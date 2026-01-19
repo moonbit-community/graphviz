@@ -363,11 +363,18 @@ fn adjust_rank_positions(
   desired : Map[String, Double],
   nodesep_pt : Double,
 ) -> Unit {
-  let mut prev_pos = 0.0
-  let mut prev_width = 0.0
-  let mut first = true
-  for name in names {
+  let len = names.length()
+  if len == 0 {
+    return ()
+  }
+  let widths : Array[Double] = []
+  let targets : Array[Double] = []
+  let cumulative : Array[Double] = []
+  let mut cum = 0.0
+  for i in 0..<len {
+    let name = names[i]
     let width = node_width_pt(name, sizes)
+    widths.push(width)
     let fallback = match x_positions.get(name) {
       Some(value) => value
       None => width / 2.0
@@ -376,16 +383,55 @@ fn adjust_rank_positions(
       Some(value) => (value + fallback) / 2.0
       None => fallback
     }
-    let min_x = if first {
-      width / 2.0
+    targets.push(target)
+    if i == 0 {
+      cum = 0.0
     } else {
-      prev_pos + (prev_width + width) / 2.0 + nodesep_pt
+      let prev_width = widths[i - 1]
+      let sep = (prev_width + width) / 2.0 + nodesep_pt
+      cum = cum + sep
     }
-    let pos_x = if target < min_x { min_x } else { target }
-    x_positions[name] = pos_x
-    prev_pos = pos_x
-    prev_width = width
-    first = false
+    cumulative.push(cum)
+  }
+  let block_values : Array[Double] = []
+  let block_weights : Array[Int] = []
+  let block_counts : Array[Int] = []
+  for i in 0..<len {
+    let t = targets[i] - cumulative[i]
+    block_values.push(t)
+    block_weights.push(1)
+    block_counts.push(1)
+    while block_values.length() >= 2 {
+      let last = block_values.length() - 1
+      let prev = last - 1
+      if block_values[prev] <= block_values[last] {
+        break
+      }
+      let weight = block_weights[prev] + block_weights[last]
+      let left = block_values[prev] * block_weights[prev].to_double()
+      let right = block_values[last] * block_weights[last].to_double()
+      let value = (left + right) / weight.to_double()
+      let count = block_counts[prev] + block_counts[last]
+      block_values[prev] = value
+      block_weights[prev] = weight
+      block_counts[prev] = count
+      let _ = block_values.pop()
+      let _ = block_weights.pop()
+      let _ = block_counts.pop()
+    }
+  }
+  let y_values : Array[Double] = []
+  for i in 0..<block_values.length() {
+    let value = block_values[i]
+    let count = block_counts[i]
+    for _j in 0..<count {
+      y_values.push(value)
+    }
+  }
+  for i in 0..<len {
+    let name = names[i]
+    let x = y_values[i] + cumulative[i]
+    x_positions[name] = x
   }
 }
 
@@ -968,7 +1014,7 @@ pub fn layout_dot(
   }
   let (parents, children) = build_edge_index(nodes, edges)
   let x_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
-  for _i in 0..<2 {
+  for _i in 0..<6 {
     for rank in rank_keys {
       let names = match groups.get(rank) {
         Some(list) => list
