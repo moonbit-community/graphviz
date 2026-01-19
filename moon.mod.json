@@ -1,7 +1,10 @@
 {
   "name": "moonbit-community/graphviz",
   "version": "0.1.0",
-  "description": "Graphviz rewrite in MoonBit",
+  "deps": {
+    "moonbitlang/x": "0.4.38"
+  },
   "repository": "https://github.com/moonbit-community/graphviz",
+  "description": "Graphviz rewrite in MoonBit",
   "source": "src"
 }

@@ -1,13 +1,13 @@
 ///|
 /// Core graph kinds supported by DOT.
-pub enum GraphKind {
+pub(all) enum GraphKind {
   Directed
   Undirected
 } derive(Show, Eq)
 
 ///|
 /// Attribute scope kinds.
-pub enum AttrKind {
+pub(all) enum AttrKind {
   Graph
   Node
   Edge
@@ -15,7 +15,7 @@ pub enum AttrKind {
 
 ///|
 /// Compass ports used in node:port:compass syntax.
-pub enum Compass {
+pub(all) enum Compass {
   N
   NE
   E
@@ -29,7 +29,7 @@ pub enum Compass {
 
 ///|
 /// Optional port name and compass reference.
-pub struct Port {
+pub(all) struct Port {
   name : String?
   compass : Compass?
 } derive(Show, Eq)
@@ -250,5 +250,33 @@ pub fn Edge::set_attr(self : Edge, name : String, value : String) -> Unit {
 ///|
 #declaration_only
 pub fn Edge::get_attr(self : Edge, name : String) -> String? {
+  ...
+}
+
+///|
+/// Enumerate explicit graph attributes.
+#declaration_only
+pub fn Graph::attrs(self : Graph) -> Array[(String, String)] {
+  ...
+}
+
+///|
+/// Enumerate default attributes declared on this graph scope.
+#declaration_only
+pub fn Graph::default_attrs(self : Graph, kind : AttrKind) -> Array[(String, String)] {
+  ...
+}
+
+///|
+/// Enumerate explicit node attributes.
+#declaration_only
+pub fn Node::attrs(self : Node) -> Array[(String, String)] {
+  ...
+}
+
+///|
+/// Enumerate explicit edge attributes.
+#declaration_only
+pub fn Edge::attrs(self : Edge) -> Array[(String, String)] {
   ...
 }
