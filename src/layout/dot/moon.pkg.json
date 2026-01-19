@@ -2,5 +2,13 @@
   "import": [
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom"
+  ],
+  "test-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    },
+    "moonbitlang/x/fs",
+    "moonbitlang/core/strconv"
   ]
 }
