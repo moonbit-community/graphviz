@@ -1,0 +1,6 @@
+{
+  "name": "moonbit-community/graphviz",
+  "version": "0.1.0",
+  "description": "Graphviz rewrite in MoonBit",
+  "repository": "https://github.com/moonbit-community/graphviz"
+}
