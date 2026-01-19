@@ -211,6 +211,168 @@ fn format_rect(rect : @geom.Rect) -> String {
 }
 
 ///|
+fn port_key(port : @cgraph.Port?) -> String {
+  match port {
+    None => ""
+    Some(value) => {
+      let mut out = ""
+      match value.name {
+        Some(name) => out = name
+        None => ()
+      }
+      match value.compass {
+        Some(compass) => {
+          let label = match compass {
+            @cgraph.Compass::N => "n"
+            @cgraph.Compass::NE => "ne"
+            @cgraph.Compass::E => "e"
+            @cgraph.Compass::SE => "se"
+            @cgraph.Compass::S => "s"
+            @cgraph.Compass::SW => "sw"
+            @cgraph.Compass::W => "w"
+            @cgraph.Compass::NW => "nw"
+            @cgraph.Compass::C => "c"
+          }
+          if out == "" {
+            out = label
+          } else {
+            out = "\{out}:\{label}"
+          }
+        }
+        None => ()
+      }
+      out
+    }
+  }
+}
+
+///|
+fn edge_key(edge : @cgraph.Edge) -> String {
+  let tail = edge.tail().name()
+  let head = edge.head().name()
+  let name = match edge.name() {
+    Some(value) => value
+    None => ""
+  }
+  let tail_port = port_key(edge.tail_port())
+  let head_port = port_key(edge.head_port())
+  "\{tail}|\{head}|\{name}|\{tail_port}|\{head_port}"
+}
+
+///|
+fn compute_bbox(
+  nodes : Array[DotLayoutNode],
+  edges : Array[DotLayoutEdge],
+) -> @geom.Rect {
+  let mut bbox_set = false
+  let mut min_x = 0.0
+  let mut max_x = 0.0
+  let mut min_y = 0.0
+  let mut max_y = 0.0
+  for node in nodes {
+    let half_w = node.width_in * 72.0 / 2.0
+    let half_h = node.height_in * 72.0 / 2.0
+    let left = node.pos.x - half_w
+    let right = node.pos.x + half_w
+    let bottom = node.pos.y - half_h
+    let top = node.pos.y + half_h
+    if !bbox_set {
+      min_x = left
+      max_x = right
+      min_y = bottom
+      max_y = top
+      bbox_set = true
+    } else {
+      if left < min_x {
+        min_x = left
+      }
+      if right > max_x {
+        max_x = right
+      }
+      if bottom < min_y {
+        min_y = bottom
+      }
+      if top > max_y {
+        max_y = top
+      }
+    }
+  }
+  for edge in edges {
+    for spline in edge.splines {
+      for point in spline.points {
+        if !bbox_set {
+          min_x = point.x
+          max_x = point.x
+          min_y = point.y
+          max_y = point.y
+          bbox_set = true
+        } else {
+          if point.x < min_x {
+            min_x = point.x
+          }
+          if point.x > max_x {
+            max_x = point.x
+          }
+          if point.y < min_y {
+            min_y = point.y
+          }
+          if point.y > max_y {
+            max_y = point.y
+          }
+        }
+      }
+    }
+  }
+  if bbox_set {
+    { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+  } else {
+    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
+  }
+}
+
+///|
+fn layout_subgraphs(
+  graph : @cgraph.Graph,
+  nodes_out : Array[DotLayoutNode],
+  edges_out : Array[DotLayoutEdge],
+) -> Array[DotLayoutGraph] {
+  let result : Array[DotLayoutGraph] = []
+  for subgraph in graph.subgraphs() {
+    let node_set : Map[String, Bool] = Map::new()
+    for node in subgraph.nodes() {
+      node_set[node.name()] = true
+    }
+    let edge_set : Map[String, Bool] = Map::new()
+    for edge in subgraph.edges() {
+      edge_set[edge_key(edge)] = true
+    }
+    let sub_nodes : Array[DotLayoutNode] = []
+    for node_layout in nodes_out {
+      if node_set.get(node_layout.node.name()) is Some(_) {
+        sub_nodes.push(node_layout)
+      }
+    }
+    let sub_edges : Array[DotLayoutEdge] = []
+    for edge_layout in edges_out {
+      if edge_set.get(edge_key(edge_layout.edge)) is Some(_) {
+        sub_edges.push(edge_layout)
+      }
+    }
+    let bbox = compute_bbox(sub_nodes, sub_edges)
+    let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
+    result.push({
+      graph: subgraph,
+      bbox,
+      label_pos: None,
+      nodes: sub_nodes,
+      edges: sub_edges,
+      subgraphs: sub_subgraphs,
+    })
+  }
+  result
+}
+
+///|
 fn spline_for_edge(tail : @geom.Point, head : @geom.Point) -> @geom.Spline {
   let mid_y = (tail.y + head.y) / 2.0
   let points : Array[@geom.Point] = [
@@ -397,77 +559,14 @@ pub fn layout_dot(
       tail_label_pos: None,
     })
   }
-  let mut bbox_set = false
-  let mut min_x = 0.0
-  let mut max_x = 0.0
-  let mut min_y = 0.0
-  let mut max_y = 0.0
-  for node in nodes_out {
-    let half_w = node.width_in * 72.0 / 2.0
-    let half_h = node.height_in * 72.0 / 2.0
-    let left = node.pos.x - half_w
-    let right = node.pos.x + half_w
-    let bottom = node.pos.y - half_h
-    let top = node.pos.y + half_h
-    if !bbox_set {
-      min_x = left
-      max_x = right
-      min_y = bottom
-      max_y = top
-      bbox_set = true
-    } else {
-      if left < min_x {
-        min_x = left
-      }
-      if right > max_x {
-        max_x = right
-      }
-      if bottom < min_y {
-        min_y = bottom
-      }
-      if top > max_y {
-        max_y = top
-      }
-    }
-  }
-  for edge in edges_out {
-    for spline in edge.splines {
-      for point in spline.points {
-        if !bbox_set {
-          min_x = point.x
-          max_x = point.x
-          min_y = point.y
-          max_y = point.y
-          bbox_set = true
-        } else {
-          if point.x < min_x {
-            min_x = point.x
-          }
-          if point.x > max_x {
-            max_x = point.x
-          }
-          if point.y < min_y {
-            min_y = point.y
-          }
-          if point.y > max_y {
-            max_y = point.y
-          }
-        }
-      }
-    }
-  }
-  let bbox : @geom.Rect = if bbox_set {
-    { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
-  } else {
-    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
-  }
+  let bbox = compute_bbox(nodes_out, edges_out)
   {
     graph,
     bbox,
     label_pos: None,
     nodes: nodes_out,
     edges: edges_out,
-    subgraphs: [],
+    subgraphs: layout_subgraphs(graph, nodes_out, edges_out),
   }
 }
 
@@ -508,5 +607,8 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
       Some(pos) => edge.set_attr("tail_lp", format_point(pos))
       None => ()
     }
+  }
+  for subgraph in self.subgraphs {
+    subgraph.apply()
   }
 }
