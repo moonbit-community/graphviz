@@ -276,198 +276,149 @@ fn compute_ranks_directed(
 }
 
 ///|
-fn build_tree_index(
+fn build_edge_index(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
-) -> (Map[String, Int], Map[String, Array[String]]) {
-  let indegree : Map[String, Int] = Map::new()
+) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+  let parents : Map[String, Array[String]] = Map::new()
   let children : Map[String, Array[String]] = Map::new()
   for node in nodes {
     let name = node.name()
-    indegree[name] = 0
+    parents[name] = []
     children[name] = []
   }
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
-    let count = match indegree.get(head) {
-      Some(value) => value
-      None => 0
+    match parents.get(head) {
+      Some(list) => list.push(tail)
+      None => parents[head] = [tail]
     }
-    indegree[head] = count + 1
     match children.get(tail) {
       Some(list) => list.push(head)
       None => children[tail] = [head]
     }
   }
-  (indegree, children)
+  (parents, children)
 }
 
 ///|
-fn is_forest(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  indegree : Map[String, Int],
-) -> Bool {
-  let mut roots = 0
-  for node in nodes {
-    let count = match indegree.get(node.name()) {
-      Some(value) => value
-      None => 0
-    }
-    if count == 0 {
-      roots = roots + 1
-    } else if count > 1 {
-      return false
-    }
-  }
-  edges.length() == nodes.length() - roots
-}
-
-///|
-fn subtree_width(
-  name : String,
-  children : Map[String, Array[String]],
-  sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  widths : Map[String, Double],
-) -> Double {
-  match widths.get(name) {
-    Some(value) => value
-    None => {
-      let child_list = match children.get(name) {
-        Some(list) => list
-        None => []
-      }
-      let mut total = 0.0
-      let mut count = 0
-      for child in child_list {
-        total = total + subtree_width(child, children, sizes, nodesep_pt, widths)
+fn average_positions(
+  names : Array[String],
+  x_positions : Map[String, Double],
+) -> Double? {
+  let mut sum = 0.0
+  let mut count = 0
+  for name in names {
+    match x_positions.get(name) {
+      Some(value) => {
+        sum = sum + value
         count = count + 1
       }
-      if count > 1 {
-        total = total + nodesep_pt * (count - 1).to_double()
-      }
-      let self_width = match sizes.get(name) {
-        Some(value) => value.width_pt
-        None => default_node_width_in() * 72.0
-      }
-      let final_width = if total > self_width { total } else { self_width }
-      widths[name] = final_width
-      final_width
+      None => ()
     }
+  }
+  if count == 0 {
+    None
+  } else {
+    Some(sum / count.to_double())
   }
 }
 
 ///|
-fn assign_tree_positions(
-  name : String,
-  left : Double,
-  children : Map[String, Array[String]],
-  sizes : Map[String, NodeSize],
-  widths : Map[String, Double],
-  nodesep_pt : Double,
+fn compute_desired_positions(
+  names : Array[String],
+  neighbors : Map[String, Array[String]],
   x_positions : Map[String, Double],
-) -> Unit {
-  let subtree = match widths.get(name) {
-    Some(value) => value
+) -> Map[String, Double] {
+  let desired : Map[String, Double] = Map::new()
+  for name in names {
+    let list = match neighbors.get(name) {
+      Some(value) => value
+      None => []
+    }
+    match average_positions(list, x_positions) {
+      Some(value) => desired[name] = value
+      None => ()
+    }
+  }
+  desired
+}
+
+///|
+fn node_width_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
+  match sizes.get(name) {
+    Some(value) => value.width_pt
     None => default_node_width_in() * 72.0
   }
-  let child_list = match children.get(name) {
-    Some(list) => list
-    None => []
-  }
-  let mut child_span = 0.0
-  let mut count = 0
-  for child in child_list {
-    let child_width = match widths.get(child) {
-      Some(value) => value
-      None => {
-        match sizes.get(child) {
-          Some(value) => value.width_pt
-          None => default_node_width_in() * 72.0
-        }
-      }
-    }
-    child_span = child_span + child_width
-    count = count + 1
-  }
-  if count > 1 {
-    child_span = child_span + nodesep_pt * (count - 1).to_double()
-  }
-  let mut child_left = left
-  if child_span < subtree {
-    child_left = left + (subtree - child_span) / 2.0
-  }
-  for child in child_list {
-    let child_width = match widths.get(child) {
-      Some(value) => value
-      None => {
-        match sizes.get(child) {
-          Some(value) => value.width_pt
-          None => default_node_width_in() * 72.0
-        }
-      }
-    }
-    assign_tree_positions(
-      child,
-      child_left,
-      children,
-      sizes,
-      widths,
-      nodesep_pt,
-      x_positions,
-    )
-    child_left = child_left + child_width + nodesep_pt
-  }
-  x_positions[name] = left + subtree / 2.0
 }
 
 ///|
-fn compute_tree_positions(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
+fn adjust_rank_positions(
+  names : Array[String],
+  x_positions : Map[String, Double],
   sizes : Map[String, NodeSize],
+  desired : Map[String, Double],
   nodesep_pt : Double,
-) -> Option[Map[String, Double]] {
-  let (indegree, children) = build_tree_index(nodes, edges)
-  if !is_forest(nodes, edges, indegree) {
-    return None
+) -> Unit {
+  let mut prev_pos = 0.0
+  let mut prev_width = 0.0
+  let mut first = true
+  for name in names {
+    let width = node_width_pt(name, sizes)
+    let fallback = match x_positions.get(name) {
+      Some(value) => value
+      None => width / 2.0
+    }
+    let target = match desired.get(name) {
+      Some(value) => (value + fallback) / 2.0
+      None => fallback
+    }
+    let min_x = if first {
+      width / 2.0
+    } else {
+      prev_pos + (prev_width + width) / 2.0 + nodesep_pt
+    }
+    let pos_x = if target < min_x { min_x } else { target }
+    x_positions[name] = pos_x
+    prev_pos = pos_x
+    prev_width = width
+    first = false
   }
-  let widths : Map[String, Double] = Map::new()
-  let roots : Array[String] = []
+}
+
+///|
+fn normalize_x_positions(
+  nodes : Array[@cgraph.Node],
+  x_positions : Map[String, Double],
+  sizes : Map[String, NodeSize],
+) -> Unit {
+  let mut min_x = 0.0
+  let mut seen = false
   for node in nodes {
     let name = node.name()
-    let count = match indegree.get(name) {
+    let width = node_width_pt(name, sizes)
+    let pos = match x_positions.get(name) {
       Some(value) => value
-      None => 0
+      None => 0.0
     }
-    if count == 0 {
-      roots.push(name)
+    let left = pos - width / 2.0
+    if !seen {
+      min_x = left
+      seen = true
+    } else if left < min_x {
+      min_x = left
     }
   }
-  for root in roots {
-    let _ = subtree_width(root, children, sizes, nodesep_pt, widths)
-  }
-  let positions : Map[String, Double] = Map::new()
-  let mut current_x = 0.0
-  for root in roots {
-    assign_tree_positions(
-      root,
-      current_x,
-      children,
-      sizes,
-      widths,
-      nodesep_pt,
-      positions,
-    )
-    let root_width = match widths.get(root) {
-      Some(value) => value
-      None => default_node_width_in() * 72.0
+  if seen && min_x != 0.0 {
+    for node in nodes {
+      let name = node.name()
+      match x_positions.get(name) {
+        Some(value) => x_positions[name] = value - min_x
+        None => ()
+      }
     }
-    current_x = current_x + root_width + nodesep_pt
   }
-  Some(positions)
 }
 
 ///|
@@ -485,22 +436,10 @@ fn compute_rank_positions(
     }
     let mut current_x = 0.0
     for name in names {
-      let size = match sizes.get(name) {
-        Some(value) => value
-        None => {
-          let width_in = default_node_width_in()
-          let height_in = default_node_height_in()
-          {
-            width_in,
-            height_in,
-            width_pt: width_in * 72.0,
-            height_pt: height_in * 72.0,
-          }
-        }
-      }
-      let pos_x = current_x + size.width_pt / 2.0
+      let width = node_width_pt(name, sizes)
+      let pos_x = current_x + width / 2.0
       positions[name] = pos_x
-      current_x = current_x + size.width_pt + nodesep_pt
+      current_x = current_x + width + nodesep_pt
     }
   }
   positions
@@ -1025,15 +964,28 @@ pub fn layout_dot(
     }
     current_y = current_y - max_height - ranksep_pt
   }
-  let tree_positions = if graph.kind() == @cgraph.GraphKind::Directed {
-    compute_tree_positions(nodes, edges, sizes, nodesep_pt)
-  } else {
-    None
+  let (parents, children) = build_edge_index(nodes, edges)
+  let x_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
+  for _i in 0..<2 {
+    for rank in rank_keys {
+      let names = match groups.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      let desired = compute_desired_positions(names, parents, x_positions)
+      adjust_rank_positions(names, x_positions, sizes, desired, nodesep_pt)
+    }
+    for i in 0..<rank_keys.length() {
+      let rank = rank_keys[rank_keys.length() - 1 - i]
+      let names = match groups.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      let desired = compute_desired_positions(names, children, x_positions)
+      adjust_rank_positions(names, x_positions, sizes, desired, nodesep_pt)
+    }
   }
-  let x_positions = match tree_positions {
-    Some(value) => value
-    None => compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
-  }
+  normalize_x_positions(nodes, x_positions, sizes)
   let positions : Map[String, @geom.Point] = Map::new()
   for node in nodes {
     let name = node.name()
