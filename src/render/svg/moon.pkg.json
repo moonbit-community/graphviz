@@ -1,1 +1,8 @@
-{}
+{
+  "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/dot",
+      "alias": "layout_dot"
+    }
+  ]
+}
