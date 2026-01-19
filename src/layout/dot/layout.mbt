@@ -303,25 +303,27 @@ fn build_edge_index(
 }
 
 ///|
-fn average_positions(
+fn median_positions(
   names : Array[String],
   x_positions : Map[String, Double],
 ) -> Double? {
-  let mut sum = 0.0
-  let mut count = 0
+  let values : Array[Double] = []
   for name in names {
     match x_positions.get(name) {
-      Some(value) => {
-        sum = sum + value
-        count = count + 1
-      }
+      Some(value) => values.push(value)
       None => ()
     }
   }
-  if count == 0 {
+  if values.length() == 0 {
     None
   } else {
-    Some(sum / count.to_double())
+    values.sort()
+    let mid = values.length() / 2
+    if values.length() % 2 == 0 {
+      Some((values[mid - 1] + values[mid]) / 2.0)
+    } else {
+      Some(values[mid])
+    }
   }
 }
 
@@ -337,7 +339,7 @@ fn compute_desired_positions(
       Some(value) => value
       None => []
     }
-    match average_positions(list, x_positions) {
+    match median_positions(list, x_positions) {
       Some(value) => desired[name] = value
       None => ()
     }
