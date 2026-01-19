@@ -10,16 +10,18 @@ and performance checks.
 Preferred output formats for parity checks:
 
 - -Tdot: layout attributes only (pos, bb, lp, etc.)
+- -Txdot: layout + drawing ops (stable text output for regression tests)
 - -Tplain: compact numeric output for basic layout sanity
-- -Tsvg: rendering parity for a small subset (text-based snapshots)
+- -Tsvg: human review output for a small subset
 
-Note: xdot is not planned; svg is the first rendering target.
+Note: xdot is the primary regression target; svg is emitted alongside
+for human inspection.
 
 When outputs differ:
 
 - compare topology and attribute presence first (pos, bb, lp)
 - compare numeric values within tolerances (layout is not bit-exact)
-- treat SVG/png as visual checkpoints, not strict byte-for-byte matches
+- treat svg/png as visual checkpoints unless we add strict normalization
 
 ## Tier 0: Smoke tests (parser + minimal layout)
 
@@ -55,7 +57,7 @@ Attributes, shapes, ports, clusters, and labels:
   - refs/graphviz/graphs/directed/psfonttest.gv
   - refs/graphviz/graphs/directed/Latin1.gv
 
-Expected outputs: -Tdot, spot-check -Tsvg
+Expected outputs: -Tdot, -Txdot, spot-check -Tsvg
 
 ## Tier 2: Layout engine coverage
 
@@ -94,7 +96,7 @@ Edge routing and label placement edge cases:
   - refs/graphviz/graphs/directed/ctext.gv
   - refs/graphviz/graphs/directed/hashtable.gv
 
-Expected outputs: -Tdot, spot-check -Tsvg
+Expected outputs: -Tdot, -Txdot, spot-check -Tsvg
 
 ## Tier 4: Regression and performance
 
@@ -131,16 +133,17 @@ Existing fixtures for byte-level diffs:
 - refs/graphviz/tests/2636.svg (expected)
 - refs/graphviz/tests/usershape.dot
 - refs/graphviz/tests/usershape.svg (expected)
+- refs/graphviz/tests/1172_1.xdot (expected)
 
-These are good candidates for early svg parity.
+These are good candidates for early xdot + svg parity.
 
 ## Notes for MoonBit integration
 
 - Start with Tier 0 and Tier 1 to validate DOT parsing and attribute
   propagation.
 - Defer Tier 4 until the layout core is stable.
-- Use svg outputs as the rendering parity target. Normalize whitespace
-  and tolerate minor numeric differences.
+- Use xdot outputs as the rendering parity target. Keep svg for
+  human review (normalize whitespace if we add svg snapshots).
 
 ## References
 
