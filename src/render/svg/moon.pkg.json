@@ -6,5 +6,8 @@
     },
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/strconv"
+  ],
+  "test-import": [
+    "moonbit-community/graphviz/dot"
   ]
 }
