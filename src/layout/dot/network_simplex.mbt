@@ -1,12 +1,29 @@
 ///|
 const NONE_EDGE : Int = -1
+///|
+const NO_HEAP : Int = -1
+
+///|
+priv enum OrderingMode {
+  Out
+  In
+}
+
+///|
+fn parse_ordering(value : String) -> OrderingMode? {
+  match value.to_lower() {
+    "out" => Some(OrderingMode::Out)
+    "in" => Some(OrderingMode::In)
+    _ => None
+  }
+}
 
 ///|
 priv struct NsEdge {
   tail : Int
   head : Int
   minlen : Int
-  weight : Int
+  mut weight : Int
   mut cutvalue : Int
   mut tree_index : Int
 }
@@ -99,18 +116,22 @@ fn add_tree_edge(graph : NsGraph, edge_idx : Int) -> Unit {
   let index = graph.tree_edges.length()
   graph.edges[edge_idx].tree_index = index
   graph.tree_edges.push(edge_idx)
+  let edge = graph.edges[edge_idx]
+  graph.nodes[edge.tail].tree_out.push(edge_idx)
+  graph.nodes[edge.head].tree_in.push(edge_idx)
 }
 
 ///|
-fn rebuild_tree_lists(graph : NsGraph) -> Unit {
-  for i in 0..<graph.nodes.length() {
-    graph.nodes[i].tree_in.clear()
-    graph.nodes[i].tree_out.clear()
-  }
-  for edge_idx in graph.tree_edges {
-    let edge = graph.edges[edge_idx]
-    graph.nodes[edge.tail].tree_out.push(edge_idx)
-    graph.nodes[edge.head].tree_in.push(edge_idx)
+fn remove_tree_edge(list : Array[Int], edge_idx : Int) -> Unit {
+  let mut i = 0
+  while i < list.length() {
+    if list[i] == edge_idx {
+      let last = list.length() - 1
+      list[i] = list[last]
+      let _ = list.pop()
+      return ()
+    }
+    i = i + 1
   }
 }
 
@@ -127,7 +148,14 @@ fn exchange_tree_edges(
   graph.edges[entering].tree_index = idx
   graph.edges[leaving].tree_index = NONE_EDGE
   graph.tree_edges[idx] = entering
-  rebuild_tree_lists(graph)
+  let leaving_tail = graph.edges[leaving].tail
+  let leaving_head = graph.edges[leaving].head
+  remove_tree_edge(graph.nodes[leaving_tail].tree_out, leaving)
+  remove_tree_edge(graph.nodes[leaving_head].tree_in, leaving)
+  let entering_tail = graph.edges[entering].tail
+  let entering_head = graph.edges[entering].head
+  graph.nodes[entering_tail].tree_out.push(entering)
+  graph.nodes[entering_head].tree_in.push(entering)
 }
 
 ///|
@@ -186,179 +214,604 @@ fn init_rank(graph : NsGraph) -> Unit {
 }
 
 ///|
-fn tight_component(
-  graph : NsGraph,
-  start : Int,
-  subtree : Array[Int],
-  subtree_id : Int,
-) -> Array[Int] {
-  let nodes_in : Array[Int] = []
-  let stack : Array[Int] = [start]
-  subtree[start] = subtree_id
-  while stack.length() > 0 {
-    let v = stack[stack.length() - 1]
-    let _ = stack.pop()
-    nodes_in.push(v)
-    let mut index = 0
-    let edges = graph.nodes[v].out_edges
-    while index < edges.length() {
-      let edge_idx = edges[index]
-      if !is_tree_edge(graph, edge_idx) && edge_slack(graph, edge_idx) == 0 {
-        let head = graph.edges[edge_idx].head
-        if subtree[head] == NONE_EDGE {
-          subtree[head] = subtree_id
-          add_tree_edge(graph, edge_idx)
-          stack.push(head)
-        }
-      }
-      index = index + 1
-    }
-    index = 0
-    let in_edges = graph.nodes[v].in_edges
-    while index < in_edges.length() {
-      let edge_idx = in_edges[index]
-      if !is_tree_edge(graph, edge_idx) && edge_slack(graph, edge_idx) == 0 {
-        let tail = graph.edges[edge_idx].tail
-        if subtree[tail] == NONE_EDGE {
-          subtree[tail] = subtree_id
-          add_tree_edge(graph, edge_idx)
-          stack.push(tail)
-        }
-      }
-      index = index + 1
-    }
-  }
-  nodes_in
+priv struct Subtree {
+  rep : Int
+  mut size : Int
+  mut heap_index : Int
+  mut parent : Int
 }
 
 ///|
-fn merge_subtrees(
-  graph : NsGraph,
-  subtree : Array[Int],
-  subtrees : Array[Array[Int]],
-) -> Bool {
-  let active : Array[Int] = []
+priv struct TightState {
+  node : Int
+  mut in_i : Int
+  mut out_i : Int
+  mut rv : Int
+}
+
+///|
+priv struct DfsState {
+  node : Int
+  par_edge : Int
+  mut lim : Int
+  mut tree_out_i : Int
+  mut tree_in_i : Int
+}
+
+///|
+fn subtree_on_heap(subtrees : Array[Subtree], idx : Int) -> Bool {
+  subtrees[idx].heap_index != NO_HEAP
+}
+
+///|
+fn subtree_find(subtrees : Array[Subtree], idx : Int) -> Int {
+  let mut root = idx
+  while subtrees[root].parent != root {
+    root = subtrees[root].parent
+  }
+  let mut cur = idx
+  while subtrees[cur].parent != cur {
+    let parent = subtrees[cur].parent
+    subtrees[cur].parent = root
+    cur = parent
+  }
+  root
+}
+
+///|
+fn subtree_union(
+  subtrees : Array[Subtree],
+  a : Int,
+  b : Int,
+) -> Int {
+  let r0 = subtree_find(subtrees, a)
+  let r1 = subtree_find(subtrees, b)
+  if r0 == r1 {
+    return r0
+  }
+  let mut root = r1
+  let on0 = subtree_on_heap(subtrees, r0)
+  let on1 = subtree_on_heap(subtrees, r1)
+  if !on1 {
+    root = r0
+  } else if !on0 {
+    root = r1
+  } else if subtrees[r1].size < subtrees[r0].size {
+    root = r0
+  }
+  subtrees[r0].parent = root
+  subtrees[r1].parent = root
+  subtrees[root].size = subtrees[r0].size + subtrees[r1].size
+  root
+}
+
+///|
+fn heapify_down(
+  heap : Array[Int],
+  subtrees : Array[Subtree],
+  start : Int,
+) -> Unit {
+  let mut idx = start
+  let size = heap.length()
+  while true {
+    let left = idx * 2 + 1
+    let right = idx * 2 + 2
+    let mut smallest = idx
+    if left < size && subtrees[heap[left]].size < subtrees[heap[smallest]].size {
+      smallest = left
+    }
+    if right < size && subtrees[heap[right]].size < subtrees[heap[smallest]].size {
+      smallest = right
+    }
+    if smallest == idx {
+      break
+    }
+    let tmp = heap[idx]
+    heap[idx] = heap[smallest]
+    heap[smallest] = tmp
+    subtrees[heap[idx]].heap_index = idx
+    subtrees[heap[smallest]].heap_index = smallest
+    idx = smallest
+  }
+}
+
+///|
+fn build_heap(subtrees : Array[Subtree]) -> Array[Int] {
+  let heap : Array[Int] = []
   for i in 0..<subtrees.length() {
-    if subtrees[i].length() > 0 {
-      active.push(i)
+    heap.push(i)
+    subtrees[i].heap_index = i
+  }
+  if heap.length() == 0 {
+    return heap
+  }
+  let mut idx = heap.length() / 2
+  while idx > 0 {
+    idx = idx - 1
+    heapify_down(heap, subtrees, idx)
+  }
+  heap
+}
+
+///|
+fn heap_extract_min(
+  heap : Array[Int],
+  subtrees : Array[Subtree],
+) -> Int {
+  let min_idx = heap[0]
+  subtrees[min_idx].heap_index = NO_HEAP
+  let last = heap[heap.length() - 1]
+  heap[0] = last
+  let _ = heap.pop()
+  if heap.length() > 0 {
+    subtrees[last].heap_index = 0
+    heapify_down(heap, subtrees, 0)
+  }
+  min_idx
+}
+
+///|
+fn tree_adjust(
+  graph : NsGraph,
+  start : Int,
+  from : Int,
+  delta : Int,
+) -> Unit {
+  let stack : Array[(Int, Int)] = [(start, from)]
+  while stack.length() > 0 {
+    let (v, parent) = stack[stack.length() - 1]
+    let _ = stack.pop()
+    graph.nodes[v].rank = graph.nodes[v].rank + delta
+    for edge_idx in graph.nodes[v].tree_in {
+      let tail = graph.edges[edge_idx].tail
+      if tail != parent {
+        stack.push((tail, v))
+      }
+    }
+    for edge_idx in graph.nodes[v].tree_out {
+      let head = graph.edges[edge_idx].head
+      if head != parent {
+        stack.push((head, v))
+      }
     }
   }
-  while active.length() > 1 {
-    let mut best_edge = NONE_EDGE
-    let mut best_slack = 0
-    let mut best_a = NONE_EDGE
-    let mut best_b = NONE_EDGE
-    for edge_idx in 0..<graph.edges.length() {
-      if is_tree_edge(graph, edge_idx) {
+}
+
+///|
+fn tight_subtree_search(
+  graph : NsGraph,
+  start : Int,
+  node_subtree : Array[Int],
+  subtree_id : Int,
+) -> Int {
+  let stack : Array[TightState] = [{
+    node: start,
+    in_i: 0,
+    out_i: 0,
+    rv: 1,
+  }]
+  node_subtree[start] = subtree_id
+  let mut result = 1
+  while stack.length() > 0 {
+    let last = stack.length() - 1
+    let state = stack[last]
+    let mut updated = false
+    while state.in_i < graph.nodes[state.node].in_edges.length() {
+      let edge_idx = graph.nodes[state.node].in_edges[state.in_i]
+      state.in_i = state.in_i + 1
+      if is_tree_edge(graph, edge_idx) || edge_slack(graph, edge_idx) != 0 {
         continue
       }
-      let edge = graph.edges[edge_idx]
-      let a = subtree[edge.tail]
-      let b = subtree[edge.head]
-      if a == b {
-        continue
-      }
-      let slack = edge_slack(graph, edge_idx)
-      if best_edge == NONE_EDGE || slack < best_slack {
-        best_edge = edge_idx
-        best_slack = slack
-        best_a = a
-        best_b = b
-      }
-    }
-    if best_edge == NONE_EDGE {
-      return false
-    }
-    let mut keep = best_a
-    let mut drop = best_b
-    if subtrees[best_b].length() > subtrees[best_a].length() {
-      keep = best_b
-      drop = best_a
-    }
-    if best_slack != 0 {
-      let edge = graph.edges[best_edge]
-      if subtree[edge.tail] == drop {
-        for node in subtrees[drop] {
-          graph.nodes[node].rank = graph.nodes[node].rank + best_slack
-        }
-      } else {
-        for node in subtrees[drop] {
-          graph.nodes[node].rank = graph.nodes[node].rank - best_slack
-        }
-      }
-    }
-    add_tree_edge(graph, best_edge)
-    for node in subtrees[drop] {
-      subtree[node] = keep
-      subtrees[keep].push(node)
-    }
-    subtrees[drop] = []
-    let mut i = 0
-    while i < active.length() {
-      if active[i] == drop {
-        let last = active.length() - 1
-        active[i] = active[last]
-        let _ = active.pop()
+      let tail = graph.edges[edge_idx].tail
+      if node_subtree[tail] == NONE_EDGE {
+        node_subtree[tail] = subtree_id
+        add_tree_edge(graph, edge_idx)
+        stack[last] = state
+        stack.push({
+          node: tail,
+          in_i: 0,
+          out_i: 0,
+          rv: 1,
+        })
+        updated = true
         break
       }
-      i = i + 1
+    }
+    if updated {
+      continue
+    }
+    while state.out_i < graph.nodes[state.node].out_edges.length() {
+      let edge_idx = graph.nodes[state.node].out_edges[state.out_i]
+      state.out_i = state.out_i + 1
+      if is_tree_edge(graph, edge_idx) || edge_slack(graph, edge_idx) != 0 {
+        continue
+      }
+      let head = graph.edges[edge_idx].head
+      if node_subtree[head] == NONE_EDGE {
+        node_subtree[head] = subtree_id
+        add_tree_edge(graph, edge_idx)
+        stack[last] = state
+        stack.push({
+          node: head,
+          in_i: 0,
+          out_i: 0,
+          rv: 1,
+        })
+        updated = true
+        break
+      }
+    }
+    if updated {
+      continue
+    }
+    let done = stack.pop()
+    match done {
+      None => ()
+      Some(value) => {
+        if stack.length() == 0 {
+          result = value.rv
+        } else {
+          let parent = stack.length() - 1
+          let parent_state = stack[parent]
+          parent_state.rv = parent_state.rv + value.rv
+          stack[parent] = parent_state
+        }
+      }
     }
   }
-  true
+  result
+}
+
+///|
+fn inter_tree_edge_search(
+  graph : NsGraph,
+  node_subtree : Array[Int],
+  subtrees : Array[Subtree],
+  root : Int,
+  v : Int,
+  from : Int,
+  best : Int?,
+) -> Int? {
+  let mut current = best
+  match current {
+    Some(edge_idx) => {
+      if edge_slack(graph, edge_idx) == 0 {
+        return current
+      }
+    }
+    None => ()
+  }
+  for edge_idx in graph.nodes[v].out_edges {
+    if is_tree_edge(graph, edge_idx) {
+      let head = graph.edges[edge_idx].head
+      if head != from {
+        current = inter_tree_edge_search(
+          graph,
+          node_subtree,
+          subtrees,
+          root,
+          head,
+          v,
+          current,
+        )
+        match current {
+          Some(found) => {
+            if edge_slack(graph, found) == 0 {
+              return current
+            }
+          }
+          None => ()
+        }
+      }
+      continue
+    }
+    let head = graph.edges[edge_idx].head
+    let head_sub = node_subtree[head]
+    if head_sub != NONE_EDGE && subtree_find(subtrees, head_sub) != root {
+      let slack = edge_slack(graph, edge_idx)
+      match current {
+        Some(best_edge) => {
+          if slack < edge_slack(graph, best_edge) {
+            current = Some(edge_idx)
+          }
+        }
+        None => current = Some(edge_idx)
+      }
+    }
+  }
+  for edge_idx in graph.nodes[v].in_edges {
+    if is_tree_edge(graph, edge_idx) {
+      let tail = graph.edges[edge_idx].tail
+      if tail != from {
+        current = inter_tree_edge_search(
+          graph,
+          node_subtree,
+          subtrees,
+          root,
+          tail,
+          v,
+          current,
+        )
+        match current {
+          Some(found) => {
+            if edge_slack(graph, found) == 0 {
+              return current
+            }
+          }
+          None => ()
+        }
+      }
+      continue
+    }
+    let tail = graph.edges[edge_idx].tail
+    let tail_sub = node_subtree[tail]
+    if tail_sub != NONE_EDGE && subtree_find(subtrees, tail_sub) != root {
+      let slack = edge_slack(graph, edge_idx)
+      match current {
+        Some(best_edge) => {
+          if slack < edge_slack(graph, best_edge) {
+            current = Some(edge_idx)
+          }
+        }
+        None => current = Some(edge_idx)
+      }
+    }
+  }
+  current
+}
+
+///|
+fn inter_tree_edge(
+  graph : NsGraph,
+  node_subtree : Array[Int],
+  subtrees : Array[Subtree],
+  subtree_id : Int,
+) -> Int? {
+  let root = subtree_find(subtrees, subtree_id)
+  let start = subtrees[root].rep
+  inter_tree_edge_search(
+    graph,
+    node_subtree,
+    subtrees,
+    root,
+    start,
+    NONE_EDGE,
+    None,
+  )
+}
+
+///|
+fn merge_trees(
+  graph : NsGraph,
+  node_subtree : Array[Int],
+  subtrees : Array[Subtree],
+  edge_idx : Int,
+) -> Int? {
+  let edge = graph.edges[edge_idx]
+  let tail_sub = subtree_find(subtrees, node_subtree[edge.tail])
+  let head_sub = subtree_find(subtrees, node_subtree[edge.head])
+  if tail_sub == head_sub {
+    return Some(tail_sub)
+  }
+  let slack = edge_slack(graph, edge_idx)
+  if !subtree_on_heap(subtrees, tail_sub) {
+    if slack != 0 {
+      tree_adjust(graph, subtrees[tail_sub].rep, NONE_EDGE, slack)
+    }
+  } else {
+    if slack != 0 {
+      tree_adjust(graph, subtrees[head_sub].rep, NONE_EDGE, -slack)
+    }
+  }
+  add_tree_edge(graph, edge_idx)
+  Some(subtree_union(subtrees, tail_sub, head_sub))
 }
 
 ///|
 fn feasible_tree(graph : NsGraph) -> Bool {
-  let subtree : Array[Int] = []
+  let node_subtree : Array[Int] = []
   for _ in 0..<graph.nodes.length() {
-    subtree.push(NONE_EDGE)
+    node_subtree.push(NONE_EDGE)
   }
-  let subtrees : Array[Array[Int]] = []
+  let subtrees : Array[Subtree] = []
   for i in 0..<graph.nodes.length() {
-    if subtree[i] != NONE_EDGE {
+    if node_subtree[i] != NONE_EDGE {
       continue
     }
-    let nodes_in = tight_component(graph, i, subtree, subtrees.length())
-    subtrees.push(nodes_in)
+    let size = tight_subtree_search(graph, i, node_subtree, subtrees.length())
+    subtrees.push({
+      rep: i,
+      size,
+      heap_index: NO_HEAP,
+      parent: subtrees.length(),
+    })
   }
-  let ok = merge_subtrees(graph, subtree, subtrees)
-  if ok {
-    rebuild_tree_lists(graph)
+  let heap = build_heap(subtrees)
+  while heap.length() > 1 {
+    let tree_idx = heap_extract_min(heap, subtrees)
+    let entering = inter_tree_edge(graph, node_subtree, subtrees, tree_idx)
+    match entering {
+      None => return false
+      Some(edge_idx) => {
+        let merged = merge_trees(graph, node_subtree, subtrees, edge_idx)
+        match merged {
+          None => return false
+          Some(root) => {
+            let heap_idx = subtrees[root].heap_index
+            if heap_idx != NO_HEAP {
+              heapify_down(heap, subtrees, heap_idx)
+            }
+          }
+        }
+      }
+    }
   }
-  ok
+  init_cutvalues(graph)
+  true
 }
 
 ///|
-fn dfs_range_impl(
+fn dfs_range_init(graph : NsGraph, root : Int) -> Int {
+  graph.nodes[root].par_edge = NONE_EDGE
+  graph.nodes[root].low = 1
+  let stack : Array[DfsState] = [{
+    node: root,
+    par_edge: NONE_EDGE,
+    lim: 1,
+    tree_out_i: 0,
+    tree_in_i: 0,
+  }]
+  let mut lim = 0
+  while stack.length() > 0 {
+    let last = stack.length() - 1
+    let state = stack[last]
+    let mut pushed = false
+    while state.tree_out_i < graph.nodes[state.node].tree_out.length() {
+      let edge_idx = graph.nodes[state.node].tree_out[state.tree_out_i]
+      state.tree_out_i = state.tree_out_i + 1
+      if edge_idx != state.par_edge {
+        let head = graph.edges[edge_idx].head
+        graph.nodes[head].par_edge = edge_idx
+        graph.nodes[head].low = state.lim
+        stack[last] = state
+        stack.push({
+          node: head,
+          par_edge: edge_idx,
+          lim: state.lim,
+          tree_out_i: 0,
+          tree_in_i: 0,
+        })
+        pushed = true
+        break
+      }
+    }
+    if pushed {
+      continue
+    }
+    while state.tree_in_i < graph.nodes[state.node].tree_in.length() {
+      let edge_idx = graph.nodes[state.node].tree_in[state.tree_in_i]
+      state.tree_in_i = state.tree_in_i + 1
+      if edge_idx != state.par_edge {
+        let tail = graph.edges[edge_idx].tail
+        graph.nodes[tail].par_edge = edge_idx
+        graph.nodes[tail].low = state.lim
+        stack[last] = state
+        stack.push({
+          node: tail,
+          par_edge: edge_idx,
+          lim: state.lim,
+          tree_out_i: 0,
+          tree_in_i: 0,
+        })
+        pushed = true
+        break
+      }
+    }
+    if pushed {
+      continue
+    }
+    graph.nodes[state.node].lim = state.lim
+    lim = state.lim
+    let _ = stack.pop()
+    if stack.length() > 0 {
+      let parent_idx = stack.length() - 1
+      let parent_state = stack[parent_idx]
+      parent_state.lim = lim + 1
+      stack[parent_idx] = parent_state
+    }
+  }
+  lim + 1
+}
+
+///|
+fn dfs_range(
   graph : NsGraph,
   node_idx : Int,
   parent_edge : Int,
-  counter : Int,
+  low : Int,
 ) -> Int {
+  if graph.nodes[node_idx].par_edge == parent_edge && graph.nodes[node_idx].low == low {
+    return graph.nodes[node_idx].lim + 1
+  }
   graph.nodes[node_idx].par_edge = parent_edge
-  graph.nodes[node_idx].low = counter
-  let mut cur = counter
-  for edge_idx in graph.nodes[node_idx].tree_out {
-    if edge_idx == parent_edge {
+  graph.nodes[node_idx].low = low
+  let stack : Array[DfsState] = [{
+    node: node_idx,
+    par_edge: parent_edge,
+    lim: low,
+    tree_out_i: 0,
+    tree_in_i: 0,
+  }]
+  let mut lim = 0
+  while stack.length() > 0 {
+    let last = stack.length() - 1
+    let state = stack[last]
+    let mut processed = false
+    while state.tree_out_i < graph.nodes[state.node].tree_out.length() {
+      let edge_idx = graph.nodes[state.node].tree_out[state.tree_out_i]
+      state.tree_out_i = state.tree_out_i + 1
+      if edge_idx != state.par_edge {
+        let head = graph.edges[edge_idx].head
+        if graph.nodes[head].par_edge == edge_idx && graph.nodes[head].low == state.lim {
+          state.lim = graph.nodes[head].lim + 1
+          stack[last] = state
+        } else {
+          graph.nodes[head].par_edge = edge_idx
+          graph.nodes[head].low = state.lim
+          stack[last] = state
+          stack.push({
+            node: head,
+            par_edge: edge_idx,
+            lim: state.lim,
+            tree_out_i: 0,
+            tree_in_i: 0,
+          })
+        }
+        processed = true
+        break
+      }
+    }
+    if processed {
       continue
     }
-    let head = graph.edges[edge_idx].head
-    cur = dfs_range_impl(graph, head, edge_idx, cur)
-  }
-  for edge_idx in graph.nodes[node_idx].tree_in {
-    if edge_idx == parent_edge {
+    while state.tree_in_i < graph.nodes[state.node].tree_in.length() {
+      let edge_idx = graph.nodes[state.node].tree_in[state.tree_in_i]
+      state.tree_in_i = state.tree_in_i + 1
+      if edge_idx != state.par_edge {
+        let tail = graph.edges[edge_idx].tail
+        if graph.nodes[tail].par_edge == edge_idx && graph.nodes[tail].low == state.lim {
+          state.lim = graph.nodes[tail].lim + 1
+          stack[last] = state
+        } else {
+          graph.nodes[tail].par_edge = edge_idx
+          graph.nodes[tail].low = state.lim
+          stack[last] = state
+          stack.push({
+            node: tail,
+            par_edge: edge_idx,
+            lim: state.lim,
+            tree_out_i: 0,
+            tree_in_i: 0,
+          })
+        }
+        processed = true
+        break
+      }
+    }
+    if processed {
       continue
     }
-    let tail = graph.edges[edge_idx].tail
-    cur = dfs_range_impl(graph, tail, edge_idx, cur)
+    graph.nodes[state.node].lim = state.lim
+    lim = state.lim
+    let _ = stack.pop()
+    if stack.length() > 0 {
+      let parent_idx = stack.length() - 1
+      let parent_state = stack[parent_idx]
+      parent_state.lim = lim + 1
+      stack[parent_idx] = parent_state
+    }
   }
-  graph.nodes[node_idx].lim = cur
-  cur + 1
-}
-
-///|
-fn dfs_range_init(graph : NsGraph, root : Int) -> Unit {
-  let _ = dfs_range_impl(graph, root, NONE_EDGE, 1)
+  lim + 1
 }
 
 ///|
@@ -439,19 +892,192 @@ fn dfs_cutval(graph : NsGraph, node_idx : Int, parent_edge : Int) -> Unit {
 
 ///|
 fn init_cutvalues(graph : NsGraph) -> Unit {
-  dfs_range_init(graph, 0)
+  let _ = dfs_range_init(graph, 0)
   dfs_cutval(graph, 0, NONE_EDGE)
 }
 
 ///|
-fn leave_edge(graph : NsGraph) -> Int? {
+fn invalidate_path(graph : NsGraph, lca : Int, to_node : Int) -> Unit {
+  let mut current = to_node
+  while true {
+    if graph.nodes[current].low == -1 {
+      break
+    }
+    graph.nodes[current].low = -1
+    let parent_edge = graph.nodes[current].par_edge
+    if parent_edge == NONE_EDGE {
+      break
+    }
+    if graph.nodes[current].lim >= graph.nodes[lca].lim {
+      break
+    }
+    let tail = graph.edges[parent_edge].tail
+    let head = graph.edges[parent_edge].head
+    if graph.nodes[tail].lim > graph.nodes[head].lim {
+      current = tail
+    } else {
+      current = head
+    }
+  }
+}
+
+///|
+fn treeupdate(
+  graph : NsGraph,
+  v : Int,
+  w : Int,
+  cutvalue : Int,
+  dir : Bool,
+) -> Int {
+  let mut current = v
+  while !seq(graph.nodes[current].low, graph.nodes[w].lim, graph.nodes[current].lim) {
+    let edge_idx = graph.nodes[current].par_edge
+    if edge_idx == NONE_EDGE {
+      break
+    }
+    let tail = graph.edges[edge_idx].tail
+    let head = graph.edges[edge_idx].head
+    let sign = if tail == current { dir } else { !dir }
+    if sign {
+      graph.edges[edge_idx].cutvalue = graph.edges[edge_idx].cutvalue + cutvalue
+    } else {
+      graph.edges[edge_idx].cutvalue = graph.edges[edge_idx].cutvalue - cutvalue
+    }
+    if graph.nodes[tail].lim > graph.nodes[head].lim {
+      current = tail
+    } else {
+      current = head
+    }
+  }
+  current
+}
+
+///|
+fn leave_edge(
+  graph : NsGraph,
+  search_index : Int,
+  search_size : Int,
+) -> (Int?, Int) {
+  let total = graph.tree_edges.length()
+  let mut idx = search_index
   let mut best_edge : Int? = None
   let mut best_cut = 0
-  for edge_idx in graph.tree_edges {
+  let mut count = 0
+  while idx < total {
+    let edge_idx = graph.tree_edges[idx]
     let cut = graph.edges[edge_idx].cutvalue
-    if cut < best_cut {
-      best_cut = cut
-      best_edge = Some(edge_idx)
+    if cut < 0 {
+      if best_edge is None || cut < best_cut {
+        best_edge = Some(edge_idx)
+        best_cut = cut
+      }
+      count = count + 1
+      if count >= search_size {
+        return (best_edge, idx)
+      }
+    }
+    idx = idx + 1
+  }
+  if search_index > 0 {
+    idx = 0
+    while idx < search_index {
+      let edge_idx = graph.tree_edges[idx]
+      let cut = graph.edges[edge_idx].cutvalue
+      if cut < 0 {
+        if best_edge is None || cut < best_cut {
+          best_edge = Some(edge_idx)
+          best_cut = cut
+        }
+        count = count + 1
+        if count >= search_size {
+          return (best_edge, idx)
+        }
+      }
+      idx = idx + 1
+    }
+  }
+  (best_edge, idx)
+}
+
+///|
+fn dfs_enter_outedge(
+  graph : NsGraph,
+  start : Int,
+  low : Int,
+  lim : Int,
+) -> Int? {
+  let mut best_edge : Int? = None
+  let mut best_slack = 0x7fffffff
+  let stack : Array[Int] = [start]
+  while stack.length() > 0 {
+    let v = stack[stack.length() - 1]
+    let _ = stack.pop()
+    for edge_idx in graph.nodes[v].out_edges {
+      let head = graph.edges[edge_idx].head
+      if is_tree_edge(graph, edge_idx) {
+        if graph.nodes[head].lim < graph.nodes[v].lim {
+          stack.push(head)
+        }
+        continue
+      }
+      if seq(low, graph.nodes[head].lim, lim) {
+        continue
+      }
+      let slack = edge_slack(graph, edge_idx)
+      if slack < best_slack || best_edge is None {
+        best_edge = Some(edge_idx)
+        best_slack = slack
+      }
+    }
+    if best_slack > 0 {
+      for edge_idx in graph.nodes[v].tree_in {
+        let tail = graph.edges[edge_idx].tail
+        if graph.nodes[tail].lim < graph.nodes[v].lim {
+          stack.push(tail)
+        }
+      }
+    }
+  }
+  best_edge
+}
+
+///|
+fn dfs_enter_inedge(
+  graph : NsGraph,
+  start : Int,
+  low : Int,
+  lim : Int,
+) -> Int? {
+  let mut best_edge : Int? = None
+  let mut best_slack = 0x7fffffff
+  let stack : Array[Int] = [start]
+  while stack.length() > 0 {
+    let v = stack[stack.length() - 1]
+    let _ = stack.pop()
+    for edge_idx in graph.nodes[v].in_edges {
+      let tail = graph.edges[edge_idx].tail
+      if is_tree_edge(graph, edge_idx) {
+        if graph.nodes[tail].lim < graph.nodes[v].lim {
+          stack.push(tail)
+        }
+        continue
+      }
+      if seq(low, graph.nodes[tail].lim, lim) {
+        continue
+      }
+      let slack = edge_slack(graph, edge_idx)
+      if slack < best_slack || best_edge is None {
+        best_edge = Some(edge_idx)
+        best_slack = slack
+      }
+    }
+    if best_slack > 0 {
+      for edge_idx in graph.nodes[v].tree_out {
+        let head = graph.edges[edge_idx].head
+        if graph.nodes[head].lim < graph.nodes[v].lim {
+          stack.push(head)
+        }
+      }
     }
   }
   best_edge
@@ -460,32 +1086,21 @@ fn leave_edge(graph : NsGraph) -> Int? {
 ///|
 fn enter_edge(graph : NsGraph, leaving : Int) -> Int? {
   let edge = graph.edges[leaving]
-  let root = if graph.nodes[edge.tail].lim < graph.nodes[edge.head].lim {
-    edge.tail
+  if graph.nodes[edge.tail].lim < graph.nodes[edge.head].lim {
+    dfs_enter_inedge(
+      graph,
+      edge.tail,
+      graph.nodes[edge.tail].low,
+      graph.nodes[edge.tail].lim,
+    )
   } else {
-    edge.head
+    dfs_enter_outedge(
+      graph,
+      edge.head,
+      graph.nodes[edge.head].low,
+      graph.nodes[edge.head].lim,
+    )
   }
-  let low = graph.nodes[root].low
-  let lim = graph.nodes[root].lim
-  let mut best_edge : Int? = None
-  let mut best_slack = 0
-  for edge_idx in 0..<graph.edges.length() {
-    if is_tree_edge(graph, edge_idx) {
-      continue
-    }
-    let e = graph.edges[edge_idx]
-    let tail_in = seq(low, graph.nodes[e.tail].lim, lim)
-    let head_in = seq(low, graph.nodes[e.head].lim, lim)
-    if tail_in == head_in {
-      continue
-    }
-    let slack = edge_slack(graph, edge_idx)
-    if best_edge is None || slack < best_slack {
-      best_edge = Some(edge_idx)
-      best_slack = slack
-    }
-  }
-  best_edge
 }
 
 ///|
@@ -532,12 +1147,22 @@ fn update(
       rerank(graph, head, -delta, leaving)
     }
   }
+  let cutvalue = graph.edges[leaving].cutvalue
+  let enter_tail = graph.edges[entering].tail
+  let enter_head = graph.edges[entering].head
+  let lca = treeupdate(graph, enter_tail, enter_head, cutvalue, true)
+  let _ = treeupdate(graph, enter_head, enter_tail, cutvalue, false)
+  let lca_low = graph.nodes[lca].low
+  invalidate_path(graph, lca, enter_head)
+  invalidate_path(graph, lca, enter_tail)
+  graph.edges[entering].cutvalue = -cutvalue
+  graph.edges[leaving].cutvalue = 0
   exchange_tree_edges(graph, leaving, entering)
+  let _ = dfs_range(graph, lca, graph.nodes[lca].par_edge, lca_low)
 }
 
 ///|
 fn lr_balance(graph : NsGraph) -> Unit {
-  init_cutvalues(graph)
   for edge_idx in graph.tree_edges {
     if graph.edges[edge_idx].cutvalue != 0 {
       continue
@@ -573,8 +1198,11 @@ fn network_simplex(graph : NsGraph, max_iter : Int) -> Unit {
   }
   init_cutvalues(graph)
   let mut iter = 0
+  let mut search_index = 0
+  let search_size = 30
   while iter < max_iter {
-    let leaving = leave_edge(graph)
+    let (leaving, next_index) = leave_edge(graph, search_index, search_size)
+    search_index = next_index
     match leaving {
       None => break
       Some(leaving_idx) => {
@@ -583,7 +1211,6 @@ fn network_simplex(graph : NsGraph, max_iter : Int) -> Unit {
           None => break
           Some(entering_idx) => {
             update(graph, leaving_idx, entering_idx)
-            init_cutvalues(graph)
           }
         }
       }
@@ -599,6 +1226,15 @@ fn round_int(value : Double) -> Int {
     (value + 0.5).floor().to_int()
   } else {
     (value - 0.5).ceil().to_int()
+  }
+}
+
+///|
+fn trunc_int(value : Double) -> Int {
+  if value >= 0.0 {
+    value.floor().to_int()
+  } else {
+    value.ceil().to_int()
   }
 }
 
@@ -622,20 +1258,213 @@ fn nodesep_minlen(
 }
 
 ///|
+fn adj_key(tail_idx : Int, head_idx : Int) -> String {
+  "\{tail_idx}:\{head_idx}"
+}
+
+///|
+fn apply_ordering_constraints(
+  graph : NsGraph,
+  index : Map[String, Int],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  adj_edges : Map[String, Int],
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  ordering : OrderingMode?,
+) -> Unit {
+  let node_modes : Map[String, OrderingMode] = Map::new()
+  let node_keys : Array[String] = []
+  match ordering {
+    Some(mode) => {
+      for node in nodes {
+        let name = node.name()
+        node_modes[name] = mode
+        node_keys.push(name)
+      }
+    }
+    None => {
+      for node in nodes {
+        let name = node.name()
+        match node.get_attr("ordering") {
+          Some(value) => {
+            match parse_ordering(value) {
+              Some(mode) => {
+                node_modes[name] = mode
+                node_keys.push(name)
+              }
+              None => ()
+            }
+          }
+          None => ()
+        }
+      }
+    }
+  }
+  if node_keys.length() == 0 {
+    return ()
+  }
+  let edge_lists : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for name in node_keys {
+    edge_lists[name] = []
+  }
+  for edge in edges {
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    match node_modes.get(tail_name) {
+      Some(OrderingMode::Out) => {
+        match edge_lists.get(tail_name) {
+          Some(list) => list.push(edge)
+          None => ()
+        }
+      }
+      _ => ()
+    }
+    match node_modes.get(head_name) {
+      Some(OrderingMode::In) => {
+        match edge_lists.get(head_name) {
+          Some(list) => list.push(edge)
+          None => ()
+        }
+      }
+      _ => ()
+    }
+  }
+  let mut node_idx = 0
+  while node_idx < node_keys.length() {
+    let name = node_keys[node_idx]
+    node_idx = node_idx + 1
+    let mode = match node_modes.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let list = match edge_lists.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    if list.length() <= 1 {
+      continue
+    }
+    let mut i = 0
+    while i + 1 < list.length() {
+      let first = list[i]
+      let second = list[i + 1]
+      let first_node = if mode is OrderingMode::Out {
+        first.head().name()
+      } else {
+        first.tail().name()
+      }
+      let second_node = if mode is OrderingMode::Out {
+        second.head().name()
+      } else {
+        second.tail().name()
+      }
+      let first_rank = match ranks.get(first_node) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      let second_rank = match ranks.get(second_node) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      if first_rank != second_rank {
+        i = i + 1
+        continue
+      }
+      let first_order = match node_order.get(first_node) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      let second_order = match node_order.get(second_node) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      let mut left = first_node
+      let mut right = second_node
+      if first_order > second_order {
+        left = second_node
+        right = first_node
+      }
+      let left_idx = match index.get(left) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      let right_idx = match index.get(right) {
+        Some(value) => value
+        None => {
+          i = i + 1
+          continue
+        }
+      }
+      let key = adj_key(left_idx, right_idx)
+      match adj_edges.get(key) {
+        Some(edge_idx) => {
+          if graph.edges[edge_idx].weight < 1 {
+            graph.edges[edge_idx].weight = 1
+          }
+        }
+        None => {
+          let minlen = nodesep_minlen(left, right, sizes, nodesep_pt)
+          let _ = add_edge(graph, left_idx, right_idx, minlen, 1)
+        }
+      }
+      i = i + 1
+    }
+  }
+}
+
+///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  ordering : OrderingMode?,
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
+  let node_order : Map[String, Int] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for i in 0..<names.length() {
+      node_order[names[i]] = i
+    }
+  }
+  let base_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
   let index : Map[String, Int] = Map::new()
   for node in nodes {
     let name = node.name()
-    index[name] = add_node(graph, name)
+    let idx = add_node(graph, name)
+    index[name] = idx
+    let pos = match base_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    graph.nodes[idx].rank = trunc_int(pos)
   }
+  let adj_edges : Map[String, Int] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -654,10 +1483,23 @@ fn build_constraint_graph(
         None => 0
       }
       let minlen = nodesep_minlen(tail, head, sizes, nodesep_pt)
-      let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
+      let edge_idx = add_edge(graph, tail_idx, head_idx, minlen, 0)
+      adj_edges[adj_key(tail_idx, head_idx)] = edge_idx
       i = i + 1
     }
   }
+  apply_ordering_constraints(
+    graph,
+    index,
+    ranks,
+    node_order,
+    adj_edges,
+    nodes,
+    edges,
+    sizes,
+    nodesep_pt,
+    ordering,
+  )
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
@@ -670,6 +1512,10 @@ fn build_constraint_graph(
       None => 0
     }
     let slack_idx = add_node(graph, "")
+    let tail_rank = graph.nodes[tail_idx].rank
+    let head_rank = graph.nodes[head_idx].rank
+    let base = if tail_rank < head_rank { tail_rank } else { head_rank }
+    graph.nodes[slack_idx].rank = base - 1
     let _ = add_edge(graph, slack_idx, tail_idx, 1, 1)
     let _ = add_edge(graph, slack_idx, head_idx, 1, 1)
   }
@@ -680,18 +1526,22 @@ fn build_constraint_graph(
 fn x_positions_from_simplex(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  ordering : OrderingMode?,
 ) -> Map[String, Double] {
   let (graph, index) = build_constraint_graph(
     nodes,
     edges,
+    ranks,
     rank_keys,
     groups,
     sizes,
     nodesep_pt,
+    ordering,
   )
   network_simplex(graph, 1000)
   let positions : Map[String, Double] = Map::new()
@@ -710,10 +1560,21 @@ fn x_positions_from_simplex(
 fn compute_x_positions(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  ordering : OrderingMode?,
 ) -> Map[String, Double] {
-  x_positions_from_simplex(nodes, edges, rank_keys, groups, sizes, nodesep_pt)
+  x_positions_from_simplex(
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    nodesep_pt,
+    ordering,
+  )
 }

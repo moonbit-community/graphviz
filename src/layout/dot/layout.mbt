@@ -78,22 +78,116 @@ fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
-fn label_metrics(label : String) -> (Int, Int) {
-  let mut max_len = 0
-  let mut current_len = 0
+const LINE_SPACING : Double = 1.2
+///|
+const TEXT_SCALE : Double = 0.9706
+///|
+const PAD_X_PT : Double = 16.0
+///|
+const PAD_Y_PT : Double = 8.0
+
+///|
+fn char_width_units(ch : Char) -> Int {
+  match ch {
+    ' ' => 250
+    '\t' => 250
+    '!' => 333
+    '"' => 408
+    '#' => 500
+    '$' => 500
+    '%' => 833
+    '&' => 778
+    '\'' => 180
+    '(' | ')' | '[' | ']' => 333
+    '*' => 500
+    '+' | '<' | '=' | '>' => 564
+    ',' | '.' => 250
+    '-' => 333
+    '/' | '\\' => 278
+    '0'..='9' => 500
+    ':' | ';' => 278
+    '?' => 444
+    '@' => 921
+    'A' => 722
+    'B' => 667
+    'C' => 667
+    'D' => 722
+    'E' => 611
+    'F' => 556
+    'G' => 722
+    'H' => 722
+    'I' => 333
+    'J' => 389
+    'K' => 722
+    'L' => 611
+    'M' => 889
+    'N' => 722
+    'O' => 722
+    'P' => 556
+    'Q' => 722
+    'R' => 667
+    'S' => 556
+    'T' => 611
+    'U' => 722
+    'V' => 722
+    'W' => 944
+    'X' => 722
+    'Y' => 722
+    'Z' => 611
+    '^' => 469
+    '_' => 500
+    '`' => 333
+    'a' => 444
+    'b' => 500
+    'c' => 444
+    'd' => 500
+    'e' => 444
+    'f' => 333
+    'g' => 500
+    'h' => 500
+    'i' => 278
+    'j' => 278
+    'k' => 500
+    'l' => 278
+    'm' => 778
+    'n' => 500
+    'o' => 500
+    'p' => 500
+    'q' => 500
+    'r' => 333
+    's' => 389
+    't' => 278
+    'u' => 500
+    'v' => 500
+    'w' => 722
+    'x' => 500
+    'y' => 500
+    'z' => 444
+    '{' => 480
+    '|' => 200
+    '}' => 480
+    '~' => 541
+    _ => 500
+  }
+}
+
+///|
+fn label_text_dimensions(label : String, font_size_pt : Double) -> (Double, Double) {
+  let mut max_units = 0
+  let mut current_units = 0
   let mut lines = 1
   let mut escaping = false
   for ch in label {
     if escaping {
       escaping = false
       if ch == 'n' || ch == 'l' || ch == 'r' {
-        if current_len > max_len {
-          max_len = current_len
+        if current_units > max_units {
+          max_units = current_units
         }
-        current_len = 0
+        current_units = 0
         lines = lines + 1
       } else {
-        current_len = current_len + 1
+        current_units = current_units + char_width_units(ch)
       }
       continue
     }
@@ -102,22 +196,60 @@ fn label_metrics(label : String) -> (Int, Int) {
       continue
     }
     if ch == '\n' || ch == '\r' {
-      if current_len > max_len {
-        max_len = current_len
+      if current_units > max_units {
+        max_units = current_units
       }
-      current_len = 0
+      current_units = 0
       lines = lines + 1
     } else {
-      current_len = current_len + 1
+      current_units = current_units + char_width_units(ch)
     }
   }
   if escaping {
-    current_len = current_len + 1
+    current_units = current_units + char_width_units('\\')
   }
-  if current_len > max_len {
-    max_len = current_len
+  if current_units > max_units {
+    max_units = current_units
   }
-  (max_len, lines)
+  let width_pt = max_units.to_double() * font_size_pt * TEXT_SCALE / 1000.0
+  let height_pt = lines.to_double() * font_size_pt * LINE_SPACING
+  (width_pt, height_pt)
+}
+
+///|
+fn extract_numbers(value : String) -> Array[Double] {
+  let sb = StringBuilder::new()
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+    } else {
+      sb.write_char(' ')
+    }
+  }
+  let normalized = sb.to_string()
+  let numbers : Array[Double] = []
+  for token in normalized.split(" ") {
+    if token.length() == 0 {
+      continue
+    }
+    numbers.push(parse_double(token.to_string(), 0.0))
+  }
+  numbers
+}
+
+///|
+fn parse_margin(value : String) -> (Double, Double)? {
+  let numbers = extract_numbers(value)
+  if numbers.length() == 0 {
+    return None
+  }
+  if numbers.length() == 1 {
+    let val = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+    return Some((val, val))
+  }
+  let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+  let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
+  Some((x, y))
 }
 
 ///|
@@ -148,11 +280,28 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     Some(value) => parse_double(value, 14.0)
     None => 14.0
   }
-  let (max_chars, lines) = label_metrics(label_text(node))
-  let label_width_in =
-    max_chars.to_double() * font_size_pt * 0.55 / 72.0
-  let label_height_in =
-    lines.to_double() * font_size_pt * 1.2 / 72.0
+  let label = label_text(node)
+  let (text_width_pt, text_height_pt) =
+    label_text_dimensions(label, font_size_pt)
+  let mut pad_x_pt = PAD_X_PT
+  let mut pad_y_pt = PAD_Y_PT
+  match node.get_attr("margin") {
+    Some(value) => {
+      match parse_margin(value) {
+        Some((margin_x, margin_y)) => {
+          pad_x_pt = margin_x * 72.0 * 2.0
+          pad_y_pt = margin_y * 72.0 * 2.0
+        }
+        None => ()
+      }
+    }
+    None => ()
+  }
+  let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
+  let label_width_pt = if has_label { text_width_pt + pad_x_pt } else { 0.0 }
+  let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
+  let label_width_in = label_width_pt / 72.0
+  let label_height_in = label_height_pt / 72.0
   let width_in = if label_width_in > base_width_in {
     label_width_in
   } else {
@@ -1012,27 +1161,20 @@ pub fn layout_dot(
     }
     current_y = current_y - max_height - ranksep_pt
   }
-  let (parents, children) = build_edge_index(nodes, edges)
-  let x_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
-  for _i in 0..<6 {
-    for rank in rank_keys {
-      let names = match groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      let desired = compute_desired_positions(names, parents, x_positions)
-      adjust_rank_positions(names, x_positions, sizes, desired, nodesep_pt)
-    }
-    for i in 0..<rank_keys.length() {
-      let rank = rank_keys[rank_keys.length() - 1 - i]
-      let names = match groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      let desired = compute_desired_positions(names, children, x_positions)
-      adjust_rank_positions(names, x_positions, sizes, desired, nodesep_pt)
-    }
+  let ordering = match graph.get_attr("ordering") {
+    Some(value) => parse_ordering(value)
+    None => None
   }
+  let x_positions = compute_x_positions(
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    nodesep_pt,
+    ordering,
+  )
   normalize_x_positions(nodes, x_positions, sizes)
   let positions : Map[String, @geom.Point] = Map::new()
   for node in nodes {
