@@ -96,6 +96,25 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
 }
 
 ///|
+fn clip_to_rect(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
+  let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
+  let t = if tx < ty { tx } else { ty }
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
 fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
   graph.nodes()
 }
@@ -381,7 +400,7 @@ fn spline_for_edge(tail : @geom.Point, head : @geom.Point) -> @geom.Spline {
     { x: head.x, y: mid_y },
     head,
   ]
-  { start: None, end: None, points }
+  { start: Some(tail), end: Some(head), points }
 }
 
 ///|
@@ -550,13 +569,53 @@ pub fn layout_dot(
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let spline = spline_for_edge(tail_pos, head_pos)
+    let tail_size = match sizes.get(tail_name) {
+      Some(value) => value
+      None => node_size(edge.tail())
+    }
+    let head_size = match sizes.get(head_name) {
+      Some(value) => value
+      None => node_size(edge.head())
+    }
+    let tail_clip = clip_to_rect(tail_pos, tail_size, head_pos)
+    let head_clip = clip_to_rect(head_pos, head_size, tail_pos)
+    let spline = spline_for_edge(tail_clip, head_clip)
+    let label_pos : @geom.Point? = match edge.get_attr("label") {
+      Some(value) => {
+        if value == "" {
+          None
+        } else {
+          Some({ x: (tail_clip.x + head_clip.x) / 2.0, y: (tail_clip.y + head_clip.y) / 2.0 })
+        }
+      }
+      None => None
+    }
+    let head_label_pos : @geom.Point? = match edge.get_attr("headlabel") {
+      Some(value) => {
+        if value == "" {
+          None
+        } else {
+          Some(head_clip)
+        }
+      }
+      None => None
+    }
+    let tail_label_pos : @geom.Point? = match edge.get_attr("taillabel") {
+      Some(value) => {
+        if value == "" {
+          None
+        } else {
+          Some(tail_clip)
+        }
+      }
+      None => None
+    }
     edges_out.push({
       edge,
       splines: [spline],
-      label_pos: None,
-      head_label_pos: None,
-      tail_label_pos: None,
+      label_pos,
+      head_label_pos,
+      tail_label_pos,
     })
   }
   let bbox = compute_bbox(nodes_out, edges_out)
@@ -588,6 +647,14 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     let segments : Array[String] = []
     for spline in edge_layout.splines {
       let parts : Array[String] = []
+      match spline.start {
+        Some(point) => parts.push("s,\{format_point(point)}")
+        None => ()
+      }
+      match spline.end {
+        Some(point) => parts.push("e,\{format_point(point)}")
+        None => ()
+      }
       for point in spline.points {
         parts.push(format_point(point))
       }
