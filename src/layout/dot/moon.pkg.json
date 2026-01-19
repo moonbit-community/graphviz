@@ -1,7 +1,8 @@
 {
   "import": [
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/core/strconv"
   ],
   "test-import": [
     {
