@@ -11,4 +11,5 @@ test "render_svg emits svg" {
   )
   assert_true(svg.contains("<svg"))
   assert_true(svg.contains("<path"))
+  assert_true(svg.contains("<polygon"))
 }

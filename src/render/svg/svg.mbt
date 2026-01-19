@@ -8,6 +8,12 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+priv struct ArrowFlags {
+  head : Bool
+  tail : Bool
+}
+
+///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\\\N", new=name)
   with_name.replace_all(old="\\\\n", new="\n")
@@ -56,6 +62,114 @@ fn font_name(value : String?) -> String {
     Some(text) => text
     None => "Times-Roman"
   }
+}
+
+///|
+fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
+  if kind != @cgraph.GraphKind::Directed {
+    return { head: false, tail: false }
+  }
+  let dir = match edge.get_attr("dir") {
+    Some(value) => value.to_lower()
+    None => "forward"
+  }
+  let mut head = true
+  let mut tail = false
+  match dir {
+    "none" => {
+      head = false
+      tail = false
+    }
+    "back" => {
+      head = false
+      tail = true
+    }
+    "both" => {
+      head = true
+      tail = true
+    }
+    _ => ()
+  }
+  let head_shape = match edge.get_attr("arrowhead") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if head_shape == "none" {
+    head = false
+  }
+  let tail_shape = match edge.get_attr("arrowtail") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if tail_shape == "none" {
+    tail = false
+  }
+  { head, tail }
+}
+
+///|
+fn arrow_size(edge : @cgraph.Edge) -> Double {
+  match edge.get_attr("arrowsize") {
+    Some(value) => parse_double(value, 1.0)
+    None => 1.0
+  }
+}
+
+///|
+fn arrow_triangle(
+  tip : @geom.Point,
+  from : @geom.Point,
+  size : Double,
+) -> Array[@geom.Point] {
+  let dx = tip.x - from.x
+  let dy = tip.y - from.y
+  let len = Double::sqrt(dx * dx + dy * dy)
+  if len < 0.0001 {
+    return []
+  }
+  let ux = dx / len
+  let uy = dy / len
+  let length = 10.0 * size
+  let width = 6.0 * size
+  let base_x = tip.x - ux * length
+  let base_y = tip.y - uy * length
+  let px = -uy
+  let py = ux
+  let half = width / 2.0
+  [
+    tip,
+    { x: base_x + px * half, y: base_y + py * half },
+    { x: base_x - px * half, y: base_y - py * half },
+  ]
+}
+
+///|
+fn arrow_points(
+  layout : @layout_dot.DotLayoutEdge,
+  at_head : Bool,
+) -> Array[@geom.Point] {
+  if layout.splines.length() == 0 {
+    return []
+  }
+  let spline = if at_head {
+    layout.splines[layout.splines.length() - 1]
+  } else {
+    layout.splines[0]
+  }
+  if spline.points.length() < 2 {
+    return []
+  }
+  let tip = if at_head {
+    spline.points[spline.points.length() - 1]
+  } else {
+    spline.points[0]
+  }
+  let from = if at_head {
+    spline.points[spline.points.length() - 2]
+  } else {
+    spline.points[1]
+  }
+  arrow_triangle(tip, from, arrow_size(layout.edge))
 }
 
 ///|
@@ -130,6 +244,25 @@ fn spline_path(
 }
 
 ///|
+fn polygon_points(
+  points : Array[@geom.Point],
+  llx : Double,
+  lly : Double,
+) -> String {
+  let sb = StringBuilder::new()
+  for i in 0..<points.length() {
+    let point = shift_point(points[i], llx, lly)
+    if i > 0 {
+      sb.write_char(' ')
+    }
+    sb.write_string(point.x.to_string())
+    sb.write_char(',')
+    sb.write_string(point.y.to_string())
+  }
+  sb.to_string()
+}
+
+///|
 fn write_line(
   sb : StringBuilder,
   text : String,
@@ -184,6 +317,7 @@ pub fn render_svg(
     pretty,
   )
   let edge_indent = if pretty { "    " } else { "" }
+  let kind = layout.graph.kind()
   for edge_layout in layout.edges {
     let edge = edge_layout.edge
     let color = match edge.get_attr("color") {
@@ -196,6 +330,31 @@ pub fn render_svg(
         write_line(
           sb,
           "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"/>",
+          edge_indent,
+          pretty,
+        )
+      }
+    }
+    let flags = arrow_flags(edge, kind)
+    if flags.head {
+      let points = arrow_points(edge_layout, true)
+      if points.length() > 0 {
+        let attrs = polygon_points(points, bbox.llx, bbox.lly)
+        write_line(
+          sb,
+          "<polygon points=\"\{attrs}\" fill=\"\{color}\" stroke=\"\{color}\"/>",
+          edge_indent,
+          pretty,
+        )
+      }
+    }
+    if flags.tail {
+      let points = arrow_points(edge_layout, false)
+      if points.length() > 0 {
+        let attrs = polygon_points(points, bbox.llx, bbox.lly)
+        write_line(
+          sb,
+          "<polygon points=\"\{attrs}\" fill=\"\{color}\" stroke=\"\{color}\"/>",
           edge_indent,
           pretty,
         )

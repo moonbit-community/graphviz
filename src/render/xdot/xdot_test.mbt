@@ -51,4 +51,7 @@ test "render_xdot attaches draw ops" {
   guard edge.get_attr("_draw_") is Some(_) else {
     fail("missing edge _draw_")
   }
+  guard edge.get_attr("_hdraw_") is Some(_) else {
+    fail("missing edge _hdraw_")
+  }
 }

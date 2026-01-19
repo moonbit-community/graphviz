@@ -8,6 +8,12 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+priv struct ArrowFlags {
+  head : Bool
+  tail : Bool
+}
+
+///|
 fn format_double(value : Double) -> String {
   let rounded = (value * 100.0).round() / 100.0
   if rounded == 0.0 {
@@ -83,6 +89,126 @@ fn font_name(value : String?) -> String {
 ///|
 fn estimate_text_width(text : String, size : Double) -> Double {
   text.length().to_double() * size * 0.6
+}
+
+///|
+fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
+  if kind != @cgraph.GraphKind::Directed {
+    return { head: false, tail: false }
+  }
+  let dir = match edge.get_attr("dir") {
+    Some(value) => value.to_lower()
+    None => "forward"
+  }
+  let mut head = true
+  let mut tail = false
+  match dir {
+    "none" => {
+      head = false
+      tail = false
+    }
+    "back" => {
+      head = false
+      tail = true
+    }
+    "both" => {
+      head = true
+      tail = true
+    }
+    _ => ()
+  }
+  let head_shape = match edge.get_attr("arrowhead") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if head_shape == "none" {
+    head = false
+  }
+  let tail_shape = match edge.get_attr("arrowtail") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if tail_shape == "none" {
+    tail = false
+  }
+  { head, tail }
+}
+
+///|
+fn arrow_size(edge : @cgraph.Edge) -> Double {
+  match edge.get_attr("arrowsize") {
+    Some(value) => parse_double(value, 1.0)
+    None => 1.0
+  }
+}
+
+///|
+fn arrow_triangle(
+  tip : @geom.Point,
+  from : @geom.Point,
+  size : Double,
+) -> Array[@geom.Point] {
+  let dx = tip.x - from.x
+  let dy = tip.y - from.y
+  let len = Double::sqrt(dx * dx + dy * dy)
+  if len < 0.0001 {
+    return []
+  }
+  let ux = dx / len
+  let uy = dy / len
+  let length = 10.0 * size
+  let width = 6.0 * size
+  let base_x = tip.x - ux * length
+  let base_y = tip.y - uy * length
+  let px = -uy
+  let py = ux
+  let half = width / 2.0
+  [
+    tip,
+    { x: base_x + px * half, y: base_y + py * half },
+    { x: base_x - px * half, y: base_y - py * half },
+  ]
+}
+
+///|
+fn arrow_ops(
+  layout : @layout_dot.DotLayoutEdge,
+  at_head : Bool,
+) -> Array[@render.DrawOp] {
+  let ops : Array[@render.DrawOp] = []
+  if layout.splines.length() == 0 {
+    return ops
+  }
+  let spline = if at_head {
+    layout.splines[layout.splines.length() - 1]
+  } else {
+    layout.splines[0]
+  }
+  if spline.points.length() < 2 {
+    return ops
+  }
+  let tip = if at_head {
+    spline.points[spline.points.length() - 1]
+  } else {
+    spline.points[0]
+  }
+  let from = if at_head {
+    spline.points[spline.points.length() - 2]
+  } else {
+    spline.points[1]
+  }
+  let points = arrow_triangle(tip, from, arrow_size(layout.edge))
+  if points.length() == 0 {
+    return ops
+  }
+  let color = match layout.edge.get_attr("color") {
+    Some(value) => value
+    None => "black"
+  }
+  ops.push(@render.DrawOp::PenColor(color=color))
+  ops.push(@render.DrawOp::FillColor(color=color))
+  ops.push(@render.DrawOp::Polygon(filled=true, points=points))
+  ops
 }
 
 ///|
@@ -434,6 +560,7 @@ pub fn attach_xdot_attrs(
   }
   let graph = layout.graph
   graph.set_attr("xdotversion", version)
+  let kind = graph.kind()
   for node_layout in layout.nodes {
     let draw_ops = node_draw_ops(node_layout)
     node_layout.node.set_attr("_draw_", encode_xdot_ops(draw_ops))
@@ -448,6 +575,19 @@ pub fn attach_xdot_attrs(
     let label_ops = edge_label_ops(edge_layout)
     if label_ops.length() > 0 {
       edge_layout.edge.set_attr("_ldraw_", encode_xdot_ops(label_ops))
+    }
+    let flags = arrow_flags(edge_layout.edge, kind)
+    if flags.head {
+      let head_ops = arrow_ops(edge_layout, true)
+      if head_ops.length() > 0 {
+        edge_layout.edge.set_attr("_hdraw_", encode_xdot_ops(head_ops))
+      }
+    }
+    if flags.tail {
+      let tail_ops = arrow_ops(edge_layout, false)
+      if tail_ops.length() > 0 {
+        edge_layout.edge.set_attr("_tdraw_", encode_xdot_ops(tail_ops))
+      }
     }
   }
 }
