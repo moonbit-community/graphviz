@@ -318,6 +318,56 @@ fn compute_bbox(
   }
   for edge in edges {
     for spline in edge.splines {
+      match spline.start {
+        Some(point) => {
+          if !bbox_set {
+            min_x = point.x
+            max_x = point.x
+            min_y = point.y
+            max_y = point.y
+            bbox_set = true
+          } else {
+            if point.x < min_x {
+              min_x = point.x
+            }
+            if point.x > max_x {
+              max_x = point.x
+            }
+            if point.y < min_y {
+              min_y = point.y
+            }
+            if point.y > max_y {
+              max_y = point.y
+            }
+          }
+        }
+        None => ()
+      }
+      match spline.end {
+        Some(point) => {
+          if !bbox_set {
+            min_x = point.x
+            max_x = point.x
+            min_y = point.y
+            max_y = point.y
+            bbox_set = true
+          } else {
+            if point.x < min_x {
+              min_x = point.x
+            }
+            if point.x > max_x {
+              max_x = point.x
+            }
+            if point.y < min_y {
+              min_y = point.y
+            }
+            if point.y > max_y {
+              max_y = point.y
+            }
+          }
+        }
+        None => ()
+      }
       for point in spline.points {
         if !bbox_set {
           min_x = point.x
@@ -527,7 +577,12 @@ fn layout_subgraphs(
 }
 
 ///|
-fn spline_for_edge(tail : @geom.Point, head : @geom.Point) -> @geom.Spline {
+fn spline_for_edge(
+  tail : @geom.Point,
+  head : @geom.Point,
+  start : @geom.Point?,
+  end : @geom.Point?,
+) -> @geom.Spline {
   let mid_y = (tail.y + head.y) / 2.0
   let points : Array[@geom.Point] = [
     tail,
@@ -535,7 +590,7 @@ fn spline_for_edge(tail : @geom.Point, head : @geom.Point) -> @geom.Spline {
     { x: head.x, y: mid_y },
     head,
   ]
-  { start: Some(tail), end: Some(head), points }
+  { start, end, points }
 }
 
 ///|
@@ -711,7 +766,7 @@ pub fn layout_dot(
     }
     let tail_clip = clip_to_rect(tail_pos, tail_size, head_pos)
     let head_clip = clip_to_rect(head_pos, head_size, tail_pos)
-    let spline = spline_for_edge(tail_clip, head_clip)
+    let spline = spline_for_edge(tail_clip, head_clip, Some(tail_clip), Some(head_clip))
     let label_pos : @geom.Point? = match edge.get_attr("label") {
       Some(value) => {
         if value == "" {
