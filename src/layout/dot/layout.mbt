@@ -350,6 +350,141 @@ fn compute_bbox(
 }
 
 ///|
+fn transform_point(
+  point : @geom.Point,
+  bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => point
+    RankDir::BT => { x: point.x, y: bbox.lly + bbox.ury - point.y }
+    RankDir::LR => { x: bbox.lly + bbox.ury - point.y, y: point.x }
+    RankDir::RL => { x: point.y, y: bbox.llx + bbox.urx - point.x }
+  }
+}
+
+///|
+fn transform_optional_point(
+  point : @geom.Point?,
+  bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  match point {
+    Some(value) => Some(transform_point(value, bbox, rankdir))
+    None => None
+  }
+}
+
+///|
+fn transform_spline(
+  spline : @geom.Spline,
+  bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> @geom.Spline {
+  let points : Array[@geom.Point] = []
+  for point in spline.points {
+    points.push(transform_point(point, bbox, rankdir))
+  }
+  {
+    start: transform_optional_point(spline.start, bbox, rankdir),
+    end: transform_optional_point(spline.end, bbox, rankdir),
+    points,
+  }
+}
+
+///|
+fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
+  { x: point.x + dx, y: point.y + dy }
+}
+
+///|
+fn shift_optional_point(point : @geom.Point?, dx : Double, dy : Double) -> @geom.Point? {
+  match point {
+    Some(value) => Some(shift_point(value, dx, dy))
+    None => None
+  }
+}
+
+///|
+fn shift_spline(spline : @geom.Spline, dx : Double, dy : Double) -> @geom.Spline {
+  let points : Array[@geom.Point] = []
+  for point in spline.points {
+    points.push(shift_point(point, dx, dy))
+  }
+  {
+    start: shift_optional_point(spline.start, dx, dy),
+    end: shift_optional_point(spline.end, dx, dy),
+    points,
+  }
+}
+
+///|
+fn transform_layout(
+  nodes : Array[DotLayoutNode],
+  edges : Array[DotLayoutEdge],
+  bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> (Array[DotLayoutNode], Array[DotLayoutEdge], @geom.Rect) {
+  let transformed_nodes : Array[DotLayoutNode] = []
+  for node_layout in nodes {
+    transformed_nodes.push({
+      node: node_layout.node,
+      pos: transform_point(node_layout.pos, bbox, rankdir),
+      width_in: node_layout.width_in,
+      height_in: node_layout.height_in,
+      label_pos: transform_optional_point(node_layout.label_pos, bbox, rankdir),
+    })
+  }
+  let transformed_edges : Array[DotLayoutEdge] = []
+  for edge_layout in edges {
+    let splines : Array[@geom.Spline] = []
+    for spline in edge_layout.splines {
+      splines.push(transform_spline(spline, bbox, rankdir))
+    }
+    transformed_edges.push({
+      edge: edge_layout.edge,
+      splines,
+      label_pos: transform_optional_point(edge_layout.label_pos, bbox, rankdir),
+      head_label_pos: transform_optional_point(edge_layout.head_label_pos, bbox, rankdir),
+      tail_label_pos: transform_optional_point(edge_layout.tail_label_pos, bbox, rankdir),
+    })
+  }
+  let transformed_bbox = compute_bbox(transformed_nodes, transformed_edges)
+  if transformed_bbox.llx == 0.0 && transformed_bbox.lly == 0.0 {
+    (transformed_nodes, transformed_edges, transformed_bbox)
+  } else {
+    let dx = -transformed_bbox.llx
+    let dy = -transformed_bbox.lly
+    let shifted_nodes : Array[DotLayoutNode] = []
+    for node_layout in transformed_nodes {
+      shifted_nodes.push({
+        node: node_layout.node,
+        pos: shift_point(node_layout.pos, dx, dy),
+        width_in: node_layout.width_in,
+        height_in: node_layout.height_in,
+        label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+      })
+    }
+    let shifted_edges : Array[DotLayoutEdge] = []
+    for edge_layout in transformed_edges {
+      let splines : Array[@geom.Spline] = []
+      for spline in edge_layout.splines {
+        splines.push(shift_spline(spline, dx, dy))
+      }
+      shifted_edges.push({
+        edge: edge_layout.edge,
+        splines,
+        label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
+        head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
+        tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+      })
+    }
+    let shifted_bbox = compute_bbox(shifted_nodes, shifted_edges)
+    (shifted_nodes, shifted_edges, shifted_bbox)
+  }
+}
+
+///|
 fn layout_subgraphs(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
@@ -428,9 +563,6 @@ pub fn layout_dot(
       }
       None => RankDir::TB
     }
-  }
-  if rankdir != RankDir::TB {
-    raise DotLayoutError::UnsupportedFeature(message="rankdir not supported yet")
   }
   let nodesep_in = match opts.nodesep {
     Some(value) => value
@@ -618,14 +750,19 @@ pub fn layout_dot(
       tail_label_pos,
     })
   }
-  let bbox = compute_bbox(nodes_out, edges_out)
+  let base_bbox = compute_bbox(nodes_out, edges_out)
+  let (final_nodes, final_edges, bbox) = if rankdir == RankDir::TB {
+    (nodes_out, edges_out, base_bbox)
+  } else {
+    transform_layout(nodes_out, edges_out, base_bbox, rankdir)
+  }
   {
     graph,
     bbox,
     label_pos: None,
-    nodes: nodes_out,
-    edges: edges_out,
-    subgraphs: layout_subgraphs(graph, nodes_out, edges_out),
+    nodes: final_nodes,
+    edges: final_edges,
+    subgraphs: layout_subgraphs(graph, final_nodes, final_edges),
   }
 }
 
