@@ -17,6 +17,17 @@ test "encode xdot ops basic" {
 }
 
 ///|
+test "encode xdot ops rounds doubles" {
+  let ops : Array[@render.DrawOp] = [
+    @render.DrawOp::Polyline(points=[
+      { x: 1.239, y: 5.0 },
+      { x: -2.341, y: 0.0 },
+    ]),
+  ]
+  inspect(encode_xdot_ops(ops), content="L 2 1.24 5 -2.34 0")
+}
+
+///|
 test "render_xdot attaches draw ops" {
   let graph = @dot.parse_dot("digraph { a -> b; }")
   let layout = @layout_dot.layout_dot(graph)

@@ -8,6 +8,28 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+fn format_double(value : Double) -> String {
+  let rounded = (value * 100.0).round() / 100.0
+  if rounded == 0.0 {
+    return "0"
+  }
+  let text = rounded.to_string()
+  if !text.contains(".") {
+    return text
+  }
+  let mut result = text
+  while result.length() > 0 && result.has_suffix("0") {
+    let next_len = result.length() - 1
+    result = result.unsafe_substring(start=0, end=next_len)
+  }
+  if result.has_suffix(".") {
+    let next_len = result.length() - 1
+    result = result.unsafe_substring(start=0, end=next_len)
+  }
+  result
+}
+
+///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\\\N", new=name)
   with_name.replace_all(old="\\\\n", new="\n")
@@ -217,7 +239,7 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
 ///|
 fn append_double(sb : StringBuilder, value : Double) -> Unit {
   sb.write_char(' ')
-  sb.write_string(value.to_string())
+  sb.write_string(format_double(value))
 }
 
 ///|
@@ -246,18 +268,18 @@ fn encode_gradient(gradient : @render.Gradient) -> String {
   match gradient {
     @render.Gradient::Linear(value) => {
       sb.write_char('[')
-      sb.write_string(value.start.x.to_string())
+      sb.write_string(format_double(value.start.x))
       sb.write_char(' ')
-      sb.write_string(value.start.y.to_string())
+      sb.write_string(format_double(value.start.y))
       sb.write_char(' ')
-      sb.write_string(value.end.x.to_string())
+      sb.write_string(format_double(value.end.x))
       sb.write_char(' ')
-      sb.write_string(value.end.y.to_string())
+      sb.write_string(format_double(value.end.y))
       sb.write_char(' ')
       sb.write_string(value.stops.length().to_string())
       for stop in value.stops {
         sb.write_char(' ')
-        sb.write_string(stop.offset.to_string())
+        sb.write_string(format_double(stop.offset))
         sb.write_char(' ')
         sb.write_string(stop.color.length().to_string())
         sb.write_string(" -")
@@ -267,22 +289,22 @@ fn encode_gradient(gradient : @render.Gradient) -> String {
     }
     @render.Gradient::Radial(value) => {
       sb.write_char('(')
-      sb.write_string(value.start_center.x.to_string())
+      sb.write_string(format_double(value.start_center.x))
       sb.write_char(' ')
-      sb.write_string(value.start_center.y.to_string())
+      sb.write_string(format_double(value.start_center.y))
       sb.write_char(' ')
-      sb.write_string(value.start_radius.to_string())
+      sb.write_string(format_double(value.start_radius))
       sb.write_char(' ')
-      sb.write_string(value.end_center.x.to_string())
+      sb.write_string(format_double(value.end_center.x))
       sb.write_char(' ')
-      sb.write_string(value.end_center.y.to_string())
+      sb.write_string(format_double(value.end_center.y))
       sb.write_char(' ')
-      sb.write_string(value.end_radius.to_string())
+      sb.write_string(format_double(value.end_radius))
       sb.write_char(' ')
       sb.write_string(value.stops.length().to_string())
       for stop in value.stops {
         sb.write_char(' ')
-        sb.write_string(stop.offset.to_string())
+        sb.write_string(format_double(stop.offset))
         sb.write_char(' ')
         sb.write_string(stop.color.length().to_string())
         sb.write_string(" -")
