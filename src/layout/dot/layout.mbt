@@ -36,6 +36,48 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+fn parse_first_double(value : String, fallback : Double) -> Double {
+  let sb = StringBuilder::new()
+  let mut seen = false
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+      seen = true
+    } else if seen {
+      break
+    }
+  }
+  if !seen {
+    fallback
+  } else {
+    parse_double(sb.to_string(), fallback)
+  }
+}
+
+///|
+fn parse_rankdir(value : String) -> RankDir? {
+  match value.to_lower() {
+    "tb" => Some(RankDir::TB)
+    "bt" => Some(RankDir::BT)
+    "lr" => Some(RankDir::LR)
+    "rl" => Some(RankDir::RL)
+    _ => None
+  }
+}
+
+///|
+fn parse_splines(value : String) -> SplinesMode? {
+  match value.to_lower() {
+    "true" | "spline" | "splines" => Some(SplinesMode::Spline)
+    "false" | "none" | "" => Some(SplinesMode::None)
+    "polyline" => Some(SplinesMode::Polyline)
+    "ortho" => Some(SplinesMode::Ortho)
+    "curved" => Some(SplinesMode::Curved)
+    _ => None
+  }
+}
+
+///|
 fn node_size(node : @cgraph.Node) -> NodeSize {
   let width_in = match node.get_attr("width") {
     Some(value) => parse_double(value, default_node_width_in())
@@ -54,10 +96,8 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
 }
 
 ///|
-fn sorted_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
-  let nodes = graph.nodes()
-  nodes.sort_by_key((node) => node.name())
-  nodes
+fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
+  graph.nodes()
 }
 
 ///|
@@ -87,7 +127,6 @@ fn compute_ranks_directed(
       None => outgoing[tail] = [head]
     }
   }
-  names.sort()
   let queue : Array[String] = []
   for name in names {
     let count = match indegree.get(name) {
@@ -158,9 +197,6 @@ fn build_rank_groups(
       None => groups[rank] = [name]
     }
   }
-  for _, list in groups {
-    list.sort()
-  }
   groups
 }
 
@@ -204,20 +240,47 @@ pub fn layout_dot(
   let opts = options
   let rankdir = match opts.rankdir {
     Some(value) => value
-    None => RankDir::TB
+    None => match graph.get_attr("rankdir") {
+      Some(value) => match parse_rankdir(value) {
+        Some(parsed) => parsed
+        None => RankDir::TB
+      }
+      None => RankDir::TB
+    }
   }
   if rankdir != RankDir::TB {
     raise DotLayoutError::UnsupportedFeature(message="rankdir not supported yet")
   }
   let nodesep_in = match opts.nodesep {
     Some(value) => value
-    None => default_nodesep_in()
+    None => match graph.get_attr("nodesep") {
+      Some(value) => parse_first_double(value, default_nodesep_in())
+      None => default_nodesep_in()
+    }
   }
   let ranksep_in = match opts.ranksep {
     Some(value) => value
-    None => default_ranksep_in()
+    None => match graph.get_attr("ranksep") {
+      Some(value) => parse_first_double(value, default_ranksep_in())
+      None => default_ranksep_in()
+    }
   }
-  let nodes = sorted_nodes(graph)
+  let splines = match opts.splines {
+    Some(value) => value
+    None => match graph.get_attr("splines") {
+      Some(value) => match parse_splines(value) {
+        Some(parsed) => parsed
+        None => SplinesMode::Spline
+      }
+      None => SplinesMode::Spline
+    }
+  }
+  if splines != SplinesMode::Spline {
+    raise DotLayoutError::UnsupportedFeature(
+      message="splines mode not supported yet",
+    )
+  }
+  let nodes = ordered_nodes(graph)
   let edges = graph.edges()
   let sizes : Map[String, NodeSize] = Map::new()
   for node in nodes {
@@ -238,10 +301,7 @@ pub fn layout_dot(
     rank_keys.push(key)
   }
   rank_keys.sort()
-  let positions : Map[String, @geom.Point] = Map::new()
-  let mut current_y = 0.0
-  let nodesep_pt = nodesep_in * 72.0
-  let ranksep_pt = ranksep_in * 72.0
+  let rank_heights : Map[Int, Double] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -257,6 +317,33 @@ pub fn layout_dot(
         max_height = size.height_pt
       }
     }
+    rank_heights[rank] = max_height
+  }
+  let positions : Map[String, @geom.Point] = Map::new()
+  let nodesep_pt = nodesep_in * 72.0
+  let ranksep_pt = ranksep_in * 72.0
+  let mut total_height = 0.0
+  for i in 0..<rank_keys.length() {
+    let rank = rank_keys[i]
+    let height = match rank_heights.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    total_height = total_height + height
+    if i + 1 < rank_keys.length() {
+      total_height = total_height + ranksep_pt
+    }
+  }
+  let mut current_y = total_height
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let max_height = match rank_heights.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
     let mut current_x = 0.0
     for name in names {
       let size = match sizes.get(name) {
@@ -264,11 +351,11 @@ pub fn layout_dot(
         None => node_size(graph.node(name))
       }
       let pos_x = current_x + size.width_pt / 2.0
-      let pos_y = current_y + max_height / 2.0
+      let pos_y = current_y - max_height / 2.0
       positions[name] = { x: pos_x, y: pos_y }
       current_x = current_x + size.width_pt + nodesep_pt
     }
-    current_y = current_y + max_height + ranksep_pt
+    current_y = current_y - max_height - ranksep_pt
   }
   let nodes_out : Array[DotLayoutNode] = []
   for node in nodes {
