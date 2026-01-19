@@ -8,5 +8,9 @@
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/dot",
     "moonbitlang/core/strconv"
+  ],
+  "test-import": [
+    "moonbitlang/x/fs",
+    "moonbit-community/graphviz/cgraph"
   ]
 }
