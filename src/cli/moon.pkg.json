@@ -1,1 +1,17 @@
-{}
+{
+  "import": [
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/dot",
+    {
+      "path": "moonbit-community/graphviz/layout/dot",
+      "alias": "layout_dot"
+    },
+    "moonbit-community/graphviz/render/xdot",
+    "moonbit-community/graphviz/render/svg",
+    "moonbitlang/core/strconv",
+    "moonbitlang/x/fs"
+  ],
+  "test-import": [
+    "moonbitlang/x/fs"
+  ]
+}

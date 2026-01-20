@@ -1,0 +1,7 @@
+{
+  "is_main": true,
+  "import": [
+    "moonbit-community/graphviz/cli",
+    "moonbitlang/x/sys"
+  ]
+}
