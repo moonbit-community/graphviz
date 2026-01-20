@@ -1084,22 +1084,6 @@ fn layout_subgraphs(
 }
 
 ///|
-fn spline_for_edge(
-  tail : @geom.Point,
-  head : @geom.Point,
-  start : @geom.Point?,
-  end : @geom.Point?,
-) -> @geom.Spline {
-  let mid_y = (tail.y + head.y) / 2.0
-  let points : Array[@geom.Point] = [
-    tail,
-    { x: tail.x, y: mid_y },
-    { x: head.x, y: mid_y },
-    head,
-  ]
-  { start, end, points }
-}
-
 ///|
 pub fn DotLayoutOptions::default() -> DotLayoutOptions {
   {
@@ -1294,7 +1278,24 @@ pub fn layout_dot(
     }
     let tail_clip = clip_to_rect(tail_pos, tail_size, head_pos)
     let head_clip = clip_to_rect(head_pos, head_size, tail_pos)
-    let spline = spline_for_edge(tail_clip, head_clip, Some(tail_clip), Some(head_clip))
+    let dir = edge_dir_for(edge, graph.kind())
+    let include_tail = match dir {
+      EdgeDir::Back | EdgeDir::Both => true
+      _ => false
+    }
+    let include_head = match dir {
+      EdgeDir::Forward | EdgeDir::Both => true
+      _ => false
+    }
+    let spline = edge_spline_for_line(
+      edge,
+      tail_pos,
+      head_pos,
+      tail_size,
+      head_size,
+      include_tail,
+      include_head,
+    )
     let label_pos : @geom.Point? = match edge.get_attr("label") {
       Some(value) => {
         if value == "" {

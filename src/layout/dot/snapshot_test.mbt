@@ -95,6 +95,8 @@ fn compare_attr_value(
   tol : Double,
 ) -> Unit raise {
   if is_numeric_attr(name) {
+    // Bezier clipping uses a coarse stopping threshold; allow a bit more slack for pos.
+    let value_tol = if name == "pos" { tol * 1.5 } else { tol }
     let expected_nums = extract_numbers(expected)
     let actual_nums = extract_numbers(actual)
     assert_eq(expected_nums.length(), actual_nums.length())
@@ -102,7 +104,7 @@ fn compare_attr_value(
       let ok = Double::is_close(
         expected_nums[i],
         actual_nums[i],
-        absolute_tolerance=tol,
+        absolute_tolerance=value_tol,
       )
       if !ok {
         fail("\{name} mismatch: expected=\{expected} actual=\{actual}")
@@ -175,12 +177,7 @@ fn compare_edges(
   for key, expected_edge in expected_map {
     match actual_map.get(key) {
       Some(actual_edge) => {
-        // Edge spline parity is tracked separately; only compare non-pos attrs for now.
-        compare_attrs(
-          filter_edge_attrs(expected_edge.attrs()),
-          filter_edge_attrs(actual_edge.attrs()),
-          tol,
-        )
+        compare_attrs(expected_edge.attrs(), actual_edge.attrs(), tol)
       }
       None => fail("missing edge \{key}")
     }
@@ -188,18 +185,6 @@ fn compare_edges(
 }
 
 ///|
-fn filter_edge_attrs(attrs : Array[(String, String)]) -> Array[(String, String)] {
-  let filtered : Array[(String, String)] = []
-  for pair in attrs {
-    let (key, value) = pair
-    if key == "pos" {
-      continue
-    }
-    filtered.push((key, value))
-  }
-  filtered
-}
-
 ///|
 fn compare_subgraphs(
   expected : @cgraph.Graph,
