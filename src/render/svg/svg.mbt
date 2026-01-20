@@ -729,11 +729,11 @@ pub fn render_svg(
           @render.TextAlign::Center => "middle"
         }
         let x = line_x - bbox.llx
-        let y = line_y - bbox.lly
+        let y = bbox.lly - line_y
         let escaped = escape_xml(line.text)
         write_line(
           sb,
-          "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+          "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
           node_indent,
           pretty,
         )
