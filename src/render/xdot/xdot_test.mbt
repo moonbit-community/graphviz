@@ -55,3 +55,73 @@ test "render_xdot attaches draw ops" {
     fail("missing edge _hdraw_")
   }
 }
+
+///|
+fn parse_double_or_fail(value : StringView) -> Double raise {
+  try @strconv.parse_double(value) catch {
+    _ => fail("invalid number: \{value}")
+  }
+}
+
+///|
+fn parse_point_attr(value : String) -> @geom.Point raise {
+  let parts = value.split(",").to_array()
+  if parts.length() != 2 {
+    fail("invalid point: \{value}")
+  }
+  { x: parse_double_or_fail(parts[0]), y: parse_double_or_fail(parts[1]) }
+}
+
+test "render_xdot attaches graph label attrs" {
+  let graph = @dot.parse_dot("digraph { label=\"Hello\"; a -> b; }")
+  let layout = @layout_dot.layout_dot(graph)
+  let output = render_xdot(layout)
+  let output_graph = @dot.parse_dot(output)
+  guard output_graph.get_attr("_ldraw_") is Some(_) else {
+    fail("missing graph _ldraw_")
+  }
+  guard output_graph.get_attr("lwidth") is Some(_) else {
+    fail("missing graph lwidth")
+  }
+  guard output_graph.get_attr("lheight") is Some(_) else {
+    fail("missing graph lheight")
+  }
+  match output_graph.get_attr("lp") {
+    Some(value) => {
+      let _ = parse_point_attr(value)
+    }
+    None => fail("missing graph lp")
+  }
+}
+
+test "graph labelloc affects label position" {
+  let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
+  let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")
+  let top_output = render_xdot(@layout_dot.layout_dot(top_graph))
+  let bottom_output = render_xdot(@layout_dot.layout_dot(bottom_graph))
+  let top_lp = match @dot.parse_dot(top_output).get_attr("lp") {
+    Some(value) => parse_point_attr(value)
+    None => fail("missing top graph lp")
+  }
+  let bottom_lp = match @dot.parse_dot(bottom_output).get_attr("lp") {
+    Some(value) => parse_point_attr(value)
+    None => fail("missing bottom graph lp")
+  }
+  assert_true(top_lp.y > bottom_lp.y)
+}
+
+test "graph labeljust affects label position" {
+  let left_graph = @dot.parse_dot("digraph { label=\"Hello\"; labeljust=l; a -> b; }")
+  let right_graph = @dot.parse_dot("digraph { label=\"Hello\"; labeljust=r; a -> b; }")
+  let left_output = render_xdot(@layout_dot.layout_dot(left_graph))
+  let right_output = render_xdot(@layout_dot.layout_dot(right_graph))
+  let left_lp = match @dot.parse_dot(left_output).get_attr("lp") {
+    Some(value) => parse_point_attr(value)
+    None => fail("missing left graph lp")
+  }
+  let right_lp = match @dot.parse_dot(right_output).get_attr("lp") {
+    Some(value) => parse_point_attr(value)
+    None => fail("missing right graph lp")
+  }
+  assert_true(left_lp.x < right_lp.x)
+}

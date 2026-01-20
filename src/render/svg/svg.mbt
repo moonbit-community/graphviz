@@ -711,7 +711,10 @@ fn write_cluster_graphs(
             Some(value) => value
             None => "black"
           }
-          let pos = graph_label_pos(rect, height_pt)
+          let pos = match subgraph.label_pos {
+            Some(value) => value
+            None => graph_label_pos(rect, height_pt)
+          }
           write_label_lines(
             sb,
             text,
@@ -953,6 +956,34 @@ pub fn render_svg(
         pretty,
       )
     }
+  }
+  match graph_label_metrics(layout.graph) {
+    Some((text, _width_pt, _height_pt)) => {
+      match layout.label_pos {
+        Some(pos) => {
+          let graph = layout.graph
+          let font = font_name(graph.get_attr("fontname"))
+          let size = font_size(graph.get_attr("fontsize"))
+          let color = match graph.get_attr("fontcolor") {
+            Some(value) => value
+            None => "black"
+          }
+          write_label_lines(
+            sb,
+            text,
+            font,
+            size,
+            color,
+            pos,
+            bbox,
+            node_indent,
+            pretty,
+          )
+        }
+        None => ()
+      }
+    }
+    None => ()
   }
   write_line(sb, "</g>", "  ", pretty)
   write_line(sb, "</svg>", "", pretty)

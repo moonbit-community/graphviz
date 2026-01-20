@@ -1535,6 +1535,61 @@ fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+priv enum LabelLoc {
+  Top
+  Bottom
+}
+
+///|
+priv enum LabelJust {
+  Left
+  Center
+  Right
+}
+
+///|
+fn parse_label_loc(value : String?, default_loc : LabelLoc) -> LabelLoc {
+  match value {
+    Some(text) => {
+      let lower = text.to_lower()
+      match lower {
+        "t" | "top" => LabelLoc::Top
+        "b" | "bottom" => LabelLoc::Bottom
+        _ => default_loc
+      }
+    }
+    None => default_loc
+  }
+}
+
+///|
+fn parse_label_just(value : String?) -> LabelJust {
+  match value {
+    Some(text) => {
+      let lower = text.to_lower()
+      match lower {
+        "l" | "left" => LabelJust::Left
+        "r" | "right" => LabelJust::Right
+        "c" | "center" => LabelJust::Center
+        _ => LabelJust::Center
+      }
+    }
+    None => LabelJust::Center
+  }
+}
+
+///|
+fn graph_label_loc(graph : @cgraph.Graph) -> LabelLoc {
+  let default_loc = if graph.is_root() { LabelLoc::Bottom } else { LabelLoc::Top }
+  parse_label_loc(graph.get_attr("labelloc"), default_loc)
+}
+
+///|
+fn graph_label_just(graph : @cgraph.Graph) -> LabelJust {
+  parse_label_just(graph.get_attr("labeljust"))
+}
+
+///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
   match graph.get_attr("label") {
     Some(value) => {
@@ -1552,6 +1607,57 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
     }
     None => None
   }
+}
+
+///|
+fn graph_label_pos(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+  just : LabelJust,
+) -> @geom.Point {
+  let margin = 4.0
+  let x = match just {
+    LabelJust::Left => bbox.llx + margin + label_width_pt / 2.0
+    LabelJust::Right => bbox.urx - margin - label_width_pt / 2.0
+    LabelJust::Center => (bbox.llx + bbox.urx) / 2.0
+  }
+  let y = match loc {
+    LabelLoc::Top => bbox.ury - margin - label_height_pt / 2.0
+    LabelLoc::Bottom => bbox.lly + margin + label_height_pt / 2.0
+  }
+  { x, y }
+}
+
+///|
+fn expand_bbox_for_label(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+) -> @geom.Rect {
+  let pad = 8.0
+  let mut llx = bbox.llx
+  let mut lly = bbox.lly
+  let mut urx = bbox.urx
+  let mut ury = bbox.ury
+  match loc {
+    LabelLoc::Top => {
+      ury = ury + label_height_pt + pad
+    }
+    LabelLoc::Bottom => {
+      lly = lly - label_height_pt - pad
+    }
+  }
+  let label_width = label_width_pt + pad * 2.0
+  let current_width = urx - llx
+  if label_width > current_width {
+    let extra = label_width - current_width
+    llx = llx - extra / 2.0
+    urx = urx + extra / 2.0
+  }
+  { llx, lly, urx, ury }
 }
 
 ///|
@@ -1583,35 +1689,39 @@ fn layout_subgraphs(
       }
     }
     let mut bbox = compute_bbox(sub_nodes, sub_edges)
+    let mut label_pos : @geom.Point? = None
+    let mut label_info : (Double, Double, LabelLoc, LabelJust)? = None
     if is_cluster_graph(subgraph) {
       let pad = 8.0
-      let mut llx = bbox.llx - pad
+      let llx = bbox.llx - pad
       let lly = bbox.lly - pad
-      let mut urx = bbox.urx + pad
-      let mut ury = bbox.ury + pad
+      let urx = bbox.urx + pad
+      let ury = bbox.ury + pad
+      bbox = { llx, lly, urx, ury }
       match graph_label_metrics(subgraph) {
         Some((width_pt, height_pt)) => {
-          ury = ury + height_pt + 8.0
-          let label_width = width_pt + pad * 2.0
-          let current_width = urx - llx
-          if label_width > current_width {
-            let extra = label_width - current_width
-            llx = llx - extra / 2.0
-            urx = urx + extra / 2.0
-          }
+          let loc = graph_label_loc(subgraph)
+          let just = graph_label_just(subgraph)
+          bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+          label_info = Some((width_pt, height_pt, loc, just))
         }
         None => ()
       }
-      bbox = { llx, lly, urx, ury }
     }
     let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
+    match label_info {
+      Some((width_pt, height_pt, loc, just)) => {
+        label_pos = Some(graph_label_pos(bbox, width_pt, height_pt, loc, just))
+      }
+      None => ()
+    }
     result.push({
       graph: subgraph,
       bbox,
-      label_pos: None,
+      label_pos,
       nodes: sub_nodes,
       edges: sub_edges,
       subgraphs: sub_subgraphs,
@@ -1917,15 +2027,27 @@ pub fn layout_dot(
     transform_layout(nodes_out, edges_out, base_bbox, rankdir)
   }
   let subgraphs = layout_subgraphs(graph, final_nodes, final_edges)
-  let final_bbox = if subgraphs.length() > 0 {
+  let mut final_bbox = if subgraphs.length() > 0 {
     expand_bbox_with_subgraphs(bbox, subgraphs)
   } else {
     bbox
   }
+  let mut label_pos : @geom.Point? = None
+  if graph.is_root() {
+    match graph_label_metrics(graph) {
+      Some((width_pt, height_pt)) => {
+        let loc = graph_label_loc(graph)
+        let just = graph_label_just(graph)
+        final_bbox = expand_bbox_for_label(final_bbox, width_pt, height_pt, loc)
+        label_pos = Some(graph_label_pos(final_bbox, width_pt, height_pt, loc, just))
+      }
+      None => ()
+    }
+  }
   {
     graph,
     bbox: final_bbox,
-    label_pos: None,
+    label_pos,
     nodes: final_nodes,
     edges: final_edges,
     subgraphs,
@@ -1947,6 +2069,10 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   }
   if write_bb {
     self.graph.set_attr("bb", format_rect(self.bbox))
+  }
+  match self.label_pos {
+    Some(pos) => self.graph.set_attr("lp", format_point(pos))
+    None => ()
   }
   for node_layout in self.nodes {
     let node = node_layout.node

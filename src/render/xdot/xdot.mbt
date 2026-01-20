@@ -914,7 +914,7 @@ fn graph_label_ops(
 ) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let graph = layout.graph
-  if !is_cluster_graph(graph) {
+  if !graph.is_root() && !is_cluster_graph(graph) {
     return ops
   }
   match graph_label_metrics(graph) {
@@ -928,7 +928,10 @@ fn graph_label_ops(
         None => "black"
       }
       let pen_color = normalize_color(color)
-      let pos = graph_label_pos(layout.bbox, height_pt)
+      let pos = match layout.label_pos {
+        Some(value) => value
+        None => graph_label_pos(layout.bbox, height_pt)
+      }
       let lines = label_lines(text, font.size)
       let line_step = line_height(font.name, font.size)
       let start_y = pos.y + height_pt / 2.0 - font.size + centerline_offset(font.size)
@@ -965,10 +968,13 @@ fn attach_graph_attrs(layout : @layout_dot.DotLayoutGraph) -> Unit {
   if draw_ops.length() > 0 {
     graph.set_attr("_draw_", encode_xdot_ops(draw_ops))
   }
-  if is_cluster_graph(graph) {
+  if graph.is_root() || is_cluster_graph(graph) {
     match graph_label_metrics(graph) {
       Some((_text, width_pt, height_pt)) => {
-        let pos = graph_label_pos(layout.bbox, height_pt)
+        let pos = match layout.label_pos {
+          Some(value) => value
+          None => graph_label_pos(layout.bbox, height_pt)
+        }
         graph.set_attr("lwidth", format_double(width_pt / 72.0))
         graph.set_attr("lheight", format_double(height_pt / 72.0))
         graph.set_attr("lp", format_point(pos))
