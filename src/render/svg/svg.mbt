@@ -788,6 +788,19 @@ pub fn render_svg(
     "",
     pretty,
   )
+  if layout.graph.is_root() {
+    let fill = match layout.graph.get_attr("bgcolor") {
+      Some(value) => value
+      None => "white"
+    }
+    let rect_indent = if pretty { "  " } else { "" }
+    write_line(
+      sb,
+      "<rect x=\"0\" y=\"0\" width=\"\{width}\" height=\"\{height}\" fill=\"\{fill}\"/>",
+      rect_indent,
+      pretty,
+    )
+  }
   write_line(
     sb,
     "<g transform=\"translate(0 \{height}) scale(1 -1)\">",

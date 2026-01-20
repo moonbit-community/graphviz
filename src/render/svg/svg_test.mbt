@@ -14,6 +14,20 @@ test "render_svg emits svg" {
   assert_true(svg.contains("<polygon"))
 }
 
+test "render_svg emits root background" {
+  let graph = @dot.parse_dot("digraph { bgcolor=\"pink\"; }")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains("<rect"))
+  assert_true(svg.contains("fill=\"pink\""))
+}
+
 test "render_svg emits edge labels" {
   let graph = @dot.parse_dot("digraph { a -> b [label=\"edge\"]; }")
   let layout = @layout_dot.layout_dot(graph)
