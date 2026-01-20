@@ -1750,15 +1750,20 @@ pub fn layout_dot(
     Some(value) => parse_ordering(value)
     None => None
   }
-  let (parents, children) = build_edge_index(nodes, edges)
-  let ordered_groups = reorder_rank_groups(
-    rank_keys,
-    groups,
-    parents,
-    children,
-    sizes,
-    nodesep_pt,
-  )
+  let ordered_groups = match ordering {
+    Some(_) => groups
+    None => {
+      let (parents, children) = build_edge_index(nodes, edges)
+      reorder_rank_groups(
+        rank_keys,
+        groups,
+        parents,
+        children,
+        sizes,
+        nodesep_pt,
+      )
+    }
+  }
   let x_positions = compute_x_positions(
     nodes,
     edges,
