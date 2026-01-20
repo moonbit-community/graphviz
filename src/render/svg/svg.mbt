@@ -578,6 +578,52 @@ fn write_line(
 }
 
 ///|
+fn write_label_lines(
+  sb : StringBuilder,
+  text : String,
+  font : String,
+  size : Double,
+  color : String,
+  pos : @geom.Point,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  if text == "" {
+    return ()
+  }
+  let (lines, max_width, total_height) = label_metrics(text, font, size)
+  let line_step = line_height(font, size)
+  let start_y = pos.y + total_height / 2.0 - size + centerline_offset(size)
+  for i in 0..<lines.length() {
+    let line = lines[i]
+    if line.text == "" {
+      continue
+    }
+    let line_x = match line.align {
+      @render.TextAlign::Left => pos.x - max_width / 2.0
+      @render.TextAlign::Right => pos.x + max_width / 2.0
+      @render.TextAlign::Center => pos.x
+    }
+    let line_y = start_y - line_step * i.to_double()
+    let anchor = match line.align {
+      @render.TextAlign::Left => "start"
+      @render.TextAlign::Right => "end"
+      @render.TextAlign::Center => "middle"
+    }
+    let x = line_x - bbox.llx
+    let y = bbox.lly - line_y
+    let escaped = escape_xml(line.text)
+    write_line(
+      sb,
+      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+      indent,
+      pretty,
+    )
+  }
+}
+
+///|
 pub fn SvgOptions::default() -> SvgOptions {
   { pretty: Some(true), include_xml_decl: Some(true) }
 }
@@ -643,6 +689,84 @@ pub fn render_svg(
       let ops = arrow_primitives(edge_layout, false)
       write_arrow_ops(sb, ops, color, bbox.llx, bbox.lly, edge_indent, pretty)
     }
+    let label_text = match edge.get_attr("label") {
+      Some(value) => resolve_label(value, "")
+      None => ""
+    }
+    match edge_layout.label_pos {
+      Some(pos) => {
+        let font = font_name(edge.get_attr("fontname"))
+        let size = font_size(edge.get_attr("fontsize"))
+        let font_color = match edge.get_attr("fontcolor") {
+          Some(value) => value
+          None => "black"
+        }
+        write_label_lines(
+          sb,
+          label_text,
+          font,
+          size,
+          font_color,
+          pos,
+          bbox,
+          edge_indent,
+          pretty,
+        )
+      }
+      None => ()
+    }
+    let head_label_text = match edge.get_attr("headlabel") {
+      Some(value) => resolve_label(value, "")
+      None => ""
+    }
+    match edge_layout.head_label_pos {
+      Some(pos) => {
+        let font = font_name(edge.get_attr("fontname"))
+        let size = font_size(edge.get_attr("fontsize"))
+        let font_color = match edge.get_attr("fontcolor") {
+          Some(value) => value
+          None => "black"
+        }
+        write_label_lines(
+          sb,
+          head_label_text,
+          font,
+          size,
+          font_color,
+          pos,
+          bbox,
+          edge_indent,
+          pretty,
+        )
+      }
+      None => ()
+    }
+    let tail_label_text = match edge.get_attr("taillabel") {
+      Some(value) => resolve_label(value, "")
+      None => ""
+    }
+    match edge_layout.tail_label_pos {
+      Some(pos) => {
+        let font = font_name(edge.get_attr("fontname"))
+        let size = font_size(edge.get_attr("fontsize"))
+        let font_color = match edge.get_attr("fontcolor") {
+          Some(value) => value
+          None => "black"
+        }
+        write_label_lines(
+          sb,
+          tail_label_text,
+          font,
+          size,
+          font_color,
+          pos,
+          bbox,
+          edge_indent,
+          pretty,
+        )
+      }
+      None => ()
+    }
   }
   let node_indent = if pretty { "    " } else { "" }
   for node_layout in layout.nodes {
@@ -707,35 +831,17 @@ pub fn render_svg(
         Some(value) => value
         None => node_layout.pos
       }
-      let (lines, max_width, total_height) = label_metrics(text, font, size)
-      let line_step = line_height(font, size)
-      let start_y = pos.y + total_height / 2.0 - size + centerline_offset(size)
-      for i in 0..<lines.length() {
-        let line = lines[i]
-        if line.text == "" {
-          continue
-        }
-        let line_x = match line.align {
-          @render.TextAlign::Left => pos.x - max_width / 2.0
-          @render.TextAlign::Right => pos.x + max_width / 2.0
-          @render.TextAlign::Center => pos.x
-        }
-        let line_y = start_y - line_step * i.to_double()
-        let anchor = match line.align {
-          @render.TextAlign::Left => "start"
-          @render.TextAlign::Right => "end"
-          @render.TextAlign::Center => "middle"
-        }
-        let x = line_x - bbox.llx
-        let y = bbox.lly - line_y
-        let escaped = escape_xml(line.text)
-        write_line(
-          sb,
-          "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
-          node_indent,
-          pretty,
-        )
-      }
+      write_label_lines(
+        sb,
+        text,
+        font,
+        size,
+        color,
+        pos,
+        bbox,
+        node_indent,
+        pretty,
+      )
     }
   }
   write_line(sb, "</g>", "  ", pretty)
