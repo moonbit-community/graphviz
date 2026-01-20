@@ -88,6 +88,20 @@ pub fn layout_dot(
 }
 
 ///|
+/// Build a layout from existing node positions (neato -n style).
+/// scale converts pos coordinates from points-per-inch into points.
+/// no_op_level > 1 reuses edge pos attributes when present.
+#declaration_only
+pub fn layout_neato_noop(
+  graph : @cgraph.Graph,
+  no_op_level? : Int = 1,
+  scale? : Double = 72.0,
+  prune? : Bool = false,
+) -> DotLayoutGraph raise DotLayoutError {
+  ...
+}
+
+///|
 /// Attach layout attributes (bb, pos, lp, edge pos, etc.) to the graph.
 #declaration_only
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {

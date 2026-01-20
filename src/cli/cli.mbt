@@ -103,6 +103,24 @@ fn parse_int(flag : String, text : String) -> Int raise CliError {
 }
 
 ///|
+fn try_parse_double(text : String) -> Double? {
+  try @strconv.parse_double(text) catch {
+    _ => None
+  } noraise {
+    value => Some(value)
+  }
+}
+
+///|
+fn try_parse_int(text : String) -> Int? {
+  try @strconv.parse_int(text) catch {
+    _ => None
+  } noraise {
+    value => Some(value)
+  }
+}
+
+///|
 fn required_flag_value(
   args : Array[String],
   index : Int,
@@ -126,21 +144,50 @@ fn required_flag_value(
 }
 
 ///|
-fn optional_flag_value(
+fn optional_int_flag_value(
   args : Array[String],
   index : Int,
+  flag : String,
   prefix_len : Int,
-) -> (String?, Int) {
+) -> (Int?, Int) raise CliError {
   let arg = args[index]
   if arg.length() > prefix_len {
     let value = arg.unsafe_substring(start=prefix_len, end=arg.length())
-    return (Some(value), index)
+    return (Some(parse_int(flag, value)), index)
   }
   let next_index = index + 1
   if next_index < args.length() {
     let value = args[next_index]
     if !value.has_prefix("-") {
-      return (Some(value), next_index)
+      match try_parse_int(value) {
+        Some(parsed) => return (Some(parsed), next_index)
+        None => ()
+      }
+    }
+  }
+  (None, index)
+}
+
+///|
+fn optional_double_flag_value(
+  args : Array[String],
+  index : Int,
+  flag : String,
+  prefix_len : Int,
+) -> (Double?, Int) raise CliError {
+  let arg = args[index]
+  if arg.length() > prefix_len {
+    let value = arg.unsafe_substring(start=prefix_len, end=arg.length())
+    return (Some(parse_double(flag, value)), index)
+  }
+  let next_index = index + 1
+  if next_index < args.length() {
+    let value = args[next_index]
+    if !value.has_prefix("-") {
+      match try_parse_double(value) {
+        Some(parsed) => return (Some(parsed), next_index)
+        None => ()
+      }
     }
   }
   (None, index)
@@ -227,18 +274,18 @@ pub fn parse_cli_args(
       continue
     }
     if arg.has_prefix("-s") {
-      let (value, next) = optional_flag_value(args, i, 2)
+      let (value, next) = optional_double_flag_value(args, i, "-s", 2)
       match value {
-        Some(text) => scale = Some(parse_double("-s", text))
+        Some(parsed) => scale = Some(parsed)
         None => scale = Some(72.0)
       }
       i = next + 1
       continue
     }
     if arg.has_prefix("-n") {
-      let (value, next) = optional_flag_value(args, i, 2)
+      let (value, next) = optional_int_flag_value(args, i, "-n", 2)
       match value {
-        Some(text) => neato_no_op = Some(parse_int("-n", text))
+        Some(parsed) => neato_no_op = Some(parsed)
         None => neato_no_op = Some(1)
       }
       i = next + 1
@@ -295,20 +342,63 @@ fn apply_attrs(graph : @cgraph.Graph, job : CliJob) -> Unit {
 }
 
 ///|
+fn layout_for_job(
+  job : CliJob,
+  graph : @cgraph.Graph,
+) -> @layout_dot.DotLayoutGraph raise {
+  match job.engine {
+    LayoutEngine::Dot => @layout_dot.layout_dot(graph)
+    LayoutEngine::Neato => {
+      let no_op_level = match job.neato_no_op {
+        Some(level) => Some(level)
+        None => if job.neato_prune { Some(1) } else { None }
+      }
+      match no_op_level {
+        Some(level) => {
+          let scale = match job.scale {
+            Some(value) => value
+            None => 72.0
+          }
+          @layout_dot.layout_neato_noop(
+            graph,
+            no_op_level=level,
+            scale=scale,
+            prune=job.neato_prune,
+          )
+        }
+        None => raise @layout_dot.DotLayoutError::UnsupportedFeature(
+          message="neato layout not implemented (use -n)",
+        )
+      }
+    }
+    LayoutEngine::Fdp
+    | LayoutEngine::Sfdp
+    | LayoutEngine::Twopi
+    | LayoutEngine::Circo
+    | LayoutEngine::Osage
+    | LayoutEngine::Patchwork
+    | LayoutEngine::Nop
+    | LayoutEngine::Other(_) => raise @layout_dot.DotLayoutError::UnsupportedFeature(
+      message="layout engine not implemented",
+    )
+  }
+}
+
+///|
 pub fn render_job(job : CliJob) -> String raise {
   let graph = read_dot_input(job.input)
   apply_attrs(graph, job)
-  let layout = @layout_dot.layout_dot(graph)
+  let layout = layout_for_job(job, graph)
   match job.format.format {
     OutputFormat::Dot => {
       layout.apply()
-      @dot.write_dot(graph)
+      @dot.write_dot(layout.graph)
     }
     OutputFormat::XDot => @xdot.render_xdot(layout)
     OutputFormat::Svg => @svg.render_svg(layout)
     OutputFormat::Other(_) => {
       layout.apply()
-      @dot.write_dot(graph)
+      @dot.write_dot(layout.graph)
     }
   }
 }

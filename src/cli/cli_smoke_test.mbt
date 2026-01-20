@@ -6,15 +6,15 @@ fn ensure_dir(path : String) -> Unit raise {
 }
 
 ///|
-fn write_input(path : String) -> Unit raise {
-  @fs.write_string_to_file(path, "digraph { a -> b }")
+fn write_input(path : String, contents : String) -> Unit raise {
+  @fs.write_string_to_file(path, contents)
 }
 
 test "cli smoke dot/xdot/svg" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/input.dot"
-  write_input(input_path)
+  write_input(input_path, "digraph { a -> b }")
 
   let dot_out = run_cli(["-Tdot", input_path])
   assert_true(dot_out.contains("pos="))
@@ -31,7 +31,7 @@ test "cli smoke writes output file" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/input.dot"
-  write_input(input_path)
+  write_input(input_path, "digraph { a -> b }")
   let out_path = "target/cli/out.svg"
   let stdout = run_cli(["-Tsvg", "-o", out_path, input_path])
   assert_eq(stdout, "")
