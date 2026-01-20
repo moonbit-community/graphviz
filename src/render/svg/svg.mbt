@@ -574,9 +574,7 @@ fn write_line(
     sb.write_string(indent)
   }
   sb.write_string(text)
-  if pretty {
-    sb.write_char('\n')
-  }
+  sb.write_char('\n')
 }
 
 ///|
