@@ -1042,6 +1042,33 @@ fn transform_layout(
 }
 
 ///|
+fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
+  match graph.get_attr("label") {
+    Some(value) => {
+      if value == "" {
+        None
+      } else {
+        let font_size_pt = match graph.get_attr("fontsize") {
+          Some(size) => parse_double(size, 14.0)
+          None => 14.0
+        }
+        let (width_pt, height_pt) = label_text_dimensions(value, font_size_pt)
+        Some((width_pt, height_pt))
+      }
+    }
+    None => None
+  }
+}
+
+///|
 fn layout_subgraphs(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
@@ -1069,7 +1096,28 @@ fn layout_subgraphs(
         sub_edges.push(edge_layout)
       }
     }
-    let bbox = compute_bbox(sub_nodes, sub_edges)
+    let mut bbox = compute_bbox(sub_nodes, sub_edges)
+    if is_cluster_graph(subgraph) {
+      let pad = 8.0
+      let mut llx = bbox.llx - pad
+      let lly = bbox.lly - pad
+      let mut urx = bbox.urx + pad
+      let mut ury = bbox.ury + pad
+      match graph_label_metrics(subgraph) {
+        Some((width_pt, height_pt)) => {
+          ury = ury + height_pt + 8.0
+          let label_width = width_pt + pad * 2.0
+          let current_width = urx - llx
+          if label_width > current_width {
+            let extra = label_width - current_width
+            llx = llx - extra / 2.0
+            urx = urx + extra / 2.0
+          }
+        }
+        None => ()
+      }
+      bbox = { llx, lly, urx, ury }
+    }
     let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
     result.push({
       graph: subgraph,

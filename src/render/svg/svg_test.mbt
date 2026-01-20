@@ -13,3 +13,38 @@ test "render_svg emits svg" {
   assert_true(svg.contains("<path"))
   assert_true(svg.contains("<polygon"))
 }
+
+///|
+fn ensure_dir(path : String) -> Unit raise {
+  if !@fs.path_exists(path) {
+    @fs.create_dir(path)
+  }
+}
+
+test "svg spot-check outputs" {
+  let out_dir = "target/render/svg"
+  ensure_dir("target")
+  ensure_dir("target/render")
+  ensure_dir(out_dir)
+  let cases : Array[(String, String)] = [
+    ("refs/graphviz/doc/dotguide/graph1.dot", "graph1"),
+    ("refs/graphviz/graphs/directed/clust.gv", "clust"),
+    ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
+    ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
+  ]
+  for pair in cases {
+    let (input_path, name) = pair
+    let graph = @dot.parse_dot_file(input_path)
+    let layout = @layout_dot.layout_dot(graph)
+    let svg = render_svg(
+      layout,
+      options={
+        pretty: Some(false),
+        include_xml_decl: Some(false),
+      },
+    )
+    let out_path = "\{out_dir}/\{name}.svg"
+    @fs.write_string_to_file(out_path, svg)
+    assert_true(svg.contains("<svg"))
+  }
+}

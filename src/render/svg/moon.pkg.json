@@ -9,6 +9,7 @@
     "moonbitlang/core/strconv"
   ],
   "test-import": [
+    "moonbitlang/x/fs",
     "moonbit-community/graphviz/dot"
   ]
 }
