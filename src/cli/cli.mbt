@@ -249,6 +249,14 @@ pub fn parse_cli_args(
       i = i + 1
       continue
     }
+    if arg == "-" {
+      match input {
+        Some(_) => raise CliError::MultipleInputs
+        None => input = Some(arg)
+      }
+      i = i + 1
+      continue
+    }
     if arg.has_prefix("-") {
       raise CliError::UnknownFlag(flag=arg)
     }
@@ -288,10 +296,7 @@ fn apply_attrs(graph : @cgraph.Graph, job : CliJob) -> Unit {
 
 ///|
 pub fn render_job(job : CliJob) -> String raise {
-  let graph = match job.input {
-    Some(path) => @dot.parse_dot_file(path)
-    None => @dot.parse_dot("digraph {}")
-  }
+  let graph = read_dot_input(job.input)
   apply_attrs(graph, job)
   let layout = @layout_dot.layout_dot(graph)
   match job.format.format {
@@ -306,6 +311,15 @@ pub fn render_job(job : CliJob) -> String raise {
       @dot.write_dot(graph)
     }
   }
+}
+
+///|
+fn read_dot_input(input : String?) -> @cgraph.Graph raise {
+  let path = match input {
+    None => "/dev/stdin"
+    Some(path) => if path == "-" { "/dev/stdin" } else { path }
+  }
+  @dot.parse_dot_file(path)
 }
 
 ///|
