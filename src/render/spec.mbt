@@ -62,3 +62,15 @@ pub(all) enum DrawOp {
   Style(name~ : String)
   FontChar(codepoint~ : UInt)
 } derive(Show, Eq)
+
+///|
+/// Generate arrowhead drawing primitives for a single arrow tip.
+#declaration_only
+pub fn arrow_primitives(
+  tip : @geom.Point,
+  from : @geom.Point,
+  size : Double,
+  arrowhead : String?,
+) -> Array[DrawOp] {
+  ...
+}

@@ -105,6 +105,24 @@ fn tokenize_xdot(value : String) -> Array[String] {
 }
 
 ///|
+fn normalize_color_tokens(tokens : Array[String]) -> Array[String] {
+  let normalized : Array[String] = []
+  let mut index = 0
+  while index < tokens.length() {
+    let token = tokens[index]
+    if token == "-#\\" && index + 1 < tokens.length() {
+      let merged = "-#\{tokens[index + 1]}"
+      normalized.push(merged)
+      index = index + 2
+    } else {
+      normalized.push(token)
+      index = index + 1
+    }
+  }
+  normalized
+}
+
+///|
 fn token_number(value : String) -> Double? {
   try Some(@strconv.parse_double(value)) catch {
     _ => None
@@ -118,8 +136,8 @@ fn compare_draw_attr(
   tol : Double,
 ) -> Unit raise {
   let _ = tol
-  let expected_tokens = tokenize_xdot(expected)
-  let actual_tokens = tokenize_xdot(actual)
+  let expected_tokens = normalize_color_tokens(tokenize_xdot(expected))
+  let actual_tokens = normalize_color_tokens(tokenize_xdot(actual))
   let expected_filtered : Array[String] = []
   for token in expected_tokens {
     if token_number(token) is None && token != "\\" {
@@ -320,9 +338,9 @@ fn assert_snapshot(
 }
 
 test "xdot snapshot parity" {
-  // Arrow snapshots are deferred until arrowhead shapes land.
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
+    ("refs/graphviz/graphs/directed/arrows.gv", "tests/render/xdot/arrows.xdot"),
     ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
     ("refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot"),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),

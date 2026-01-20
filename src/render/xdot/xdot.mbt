@@ -215,6 +215,7 @@ fn shape_kind(value : String?) -> String {
   match shape {
     "box" | "rect" | "rectangle" => "box"
     "record" => "record"
+    "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
   }
@@ -302,33 +303,6 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
-fn arrow_triangle(
-  tip : @geom.Point,
-  from : @geom.Point,
-  size : Double,
-) -> Array[@geom.Point] {
-  let dx = tip.x - from.x
-  let dy = tip.y - from.y
-  let len = Double::sqrt(dx * dx + dy * dy)
-  if len < 0.0001 {
-    return []
-  }
-  let ux = dx / len
-  let uy = dy / len
-  let length = 10.0 * size
-  let width = 6.0 * size
-  let base_x = tip.x - ux * length
-  let base_y = tip.y - uy * length
-  let px = -uy
-  let py = ux
-  let half = width / 2.0
-  [
-    tip,
-    { x: base_x + px * half, y: base_y + py * half },
-    { x: base_x - px * half, y: base_y - py * half },
-  ]
-}
-
 ///|
 fn arrow_ops(
   layout : @layout_dot.DotLayoutEdge,
@@ -356,23 +330,55 @@ fn arrow_ops(
   } else {
     spline.points[1]
   }
-  let points = arrow_triangle(tip, from, arrow_size(layout.edge))
-  if points.length() == 0 {
+  let arrowhead = if at_head {
+    layout.edge.get_attr("arrowhead")
+  } else {
+    layout.edge.get_attr("arrowtail")
+  }
+  let primitives = @render.arrow_primitives(
+    tip,
+    from,
+    arrow_size(layout.edge),
+    arrowhead,
+  )
+  if primitives.length() == 0 {
     return ops
   }
   let style = match layout.edge.get_attr("style") {
     Some(value) => value.to_lower()
     None => "solid"
   }
-  ops.push(@render.DrawOp::Style(name=style))
   let color = match layout.edge.get_attr("color") {
     Some(value) => value
     None => "black"
   }
   let normalized = normalize_color(color)
-  ops.push(@render.DrawOp::PenColor(color=normalized))
-  ops.push(@render.DrawOp::FillColor(color=normalized))
-  ops.push(@render.DrawOp::Polygon(filled=true, points=points))
+  for primitive in primitives {
+    ops.push(@render.DrawOp::Style(name=style))
+    ops.push(@render.DrawOp::PenColor(color=normalized))
+    match primitive {
+      @render.DrawOp::Polygon(filled~, points~) => {
+        if filled {
+          ops.push(@render.DrawOp::FillColor(color=normalized))
+        }
+        ops.push(@render.DrawOp::Polygon(filled=filled, points=points))
+      }
+      @render.DrawOp::Ellipse(filled~, rect~) => {
+        if filled {
+          ops.push(@render.DrawOp::FillColor(color=normalized))
+        }
+        ops.push(@render.DrawOp::Ellipse(filled=filled, rect=rect))
+      }
+      @render.DrawOp::Polyline(points~) => {
+        ops.push(@render.DrawOp::Polyline(points=points))
+      }
+      @render.DrawOp::Bezier(filled~, points~) => {
+        let _ = filled
+        ops.push(@render.DrawOp::Bezier(filled=false, points=points))
+      }
+      _ => ()
+    }
+  }
   ops
 }
 
@@ -511,13 +517,23 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return record_draw_ops(layout)
   }
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-  let filled = has_filled_style(node.get_attr("style"))
+  let filled = if shape == "point" {
+    true
+  } else {
+    has_filled_style(node.get_attr("style"))
+  }
   if filled {
     let fill = match node.get_attr("fillcolor") {
       Some(value) => value
-      None => match node.get_attr("color") {
-        Some(value) => value
-        None => "white"
+      None => {
+        if shape == "point" {
+          pen
+        } else {
+          match node.get_attr("color") {
+            Some(value) => value
+            None => "white"
+          }
+        }
       }
     }
     ops.push(@render.DrawOp::FillColor(color=normalize_color(fill)))

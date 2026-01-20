@@ -35,6 +35,7 @@ fn shape_kind(value : String?) -> String {
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
+    "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
   }
@@ -116,38 +117,10 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
-fn arrow_triangle(
-  tip : @geom.Point,
-  from : @geom.Point,
-  size : Double,
-) -> Array[@geom.Point] {
-  let dx = tip.x - from.x
-  let dy = tip.y - from.y
-  let len = Double::sqrt(dx * dx + dy * dy)
-  if len < 0.0001 {
-    return []
-  }
-  let ux = dx / len
-  let uy = dy / len
-  let length = 10.0 * size
-  let width = 6.0 * size
-  let base_x = tip.x - ux * length
-  let base_y = tip.y - uy * length
-  let px = -uy
-  let py = ux
-  let half = width / 2.0
-  [
-    tip,
-    { x: base_x + px * half, y: base_y + py * half },
-    { x: base_x - px * half, y: base_y - py * half },
-  ]
-}
-
-///|
-fn arrow_points(
+fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
-) -> Array[@geom.Point] {
+) -> Array[@render.DrawOp] {
   if layout.splines.length() == 0 {
     return []
   }
@@ -169,7 +142,12 @@ fn arrow_points(
   } else {
     spline.points[1]
   }
-  arrow_triangle(tip, from, arrow_size(layout.edge))
+  let arrowhead = if at_head {
+    layout.edge.get_attr("arrowhead")
+  } else {
+    layout.edge.get_attr("arrowtail")
+  }
+  @render.arrow_primitives(tip, from, arrow_size(layout.edge), arrowhead)
 }
 
 ///|
@@ -263,6 +241,67 @@ fn polygon_points(
 }
 
 ///|
+fn write_arrow_ops(
+  sb : StringBuilder,
+  ops : Array[@render.DrawOp],
+  color : String,
+  llx : Double,
+  lly : Double,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  for op in ops {
+    match op {
+      @render.DrawOp::Polygon(filled~, points~) => {
+        let attrs = polygon_points(points, llx, lly)
+        let fill = if filled { color } else { "none" }
+        write_line(
+          sb,
+          "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{color}\"/>",
+          indent,
+          pretty,
+        )
+      }
+      @render.DrawOp::Ellipse(filled~, rect~) => {
+        let center_x = (rect.llx + rect.urx) / 2.0 - llx
+        let center_y = (rect.lly + rect.ury) / 2.0 - lly
+        let radius_x = (rect.urx - rect.llx) / 2.0
+        let radius_y = (rect.ury - rect.lly) / 2.0
+        let fill = if filled { color } else { "none" }
+        write_line(
+          sb,
+          "<ellipse cx=\"\{center_x}\" cy=\"\{center_y}\" rx=\"\{radius_x}\" ry=\"\{radius_y}\" fill=\"\{fill}\" stroke=\"\{color}\"/>",
+          indent,
+          pretty,
+        )
+      }
+      @render.DrawOp::Polyline(points~) => {
+        let attrs = polygon_points(points, llx, lly)
+        write_line(
+          sb,
+          "<polyline points=\"\{attrs}\" fill=\"none\" stroke=\"\{color}\"/>",
+          indent,
+          pretty,
+        )
+      }
+      @render.DrawOp::Bezier(filled~, points~) => {
+        let _ = filled
+        let path = spline_path(@geom.Spline::{ start: None, end: None, points }, llx, lly)
+        if path != "" {
+          write_line(
+            sb,
+            "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"/>",
+            indent,
+            pretty,
+          )
+        }
+      }
+      _ => ()
+    }
+  }
+}
+
+///|
 fn write_line(
   sb : StringBuilder,
   text : String,
@@ -337,28 +376,12 @@ pub fn render_svg(
     }
     let flags = arrow_flags(edge, kind)
     if flags.head {
-      let points = arrow_points(edge_layout, true)
-      if points.length() > 0 {
-        let attrs = polygon_points(points, bbox.llx, bbox.lly)
-        write_line(
-          sb,
-          "<polygon points=\"\{attrs}\" fill=\"\{color}\" stroke=\"\{color}\"/>",
-          edge_indent,
-          pretty,
-        )
-      }
+      let ops = arrow_primitives(edge_layout, true)
+      write_arrow_ops(sb, ops, color, bbox.llx, bbox.lly, edge_indent, pretty)
     }
     if flags.tail {
-      let points = arrow_points(edge_layout, false)
-      if points.length() > 0 {
-        let attrs = polygon_points(points, bbox.llx, bbox.lly)
-        write_line(
-          sb,
-          "<polygon points=\"\{attrs}\" fill=\"\{color}\" stroke=\"\{color}\"/>",
-          edge_indent,
-          pretty,
-        )
-      }
+      let ops = arrow_primitives(edge_layout, false)
+      write_arrow_ops(sb, ops, color, bbox.llx, bbox.lly, edge_indent, pretty)
     }
   }
   let node_indent = if pretty { "    " } else { "" }
@@ -370,11 +393,21 @@ pub fn render_svg(
       Some(value) => value
       None => "black"
     }
-    let filled = has_filled_style(node.get_attr("style"))
+    let filled = if kind == "point" {
+      true
+    } else {
+      has_filled_style(node.get_attr("style"))
+    }
     let fill = if filled {
       match node.get_attr("fillcolor") {
         Some(value) => value
-        None => "white"
+        None => {
+          if kind == "point" {
+            stroke
+          } else {
+            "white"
+          }
+        }
       }
     } else {
       "none"

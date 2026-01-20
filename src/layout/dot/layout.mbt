@@ -27,6 +27,11 @@ fn default_node_height_in() -> Double {
 }
 
 ///|
+fn default_point_size_in() -> Double {
+  0.05
+}
+
+///|
 fn parse_double(value : String, fallback : Double) -> Double {
   try @strconv.parse_double(value) catch {
     _ => fallback
@@ -570,13 +575,22 @@ fn port_geometry(
 
 ///|
 fn node_size(node : @cgraph.Node) -> NodeSize {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
+    (default_point_size_in(), default_point_size_in())
+  } else {
+    (default_node_width_in(), default_node_height_in())
+  }
   let base_width_in = match node.get_attr("width") {
-    Some(value) => parse_double(value, default_node_width_in())
-    None => default_node_width_in()
+    Some(value) => parse_double(value, fallback_width)
+    None => fallback_width
   }
   let base_height_in = match node.get_attr("height") {
-    Some(value) => parse_double(value, default_node_height_in())
-    None => default_node_height_in()
+    Some(value) => parse_double(value, fallback_height)
+    None => fallback_height
   }
   let font_size_pt = match node.get_attr("fontsize") {
     Some(value) => parse_double(value, 14.0)
