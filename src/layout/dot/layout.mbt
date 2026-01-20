@@ -125,6 +125,16 @@ const PAD_X_PT : Double = 16.0
 const PAD_Y_PT : Double = 8.0
 
 ///|
+fn font_width_scale(font_name : String) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("palatino") {
+    1.02
+  } else {
+    1.0
+  }
+}
+
+///|
 fn char_width_units(ch : Char) -> Int {
   match ch {
     ' ' => 250
@@ -210,7 +220,19 @@ fn char_width_units(ch : Char) -> Int {
 }
 
 ///|
-fn label_text_dimensions(label : String, font_size_pt : Double) -> (Double, Double) {
+fn label_text_dimensions(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> (Double, Double) {
+  if label == "" {
+    return (0.0, 0.0)
+  }
+  let line_height = if font_name.to_lower().contains("palatino") {
+    font_size_pt * 1.125
+  } else {
+    font_size_pt * LINE_SPACING
+  }
   let mut max_units = 0
   let mut current_units = 0
   let mut lines = 1
@@ -249,8 +271,10 @@ fn label_text_dimensions(label : String, font_size_pt : Double) -> (Double, Doub
   if current_units > max_units {
     max_units = current_units
   }
-  let width_pt = max_units.to_double() * font_size_pt * TEXT_SCALE / 1000.0
-  let height_pt = lines.to_double() * font_size_pt * LINE_SPACING
+  let width_scale = font_width_scale(font_name)
+  let width_pt =
+    max_units.to_double() * font_size_pt * TEXT_SCALE * width_scale / 1000.0
+  let height_pt = lines.to_double() * line_height
   (width_pt, height_pt)
 }
 
@@ -294,13 +318,17 @@ fn parse_margin(value : String) -> (Double, Double)? {
 fn label_text(node : @cgraph.Node) -> String {
   match node.get_attr("label") {
     Some(value) => {
-      if value == "" || value == "\\N" {
-        node.name()
-      } else {
-        value
-      }
+      if value == "\\N" { node.name() } else { value }
     }
     None => node.name()
+  }
+}
+
+///|
+fn font_name(value : String?) -> String {
+  match value {
+    Some(text) => text
+    None => "Times-Roman"
   }
 }
 
@@ -422,6 +450,7 @@ fn record_fields(label : String) -> Array[RecordField] {
 ///|
 fn record_field_metrics(
   fields : Array[RecordField],
+  font_name : String,
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
@@ -431,7 +460,7 @@ fn record_field_metrics(
   let mut max_width = 0.0
   for field in fields {
     let (text_width_pt, text_height_pt) =
-      label_text_dimensions(field.text, font_size_pt)
+      label_text_dimensions(field.text, font_name, font_size_pt)
     let width_pt = text_width_pt + pad_x_pt
     let height_pt = text_height_pt + pad_y_pt
     heights.push(height_pt)
@@ -446,13 +475,14 @@ fn record_field_metrics(
 ///|
 fn record_scaled_heights(
   fields : Array[RecordField],
+  font_name : String,
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
   total_height_pt : Double,
 ) -> Array[Double] {
   let (heights, sum_height, _) =
-    record_field_metrics(fields, font_size_pt, pad_x_pt, pad_y_pt)
+    record_field_metrics(fields, font_name, font_size_pt, pad_x_pt, pad_y_pt)
   let scale = if sum_height > 0.0 { total_height_pt / sum_height } else { 1.0 }
   let scaled : Array[Double] = []
   for height in heights {
@@ -480,9 +510,11 @@ fn record_rects(
     Some(value) => parse_double(value, 14.0)
     None => 14.0
   }
+  let font = font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let heights = record_scaled_heights(
     fields,
+    font,
     font_size_pt,
     pad_x_pt,
     pad_y_pt,
@@ -512,9 +544,11 @@ fn record_ports(
     Some(value) => parse_double(value, 14.0)
     None => 14.0
   }
+  let font = font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let heights = record_scaled_heights(
     fields,
+    font,
     font_size_pt,
     pad_x_pt,
     pad_y_pt,
@@ -579,6 +613,10 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     Some(value) => value.to_lower()
     None => ""
   }
+  let scale_ellipse = match shape {
+    "box" | "rect" | "rectangle" | "record" | "point" | "dot" => false
+    _ => true
+  }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
     (default_point_size_in(), default_point_size_in())
   } else {
@@ -596,6 +634,7 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     Some(value) => parse_double(value, 14.0)
     None => 14.0
   }
+  let font = font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
@@ -603,26 +642,46 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     let label = label_text(node)
     let fields = record_fields(label)
     let (_, sum_height, max_width) =
-      record_field_metrics(fields, font_size_pt, pad_x_pt, pad_y_pt)
+      record_field_metrics(fields, font, font_size_pt, pad_x_pt, pad_y_pt)
     let width_pt = if max_width > base_width_pt { max_width } else { base_width_pt }
     let height_pt = if sum_height > base_height_pt { sum_height } else { base_height_pt }
     return node_size_from_points(width_pt, height_pt)
   }
   let label = label_text(node)
   let (text_width_pt, text_height_pt) =
-    label_text_dimensions(label, font_size_pt)
+    label_text_dimensions(label, font, font_size_pt)
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
   let label_width_pt = if has_label { text_width_pt + pad_x_pt } else { 0.0 }
   let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
-  let label_width_in = label_width_pt / 72.0
-  let label_height_in = label_height_pt / 72.0
-  let width_in = if label_width_in > base_width_in {
-    label_width_in
+  let mut scaled_label_width_pt = label_width_pt
+  let mut scaled_label_height_pt = label_height_pt
+  if scale_ellipse && has_label {
+    let sqrt2 = Double::sqrt(2.0)
+    let temp = label_height_pt * sqrt2
+    if base_height_pt > temp {
+      let ratio = label_height_pt / base_height_pt
+      let denom = 1.0 - ratio * ratio
+      if denom > 0.0 {
+        let scale = Double::sqrt(1.0 / denom)
+        scaled_label_width_pt = label_width_pt * scale
+      } else {
+        scaled_label_width_pt = label_width_pt * sqrt2
+        scaled_label_height_pt = temp
+      }
+    } else {
+      scaled_label_width_pt = label_width_pt * sqrt2
+      scaled_label_height_pt = temp
+    }
+  }
+  let scaled_label_width_in = scaled_label_width_pt / 72.0
+  let scaled_label_height_in = scaled_label_height_pt / 72.0
+  let width_in = if scaled_label_width_in > base_width_in {
+    scaled_label_width_in
   } else {
     base_width_in
   }
-  let height_in = if label_height_in > base_height_in {
-    label_height_in
+  let height_in = if scaled_label_height_in > base_height_in {
+    scaled_label_height_in
   } else {
     base_height_in
   }
@@ -663,77 +722,56 @@ fn compute_ranks_directed(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Int] {
-  let indegree : Map[String, Int] = Map::new()
-  let outgoing : Map[String, Array[String]] = Map::new()
-  let names : Array[String] = []
+  let graph = new_graph()
+  let index : Map[String, Int] = Map::new()
   for node in nodes {
     let name = node.name()
-    indegree[name] = 0
-    outgoing[name] = []
-    names.push(name)
+    index[name] = add_node(graph, name)
   }
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
-    let count = match indegree.get(head) {
+    let tail_idx = match index.get(tail) {
       Some(value) => value
       None => 0
     }
-    indegree[head] = count + 1
-    match outgoing.get(tail) {
-      Some(list) => list.push(head)
-      None => outgoing[tail] = [head]
-    }
-  }
-  let queue : Array[String] = []
-  for name in names {
-    let count = match indegree.get(name) {
+    let head_idx = match index.get(head) {
       Some(value) => value
       None => 0
     }
-    if count == 0 {
-      queue.push(name)
+    let minlen_value = match edge.get_attr("minlen") {
+      Some(value) => parse_double(value, 1.0)
+      None => 1.0
     }
+    let minlen = if minlen_value < 1.0 { 1 } else { minlen_value.round().to_int() }
+    let _ = add_edge(graph, tail_idx, head_idx, minlen, 1)
   }
+  network_simplex(graph, 0x7fffffff, BalanceMode::TB)
   let ranks : Map[String, Int] = Map::new()
-  let max_parent : Map[String, Int] = Map::new()
-  let mut index = 0
-  while index < queue.length() {
-    let name = queue[index]
-    index = index + 1
-    let rank = match max_parent.get(name) {
+  let mut min_rank = 0
+  let mut seen = false
+  for node in nodes {
+    let name = node.name()
+    let idx = match index.get(name) {
       Some(value) => value
       None => 0
     }
-    ranks[name] = rank
-    match outgoing.get(name) {
-      Some(list) => {
-        for head in list {
-          let remaining = match indegree.get(head) {
-            Some(value) => value - 1
-            None => 0
-          }
-          indegree[head] = remaining
-          let candidate = rank + 1
-          let current = match max_parent.get(head) {
-            Some(value) => value
-            None => 0
-          }
-          if candidate > current {
-            max_parent[head] = candidate
-          }
-          if remaining == 0 {
-            queue.push(head)
-          }
-        }
-      }
-      None => ()
+    let rank = graph.nodes[idx].rank
+    if !seen {
+      min_rank = rank
+      seen = true
+    } else if rank < min_rank {
+      min_rank = rank
     }
   }
-  for name in names {
-    if ranks.get(name) is None {
-      ranks[name] = 0
+  for node in nodes {
+    let name = node.name()
+    let idx = match index.get(name) {
+      Some(value) => value
+      None => 0
     }
+    let rank = graph.nodes[idx].rank - min_rank
+    ranks[name] = rank
   }
   ranks
 }
@@ -788,6 +826,65 @@ fn median_positions(
       Some(values[mid])
     }
   }
+}
+
+///|
+fn position_key(
+  name : String,
+  desired : Map[String, Double],
+  x_positions : Map[String, Double],
+) -> Double {
+  match desired.get(name) {
+    Some(value) => value
+    None => match x_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+  }
+}
+
+///|
+fn sort_by_positions(
+  names : Array[String],
+  desired : Map[String, Double],
+  x_positions : Map[String, Double],
+  neighbors : Map[String, Array[String]],
+) -> Array[String] {
+  let sorted = names.copy()
+  if sorted.length() < 2 {
+    return sorted
+  }
+  let mut i = 1
+  while i < sorted.length() {
+    let current = sorted[i]
+    let current_key = position_key(current, desired, x_positions)
+    let mut j = i
+    let current_degree = match neighbors.get(current) {
+      Some(list) => list.length()
+      None => 0
+    }
+    while j > 0 {
+      let prev = sorted[j - 1]
+      let prev_key = position_key(prev, desired, x_positions)
+      if prev_key < current_key {
+        break
+      }
+      if prev_key == current_key {
+        let prev_degree = match neighbors.get(prev) {
+          Some(list) => list.length()
+          None => 0
+        }
+        if prev_degree <= current_degree {
+          break
+        }
+      }
+      sorted[j] = prev
+      j = j - 1
+    }
+    sorted[j] = current
+    i = i + 1
+  }
+  sorted
 }
 
 ///|
@@ -968,6 +1065,57 @@ fn compute_rank_positions(
 }
 
 ///|
+fn reorder_rank_groups(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+) -> Map[Int, Array[String]] {
+  let ordered : Map[Int, Array[String]] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    ordered[rank] = names
+  }
+  let mut x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+  if rank_keys.length() > 1 {
+    let mut idx = rank_keys.length() - 1
+    while idx > 0 {
+      let rank = rank_keys[idx - 1]
+      let names = match ordered.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      if names.length() > 1 {
+        let desired = compute_desired_positions(names, children, x_positions)
+        ordered[rank] = sort_by_positions(names, desired, x_positions, children)
+        x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+      }
+      idx = idx - 1
+    }
+    let mut j = 1
+    while j < rank_keys.length() {
+      let rank = rank_keys[j]
+      let names = match ordered.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      if names.length() > 1 {
+        let desired = compute_desired_positions(names, parents, x_positions)
+        ordered[rank] = sort_by_positions(names, desired, x_positions, parents)
+        x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+      }
+      j = j + 1
+    }
+  }
+  ordered
+}
+
+///|
 fn build_rank_groups(
   nodes : Array[@cgraph.Node],
   ranks : Map[String, Int],
@@ -1005,6 +1153,28 @@ fn format_float(value : Double) -> String {
   }
   let frac_str = if frac < 10 { "0\{frac}" } else { "\{frac}" }
   "\{sign}\{int_part}.\{frac_str}"
+}
+
+///|
+fn format_dim(value : Double) -> String {
+  let rounded = (value * 100000.0).round() / 100000.0
+  if rounded == 0.0 {
+    return "0"
+  }
+  let text = rounded.to_string()
+  if !text.contains(".") {
+    return text
+  }
+  let mut result = text
+  while result.length() > 0 && result.has_suffix("0") {
+    let next_len = result.length() - 1
+    result = result.unsafe_substring(start=0, end=next_len)
+  }
+  if result.has_suffix(".") {
+    let next_len = result.length() - 1
+    result = result.unsafe_substring(start=0, end=next_len)
+  }
+  result
 }
 
 ///|
@@ -1197,6 +1367,31 @@ fn compute_bbox(
 }
 
 ///|
+fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
+  {
+    llx: if base.llx < other.llx { base.llx } else { other.llx },
+    lly: if base.lly < other.lly { base.lly } else { other.lly },
+    urx: if base.urx > other.urx { base.urx } else { other.urx },
+    ury: if base.ury > other.ury { base.ury } else { other.ury },
+  }
+}
+
+///|
+fn expand_bbox_with_subgraphs(
+  bbox : @geom.Rect,
+  subgraphs : Array[DotLayoutGraph],
+) -> @geom.Rect {
+  let mut result = bbox
+  for subgraph in subgraphs {
+    result = merge_bbox(result, subgraph.bbox)
+    if subgraph.subgraphs.length() > 0 {
+      result = expand_bbox_with_subgraphs(result, subgraph.subgraphs)
+    }
+  }
+  result
+}
+
+///|
 fn transform_point(
   point : @geom.Point,
   bbox : @geom.Rect,
@@ -1350,7 +1545,8 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
           Some(size) => parse_double(size, 14.0)
           None => 14.0
         }
-        let (width_pt, height_pt) = label_text_dimensions(value, font_size_pt)
+        let font = font_name(graph.get_attr("fontname"))
+        let (width_pt, height_pt) = label_text_dimensions(value, font, font_size_pt)
         Some((width_pt, height_pt))
       }
     }
@@ -1409,6 +1605,9 @@ fn layout_subgraphs(
       bbox = { llx, lly, urx, ury }
     }
     let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
+    if sub_subgraphs.length() > 0 {
+      bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
+    }
     result.push({
       graph: subgraph,
       bbox,
@@ -1551,12 +1750,21 @@ pub fn layout_dot(
     Some(value) => parse_ordering(value)
     None => None
   }
+  let (parents, children) = build_edge_index(nodes, edges)
+  let ordered_groups = reorder_rank_groups(
+    rank_keys,
+    groups,
+    parents,
+    children,
+    sizes,
+    nodesep_pt,
+  )
   let x_positions = compute_x_positions(
     nodes,
     edges,
     ranks,
     rank_keys,
-    groups,
+    ordered_groups,
     sizes,
     nodesep_pt,
     ordering,
@@ -1703,13 +1911,19 @@ pub fn layout_dot(
   } else {
     transform_layout(nodes_out, edges_out, base_bbox, rankdir)
   }
+  let subgraphs = layout_subgraphs(graph, final_nodes, final_edges)
+  let final_bbox = if subgraphs.length() > 0 {
+    expand_bbox_with_subgraphs(bbox, subgraphs)
+  } else {
+    bbox
+  }
   {
     graph,
-    bbox,
+    bbox: final_bbox,
     label_pos: None,
     nodes: final_nodes,
     edges: final_edges,
-    subgraphs: layout_subgraphs(graph, final_nodes, final_edges),
+    subgraphs,
   }
 }
 
@@ -1732,8 +1946,8 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   for node_layout in self.nodes {
     let node = node_layout.node
     node.set_attr("pos", format_point(node_layout.pos))
-    node.set_attr("width", format_float(node_layout.width_in))
-    node.set_attr("height", format_float(node_layout.height_in))
+    node.set_attr("width", format_dim(node_layout.width_in))
+    node.set_attr("height", format_dim(node_layout.height_in))
     if is_record_shape(node) {
       let size = node_size_from_points(
         node_layout.width_in * 72.0,

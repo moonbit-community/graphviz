@@ -11,6 +11,12 @@ priv enum OrderingMode {
 }
 
 ///|
+priv enum BalanceMode {
+  LR
+  TB
+}
+
+///|
 fn parse_ordering(value : String) -> OrderingMode? {
   match value.to_lower() {
     "out" => Some(OrderingMode::Out)
@@ -1198,7 +1204,127 @@ fn lr_balance(graph : NsGraph) -> Unit {
 }
 
 ///|
-fn network_simplex(graph : NsGraph, max_iter : Int) -> Unit {
+fn normalize_ranks(graph : NsGraph) -> Int {
+  let mut min_rank = 0
+  let mut max_rank = 0
+  let mut seen = false
+  for node in graph.nodes {
+    let rank = node.rank
+    if !seen {
+      min_rank = rank
+      max_rank = rank
+      seen = true
+    } else {
+      if rank < min_rank {
+        min_rank = rank
+      }
+      if rank > max_rank {
+        max_rank = rank
+      }
+    }
+  }
+  if !seen {
+    return 0
+  }
+  if min_rank != 0 {
+    for node in graph.nodes {
+      node.rank = node.rank - min_rank
+    }
+    max_rank = max_rank - min_rank
+  }
+  max_rank
+}
+
+///|
+fn tb_balance(graph : NsGraph) -> Unit {
+  let max_rank = normalize_ranks(graph)
+  if max_rank <= 0 {
+    return ()
+  }
+  let nrank : Array[Int] = []
+  for _ in 0..<(max_rank + 1) {
+    nrank.push(0)
+  }
+  for node in graph.nodes {
+    let rank = node.rank
+    if rank >= 0 && rank <= max_rank {
+      nrank[rank] = nrank[rank] + 1
+    }
+  }
+  let nodes_by_rank : Map[Int, Array[Int]] = Map::new()
+  for i in 0..<graph.nodes.length() {
+    let rank = graph.nodes[i].rank
+    match nodes_by_rank.get(rank) {
+      Some(list) => list.push(i)
+      None => nodes_by_rank[rank] = [i]
+    }
+  }
+  let ordered : Array[Int] = []
+  for rank in 0..=max_rank {
+    match nodes_by_rank.get(rank) {
+      Some(list) => {
+        for idx in list {
+          ordered.push(idx)
+        }
+      }
+      None => ()
+    }
+  }
+  for idx in ordered {
+    let node = graph.nodes[idx]
+    let mut inweight = 0
+    let mut outweight = 0
+    let mut low = 0
+    let mut high = max_rank
+    for edge_idx in node.in_edges {
+      let edge = graph.edges[edge_idx]
+      inweight = inweight + edge.weight
+      let candidate = graph.nodes[edge.tail].rank + edge.minlen
+      if candidate > low {
+        low = candidate
+      }
+    }
+    for edge_idx in node.out_edges {
+      let edge = graph.edges[edge_idx]
+      outweight = outweight + edge.weight
+      let candidate = graph.nodes[edge.head].rank - edge.minlen
+      if candidate < high {
+        high = candidate
+      }
+    }
+    if inweight != outweight {
+      continue
+    }
+    if low < 0 {
+      low = 0
+    }
+    if high > max_rank {
+      high = max_rank
+    }
+    if low > high {
+      continue
+    }
+    let mut choice = low
+    let mut r = low + 1
+    while r <= high {
+      if nrank[r] < nrank[choice] {
+        choice = r
+      }
+      r = r + 1
+    }
+    let current = graph.nodes[idx].rank
+    if choice != current {
+      if current >= 0 && current <= max_rank {
+        nrank[current] = nrank[current] - 1
+      }
+      nrank[choice] = nrank[choice] + 1
+      graph.nodes[idx].rank = choice
+    }
+  }
+}
+
+///|
+fn network_simplex(graph : NsGraph, max_iter : Int, balance : BalanceMode) -> Unit {
   let feasible = init_graph(graph)
   if !feasible {
     init_rank(graph)
@@ -1227,7 +1353,10 @@ fn network_simplex(graph : NsGraph, max_iter : Int) -> Unit {
     }
     iter = iter + 1
   }
-  lr_balance(graph)
+  match balance {
+    BalanceMode::LR => lr_balance(graph)
+    BalanceMode::TB => tb_balance(graph)
+  }
 }
 
 ///|
@@ -1387,7 +1516,7 @@ fn x_positions_from_simplex(
     nodesep_pt,
     ordering,
   )
-  network_simplex(graph, 0x7fffffff)
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
     let name = node.name()

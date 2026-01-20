@@ -12,6 +12,22 @@ const LINE_SPACING : Double = 1.2
 const TEXT_SCALE : Double = 0.9706
 
 ///|
+fn font_width_scale(font_name : String) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("palatino") {
+    1.02
+  } else {
+    1.0
+  }
+}
+
+priv struct LabelLine {
+  text : String
+  align : @render.TextAlign
+  width_pt : Double
+}
+
+///|
 fn char_width_units(ch : Char) -> Int {
   match ch {
     ' ' => 250
@@ -74,7 +90,7 @@ fn char_width_units(ch : Char) -> Int {
     'j' => 278
     'k' => 500
     'l' => 278
-    'm' => 778
+    'm' => 820
     'n' => 500
     'o' => 500
     'p' => 500
@@ -97,22 +113,101 @@ fn char_width_units(ch : Char) -> Int {
 }
 
 ///|
-fn label_text_dimensions(label : String, font_size_pt : Double) -> (Double, Double) {
-  let mut max_units = 0
+fn push_label_line(
+  lines : Array[LabelLine],
+  text : String,
+  align : @render.TextAlign,
+  width_units : Int,
+  font_size_pt : Double,
+) -> Unit {
+  let width_pt = width_units.to_double() * font_size_pt * TEXT_SCALE / 1000.0
+  lines.push({ text, align, width_pt })
+}
+
+///|
+// Heuristic line heights tuned to Graphviz xdot baselines for common fonts.
+fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("palatino") {
+    1.125
+  } else if lower.contains("times") {
+    let min_size = 10.0
+    let max_size = 14.0
+    if font_size_pt <= min_size {
+      1.125
+    } else if font_size_pt >= max_size {
+      1.1786
+    } else {
+      let t = (font_size_pt - min_size) / (max_size - min_size)
+      1.125 + t * (1.1786 - 1.125)
+    }
+  } else {
+    LINE_SPACING
+  }
+}
+
+///|
+fn line_height(font_name : String, font_size_pt : Double) -> Double {
+  font_size_pt * line_height_scale(font_name, font_size_pt)
+}
+
+///|
+fn centerline_offset(font_size_pt : Double) -> Double {
+  font_size_pt * 0.05
+}
+
+///|
+fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
+  let lines : Array[LabelLine] = []
+  let mut sb = StringBuilder::new()
   let mut current_units = 0
-  let mut lines = 1
+  let mut has_chars = false
   let mut escaping = false
   for ch in label {
     if escaping {
       escaping = false
-      if ch == 'n' || ch == 'l' || ch == 'r' {
-        if current_units > max_units {
-          max_units = current_units
+      match ch {
+        'n' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Center,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
         }
-        current_units = 0
-        lines = lines + 1
-      } else {
-        current_units = current_units + char_width_units(ch)
+        'l' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Left,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
+        }
+        'r' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Right,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
+        }
+        _ => {
+          sb.write_char(ch)
+          current_units = current_units + char_width_units(ch)
+          has_chars = true
+        }
       }
       continue
     }
@@ -121,23 +216,67 @@ fn label_text_dimensions(label : String, font_size_pt : Double) -> (Double, Doub
       continue
     }
     if ch == '\n' || ch == '\r' {
-      if current_units > max_units {
-        max_units = current_units
-      }
+      push_label_line(
+        lines,
+        sb.to_string(),
+        @render.TextAlign::Center,
+        current_units,
+        font_size_pt,
+      )
+      sb = StringBuilder::new()
       current_units = 0
-      lines = lines + 1
-    } else {
-      current_units = current_units + char_width_units(ch)
+      has_chars = false
+      continue
     }
+    sb.write_char(ch)
+    current_units = current_units + char_width_units(ch)
+    has_chars = true
   }
   if escaping {
+    sb.write_char('\\')
     current_units = current_units + char_width_units('\\')
+    has_chars = true
   }
-  if current_units > max_units {
-    max_units = current_units
+  if has_chars || lines.length() == 0 {
+    push_label_line(
+      lines,
+      sb.to_string(),
+      @render.TextAlign::Center,
+      current_units,
+      font_size_pt,
+    )
   }
-  let width_pt = max_units.to_double() * font_size_pt * TEXT_SCALE / 1000.0
-  let height_pt = lines.to_double() * font_size_pt * LINE_SPACING
+  lines
+}
+
+///|
+fn label_metrics(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> (Array[LabelLine], Double, Double) {
+  let raw_lines = label_lines(label, font_size_pt)
+  let width_scale = font_width_scale(font_name)
+  let lines : Array[LabelLine] = []
+  let mut max_width = 0.0
+  for line in raw_lines {
+    let width_pt = line.width_pt * width_scale
+    if width_pt > max_width {
+      max_width = width_pt
+    }
+    lines.push({ text: line.text, align: line.align, width_pt })
+  }
+  let height_pt = line_height(font_name, font_size_pt) * lines.length().to_double()
+  (lines, max_width, height_pt)
+}
+
+///|
+fn label_text_dimensions(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> (Double, Double) {
+  let (_, width_pt, height_pt) = label_metrics(label, font_name, font_size_pt)
   (width_pt, height_pt)
 }
 
@@ -171,8 +310,8 @@ fn format_double(value : Double) -> String {
 
 ///|
 fn resolve_label(text : String, name : String) -> String {
-  let with_name = text.replace_all(old="\\\\N", new=name)
-  with_name.replace_all(old="\\\\n", new="\n")
+  let with_name = text.replace_all(old="\\N", new=name)
+  with_name.replace_all(old="\\n", new="\n")
 }
 
 ///|
@@ -246,10 +385,6 @@ fn font_name(value : String?) -> String {
 }
 
 ///|
-fn estimate_text_width(text : String, size : Double) -> Double {
-  let (width, _) = label_text_dimensions(text, size)
-  width
-}
 
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
@@ -562,23 +697,38 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     name: font_name(node.get_attr("fontname")),
     size: font_size(node.get_attr("fontsize")),
   }
-  ops.push(@render.DrawOp::Font(font=font))
   let color = match node.get_attr("fontcolor") {
     Some(value) => value
     None => "black"
   }
-  ops.push(@render.DrawOp::PenColor(color=normalize_color(color)))
-  let width = estimate_text_width(text, font.size)
+  let pen_color = normalize_color(color)
+  let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
+  let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
     Some(value) => value
     None => layout.pos
   }
-  ops.push(@render.DrawOp::Text(
-    pos=pos,
-    align=@render.TextAlign::Center,
-    width=width,
-    text=text,
-  ))
+  let start_y = pos.y + total_height / 2.0 - font.size + centerline_offset(font.size)
+  for i in 0..<lines.length() {
+    let line = lines[i]
+    if line.text == "" {
+      continue
+    }
+    ops.push(@render.DrawOp::Font(font=font))
+    ops.push(@render.DrawOp::PenColor(color=pen_color))
+    let line_x = match line.align {
+      @render.TextAlign::Left => pos.x - max_width / 2.0
+      @render.TextAlign::Right => pos.x + max_width / 2.0
+      @render.TextAlign::Center => pos.x
+    }
+    let line_y = start_y - line_step * i.to_double()
+    ops.push(@render.DrawOp::Text(
+      pos={ x: line_x, y: line_y },
+      align=line.align,
+      width=line.width_pt,
+      text=line.text,
+    ))
+  }
   ops
 }
 
@@ -612,13 +762,13 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
     name: font_name(edge.get_attr("fontname")),
     size: font_size(edge.get_attr("fontsize")),
   }
-  ops.push(@render.DrawOp::Font(font=font))
   let color = match edge.get_attr("fontcolor") {
     Some(value) => value
     None => "black"
   }
-  ops.push(@render.DrawOp::PenColor(color=normalize_color(color)))
-  let width = estimate_text_width(text, font.size)
+  let pen_color = normalize_color(color)
+  let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
+  let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
     Some(value) => value
     None => match layout.splines.get(0) {
@@ -626,12 +776,27 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
       None => { x: 0.0, y: 0.0 }
     }
   }
-  ops.push(@render.DrawOp::Text(
-    pos=pos,
-    align=@render.TextAlign::Center,
-    width=width,
-    text=text,
-  ))
+  let start_y = pos.y + total_height / 2.0 - font.size + centerline_offset(font.size)
+  for i in 0..<lines.length() {
+    let line = lines[i]
+    if line.text == "" {
+      continue
+    }
+    ops.push(@render.DrawOp::Font(font=font))
+    ops.push(@render.DrawOp::PenColor(color=pen_color))
+    let line_x = match line.align {
+      @render.TextAlign::Left => pos.x - max_width / 2.0
+      @render.TextAlign::Right => pos.x + max_width / 2.0
+      @render.TextAlign::Center => pos.x
+    }
+    let line_y = start_y - line_step * i.to_double()
+    ops.push(@render.DrawOp::Text(
+      pos={ x: line_x, y: line_y },
+      align=line.align,
+      width=line.width_pt,
+      text=line.text,
+    ))
+  }
   ops
 }
 
@@ -688,7 +853,8 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
       let size = font_size(graph.get_attr("fontsize"))
-      let (width_pt, height_pt) = label_text_dimensions(text, size)
+      let name = font_name(graph.get_attr("fontname"))
+      let (width_pt, height_pt) = label_text_dimensions(text, name, size)
       Some((text, width_pt, height_pt))
     }
     None => None
@@ -757,19 +923,35 @@ fn graph_label_ops(
         name: font_name(graph.get_attr("fontname")),
         size: font_size(graph.get_attr("fontsize")),
       }
-      ops.push(@render.DrawOp::Font(font=font))
       let color = match graph.get_attr("fontcolor") {
         Some(value) => value
         None => "black"
       }
-      ops.push(@render.DrawOp::PenColor(color=normalize_color(color)))
+      let pen_color = normalize_color(color)
       let pos = graph_label_pos(layout.bbox, height_pt)
-      ops.push(@render.DrawOp::Text(
-        pos=pos,
-        align=@render.TextAlign::Center,
-        width=width_pt,
-        text=text,
-      ))
+      let lines = label_lines(text, font.size)
+      let line_step = line_height(font.name, font.size)
+      let start_y = pos.y + height_pt / 2.0 - font.size + centerline_offset(font.size)
+      for i in 0..<lines.length() {
+        let line = lines[i]
+        if line.text == "" {
+          continue
+        }
+        ops.push(@render.DrawOp::Font(font=font))
+        ops.push(@render.DrawOp::PenColor(color=pen_color))
+        let line_x = match line.align {
+          @render.TextAlign::Left => pos.x - width_pt / 2.0
+          @render.TextAlign::Right => pos.x + width_pt / 2.0
+          @render.TextAlign::Center => pos.x
+        }
+        let line_y = start_y - line_step * i.to_double()
+        ops.push(@render.DrawOp::Text(
+          pos={ x: line_x, y: line_y },
+          align=line.align,
+          width=line.width_pt,
+          text=line.text,
+        ))
+      }
     }
     None => ()
   }
