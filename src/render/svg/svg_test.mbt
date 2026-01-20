@@ -27,6 +27,20 @@ test "render_svg emits edge labels" {
   assert_true(svg.contains(">edge</text>"))
 }
 
+test "render_svg emits cluster labels" {
+  let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains(">hello world</text>"))
+  assert_true(svg.contains(">MSDOT</text>"))
+}
+
 ///|
 fn ensure_dir(path : String) -> Unit raise {
   if !@fs.path_exists(path) {

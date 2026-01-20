@@ -290,6 +290,48 @@ fn label_text(value : String?, fallback : String) -> String {
 }
 
 ///|
+fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn graph_label_text(graph : @cgraph.Graph) -> String? {
+  match graph.get_attr("label") {
+    Some(value) => {
+      if value == "" {
+        None
+      } else {
+        Some(resolve_label(value, ""))
+      }
+    }
+    None => None
+  }
+}
+
+///|
+fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
+  match graph_label_text(graph) {
+    Some(text) => {
+      let size = font_size(graph.get_attr("fontsize"))
+      let name = font_name(graph.get_attr("fontname"))
+      let (_, width_pt, height_pt) = label_metrics(text, name, size)
+      Some((text, width_pt, height_pt))
+    }
+    None => None
+  }
+}
+
+///|
+fn graph_label_pos(bbox : @geom.Rect, height_pt : Double) -> @geom.Point {
+  let x = (bbox.llx + bbox.urx) / 2.0
+  let y = bbox.ury - 4.0 - height_pt / 2.0
+  { x, y }
+}
+
+///|
 fn shape_kind(value : String?) -> String {
   let shape = match value {
     Some(text) => text.to_lower()
@@ -624,6 +666,72 @@ fn write_label_lines(
 }
 
 ///|
+fn write_cluster_graphs(
+  sb : StringBuilder,
+  layout : @layout_dot.DotLayoutGraph,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  for subgraph in layout.subgraphs {
+    let graph = subgraph.graph
+    if is_cluster_graph(graph) {
+      let rect = subgraph.bbox
+      let x = rect.llx - bbox.llx
+      let y = rect.lly - bbox.lly
+      let w = rect.urx - rect.llx
+      let h = rect.ury - rect.lly
+      let stroke = match graph.get_attr("color") {
+        Some(value) => value
+        None => "black"
+      }
+      let mut extra = ""
+      match graph.get_attr("style") {
+        Some(value) => {
+          let style = value.to_lower()
+          if style.contains("dashed") {
+            extra = " stroke-dasharray=\"5,5\""
+          } else if style.contains("dotted") {
+            extra = " stroke-dasharray=\"2,4\""
+          }
+        }
+        None => ()
+      }
+      write_line(
+        sb,
+        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"none\" stroke=\"\{stroke}\"\{extra}/>",
+        indent,
+        pretty,
+      )
+      match graph_label_metrics(graph) {
+        Some((text, _width_pt, height_pt)) => {
+          let font = font_name(graph.get_attr("fontname"))
+          let size = font_size(graph.get_attr("fontsize"))
+          let color = match graph.get_attr("fontcolor") {
+            Some(value) => value
+            None => "black"
+          }
+          let pos = graph_label_pos(rect, height_pt)
+          write_label_lines(
+            sb,
+            text,
+            font,
+            size,
+            color,
+            pos,
+            bbox,
+            indent,
+            pretty,
+          )
+        }
+        None => ()
+      }
+    }
+    write_cluster_graphs(sb, subgraph, bbox, indent, pretty)
+  }
+}
+
+///|
 pub fn SvgOptions::default() -> SvgOptions {
   { pretty: Some(true), include_xml_decl: Some(true) }
 }
@@ -661,6 +769,8 @@ pub fn render_svg(
     "  ",
     pretty,
   )
+  let cluster_indent = if pretty { "    " } else { "" }
+  write_cluster_graphs(sb, layout, bbox, cluster_indent, pretty)
   let edge_indent = if pretty { "    " } else { "" }
   let kind = layout.graph.kind()
   for edge_layout in layout.edges {
