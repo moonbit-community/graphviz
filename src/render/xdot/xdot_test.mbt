@@ -72,6 +72,21 @@ fn parse_point_attr(value : String) -> @geom.Point raise {
   { x: parse_double_or_fail(parts[0]), y: parse_double_or_fail(parts[1]) }
 }
 
+///|
+fn find_subgraph(graph : @cgraph.Graph, name : String) -> @cgraph.Graph raise {
+  for subgraph in graph.subgraphs() {
+    match subgraph.name() {
+      Some(value) => {
+        if value == name {
+          return subgraph
+        }
+      }
+      None => ()
+    }
+  }
+  fail("missing subgraph: \{name}")
+}
+
 test "render_xdot attaches graph label attrs" {
   let graph = @dot.parse_dot("digraph { label=\"Hello\"; a -> b; }")
   let layout = @layout_dot.layout_dot(graph)
@@ -92,6 +107,21 @@ test "render_xdot attaches graph label attrs" {
     }
     None => fail("missing graph lp")
   }
+}
+
+test "render_xdot fills cluster background" {
+  let graph = @dot.parse_dot(
+    "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let cluster = find_subgraph(output_graph, "cluster_0")
+  let draw = match cluster.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing cluster _draw_")
+  }
+  assert_true(draw.contains("-lightgrey"))
+  assert_true(draw.contains("P "))
 }
 
 test "graph labelloc affects label position" {

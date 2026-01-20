@@ -354,6 +354,24 @@ fn has_filled_style(value : String?) -> Bool {
 }
 
 ///|
+fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
+  let style = graph.get_attr("style")
+  if has_filled_style(style) {
+    match graph.get_attr("fillcolor") {
+      Some(value) => Some(value)
+      None => {
+        match graph.get_attr("color") {
+          Some(value) => Some(value)
+          None => Some("black")
+        }
+      }
+    }
+  } else {
+    graph.get_attr("bgcolor")
+  }
+}
+
+///|
 fn font_size(value : String?) -> Double {
   match value {
     Some(text) => parse_double(text, 14.0)
@@ -685,6 +703,10 @@ fn write_cluster_graphs(
         Some(value) => value
         None => "black"
       }
+      let fill = match cluster_fill_color(graph) {
+        Some(value) => value
+        None => "none"
+      }
       let mut extra = ""
       match graph.get_attr("style") {
         Some(value) => {
@@ -699,7 +721,7 @@ fn write_cluster_graphs(
       }
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"none\" stroke=\"\{stroke}\"\{extra}/>",
+        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{extra}/>",
         indent,
         pretty,
       )

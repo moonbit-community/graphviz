@@ -884,11 +884,12 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     return ops
   }
   if is_cluster_graph(graph) {
-    match graph.get_attr("style") {
+    let style = graph.get_attr("style")
+    match style {
       Some(value) => {
-        let style = value.to_lower()
-        if style != "" && style != "solid" {
-          ops.push(@render.DrawOp::Style(name=style))
+        let lowered = value.to_lower()
+        if lowered != "" && lowered != "solid" {
+          ops.push(@render.DrawOp::Style(name=lowered))
         }
       }
       None => ()
@@ -898,7 +899,23 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
       None => "black"
     }
     ops.push(@render.DrawOp::PenColor(color=normalize_color(color)))
-    ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(bbox)))
+    let fill = if has_filled_style(style) {
+      match graph.get_attr("fillcolor") {
+        Some(value) => Some(value)
+        None => Some(color)
+      }
+    } else {
+      graph.get_attr("bgcolor")
+    }
+    match fill {
+      Some(value) => {
+        ops.push(@render.DrawOp::FillColor(color=normalize_color(value)))
+        ops.push(@render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)))
+      }
+      None => {
+        ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(bbox)))
+      }
+    }
   }
   ops
 }

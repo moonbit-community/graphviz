@@ -41,6 +41,21 @@ test "render_svg emits cluster labels" {
   assert_true(svg.contains(">MSDOT</text>"))
 }
 
+test "render_svg fills cluster background" {
+  let graph = @dot.parse_dot(
+    "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains("fill=\"lightgrey\""))
+}
+
 test "render_svg emits graph labels" {
   let graph = @dot.parse_dot("digraph { label=\"Root\"; labelloc=t; labeljust=r; a -> b; }")
   let layout = @layout_dot.layout_dot(graph)
