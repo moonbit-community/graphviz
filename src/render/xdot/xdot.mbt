@@ -214,6 +214,7 @@ fn shape_kind(value : String?) -> String {
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
+    "record" => "record"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
   }
@@ -408,6 +409,80 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
+fn split_record_fields(label : String) -> Array[String] {
+  let fields : Array[String] = []
+  let mut sb = StringBuilder::new()
+  let mut escaping = false
+  let mut in_port = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '<' {
+      in_port = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '>' {
+      in_port = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '|' && !in_port {
+      fields.push(sb.to_string())
+      sb = StringBuilder::new()
+      continue
+    }
+    sb.write_char(ch)
+  }
+  let last = sb.to_string()
+  if last != "" || fields.length() == 0 {
+    fields.push(last)
+  }
+  fields
+}
+
+///|
+fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
+  let ops : Array[@render.DrawOp] = []
+  let node = layout.node
+  let pen = match node.get_attr("color") {
+    Some(value) => value
+    None => "black"
+  }
+  let color = normalize_color(pen)
+  let rect = node_rect(layout)
+  ops.push(@render.DrawOp::PenColor(color=color))
+  ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)))
+  let label = match node.get_attr("label") {
+    Some(value) => value
+    None => node.name()
+  }
+  let fields = split_record_fields(label)
+  if fields.length() > 1 {
+    let count = fields.length().to_double()
+    let height = rect.ury - rect.lly
+    let step = height / count
+    for i in 1..<fields.length() {
+      let y = rect.ury - step * i.to_double()
+      ops.push(@render.DrawOp::PenColor(color=color))
+      ops.push(@render.DrawOp::Polyline(points=[
+        { x: rect.llx, y },
+        { x: rect.urx, y },
+      ]))
+    }
+  }
+  ops
+}
+
+///|
 fn midpoint(a : @geom.Point, b : @geom.Point) -> @geom.Point {
   { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0 }
 }
@@ -431,6 +506,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     None => "black"
   }
   let normalized_pen = normalize_color(pen)
+  let shape = shape_kind(node.get_attr("shape"))
+  if shape == "record" {
+    return record_draw_ops(layout)
+  }
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = has_filled_style(node.get_attr("style"))
   if filled {
@@ -444,7 +523,7 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     ops.push(@render.DrawOp::FillColor(color=normalize_color(fill)))
   }
   let rect = node_rect(layout)
-  match shape_kind(node.get_attr("shape")) {
+  match shape {
     "box" => {
       ops.push(@render.DrawOp::Polygon(filled=filled, points=rect_points(rect)))
     }

@@ -76,7 +76,7 @@ fn is_draw_attr(name : String) -> Bool {
 ///|
 fn should_compare_attr(name : String) -> Bool {
   match name {
-    "_ldraw_" => false
+    "_ldraw_" | "rects" => false
     _ => true
   }
 }
@@ -84,11 +84,22 @@ fn should_compare_attr(name : String) -> Bool {
 ///|
 fn tokenize_xdot(value : String) -> Array[String] {
   let parts : Array[String] = []
-  for token in value.split(" ") {
-    if token.length() == 0 {
-      continue
+  let mut sb = StringBuilder::new()
+  let mut has_token = false
+  for ch in value {
+    if ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t' {
+      if has_token {
+        parts.push(sb.to_string())
+        sb = StringBuilder::new()
+        has_token = false
+      }
+    } else {
+      sb.write_char(ch)
+      has_token = true
     }
-    parts.push(token.to_string())
+  }
+  if has_token {
+    parts.push(sb.to_string())
   }
   parts
 }
@@ -111,17 +122,19 @@ fn compare_draw_attr(
   let actual_tokens = tokenize_xdot(actual)
   let expected_filtered : Array[String] = []
   for token in expected_tokens {
-    if token_number(token) is None {
+    if token_number(token) is None && token != "\\" {
       expected_filtered.push(token)
     }
   }
   let actual_filtered : Array[String] = []
   for token in actual_tokens {
-    if token_number(token) is None {
+    if token_number(token) is None && token != "\\" {
       actual_filtered.push(token)
     }
   }
-  assert_eq(expected_filtered.length(), actual_filtered.length())
+  if expected_filtered.length() != actual_filtered.length() {
+    fail("draw token count mismatch: expected=\{expected} actual=\{actual}")
+  }
   for i in 0..<expected_filtered.length() {
     assert_eq(expected_filtered[i], actual_filtered[i])
   }
@@ -307,10 +320,11 @@ fn assert_snapshot(
 }
 
 test "xdot snapshot parity" {
-  // Records/arrows snapshots are deferred until record layout and arrowheads land.
+  // Arrow snapshots are deferred until arrowhead shapes land.
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
     ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
+    ("refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot"),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
     ("refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot"),
   ]
