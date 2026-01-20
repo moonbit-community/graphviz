@@ -315,8 +315,8 @@ fn graph_label_text(graph : @cgraph.Graph) -> String? {
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
-      let size = font_size(graph.get_attr("fontsize"))
-      let name = font_name(graph.get_attr("fontname"))
+      let size = @attrs.font_size(graph.get_attr("fontsize"))
+      let name = @attrs.font_name(graph.get_attr("fontname"))
       let (_, width_pt, height_pt) = label_metrics(text, name, size)
       Some((text, width_pt, height_pt))
     }
@@ -432,10 +432,7 @@ fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
 
 ///|
 fn arrow_size(edge : @cgraph.Edge) -> Double {
-  match edge.get_attr("arrowsize") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
+  @attrs.parse_double(edge.get_attr("arrowsize"), 1.0)
 }
 
 ///|
@@ -699,25 +696,17 @@ fn write_cluster_graphs(
       let y = rect.lly - bbox.lly
       let w = rect.urx - rect.llx
       let h = rect.ury - rect.lly
-      let stroke = match graph.get_attr("color") {
-        Some(value) => value
-        None => "black"
-      }
+      let stroke = @attrs.color(graph.get_attr("color"), default="black")
       let fill = match cluster_fill_color(graph) {
         Some(value) => value
         None => "none"
       }
       let mut extra = ""
-      match graph.get_attr("style") {
-        Some(value) => {
-          let style = value.to_lower()
-          if style.contains("dashed") {
-            extra = " stroke-dasharray=\"5,5\""
-          } else if style.contains("dotted") {
-            extra = " stroke-dasharray=\"2,4\""
-          }
-        }
-        None => ()
+      let style = @attrs.parse_style(graph.get_attr("style"))
+      if style.dashed {
+        extra = " stroke-dasharray=\"5,5\""
+      } else if style.dotted {
+        extra = " stroke-dasharray=\"2,4\""
       }
       write_line(
         sb,
@@ -727,12 +716,9 @@ fn write_cluster_graphs(
       )
       match graph_label_metrics(graph) {
         Some((text, _width_pt, height_pt)) => {
-          let font = font_name(graph.get_attr("fontname"))
-          let size = font_size(graph.get_attr("fontsize"))
-          let color = match graph.get_attr("fontcolor") {
-            Some(value) => value
-            None => "black"
-          }
+          let font = @attrs.font_name(graph.get_attr("fontname"))
+          let size = @attrs.font_size(graph.get_attr("fontsize"))
+          let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
           let pos = match subgraph.label_pos {
             Some(value) => value
             None => graph_label_pos(rect, height_pt)
@@ -813,10 +799,7 @@ pub fn render_svg(
   let kind = layout.graph.kind()
   for edge_layout in layout.edges {
     let edge = edge_layout.edge
-    let color = match edge.get_attr("color") {
-      Some(value) => value
-      None => "black"
-    }
+    let color = @attrs.color(edge.get_attr("color"), default="black")
     for spline in edge_layout.splines {
       let path = spline_path(spline, bbox.llx, bbox.lly)
       if path != "" {
@@ -843,12 +826,9 @@ pub fn render_svg(
     }
     match edge_layout.label_pos {
       Some(pos) => {
-        let font = font_name(edge.get_attr("fontname"))
-        let size = font_size(edge.get_attr("fontsize"))
-        let font_color = match edge.get_attr("fontcolor") {
-          Some(value) => value
-          None => "black"
-        }
+        let font = @attrs.font_name(edge.get_attr("fontname"))
+        let size = @attrs.font_size(edge.get_attr("fontsize"))
+        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
         write_label_lines(
           sb,
           label_text,
@@ -869,12 +849,9 @@ pub fn render_svg(
     }
     match edge_layout.head_label_pos {
       Some(pos) => {
-        let font = font_name(edge.get_attr("fontname"))
-        let size = font_size(edge.get_attr("fontsize"))
-        let font_color = match edge.get_attr("fontcolor") {
-          Some(value) => value
-          None => "black"
-        }
+        let font = @attrs.font_name(edge.get_attr("fontname"))
+        let size = @attrs.font_size(edge.get_attr("fontsize"))
+        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
         write_label_lines(
           sb,
           head_label_text,
@@ -895,12 +872,9 @@ pub fn render_svg(
     }
     match edge_layout.tail_label_pos {
       Some(pos) => {
-        let font = font_name(edge.get_attr("fontname"))
-        let size = font_size(edge.get_attr("fontsize"))
-        let font_color = match edge.get_attr("fontcolor") {
-          Some(value) => value
-          None => "black"
-        }
+        let font = @attrs.font_name(edge.get_attr("fontname"))
+        let size = @attrs.font_size(edge.get_attr("fontsize"))
+        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
         write_label_lines(
           sb,
           tail_label_text,
@@ -921,14 +895,11 @@ pub fn render_svg(
     let node = node_layout.node
     let rect = node_rect(node_layout)
     let kind = shape_kind(node.get_attr("shape"))
-    let stroke = match node.get_attr("color") {
-      Some(value) => value
-      None => "black"
-    }
+    let stroke = @attrs.color(node.get_attr("color"), default="black")
     let filled = if kind == "point" {
       true
     } else {
-      has_filled_style(node.get_attr("style"))
+      @attrs.parse_style(node.get_attr("style")).filled
     }
     let fill = if filled {
       match node.get_attr("fillcolor") {
@@ -969,12 +940,9 @@ pub fn render_svg(
     }
     let text = label_text(node.get_attr("label"), node.name())
     if text != "" {
-      let font = font_name(node.get_attr("fontname"))
-      let size = font_size(node.get_attr("fontsize"))
-      let color = match node.get_attr("fontcolor") {
-        Some(value) => value
-        None => "black"
-      }
+      let font = @attrs.font_name(node.get_attr("fontname"))
+      let size = @attrs.font_size(node.get_attr("fontsize"))
+      let color = @attrs.color(node.get_attr("fontcolor"), default="black")
       let pos = match node_layout.label_pos {
         Some(value) => value
         None => node_layout.pos
@@ -997,12 +965,9 @@ pub fn render_svg(
       match layout.label_pos {
         Some(pos) => {
           let graph = layout.graph
-          let font = font_name(graph.get_attr("fontname"))
-          let size = font_size(graph.get_attr("fontsize"))
-          let color = match graph.get_attr("fontcolor") {
-            Some(value) => value
-            None => "black"
-          }
+          let font = @attrs.font_name(graph.get_attr("fontname"))
+          let size = @attrs.font_size(graph.get_attr("fontsize"))
+          let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
           write_label_lines(
             sb,
             text,

@@ -1,12 +1,3 @@
-///|
-fn parse_double(value : String, fallback : Double) -> Double {
-  try @strconv.parse_double(value) catch {
-    _ => fallback
-  } noraise {
-    parsed => parsed
-  }
-}
-
 const LINE_SPACING : Double = 1.2
 
 const TEXT_SCALE : Double = 0.9706
@@ -315,29 +306,6 @@ fn resolve_label(text : String, name : String) -> String {
 }
 
 ///|
-fn normalize_color(value : String) -> String {
-  let lower = value.to_lower()
-  if lower.has_prefix("#") {
-    return lower
-  }
-  match lower {
-    "black" => "#000000"
-    "white" => "#ffffff"
-    "red" => "#ff0000"
-    "green" => "#00ff00"
-    "blue" => "#0000ff"
-    "yellow" => "#ffff00"
-    "orange" => "#ffa500"
-    "cyan" => "#00ffff"
-    "magenta" => "#ff00ff"
-    "hotpink" => "#ff69b4"
-    "purple" => "#a020f0"
-    "slateblue" => "#6a5acd"
-    _ => lower
-  }
-}
-
-///|
 fn label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_label(text, fallback)
@@ -361,31 +329,6 @@ fn shape_kind(value : String?) -> String {
 }
 
 ///|
-fn has_filled_style(value : String?) -> Bool {
-  match value {
-    Some(text) => text.to_lower().contains("filled")
-    None => false
-  }
-}
-
-///|
-fn font_size(value : String?) -> Double {
-  match value {
-    Some(text) => parse_double(text, 14.0)
-    None => 14.0
-  }
-}
-
-///|
-fn font_name(value : String?) -> String {
-  match value {
-    Some(text) => text
-    None => "Times-Roman"
-  }
-}
-
-///|
-
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
   if kind != @cgraph.GraphKind::Directed {
@@ -431,10 +374,7 @@ fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
 
 ///|
 fn arrow_size(edge : @cgraph.Edge) -> Double {
-  match edge.get_attr("arrowsize") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
+  @attrs.parse_double(edge.get_attr("arrowsize"), 1.0)
 }
 
 ///|
@@ -479,15 +419,9 @@ fn arrow_ops(
   if primitives.length() == 0 {
     return ops
   }
-  let style = match layout.edge.get_attr("style") {
-    Some(value) => value.to_lower()
-    None => "solid"
-  }
-  let color = match layout.edge.get_attr("color") {
-    Some(value) => value
-    None => "black"
-  }
-  let normalized = normalize_color(color)
+  let style = @attrs.parse_style(layout.edge.get_attr("style")).raw
+  let color = @attrs.color(layout.edge.get_attr("color"), default="black")
+  let normalized = @attrs.normalize_color(color)
   for primitive in primitives {
     ops.push(@render.DrawOp::Style(name=style))
     ops.push(@render.DrawOp::PenColor(color=normalized))
@@ -598,7 +532,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     Some(value) => value
     None => "black"
   }
-  let color = normalize_color(pen)
+  let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)
   ops.push(@render.DrawOp::PenColor(color=color))
   ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)))
@@ -642,11 +576,8 @@ fn spline_midpoint(spline : @geom.Spline) -> @geom.Point {
 fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
   let ops : Array[@render.DrawOp] = []
-  let pen = match node.get_attr("color") {
-    Some(value) => value
-    None => "black"
-  }
-  let normalized_pen = normalize_color(pen)
+  let pen = @attrs.color(node.get_attr("color"), default="black")
+  let normalized_pen = @attrs.normalize_color(pen)
   let shape = shape_kind(node.get_attr("shape"))
   if shape == "record" {
     return record_draw_ops(layout)
@@ -655,7 +586,7 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let filled = if shape == "point" {
     true
   } else {
-    has_filled_style(node.get_attr("style"))
+    @attrs.parse_style(node.get_attr("style")).filled
   }
   if filled {
     let fill = match node.get_attr("fillcolor") {
@@ -664,14 +595,11 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
         if shape == "point" {
           pen
         } else {
-          match node.get_attr("color") {
-            Some(value) => value
-            None => "white"
-          }
+          @attrs.color(node.get_attr("color"), default="white")
         }
       }
     }
-    ops.push(@render.DrawOp::FillColor(color=normalize_color(fill)))
+    ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
   }
   let rect = node_rect(layout)
   match shape {
@@ -694,14 +622,11 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return ops
   }
   let font = @render.Font::{
-    name: font_name(node.get_attr("fontname")),
-    size: font_size(node.get_attr("fontsize")),
+    name: @attrs.font_name(node.get_attr("fontname")),
+    size: @attrs.font_size(node.get_attr("fontsize")),
   }
-  let color = match node.get_attr("fontcolor") {
-    Some(value) => value
-    None => "black"
-  }
-  let pen_color = normalize_color(color)
+  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let pen_color = @attrs.normalize_color(color)
   let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
   let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
@@ -736,11 +661,8 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
-  let pen = match edge.get_attr("color") {
-    Some(value) => value
-    None => "black"
-  }
-  ops.push(@render.DrawOp::PenColor(color=normalize_color(pen)))
+  let pen = @attrs.color(edge.get_attr("color"), default="black")
+  ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(pen)))
   for spline in layout.splines {
     ops.push(@render.DrawOp::Bezier(filled=false, points=spline.points))
   }
@@ -759,14 +681,11 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
     return ops
   }
   let font = @render.Font::{
-    name: font_name(edge.get_attr("fontname")),
-    size: font_size(edge.get_attr("fontsize")),
+    name: @attrs.font_name(edge.get_attr("fontname")),
+    size: @attrs.font_size(edge.get_attr("fontsize")),
   }
-  let color = match edge.get_attr("fontcolor") {
-    Some(value) => value
-    None => "black"
-  }
-  let pen_color = normalize_color(color)
+  let color = @attrs.color(edge.get_attr("fontcolor"), default="black")
+  let pen_color = @attrs.normalize_color(color)
   let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
   let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
@@ -852,8 +771,8 @@ fn graph_label_text(graph : @cgraph.Graph) -> String? {
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
-      let size = font_size(graph.get_attr("fontsize"))
-      let name = font_name(graph.get_attr("fontname"))
+      let size = @attrs.font_size(graph.get_attr("fontsize"))
+      let name = @attrs.font_name(graph.get_attr("fontname"))
       let (width_pt, height_pt) = label_text_dimensions(text, name, size)
       Some((text, width_pt, height_pt))
     }
@@ -874,42 +793,27 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
   let graph = layout.graph
   let bbox = layout.bbox
   if graph.is_root() {
-    let fill = match graph.get_attr("bgcolor") {
-      Some(value) => value
-      None => "white"
-    }
+    let fill = @attrs.color(graph.get_attr("bgcolor"), default="white")
     ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
-    ops.push(@render.DrawOp::FillColor(color=normalize_color(fill)))
+    ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
     ops.push(@render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)))
     return ops
   }
   if is_cluster_graph(graph) {
-    let style = graph.get_attr("style")
-    match style {
-      Some(value) => {
-        let lowered = value.to_lower()
-        if lowered != "" && lowered != "solid" {
-          ops.push(@render.DrawOp::Style(name=lowered))
-        }
-      }
-      None => ()
+    let style = @attrs.parse_style(graph.get_attr("style"))
+    if style.raw != "" && style.raw != "solid" {
+      ops.push(@render.DrawOp::Style(name=style.raw))
     }
-    let color = match graph.get_attr("color") {
-      Some(value) => value
-      None => "black"
-    }
-    ops.push(@render.DrawOp::PenColor(color=normalize_color(color)))
-    let fill = if has_filled_style(style) {
-      match graph.get_attr("fillcolor") {
-        Some(value) => Some(value)
-        None => Some(color)
-      }
+    let color = @attrs.color(graph.get_attr("color"), default="black")
+    ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(color)))
+    let fill = if style.filled {
+      Some(@attrs.color(graph.get_attr("fillcolor"), default=color))
     } else {
       graph.get_attr("bgcolor")
     }
     match fill {
       Some(value) => {
-        ops.push(@render.DrawOp::FillColor(color=normalize_color(value)))
+        ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(value)))
         ops.push(@render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)))
       }
       None => {
@@ -937,14 +841,11 @@ fn graph_label_ops(
   match graph_label_metrics(graph) {
     Some((text, width_pt, height_pt)) => {
       let font = @render.Font::{
-        name: font_name(graph.get_attr("fontname")),
-        size: font_size(graph.get_attr("fontsize")),
+        name: @attrs.font_name(graph.get_attr("fontname")),
+        size: @attrs.font_size(graph.get_attr("fontsize")),
       }
-      let color = match graph.get_attr("fontcolor") {
-        Some(value) => value
-        None => "black"
-      }
-      let pen_color = normalize_color(color)
+      let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
+      let pen_color = @attrs.normalize_color(color)
       let pos = match layout.label_pos {
         Some(value) => value
         None => graph_label_pos(layout.bbox, height_pt)

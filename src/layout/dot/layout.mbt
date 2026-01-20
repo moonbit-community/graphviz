@@ -325,14 +325,6 @@ fn label_text(node : @cgraph.Node) -> String {
 }
 
 ///|
-fn font_name(value : String?) -> String {
-  match value {
-    Some(text) => text
-    None => "Times-Roman"
-  }
-}
-
-///|
 fn is_record_shape(node : @cgraph.Node) -> Bool {
   match node.get_attr("shape") {
     Some(value) => value.to_lower() == "record"
@@ -506,11 +498,8 @@ fn record_rects(
 ) -> Array[@geom.Rect] {
   let label = label_text(node)
   let fields = record_fields(label)
-  let font_size_pt = match node.get_attr("fontsize") {
-    Some(value) => parse_double(value, 14.0)
-    None => 14.0
-  }
-  let font = font_name(node.get_attr("fontname"))
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let heights = record_scaled_heights(
     fields,
@@ -540,11 +529,8 @@ fn record_ports(
 ) -> Map[String, RecordPort] {
   let label = label_text(node)
   let fields = record_fields(label)
-  let font_size_pt = match node.get_attr("fontsize") {
-    Some(value) => parse_double(value, 14.0)
-    None => 14.0
-  }
-  let font = font_name(node.get_attr("fontname"))
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let heights = record_scaled_heights(
     fields,
@@ -630,11 +616,8 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     Some(value) => parse_double(value, fallback_height)
     None => fallback_height
   }
-  let font_size_pt = match node.get_attr("fontsize") {
-    Some(value) => parse_double(value, 14.0)
-    None => 14.0
-  }
-  let font = font_name(node.get_attr("fontname"))
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node.get_attr("fontname"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
@@ -1596,11 +1579,8 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
       if value == "" {
         None
       } else {
-        let font_size_pt = match graph.get_attr("fontsize") {
-          Some(size) => parse_double(size, 14.0)
-          None => 14.0
-        }
-        let font = font_name(graph.get_attr("fontname"))
+        let font_size_pt = @attrs.font_size(graph.get_attr("fontsize"))
+        let font = @attrs.font_name(graph.get_attr("fontname"))
         let (width_pt, height_pt) = label_text_dimensions(value, font, font_size_pt)
         Some((width_pt, height_pt))
       }

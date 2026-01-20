@@ -4,11 +4,11 @@
       "path": "moonbit-community/graphviz/layout/dot",
       "alias": "layout_dot"
     },
+    "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/render",
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/dot",
-    "moonbit-community/graphviz/cgraph",
-    "moonbitlang/core/strconv"
+    "moonbit-community/graphviz/cgraph"
   ],
   "test-import": [
     "moonbitlang/x/fs",

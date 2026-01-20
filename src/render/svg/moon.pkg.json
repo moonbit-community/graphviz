@@ -4,6 +4,7 @@
       "path": "moonbit-community/graphviz/layout/dot",
       "alias": "layout_dot"
     },
+    "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/render",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
