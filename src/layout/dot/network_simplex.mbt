@@ -2,6 +2,7 @@
 const NONE_EDGE : Int = -1
 ///|
 const NO_HEAP : Int = -1
+///|
 
 ///|
 priv enum OrderingMode {
@@ -23,7 +24,7 @@ priv struct NsEdge {
   tail : Int
   head : Int
   minlen : Int
-  mut weight : Int
+  weight : Int
   mut cutvalue : Int
   mut tree_index : Int
 }
@@ -614,13 +615,18 @@ fn feasible_tree(graph : NsGraph) -> Bool {
     node_subtree.push(NONE_EDGE)
   }
   let subtrees : Array[Subtree] = []
-  for i in 0..<graph.nodes.length() {
-    if node_subtree[i] != NONE_EDGE {
+  for node_idx in 0..<graph.nodes.length() {
+    if node_subtree[node_idx] != NONE_EDGE {
       continue
     }
-    let size = tight_subtree_search(graph, i, node_subtree, subtrees.length())
+    let size = tight_subtree_search(
+      graph,
+      node_idx,
+      node_subtree,
+      subtrees.length(),
+    )
     subtrees.push({
-      rep: i,
+      rep: node_idx,
       size,
       heap_index: NO_HEAP,
       parent: subtrees.length(),
@@ -892,8 +898,12 @@ fn dfs_cutval(graph : NsGraph, node_idx : Int, parent_edge : Int) -> Unit {
 
 ///|
 fn init_cutvalues(graph : NsGraph) -> Unit {
-  let _ = dfs_range_init(graph, 0)
-  dfs_cutval(graph, 0, NONE_EDGE)
+  if graph.nodes.length() == 0 {
+    return ()
+  }
+  let root = 0
+  let _ = dfs_range_init(graph, root)
+  dfs_cutval(graph, root, NONE_EDGE)
 }
 
 ///|
@@ -1108,20 +1118,20 @@ fn rerank(
   graph : NsGraph,
   node_idx : Int,
   delta : Int,
-  parent_edge : Int,
 ) -> Unit {
   graph.nodes[node_idx].rank = graph.nodes[node_idx].rank - delta
+  let parent_edge = graph.nodes[node_idx].par_edge
   for edge_idx in graph.nodes[node_idx].tree_out {
     if edge_idx == parent_edge {
       continue
     }
-    rerank(graph, graph.edges[edge_idx].head, delta, edge_idx)
+    rerank(graph, graph.edges[edge_idx].head, delta)
   }
   for edge_idx in graph.nodes[node_idx].tree_in {
     if edge_idx == parent_edge {
       continue
     }
-    rerank(graph, graph.edges[edge_idx].tail, delta, edge_idx)
+    rerank(graph, graph.edges[edge_idx].tail, delta)
   }
 }
 
@@ -1138,13 +1148,13 @@ fn update(
     let tail_deg = graph.nodes[tail].tree_in.length() + graph.nodes[tail].tree_out.length()
     let head_deg = graph.nodes[head].tree_in.length() + graph.nodes[head].tree_out.length()
     if tail_deg == 1 {
-      rerank(graph, tail, delta, leaving)
+      rerank(graph, tail, delta)
     } else if head_deg == 1 {
-      rerank(graph, head, -delta, leaving)
+      rerank(graph, head, -delta)
     } else if graph.nodes[tail].lim < graph.nodes[head].lim {
-      rerank(graph, tail, delta, leaving)
+      rerank(graph, tail, delta)
     } else {
-      rerank(graph, head, -delta, leaving)
+      rerank(graph, head, -delta)
     }
   }
   let cutvalue = graph.edges[leaving].cutvalue
@@ -1178,9 +1188,9 @@ fn lr_balance(graph : NsGraph) -> Unit {
         let tail = graph.edges[edge_idx].tail
         let head = graph.edges[edge_idx].head
         if graph.nodes[tail].lim < graph.nodes[head].lim {
-          rerank(graph, tail, delta / 2, edge_idx)
+          rerank(graph, tail, delta / 2)
         } else {
-          rerank(graph, head, -delta / 2, edge_idx)
+          rerank(graph, head, -delta / 2)
         }
       }
     }
@@ -1258,179 +1268,6 @@ fn nodesep_minlen(
 }
 
 ///|
-fn adj_key(tail_idx : Int, head_idx : Int) -> String {
-  "\{tail_idx}:\{head_idx}"
-}
-
-///|
-fn apply_ordering_constraints(
-  graph : NsGraph,
-  index : Map[String, Int],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  adj_edges : Map[String, Int],
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  ordering : OrderingMode?,
-) -> Unit {
-  let node_modes : Map[String, OrderingMode] = Map::new()
-  let node_keys : Array[String] = []
-  match ordering {
-    Some(mode) => {
-      for node in nodes {
-        let name = node.name()
-        node_modes[name] = mode
-        node_keys.push(name)
-      }
-    }
-    None => {
-      for node in nodes {
-        let name = node.name()
-        match node.get_attr("ordering") {
-          Some(value) => {
-            match parse_ordering(value) {
-              Some(mode) => {
-                node_modes[name] = mode
-                node_keys.push(name)
-              }
-              None => ()
-            }
-          }
-          None => ()
-        }
-      }
-    }
-  }
-  if node_keys.length() == 0 {
-    return ()
-  }
-  let edge_lists : Map[String, Array[@cgraph.Edge]] = Map::new()
-  for name in node_keys {
-    edge_lists[name] = []
-  }
-  for edge in edges {
-    let tail_name = edge.tail().name()
-    let head_name = edge.head().name()
-    match node_modes.get(tail_name) {
-      Some(OrderingMode::Out) => {
-        match edge_lists.get(tail_name) {
-          Some(list) => list.push(edge)
-          None => ()
-        }
-      }
-      _ => ()
-    }
-    match node_modes.get(head_name) {
-      Some(OrderingMode::In) => {
-        match edge_lists.get(head_name) {
-          Some(list) => list.push(edge)
-          None => ()
-        }
-      }
-      _ => ()
-    }
-  }
-  let mut node_idx = 0
-  while node_idx < node_keys.length() {
-    let name = node_keys[node_idx]
-    node_idx = node_idx + 1
-    let mode = match node_modes.get(name) {
-      Some(value) => value
-      None => continue
-    }
-    let list = match edge_lists.get(name) {
-      Some(value) => value
-      None => continue
-    }
-    if list.length() <= 1 {
-      continue
-    }
-    let mut i = 0
-    while i + 1 < list.length() {
-      let first = list[i]
-      let second = list[i + 1]
-      let first_node = if mode is OrderingMode::Out {
-        first.head().name()
-      } else {
-        first.tail().name()
-      }
-      let second_node = if mode is OrderingMode::Out {
-        second.head().name()
-      } else {
-        second.tail().name()
-      }
-      let first_rank = match ranks.get(first_node) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      let second_rank = match ranks.get(second_node) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      if first_rank != second_rank {
-        i = i + 1
-        continue
-      }
-      let first_order = match node_order.get(first_node) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      let second_order = match node_order.get(second_node) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      let mut left = first_node
-      let mut right = second_node
-      if first_order > second_order {
-        left = second_node
-        right = first_node
-      }
-      let left_idx = match index.get(left) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      let right_idx = match index.get(right) {
-        Some(value) => value
-        None => {
-          i = i + 1
-          continue
-        }
-      }
-      let key = adj_key(left_idx, right_idx)
-      match adj_edges.get(key) {
-        Some(edge_idx) => {
-          if graph.edges[edge_idx].weight < 1 {
-            graph.edges[edge_idx].weight = 1
-          }
-        }
-        None => {
-          let minlen = nodesep_minlen(left, right, sizes, nodesep_pt)
-          let _ = add_edge(graph, left_idx, right_idx, minlen, 1)
-        }
-      }
-      i = i + 1
-    }
-  }
-}
-
-///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -1442,19 +1279,39 @@ fn build_constraint_graph(
   ordering : OrderingMode?,
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
-  let node_order : Map[String, Int] = Map::new()
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
+  let ordered_nodes = nodes
+  let outgoing_edges : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in edges {
+    let tail = edge.tail().name()
+    match outgoing_edges.get(tail) {
+      Some(list) => list.push(edge)
+      None => outgoing_edges[tail] = [edge]
+    }
+  }
+  let slack_nodes : Array[(String, String)] = []
+  for node in ordered_nodes {
+    let tail_name = node.name()
+    let list = match outgoing_edges.get(tail_name) {
+      Some(value) => value
       None => []
     }
-    for i in 0..<names.length() {
-      node_order[names[i]] = i
+    for edge in list {
+      slack_nodes.push((edge.tail().name(), edge.head().name()))
     }
+  }
+  let slack_indices : Array[Int] = []
+  for _ in 0..<slack_nodes.length() {
+    slack_indices.push(0)
+  }
+  let mut slack_rev = slack_nodes.length()
+  while slack_rev > 0 {
+    slack_rev = slack_rev - 1
+    let slack_idx = add_node(graph, "")
+    slack_indices[slack_rev] = slack_idx
   }
   let base_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
   let index : Map[String, Int] = Map::new()
-  for node in nodes {
+  for node in ordered_nodes {
     let name = node.name()
     let idx = add_node(graph, name)
     index[name] = idx
@@ -1464,7 +1321,6 @@ fn build_constraint_graph(
     }
     graph.nodes[idx].rank = trunc_int(pos)
   }
-  let adj_edges : Map[String, Int] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -1483,26 +1339,14 @@ fn build_constraint_graph(
         None => 0
       }
       let minlen = nodesep_minlen(tail, head, sizes, nodesep_pt)
-      let edge_idx = add_edge(graph, tail_idx, head_idx, minlen, 0)
-      adj_edges[adj_key(tail_idx, head_idx)] = edge_idx
+      let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
       i = i + 1
     }
   }
-  apply_ordering_constraints(
-    graph,
-    index,
-    ranks,
-    node_order,
-    adj_edges,
-    nodes,
-    edges,
-    sizes,
-    nodesep_pt,
-    ordering,
-  )
-  for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+  ignore(ranks)
+  ignore(ordering)
+  for i in 0..<slack_nodes.length() {
+    let (tail, head) = slack_nodes[i]
     let tail_idx = match index.get(tail) {
       Some(value) => value
       None => 0
@@ -1511,7 +1355,7 @@ fn build_constraint_graph(
       Some(value) => value
       None => 0
     }
-    let slack_idx = add_node(graph, "")
+    let slack_idx = slack_indices[i]
     let tail_rank = graph.nodes[tail_idx].rank
     let head_rank = graph.nodes[head_idx].rank
     let base = if tail_rank < head_rank { tail_rank } else { head_rank }
@@ -1543,7 +1387,7 @@ fn x_positions_from_simplex(
     nodesep_pt,
     ordering,
   )
-  network_simplex(graph, 1000)
+  network_simplex(graph, 0x7fffffff)
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
     let name = node.name()

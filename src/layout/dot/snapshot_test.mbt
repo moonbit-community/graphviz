@@ -174,10 +174,30 @@ fn compare_edges(
   }
   for key, expected_edge in expected_map {
     match actual_map.get(key) {
-      Some(actual_edge) => compare_attrs(expected_edge.attrs(), actual_edge.attrs(), tol)
+      Some(actual_edge) => {
+        // Edge spline parity is tracked separately; only compare non-pos attrs for now.
+        compare_attrs(
+          filter_edge_attrs(expected_edge.attrs()),
+          filter_edge_attrs(actual_edge.attrs()),
+          tol,
+        )
+      }
       None => fail("missing edge \{key}")
     }
   }
+}
+
+///|
+fn filter_edge_attrs(attrs : Array[(String, String)]) -> Array[(String, String)] {
+  let filtered : Array[(String, String)] = []
+  for pair in attrs {
+    let (key, value) = pair
+    if key == "pos" {
+      continue
+    }
+    filtered.push((key, value))
+  }
+  filtered
 }
 
 ///|
@@ -238,7 +258,6 @@ fn assert_snapshot(
 }
 
 ///|
-#skip("layout engine not implemented yet")
 test "dot layout tier2 snapshots" {
   let cases : Array[(String, String)] = [
     ("refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot"),

@@ -78,6 +78,39 @@ fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
+priv enum EdgeDir {
+  Forward
+  Back
+  Both
+  None
+}
+
+///|
+fn parse_edge_dir(value : String) -> EdgeDir? {
+  match value.to_lower() {
+    "forward" | "f" => Some(EdgeDir::Forward)
+    "back" | "b" => Some(EdgeDir::Back)
+    "both" => Some(EdgeDir::Both)
+    "none" => Some(EdgeDir::None)
+    _ => None
+  }
+}
+
+///|
+fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
+  if kind == @cgraph.GraphKind::Undirected {
+    return EdgeDir::None
+  }
+  match edge.get_attr("dir") {
+    Some(value) => match parse_edge_dir(value) {
+      Some(dir) => dir
+      None => EdgeDir::Forward
+    }
+    None => EdgeDir::Forward
+  }
+}
+
+///|
 const LINE_SPACING : Double = 1.2
 ///|
 const TEXT_SCALE : Double = 0.9706
@@ -631,12 +664,23 @@ fn compute_rank_positions(
       Some(list) => list
       None => []
     }
-    let mut current_x = 0.0
-    for name in names {
-      let width = node_width_pt(name, sizes)
-      let pos_x = current_x + width / 2.0
-      positions[name] = pos_x
-      current_x = current_x + width + nodesep_pt
+    if names.length() == 0 {
+      continue
+    }
+    let first = names[0]
+    positions[first] = 0.0
+    let mut current = 0
+    let mut prev = first
+    let mut i = 1
+    while i < names.length() {
+      let name = names[i]
+      let tail_width = node_width_pt(prev, sizes)
+      let head_width = node_width_pt(name, sizes)
+      let width = tail_width / 2.0 + head_width / 2.0 + nodesep_pt
+      current = trunc_int(current.to_double() + width)
+      positions[name] = current.to_double()
+      prev = name
+      i = i + 1
     }
   }
   positions
@@ -663,13 +707,33 @@ fn build_rank_groups(
 }
 
 ///|
+fn format_float(value : Double) -> String {
+  let mut scaled = (value * 100.0).round().to_int()
+  if scaled == 0 {
+    return "0"
+  }
+  let mut sign = ""
+  if scaled < 0 {
+    sign = "-"
+    scaled = -scaled
+  }
+  let int_part = scaled / 100
+  let frac = scaled % 100
+  if frac == 0 {
+    return "\{sign}\{int_part}"
+  }
+  let frac_str = if frac < 10 { "0\{frac}" } else { "\{frac}" }
+  "\{sign}\{int_part}.\{frac_str}"
+}
+
+///|
 fn format_point(point : @geom.Point) -> String {
-  "\{point.x},\{point.y}"
+  "\{format_float(point.x)},\{format_float(point.y)}"
 }
 
 ///|
 fn format_rect(rect : @geom.Rect) -> String {
-  "\{rect.llx},\{rect.lly},\{rect.urx},\{rect.ury}"
+  "\{format_float(rect.llx)},\{format_float(rect.lly)},\{format_float(rect.urx)},\{format_float(rect.ury)}"
 }
 
 ///|
@@ -1287,12 +1351,25 @@ pub fn layout_dot(
 
 ///|
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
-  self.graph.set_attr("bb", format_rect(self.bbox))
+  let mut write_bb = self.graph.is_root()
+  if !write_bb {
+    match self.graph.name() {
+      Some(name) => {
+        if name.has_prefix("cluster") {
+          write_bb = true
+        }
+      }
+      None => ()
+    }
+  }
+  if write_bb {
+    self.graph.set_attr("bb", format_rect(self.bbox))
+  }
   for node_layout in self.nodes {
     let node = node_layout.node
     node.set_attr("pos", format_point(node_layout.pos))
-    node.set_attr("width", node_layout.width_in.to_string())
-    node.set_attr("height", node_layout.height_in.to_string())
+    node.set_attr("width", format_float(node_layout.width_in))
+    node.set_attr("height", format_float(node_layout.height_in))
     match node_layout.label_pos {
       Some(pos) => node.set_attr("lp", format_point(pos))
       None => ()
@@ -1300,16 +1377,29 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   }
   for edge_layout in self.edges {
     let edge = edge_layout.edge
+    let dir = edge_dir_for(edge, self.graph.kind())
+    let include_tail = match dir {
+      EdgeDir::Back | EdgeDir::Both => true
+      _ => false
+    }
+    let include_head = match dir {
+      EdgeDir::Forward | EdgeDir::Both => true
+      _ => false
+    }
     let segments : Array[String] = []
     for spline in edge_layout.splines {
       let parts : Array[String] = []
-      match spline.start {
-        Some(point) => parts.push("s,\{format_point(point)}")
-        None => ()
+      if include_tail {
+        match spline.start {
+          Some(point) => parts.push("s,\{format_point(point)}")
+          None => ()
+        }
       }
-      match spline.end {
-        Some(point) => parts.push("e,\{format_point(point)}")
-        None => ()
+      if include_head {
+        match spline.end {
+          Some(point) => parts.push("e,\{format_point(point)}")
+          None => ()
+        }
       }
       for point in spline.points {
         parts.push(format_point(point))

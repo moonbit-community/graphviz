@@ -148,6 +148,27 @@ fn write_indent(sb : StringBuilder, indent : Int) -> Unit {
 }
 
 ///|
+fn merge_attrs(
+  base : Array[(String, String)],
+  overrides : Array[(String, String)],
+) -> Array[(String, String)] {
+  let merged : Map[String, String] = Map::new()
+  for pair in base {
+    let (key, value) = pair
+    merged[key] = value
+  }
+  for pair in overrides {
+    let (key, value) = pair
+    merged[key] = value
+  }
+  let out : Array[(String, String)] = []
+  for key, value in merged {
+    out.push((key, value))
+  }
+  out
+}
+
+///|
 fn write_graph(
   graph : @cgraph.Graph,
   sb : StringBuilder,
@@ -177,18 +198,32 @@ fn write_graph(
   sb.write_string(" {\n")
   let inner = indent + 2
 
-  let graph_defaults = graph.default_attrs(@cgraph.AttrKind::Graph)
+  let graph_defaults = merge_attrs(
+    graph.default_attrs(@cgraph.AttrKind::Graph),
+    graph.attrs(),
+  )
   if graph_defaults.length() > 0 {
     write_indent(sb, inner)
     sb.write_string("graph ")
     write_attr_list(sb, graph_defaults)
     sb.write_string(";\n")
   }
-  let node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
-  if node_defaults.length() > 0 {
+  let node_defaults : Map[String, String] = Map::new()
+  if is_root {
+    node_defaults["label"] = "\\N"
+  }
+  for pair in graph.default_attrs(@cgraph.AttrKind::Node) {
+    let (key, value) = pair
+    node_defaults[key] = value
+  }
+  let node_defaults_list : Array[(String, String)] = []
+  for key, value in node_defaults {
+    node_defaults_list.push((key, value))
+  }
+  if node_defaults_list.length() > 0 {
     write_indent(sb, inner)
     sb.write_string("node ")
-    write_attr_list(sb, node_defaults)
+    write_attr_list(sb, node_defaults_list)
     sb.write_string(";\n")
   }
   let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
@@ -196,15 +231,6 @@ fn write_graph(
     write_indent(sb, inner)
     sb.write_string("edge ")
     write_attr_list(sb, edge_defaults)
-    sb.write_string(";\n")
-  }
-
-  for pair in graph.attrs() {
-    let (key, value) = pair
-    write_indent(sb, inner)
-    sb.write_string(write_id(key))
-    sb.write_string("=")
-    sb.write_string(write_id(value))
     sb.write_string(";\n")
   }
 
