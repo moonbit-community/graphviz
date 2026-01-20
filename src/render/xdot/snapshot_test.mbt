@@ -60,7 +60,7 @@ fn edge_key(edge : @cgraph.Edge) -> String {
 ///|
 fn is_numeric_attr(name : String) -> Bool {
   match name {
-    "bb" | "pos" | "lp" | "width" | "height" | "lwidth" | "lheight" => true
+    "bb" | "pos" | "lp" | "width" | "height" | "lwidth" | "lheight" | "rects" => true
     _ => false
   }
 }
@@ -76,7 +76,7 @@ fn is_draw_attr(name : String) -> Bool {
 ///|
 fn should_compare_attr(name : String) -> Bool {
   match name {
-    "_ldraw_" | "rects" => false
+    "_ldraw_" => false
     _ => true
   }
 }

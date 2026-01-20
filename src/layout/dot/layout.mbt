@@ -300,22 +300,15 @@ fn label_text(node : @cgraph.Node) -> String {
 }
 
 ///|
-fn node_size(node : @cgraph.Node) -> NodeSize {
-  let base_width_in = match node.get_attr("width") {
-    Some(value) => parse_double(value, default_node_width_in())
-    None => default_node_width_in()
+fn is_record_shape(node : @cgraph.Node) -> Bool {
+  match node.get_attr("shape") {
+    Some(value) => value.to_lower() == "record"
+    None => false
   }
-  let base_height_in = match node.get_attr("height") {
-    Some(value) => parse_double(value, default_node_height_in())
-    None => default_node_height_in()
-  }
-  let font_size_pt = match node.get_attr("fontsize") {
-    Some(value) => parse_double(value, 14.0)
-    None => 14.0
-  }
-  let label = label_text(node)
-  let (text_width_pt, text_height_pt) =
-    label_text_dimensions(label, font_size_pt)
+}
+
+///|
+fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
   match node.get_attr("margin") {
@@ -330,6 +323,280 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     }
     None => ()
   }
+  (pad_x_pt, pad_y_pt)
+}
+
+///|
+priv struct RecordField {
+  name : String?
+  text : String
+}
+
+///|
+priv struct RecordPort {
+  center : @geom.Point
+  size : NodeSize
+}
+
+///|
+fn split_record_fields(label : String) -> Array[String] {
+  let fields : Array[String] = []
+  let mut sb = StringBuilder::new()
+  let mut escaping = false
+  let mut in_port = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '<' {
+      in_port = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '>' {
+      in_port = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '|' && !in_port {
+      fields.push(sb.to_string())
+      sb = StringBuilder::new()
+      continue
+    }
+    sb.write_char(ch)
+  }
+  let last = sb.to_string()
+  if last != "" || fields.length() == 0 {
+    fields.push(last)
+  }
+  fields
+}
+
+///|
+fn record_field_from_text(field : String) -> RecordField {
+  if field.has_prefix("<") {
+    match field.find(">") {
+      Some(pos) => {
+        let name = if pos > 1 {
+          field.unsafe_substring(start=1, end=pos)
+        } else {
+          ""
+        }
+        let len = field.length()
+        let text = if pos + 1 < len {
+          field.unsafe_substring(start=pos + 1, end=len)
+        } else {
+          ""
+        }
+        let port_name : String? = if name == "" { None } else { Some(name) }
+        { name: port_name, text }
+      }
+      None => { name: None, text: field }
+    }
+  } else {
+    { name: None, text: field }
+  }
+}
+
+///|
+fn record_fields(label : String) -> Array[RecordField] {
+  let fields : Array[RecordField] = []
+  for part in split_record_fields(label) {
+    fields.push(record_field_from_text(part))
+  }
+  fields
+}
+
+///|
+fn record_field_metrics(
+  fields : Array[RecordField],
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> (Array[Double], Double, Double) {
+  let heights : Array[Double] = []
+  let mut sum_height = 0.0
+  let mut max_width = 0.0
+  for field in fields {
+    let (text_width_pt, text_height_pt) =
+      label_text_dimensions(field.text, font_size_pt)
+    let width_pt = text_width_pt + pad_x_pt
+    let height_pt = text_height_pt + pad_y_pt
+    heights.push(height_pt)
+    sum_height = sum_height + height_pt
+    if width_pt > max_width {
+      max_width = width_pt
+    }
+  }
+  (heights, sum_height, max_width)
+}
+
+///|
+fn record_scaled_heights(
+  fields : Array[RecordField],
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+  total_height_pt : Double,
+) -> Array[Double] {
+  let (heights, sum_height, _) =
+    record_field_metrics(fields, font_size_pt, pad_x_pt, pad_y_pt)
+  let scale = if sum_height > 0.0 { total_height_pt / sum_height } else { 1.0 }
+  let scaled : Array[Double] = []
+  for height in heights {
+    scaled.push(height * scale)
+  }
+  scaled
+}
+
+///|
+fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
+  let width_in = width_pt / 72.0
+  let height_in = height_pt / 72.0
+  { width_in, height_in, width_pt, height_pt }
+}
+
+///|
+fn record_rects(
+  node : @cgraph.Node,
+  pos : @geom.Point,
+  size : NodeSize,
+) -> Array[@geom.Rect] {
+  let label = label_text(node)
+  let fields = record_fields(label)
+  let font_size_pt = match node.get_attr("fontsize") {
+    Some(value) => parse_double(value, 14.0)
+    None => 14.0
+  }
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let heights = record_scaled_heights(
+    fields,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+    size.height_pt,
+  )
+  let left = pos.x - size.width_pt / 2.0
+  let right = pos.x + size.width_pt / 2.0
+  let mut top = pos.y + size.height_pt / 2.0
+  let rects : Array[@geom.Rect] = []
+  for height in heights {
+    let bottom = top - height
+    rects.push({ llx: left, lly: bottom, urx: right, ury: top })
+    top = bottom
+  }
+  rects
+}
+
+///|
+fn record_ports(
+  node : @cgraph.Node,
+  pos : @geom.Point,
+  size : NodeSize,
+) -> Map[String, RecordPort] {
+  let label = label_text(node)
+  let fields = record_fields(label)
+  let font_size_pt = match node.get_attr("fontsize") {
+    Some(value) => parse_double(value, 14.0)
+    None => 14.0
+  }
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let heights = record_scaled_heights(
+    fields,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+    size.height_pt,
+  )
+  let left = pos.x - size.width_pt / 2.0
+  let right = pos.x + size.width_pt / 2.0
+  let mut top = pos.y + size.height_pt / 2.0
+  let ports : Map[String, RecordPort] = Map::new()
+  for i in 0..<fields.length() {
+    let field = fields[i]
+    let height = heights[i]
+    let bottom = top - height
+    match field.name {
+      Some(name) => {
+        let center = @geom.Point::{
+          x: (left + right) / 2.0,
+          y: (top + bottom) / 2.0,
+        }
+        let field_size = node_size_from_points(right - left, height)
+        ports[name] = { center, size: field_size }
+      }
+      None => ()
+    }
+    top = bottom
+  }
+  ports
+}
+
+///|
+fn port_geometry(
+  node_name : String,
+  port : @cgraph.Port?,
+  record_ports_map : Map[String, Map[String, RecordPort]],
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> (@geom.Point, NodeSize) {
+  match port {
+    Some(value) => {
+      match value.name {
+        Some(name) => {
+          match record_ports_map.get(node_name) {
+            Some(ports) => {
+              match ports.get(name) {
+                Some(port_info) => (port_info.center, port_info.size)
+                None => (node_pos, node_size)
+              }
+            }
+            None => (node_pos, node_size)
+          }
+        }
+        None => (node_pos, node_size)
+      }
+    }
+    None => (node_pos, node_size)
+  }
+}
+
+///|
+fn node_size(node : @cgraph.Node) -> NodeSize {
+  let base_width_in = match node.get_attr("width") {
+    Some(value) => parse_double(value, default_node_width_in())
+    None => default_node_width_in()
+  }
+  let base_height_in = match node.get_attr("height") {
+    Some(value) => parse_double(value, default_node_height_in())
+    None => default_node_height_in()
+  }
+  let font_size_pt = match node.get_attr("fontsize") {
+    Some(value) => parse_double(value, 14.0)
+    None => 14.0
+  }
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let base_width_pt = base_width_in * 72.0
+  let base_height_pt = base_height_in * 72.0
+  if is_record_shape(node) {
+    let label = label_text(node)
+    let fields = record_fields(label)
+    let (_, sum_height, max_width) =
+      record_field_metrics(fields, font_size_pt, pad_x_pt, pad_y_pt)
+    let width_pt = if max_width > base_width_pt { max_width } else { base_width_pt }
+    let height_pt = if sum_height > base_height_pt { sum_height } else { base_height_pt }
+    return node_size_from_points(width_pt, height_pt)
+  }
+  let label = label_text(node)
+  let (text_width_pt, text_height_pt) =
+    label_text_dimensions(label, font_size_pt)
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
   let label_width_pt = if has_label { text_width_pt + pad_x_pt } else { 0.0 }
   let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
@@ -734,6 +1001,15 @@ fn format_point(point : @geom.Point) -> String {
 ///|
 fn format_rect(rect : @geom.Rect) -> String {
   "\{format_float(rect.llx)},\{format_float(rect.lly)},\{format_float(rect.urx)},\{format_float(rect.ury)}"
+}
+
+///|
+fn format_rects(rects : Array[@geom.Rect]) -> String {
+  let parts : Array[String] = []
+  for rect in rects {
+    parts.push(format_rect(rect))
+  }
+  parts.join(" ")
 }
 
 ///|
@@ -1304,6 +1580,17 @@ pub fn layout_dot(
       label_pos: None,
     })
   }
+  let record_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
+  for node_layout in nodes_out {
+    if is_record_shape(node_layout.node) {
+      let size = node_size_from_points(
+        node_layout.width_in * 72.0,
+        node_layout.height_in * 72.0,
+      )
+      let ports = record_ports(node_layout.node, node_layout.pos, size)
+      record_ports_map[node_layout.node.name()] = ports
+    }
+  }
   let edges_out : Array[DotLayoutEdge] = []
   for edge in edges {
     let tail_name = edge.tail().name()
@@ -1324,8 +1611,22 @@ pub fn layout_dot(
       Some(value) => value
       None => node_size(edge.head())
     }
-    let tail_clip = clip_to_rect(tail_pos, tail_size, head_pos)
-    let head_clip = clip_to_rect(head_pos, head_size, tail_pos)
+    let (tail_anchor, tail_anchor_size) = port_geometry(
+      tail_name,
+      edge.tail_port(),
+      record_ports_map,
+      tail_pos,
+      tail_size,
+    )
+    let (head_anchor, head_anchor_size) = port_geometry(
+      head_name,
+      edge.head_port(),
+      record_ports_map,
+      head_pos,
+      head_size,
+    )
+    let tail_clip = clip_to_rect(tail_anchor, tail_anchor_size, head_anchor)
+    let head_clip = clip_to_rect(head_anchor, head_anchor_size, tail_anchor)
     let dir = edge_dir_for(edge, graph.kind())
     let include_tail = match dir {
       EdgeDir::Back | EdgeDir::Both => true
@@ -1337,10 +1638,10 @@ pub fn layout_dot(
     }
     let spline = edge_spline_for_line(
       edge,
-      tail_pos,
-      head_pos,
-      tail_size,
-      head_size,
+      tail_anchor,
+      head_anchor,
+      tail_anchor_size,
+      head_anchor_size,
       include_tail,
       include_head,
     )
@@ -1419,6 +1720,16 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     node.set_attr("pos", format_point(node_layout.pos))
     node.set_attr("width", format_float(node_layout.width_in))
     node.set_attr("height", format_float(node_layout.height_in))
+    if is_record_shape(node) {
+      let size = node_size_from_points(
+        node_layout.width_in * 72.0,
+        node_layout.height_in * 72.0,
+      )
+      let rects = record_rects(node, node_layout.pos, size)
+      if rects.length() > 0 {
+        node.set_attr("rects", format_rects(rects))
+      }
+    }
     match node_layout.label_pos {
       Some(pos) => node.set_attr("lp", format_point(pos))
       None => ()
