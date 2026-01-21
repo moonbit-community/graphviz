@@ -19,6 +19,7 @@ const TEXT_SCALE : Double = 0.9706
 
 const PAD_X_PT : Double = 16.0
 const PAD_Y_PT : Double = 8.0
+const DEFAULT_GRAPH_PAD_PT : Double = 4.0
 
 ///|
 fn font_width_scale(font_name : String) -> Double {
@@ -1401,6 +1402,30 @@ fn shift_point(point : @geom.Point, llx : Double, lly : Double) -> @geom.Point {
 }
 
 ///|
+fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
+  match graph.get_attr("pad") {
+    Some(value) => {
+      let parts : Array[String] = []
+      for part in value.split(",") {
+        parts.push(part.trim().to_string())
+      }
+      let x_in = if parts.length() > 0 {
+        parse_double(parts[0], DEFAULT_GRAPH_PAD_PT / 72.0)
+      } else {
+        DEFAULT_GRAPH_PAD_PT / 72.0
+      }
+      let y_in = if parts.length() > 1 {
+        parse_double(parts[1], x_in)
+      } else {
+        x_in
+      }
+      (x_in * 72.0, y_in * 72.0)
+    }
+    None => (DEFAULT_GRAPH_PAD_PT, DEFAULT_GRAPH_PAD_PT)
+  }
+}
+
+///|
 fn spline_path(
   spline : @geom.Spline,
   llx : Double,
@@ -1656,8 +1681,15 @@ pub fn render_svg(
     None => true
   }
   let bbox = layout.bbox
-  let width = bbox.urx - bbox.llx
-  let height = bbox.ury - bbox.lly
+  let (pad_x, pad_y) = graph_pad_pt(layout.graph)
+  let padded_bbox : @geom.Rect = {
+    llx: bbox.llx - pad_x,
+    lly: bbox.lly - pad_y,
+    urx: bbox.urx + pad_x,
+    ury: bbox.ury + pad_y,
+  }
+  let width = padded_bbox.urx - padded_bbox.llx
+  let height = padded_bbox.ury - padded_bbox.lly
   let sb = StringBuilder::new()
   if include_xml_decl {
     write_line(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "", pretty)
@@ -1688,7 +1720,7 @@ pub fn render_svg(
     pretty,
   )
   let cluster_indent = if pretty { "    " } else { "" }
-  write_cluster_graphs(sb, layout, bbox, cluster_indent, pretty)
+  write_cluster_graphs(sb, layout, padded_bbox, cluster_indent, pretty)
   let edge_indent = if pretty { "    " } else { "" }
   let kind = layout.graph.kind()
   for edge_layout in layout.edges {
@@ -1697,7 +1729,7 @@ pub fn render_svg(
     let style = @attrs.parse_style(edge.get_attr("style"))
     let dash = stroke_dash_attr(style)
     for spline in edge_layout.splines {
-      let path = spline_path(spline, bbox.llx, bbox.lly)
+      let path = spline_path(spline, padded_bbox.llx, padded_bbox.lly)
       if path != "" {
         write_line(
           sb,
@@ -1710,11 +1742,11 @@ pub fn render_svg(
     let flags = arrow_flags(edge, kind)
     if flags.head {
       let ops = arrow_primitives(edge_layout, true)
-      write_arrow_ops(sb, ops, color, dash, bbox.llx, bbox.lly, edge_indent, pretty)
+      write_arrow_ops(sb, ops, color, dash, padded_bbox.llx, padded_bbox.lly, edge_indent, pretty)
     }
     if flags.tail {
       let ops = arrow_primitives(edge_layout, false)
-      write_arrow_ops(sb, ops, color, dash, bbox.llx, bbox.lly, edge_indent, pretty)
+      write_arrow_ops(sb, ops, color, dash, padded_bbox.llx, padded_bbox.lly, edge_indent, pretty)
     }
     let label_text = match edge.get_attr("label") {
       Some(value) => resolve_label(value, "")
@@ -1732,7 +1764,7 @@ pub fn render_svg(
           size,
           font_color,
           pos,
-          bbox,
+          padded_bbox,
           edge_indent,
           pretty,
         )
@@ -1755,7 +1787,7 @@ pub fn render_svg(
           size,
           font_color,
           pos,
-          bbox,
+          padded_bbox,
           edge_indent,
           pretty,
         )
@@ -1778,7 +1810,7 @@ pub fn render_svg(
           size,
           font_color,
           pos,
-          bbox,
+          padded_bbox,
           edge_indent,
           pretty,
         )
@@ -1821,7 +1853,7 @@ pub fn render_svg(
         stroke,
         fill,
         dash,
-        bbox,
+        padded_bbox,
         node_indent,
         pretty,
       )
@@ -1832,7 +1864,7 @@ pub fn render_svg(
     } else {
       match shape_polygon_points(kind, rect) {
         Some(points) => {
-          let attrs = polygon_points(points, bbox.llx, bbox.lly)
+          let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
           write_line(
             sb,
             "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
@@ -1842,8 +1874,8 @@ pub fn render_svg(
         }
         None => {
           if kind == "box" {
-            let x = rect.llx - bbox.llx
-            let y = rect.lly - bbox.lly
+            let x = rect.llx - padded_bbox.llx
+            let y = rect.lly - padded_bbox.lly
             let w = rect.urx - rect.llx
             let h = rect.ury - rect.lly
             write_line(
@@ -1853,8 +1885,8 @@ pub fn render_svg(
               pretty,
             )
           } else {
-            let cx = node_layout.pos.x - bbox.llx
-            let cy = node_layout.pos.y - bbox.lly
+            let cx = node_layout.pos.x - padded_bbox.llx
+            let cy = node_layout.pos.y - padded_bbox.lly
             let rx = (rect.urx - rect.llx) / 2.0
             let ry = (rect.ury - rect.lly) / 2.0
             write_line(
@@ -1882,7 +1914,7 @@ pub fn render_svg(
         color,
         stroke,
         dash,
-        bbox,
+        padded_bbox,
         node_indent,
         pretty,
       )
@@ -1898,7 +1930,7 @@ pub fn render_svg(
             font,
             size,
             color,
-            bbox,
+            padded_bbox,
             node_indent,
             pretty,
           )
@@ -1917,7 +1949,7 @@ pub fn render_svg(
             size,
             color,
             pos,
-            bbox,
+            padded_bbox,
             node_indent,
             pretty,
           )
@@ -1940,7 +1972,7 @@ pub fn render_svg(
             size,
             color,
             pos,
-            bbox,
+            padded_bbox,
             node_indent,
             pretty,
           )

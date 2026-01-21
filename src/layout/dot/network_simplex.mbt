@@ -1981,6 +1981,7 @@ fn build_constraint_graph(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   ordering : OrderingMode?,
+  has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
 ) -> (NsGraph, Map[String, Int]) {
@@ -2094,7 +2095,9 @@ fn build_constraint_graph(
     let base_tail = tail_rank - m0 - 1
     let base_head = head_rank - m1 - 1
     graph.nodes[slack_idx].rank = if base_tail < base_head { base_tail } else { base_head }
-    let weight = edge_weight(edge)
+    let minlen_value = edge_minlen(edge)
+    let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
+    let weight = edge_weight(edge) * minlen
     let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
     let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
   }
@@ -2111,6 +2114,7 @@ fn x_positions_from_simplex(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   ordering : OrderingMode?,
+  has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
@@ -2123,6 +2127,7 @@ fn x_positions_from_simplex(
     sizes,
     nodesep_pt,
     ordering,
+    has_edge_labels,
     extra_nodes,
     extra_edges,
   )
@@ -2150,6 +2155,7 @@ fn compute_x_positions(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   ordering : OrderingMode?,
+  has_edge_labels : Bool,
 ) -> Map[String, Double] {
   let (extra_nodes, extra_edges) = build_cluster_constraints(
     graph,
@@ -2169,6 +2175,7 @@ fn compute_x_positions(
     sizes,
     nodesep_pt,
     ordering,
+    has_edge_labels,
     extra_nodes,
     extra_edges,
   )

@@ -3099,6 +3099,56 @@ fn shift_spline(spline : @geom.Spline, dx : Double, dy : Double) -> @geom.Spline
 }
 
 ///|
+fn shift_layout_graph(
+  layout : DotLayoutGraph,
+  dx : Double,
+  dy : Double,
+) -> DotLayoutGraph {
+  let shifted_nodes : Array[DotLayoutNode] = []
+  for node_layout in layout.nodes {
+    shifted_nodes.push({
+      node: node_layout.node,
+      pos: shift_point(node_layout.pos, dx, dy),
+      width_in: node_layout.width_in,
+      height_in: node_layout.height_in,
+      label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+    })
+  }
+  let shifted_edges : Array[DotLayoutEdge] = []
+  for edge_layout in layout.edges {
+    let splines : Array[@geom.Spline] = []
+    for spline in edge_layout.splines {
+      splines.push(shift_spline(spline, dx, dy))
+    }
+    shifted_edges.push({
+      edge: edge_layout.edge,
+      splines,
+      label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
+      head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
+      tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+    })
+  }
+  let shifted_subgraphs : Array[DotLayoutGraph] = []
+  for subgraph in layout.subgraphs {
+    shifted_subgraphs.push(shift_layout_graph(subgraph, dx, dy))
+  }
+  let shifted_bbox : @geom.Rect = {
+    llx: layout.bbox.llx + dx,
+    lly: layout.bbox.lly + dy,
+    urx: layout.bbox.urx + dx,
+    ury: layout.bbox.ury + dy,
+  }
+  {
+    graph: layout.graph,
+    bbox: shifted_bbox,
+    label_pos: shift_optional_point(layout.label_pos, dx, dy),
+    nodes: shifted_nodes,
+    edges: shifted_edges,
+    subgraphs: shifted_subgraphs,
+  }
+}
+
+///|
 fn transform_layout(
   nodes : Array[DotLayoutNode],
   edges : Array[DotLayoutEdge],
@@ -3626,6 +3676,7 @@ pub fn layout_dot(
     sizes,
     nodesep_pt,
     ordering,
+    has_edge_labels,
   )
   normalize_x_positions(nodes, x_positions, sizes)
   let positions : Map[String, @geom.Point] = Map::new()
@@ -3815,13 +3866,24 @@ pub fn layout_dot(
       None => ()
     }
   }
-  {
+  let layout = {
     graph,
     bbox: final_bbox,
     label_pos,
     nodes: final_nodes,
     edges: final_edges,
     subgraphs,
+  }
+  if graph.is_root() {
+    let dx = -layout.bbox.llx
+    let dy = -layout.bbox.lly
+    if dx != 0.0 || dy != 0.0 {
+      shift_layout_graph(layout, dx, dy)
+    } else {
+      layout
+    }
+  } else {
+    layout
   }
 }
 
