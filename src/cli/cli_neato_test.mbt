@@ -107,3 +107,18 @@ test "cli neato assigns positions without -n" {
   assert_true(!ab_same)
   assert_true(!ac_same)
 }
+
+test "cli neato honors pinned positions" {
+  ensure_dir("target")
+  ensure_dir("target/cli")
+  let input_path = "target/cli/neato_pinned.dot"
+  write_input(input_path, "graph { a [pos=\"10,20!\"]; b; a -- b; }")
+  let output = run_cli([input_path], program="neato")
+  let graph = @dot.parse_dot(output)
+  let (ax, ay) = match node_pos(graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  assert_true(Double::is_close(ax, 10.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(ay, 20.0, absolute_tolerance=0.01))
+}
