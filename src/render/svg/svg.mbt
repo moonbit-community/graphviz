@@ -614,44 +614,104 @@ priv struct RecordField {
 }
 
 ///|
-fn split_record_fields(label : String) -> Array[String] {
-  let fields : Array[String] = []
+priv enum RecordOrientation {
+  Horizontal
+  Vertical
+}
+
+///|
+priv enum RecordNode {
+  Field(RecordField)
+  Group(Array[RecordNode])
+}
+
+///|
+fn toggle_record_orientation(orientation : RecordOrientation) -> RecordOrientation {
+  match orientation {
+    RecordOrientation::Horizontal => RecordOrientation::Vertical
+    RecordOrientation::Vertical => RecordOrientation::Horizontal
+  }
+}
+
+///|
+priv struct RecordParser {
+  chars : Array[Char]
+  mut index : Int
+}
+
+///|
+fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
+  let nodes : Array[RecordNode] = []
   let mut sb = StringBuilder::new()
   let mut escaping = false
   let mut in_port = false
-  for ch in label {
+  let mut segment_has_node = false
+  while parser.index < parser.chars.length() {
+    let ch = parser.chars[parser.index]
     if escaping {
       escaping = false
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '\\' {
       escaping = true
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '<' {
       in_port = true
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '>' {
       in_port = false
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
-    if ch == '|' && !in_port {
-      fields.push(sb.to_string())
+    if !in_port && ch == '{' {
+      let text = sb.to_string()
+      if text != "" {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+        segment_has_node = true
+      }
       sb = StringBuilder::new()
+      parser.index = parser.index + 1
+      let children = parse_record_nodes(parser)
+      nodes.push(RecordNode::Group(children))
+      segment_has_node = true
       continue
+    }
+    if !in_port && ch == '|' {
+      let text = sb.to_string()
+      if !segment_has_node {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+      }
+      sb = StringBuilder::new()
+      segment_has_node = false
+      parser.index = parser.index + 1
+      continue
+    }
+    if !in_port && ch == '}' {
+      let text = sb.to_string()
+      if !segment_has_node {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+      }
+      sb = StringBuilder::new()
+      parser.index = parser.index + 1
+      return nodes
     }
     sb.write_char(ch)
+    parser.index = parser.index + 1
   }
-  let last = sb.to_string()
-  if last != "" || fields.length() == 0 {
-    fields.push(last)
+  let text = sb.to_string()
+  if !segment_has_node {
+    nodes.push(RecordNode::Field(record_field_from_text(text)))
   }
-  fields
+  nodes
 }
 
 ///|
@@ -675,94 +735,328 @@ fn record_field_from_text(field : String) -> RecordField {
 }
 
 ///|
-fn record_fields(label : String) -> Array[RecordField] {
-  let fields : Array[RecordField] = []
-  for part in split_record_fields(label) {
-    fields.push(record_field_from_text(part))
+fn record_nodes(label : String) -> Array[RecordNode] {
+  let chars : Array[Char] = []
+  for ch in label {
+    chars.push(ch)
   }
-  fields
+  let parser = RecordParser::{ chars, index: 0 }
+  let nodes = parse_record_nodes(parser)
+  if nodes.length() == 1 {
+    match nodes[0] {
+      RecordNode::Group(children) => children
+      _ => nodes
+    }
+  } else {
+    nodes
+  }
 }
 
 ///|
-fn record_field_heights(
-  fields : Array[RecordField],
+priv struct RecordNodeSize {
+  width_pt : Double
+  height_pt : Double
+}
+
+///|
+fn record_nodes_sizes(
+  nodes : Array[RecordNode],
+  orientation : RecordOrientation,
   name : String,
   font_name : String,
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
-  total_height_pt : Double,
-) -> Array[Double] {
-  let _ = pad_x_pt
-  let heights : Array[Double] = []
-  let mut sum_height = 0.0
-  for field in fields {
-    let text = resolve_label(field.text, name)
-    let (_, text_width_pt, text_height_pt) =
-      label_metrics(text, font_name, font_size_pt)
-    let _ = text_width_pt
-    let height_pt = text_height_pt + pad_y_pt
-    heights.push(height_pt)
-    sum_height = sum_height + height_pt
-  }
-  if heights.length() == 0 {
-    return heights
-  }
-  if sum_height <= 0.0 {
-    let equal = total_height_pt / heights.length().to_double()
-    for i in 0..<heights.length() {
-      heights[i] = equal
+) -> Array[RecordNodeSize] {
+  let sizes : Array[RecordNodeSize] = []
+  for node in nodes {
+    match node {
+      RecordNode::Field(field) => {
+        let text = resolve_label(field.text, name)
+        let (_, text_width_pt, text_height_pt) =
+          label_metrics(text, font_name, font_size_pt)
+        sizes.push({
+          width_pt: text_width_pt + pad_x_pt,
+          height_pt: text_height_pt + pad_y_pt,
+        })
+      }
+      RecordNode::Group(children) => {
+        let size = record_group_size(
+          children,
+          toggle_record_orientation(orientation),
+          name,
+          font_name,
+          font_size_pt,
+          pad_x_pt,
+          pad_y_pt,
+        )
+        sizes.push(size)
+      }
     }
-    return heights
   }
-  let scale = total_height_pt / sum_height
-  for i in 0..<heights.length() {
-    heights[i] = heights[i] * scale
-  }
-  heights
+  sizes
 }
 
 ///|
-fn record_rects(
-  layout : @layout_dot.DotLayoutNode,
-  fields : Array[RecordField],
-) -> Array[@geom.Rect] {
-  let node = layout.node
-  let rect = node_rect(layout)
-  let total_height = rect.ury - rect.lly
-  let name = node.name()
-  let font = @attrs.font_name(node.get_attr("fontname"))
-  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
-  let (pad_x_pt, pad_y_pt) = node_padding(node)
-  let heights = record_field_heights(
-    fields,
+fn record_group_size(
+  nodes : Array[RecordNode],
+  orientation : RecordOrientation,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> RecordNodeSize {
+  let sizes = record_nodes_sizes(
+    nodes,
+    orientation,
     name,
-    font,
+    font_name,
     font_size_pt,
     pad_x_pt,
     pad_y_pt,
-    total_height,
   )
-  let rects : Array[@geom.Rect] = []
-  let mut top = rect.ury
-  for height in heights {
-    let bottom = top - height
-    rects.push({ llx: rect.llx, lly: bottom, urx: rect.urx, ury: top })
-    top = bottom
+  if sizes.length() == 0 {
+    return { width_pt: 0.0, height_pt: 0.0 }
   }
-  rects
+  let mut width = 0.0
+  let mut height = 0.0
+  match orientation {
+    RecordOrientation::Vertical => {
+      for size in sizes {
+        if size.width_pt > width {
+          width = size.width_pt
+        }
+        height = height + size.height_pt
+      }
+    }
+    RecordOrientation::Horizontal => {
+      for size in sizes {
+        if size.height_pt > height {
+          height = size.height_pt
+        }
+        width = width + size.width_pt
+      }
+    }
+  }
+  { width_pt: width, height_pt: height }
 }
 
 ///|
-fn record_field_centers(rects : Array[@geom.Rect]) -> Array[@geom.Point] {
-  let centers : Array[@geom.Point] = []
-  for rect in rects {
-    centers.push({
-      x: (rect.llx + rect.urx) / 2.0,
-      y: (rect.lly + rect.ury) / 2.0,
-    })
+priv struct RecordLayout {
+  rect : @geom.Rect
+  node : RecordNode
+  children : Array[RecordLayout]
+}
+
+///|
+fn record_layout_nodes(
+  nodes : Array[RecordNode],
+  rect : @geom.Rect,
+  orientation : RecordOrientation,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> Array[RecordLayout] {
+  if nodes.length() == 0 {
+    return []
   }
-  centers
+  let sizes = record_nodes_sizes(
+    nodes,
+    orientation,
+    name,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  let axis_sizes : Array[Double] = []
+  let mut axis_sum = 0.0
+  for size in sizes {
+    let axis = match orientation {
+      RecordOrientation::Vertical => size.height_pt
+      RecordOrientation::Horizontal => size.width_pt
+    }
+    axis_sizes.push(axis)
+    axis_sum = axis_sum + axis
+  }
+  let axis_total = match orientation {
+    RecordOrientation::Vertical => rect.ury - rect.lly
+    RecordOrientation::Horizontal => rect.urx - rect.llx
+  }
+  if axis_sizes.length() > 0 {
+    if axis_sum <= 0.0 {
+      let equal = axis_total / axis_sizes.length().to_double()
+      for i in 0..<axis_sizes.length() {
+        axis_sizes[i] = equal
+      }
+    } else {
+      let scale = axis_total / axis_sum
+      for i in 0..<axis_sizes.length() {
+        axis_sizes[i] = axis_sizes[i] * scale
+      }
+    }
+  }
+  let layouts : Array[RecordLayout] = []
+  let mut cursor = match orientation {
+    RecordOrientation::Vertical => rect.ury
+    RecordOrientation::Horizontal => rect.llx
+  }
+  for i in 0..<nodes.length() {
+    let axis = axis_sizes[i]
+    let child_rect = match orientation {
+    RecordOrientation::Vertical => {
+      let bottom = cursor - axis
+      let child : @geom.Rect = {
+        llx: rect.llx,
+        lly: bottom,
+        urx: rect.urx,
+        ury: cursor,
+      }
+      cursor = bottom
+      child
+    }
+    RecordOrientation::Horizontal => {
+      let right = cursor + axis
+      let child : @geom.Rect = {
+        llx: cursor,
+        lly: rect.lly,
+        urx: right,
+        ury: rect.ury,
+      }
+      cursor = right
+      child
+    }
+    }
+    match nodes[i] {
+      RecordNode::Field(_) => layouts.push({ rect: child_rect, node: nodes[i], children: [] })
+      RecordNode::Group(children) => {
+        let child_layouts = record_layout_nodes(
+          children,
+          child_rect,
+          toggle_record_orientation(orientation),
+          name,
+          font_name,
+          font_size_pt,
+          pad_x_pt,
+          pad_y_pt,
+        )
+        layouts.push({ rect: child_rect, node: nodes[i], children: child_layouts })
+      }
+    }
+  }
+  layouts
+}
+
+///|
+fn write_record_separators(
+  sb : StringBuilder,
+  layouts : Array[RecordLayout],
+  orientation : RecordOrientation,
+  rect : @geom.Rect,
+  stroke : String,
+  stroke_dash : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  if layouts.length() > 1 {
+    match orientation {
+      RecordOrientation::Vertical => {
+        let x1 = rect.llx - bbox.llx
+        let x2 = rect.urx - bbox.llx
+        for i in 1..<layouts.length() {
+          let line_y = layouts[i].rect.ury - bbox.lly
+          write_line(
+            sb,
+            "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+            indent,
+            pretty,
+          )
+        }
+      }
+      RecordOrientation::Horizontal => {
+        let y1 = rect.lly - bbox.lly
+        let y2 = rect.ury - bbox.lly
+        for i in 1..<layouts.length() {
+          let line_x = layouts[i].rect.llx - bbox.llx
+          write_line(
+            sb,
+            "<line x1=\"\{line_x}\" y1=\"\{y1}\" x2=\"\{line_x}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+            indent,
+            pretty,
+          )
+        }
+      }
+    }
+  }
+  for layout in layouts {
+    match layout.node {
+      RecordNode::Group(_) => write_record_separators(
+        sb,
+        layout.children,
+        toggle_record_orientation(orientation),
+        layout.rect,
+        stroke,
+        stroke_dash,
+        bbox,
+        indent,
+        pretty,
+      )
+      _ => ()
+    }
+  }
+}
+
+///|
+fn write_record_labels(
+  sb : StringBuilder,
+  layouts : Array[RecordLayout],
+  name : String,
+  font : String,
+  size : Double,
+  color : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  for layout in layouts {
+    match layout.node {
+      RecordNode::Field(field) => {
+        let text = resolve_label(field.text, name)
+        if text != "" {
+          let center = @geom.Point::{
+            x: (layout.rect.llx + layout.rect.urx) / 2.0,
+            y: (layout.rect.lly + layout.rect.ury) / 2.0,
+          }
+          write_label_lines(
+            sb,
+            text,
+            font,
+            size,
+            color,
+            center,
+            bbox,
+            indent,
+            pretty,
+          )
+        }
+      }
+      RecordNode::Group(_) => write_record_labels(
+        sb,
+        layout.children,
+        name,
+        font,
+        size,
+        color,
+        bbox,
+        indent,
+        pretty,
+      )
+    }
+  }
 }
 
 ///|
@@ -779,9 +1073,7 @@ fn write_record_node(
 ) -> Unit {
   let node = layout.node
   let label = label_text(node.get_attr("label"), node.name())
-  let fields = record_fields(label)
-  let rects = record_rects(layout, fields)
-  let centers = record_field_centers(rects)
+  let nodes = record_nodes(label)
   let x = rect.llx - bbox.llx
   let y = rect.lly - bbox.lly
   let w = rect.urx - rect.llx
@@ -792,37 +1084,42 @@ fn write_record_node(
     indent,
     pretty,
   )
-  for i in 1..<rects.length() {
-    let line_y = rects[i].ury - bbox.lly
-    let x1 = rect.llx - bbox.llx
-    let x2 = rect.urx - bbox.llx
-    write_line(
-      sb,
-      "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
-      indent,
-      pretty,
-    )
-  }
   let font = @attrs.font_name(node.get_attr("fontname"))
   let size = @attrs.font_size(node.get_attr("fontsize"))
   let color = @attrs.color(node.get_attr("fontcolor"), default="black")
-  for i in 0..<fields.length() {
-    let text = resolve_label(fields[i].text, node.name())
-    if text == "" {
-      continue
-    }
-    write_label_lines(
-      sb,
-      text,
-      font,
-      size,
-      color,
-      centers[i],
-      bbox,
-      indent,
-      pretty,
-    )
-  }
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let layouts = record_layout_nodes(
+    nodes,
+    rect,
+    RecordOrientation::Horizontal,
+    node.name(),
+    font,
+    size,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  write_record_separators(
+    sb,
+    layouts,
+    RecordOrientation::Horizontal,
+    rect,
+    stroke,
+    stroke_dash,
+    bbox,
+    indent,
+    pretty,
+  )
+  write_record_labels(
+    sb,
+    layouts,
+    node.name(),
+    font,
+    size,
+    color,
+    bbox,
+    indent,
+    pretty,
+  )
 }
 
 ///|

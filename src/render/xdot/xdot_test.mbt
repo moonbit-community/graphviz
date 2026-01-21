@@ -178,6 +178,27 @@ test "render_xdot draws polygon node shapes" {
   assert_true(!draw_b.contains("E "))
 }
 
+test "render_xdot renders nested record labels" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let label_draw = match node_a.get_attr("_ldraw_") {
+    Some(value) => value
+    None => fail("missing node _ldraw_")
+  }
+  assert_true(label_draw.contains(" -a"))
+  assert_true(label_draw.contains(" -b"))
+  assert_true(label_draw.contains(" -c"))
+  assert_true(label_draw.contains(" -d"))
+  assert_true(label_draw.contains(" -e"))
+}
+
 test "graph labelloc affects label position" {
   let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
   let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")

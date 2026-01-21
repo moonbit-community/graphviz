@@ -2,6 +2,18 @@ const LINE_SPACING : Double = 1.2
 
 const TEXT_SCALE : Double = 0.9706
 
+const PAD_X_PT : Double = 16.0
+const PAD_Y_PT : Double = 8.0
+
+///|
+fn parse_double(value : String, fallback : Double) -> Double {
+  try @strconv.parse_double(value) catch {
+    _ => fallback
+  } noraise {
+    parsed => parsed
+  }
+}
+
 ///|
 fn font_width_scale(font_name : String) -> Double {
   let lower = font_name.to_lower()
@@ -262,6 +274,42 @@ fn label_metrics(
 }
 
 ///|
+fn extract_numbers(value : String) -> Array[Double] {
+  let sb = StringBuilder::new()
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+    } else {
+      sb.write_char(' ')
+    }
+  }
+  let normalized = sb.to_string()
+  let numbers : Array[Double] = []
+  for token in normalized.split(" ") {
+    if token.length() == 0 {
+      continue
+    }
+    numbers.push(parse_double(token.to_string(), 0.0))
+  }
+  numbers
+}
+
+///|
+fn parse_margin(value : String) -> (Double, Double)? {
+  let numbers = extract_numbers(value)
+  if numbers.length() == 0 {
+    return None
+  }
+  if numbers.length() == 1 {
+    let val = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+    return Some((val, val))
+  }
+  let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+  let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
+  Some((x, y))
+}
+
+///|
 fn label_text_dimensions(
   label : String,
   font_name : String,
@@ -332,6 +380,25 @@ fn shape_kind(value : String?) -> String {
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
   }
+}
+
+///|
+fn node_padding(node : @cgraph.Node) -> (Double, Double) {
+  let mut pad_x_pt = PAD_X_PT
+  let mut pad_y_pt = PAD_Y_PT
+  match node.get_attr("margin") {
+    Some(value) => {
+      match parse_margin(value) {
+        Some((margin_x, margin_y)) => {
+          pad_x_pt = margin_x * 72.0 * 2.0
+          pad_y_pt = margin_y * 72.0 * 2.0
+        }
+        None => ()
+      }
+    }
+    None => ()
+  }
+  (pad_x_pt, pad_y_pt)
 }
 
 ///|
@@ -564,44 +631,450 @@ fn shape_polygon_points(kind : String, rect : @geom.Rect) -> Array[@geom.Point]?
 }
 
 ///|
-fn split_record_fields(label : String) -> Array[String] {
-  let fields : Array[String] = []
+priv struct RecordField {
+  text : String
+}
+
+///|
+priv enum RecordOrientation {
+  Horizontal
+  Vertical
+}
+
+///|
+priv enum RecordNode {
+  Field(RecordField)
+  Group(Array[RecordNode])
+}
+
+///|
+fn toggle_record_orientation(orientation : RecordOrientation) -> RecordOrientation {
+  match orientation {
+    RecordOrientation::Horizontal => RecordOrientation::Vertical
+    RecordOrientation::Vertical => RecordOrientation::Horizontal
+  }
+}
+
+///|
+priv struct RecordParser {
+  chars : Array[Char]
+  mut index : Int
+}
+
+///|
+fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
+  let nodes : Array[RecordNode] = []
   let mut sb = StringBuilder::new()
   let mut escaping = false
   let mut in_port = false
-  for ch in label {
+  let mut segment_has_node = false
+  while parser.index < parser.chars.length() {
+    let ch = parser.chars[parser.index]
     if escaping {
       escaping = false
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '\\' {
       escaping = true
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '<' {
       in_port = true
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
     if ch == '>' {
       in_port = false
       sb.write_char(ch)
+      parser.index = parser.index + 1
       continue
     }
-    if ch == '|' && !in_port {
-      fields.push(sb.to_string())
+    if !in_port && ch == '{' {
+      let text = sb.to_string()
+      if text != "" {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+        segment_has_node = true
+      }
       sb = StringBuilder::new()
+      parser.index = parser.index + 1
+      let children = parse_record_nodes(parser)
+      nodes.push(RecordNode::Group(children))
+      segment_has_node = true
       continue
+    }
+    if !in_port && ch == '|' {
+      let text = sb.to_string()
+      if !segment_has_node {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+      }
+      sb = StringBuilder::new()
+      segment_has_node = false
+      parser.index = parser.index + 1
+      continue
+    }
+    if !in_port && ch == '}' {
+      let text = sb.to_string()
+      if !segment_has_node {
+        nodes.push(RecordNode::Field(record_field_from_text(text)))
+      }
+      sb = StringBuilder::new()
+      parser.index = parser.index + 1
+      return nodes
     }
     sb.write_char(ch)
+    parser.index = parser.index + 1
   }
-  let last = sb.to_string()
-  if last != "" || fields.length() == 0 {
-    fields.push(last)
+  let text = sb.to_string()
+  if !segment_has_node {
+    nodes.push(RecordNode::Field(record_field_from_text(text)))
   }
-  fields
+  nodes
+}
+
+///|
+fn record_field_from_text(field : String) -> RecordField {
+  if field.has_prefix("<") {
+    match field.find(">") {
+      Some(pos) => {
+        let len = field.length()
+        let text = if pos + 1 < len {
+          field.unsafe_substring(start=pos + 1, end=len)
+        } else {
+          ""
+        }
+        { text: text }
+      }
+      None => { text: field }
+    }
+  } else {
+    { text: field }
+  }
+}
+
+///|
+fn record_nodes(label : String) -> Array[RecordNode] {
+  let chars : Array[Char] = []
+  for ch in label {
+    chars.push(ch)
+  }
+  let parser = RecordParser::{ chars, index: 0 }
+  let nodes = parse_record_nodes(parser)
+  if nodes.length() == 1 {
+    match nodes[0] {
+      RecordNode::Group(children) => children
+      _ => nodes
+    }
+  } else {
+    nodes
+  }
+}
+
+///|
+priv struct RecordNodeSize {
+  width_pt : Double
+  height_pt : Double
+}
+
+///|
+fn record_nodes_sizes(
+  nodes : Array[RecordNode],
+  orientation : RecordOrientation,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> Array[RecordNodeSize] {
+  let sizes : Array[RecordNodeSize] = []
+  for node in nodes {
+    match node {
+      RecordNode::Field(field) => {
+        let text = resolve_label(field.text, name)
+        let (_, text_width_pt, text_height_pt) =
+          label_metrics(text, font_name, font_size_pt)
+        sizes.push({
+          width_pt: text_width_pt + pad_x_pt,
+          height_pt: text_height_pt + pad_y_pt,
+        })
+      }
+      RecordNode::Group(children) => {
+        let size = record_group_size(
+          children,
+          toggle_record_orientation(orientation),
+          name,
+          font_name,
+          font_size_pt,
+          pad_x_pt,
+          pad_y_pt,
+        )
+        sizes.push(size)
+      }
+    }
+  }
+  sizes
+}
+
+///|
+fn record_group_size(
+  nodes : Array[RecordNode],
+  orientation : RecordOrientation,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> RecordNodeSize {
+  let sizes = record_nodes_sizes(
+    nodes,
+    orientation,
+    name,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  if sizes.length() == 0 {
+    return { width_pt: 0.0, height_pt: 0.0 }
+  }
+  let mut width = 0.0
+  let mut height = 0.0
+  match orientation {
+    RecordOrientation::Vertical => {
+      for size in sizes {
+        if size.width_pt > width {
+          width = size.width_pt
+        }
+        height = height + size.height_pt
+      }
+    }
+    RecordOrientation::Horizontal => {
+      for size in sizes {
+        if size.height_pt > height {
+          height = size.height_pt
+        }
+        width = width + size.width_pt
+      }
+    }
+  }
+  { width_pt: width, height_pt: height }
+}
+
+///|
+priv struct RecordLayout {
+  rect : @geom.Rect
+  node : RecordNode
+  children : Array[RecordLayout]
+}
+
+///|
+fn record_layout_nodes(
+  nodes : Array[RecordNode],
+  rect : @geom.Rect,
+  orientation : RecordOrientation,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> Array[RecordLayout] {
+  if nodes.length() == 0 {
+    return []
+  }
+  let sizes = record_nodes_sizes(
+    nodes,
+    orientation,
+    name,
+    font_name,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  let axis_sizes : Array[Double] = []
+  let mut axis_sum = 0.0
+  for size in sizes {
+    let axis = match orientation {
+      RecordOrientation::Vertical => size.height_pt
+      RecordOrientation::Horizontal => size.width_pt
+    }
+    axis_sizes.push(axis)
+    axis_sum = axis_sum + axis
+  }
+  let axis_total = match orientation {
+    RecordOrientation::Vertical => rect.ury - rect.lly
+    RecordOrientation::Horizontal => rect.urx - rect.llx
+  }
+  if axis_sizes.length() > 0 {
+    if axis_sum <= 0.0 {
+      let equal = axis_total / axis_sizes.length().to_double()
+      for i in 0..<axis_sizes.length() {
+        axis_sizes[i] = equal
+      }
+    } else {
+      let scale = axis_total / axis_sum
+      for i in 0..<axis_sizes.length() {
+        axis_sizes[i] = axis_sizes[i] * scale
+      }
+    }
+  }
+  let layouts : Array[RecordLayout] = []
+  let mut cursor = match orientation {
+    RecordOrientation::Vertical => rect.ury
+    RecordOrientation::Horizontal => rect.llx
+  }
+  for i in 0..<nodes.length() {
+    let axis = axis_sizes[i]
+    let child_rect : @geom.Rect = match orientation {
+      RecordOrientation::Vertical => {
+        let bottom = cursor - axis
+        let child : @geom.Rect = {
+          llx: rect.llx,
+          lly: bottom,
+          urx: rect.urx,
+          ury: cursor,
+        }
+        cursor = bottom
+        child
+      }
+      RecordOrientation::Horizontal => {
+        let right = cursor + axis
+        let child : @geom.Rect = {
+          llx: cursor,
+          lly: rect.lly,
+          urx: right,
+          ury: rect.ury,
+        }
+        cursor = right
+        child
+      }
+    }
+    match nodes[i] {
+      RecordNode::Field(_) => layouts.push({ rect: child_rect, node: nodes[i], children: [] })
+      RecordNode::Group(children) => {
+        let child_layouts = record_layout_nodes(
+          children,
+          child_rect,
+          toggle_record_orientation(orientation),
+          name,
+          font_name,
+          font_size_pt,
+          pad_x_pt,
+          pad_y_pt,
+        )
+        layouts.push({ rect: child_rect, node: nodes[i], children: child_layouts })
+      }
+    }
+  }
+  layouts
+}
+
+///|
+fn record_separator_ops(
+  ops : Array[@render.DrawOp],
+  layouts : Array[RecordLayout],
+  orientation : RecordOrientation,
+  rect : @geom.Rect,
+  color : String,
+) -> Unit {
+  if layouts.length() > 1 {
+    match orientation {
+      RecordOrientation::Vertical => {
+        let x1 = rect.llx
+        let x2 = rect.urx
+        for i in 1..<layouts.length() {
+          let y = layouts[i].rect.ury
+          ops.push(@render.DrawOp::PenColor(color=color))
+          ops.push(@render.DrawOp::Polyline(points=[
+            { x: x1, y },
+            { x: x2, y },
+          ]))
+        }
+      }
+      RecordOrientation::Horizontal => {
+        let y1 = rect.lly
+        let y2 = rect.ury
+        for i in 1..<layouts.length() {
+          let x = layouts[i].rect.llx
+          ops.push(@render.DrawOp::PenColor(color=color))
+          ops.push(@render.DrawOp::Polyline(points=[
+            { x, y: y1 },
+            { x, y: y2 },
+          ]))
+        }
+      }
+    }
+  }
+  for layout in layouts {
+    match layout.node {
+      RecordNode::Group(_) => record_separator_ops(
+        ops,
+        layout.children,
+        toggle_record_orientation(orientation),
+        layout.rect,
+        color,
+      )
+      _ => ()
+    }
+  }
+}
+
+///|
+fn record_label_ops_from_layout(
+  ops : Array[@render.DrawOp],
+  layouts : Array[RecordLayout],
+  name : String,
+  font : @render.Font,
+  color : String,
+) -> Unit {
+  for layout in layouts {
+    match layout.node {
+      RecordNode::Field(field) => {
+        let text = resolve_label(field.text, name)
+        if text == "" {
+          continue
+        }
+        let (lines, max_width, total_height) =
+          label_metrics(text, font.name, font.size)
+        let line_step = line_height(font.name, font.size)
+        let center_x = (layout.rect.llx + layout.rect.urx) / 2.0
+        let center_y = (layout.rect.lly + layout.rect.ury) / 2.0
+        let start_y = center_y + total_height / 2.0 -
+          font.size +
+          centerline_offset(font.size)
+        for i in 0..<lines.length() {
+          let line = lines[i]
+          if line.text == "" {
+            continue
+          }
+          let line_x = match line.align {
+            @render.TextAlign::Left => center_x - max_width / 2.0
+            @render.TextAlign::Right => center_x + max_width / 2.0
+            @render.TextAlign::Center => center_x
+          }
+          let line_y = start_y - line_step * i.to_double()
+          ops.push(@render.DrawOp::Font(font=font))
+          ops.push(@render.DrawOp::PenColor(color=color))
+          ops.push(@render.DrawOp::Text(
+            pos={ x: line_x, y: line_y },
+            align=line.align,
+            width=line.width_pt,
+            text=line.text,
+          ))
+        }
+      }
+      RecordNode::Group(_) => record_label_ops_from_layout(
+        ops,
+        layout.children,
+        name,
+        font,
+        color,
+      )
+    }
+  }
 }
 
 ///|
@@ -621,24 +1094,50 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
   let rect = node_rect(layout)
   ops.push(@render.DrawOp::PenColor(color=color))
   ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)))
-  let label = match node.get_attr("label") {
-    Some(value) => value
-    None => node.name()
+  let label = label_text(node.get_attr("label"), node.name())
+  let nodes = record_nodes(label)
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let size = @attrs.font_size(node.get_attr("fontsize"))
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let layouts = record_layout_nodes(
+    nodes,
+    rect,
+    RecordOrientation::Horizontal,
+    node.name(),
+    font,
+    size,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  record_separator_ops(ops, layouts, RecordOrientation::Horizontal, rect, color)
+  ops
+}
+
+///|
+fn record_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
+  let ops : Array[@render.DrawOp] = []
+  let node = layout.node
+  let label = label_text(node.get_attr("label"), node.name())
+  let nodes = record_nodes(label)
+  let font = @render.Font::{
+    name: @attrs.font_name(node.get_attr("fontname")),
+    size: @attrs.font_size(node.get_attr("fontsize")),
   }
-  let fields = split_record_fields(label)
-  if fields.length() > 1 {
-    let count = fields.length().to_double()
-    let height = rect.ury - rect.lly
-    let step = height / count
-    for i in 1..<fields.length() {
-      let y = rect.ury - step * i.to_double()
-      ops.push(@render.DrawOp::PenColor(color=color))
-      ops.push(@render.DrawOp::Polyline(points=[
-        { x: rect.llx, y },
-        { x: rect.urx, y },
-      ]))
-    }
-  }
+  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let pen_color = @attrs.normalize_color(color)
+  let rect = node_rect(layout)
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let layouts = record_layout_nodes(
+    nodes,
+    rect,
+    RecordOrientation::Horizontal,
+    node.name(),
+    font.name,
+    font.size,
+    pad_x_pt,
+    pad_y_pt,
+  )
+  record_label_ops_from_layout(ops, layouts, node.name(), font, pen_color)
   ops
 }
 
@@ -712,6 +1211,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 ///|
 fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
+  let shape = shape_kind(node.get_attr("shape"))
+  if shape == "record" {
+    return record_label_ops(layout)
+  }
   let ops : Array[@render.DrawOp] = []
   let text = label_text(node.get_attr("label"), node.name())
   if text == "" {

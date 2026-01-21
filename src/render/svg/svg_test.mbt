@@ -107,6 +107,26 @@ test "render_svg renders record fields" {
   assert_true(svg.contains("<line"))
 }
 
+test "render_svg renders nested record fields" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains(">a</text>"))
+  assert_true(svg.contains(">b</text>"))
+  assert_true(svg.contains(">c</text>"))
+  assert_true(svg.contains(">d</text>"))
+  assert_true(svg.contains(">e</text>"))
+  assert_true(svg.contains("<line"))
+}
+
 test "render_svg emits cluster labels" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)
