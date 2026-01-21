@@ -123,6 +123,8 @@ const TEXT_SCALE : Double = 0.9706
 const PAD_X_PT : Double = 16.0
 ///|
 const PAD_Y_PT : Double = 8.0
+///|
+const EDGE_LABEL_NODESEP_PT : Double = 5.0
 
 ///|
 fn font_width_scale(font_name : String) -> Double {
@@ -2276,11 +2278,25 @@ fn normalize_x_positions(
 }
 
 ///|
+fn rank_nodesep_pt(
+  rank : Int,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+) -> Double {
+  if has_edge_labels && rank % 2 != 0 {
+    EDGE_LABEL_NODESEP_PT
+  } else {
+    nodesep_pt
+  }
+}
+
+///|
 fn compute_rank_positions(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  has_edge_labels : Bool,
 ) -> Map[String, Double] {
   let positions : Map[String, Double] = Map::new()
   for rank in rank_keys {
@@ -2296,11 +2312,12 @@ fn compute_rank_positions(
     let mut current = 0
     let mut prev = first
     let mut i = 1
+    let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
     while i < names.length() {
       let name = names[i]
       let tail_width = node_width_pt(prev, sizes)
       let head_width = node_width_pt(name, sizes)
-      let width = tail_width / 2.0 + head_width / 2.0 + nodesep_pt
+      let width = tail_width / 2.0 + head_width / 2.0 + rank_nodesep
       current = trunc_int(current.to_double() + width)
       positions[name] = current.to_double()
       prev = name
@@ -2556,6 +2573,7 @@ fn reorder_rank_groups(
   node_order : Map[String, Int],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  has_edge_labels : Bool,
 ) -> Map[Int, Array[String]] {
   let ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
@@ -2594,7 +2612,8 @@ fn reorder_rank_groups(
   let node_ranks = build_node_ranks(ordered)
   let mut best_ordered = clone_rank_groups(ordered)
   let mut best_cross = count_crossings(ordered, node_ranks, edges)
-  let mut x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+  let mut x_positions =
+    compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
   if rank_keys.length() > 1 {
     let iterations = 4
     let mut iter = 0
@@ -2623,7 +2642,8 @@ fn reorder_rank_groups(
             port_edge_nodes,
             edge_pair_order,
           )
-          x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+          x_positions =
+            compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
         }
         idx = idx - 1
       }
@@ -2681,7 +2701,8 @@ fn reorder_rank_groups(
             port_edge_nodes,
             edge_pair_order,
           )
-          x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+          x_positions =
+            compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
         }
         j = j + 1
       }
@@ -2719,7 +2740,8 @@ fn reorder_rank_groups(
     }
   }
   let final_ordered = clone_rank_groups(best_ordered)
-  let final_positions = compute_rank_positions(rank_keys, final_ordered, sizes, nodesep_pt)
+  let final_positions =
+    compute_rank_positions(rank_keys, final_ordered, sizes, nodesep_pt, has_edge_labels)
   for rank in rank_keys {
     let names = match final_ordered.get(rank) {
       Some(list) => list
@@ -3223,6 +3245,19 @@ fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+fn graph_has_cluster(graph : @cgraph.Graph) -> Bool {
+  for subgraph in graph.subgraphs() {
+    if is_cluster_graph(subgraph) {
+      return true
+    }
+    if graph_has_cluster(subgraph) {
+      return true
+    }
+  }
+  false
+}
+
+///|
 priv enum LabelLoc {
   Top
   Bottom
@@ -3380,6 +3415,10 @@ fn layout_subgraphs(
     let mut bbox = compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
     let mut label_info : (Double, Double, LabelLoc, LabelJust)? = None
+    let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
+    if sub_subgraphs.length() > 0 {
+      bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
+    }
     if is_cluster_graph(subgraph) {
       let pad = cluster_margin_pt(subgraph)
       let llx = bbox.llx - pad
@@ -3396,10 +3435,6 @@ fn layout_subgraphs(
         }
         None => ()
       }
-    }
-    let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
-    if sub_subgraphs.length() > 0 {
-      bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
     match label_info {
       Some((width_pt, height_pt, loc, just)) => {
@@ -3663,6 +3698,7 @@ pub fn layout_dot(
         node_order,
         sizes,
         nodesep_pt,
+        has_edge_labels,
       )
     }
   }
@@ -3853,6 +3889,15 @@ pub fn layout_dot(
     expand_bbox_with_subgraphs(bbox, subgraphs)
   } else {
     bbox
+  }
+  if graph.is_root() && graph_has_cluster(graph) {
+    let pad = cluster_margin_pt(graph)
+    final_bbox = {
+      llx: final_bbox.llx,
+      lly: final_bbox.lly - pad,
+      urx: final_bbox.urx,
+      ury: final_bbox.ury + pad,
+    }
   }
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {

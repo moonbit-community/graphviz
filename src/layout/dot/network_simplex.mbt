@@ -1508,6 +1508,7 @@ fn build_cluster_constraints(
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  has_edge_labels : Bool,
 ) -> (Array[(String, Int)], Array[ConstraintEdge]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
@@ -1519,7 +1520,8 @@ fn build_cluster_constraints(
   if cluster_members.length() == 0 {
     return ([], [])
   }
-  let base_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
+  let base_positions =
+    compute_rank_positions(rank_keys, groups, sizes, nodesep_pt, has_edge_labels)
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
     existing_names[node.name()] = true
@@ -2017,7 +2019,8 @@ fn build_constraint_graph(
     let slack_idx = add_node(graph, "")
     slack_indices[slack_rev] = slack_idx
   }
-  let base_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
+  let base_positions =
+    compute_rank_positions(rank_keys, groups, sizes, nodesep_pt, has_edge_labels)
   let index : Map[String, Int] = Map::new()
   for node in ordered_nodes {
     let name = node.name()
@@ -2040,6 +2043,7 @@ fn build_constraint_graph(
       Some(list) => list
       None => []
     }
+    let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
     let mut i = 0
     while i + 1 < names.length() {
       let tail = names[i]
@@ -2052,7 +2056,7 @@ fn build_constraint_graph(
         Some(value) => value
         None => 0
       }
-      let minlen = nodesep_minlen(tail, head, sizes, nodesep_pt)
+      let minlen = nodesep_minlen(tail, head, sizes, rank_nodesep)
       let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
       i = i + 1
     }
@@ -2165,6 +2169,7 @@ fn compute_x_positions(
     groups,
     sizes,
     nodesep_pt,
+    has_edge_labels,
   )
   x_positions_from_simplex(
     nodes,

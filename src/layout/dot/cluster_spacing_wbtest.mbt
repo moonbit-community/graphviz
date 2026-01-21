@@ -72,6 +72,24 @@ fn spacing_cluster(graph : @cgraph.Graph) -> @cgraph.Graph raise {
   subgraphs[0]
 }
 
+///|
+fn spacing_find_subgraph(
+  graph : @cgraph.Graph,
+  name : String,
+) -> @cgraph.Graph raise {
+  for subgraph in graph.subgraphs() {
+    match subgraph.name() {
+      Some(value) => {
+        if value == name {
+          return subgraph
+        }
+      }
+      None => ()
+    }
+  }
+  fail("missing subgraph \{name}")
+}
+
 test "cluster bbox includes margin and label padding" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
@@ -106,6 +124,39 @@ test "cluster bbox includes margin and label padding" {
   }
   guard ury >= expected_top - 0.1 else {
     fail("cluster ury too small: \{ury} expected >= \{expected_top}")
+  }
+}
+
+test "nested clusters include parent margin" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_outer { label=\"Outer\"; subgraph cluster_inner { label=\"Inner\"; a; } } }",
+  )
+  let layout = layout_dot(graph)
+  layout.apply()
+  let outer = spacing_find_subgraph(graph, "cluster_outer")
+  let inner = spacing_find_subgraph(outer, "cluster_inner")
+  let outer_bb = match outer.get_attr("bb") {
+    Some(value) => spacing_parse_rect(value)
+    None => fail("missing outer cluster bb")
+  }
+  let inner_bb = match inner.get_attr("bb") {
+    Some(value) => spacing_parse_rect(value)
+    None => fail("missing inner cluster bb")
+  }
+  let margin = cluster_margin_pt(outer)
+  let (outer_llx, outer_lly, outer_urx, outer_ury) = outer_bb
+  let (inner_llx, inner_lly, inner_urx, inner_ury) = inner_bb
+  guard outer_llx <= inner_llx - margin + 0.1 else {
+    fail("outer llx too large: \{outer_llx} expected <= \{inner_llx - margin}")
+  }
+  guard outer_lly <= inner_lly - margin + 0.1 else {
+    fail("outer lly too large: \{outer_lly} expected <= \{inner_lly - margin}")
+  }
+  guard outer_urx >= inner_urx + margin - 0.1 else {
+    fail("outer urx too small: \{outer_urx} expected >= \{inner_urx + margin}")
+  }
+  guard outer_ury >= inner_ury + margin - 0.1 else {
+    fail("outer ury too small: \{outer_ury} expected >= \{inner_ury + margin}")
   }
 }
 
