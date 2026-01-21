@@ -1106,6 +1106,25 @@ fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
 }
 
 ///|
+fn node_cluster_key(node : @cgraph.Node) -> String {
+  let mut graph = node.graph()
+  let mut key = ""
+  while !graph.is_root() {
+    if is_cluster_graph(graph) {
+      match graph.name() {
+        Some(name) => key = name
+        None => key = ""
+      }
+    }
+    match graph.parent() {
+      Some(parent) => graph = parent
+      None => break
+    }
+  }
+  key
+}
+
+///|
 fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
   match edge.get_attr("constraint") {
     Some(value) => {
@@ -1134,6 +1153,28 @@ fn edge_minlen(edge : @cgraph.Edge) -> Int {
   }
   let minlen = minlen_value.round().to_int()
   if minlen < 1 { 1 } else { minlen }
+}
+
+///|
+fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
+  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
+  let font = @attrs.font_name(edge.get_attr("fontname"))
+  let mut max_height = 0.0
+  let labels = ["label", "headlabel", "taillabel"]
+  for name in labels {
+    match edge.get_attr(name) {
+      Some(text) => {
+        if text != "" {
+          let (_width, height) = label_text_dimensions(text, font, font_size_pt)
+          if height > max_height {
+            max_height = height
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  max_height
 }
 
 ///|
@@ -1381,7 +1422,8 @@ fn sort_by_positions(
   names : Array[String],
   desired : Map[String, Double],
   x_positions : Map[String, Double],
-  neighbors : Map[String, Array[String]],
+  primary : Map[String, Array[String]],
+  secondary : Map[String, Array[String]],
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
@@ -1392,7 +1434,11 @@ fn sort_by_positions(
     let current = sorted[i]
     let current_key = position_key(current, desired, x_positions)
     let mut j = i
-    let current_degree = match neighbors.get(current) {
+    let current_degree = match primary.get(current) {
+      Some(list) => list.length()
+      None => 0
+    }
+    let current_secondary = match secondary.get(current) {
       Some(list) => list.length()
       None => 0
     }
@@ -1403,12 +1449,24 @@ fn sort_by_positions(
         break
       }
       if prev_key == current_key {
-        let prev_degree = match neighbors.get(prev) {
+        let prev_degree = match primary.get(prev) {
           Some(list) => list.length()
           None => 0
         }
-        if prev_degree <= current_degree {
+        if prev_degree < current_degree {
+          // move current left
+        } else if prev_degree > current_degree {
           break
+        } else {
+          let prev_secondary = match secondary.get(prev) {
+            Some(list) => list.length()
+            None => 0
+          }
+          if prev_secondary < current_secondary {
+            // move current left
+          } else {
+            break
+          }
         }
       }
       sorted[j] = prev
@@ -1418,6 +1476,132 @@ fn sort_by_positions(
     i = i + 1
   }
   sorted
+}
+
+///|
+fn median_value(values : Array[Double]) -> Double? {
+  if values.length() == 0 {
+    return None
+  }
+  let sorted = values.copy()
+  sorted.sort()
+  let mid = sorted.length() / 2
+  if sorted.length() % 2 == 0 {
+    Some((sorted[mid - 1] + sorted[mid]) / 2.0)
+  } else {
+    Some(sorted[mid])
+  }
+}
+
+///|
+fn order_rank_by_cluster(
+  names : Array[String],
+  desired : Map[String, Double],
+  x_positions : Map[String, Double],
+  primary : Map[String, Array[String]],
+  secondary : Map[String, Array[String]],
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  if names.length() < 2 {
+    return names.copy()
+  }
+  let group_keys : Array[String] = []
+  let group_nodes : Array[Array[String]] = []
+  let group_order : Array[Int] = []
+  let group_index : Map[String, Int] = Map::new()
+  let mut next_index = 0
+  for name in names {
+    let cluster_key = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    let group_key = if cluster_key == "" { name } else { cluster_key }
+    let idx = match group_index.get(group_key) {
+      Some(value) => value
+      None => {
+        let index = next_index
+        next_index = next_index + 1
+        group_index[group_key] = index
+        group_keys.push(group_key)
+        group_nodes.push([])
+        group_order.push(index)
+        index
+      }
+    }
+    group_nodes[idx].push(name)
+  }
+  let group_values : Array[Double] = []
+  let group_secondary : Array[Int] = []
+  for i in 0..<group_nodes.length() {
+    let values : Array[Double] = []
+    let mut secondary_total = 0
+    for name in group_nodes[i] {
+      match desired.get(name) {
+        Some(value) => values.push(value)
+        None => match x_positions.get(name) {
+          Some(value) => values.push(value)
+          None => ()
+        }
+      }
+      match secondary.get(name) {
+        Some(list) => secondary_total = secondary_total + list.length()
+        None => ()
+      }
+    }
+    let value = match median_value(values) {
+      Some(val) => val
+      None => 0.0
+    }
+    group_values.push(value)
+    group_secondary.push(secondary_total)
+  }
+  let order : Array[Int] = []
+  for i in 0..<group_nodes.length() {
+    order.push(i)
+  }
+  let mut i = 1
+  while i < order.length() {
+    let current = order[i]
+    let current_val = group_values[current]
+    let mut j = i
+    while j > 0 {
+      let prev = order[j - 1]
+      let prev_val = group_values[prev]
+      if prev_val < current_val {
+        break
+      }
+      if prev_val == current_val {
+        let prev_secondary = group_secondary[prev]
+        let current_secondary = group_secondary[current]
+        if prev_secondary < current_secondary {
+          // move current left
+        } else if prev_secondary > current_secondary {
+          break
+        } else if group_order[prev] <= group_order[current] {
+          break
+        }
+      }
+      order[j] = prev
+      j = j - 1
+    }
+    order[j] = current
+    i = i + 1
+  }
+  let result : Array[String] = []
+  for idx in order {
+    let group = group_nodes[idx]
+    let ordered_group = sort_by_positions(
+      group,
+      desired,
+      x_positions,
+      primary,
+      secondary,
+    )
+    for name in ordered_group {
+      result.push(name)
+    }
+  }
+  result
 }
 
 ///|
@@ -1440,6 +1624,7 @@ fn compute_desired_positions(
   desired
 }
 
+///|
 ///|
 fn node_width_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
   match sizes.get(name) {
@@ -1598,11 +1783,245 @@ fn compute_rank_positions(
 }
 
 ///|
+fn clone_rank_groups(
+  groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let cloned : Map[Int, Array[String]] = Map::new()
+  for rank, names in groups {
+    cloned[rank] = names.copy()
+  }
+  cloned
+}
+
+///|
+fn build_node_ranks(
+  groups : Map[Int, Array[String]],
+) -> Map[String, Int] {
+  let ranks : Map[String, Int] = Map::new()
+  for rank, names in groups {
+    for name in names {
+      ranks[name] = rank
+    }
+  }
+  ranks
+}
+
+///|
+fn build_order_index(
+  groups : Map[Int, Array[String]],
+) -> Map[String, Int] {
+  let order : Map[String, Int] = Map::new()
+  for _rank, names in groups {
+    for i in 0..<names.length() {
+      order[names[i]] = i
+    }
+  }
+  order
+}
+
+///|
+fn count_crossings(
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  edges : Array[@cgraph.Edge],
+) -> Int {
+  let order = build_order_index(groups)
+  let edge_groups : Map[String, Array[(Int, Int)]] = Map::new()
+  for edge in edges {
+    if !edge_is_constraint(edge) {
+      continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    if tail_rank == head_rank {
+      continue
+    }
+    let low_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+    let high_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+    let low_node = if tail_rank < head_rank { tail } else { head }
+    let high_node = if tail_rank < head_rank { head } else { tail }
+    let low_order = match order.get(low_node) {
+      Some(value) => value
+      None => continue
+    }
+    let high_order = match order.get(high_node) {
+      Some(value) => value
+      None => continue
+    }
+    let key = "\{low_rank}:\{high_rank}"
+    match edge_groups.get(key) {
+      Some(list) => list.push((low_order, high_order))
+      None => edge_groups[key] = [(low_order, high_order)]
+    }
+  }
+  let mut crossings = 0
+  for _key, list in edge_groups {
+    for i in 0..<list.length() {
+      let (t1, h1) = list[i]
+      let mut j = i + 1
+      while j < list.length() {
+        let (t2, h2) = list[j]
+        let dt = t1 - t2
+        let dh = h1 - h2
+        if dt * dh < 0 {
+          crossings = crossings + 1
+        }
+        j = j + 1
+      }
+    }
+  }
+  crossings
+}
+
+///|
+fn crossing_for_pair(
+  left : String,
+  right : String,
+  rank : Int,
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  ranks : Map[String, Int],
+  order : Map[String, Int],
+) -> Int {
+  let mut count = 0
+  let left_parents = match parents.get(left) {
+    Some(value) => value
+    None => []
+  }
+  let right_parents = match parents.get(right) {
+    Some(value) => value
+    None => []
+  }
+  for lp in left_parents {
+    if ranks.get(lp) != Some(rank - 1) {
+      continue
+    }
+    let lp_order = match order.get(lp) {
+      Some(value) => value
+      None => continue
+    }
+    for rp in right_parents {
+      if ranks.get(rp) != Some(rank - 1) {
+        continue
+      }
+      let rp_order = match order.get(rp) {
+        Some(value) => value
+        None => continue
+      }
+      if lp_order > rp_order {
+        count = count + 1
+      }
+    }
+  }
+  let left_children = match children.get(left) {
+    Some(value) => value
+    None => []
+  }
+  let right_children = match children.get(right) {
+    Some(value) => value
+    None => []
+  }
+  for lc in left_children {
+    if ranks.get(lc) != Some(rank + 1) {
+      continue
+    }
+    let lc_order = match order.get(lc) {
+      Some(value) => value
+      None => continue
+    }
+    for rc in right_children {
+      if ranks.get(rc) != Some(rank + 1) {
+        continue
+      }
+      let rc_order = match order.get(rc) {
+        Some(value) => value
+        None => continue
+      }
+      if lc_order > rc_order {
+        count = count + 1
+      }
+    }
+  }
+  count
+}
+
+///|
+fn transpose_rank(
+  rank : Int,
+  names : Array[String],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  ranks : Map[String, Int],
+  order : Map[String, Int],
+  reverse : Bool,
+) -> Bool {
+  let mut changed = false
+  let mut i = 0
+  while i + 1 < names.length() {
+    let left = names[i]
+    let right = names[i + 1]
+    let c0 = crossing_for_pair(left, right, rank, parents, children, ranks, order)
+    let c1 = crossing_for_pair(right, left, rank, parents, children, ranks, order)
+    if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
+      names[i] = right
+      names[i + 1] = left
+      order[left] = i + 1
+      order[right] = i
+      changed = true
+    }
+    i = i + 1
+  }
+  changed
+}
+
+///|
+fn transpose_rank_groups(
+  rank_keys : Array[Int],
+  ordered : Map[Int, Array[String]],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  ranks : Map[String, Int],
+  reverse : Bool,
+) -> Bool {
+  let mut changed_any = false
+  let mut changed = true
+  while changed {
+    changed = false
+    let order = build_order_index(ordered)
+    for rank in rank_keys {
+      let names = match ordered.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      if names.length() < 2 {
+        continue
+      }
+      if transpose_rank(rank, names, parents, children, ranks, order, reverse) {
+        ordered[rank] = names
+        changed = true
+        changed_any = true
+      }
+    }
+  }
+  changed_any
+}
+
+///|
 fn reorder_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
+  edges : Array[@cgraph.Edge],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
+  cluster_keys : Map[String, String],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
 ) -> Map[Int, Array[String]] {
@@ -1614,40 +2033,107 @@ fn reorder_rank_groups(
     }
     ordered[rank] = names
   }
+  let node_ranks = build_node_ranks(ordered)
+  let mut best_ordered = clone_rank_groups(ordered)
+  let mut best_cross = count_crossings(ordered, node_ranks, edges)
   let mut x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
   if rank_keys.length() > 1 {
-    let mut idx = rank_keys.length() - 1
-    while idx > 0 {
-      let rank = rank_keys[idx - 1]
-      let names = match ordered.get(rank) {
-        Some(list) => list
-        None => []
+    let iterations = 4
+    let mut iter = 0
+    while iter < iterations {
+      let mut idx = rank_keys.length() - 1
+      while idx > 0 {
+        let rank = rank_keys[idx - 1]
+        let names = match ordered.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        if names.length() > 1 {
+          let desired = compute_desired_positions(names, children, x_positions)
+          ordered[rank] = order_rank_by_cluster(
+            names,
+            desired,
+            x_positions,
+            children,
+            parents,
+            cluster_keys,
+          )
+          x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+        }
+        idx = idx - 1
       }
-      if names.length() > 1 {
-        let desired = compute_desired_positions(names, children, x_positions)
-        ordered[rank] = sort_by_positions(names, desired, x_positions, children)
-        x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+      let _ = transpose_rank_groups(rank_keys, ordered, parents, children, node_ranks, true)
+      for rank in rank_keys {
+        let names = match ordered.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        if names.length() > 1 {
+          let desired = compute_desired_positions(names, children, x_positions)
+          ordered[rank] = order_rank_by_cluster(
+            names,
+            desired,
+            x_positions,
+            children,
+            parents,
+            cluster_keys,
+          )
+        }
       }
-      idx = idx - 1
-    }
-    let mut j = 1
-    while j < rank_keys.length() {
-      let rank = rank_keys[j]
-      let names = match ordered.get(rank) {
-        Some(list) => list
-        None => []
+      let down_cross = count_crossings(ordered, node_ranks, edges)
+      if down_cross < best_cross {
+        best_cross = down_cross
+        best_ordered = clone_rank_groups(ordered)
       }
-      if names.length() > 1 {
-        let desired = compute_desired_positions(names, parents, x_positions)
-        ordered[rank] = sort_by_positions(names, desired, x_positions, parents)
-        x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+      let mut j = 1
+      while j < rank_keys.length() {
+        let rank = rank_keys[j]
+        let names = match ordered.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        if names.length() > 1 {
+          let desired = compute_desired_positions(names, parents, x_positions)
+          ordered[rank] = order_rank_by_cluster(
+            names,
+            desired,
+            x_positions,
+            parents,
+            children,
+            cluster_keys,
+          )
+          x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
+        }
+        j = j + 1
       }
-      j = j + 1
+      let _ = transpose_rank_groups(rank_keys, ordered, parents, children, node_ranks, false)
+      for rank in rank_keys {
+        let names = match ordered.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        if names.length() > 1 {
+          let desired = compute_desired_positions(names, parents, x_positions)
+          ordered[rank] = order_rank_by_cluster(
+            names,
+            desired,
+            x_positions,
+            parents,
+            children,
+            cluster_keys,
+          )
+        }
+      }
+      let up_cross = count_crossings(ordered, node_ranks, edges)
+      if up_cross < best_cross {
+        best_cross = up_cross
+        best_ordered = clone_rank_groups(ordered)
+      }
+      iter = iter + 1
     }
   }
-  ordered
+  best_ordered
 }
-
 ///|
 fn build_rank_groups(
   nodes : Array[@cgraph.Node],
@@ -2351,6 +2837,40 @@ pub fn layout_dot(
     }
     rank_heights[rank] = max_height
   }
+  let rank_extras : Map[Int, Double] = Map::new()
+  if rank_keys.length() > 1 {
+    for i in 0..<(rank_keys.length() - 1) {
+      rank_extras[rank_keys[i]] = 0.0
+    }
+    for edge in edges {
+      let tail = edge.tail().name()
+      let head = edge.head().name()
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => continue
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => continue
+      }
+      let diff = tail_rank - head_rank
+      if diff != 1 && diff != -1 {
+        continue
+      }
+      let top_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+      let label_height = edge_label_height_pt(edge)
+      if label_height > 0.0 {
+        let extra = label_height + 4.0
+        let current = match rank_extras.get(top_rank) {
+          Some(value) => value
+          None => 0.0
+        }
+        if extra > current {
+          rank_extras[top_rank] = extra
+        }
+      }
+    }
+  }
   let nodesep_pt = nodesep_in * 72.0
   let ranksep_pt = ranksep_in * 72.0
   let y_positions : Map[String, Double] = Map::new()
@@ -2363,7 +2883,11 @@ pub fn layout_dot(
     }
     total_height = total_height + height
     if i + 1 < rank_keys.length() {
-      total_height = total_height + ranksep_pt
+      let extra = match rank_extras.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      total_height = total_height + ranksep_pt + extra
     }
   }
   let mut current_y = total_height
@@ -2380,11 +2904,19 @@ pub fn layout_dot(
     for name in names {
       y_positions[name] = pos_y
     }
-    current_y = current_y - max_height - ranksep_pt
+    let extra = match rank_extras.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    current_y = current_y - max_height - ranksep_pt - extra
   }
   let ordering = match graph.get_attr("ordering") {
     Some(value) => parse_ordering(value)
     None => None
+  }
+  let cluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    cluster_keys[node.name()] = node_cluster_key(node)
   }
   let ordered_groups = match ordering {
     Some(_) => groups
@@ -2393,8 +2925,10 @@ pub fn layout_dot(
       reorder_rank_groups(
         rank_keys,
         groups,
+        edges,
         parents,
         children,
+        cluster_keys,
         sizes,
         nodesep_pt,
       )
