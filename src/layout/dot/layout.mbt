@@ -1186,13 +1186,82 @@ fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
-fn graph_label_extras(graph : @cgraph.Graph) -> (Double, Double) {
+fn edge_has_label(edge : @cgraph.Edge) -> Bool {
+  let labels = ["label", "headlabel", "taillabel"]
+  for name in labels {
+    match edge.get_attr(name) {
+      Some(value) => {
+        if value != "" {
+          return true
+        }
+      }
+      None => ()
+    }
+  }
+  false
+}
+
+///|
+fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
+  for edge in edges {
+    if edge_has_label(edge) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn self_edge_label_half_heights(edges : Array[@cgraph.Edge]) -> Map[String, Double] {
+  let heights : Map[String, Double] = Map::new()
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if tail != head {
+      continue
+    }
+    let half_height = edge_label_height_pt(edge) / 2.0
+    let current = match heights.get(tail) {
+      Some(value) => value
+      None => 0.0
+    }
+    if half_height > current {
+      heights[tail] = half_height
+    }
+  }
+  heights
+}
+
+///|
+fn node_half_height_pt(
+  name : String,
+  sizes : Map[String, NodeSize],
+  self_edge_labels : Map[String, Double],
+) -> Double {
+  let base_height = match sizes.get(name) {
+    Some(value) => value.height_pt / 2.0
+    None => 0.0
+  }
+  let label_height = match self_edge_labels.get(name) {
+    Some(value) => value
+    None => 0.0
+  }
+  if label_height > base_height {
+    label_height
+  } else {
+    base_height
+  }
+}
+
+///|
+fn cluster_label_padding_pt(graph : @cgraph.Graph) -> (Double, Double) {
   match graph_label_metrics(graph) {
     Some((_width_pt, height_pt)) => {
       let loc = graph_label_loc(graph)
+      let pad = CLUSTER_LABEL_PAD_PT
       match loc {
-        LabelLoc::Top => (height_pt + 16.0, 0.0)
-        LabelLoc::Bottom => (0.0, height_pt + 16.0)
+        LabelLoc::Top => (height_pt + pad, 0.0)
+        LabelLoc::Bottom => (0.0, height_pt + pad)
       }
     }
     None => (0.0, 0.0)
@@ -1200,148 +1269,207 @@ fn graph_label_extras(graph : @cgraph.Graph) -> (Double, Double) {
 }
 
 ///|
-fn cluster_padding_extras(graph : @cgraph.Graph) -> (Double, Double) {
-  let pad = 8.0
-  let mut top_extra = pad
-  let mut bottom_extra = pad
-  match graph_label_metrics(graph) {
-    Some((_width_pt, height_pt)) => {
-      let loc = graph_label_loc(graph)
-      match loc {
-        LabelLoc::Top => top_extra = height_pt + pad * 2.0
-        LabelLoc::Bottom => bottom_extra = height_pt + pad * 2.0
-      }
-    }
-    None => ()
-  }
-  (top_extra, bottom_extra)
+priv struct ClusterHeights {
+  min_rank : Int
+  max_rank : Int
+  ht1 : Double
+  ht2 : Double
 }
 
 ///|
-fn apply_cluster_padding_extras(
+fn collect_cluster_rank_heights(
   graph : @cgraph.Graph,
-  rank_keys : Array[Int],
-  rank_index : Map[Int, Int],
   ranks : Map[String, Int],
-  rank_extras : Map[Int, Double],
-  top_extra : Double,
-  bottom_extra : Double,
-  top_stack : Double,
-  top_stack_rank : Int?,
-  bottom_stack : Double,
-  bottom_stack_rank : Int?,
-) -> (Double, Double) {
-  let mut top_pad = top_extra
-  let mut bottom_pad = bottom_extra
-  let mut next_top_stack = top_stack
-  let mut next_top_rank = top_stack_rank
-  let mut next_bottom_stack = bottom_stack
-  let mut next_bottom_rank = bottom_stack_rank
-  if is_cluster_graph(graph) {
-    let (cluster_top, cluster_bottom) = cluster_padding_extras(graph)
-    let mut min_rank : Int? = None
-    let mut max_rank : Int? = None
-    for node in graph.nodes() {
-      match ranks.get(node.name()) {
-        Some(value) => {
-          match min_rank {
-            Some(current) => {
-              if value < current {
-                min_rank = Some(value)
-              }
-            }
-            None => min_rank = Some(value)
-          }
-          match max_rank {
-            Some(current) => {
-              if value > current {
-                max_rank = Some(value)
-              }
-            }
-            None => max_rank = Some(value)
-          }
-        }
-        None => ()
-      }
+  sizes : Map[String, NodeSize],
+  self_edge_labels : Map[String, Double],
+  seen : Map[String, Bool],
+  rank_heights : Map[Int, Double],
+  min_rank : Int?,
+  max_rank : Int?,
+) -> (Int?, Int?) {
+  let mut next_min = min_rank
+  let mut next_max = max_rank
+  for node in graph.nodes() {
+    let name = node.name()
+    if seen.get(name) is Some(_) {
+      continue
     }
-    match min_rank {
-      Some(rank_value) => {
-        let stack_top = match top_stack_rank {
-          Some(value) if value == rank_value => top_stack + cluster_top
-          _ => cluster_top
+    seen[name] = true
+    match ranks.get(name) {
+      Some(rank) => {
+        let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+        let current = match rank_heights.get(rank) {
+          Some(value) => value
+          None => 0.0
         }
-        match rank_index.get(rank_value) {
-          Some(idx) => {
-            if idx == 0 {
-              if stack_top > top_pad {
-                top_pad = stack_top
-              }
-            } else {
-              let above_rank = rank_keys[idx - 1]
-              let current = match rank_extras.get(above_rank) {
-                Some(value) => value
-                None => 0.0
-              }
-              if stack_top > current {
-                rank_extras[above_rank] = stack_top
-              }
+        if half_height > current {
+          rank_heights[rank] = half_height
+        }
+        match next_min {
+          Some(value) => {
+            if rank < value {
+              next_min = Some(rank)
             }
           }
-          None => ()
+          None => next_min = Some(rank)
         }
-        next_top_stack = stack_top
-        next_top_rank = Some(rank_value)
-      }
-      None => ()
-    }
-    match max_rank {
-      Some(rank_value) => {
-        let stack_bottom = match bottom_stack_rank {
-          Some(value) if value == rank_value => bottom_stack + cluster_bottom
-          _ => cluster_bottom
-        }
-        match rank_index.get(rank_value) {
-          Some(idx) => {
-            if idx + 1 >= rank_keys.length() {
-              if stack_bottom > bottom_pad {
-                bottom_pad = stack_bottom
-              }
-            } else {
-              let current = match rank_extras.get(rank_value) {
-                Some(value) => value
-                None => 0.0
-              }
-              if stack_bottom > current {
-                rank_extras[rank_value] = stack_bottom
-              }
+        match next_max {
+          Some(value) => {
+            if rank > value {
+              next_max = Some(rank)
             }
           }
-          None => ()
+          None => next_max = Some(rank)
         }
-        next_bottom_stack = stack_bottom
-        next_bottom_rank = Some(rank_value)
       }
       None => ()
     }
   }
   for child in graph.subgraphs() {
-    let (next_top, next_bottom) = apply_cluster_padding_extras(
+    let (child_min, child_max) = collect_cluster_rank_heights(
       child,
-      rank_keys,
-      rank_index,
       ranks,
-      rank_extras,
-      top_pad,
-      bottom_pad,
-      next_top_stack,
-      next_top_rank,
-      next_bottom_stack,
-      next_bottom_rank,
+      sizes,
+      self_edge_labels,
+      seen,
+      rank_heights,
+      next_min,
+      next_max,
     )
-    top_pad = next_top
-    bottom_pad = next_bottom
+    next_min = child_min
+    next_max = child_max
   }
-  (top_pad, bottom_pad)
+  (next_min, next_max)
+}
+
+///|
+fn apply_cluster_rank_heights(
+  graph : @cgraph.Graph,
+  ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  self_edge_labels : Map[String, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> ClusterHeights? {
+  let is_cluster = is_cluster_graph(graph)
+  let children = graph.subgraphs()
+  if !is_cluster {
+    for child in children {
+      let _ = apply_cluster_rank_heights(
+        child,
+        ranks,
+        sizes,
+        self_edge_labels,
+        rank_ht1,
+        rank_ht2,
+      )
+    }
+    return None
+  }
+  let seen : Map[String, Bool] = Map::new()
+  let rank_heights : Map[Int, Double] = Map::new()
+  let (min_rank, max_rank) = collect_cluster_rank_heights(
+    graph,
+    ranks,
+    sizes,
+    self_edge_labels,
+    seen,
+    rank_heights,
+    None,
+    None,
+  )
+  let min_rank_value = match min_rank {
+    Some(value) => value
+    None => {
+      for child in children {
+        let _ = apply_cluster_rank_heights(
+          child,
+          ranks,
+          sizes,
+          self_edge_labels,
+          rank_ht1,
+          rank_ht2,
+        )
+      }
+      return None
+    }
+  }
+  let max_rank_value = match max_rank {
+    Some(value) => value
+    None => {
+      for child in children {
+        let _ = apply_cluster_rank_heights(
+          child,
+          ranks,
+          sizes,
+          self_edge_labels,
+          rank_ht1,
+          rank_ht2,
+        )
+      }
+      return None
+    }
+  }
+  let margin = cluster_margin_pt(graph)
+  let base_top = match rank_heights.get(max_rank_value) {
+    Some(value) => value
+    None => 0.0
+  }
+  let base_bottom = match rank_heights.get(min_rank_value) {
+    Some(value) => value
+    None => 0.0
+  }
+  let mut ht1 = base_top + margin
+  let mut ht2 = base_bottom + margin
+  for child in children {
+    match apply_cluster_rank_heights(
+      child,
+      ranks,
+      sizes,
+      self_edge_labels,
+      rank_ht1,
+      rank_ht2,
+    ) {
+      Some(info) => {
+        if info.max_rank == max_rank_value {
+          let candidate = info.ht1 + margin
+          if candidate > ht1 {
+            ht1 = candidate
+          }
+        }
+        if info.min_rank == min_rank_value {
+          let candidate = info.ht2 + margin
+          if candidate > ht2 {
+            ht2 = candidate
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  let (label_top, label_bottom) = cluster_label_padding_pt(graph)
+  ht1 = ht1 + label_bottom
+  ht2 = ht2 + label_top
+  let current_top = match rank_ht1.get(max_rank_value) {
+    Some(value) => value
+    None => 0.0
+  }
+  if ht1 > current_top {
+    rank_ht1[max_rank_value] = ht1
+  }
+  let current_bottom = match rank_ht2.get(min_rank_value) {
+    Some(value) => value
+    None => 0.0
+  }
+  if ht2 > current_bottom {
+    rank_ht2[min_rank_value] = ht2
+  }
+  Some({
+    min_rank: min_rank_value,
+    max_rank: max_rank_value,
+    ht1,
+    ht2,
+  })
 }
 
 ///|
@@ -1493,6 +1621,7 @@ fn compute_ranks_directed(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
 ) -> Map[String, Int] {
   let graph = new_graph()
   let index : Map[String, Int] = Map::new()
@@ -1514,7 +1643,8 @@ fn compute_ranks_directed(
       Some(value) => value
       None => 0
     }
-    let minlen = edge_minlen(edge)
+    let minlen_value = edge_minlen(edge)
+    let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
     let weight = edge_weight(edge)
     let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
   }
@@ -3201,7 +3331,7 @@ fn layout_subgraphs(
     let mut label_pos : @geom.Point? = None
     let mut label_info : (Double, Double, LabelLoc, LabelJust)? = None
     if is_cluster_graph(subgraph) {
-      let pad = 8.0
+      let pad = cluster_margin_pt(subgraph)
       let llx = bbox.llx - pad
       let lly = bbox.lly - pad
       let urx = bbox.urx + pad
@@ -3293,6 +3423,7 @@ pub fn layout_dot(
   let _ = splines
   let nodes = ordered_nodes(graph)
   let edges = graph.edges()
+  let has_edge_labels = graph_has_edge_labels(edges)
   let node_order : Map[String, Int] = Map::new()
   for i in 0..<nodes.length() {
     node_order[nodes[i].name()] = i
@@ -3302,7 +3433,7 @@ pub fn layout_dot(
     sizes[node.name()] = node_size(node)
   }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
-    compute_ranks_directed(graph, nodes, edges)
+    compute_ranks_directed(graph, nodes, edges, has_edge_labels)
   } else {
     let base : Map[String, Int] = Map::new()
     for node in nodes {
@@ -3316,37 +3447,38 @@ pub fn layout_dot(
     rank_keys.push(key)
   }
   rank_keys.sort()
-  let rank_index : Map[Int, Int] = Map::new()
-  for i in 0..<rank_keys.length() {
-    rank_index[rank_keys[i]] = i
+  let all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let min_rank = rank_keys[0]
+    let max_rank = rank_keys[rank_keys.length() - 1]
+    for rank in min_rank..=max_rank {
+      all_ranks.push(rank)
+    }
   }
-  let rank_heights : Map[Int, Double] = Map::new()
+  let self_edge_labels = self_edge_label_half_heights(edges)
+  let rank_pht : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    rank_pht[rank] = 0.0
+  }
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
       None => []
     }
-    let mut max_height = 0.0
+    let mut max_half = 0.0
     for name in names {
-      let size = match sizes.get(name) {
-        Some(value) => value
-        None => node_size(graph.node(name))
-      }
-      if size.height_pt > max_height {
-        max_height = size.height_pt
+      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      if half_height > max_half {
+        max_half = half_height
       }
     }
-    rank_heights[rank] = max_height
+    rank_pht[rank] = max_half
   }
-  let rank_extras : Map[Int, Double] = Map::new()
-  let (root_top_extra, root_bottom_extra) = graph_label_extras(graph)
-  let mut top_extra = root_top_extra
-  let mut bottom_extra = root_bottom_extra
-  if rank_keys.length() > 1 {
-    for i in 0..<(rank_keys.length() - 1) {
-      rank_extras[rank_keys[i]] = 0.0
-    }
+  if has_edge_labels {
     for edge in edges {
+      if !edge_has_label(edge) {
+        continue
+      }
       let tail = edge.tail().name()
       let head = edge.head().name()
       let tail_rank = match ranks.get(tail) {
@@ -3357,78 +3489,100 @@ pub fn layout_dot(
         Some(value) => value
         None => continue
       }
-      let diff = tail_rank - head_rank
-      if diff != 1 && diff != -1 {
+      let minlen = edge_minlen(edge) * 2
+      if minlen < 2 {
         continue
       }
-      let top_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-      let label_height = edge_label_height_pt(edge)
-      if label_height > 0.0 {
-        let extra = label_height
-        let current = match rank_extras.get(top_rank) {
-          Some(value) => value
-          None => 0.0
-        }
-        if extra > current {
-          rank_extras[top_rank] = extra
-        }
+      let label_rank = if tail_rank < head_rank {
+        tail_rank + minlen / 2
+      } else {
+        head_rank + minlen / 2
       }
-    }
-  }
-  let (cluster_top_extra, cluster_bottom_extra) = apply_cluster_padding_extras(
-    graph,
-    rank_keys,
-    rank_index,
-    ranks,
-    rank_extras,
-    top_extra,
-    bottom_extra,
-    0.0,
-    None,
-    0.0,
-    None,
-  )
-  top_extra = cluster_top_extra
-  bottom_extra = cluster_bottom_extra
-  let nodesep_pt = nodesep_in * 72.0
-  let ranksep_pt = ranksep_in * 72.0
-  let y_positions : Map[String, Double] = Map::new()
-  let mut total_height = 0.0
-  for i in 0..<rank_keys.length() {
-    let rank = rank_keys[i]
-    let height = match rank_heights.get(rank) {
-      Some(value) => value
-      None => 0.0
-    }
-    total_height = total_height + height
-    if i + 1 < rank_keys.length() {
-      let extra = match rank_extras.get(rank) {
+      let half_height = edge_label_height_pt(edge) / 2.0
+      let current = match rank_pht.get(label_rank) {
         Some(value) => value
         None => 0.0
       }
-      total_height = total_height + ranksep_pt + extra
+      if half_height > current {
+        rank_pht[label_rank] = half_height
+      }
     }
   }
-  total_height = total_height + top_extra + bottom_extra
-  let mut current_y = total_height - top_extra
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let max_height = match rank_heights.get(rank) {
+  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht2 : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    let half_height = match rank_pht.get(rank) {
       Some(value) => value
       None => 0.0
     }
-    let pos_y = current_y - max_height / 2.0
-    for name in names {
-      y_positions[name] = pos_y
-    }
-    let extra = match rank_extras.get(rank) {
+    rank_ht1[rank] = half_height
+    rank_ht2[rank] = half_height
+  }
+  let _ = apply_cluster_rank_heights(
+    graph,
+    ranks,
+    sizes,
+    self_edge_labels,
+    rank_ht1,
+    rank_ht2,
+  )
+  let nodesep_pt = nodesep_in * 72.0
+  let mut ranksep_pt = ranksep_in * 72.0
+  if has_edge_labels {
+    ranksep_pt = (ranksep_pt + 1.0) / 2.0
+  }
+  let y_positions : Map[String, Double] = Map::new()
+  if all_ranks.length() > 0 {
+    let rank_y : Map[Int, Double] = Map::new()
+    let max_rank = all_ranks[all_ranks.length() - 1]
+    let start_y = match rank_ht1.get(max_rank) {
       Some(value) => value
       None => 0.0
     }
-    current_y = current_y - max_height - ranksep_pt - extra
+    rank_y[max_rank] = start_y
+    let mut idx = all_ranks.length() - 1
+    while idx > 0 {
+      let upper = all_ranks[idx]
+      let lower = all_ranks[idx - 1]
+      let upper_pht = match rank_pht.get(upper) {
+        Some(value) => value
+        None => 0.0
+      }
+      let lower_pht = match rank_pht.get(lower) {
+        Some(value) => value
+        None => 0.0
+      }
+      let upper_ht2 = match rank_ht2.get(upper) {
+        Some(value) => value
+        None => 0.0
+      }
+      let lower_ht1 = match rank_ht1.get(lower) {
+        Some(value) => value
+        None => 0.0
+      }
+      let d0 = upper_pht + lower_pht + ranksep_pt
+      let d1 = upper_ht2 + lower_ht1 + CLUSTER_MARGIN_PT
+      let delta = if d0 > d1 { d0 } else { d1 }
+      let base_y = match rank_y.get(upper) {
+        Some(value) => value
+        None => 0.0
+      }
+      rank_y[lower] = base_y + delta
+      idx = idx - 1
+    }
+    for rank in rank_keys {
+      let names = match groups.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      let pos_y = match rank_y.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      for name in names {
+        y_positions[name] = pos_y
+      }
+    }
   }
   let ordering = match graph.get_attr("ordering") {
     Some(value) => parse_ordering(value)
