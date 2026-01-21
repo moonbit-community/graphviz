@@ -144,6 +144,27 @@ test "render_svg renders html-like labels" {
   assert_true(svg.contains("<rect"))
 }
 
+test "render_svg renders html label alignment and colors" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains(">left</text>"))
+  assert_true(svg.contains(">right</text>"))
+  assert_true(svg.contains(">inner</text>"))
+  assert_true(svg.contains("fill=\"yellow\""))
+  assert_true(svg.contains("fill=\"red\""))
+  assert_true(svg.contains("text-anchor=\"start\""))
+  assert_true(svg.contains("text-anchor=\"end\""))
+}
+
 test "render_svg emits cluster labels" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)

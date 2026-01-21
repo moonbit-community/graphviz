@@ -217,6 +217,29 @@ test "render_xdot renders html-like labels" {
   assert_true(label_draw.contains(" -right"))
 }
 
+test "render_xdot renders html label colors and nested tables" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let label_draw = match node_a.get_attr("_ldraw_") {
+    Some(value) => value
+    None => fail("missing node _ldraw_")
+  }
+  assert_true(label_draw.contains(" -left"))
+  assert_true(label_draw.contains(" -right"))
+  assert_true(label_draw.contains(" -inner"))
+  assert_true(label_draw.contains("-#ffff00"))
+  assert_true(label_draw.contains("-#ff0000"))
+  assert_true(label_draw.contains("P "))
+  assert_true(label_draw.contains("p "))
+}
+
 test "graph labelloc affects label position" {
   let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
   let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")
