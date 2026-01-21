@@ -506,7 +506,7 @@ fn html_table_placements(table : HtmlTable) -> (Array[HtmlCellPlacement], Int, I
       placements.push({ cell, row: row_index, col: col_index })
       if cell.row_span > 1 {
         for i in col_index..<needed {
-          row_spans[i] = cell.row_span - 1
+          row_spans[i] = cell.row_span
         }
       }
       let end_col = col_index + cell.col_span

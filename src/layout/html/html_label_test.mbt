@@ -28,6 +28,117 @@ fn fixed_cell_size(_cell : HtmlCell) -> (Double, Double) {
 }
 
 ///|
+fn cell_size_from_min(table : HtmlTable, cell : HtmlCell) -> (Double, Double) {
+  let mut width = 0.0
+  let mut height = 0.0
+  match cell.min_width_pt {
+    Some(value) => {
+      if value > width {
+        width = value
+      }
+    }
+    None => ()
+  }
+  match cell.min_height_pt {
+    Some(value) => {
+      if value > height {
+        height = value
+      }
+    }
+    None => ()
+  }
+  width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
+  height = height + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
+  (width, height)
+}
+
+///|
+fn find_cell_rect(cells : Array[HtmlCellLayout], text : String) -> @geom.Rect? {
+  let mut found : @geom.Rect? = None
+  for cell_layout in cells {
+    match cell_layout.cell.content {
+      HtmlCellContent::Text(value) => {
+        if value == text {
+          found = Some(cell_layout.rect)
+        }
+      }
+      _ => ()
+    }
+  }
+  found
+}
+
+///|
+fn row_span_table() -> HtmlTable {
+  let tall = make_text_cell("Tall", 1, 2)
+  let top = make_text_cell("Top", 1, 1)
+  let bottom = make_text_cell("Bottom", 1, 1)
+  let row0 = HtmlRow::{ cells: [tall, top] }
+  let row1 = HtmlRow::{ cells: [bottom] }
+  HtmlTable::{
+    rows: [row0, row1],
+    border_pt: 0.0,
+    cell_border_pt: 0.0,
+    cell_spacing_pt: 0.0,
+    cell_padding_pt: 0.0,
+    bg_color: None,
+  }
+}
+
+///|
+fn row_span_cell_size(cell : HtmlCell) -> (Double, Double) {
+  match cell.content {
+    HtmlCellContent::Text(text) => {
+      if text == "Tall" {
+        (10.0, 30.0)
+      } else if text == "Top" {
+        (20.0, 10.0)
+      } else if text == "Bottom" {
+        (20.0, 20.0)
+      } else {
+        (0.0, 0.0)
+      }
+    }
+    _ => (0.0, 0.0)
+  }
+}
+
+///|
+fn col_span_table() -> HtmlTable {
+  let wide = make_text_cell("Wide", 2, 1)
+  let left = make_text_cell("Left", 1, 1)
+  let right = make_text_cell("Right", 1, 1)
+  let row0 = HtmlRow::{ cells: [wide] }
+  let row1 = HtmlRow::{ cells: [left, right] }
+  HtmlTable::{
+    rows: [row0, row1],
+    border_pt: 0.0,
+    cell_border_pt: 0.0,
+    cell_spacing_pt: 0.0,
+    cell_padding_pt: 0.0,
+    bg_color: None,
+  }
+}
+
+///|
+fn col_span_cell_size(cell : HtmlCell) -> (Double, Double) {
+  match cell.content {
+    HtmlCellContent::Text(text) => {
+      if text == "Wide" {
+        (40.0, 10.0)
+      } else if text == "Left" {
+        (10.0, 20.0)
+      } else if text == "Right" {
+        (30.0, 20.0)
+      } else {
+        (0.0, 0.0)
+      }
+    }
+    _ => (0.0, 0.0)
+  }
+}
+
+///|
 test "html label unescapes quotes" {
   let label = "<<b>\\\"hi\\\"</b>>"
   match strip_html_wrappers(label) {
@@ -109,6 +220,30 @@ test "html label defaults spans when zero" {
   }
 }
 
+///|
+test "html label parses sizing attributes" {
+  let label =
+    "<<table border=\"1\" cellborder=\"2\" cellpadding=\"3\" cellspacing=\"4\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      assert_true(Double::is_close(table.border_pt, 1.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(table.cell_border_pt, 2.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(table.cell_padding_pt, 3.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(table.cell_spacing_pt, 4.0, absolute_tolerance=0.01))
+      let cell = table.rows[0].cells[0]
+      match cell.min_width_pt {
+        Some(value) => assert_true(Double::is_close(value, 40.0, absolute_tolerance=0.01))
+        None => fail("expected min width")
+      }
+      match cell.min_height_pt {
+        Some(value) => assert_true(Double::is_close(value, 50.0, absolute_tolerance=0.01))
+        None => fail("expected min height")
+      }
+    }
+    _ => fail("expected table label")
+  }
+}
+
 test "html table size includes border and spacing" {
   let cell = make_text_cell("x", 1, 1)
   let row = HtmlRow::{ cells: [cell, cell] }
@@ -142,6 +277,20 @@ test "html table size respects colspan" {
   assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
 }
 
+///|
+test "html table size includes padding and min size" {
+  let label =
+    "<<table border=\"1\" cellborder=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let (width, height) = html_table_size(table, cell => cell_size_from_min(table, cell))
+      assert_true(Double::is_close(width, 48.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(height, 58.0, absolute_tolerance=0.01))
+    }
+    _ => fail("expected table label")
+  }
+}
+
 test "html table layout scales cell rect" {
   let cell = make_text_cell("x", 1, 1)
   let row = HtmlRow::{ cells: [cell] }
@@ -163,4 +312,50 @@ test "html table layout scales cell rect" {
   assert_true(Double::is_close(cell_rect.lly, rect.lly, absolute_tolerance=0.01))
   assert_true(Double::is_close(cell_rect.urx, rect.urx, absolute_tolerance=0.01))
   assert_true(Double::is_close(cell_rect.ury, rect.ury, absolute_tolerance=0.01))
+}
+
+///|
+test "html table metrics distribute rowspan heights" {
+  let table = row_span_table()
+  let metrics = html_table_metrics(table, row_span_cell_size)
+  assert_eq(metrics.col_widths.length(), 2)
+  assert_eq(metrics.row_heights.length(), 2)
+  assert_true(Double::is_close(metrics.col_widths[0], 10.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(metrics.col_widths[1], 20.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(metrics.row_heights[0], 15.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(metrics.row_heights[1], 20.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(metrics.total_width, 30.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(metrics.total_height, 35.0, absolute_tolerance=0.01))
+}
+
+///|
+test "html table layout spans rows" {
+  let table = row_span_table()
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 30.0, ury: 35.0 }
+  let layout = html_table_layout(table, rect, row_span_cell_size)
+  match find_cell_rect(layout.cells, "Tall") {
+    Some(cell_rect) => {
+      assert_true(Double::is_close(cell_rect.llx, 0.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.lly, 0.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.urx, 10.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.ury, 35.0, absolute_tolerance=0.01))
+    }
+    None => fail("missing Tall cell")
+  }
+}
+
+///|
+test "html table layout spans columns" {
+  let table = col_span_table()
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 50.0, ury: 30.0 }
+  let layout = html_table_layout(table, rect, col_span_cell_size)
+  match find_cell_rect(layout.cells, "Wide") {
+    Some(cell_rect) => {
+      assert_true(Double::is_close(cell_rect.llx, 0.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.lly, 20.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.urx, 50.0, absolute_tolerance=0.01))
+      assert_true(Double::is_close(cell_rect.ury, 30.0, absolute_tolerance=0.01))
+    }
+    None => fail("missing Wide cell")
+  }
 }
