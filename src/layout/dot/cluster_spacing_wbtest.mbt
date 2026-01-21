@@ -1,0 +1,143 @@
+///|
+fn spacing_parse_double(text : String, fallback : Double) -> Double {
+  try @strconv.parse_double(text) catch {
+    _ => fallback
+  } noraise {
+    value => value
+  }
+}
+
+///|
+fn spacing_parse_point(text : String) -> @geom.Point {
+  let parts : Array[String] = []
+  for part in text.split(",") {
+    parts.push(part.to_string())
+  }
+  let x = if parts.length() > 0 { spacing_parse_double(parts[0], 0.0) } else { 0.0 }
+  let y = if parts.length() > 1 { spacing_parse_double(parts[1], 0.0) } else { 0.0 }
+  { x, y }
+}
+
+///|
+fn spacing_parse_rect(text : String) -> (Double, Double, Double, Double) {
+  let parts : Array[String] = []
+  for part in text.split(",") {
+    parts.push(part.to_string())
+  }
+  let llx = if parts.length() > 0 { spacing_parse_double(parts[0], 0.0) } else { 0.0 }
+  let lly = if parts.length() > 1 { spacing_parse_double(parts[1], 0.0) } else { 0.0 }
+  let urx = if parts.length() > 2 { spacing_parse_double(parts[2], 0.0) } else { 0.0 }
+  let ury = if parts.length() > 3 { spacing_parse_double(parts[3], 0.0) } else { 0.0 }
+  (llx, lly, urx, ury)
+}
+
+///|
+fn spacing_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point raise {
+  match graph.find_node(name) {
+    Some(node) => match node.get_attr("pos") {
+      Some(value) => spacing_parse_point(value)
+      None => fail("missing pos for node \{name}")
+    }
+    None => fail("missing node \{name}")
+  }
+}
+
+///|
+fn spacing_node_size_pt(
+  graph : @cgraph.Graph,
+  name : String,
+) -> (Double, Double) raise {
+  match graph.find_node(name) {
+    Some(node) => {
+      let width_in = match node.get_attr("width") {
+        Some(value) => spacing_parse_double(value, 0.0)
+        None => 0.0
+      }
+      let height_in = match node.get_attr("height") {
+        Some(value) => spacing_parse_double(value, 0.0)
+        None => 0.0
+      }
+      (width_in * 72.0, height_in * 72.0)
+    }
+    None => fail("missing node \{name}")
+  }
+}
+
+///|
+fn spacing_cluster(graph : @cgraph.Graph) -> @cgraph.Graph raise {
+  let subgraphs = graph.subgraphs()
+  if subgraphs.length() == 0 {
+    fail("missing cluster subgraph")
+  }
+  subgraphs[0]
+}
+
+test "cluster bbox includes margin and label padding" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
+  )
+  let layout = layout_dot(graph)
+  layout.apply()
+  let cluster = spacing_cluster(graph)
+  let bb_text = match cluster.get_attr("bb") {
+    Some(value) => value
+    None => fail("missing cluster bb")
+  }
+  let (llx, lly, urx, ury) = spacing_parse_rect(bb_text)
+  let pos = spacing_node_pos(graph, "a")
+  let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
+  let margin = cluster_margin_pt(cluster)
+  let label_height = match graph_label_metrics(cluster) {
+    Some((_width, height)) => height
+    None => 0.0
+  }
+  let expected_left = pos.x - width_pt / 2.0 - margin
+  let expected_right = pos.x + width_pt / 2.0 + margin
+  let expected_bottom = pos.y - height_pt / 2.0 - margin
+  let expected_top = pos.y + height_pt / 2.0 + margin + label_height + CLUSTER_LABEL_PAD_PT
+  guard llx <= expected_left + 0.1 else {
+    fail("cluster llx too large: \{llx} expected <= \{expected_left}")
+  }
+  guard urx >= expected_right - 0.1 else {
+    fail("cluster urx too small: \{urx} expected >= \{expected_right}")
+  }
+  guard lly <= expected_bottom + 0.1 else {
+    fail("cluster lly too large: \{lly} expected <= \{expected_bottom}")
+  }
+  guard ury >= expected_top - 0.1 else {
+    fail("cluster ury too small: \{ury} expected >= \{expected_top}")
+  }
+}
+
+test "edge labels expand rank spacing" {
+  let with_label = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",
+  )
+  let layout_label = layout_dot(with_label)
+  layout_label.apply()
+  let pos_a = spacing_node_pos(with_label, "a")
+  let pos_b = spacing_node_pos(with_label, "b")
+  let dist_label = Double::abs(pos_a.y - pos_b.y)
+  let edges = with_label.edges()
+  guard edges.length() > 0 else {
+    fail("missing labeled edge")
+  }
+  let edge = edges[0]
+  let label_height = edge_label_height_pt(edge)
+
+  let without_label = @dot_parser.parse_dot(
+    "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b; }",
+  )
+  let layout_plain = layout_dot(without_label)
+  layout_plain.apply()
+  let pos_plain_a = spacing_node_pos(without_label, "a")
+  let pos_plain_b = spacing_node_pos(without_label, "b")
+  let dist_plain = Double::abs(pos_plain_a.y - pos_plain_b.y)
+
+  guard dist_label > dist_plain else {
+    fail("expected labeled edge to increase rank spacing")
+  }
+  guard dist_label >= dist_plain + label_height - 0.1 else {
+    fail("expected label height to contribute to spacing")
+  }
+}
