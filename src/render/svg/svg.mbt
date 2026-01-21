@@ -395,7 +395,7 @@ fn shape_kind(value : String?) -> String {
     "invtriangle" | "invtri" => "invtriangle"
     "hexagon" => "hexagon"
     "octagon" => "octagon"
-    "record" => "record"
+    "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"

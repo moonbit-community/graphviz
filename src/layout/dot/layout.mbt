@@ -327,7 +327,12 @@ fn label_text(node : @cgraph.Node) -> String {
 ///|
 fn is_record_shape(node : @cgraph.Node) -> Bool {
   match node.get_attr("shape") {
-    Some(value) => value.to_lower() == "record"
+    Some(value) => {
+      match value.to_lower() {
+        "record" | "mrecord" => true
+        _ => false
+      }
+    }
     None => false
   }
 }
@@ -965,6 +970,7 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     | "rect"
     | "rectangle"
     | "record"
+    | "mrecord"
     | "point"
     | "dot"
     | "plaintext"
