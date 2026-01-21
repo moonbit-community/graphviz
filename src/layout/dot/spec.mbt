@@ -102,6 +102,18 @@ pub fn layout_neato_noop(
 }
 
 ///|
+/// Run neato layout and return typed geometry output.
+/// scale controls the output coordinate scale (points per inch).
+#declaration_only
+pub fn layout_neato(
+  graph : @cgraph.Graph,
+  scale? : Double = 72.0,
+  prune? : Bool = false,
+) -> DotLayoutGraph raise DotLayoutError {
+  ...
+}
+
+///|
 /// Attach layout attributes (bb, pos, lp, edge pos, etc.) to the graph.
 #declaration_only
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {

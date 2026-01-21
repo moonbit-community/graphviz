@@ -80,3 +80,30 @@ test "cli neato -x prunes isolated nodes" {
     None => fail("expected node c to remain")
   }
 }
+
+test "cli neato assigns positions without -n" {
+  ensure_dir("target")
+  ensure_dir("target/cli")
+  let input_path = "target/cli/neato_layout.dot"
+  write_input(input_path, "graph { a -- b; b -- c; }")
+  let output = run_cli([input_path], program="neato")
+  let graph = @dot.parse_dot(output)
+  let (ax, ay) = match node_pos(graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let (bx, by) = match node_pos(graph, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  let (cx, cy) = match node_pos(graph, "c") {
+    Some(value) => value
+    None => fail("missing pos for node c")
+  }
+  let ab_same =
+    Double::is_close(ax, bx, absolute_tolerance=0.01) && Double::is_close(ay, by, absolute_tolerance=0.01)
+  let ac_same =
+    Double::is_close(ax, cx, absolute_tolerance=0.01) && Double::is_close(ay, cy, absolute_tolerance=0.01)
+  assert_true(!ab_same)
+  assert_true(!ac_same)
+}

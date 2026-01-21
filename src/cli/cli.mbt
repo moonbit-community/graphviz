@@ -349,16 +349,12 @@ fn layout_for_job(
   match job.engine {
     LayoutEngine::Dot => @layout_dot.layout_dot(graph)
     LayoutEngine::Neato => {
-      let no_op_level = match job.neato_no_op {
-        Some(level) => Some(level)
-        None => if job.neato_prune { Some(1) } else { None }
+      let scale = match job.scale {
+        Some(value) => value
+        None => 72.0
       }
-      match no_op_level {
+      match job.neato_no_op {
         Some(level) => {
-          let scale = match job.scale {
-            Some(value) => value
-            None => 72.0
-          }
           @layout_dot.layout_neato_noop(
             graph,
             no_op_level=level,
@@ -366,8 +362,10 @@ fn layout_for_job(
             prune=job.neato_prune,
           )
         }
-        None => raise @layout_dot.DotLayoutError::UnsupportedFeature(
-          message="neato layout not implemented (use -n)",
+        None => @layout_dot.layout_neato(
+          graph,
+          scale=scale,
+          prune=job.neato_prune,
         )
       }
     }
