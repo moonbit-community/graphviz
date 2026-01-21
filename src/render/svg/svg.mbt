@@ -389,6 +389,12 @@ fn shape_kind(value : String?) -> String {
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
+    "plaintext" | "plain" | "none" => "plaintext"
+    "diamond" => "diamond"
+    "triangle" => "triangle"
+    "invtriangle" | "invtri" => "invtriangle"
+    "hexagon" => "hexagon"
+    "octagon" => "octagon"
     "record" => "record"
     "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
@@ -536,6 +542,69 @@ fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
     lly: layout.pos.y - half_h,
     urx: layout.pos.x + half_w,
     ury: layout.pos.y + half_h,
+  }
+}
+
+///|
+fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: rect.ury },
+    { x: rect.urx, y: cy },
+    { x: cx, y: rect.lly },
+    { x: rect.llx, y: cy },
+  ]
+}
+
+///|
+fn triangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  [
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+    { x: cx, y: rect.ury },
+  ]
+}
+
+///|
+fn invtriangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  [
+    { x: rect.llx, y: rect.ury },
+    { x: rect.urx, y: rect.ury },
+    { x: cx, y: rect.lly },
+  ]
+}
+
+///|
+fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let half_w = (rect.urx - rect.llx) / 2.0
+  let half_h = (rect.ury - rect.lly) / 2.0
+  let radius = if half_w < half_h { half_w } else { half_h }
+  let step = 2.0 * @math.PI / sides.to_double()
+  let points : Array[@geom.Point] = []
+  for i in 0..<sides {
+    let angle = step * i.to_double()
+    points.push({
+      x: cx + radius * @math.cos(angle),
+      y: cy + radius * @math.sin(angle),
+    })
+  }
+  points
+}
+
+///|
+fn shape_polygon_points(kind : String, rect : @geom.Rect) -> Array[@geom.Point]? {
+  match kind {
+    "diamond" => Some(diamond_points(rect))
+    "triangle" => Some(triangle_points(rect))
+    "invtriangle" => Some(invtriangle_points(rect))
+    "hexagon" => Some(regular_polygon_points(rect, 6))
+    "octagon" => Some(regular_polygon_points(rect, 8))
+    _ => None
   }
 }
 
@@ -1188,28 +1257,45 @@ pub fn render_svg(
       )
       continue
     }
-    if kind == "box" {
-      let x = rect.llx - bbox.llx
-      let y = rect.lly - bbox.lly
-      let w = rect.urx - rect.llx
-      let h = rect.ury - rect.lly
-      write_line(
-        sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
+    if kind == "plaintext" {
+      // No outline for plaintext/none nodes.
     } else {
-      let cx = node_layout.pos.x - bbox.llx
-      let cy = node_layout.pos.y - bbox.lly
-      let rx = (rect.urx - rect.llx) / 2.0
-      let ry = (rect.ury - rect.lly) / 2.0
-      write_line(
-        sb,
-        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
+      match shape_polygon_points(kind, rect) {
+        Some(points) => {
+          let attrs = polygon_points(points, bbox.llx, bbox.lly)
+          write_line(
+            sb,
+            "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+            node_indent,
+            pretty,
+          )
+        }
+        None => {
+          if kind == "box" {
+            let x = rect.llx - bbox.llx
+            let y = rect.lly - bbox.lly
+            let w = rect.urx - rect.llx
+            let h = rect.ury - rect.lly
+            write_line(
+              sb,
+              "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+              node_indent,
+              pretty,
+            )
+          } else {
+            let cx = node_layout.pos.x - bbox.llx
+            let cy = node_layout.pos.y - bbox.lly
+            let rx = (rect.urx - rect.llx) / 2.0
+            let ry = (rect.ury - rect.lly) / 2.0
+            write_line(
+              sb,
+              "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+              node_indent,
+              pretty,
+            )
+          }
+        }
+      }
     }
     let text = label_text(node.get_attr("label"), node.name())
     if text != "" {

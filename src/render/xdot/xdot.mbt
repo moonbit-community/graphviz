@@ -321,6 +321,12 @@ fn shape_kind(value : String?) -> String {
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
+    "plaintext" | "plain" | "none" => "plaintext"
+    "diamond" => "diamond"
+    "triangle" => "triangle"
+    "invtriangle" | "invtri" => "invtriangle"
+    "hexagon" => "hexagon"
+    "octagon" => "octagon"
     "record" => "record"
     "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
@@ -495,6 +501,69 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
+fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: rect.ury },
+    { x: rect.urx, y: cy },
+    { x: cx, y: rect.lly },
+    { x: rect.llx, y: cy },
+  ]
+}
+
+///|
+fn triangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  [
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+    { x: cx, y: rect.ury },
+  ]
+}
+
+///|
+fn invtriangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  [
+    { x: rect.llx, y: rect.ury },
+    { x: rect.urx, y: rect.ury },
+    { x: cx, y: rect.lly },
+  ]
+}
+
+///|
+fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let half_w = (rect.urx - rect.llx) / 2.0
+  let half_h = (rect.ury - rect.lly) / 2.0
+  let radius = if half_w < half_h { half_w } else { half_h }
+  let step = 2.0 * @math.PI / sides.to_double()
+  let points : Array[@geom.Point] = []
+  for i in 0..<sides {
+    let angle = step * i.to_double()
+    points.push({
+      x: cx + radius * @math.cos(angle),
+      y: cy + radius * @math.sin(angle),
+    })
+  }
+  points
+}
+
+///|
+fn shape_polygon_points(kind : String, rect : @geom.Rect) -> Array[@geom.Point]? {
+  match kind {
+    "diamond" => Some(diamond_points(rect))
+    "triangle" => Some(triangle_points(rect))
+    "invtriangle" => Some(invtriangle_points(rect))
+    "hexagon" => Some(regular_polygon_points(rect, 6))
+    "octagon" => Some(regular_polygon_points(rect, 8))
+    _ => None
+  }
+}
+
+///|
 fn split_record_fields(label : String) -> Array[String] {
   let fields : Array[String] = []
   let mut sb = StringBuilder::new()
@@ -598,6 +667,9 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   if shape == "record" {
     return record_draw_ops(layout)
   }
+  if shape == "plaintext" {
+    return ops
+  }
   let style = @attrs.parse_style(node.get_attr("style"))
   match dash_style_name(style) {
     Some(name) => ops.push(@render.DrawOp::Style(name=name))
@@ -628,7 +700,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
       ops.push(@render.DrawOp::Polygon(filled=filled, points=rect_points(rect)))
     }
     _ => {
-      ops.push(@render.DrawOp::Ellipse(filled=filled, rect=rect))
+      match shape_polygon_points(shape, rect) {
+        Some(points) => ops.push(@render.DrawOp::Polygon(filled=filled, points=points))
+        None => ops.push(@render.DrawOp::Ellipse(filled=filled, rect=rect))
+      }
     }
   }
   ops

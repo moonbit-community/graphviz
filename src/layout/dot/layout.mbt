@@ -600,7 +600,15 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     None => ""
   }
   let scale_ellipse = match shape {
-    "box" | "rect" | "rectangle" | "record" | "point" | "dot" => false
+    "box"
+    | "rect"
+    | "rectangle"
+    | "record"
+    | "point"
+    | "dot"
+    | "plaintext"
+    | "plain"
+    | "none" => false
     _ => true
   }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {

@@ -57,6 +57,39 @@ test "render_svg honors dashed and dotted styles" {
   assert_true(svg.contains("stroke-dasharray=\"5,5\""))
 }
 
+test "render_svg draws polygon node shapes" {
+  let graph = @dot.parse_dot(
+    "digraph { a [shape=diamond]; b [shape=triangle]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains("<polygon"))
+  assert_true(!svg.contains("<ellipse"))
+}
+
+test "render_svg skips outlines for plaintext nodes" {
+  let graph = @dot.parse_dot(
+    "digraph { a [shape=plaintext,label=\"hello\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains(">hello</text>"))
+  assert_true(!svg.contains("<ellipse"))
+  assert_true(!svg.contains("<polygon"))
+}
+
 test "render_svg renders record fields" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"<f0>left|<f1>right\"]; }",

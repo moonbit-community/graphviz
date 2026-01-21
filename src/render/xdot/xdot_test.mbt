@@ -150,6 +150,34 @@ test "render_xdot encodes dashed and dotted styles" {
   assert_true(edge_draw.contains("S 6 -dotted"))
 }
 
+test "render_xdot draws polygon node shapes" {
+  let graph = @dot.parse_dot(
+    "digraph { a [shape=diamond]; b [shape=triangle]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let node_b = match output_graph.find_node("b") {
+    Some(node) => node
+    None => fail("missing node b")
+  }
+  let draw_a = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  let draw_b = match node_b.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(draw_a.contains("P ") || draw_a.contains("p "))
+  assert_true(!draw_a.contains("E "))
+  assert_true(draw_b.contains("P ") || draw_b.contains("p "))
+  assert_true(!draw_b.contains("E "))
+}
+
 test "graph labelloc affects label position" {
   let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
   let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")
