@@ -1445,6 +1445,42 @@ fn add_rank_same_constraints(
 }
 
 ///|
+fn collect_rank_same_order(
+  graph : @cgraph.Graph,
+  group_ids : Map[String, Int],
+  order_ids : Map[String, Int],
+  next_group : Int,
+) -> Int {
+  let mut current_group = next_group
+  match graph.get_attr("rank") {
+    Some(value) => {
+      if value.to_lower() == "same" {
+        let group_id = current_group
+        current_group = current_group + 1
+        let mut idx = 0
+        for node in graph.nodes() {
+          if group_ids.get(node.name()) is None {
+            group_ids[node.name()] = group_id
+            order_ids[node.name()] = idx
+          }
+          idx = idx + 1
+        }
+      }
+    }
+    None => ()
+  }
+  for child in graph.subgraphs() {
+    current_group = collect_rank_same_order(
+      child,
+      group_ids,
+      order_ids,
+      current_group,
+    )
+  }
+  current_group
+}
+
+///|
 fn compute_ranks_directed(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -1583,6 +1619,9 @@ fn sort_by_positions(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  edge_order : Map[String, Int],
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
@@ -1624,7 +1663,50 @@ fn sort_by_positions(
           if prev_secondary < current_secondary {
             // move current left
           } else {
-            break
+            let mut decided = false
+            match rank_same_groups.get(prev) {
+              Some(prev_group) => {
+                match rank_same_groups.get(current) {
+                  Some(current_group) => {
+                    if prev_group == current_group {
+                      let prev_idx = match rank_same_order.get(prev) {
+                        Some(value) => value
+                        None => 0
+                      }
+                      let current_idx = match rank_same_order.get(current) {
+                        Some(value) => value
+                        None => 0
+                      }
+                      decided = true
+                      if prev_idx <= current_idx {
+                        break
+                      }
+                    }
+                  }
+                  None => ()
+                }
+              }
+              None => ()
+            }
+            if !decided {
+              match edge_order.get(prev) {
+                Some(prev_idx) => {
+                  match edge_order.get(current) {
+                    Some(current_idx) => {
+                      decided = true
+                      if prev_idx <= current_idx {
+                        break
+                      }
+                    }
+                    None => ()
+                  }
+                }
+                None => ()
+              }
+            }
+            if !decided {
+              break
+            }
           }
         }
       }
@@ -1653,6 +1735,24 @@ fn median_value(values : Array[Double]) -> Double? {
 }
 
 ///|
+fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
+  let order : Map[String, Int] = Map::new()
+  let mut idx = 0
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if order.get(tail) is None {
+      order[tail] = idx
+    }
+    if order.get(head) is None {
+      order[head] = idx
+    }
+    idx = idx + 1
+  }
+  order
+}
+
+///|
 fn order_rank_by_cluster(
   names : Array[String],
   desired : Map[String, Double],
@@ -1660,6 +1760,9 @@ fn order_rank_by_cluster(
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
   cluster_keys : Map[String, String],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  edge_order : Map[String, Int],
 ) -> Array[String] {
   if names.length() < 2 {
     return names.copy()
@@ -1755,6 +1858,9 @@ fn order_rank_by_cluster(
       x_positions,
       primary,
       secondary,
+      rank_same_groups,
+      rank_same_order,
+      edge_order,
     )
     for name in ordered_group {
       result.push(name)
@@ -2181,6 +2287,9 @@ fn reorder_rank_groups(
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   cluster_keys : Map[String, String],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  edge_order : Map[String, Int],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
 ) -> Map[Int, Array[String]] {
@@ -2216,6 +2325,9 @@ fn reorder_rank_groups(
             children,
             parents,
             cluster_keys,
+            rank_same_groups,
+            rank_same_order,
+            edge_order,
           )
           x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
         }
@@ -2236,6 +2348,9 @@ fn reorder_rank_groups(
             children,
             parents,
             cluster_keys,
+            rank_same_groups,
+            rank_same_order,
+            edge_order,
           )
         }
       }
@@ -2260,6 +2375,9 @@ fn reorder_rank_groups(
             parents,
             children,
             cluster_keys,
+            rank_same_groups,
+            rank_same_order,
+            edge_order,
           )
           x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
         }
@@ -2280,6 +2398,9 @@ fn reorder_rank_groups(
             parents,
             children,
             cluster_keys,
+            rank_same_groups,
+            rank_same_order,
+            edge_order,
           )
         }
       }
@@ -3104,6 +3225,10 @@ pub fn layout_dot(
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
   }
+  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map::new()
+  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  let edge_order = collect_edge_order(edges)
   let ordered_groups = match ordering {
     Some(_) => groups
     None => {
@@ -3115,6 +3240,9 @@ pub fn layout_dot(
         parents,
         children,
         cluster_keys,
+        rank_same_groups,
+        rank_same_order,
+        edge_order,
         sizes,
         nodesep_pt,
       )
