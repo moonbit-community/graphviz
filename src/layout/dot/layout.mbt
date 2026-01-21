@@ -1136,6 +1136,14 @@ fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+fn port_is_explicit(port : @cgraph.Port?) -> Bool {
+  match port {
+    Some(value) => value.name is Some(_) || value.compass is Some(_)
+    None => false
+  }
+}
+
+///|
 fn edge_weight(edge : @cgraph.Edge) -> Int {
   let weight_value = match edge.get_attr("weight") {
     Some(value) => parse_double(value, 1.0)
@@ -1619,14 +1627,19 @@ fn sort_by_positions(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
+  parents_map : Map[String, Array[String]],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
   edge_order : Map[String, Int],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  edge_pair_order : Map[String, Int],
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
     return sorted
   }
+  let _ = edge_order
   let mut i = 1
   while i < sorted.length() {
     let current = sorted[i]
@@ -1643,10 +1656,11 @@ fn sort_by_positions(
     while j > 0 {
       let prev = sorted[j - 1]
       let prev_key = position_key(prev, desired, x_positions)
-      if prev_key < current_key {
+      let diff = prev_key - current_key
+      if diff < -0.000001 {
         break
       }
-      if prev_key == current_key {
+      if Double::abs(diff) <= 0.000001 {
         let prev_degree = match primary.get(prev) {
           Some(list) => list.length()
           None => 0
@@ -1656,56 +1670,110 @@ fn sort_by_positions(
         } else if prev_degree > current_degree {
           break
         } else {
-          let prev_secondary = match secondary.get(prev) {
-            Some(list) => list.length()
-            None => 0
-          }
-          if prev_secondary < current_secondary {
-            // move current left
+          let prev_ported = port_edge_nodes.get(prev) is Some(_)
+          let current_ported = port_edge_nodes.get(current) is Some(_)
+          if prev_ported != current_ported {
+            if !current_ported {
+              break
+            }
           } else {
-            let mut decided = false
-            match rank_same_groups.get(prev) {
-              Some(prev_group) => {
-                match rank_same_groups.get(current) {
-                  Some(current_group) => {
-                    if prev_group == current_group {
-                      let prev_idx = match rank_same_order.get(prev) {
-                        Some(value) => value
-                        None => 0
+            let prev_secondary = match secondary.get(prev) {
+              Some(list) => list.length()
+              None => 0
+            }
+            if prev_secondary < current_secondary {
+              // move current left
+            } else if prev_secondary > current_secondary {
+              break
+            } else {
+              let mut decided = false
+              if prev_ported && current_ported {
+                let prev_idx = match node_order.get(prev) {
+                  Some(value) => value
+                  None => 0
+                }
+                let current_idx = match node_order.get(current) {
+                  Some(value) => value
+                  None => 0
+                }
+                decided = true
+                if prev_idx <= current_idx {
+                  break
+                }
+              }
+              if !decided {
+                match rank_same_groups.get(prev) {
+                  Some(prev_group) => {
+                    match rank_same_groups.get(current) {
+                      Some(current_group) => {
+                        if prev_group == current_group {
+                          let prev_idx = match rank_same_order.get(prev) {
+                            Some(value) => value
+                            None => 0
+                          }
+                          let current_idx = match rank_same_order.get(current) {
+                            Some(value) => value
+                            None => 0
+                          }
+                          decided = true
+                          if prev_idx <= current_idx {
+                            break
+                          }
+                        }
                       }
-                      let current_idx = match rank_same_order.get(current) {
-                        Some(value) => value
-                        None => 0
-                      }
-                      decided = true
-                      if prev_idx <= current_idx {
-                        break
-                      }
+                      None => ()
                     }
                   }
                   None => ()
                 }
               }
-              None => ()
-            }
-            if !decided {
-              match edge_order.get(prev) {
-                Some(prev_idx) => {
-                  match edge_order.get(current) {
-                    Some(current_idx) => {
-                      decided = true
-                      if prev_idx <= current_idx {
-                        break
+              if !decided {
+                let prev_parents = match parents_map.get(prev) {
+                  Some(list) => list
+                  None => []
+                }
+                let current_parents = match parents_map.get(current) {
+                  Some(list) => list
+                  None => []
+                }
+                for parent in prev_parents {
+                  let mut shared = false
+                  for candidate in current_parents {
+                    if candidate == parent {
+                      shared = true
+                      break
+                    }
+                  }
+                  if !shared {
+                    continue
+                  }
+                  let prev_key = "\{parent}|\{prev}"
+                  let current_key = "\{parent}|\{current}"
+                  match edge_pair_order.get(prev_key) {
+                    Some(prev_idx) => {
+                      match edge_pair_order.get(current_key) {
+                        Some(current_idx) => {
+                          decided = true
+                          if prev_idx <= current_idx {
+                            break
+                          }
+                        }
+                        None => ()
                       }
                     }
                     None => ()
                   }
+                  if decided {
+                    break
+                  }
                 }
-                None => ()
               }
-            }
-            if !decided {
-              break
+              if !decided {
+                let cmp = String::compare(prev, current)
+                if cmp <= 0 {
+                  break
+                }
+              }
             }
           }
         }
@@ -1759,10 +1827,14 @@ fn order_rank_by_cluster(
   x_positions : Map[String, Double],
   primary : Map[String, Array[String]],
   secondary : Map[String, Array[String]],
+  parents_map : Map[String, Array[String]],
   cluster_keys : Map[String, String],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
   edge_order : Map[String, Int],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  edge_pair_order : Map[String, Int],
 ) -> Array[String] {
   if names.length() < 2 {
     return names.copy()
@@ -1858,9 +1930,13 @@ fn order_rank_by_cluster(
       x_positions,
       primary,
       secondary,
+      parents_map,
       rank_same_groups,
       rank_same_order,
       edge_order,
+      node_order,
+      port_edge_nodes,
+      edge_pair_order,
     )
     for name in ordered_group {
       result.push(name)
@@ -1884,6 +1960,63 @@ fn compute_desired_positions(
     match median_positions(list, x_positions) {
       Some(value) => desired[name] = value
       None => ()
+    }
+  }
+  desired
+}
+
+///|
+///|
+fn compute_desired_positions_with_rank_fallback(
+  names : Array[String],
+  children : Map[String, Array[String]],
+  parents : Map[String, Array[String]],
+  x_positions : Map[String, Double],
+  ranks : Map[String, Int],
+  rank_sizes : Map[Int, Int],
+) -> Map[String, Double] {
+  let desired : Map[String, Double] = Map::new()
+  for name in names {
+    let child_list = match children.get(name) {
+      Some(value) => value
+      None => []
+    }
+    let mut use_children = false
+    for child in child_list {
+      match ranks.get(child) {
+        Some(rank) => {
+          match rank_sizes.get(rank) {
+            Some(size) => {
+              if size > 1 {
+                use_children = true
+                break
+              }
+            }
+            None => ()
+          }
+        }
+        None => ()
+      }
+    }
+    let primary = if use_children { children } else { parents }
+    let fallback = if use_children { parents } else { children }
+    let list = match primary.get(name) {
+      Some(value) => value
+      None => []
+    }
+    match median_positions(list, x_positions) {
+      Some(value) => desired[name] = value
+      None => ()
+    }
+    if desired.get(name) is None {
+      let fallback_list = match fallback.get(name) {
+        Some(value) => value
+        None => []
+      }
+      match median_positions(fallback_list, x_positions) {
+        Some(value) => desired[name] = value
+        None => ()
+      }
     }
   }
   desired
@@ -2290,6 +2423,7 @@ fn reorder_rank_groups(
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
   edge_order : Map[String, Int],
+  node_order : Map[String, Int],
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
 ) -> Map[Int, Array[String]] {
@@ -2300,6 +2434,32 @@ fn reorder_rank_groups(
       None => []
     }
     ordered[rank] = names
+  }
+  let rank_sizes : Map[Int, Int] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    rank_sizes[rank] = names.length()
+  }
+  let port_edge_nodes : Map[String, Bool] = Map::new()
+  for edge in edges {
+    let ported =
+      port_is_explicit(edge.tail_port()) ||
+      port_is_explicit(edge.head_port())
+    if ported {
+      port_edge_nodes[edge.tail().name()] = true
+      port_edge_nodes[edge.head().name()] = true
+    }
+  }
+  let edge_pair_order : Map[String, Int] = Map::new()
+  let mut edge_idx = 0
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    edge_pair_order["\{tail}|\{head}"] = edge_idx
+    edge_idx = edge_idx + 1
   }
   let node_ranks = build_node_ranks(ordered)
   let mut best_ordered = clone_rank_groups(ordered)
@@ -2324,10 +2484,14 @@ fn reorder_rank_groups(
             x_positions,
             children,
             parents,
+            parents,
             cluster_keys,
             rank_same_groups,
             rank_same_order,
             edge_order,
+            node_order,
+            port_edge_nodes,
+            edge_pair_order,
           )
           x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
         }
@@ -2347,15 +2511,19 @@ fn reorder_rank_groups(
             x_positions,
             children,
             parents,
+            parents,
             cluster_keys,
             rank_same_groups,
             rank_same_order,
             edge_order,
+            node_order,
+            port_edge_nodes,
+            edge_pair_order,
           )
         }
       }
       let down_cross = count_crossings(ordered, node_ranks, edges)
-      if down_cross < best_cross {
+      if down_cross <= best_cross {
         best_cross = down_cross
         best_ordered = clone_rank_groups(ordered)
       }
@@ -2374,10 +2542,14 @@ fn reorder_rank_groups(
             x_positions,
             parents,
             children,
+            parents,
             cluster_keys,
             rank_same_groups,
             rank_same_order,
             edge_order,
+            node_order,
+            port_edge_nodes,
+            edge_pair_order,
           )
           x_positions = compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt)
         }
@@ -2397,10 +2569,14 @@ fn reorder_rank_groups(
             x_positions,
             parents,
             children,
+            parents,
             cluster_keys,
             rank_same_groups,
             rank_same_order,
             edge_order,
+            node_order,
+            port_edge_nodes,
+            edge_pair_order,
           )
         }
       }
@@ -2412,7 +2588,40 @@ fn reorder_rank_groups(
       iter = iter + 1
     }
   }
-  best_ordered
+  let final_ordered = clone_rank_groups(best_ordered)
+  let final_positions = compute_rank_positions(rank_keys, final_ordered, sizes, nodesep_pt)
+  for rank in rank_keys {
+    let names = match final_ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if names.length() > 1 {
+      let desired = compute_desired_positions_with_rank_fallback(
+        names,
+        children,
+        parents,
+        final_positions,
+        node_ranks,
+        rank_sizes,
+      )
+      final_ordered[rank] = order_rank_by_cluster(
+        names,
+        desired,
+        final_positions,
+        children,
+        parents,
+        parents,
+        cluster_keys,
+        rank_same_groups,
+        rank_same_order,
+        edge_order,
+        node_order,
+        port_edge_nodes,
+        edge_pair_order,
+      )
+    }
+  }
+  final_ordered
 }
 ///|
 fn build_rank_groups(
@@ -3084,6 +3293,10 @@ pub fn layout_dot(
   let _ = splines
   let nodes = ordered_nodes(graph)
   let edges = graph.edges()
+  let node_order : Map[String, Int] = Map::new()
+  for i in 0..<nodes.length() {
+    node_order[nodes[i].name()] = i
+  }
   let sizes : Map[String, NodeSize] = Map::new()
   for node in nodes {
     sizes[node.name()] = node_size(node)
@@ -3243,6 +3456,7 @@ pub fn layout_dot(
         rank_same_groups,
         rank_same_order,
         edge_order,
+        node_order,
         sizes,
         nodesep_pt,
       )

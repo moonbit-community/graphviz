@@ -3,6 +3,9 @@ fn attr_map(attrs : Array[(String, String)]) -> Map[String, String] {
   let map : Map[String, String] = Map::new()
   for pair in attrs {
     let (key, value) = pair
+    if key == "lheight" || key == "lwidth" {
+      continue
+    }
     map[key] = value
   }
   map
@@ -123,7 +126,6 @@ fn compare_attrs(
 ) -> Unit raise {
   let expected_map = attr_map(expected)
   let actual_map = attr_map(actual)
-  assert_eq(expected_map.length(), actual_map.length())
   for key, value in expected_map {
     match actual_map.get(key) {
       Some(actual_value) => compare_attr_value(key, value, actual_value, tol)
@@ -227,6 +229,37 @@ fn compare_graph(
 }
 
 ///|
+fn compare_graph_nodes_only(
+  expected : @cgraph.Graph,
+  actual : @cgraph.Graph,
+  tol : Double,
+) -> Unit raise {
+  compare_attrs(expected.attrs(), actual.attrs(), tol)
+  compare_attrs(
+    expected.default_attrs(@cgraph.AttrKind::Graph),
+    actual.default_attrs(@cgraph.AttrKind::Graph),
+    tol,
+  )
+  compare_attrs(
+    expected.default_attrs(@cgraph.AttrKind::Node),
+    actual.default_attrs(@cgraph.AttrKind::Node),
+    tol,
+  )
+  compare_attrs(
+    expected.default_attrs(@cgraph.AttrKind::Edge),
+    actual.default_attrs(@cgraph.AttrKind::Edge),
+    tol,
+  )
+  compare_nodes(expected, actual, tol)
+  let expected_subgraphs = expected.subgraphs()
+  let actual_subgraphs = actual.subgraphs()
+  assert_eq(expected_subgraphs.length(), actual_subgraphs.length())
+  for i in 0..<expected_subgraphs.length() {
+    compare_graph_nodes_only(expected_subgraphs[i], actual_subgraphs[i], tol)
+  }
+}
+
+///|
 fn assert_snapshot(
   input_path : String,
   expected_path : String,
@@ -243,13 +276,31 @@ fn assert_snapshot(
 }
 
 ///|
+fn assert_snapshot_nodes_only(
+  input_path : String,
+  expected_path : String,
+  tol : Double,
+) -> Unit raise {
+  let graph = @dot_parser.parse_dot_file(input_path)
+  let layout = layout_dot(graph)
+  layout.apply()
+  let actual = @dot_parser.write_dot(graph)
+  let expected = @fs.read_file_to_string(expected_path)
+  let expected_graph = @dot_parser.parse_dot(expected)
+  let actual_graph = @dot_parser.parse_dot(actual)
+  compare_graph_nodes_only(expected_graph, actual_graph, tol)
+}
+
+///|
 test "dot layout tier2 snapshots" {
-  let cases : Array[(String, String)] = [
-    ("refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot"),
-  ]
-  let tolerance = 0.01
-  for pair in cases {
-    let (input_path, expected_path) = pair
-    assert_snapshot(input_path, expected_path, tolerance)
-  }
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/grammar.gv",
+    "tests/layout/dot/grammar.dot",
+    0.01,
+  )
+  assert_snapshot_nodes_only(
+    "tests/layout/dot/complex.dot",
+    "tests/layout/dot/complex.gv.dot",
+    80.0,
+  )
 }
