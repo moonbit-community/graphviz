@@ -124,6 +124,32 @@ test "render_xdot fills cluster background" {
   assert_true(draw.contains("P "))
 }
 
+test "render_xdot encodes dashed and dotted styles" {
+  let graph = @dot.parse_dot(
+    "digraph { node [style=dashed]; a; b; a -> b [style=dotted]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let node_draw = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(node_draw.contains("S 6 -dashed"))
+  let edges = output_graph.edges()
+  guard edges.length() > 0 else {
+    fail("missing edge")
+  }
+  let edge_draw = match edges[0].get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing edge _draw_")
+  }
+  assert_true(edge_draw.contains("S 6 -dotted"))
+}
+
 test "graph labelloc affects label position" {
   let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
   let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")

@@ -41,6 +41,22 @@ test "render_svg emits edge labels" {
   assert_true(svg.contains(">edge</text>"))
 }
 
+test "render_svg honors dashed and dotted styles" {
+  let graph = @dot.parse_dot(
+    "digraph { node [style=dotted]; a; b; a -> b [style=dashed]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains("stroke-dasharray=\"2,4\""))
+  assert_true(svg.contains("stroke-dasharray=\"5,5\""))
+}
+
 test "render_svg renders record fields" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"<f0>left|<f1>right\"]; }",

@@ -329,6 +329,17 @@ fn shape_kind(value : String?) -> String {
 }
 
 ///|
+fn dash_style_name(style : @attrs.StyleFlags) -> String? {
+  if style.dashed {
+    Some("dashed")
+  } else if style.dotted {
+    Some("dotted")
+  } else {
+    None
+  }
+}
+
+///|
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
   if kind != @cgraph.GraphKind::Directed {
@@ -532,6 +543,11 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     Some(value) => value
     None => "black"
   }
+  let style = @attrs.parse_style(node.get_attr("style"))
+  match dash_style_name(style) {
+    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    None => ()
+  }
   let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)
   ops.push(@render.DrawOp::PenColor(color=color))
@@ -582,11 +598,16 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   if shape == "record" {
     return record_draw_ops(layout)
   }
+  let style = @attrs.parse_style(node.get_attr("style"))
+  match dash_style_name(style) {
+    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    None => ()
+  }
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = if shape == "point" {
     true
   } else {
-    @attrs.parse_style(node.get_attr("style")).filled
+    style.filled
   }
   if filled {
     let fill = match node.get_attr("fillcolor") {
@@ -662,6 +683,11 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
   let pen = @attrs.color(edge.get_attr("color"), default="black")
+  let style = @attrs.parse_style(edge.get_attr("style"))
+  match dash_style_name(style) {
+    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    None => ()
+  }
   ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(pen)))
   for spline in layout.splines {
     ops.push(@render.DrawOp::Bezier(filled=false, points=spline.points))

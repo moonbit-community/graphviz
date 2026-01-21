@@ -315,6 +315,17 @@ fn parse_margin(value : String) -> (Double, Double)? {
 }
 
 ///|
+fn stroke_dash_attr(style : @attrs.StyleFlags) -> String {
+  if style.dashed {
+    " stroke-dasharray=\"5,5\""
+  } else if style.dotted {
+    " stroke-dasharray=\"2,4\""
+  } else {
+    ""
+  }
+}
+
+///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\N", new=name)
   with_name.replace_all(old="\\n", new="\n")
@@ -692,6 +703,7 @@ fn write_record_node(
   rect : @geom.Rect,
   stroke : String,
   fill : String,
+  stroke_dash : String,
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
@@ -707,7 +719,7 @@ fn write_record_node(
   let h = rect.ury - rect.lly
   write_line(
     sb,
-    "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"/>",
+    "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
     indent,
     pretty,
   )
@@ -717,7 +729,7 @@ fn write_record_node(
     let x2 = rect.urx - bbox.llx
     write_line(
       sb,
-      "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"/>",
+      "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
       indent,
       pretty,
     )
@@ -811,6 +823,7 @@ fn write_arrow_ops(
   sb : StringBuilder,
   ops : Array[@render.DrawOp],
   color : String,
+  stroke_dash : String,
   llx : Double,
   lly : Double,
   indent : String,
@@ -823,7 +836,7 @@ fn write_arrow_ops(
         let fill = if filled { color } else { "none" }
         write_line(
           sb,
-          "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{color}\"/>",
+          "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}/>",
           indent,
           pretty,
         )
@@ -836,7 +849,7 @@ fn write_arrow_ops(
         let fill = if filled { color } else { "none" }
         write_line(
           sb,
-          "<ellipse cx=\"\{center_x}\" cy=\"\{center_y}\" rx=\"\{radius_x}\" ry=\"\{radius_y}\" fill=\"\{fill}\" stroke=\"\{color}\"/>",
+          "<ellipse cx=\"\{center_x}\" cy=\"\{center_y}\" rx=\"\{radius_x}\" ry=\"\{radius_y}\" fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}/>",
           indent,
           pretty,
         )
@@ -845,7 +858,7 @@ fn write_arrow_ops(
         let attrs = polygon_points(points, llx, lly)
         write_line(
           sb,
-          "<polyline points=\"\{attrs}\" fill=\"none\" stroke=\"\{color}\"/>",
+          "<polyline points=\"\{attrs}\" fill=\"none\" stroke=\"\{color}\"\{stroke_dash}/>",
           indent,
           pretty,
         )
@@ -856,7 +869,7 @@ fn write_arrow_ops(
         if path != "" {
           write_line(
             sb,
-            "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"/>",
+            "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"\{stroke_dash}/>",
             indent,
             pretty,
           )
@@ -948,16 +961,11 @@ fn write_cluster_graphs(
         Some(value) => value
         None => "none"
       }
-      let mut extra = ""
       let style = @attrs.parse_style(graph.get_attr("style"))
-      if style.dashed {
-        extra = " stroke-dasharray=\"5,5\""
-      } else if style.dotted {
-        extra = " stroke-dasharray=\"2,4\""
-      }
+      let dash = stroke_dash_attr(style)
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{extra}/>",
+        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
         indent,
         pretty,
       )
@@ -1047,12 +1055,14 @@ pub fn render_svg(
   for edge_layout in layout.edges {
     let edge = edge_layout.edge
     let color = @attrs.color(edge.get_attr("color"), default="black")
+    let style = @attrs.parse_style(edge.get_attr("style"))
+    let dash = stroke_dash_attr(style)
     for spline in edge_layout.splines {
       let path = spline_path(spline, bbox.llx, bbox.lly)
       if path != "" {
         write_line(
           sb,
-          "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"/>",
+          "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"\{dash}/>",
           edge_indent,
           pretty,
         )
@@ -1061,11 +1071,11 @@ pub fn render_svg(
     let flags = arrow_flags(edge, kind)
     if flags.head {
       let ops = arrow_primitives(edge_layout, true)
-      write_arrow_ops(sb, ops, color, bbox.llx, bbox.lly, edge_indent, pretty)
+      write_arrow_ops(sb, ops, color, dash, bbox.llx, bbox.lly, edge_indent, pretty)
     }
     if flags.tail {
       let ops = arrow_primitives(edge_layout, false)
-      write_arrow_ops(sb, ops, color, bbox.llx, bbox.lly, edge_indent, pretty)
+      write_arrow_ops(sb, ops, color, dash, bbox.llx, bbox.lly, edge_indent, pretty)
     }
     let label_text = match edge.get_attr("label") {
       Some(value) => resolve_label(value, "")
@@ -1143,11 +1153,13 @@ pub fn render_svg(
     let rect = node_rect(node_layout)
     let kind = shape_kind(node.get_attr("shape"))
     let stroke = @attrs.color(node.get_attr("color"), default="black")
+    let style = @attrs.parse_style(node.get_attr("style"))
     let filled = if kind == "point" {
       true
     } else {
-      @attrs.parse_style(node.get_attr("style")).filled
+      style.filled
     }
+    let dash = stroke_dash_attr(style)
     let fill = if filled {
       match node.get_attr("fillcolor") {
         Some(value) => value
@@ -1169,6 +1181,7 @@ pub fn render_svg(
         rect,
         stroke,
         fill,
+        dash,
         bbox,
         node_indent,
         pretty,
@@ -1182,7 +1195,7 @@ pub fn render_svg(
       let h = rect.ury - rect.lly
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"/>",
+        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
         node_indent,
         pretty,
       )
@@ -1193,7 +1206,7 @@ pub fn render_svg(
       let ry = (rect.ury - rect.lly) / 2.0
       write_line(
         sb,
-        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"/>",
+        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
         node_indent,
         pretty,
       )
