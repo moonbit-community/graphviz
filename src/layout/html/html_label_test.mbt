@@ -56,6 +56,59 @@ test "html label parses table cell" {
   }
 }
 
+test "html label collapses whitespace" {
+  let label = "<<b>  hello   world  </b>>"
+  assert_text_label(label, "hello world")
+}
+
+test "html label br creates newline" {
+  let label = "<<table><tr><td>Line1<br/>Line2</td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let cell = table.rows[0].cells[0]
+      match cell.content {
+        HtmlCellContent::Text(text) => assert_eq(text, "Line1\nLine2")
+        _ => fail("expected text cell")
+      }
+    }
+    _ => fail("expected table label")
+  }
+}
+
+test "html label parses nested table" {
+  let label =
+    "<<table><tr><td><table><tr><td>Inner</td></tr></table></td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let cell = table.rows[0].cells[0]
+      match cell.content {
+        HtmlCellContent::Table(nested) => {
+          assert_eq(nested.rows.length(), 1)
+          let inner_cell = nested.rows[0].cells[0]
+          match inner_cell.content {
+            HtmlCellContent::Text(text) => assert_eq(text, "Inner")
+            _ => fail("expected nested text cell")
+          }
+        }
+        _ => fail("expected nested table")
+      }
+    }
+    _ => fail("expected table label")
+  }
+}
+
+test "html label defaults spans when zero" {
+  let label = "<<table><tr><td colspan=\"0\" rowspan=\"0\">Hi</td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let cell = table.rows[0].cells[0]
+      assert_eq(cell.col_span, 1)
+      assert_eq(cell.row_span, 1)
+    }
+    _ => fail("expected table label")
+  }
+}
+
 test "html table size includes border and spacing" {
   let cell = make_text_cell("x", 1, 1)
   let row = HtmlRow::{ cells: [cell, cell] }
