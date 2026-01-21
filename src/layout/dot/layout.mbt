@@ -701,7 +701,147 @@ fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
 }
 
 ///|
+fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("constraint") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "false" && lower != "0" && lower != "no"
+    }
+    None => true
+  }
+}
+
+///|
+fn edge_weight(edge : @cgraph.Edge) -> Int {
+  let weight_value = match edge.get_attr("weight") {
+    Some(value) => parse_double(value, 1.0)
+    None => 1.0
+  }
+  let weight = weight_value.round().to_int()
+  if weight < 0 { 0 } else { weight }
+}
+
+///|
+fn edge_minlen(edge : @cgraph.Edge) -> Int {
+  let minlen_value = match edge.get_attr("minlen") {
+    Some(value) => parse_double(value, 1.0)
+    None => 1.0
+  }
+  let minlen = minlen_value.round().to_int()
+  if minlen < 1 { 1 } else { minlen }
+}
+
+///|
+fn collect_rank_extremes(
+  subgraph : @cgraph.Graph,
+  min_nodes : Map[String, Bool],
+  max_nodes : Map[String, Bool],
+) -> Unit {
+  match subgraph.get_attr("rank") {
+    Some(value) => {
+      let lower = value.to_lower()
+      if lower == "min" || lower == "source" {
+        for node in subgraph.nodes() {
+          min_nodes[node.name()] = true
+        }
+      } else if lower == "max" || lower == "sink" {
+        for node in subgraph.nodes() {
+          max_nodes[node.name()] = true
+        }
+      }
+    }
+    None => ()
+  }
+  for child in subgraph.subgraphs() {
+    collect_rank_extremes(child, min_nodes, max_nodes)
+  }
+}
+
+///|
+fn apply_rank_extremes(
+  ranks : Map[String, Int],
+  min_nodes : Map[String, Bool],
+  max_nodes : Map[String, Bool],
+) -> Unit {
+  if ranks.length() == 0 {
+    return ()
+  }
+  let mut max_rank = 0
+  let mut seen = false
+  for _name, rank in ranks {
+    if !seen {
+      max_rank = rank
+      seen = true
+    } else if rank > max_rank {
+      max_rank = rank
+    }
+  }
+  if min_nodes.length() > 0 {
+    for name, _ in min_nodes {
+      match ranks.get(name) {
+        Some(_) => ranks[name] = 0
+        None => ()
+      }
+    }
+  }
+  if max_nodes.length() > 0 {
+    for name, _ in max_nodes {
+      match ranks.get(name) {
+        Some(_) => ranks[name] = max_rank
+        None => ()
+      }
+    }
+  }
+}
+
+///|
+fn add_rank_same_constraints(
+  rank_graph : NsGraph,
+  index : Map[String, Int],
+  subgraph : @cgraph.Graph,
+) -> Unit {
+  match subgraph.get_attr("rank") {
+    Some(value) => {
+      if value.to_lower() == "same" {
+        let nodes = subgraph.nodes()
+        if nodes.length() > 1 {
+          let mut i = 0
+          while i < nodes.length() {
+            let name_i = nodes[i].name()
+            let idx_i = match index.get(name_i) {
+              Some(value) => value
+              None => -1
+            }
+            if idx_i >= 0 {
+              let mut j = i + 1
+              while j < nodes.length() {
+                let name_j = nodes[j].name()
+                let idx_j = match index.get(name_j) {
+                  Some(value) => value
+                  None => -1
+                }
+                if idx_j >= 0 {
+                  let _ = add_edge(rank_graph, idx_i, idx_j, 0, 1000)
+                  let _ = add_edge(rank_graph, idx_j, idx_i, 0, 1000)
+                }
+                j = j + 1
+              }
+            }
+            i = i + 1
+          }
+        }
+      }
+    }
+    None => ()
+  }
+  for child in subgraph.subgraphs() {
+    add_rank_same_constraints(rank_graph, index, child)
+  }
+}
+
+///|
 fn compute_ranks_directed(
+  source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Int] {
@@ -712,6 +852,9 @@ fn compute_ranks_directed(
     index[name] = add_node(graph, name)
   }
   for edge in edges {
+    if !edge_is_constraint(edge) {
+      continue
+    }
     let tail = edge.tail().name()
     let head = edge.head().name()
     let tail_idx = match index.get(tail) {
@@ -722,13 +865,11 @@ fn compute_ranks_directed(
       Some(value) => value
       None => 0
     }
-    let minlen_value = match edge.get_attr("minlen") {
-      Some(value) => parse_double(value, 1.0)
-      None => 1.0
-    }
-    let minlen = if minlen_value < 1.0 { 1 } else { minlen_value.round().to_int() }
-    let _ = add_edge(graph, tail_idx, head_idx, minlen, 1)
+    let minlen = edge_minlen(edge)
+    let weight = edge_weight(edge)
+    let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
   }
+  add_rank_same_constraints(graph, index, source)
   network_simplex(graph, 0x7fffffff, BalanceMode::TB)
   let ranks : Map[String, Int] = Map::new()
   let mut min_rank = 0
@@ -756,6 +897,10 @@ fn compute_ranks_directed(
     let rank = graph.nodes[idx].rank - min_rank
     ranks[name] = rank
   }
+  let min_nodes : Map[String, Bool] = Map::new()
+  let max_nodes : Map[String, Bool] = Map::new()
+  collect_rank_extremes(source, min_nodes, max_nodes)
+  apply_rank_extremes(ranks, min_nodes, max_nodes)
   ranks
 }
 

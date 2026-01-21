@@ -13,5 +13,11 @@
     },
     "moonbitlang/x/fs",
     "moonbitlang/core/strconv"
+  ],
+  "wbtest-import": [
+    {
+      "path": "moonbit-community/graphviz/dot",
+      "alias": "dot_parser"
+    }
   ]
 }
