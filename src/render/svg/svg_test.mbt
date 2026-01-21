@@ -41,6 +41,23 @@ test "render_svg emits edge labels" {
   assert_true(svg.contains(">edge</text>"))
 }
 
+test "render_svg renders record fields" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=record]; a [label=\"<f0>left|<f1>right\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(
+    layout,
+    options={
+      pretty: Some(false),
+      include_xml_decl: Some(false),
+    },
+  )
+  assert_true(svg.contains(">left</text>"))
+  assert_true(svg.contains(">right</text>"))
+  assert_true(svg.contains("<line"))
+}
+
 test "render_svg emits cluster labels" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)

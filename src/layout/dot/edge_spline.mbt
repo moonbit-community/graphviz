@@ -386,6 +386,181 @@ fn nudge_endpoints(
 }
 
 ///|
+fn orthogonal_polyline_points(
+  tail : @geom.Point,
+  head : @geom.Point,
+  rankdir : RankDir,
+) -> Array[@geom.Point] {
+  match rankdir {
+    RankDir::TB | RankDir::BT => {
+      let mid_y = (tail.y + head.y) / 2.0
+      [tail, point(tail.x, mid_y), point(head.x, mid_y), head]
+    }
+    RankDir::LR | RankDir::RL => {
+      let mid_x = (tail.x + head.x) / 2.0
+      [tail, point(mid_x, tail.y), point(mid_x, head.y), head]
+    }
+  }
+}
+
+///|
+fn compact_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let result : Array[@geom.Point] = []
+  for point in points {
+    if result.length() == 0 || result[result.length() - 1] != point {
+      result.push(point)
+    }
+  }
+  result
+}
+
+///|
+fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
+  let dx = b.x - a.x
+  let dy = b.y - a.y
+  @math.hypot(dx, dy)
+}
+
+///|
+fn polyline_length(points : Array[@geom.Point]) -> Double {
+  let mut total = 0.0
+  if points.length() < 2 {
+    return total
+  }
+  for i in 0..<(points.length() - 1) {
+    total = total + segment_length(points[i], points[i + 1])
+  }
+  total
+}
+
+///|
+fn trim_polyline_start(points : Array[@geom.Point], trim_len : Double) -> Array[@geom.Point] {
+  if trim_len <= 0.0 || points.length() < 2 {
+    return points
+  }
+  let total_len = polyline_length(points)
+  if trim_len >= total_len {
+    return points
+  }
+  let out : Array[@geom.Point] = []
+  let mut remaining = trim_len
+  let mut index = 0
+  while index + 1 < points.length() {
+    let a = points[index]
+    let b = points[index + 1]
+    let seg_len = segment_length(a, b)
+    if seg_len <= 0.0 {
+      index = index + 1
+      continue
+    }
+    if remaining < seg_len {
+      let t = remaining / seg_len
+      let start = point_lerp(a, b, t)
+      out.push(start)
+      for j in (index + 1)..<points.length() {
+        out.push(points[j])
+      }
+      return out
+    }
+    remaining = remaining - seg_len
+    index = index + 1
+  }
+  points
+}
+
+///|
+fn trim_polyline_end(points : Array[@geom.Point], trim_len : Double) -> Array[@geom.Point] {
+  if trim_len <= 0.0 || points.length() < 2 {
+    return points
+  }
+  let total_len = polyline_length(points)
+  if trim_len >= total_len {
+    return points
+  }
+  let mut remaining = trim_len
+  let mut index = points.length() - 1
+  while index > 0 {
+    let a = points[index - 1]
+    let b = points[index]
+    let seg_len = segment_length(a, b)
+    if seg_len <= 0.0 {
+      index = index - 1
+      continue
+    }
+    if remaining < seg_len {
+      let t = remaining / seg_len
+      let end_point = point_lerp(b, a, t)
+      let out : Array[@geom.Point] = []
+      for j in 0..<index {
+        out.push(points[j])
+      }
+      out.push(end_point)
+      return out
+    }
+    remaining = remaining - seg_len
+    index = index - 1
+  }
+  points
+}
+
+///|
+fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  if points.length() < 2 {
+    return out
+  }
+  out.push(points[0])
+  for i in 0..<(points.length() - 1) {
+    let p0 = points[i]
+    let p1 = points[i + 1]
+    let c1 = point_lerp(p0, p1, 1.0 / 3.0)
+    let c2 = point_lerp(p0, p1, 2.0 / 3.0)
+    out.push(c1)
+    out.push(c2)
+    out.push(p1)
+  }
+  out
+}
+
+///|
+fn edge_spline_for_polyline(
+  edge : @cgraph.Edge,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+  rankdir : RankDir,
+  orthogonal : Bool,
+  include_tail : Bool,
+  include_head : Bool,
+) -> @geom.Spline {
+  let (tail, head) = if tail_clip == head_clip {
+    (tail_clip, point(head_clip.x + 1.0, head_clip.y))
+  } else {
+    (tail_clip, head_clip)
+  }
+  let raw_points = if orthogonal {
+    orthogonal_polyline_points(tail, head, rankdir)
+  } else {
+    [tail, head]
+  }
+  let arrow_len = if include_tail || include_head {
+    arrow_length_for_edge(edge)
+  } else {
+    0.0
+  }
+  let mut polyline = compact_polyline(raw_points)
+  if include_tail {
+    polyline = trim_polyline_start(polyline, arrow_len)
+  }
+  if include_head {
+    polyline = trim_polyline_end(polyline, arrow_len)
+  }
+  let points = polyline_to_bezier(compact_polyline(polyline))
+  let start_point = if include_tail { Some(tail) } else { None }
+  let end_point = if include_head { Some(head) } else { None }
+  { start: start_point, end: end_point, points }
+}
+
+///|
 fn edge_spline_for_line(
   edge : @cgraph.Edge,
   tail_center : @geom.Point,

@@ -1859,10 +1859,10 @@ fn layout_subgraphs(
 ///|
 pub fn DotLayoutOptions::default() -> DotLayoutOptions {
   {
-    rankdir: Some(RankDir::TB),
-    nodesep: Some(default_nodesep_in()),
-    ranksep: Some(default_ranksep_in()),
-    splines: Some(SplinesMode::Spline),
+    rankdir: None,
+    nodesep: None,
+    ranksep: None,
+    splines: None,
   }
 }
 
@@ -1906,11 +1906,7 @@ pub fn layout_dot(
       None => SplinesMode::Spline
     }
   }
-  if splines != SplinesMode::Spline {
-    raise DotLayoutError::UnsupportedFeature(
-      message="splines mode not supported yet",
-    )
-  }
+  let _ = splines
   let nodes = ordered_nodes(graph)
   let edges = graph.edges()
   let sizes : Map[String, NodeSize] = Map::new()
@@ -1918,7 +1914,7 @@ pub fn layout_dot(
     sizes[node.name()] = node_size(node)
   }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
-    compute_ranks_directed(nodes, edges)
+    compute_ranks_directed(graph, nodes, edges)
   } else {
     let base : Map[String, Int] = Map::new()
     for node in nodes {
@@ -2098,15 +2094,35 @@ pub fn layout_dot(
       EdgeDir::Forward | EdgeDir::Both => true
       _ => false
     }
-    let spline = edge_spline_for_line(
-      edge,
-      tail_anchor,
-      head_anchor,
-      tail_anchor_size,
-      head_anchor_size,
-      include_tail,
-      include_head,
-    )
+    let spline = match splines {
+      SplinesMode::Polyline => edge_spline_for_polyline(
+        edge,
+        tail_clip,
+        head_clip,
+        rankdir,
+        false,
+        include_tail,
+        include_head,
+      )
+      SplinesMode::Ortho => edge_spline_for_polyline(
+        edge,
+        tail_clip,
+        head_clip,
+        rankdir,
+        true,
+        include_tail,
+        include_head,
+      )
+      _ => edge_spline_for_line(
+        edge,
+        tail_anchor,
+        head_anchor,
+        tail_anchor_size,
+        head_anchor_size,
+        include_tail,
+        include_head,
+      )
+    }
     let label_pos : @geom.Point? = match edge.get_attr("label") {
       Some(value) => {
         if value == "" {

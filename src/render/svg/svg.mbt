@@ -17,6 +17,9 @@ const LINE_SPACING : Double = 1.2
 
 const TEXT_SCALE : Double = 0.9706
 
+const PAD_X_PT : Double = 16.0
+const PAD_Y_PT : Double = 8.0
+
 ///|
 fn font_width_scale(font_name : String) -> Double {
   let lower = font_name.to_lower()
@@ -276,6 +279,42 @@ fn label_metrics(
 }
 
 ///|
+fn extract_numbers(value : String) -> Array[Double] {
+  let sb = StringBuilder::new()
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+    } else {
+      sb.write_char(' ')
+    }
+  }
+  let normalized = sb.to_string()
+  let numbers : Array[Double] = []
+  for token in normalized.split(" ") {
+    if token.length() == 0 {
+      continue
+    }
+    numbers.push(parse_double(token.to_string(), 0.0))
+  }
+  numbers
+}
+
+///|
+fn parse_margin(value : String) -> (Double, Double)? {
+  let numbers = extract_numbers(value)
+  if numbers.length() == 0 {
+    return None
+  }
+  if numbers.length() == 1 {
+    let val = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+    return Some((val, val))
+  }
+  let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
+  let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
+  Some((x, y))
+}
+
+///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\N", new=name)
   with_name.replace_all(old="\\n", new="\n")
@@ -339,6 +378,7 @@ fn shape_kind(value : String?) -> String {
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
+    "record" => "record"
     "point" | "dot" => "point"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
@@ -346,45 +386,36 @@ fn shape_kind(value : String?) -> String {
 }
 
 ///|
-fn has_filled_style(value : String?) -> Bool {
-  match value {
-    Some(text) => text.to_lower().contains("filled")
-    None => false
-  }
-}
-
-///|
 fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
-  let style = graph.get_attr("style")
-  if has_filled_style(style) {
-    match graph.get_attr("fillcolor") {
-      Some(value) => Some(value)
-      None => {
-        match graph.get_attr("color") {
-          Some(value) => Some(value)
-          None => Some("black")
-        }
-      }
-    }
+  let style = @attrs.parse_style(graph.get_attr("style"))
+  if style.filled {
+    let fill = @attrs.color(
+      graph.get_attr("fillcolor"),
+      default=@attrs.color(graph.get_attr("color"), default="black"),
+    )
+    Some(fill)
   } else {
     graph.get_attr("bgcolor")
   }
 }
 
 ///|
-fn font_size(value : String?) -> Double {
-  match value {
-    Some(text) => parse_double(text, 14.0)
-    None => 14.0
+fn node_padding(node : @cgraph.Node) -> (Double, Double) {
+  let mut pad_x_pt = PAD_X_PT
+  let mut pad_y_pt = PAD_Y_PT
+  match node.get_attr("margin") {
+    Some(value) => {
+      match parse_margin(value) {
+        Some((margin_x, margin_y)) => {
+          pad_x_pt = margin_x * 72.0 * 2.0
+          pad_y_pt = margin_y * 72.0 * 2.0
+        }
+        None => ()
+      }
+    }
+    None => ()
   }
-}
-
-///|
-fn font_name(value : String?) -> String {
-  match value {
-    Some(text) => text
-    None => "Times-Roman"
-  }
+  (pad_x_pt, pad_y_pt)
 }
 
 ///|
@@ -494,6 +525,222 @@ fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
     lly: layout.pos.y - half_h,
     urx: layout.pos.x + half_w,
     ury: layout.pos.y + half_h,
+  }
+}
+
+///|
+priv struct RecordField {
+  text : String
+}
+
+///|
+fn split_record_fields(label : String) -> Array[String] {
+  let fields : Array[String] = []
+  let mut sb = StringBuilder::new()
+  let mut escaping = false
+  let mut in_port = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '<' {
+      in_port = true
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '>' {
+      in_port = false
+      sb.write_char(ch)
+      continue
+    }
+    if ch == '|' && !in_port {
+      fields.push(sb.to_string())
+      sb = StringBuilder::new()
+      continue
+    }
+    sb.write_char(ch)
+  }
+  let last = sb.to_string()
+  if last != "" || fields.length() == 0 {
+    fields.push(last)
+  }
+  fields
+}
+
+///|
+fn record_field_from_text(field : String) -> RecordField {
+  if field.has_prefix("<") {
+    match field.find(">") {
+      Some(pos) => {
+        let len = field.length()
+        let text = if pos + 1 < len {
+          field.unsafe_substring(start=pos + 1, end=len)
+        } else {
+          ""
+        }
+        { text: text }
+      }
+      None => { text: field }
+    }
+  } else {
+    { text: field }
+  }
+}
+
+///|
+fn record_fields(label : String) -> Array[RecordField] {
+  let fields : Array[RecordField] = []
+  for part in split_record_fields(label) {
+    fields.push(record_field_from_text(part))
+  }
+  fields
+}
+
+///|
+fn record_field_heights(
+  fields : Array[RecordField],
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+  total_height_pt : Double,
+) -> Array[Double] {
+  let _ = pad_x_pt
+  let heights : Array[Double] = []
+  let mut sum_height = 0.0
+  for field in fields {
+    let text = resolve_label(field.text, name)
+    let (_, text_width_pt, text_height_pt) =
+      label_metrics(text, font_name, font_size_pt)
+    let _ = text_width_pt
+    let height_pt = text_height_pt + pad_y_pt
+    heights.push(height_pt)
+    sum_height = sum_height + height_pt
+  }
+  if heights.length() == 0 {
+    return heights
+  }
+  if sum_height <= 0.0 {
+    let equal = total_height_pt / heights.length().to_double()
+    for i in 0..<heights.length() {
+      heights[i] = equal
+    }
+    return heights
+  }
+  let scale = total_height_pt / sum_height
+  for i in 0..<heights.length() {
+    heights[i] = heights[i] * scale
+  }
+  heights
+}
+
+///|
+fn record_rects(
+  layout : @layout_dot.DotLayoutNode,
+  fields : Array[RecordField],
+) -> Array[@geom.Rect] {
+  let node = layout.node
+  let rect = node_rect(layout)
+  let total_height = rect.ury - rect.lly
+  let name = node.name()
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let heights = record_field_heights(
+    fields,
+    name,
+    font,
+    font_size_pt,
+    pad_x_pt,
+    pad_y_pt,
+    total_height,
+  )
+  let rects : Array[@geom.Rect] = []
+  let mut top = rect.ury
+  for height in heights {
+    let bottom = top - height
+    rects.push({ llx: rect.llx, lly: bottom, urx: rect.urx, ury: top })
+    top = bottom
+  }
+  rects
+}
+
+///|
+fn record_field_centers(rects : Array[@geom.Rect]) -> Array[@geom.Point] {
+  let centers : Array[@geom.Point] = []
+  for rect in rects {
+    centers.push({
+      x: (rect.llx + rect.urx) / 2.0,
+      y: (rect.lly + rect.ury) / 2.0,
+    })
+  }
+  centers
+}
+
+///|
+fn write_record_node(
+  sb : StringBuilder,
+  layout : @layout_dot.DotLayoutNode,
+  rect : @geom.Rect,
+  stroke : String,
+  fill : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  let node = layout.node
+  let label = label_text(node.get_attr("label"), node.name())
+  let fields = record_fields(label)
+  let rects = record_rects(layout, fields)
+  let centers = record_field_centers(rects)
+  let x = rect.llx - bbox.llx
+  let y = rect.lly - bbox.lly
+  let w = rect.urx - rect.llx
+  let h = rect.ury - rect.lly
+  write_line(
+    sb,
+    "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"/>",
+    indent,
+    pretty,
+  )
+  for i in 1..<rects.length() {
+    let line_y = rects[i].ury - bbox.lly
+    let x1 = rect.llx - bbox.llx
+    let x2 = rect.urx - bbox.llx
+    write_line(
+      sb,
+      "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"/>",
+      indent,
+      pretty,
+    )
+  }
+  let font = @attrs.font_name(node.get_attr("fontname"))
+  let size = @attrs.font_size(node.get_attr("fontsize"))
+  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  for i in 0..<fields.length() {
+    let text = resolve_label(fields[i].text, node.name())
+    if text == "" {
+      continue
+    }
+    write_label_lines(
+      sb,
+      text,
+      font,
+      size,
+      color,
+      centers[i],
+      bbox,
+      indent,
+      pretty,
+    )
   }
 }
 
@@ -914,6 +1161,19 @@ pub fn render_svg(
       }
     } else {
       "none"
+    }
+    if kind == "record" {
+      write_record_node(
+        sb,
+        node_layout,
+        rect,
+        stroke,
+        fill,
+        bbox,
+        node_indent,
+        pretty,
+      )
+      continue
     }
     if kind == "box" {
       let x = rect.llx - bbox.llx
