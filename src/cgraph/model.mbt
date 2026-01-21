@@ -321,8 +321,6 @@ pub fn Graph::edge(
     }
   }
   add_edge_membership(self.root, self.id, edge_id)
-  add_node_membership(self.root, self.id, tail_id)
-  add_node_membership(self.root, self.id, head_id)
   { root: self.root, id: edge_id }
 }
 

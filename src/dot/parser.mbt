@@ -169,7 +169,13 @@ fn Parser::parse_endpoint(self : Parser, graph : @cgraph.Graph) -> Endpoint rais
 ///|
 fn Parser::endpoint_nodes(graph : @cgraph.Graph, endpoint : Endpoint) -> (Array[@cgraph.Node], @cgraph.Port?) {
   match endpoint {
-    Node(node_id) => ([graph.node(node_id.name)], node_id.port)
+    Node(node_id) => {
+      let node = match graph.find_node(node_id.name) {
+        Some(value) => value
+        None => graph.node(node_id.name)
+      }
+      ([node], node_id.port)
+    }
     Subgraph(sub) => (sub.nodes(), None)
   }
 }

@@ -1468,7 +1468,7 @@ fn build_constraint_graph(
         None => 0
       }
       let minlen = nodesep_minlen(tail, head, sizes, nodesep_pt)
-      let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
+      let _ = add_edge(graph, tail_idx, head_idx, minlen, 1)
       i = i + 1
     }
   }
