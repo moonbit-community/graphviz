@@ -98,49 +98,49 @@
     <polygon points="820.3702248,199.4375176351761 823.3702248,209.4375176351761 817.3702248,209.4375176351761" fill="black" stroke="black"/>
     <polygon points="820.3702248,212.2401438637937 817.3702248,202.2401438637937 823.3702248,202.2401438637937" fill="black" stroke="black"/>
     <text x="820.3702248" y="-200.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Raw PROT_G</text>
-    <rect x="8" y="368" width="130.74044960000003" height="36" fill="none" stroke="black"/>
+    <rect x="8" y="368" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="73.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">xvm_a Application ..</text>
-    <rect x="451" y="368" width="130.74044959999998" height="36" fill="none" stroke="black"/>
+    <rect x="451" y="368" width="130.74044959999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="516.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">xvm_a Application 1</text>
-    <rect x="214.3425562" y="440" width="102.05533719999997" height="36" fill="none" stroke="black"/>
+    <rect x="214.3425562" y="440" width="102.05533719999997" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="265.3702248" y="-452.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Z Application ..</text>
-    <rect x="763.3425562" y="440" width="102.05533719999994" height="36" fill="none" stroke="black"/>
+    <rect x="763.3425562" y="440" width="102.05533719999994" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="814.3702248" y="-452.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Z Application 1</text>
-    <rect x="599.7724139999999" y="368" width="169.1956216000001" height="36" fill="none" stroke="black"/>
+    <rect x="599.7724139999999" y="368" width="169.1956216000001" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="684.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Z Shapeshifter Appearances</text>
-    <rect x="228.0715884" y="296" width="282.59727280000004" height="36" fill="none" stroke="black"/>
+    <rect x="228.0715884" y="296" width="282.59727280000004" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <line x1="321.4303496" y1="296" x2="321.4303496" y2="332" stroke="black"/>
     <text x="274.750969" y="-308.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Machsrv Core</text>
     <text x="416.04960539999996" y="-308.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">PROT_A-to-XPROT Converter</text>
-    <rect x="993.1160325999999" y="368" width="120.50838440000007" height="36" fill="none" stroke="black"/>
+    <rect x="993.1160325999999" y="368" width="120.50838440000007" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="1053.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">NOXd Appearance</text>
-    <rect x="306.0858194" y="368" width="126.56881080000005" height="36" fill="none" stroke="black"/>
+    <rect x="306.0858194" y="368" width="126.56881080000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="369.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Ingress Shapeshifter</text>
-    <rect x="761.9912317999999" y="296" width="116.75798600000007" height="36" fill="none" stroke="black"/>
+    <rect x="761.9912317999999" y="296" width="116.75798600000007" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="820.3702248" y="-308.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">NOX Shapeshifter</text>
-    <rect x="758.5941318" y="224" width="123.55218599999989" height="36" fill="none" stroke="black"/>
+    <rect x="758.5941318" y="224" width="123.55218599999989" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="820.3702248" y="-236.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Egress Shapeshifter</text>
-    <rect x="653.4382062" y="440" width="91.86403719999998" height="36" fill="none" stroke="black"/>
+    <rect x="653.4382062" y="440" width="91.86403719999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="699.3702248" y="-452.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Other Chunks</text>
-    <rect x="156.558377" y="368" width="131.62369560000002" height="36" fill="none" stroke="black"/>
+    <rect x="156.558377" y="368" width="131.62369560000002" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="222.37022480000002" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">XPROT &quot;crystalizer&quot;</text>
-    <rect x="334.7573434" y="440" width="69.22576279999998" height="36" fill="none" stroke="black"/>
+    <rect x="334.7573434" y="440" width="69.22576279999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="369.3702248" y="-452.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">JZ Chunk</text>
-    <rect x="319.28695" y="512" width="100.16654960000005" height="36" fill="none" stroke="black"/>
+    <rect x="319.28695" y="512" width="100.16654960000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="369.3702248" y="-524.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Arbiter Chunks</text>
-    <rect x="787.08115" y="368" width="86.57814959999996" height="36" fill="none" stroke="black"/>
+    <rect x="787.08115" y="368" width="86.57814959999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="830.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Shapeshift X</text>
-    <rect x="891.5894624" y="368" width="83.56152479999992" height="36" fill="none" stroke="black"/>
+    <rect x="891.5894624" y="368" width="83.56152479999992" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="933.3702248" y="-380.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Shapeshift 1</text>
-    <rect x="740.3702248" y="8" width="54" height="36" fill="none" stroke="black"/>
+    <rect x="740.3702248" y="8" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="767.3702248" y="-20.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">ZZZ</text>
-    <rect x="846.3702248" y="8" width="54" height="36" fill="none" stroke="black"/>
+    <rect x="846.3702248" y="8" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="873.3702248" y="-20.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">YYY</text>
-    <rect x="724.4684193999999" y="80" width="85.80361080000011" height="36" fill="none" stroke="black"/>
+    <rect x="724.4684193999999" y="80" width="85.80361080000011" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="767.3702248" y="-92.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">ZZZ Worker</text>
-    <rect x="828.2059508" y="80" width="90.32854799999996" height="36" fill="none" stroke="black"/>
+    <rect x="828.2059508" y="80" width="90.32854799999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="873.3702248" y="-92.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">YYY Worker</text>
-    <rect x="783.4948747999999" y="152" width="73.75070000000005" height="36" fill="none" stroke="black"/>
+    <rect x="783.4948747999999" y="152" width="73.75070000000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="820.3702248" y="-164.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Foo Agent</text>
     <text x="560.8122085" y="-588.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black">Complex Architecture</text>
   </g>

@@ -1086,9 +1086,22 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     None => "black"
   }
   let style = @attrs.parse_style(node.get_attr("style"))
+  let mut style_name = ""
+  let is_mrecord = match node.get_attr("shape") {
+    Some(value) => value.to_lower() == "mrecord"
+    None => false
+  }
+  if is_mrecord {
+    style_name = "rounded"
+  }
   match dash_style_name(style) {
-    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    Some(name) => {
+      style_name = if style_name == "" { name } else { "\{style_name},\{name}" }
+    }
     None => ()
+  }
+  if style_name != "" {
+    ops.push(@render.DrawOp::Style(name=style_name))
   }
   let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)

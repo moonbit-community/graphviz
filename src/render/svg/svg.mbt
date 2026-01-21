@@ -1078,9 +1078,17 @@ fn write_record_node(
   let y = rect.lly - bbox.lly
   let w = rect.urx - rect.llx
   let h = rect.ury - rect.lly
+  let rounded = match node.get_attr("shape") {
+    Some(value) => value.to_lower() == "mrecord"
+    None => false
+  }
   write_line(
     sb,
-    "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+    if rounded {
+      "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" rx=\"6\" ry=\"6\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>"
+    } else {
+      "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>"
+    },
     indent,
     pretty,
   )
