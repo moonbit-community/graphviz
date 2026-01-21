@@ -3,6 +3,16 @@ const NONE_EDGE : Int = -1
 ///|
 const NO_HEAP : Int = -1
 ///|
+const CLUSTER_MARGIN_PT : Double = 8.0
+///|
+const CLUSTER_LABEL_PAD_PT : Double = 8.0
+///|
+const CLUSTER_COMPACT_WEIGHT : Int = 128
+///|
+const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
+///|
+const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
+///|
 
 ///|
 priv enum OrderingMode {
@@ -53,6 +63,14 @@ priv struct NsGraph {
   nodes : Array[NsNode]
   edges : Array[NsEdge]
   tree_edges : Array[Int]
+}
+
+///|
+priv struct ConstraintEdge {
+  tail : String
+  head : String
+  minlen : Int
+  weight : Int
 }
 
 ///|
@@ -1397,6 +1415,563 @@ fn nodesep_minlen(
 }
 
 ///|
+fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
+  match graph.get_attr("margin") {
+    Some(value) => {
+      let margin = parse_first_double(value, CLUSTER_MARGIN_PT)
+      if margin < 0.0 { CLUSTER_MARGIN_PT } else { margin }
+    }
+    None => CLUSTER_MARGIN_PT
+  }
+}
+
+///|
+fn unique_cluster_node_name(
+  prefix : String,
+  cluster_name : String,
+  existing : Map[String, Bool],
+) -> String {
+  let mut candidate = "\{prefix}\{cluster_name}"
+  if existing.get(candidate) is None {
+    existing[candidate] = true
+    return candidate
+  }
+  let mut i = 1
+  while true {
+    candidate = "\{prefix}\{cluster_name}_\{i}"
+    if existing.get(candidate) is None {
+      existing[candidate] = true
+      return candidate
+    }
+    i = i + 1
+  }
+  ""
+}
+
+///|
+fn collect_cluster_graphs(
+  graph : @cgraph.Graph,
+  parent : String?,
+  clusters : Map[String, @cgraph.Graph],
+  parents : Map[String, String?],
+) -> Unit {
+  let mut next_parent = parent
+  if is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => {
+        clusters[name] = graph
+        parents[name] = parent
+        next_parent = Some(name)
+      }
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_graphs(child, next_parent, clusters, parents)
+  }
+}
+
+///|
+fn collect_graph_nodes(
+  graph : @cgraph.Graph,
+  nodes_out : Map[String, Bool],
+) -> Unit {
+  for node in graph.nodes() {
+    nodes_out[node.name()] = true
+  }
+  for child in graph.subgraphs() {
+    collect_graph_nodes(child, nodes_out)
+  }
+}
+
+///|
+fn collect_cluster_members(
+  cluster_graphs : Map[String, @cgraph.Graph],
+) -> Map[String, Map[String, Bool]] {
+  let members : Map[String, Map[String, Bool]] = Map::new()
+  for name, cluster_graph in cluster_graphs {
+    let set : Map[String, Bool] = Map::new()
+    collect_graph_nodes(cluster_graph, set)
+    if set.length() > 0 {
+      members[name] = set
+    }
+  }
+  members
+}
+
+///|
+fn build_cluster_constraints(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  ranks : Map[String, Int],
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+) -> (Array[(String, Int)], Array[ConstraintEdge]) {
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  if cluster_graphs.length() == 0 {
+    return ([], [])
+  }
+  let cluster_members = collect_cluster_members(cluster_graphs)
+  if cluster_members.length() == 0 {
+    return ([], [])
+  }
+  let base_positions = compute_rank_positions(rank_keys, groups, sizes, nodesep_pt)
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in nodes {
+    existing_names[node.name()] = true
+  }
+  let cluster_nodes : Map[String, (String, String)] = Map::new()
+  let cluster_margins : Map[String, Double] = Map::new()
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let extra_nodes : Array[(String, Int)] = []
+  let extra_edges : Array[ConstraintEdge] = []
+  for name, cluster_graph in cluster_graphs {
+    cluster_margins[name] = cluster_margin_pt(cluster_graph)
+  }
+  for name, members in cluster_members {
+    let mut min_rank : Int? = None
+    let mut max_rank : Int? = None
+    let mut min_left : Double? = None
+    let mut max_right : Double? = None
+    for node_name, _ in members {
+      match ranks.get(node_name) {
+        Some(value) => {
+          match min_rank {
+            Some(current) => {
+              if value < current {
+                min_rank = Some(value)
+              }
+            }
+            None => min_rank = Some(value)
+          }
+          match max_rank {
+            Some(current) => {
+              if value > current {
+                max_rank = Some(value)
+              }
+            }
+            None => max_rank = Some(value)
+          }
+        }
+        None => ()
+      }
+      match base_positions.get(node_name) {
+        Some(pos) => {
+          let width = node_width_pt(node_name, sizes)
+          let left = pos - width / 2.0
+          let right = pos + width / 2.0
+          match min_left {
+            Some(current) => {
+              if left < current {
+                min_left = Some(left)
+              }
+            }
+            None => min_left = Some(left)
+          }
+          match max_right {
+            Some(current) => {
+              if right > current {
+                max_right = Some(right)
+              }
+            }
+            None => max_right = Some(right)
+          }
+        }
+        None => ()
+      }
+    }
+    match (min_left, max_right) {
+      (Some(left), Some(right)) => {
+        let ln_name = unique_cluster_node_name(
+          CLUSTER_LN_PREFIX,
+          name,
+          existing_names,
+        )
+        let rn_name = unique_cluster_node_name(
+          CLUSTER_RN_PREFIX,
+          name,
+          existing_names,
+        )
+        cluster_nodes[name] = (ln_name, rn_name)
+        let margin = match cluster_margins.get(name) {
+          Some(value) => value
+          None => CLUSTER_MARGIN_PT
+        }
+        extra_nodes.push((ln_name, trunc_int(left - margin)))
+        extra_nodes.push((rn_name, trunc_int(right + margin)))
+        match min_rank {
+          Some(value) => cluster_min_rank[name] = value
+          None => ()
+        }
+        match max_rank {
+          Some(value) => cluster_max_rank[name] = value
+          None => ()
+        }
+      }
+      _ => ()
+    }
+  }
+  if cluster_nodes.length() == 0 {
+    return ([], [])
+  }
+  for name, pair in cluster_nodes {
+    let (ln_name, rn_name) = pair
+    match cluster_graphs.get(name) {
+      Some(cluster_graph) => {
+        match graph_label_metrics(cluster_graph) {
+          Some((width_pt, _height_pt)) => {
+            let label_width = width_pt + CLUSTER_LABEL_PAD_PT * 2.0
+            let minlen = round_int(label_width)
+            if minlen > 0 {
+              extra_edges.push({
+                tail: ln_name,
+                head: rn_name,
+                minlen,
+                weight: 0,
+              })
+            }
+          }
+          None => ()
+        }
+      }
+      None => ()
+    }
+    extra_edges.push({
+      tail: ln_name,
+      head: rn_name,
+      minlen: 1,
+      weight: CLUSTER_COMPACT_WEIGHT,
+    })
+    let margin = match cluster_margins.get(name) {
+      Some(value) => value
+      None => CLUSTER_MARGIN_PT
+    }
+    match cluster_members.get(name) {
+      Some(members) => {
+        for rank in rank_keys {
+          let names = match groups.get(rank) {
+            Some(list) => list
+            None => []
+          }
+          let mut left_idx = -1
+          let mut right_idx = -1
+          let mut i = 0
+          while i < names.length() {
+            let node_name = names[i]
+            if members.get(node_name) is Some(_) {
+              if left_idx < 0 {
+                left_idx = i
+              }
+              right_idx = i
+            }
+            i = i + 1
+          }
+          if left_idx < 0 {
+            continue
+          }
+          let left_name = names[left_idx]
+          let right_name = names[right_idx]
+          let left_minlen =
+            round_int(node_width_pt(left_name, sizes) / 2.0 + margin)
+          extra_edges.push({
+            tail: ln_name,
+            head: left_name,
+            minlen: left_minlen,
+            weight: 0,
+          })
+          let right_minlen =
+            round_int(node_width_pt(right_name, sizes) / 2.0 + margin)
+          extra_edges.push({
+            tail: right_name,
+            head: rn_name,
+            minlen: right_minlen,
+            weight: 0,
+          })
+          let mut j = left_idx - 1
+          while j >= 0 {
+            let outside = names[j]
+            if members.get(outside) is None {
+              let minlen = round_int(node_width_pt(outside, sizes) / 2.0 + margin)
+              extra_edges.push({
+                tail: outside,
+                head: ln_name,
+                minlen,
+                weight: 0,
+              })
+              break
+            }
+            j = j - 1
+          }
+          j = right_idx + 1
+          while j < names.length() {
+            let outside = names[j]
+            if members.get(outside) is None {
+              let minlen = round_int(node_width_pt(outside, sizes) / 2.0 + margin)
+              extra_edges.push({
+                tail: rn_name,
+                head: outside,
+                minlen,
+                weight: 0,
+              })
+              break
+            }
+            j = j + 1
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  for name, parent in cluster_parents {
+    match parent {
+      Some(parent_name) => {
+        match cluster_nodes.get(parent_name) {
+          Some(parent_pair) => {
+            match cluster_nodes.get(name) {
+              Some(child_pair) => {
+                let (parent_ln, parent_rn) = parent_pair
+                let (child_ln, child_rn) = child_pair
+                let margin = match cluster_margins.get(parent_name) {
+                  Some(value) => value
+                  None => CLUSTER_MARGIN_PT
+                }
+                let minlen = round_int(margin)
+                extra_edges.push({
+                  tail: parent_ln,
+                  head: child_ln,
+                  minlen,
+                  weight: 0,
+                })
+                extra_edges.push({
+                  tail: child_rn,
+                  head: parent_rn,
+                  minlen,
+                  weight: 0,
+                })
+              }
+              None => ()
+            }
+          }
+          None => ()
+        }
+      }
+      None => ()
+    }
+  }
+  let parent_children : Map[String, Array[String]] = Map::new()
+  for name, parent in cluster_parents {
+    let key = match parent {
+      Some(value) => value
+      None => ""
+    }
+    match parent_children.get(key) {
+      Some(list) => list.push(name)
+      None => parent_children[key] = [name]
+    }
+  }
+  let root_margin = cluster_margin_pt(graph)
+  for parent_key, children in parent_children {
+    let margin = if parent_key == "" {
+      root_margin
+    } else {
+      match cluster_margins.get(parent_key) {
+        Some(value) => value
+        None => CLUSTER_MARGIN_PT
+      }
+    }
+    let mut i = 0
+    while i + 1 < children.length() {
+      let name_i = children[i]
+      match cluster_min_rank.get(name_i) {
+        None => {
+          i = i + 1
+          continue
+        }
+        Some(min_i) => {
+          match cluster_max_rank.get(name_i) {
+            None => {
+              i = i + 1
+              continue
+            }
+            Some(max_i) => {
+              match cluster_members.get(name_i) {
+                None => {
+                  i = i + 1
+                  continue
+                }
+                Some(members_i) => {
+                  let mut j = i + 1
+                  while j < children.length() {
+                    let name_j = children[j]
+                    match cluster_min_rank.get(name_j) {
+                      None => {
+                        j = j + 1
+                        continue
+                      }
+                      Some(min_j) => {
+                        match cluster_max_rank.get(name_j) {
+                          None => {
+                            j = j + 1
+                            continue
+                          }
+                          Some(max_j) => {
+                            if min_i <= max_j && min_j <= max_i {
+                              match cluster_members.get(name_j) {
+                                None => {
+                                  j = j + 1
+                                  continue
+                                }
+                                Some(members_j) => {
+                                  let start = if min_i > min_j { min_i } else { min_j }
+                                  let end = if max_i < max_j { max_i } else { max_j }
+                                  let mut chosen_first_i = -1
+                                  let mut chosen_first_j = -1
+                                  let mut r = start
+                                  while r <= end {
+                                    let names = match groups.get(r) {
+                                      Some(list) => list
+                                      None => []
+                                    }
+                                    let mut idx = 0
+                                    let mut first_i = -1
+                                    let mut first_j = -1
+                                    while idx < names.length() &&
+                                      (first_i < 0 || first_j < 0) {
+                                      let node_name = names[idx]
+                                      if first_i < 0 &&
+                                        members_i.get(node_name) is Some(_) {
+                                        first_i = idx
+                                      }
+                                      if first_j < 0 &&
+                                        members_j.get(node_name) is Some(_) {
+                                        first_j = idx
+                                      }
+                                      idx = idx + 1
+                                    }
+                                    if first_i >= 0 && first_j >= 0 {
+                                      chosen_first_i = first_i
+                                      chosen_first_j = first_j
+                                      break
+                                    }
+                                    r = r + 1
+                                  }
+                                  if chosen_first_i >= 0 && chosen_first_j >= 0 {
+                                    let (left_name, right_name) =
+                                      if chosen_first_i < chosen_first_j {
+                                        (name_i, name_j)
+                                      } else {
+                                        (name_j, name_i)
+                                      }
+                                    match cluster_nodes.get(left_name) {
+                                      None => {
+                                        j = j + 1
+                                        continue
+                                      }
+                                      Some(left_pair) => {
+                                        match cluster_nodes.get(right_name) {
+                                          None => {
+                                            j = j + 1
+                                            continue
+                                          }
+                                          Some(right_pair) => {
+                                            let (_left_ln, left_rn) = left_pair
+                                            let (right_ln, _right_rn) = right_pair
+                                            let minlen = round_int(margin)
+                                            extra_edges.push({
+                                              tail: left_rn,
+                                              head: right_ln,
+                                              minlen,
+                                              weight: 0,
+                                            })
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    j = j + 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      i = i + 1
+    }
+  }
+  (extra_nodes, extra_edges)
+}
+
+///|
+fn port_offsets_for_nodes(
+  nodes : Array[@cgraph.Node],
+  sizes : Map[String, NodeSize],
+) -> Map[String, Map[String, Double]] {
+  let offsets : Map[String, Map[String, Double]] = Map::new()
+  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
+  for node in nodes {
+    let name = node.name()
+    let size = match sizes.get(name) {
+      Some(value) => value
+      None => node_size(node)
+    }
+    let ports =
+      if is_record_shape(node) {
+        record_ports(node, origin, size)
+      } else {
+        html_ports(node, origin, size)
+      }
+    if ports.length() > 0 {
+      let node_offsets : Map[String, Double] = Map::new()
+      for port_name, port_info in ports {
+        node_offsets[port_name] = port_info.center.x
+      }
+      offsets[name] = node_offsets
+    }
+  }
+  offsets
+}
+
+///|
+fn port_offset(
+  node_name : String,
+  port : @cgraph.Port?,
+  offsets : Map[String, Map[String, Double]],
+) -> Double {
+  match port {
+    Some(value) => {
+      match value.name {
+        Some(name) => {
+          match offsets.get(node_name) {
+            Some(node_offsets) => {
+              match node_offsets.get(name) {
+                Some(offset) => offset
+                None => 0.0
+              }
+            }
+            None => 0.0
+          }
+        }
+        None => 0.0
+      }
+    }
+    None => 0.0
+  }
+}
+
+///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -1406,6 +1981,8 @@ fn build_constraint_graph(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   ordering : OrderingMode?,
+  extra_nodes : Array[(String, Int)],
+  extra_edges : Array[ConstraintEdge],
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
   let ordered_nodes = nodes
@@ -1417,7 +1994,8 @@ fn build_constraint_graph(
       None => outgoing_edges[tail] = [edge]
     }
   }
-  let slack_nodes : Array[(String, String)] = []
+  let port_offsets = port_offsets_for_nodes(ordered_nodes, sizes)
+  let slack_edges : Array[@cgraph.Edge] = []
   for node in ordered_nodes {
     let tail_name = node.name()
     let list = match outgoing_edges.get(tail_name) {
@@ -1425,14 +2003,14 @@ fn build_constraint_graph(
       None => []
     }
     for edge in list {
-      slack_nodes.push((edge.tail().name(), edge.head().name()))
+      slack_edges.push(edge)
     }
   }
   let slack_indices : Array[Int] = []
-  for _ in 0..<slack_nodes.length() {
+  for _ in 0..<slack_edges.length() {
     slack_indices.push(0)
   }
-  let mut slack_rev = slack_nodes.length()
+  let mut slack_rev = slack_edges.length()
   while slack_rev > 0 {
     slack_rev = slack_rev - 1
     let slack_idx = add_node(graph, "")
@@ -1449,6 +2027,12 @@ fn build_constraint_graph(
       None => 0.0
     }
     graph.nodes[idx].rank = trunc_int(pos)
+  }
+  for pair in extra_nodes {
+    let (name, rank) = pair
+    let idx = add_node(graph, name)
+    index[name] = idx
+    graph.nodes[idx].rank = rank
   }
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -1472,25 +2056,47 @@ fn build_constraint_graph(
       i = i + 1
     }
   }
+  for edge in extra_edges {
+    match index.get(edge.tail) {
+      Some(tail_idx) => {
+        match index.get(edge.head) {
+          Some(head_idx) => {
+            let _ = add_edge(graph, tail_idx, head_idx, edge.minlen, edge.weight)
+          }
+          None => ()
+        }
+      }
+      None => ()
+    }
+  }
   ignore(ranks)
   ignore(ordering)
-  for i in 0..<slack_nodes.length() {
-    let (tail, head) = slack_nodes[i]
-    let tail_idx = match index.get(tail) {
+  for i in 0..<slack_edges.length() {
+    let edge = slack_edges[i]
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    let tail_idx = match index.get(tail_name) {
       Some(value) => value
       None => 0
     }
-    let head_idx = match index.get(head) {
+    let head_idx = match index.get(head_name) {
       Some(value) => value
       None => 0
     }
     let slack_idx = slack_indices[i]
+    let tail_offset = port_offset(tail_name, edge.tail_port(), port_offsets)
+    let head_offset = port_offset(head_name, edge.head_port(), port_offsets)
+    let delta = head_offset - tail_offset
+    let m0 = if delta > 0.0 { round_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { round_int(-delta) } else { 0 }
     let tail_rank = graph.nodes[tail_idx].rank
     let head_rank = graph.nodes[head_idx].rank
-    let base = if tail_rank < head_rank { tail_rank } else { head_rank }
-    graph.nodes[slack_idx].rank = base - 1
-    let _ = add_edge(graph, slack_idx, tail_idx, 1, 1)
-    let _ = add_edge(graph, slack_idx, head_idx, 1, 1)
+    let base_tail = tail_rank - m0 - 1
+    let base_head = head_rank - m1 - 1
+    graph.nodes[slack_idx].rank = if base_tail < base_head { base_tail } else { base_head }
+    let weight = edge_weight(edge)
+    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
+    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
   }
   (graph, index)
 }
@@ -1505,6 +2111,8 @@ fn x_positions_from_simplex(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   ordering : OrderingMode?,
+  extra_nodes : Array[(String, Int)],
+  extra_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
   let (graph, index) = build_constraint_graph(
     nodes,
@@ -1515,6 +2123,8 @@ fn x_positions_from_simplex(
     sizes,
     nodesep_pt,
     ordering,
+    extra_nodes,
+    extra_edges,
   )
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let positions : Map[String, Double] = Map::new()
@@ -1531,6 +2141,7 @@ fn x_positions_from_simplex(
 
 ///|
 fn compute_x_positions(
+  graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
@@ -1540,6 +2151,15 @@ fn compute_x_positions(
   nodesep_pt : Double,
   ordering : OrderingMode?,
 ) -> Map[String, Double] {
+  let (extra_nodes, extra_edges) = build_cluster_constraints(
+    graph,
+    nodes,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    nodesep_pt,
+  )
   x_positions_from_simplex(
     nodes,
     edges,
@@ -1549,5 +2169,7 @@ fn compute_x_positions(
     sizes,
     nodesep_pt,
     ordering,
+    extra_nodes,
+    extra_edges,
   )
 }

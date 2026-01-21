@@ -3249,6 +3249,7 @@ pub fn layout_dot(
     }
   }
   let x_positions = compute_x_positions(
+    graph,
     nodes,
     edges,
     ranks,
