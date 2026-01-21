@@ -29,6 +29,15 @@ fn node_pos(graph : @cgraph.Graph, name : String) -> (Double, Double)? {
   }
 }
 
+///|
+fn distance(a : (Double, Double), b : (Double, Double)) -> Double {
+  let (ax, ay) = a
+  let (bx, by) = b
+  let dx = ax - bx
+  let dy = ay - by
+  Double::sqrt(dx * dx + dy * dy)
+}
+
 test "cli neato -n preserves node positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -121,4 +130,36 @@ test "cli neato honors pinned positions" {
   }
   assert_true(Double::is_close(ax, 10.0, absolute_tolerance=0.01))
   assert_true(Double::is_close(ay, 20.0, absolute_tolerance=0.01))
+}
+
+test "cli neato respects edge length" {
+  ensure_dir("target")
+  ensure_dir("target/cli")
+  let short_path = "target/cli/neato_len_short.dot"
+  write_input(short_path, "graph { a -- b [len=1]; }")
+  let short_out = run_cli([short_path], program="neato")
+  let short_graph = @dot.parse_dot(short_out)
+  let (sax, say) = match node_pos(short_graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let (sbx, sby) = match node_pos(short_graph, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  let short_dist = distance((sax, say), (sbx, sby))
+  let long_path = "target/cli/neato_len_long.dot"
+  write_input(long_path, "graph { a -- b [len=2]; }")
+  let long_out = run_cli([long_path], program="neato")
+  let long_graph = @dot.parse_dot(long_out)
+  let (lax, lay) = match node_pos(long_graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let (lbx, lby) = match node_pos(long_graph, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  let long_dist = distance((lax, lay), (lbx, lby))
+  assert_true(long_dist > short_dist + 10.0)
 }
