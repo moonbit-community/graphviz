@@ -199,6 +199,24 @@ test "render_xdot renders nested record labels" {
   assert_true(label_draw.contains(" -e"))
 }
 
+test "render_xdot renders html-like labels" {
+  let graph = @dot.parse_dot(
+    "digraph { node [shape=plaintext]; a [label=<<TABLE CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\"><TR><TD>left</TD><TD>right</TD></TR></TABLE>>]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let label_draw = match node_a.get_attr("_ldraw_") {
+    Some(value) => value
+    None => fail("missing node _ldraw_")
+  }
+  assert_true(label_draw.contains(" -left"))
+  assert_true(label_draw.contains(" -right"))
+}
+
 test "graph labelloc affects label position" {
   let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
   let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")

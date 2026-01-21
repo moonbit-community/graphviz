@@ -65,3 +65,21 @@ test "record_ports include nested port names" {
     None => fail("missing nested port")
   }
 }
+
+test "html_ports include td port names" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { node [shape=plaintext]; a [label=<<TABLE><TR><TD PORT=\\\"p1\\\">one</TD></TR></TABLE>>]; }",
+  )
+  let node = graph.node("a")
+  let size = node_size(node)
+  let ports = html_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
+  match ports.get("p1") {
+    Some(port) => {
+      let half_w = size.width_pt / 2.0
+      let half_h = size.height_pt / 2.0
+      assert_true(port.center.x >= -half_w && port.center.x <= half_w)
+      assert_true(port.center.y >= -half_h && port.center.y <= half_h)
+    }
+    None => fail("missing html port")
+  }
+}
