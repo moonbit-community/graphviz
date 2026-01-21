@@ -8,6 +8,26 @@ fn assert_text_label(label : String, expected : String) -> Unit raise {
 }
 
 ///|
+fn make_text_cell(text : String, col_span : Int, row_span : Int) -> HtmlCell {
+  {
+    content: HtmlCellContent::Text(text),
+    port: None,
+    col_span: col_span,
+    row_span: row_span,
+    align: HtmlAlign::Center,
+    valign: HtmlVAlign::Middle,
+    bg_color: None,
+    min_width_pt: None,
+    min_height_pt: None,
+  }
+}
+
+///|
+fn fixed_cell_size(_cell : HtmlCell) -> (Double, Double) {
+  (10.0, 20.0)
+}
+
+///|
 test "html label unescapes quotes" {
   let label = "<<b>\\\"hi\\\"</b>>"
   match strip_html_wrappers(label) {
@@ -34,4 +54,60 @@ test "html label parses table cell" {
     }
     _ => fail("expected table label")
   }
+}
+
+test "html table size includes border and spacing" {
+  let cell = make_text_cell("x", 1, 1)
+  let row = HtmlRow::{ cells: [cell, cell] }
+  let table = HtmlTable::{
+    rows: [row],
+    border_pt: 1.0,
+    cell_border_pt: 0.0,
+    cell_spacing_pt: 2.0,
+    cell_padding_pt: 0.0,
+    bg_color: None,
+  }
+  let (width, height) = html_table_size(table, fixed_cell_size)
+  assert_true(Double::is_close(width, 24.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
+}
+
+test "html table size respects colspan" {
+  let cell = make_text_cell("x", 2, 1)
+  let row = HtmlRow::{ cells: [cell] }
+  let table = HtmlTable::{
+    rows: [row],
+    border_pt: 1.0,
+    cell_border_pt: 0.0,
+    cell_spacing_pt: 2.0,
+    cell_padding_pt: 0.0,
+    bg_color: None,
+  }
+  let cell_size = (_cell : HtmlCell) => (30.0, 20.0)
+  let (width, height) = html_table_size(table, cell_size)
+  assert_true(Double::is_close(width, 34.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
+}
+
+test "html table layout scales cell rect" {
+  let cell = make_text_cell("x", 1, 1)
+  let row = HtmlRow::{ cells: [cell] }
+  let table = HtmlTable::{
+    rows: [row],
+    border_pt: 0.0,
+    cell_border_pt: 0.0,
+    cell_spacing_pt: 0.0,
+    cell_padding_pt: 0.0,
+    bg_color: None,
+  }
+  let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 40.0 }
+  let layout = html_table_layout(table, rect, fixed_cell_size)
+  assert_eq(layout.cells.length(), 1)
+  assert_true(Double::is_close(layout.scale_x, 2.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(layout.scale_y, 2.0, absolute_tolerance=0.01))
+  let cell_rect = layout.cells[0].rect
+  assert_true(Double::is_close(cell_rect.llx, rect.llx, absolute_tolerance=0.01))
+  assert_true(Double::is_close(cell_rect.lly, rect.lly, absolute_tolerance=0.01))
+  assert_true(Double::is_close(cell_rect.urx, rect.urx, absolute_tolerance=0.01))
+  assert_true(Double::is_close(cell_rect.ury, rect.ury, absolute_tolerance=0.01))
 }
