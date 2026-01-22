@@ -1353,15 +1353,26 @@ fn nodesep_minlen(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
 ) -> Int {
-  let tail_right = match sizes.get(tail_name) {
+  let tail_size = sizes.get(tail_name)
+  let head_size = sizes.get(head_name)
+  let tail_right = match tail_size {
     Some(value) => value.right_pt
     None => default_node_width_in() * 72.0 / 2.0
   }
-  let head_left = match sizes.get(head_name) {
+  let head_left = match head_size {
     Some(value) => value.left_pt
     None => default_node_width_in() * 72.0 / 2.0
   }
-  let minlen = tail_right + head_left + nodesep_pt
+  let tail_is_vnode = match tail_size {
+    Some(value) => value.height_pt == 0.0
+    None => false
+  }
+  let head_is_vnode = match head_size {
+    Some(value) => value.height_pt == 0.0
+    None => false
+  }
+  let sep = if tail_is_vnode || head_is_vnode { 0.0 } else { nodesep_pt }
+  let minlen = tail_right + head_left + sep
   round_int(minlen)
 }
 
