@@ -39,6 +39,16 @@ fn font_width_scale(font_name : String) -> Double {
 }
 
 ///|
+fn svg_font_family(font_name : String) -> String {
+  let lower = font_name.to_lower()
+  if lower == "times-roman" || lower == "times" {
+    "Times,serif"
+  } else {
+    font_name
+  }
+}
+
+///|
 priv struct LabelLine {
   text : String
   align : @render.TextAlign
@@ -329,9 +339,9 @@ fn parse_margin(value : String) -> (Double, Double)? {
 ///|
 fn stroke_dash_attr(style : @attrs.StyleFlags) -> String {
   if style.dashed {
-    " stroke-dasharray=\"5,5\""
+    " stroke-dasharray=\"5,2\""
   } else if style.dotted {
-    " stroke-dasharray=\"2,4\""
+    " stroke-dasharray=\"1,5\""
   } else {
     ""
   }
@@ -1557,6 +1567,7 @@ fn write_label_lines(
   if text == "" {
     return ()
   }
+  let font_family = svg_font_family(font)
   let (lines, max_width, total_height) = label_metrics(text, font, size)
   let line_step = line_height(font, size)
   let start_y = pos.y + total_height / 2.0 - size + centerline_offset(size)
@@ -1581,7 +1592,7 @@ fn write_label_lines(
     let escaped = escape_xml(line.text)
     write_line(
       sb,
-      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
       indent,
       pretty,
     )
@@ -1722,7 +1733,7 @@ pub fn render_svg(
         sb,
         ops,
         color,
-        dash,
+        "",
         padded_bbox.llx,
         padded_bbox.lly,
         edge_indent,
@@ -1735,7 +1746,7 @@ pub fn render_svg(
         sb,
         ops,
         color,
-        dash,
+        "",
         padded_bbox.llx,
         padded_bbox.lly,
         edge_indent,

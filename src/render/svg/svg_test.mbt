@@ -44,8 +44,8 @@ test "render_svg honors dashed and dotted styles" {
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
-  assert_true(svg.contains("stroke-dasharray=\"2,4\""))
-  assert_true(svg.contains("stroke-dasharray=\"5,5\""))
+  assert_true(svg.contains("stroke-dasharray=\"1,5\""))
+  assert_true(svg.contains("stroke-dasharray=\"5,2\""))
 }
 
 ///|
