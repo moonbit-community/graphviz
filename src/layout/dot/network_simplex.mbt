@@ -2152,8 +2152,8 @@ fn build_constraint_graph(
     let tail_offset = port_offset(tail_name, edge.tail_port(), port_offsets)
     let head_offset = port_offset(head_name, edge.head_port(), port_offsets)
     let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { round_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { round_int(-delta) } else { 0 }
+    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
     let tail_rank = graph.nodes[tail_idx].rank
     let head_rank = graph.nodes[head_idx].rank
     let base_tail = tail_rank - m0 - 1
@@ -2189,8 +2189,8 @@ fn build_constraint_graph(
       port_offsets,
     )
     let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { round_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { round_int(-delta) } else { 0 }
+    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
     let tail_rank = graph.nodes[tail_idx].rank
     let head_rank = graph.nodes[head_idx].rank
     let minlen = if extra.minlen > 0 { extra.minlen } else { 1 }
