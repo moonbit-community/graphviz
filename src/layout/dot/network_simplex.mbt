@@ -79,6 +79,8 @@ priv struct ConstraintEdge {
   head : String
   minlen : Int
   weight : Int
+  tail_port : String?
+  head_port : String?
 }
 
 ///|
@@ -1637,6 +1639,8 @@ fn build_cluster_constraints(
                 head: rn_name,
                 minlen,
                 weight: 0,
+                tail_port: None,
+                head_port: None,
               })
             }
           }
@@ -1649,6 +1653,8 @@ fn build_cluster_constraints(
       head: rn_name,
       minlen: 1,
       weight: CLUSTER_COMPACT_WEIGHT,
+      tail_port: None,
+      head_port: None,
     })
     let margin = match cluster_margins.get(name) {
       Some(value) => value
@@ -1687,6 +1693,8 @@ fn build_cluster_constraints(
             head: left_name,
             minlen: left_minlen,
             weight: 0,
+            tail_port: None,
+            head_port: None,
           })
           let right_minlen = round_int(
             node_right_pt(right_name, sizes) + margin,
@@ -1696,6 +1704,8 @@ fn build_cluster_constraints(
             head: rn_name,
             minlen: right_minlen,
             weight: 0,
+            tail_port: None,
+            head_port: None,
           })
           let mut j = left_idx - 1
           while j >= 0 {
@@ -1709,6 +1719,8 @@ fn build_cluster_constraints(
                 head: ln_name,
                 minlen,
                 weight: 0,
+                tail_port: None,
+                head_port: None,
               })
               break
             }
@@ -1726,6 +1738,8 @@ fn build_cluster_constraints(
                 head: outside,
                 minlen,
                 weight: 0,
+                tail_port: None,
+                head_port: None,
               })
               break
             }
@@ -1754,12 +1768,16 @@ fn build_cluster_constraints(
                   head: child_ln,
                   minlen,
                   weight: 0,
+                  tail_port: None,
+                  head_port: None,
                 })
                 extra_edges.push({
                   tail: child_rn,
                   head: parent_rn,
                   minlen,
                   weight: 0,
+                  tail_port: None,
+                  head_port: None,
                 })
               }
               None => ()
@@ -1901,6 +1919,8 @@ fn build_cluster_constraints(
                                               head: right_ln,
                                               minlen,
                                               weight: 0,
+                                              tail_port: None,
+                                              head_port: None,
                                             })
                                           }
                                         }
@@ -1977,6 +1997,26 @@ fn port_offset(
 }
 
 ///|
+fn port_offset_by_name(
+  node_name : String,
+  port_name : String?,
+  offsets : Map[String, Map[String, Double]],
+) -> Double {
+  match port_name {
+    Some(name) =>
+      match offsets.get(node_name) {
+        Some(node_offsets) =>
+          match node_offsets.get(name) {
+            Some(offset) => offset
+            None => 0.0
+          }
+        None => 0.0
+      }
+    None => 0.0
+  }
+}
+
+///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -1990,6 +2030,7 @@ fn build_constraint_graph(
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
+  edge_vnodes : Map[String, Array[String]],
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
   let ordered_nodes = nodes
@@ -2010,6 +2051,10 @@ fn build_constraint_graph(
       None => []
     }
     for edge in list {
+      match edge_vnodes.get(edge_key(edge)) {
+        Some(_) => continue
+        None => ()
+      }
       slack_edges.push(edge)
     }
   }
@@ -2133,18 +2178,31 @@ fn build_constraint_graph(
       None => 0
     }
     let slack_idx = add_node(graph, "")
+    let tail_offset = port_offset_by_name(
+      extra.tail,
+      extra.tail_port,
+      port_offsets,
+    )
+    let head_offset = port_offset_by_name(
+      extra.head,
+      extra.head_port,
+      port_offsets,
+    )
+    let delta = head_offset - tail_offset
+    let m0 = if delta > 0.0 { round_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { round_int(-delta) } else { 0 }
     let tail_rank = graph.nodes[tail_idx].rank
     let head_rank = graph.nodes[head_idx].rank
-    let base_tail = tail_rank - extra.minlen
-    let base_head = head_rank - extra.minlen
+    let minlen = if extra.minlen > 0 { extra.minlen } else { 1 }
+    let base_tail = tail_rank - m0 - minlen
+    let base_head = head_rank - m1 - minlen
     graph.nodes[slack_idx].rank = if base_tail < base_head {
       base_tail
     } else {
       base_head
     }
-    let minlen = if extra.minlen > 0 { extra.minlen } else { 1 }
-    let _ = add_edge(graph, slack_idx, tail_idx, minlen, extra.weight)
-    let _ = add_edge(graph, slack_idx, head_idx, minlen, extra.weight)
+    let _ = add_edge(graph, slack_idx, tail_idx, m0 + minlen, extra.weight)
+    let _ = add_edge(graph, slack_idx, head_idx, m1 + minlen, extra.weight)
 
   }
   (graph, index)
@@ -2164,10 +2222,11 @@ fn x_positions_from_simplex(
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
+  edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Double] {
   let (graph, index) = build_constraint_graph(
     nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, ordering, has_edge_labels,
-    extra_nodes, extra_edges, extra_slack_edges,
+    extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
   )
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let positions : Map[String, Double] = Map::new()
@@ -2216,6 +2275,6 @@ fn compute_x_positions(
   }
   x_positions_from_simplex(
     nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, ordering, has_edge_labels,
-    all_extra_nodes, extra_edges, extra_slack_edges,
+    all_extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
   )
 }

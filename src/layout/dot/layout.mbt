@@ -671,15 +671,15 @@ fn record_layout_nodes(
     RecordOrientation::Horizontal => rect.urx - rect.llx
   }
   if axis_sizes.length() > 0 {
-    if axis_sum <= 0.0 {
-      let equal = axis_total / axis_sizes.length().to_double()
+    // Match Graphviz resize_reclbl: distribute extra size evenly with int rounding.
+    let delta = axis_total - axis_sum
+    if delta != 0.0 {
+      let inc = delta / axis_sizes.length().to_double()
       for i in 0..<axis_sizes.length() {
-        axis_sizes[i] = equal
-      }
-    } else {
-      let scale = axis_total / axis_sum
-      for i in 0..<axis_sizes.length() {
-        axis_sizes[i] = axis_sizes[i] * scale
+        let before = (i.to_double() * inc).trunc().to_int()
+        let after = ((i + 1).to_double() * inc).trunc().to_int()
+        let amt = after - before
+        axis_sizes[i] = axis_sizes[i] + Double::from_int(amt)
       }
     }
   }
@@ -2395,22 +2395,31 @@ fn unique_virtual_node_name(
 }
 
 ///|
-fn build_edge_order_keys(
+fn build_vnode_order_keys(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   order_index : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
 ) -> Map[String, Double] {
   let keys : Map[String, Double] = Map::new()
   for edge in edges {
+    let vnodes = match edge_vnodes.get(edge_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
     let tail = edge.tail().name()
     let head = edge.head().name()
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
-      None => 0
+      None => continue
     }
     let head_rank = match ranks.get(head) {
       Some(value) => value
-      None => 0
+      None => continue
     }
     let tail_order = match order_index.get(tail) {
       Some(value) => value
@@ -2420,8 +2429,27 @@ fn build_edge_order_keys(
       Some(value) => value
       None => 0
     }
-    let key = if tail_rank <= head_rank { head_order } else { tail_order }
-    keys[edge_key(edge)] = key.to_double()
+    let (low_rank, high_rank, low_order, high_order) = if tail_rank <= head_rank {
+      (tail_rank, head_rank, tail_order, head_order)
+    } else {
+      (head_rank, tail_rank, head_order, tail_order)
+    }
+    let span = high_rank - low_rank
+    if span <= 0 {
+      continue
+    }
+    let span_f = Double::from_int(span)
+    let low_order_f = Double::from_int(low_order)
+    let high_order_f = Double::from_int(high_order)
+    for vnode in vnodes {
+      let vnode_rank = match vnode_ranks.get(vnode) {
+        Some(value) => value
+        None => continue
+      }
+      let t = Double::from_int(vnode_rank - low_rank) / span_f
+      let key = low_order_f + (high_order_f - low_order_f) * t
+      keys[vnode] = key
+    }
   }
   keys
 }
@@ -2580,6 +2608,31 @@ fn virtual_weight_scale(
 }
 
 ///|
+fn edge_port_name(port : @cgraph.Port?) -> String? {
+  match port {
+    Some(value) => value.name
+    None => None
+  }
+}
+
+///|
+fn endpoint_port_name(
+  node_name : String,
+  tail_name : String,
+  head_name : String,
+  tail_port : String?,
+  head_port : String?,
+) -> String? {
+  if node_name == tail_name {
+    tail_port
+  } else if node_name == head_name {
+    head_port
+  } else {
+    None
+  }
+}
+
+///|
 fn build_virtual_slack_edges(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
@@ -2599,6 +2652,8 @@ fn build_virtual_slack_edges(
     }
     let tail = edge.tail().name()
     let head = edge.head().name()
+    let tail_port_name = edge_port_name(edge.tail_port())
+    let head_port_name = edge_port_name(edge.head_port())
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
@@ -2613,42 +2668,59 @@ fn build_virtual_slack_edges(
     let mut prev = low
     for vnode in vnodes {
       let scale = virtual_weight_scale(prev, vnode, vnode_ranks, node_singletons)
+      let tail_port = endpoint_port_name(
+        prev,
+        tail,
+        head,
+        tail_port_name,
+        head_port_name,
+      )
+      let head_port = endpoint_port_name(
+        vnode,
+        tail,
+        head,
+        tail_port_name,
+        head_port_name,
+      )
       extra.push({
         tail: prev,
         head: vnode,
         minlen: 1,
         weight: base_weight * scale,
+        tail_port,
+        head_port,
       })
       prev = vnode
     }
     let scale = virtual_weight_scale(prev, high, vnode_ranks, node_singletons)
+    let tail_port = endpoint_port_name(
+      prev,
+      tail,
+      head,
+      tail_port_name,
+      head_port_name,
+    )
+    let head_port = endpoint_port_name(
+      high,
+      tail,
+      head,
+      tail_port_name,
+      head_port_name,
+    )
     extra.push({
       tail: prev,
       head: high,
       minlen: 1,
       weight: base_weight * scale,
+      tail_port,
+      head_port,
     })
   }
   extra
 }
 
 ///|
-fn build_vnode_order_keys(
-  edge_vnodes : Map[String, Array[String]],
-  edge_order_keys : Map[String, Double],
-) -> Map[String, Double] {
-  let keys : Map[String, Double] = Map::new()
-  for edge_key, names in edge_vnodes {
-    let key = match edge_order_keys.get(edge_key) {
-      Some(value) => value
-      None => 0.0
-    }
-    for name in names {
-      keys[name] = key
-    }
-  }
-  keys
-}
+
 
 ///|
 fn merge_sizes_with_vnodes(
@@ -4140,10 +4212,12 @@ pub fn layout_dot(
     node_singletons,
   )
   let order_index = build_order_index(ordered_groups)
-  let edge_order_keys = build_edge_order_keys(edges, ranks, order_index)
   let vnode_order_keys = build_vnode_order_keys(
+    edges,
+    ranks,
+    order_index,
     vnode_info.edge_vnodes,
-    edge_order_keys,
+    vnode_info.vnode_ranks,
   )
   let x_sizes = merge_sizes_with_vnodes(sizes, vnode_info.vnode_sizes)
   let x_groups = build_x_groups_with_vnodes(
