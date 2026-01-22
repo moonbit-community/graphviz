@@ -18,10 +18,8 @@ fn roundtrip_file(path : String) -> Unit raise {
 ///|
 test "dot roundtrip tier0" {
   let paths : Array[String] = [
-    "refs/graphviz/doc/dotguide/graph1.dot",
-    "refs/graphviz/doc/dotguide/graph2.dot",
-    "refs/graphviz/graphs/directed/try.gv",
-    "refs/graphviz/graphs/directed/tree.gv",
+    "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",
+    "refs/graphviz/graphs/directed/try.gv", "refs/graphviz/graphs/directed/tree.gv",
     "refs/graphviz/graphs/undirected/ER.gv",
   ]
   for path in paths {
@@ -32,16 +30,11 @@ test "dot roundtrip tier0" {
 ///|
 test "dot roundtrip tier1" {
   let paths : Array[String] = [
-    "refs/graphviz/graphs/directed/clust.gv",
-    "refs/graphviz/graphs/directed/clust4.gv",
-    "refs/graphviz/graphs/directed/records.gv",
-    "refs/graphviz/graphs/directed/structs.gv",
-    "refs/graphviz/graphs/directed/table.gv",
-    "refs/graphviz/graphs/directed/arrows.gv",
-    "refs/graphviz/graphs/directed/oldarrows.gv",
-    "refs/graphviz/graphs/directed/polypoly.gv",
-    "refs/graphviz/graphs/directed/trapeziumlr.gv",
-    "refs/graphviz/graphs/directed/psfonttest.gv",
+    "refs/graphviz/graphs/directed/clust.gv", "refs/graphviz/graphs/directed/clust4.gv",
+    "refs/graphviz/graphs/directed/records.gv", "refs/graphviz/graphs/directed/structs.gv",
+    "refs/graphviz/graphs/directed/table.gv", "refs/graphviz/graphs/directed/arrows.gv",
+    "refs/graphviz/graphs/directed/oldarrows.gv", "refs/graphviz/graphs/directed/polypoly.gv",
+    "refs/graphviz/graphs/directed/trapeziumlr.gv", "refs/graphviz/graphs/directed/psfonttest.gv",
     "refs/graphviz/graphs/directed/Latin1.gv",
   ]
   for path in paths {

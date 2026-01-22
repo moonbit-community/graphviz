@@ -22,10 +22,7 @@ fn style_tokens(value : String) -> Array[String] {
 }
 
 ///|
-pub fn parse_style(
-  value : String?,
-  default? : String = "solid",
-) -> StyleFlags {
+pub fn parse_style(value : String?, default? : String = "solid") -> StyleFlags {
   let raw = match value {
     Some(text) => if text == "" { default } else { text }
     None => default

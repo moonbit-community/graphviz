@@ -21,10 +21,11 @@ fn parse_pos(text : String) -> (Double, Double) {
 ///|
 fn node_pos(graph : @cgraph.Graph, name : String) -> (Double, Double)? {
   match graph.find_node(name) {
-    Some(node) => match node.get_attr("pos") {
-      Some(value) => Some(parse_pos(value))
-      None => None
-    }
+    Some(node) =>
+      match node.get_attr("pos") {
+        Some(value) => Some(parse_pos(value))
+        None => None
+      }
     None => None
   }
 }
@@ -38,13 +39,13 @@ fn distance(a : (Double, Double), b : (Double, Double)) -> Double {
   Double::sqrt(dx * dx + dy * dy)
 }
 
+///|
 test "cli neato -n preserves node positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_input.dot"
   write_input(
-    input_path,
-    "graph { a [pos=\"10,20!\", pin=true]; b [pos=\"30,40\"]; a -- b; }",
+    input_path, "graph { a [pos=\"10,20!\", pin=true]; b [pos=\"30,40\"]; a -- b; }",
   )
   let output = run_cli(["-n", input_path], program="neato")
   let graph = @dot.parse_dot(output)
@@ -62,13 +63,13 @@ test "cli neato -n preserves node positions" {
   assert_true(Double::is_close(by, 40.0, absolute_tolerance=0.01))
 }
 
+///|
 test "cli neato -x prunes isolated nodes" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/neato_prune.dot"
   write_input(
-    input_path,
-    "graph { a [pos=\"0,0\"]; b [pos=\"10,0\"]; c [pos=\"5,8\"]; d [pos=\"100,100\"]; a -- b; b -- c; c -- a; }",
+    input_path, "graph { a [pos=\"0,0\"]; b [pos=\"10,0\"]; c [pos=\"5,8\"]; d [pos=\"100,100\"]; a -- b; b -- c; c -- a; }",
   )
   let output = run_cli(["-n", "-x", input_path], program="neato")
   let graph = @dot.parse_dot(output)
@@ -90,6 +91,7 @@ test "cli neato -x prunes isolated nodes" {
   }
 }
 
+///|
 test "cli neato assigns positions without -n" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -109,14 +111,15 @@ test "cli neato assigns positions without -n" {
     Some(value) => value
     None => fail("missing pos for node c")
   }
-  let ab_same =
-    Double::is_close(ax, bx, absolute_tolerance=0.01) && Double::is_close(ay, by, absolute_tolerance=0.01)
-  let ac_same =
-    Double::is_close(ax, cx, absolute_tolerance=0.01) && Double::is_close(ay, cy, absolute_tolerance=0.01)
+  let ab_same = Double::is_close(ax, bx, absolute_tolerance=0.01) &&
+    Double::is_close(ay, by, absolute_tolerance=0.01)
+  let ac_same = Double::is_close(ax, cx, absolute_tolerance=0.01) &&
+    Double::is_close(ay, cy, absolute_tolerance=0.01)
   assert_true(!ab_same)
   assert_true(!ac_same)
 }
 
+///|
 test "cli neato honors pinned positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -132,6 +135,7 @@ test "cli neato honors pinned positions" {
   assert_true(Double::is_close(ay, 20.0, absolute_tolerance=0.01))
 }
 
+///|
 test "cli neato respects edge length" {
   ensure_dir("target")
   ensure_dir("target/cli")

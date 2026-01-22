@@ -1,8 +1,7 @@
+///|
 test "record_nodes parses nested braces" {
   let nodes = record_nodes("{a|{b|<here>c|d}|e}")
-  guard nodes.length() == 3 else {
-    fail("expected 3 top-level fields")
-  }
+  guard nodes.length() == 3 else { fail("expected 3 top-level fields") }
   match nodes[0] {
     RecordNode::Field(field_a) => {
       assert_eq(field_a.name, None)
@@ -12,9 +11,7 @@ test "record_nodes parses nested braces" {
   }
   match nodes[1] {
     RecordNode::Group(children) => {
-      guard children.length() == 3 else {
-        fail("expected 3 nested fields")
-      }
+      guard children.length() == 3 else { fail("expected 3 nested fields") }
       match children[0] {
         RecordNode::Field(field_b) => {
           assert_eq(field_b.name, None)
@@ -48,6 +45,7 @@ test "record_nodes parses nested braces" {
   }
 }
 
+///|
 test "record_ports include nested port names" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
@@ -66,6 +64,7 @@ test "record_ports include nested port names" {
   }
 }
 
+///|
 test "html_ports include td port names" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE><TR><TD PORT=\\\"p1\\\">one</TD></TR></TABLE>>]; }",

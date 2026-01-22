@@ -1,8 +1,13 @@
+///|
 const LINE_SPACING : Double = 1.2
 
+///|
 const TEXT_SCALE : Double = 0.9706
 
+///|
 const PAD_X_PT : Double = 16.0
+
+///|
 const PAD_Y_PT : Double = 8.0
 
 ///|
@@ -24,6 +29,7 @@ fn font_width_scale(font_name : String) -> Double {
   }
 }
 
+///|
 priv struct LabelLine {
   text : String
   align : @render.TextAlign
@@ -269,7 +275,8 @@ fn label_metrics(
     }
     lines.push({ text: line.text, align: line.align, width_pt })
   }
-  let height_pt = line_height(font_name, font_size_pt) * lines.length().to_double()
+  let height_pt = line_height(font_name, font_size_pt) *
+    lines.length().to_double()
   (lines, max_width, height_pt)
 }
 
@@ -387,7 +394,7 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
   match node.get_attr("margin") {
-    Some(value) => {
+    Some(value) =>
       match parse_margin(value) {
         Some((margin_x, margin_y)) => {
           pad_x_pt = margin_x * 72.0 * 2.0
@@ -395,7 +402,6 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
         }
         None => ()
       }
-    }
     None => ()
   }
   (pad_x_pt, pad_y_pt)
@@ -413,6 +419,7 @@ fn dash_style_name(style : @attrs.StyleFlags) -> String? {
 }
 
 ///|
+
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
   if kind != @cgraph.GraphKind::Directed {
@@ -462,6 +469,7 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+
 ///|
 fn arrow_ops(
   layout : @layout_dot.DotLayoutEdge,
@@ -514,20 +522,19 @@ fn arrow_ops(
         if filled {
           ops.push(@render.DrawOp::FillColor(color=normalized))
         }
-        ops.push(@render.DrawOp::Polygon(filled=filled, points=points))
+        ops.push(@render.DrawOp::Polygon(filled~, points~))
       }
       @render.DrawOp::Ellipse(filled~, rect~) => {
         if filled {
           ops.push(@render.DrawOp::FillColor(color=normalized))
         }
-        ops.push(@render.DrawOp::Ellipse(filled=filled, rect=rect))
+        ops.push(@render.DrawOp::Ellipse(filled~, rect~))
       }
-      @render.DrawOp::Polyline(points~) => {
-        ops.push(@render.DrawOp::Polyline(points=points))
-      }
+      @render.DrawOp::Polyline(points~) =>
+        ops.push(@render.DrawOp::Polyline(points~))
       @render.DrawOp::Bezier(filled~, points~) => {
         let _ = filled
-        ops.push(@render.DrawOp::Bezier(filled=false, points=points))
+        ops.push(@render.DrawOp::Bezier(filled=false, points~))
       }
       _ => ()
     }
@@ -619,7 +626,10 @@ fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] 
 }
 
 ///|
-fn shape_polygon_points(kind : String, rect : @geom.Rect) -> Array[@geom.Point]? {
+fn shape_polygon_points(
+  kind : String,
+  rect : @geom.Rect,
+) -> Array[@geom.Point]? {
   match kind {
     "diamond" => Some(diamond_points(rect))
     "triangle" => Some(triangle_points(rect))
@@ -648,7 +658,9 @@ priv enum RecordNode {
 }
 
 ///|
-fn toggle_record_orientation(orientation : RecordOrientation) -> RecordOrientation {
+fn toggle_record_orientation(
+  orientation : RecordOrientation,
+) -> RecordOrientation {
   match orientation {
     RecordOrientation::Horizontal => RecordOrientation::Vertical
     RecordOrientation::Vertical => RecordOrientation::Horizontal
@@ -747,7 +759,7 @@ fn record_field_from_text(field : String) -> RecordField {
         } else {
           ""
         }
-        { text: text }
+        { text, }
       }
       None => { text: field }
     }
@@ -795,8 +807,9 @@ fn record_nodes_sizes(
     match node {
       RecordNode::Field(field) => {
         let text = resolve_label(field.text, name)
-        let (_, text_width_pt, text_height_pt) =
-          label_metrics(text, font_name, font_size_pt)
+        let (_, text_width_pt, text_height_pt) = label_metrics(
+          text, font_name, font_size_pt,
+        )
         sizes.push({
           width_pt: text_width_pt + pad_x_pt,
           height_pt: text_height_pt + pad_y_pt,
@@ -830,13 +843,7 @@ fn record_group_size(
   pad_y_pt : Double,
 ) -> RecordNodeSize {
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    name,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   if sizes.length() == 0 {
     return { width_pt: 0.0, height_pt: 0.0 }
@@ -844,22 +851,20 @@ fn record_group_size(
   let mut width = 0.0
   let mut height = 0.0
   match orientation {
-    RecordOrientation::Vertical => {
+    RecordOrientation::Vertical =>
       for size in sizes {
         if size.width_pt > width {
           width = size.width_pt
         }
         height = height + size.height_pt
       }
-    }
-    RecordOrientation::Horizontal => {
+    RecordOrientation::Horizontal =>
       for size in sizes {
         if size.height_pt > height {
           height = size.height_pt
         }
         width = width + size.width_pt
       }
-    }
   }
   { width_pt: width, height_pt: height }
 }
@@ -886,13 +891,7 @@ fn record_layout_nodes(
     return []
   }
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    name,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   let axis_sizes : Array[Double] = []
   let mut axis_sum = 0.0
@@ -953,7 +952,8 @@ fn record_layout_nodes(
       }
     }
     match nodes[i] {
-      RecordNode::Field(_) => layouts.push({ rect: child_rect, node: nodes[i], children: [] })
+      RecordNode::Field(_) =>
+        layouts.push({ rect: child_rect, node: nodes[i], children: [] })
       RecordNode::Group(children) => {
         let child_layouts = record_layout_nodes(
           children,
@@ -965,7 +965,11 @@ fn record_layout_nodes(
           pad_x_pt,
           pad_y_pt,
         )
-        layouts.push({ rect: child_rect, node: nodes[i], children: child_layouts })
+        layouts.push({
+          rect: child_rect,
+          node: nodes[i],
+          children: child_layouts,
+        })
       }
     }
   }
@@ -987,11 +991,10 @@ fn record_separator_ops(
         let x2 = rect.urx
         for i in 1..<layouts.length() {
           let y = layouts[i].rect.ury
-          ops.push(@render.DrawOp::PenColor(color=color))
-          ops.push(@render.DrawOp::Polyline(points=[
-            { x: x1, y },
-            { x: x2, y },
-          ]))
+          ops.push(@render.DrawOp::PenColor(color~))
+          ops.push(
+            @render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]),
+          )
         }
       }
       RecordOrientation::Horizontal => {
@@ -999,24 +1002,24 @@ fn record_separator_ops(
         let y2 = rect.ury
         for i in 1..<layouts.length() {
           let x = layouts[i].rect.llx
-          ops.push(@render.DrawOp::PenColor(color=color))
-          ops.push(@render.DrawOp::Polyline(points=[
-            { x, y: y1 },
-            { x, y: y2 },
-          ]))
+          ops.push(@render.DrawOp::PenColor(color~))
+          ops.push(
+            @render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]),
+          )
         }
       }
     }
   }
   for layout in layouts {
     match layout.node {
-      RecordNode::Group(_) => record_separator_ops(
-        ops,
-        layout.children,
-        toggle_record_orientation(orientation),
-        layout.rect,
-        color,
-      )
+      RecordNode::Group(_) =>
+        record_separator_ops(
+          ops,
+          layout.children,
+          toggle_record_orientation(orientation),
+          layout.rect,
+          color,
+        )
       _ => ()
     }
   }
@@ -1037,12 +1040,16 @@ fn record_label_ops_from_layout(
         if text == "" {
           continue
         }
-        let (lines, max_width, total_height) =
-          label_metrics(text, font.name, font.size)
+        let (lines, max_width, total_height) = label_metrics(
+          text,
+          font.name,
+          font.size,
+        )
         let line_step = line_height(font.name, font.size)
         let center_x = (layout.rect.llx + layout.rect.urx) / 2.0
         let center_y = (layout.rect.lly + layout.rect.ury) / 2.0
-        let start_y = center_y + total_height / 2.0 -
+        let start_y = center_y +
+          total_height / 2.0 -
           font.size +
           centerline_offset(font.size)
         for i in 0..<lines.length() {
@@ -1056,23 +1063,20 @@ fn record_label_ops_from_layout(
             @render.TextAlign::Center => center_x
           }
           let line_y = start_y - line_step * i.to_double()
-          ops.push(@render.DrawOp::Font(font=font))
-          ops.push(@render.DrawOp::PenColor(color=color))
-          ops.push(@render.DrawOp::Text(
-            pos={ x: line_x, y: line_y },
-            align=line.align,
-            width=line.width_pt,
-            text=line.text,
-          ))
+          ops.push(@render.DrawOp::Font(font~))
+          ops.push(@render.DrawOp::PenColor(color~))
+          ops.push(
+            @render.DrawOp::Text(
+              pos={ x: line_x, y: line_y },
+              align=line.align,
+              width=line.width_pt,
+              text=line.text,
+            ),
+          )
         }
       }
-      RecordNode::Group(_) => record_label_ops_from_layout(
-        ops,
-        layout.children,
-        name,
-        font,
-        color,
-      )
+      RecordNode::Group(_) =>
+        record_label_ops_from_layout(ops, layout.children, name, font, color)
     }
   }
 }
@@ -1095,9 +1099,8 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     style_name = "rounded"
   }
   match dash_style_name(style) {
-    Some(name) => {
+    Some(name) =>
       style_name = if style_name == "" { name } else { "\{style_name},\{name}" }
-    }
     None => ()
   }
   if style_name != "" {
@@ -1105,8 +1108,10 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
   }
   let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)
-  ops.push(@render.DrawOp::PenColor(color=color))
-  ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)))
+  ops.push(@render.DrawOp::PenColor(color~))
+  ops.push(
+    @render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)),
+  )
   let label = label_text(node.get_attr("label"), node.name())
   let nodes = record_nodes(label)
   let font = @attrs.font_name(node.get_attr("fontname"))
@@ -1127,7 +1132,9 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
 }
 
 ///|
-fn record_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
+fn record_label_ops(
+  layout : @layout_dot.DotLayoutNode,
+) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
   let label = label_text(node.get_attr("label"), node.name())
@@ -1174,8 +1181,9 @@ fn html_cell_content_size(
 ) -> (Double, Double) {
   match content {
     @html_label.HtmlCellContent::Text(text) => {
-      let (_lines, width_pt, height_pt) =
-        html_text_metrics(text, name, font_name, font_size_pt)
+      let (_lines, width_pt, height_pt) = html_text_metrics(
+        text, name, font_name, font_size_pt,
+      )
       (width_pt, height_pt)
     }
     @html_label.HtmlCellContent::Table(table) =>
@@ -1200,19 +1208,11 @@ fn html_cell_size(
   let mut width = content_width
   let mut height = content_height
   match cell.min_width_pt {
-    Some(value) => {
-      if value > width {
-        width = value
-      }
-    }
+    Some(value) => if value > width { width = value }
     None => ()
   }
   match cell.min_height_pt {
-    Some(value) => {
-      if value > height {
-        height = value
-      }
-    }
+    Some(value) => if value > height { height = value }
     None => ()
   }
   width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
@@ -1227,10 +1227,9 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  @html_label.html_table_size(
-    table,
-    cell => html_cell_size(table, cell, name, font_name, font_size_pt),
-  )
+  @html_label.html_table_size(table, cell => html_cell_size(
+    table, cell, name, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -1241,11 +1240,9 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(
-    table,
-    rect,
-    cell => html_cell_size(table, cell, name, font_name, font_size_pt),
-  )
+  @html_label.html_table_layout(table, rect, cell => html_cell_size(
+    table, cell, name, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -1259,8 +1256,12 @@ fn html_text_ops(
   font : @render.Font,
   color : String,
 ) -> Unit {
-  let (lines, max_width, total_height) =
-    html_text_metrics(text, name, font.name, font.size)
+  let (lines, max_width, total_height) = html_text_metrics(
+    text,
+    name,
+    font.name,
+    font.size,
+  )
   if lines.length() == 0 {
     return ()
   }
@@ -1270,7 +1271,10 @@ fn html_text_ops(
     @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
     @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
   }
-  let start_y = center_y + total_height / 2.0 - font.size + centerline_offset(font.size)
+  let start_y = center_y +
+    total_height / 2.0 -
+    font.size +
+    centerline_offset(font.size)
   let line_x = match align {
     @html_label.HtmlAlign::Left => rect.llx
     @html_label.HtmlAlign::Right => rect.urx
@@ -1287,14 +1291,16 @@ fn html_text_ops(
       continue
     }
     let line_y = start_y - line_step * i.to_double()
-    ops.push(@render.DrawOp::Font(font=font))
-    ops.push(@render.DrawOp::PenColor(color=color))
-    ops.push(@render.DrawOp::Text(
-      pos={ x: line_x, y: line_y },
-      align=line_align,
-      width=if line.width_pt > max_width { line.width_pt } else { max_width },
-      text=line.text,
-    ))
+    ops.push(@render.DrawOp::Font(font~))
+    ops.push(@render.DrawOp::PenColor(color~))
+    ops.push(
+      @render.DrawOp::Text(
+        pos={ x: line_x, y: line_y },
+        align=line_align,
+        width=if line.width_pt > max_width { line.width_pt } else { max_width },
+        text=line.text,
+      ),
+    )
   }
 }
 
@@ -1318,22 +1324,33 @@ fn html_table_ops(
   }
   if table.border_pt > 0.0 {
     ops.push(@render.DrawOp::PenColor(color=stroke))
-    ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)))
+    ops.push(
+      @render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)),
+    )
   }
-  let pad_x = table.cell_padding_pt * layout.scale_x + table.cell_border_pt * layout.scale_x
-  let pad_y = table.cell_padding_pt * layout.scale_y + table.cell_border_pt * layout.scale_y
+  let pad_x = table.cell_padding_pt * layout.scale_x +
+    table.cell_border_pt * layout.scale_x
+  let pad_y = table.cell_padding_pt * layout.scale_y +
+    table.cell_border_pt * layout.scale_y
   for cell_layout in layout.cells {
     let cell_rect = cell_layout.rect
     match cell_layout.cell.bg_color {
       Some(color) => {
         ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(color)))
-        ops.push(@render.DrawOp::Polygon(filled=true, points=rect_points(cell_rect)))
+        ops.push(
+          @render.DrawOp::Polygon(filled=true, points=rect_points(cell_rect)),
+        )
       }
       None => ()
     }
     if table.cell_border_pt > 0.0 {
       ops.push(@render.DrawOp::PenColor(color=stroke))
-      ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(cell_rect)))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled=false,
+          points=outline_rect_points(cell_rect),
+        ),
+      )
     }
     let content_rect : @geom.Rect = {
       llx: cell_rect.llx + pad_x,
@@ -1342,16 +1359,11 @@ fn html_table_ops(
       ury: cell_rect.ury - pad_y,
     }
     match cell_layout.cell.content {
-      @html_label.HtmlCellContent::Table(nested) => html_table_ops(
-        ops,
-        nested,
-        content_rect,
-        name,
-        font,
-        text_color,
-        stroke,
-      )
-      @html_label.HtmlCellContent::Text(text) => {
+      @html_label.HtmlCellContent::Table(nested) =>
+        html_table_ops(
+          ops, nested, content_rect, name, font, text_color, stroke,
+        )
+      @html_label.HtmlCellContent::Text(text) =>
         if text != "" {
           html_text_ops(
             ops,
@@ -1364,7 +1376,6 @@ fn html_table_ops(
             text_color,
           )
         }
-      }
     }
   }
 }
@@ -1381,18 +1392,13 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   }
   let color = @attrs.color(node.get_attr("fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
-  let stroke = @attrs.normalize_color(@attrs.color(node.get_attr("color"), default="black"))
+  let stroke = @attrs.normalize_color(
+    @attrs.color(node.get_attr("color"), default="black"),
+  )
   match @html_label.parse_html_label(label) {
-    Some(@html_label.HtmlLabel::Table(table)) => html_table_ops(
-      ops,
-      table,
-      rect,
-      node.name(),
-      font,
-      pen_color,
-      stroke,
-    )
-    Some(@html_label.HtmlLabel::Text(text)) => {
+    Some(@html_label.HtmlLabel::Table(table)) =>
+      html_table_ops(ops, table, rect, node.name(), font, pen_color, stroke)
+    Some(@html_label.HtmlLabel::Text(text)) =>
       if text != "" {
         html_text_ops(
           ops,
@@ -1405,7 +1411,6 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
           pen_color,
         )
       }
-    }
     None => ()
   }
   ops
@@ -1441,39 +1446,32 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   }
   let style = @attrs.parse_style(node.get_attr("style"))
   match dash_style_name(style) {
-    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    Some(name) => ops.push(@render.DrawOp::Style(name~))
     None => ()
   }
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-  let filled = if shape == "point" {
-    true
-  } else {
-    style.filled
-  }
+  let filled = if shape == "point" { true } else { style.filled }
   if filled {
     let fill = match node.get_attr("fillcolor") {
       Some(value) => value
-      None => {
+      None =>
         if shape == "point" {
           pen
         } else {
           @attrs.color(node.get_attr("color"), default="white")
         }
-      }
     }
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
   }
   let rect = node_rect(layout)
   match shape {
-    "box" => {
-      ops.push(@render.DrawOp::Polygon(filled=filled, points=rect_points(rect)))
-    }
-    _ => {
+    "box" =>
+      ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(rect)))
+    _ =>
       match shape_polygon_points(shape, rect) {
-        Some(points) => ops.push(@render.DrawOp::Polygon(filled=filled, points=points))
-        None => ops.push(@render.DrawOp::Ellipse(filled=filled, rect=rect))
+        Some(points) => ops.push(@render.DrawOp::Polygon(filled~, points~))
+        None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
       }
-    }
   }
   ops
 }
@@ -1500,19 +1498,26 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   }
   let color = @attrs.color(node.get_attr("fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
-  let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
+  let (lines, max_width, total_height) = label_metrics(
+    text,
+    font.name,
+    font.size,
+  )
   let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
     Some(value) => value
     None => layout.pos
   }
-  let start_y = pos.y + total_height / 2.0 - font.size + centerline_offset(font.size)
+  let start_y = pos.y +
+    total_height / 2.0 -
+    font.size +
+    centerline_offset(font.size)
   for i in 0..<lines.length() {
     let line = lines[i]
     if line.text == "" {
       continue
     }
-    ops.push(@render.DrawOp::Font(font=font))
+    ops.push(@render.DrawOp::Font(font~))
     ops.push(@render.DrawOp::PenColor(color=pen_color))
     let line_x = match line.align {
       @render.TextAlign::Left => pos.x - max_width / 2.0
@@ -1520,12 +1525,14 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
       @render.TextAlign::Center => pos.x
     }
     let line_y = start_y - line_step * i.to_double()
-    ops.push(@render.DrawOp::Text(
-      pos={ x: line_x, y: line_y },
-      align=line.align,
-      width=line.width_pt,
-      text=line.text,
-    ))
+    ops.push(
+      @render.DrawOp::Text(
+        pos={ x: line_x, y: line_y },
+        align=line.align,
+        width=line.width_pt,
+        text=line.text,
+      ),
+    )
   }
   ops
 }
@@ -1537,7 +1544,7 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let pen = @attrs.color(edge.get_attr("color"), default="black")
   let style = @attrs.parse_style(edge.get_attr("style"))
   match dash_style_name(style) {
-    Some(name) => ops.push(@render.DrawOp::Style(name=name))
+    Some(name) => ops.push(@render.DrawOp::Style(name~))
     None => ()
   }
   ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(pen)))
@@ -1564,22 +1571,30 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   let color = @attrs.color(edge.get_attr("fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
-  let (lines, max_width, total_height) = label_metrics(text, font.name, font.size)
+  let (lines, max_width, total_height) = label_metrics(
+    text,
+    font.name,
+    font.size,
+  )
   let line_step = line_height(font.name, font.size)
   let pos = match layout.label_pos {
     Some(value) => value
-    None => match layout.splines.get(0) {
-      Some(spline) => spline_midpoint(spline)
-      None => { x: 0.0, y: 0.0 }
-    }
+    None =>
+      match layout.splines.get(0) {
+        Some(spline) => spline_midpoint(spline)
+        None => { x: 0.0, y: 0.0 }
+      }
   }
-  let start_y = pos.y + total_height / 2.0 - font.size + centerline_offset(font.size)
+  let start_y = pos.y +
+    total_height / 2.0 -
+    font.size +
+    centerline_offset(font.size)
   for i in 0..<lines.length() {
     let line = lines[i]
     if line.text == "" {
       continue
     }
-    ops.push(@render.DrawOp::Font(font=font))
+    ops.push(@render.DrawOp::Font(font~))
     ops.push(@render.DrawOp::PenColor(color=pen_color))
     let line_x = match line.align {
       @render.TextAlign::Left => pos.x - max_width / 2.0
@@ -1587,12 +1602,14 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
       @render.TextAlign::Center => pos.x
     }
     let line_y = start_y - line_step * i.to_double()
-    ops.push(@render.DrawOp::Text(
-      pos={ x: line_x, y: line_y },
-      align=line.align,
-      width=line.width_pt,
-      text=line.text,
-    ))
+    ops.push(
+      @render.DrawOp::Text(
+        pos={ x: line_x, y: line_y },
+        align=line.align,
+        width=line.width_pt,
+        text=line.text,
+      ),
+    )
   }
   ops
 }
@@ -1634,13 +1651,7 @@ fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 ///|
 fn graph_label_text(graph : @cgraph.Graph) -> String? {
   match graph.get_attr("label") {
-    Some(value) => {
-      if value == "" {
-        None
-      } else {
-        Some(value)
-      }
-    }
+    Some(value) => if value == "" { None } else { Some(value) }
     None => None
   }
 }
@@ -1674,7 +1685,9 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     let fill = @attrs.color(graph.get_attr("bgcolor"), default="white")
     ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
-    ops.push(@render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)))
+    ops.push(
+      @render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)),
+    )
     return ops
   }
   if is_cluster_graph(graph) {
@@ -1692,11 +1705,17 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     match fill {
       Some(value) => {
         ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(value)))
-        ops.push(@render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)))
+        ops.push(
+          @render.DrawOp::Polygon(filled=true, points=outline_rect_points(bbox)),
+        )
       }
-      None => {
-        ops.push(@render.DrawOp::Polygon(filled=false, points=outline_rect_points(bbox)))
-      }
+      None =>
+        ops.push(
+          @render.DrawOp::Polygon(
+            filled=false,
+            points=outline_rect_points(bbox),
+          ),
+        )
     }
   }
   ops
@@ -1730,13 +1749,16 @@ fn graph_label_ops(
       }
       let lines = label_lines(text, font.size)
       let line_step = line_height(font.name, font.size)
-      let start_y = pos.y + height_pt / 2.0 - font.size + centerline_offset(font.size)
+      let start_y = pos.y +
+        height_pt / 2.0 -
+        font.size +
+        centerline_offset(font.size)
       for i in 0..<lines.length() {
         let line = lines[i]
         if line.text == "" {
           continue
         }
-        ops.push(@render.DrawOp::Font(font=font))
+        ops.push(@render.DrawOp::Font(font~))
         ops.push(@render.DrawOp::PenColor(color=pen_color))
         let line_x = match line.align {
           @render.TextAlign::Left => pos.x - width_pt / 2.0
@@ -1744,12 +1766,14 @@ fn graph_label_ops(
           @render.TextAlign::Center => pos.x
         }
         let line_y = start_y - line_step * i.to_double()
-        ops.push(@render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
-          align=line.align,
-          width=line.width_pt,
-          text=line.text,
-        ))
+        ops.push(
+          @render.DrawOp::Text(
+            pos={ x: line_x, y: line_y },
+            align=line.align,
+            width=line.width_pt,
+            text=line.text,
+          ),
+        )
       }
     }
     None => ()
@@ -2004,6 +2028,6 @@ pub fn render_xdot(
   options? : XDotOptions = XDotOptions::default(),
 ) -> String {
   layout.apply()
-  attach_xdot_attrs(layout, options=options)
+  attach_xdot_attrs(layout, options~)
   @dot.write_dot(layout.graph)
 }

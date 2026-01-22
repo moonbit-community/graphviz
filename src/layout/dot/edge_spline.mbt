@@ -1,9 +1,12 @@
 ///|
 const ARROW_LENGTH : Double = 10.0
+
 ///|
 const ARR_MOD_INV : Int = 1 << 5
+
 ///|
 const ARR_MOD_LEFT : Int = 1 << 6
+
 ///|
 const ARR_MOD_RIGHT : Int = 1 << 7
 
@@ -109,18 +112,20 @@ fn bezier_clip(
       }
       best = seg
       found = true
+    } else if left_inside {
+      high = t
     } else {
-      if left_inside {
-        high = t
-      } else {
-        low = t
-      }
+      low = t
     }
     if Double::abs(opt.x - pt.x) <= 0.5 && Double::abs(opt.y - pt.y) <= 0.5 {
       break
     }
   }
-  if found { best } else { seg }
+  if found {
+    best
+  } else {
+    seg
+  }
 }
 
 ///|
@@ -130,7 +135,8 @@ fn miter_shape(
   base_right : @geom.Point,
   penwidth : Double,
 ) -> Triangle {
-  if (base_left.x == p.x && base_left.y == p.y) || (base_right.x == p.x && base_right.y == p.y) {
+  if (base_left.x == p.x && base_left.y == p.y) ||
+    (base_right.x == p.x && base_right.y == p.y) {
     return Triangle::{ p0: p, p1: p, p2: p }
   }
   let dx_a = p.x - base_left.x
@@ -172,11 +178,11 @@ fn miter_shape(
   )
   if normalized_miter_length > stroke_miterlimit {
     let p_bevel = point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
-    Triangle::{ p0: p_bevel, p1: p1, p2: p2 }
+    Triangle::{ p0: p_bevel, p1, p2 }
   } else {
     let l = penwidth / 2.0 / @math.tan(theta / 2.0)
     let p3 = point(p1.x + l * cos_alpha, p1.y + l * sin_alpha)
-    Triangle::{ p0: p3, p1: p1, p2: p2 }
+    Triangle::{ p0: p3, p1, p2 }
   }
 }
 
@@ -199,8 +205,16 @@ fn arrow_type_normal0(
   let v_inv = point(-v.x, -v.y)
   let normal_left = if (flag & ARR_MOD_RIGHT) != 0 { origin } else { v_inv }
   let normal_right = if (flag & ARR_MOD_LEFT) != 0 { origin } else { v }
-  let base_left = if (flag & ARR_MOD_INV) != 0 { normal_right } else { normal_left }
-  let base_right = if (flag & ARR_MOD_INV) != 0 { normal_left } else { normal_right }
+  let base_left = if (flag & ARR_MOD_INV) != 0 {
+    normal_right
+  } else {
+    normal_left
+  }
+  let base_right = if (flag & ARR_MOD_INV) != 0 {
+    normal_left
+  } else {
+    normal_right
+  }
   let normal_tip = point(-u.x, -u.y)
   let inv_tip = u
   let p_tip = if (flag & ARR_MOD_INV) != 0 { inv_tip } else { normal_tip }
@@ -220,7 +234,11 @@ fn arrow_type_normal0(
       let dy = p1.y - p_tip.y
       let hypot_p = @math.hypot(dx, dy)
       let cos_alpha = dx / hypot_p
-      let alpha = if dy > 0.0 { @math.acos(cos_alpha) } else { -@math.acos(cos_alpha) }
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
       let gamma = alpha - phi
       let delta_tip_length = hypot_p * @math.cos(gamma)
       delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
@@ -231,7 +249,11 @@ fn arrow_type_normal0(
       let dy = p2.y - p_tip.y
       let hypot_p = @math.hypot(dx, dy)
       let cos_alpha = dx / hypot_p
-      let alpha = if dy > 0.0 { @math.acos(cos_alpha) } else { -@math.acos(cos_alpha) }
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
       let gamma = alpha - phi
       let delta_tip_length = hypot_p * @math.cos(gamma)
       delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
@@ -291,7 +313,11 @@ fn arrow_length_normal(
   let overlap_at_base = penwidth / 2.0
   let length_where_width_is_penwidth = full_length * penwidth / full_base_width
   let overlap_at_tip = length_where_width_is_penwidth
-  let overlap = if (flag & ARR_MOD_INV) != 0 { overlap_at_tip } else { overlap_at_base }
+  let overlap = if (flag & ARR_MOD_INV) != 0 {
+    overlap_at_tip
+  } else {
+    overlap_at_base
+  }
   full_length - overlap
 }
 
@@ -330,12 +356,13 @@ fn arrow_end_clip(
   }
   let sp = [end_point, points[2], points[1], points[0]]
   let len2 = arrow_len * arrow_len
-  let clipped = bezier_clip(
-    sp,
-    (p) => point_dist2(p, end_point) <= len2,
-    true,
-  )
-  let new_points : Array[@geom.Point] = [clipped[3], clipped[2], clipped[1], clipped[0]]
+  let clipped = bezier_clip(sp, p => point_dist2(p, end_point) <= len2, true)
+  let new_points : Array[@geom.Point] = [
+    clipped[3],
+    clipped[2],
+    clipped[1],
+    clipped[0],
+  ]
   (new_points, end_point)
 }
 
@@ -350,12 +377,13 @@ fn arrow_start_clip(
   }
   let sp = [points[3], points[2], points[1], start_point]
   let len2 = arrow_len * arrow_len
-  let clipped = bezier_clip(
-    sp,
-    (p) => point_dist2(p, start_point) <= len2,
-    false,
-  )
-  let new_points : Array[@geom.Point] = [clipped[3], clipped[2], clipped[1], clipped[0]]
+  let clipped = bezier_clip(sp, p => point_dist2(p, start_point) <= len2, false)
+  let new_points : Array[@geom.Point] = [
+    clipped[3],
+    clipped[2],
+    clipped[1],
+    clipped[0],
+  ]
   (new_points, start_point)
 }
 
@@ -434,7 +462,10 @@ fn polyline_length(points : Array[@geom.Point]) -> Double {
 }
 
 ///|
-fn trim_polyline_start(points : Array[@geom.Point], trim_len : Double) -> Array[@geom.Point] {
+fn trim_polyline_start(
+  points : Array[@geom.Point],
+  trim_len : Double,
+) -> Array[@geom.Point] {
   if trim_len <= 0.0 || points.length() < 2 {
     return points
   }
@@ -469,7 +500,10 @@ fn trim_polyline_start(points : Array[@geom.Point], trim_len : Double) -> Array[
 }
 
 ///|
-fn trim_polyline_end(points : Array[@geom.Point], trim_len : Double) -> Array[@geom.Point] {
+fn trim_polyline_end(
+  points : Array[@geom.Point],
+  trim_len : Double,
+) -> Array[@geom.Point] {
   if trim_len <= 0.0 || points.length() < 2 {
     return points
   }

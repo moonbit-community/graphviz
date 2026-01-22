@@ -13,18 +13,27 @@ fn neato_parse_pos(text : String) -> @geom.Point {
   for part in text.split(",") {
     parts.push(part.to_string())
   }
-  let x = if parts.length() > 0 { neato_parse_double(parts[0], 0.0) } else { 0.0 }
-  let y = if parts.length() > 1 { neato_parse_double(parts[1], 0.0) } else { 0.0 }
+  let x = if parts.length() > 0 {
+    neato_parse_double(parts[0], 0.0)
+  } else {
+    0.0
+  }
+  let y = if parts.length() > 1 {
+    neato_parse_double(parts[1], 0.0)
+  } else {
+    0.0
+  }
   { x, y }
 }
 
 ///|
 fn neato_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
   match graph.find_node(name) {
-    Some(node) => match node.get_attr("pos") {
-      Some(value) => Some(neato_parse_pos(value))
-      None => None
-    }
+    Some(node) =>
+      match node.get_attr("pos") {
+        Some(value) => Some(neato_parse_pos(value))
+        None => None
+      }
     None => None
   }
 }
@@ -36,6 +45,7 @@ fn neato_distance(a : @geom.Point, b : @geom.Point) -> Double {
   Double::sqrt(dx * dx + dy * dy)
 }
 
+///|
 test "layout_neato preserves pinned positions" {
   let graph = @dot_parser.parse_dot(
     "graph { node [shape=box,width=1,height=1,label=\"\"]; a [pos=\"10,20!\"]; b [pos=\"30,40\", pin=true]; c; a -- c; b -- c; }",
@@ -56,6 +66,7 @@ test "layout_neato preserves pinned positions" {
   assert_true(Double::is_close(b_pos.y, 40.0, absolute_tolerance=0.01))
 }
 
+///|
 test "layout_neato scales spacing with nodesep" {
   let graph_small = @dot_parser.parse_dot(
     "graph { nodesep=0.1; node [shape=box,width=1,height=1,label=\"\"]; a; b; }",
@@ -88,6 +99,7 @@ test "layout_neato scales spacing with nodesep" {
   assert_true(large_dist > small_dist + 100.0)
 }
 
+///|
 test "layout_neato respects edge length" {
   let short_graph = @dot_parser.parse_dot(
     "graph { nodesep=0; node [shape=box,width=1,height=1,label=\"\"]; a -- b [len=1]; }",

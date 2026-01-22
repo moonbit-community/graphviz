@@ -13,7 +13,12 @@ fn parse_numbers(text : String, limit : Int) -> Array[Double] {
   let mut current = StringBuilder::new()
   let mut seen = false
   for ch in text {
-    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' || ch == 'e' || ch == 'E' {
+    if ch.is_ascii_digit() ||
+      ch == '-' ||
+      ch == '+' ||
+      ch == '.' ||
+      ch == 'e' ||
+      ch == 'E' {
       current.write_char(ch)
       seen = true
       continue
@@ -55,7 +60,10 @@ fn scale_point(point : @geom.Point, factor : Double) -> @geom.Point {
 }
 
 ///|
-fn line_control_points(start : @geom.Point, end : @geom.Point) -> Array[@geom.Point] {
+fn line_control_points(
+  start : @geom.Point,
+  end : @geom.Point,
+) -> Array[@geom.Point] {
   let control1 : @geom.Point = {
     x: (start.x * 2.0 + end.x) / 3.0,
     y: (start.y * 2.0 + end.y) / 3.0,
@@ -196,7 +204,7 @@ fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
     }
     removed[name] = true
     match neighbors.get(name) {
-      Some(list) => {
+      Some(list) =>
         for neighbor in list {
           if removed.get(neighbor) is Some(_) {
             continue
@@ -211,7 +219,6 @@ fn prune_keep_set(graph : @cgraph.Graph) -> Map[String, Bool] {
             queue.push(neighbor)
           }
         }
-      }
       None => ()
     }
   }
@@ -231,7 +238,8 @@ fn clone_pruned_graph(
   keep : Map[String, Bool],
 ) -> @cgraph.Graph {
   let cloned = match graph.name() {
-    Some(name) => @cgraph.Graph::new(graph.kind(), name=name, strict=graph.is_strict())
+    Some(name) =>
+      @cgraph.Graph::new(graph.kind(), name~, strict=graph.is_strict())
     None => @cgraph.Graph::new(graph.kind(), strict=graph.is_strict())
   }
   for pair in graph.attrs() {
@@ -275,37 +283,58 @@ fn clone_pruned_graph(
     let tail_port = edge.tail_port()
     let head_port = edge.head_port()
     let new_edge = match name {
-      Some(label) => match tail_port {
-        Some(tail_value) => match head_port {
-          Some(head_value) => cloned.edge(
-            new_tail,
-            new_head,
-            name=label,
-            tail_port=tail_value,
-            head_port=head_value,
-          )
-          None => cloned.edge(new_tail, new_head, name=label, tail_port=tail_value)
+      Some(label) =>
+        match tail_port {
+          Some(tail_value) =>
+            match head_port {
+              Some(head_value) =>
+                cloned.edge(
+                  new_tail,
+                  new_head,
+                  name=label,
+                  tail_port=tail_value,
+                  head_port=head_value,
+                )
+              None =>
+                cloned.edge(
+                  new_tail,
+                  new_head,
+                  name=label,
+                  tail_port=tail_value,
+                )
+            }
+          None =>
+            match head_port {
+              Some(head_value) =>
+                cloned.edge(
+                  new_tail,
+                  new_head,
+                  name=label,
+                  head_port=head_value,
+                )
+              None => cloned.edge(new_tail, new_head, name=label)
+            }
         }
-        None => match head_port {
-          Some(head_value) => cloned.edge(new_tail, new_head, name=label, head_port=head_value)
-          None => cloned.edge(new_tail, new_head, name=label)
+      None =>
+        match tail_port {
+          Some(tail_value) =>
+            match head_port {
+              Some(head_value) =>
+                cloned.edge(
+                  new_tail,
+                  new_head,
+                  tail_port=tail_value,
+                  head_port=head_value,
+                )
+              None => cloned.edge(new_tail, new_head, tail_port=tail_value)
+            }
+          None =>
+            match head_port {
+              Some(head_value) =>
+                cloned.edge(new_tail, new_head, head_port=head_value)
+              None => cloned.edge(new_tail, new_head)
+            }
         }
-      }
-      None => match tail_port {
-        Some(tail_value) => match head_port {
-          Some(head_value) => cloned.edge(
-            new_tail,
-            new_head,
-            tail_port=tail_value,
-            head_port=head_value,
-          )
-          None => cloned.edge(new_tail, new_head, tail_port=tail_value)
-        }
-        None => match head_port {
-          Some(head_value) => cloned.edge(new_tail, new_head, head_port=head_value)
-          None => cloned.edge(new_tail, new_head)
-        }
-      }
     }
     for pair in edge.attrs() {
       let (key, value) = pair
@@ -335,19 +364,17 @@ pub fn layout_neato_noop(
   for node in ordered_nodes(active_graph) {
     let pos_value = match node.get_attr("pos") {
       Some(value) => value
-      None => {
+      None =>
         raise DotLayoutError::InvalidGraph(
           message="neato -n requires pos for node \{node.name()}",
         )
-      }
     }
     let parsed = match parse_point_attr(pos_value) {
       Some(value) => value
-      None => {
+      None =>
         raise DotLayoutError::InvalidGraph(
           message="invalid pos for node \{node.name()}",
         )
-      }
     }
     let pos = scale_point(parsed, scale_factor)
     positions[node.name()] = pos
@@ -414,7 +441,9 @@ pub fn layout_neato_noop(
         let loc = graph_label_loc(active_graph)
         let just = graph_label_just(active_graph)
         final_bbox = expand_bbox_for_label(final_bbox, width_pt, height_pt, loc)
-        label_pos = Some(graph_label_pos(final_bbox, width_pt, height_pt, loc, just))
+        label_pos = Some(
+          graph_label_pos(final_bbox, width_pt, height_pt, loc, just),
+        )
       }
       None => ()
     }

@@ -12,6 +12,7 @@ fn rank_wb_find_edge(
   None
 }
 
+///|
 test "edge weight and minlen parsing clamps values" {
   let graph = @dot_parser.parse_dot(
     "digraph { a -> b [weight=2, minlen=3]; c -> d [weight=-2, minlen=0]; e -> f; }",

@@ -1,0 +1,12 @@
+digraph edge_labels {
+  nodesep="0.25";
+  ranksep="0.5";
+  a [shape=box];
+  b [shape=box];
+  c [shape=box];
+  d [shape=box];
+  {rank=same; a; b;}
+  {rank=same; c; d;}
+  a -> c [label="Edge Label A"];
+  b -> d [label="Edge Label B Longer"];
+}

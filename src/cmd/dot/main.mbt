@@ -9,7 +9,7 @@ fn main {
   for i in 1..<args.length() {
     cli_args.push(args[i])
   }
-  let output = try @cli.run_cli(cli_args, program=program) catch {
+  let output = @cli.run_cli(cli_args, program~) catch {
     err => {
       println("cli error: \{err}")
       @sys.exit(1)

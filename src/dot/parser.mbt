@@ -40,12 +40,19 @@ fn Parser::is_keyword(self : Parser, keyword : String) -> Bool {
 }
 
 ///|
+
 ///|
-fn Parser::expect_token(self : Parser, expected : Token) -> Unit raise DotParseError {
+fn Parser::expect_token(
+  self : Parser,
+  expected : Token,
+) -> Unit raise DotParseError {
   if self.current.token == expected {
     self.advance()
   } else {
-    raise DotParseError::InvalidToken(pos=self.current.pos, token=token_label(self.current.token))
+    raise DotParseError::InvalidToken(
+      pos=self.current.pos,
+      token=token_label(self.current.token),
+    )
   }
 }
 
@@ -64,7 +71,11 @@ fn Parser::parse_id(self : Parser) -> String raise DotParseError {
       self.advance()
       value
     }
-    _ => raise DotParseError::InvalidToken(pos=self.current.pos, token=token_label(self.current.token))
+    _ =>
+      raise DotParseError::InvalidToken(
+        pos=self.current.pos,
+        token=token_label(self.current.token),
+      )
   }
 }
 
@@ -111,7 +122,9 @@ fn Parser::parse_node_id(self : Parser) -> NodeId raise DotParseError {
 }
 
 ///|
-fn Parser::parse_attr_list(self : Parser) -> Map[String, String] raise DotParseError {
+fn Parser::parse_attr_list(
+  self : Parser,
+) -> Map[String, String] raise DotParseError {
   let attrs : Map[String, String] = Map::new()
   while self.current.token == LBracket {
     self.advance()
@@ -137,7 +150,10 @@ fn Parser::parse_attr_list(self : Parser) -> Map[String, String] raise DotParseE
 }
 
 ///|
-fn Parser::parse_subgraph(self : Parser, graph : @cgraph.Graph) -> @cgraph.Graph raise DotParseError {
+fn Parser::parse_subgraph(
+  self : Parser,
+  graph : @cgraph.Graph,
+) -> @cgraph.Graph raise DotParseError {
   let mut name : String? = None
   if self.is_keyword("subgraph") {
     self.advance()
@@ -158,7 +174,10 @@ fn Parser::parse_subgraph(self : Parser, graph : @cgraph.Graph) -> @cgraph.Graph
 }
 
 ///|
-fn Parser::parse_endpoint(self : Parser, graph : @cgraph.Graph) -> Endpoint raise DotParseError {
+fn Parser::parse_endpoint(
+  self : Parser,
+  graph : @cgraph.Graph,
+) -> Endpoint raise DotParseError {
   if self.is_keyword("subgraph") || self.current.token == LBrace {
     Endpoint::Subgraph(self.parse_subgraph(graph))
   } else {
@@ -167,7 +186,10 @@ fn Parser::parse_endpoint(self : Parser, graph : @cgraph.Graph) -> Endpoint rais
 }
 
 ///|
-fn Parser::endpoint_nodes(graph : @cgraph.Graph, endpoint : Endpoint) -> (Array[@cgraph.Node], @cgraph.Port?) {
+fn Parser::endpoint_nodes(
+  graph : @cgraph.Graph,
+  endpoint : Endpoint,
+) -> (Array[@cgraph.Node], @cgraph.Port?) {
   match endpoint {
     Node(node_id) => {
       let node = match graph.find_node(node_id.name) {
@@ -187,13 +209,20 @@ fn Parser::parse_edge_stmt(
   left : Endpoint,
 ) -> Unit raise DotParseError {
   let endpoints : Array[Endpoint] = [left]
-  while self.current.token == EdgeDirected || self.current.token == EdgeUndirected {
+  while self.current.token == EdgeDirected ||
+        self.current.token == EdgeUndirected {
     let op = self.current.token
     if graph.kind() == @cgraph.GraphKind::Directed && op != EdgeDirected {
-      raise DotParseError::InvalidSyntax(pos=self.current.pos, message="undirected edge in digraph")
+      raise DotParseError::InvalidSyntax(
+        pos=self.current.pos,
+        message="undirected edge in digraph",
+      )
     }
     if graph.kind() == @cgraph.GraphKind::Undirected && op != EdgeUndirected {
-      raise DotParseError::InvalidSyntax(pos=self.current.pos, message="directed edge in graph")
+      raise DotParseError::InvalidSyntax(
+        pos=self.current.pos,
+        message="directed edge in graph",
+      )
     }
     self.advance()
     endpoints.push(self.parse_endpoint(graph))
@@ -201,22 +230,23 @@ fn Parser::parse_edge_stmt(
   let attrs = self.parse_attr_list()
   for i in 0..<(endpoints.length() - 1) {
     let (left_nodes, left_port) = Parser::endpoint_nodes(graph, endpoints[i])
-    let (right_nodes, right_port) = Parser::endpoint_nodes(graph, endpoints[i + 1])
+    let (right_nodes, right_port) = Parser::endpoint_nodes(
+      graph,
+      endpoints[i + 1],
+    )
     for tail in left_nodes {
       for head in right_nodes {
         let edge = match left_port {
-          Some(tail_port) => {
+          Some(tail_port) =>
             match right_port {
-              Some(head_port) => graph.edge(tail, head, tail_port=tail_port, head_port=head_port)
-              None => graph.edge(tail, head, tail_port=tail_port)
+              Some(head_port) => graph.edge(tail, head, tail_port~, head_port~)
+              None => graph.edge(tail, head, tail_port~)
             }
-          }
-          None => {
+          None =>
             match right_port {
-              Some(head_port) => graph.edge(tail, head, head_port=head_port)
+              Some(head_port) => graph.edge(tail, head, head_port~)
               None => graph.edge(tail, head)
             }
-          }
         }
         for key, value in attrs {
           edge.set_attr(key, value)
@@ -227,7 +257,10 @@ fn Parser::parse_edge_stmt(
 }
 
 ///|
-fn Parser::parse_stmt(self : Parser, graph : @cgraph.Graph) -> Unit raise DotParseError {
+fn Parser::parse_stmt(
+  self : Parser,
+  graph : @cgraph.Graph,
+) -> Unit raise DotParseError {
   if self.is_keyword("graph") && self.next.token == LBracket {
     self.advance()
     let attrs = self.parse_attr_list()
@@ -254,7 +287,8 @@ fn Parser::parse_stmt(self : Parser, graph : @cgraph.Graph) -> Unit raise DotPar
   }
   if self.is_keyword("subgraph") || self.current.token == LBrace {
     let subgraph = self.parse_subgraph(graph)
-    if self.current.token == EdgeDirected || self.current.token == EdgeUndirected {
+    if self.current.token == EdgeDirected ||
+      self.current.token == EdgeUndirected {
       self.parse_edge_stmt(graph, Endpoint::Subgraph(subgraph))
     }
     return
@@ -278,7 +312,10 @@ fn Parser::parse_stmt(self : Parser, graph : @cgraph.Graph) -> Unit raise DotPar
 }
 
 ///|
-fn Parser::parse_stmt_list(self : Parser, graph : @cgraph.Graph) -> Unit raise DotParseError {
+fn Parser::parse_stmt_list(
+  self : Parser,
+  graph : @cgraph.Graph,
+) -> Unit raise DotParseError {
   while self.current.token != RBrace && self.current.token != Eof {
     self.parse_stmt(graph)
     while self.current.token == Semi {
@@ -301,13 +338,20 @@ fn Parser::parse_graph(self : Parser) -> @cgraph.Graph raise DotParseError {
     self.advance()
     @cgraph.GraphKind::Undirected
   } else {
-    raise DotParseError::InvalidSyntax(pos=self.current.pos, message="expected graph or digraph")
+    raise DotParseError::InvalidSyntax(
+      pos=self.current.pos,
+      message="expected graph or digraph",
+    )
   }
-  let name = if self.current.token == LBrace { None } else { Some(self.parse_id()) }
+  let name = if self.current.token == LBrace {
+    None
+  } else {
+    Some(self.parse_id())
+  }
   self.expect_token(LBrace)
   let graph = match name {
-    Some(label) => @cgraph.Graph::new(kind, name=label, strict=strict)
-    None => @cgraph.Graph::new(kind, strict=strict)
+    Some(label) => @cgraph.Graph::new(kind, name=label, strict~)
+    None => @cgraph.Graph::new(kind, strict~)
   }
   self.parse_stmt_list(graph)
   self.expect_token(RBrace)
@@ -319,7 +363,10 @@ pub fn parse_dot(src : String) -> @cgraph.Graph raise DotParseError {
   let parser = Parser::new(src)
   let graph = parser.parse_graph()
   if parser.current.token != Eof {
-    raise DotParseError::InvalidSyntax(pos=parser.current.pos, message="trailing tokens")
+    raise DotParseError::InvalidSyntax(
+      pos=parser.current.pos,
+      message="trailing tokens",
+    )
   }
   graph
 }
@@ -327,7 +374,11 @@ pub fn parse_dot(src : String) -> @cgraph.Graph raise DotParseError {
 ///|
 pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
   let bytes = try @fs.read_file_to_bytes(path) catch {
-    err => raise DotParseError::InvalidSyntax(pos={ line: 1, column: 1, offset: 0 }, message=err.to_string())
+    err =>
+      raise DotParseError::InvalidSyntax(
+        pos={ line: 1, column: 1, offset: 0 },
+        message=err.to_string(),
+      )
   } noraise {
     data => data
   }
@@ -347,7 +398,11 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
       }
       let utf8_bytes = buf.to_bytes()
       try @encoding/utf8.decode(utf8_bytes) catch {
-        _ => raise DotParseError::InvalidSyntax(pos={ line: 1, column: 1, offset: 0 }, message="invalid utf8")
+        _ =>
+          raise DotParseError::InvalidSyntax(
+            pos={ line: 1, column: 1, offset: 0 },
+            message="invalid utf8",
+          )
       } noraise {
         text => text
       }

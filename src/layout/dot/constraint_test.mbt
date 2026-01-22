@@ -21,14 +21,16 @@ fn parse_point(text : String) -> @geom.Point {
 ///|
 fn node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
   match graph.find_node(name) {
-    Some(node) => match node.get_attr("pos") {
-      Some(value) => Some(parse_point(value))
-      None => None
-    }
+    Some(node) =>
+      match node.get_attr("pos") {
+        Some(value) => Some(parse_point(value))
+        None => None
+      }
     None => None
   }
 }
 
+///|
 test "constraint false keeps nodes on same rank" {
   let graph = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
   let layout = layout_dot(graph)
@@ -44,6 +46,7 @@ test "constraint false keeps nodes on same rank" {
   assert_true(Double::is_close(a_pos.y, b_pos.y, absolute_tolerance=0.01))
 }
 
+///|
 test "constraint true separates ranks" {
   let graph = @dot_parser.parse_dot("digraph { a -> b; }")
   let layout = layout_dot(graph)

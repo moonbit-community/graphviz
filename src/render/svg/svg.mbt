@@ -13,12 +13,19 @@ priv struct ArrowFlags {
   tail : Bool
 }
 
+///|
 const LINE_SPACING : Double = 1.2
 
+///|
 const TEXT_SCALE : Double = 0.9706
 
+///|
 const PAD_X_PT : Double = 16.0
+
+///|
 const PAD_Y_PT : Double = 8.0
+
+///|
 const DEFAULT_GRAPH_PAD_PT : Double = 4.0
 
 ///|
@@ -31,6 +38,7 @@ fn font_width_scale(font_name : String) -> Double {
   }
 }
 
+///|
 priv struct LabelLine {
   text : String
   align : @render.TextAlign
@@ -135,6 +143,8 @@ fn push_label_line(
 }
 
 // Heuristic line heights tuned to Graphviz xdot baselines for common fonts.
+
+///|
 fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
   let lower = font_name.to_lower()
   if lower.contains("palatino") {
@@ -275,7 +285,8 @@ fn label_metrics(
     }
     lines.push({ text: line.text, align: line.align, width_pt })
   }
-  let height_pt = line_height(font_name, font_size_pt) * lines.length().to_double()
+  let height_pt = line_height(font_name, font_size_pt) *
+    lines.length().to_double()
   (lines, max_width, height_pt)
 }
 
@@ -351,13 +362,12 @@ fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 ///|
 fn graph_label_text(graph : @cgraph.Graph) -> String? {
   match graph.get_attr("label") {
-    Some(value) => {
+    Some(value) =>
       if value == "" {
         None
       } else {
         Some(resolve_label(value, ""))
       }
-    }
     None => None
   }
 }
@@ -422,7 +432,7 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
   match node.get_attr("margin") {
-    Some(value) => {
+    Some(value) =>
       match parse_margin(value) {
         Some((margin_x, margin_y)) => {
           pad_x_pt = margin_x * 72.0 * 2.0
@@ -430,7 +440,6 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
         }
         None => ()
       }
-    }
     None => ()
   }
   (pad_x_pt, pad_y_pt)
@@ -598,7 +607,10 @@ fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] 
 }
 
 ///|
-fn shape_polygon_points(kind : String, rect : @geom.Rect) -> Array[@geom.Point]? {
+fn shape_polygon_points(
+  kind : String,
+  rect : @geom.Rect,
+) -> Array[@geom.Point]? {
   match kind {
     "diamond" => Some(diamond_points(rect))
     "triangle" => Some(triangle_points(rect))
@@ -627,7 +639,9 @@ priv enum RecordNode {
 }
 
 ///|
-fn toggle_record_orientation(orientation : RecordOrientation) -> RecordOrientation {
+fn toggle_record_orientation(
+  orientation : RecordOrientation,
+) -> RecordOrientation {
   match orientation {
     RecordOrientation::Horizontal => RecordOrientation::Vertical
     RecordOrientation::Vertical => RecordOrientation::Horizontal
@@ -726,7 +740,7 @@ fn record_field_from_text(field : String) -> RecordField {
         } else {
           ""
         }
-        { text: text }
+        { text, }
       }
       None => { text: field }
     }
@@ -774,8 +788,9 @@ fn record_nodes_sizes(
     match node {
       RecordNode::Field(field) => {
         let text = resolve_label(field.text, name)
-        let (_, text_width_pt, text_height_pt) =
-          label_metrics(text, font_name, font_size_pt)
+        let (_, text_width_pt, text_height_pt) = label_metrics(
+          text, font_name, font_size_pt,
+        )
         sizes.push({
           width_pt: text_width_pt + pad_x_pt,
           height_pt: text_height_pt + pad_y_pt,
@@ -809,13 +824,7 @@ fn record_group_size(
   pad_y_pt : Double,
 ) -> RecordNodeSize {
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    name,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   if sizes.length() == 0 {
     return { width_pt: 0.0, height_pt: 0.0 }
@@ -823,22 +832,20 @@ fn record_group_size(
   let mut width = 0.0
   let mut height = 0.0
   match orientation {
-    RecordOrientation::Vertical => {
+    RecordOrientation::Vertical =>
       for size in sizes {
         if size.width_pt > width {
           width = size.width_pt
         }
         height = height + size.height_pt
       }
-    }
-    RecordOrientation::Horizontal => {
+    RecordOrientation::Horizontal =>
       for size in sizes {
         if size.height_pt > height {
           height = size.height_pt
         }
         width = width + size.width_pt
       }
-    }
   }
   { width_pt: width, height_pt: height }
 }
@@ -865,13 +872,7 @@ fn record_layout_nodes(
     return []
   }
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    name,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, name, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   let axis_sizes : Array[Double] = []
   let mut axis_sum = 0.0
@@ -908,31 +909,32 @@ fn record_layout_nodes(
   for i in 0..<nodes.length() {
     let axis = axis_sizes[i]
     let child_rect = match orientation {
-    RecordOrientation::Vertical => {
-      let bottom = cursor - axis
-      let child : @geom.Rect = {
-        llx: rect.llx,
-        lly: bottom,
-        urx: rect.urx,
-        ury: cursor,
+      RecordOrientation::Vertical => {
+        let bottom = cursor - axis
+        let child : @geom.Rect = {
+          llx: rect.llx,
+          lly: bottom,
+          urx: rect.urx,
+          ury: cursor,
+        }
+        cursor = bottom
+        child
       }
-      cursor = bottom
-      child
-    }
-    RecordOrientation::Horizontal => {
-      let right = cursor + axis
-      let child : @geom.Rect = {
-        llx: cursor,
-        lly: rect.lly,
-        urx: right,
-        ury: rect.ury,
+      RecordOrientation::Horizontal => {
+        let right = cursor + axis
+        let child : @geom.Rect = {
+          llx: cursor,
+          lly: rect.lly,
+          urx: right,
+          ury: rect.ury,
+        }
+        cursor = right
+        child
       }
-      cursor = right
-      child
-    }
     }
     match nodes[i] {
-      RecordNode::Field(_) => layouts.push({ rect: child_rect, node: nodes[i], children: [] })
+      RecordNode::Field(_) =>
+        layouts.push({ rect: child_rect, node: nodes[i], children: [] })
       RecordNode::Group(children) => {
         let child_layouts = record_layout_nodes(
           children,
@@ -944,7 +946,11 @@ fn record_layout_nodes(
           pad_x_pt,
           pad_y_pt,
         )
-        layouts.push({ rect: child_rect, node: nodes[i], children: child_layouts })
+        layouts.push({
+          rect: child_rect,
+          node: nodes[i],
+          children: child_layouts,
+        })
       }
     }
   }
@@ -995,17 +1001,18 @@ fn write_record_separators(
   }
   for layout in layouts {
     match layout.node {
-      RecordNode::Group(_) => write_record_separators(
-        sb,
-        layout.children,
-        toggle_record_orientation(orientation),
-        layout.rect,
-        stroke,
-        stroke_dash,
-        bbox,
-        indent,
-        pretty,
-      )
+      RecordNode::Group(_) =>
+        write_record_separators(
+          sb,
+          layout.children,
+          toggle_record_orientation(orientation),
+          layout.rect,
+          stroke,
+          stroke_dash,
+          bbox,
+          indent,
+          pretty,
+        )
       _ => ()
     }
   }
@@ -1033,29 +1040,22 @@ fn write_record_labels(
             y: (layout.rect.lly + layout.rect.ury) / 2.0,
           }
           write_label_lines(
-            sb,
-            text,
-            font,
-            size,
-            color,
-            center,
-            bbox,
-            indent,
-            pretty,
+            sb, text, font, size, color, center, bbox, indent, pretty,
           )
         }
       }
-      RecordNode::Group(_) => write_record_labels(
-        sb,
-        layout.children,
-        name,
-        font,
-        size,
-        color,
-        bbox,
-        indent,
-        pretty,
-      )
+      RecordNode::Group(_) =>
+        write_record_labels(
+          sb,
+          layout.children,
+          name,
+          font,
+          size,
+          color,
+          bbox,
+          indent,
+          pretty,
+        )
     }
   }
 }
@@ -1151,8 +1151,9 @@ fn html_cell_content_size(
 ) -> (Double, Double) {
   match content {
     @html_label.HtmlCellContent::Text(text) => {
-      let (_lines, width_pt, height_pt) =
-        html_text_metrics(text, name, font_name, font_size_pt)
+      let (_lines, width_pt, height_pt) = html_text_metrics(
+        text, name, font_name, font_size_pt,
+      )
       (width_pt, height_pt)
     }
     @html_label.HtmlCellContent::Table(table) =>
@@ -1177,19 +1178,11 @@ fn html_cell_size(
   let mut width = content_width
   let mut height = content_height
   match cell.min_width_pt {
-    Some(value) => {
-      if value > width {
-        width = value
-      }
-    }
+    Some(value) => if value > width { width = value }
     None => ()
   }
   match cell.min_height_pt {
-    Some(value) => {
-      if value > height {
-        height = value
-      }
-    }
+    Some(value) => if value > height { height = value }
     None => ()
   }
   width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
@@ -1204,10 +1197,9 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  @html_label.html_table_size(
-    table,
-    cell => html_cell_size(table, cell, name, font_name, font_size_pt),
-  )
+  @html_label.html_table_size(table, cell => html_cell_size(
+    table, cell, name, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -1218,11 +1210,9 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(
-    table,
-    rect,
-    cell => html_cell_size(table, cell, name, font_name, font_size_pt),
-  )
+  @html_label.html_table_layout(table, rect, cell => html_cell_size(
+    table, cell, name, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -1240,7 +1230,9 @@ fn write_html_text_lines(
   indent : String,
   pretty : Bool,
 ) -> Unit {
-  let (lines, _max_width, total_height) = html_text_metrics(text, name, font, size)
+  let (lines, _max_width, total_height) = html_text_metrics(
+    text, name, font, size,
+  )
   if lines.length() == 0 {
     return ()
   }
@@ -1322,8 +1314,10 @@ fn write_html_table(
       pretty,
     )
   }
-  let pad_x = table.cell_padding_pt * layout.scale_x + table.cell_border_pt * layout.scale_x
-  let pad_y = table.cell_padding_pt * layout.scale_y + table.cell_border_pt * layout.scale_y
+  let pad_x = table.cell_padding_pt * layout.scale_x +
+    table.cell_border_pt * layout.scale_x
+  let pad_y = table.cell_padding_pt * layout.scale_y +
+    table.cell_border_pt * layout.scale_y
   for cell_layout in layout.cells {
     let cell_rect = cell_layout.rect
     match cell_layout.cell.bg_color {
@@ -1360,21 +1354,12 @@ fn write_html_table(
       ury: cell_rect.ury - pad_y,
     }
     match cell_layout.cell.content {
-      @html_label.HtmlCellContent::Table(nested) => write_html_table(
-        sb,
-        nested,
-        content_rect,
-        name,
-        font,
-        size,
-        text_color,
-        stroke,
-        stroke_dash,
-        bbox,
-        indent,
-        pretty,
-      )
-      @html_label.HtmlCellContent::Text(text) => {
+      @html_label.HtmlCellContent::Table(nested) =>
+        write_html_table(
+          sb, nested, content_rect, name, font, size, text_color, stroke, stroke_dash,
+          bbox, indent, pretty,
+        )
+      @html_label.HtmlCellContent::Text(text) =>
         if text != "" {
           write_html_text_lines(
             sb,
@@ -1391,7 +1376,6 @@ fn write_html_table(
             pretty,
           )
         }
-      }
     }
   }
 }
@@ -1426,11 +1410,7 @@ fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
 }
 
 ///|
-fn spline_path(
-  spline : @geom.Spline,
-  llx : Double,
-  lly : Double,
-) -> String {
+fn spline_path(spline : @geom.Spline, llx : Double, lly : Double) -> String {
   let sb = StringBuilder::new()
   let points = spline.points
   if points.length() == 0 {
@@ -1529,7 +1509,11 @@ fn write_arrow_ops(
       }
       @render.DrawOp::Bezier(filled~, points~) => {
         let _ = filled
-        let path = spline_path(@geom.Spline::{ start: None, end: None, points }, llx, lly)
+        let path = spline_path(
+          @geom.Spline::{ start: None, end: None, points },
+          llx,
+          lly,
+        )
         if path != "" {
           write_line(
             sb,
@@ -1643,15 +1627,7 @@ fn write_cluster_graphs(
             None => graph_label_pos(rect, height_pt)
           }
           write_label_lines(
-            sb,
-            text,
-            font,
-            size,
-            color,
-            pos,
-            bbox,
-            indent,
-            pretty,
+            sb, text, font, size, color, pos, bbox, indent, pretty,
           )
         }
         None => ()
@@ -1742,11 +1718,29 @@ pub fn render_svg(
     let flags = arrow_flags(edge, kind)
     if flags.head {
       let ops = arrow_primitives(edge_layout, true)
-      write_arrow_ops(sb, ops, color, dash, padded_bbox.llx, padded_bbox.lly, edge_indent, pretty)
+      write_arrow_ops(
+        sb,
+        ops,
+        color,
+        dash,
+        padded_bbox.llx,
+        padded_bbox.lly,
+        edge_indent,
+        pretty,
+      )
     }
     if flags.tail {
       let ops = arrow_primitives(edge_layout, false)
-      write_arrow_ops(sb, ops, color, dash, padded_bbox.llx, padded_bbox.lly, edge_indent, pretty)
+      write_arrow_ops(
+        sb,
+        ops,
+        color,
+        dash,
+        padded_bbox.llx,
+        padded_bbox.lly,
+        edge_indent,
+        pretty,
+      )
     }
     let label_text = match edge.get_attr("label") {
       Some(value) => resolve_label(value, "")
@@ -1756,16 +1750,12 @@ pub fn render_svg(
       Some(pos) => {
         let font = @attrs.font_name(edge.get_attr("fontname"))
         let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
+        let font_color = @attrs.color(
+          edge.get_attr("fontcolor"),
+          default="black",
+        )
         write_label_lines(
-          sb,
-          label_text,
-          font,
-          size,
-          font_color,
-          pos,
-          padded_bbox,
-          edge_indent,
+          sb, label_text, font, size, font_color, pos, padded_bbox, edge_indent,
           pretty,
         )
       }
@@ -1779,16 +1769,12 @@ pub fn render_svg(
       Some(pos) => {
         let font = @attrs.font_name(edge.get_attr("fontname"))
         let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
+        let font_color = @attrs.color(
+          edge.get_attr("fontcolor"),
+          default="black",
+        )
         write_label_lines(
-          sb,
-          head_label_text,
-          font,
-          size,
-          font_color,
-          pos,
-          padded_bbox,
-          edge_indent,
+          sb, head_label_text, font, size, font_color, pos, padded_bbox, edge_indent,
           pretty,
         )
       }
@@ -1802,16 +1788,12 @@ pub fn render_svg(
       Some(pos) => {
         let font = @attrs.font_name(edge.get_attr("fontname"))
         let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
+        let font_color = @attrs.color(
+          edge.get_attr("fontcolor"),
+          default="black",
+        )
         write_label_lines(
-          sb,
-          tail_label_text,
-          font,
-          size,
-          font_color,
-          pos,
-          padded_bbox,
-          edge_indent,
+          sb, tail_label_text, font, size, font_color, pos, padded_bbox, edge_indent,
           pretty,
         )
       }
@@ -1825,37 +1807,19 @@ pub fn render_svg(
     let kind = shape_kind(node.get_attr("shape"))
     let stroke = @attrs.color(node.get_attr("color"), default="black")
     let style = @attrs.parse_style(node.get_attr("style"))
-    let filled = if kind == "point" {
-      true
-    } else {
-      style.filled
-    }
+    let filled = if kind == "point" { true } else { style.filled }
     let dash = stroke_dash_attr(style)
     let fill = if filled {
       match node.get_attr("fillcolor") {
         Some(value) => value
-        None => {
-          if kind == "point" {
-            stroke
-          } else {
-            "white"
-          }
-        }
+        None => if kind == "point" { stroke } else { "white" }
       }
     } else {
       "none"
     }
     if kind == "record" {
       write_record_node(
-        sb,
-        node_layout,
-        rect,
-        stroke,
-        fill,
-        dash,
-        padded_bbox,
-        node_indent,
-        pretty,
+        sb, node_layout, rect, stroke, fill, dash, padded_bbox, node_indent, pretty,
       )
       continue
     }
@@ -1872,7 +1836,7 @@ pub fn render_svg(
             pretty,
           )
         }
-        None => {
+        None =>
           if kind == "box" {
             let x = rect.llx - padded_bbox.llx
             let y = rect.lly - padded_bbox.lly
@@ -1896,7 +1860,6 @@ pub fn render_svg(
               pretty,
             )
           }
-        }
       }
     }
     let text = label_text(node.get_attr("label"), node.name())
@@ -1904,21 +1867,22 @@ pub fn render_svg(
     let size = @attrs.font_size(node.get_attr("fontsize"))
     let color = @attrs.color(node.get_attr("fontcolor"), default="black")
     match @html_label.parse_html_label(text) {
-      Some(@html_label.HtmlLabel::Table(table)) => write_html_table(
-        sb,
-        table,
-        rect,
-        node.name(),
-        font,
-        size,
-        color,
-        stroke,
-        dash,
-        padded_bbox,
-        node_indent,
-        pretty,
-      )
-      Some(@html_label.HtmlLabel::Text(html_text)) => {
+      Some(@html_label.HtmlLabel::Table(table)) =>
+        write_html_table(
+          sb,
+          table,
+          rect,
+          node.name(),
+          font,
+          size,
+          color,
+          stroke,
+          dash,
+          padded_bbox,
+          node_indent,
+          pretty,
+        )
+      Some(@html_label.HtmlLabel::Text(html_text)) =>
         if html_text != "" {
           write_html_text_lines(
             sb,
@@ -1935,30 +1899,20 @@ pub fn render_svg(
             pretty,
           )
         }
-      }
-      None => {
+      None =>
         if text != "" {
           let pos = match node_layout.label_pos {
             Some(value) => value
             None => node_layout.pos
           }
           write_label_lines(
-            sb,
-            text,
-            font,
-            size,
-            color,
-            pos,
-            padded_bbox,
-            node_indent,
-            pretty,
+            sb, text, font, size, color, pos, padded_bbox, node_indent, pretty,
           )
         }
-      }
     }
   }
   match graph_label_metrics(layout.graph) {
-    Some((text, _width_pt, _height_pt)) => {
+    Some((text, _width_pt, _height_pt)) =>
       match layout.label_pos {
         Some(pos) => {
           let graph = layout.graph
@@ -1966,20 +1920,11 @@ pub fn render_svg(
           let size = @attrs.font_size(graph.get_attr("fontsize"))
           let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
           write_label_lines(
-            sb,
-            text,
-            font,
-            size,
-            color,
-            pos,
-            padded_bbox,
-            node_indent,
-            pretty,
+            sb, text, font, size, color, pos, padded_bbox, node_indent, pretty,
           )
         }
         None => ()
       }
-    }
     None => ()
   }
   write_line(sb, "</g>", "  ", pretty)

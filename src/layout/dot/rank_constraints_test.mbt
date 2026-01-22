@@ -13,22 +13,32 @@ fn rank_parse_point(text : String) -> @geom.Point {
   for part in text.split(",") {
     parts.push(part.to_string())
   }
-  let x = if parts.length() > 0 { rank_parse_double(parts[0], 0.0) } else { 0.0 }
-  let y = if parts.length() > 1 { rank_parse_double(parts[1], 0.0) } else { 0.0 }
+  let x = if parts.length() > 0 {
+    rank_parse_double(parts[0], 0.0)
+  } else {
+    0.0
+  }
+  let y = if parts.length() > 1 {
+    rank_parse_double(parts[1], 0.0)
+  } else {
+    0.0
+  }
   { x, y }
 }
 
 ///|
 fn rank_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
   match graph.find_node(name) {
-    Some(node) => match node.get_attr("pos") {
-      Some(value) => Some(rank_parse_point(value))
-      None => None
-    }
+    Some(node) =>
+      match node.get_attr("pos") {
+        Some(value) => Some(rank_parse_point(value))
+        None => None
+      }
     None => None
   }
 }
 
+///|
 test "rank=min places nodes at top" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=min; a; b; } c; a -> c; b -> c; }",
@@ -51,6 +61,7 @@ test "rank=min places nodes at top" {
   assert_true(a_pos.y > c_pos.y)
 }
 
+///|
 test "rank=max places nodes at bottom" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=max; a; b; } c; c -> a; c -> b; }",
@@ -73,6 +84,7 @@ test "rank=max places nodes at bottom" {
   assert_true(a_pos.y < c_pos.y)
 }
 
+///|
 test "rank=source and rank=sink keep extremes" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=source; s1; s2; } subgraph { rank=sink; t1; t2; } s1 -> t1; s2 -> t2; }",

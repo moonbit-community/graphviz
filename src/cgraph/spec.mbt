@@ -263,7 +263,10 @@ pub fn Graph::attrs(self : Graph) -> Array[(String, String)] {
 ///|
 /// Enumerate default attributes declared on this graph scope.
 #declaration_only
-pub fn Graph::default_attrs(self : Graph, kind : AttrKind) -> Array[(String, String)] {
+pub fn Graph::default_attrs(
+  self : Graph,
+  kind : AttrKind,
+) -> Array[(String, String)] {
   ...
 }
 

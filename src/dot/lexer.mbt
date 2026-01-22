@@ -233,7 +233,7 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
       self.advance()
       { token: Colon, pos }
     }
-    Some('-') => {
+    Some('-') =>
       match self.peek_char(offset=1) {
         Some('>') => {
           self.advance()
@@ -252,12 +252,11 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
           { token: Id(id), pos }
         }
       }
-    }
     Some('"') => {
       let value = self.read_quoted_string()
       { token: String(value), pos }
     }
-    Some('<') => {
+    Some('<') =>
       if self.peek_char(offset=1) == Some('<') {
         let value = self.read_html()
         { token: Html(value), pos }
@@ -265,12 +264,12 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
         let id = self.read_id()
         { token: Id(id), pos }
       }
-    }
     Some(value) if is_id_char(value) => {
       let id = self.read_id()
       { token: Id(id), pos }
     }
-    Some(value) => raise DotParseError::InvalidToken(pos=pos, token=value.to_string())
+    Some(value) =>
+      raise DotParseError::InvalidToken(pos~, token=value.to_string())
   }
 }
 

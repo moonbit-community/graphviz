@@ -141,10 +141,10 @@ fn resolve_default(
 ) -> String? {
   let mut current : Int? = Some(graph_id)
   while current is Some(id) {
-  let defaults = match kind {
-    AttrKind::Graph => root.graphs[id].defaults_graph
-    AttrKind::Node => root.graphs[id].defaults_node
-    AttrKind::Edge => root.graphs[id].defaults_edge
+    let defaults = match kind {
+      AttrKind::Graph => root.graphs[id].defaults_graph
+      AttrKind::Node => root.graphs[id].defaults_node
+      AttrKind::Edge => root.graphs[id].defaults_edge
     }
     let value = defaults.get(name)
     if value is Some(_) {
@@ -232,7 +232,7 @@ pub fn Graph::subgraph(self : Graph, name? : String) -> Graph {
 
 ///|
 pub fn Graph::subgraphs(self : Graph) -> Array[Graph] {
-  self.root.graphs[self.id].subgraphs.map((id) => { root: self.root, id })
+  self.root.graphs[self.id].subgraphs.map(id => { root: self.root, id })
 }
 
 ///|
@@ -266,7 +266,7 @@ pub fn Graph::find_node(self : Graph, name : String) -> Node? {
 
 ///|
 pub fn Graph::nodes(self : Graph) -> Array[Node] {
-  self.root.graphs[self.id].nodes.map((id) => { root: self.root, id })
+  self.root.graphs[self.id].nodes.map(id => { root: self.root, id })
 }
 
 ///|
@@ -326,7 +326,7 @@ pub fn Graph::edge(
 
 ///|
 pub fn Graph::edges(self : Graph) -> Array[Edge] {
-  self.root.graphs[self.id].edges.map((id) => { root: self.root, id })
+  self.root.graphs[self.id].edges.map(id => { root: self.root, id })
 }
 
 ///|
@@ -460,7 +460,10 @@ pub fn Graph::attrs(self : Graph) -> Array[(String, String)] {
 }
 
 ///|
-pub fn Graph::default_attrs(self : Graph, kind : AttrKind) -> Array[(String, String)] {
+pub fn Graph::default_attrs(
+  self : Graph,
+  kind : AttrKind,
+) -> Array[(String, String)] {
   let defaults = match kind {
     AttrKind::Graph => self.root.graphs[self.id].defaults_graph
     AttrKind::Node => self.root.graphs[self.id].defaults_node

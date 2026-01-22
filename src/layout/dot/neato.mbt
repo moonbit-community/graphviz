@@ -22,13 +22,14 @@ fn node_pos_hint(node : @cgraph.Node) -> (@geom.Point?, Bool) {
     None => false
   }
   match node.get_attr("pos") {
-    Some(value) => match parse_point_attr(value) {
-      Some(pos) => {
-        let pinned = pin_attr || pos_is_pinned(value)
-        (Some(pos), pinned)
+    Some(value) =>
+      match parse_point_attr(value) {
+        Some(pos) => {
+          let pinned = pin_attr || pos_is_pinned(value)
+          (Some(pos), pinned)
+        }
+        None => (None, false)
       }
-      None => (None, false)
-    }
     None => (None, false)
   }
 }
@@ -146,10 +147,7 @@ fn relax_positions(
       cx = cx * inv
       cy = cy * inv
       for i in 0..<node_count {
-        positions[i] = {
-          x: positions[i].x - cx,
-          y: positions[i].y - cy,
-        }
+        positions[i] = { x: positions[i].x - cx, y: positions[i].y - cy }
       }
     }
     temperature = temperature * 0.9
@@ -252,7 +250,12 @@ pub fn layout_neato(
     let weight = if raw_weight <= 0.0 { 1.0 } else { raw_weight }
     let min_len = radii[tail_index] + radii[head_index] + nodesep_pt
     let desired = if length_pt > min_len { length_pt } else { min_len }
-    edges.push({ tail: tail_index, head: head_index, length_pt: desired, weight })
+    edges.push({
+      tail: tail_index,
+      head: head_index,
+      length_pt: desired,
+      weight,
+    })
   }
   if node_count > 1 {
     relax_positions(positions, pinned, radii, edges, spacing, nodesep_pt, 100)
@@ -317,7 +320,9 @@ pub fn layout_neato(
         let loc = graph_label_loc(active_graph)
         let just = graph_label_just(active_graph)
         final_bbox = expand_bbox_for_label(final_bbox, width_pt, height_pt, loc)
-        label_pos = Some(graph_label_pos(final_bbox, width_pt, height_pt, loc, just))
+        label_pos = Some(
+          graph_label_pos(final_bbox, width_pt, height_pt, loc, just),
+        )
       }
       None => ()
     }

@@ -1,8 +1,5 @@
 ///|
-pub fn color(
-  value : String?,
-  default? : String = "black",
-) -> String {
+pub fn color(value : String?, default? : String = "black") -> String {
   match value {
     Some(text) => if text == "" { default } else { text }
     None => default

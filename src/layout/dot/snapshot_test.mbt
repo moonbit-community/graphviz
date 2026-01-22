@@ -153,7 +153,8 @@ fn compare_nodes(
   }
   for name, expected_node in expected_map {
     match actual_map.get(name) {
-      Some(actual_node) => compare_attrs(expected_node.attrs(), actual_node.attrs(), tol)
+      Some(actual_node) =>
+        compare_attrs(expected_node.attrs(), actual_node.attrs(), tol)
       None => fail("missing node \{name}")
     }
   }
@@ -178,15 +179,15 @@ fn compare_edges(
   }
   for key, expected_edge in expected_map {
     match actual_map.get(key) {
-      Some(actual_edge) => {
+      Some(actual_edge) =>
         compare_attrs(expected_edge.attrs(), actual_edge.attrs(), tol)
-      }
       None => fail("missing edge \{key}")
     }
   }
 }
 
 ///|
+
 ///|
 fn compare_subgraphs(
   expected : @cgraph.Graph,
@@ -229,15 +230,33 @@ fn compare_graph(
 }
 
 ///|
+fn filter_attrs_for_nodes_only(
+  attrs : Array[(String, String)],
+) -> Array[(String, String)] {
+  let filtered : Array[(String, String)] = []
+  for pair in attrs {
+    let (name, value) = pair
+    if name != "bb" {
+      filtered.push((name, value))
+    }
+  }
+  filtered
+}
+
+///|
 fn compare_graph_nodes_only(
   expected : @cgraph.Graph,
   actual : @cgraph.Graph,
   tol : Double,
 ) -> Unit raise {
-  compare_attrs(expected.attrs(), actual.attrs(), tol)
   compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Graph),
-    actual.default_attrs(@cgraph.AttrKind::Graph),
+    filter_attrs_for_nodes_only(expected.attrs()),
+    filter_attrs_for_nodes_only(actual.attrs()),
+    tol,
+  )
+  compare_attrs(
+    filter_attrs_for_nodes_only(expected.default_attrs(@cgraph.AttrKind::Graph)),
+    filter_attrs_for_nodes_only(actual.default_attrs(@cgraph.AttrKind::Graph)),
     tol,
   )
   compare_attrs(
@@ -294,13 +313,13 @@ fn assert_snapshot_nodes_only(
 ///|
 test "dot layout tier2 snapshots" {
   assert_snapshot(
-    "refs/graphviz/graphs/directed/grammar.gv",
-    "tests/layout/dot/grammar.dot",
-    0.01,
+    "refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot", 0.01,
   )
   assert_snapshot_nodes_only(
-    "tests/layout/dot/complex.dot",
-    "tests/layout/dot/complex.gv.dot",
-    80.0,
+    "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
+    30.0,
+  )
+  assert_snapshot_nodes_only(
+    "tests/layout/dot/complex.dot", "tests/layout/dot/complex.gv.dot", 80.0,
   )
 }

@@ -4,6 +4,16 @@ priv struct NodeSize {
   height_in : Double
   width_pt : Double
   height_pt : Double
+  left_pt : Double
+  right_pt : Double
+}
+
+///|
+priv struct EdgeVnodeInfo {
+  vnode_ranks : Map[String, Int]
+  vnode_sizes : Map[String, NodeSize]
+  vnodes_by_rank : Map[Int, Array[String]]
+  edge_vnodes : Map[String, Array[String]]
 }
 
 ///|
@@ -107,24 +117,33 @@ fn edge_dir_for(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> EdgeDir {
     return EdgeDir::None
   }
   match edge.get_attr("dir") {
-    Some(value) => match parse_edge_dir(value) {
-      Some(dir) => dir
-      None => EdgeDir::Forward
-    }
+    Some(value) =>
+      match parse_edge_dir(value) {
+        Some(dir) => dir
+        None => EdgeDir::Forward
+      }
     None => EdgeDir::Forward
   }
 }
 
 ///|
 const LINE_SPACING : Double = 1.2
+
 ///|
 const TEXT_SCALE : Double = 0.9706
+
 ///|
 const PAD_X_PT : Double = 16.0
+
 ///|
 const PAD_Y_PT : Double = 8.0
+
 ///|
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
+
+
+///|
+const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
 
 ///|
 fn font_width_scale(font_name : String) -> Double {
@@ -274,8 +293,11 @@ fn label_text_dimensions(
     max_units = current_units
   }
   let width_scale = font_width_scale(font_name)
-  let width_pt =
-    max_units.to_double() * font_size_pt * TEXT_SCALE * width_scale / 1000.0
+  let width_pt = max_units.to_double() *
+    font_size_pt *
+    TEXT_SCALE *
+    width_scale /
+    1000.0
   let height_pt = lines.to_double() * line_height
   (width_pt, height_pt)
 }
@@ -319,9 +341,7 @@ fn parse_margin(value : String) -> (Double, Double)? {
 ///|
 fn label_text(node : @cgraph.Node) -> String {
   match node.get_attr("label") {
-    Some(value) => {
-      if value == "\\N" { node.name() } else { value }
-    }
+    Some(value) => if value == "\\N" { node.name() } else { value }
     None => node.name()
   }
 }
@@ -329,12 +349,11 @@ fn label_text(node : @cgraph.Node) -> String {
 ///|
 fn is_record_shape(node : @cgraph.Node) -> Bool {
   match node.get_attr("shape") {
-    Some(value) => {
+    Some(value) =>
       match value.to_lower() {
         "record" | "mrecord" => true
         _ => false
       }
-    }
     None => false
   }
 }
@@ -344,7 +363,7 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
   match node.get_attr("margin") {
-    Some(value) => {
+    Some(value) =>
       match parse_margin(value) {
         Some((margin_x, margin_y)) => {
           pad_x_pt = margin_x * 72.0 * 2.0
@@ -352,7 +371,6 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
         }
         None => ()
       }
-    }
     None => ()
   }
   (pad_x_pt, pad_y_pt)
@@ -383,7 +401,9 @@ priv enum RecordNode {
 }
 
 ///|
-fn toggle_record_orientation(orientation : RecordOrientation) -> RecordOrientation {
+fn toggle_record_orientation(
+  orientation : RecordOrientation,
+) -> RecordOrientation {
   match orientation {
     RecordOrientation::Horizontal => RecordOrientation::Vertical
     RecordOrientation::Vertical => RecordOrientation::Horizontal
@@ -534,8 +554,11 @@ fn record_nodes_sizes(
   for node in nodes {
     match node {
       RecordNode::Field(field) => {
-        let (text_width_pt, text_height_pt) =
-          label_text_dimensions(field.text, font_name, font_size_pt)
+        let (text_width_pt, text_height_pt) = label_text_dimensions(
+          field.text,
+          font_name,
+          font_size_pt,
+        )
         sizes.push({
           width_pt: text_width_pt + pad_x_pt,
           height_pt: text_height_pt + pad_y_pt,
@@ -567,12 +590,7 @@ fn record_group_size(
   pad_y_pt : Double,
 ) -> RecordNodeSize {
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   if sizes.length() == 0 {
     return { width_pt: 0.0, height_pt: 0.0 }
@@ -580,22 +598,20 @@ fn record_group_size(
   let mut width = 0.0
   let mut height = 0.0
   match orientation {
-    RecordOrientation::Vertical => {
+    RecordOrientation::Vertical =>
       for size in sizes {
         if size.width_pt > width {
           width = size.width_pt
         }
         height = height + size.height_pt
       }
-    }
-    RecordOrientation::Horizontal => {
+    RecordOrientation::Horizontal =>
       for size in sizes {
         if size.height_pt > height {
           height = size.height_pt
         }
         width = width + size.width_pt
       }
-    }
   }
   { width_pt: width, height_pt: height }
 }
@@ -604,7 +620,22 @@ fn record_group_size(
 fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
-  { width_in, height_in, width_pt, height_pt }
+  let half = width_pt / 2.0
+  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
+}
+
+///|
+fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
+  let width_pt = left_pt + right_pt
+  let width_in = width_pt / 72.0
+  {
+    width_in,
+    height_in: 0.0,
+    width_pt,
+    height_pt: 0.0,
+    left_pt,
+    right_pt,
+  }
 }
 
 ///|
@@ -623,12 +654,7 @@ fn record_layout_nodes(
     return ()
   }
   let sizes = record_nodes_sizes(
-    nodes,
-    orientation,
-    font_name,
-    font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    nodes, orientation, font_name, font_size_pt, pad_x_pt, pad_y_pt,
   )
   let axis_sizes : Array[Double] = []
   let mut axis_sum = 0.0
@@ -664,28 +690,28 @@ fn record_layout_nodes(
   for i in 0..<nodes.length() {
     let axis = axis_sizes[i]
     let child_rect = match orientation {
-    RecordOrientation::Vertical => {
-      let bottom = cursor - axis
-      let child : @geom.Rect = {
-        llx: rect.llx,
-        lly: bottom,
-        urx: rect.urx,
-        ury: cursor,
+      RecordOrientation::Vertical => {
+        let bottom = cursor - axis
+        let child : @geom.Rect = {
+          llx: rect.llx,
+          lly: bottom,
+          urx: rect.urx,
+          ury: cursor,
+        }
+        cursor = bottom
+        child
       }
-      cursor = bottom
-      child
-    }
-    RecordOrientation::Horizontal => {
-      let right = cursor + axis
-      let child : @geom.Rect = {
-        llx: cursor,
-        lly: rect.lly,
-        urx: right,
-        ury: rect.ury,
+      RecordOrientation::Horizontal => {
+        let right = cursor + axis
+        let child : @geom.Rect = {
+          llx: cursor,
+          lly: rect.lly,
+          urx: right,
+          ury: rect.ury,
+        }
+        cursor = right
+        child
       }
-      cursor = right
-      child
-    }
     }
     match nodes[i] {
       RecordNode::Field(field) => {
@@ -705,7 +731,7 @@ fn record_layout_nodes(
           None => ()
         }
       }
-      RecordNode::Group(children) => {
+      RecordNode::Group(children) =>
         record_layout_nodes(
           children,
           child_rect,
@@ -717,7 +743,6 @@ fn record_layout_nodes(
           rects,
           ports,
         )
-      }
     }
   }
 }
@@ -797,7 +822,8 @@ fn html_cell_content_size(
   match content {
     @html_label.HtmlCellContent::Text(text) =>
       label_text_dimensions(text, font_name, font_size_pt)
-    @html_label.HtmlCellContent::Table(table) => html_table_size(table, font_name, font_size_pt)
+    @html_label.HtmlCellContent::Table(table) =>
+      html_table_size(table, font_name, font_size_pt)
   }
 }
 
@@ -816,19 +842,11 @@ fn html_cell_size(
   let mut width = content_width
   let mut height = content_height
   match cell.min_width_pt {
-    Some(value) => {
-      if value > width {
-        width = value
-      }
-    }
+    Some(value) => if value > width { width = value }
     None => ()
   }
   match cell.min_height_pt {
-    Some(value) => {
-      if value > height {
-        height = value
-      }
-    }
+    Some(value) => if value > height { height = value }
     None => ()
   }
   width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
@@ -842,10 +860,9 @@ fn html_table_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  @html_label.html_table_size(
-    table,
-    cell => html_cell_size(table, cell, font_name, font_size_pt),
-  )
+  @html_label.html_table_size(table, cell => html_cell_size(
+    table, cell, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -855,11 +872,9 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(
-    table,
-    rect,
-    cell => html_cell_size(table, cell, font_name, font_size_pt),
-  )
+  @html_label.html_table_layout(table, rect, cell => html_cell_size(
+    table, cell, font_name, font_size_pt,
+  ))
 }
 
 ///|
@@ -869,8 +884,10 @@ fn html_label_size(
   font_size_pt : Double,
 ) -> (Double, Double) {
   match label {
-    @html_label.HtmlLabel::Text(text) => label_text_dimensions(text, font_name, font_size_pt)
-    @html_label.HtmlLabel::Table(table) => html_table_size(table, font_name, font_size_pt)
+    @html_label.HtmlLabel::Text(text) =>
+      label_text_dimensions(text, font_name, font_size_pt)
+    @html_label.HtmlLabel::Table(table) =>
+      html_table_size(table, font_name, font_size_pt)
   }
 }
 
@@ -899,9 +916,14 @@ fn collect_html_ports(
       None => ()
     }
     match cell_layout.cell.content {
-      @html_label.HtmlCellContent::Table(nested) => {
-        collect_html_ports(nested, cell_layout.rect, font_name, font_size_pt, ports)
-      }
+      @html_label.HtmlCellContent::Table(nested) =>
+        collect_html_ports(
+          nested,
+          cell_layout.rect,
+          font_name,
+          font_size_pt,
+          ports,
+        )
       _ => ()
     }
   }
@@ -941,22 +963,19 @@ fn port_geometry(
   node_size : NodeSize,
 ) -> (@geom.Point, NodeSize) {
   match port {
-    Some(value) => {
+    Some(value) =>
       match value.name {
-        Some(name) => {
+        Some(name) =>
           match label_ports_map.get(node_name) {
-            Some(ports) => {
+            Some(ports) =>
               match ports.get(name) {
                 Some(port_info) => (port_info.center, port_info.size)
                 None => (node_pos, node_size)
               }
-            }
             None => (node_pos, node_size)
           }
-        }
         None => (node_pos, node_size)
       }
-    }
     None => (node_pos, node_size)
   }
 }
@@ -1009,37 +1028,43 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
       pad_x_pt,
       pad_y_pt,
     )
-    let width_pt =
-      if record_size.width_pt > base_width_pt { record_size.width_pt } else { base_width_pt }
-    let height_pt =
-      if record_size.height_pt > base_height_pt { record_size.height_pt } else { base_height_pt }
+    let width_pt = if record_size.width_pt > base_width_pt {
+      record_size.width_pt
+    } else {
+      base_width_pt
+    }
+    let height_pt = if record_size.height_pt > base_height_pt {
+      record_size.height_pt
+    } else {
+      base_height_pt
+    }
     return node_size_from_points(width_pt, height_pt)
   }
   let label = label_text(node)
   if @html_label.is_html_label_text(label) {
     match @html_label.parse_html_label(label) {
       Some(html_label) => {
-        let (html_width_pt, html_height_pt) =
-          html_label_size(html_label, font, font_size_pt)
-        let width_pt =
-          if html_width_pt + pad_x_pt > base_width_pt {
-            html_width_pt + pad_x_pt
-          } else {
-            base_width_pt
-          }
-        let height_pt =
-          if html_height_pt + pad_y_pt > base_height_pt {
-            html_height_pt + pad_y_pt
-          } else {
-            base_height_pt
-          }
+        let (html_width_pt, html_height_pt) = html_label_size(
+          html_label, font, font_size_pt,
+        )
+        let width_pt = if html_width_pt + pad_x_pt > base_width_pt {
+          html_width_pt + pad_x_pt
+        } else {
+          base_width_pt
+        }
+        let height_pt = if html_height_pt + pad_y_pt > base_height_pt {
+          html_height_pt + pad_y_pt
+        } else {
+          base_height_pt
+        }
         return node_size_from_points(width_pt, height_pt)
       }
       None => ()
     }
   }
-  let (text_width_pt, text_height_pt) =
-    label_text_dimensions(label, font, font_size_pt)
+  let (text_width_pt, text_height_pt) = label_text_dimensions(
+    label, font, font_size_pt,
+  )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
   let label_width_pt = if has_label { text_width_pt + pad_x_pt } else { 0.0 }
   let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
@@ -1075,11 +1100,15 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
   } else {
     base_height_in
   }
+  let width_pt = width_in * 72.0
+  let half = width_pt / 2.0
   {
     width_in,
     height_in,
-    width_pt: width_in * 72.0,
+    width_pt,
     height_pt: height_in * 72.0,
+    left_pt: half,
+    right_pt: half,
   }
 }
 
@@ -1152,7 +1181,11 @@ fn edge_weight(edge : @cgraph.Edge) -> Int {
     None => 1.0
   }
   let weight = weight_value.round().to_int()
-  if weight < 0 { 0 } else { weight }
+  if weight < 0 {
+    0
+  } else {
+    weight
+  }
 }
 
 ///|
@@ -1162,7 +1195,32 @@ fn edge_minlen(edge : @cgraph.Edge) -> Int {
     None => 1.0
   }
   let minlen = minlen_value.round().to_int()
-  if minlen < 1 { 1 } else { minlen }
+  if minlen < 1 {
+    1
+  } else {
+    minlen
+  }
+}
+
+///|
+fn edge_mid_label_text(edge : @cgraph.Edge) -> String? {
+  match edge.get_attr("label") {
+    Some(value) => if value == "" { None } else { Some(value) }
+    None => None
+  }
+}
+
+///|
+fn edge_mid_label_width_pt(edge : @cgraph.Edge) -> Double {
+  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
+  let font = @attrs.font_name(edge.get_attr("fontname"))
+  match edge_mid_label_text(edge) {
+    Some(text) => {
+      let (width, _height) = label_text_dimensions(text, font, font_size_pt)
+      width
+    }
+    None => 0.0
+  }
 }
 
 ///|
@@ -1173,14 +1231,13 @@ fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
   let labels = ["label", "headlabel", "taillabel"]
   for name in labels {
     match edge.get_attr(name) {
-      Some(text) => {
+      Some(text) =>
         if text != "" {
           let (_width, height) = label_text_dimensions(text, font, font_size_pt)
           if height > max_height {
             max_height = height
           }
         }
-      }
       None => ()
     }
   }
@@ -1192,11 +1249,7 @@ fn edge_has_label(edge : @cgraph.Edge) -> Bool {
   let labels = ["label", "headlabel", "taillabel"]
   for name in labels {
     match edge.get_attr(name) {
-      Some(value) => {
-        if value != "" {
-          return true
-        }
-      }
+      Some(value) => if value != "" { return true }
       None => ()
     }
   }
@@ -1214,7 +1267,9 @@ fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
 }
 
 ///|
-fn self_edge_label_half_heights(edges : Array[@cgraph.Edge]) -> Map[String, Double] {
+fn self_edge_label_half_heights(
+  edges : Array[@cgraph.Edge],
+) -> Map[String, Double] {
   let heights : Map[String, Double] = Map::new()
   for edge in edges {
     let tail = edge.tail().name()
@@ -1308,19 +1363,11 @@ fn collect_cluster_rank_heights(
           rank_heights[rank] = half_height
         }
         match next_min {
-          Some(value) => {
-            if rank < value {
-              next_min = Some(rank)
-            }
-          }
+          Some(value) => if rank < value { next_min = Some(rank) }
           None => next_min = Some(rank)
         }
         match next_max {
-          Some(value) => {
-            if rank > value {
-              next_max = Some(rank)
-            }
-          }
+          Some(value) => if rank > value { next_max = Some(rank) }
           None => next_max = Some(rank)
         }
       }
@@ -1329,14 +1376,7 @@ fn collect_cluster_rank_heights(
   }
   for child in graph.subgraphs() {
     let (child_min, child_max) = collect_cluster_rank_heights(
-      child,
-      ranks,
-      sizes,
-      self_edge_labels,
-      seen,
-      rank_heights,
-      next_min,
-      next_max,
+      child, ranks, sizes, self_edge_labels, seen, rank_heights, next_min, next_max,
     )
     next_min = child_min
     next_max = child_max
@@ -1358,13 +1398,9 @@ fn apply_cluster_rank_heights(
   if !is_cluster {
     for child in children {
       let _ = apply_cluster_rank_heights(
-        child,
-        ranks,
-        sizes,
-        self_edge_labels,
-        rank_ht1,
-        rank_ht2,
+        child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
       )
+
     }
     return None
   }
@@ -1385,13 +1421,9 @@ fn apply_cluster_rank_heights(
     None => {
       for child in children {
         let _ = apply_cluster_rank_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rank_ht1,
-          rank_ht2,
+          child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
         )
+
       }
       return None
     }
@@ -1401,13 +1433,9 @@ fn apply_cluster_rank_heights(
     None => {
       for child in children {
         let _ = apply_cluster_rank_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rank_ht1,
-          rank_ht2,
+          child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
         )
+
       }
       return None
     }
@@ -1424,14 +1452,10 @@ fn apply_cluster_rank_heights(
   let mut ht1 = base_top + margin
   let mut ht2 = base_bottom + margin
   for child in children {
-    match apply_cluster_rank_heights(
-      child,
-      ranks,
-      sizes,
-      self_edge_labels,
-      rank_ht1,
-      rank_ht2,
-    ) {
+    match
+      apply_cluster_rank_heights(
+        child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
+      ) {
       Some(info) => {
         if info.max_rank == max_rank_value {
           let candidate = info.ht1 + margin
@@ -1466,12 +1490,7 @@ fn apply_cluster_rank_heights(
   if ht2 > current_bottom {
     rank_ht2[min_rank_value] = ht2
   }
-  Some({
-    min_rank: min_rank_value,
-    max_rank: max_rank_value,
-    ht1,
-    ht2,
-  })
+  Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
 }
 
 ///|
@@ -1544,7 +1563,7 @@ fn add_rank_same_constraints(
   subgraph : @cgraph.Graph,
 ) -> Unit {
   match subgraph.get_attr("rank") {
-    Some(value) => {
+    Some(value) =>
       if value.to_lower() == "same" {
         let nodes = subgraph.nodes()
         if nodes.length() > 1 {
@@ -1566,6 +1585,7 @@ fn add_rank_same_constraints(
                 if idx_j >= 0 {
                   let _ = add_edge(rank_graph, idx_i, idx_j, 0, 1000)
                   let _ = add_edge(rank_graph, idx_j, idx_i, 0, 1000)
+
                 }
                 j = j + 1
               }
@@ -1574,7 +1594,6 @@ fn add_rank_same_constraints(
           }
         }
       }
-    }
     None => ()
   }
   for child in subgraph.subgraphs() {
@@ -1591,7 +1610,7 @@ fn collect_rank_same_order(
 ) -> Int {
   let mut current_group = next_group
   match graph.get_attr("rank") {
-    Some(value) => {
+    Some(value) =>
       if value.to_lower() == "same" {
         let group_id = current_group
         current_group = current_group + 1
@@ -1604,15 +1623,11 @@ fn collect_rank_same_order(
           idx = idx + 1
         }
       }
-    }
     None => ()
   }
   for child in graph.subgraphs() {
     current_group = collect_rank_same_order(
-      child,
-      group_ids,
-      order_ids,
-      current_group,
+      child, group_ids, order_ids, current_group,
     )
   }
   current_group
@@ -1649,6 +1664,7 @@ fn compute_ranks_directed(
     let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
     let weight = edge_weight(edge)
     let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+
   }
   add_rank_same_constraints(graph, index, source)
   network_simplex(graph, 0x7fffffff, BalanceMode::TB)
@@ -1745,10 +1761,11 @@ fn position_key(
 ) -> Double {
   match desired.get(name) {
     Some(value) => value
-    None => match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
+    None =>
+      match x_positions.get(name) {
+        Some(value) => value
+        None => 0.0
+      }
   }
 }
 
@@ -1835,9 +1852,9 @@ fn sort_by_positions(
               }
               if !decided {
                 match rank_same_groups.get(prev) {
-                  Some(prev_group) => {
+                  Some(prev_group) =>
                     match rank_same_groups.get(current) {
-                      Some(current_group) => {
+                      Some(current_group) =>
                         if prev_group == current_group {
                           let prev_idx = match rank_same_order.get(prev) {
                             Some(value) => value
@@ -1852,10 +1869,8 @@ fn sort_by_positions(
                             break
                           }
                         }
-                      }
                       None => ()
                     }
-                  }
                   None => ()
                 }
               }
@@ -1882,7 +1897,7 @@ fn sort_by_positions(
                   let prev_key = "\{parent}|\{prev}"
                   let current_key = "\{parent}|\{current}"
                   match edge_pair_order.get(prev_key) {
-                    Some(prev_idx) => {
+                    Some(prev_idx) =>
                       match edge_pair_order.get(current_key) {
                         Some(current_idx) => {
                           decided = true
@@ -1892,7 +1907,6 @@ fn sort_by_positions(
                         }
                         None => ()
                       }
-                    }
                     None => ()
                   }
                   if decided {
@@ -1901,10 +1915,7 @@ fn sort_by_positions(
                 }
               }
               if !decided {
-                let cmp = String::compare(prev, current)
-                if cmp <= 0 {
-                  break
-                }
+                break
               }
             }
           }
@@ -2004,10 +2015,11 @@ fn order_rank_by_cluster(
     for name in group_nodes[i] {
       match desired.get(name) {
         Some(value) => values.push(value)
-        None => match x_positions.get(name) {
-          Some(value) => values.push(value)
-          None => ()
-        }
+        None =>
+          match x_positions.get(name) {
+            Some(value) => values.push(value)
+            None => ()
+          }
       }
       match secondary.get(name) {
         Some(list) => secondary_total = secondary_total + list.length()
@@ -2057,18 +2069,8 @@ fn order_rank_by_cluster(
   for idx in order {
     let group = group_nodes[idx]
     let ordered_group = sort_by_positions(
-      group,
-      desired,
-      x_positions,
-      primary,
-      secondary,
-      parents_map,
-      rank_same_groups,
-      rank_same_order,
-      edge_order,
-      node_order,
-      port_edge_nodes,
-      edge_pair_order,
+      group, desired, x_positions, primary, secondary, parents_map, rank_same_groups,
+      rank_same_order, edge_order, node_order, port_edge_nodes, edge_pair_order,
     )
     for name in ordered_group {
       result.push(name)
@@ -2098,6 +2100,7 @@ fn compute_desired_positions(
 }
 
 ///|
+
 ///|
 fn compute_desired_positions_with_rank_fallback(
   names : Array[String],
@@ -2116,17 +2119,15 @@ fn compute_desired_positions_with_rank_fallback(
     let mut use_children = false
     for child in child_list {
       match ranks.get(child) {
-        Some(rank) => {
+        Some(rank) =>
           match rank_sizes.get(rank) {
-            Some(size) => {
+            Some(size) =>
               if size > 1 {
                 use_children = true
                 break
               }
-            }
             None => ()
           }
-        }
         None => ()
       }
     }
@@ -2155,11 +2156,28 @@ fn compute_desired_positions_with_rank_fallback(
 }
 
 ///|
+
 ///|
 fn node_width_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
   match sizes.get(name) {
     Some(value) => value.width_pt
     None => default_node_width_in() * 72.0
+  }
+}
+
+///|
+fn node_left_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
+  match sizes.get(name) {
+    Some(value) => value.left_pt
+    None => default_node_width_in() * 72.0 / 2.0
+  }
+}
+
+///|
+fn node_right_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
+  match sizes.get(name) {
+    Some(value) => value.right_pt
+    None => default_node_width_in() * 72.0 / 2.0
   }
 }
 
@@ -2175,17 +2193,20 @@ fn adjust_rank_positions(
   if len == 0 {
     return ()
   }
-  let widths : Array[Double] = []
+  let lefts : Array[Double] = []
+  let rights : Array[Double] = []
   let targets : Array[Double] = []
   let cumulative : Array[Double] = []
   let mut cum = 0.0
   for i in 0..<len {
     let name = names[i]
-    let width = node_width_pt(name, sizes)
-    widths.push(width)
+    let left = node_left_pt(name, sizes)
+    let right = node_right_pt(name, sizes)
+    lefts.push(left)
+    rights.push(right)
     let fallback = match x_positions.get(name) {
       Some(value) => value
-      None => width / 2.0
+      None => left
     }
     let target = match desired.get(name) {
       Some(value) => (value + fallback) / 2.0
@@ -2195,8 +2216,8 @@ fn adjust_rank_positions(
     if i == 0 {
       cum = 0.0
     } else {
-      let prev_width = widths[i - 1]
-      let sep = (prev_width + width) / 2.0 + nodesep_pt
+      let prev_right = rights[i - 1]
+      let sep = prev_right + left + nodesep_pt
       cum = cum + sep
     }
     cumulative.push(cum)
@@ -2226,6 +2247,7 @@ fn adjust_rank_positions(
       let _ = block_values.pop()
       let _ = block_weights.pop()
       let _ = block_counts.pop()
+
     }
   }
   let y_values : Array[Double] = []
@@ -2246,6 +2268,7 @@ fn adjust_rank_positions(
 ///|
 fn normalize_x_positions(
   nodes : Array[@cgraph.Node],
+  extra_names : Array[String],
   x_positions : Map[String, Double],
   sizes : Map[String, NodeSize],
 ) -> Unit {
@@ -2253,12 +2276,26 @@ fn normalize_x_positions(
   let mut seen = false
   for node in nodes {
     let name = node.name()
-    let width = node_width_pt(name, sizes)
+    let left_width = node_left_pt(name, sizes)
     let pos = match x_positions.get(name) {
       Some(value) => value
       None => 0.0
     }
-    let left = pos - width / 2.0
+    let left = pos - left_width
+    if !seen {
+      min_x = left
+      seen = true
+    } else if left < min_x {
+      min_x = left
+    }
+  }
+  for name in extra_names {
+    let left_width = node_left_pt(name, sizes)
+    let pos = match x_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    let left = pos - left_width
     if !seen {
       min_x = left
       seen = true
@@ -2269,6 +2306,12 @@ fn normalize_x_positions(
   if seen && min_x != 0.0 {
     for node in nodes {
       let name = node.name()
+      match x_positions.get(name) {
+        Some(value) => x_positions[name] = value - min_x
+        None => ()
+      }
+    }
+    for name in extra_names {
       match x_positions.get(name) {
         Some(value) => x_positions[name] = value - min_x
         None => ()
@@ -2315,9 +2358,9 @@ fn compute_rank_positions(
     let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
     while i < names.length() {
       let name = names[i]
-      let tail_width = node_width_pt(prev, sizes)
-      let head_width = node_width_pt(name, sizes)
-      let width = tail_width / 2.0 + head_width / 2.0 + rank_nodesep
+      let tail_right = node_right_pt(prev, sizes)
+      let head_left = node_left_pt(name, sizes)
+      let width = tail_right + head_left + rank_nodesep
       current = trunc_int(current.to_double() + width)
       positions[name] = current.to_double()
       prev = name
@@ -2325,6 +2368,411 @@ fn compute_rank_positions(
     }
   }
   positions
+}
+
+///|
+fn unique_virtual_node_name(
+  prefix : String,
+  edge_index : Int,
+  rank : Int,
+  existing : Map[String, Bool],
+) -> String {
+  let mut candidate = "\{prefix}\{edge_index}_\{rank}"
+  if existing.get(candidate) is None {
+    existing[candidate] = true
+    return candidate
+  }
+  let mut i = 1
+  while true {
+    candidate = "\{prefix}\{edge_index}_\{rank}_\{i}"
+    if existing.get(candidate) is None {
+      existing[candidate] = true
+      return candidate
+    }
+    i = i + 1
+  }
+  ""
+}
+
+///|
+fn build_edge_order_keys(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  order_index : Map[String, Int],
+) -> Map[String, Double] {
+  let keys : Map[String, Double] = Map::new()
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    let tail_order = match order_index.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_order = match order_index.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    let key = if tail_rank <= head_rank { head_order } else { tail_order }
+    keys[edge_key(edge)] = key.to_double()
+  }
+  keys
+}
+
+///|
+///|
+fn build_edge_vnodes(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  nodesep_pt : Double,
+  existing_names : Map[String, Bool],
+) -> EdgeVnodeInfo {
+  let vnode_ranks : Map[String, Int] = Map::new()
+  let vnode_sizes : Map[String, NodeSize] = Map::new()
+  let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let mut edge_index = 0
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => {
+        edge_index = edge_index + 1
+        continue
+      }
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => {
+        edge_index = edge_index + 1
+        continue
+      }
+    }
+    let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+    let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+    if max_rank - min_rank <= 1 {
+      edge_index = edge_index + 1
+      continue
+    }
+    let label_width = edge_mid_label_width_pt(edge)
+    let label_rank = if label_width > 0.0 {
+      (min_rank + max_rank) / 2
+    } else {
+      -1
+    }
+    let names : Array[String] = []
+    let mut rank = min_rank + 1
+    while rank < max_rank {
+      let (left_pt, right_pt) =
+        if rank == label_rank && label_width > 0.0 {
+          (nodesep_pt, label_width)
+        } else {
+          let half = nodesep_pt / 2.0
+          (half, half)
+        }
+      let name = unique_virtual_node_name(
+        EDGE_VNODE_PREFIX,
+        edge_index,
+        rank,
+        existing_names,
+      )
+      vnode_ranks[name] = rank
+      vnode_sizes[name] = vnode_size_from_widths(left_pt, right_pt)
+      match vnodes_by_rank.get(rank) {
+        Some(list) => list.push(name)
+        None => vnodes_by_rank[rank] = [name]
+      }
+      names.push(name)
+      rank = rank + 1
+    }
+    if names.length() > 0 {
+      let key = edge_key(edge)
+      match edge_vnodes.get(key) {
+        Some(list) =>
+          for name in names {
+            list.push(name)
+          }
+        None => edge_vnodes[key] = names
+      }
+    }
+    edge_index = edge_index + 1
+  }
+  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes }
+}
+
+///|
+fn build_node_singletons(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+) -> Map[String, Bool] {
+  let counts : Map[String, Int] = Map::new()
+  for node in nodes {
+    counts[node.name()] = 0
+  }
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_count = match counts.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    counts[tail] = tail_count + 1
+    let head_count = match counts.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    counts[head] = head_count + 1
+  }
+  let singletons : Map[String, Bool] = Map::new()
+  for name, count in counts {
+    if count <= 1 {
+      singletons[name] = true
+    }
+  }
+  singletons
+}
+
+///|
+fn virtual_endpoint_class(
+  name : String,
+  vnode_ranks : Map[String, Int],
+  node_singletons : Map[String, Bool],
+) -> Int {
+  if vnode_ranks.get(name) is Some(_) {
+    2
+  } else if node_singletons.get(name) is Some(_) {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+fn virtual_weight_scale(
+  tail : String,
+  head : String,
+  vnode_ranks : Map[String, Int],
+  node_singletons : Map[String, Bool],
+) -> Int {
+  let tail_class = virtual_endpoint_class(tail, vnode_ranks, node_singletons)
+  let head_class = virtual_endpoint_class(head, vnode_ranks, node_singletons)
+  if tail_class == 0 {
+    1
+  } else if tail_class == 1 {
+    if head_class == 0 { 1 } else { 2 }
+  } else {
+    if head_class == 2 {
+      4
+    } else if head_class == 1 {
+      2
+    } else {
+      1
+    }
+  }
+}
+
+///|
+fn build_virtual_slack_edges(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+  node_singletons : Map[String, Bool],
+) -> Array[ConstraintEdge] {
+  let extra : Array[ConstraintEdge] = []
+  for edge in edges {
+    let key = edge_key(edge)
+    let vnodes = match edge_vnodes.get(key) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let low = if tail_rank <= head_rank { tail } else { head }
+    let high = if tail_rank <= head_rank { head } else { tail }
+    let base_weight = edge_weight(edge)
+    let mut prev = low
+    for vnode in vnodes {
+      let scale = virtual_weight_scale(prev, vnode, vnode_ranks, node_singletons)
+      extra.push({
+        tail: prev,
+        head: vnode,
+        minlen: 1,
+        weight: base_weight * scale,
+      })
+      prev = vnode
+    }
+    let scale = virtual_weight_scale(prev, high, vnode_ranks, node_singletons)
+    extra.push({
+      tail: prev,
+      head: high,
+      minlen: 1,
+      weight: base_weight * scale,
+    })
+  }
+  extra
+}
+
+///|
+fn build_vnode_order_keys(
+  edge_vnodes : Map[String, Array[String]],
+  edge_order_keys : Map[String, Double],
+) -> Map[String, Double] {
+  let keys : Map[String, Double] = Map::new()
+  for edge_key, names in edge_vnodes {
+    let key = match edge_order_keys.get(edge_key) {
+      Some(value) => value
+      None => 0.0
+    }
+    for name in names {
+      keys[name] = key
+    }
+  }
+  keys
+}
+
+///|
+fn merge_sizes_with_vnodes(
+  sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+) -> Map[String, NodeSize] {
+  let merged : Map[String, NodeSize] = Map::new()
+  for name, size in sizes {
+    merged[name] = size
+  }
+  for name, size in vnode_sizes {
+    merged[name] = size
+  }
+  merged
+}
+
+///|
+fn sort_rank_items(items : Array[(Double, Int, String)]) -> Array[String] {
+  let sorted = items.copy()
+  let mut i = 1
+  while i < sorted.length() {
+    let current = sorted[i]
+    let (current_key, current_tie, _current_name) = current
+    let mut j = i
+    while j > 0 {
+      let prev = sorted[j - 1]
+      let (prev_key, prev_tie, _prev_name) = prev
+      let same_key = Double::abs(prev_key - current_key) <= 0.000001
+      if prev_key < current_key || (same_key && prev_tie <= current_tie) {
+        break
+      }
+      sorted[j] = prev
+      j = j - 1
+    }
+    sorted[j] = current
+    i = i + 1
+  }
+  let names : Array[String] = []
+  for item in sorted {
+    let (_key, _tie, name) = item
+    names.push(name)
+  }
+  names
+}
+
+///|
+fn build_x_groups_with_vnodes(
+  ordered_groups : Map[Int, Array[String]],
+  order_index : Map[String, Int],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys : Map[String, Double],
+) -> Map[Int, Array[String]] {
+  let result : Map[Int, Array[String]] = Map::new()
+  let rank_set : Map[Int, Bool] = Map::new()
+  for rank, _names in ordered_groups {
+    rank_set[rank] = true
+  }
+  for rank, _names in vnodes_by_rank {
+    rank_set[rank] = true
+  }
+  let ranks : Array[Int] = []
+  for rank, _ in rank_set {
+    ranks.push(rank)
+  }
+  ranks.sort()
+  for rank in ranks {
+    let names = match ordered_groups.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    let vnodes = match vnodes_by_rank.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    if vnodes.length() == 0 {
+      if names.length() > 0 {
+        result[rank] = names
+      }
+      continue
+    }
+    let items : Array[(Double, Int, String)] = []
+    let mut idx = 0
+    for name in names {
+      let key = match order_index.get(name) {
+        Some(value) => value.to_double()
+        None => idx.to_double()
+      }
+      items.push((key, idx, name))
+      idx = idx + 1
+    }
+    let tie_offset = names.length() + 1
+    let mut v_idx = 0
+    for name in vnodes {
+      let key = match vnode_order_keys.get(name) {
+        Some(value) => value
+        None => 0.0
+      }
+      items.push((key, tie_offset + v_idx, name))
+      v_idx = v_idx + 1
+    }
+    result[rank] = sort_rank_items(items)
+  }
+  result
+}
+
+///|
+fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
+  let keys : Array[Int] = []
+  for rank, _ in groups {
+    keys.push(rank)
+  }
+  keys.sort()
+  keys
+}
+
+///|
+fn build_vnode_extra_nodes(
+  vnode_ranks : Map[String, Int],
+) -> Array[(String, Int)] {
+  let extra : Array[(String, Int)] = []
+  for name, rank in vnode_ranks {
+    extra.push((name, rank))
+  }
+  extra
 }
 
 ///|
@@ -2339,9 +2787,7 @@ fn clone_rank_groups(
 }
 
 ///|
-fn build_node_ranks(
-  groups : Map[Int, Array[String]],
-) -> Map[String, Int] {
+fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let ranks : Map[String, Int] = Map::new()
   for rank, names in groups {
     for name in names {
@@ -2352,9 +2798,7 @@ fn build_node_ranks(
 }
 
 ///|
-fn build_order_index(
-  groups : Map[Int, Array[String]],
-) -> Map[String, Int] {
+fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let order : Map[String, Int] = Map::new()
   for _rank, names in groups {
     for i in 0..<names.length() {
@@ -2513,8 +2957,12 @@ fn transpose_rank(
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    let c0 = crossing_for_pair(left, right, rank, parents, children, ranks, order)
-    let c1 = crossing_for_pair(right, left, rank, parents, children, ranks, order)
+    let c0 = crossing_for_pair(
+      left, right, rank, parents, children, ranks, order,
+    )
+    let c1 = crossing_for_pair(
+      right, left, rank, parents, children, ranks, order,
+    )
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
@@ -2528,17 +2976,23 @@ fn transpose_rank(
 }
 
 ///|
-fn transpose_rank_groups(
+fn transpose_rank_groups_limited(
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   ranks : Map[String, Int],
   reverse : Bool,
+  max_passes : Int,
 ) -> Bool {
   let mut changed_any = false
   let mut changed = true
+  let mut passes = 0
   while changed {
+    if passes >= max_passes {
+      break
+    }
+    passes = passes + 1
     changed = false
     let order = build_order_index(ordered)
     for rank in rank_keys {
@@ -2593,8 +3047,7 @@ fn reorder_rank_groups(
   }
   let port_edge_nodes : Map[String, Bool] = Map::new()
   for edge in edges {
-    let ported =
-      port_is_explicit(edge.tail_port()) ||
+    let ported = port_is_explicit(edge.tail_port()) ||
       port_is_explicit(edge.head_port())
     if ported {
       port_edge_nodes[edge.tail().name()] = true
@@ -2612,10 +3065,11 @@ fn reorder_rank_groups(
   let node_ranks = build_node_ranks(ordered)
   let mut best_ordered = clone_rank_groups(ordered)
   let mut best_cross = count_crossings(ordered, node_ranks, edges)
-  let mut x_positions =
-    compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
+  let mut x_positions = compute_rank_positions(
+    rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
+  )
   if rank_keys.length() > 1 {
-    let iterations = 4
+    let iterations = 1
     let mut iter = 0
     while iter < iterations {
       let mut idx = rank_keys.length() - 1
@@ -2628,26 +3082,19 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired = compute_desired_positions(names, children, x_positions)
           ordered[rank] = order_rank_by_cluster(
-            names,
-            desired,
-            x_positions,
-            children,
-            parents,
-            parents,
-            cluster_keys,
-            rank_same_groups,
-            rank_same_order,
-            edge_order,
-            node_order,
-            port_edge_nodes,
+            names, desired, x_positions, children, parents, parents, cluster_keys,
+            rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
             edge_pair_order,
           )
-          x_positions =
-            compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
+          x_positions = compute_rank_positions(
+            rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
+          )
         }
         idx = idx - 1
       }
-      let _ = transpose_rank_groups(rank_keys, ordered, parents, children, node_ranks, true)
+      let _ = transpose_rank_groups_limited(
+        rank_keys, ordered, parents, children, node_ranks, true, 2,
+      )
       for rank in rank_keys {
         let names = match ordered.get(rank) {
           Some(list) => list
@@ -2656,18 +3103,8 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired = compute_desired_positions(names, children, x_positions)
           ordered[rank] = order_rank_by_cluster(
-            names,
-            desired,
-            x_positions,
-            children,
-            parents,
-            parents,
-            cluster_keys,
-            rank_same_groups,
-            rank_same_order,
-            edge_order,
-            node_order,
-            port_edge_nodes,
+            names, desired, x_positions, children, parents, parents, cluster_keys,
+            rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
             edge_pair_order,
           )
         }
@@ -2687,26 +3124,19 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired = compute_desired_positions(names, parents, x_positions)
           ordered[rank] = order_rank_by_cluster(
-            names,
-            desired,
-            x_positions,
-            parents,
-            children,
-            parents,
-            cluster_keys,
-            rank_same_groups,
-            rank_same_order,
-            edge_order,
-            node_order,
-            port_edge_nodes,
+            names, desired, x_positions, parents, children, parents, cluster_keys,
+            rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
             edge_pair_order,
           )
-          x_positions =
-            compute_rank_positions(rank_keys, ordered, sizes, nodesep_pt, has_edge_labels)
+          x_positions = compute_rank_positions(
+            rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
+          )
         }
         j = j + 1
       }
-      let _ = transpose_rank_groups(rank_keys, ordered, parents, children, node_ranks, false)
+      let _ = transpose_rank_groups_limited(
+        rank_keys, ordered, parents, children, node_ranks, false, 2,
+      )
       for rank in rank_keys {
         let names = match ordered.get(rank) {
           Some(list) => list
@@ -2715,18 +3145,8 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired = compute_desired_positions(names, parents, x_positions)
           ordered[rank] = order_rank_by_cluster(
-            names,
-            desired,
-            x_positions,
-            parents,
-            children,
-            parents,
-            cluster_keys,
-            rank_same_groups,
-            rank_same_order,
-            edge_order,
-            node_order,
-            port_edge_nodes,
+            names, desired, x_positions, parents, children, parents, cluster_keys,
+            rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
             edge_pair_order,
           )
         }
@@ -2740,8 +3160,9 @@ fn reorder_rank_groups(
     }
   }
   let final_ordered = clone_rank_groups(best_ordered)
-  let final_positions =
-    compute_rank_positions(rank_keys, final_ordered, sizes, nodesep_pt, has_edge_labels)
+  let final_positions = compute_rank_positions(
+    rank_keys, final_ordered, sizes, nodesep_pt, has_edge_labels,
+  )
   for rank in rank_keys {
     let names = match final_ordered.get(rank) {
       Some(list) => list
@@ -2749,32 +3170,18 @@ fn reorder_rank_groups(
     }
     if names.length() > 1 {
       let desired = compute_desired_positions_with_rank_fallback(
-        names,
-        children,
-        parents,
-        final_positions,
-        node_ranks,
-        rank_sizes,
+        names, children, parents, final_positions, node_ranks, rank_sizes,
       )
       final_ordered[rank] = order_rank_by_cluster(
-        names,
-        desired,
-        final_positions,
-        children,
-        parents,
-        parents,
-        cluster_keys,
-        rank_same_groups,
-        rank_same_order,
-        edge_order,
-        node_order,
-        port_edge_nodes,
+        names, desired, final_positions, children, parents, parents, cluster_keys,
+        rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
         edge_pair_order,
       )
     }
   }
   final_ordered
 }
+
 ///|
 fn build_rank_groups(
   nodes : Array[@cgraph.Node],
@@ -2946,7 +3353,7 @@ fn compute_bbox(
   for edge in edges {
     for spline in edge.splines {
       match spline.start {
-        Some(point) => {
+        Some(point) =>
           if !bbox_set {
             min_x = point.x
             max_x = point.x
@@ -2967,11 +3374,10 @@ fn compute_bbox(
               max_y = point.y
             }
           }
-        }
         None => ()
       }
       match spline.end {
-        Some(point) => {
+        Some(point) =>
           if !bbox_set {
             min_x = point.x
             max_x = point.x
@@ -2992,7 +3398,6 @@ fn compute_bbox(
               max_y = point.y
             }
           }
-        }
         None => ()
       }
       for point in spline.points {
@@ -3029,10 +3434,26 @@ fn compute_bbox(
 ///|
 fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
   {
-    llx: if base.llx < other.llx { base.llx } else { other.llx },
-    lly: if base.lly < other.lly { base.lly } else { other.lly },
-    urx: if base.urx > other.urx { base.urx } else { other.urx },
-    ury: if base.ury > other.ury { base.ury } else { other.ury },
+    llx: if base.llx < other.llx {
+      base.llx
+    } else {
+      other.llx
+    },
+    lly: if base.lly < other.lly {
+      base.lly
+    } else {
+      other.lly
+    },
+    urx: if base.urx > other.urx {
+      base.urx
+    } else {
+      other.urx
+    },
+    ury: if base.ury > other.ury {
+      base.ury
+    } else {
+      other.ury
+    },
   }
 }
 
@@ -3100,7 +3521,11 @@ fn shift_point(point : @geom.Point, dx : Double, dy : Double) -> @geom.Point {
 }
 
 ///|
-fn shift_optional_point(point : @geom.Point?, dx : Double, dy : Double) -> @geom.Point? {
+fn shift_optional_point(
+  point : @geom.Point?,
+  dx : Double,
+  dy : Double,
+) -> @geom.Point? {
   match point {
     Some(value) => Some(shift_point(value, dx, dy))
     None => None
@@ -3108,7 +3533,11 @@ fn shift_optional_point(point : @geom.Point?, dx : Double, dy : Double) -> @geom
 }
 
 ///|
-fn shift_spline(spline : @geom.Spline, dx : Double, dy : Double) -> @geom.Spline {
+fn shift_spline(
+  spline : @geom.Spline,
+  dx : Double,
+  dy : Double,
+) -> @geom.Spline {
   let points : Array[@geom.Point] = []
   for point in spline.points {
     points.push(shift_point(point, dx, dy))
@@ -3197,8 +3626,16 @@ fn transform_layout(
       edge: edge_layout.edge,
       splines,
       label_pos: transform_optional_point(edge_layout.label_pos, bbox, rankdir),
-      head_label_pos: transform_optional_point(edge_layout.head_label_pos, bbox, rankdir),
-      tail_label_pos: transform_optional_point(edge_layout.tail_label_pos, bbox, rankdir),
+      head_label_pos: transform_optional_point(
+        edge_layout.head_label_pos,
+        bbox,
+        rankdir,
+      ),
+      tail_label_pos: transform_optional_point(
+        edge_layout.tail_label_pos,
+        bbox,
+        rankdir,
+      ),
     })
   }
   let transformed_bbox = compute_bbox(transformed_nodes, transformed_edges)
@@ -3303,7 +3740,11 @@ fn parse_label_just(value : String?) -> LabelJust {
 
 ///|
 fn graph_label_loc(graph : @cgraph.Graph) -> LabelLoc {
-  let default_loc = if graph.is_root() { LabelLoc::Bottom } else { LabelLoc::Top }
+  let default_loc = if graph.is_root() {
+    LabelLoc::Bottom
+  } else {
+    LabelLoc::Top
+  }
   parse_label_loc(graph.get_attr("labelloc"), default_loc)
 }
 
@@ -3315,16 +3756,17 @@ fn graph_label_just(graph : @cgraph.Graph) -> LabelJust {
 ///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
   match graph.get_attr("label") {
-    Some(value) => {
+    Some(value) =>
       if value == "" {
         None
       } else {
         let font_size_pt = @attrs.font_size(graph.get_attr("fontsize"))
         let font = @attrs.font_name(graph.get_attr("fontname"))
-        let (width_pt, height_pt) = label_text_dimensions(value, font, font_size_pt)
+        let (width_pt, height_pt) = label_text_dimensions(
+          value, font, font_size_pt,
+        )
         Some((width_pt, height_pt))
       }
-    }
     None => None
   }
 }
@@ -3363,12 +3805,8 @@ fn expand_bbox_for_label(
   let mut urx = bbox.urx
   let mut ury = bbox.ury
   match loc {
-    LabelLoc::Top => {
-      ury = ury + label_height_pt + pad
-    }
-    LabelLoc::Bottom => {
-      lly = lly - label_height_pt - pad
-    }
+    LabelLoc::Top => ury = ury + label_height_pt + pad
+    LabelLoc::Bottom => lly = lly - label_height_pt - pad
   }
   let label_width = label_width_pt + pad * 2.0
   let current_width = urx - llx
@@ -3407,7 +3845,8 @@ fn layout_subgraphs(
       if edge_set.get(edge_key(edge_layout.edge)) is Some(_) {
         let tail_name = edge_layout.edge.tail().name()
         let head_name = edge_layout.edge.head().name()
-        if node_set.get(tail_name) is Some(_) && node_set.get(head_name) is Some(_) {
+        if node_set.get(tail_name) is Some(_) &&
+          node_set.get(head_name) is Some(_) {
           sub_edges.push(edge_layout)
         }
       }
@@ -3437,9 +3876,8 @@ fn layout_subgraphs(
       }
     }
     match label_info {
-      Some((width_pt, height_pt, loc, just)) => {
+      Some((width_pt, height_pt, loc, just)) =>
         label_pos = Some(graph_label_pos(bbox, width_pt, height_pt, loc, just))
-      }
       None => ()
     }
     result.push({
@@ -3455,14 +3893,10 @@ fn layout_subgraphs(
 }
 
 ///|
+
 ///|
 pub fn DotLayoutOptions::default() -> DotLayoutOptions {
-  {
-    rankdir: None,
-    nodesep: None,
-    ranksep: None,
-    splines: None,
-  }
+  { rankdir: None, nodesep: None, ranksep: None, splines: None }
 }
 
 ///|
@@ -3473,37 +3907,43 @@ pub fn layout_dot(
   let opts = options
   let rankdir = match opts.rankdir {
     Some(value) => value
-    None => match graph.get_attr("rankdir") {
-      Some(value) => match parse_rankdir(value) {
-        Some(parsed) => parsed
+    None =>
+      match graph.get_attr("rankdir") {
+        Some(value) =>
+          match parse_rankdir(value) {
+            Some(parsed) => parsed
+            None => RankDir::TB
+          }
         None => RankDir::TB
       }
-      None => RankDir::TB
-    }
   }
   let nodesep_in = match opts.nodesep {
     Some(value) => value
-    None => match graph.get_attr("nodesep") {
-      Some(value) => parse_first_double(value, default_nodesep_in())
-      None => default_nodesep_in()
-    }
+    None =>
+      match graph.get_attr("nodesep") {
+        Some(value) => parse_first_double(value, default_nodesep_in())
+        None => default_nodesep_in()
+      }
   }
   let ranksep_in = match opts.ranksep {
     Some(value) => value
-    None => match graph.get_attr("ranksep") {
-      Some(value) => parse_first_double(value, default_ranksep_in())
-      None => default_ranksep_in()
-    }
+    None =>
+      match graph.get_attr("ranksep") {
+        Some(value) => parse_first_double(value, default_ranksep_in())
+        None => default_ranksep_in()
+      }
   }
   let splines = match opts.splines {
     Some(value) => value
-    None => match graph.get_attr("splines") {
-      Some(value) => match parse_splines(value) {
-        Some(parsed) => parsed
+    None =>
+      match graph.get_attr("splines") {
+        Some(value) =>
+          match parse_splines(value) {
+            Some(parsed) => parsed
+            None => SplinesMode::Spline
+          }
         None => SplinesMode::Spline
       }
-      None => SplinesMode::Spline
-    }
   }
   let _ = splines
   let nodes = ordered_nodes(graph)
@@ -3604,12 +4044,7 @@ pub fn layout_dot(
     rank_ht2[rank] = half_height
   }
   let _ = apply_cluster_rank_heights(
-    graph,
-    ranks,
-    sizes,
-    self_edge_labels,
-    rank_ht1,
-    rank_ht2,
+    graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
   )
   let nodesep_pt = nodesep_in * 72.0
   let mut ranksep_pt = ranksep_in * 72.0
@@ -3686,35 +4121,61 @@ pub fn layout_dot(
     None => {
       let (parents, children) = build_edge_index(nodes, edges)
       reorder_rank_groups(
-        rank_keys,
-        groups,
-        edges,
-        parents,
-        children,
-        cluster_keys,
-        rank_same_groups,
-        rank_same_order,
-        edge_order,
-        node_order,
-        sizes,
-        nodesep_pt,
-        has_edge_labels,
+        rank_keys, groups, edges, parents, children, cluster_keys, rank_same_groups,
+        rank_same_order, edge_order, node_order, sizes, nodesep_pt, has_edge_labels,
       )
     }
   }
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in nodes {
+    existing_names[node.name()] = true
+  }
+  let vnode_info = build_edge_vnodes(edges, ranks, nodesep_pt, existing_names)
+  let node_singletons = build_node_singletons(nodes, edges)
+  let virtual_slack_edges = build_virtual_slack_edges(
+    edges,
+    ranks,
+    vnode_info.edge_vnodes,
+    vnode_info.vnode_ranks,
+    node_singletons,
+  )
+  let order_index = build_order_index(ordered_groups)
+  let edge_order_keys = build_edge_order_keys(edges, ranks, order_index)
+  let vnode_order_keys = build_vnode_order_keys(
+    vnode_info.edge_vnodes,
+    edge_order_keys,
+  )
+  let x_sizes = merge_sizes_with_vnodes(sizes, vnode_info.vnode_sizes)
+  let x_groups = build_x_groups_with_vnodes(
+    ordered_groups,
+    order_index,
+    vnode_info.vnodes_by_rank,
+    vnode_order_keys,
+  )
+  let x_rank_keys = collect_rank_keys(x_groups)
+  let x_ranks = build_node_ranks(x_groups)
+  let vnode_extra_nodes = build_vnode_extra_nodes(vnode_info.vnode_ranks)
   let x_positions = compute_x_positions(
     graph,
     nodes,
     edges,
-    ranks,
-    rank_keys,
-    ordered_groups,
-    sizes,
+    x_ranks,
+    x_rank_keys,
+    x_groups,
+    x_sizes,
     nodesep_pt,
     ordering,
     has_edge_labels,
+    vnode_extra_nodes,
+    vnode_info.edge_vnodes,
+    virtual_slack_edges,
   )
-  normalize_x_positions(nodes, x_positions, sizes)
+  let vnode_names : Array[String] = []
+  for pair in vnode_extra_nodes {
+    let (name, _rank) = pair
+    vnode_names.push(name)
+  }
+  normalize_x_positions(nodes, vnode_names, x_positions, x_sizes)
   let positions : Map[String, @geom.Point] = Map::new()
   for node in nodes {
     let name = node.name()
@@ -3812,62 +4273,38 @@ pub fn layout_dot(
       _ => false
     }
     let spline = match splines {
-      SplinesMode::Polyline => edge_spline_for_polyline(
-        edge,
-        tail_clip,
-        head_clip,
-        rankdir,
-        false,
-        include_tail,
-        include_head,
-      )
-      SplinesMode::Ortho => edge_spline_for_polyline(
-        edge,
-        tail_clip,
-        head_clip,
-        rankdir,
-        true,
-        include_tail,
-        include_head,
-      )
-      _ => edge_spline_for_line(
-        edge,
-        tail_anchor,
-        head_anchor,
-        tail_anchor_size,
-        head_anchor_size,
-        include_tail,
-        include_head,
-      )
+      SplinesMode::Polyline =>
+        edge_spline_for_polyline(
+          edge, tail_clip, head_clip, rankdir, false, include_tail, include_head,
+        )
+      SplinesMode::Ortho =>
+        edge_spline_for_polyline(
+          edge, tail_clip, head_clip, rankdir, true, include_tail, include_head,
+        )
+      _ =>
+        edge_spline_for_line(
+          edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
+          include_head,
+        )
     }
     let label_pos : @geom.Point? = match edge.get_attr("label") {
-      Some(value) => {
+      Some(value) =>
         if value == "" {
           None
         } else {
-          Some({ x: (tail_clip.x + head_clip.x) / 2.0, y: (tail_clip.y + head_clip.y) / 2.0 })
+          Some({
+            x: (tail_clip.x + head_clip.x) / 2.0,
+            y: (tail_clip.y + head_clip.y) / 2.0,
+          })
         }
-      }
       None => None
     }
     let head_label_pos : @geom.Point? = match edge.get_attr("headlabel") {
-      Some(value) => {
-        if value == "" {
-          None
-        } else {
-          Some(head_clip)
-        }
-      }
+      Some(value) => if value == "" { None } else { Some(head_clip) }
       None => None
     }
     let tail_label_pos : @geom.Point? = match edge.get_attr("taillabel") {
-      Some(value) => {
-        if value == "" {
-          None
-        } else {
-          Some(tail_clip)
-        }
-      }
+      Some(value) => if value == "" { None } else { Some(tail_clip) }
       None => None
     }
     edges_out.push({
@@ -3906,7 +4343,9 @@ pub fn layout_dot(
         let loc = graph_label_loc(graph)
         let just = graph_label_just(graph)
         final_bbox = expand_bbox_for_label(final_bbox, width_pt, height_pt, loc)
-        label_pos = Some(graph_label_pos(final_bbox, width_pt, height_pt, loc, just))
+        label_pos = Some(
+          graph_label_pos(final_bbox, width_pt, height_pt, loc, just),
+        )
       }
       None => ()
     }
@@ -3937,11 +4376,7 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   let mut write_bb = self.graph.is_root()
   if !write_bb {
     match self.graph.name() {
-      Some(name) => {
-        if name.has_prefix("cluster") {
-          write_bb = true
-        }
-      }
+      Some(name) => if name.has_prefix("cluster") { write_bb = true }
       None => ()
     }
   }

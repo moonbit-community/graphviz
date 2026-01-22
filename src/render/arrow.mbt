@@ -1,5 +1,6 @@
 ///|
 const ARROW_LENGTH : Double = 10.0
+
 ///|
 const ARROW_WIDTH : Double = 6.0
 
@@ -85,7 +86,7 @@ fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
   if end > text.length() {
     return false
   }
-  text.unsafe_substring(start=start, end=end) == prefix
+  text.unsafe_substring(start~, end~) == prefix
 }
 
 ///|
@@ -95,7 +96,14 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
     None => "normal"
   }
   if value == "" {
-    return [ArrowShape::{ base: ArrowBase::Normal, open: false, left: false, right: false }]
+    return [
+      ArrowShape::{
+        base: ArrowBase::Normal,
+        open: false,
+        left: false,
+        right: false,
+      },
+    ]
   }
   if value == "none" {
     return []
@@ -141,7 +149,12 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
     }
   }
   if shapes.length() == 0 {
-    shapes.push(ArrowShape::{ base: ArrowBase::Normal, open: false, left: false, right: false })
+    shapes.push(ArrowShape::{
+      base: ArrowBase::Normal,
+      open: false,
+      left: false,
+      right: false,
+    })
   }
   shapes
 }
@@ -224,39 +237,81 @@ fn arrow_shape_primitives(
   match shape.base {
     ArrowBase::Normal => {
       let base = point_add(tip, point_scale(dir, -length))
-      let points = triangle_points(tip, base, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = triangle_points(
+        tip,
+        base,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Vee => {
       let base = point_add(tip, point_scale(dir, -length))
-      let points = triangle_points(tip, base, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = triangle_points(
+        tip,
+        base,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Inv => {
       let base = tip
       let point_tip = point_add(tip, point_scale(dir, -length))
-      let points = triangle_points(point_tip, base, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = triangle_points(
+        point_tip,
+        base,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Box => {
       let back = point_add(tip, point_scale(dir, -length))
-      let points = box_points(tip, back, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = box_points(
+        tip,
+        back,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
       let line_end = point_add(back, point_scale(dir, -length * 0.3))
       ops.push(DrawOp::Polyline(points=[back, line_end]))
     }
     ArrowBase::Tee => {
       let tee_length = length * 0.3
       let back = point_add(tip, point_scale(dir, -tee_length))
-      let points = box_points(tip, back, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = box_points(
+        tip,
+        back,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
       let line_end = point_add(back, point_scale(dir, -length * 0.6))
       ops.push(DrawOp::Polyline(points=[back, line_end]))
     }
     ArrowBase::Diamond => {
       let base = point_add(tip, point_scale(dir, -length))
-      let points = diamond_points(tip, base, perp, half_width, shape.left, shape.right)
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      let points = diamond_points(
+        tip,
+        base,
+        perp,
+        half_width,
+        shape.left,
+        shape.right,
+      )
+      ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Dot => {
       let radius = half_width
@@ -267,7 +322,7 @@ fn arrow_shape_primitives(
         urx: center.x + radius,
         ury: center.y + radius,
       }
-      ops.push(DrawOp::Ellipse(filled=filled, rect=rect))
+      ops.push(DrawOp::Ellipse(filled~, rect~))
     }
     ArrowBase::Crow => {
       let base = point_add(tip, point_scale(dir, -length))
@@ -276,7 +331,7 @@ fn arrow_shape_primitives(
       let right_point = point_add(tip, point_scale(perp, -wing))
       let tail = point_add(base, point_scale(dir, length * 0.2))
       let points = [left_point, tip, right_point, tail]
-      ops.push(DrawOp::Polygon(filled=filled, points=points))
+      ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Curve | ArrowBase::ICurve => {
       let base = point_add(tip, point_scale(dir, -length))
@@ -325,7 +380,9 @@ pub fn arrow_primitives(
   let mut offset = 0.0
   for shape in shapes {
     let shape_tip = point_add(tip, point_scale(dir, -offset))
-    let primitives = arrow_shape_primitives(shape, shape_tip, dir, perp, length, width)
+    let primitives = arrow_shape_primitives(
+      shape, shape_tip, dir, perp, length, width,
+    )
     for op in primitives {
       ops.push(op)
     }

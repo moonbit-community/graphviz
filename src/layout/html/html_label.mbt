@@ -31,7 +31,9 @@ pub fn strip_html_wrappers(label : String) -> String? {
   }
   let len = label.length()
   let inner = label.unsafe_substring(start=1, end=len - 1)
-  let unescaped = inner.replace_all(old="\\\"", new="\"").replace_all(old="\\'", new="'")
+  let unescaped = inner
+    .replace_all(old="\\\"", new="\"")
+    .replace_all(old="\\'", new="'")
   Some(unescaped)
 }
 
@@ -72,7 +74,10 @@ fn html_read_name(parser : HtmlParser) -> String {
   let sb = StringBuilder::new()
   while parser.index < parser.chars.length() {
     let ch = parser.chars[parser.index]
-    if (ch.is_ascii_alphabetic() || ch.is_ascii_digit()) || ch == '_' || ch == '-' || ch == ':' {
+    if (ch.is_ascii_alphabetic() || ch.is_ascii_digit()) ||
+      ch == '_' ||
+      ch == '-' ||
+      ch == ':' {
       sb.write_char(ch)
       parser.index = parser.index + 1
     } else {
@@ -249,7 +254,7 @@ fn html_collapse_whitespace(text : String) -> String {
     if start == 0 && end == collapsed.length() {
       collapsed
     } else {
-      collapsed.unsafe_substring(start=start, end=end)
+      collapsed.unsafe_substring(start~, end~)
     }
   }
 }
@@ -257,13 +262,12 @@ fn html_collapse_whitespace(text : String) -> String {
 ///|
 fn html_align_from(value : String?) -> HtmlAlign {
   match value {
-    Some(text) => {
+    Some(text) =>
       match text.to_lower() {
         "left" => HtmlAlign::Left
         "right" => HtmlAlign::Right
         _ => HtmlAlign::Center
       }
-    }
     None => HtmlAlign::Center
   }
 }
@@ -271,13 +275,12 @@ fn html_align_from(value : String?) -> HtmlAlign {
 ///|
 fn html_valign_from(value : String?) -> HtmlVAlign {
   match value {
-    Some(text) => {
+    Some(text) =>
       match text.to_lower() {
         "top" => HtmlVAlign::Top
         "bottom" => HtmlVAlign::Bottom
         _ => HtmlVAlign::Middle
       }
-    }
     None => HtmlVAlign::Middle
   }
 }
@@ -287,7 +290,11 @@ fn html_parse_int(value : String?, fallback : Int) -> Int {
   match value {
     Some(text) => {
       let parsed = parse_double(text, fallback.to_double()).round().to_int()
-      if parsed <= 0 { fallback } else { parsed }
+      if parsed <= 0 {
+        fallback
+      } else {
+        parsed
+      }
     }
     None => fallback
   }
@@ -308,14 +315,10 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
     match html_parser_peek(parser) {
-      Some('<') => {
+      Some('<') =>
         match html_parse_tag(parser) {
-          Some(HtmlTag::End(name)) => {
-            if name == "td" || name == "th" {
-              break
-            }
-          }
-          Some(HtmlTag::Start(name, attrs, _self_closing)) => {
+          Some(HtmlTag::End(name)) => if name == "td" || name == "th" { break }
+          Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "br" {
               sb.write_char('\n')
             } else if name == "table" {
@@ -323,7 +326,6 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
             } else {
               // Ignore other tags.
             }
-          }
           None => {
             let text = html_parse_text(parser)
             if !html_is_whitespace_only(text) {
@@ -331,7 +333,6 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
             }
           }
         }
-      }
       None => break
       _ => {
         let text = html_parse_text(parser)
@@ -348,7 +349,10 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
 }
 
 ///|
-fn parse_html_cell_from_attrs(parser : HtmlParser, attrs : Map[String, String]) -> HtmlCell {
+fn parse_html_cell_from_attrs(
+  parser : HtmlParser,
+  attrs : Map[String, String],
+) -> HtmlCell {
   let port : String? = match attrs.get("port") {
     Some(value) => if value == "" { None } else { Some(value) }
     None => None
@@ -367,7 +371,17 @@ fn parse_html_cell_from_attrs(parser : HtmlParser, attrs : Map[String, String]) 
     None => None
   }
   let content = parse_html_cell_content(parser)
-  { content, port, col_span, row_span, align, valign, bg_color, min_width_pt, min_height_pt }
+  {
+    content,
+    port,
+    col_span,
+    row_span,
+    align,
+    valign,
+    bg_color,
+    min_width_pt,
+    min_height_pt,
+  }
 }
 
 ///|
@@ -376,14 +390,10 @@ fn parse_html_row(parser : HtmlParser) -> HtmlRow {
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
     match html_parser_peek(parser) {
-      Some('<') => {
+      Some('<') =>
         match html_parse_tag(parser) {
-          Some(HtmlTag::End(name)) => {
-            if name == "tr" {
-              break
-            }
-          }
-          Some(HtmlTag::Start(name, attrs, _self_closing)) => {
+          Some(HtmlTag::End(name)) => if name == "tr" { break }
+          Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "td" || name == "th" {
               cells.push(parse_html_cell_from_attrs(parser, attrs))
             } else if name == "tr" {
@@ -391,23 +401,26 @@ fn parse_html_row(parser : HtmlParser) -> HtmlRow {
             } else {
               // Ignore other tags.
             }
-          }
           None => {
             let _ = html_parse_text(parser)
+
           }
         }
-      }
       None => break
       _ => {
         let _ = html_parse_text(parser)
+
       }
     }
   }
-  HtmlRow::{ cells }
+  HtmlRow::{ cells, }
 }
 
 ///|
-fn parse_html_table_from_attrs(parser : HtmlParser, attrs : Map[String, String]) -> HtmlTable {
+fn parse_html_table_from_attrs(
+  parser : HtmlParser,
+  attrs : Map[String, String],
+) -> HtmlTable {
   let border_pt = html_parse_double(attrs.get("border"), 0.0)
   let cell_border_pt = html_parse_double(attrs.get("cellborder"), 0.0)
   let cell_spacing_pt = html_parse_double(attrs.get("cellspacing"), 2.0)
@@ -417,34 +430,38 @@ fn parse_html_table_from_attrs(parser : HtmlParser, attrs : Map[String, String])
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
     match html_parser_peek(parser) {
-      Some('<') => {
+      Some('<') =>
         match html_parse_tag(parser) {
-          Some(HtmlTag::End(name)) => {
-            if name == "table" {
-              break
-            }
-          }
-          Some(HtmlTag::Start(name, attrs, _self_closing)) => {
+          Some(HtmlTag::End(name)) => if name == "table" { break }
+          Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "tr" {
               rows.push(parse_html_row(parser))
             } else if name == "table" {
               let _ = parse_html_table_from_attrs(parser, attrs)
+
             } else {
               // Ignore other tags.
             }
-          }
           None => {
             let _ = html_parse_text(parser)
+
           }
         }
-      }
       None => break
       _ => {
         let _ = html_parse_text(parser)
+
       }
     }
   }
-  { rows, border_pt, cell_border_pt, cell_spacing_pt, cell_padding_pt, bg_color }
+  {
+    rows,
+    border_pt,
+    cell_border_pt,
+    cell_spacing_pt,
+    cell_padding_pt,
+    bg_color,
+  }
 }
 
 ///|
@@ -458,7 +475,7 @@ pub fn parse_html_label(label : String) -> HtmlLabel? {
       let parser = HtmlParser::{ chars, index: 0 }
       html_parser_skip_whitespace(parser)
       match html_parse_tag(parser) {
-        Some(HtmlTag::Start(name, attrs, _self_closing)) => {
+        Some(HtmlTag::Start(name, attrs, _self_closing)) =>
           if name == "table" {
             Some(HtmlLabel::Table(parse_html_table_from_attrs(parser, attrs)))
           } else if name == "br" {
@@ -472,7 +489,6 @@ pub fn parse_html_label(label : String) -> HtmlLabel? {
             }
             Some(HtmlLabel::Text(text))
           }
-        }
         _ => {
           let text = html_parse_text(parser)
           if html_is_whitespace_only(text) {
@@ -488,7 +504,9 @@ pub fn parse_html_label(label : String) -> HtmlLabel? {
 }
 
 ///|
-fn html_table_placements(table : HtmlTable) -> (Array[HtmlCellPlacement], Int, Int) {
+fn html_table_placements(
+  table : HtmlTable,
+) -> (Array[HtmlCellPlacement], Int, Int) {
   let placements : Array[HtmlCellPlacement] = []
   let mut col_count = 0
   let mut row_index = 0
@@ -597,26 +615,20 @@ pub fn html_table_metrics(
   let mut total_width = table.border_pt * 2.0
   let mut total_height = table.border_pt * 2.0
   if col_widths.length() > 0 {
-    total_width =
-      total_width + table.cell_spacing_pt * (col_widths.length() - 1).to_double()
+    total_width = total_width +
+      table.cell_spacing_pt * (col_widths.length() - 1).to_double()
     for width in col_widths {
       total_width = total_width + width
     }
   }
   if row_heights.length() > 0 {
-    total_height =
-      total_height + table.cell_spacing_pt * (row_heights.length() - 1).to_double()
+    total_height = total_height +
+      table.cell_spacing_pt * (row_heights.length() - 1).to_double()
     for height in row_heights {
       total_height = total_height + height
     }
   }
-  {
-    placements,
-    col_widths,
-    row_heights,
-    total_width,
-    total_height,
-  }
+  { placements, col_widths, row_heights, total_width, total_height }
 }
 
 ///|
@@ -636,11 +648,7 @@ pub fn html_table_layout(
 ) -> HtmlTableLayout {
   let metrics = html_table_metrics(table, cell_size)
   if metrics.total_width <= 0.0 || metrics.total_height <= 0.0 {
-    return {
-      cells: [],
-      scale_x: 1.0,
-      scale_y: 1.0,
-    }
+    return { cells: [], scale_x: 1.0, scale_y: 1.0 }
   }
   let scale_x = (rect.urx - rect.llx) / metrics.total_width
   let scale_y = (rect.ury - rect.lly) / metrics.total_height
@@ -682,10 +690,7 @@ pub fn html_table_layout(
     let urx = col_positions[end_col].1
     let ury = row_positions[start_row].0
     let lly = row_positions[end_row].1
-    cells.push({
-      rect: { llx, lly, urx, ury },
-      cell: placement.cell,
-    })
+    cells.push({ rect: { llx, lly, urx, ury }, cell: placement.cell })
   }
   { cells, scale_x, scale_y }
 }

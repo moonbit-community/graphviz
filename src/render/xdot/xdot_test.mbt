@@ -2,10 +2,12 @@
 test "encode xdot ops basic" {
   let ops : Array[@render.DrawOp] = [
     @render.DrawOp::PenColor(color="black"),
-    @render.DrawOp::Ellipse(
-      filled=true,
-      rect={ llx: 0.0, lly: 0.0, urx: 10.0, ury: 20.0 },
-    ),
+    @render.DrawOp::Ellipse(filled=true, rect={
+      llx: 0.0,
+      lly: 0.0,
+      urx: 10.0,
+      ury: 20.0,
+    }),
     @render.DrawOp::Text(
       pos={ x: 5.0, y: 6.0 },
       align=@render.TextAlign::Center,
@@ -13,7 +15,10 @@ test "encode xdot ops basic" {
       text="Hi",
     ),
   ]
-  inspect(encode_xdot_ops(ops), content="c 5 -black E 5 10 5 10 T 5 6 0 12 2 -Hi")
+  inspect(
+    encode_xdot_ops(ops),
+    content="c 5 -black E 5 10 5 10 T 5 6 0 12 2 -Hi",
+  )
 }
 
 ///|
@@ -44,13 +49,9 @@ test "render_xdot attaches draw ops" {
     fail("missing xdotversion")
   }
   let edges = output_graph.edges()
-  guard edges.length() > 0 else {
-    fail("missing edges")
-  }
+  guard edges.length() > 0 else { fail("missing edges") }
   let edge = edges[0]
-  guard edge.get_attr("_draw_") is Some(_) else {
-    fail("missing edge _draw_")
-  }
+  guard edge.get_attr("_draw_") is Some(_) else { fail("missing edge _draw_") }
   guard edge.get_attr("_hdraw_") is Some(_) else {
     fail("missing edge _hdraw_")
   }
@@ -58,7 +59,7 @@ test "render_xdot attaches draw ops" {
 
 ///|
 fn parse_double_or_fail(value : StringView) -> Double raise {
-  try @strconv.parse_double(value) catch {
+  @strconv.parse_double(value) catch {
     _ => fail("invalid number: \{value}")
   }
 }
@@ -76,17 +77,14 @@ fn parse_point_attr(value : String) -> @geom.Point raise {
 fn find_subgraph(graph : @cgraph.Graph, name : String) -> @cgraph.Graph raise {
   for subgraph in graph.subgraphs() {
     match subgraph.name() {
-      Some(value) => {
-        if value == name {
-          return subgraph
-        }
-      }
+      Some(value) => if value == name { return subgraph }
       None => ()
     }
   }
   fail("missing subgraph: \{name}")
 }
 
+///|
 test "render_xdot attaches graph label attrs" {
   let graph = @dot.parse_dot("digraph { label=\"Hello\"; a -> b; }")
   let layout = @layout_dot.layout_dot(graph)
@@ -104,11 +102,13 @@ test "render_xdot attaches graph label attrs" {
   match output_graph.get_attr("lp") {
     Some(value) => {
       let _ = parse_point_attr(value)
+
     }
     None => fail("missing graph lp")
   }
 }
 
+///|
 test "render_xdot fills cluster background" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
@@ -124,6 +124,7 @@ test "render_xdot fills cluster background" {
   assert_true(draw.contains("P "))
 }
 
+///|
 test "render_xdot encodes dashed and dotted styles" {
   let graph = @dot.parse_dot(
     "digraph { node [style=dashed]; a; b; a -> b [style=dotted]; }",
@@ -140,9 +141,7 @@ test "render_xdot encodes dashed and dotted styles" {
   }
   assert_true(node_draw.contains("S 6 -dashed"))
   let edges = output_graph.edges()
-  guard edges.length() > 0 else {
-    fail("missing edge")
-  }
+  guard edges.length() > 0 else { fail("missing edge") }
   let edge_draw = match edges[0].get_attr("_draw_") {
     Some(value) => value
     None => fail("missing edge _draw_")
@@ -150,6 +149,7 @@ test "render_xdot encodes dashed and dotted styles" {
   assert_true(edge_draw.contains("S 6 -dotted"))
 }
 
+///|
 test "render_xdot draws polygon node shapes" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=diamond]; b [shape=triangle]; }",
@@ -178,6 +178,7 @@ test "render_xdot draws polygon node shapes" {
   assert_true(!draw_b.contains("E "))
 }
 
+///|
 test "render_xdot renders nested record labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
@@ -199,6 +200,7 @@ test "render_xdot renders nested record labels" {
   assert_true(label_draw.contains(" -e"))
 }
 
+///|
 test "render_xdot renders html-like labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\"><TR><TD>left</TD><TD>right</TD></TR></TABLE>>]; }",
@@ -217,6 +219,7 @@ test "render_xdot renders html-like labels" {
   assert_true(label_draw.contains(" -right"))
 }
 
+///|
 test "render_xdot renders html label colors and nested tables" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
@@ -240,9 +243,14 @@ test "render_xdot renders html label colors and nested tables" {
   assert_true(label_draw.contains("p "))
 }
 
+///|
 test "graph labelloc affects label position" {
-  let top_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=t; a -> b; }")
-  let bottom_graph = @dot.parse_dot("digraph { label=\"Hello\"; labelloc=b; a -> b; }")
+  let top_graph = @dot.parse_dot(
+    "digraph { label=\"Hello\"; labelloc=t; a -> b; }",
+  )
+  let bottom_graph = @dot.parse_dot(
+    "digraph { label=\"Hello\"; labelloc=b; a -> b; }",
+  )
   let top_output = render_xdot(@layout_dot.layout_dot(top_graph))
   let bottom_output = render_xdot(@layout_dot.layout_dot(bottom_graph))
   let top_lp = match @dot.parse_dot(top_output).get_attr("lp") {
@@ -256,9 +264,14 @@ test "graph labelloc affects label position" {
   assert_true(top_lp.y > bottom_lp.y)
 }
 
+///|
 test "graph labeljust affects label position" {
-  let left_graph = @dot.parse_dot("digraph { label=\"Hello\"; labeljust=l; a -> b; }")
-  let right_graph = @dot.parse_dot("digraph { label=\"Hello\"; labeljust=r; a -> b; }")
+  let left_graph = @dot.parse_dot(
+    "digraph { label=\"Hello\"; labeljust=l; a -> b; }",
+  )
+  let right_graph = @dot.parse_dot(
+    "digraph { label=\"Hello\"; labeljust=r; a -> b; }",
+  )
   let left_output = render_xdot(@layout_dot.layout_dot(left_graph))
   let right_output = render_xdot(@layout_dot.layout_dot(right_graph))
   let left_lp = match @dot.parse_dot(left_output).get_attr("lp") {

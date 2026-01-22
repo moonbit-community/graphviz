@@ -4,7 +4,11 @@ fn program_basename(program : String) -> String {
   for part in program.split("/") {
     name = part.to_string()
   }
-  if name == "" { program } else { name }
+  if name == "" {
+    program
+  } else {
+    name
+  }
 }
 
 ///|
@@ -19,7 +23,7 @@ fn parse_engine_name(name : String) -> LayoutEngine {
     "osage" => LayoutEngine::Osage
     "patchwork" => LayoutEngine::Patchwork
     "nop" => LayoutEngine::Nop
-    _ => LayoutEngine::Other(name=name)
+    _ => LayoutEngine::Other(name~)
   }
 }
 
@@ -79,26 +83,26 @@ fn parse_assignment(
     }
   }
   if !seen_eq {
-    raise CliError::InvalidAssignment(flag=flag, value=text)
+    raise CliError::InvalidAssignment(flag~, value=text)
   }
   let name = name_sb.to_string()
   if name == "" {
-    raise CliError::InvalidAssignment(flag=flag, value=text)
+    raise CliError::InvalidAssignment(flag~, value=text)
   }
   { name, value: value_sb.to_string() }
 }
 
 ///|
 fn parse_double(flag : String, text : String) -> Double raise CliError {
-  try @strconv.parse_double(text) catch {
-    _ => raise CliError::InvalidNumber(flag=flag, value=text)
+  @strconv.parse_double(text) catch {
+    _ => raise CliError::InvalidNumber(flag~, value=text)
   }
 }
 
 ///|
 fn parse_int(flag : String, text : String) -> Int raise CliError {
-  try @strconv.parse_int(text) catch {
-    _ => raise CliError::InvalidNumber(flag=flag, value=text)
+  @strconv.parse_int(text) catch {
+    _ => raise CliError::InvalidNumber(flag~, value=text)
   }
 }
 
@@ -134,11 +138,11 @@ fn required_flag_value(
   }
   let next_index = index + 1
   if next_index >= args.length() {
-    raise CliError::MissingValue(flag=flag)
+    raise CliError::MissingValue(flag~)
   }
   let value = args[next_index]
   if value.has_prefix("-") {
-    raise CliError::MissingValue(flag=flag)
+    raise CliError::MissingValue(flag~)
   }
   (value, next_index)
 }
@@ -198,7 +202,7 @@ pub fn parse_cli_args(
   args : Array[String],
   program? : String = "dot",
 ) -> CliAction raise CliError {
-  let mut engine = default_engine(program=program)
+  let mut engine = default_engine(program~)
   let mut format = default_format(engine)
   let mut format_set = false
   let mut input : String? = None
@@ -354,19 +358,14 @@ fn layout_for_job(
         None => 72.0
       }
       match job.neato_no_op {
-        Some(level) => {
+        Some(level) =>
           @layout_dot.layout_neato_noop(
             graph,
             no_op_level=level,
-            scale=scale,
+            scale~,
             prune=job.neato_prune,
           )
-        }
-        None => @layout_dot.layout_neato(
-          graph,
-          scale=scale,
-          prune=job.neato_prune,
-        )
+        None => @layout_dot.layout_neato(graph, scale~, prune=job.neato_prune)
       }
     }
     LayoutEngine::Fdp
@@ -376,9 +375,10 @@ fn layout_for_job(
     | LayoutEngine::Osage
     | LayoutEngine::Patchwork
     | LayoutEngine::Nop
-    | LayoutEngine::Other(_) => raise @layout_dot.DotLayoutError::UnsupportedFeature(
-      message="layout engine not implemented",
-    )
+    | LayoutEngine::Other(_) =>
+      raise @layout_dot.DotLayoutError::UnsupportedFeature(
+        message="layout engine not implemented",
+      )
   }
 }
 
@@ -421,11 +421,8 @@ fn version_text() -> String {
 }
 
 ///|
-pub fn run_cli(
-  args : Array[String],
-  program? : String = "dot",
-) -> String raise {
-  match parse_cli_args(args, program=program) {
+pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise {
+  match parse_cli_args(args, program~) {
     CliAction::Render(job) => {
       let output = render_job(job)
       match job.output {

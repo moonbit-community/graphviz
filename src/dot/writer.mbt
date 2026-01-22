@@ -108,12 +108,11 @@ fn write_port(port : @cgraph.Port?) -> String {
             None => ()
           }
         }
-        None => {
+        None =>
           match value.compass {
             Some(compass) => out = ":\{compass_label(compass)}"
             None => ()
           }
-        }
       }
       out
     }
@@ -197,7 +196,6 @@ fn write_graph(
   }
   sb.write_string(" {\n")
   let inner = indent + 2
-
   let graph_defaults = merge_attrs(
     graph.default_attrs(@cgraph.AttrKind::Graph),
     graph.attrs(),
@@ -233,13 +231,11 @@ fn write_graph(
     write_attr_list(sb, edge_defaults)
     sb.write_string(";\n")
   }
-
   for subgraph in graph.subgraphs() {
     write_graph(subgraph, sb, inner, false)
   }
-
   let nodes = graph.nodes()
-  nodes.sort_by_key((node) => node.name())
+  nodes.sort_by_key(node => node.name())
   for node in nodes {
     write_indent(sb, inner)
     sb.write_string(write_id(node.name()))
@@ -250,7 +246,6 @@ fn write_graph(
     }
     sb.write_string(";\n")
   }
-
   if graph.is_root() {
     let edge_op = match graph.kind() {
       @cgraph.GraphKind::Directed => "->"
@@ -275,7 +270,6 @@ fn write_graph(
       sb.write_string(";\n")
     }
   }
-
   write_indent(sb, indent)
   sb.write_string("}\n")
 }

@@ -2,123 +2,104 @@
 test "render_svg emits svg" {
   let graph = @dot.parse_dot("digraph { a -> b; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains("<svg"))
   assert_true(svg.contains("<path"))
   assert_true(svg.contains("<polygon"))
 }
 
+///|
 test "render_svg emits root background" {
   let graph = @dot.parse_dot("digraph { bgcolor=\"pink\"; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains("<rect"))
   assert_true(svg.contains("fill=\"pink\""))
 }
 
+///|
 test "render_svg emits edge labels" {
   let graph = @dot.parse_dot("digraph { a -> b [label=\"edge\"]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">edge</text>"))
 }
 
+///|
 test "render_svg honors dashed and dotted styles" {
   let graph = @dot.parse_dot(
     "digraph { node [style=dotted]; a; b; a -> b [style=dashed]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains("stroke-dasharray=\"2,4\""))
   assert_true(svg.contains("stroke-dasharray=\"5,5\""))
 }
 
+///|
 test "render_svg draws polygon node shapes" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=diamond]; b [shape=triangle]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains("<polygon"))
   assert_true(!svg.contains("<ellipse"))
 }
 
+///|
 test "render_svg skips outlines for plaintext nodes" {
-  let graph = @dot.parse_dot(
-    "digraph { a [shape=plaintext,label=\"hello\"]; }",
-  )
+  let graph = @dot.parse_dot("digraph { a [shape=plaintext,label=\"hello\"]; }")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">hello</text>"))
   assert_true(!svg.contains("<ellipse"))
   assert_true(!svg.contains("<polygon"))
 }
 
+///|
 test "render_svg renders record fields" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"<f0>left|<f1>right\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">left</text>"))
   assert_true(svg.contains(">right</text>"))
   assert_true(svg.contains("<line"))
 }
 
+///|
 test "render_svg renders nested record fields" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">a</text>"))
   assert_true(svg.contains(">b</text>"))
   assert_true(svg.contains(">c</text>"))
@@ -127,35 +108,31 @@ test "render_svg renders nested record fields" {
   assert_true(svg.contains("<line"))
 }
 
+///|
 test "render_svg renders html-like labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\"><TR><TD>left</TD><TD>right</TD></TR></TABLE>>]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">left</text>"))
   assert_true(svg.contains(">right</text>"))
   assert_true(svg.contains("<rect"))
 }
 
+///|
 test "render_svg renders html label alignment and colors" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE BORDER=\\\"1\\\" CELLBORDER=\\\"1\\\" CELLSPACING=\\\"0\\\" BGCOLOR=\\\"yellow\\\"><TR><TD ALIGN=\\\"left\\\" BGCOLOR=\\\"red\\\">left</TD><TD ALIGN=\\\"right\\\">right</TD></TR><TR><TD COLSPAN=\\\"2\\\"><TABLE><TR><TD>inner</TD></TR></TABLE></TD></TR></TABLE>>]; }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">left</text>"))
   assert_true(svg.contains(">right</text>"))
   assert_true(svg.contains(">inner</text>"))
@@ -165,45 +142,41 @@ test "render_svg renders html label alignment and colors" {
   assert_true(svg.contains("text-anchor=\"end\""))
 }
 
+///|
 test "render_svg emits cluster labels" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/clust.gv")
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">hello world</text>"))
   assert_true(svg.contains(">MSDOT</text>"))
 }
 
+///|
 test "render_svg fills cluster background" {
   let graph = @dot.parse_dot(
     "digraph { subgraph cluster_0 { style=filled; color=lightgrey; a; } }",
   )
   let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
-  )
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains("fill=\"lightgrey\""))
 }
 
+///|
 test "render_svg emits graph labels" {
-  let graph = @dot.parse_dot("digraph { label=\"Root\"; labelloc=t; labeljust=r; a -> b; }")
-  let layout = @layout_dot.layout_dot(graph)
-  let svg = render_svg(
-    layout,
-    options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    },
+  let graph = @dot.parse_dot(
+    "digraph { label=\"Root\"; labelloc=t; labeljust=r; a -> b; }",
   )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
   assert_true(svg.contains(">Root</text>"))
 }
 

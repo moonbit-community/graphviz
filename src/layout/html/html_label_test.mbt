@@ -12,8 +12,8 @@ fn make_text_cell(text : String, col_span : Int, row_span : Int) -> HtmlCell {
   {
     content: HtmlCellContent::Text(text),
     port: None,
-    col_span: col_span,
-    row_span: row_span,
+    col_span,
+    row_span,
     align: HtmlAlign::Center,
     valign: HtmlVAlign::Middle,
     bg_color: None,
@@ -32,19 +32,11 @@ fn cell_size_from_min(table : HtmlTable, cell : HtmlCell) -> (Double, Double) {
   let mut width = 0.0
   let mut height = 0.0
   match cell.min_width_pt {
-    Some(value) => {
-      if value > width {
-        width = value
-      }
-    }
+    Some(value) => if value > width { width = value }
     None => ()
   }
   match cell.min_height_pt {
-    Some(value) => {
-      if value > height {
-        height = value
-      }
-    }
+    Some(value) => if value > height { height = value }
     None => ()
   }
   width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
@@ -57,11 +49,10 @@ fn find_cell_rect(cells : Array[HtmlCellLayout], text : String) -> @geom.Rect? {
   let mut found : @geom.Rect? = None
   for cell_layout in cells {
     match cell_layout.cell.content {
-      HtmlCellContent::Text(value) => {
+      HtmlCellContent::Text(value) =>
         if value == text {
           found = Some(cell_layout.rect)
         }
-      }
       _ => ()
     }
   }
@@ -88,7 +79,7 @@ fn row_span_table() -> HtmlTable {
 ///|
 fn row_span_cell_size(cell : HtmlCell) -> (Double, Double) {
   match cell.content {
-    HtmlCellContent::Text(text) => {
+    HtmlCellContent::Text(text) =>
       if text == "Tall" {
         (10.0, 30.0)
       } else if text == "Top" {
@@ -98,7 +89,6 @@ fn row_span_cell_size(cell : HtmlCell) -> (Double, Double) {
       } else {
         (0.0, 0.0)
       }
-    }
     _ => (0.0, 0.0)
   }
 }
@@ -123,7 +113,7 @@ fn col_span_table() -> HtmlTable {
 ///|
 fn col_span_cell_size(cell : HtmlCell) -> (Double, Double) {
   match cell.content {
-    HtmlCellContent::Text(text) => {
+    HtmlCellContent::Text(text) =>
       if text == "Wide" {
         (40.0, 10.0)
       } else if text == "Left" {
@@ -133,7 +123,6 @@ fn col_span_cell_size(cell : HtmlCell) -> (Double, Double) {
       } else {
         (0.0, 0.0)
       }
-    }
     _ => (0.0, 0.0)
   }
 }
@@ -167,11 +156,13 @@ test "html label parses table cell" {
   }
 }
 
+///|
 test "html label collapses whitespace" {
   let label = "<<b>  hello   world  </b>>"
   assert_text_label(label, "hello world")
 }
 
+///|
 test "html label br creates newline" {
   let label = "<<table><tr><td>Line1<br/>Line2</td></tr></table>>"
   match parse_html_label(label) {
@@ -186,9 +177,9 @@ test "html label br creates newline" {
   }
 }
 
+///|
 test "html label parses nested table" {
-  let label =
-    "<<table><tr><td><table><tr><td>Inner</td></tr></table></td></tr></table>>"
+  let label = "<<table><tr><td><table><tr><td>Inner</td></tr></table></td></tr></table>>"
   match parse_html_label(label) {
     Some(HtmlLabel::Table(table)) => {
       let cell = table.rows[0].cells[0]
@@ -208,6 +199,7 @@ test "html label parses nested table" {
   }
 }
 
+///|
 test "html label defaults spans when zero" {
   let label = "<<table><tr><td colspan=\"0\" rowspan=\"0\">Hi</td></tr></table>>"
   match parse_html_label(label) {
@@ -222,21 +214,30 @@ test "html label defaults spans when zero" {
 
 ///|
 test "html label parses sizing attributes" {
-  let label =
-    "<<table border=\"1\" cellborder=\"2\" cellpadding=\"3\" cellspacing=\"4\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
+  let label = "<<table border=\"1\" cellborder=\"2\" cellpadding=\"3\" cellspacing=\"4\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
   match parse_html_label(label) {
     Some(HtmlLabel::Table(table)) => {
-      assert_true(Double::is_close(table.border_pt, 1.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(table.cell_border_pt, 2.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(table.cell_padding_pt, 3.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(table.cell_spacing_pt, 4.0, absolute_tolerance=0.01))
+      assert_true(
+        Double::is_close(table.border_pt, 1.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(table.cell_border_pt, 2.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(table.cell_padding_pt, 3.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(table.cell_spacing_pt, 4.0, absolute_tolerance=0.01),
+      )
       let cell = table.rows[0].cells[0]
       match cell.min_width_pt {
-        Some(value) => assert_true(Double::is_close(value, 40.0, absolute_tolerance=0.01))
+        Some(value) =>
+          assert_true(Double::is_close(value, 40.0, absolute_tolerance=0.01))
         None => fail("expected min width")
       }
       match cell.min_height_pt {
-        Some(value) => assert_true(Double::is_close(value, 50.0, absolute_tolerance=0.01))
+        Some(value) =>
+          assert_true(Double::is_close(value, 50.0, absolute_tolerance=0.01))
         None => fail("expected min height")
       }
     }
@@ -244,6 +245,7 @@ test "html label parses sizing attributes" {
   }
 }
 
+///|
 test "html table size includes border and spacing" {
   let cell = make_text_cell("x", 1, 1)
   let row = HtmlRow::{ cells: [cell, cell] }
@@ -260,6 +262,7 @@ test "html table size includes border and spacing" {
   assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
 }
 
+///|
 test "html table size respects colspan" {
   let cell = make_text_cell("x", 2, 1)
   let row = HtmlRow::{ cells: [cell] }
@@ -279,11 +282,12 @@ test "html table size respects colspan" {
 
 ///|
 test "html table size includes padding and min size" {
-  let label =
-    "<<table border=\"1\" cellborder=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
+  let label = "<<table border=\"1\" cellborder=\"1\" cellpadding=\"2\" cellspacing=\"0\"><tr><td width=\"40\" height=\"50\">Hi</td></tr></table>>"
   match parse_html_label(label) {
     Some(HtmlLabel::Table(table)) => {
-      let (width, height) = html_table_size(table, cell => cell_size_from_min(table, cell))
+      let (width, height) = html_table_size(table, cell => cell_size_from_min(
+        table, cell,
+      ))
       assert_true(Double::is_close(width, 48.0, absolute_tolerance=0.01))
       assert_true(Double::is_close(height, 58.0, absolute_tolerance=0.01))
     }
@@ -291,6 +295,7 @@ test "html table size includes padding and min size" {
   }
 }
 
+///|
 test "html table layout scales cell rect" {
   let cell = make_text_cell("x", 1, 1)
   let row = HtmlRow::{ cells: [cell] }
@@ -308,10 +313,18 @@ test "html table layout scales cell rect" {
   assert_true(Double::is_close(layout.scale_x, 2.0, absolute_tolerance=0.01))
   assert_true(Double::is_close(layout.scale_y, 2.0, absolute_tolerance=0.01))
   let cell_rect = layout.cells[0].rect
-  assert_true(Double::is_close(cell_rect.llx, rect.llx, absolute_tolerance=0.01))
-  assert_true(Double::is_close(cell_rect.lly, rect.lly, absolute_tolerance=0.01))
-  assert_true(Double::is_close(cell_rect.urx, rect.urx, absolute_tolerance=0.01))
-  assert_true(Double::is_close(cell_rect.ury, rect.ury, absolute_tolerance=0.01))
+  assert_true(
+    Double::is_close(cell_rect.llx, rect.llx, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(cell_rect.lly, rect.lly, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(cell_rect.urx, rect.urx, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(cell_rect.ury, rect.ury, absolute_tolerance=0.01),
+  )
 }
 
 ///|
@@ -320,12 +333,24 @@ test "html table metrics distribute rowspan heights" {
   let metrics = html_table_metrics(table, row_span_cell_size)
   assert_eq(metrics.col_widths.length(), 2)
   assert_eq(metrics.row_heights.length(), 2)
-  assert_true(Double::is_close(metrics.col_widths[0], 10.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(metrics.col_widths[1], 20.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(metrics.row_heights[0], 15.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(metrics.row_heights[1], 20.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(metrics.total_width, 30.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(metrics.total_height, 35.0, absolute_tolerance=0.01))
+  assert_true(
+    Double::is_close(metrics.col_widths[0], 10.0, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(metrics.col_widths[1], 20.0, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(metrics.row_heights[0], 15.0, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(metrics.row_heights[1], 20.0, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(metrics.total_width, 30.0, absolute_tolerance=0.01),
+  )
+  assert_true(
+    Double::is_close(metrics.total_height, 35.0, absolute_tolerance=0.01),
+  )
 }
 
 ///|
@@ -337,8 +362,12 @@ test "html table layout spans rows" {
     Some(cell_rect) => {
       assert_true(Double::is_close(cell_rect.llx, 0.0, absolute_tolerance=0.01))
       assert_true(Double::is_close(cell_rect.lly, 0.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(cell_rect.urx, 10.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(cell_rect.ury, 35.0, absolute_tolerance=0.01))
+      assert_true(
+        Double::is_close(cell_rect.urx, 10.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(cell_rect.ury, 35.0, absolute_tolerance=0.01),
+      )
     }
     None => fail("missing Tall cell")
   }
@@ -352,9 +381,15 @@ test "html table layout spans columns" {
   match find_cell_rect(layout.cells, "Wide") {
     Some(cell_rect) => {
       assert_true(Double::is_close(cell_rect.llx, 0.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(cell_rect.lly, 20.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(cell_rect.urx, 50.0, absolute_tolerance=0.01))
-      assert_true(Double::is_close(cell_rect.ury, 30.0, absolute_tolerance=0.01))
+      assert_true(
+        Double::is_close(cell_rect.lly, 20.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(cell_rect.urx, 50.0, absolute_tolerance=0.01),
+      )
+      assert_true(
+        Double::is_close(cell_rect.ury, 30.0, absolute_tolerance=0.01),
+      )
     }
     None => fail("missing Wide cell")
   }

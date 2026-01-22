@@ -54,9 +54,12 @@ fn find_edge(
   None
 }
 
+///|
 test "layout_dot ortho adds more control points than polyline" {
   let source = "digraph { a -> c; b -> c; }"
-  let graph_poly = @dot_parser.parse_dot("digraph { splines=polyline; \{source} }")
+  let graph_poly = @dot_parser.parse_dot(
+    "digraph { splines=polyline; \{source} }",
+  )
   let layout_poly = layout_dot(graph_poly)
   layout_poly.apply()
   let poly_edge = match find_edge(graph_poly, "a", "c") {
@@ -65,7 +68,9 @@ test "layout_dot ortho adds more control points than polyline" {
   }
   let poly_pos = edge_pos(poly_edge)
   assert_true(poly_pos != "")
-  let graph_ortho = @dot_parser.parse_dot("digraph { splines=ortho; \{source} }")
+  let graph_ortho = @dot_parser.parse_dot(
+    "digraph { splines=ortho; \{source} }",
+  )
   let layout_ortho = layout_dot(graph_ortho)
   layout_ortho.apply()
   let ortho_edge = match find_edge(graph_ortho, "a", "c") {

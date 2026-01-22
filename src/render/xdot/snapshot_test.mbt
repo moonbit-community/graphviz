@@ -130,7 +130,7 @@ fn normalize_color_tokens(tokens : Array[String]) -> Array[String] {
 
 ///|
 fn token_number(value : String) -> Double? {
-  try Some(@strconv.parse_double(value)) catch {
+  Some(@strconv.parse_double(value)) catch {
     _ => None
   }
 }
@@ -418,13 +418,14 @@ fn compare_nodes(
   }
   for name, expected_node in expected_map {
     match actual_map.get(name) {
-      Some(actual_node) => compare_attrs(
-        expected_node.attrs(),
-        actual_node.attrs(),
-        tol,
-        rankdir,
-        skip_clustered,
-      )
+      Some(actual_node) =>
+        compare_attrs(
+          expected_node.attrs(),
+          actual_node.attrs(),
+          tol,
+          rankdir,
+          skip_clustered,
+        )
       None => fail("missing node \{name}")
     }
   }
@@ -451,13 +452,14 @@ fn compare_edges(
   }
   for key, expected_edge in expected_map {
     match actual_map.get(key) {
-      Some(actual_edge) => compare_attrs(
-        expected_edge.attrs(),
-        actual_edge.attrs(),
-        tol,
-        rankdir,
-        skip_clustered,
-      )
+      Some(actual_edge) =>
+        compare_attrs(
+          expected_edge.attrs(),
+          actual_edge.attrs(),
+          tol,
+          rankdir,
+          skip_clustered,
+        )
       None => fail("missing edge \{key}")
     }
   }
@@ -474,7 +476,12 @@ fn compare_subgraphs(
   let actual_subgraphs = actual.subgraphs()
   assert_eq(expected_subgraphs.length(), actual_subgraphs.length())
   for i in 0..<expected_subgraphs.length() {
-    compare_graph_no_edges(expected_subgraphs[i], actual_subgraphs[i], tol, rankdir)
+    compare_graph_no_edges(
+      expected_subgraphs[i],
+      actual_subgraphs[i],
+      tol,
+      rankdir,
+    )
   }
 }
 
@@ -501,7 +508,8 @@ fn compare_graph(
   tol : Double,
 ) -> Unit raise {
   let rankdir = graph_rankdir(expected)
-  let skip_clustered = expected.subgraphs().length() > 0 || is_cluster_graph(expected)
+  let skip_clustered = expected.subgraphs().length() > 0 ||
+    is_cluster_graph(expected)
   compare_attrs(expected.attrs(), actual.attrs(), tol, rankdir, skip_clustered)
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Graph),
@@ -536,7 +544,8 @@ fn compare_graph_no_edges(
   tol : Double,
   rankdir : String,
 ) -> Unit raise {
-  let skip_clustered = expected.subgraphs().length() > 0 || is_cluster_graph(expected)
+  let skip_clustered = expected.subgraphs().length() > 0 ||
+    is_cluster_graph(expected)
   compare_attrs(expected.attrs(), actual.attrs(), tol, rankdir, skip_clustered)
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Graph),
@@ -578,14 +587,19 @@ fn assert_snapshot(
   compare_graph(expected_graph, actual_graph, tol)
 }
 
+///|
 test "xdot snapshot parity" {
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
     ("refs/graphviz/graphs/directed/arrows.gv", "tests/render/xdot/arrows.xdot"),
     ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
-    ("refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot"),
+    (
+      "refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot",
+    ),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
-    ("refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot"),
+    (
+      "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
+    ),
   ]
   let tolerance = 0.01
   for pair in cases {
