@@ -39,6 +39,17 @@ fn complex_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
 }
 
 ///|
+fn complex_pos_close(
+  actual : @geom.Point,
+  expected : @geom.Point,
+  eps : Double,
+) -> Bool {
+  let dx = Double::abs(actual.x - expected.x)
+  let dy = Double::abs(actual.y - expected.y)
+  dx <= eps && dy <= eps
+}
+
+///|
 test "dot layout handles complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
@@ -75,6 +86,31 @@ test "dot layout handles complex sample" {
   for i in 1..<positions.length() {
     guard positions[i - 1].x < positions[i].x else {
       fail("expected \{ordered[i - 1]} left of \{ordered[i]}")
+    }
+  }
+}
+
+///|
+test "dot layout matches graphviz node positions for complex sample" {
+  let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
+  let layout = layout_dot(graph)
+  layout.apply()
+  let eps = 2.0
+  for node in reference.nodes() {
+    let name = node.name()
+    let expected = match complex_node_pos(reference, name) {
+      Some(value) => value
+      None => fail("missing pos in reference for node \{name}")
+    }
+    let actual = match complex_node_pos(graph, name) {
+      Some(value) => value
+      None => fail("missing pos in layout for node \{name}")
+    }
+    if !complex_pos_close(actual, expected, eps) {
+      fail(
+        "node \{name} pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
+      )
     }
   }
 }

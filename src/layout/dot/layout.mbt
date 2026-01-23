@@ -1322,6 +1322,11 @@ fn intercluster_edge_key(
 }
 
 ///|
+fn cluster_rank_key(cluster : String, rank : Int) -> String {
+  "\{cluster}@\{rank}"
+}
+
+///|
 fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
   match edge.get_attr("constraint") {
     Some(value) => {
@@ -2480,6 +2485,116 @@ fn normalize_x_positions(
     for name in extra_names {
       match x_positions.get(name) {
         Some(value) => x_positions[name] = value - min_x
+        None => ()
+      }
+    }
+  }
+}
+
+///|
+fn adjust_intercluster_alignment(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  x_positions : Map[String, Double],
+  cluster_keys : Map[String, String],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+) -> Unit {
+  let cluster_rank_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_rank_value : Map[String, Int] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster == "" {
+      continue
+    }
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let key = cluster_rank_key(cluster, rank)
+    cluster_rank_value[key] = rank
+    match cluster_rank_nodes.get(key) {
+      Some(list) => list.push(name)
+      None => cluster_rank_nodes[key] = [name]
+    }
+  }
+  let cluster_rank_targets : Map[String, Map[String, Bool]] = Map::new()
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
+    if tail_cluster == "" || tail_cluster == head_cluster {
+      continue
+    }
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let key = cluster_rank_key(tail_cluster, tail_rank)
+    match cluster_rank_targets.get(key) {
+      Some(targets) => targets[head] = true
+      None => {
+        let targets : Map[String, Bool] = Map::new()
+        targets[head] = true
+        cluster_rank_targets[key] = targets
+      }
+    }
+  }
+  let eps = 0.01
+  for key, names in cluster_rank_nodes {
+    if names.length() < 2 {
+      continue
+    }
+    let targets = match cluster_rank_targets.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    if targets.length() != 1 {
+      continue
+    }
+    let mut target_name = ""
+    for name, _ in targets {
+      target_name = name
+      break
+    }
+    let target_x = match x_positions.get(target_name) {
+      Some(value) => value
+      None => continue
+    }
+    let mut aligned = false
+    for name in names {
+      match x_positions.get(name) {
+        Some(value) =>
+          if Double::abs(value - target_x) <= eps {
+            aligned = true
+            break
+          }
+        None => ()
+      }
+    }
+    if !aligned {
+      continue
+    }
+    let rank = match cluster_rank_value.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    let shift = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
+    for name in names {
+      match x_positions.get(name) {
+        Some(value) => x_positions[name] = value - shift
         None => ()
       }
     }
@@ -4464,6 +4579,15 @@ pub fn layout_dot(
     vnode_extra_nodes,
     vnode_info.edge_vnodes,
     virtual_slack_edges,
+  )
+  adjust_intercluster_alignment(
+    nodes,
+    edges,
+    ranks,
+    x_positions,
+    cluster_keys,
+    nodesep_pt,
+    has_edge_labels,
   )
   let vnode_names : Array[String] = []
   for pair in vnode_extra_nodes {

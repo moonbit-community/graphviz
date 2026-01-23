@@ -1,139 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1262.8868856pt" height="971.4000799999999pt" viewBox="0 0 1262.8868856 971.4000799999999">
-  <rect x="0" y="0" width="1262.8868856" height="971.4000799999999" fill="white"/>
-  <g transform="translate(0 971.4000799999999) scale(1 -1)">
-    <rect x="196.84741079999998" y="590.5" width="296.1264" height="77.80007999999998" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="344.9106108" y="-650.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Clients</text>
-    <rect x="19.570142200000006" y="735.5" width="238.1512686" height="77.80007999999998" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="138.6457765" y="-795.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Clients</text>
-    <rect x="4" y="590.5" width="185.19562159999998" height="111.40008" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="96.5978108" y="-684.15068" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifters</text>
-    <text x="96.5978108" y="-667.65028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(Configurable</text>
-    <text x="96.5978108" y="-651.1498799999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter)</text>
-    <rect x="214.29917439999997" y="478.5" width="298.5972728000001" height="77.80007999999998" fill="none" stroke="black"/>
-    <text x="363.5978108" y="-538.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Shapeshifter</text>
-    <rect x="910.3436186" y="590.5" width="136.50838440000007" height="77.80007999999998" fill="none" stroke="black"/>
-    <text x="978.5978108" y="-650.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Shapeshifter</text>
-    <rect x="518.5078108" y="396.5" width="384.3744054" height="546.1000799999999" fill="none" stroke="black"/>
-    <text x="710.6950135000001" y="-925.15028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly</text>
-    <rect x="752.3134054000001" y="404.5" width="142.56881079999994" height="263.80008" fill="none" stroke="black"/>
-    <text x="823.5978108" y="-650.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Reactor</text>
-    <rect x="526.5078108" y="590.5" width="218.02201860000002" height="319.30008" fill="none" stroke="black"/>
-    <text x="635.5188201" y="-892.35028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly Front-End</text>
-    <rect x="1054.8170484" y="590.5" width="204.06983719999994" height="77.80007999999998" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="1156.851967" y="-650.85028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Shapeshifters</text>
-    <rect x="721.6960054" y="4" width="225.06607940000004" height="360.60008000000005" fill="none" stroke="black"/>
-    <text x="834.2290451" y="-347.15028000000007" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ShipX</text>
-    <rect x="741.5978108" y="12" width="158" height="118.60007999999998" fill="none" stroke="black"/>
-    <text x="820.5978108" y="-113.15027999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorX</text>
-    <rect x="749.5978108" y="20" width="142" height="77.80008" fill="none" stroke="black"/>
-    <text x="820.5978108" y="-80.35028" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Tungsten</text>
-    <rect x="729.6960054" y="164.5" width="209.06607940000004" height="167.30008000000004" fill="none" stroke="black"/>
-    <text x="834.2290451" y="-314.35028000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorY</text>
-    <path d="M 823.5978108 587.43004 C 823.5978108 571.28004 823.5978108 551.14004 823.5978108 534.93004" fill="none" stroke="black"/>
-    <polygon points="823.5978108,534.93004 826.5978108,544.93004 820.5978108,544.93004" fill="black" stroke="black"/>
-    <polygon points="823.5978108,587.43004 820.5978108,577.43004 826.5978108,577.43004" fill="black" stroke="black"/>
-    <path d="M 823.5978108 475.18004 C 823.5978108 470.38004 823.5978108 465.40004 823.5978108 460.60004000000004" fill="none" stroke="black"/>
-    <polygon points="823.5978108,460.60004000000004 826.5978108,470.60004000000004 820.5978108,470.60004000000004" fill="black" stroke="black"/>
-    <polygon points="823.5978108,475.18004 820.5978108,465.18004 826.5978108,465.18004" fill="black" stroke="black"/>
-    <path d="M 593.8078108000001 732.33004 C 595.7178108 707.39004 598.4878108 671.4500400000001 600.3978108 646.55004" fill="none" stroke="black"/>
-    <polygon points="600.3978108,646.55004 602.6242021599288,656.7501959552995 596.641776455372,656.2913030598899" fill="black" stroke="black"/>
-    <polygon points="593.8078108000001,732.33004 591.5801718992209,722.1301564257755 597.5626536851612,722.5883176210901" fill="black" stroke="black"/>
-    <path d="M 609.7578108 840.17004 C 625.1078108 825.51004 647.2878108000001 804.34004 664.5378108000001 787.88004" fill="none" stroke="black" stroke-dasharray="1,5"/>
-    <polygon points="664.5378108000001,787.88004 659.374055830779,796.9539385346897 655.2319794763258,792.613062646821" fill="black" stroke="black"/>
-    <path d="M 568.0278108 840.12004 C 559.9578108000001 832.76004 551.8878108 823.4500400000001 547.5978108 813.00004 C 534.5078108 781.14004 540.1178108 769.12004 547.5978108 735.50004 C 554.8978108 702.71004 572.3578108 668.24004 585.6678108000001 645.18004" fill="none" stroke="black" stroke-dasharray="1,5"/>
-    <polygon points="585.6678108000001,645.18004 583.2671088579291,655.3405828095814 578.070595705474,652.3412076986023" fill="black" stroke="black"/>
-    <path d="M 591.5978108 840.17004 C 591.5978108 826.58004 591.5978108 807.39004 591.5978108 791.54004" fill="none" stroke="black" stroke-dasharray="1,5"/>
-    <polygon points="591.5978108,791.54004 594.5978108,801.54004 588.5978108,801.54004" fill="black" stroke="black"/>
-    <path d="M 629.5378108000001 738.31004 C 631.5678108000001 737.31004 633.5978108 736.37004 635.5978108 735.50004 C 683.7378108 714.53004 704.2778108 729.17004 748.5978108 701.00004 C 771.5178108 686.43004 791.7878108000001 663.01004 805.4478108000001 644.75004" fill="none" stroke="black"/>
-    <polygon points="805.4478108000001,644.75004 801.8598464813263,654.5544528864468 797.0554298258155,650.9603492985893" fill="black" stroke="black"/>
-    <polygon points="629.5378108000001,738.31004 637.1827309842915,731.199822325708 639.8341483892482,736.5821996577699" fill="black" stroke="black"/>
-    <path d="M 794.2478108 253.63004 C 791.8878108 250.58004 789.7778108 247.35003999999998 788.0978108 244.00004 C 784.5178108 236.85003999999998 782.5078108 228.50004 781.4178108000001 220.61004000000003" fill="none" stroke="black"/>
-    <polygon points="781.4178108000001,220.61004000000003 785.7580844059905,230.10540860922958 779.8145335668933,230.92650752109466" fill="black" stroke="black"/>
-    <polygon points="794.2478108,253.63004 785.7555141606025,247.55707550245222 790.5008280079604,243.88529167302107" fill="black" stroke="black"/>
-    <path d="M 842.4178108000001 252.94004 C 850.1878108000001 241.97003999999998 859.1778108000001 229.29003999999998 866.9378108000001 218.34004" fill="none" stroke="black"/>
-    <polygon points="866.9378108000001,218.34004 863.6034549262419,228.23357682497488 858.7080989283442,224.76435650135062" fill="black" stroke="black"/>
-    <polygon points="842.4178108000001,252.94004 845.7496605093206,243.04565889179014 850.6458951123006,246.51363909827643" fill="black" stroke="black"/>
-    <path d="M 775.1178108 161.38004 C 774.8078108000001 159.06004000000001 774.5478108000001 156.74004000000002 774.3478108 154.50004 C 772.0278108 127.96004 775.4878108 97.74004 778.9978108 76.20204" fill="none" stroke="black"/>
-    <polygon points="778.9978108,76.20204 780.3502907929221,86.55437296744002 774.4284135643074,85.58929779460887" fill="black" stroke="black"/>
-    <polygon points="775.1178108,161.38004 770.8198035105017,151.86546521499673 776.76694679776,151.0708038274753" fill="black" stroke="black"/>
-    <path d="M 879.7978108000001 161.50004 C 874.7378108 136.63004 867.4278108000001 100.72004 862.3778108 75.88004" fill="none" stroke="black"/>
-    <polygon points="862.3778108,75.88004 867.3099284966341,85.08189932442725 861.4302066800741,86.27725339743968" fill="black" stroke="black"/>
-    <polygon points="879.7978108000001,161.50004 874.8643071385297,152.2989236752132 880.7438488393891,151.1026839885888" fill="black" stroke="black"/>
-    <path d="M 270.18781079999997 587.4400400000001 C 269.99781079999997 572.47004 269.80781079999997 553.52004 269.74781079999997 535.42004" fill="none" stroke="black"/>
-    <polygon points="269.74781079999997,535.42004 272.780943306262,545.4100403603331 266.7809762720169,545.4299297538169" fill="black" stroke="black"/>
-    <polygon points="270.18781079999997,587.4400400000001 267.061142116818,577.478918429333 273.0606589107382,577.4027722575998" fill="black" stroke="black"/>
-    <path d="M 365.0678108 594.09004 C 328.74781079999997 578.00004 285.49781079999997 555.4400400000001 273.1578108 534.86004" fill="none" stroke="black"/>
-    <polygon points="273.1578108,534.86004 280.87323668406447,541.8936879459458 275.72739684305617,544.979191524082" fill="black" stroke="black"/>
-    <polygon points="365.0678108,594.09004 354.70970172236514,592.7825323190212 357.13994414673357,587.2967395997508" fill="black" stroke="black"/>
-    <path d="M 179.7878108 734.63004 C 161.4778108 708.96004 133.80781080000003 670.16004 115.4778108 644.46004" fill="none" stroke="black"/>
-    <polygon points="115.4778108,644.46004 123.726917598813,650.8594334885877 118.84207785850208,654.3434456457821" fill="black" stroke="black"/>
-    <polygon points="179.7878108,734.63004 171.53847319303566,728.2309440446073 176.42318726871383,724.7467557031322" fill="black" stroke="black"/>
-    <path d="M 82.2068108 732.33004 C 85.34581080000001 707.39004 89.86981080000001 671.4500400000001 93.00381080000001 646.55004" fill="none" stroke="black"/>
-    <polygon points="93.00381080000001,646.55004 94.73154499028468,656.8463954021663 88.77851251730203,656.0971261744423" fill="black" stroke="black"/>
-    <polygon points="82.2068108,732.33004 80.47906257317084,722.0336869531835 86.43209606759211,722.7829480654124" fill="black" stroke="black"/>
-    <path d="M 111.3378108 589.13004 C 130.00781080000002 558.78004 165.2678108 512.71004 210.36781080000003 505.86004" fill="none" stroke="black"/>
-    <polygon points="210.36781080000003,505.86004 200.93168514194144,510.32764926730715 200.03070996585546,504.3956813196462" fill="black" stroke="black"/>
-    <polygon points="111.3378108,589.13004 114.0221406781726,579.0407202456682 119.13261083829005,582.184459220607" fill="black" stroke="black"/>
-    <path d="M 945.0278108 592.18004 C 919.0178108 573.72004 883.1478108 548.26004 857.1378108 529.80004" fill="none" stroke="black"/>
-    <polygon points="857.1378108,529.80004 867.0290130365673,533.1413149535659 863.5563695735199,538.034243256592" fill="black" stroke="black"/>
-    <polygon points="945.0278108,592.18004 935.1366085634327,588.8387650464341 938.6092520264801,583.945836743408" fill="black" stroke="black"/>
-    <path d="M 823.5978108 401.54004000000003 C 823.5978108 375.29004000000003 823.5978108 336.51004 823.5978108 310.19004" fill="none" stroke="black"/>
-    <polygon points="823.5978108,310.19004 826.5978108,320.19004 820.5978108,320.19004" fill="black" stroke="black"/>
-    <polygon points="823.5978108,401.54004000000003 820.5978108,391.54004000000003 826.5978108,391.54004000000003" fill="black" stroke="black"/>
-    <path d="M 748.2378108 759.9400400000001 C 857.6578108 756.91004 1090.3978108 745.29004 1155.5978108 701.00004 C 1175.0978108 687.72004 1188.7978108 664.41004 1197.1978107999998 645.86004" fill="none" stroke="black" stroke-dasharray="1,5"/>
-    <polygon points="1197.1978107999998,645.86004 1195.8055978075852,656.2071044621435 1190.3398727262536,653.7320591422953" fill="black" stroke="black"/>
-    <polygon points="748.2378108,759.9400400000001 758.150936358588,756.6643810342848 758.3170214768296,762.6620819049101" fill="black" stroke="black"/>
-    <path d="M 748.4478108000001 757.01004 C 837.2078108000001 749.9500400000001 1001.7978108000001 732.92004 1050.5978108 701.00004 C 1070.6978107999998 687.86004 1084.8978108 664.37004 1093.6978107999998 645.72004" fill="none" stroke="black" stroke-dasharray="1,5"/>
-    <polygon points="1093.6978107999998,645.72004 1092.1436373347624,656.0440191185353 1086.7173655481765,653.4836335034172" fill="black" stroke="black"/>
-    <polygon points="748.4478108000001,757.01004 758.1784570639633,753.2265861168903 758.6541965156629,759.2076957107781" fill="black" stroke="black"/>
-    <path d="M 554.3078108000001 593.77004 C 512.7678108 574.66004 453.1678108 547.22004 411.68781079999997 528.13004" fill="none" stroke="black"/>
-    <polygon points="411.68781079999997,528.13004 422.0261659097074,529.5855171126976 419.5177345451515,535.0360007691553" fill="black" stroke="black"/>
-    <polygon points="554.3078108000001,593.77004 543.969235662918,592.3161266136839 546.4768425954542,586.8652636111955" fill="black" stroke="black"/>
-    <rect x="204.84741079999998" y="598.5" width="131.50080000000003" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="270.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application ..</text>
-    <rect x="354.2218108" y="598.5" width="130.75199999999995" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="419.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application 1</text>
-    <rect x="147.47421079999998" y="743.5" width="102.24720000000002" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="198.5978108" y="-756.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application ..</text>
-    <rect x="27.570142200000006" y="743.5" width="102.0553372" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="78.5978108" y="-756.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application 1</text>
-    <rect x="12" y="598.5" width="169.19562159999998" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="96.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter Appearances</text>
-    <rect x="222.29917439999997" y="486.5" width="282.59727280000004" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <line x1="315.6579356" y1="486.5" x2="315.6579356" y2="523.50008" stroke="black"/>
-    <text x="268.978555" y="-499.95023999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Core</text>
-    <text x="410.27719139999994" y="-499.95023999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">PROT_A-to-XPROT Converter</text>
-    <rect x="918.3436186" y="598.5" width="120.50838440000007" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="978.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Appearance</text>
-    <rect x="760.3134054000001" y="598.5" width="126.56881079999994" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="823.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Ingress Shapeshifter</text>
-    <rect x="765.2188178" y="486.5" width="116.75798600000007" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="823.5978108" y="-499.95023999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOX Shapeshifter</text>
-    <rect x="761.8217178000001" y="412.5" width="123.55218599999989" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="823.5978108" y="-425.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Egress Shapeshifter</text>
-    <rect x="644.6657922" y="743.5" width="91.86403719999998" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="690.5978108" y="-756.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Chunks</text>
-    <rect x="536.785963" y="598.5" width="131.62369560000002" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="602.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT &quot;crystalizer&quot;</text>
-    <rect x="556.9726508" y="743.5" width="69.2503200000001" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="591.5978108" y="-756.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">JZ Chunk</text>
-    <rect x="541.514536" y="840" width="100.16654960000005" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="591.5978108" y="-853.45024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Arbiter Chunks</text>
-    <rect x="1164.308736" y="598.5" width="86.57814959999996" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="1207.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift X</text>
-    <rect x="1062.8170484" y="598.5" width="83.56152479999992" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="1104.5978108" y="-611.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift 1</text>
-    <rect x="757.5978108" y="28" width="54" height="37.00008" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="784.5978108" y="-41.45024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ</text>
-    <rect x="829.5978108" y="28" width="54" height="37.00008" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="856.5978108" y="-41.45024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY</text>
-    <rect x="737.6960054" y="172.5" width="85.80361080000011" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="780.5978108" y="-185.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ Worker</text>
-    <rect x="840.4335368000001" y="172.5" width="90.32854799999996" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="885.5978108" y="-185.95024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY Worker</text>
-    <rect x="786.7224608" y="262" width="73.75070000000005" height="37.000080000000025" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="823.5978108" y="-275.45024" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Agent</text>
-    <text x="631.4434428000001" y="-949.9502799999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Complex Architecture</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1276.7268856pt" height="985.5999999999998pt" viewBox="0 0 1276.7268856 985.5999999999998">
+  <rect x="0" y="0" width="1276.7268856" height="985.5999999999998" fill="white"/>
+  <g transform="translate(0 985.5999999999998) scale(1 -1)">
+    <rect x="205.14758599999996" y="598.1999999999999" width="295.74044960000003" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
+    <text x="353.0178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Clients</text>
+    <rect x="27.490142200000008" y="743.9" width="238.05533719999997" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
+    <text x="146.51781079999998" y="-803.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Clients</text>
+    <rect x="11.92" y="598.1999999999999" width="185.1956216" height="110.39999999999998" fill="none" stroke="black" stroke-dasharray="5,2"/>
+    <text x="104.5178108" y="-690.8505999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifters</text>
+    <text x="104.5178108" y="-674.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(Configurable</text>
+    <text x="104.5178108" y="-657.8497999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter)</text>
+    <rect x="222.21917439999996" y="486.09999999999997" width="298.59727280000004" height="76.7999999999999" fill="none" stroke="black"/>
+    <text x="371.5178108" y="-545.4501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Shapeshifter</text>
+    <rect x="916.2636186" y="598.1999999999999" width="136.50838440000007" height="76.79999999999995" fill="none" stroke="black"/>
+    <text x="984.5178107999999" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Shapeshifter</text>
+    <rect x="528.705963" y="405.09999999999997" width="380.0962532" height="543.6999999999998" fill="none" stroke="black"/>
+    <text x="718.7540895999999" y="-931.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly</text>
+    <rect x="758.2334054" y="413.09999999999997" width="142.56881079999994" height="261.8999999999999" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Reactor</text>
+    <rect x="536.705963" y="598.1999999999999" width="213.7438664" height="317.79999999999995" fill="none" stroke="black"/>
+    <text x="643.5778962" y="-898.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly Front-End</text>
+    <rect x="1060.7370484" y="598.1999999999999" width="204.06983719999994" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
+    <text x="1162.7719670000001" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Shapeshifters</text>
+    <rect x="728.6160054000001" y="12" width="226.06607939999992" height="360.3" fill="none" stroke="black"/>
+    <text x="841.6490451000001" y="-354.85020000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ShipX</text>
+    <rect x="750.5178108" y="20" width="158" height="117.6" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-120.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorX</text>
+    <rect x="758.5178108" y="28" width="142" height="76.8" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-87.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Tungsten</text>
+    <rect x="736.6160054000001" y="172.9" width="210.06607939999992" height="166.6" fill="none" stroke="black"/>
+    <text x="841.6490451000001" y="-322.0502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorY</text>
+    <path d="M 95.24498822969183 740.8740543264323 C 96.04045865807653 738.2283786053603 98.69184995684635 739.5286610118966 100.0178108 725 C 101.34377164315366 710.4713389881034 102.67026287384476 665.5850735458773 103.20075328861371 653.7020882550528" fill="none" stroke="black"/>
+    <polygon points="103.20075328861371,653.7020882550528 105.75178390002637,663.825933513631 99.7577539319519,663.5583428900562" fill="black" stroke="black"/>
+    <polygon points="95.24498822969183,740.8740543264323 95.25138678201967,730.4337497782628 100.99728677237073,732.1613589067649" fill="black" stroke="black"/>
+    <path d="M 176.95701681392285 744.3753913466372 C 173.2171491449357 741.146159455531 164.25020930540637 740.3101740573275 154.51781079999998 725 C 144.78541229459358 709.6898259426725 124.55515661790375 664.5952891688939 118.5626257814845 652.5143470026727" fill="none" stroke="black"/>
+    <polygon points="118.5626257814845,652.5143470026727 125.69383355282854,660.1396913045336 120.318765681307,662.8058956058836" fill="black" stroke="black"/>
+    <polygon points="176.95701681392285,744.3753913466372 167.42749998058207,740.1106159805629 171.3487644297985,735.5692852153234" fill="black" stroke="black"/>
+    <path d="M 164.2706758896937 602.2261308465629 C 174.6610627164114 598.4051090388024 211.2362538476268 589.7846275691702 226.61299684999997 579.3 C 241.98973985237313 568.8153724308297 251.54477772827727 545.981971192951 256.53113390393275 539.3183654315412" fill="none" stroke="black"/>
+    <polygon points="256.53113390393275,539.3183654315412 252.94182601711438,549.1222865294297 248.13790194454023,545.5275245755664" fill="black" stroke="black"/>
+    <polygon points="164.2706758896937,602.2261308465629 172.6207190319428,595.9590119293428 174.69160305462836,601.5903030214979" fill="black" stroke="black"/>
+    <text x="208.44693252702334" y="-563.1001999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo SCADA</text>
+    <path d="M 405.0239699231758 597.3781052826206 C 402.4971410776465 594.3650877355171 404.52499810474166 589.5319580609857 389.86299685 579.3 C 375.20099559525835 569.0680419390142 329.1871348039381 543.2052974305882 317.0519623947257 535.9863569167059" fill="none" stroke="black"/>
+    <polygon points="317.0519623947257,535.9863569167059 327.1800181303942,538.5206195343507 324.11248821937846,543.677194002447" fill="black" stroke="black"/>
+    <polygon points="405.0239699231758,597.3781052826206 396.2995163880691,591.64365583095 400.8968295140522,587.788177647681" fill="black" stroke="black"/>
+    <path d="M 308.5946471434672 598.7654916709406 C 312.4310387612227 595.5212430591172 333.241484676415 589.2561858304291 331.61299685 579.3 C 329.984509023585 569.3438141695708 304.2885996291478 545.7403139069713 298.8237201849774 539.0283766883656" fill="none" stroke="black"/>
+    <polygon points="298.8237201849774,539.0283766883656 307.4639997300596,544.888885999239 302.81119614782205,548.6772126516172" fill="black" stroke="black"/>
+    <polygon points="308.5946471434672,598.7654916709406 314.2932473520106,590.0175801680052 318.1675582366193,594.5990335585138" fill="black" stroke="black"/>
+    <path d="M 829.5178108 594.686455707113 C 829.5178108 592.1220464225942 829.5178108 588.1454852357043 829.5178108 579.3 C 829.5178108 570.4545147642956 829.5178108 547.8946202440724 829.5178108 541.6135442928869" fill="none" stroke="black"/>
+    <polygon points="829.5178108,541.6135442928869 832.5178108,551.6135442928869 826.5178108,551.6135442928869" fill="black" stroke="black"/>
+    <polygon points="829.5178108,594.686455707113 826.5178108,584.686455707113 832.5178108,584.686455707113" fill="black" stroke="black"/>
+    <path d="M 829.5178108 482.58645570711303 C 829.5178108 481.4220464225942 829.5178108 477.9288185690377 829.5178108 475.59999999999997 C 829.5178108 473.27118143096226 829.5178108 469.77795357740575 829.5178108 468.6135442928869" fill="none" stroke="black"/>
+    <polygon points="829.5178108,468.6135442928869 832.5178108,478.6135442928869 826.5178108,478.6135442928869" fill="black" stroke="black"/>
+    <polygon points="829.5178108,482.58645570711303 826.5178108,472.58645570711303 832.5178108,472.58645570711303" fill="black" stroke="black"/>
+    <path d="M 938.4529814904735 601.0256488963838 C 931.2554530420613 597.4047074136531 909.1463989914893 589.7493401859211 895.2678108 579.3 C 881.3892226085107 568.8506598140788 861.8625120846147 545.1580064840472 855.1814523415376 538.3296077808566" fill="none" stroke="black"/>
+    <polygon points="855.1814523415376,538.3296077808566 864.3193133383787,543.3793103861998 860.0306559598124,547.5754297707346" fill="black" stroke="black"/>
+    <polygon points="938.4529814904735,601.0256488963838 928.1715040260119,599.2114765926126 930.8679896460724,593.8515357999538" fill="black" stroke="black"/>
+    <path d="M 587.4698655945206 847.1999999999999 C 585.7486897954338 844.1166666666666 578.5931532657535 841.5833333333333 577.1428108 828.6999999999999 C 575.6924683342465 815.8166666666666 578.2261441333334 787.1833333333333 578.7678108 769.9 C 579.3094774666666 752.6166666666667 576.547195597104 744.4447611325674 580.3928108 725 C 584.2384260028961 705.5552388674326 598.2667201478137 665.1928610038301 601.8415020173763 653.2314332045961" fill="none" stroke="black" stroke-dasharray="1,5"/>
+    <polygon points="601.8415020173763,653.2314332045961 601.8524330253696,663.6717339911187 596.1036733433949,661.9536646913222" fill="black" stroke="black"/>
+    <path d="M 597.5178108 847.1999999999999 C 597.5178108 844.1166666666666 597.5178108 836.6644092845188 597.5178108 828.6999999999999 C 597.5178108 820.7355907154811 597.5178108 804.2946202440723 597.5178108 799.4135442928869" fill="none" stroke="black" stroke-dasharray="1,5"/>
+    <polygon points="597.5178108,799.4135442928869 600.5178108,809.4135442928869 594.5178108,809.4135442928869" fill="black" stroke="black"/>
+    <path d="M 624.0246601150685 847.1999999999999 C 628.5651852292237 844.1166666666666 642.6645935769712 837.0625884935932 651.2678108 828.6999999999999 C 659.8710280230288 820.3374115064066 671.5812713443678 802.3037241986999 675.6439634532413 797.02446903844" fill="none" stroke="black" stroke-dasharray="1,5"/>
+    <polygon points="675.6439634532413,797.02446903844 671.9227237464144,806.7790769262198 667.167731466195,803.1198354180577" fill="black" stroke="black"/>
+    <path d="M 633.9419457660202 745.4903931347118 C 639.0379232716836 742.0753276122598 638.470077787073 741.2146834323439 664.5178108 725 C 690.565543812927 708.7853165676561 769.2765883363184 661.00191045054 790.228343843582 648.202292540648" fill="none" stroke="black"/>
+    <polygon points="790.228343843582,648.202292540648 783.2587319883556,655.9756129757959 780.1307850827153,650.8554617909679" fill="black" stroke="black"/>
+    <polygon points="633.9419457660202,745.4903931347118 640.5789677950783,737.431240661542 643.9191765278043,742.4155164987947" fill="black" stroke="black"/>
+    <text x="712.2155120408528" y="-692.0002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT over PROT_G</text>
+    <path d="M 596.6962883856645 740.3909148770707 C 596.6248754547204 737.825762397559 594.6569365470313 739.4651207699271 596.2678108 725 C 597.8786850529688 710.5348792300729 604.6792467195644 665.5001585479233 606.3615339034773 653.600190257508" fill="none" stroke="black"/>
+    <polygon points="606.3615339034773,653.600190257508 607.9322257702639,663.9216691757449 601.9912974335999,663.0818057948177" fill="black" stroke="black"/>
+    <polygon points="596.6962883856645,740.3909148770707 593.4191616647473,730.478274438971 599.4168378781648,730.3113012704458" fill="black" stroke="black"/>
+    <path d="M 571.9938654110869 600.0923324325826 C 566.4561896425724 596.6269436938188 562.9333959163624 590.249965768213 538.7678108 579.3 C 514.6022256836377 568.3500342317869 445.62826406076033 541.8771148527538 427.0003547129124 534.3925378233046" fill="none" stroke="black"/>
+    <polygon points="427.0003547129124,534.3925378233046 437.3978464083605,535.3370834511527 435.1608960580032,540.9044933633143" fill="black" stroke="black"/>
+    <polygon points="571.9938654110869,600.0923324325826 561.9254403089454,597.3306633788093 565.1083008141285,592.2444664690793" fill="black" stroke="black"/>
+    <text x="499.03540446051545" y="-563.1001999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT over PROT_G</text>
+    <path d="M 753.8448509017645 761.6101961334324 C 796.0403442181371 755.5084967778603 952.0273711781178 743.5628644531117 1007.0178107999999 725 C 1062.0082504218822 706.4371355468883 1070.9925423275474 662.6941745123015 1083.787488633057 650.2330094147618" fill="none" stroke="black" stroke-dasharray="1,5"/>
+    <polygon points="1083.787488633057,650.2330094147618 1078.7166986687726,659.3591854561337 1074.5304936859725,655.0608499827231" fill="black" stroke="black"/>
+    <polygon points="753.8448509017645,761.6101961334324 763.3125582169583,757.2099099843481 764.1712594763306,763.148144751276" fill="black" stroke="black"/>
+    <path d="M 753.8822570201888 763.0543823646871 C 807.029849316824 756.7119853039059 1001.9109792583846 744.0251062323193 1072.7678108 725 C 1143.6246423416153 705.9748937676807 1161.3140070249008 661.5864541423091 1179.023246269881 648.903744970771" fill="none" stroke="black" stroke-dasharray="1,5"/>
+    <polygon points="1179.023246269881,648.903744970771 1172.639883961543,657.1652633324579 1169.1463924005234,652.2871984791493" fill="black" stroke="black"/>
+    <polygon points="753.8822570201888,763.0543823646871 763.4563193894097,758.8905704392672 764.1672881314208,764.848298483403" fill="black" stroke="black"/>
+    <path d="M 811.645268355601 261.02837393953405 C 809.7906920963342 258.15697828294503 803.1367848364802 249.31150797942564 800.5178108 243.8 C 797.8988367635199 238.28849202057438 796.6958219139336 230.59943838581685 795.9314241367204 227.9593260629802" fill="none" stroke="black"/>
+    <polygon points="795.9314241367204,227.9593260629802 801.5941720256418,236.73048826342526 795.8308766675933,238.39914838936355" fill="black" stroke="black"/>
+    <polygon points="811.645268355601,261.02837393953405 803.6996741575738,254.25581660568477 808.7398038419358,251.000498992177" fill="black" stroke="black"/>
+    <text x="805.310683851225" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MechCmd</text>
+    <path d="M 852.9578665125784 262.05548097481596 C 855.6345238938154 259.01290081234663 864.8139348418483 249.641441962611 869.0178108 243.8 C 873.2216867581517 237.95855803738903 876.6539036845736 229.80569099929167 878.1811222614883 227.00682919915" fill="none" stroke="black"/>
+    <polygon points="878.1811222614883,227.00682919915 876.0246937673738,237.22200497589367 870.7577686874605,234.34807035545097" fill="black" stroke="black"/>
+    <polygon points="852.9578665125784,262.05548097481596 857.3105754334471,252.5658063202142 861.8154535866623,256.5288951186999" fill="black" stroke="black"/>
+    <text x="864.5244923144767" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MechCmd</text>
+    <path d="M 787.5178108 169.38645570711307 C 787.5178108 166.8220464225942 786.8127395570165 168.31559666757806 787.5178108 154 C 788.2228820429835 139.68440333242194 791.0431670149178 95.24406308470384 791.7482382579013 83.4928757016446" fill="none" stroke="black"/>
+    <polygon points="791.7482382579013,83.4928757016446 794.1439298870192,93.65460102848623 788.1547008142246,93.29524728411856" fill="black" stroke="black"/>
+    <polygon points="787.5178108,169.38645570711307 784.5178108,159.38645570711307 790.5178108,159.38645570711307" fill="black" stroke="black"/>
+    <text x="789.9778107999999" y="-121.4002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">SCADA_A()</text>
+    <path d="M 882.9317419712474 170.09306118721267 C 881.9460867760396 167.41088432267722 879.3559013020986 168.44248388097623 877.0178108 154 C 874.6797202979014 139.55751611902377 870.2556342655466 95.1984649177961 868.9031989586559 83.43815790135532" fill="none" stroke="black"/>
+    <polygon points="868.9031989586559,83.43815790135532 873.0260263073073,93.02994056430235 867.0653120682932,93.715422701789" fill="black" stroke="black"/>
+    <polygon points="882.9317419712474,170.09306118721267 876.6665546777077,161.74156861541036 882.2983246372661,159.67198722715403" fill="black" stroke="black"/>
+    <text x="877.2454611340758" y="-121.4002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">SCADA_A()</text>
+    <path d="M 829.5178108 409.58645570711303 C 829.5178108 406.1053797559275 829.5178108 403.9288185690377 829.5178108 388.7 C 829.5178108 373.4711814309623 829.5178108 329.9612869107391 829.5178108 318.2135442928869" fill="none" stroke="black"/>
+    <polygon points="829.5178108,318.2135442928869 832.5178108,328.2135442928869 826.5178108,328.2135442928869" fill="black" stroke="black"/>
+    <polygon points="829.5178108,409.58645570711303 826.5178108,399.58645570711303 832.5178108,399.58645570711303" fill="black" stroke="black"/>
+    <text x="829.5178108" y="-358.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Raw PROT_G</text>
+    <rect x="213.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="278.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application ..</text>
+    <rect x="362.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="427.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application 1</text>
+    <rect x="155.49014219999998" y="751.9" width="102.0553372" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="206.51781079999998" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application ..</text>
+    <rect x="35.49014220000001" y="751.9" width="102.0553372" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="86.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application 1</text>
+    <rect x="19.92" y="606.1999999999999" width="169.19562159999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="104.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter Appearances</text>
+    <rect x="230.21917439999999" y="494.09999999999997" width="282.59727280000004" height="35.99999999999994" rx="6" ry="6" fill="none" stroke="black"/>
+    <line x1="323.5779356" y1="494.09999999999997" x2="323.5779356" y2="530.0999999999999" stroke="black"/>
+    <text x="276.898555" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Core</text>
+    <text x="418.19719139999995" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">PROT_A-to-XPROT Converter</text>
+    <rect x="924.2636186" y="606.1999999999999" width="120.50838440000007" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="984.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Appearance</text>
+    <rect x="766.2334054" y="606.1999999999999" width="126.56881079999994" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Ingress Shapeshifter</text>
+    <rect x="771.1388178" y="494.09999999999997" width="116.75798600000007" height="35.99999999999994" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOX Shapeshifter</text>
+    <rect x="767.7417178000001" y="421.09999999999997" width="123.55218599999989" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-434.05019999999996" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Egress Shapeshifter</text>
+    <rect x="650.5857922" y="751.9" width="91.86403719999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="696.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Chunks</text>
+    <rect x="544.705963" y="606.1999999999999" width="131.62369560000002" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="610.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT &quot;crystalizer&quot;</text>
+    <rect x="562.9049294" y="751.9" width="69.22576279999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="597.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">JZ Chunk</text>
+    <rect x="547.434536" y="847.1999999999999" width="100.16654960000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="597.5178108" y="-860.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Arbiter Chunks</text>
+    <rect x="1170.228736" y="606.1999999999999" width="86.57814959999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="1213.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift X</text>
+    <rect x="1068.7370484" y="606.1999999999999" width="83.56152479999992" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="1110.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift 1</text>
+    <rect x="766.5178108" y="36" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="793.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ</text>
+    <rect x="838.5178108" y="36" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="865.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY</text>
+    <rect x="744.6160054" y="180.9" width="85.80361080000011" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="787.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ Worker</text>
+    <rect x="848.3535368" y="180.9" width="90.32854799999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="893.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY Worker</text>
+    <rect x="792.6424608" y="270.7" width="73.75070000000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
+    <text x="829.5178108" y="-283.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Agent</text>
+    <text x="638.3634427999999" y="-964.1501999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Complex Architecture</text>
   </g>
 </svg>
