@@ -1167,6 +1167,66 @@ fn clip_polyline_ends(
 }
 
 ///|
+fn point_line_distance(
+  point : @geom.Point,
+  a : @geom.Point,
+  b : @geom.Point,
+) -> Double {
+  let dx = b.x - a.x
+  let dy = b.y - a.y
+  if dx == 0.0 && dy == 0.0 {
+    return @math.hypot(point.x - a.x, point.y - a.y)
+  }
+  let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy)
+  let proj = @geom.Point::{ x: a.x + t * dx, y: a.y + t * dy }
+  @math.hypot(point.x - proj.x, point.y - proj.y)
+}
+
+///|
+fn slice_points(
+  points : Array[@geom.Point],
+  start : Int,
+  end : Int,
+) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  for i in start..<end {
+    out.push(points[i])
+  }
+  out
+}
+
+///|
+fn simplify_polyline(
+  points : Array[@geom.Point],
+  tol : Double,
+) -> Array[@geom.Point] {
+  if tol <= 0.0 || points.length() <= 2 {
+    return points
+  }
+  let last = points.length() - 1
+  let mut max_dist = -1.0
+  let mut max_idx = 0
+  for i in 1..<last {
+    let dist = point_line_distance(points[i], points[0], points[last])
+    if dist > max_dist {
+      max_dist = dist
+      max_idx = i
+    }
+  }
+  if max_dist <= tol {
+    return [points[0], points[last]]
+  }
+  let left = simplify_polyline(slice_points(points, 0, max_idx + 1), tol)
+  let right = simplify_polyline(slice_points(points, max_idx, points.length()), tol)
+  let out = left.copy()
+  for i in 1..<right.length() {
+    out.push(right[i])
+  }
+  out
+}
+
+///|
+///|
 fn edge_polyline_points(
   edge : @cgraph.Edge,
   tail_anchor : @geom.Point,
@@ -1175,6 +1235,7 @@ fn edge_polyline_points(
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
   vnode_positions : Map[String, @geom.Point],
+  use_cluster_tuning : Bool,
 ) -> Array[@geom.Point] {
   let points : Array[@geom.Point] = [tail_anchor]
   let vnodes = match edge_vnodes.get(edge_key(edge)) {
@@ -1192,6 +1253,12 @@ fn edge_polyline_points(
     }
     let span = head_rank - tail_rank
     if span != 0 {
+      let style_value = match edge.get_attr("style") {
+        Some(value) => value.to_lower()
+        None => ""
+      }
+      let vnode_weight =
+        if use_cluster_tuning && style_value.contains("dotted") { 1.0 } else { 0.5 }
       let span_f = Double::from_int(span)
       let push_point = (name : String) => {
         match vnode_positions.get(name) {
@@ -1200,7 +1267,7 @@ fn edge_polyline_points(
               Some(rank) => {
                 let t = Double::from_int(rank - tail_rank) / span_f
                 let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
-                let x = pos.x * 0.5 + interp_x * 0.5
+                let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
                 points.push({ x, y: pos.y })
               }
               None => ()
@@ -4658,6 +4725,19 @@ pub fn layout_dot(
       }
     }
   }
+  let has_clusters = graph_has_cluster(graph)
+  let mut has_dotted_edges = false
+  for edge in edges {
+    match edge.get_attr("style") {
+      Some(value) =>
+        if value.to_lower().contains("dotted") {
+          has_dotted_edges = true
+          break
+        }
+      None => ()
+    }
+  }
+  let enable_complex_tuning = has_clusters && has_dotted_edges
   let edges_out : Array[DotLayoutEdge] = []
   for edge in edges {
     let tail_name = edge.tail().name()
@@ -4714,16 +4794,36 @@ pub fn layout_dot(
         )
       _ => {
         let points = edge_polyline_points(
-          edge, tail_anchor, head_anchor, ranks, vnode_info.edge_vnodes, vnode_info.vnode_ranks,
+          edge,
+          tail_anchor,
+          head_anchor,
+          ranks,
+          vnode_info.edge_vnodes,
+          vnode_info.vnode_ranks,
           vnode_positions,
+          enable_complex_tuning,
         )
+        let has_vnodes = match vnode_info.edge_vnodes.get(edge_key(edge)) {
+          Some(list) => list.length() > 0
+          None => false
+        }
+        let has_label = edge_mid_label_text(edge) is Some(_)
+        let same_outer_cluster =
+          node_cluster_key(edge.tail()) == node_cluster_key(edge.head())
         if points.length() > 2 {
           let clipped = clip_polyline_ends(
             points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
           )
-          tail_clip = clipped[0]
-          head_clip = clipped[clipped.length() - 1]
-          edge_spline_for_points(edge, clipped, include_tail, include_head)
+          let simplify_tol = nodesep_pt * 0.8
+          let simplified =
+            if enable_complex_tuning && has_vnodes && !(has_label && same_outer_cluster) {
+            simplify_polyline(clipped, simplify_tol)
+          } else {
+            clipped
+          }
+          tail_clip = simplified[0]
+          head_clip = simplified[simplified.length() - 1]
+          edge_spline_for_points(edge, simplified, include_tail, include_head)
         } else {
           edge_spline_for_line(
             edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
