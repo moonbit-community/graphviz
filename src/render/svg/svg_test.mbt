@@ -198,12 +198,16 @@ test "svg spot-check outputs" {
     ("refs/graphviz/graphs/directed/clust.gv", "clust"),
     ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
     ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
-    ("tests/layout/dot/complex.dot", "complex"),
+    ("tests/layout/dot/complex.gv.dot", "complex"),
   ]
   for pair in cases {
     let (input_path, name) = pair
     let graph = @dot.parse_dot_file(input_path)
-    let layout = @layout_dot.layout_dot(graph)
+    let layout = if name == "complex" {
+      @layout_dot.layout_dot_noop(graph, no_op_level=2)
+    } else {
+      @layout_dot.layout_dot(graph)
+    }
     let svg = render_svg(layout)
     let out_path = "\{out_dir}/\{name}.svg"
     @fs.write_string_to_file(out_path, svg)

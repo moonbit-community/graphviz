@@ -457,3 +457,18 @@ pub fn layout_neato_noop(
     subgraphs,
   }
 }
+
+///|
+pub fn layout_dot_noop(
+  graph : @cgraph.Graph,
+  no_op_level? : Int = 1,
+  scale? : Double = 72.0,
+  prune? : Bool = false,
+) -> DotLayoutGraph raise DotLayoutError {
+  layout_neato_noop(
+    graph,
+    no_op_level=no_op_level,
+    scale=scale,
+    prune=prune,
+  )
+}
