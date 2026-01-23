@@ -1300,6 +1300,7 @@ fn edge_polyline_points(
   vnode_positions : Map[String, @geom.Point],
   nodesep_pt : Double,
   label_width_pt : Double,
+  dotted_weight : Double,
   use_cluster_tuning : Bool,
   split_label : Bool,
 ) -> Array[@geom.Point] {
@@ -1334,7 +1335,7 @@ fn edge_polyline_points(
       let is_dotted = style_value.contains("dotted")
       let vnode_weight =
         if use_cluster_tuning {
-          if is_dotted { 0.8 } else { if split_label { 0.3 } else { 0.0 } }
+          if is_dotted { dotted_weight } else { if split_label { 0.3 } else { 0.0 } }
         } else {
           0.5
         }
@@ -1358,9 +1359,14 @@ fn edge_polyline_points(
                 let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
                 let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
                 if split_label && rank == label_rank {
-                  points.push({ x: x - nodesep_pt, y: pos.y + nodesep_pt * y_dir })
+                  let split_width = label_width_pt * 1.5
+                  let split_x = x - nodesep_pt * 1.25
                   points.push({
-                    x: x + label_width_pt * 0.5,
+                    x: split_x - nodesep_pt,
+                    y: pos.y + nodesep_pt * y_dir,
+                  })
+                  points.push({
+                    x: split_x + split_width * 0.5,
                     y: pos.y - nodesep_pt * y_dir,
                   })
                 } else {
@@ -1401,6 +1407,69 @@ fn edge_polyline_points(
   }
   points.push(head_anchor)
   points
+}
+
+///|
+fn adjust_intercluster_dotted_points(
+  points : Array[@geom.Point],
+  tail_anchor : @geom.Point,
+  head_anchor : @geom.Point,
+  head_size : NodeSize,
+  nodesep_pt : Double,
+) -> Array[@geom.Point] {
+  if points.length() <= 2 {
+    return points
+  }
+  let last_idx = points.length() - 2
+  let head_left = head_anchor.x - head_size.width_pt / 2.0
+  let head_right = head_anchor.x + head_size.width_pt / 2.0
+  let offset = nodesep_pt * 0.5
+  let x = if head_anchor.x >= tail_anchor.x {
+    head_left - offset
+  } else {
+    head_right + offset
+  }
+  let y = tail_anchor.y + (head_anchor.y - tail_anchor.y) * 0.4
+  let adjusted = points.copy()
+  adjusted[last_idx] = { x, y }
+  adjusted
+}
+
+///|
+fn adjust_intracluster_dotted_points(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
+  if points.length() <= 3 {
+    return points
+  }
+  let adjusted = points.copy()
+  let last = points.length() - 1
+  let mid = points.length() / 2
+  let mid_y = (points[0].y + points[last].y) / 2.0
+  let left_weight = 0.2
+  let right_weight = 0.8
+  if points.length() % 2 == 0 {
+    let left = mid - 1
+    if left > 0 && left < last {
+      let avg_y = (points[left - 1].y + points[left + 1].y) / 2.0
+      adjusted[left] = {
+        x: points[left].x,
+        y: points[left].y * (1.0 - left_weight) + avg_y * left_weight,
+      }
+    }
+    if mid > 0 && mid < last {
+      adjusted[mid] = {
+        x: points[mid].x,
+        y: points[mid].y * (1.0 - right_weight) + mid_y * right_weight,
+      }
+    }
+  } else if mid > 0 && mid < last {
+    adjusted[mid] = {
+      x: points[mid].x,
+      y: points[mid].y * (1.0 - right_weight) + mid_y * right_weight,
+    }
+  }
+  adjusted
 }
 
 ///|
@@ -4956,7 +5025,9 @@ pub fn layout_dot(
           same_outer_cluster &&
           diff_local_cluster &&
           abs_dx > label_width_pt
-        let points = edge_polyline_points(
+        let dotted_weight =
+          if enable_complex_tuning && same_outer_cluster { 1.0 } else { 0.8 }
+        let mut points = edge_polyline_points(
           edge,
           tail_anchor,
           head_anchor,
@@ -4966,9 +5037,28 @@ pub fn layout_dot(
           vnode_positions,
           nodesep_pt,
           label_width_pt,
+          dotted_weight,
           enable_complex_tuning,
           split_label,
         )
+        let style_value = if enable_complex_tuning {
+          match edge.get_attr("style") {
+            Some(value) => value.to_lower()
+            None => ""
+          }
+        } else {
+          ""
+        }
+        let is_dotted = enable_complex_tuning && style_value.contains("dotted")
+        if is_dotted && !same_outer_cluster {
+          points = adjust_intercluster_dotted_points(
+            points,
+            tail_anchor,
+            head_anchor,
+            head_anchor_size,
+            nodesep_pt,
+          )
+        }
         let has_vnodes = match vnode_info.edge_vnodes.get(edge_key(edge)) {
           Some(list) => list.length() > 0
           None => false
@@ -4992,9 +5082,15 @@ pub fn layout_dot(
           } else {
             clipped
           }
-          tail_clip = simplified[0]
-          head_clip = simplified[simplified.length() - 1]
-          edge_spline_for_points(edge, simplified, include_tail, include_head)
+          let adjusted =
+            if is_dotted && same_outer_cluster {
+            adjust_intracluster_dotted_points(simplified)
+          } else {
+            simplified
+          }
+          tail_clip = adjusted[0]
+          head_clip = adjusted[adjusted.length() - 1]
+          edge_spline_for_points(edge, adjusted, include_tail, include_head)
         } else {
           edge_spline_for_line(
             edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
