@@ -1268,20 +1268,35 @@ fn edge_polyline_points(
         Some(value) => value.to_lower()
         None => ""
       }
+      let is_dotted = style_value.contains("dotted")
       let vnode_weight =
-        if use_cluster_tuning && style_value.contains("dotted") { 0.8 } else { 0.5 }
+        if use_cluster_tuning {
+          if is_dotted { 0.8 } else { 0.0 }
+        } else {
+          0.5
+        }
       let span_f = Double::from_int(span)
       let push_point = (name : String) => {
         match vnode_positions.get(name) {
           Some(pos) =>
             match vnode_ranks.get(name) {
               Some(rank) => {
-                let t = Double::from_int(rank - tail_rank) / span_f
+                let t_raw = Double::from_int(rank - tail_rank) / span_f
+                let t =
+                  if use_cluster_tuning && !is_dotted && !split_label &&
+                      head_anchor.x >= tail_anchor.x {
+                    t_raw * t_raw
+                  } else {
+                    t_raw
+                  }
                 let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
                 let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
                 if split_label && rank == label_rank {
                   points.push({ x: x - nodesep_pt, y: pos.y + nodesep_pt * y_dir })
-                  points.push({ x: x + label_width_pt, y: pos.y - nodesep_pt * y_dir })
+                  points.push({
+                    x: x + label_width_pt * 0.5,
+                    y: pos.y - nodesep_pt * y_dir,
+                  })
                 } else {
                   points.push({ x, y: pos.y })
                 }
