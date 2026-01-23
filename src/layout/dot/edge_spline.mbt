@@ -557,6 +557,36 @@ fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
+fn smooth_polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  if points.length() < 2 {
+    return out
+  }
+  out.push(points[0])
+  let mut i = 0
+  let last = points.length() - 1
+  while i < last {
+    let p0 = if i == 0 { points[0] } else { points[i - 1] }
+    let p1 = points[i]
+    let p2 = points[i + 1]
+    let p3 = if i + 2 <= last { points[i + 2] } else { points[last] }
+    let c1 = point(
+      p1.x + (p2.x - p0.x) / 6.0,
+      p1.y + (p2.y - p0.y) / 6.0,
+    )
+    let c2 = point(
+      p2.x - (p3.x - p1.x) / 6.0,
+      p2.y - (p3.y - p1.y) / 6.0,
+    )
+    out.push(c1)
+    out.push(c2)
+    out.push(p2)
+    i = i + 1
+  }
+  out
+}
+
+///|
 fn edge_spline_for_polyline(
   edge : @cgraph.Edge,
   tail_clip : @geom.Point,
@@ -592,6 +622,34 @@ fn edge_spline_for_polyline(
   let start_point = if include_tail { Some(tail) } else { None }
   let end_point = if include_head { Some(head) } else { None }
   { start: start_point, end: end_point, points }
+}
+
+///|
+fn edge_spline_for_points(
+  edge : @cgraph.Edge,
+  points : Array[@geom.Point],
+  include_tail : Bool,
+  include_head : Bool,
+) -> @geom.Spline {
+  if points.length() == 0 {
+    return { start: None, end: None, points: [] }
+  }
+  let arrow_len = if include_tail || include_head {
+    arrow_length_for_edge(edge)
+  } else {
+    0.0
+  }
+  let mut polyline = compact_polyline(points)
+  if include_tail {
+    polyline = trim_polyline_start(polyline, arrow_len)
+  }
+  if include_head {
+    polyline = trim_polyline_end(polyline, arrow_len)
+  }
+  let bezier = smooth_polyline_to_bezier(compact_polyline(polyline))
+  let start_point = if include_tail { Some(points[0]) } else { None }
+  let end_point = if include_head { Some(points[points.length() - 1]) } else { None }
+  { start: start_point, end: end_point, points: bezier }
 }
 
 ///|

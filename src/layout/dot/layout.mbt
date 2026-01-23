@@ -1148,6 +1148,98 @@ fn clip_to_rect(
 }
 
 ///|
+fn clip_polyline_ends(
+  points : Array[@geom.Point],
+  tail_anchor : @geom.Point,
+  head_anchor : @geom.Point,
+  tail_size : NodeSize,
+  head_size : NodeSize,
+) -> Array[@geom.Point] {
+  if points.length() < 2 {
+    return points
+  }
+  let out = points.copy()
+  let tail_target = out[1]
+  let head_target = out[out.length() - 2]
+  out[0] = clip_to_rect(tail_anchor, tail_size, tail_target)
+  out[out.length() - 1] = clip_to_rect(head_anchor, head_size, head_target)
+  out
+}
+
+///|
+fn edge_polyline_points(
+  edge : @cgraph.Edge,
+  tail_anchor : @geom.Point,
+  head_anchor : @geom.Point,
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+  vnode_positions : Map[String, @geom.Point],
+) -> Array[@geom.Point] {
+  let points : Array[@geom.Point] = [tail_anchor]
+  let vnodes = match edge_vnodes.get(edge_key(edge)) {
+    Some(list) => list
+    None => []
+  }
+  if vnodes.length() > 0 {
+    let tail_rank = match ranks.get(edge.tail().name()) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match ranks.get(edge.head().name()) {
+      Some(value) => value
+      None => 0
+    }
+    let span = head_rank - tail_rank
+    if span != 0 {
+      let span_f = Double::from_int(span)
+      let push_point = (name : String) => {
+        match vnode_positions.get(name) {
+          Some(pos) =>
+            match vnode_ranks.get(name) {
+              Some(rank) => {
+                let t = Double::from_int(rank - tail_rank) / span_f
+                let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
+                let x = pos.x * 0.5 + interp_x * 0.5
+                points.push({ x, y: pos.y })
+              }
+              None => ()
+            }
+          None => ()
+        }
+      }
+      if tail_rank <= head_rank {
+        for name in vnodes {
+          push_point(name)
+        }
+      } else {
+        let mut idx = vnodes.length()
+        while idx > 0 {
+          idx = idx - 1
+          let name = vnodes[idx]
+          push_point(name)
+        }
+      }
+    }
+  } else if tail_anchor != head_anchor {
+    let dx = head_anchor.x - tail_anchor.x
+    let dy = head_anchor.y - tail_anchor.y
+    let horizontal_first = Double::abs(dx) >= Double::abs(dy)
+    if horizontal_first {
+      let mid_x = (tail_anchor.x + head_anchor.x) / 2.0
+      points.push({ x: mid_x, y: tail_anchor.y })
+      points.push({ x: mid_x, y: head_anchor.y })
+    } else {
+      let mid_y = (tail_anchor.y + head_anchor.y) / 2.0
+      points.push({ x: tail_anchor.x, y: mid_y })
+      points.push({ x: head_anchor.x, y: mid_y })
+    }
+  }
+  points.push(head_anchor)
+  points
+}
+
+///|
 fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
   graph.nodes()
 }
@@ -4234,8 +4326,8 @@ pub fn layout_dot(
     ranksep_pt = (ranksep_pt + 1.0) / 2.0
   }
   let y_positions : Map[String, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map::new()
   if all_ranks.length() > 0 {
-    let rank_y : Map[Int, Double] = Map::new()
     let max_rank = all_ranks[all_ranks.length() - 1]
     let start_y = match rank_ht1.get(max_rank) {
       Some(value) => value
@@ -4377,6 +4469,18 @@ pub fn layout_dot(
     vnode_names.push(name)
   }
   normalize_x_positions(nodes, vnode_names, x_positions, x_sizes)
+  let vnode_positions : Map[String, @geom.Point] = Map::new()
+  for name, rank in vnode_info.vnode_ranks {
+    let pos_x = match x_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    let pos_y = match rank_y.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    vnode_positions[name] = { x: pos_x, y: pos_y }
+  }
   let positions : Map[String, @geom.Point] = Map::new()
   for node in nodes {
     let name = node.name()
@@ -4462,8 +4566,8 @@ pub fn layout_dot(
       head_pos,
       head_size,
     )
-    let tail_clip = clip_to_rect(tail_anchor, tail_anchor_size, head_anchor)
-    let head_clip = clip_to_rect(head_anchor, head_anchor_size, tail_anchor)
+    let mut tail_clip = clip_to_rect(tail_anchor, tail_anchor_size, head_anchor)
+    let mut head_clip = clip_to_rect(head_anchor, head_anchor_size, tail_anchor)
     let dir = edge_dir_for(edge, graph.kind())
     let include_tail = match dir {
       EdgeDir::Back | EdgeDir::Both => true
@@ -4482,11 +4586,25 @@ pub fn layout_dot(
         edge_spline_for_polyline(
           edge, tail_clip, head_clip, rankdir, true, include_tail, include_head,
         )
-      _ =>
-        edge_spline_for_line(
-          edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
-          include_head,
+      _ => {
+        let points = edge_polyline_points(
+          edge, tail_anchor, head_anchor, ranks, vnode_info.edge_vnodes, vnode_info.vnode_ranks,
+          vnode_positions,
         )
+        if points.length() > 2 {
+          let clipped = clip_polyline_ends(
+            points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
+          )
+          tail_clip = clipped[0]
+          head_clip = clipped[clipped.length() - 1]
+          edge_spline_for_points(edge, clipped, include_tail, include_head)
+        } else {
+          edge_spline_for_line(
+            edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
+            include_head,
+          )
+        }
+      }
     }
     let label_pos : @geom.Point? = match edge.get_attr("label") {
       Some(value) =>
