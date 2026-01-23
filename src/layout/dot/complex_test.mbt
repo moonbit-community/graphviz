@@ -50,6 +50,60 @@ fn complex_pos_close(
 }
 
 ///|
+fn complex_parse_edge_points(text : String) -> Array[@geom.Point] {
+  let points : Array[@geom.Point] = []
+  for segment in text.split(";") {
+    for token_view in segment.split(" ") {
+      let token = token_view.trim(chars=" \n\r\t").to_string()
+      if token == "" {
+        continue
+      }
+      let mut cleaned = token
+      if cleaned.has_suffix("\\") {
+        cleaned = cleaned.unsafe_substring(start=0, end=cleaned.length() - 1)
+      }
+      if cleaned.has_prefix("\\") {
+        cleaned = cleaned.unsafe_substring(start=1, end=cleaned.length())
+      }
+      cleaned = cleaned.trim(chars=" \n\r\t").to_string()
+      if cleaned == "" {
+        continue
+      }
+      if cleaned.has_prefix("s,") || cleaned.has_prefix("e,") {
+        continue
+      }
+      if !cleaned.contains(",") {
+        continue
+      }
+      points.push(complex_parse_point(cleaned))
+    }
+  }
+  points
+}
+
+///|
+fn complex_find_edge(
+  graph : @cgraph.Graph,
+  tail : String,
+  head : String,
+) -> @cgraph.Edge? {
+  for edge in graph.edges() {
+    if edge.tail().name() == tail && edge.head().name() == head {
+      return Some(edge)
+    }
+  }
+  None
+}
+
+///|
+fn complex_edge_points(edge : @cgraph.Edge) -> Array[@geom.Point] {
+  match edge.get_attr("pos") {
+    Some(value) => complex_parse_edge_points(value)
+    None => []
+  }
+}
+
+///|
 test "dot layout handles complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
@@ -112,5 +166,55 @@ test "dot layout matches graphviz node positions for complex sample" {
         "node \{name} pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
       )
     }
+  }
+}
+
+///|
+test "dot layout matches graphviz edge control points for complex sample" {
+  let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
+  let layout = layout_dot(graph)
+  layout.apply()
+  let tol = 60.0
+  let tol_sq = tol * tol
+  let mut worst_tail = ""
+  let mut worst_head = ""
+  let mut worst_sq = 0.0
+  for edge in reference.edges() {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let actual_edge = match complex_find_edge(graph, tail, head) {
+      Some(value) => value
+      None => fail("missing edge \{tail} -> \{head} in layout")
+    }
+    let expected_points = complex_edge_points(edge)
+    let actual_points = complex_edge_points(actual_edge)
+    let count = if expected_points.length() < actual_points.length() {
+      expected_points.length()
+    } else {
+      actual_points.length()
+    }
+    guard count > 0 else {
+      fail("missing edge pos for \{tail} -> \{head}")
+    }
+    let mut max_sq = 0.0
+    for i in 0..<count {
+      let dx = actual_points[i].x - expected_points[i].x
+      let dy = actual_points[i].y - expected_points[i].y
+      let dist_sq = dx * dx + dy * dy
+      if dist_sq > max_sq {
+        max_sq = dist_sq
+      }
+    }
+    if max_sq > worst_sq {
+      worst_sq = max_sq
+      worst_tail = tail
+      worst_head = head
+    }
+  }
+  if worst_sq > tol_sq {
+    fail(
+      "edge \{worst_tail} -> \{worst_head} pos drift: max \{Double::sqrt(worst_sq)} > \{tol}",
+    )
   }
 }

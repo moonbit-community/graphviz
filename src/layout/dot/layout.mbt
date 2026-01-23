@@ -1391,7 +1391,8 @@ fn edge_polyline_points(
         }
       }
     }
-  } else if tail_anchor != head_anchor {
+  }
+  if points.length() == 1 && tail_anchor != head_anchor {
     let dx = head_anchor.x - tail_anchor.x
     let dy = head_anchor.y - tail_anchor.y
     let horizontal_first = Double::abs(dx) >= Double::abs(dy)
