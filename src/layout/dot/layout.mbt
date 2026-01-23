@@ -2642,7 +2642,9 @@ fn build_edge_vnodes(
       Some(value) => value
       None => ""
     }
-    let vnode_cluster = if edge_cluster != "" {
+    let vnode_cluster = if edge_cluster != "" &&
+      tail_cluster == edge_cluster &&
+      head_cluster == edge_cluster {
       edge_cluster
     } else if tail_cluster != "" && tail_cluster == head_cluster {
       tail_cluster
