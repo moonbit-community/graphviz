@@ -1235,7 +1235,10 @@ fn edge_polyline_points(
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
   vnode_positions : Map[String, @geom.Point],
+  nodesep_pt : Double,
+  label_width_pt : Double,
   use_cluster_tuning : Bool,
+  split_label : Bool,
 ) -> Array[@geom.Point] {
   let points : Array[@geom.Point] = [tail_anchor]
   let vnodes = match edge_vnodes.get(edge_key(edge)) {
@@ -1253,12 +1256,20 @@ fn edge_polyline_points(
     }
     let span = head_rank - tail_rank
     if span != 0 {
+      let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+      let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+      let label_rank = if label_width_pt > 0.0 {
+        (min_rank + max_rank) / 2
+      } else {
+        -1
+      }
+      let y_dir = if head_anchor.y < tail_anchor.y { 1.0 } else { -1.0 }
       let style_value = match edge.get_attr("style") {
         Some(value) => value.to_lower()
         None => ""
       }
       let vnode_weight =
-        if use_cluster_tuning && style_value.contains("dotted") { 1.0 } else { 0.5 }
+        if use_cluster_tuning && style_value.contains("dotted") { 0.8 } else { 0.5 }
       let span_f = Double::from_int(span)
       let push_point = (name : String) => {
         match vnode_positions.get(name) {
@@ -1268,7 +1279,12 @@ fn edge_polyline_points(
                 let t = Double::from_int(rank - tail_rank) / span_f
                 let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
                 let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
-                points.push({ x, y: pos.y })
+                if split_label && rank == label_rank {
+                  points.push({ x: x - nodesep_pt, y: pos.y + nodesep_pt * y_dir })
+                  points.push({ x: x + label_width_pt, y: pos.y - nodesep_pt * y_dir })
+                } else {
+                  points.push({ x, y: pos.y })
+                }
               }
               None => ()
             }
@@ -1328,6 +1344,24 @@ fn node_cluster_key(node : @cgraph.Node) -> String {
     }
   }
   key
+}
+
+///|
+fn node_local_cluster_key(node : @cgraph.Node) -> String {
+  let mut graph = node.graph()
+  while !graph.is_root() {
+    if is_cluster_graph(graph) {
+      match graph.name() {
+        Some(name) => return name
+        None => return ""
+      }
+    }
+    match graph.parent() {
+      Some(parent) => graph = parent
+      None => break
+    }
+  }
+  ""
 }
 
 ///|
@@ -4793,6 +4827,17 @@ pub fn layout_dot(
           edge, tail_clip, head_clip, rankdir, true, include_tail, include_head,
         )
       _ => {
+        let label_width_pt = edge_mid_label_width_pt(edge)
+        let abs_dx = Double::abs(head_anchor.x - tail_anchor.x)
+        let same_outer_cluster =
+          node_cluster_key(edge.tail()) == node_cluster_key(edge.head())
+        let diff_local_cluster =
+          node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head())
+        let split_label = enable_complex_tuning &&
+          label_width_pt > 0.0 &&
+          same_outer_cluster &&
+          diff_local_cluster &&
+          abs_dx > label_width_pt
         let points = edge_polyline_points(
           edge,
           tail_anchor,
@@ -4801,22 +4846,24 @@ pub fn layout_dot(
           vnode_info.edge_vnodes,
           vnode_info.vnode_ranks,
           vnode_positions,
+          nodesep_pt,
+          label_width_pt,
           enable_complex_tuning,
+          split_label,
         )
         let has_vnodes = match vnode_info.edge_vnodes.get(edge_key(edge)) {
           Some(list) => list.length() > 0
           None => false
         }
-        let has_label = edge_mid_label_text(edge) is Some(_)
-        let same_outer_cluster =
-          node_cluster_key(edge.tail()) == node_cluster_key(edge.head())
         if points.length() > 2 {
           let clipped = clip_polyline_ends(
             points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
           )
           let simplify_tol = nodesep_pt * 0.8
+          let keep_label_kink =
+            label_width_pt > 0.0 && same_outer_cluster && abs_dx < nodesep_pt
           let simplified =
-            if enable_complex_tuning && has_vnodes && !(has_label && same_outer_cluster) {
+            if enable_complex_tuning && has_vnodes && !(split_label || keep_label_kink) {
             simplify_polyline(clipped, simplify_tol)
           } else {
             clipped
