@@ -142,6 +142,9 @@ const PAD_Y_PT : Double = 8.0
 ///|
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
 
+///|
+const DEFAULT_GRAPH_MARGIN_IN : Double = 0.11
+
 
 ///|
 const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
@@ -337,6 +340,18 @@ fn parse_margin(value : String) -> (Double, Double)? {
   let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
   let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
   Some((x, y))
+}
+
+///|
+fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
+  match graph.get_attr("margin") {
+    Some(value) =>
+      match parse_margin(value) {
+        Some((margin_x, _margin_y)) => margin_x * 72.0
+        None => DEFAULT_GRAPH_MARGIN_IN * 72.0
+      }
+    None => DEFAULT_GRAPH_MARGIN_IN * 72.0
+  }
 }
 
 ///|
@@ -4534,6 +4549,17 @@ pub fn layout_dot(
         )
       }
       None => ()
+    }
+  }
+  if graph.is_root() {
+    let margin_x = graph_margin_x_pt(graph)
+    if margin_x > 0.0 {
+      final_bbox = {
+        llx: final_bbox.llx - margin_x,
+        lly: final_bbox.lly,
+        urx: final_bbox.urx + margin_x,
+        ury: final_bbox.ury,
+      }
     }
   }
   let layout = {

@@ -1,45 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="300pt" height="249.60000000000002pt" viewBox="0 0 300 249.60000000000002">
-  <rect x="0" y="0" width="300" height="249.60000000000002" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="315.84000000000003pt" height="249.60000000000002pt" viewBox="0 0 315.84000000000003 249.60000000000002">
+  <rect x="0" y="0" width="315.84000000000003" height="249.60000000000002" fill="white"/>
   <g transform="translate(0 249.60000000000002) scale(1 -1)">
-    <rect x="4" y="12" width="142" height="148.8" fill="none" stroke="hotpink"/>
-    <text x="75" y="-143.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">hello world</text>
-    <rect x="154" y="12" width="142" height="225.60000000000002" fill="none" stroke="purple" stroke-dasharray="5,2"/>
-    <text x="225" y="-220.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MSDOT</text>
-    <path d="M 111 91.69662499427795 C 111 84.40655407865415 111 75.72646815594726 111 67.535711707834" fill="none" stroke="black"/>
-    <polygon points="111,67.535711707834 114,77.535711707834 108,77.535711707834" fill="black" stroke="black"/>
-    <path d="M 93.20224285125732 91.69662499427795 C 84.72136757156113 83.45132958346221 74.4115378837294 73.4278840536258 65.0695720750651 64.34541729520217" fill="none" stroke="black"/>
-    <polygon points="65.0695720750651,64.34541729520217 74.33075644308482,69.16521647167696 70.14828608333397,73.46718598456354" fill="black" stroke="black"/>
-    <path d="M 202.8251953125 168.4513671875 C 200.7351107597351 159.765904712677 198.15210099262185 149.03206412489527 195.78659126719128 139.20205704366157" fill="none" stroke="black"/>
-    <polygon points="195.78659126719128,139.20205704366157 201.04295620226267,148.2226239698227 195.2094829508778,149.62640095545007" fill="black" stroke="black"/>
-    <path d="M 204.86447882652283 168.38363842964174 C 201.81971970035374 143.551936222885 196.19431333286195 97.67362207022974 192.52576739460318 67.75459186265263" fill="none" stroke="black"/>
-    <polygon points="192.52576739460318,67.75459186265263 196.7205098609738,77.31514287401316 190.76511146577835,78.04536883527692" fill="black" stroke="black"/>
-    <path d="M 189 91.69662499427795 C 189 84.40655407865415 189 75.72646815594726 189 67.535711707834" fill="none" stroke="black"/>
-    <polygon points="189,67.535711707834 192,77.535711707834 186,77.535711707834" fill="black" stroke="black"/>
-    <path d="M 206.79775714874268 91.69662499427795 C 215.27863242843887 83.45132958346221 225.58846211627062 73.4278840536258 234.93042792493492 64.34541729520217" fill="none" stroke="black"/>
-    <polygon points="234.93042792493492,64.34541729520217 229.85171391666603,73.46718598456354 225.6692435569152,69.16521647167696" fill="black" stroke="black"/>
-    <path d="M 113.30419921875 168.4513671875 C 112.95963817834854 159.8603119134903 112.53469919016788 149.2651664748526 112.14396727212976 139.52291731843513" fill="none" stroke="black"/>
-    <polygon points="112.14396727212976,139.52291731843513 115.54230466141907,149.39465997049805 109.54712455012564,149.63510837068364" fill="black" stroke="black"/>
-    <path d="M 131.39501953125 168.4513671875 C 140.95564180612564 158.91623990535737 152.99161562458175 146.9123620170838 163.5863538783775 136.3458763986315" fill="none" stroke="black"/>
-    <polygon points="163.5863538783775,136.3458763986315 158.6243379511535,145.53164789252222 154.38736544708553,141.2833465849674" fill="black" stroke="black"/>
-    <path d="M 169.71909642219543 91.69662499427795 C 160.34397919123876 83.2830582485476 148.90579732525484 73.0180232406133 138.6237520902038 63.7905467476188" fill="none" stroke="black"/>
-    <polygon points="138.6237520902038,63.7905467476188 148.06990415248214,68.23691731430739 144.0624457018186,72.70237101647533" fill="black" stroke="black"/>
-    <ellipse cx="111" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="111" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">a</text>
-    <ellipse cx="111" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="111" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">b</text>
-    <ellipse cx="39" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="39" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">c</text>
-    <ellipse cx="207" cy="186.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="207" y="-181.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">x</text>
-    <ellipse cx="189" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="189" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">y</text>
-    <ellipse cx="189" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="189" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">z</text>
-    <ellipse cx="261" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="261" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">q</text>
-    <ellipse cx="114" cy="186.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="114" y="-181.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">top</text>
+    <rect x="11.92" y="12" width="142" height="148.8" fill="none" stroke="hotpink"/>
+    <text x="82.92" y="-143.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">hello world</text>
+    <rect x="161.92" y="12" width="142.00000000000003" height="225.60000000000002" fill="none" stroke="purple" stroke-dasharray="5,2"/>
+    <text x="232.92" y="-220.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MSDOT</text>
+    <path d="M 118.92 91.69662499427795 C 118.92 84.40655407865415 118.92 75.72646815594726 118.92 67.535711707834" fill="none" stroke="black"/>
+    <polygon points="118.92,67.535711707834 121.92,77.535711707834 115.92,77.535711707834" fill="black" stroke="black"/>
+    <path d="M 101.12224285125733 91.69662499427795 C 92.64136757156113 83.45132958346221 82.3315378837294 73.4278840536258 72.9895720750651 64.34541729520217" fill="none" stroke="black"/>
+    <polygon points="72.9895720750651,64.34541729520217 82.25075644308482,69.16521647167696 78.06828608333397,73.46718598456354" fill="black" stroke="black"/>
+    <path d="M 210.7451953125 168.4513671875 C 208.6551107597351 159.765904712677 206.07210099262184 149.03206412489527 203.70659126719127 139.20205704366157" fill="none" stroke="black"/>
+    <polygon points="203.70659126719127,139.20205704366157 208.96295620226266,148.2226239698227 203.1294829508778,149.62640095545007" fill="black" stroke="black"/>
+    <path d="M 212.78447882652281 168.38363842964174 C 209.73971970035373 143.551936222885 204.11431333286194 97.67362207022974 200.44576739460317 67.75459186265263" fill="none" stroke="black"/>
+    <polygon points="200.44576739460317,67.75459186265263 204.6405098609738,77.31514287401316 198.68511146577833,78.04536883527692" fill="black" stroke="black"/>
+    <path d="M 196.92 91.69662499427795 C 196.92 84.40655407865415 196.92 75.72646815594726 196.92 67.535711707834" fill="none" stroke="black"/>
+    <polygon points="196.92,67.535711707834 199.92,77.535711707834 193.92,77.535711707834" fill="black" stroke="black"/>
+    <path d="M 214.71775714874266 91.69662499427795 C 223.19863242843886 83.45132958346221 233.5084621162706 73.4278840536258 242.8504279249349 64.34541729520217" fill="none" stroke="black"/>
+    <polygon points="242.8504279249349,64.34541729520217 237.77171391666602,73.46718598456354 233.5892435569152,69.16521647167696" fill="black" stroke="black"/>
+    <path d="M 121.22419921875 168.4513671875 C 120.87963817834854 159.8603119134903 120.45469919016789 149.2651664748526 120.06396727212976 139.52291731843513" fill="none" stroke="black"/>
+    <polygon points="120.06396727212976,139.52291731843513 123.46230466141907,149.39465997049805 117.46712455012565,149.63510837068364" fill="black" stroke="black"/>
+    <path d="M 139.31501953125 168.4513671875 C 148.87564180612563 158.91623990535737 160.91161562458174 146.9123620170838 171.5063538783775 136.3458763986315" fill="none" stroke="black"/>
+    <polygon points="171.5063538783775,136.3458763986315 166.5443379511535,145.53164789252222 162.30736544708552,141.2833465849674" fill="black" stroke="black"/>
+    <path d="M 177.63909642219542 91.69662499427795 C 168.26397919123875 83.2830582485476 156.82579732525483 73.0180232406133 146.54375209020378 63.7905467476188" fill="none" stroke="black"/>
+    <polygon points="146.54375209020378,63.7905467476188 155.98990415248213,68.23691731430739 151.9824457018186,72.70237101647533" fill="black" stroke="black"/>
+    <ellipse cx="118.92" cy="110" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
+    <text x="118.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">a</text>
+    <ellipse cx="118.92" cy="38" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
+    <text x="118.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">b</text>
+    <ellipse cx="46.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="46.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">c</text>
+    <ellipse cx="214.92" cy="186.8" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="214.92" y="-181.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">x</text>
+    <ellipse cx="196.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="196.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">y</text>
+    <ellipse cx="196.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="196.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">z</text>
+    <ellipse cx="268.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="268.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">q</text>
+    <ellipse cx="121.92" cy="186.8" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
+    <text x="121.92" y="-181.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">top</text>
   </g>
 </svg>
 
