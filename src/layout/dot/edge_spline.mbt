@@ -562,25 +562,85 @@ fn smooth_polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] 
   if points.length() < 2 {
     return out
   }
-  out.push(points[0])
-  let mut i = 0
+  let seg_dirs : Array[@geom.Point] = []
+  let seg_lens : Array[Double] = []
+  for i in 0..<(points.length() - 1) {
+    let dx = points[i + 1].x - points[i].x
+    let dy = points[i + 1].y - points[i].y
+    let len = Double::sqrt(dx * dx + dy * dy)
+    seg_lens.push(len)
+    if len <= 0.0 {
+      seg_dirs.push(point(0.0, 0.0))
+    } else {
+      seg_dirs.push(point(dx / len, dy / len))
+    }
+  }
+  let dir_points : Array[@geom.Point] = []
   let last = points.length() - 1
-  while i < last {
-    let p0 = if i == 0 { points[0] } else { points[i - 1] }
-    let p1 = points[i]
-    let p2 = points[i + 1]
-    let p3 = if i + 2 <= last { points[i + 2] } else { points[last] }
-    let c1 = point(
-      p1.x + (p2.x - p0.x) / 6.0,
-      p1.y + (p2.y - p0.y) / 6.0,
-    )
-    let c2 = point(
-      p2.x - (p3.x - p1.x) / 6.0,
-      p2.y - (p3.y - p1.y) / 6.0,
-    )
+  for i in 0..=last {
+    let mut dir = point(0.0, 0.0)
+    if points.length() == 2 {
+      dir = seg_dirs[0]
+    } else if i == 0 {
+      dir = seg_dirs[0]
+    } else if i == last {
+      dir = seg_dirs[last - 1]
+    } else {
+      dir = point(
+        seg_dirs[i - 1].x + seg_dirs[i].x,
+        seg_dirs[i - 1].y + seg_dirs[i].y,
+      )
+    }
+    let dir_len = Double::sqrt(dir.x * dir.x + dir.y * dir.y)
+    if dir_len <= 0.0 {
+      if i == 0 {
+        dir = seg_dirs[0]
+      } else {
+        dir = seg_dirs[seg_dirs.length() - 1]
+      }
+    } else {
+      dir = point(dir.x / dir_len, dir.y / dir_len)
+    }
+    dir_points.push(dir)
+  }
+  out.push(points[0])
+  let handle_base = 1.0 / 3.0
+  let mut i = 0
+  let last_seg = points.length() - 2
+  while i <= last_seg {
+    let p0 = points[i]
+    let p1 = points[i + 1]
+    let seg_len = seg_lens[i]
+    let dir0 = dir_points[i]
+    let dir1 = dir_points[i + 1]
+    let c1_scale =
+      if i == 0 {
+        let next_len = if points.length() > 2 { seg_lens[1] } else { seg_len }
+        let ratio = if seg_len <= 0.0 { 1.0 } else { next_len / seg_len }
+        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
+        0.85 + 0.15 * clamped
+      } else {
+        1.0
+      }
+    let c1_len = seg_len * handle_base * c1_scale
+    let c1 = point(p0.x + dir0.x * c1_len, p0.y + dir0.y * c1_len)
+    let c2_scale =
+      if i == last_seg {
+        let prev_len = if points.length() > 2 { seg_lens[last_seg - 1] } else { seg_len }
+        let ratio = if prev_len <= 0.0 { 1.0 } else { seg_len / prev_len }
+        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
+        0.85 + 0.15 * clamped
+      } else {
+        let next_len = seg_lens[i + 1]
+        let ratio = if seg_len <= 0.0 { 1.0 } else { next_len / seg_len }
+        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
+        0.5 + 0.5 * clamped
+      }
+    let c2_len = seg_len * handle_base * c2_scale
+    let c2 = point(p1.x - dir1.x * c2_len, p1.y - dir1.y * c2_len)
     out.push(c1)
     out.push(c2)
-    out.push(p2)
+    out.push(p1)
     i = i + 1
   }
   out
