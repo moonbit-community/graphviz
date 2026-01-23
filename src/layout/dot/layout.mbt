@@ -997,6 +997,69 @@ fn port_geometry(
 }
 
 ///|
+fn record_port_boundary_anchor(
+  center : @geom.Point,
+  size : NodeSize,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+  target : @geom.Point,
+) -> (@geom.Point, NodeSize) {
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  let port_rect : @geom.Rect = {
+    llx: center.x - half_w,
+    lly: center.y - half_h,
+    urx: center.x + half_w,
+    ury: center.y + half_h,
+  }
+  let node_half_w = node_size.width_pt / 2.0
+  let node_half_h = node_size.height_pt / 2.0
+  let node_rect : @geom.Rect = {
+    llx: node_pos.x - node_half_w,
+    lly: node_pos.y - node_half_h,
+    urx: node_pos.x + node_half_w,
+    ury: node_pos.y + node_half_h,
+  }
+  let eps = 0.01
+  let left_outer = Double::abs(port_rect.llx - node_rect.llx) <= eps
+  let right_outer = Double::abs(port_rect.urx - node_rect.urx) <= eps
+  let bottom_outer = Double::abs(port_rect.lly - node_rect.lly) <= eps
+  let top_outer = Double::abs(port_rect.ury - node_rect.ury) <= eps
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  let prefer_horizontal = Double::abs(dx) >= Double::abs(dy)
+  let mut anchor = center
+  if prefer_horizontal {
+    if dx < 0.0 && left_outer {
+      anchor = { x: port_rect.llx, y: center.y }
+    } else if dx > 0.0 && right_outer {
+      anchor = { x: port_rect.urx, y: center.y }
+    }
+  }
+  if anchor == center {
+    if dy > 0.0 && top_outer {
+      anchor = { x: center.x, y: port_rect.ury }
+    } else if dy < 0.0 && bottom_outer {
+      anchor = { x: center.x, y: port_rect.lly }
+    } else if left_outer {
+      anchor = { x: port_rect.llx, y: center.y }
+    } else if right_outer {
+      anchor = { x: port_rect.urx, y: center.y }
+    } else if top_outer {
+      anchor = { x: center.x, y: port_rect.ury }
+    } else if bottom_outer {
+      anchor = { x: center.x, y: port_rect.lly }
+    }
+  }
+  let size_out = if anchor == center {
+    size
+  } else {
+    node_size_from_points(0.0, 0.0)
+  }
+  (anchor, size_out)
+}
+
+///|
 fn node_size(node : @cgraph.Node) -> NodeSize {
   let shape = match node.get_attr("shape") {
     Some(value) => value.to_lower()
@@ -4789,6 +4852,17 @@ pub fn layout_dot(
       None => ()
     }
   }
+  let label_edge_counts : Map[String, Int] = Map::new()
+  for edge in edges {
+    if edge_mid_label_text(edge) is Some(_) {
+      let tail = edge.tail().name()
+      let current = match label_edge_counts.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      label_edge_counts[tail] = current + 1
+    }
+  }
   let enable_complex_tuning = has_clusters && has_dotted_edges
   let edges_out : Array[DotLayoutEdge] = []
   for edge in edges {
@@ -4810,20 +4884,46 @@ pub fn layout_dot(
       Some(value) => value
       None => node_size(edge.head())
     }
-    let (tail_anchor, tail_anchor_size) = port_geometry(
+    let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
       tail_name,
       edge.tail_port(),
       label_ports_map,
       tail_pos,
       tail_size,
     )
-    let (head_anchor, head_anchor_size) = port_geometry(
+    let (raw_head_anchor, raw_head_anchor_size) = port_geometry(
       head_name,
       edge.head_port(),
       label_ports_map,
       head_pos,
       head_size,
     )
+    let mut tail_anchor = raw_tail_anchor
+    let mut tail_anchor_size = raw_tail_anchor_size
+    let mut head_anchor = raw_head_anchor
+    let mut head_anchor_size = raw_head_anchor_size
+    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+      let (anchor, size) = record_port_boundary_anchor(
+        tail_anchor,
+        tail_anchor_size,
+        tail_pos,
+        tail_size,
+        head_anchor,
+      )
+      tail_anchor = anchor
+      tail_anchor_size = size
+    }
+    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+      let (anchor, size) = record_port_boundary_anchor(
+        head_anchor,
+        head_anchor_size,
+        head_pos,
+        head_size,
+        tail_anchor,
+      )
+      head_anchor = anchor
+      head_anchor_size = size
+    }
     let mut tail_clip = clip_to_rect(tail_anchor, tail_anchor_size, head_anchor)
     let mut head_clip = clip_to_rect(head_anchor, head_anchor_size, tail_anchor)
     let dir = edge_dir_for(edge, graph.kind())
@@ -4878,8 +4978,14 @@ pub fn layout_dot(
             points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
           )
           let simplify_tol = nodesep_pt * 0.8
+          let tail_label_edges = match label_edge_counts.get(tail_name) {
+            Some(value) => value > 1
+            None => false
+          }
           let keep_label_kink =
-            label_width_pt > 0.0 && same_outer_cluster && abs_dx < nodesep_pt
+            label_width_pt > 0.0 &&
+            same_outer_cluster &&
+            (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))
           let simplified =
             if enable_complex_tuning && has_vnodes && !(split_label || keep_label_kink) {
             simplify_polyline(clipped, simplify_tol)
