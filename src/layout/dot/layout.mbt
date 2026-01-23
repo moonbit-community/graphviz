@@ -14,6 +14,7 @@ priv struct EdgeVnodeInfo {
   vnode_sizes : Map[String, NodeSize]
   vnodes_by_rank : Map[Int, Array[String]]
   edge_vnodes : Map[String, Array[String]]
+  vnode_clusters : Map[String, String]
 }
 
 ///|
@@ -1153,6 +1154,54 @@ fn node_cluster_key(node : @cgraph.Node) -> String {
     }
   }
   key
+}
+
+///|
+fn graph_cluster_key(graph : @cgraph.Graph) -> String {
+  let mut current = graph
+  let mut key = ""
+  while !current.is_root() {
+    if is_cluster_graph(current) {
+      match current.name() {
+        Some(name) => key = name
+        None => key = ""
+      }
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  key
+}
+
+///|
+fn collect_edge_cluster_keys(
+  graph : @cgraph.Graph,
+  edge_cluster_keys : Map[String, String],
+) -> Unit {
+  for child in graph.subgraphs() {
+    collect_edge_cluster_keys(child, edge_cluster_keys)
+  }
+  if !is_cluster_graph(graph) {
+    return ()
+  }
+  let cluster_key = graph_cluster_key(graph)
+  if cluster_key == "" {
+    return ()
+  }
+  let child_edges : Map[String, Bool] = Map::new()
+  for child in graph.subgraphs() {
+    for edge in child.edges() {
+      child_edges[edge_key(edge)] = true
+    }
+  }
+  for edge in graph.edges() {
+    let key = edge_key(edge)
+    if child_edges.get(key) is None {
+      edge_cluster_keys[key] = cluster_key
+    }
+  }
 }
 
 ///|
@@ -2393,7 +2442,6 @@ fn unique_virtual_node_name(
   }
   ""
 }
-
 ///|
 fn build_vnode_order_keys(
   edges : Array[@cgraph.Edge],
@@ -2453,7 +2501,6 @@ fn build_vnode_order_keys(
   }
   keys
 }
-
 ///|
 ///|
 fn build_edge_vnodes(
@@ -2461,15 +2508,30 @@ fn build_edge_vnodes(
   ranks : Map[String, Int],
   nodesep_pt : Double,
   existing_names : Map[String, Bool],
+  edge_cluster_keys : Map[String, String],
 ) -> EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let edge_vnodes : Map[String, Array[String]] = Map::new()
+  let vnode_clusters : Map[String, String] = Map::new()
   let mut edge_index = 0
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
+    let tail_cluster = node_cluster_key(edge.tail())
+    let head_cluster = node_cluster_key(edge.head())
+    let edge_cluster = match edge_cluster_keys.get(edge_key(edge)) {
+      Some(value) => value
+      None => ""
+    }
+    let vnode_cluster = if edge_cluster != "" {
+      edge_cluster
+    } else if tail_cluster != "" && tail_cluster == head_cluster {
+      tail_cluster
+    } else {
+      ""
+    }
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => {
@@ -2514,6 +2576,7 @@ fn build_edge_vnodes(
       )
       vnode_ranks[name] = rank
       vnode_sizes[name] = vnode_size_from_widths(left_pt, right_pt)
+      vnode_clusters[name] = vnode_cluster
       match vnodes_by_rank.get(rank) {
         Some(list) => list.push(name)
         None => vnodes_by_rank[rank] = [name]
@@ -2533,7 +2596,7 @@ fn build_edge_vnodes(
     }
     edge_index = edge_index + 1
   }
-  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes }
+  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
 }
 
 ///|
@@ -4202,7 +4265,15 @@ pub fn layout_dot(
   for node in nodes {
     existing_names[node.name()] = true
   }
-  let vnode_info = build_edge_vnodes(edges, ranks, nodesep_pt, existing_names)
+  let edge_cluster_keys : Map[String, String] = Map::new()
+  collect_edge_cluster_keys(graph, edge_cluster_keys)
+  let vnode_info = build_edge_vnodes(
+    edges,
+    ranks,
+    nodesep_pt,
+    existing_names,
+    edge_cluster_keys,
+  )
   let node_singletons = build_node_singletons(nodes, edges)
   let virtual_slack_edges = build_virtual_slack_edges(
     edges,
@@ -4229,6 +4300,13 @@ pub fn layout_dot(
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
   let vnode_extra_nodes = build_vnode_extra_nodes(vnode_info.vnode_ranks)
+  let x_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_keys {
+    x_cluster_keys[name] = key
+  }
+  for name, key in vnode_info.vnode_clusters {
+    x_cluster_keys[name] = key
+  }
   let x_positions = compute_x_positions(
     graph,
     nodes,
@@ -4237,6 +4315,7 @@ pub fn layout_dot(
     x_rank_keys,
     x_groups,
     x_sizes,
+    x_cluster_keys,
     nodesep_pt,
     ordering,
     has_edge_labels,

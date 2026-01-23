@@ -204,12 +204,16 @@ test "svg spot-check outputs" {
     let (input_path, name) = pair
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
-    let svg = render_svg(layout, options={
-      pretty: Some(false),
-      include_xml_decl: Some(false),
-    })
+    let svg = render_svg(layout)
     let out_path = "\{out_dir}/\{name}.svg"
     @fs.write_string_to_file(out_path, svg)
     assert_true(svg.contains("<svg"))
+    let baseline_path = "tests/render/svg/\{name}.svg"
+    if @fs.path_exists(baseline_path) {
+      let baseline = @fs.read_file_to_string(baseline_path)
+      let normalized_svg = svg.trim(chars=" \n\r\t").to_string()
+      let normalized_baseline = baseline.trim(chars=" \n\r\t").to_string()
+      assert_eq(normalized_svg, normalized_baseline)
+    }
   }
 }

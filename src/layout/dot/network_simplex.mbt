@@ -1352,6 +1352,7 @@ fn nodesep_minlen(
   head_name : String,
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
+  cluster_keys : Map[String, String],
 ) -> Int {
   let tail_size = sizes.get(tail_name)
   let head_size = sizes.get(head_name)
@@ -1371,7 +1372,15 @@ fn nodesep_minlen(
     Some(value) => value.height_pt == 0.0
     None => false
   }
-  let sep = if tail_is_vnode || head_is_vnode { 0.0 } else { nodesep_pt }
+  let same_cluster = match (cluster_keys.get(tail_name), cluster_keys.get(head_name)) {
+    (Some(left), Some(right)) => left != "" && left == right
+    _ => false
+  }
+  let sep = if tail_is_vnode || head_is_vnode {
+    if same_cluster { 0.0 } else { nodesep_pt }
+  } else {
+    nodesep_pt
+  }
   let minlen = tail_right + head_left + sep
   round_int(minlen)
 }
@@ -1958,8 +1967,8 @@ fn build_cluster_constraints(
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
   sizes : Map[String, NodeSize],
-) -> Map[String, Map[String, Double]] {
-  let offsets : Map[String, Map[String, Double]] = Map::new()
+) -> Map[String, Map[String, RecordPort]] {
+  let offsets : Map[String, Map[String, RecordPort]] = Map::new()
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   for node in nodes {
     let name = node.name()
@@ -1973,9 +1982,9 @@ fn port_offsets_for_nodes(
       html_ports(node, origin, size)
     }
     if ports.length() > 0 {
-      let node_offsets : Map[String, Double] = Map::new()
+      let node_offsets : Map[String, RecordPort] = Map::new()
       for port_name, port_info in ports {
-        node_offsets[port_name] = port_info.center.x
+        node_offsets[port_name] = port_info
       }
       offsets[name] = node_offsets
     }
@@ -1984,10 +1993,28 @@ fn port_offsets_for_nodes(
 }
 
 ///|
-fn port_offset(
+fn compass_port_offset(
+  compass : @cgraph.Compass,
+  node_name : String,
+  sizes : Map[String, NodeSize],
+) -> Double {
+  match compass {
+    @cgraph.Compass::E
+    | @cgraph.Compass::NE
+    | @cgraph.Compass::SE => node_right_pt(node_name, sizes)
+    @cgraph.Compass::W
+    | @cgraph.Compass::NW
+    | @cgraph.Compass::SW => -node_left_pt(node_name, sizes)
+    _ => 0.0
+  }
+}
+
+///|
+fn edge_port_offset(
   node_name : String,
   port : @cgraph.Port?,
-  offsets : Map[String, Map[String, Double]],
+  offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
 ) -> Double {
   match port {
     Some(value) =>
@@ -1996,29 +2023,60 @@ fn port_offset(
           match offsets.get(node_name) {
             Some(node_offsets) =>
               match node_offsets.get(name) {
-                Some(offset) => offset
+                Some(port_info) =>
+                  match value.compass {
+                    Some(compass) =>
+                      match compass {
+                        @cgraph.Compass::E
+                        | @cgraph.Compass::NE
+                        | @cgraph.Compass::SE => {
+                          let half = port_info.size.width_pt / 2.0
+                          port_info.center.x + half
+                        }
+                        @cgraph.Compass::W
+                        | @cgraph.Compass::NW
+                        | @cgraph.Compass::SW => {
+                          let half = port_info.size.width_pt / 2.0
+                          port_info.center.x - half
+                        }
+                        _ => port_info.center.x
+                      }
+                    None => port_info.center.x
+                  }
+                None =>
+                  match value.compass {
+                    Some(compass) => compass_port_offset(compass, node_name, sizes)
+                    None => 0.0
+                  }
+              }
+            None =>
+              match value.compass {
+                Some(compass) => compass_port_offset(compass, node_name, sizes)
                 None => 0.0
               }
+          }
+        None =>
+          match value.compass {
+            Some(compass) => compass_port_offset(compass, node_name, sizes)
             None => 0.0
           }
-        None => 0.0
       }
     None => 0.0
   }
 }
 
 ///|
-fn port_offset_by_name(
+fn edge_port_offset_by_name(
   node_name : String,
   port_name : String?,
-  offsets : Map[String, Map[String, Double]],
+  offsets : Map[String, Map[String, RecordPort]],
 ) -> Double {
   match port_name {
     Some(name) =>
       match offsets.get(node_name) {
         Some(node_offsets) =>
           match node_offsets.get(name) {
-            Some(offset) => offset
+            Some(port_info) => port_info.center.x
             None => 0.0
           }
         None => 0.0
@@ -2035,6 +2093,7 @@ fn build_constraint_graph(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  cluster_keys : Map[String, String],
   nodesep_pt : Double,
   ordering : OrderingMode?,
   has_edge_labels : Bool,
@@ -2121,7 +2180,13 @@ fn build_constraint_graph(
         Some(value) => value
         None => 0
       }
-      let minlen = nodesep_minlen(tail, head, sizes, rank_nodesep)
+      let minlen = nodesep_minlen(
+        tail,
+        head,
+        sizes,
+        rank_nodesep,
+        cluster_keys,
+      )
       let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
       i = i + 1
     }
@@ -2160,8 +2225,18 @@ fn build_constraint_graph(
       None => 0
     }
     let slack_idx = slack_indices[i]
-    let tail_offset = port_offset(tail_name, edge.tail_port(), port_offsets)
-    let head_offset = port_offset(head_name, edge.head_port(), port_offsets)
+    let tail_offset = edge_port_offset(
+      tail_name,
+      edge.tail_port(),
+      port_offsets,
+      sizes,
+    )
+    let head_offset = edge_port_offset(
+      head_name,
+      edge.head_port(),
+      port_offsets,
+      sizes,
+    )
     let delta = head_offset - tail_offset
     let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
     let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
@@ -2189,12 +2264,12 @@ fn build_constraint_graph(
       None => 0
     }
     let slack_idx = add_node(graph, "")
-    let tail_offset = port_offset_by_name(
+    let tail_offset = edge_port_offset_by_name(
       extra.tail,
       extra.tail_port,
       port_offsets,
     )
-    let head_offset = port_offset_by_name(
+    let head_offset = edge_port_offset_by_name(
       extra.head,
       extra.head_port,
       port_offsets,
@@ -2227,6 +2302,7 @@ fn x_positions_from_simplex(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  cluster_keys : Map[String, String],
   nodesep_pt : Double,
   ordering : OrderingMode?,
   has_edge_labels : Bool,
@@ -2236,7 +2312,7 @@ fn x_positions_from_simplex(
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Double] {
   let (graph, index) = build_constraint_graph(
-    nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, ordering, has_edge_labels,
+    nodes, edges, ranks, rank_keys, groups, sizes, cluster_keys, nodesep_pt, ordering, has_edge_labels,
     extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
   )
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
@@ -2269,6 +2345,7 @@ fn compute_x_positions(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  cluster_keys : Map[String, String],
   nodesep_pt : Double,
   ordering : OrderingMode?,
   has_edge_labels : Bool,
@@ -2285,7 +2362,7 @@ fn compute_x_positions(
     all_extra_nodes.push(pair)
   }
   x_positions_from_simplex(
-    nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, ordering, has_edge_labels,
+    nodes, edges, ranks, rank_keys, groups, sizes, cluster_keys, nodesep_pt, ordering, has_edge_labels,
     all_extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
   )
 }
