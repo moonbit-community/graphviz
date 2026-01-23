@@ -1498,6 +1498,12 @@ fn build_cluster_constraints(
   if cluster_members.length() == 0 {
     return ([], [])
   }
+  let node_in_any_cluster : Map[String, Bool] = Map::new()
+  for _name, members in cluster_members {
+    for node_name, _ in members {
+      node_in_any_cluster[node_name] = true
+    }
+  }
   let cluster_related : Map[String, Map[String, Bool]] = Map::new()
   let cluster_edges : Map[String, Map[String, Bool]] = Map::new()
   for name, members in cluster_members {
@@ -1731,6 +1737,15 @@ fn build_cluster_constraints(
           while j >= 0 {
             let outside = names[j]
             if related.get(outside) is None {
+              let outside_is_vnode = match sizes.get(outside) {
+                Some(size) => size.height_pt == 0.0
+                None => false
+              }
+              // Skip real nodes from other clusters; cluster separation already adds bounds.
+              if node_in_any_cluster.get(outside) is Some(_) && !outside_is_vnode {
+                j = j - 1
+                continue
+              }
               let minlen = round_int(
                 node_right_pt(outside, sizes) + margin,
               )
@@ -1750,6 +1765,15 @@ fn build_cluster_constraints(
           while j < names.length() {
             let outside = names[j]
             if related.get(outside) is None {
+              let outside_is_vnode = match sizes.get(outside) {
+                Some(size) => size.height_pt == 0.0
+                None => false
+              }
+              // Skip real nodes from other clusters; cluster separation already adds bounds.
+              if node_in_any_cluster.get(outside) is Some(_) && !outside_is_vnode {
+                j = j + 1
+                continue
+              }
               let minlen = round_int(
                 node_left_pt(outside, sizes) + margin,
               )
