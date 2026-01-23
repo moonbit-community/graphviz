@@ -1271,7 +1271,7 @@ fn edge_polyline_points(
       let is_dotted = style_value.contains("dotted")
       let vnode_weight =
         if use_cluster_tuning {
-          if is_dotted { 0.8 } else { 0.0 }
+          if is_dotted { 0.8 } else { if split_label { 0.3 } else { 0.0 } }
         } else {
           0.5
         }
@@ -1283,9 +1283,12 @@ fn edge_polyline_points(
               Some(rank) => {
                 let t_raw = Double::from_int(rank - tail_rank) / span_f
                 let t =
-                  if use_cluster_tuning && !is_dotted && !split_label &&
-                      head_anchor.x >= tail_anchor.x {
-                    t_raw * t_raw
+                  if use_cluster_tuning && !is_dotted && head_anchor.x >= tail_anchor.x {
+                    if split_label && rank == label_rank {
+                      t_raw
+                    } else {
+                      t_raw * t_raw
+                    }
                   } else {
                     t_raw
                   }
