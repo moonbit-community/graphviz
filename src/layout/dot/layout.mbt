@@ -1205,6 +1205,16 @@ fn collect_edge_cluster_keys(
 }
 
 ///|
+fn intercluster_edge_key(
+  tail_cluster : String,
+  head_cluster : String,
+  tail_rank : Int,
+  head_rank : Int,
+) -> String {
+  "\{tail_cluster}@\{tail_rank}->\{head_cluster}@\{head_rank}"
+}
+
+///|
 fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
   match edge.get_attr("constraint") {
     Some(value) => {
@@ -2702,8 +2712,10 @@ fn build_virtual_slack_edges(
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
   node_singletons : Map[String, Bool],
+  cluster_keys : Map[String, String],
 ) -> Array[ConstraintEdge] {
   let extra : Array[ConstraintEdge] = []
+  let intercluster_seen : Map[String, Bool] = Map::new()
   for edge in edges {
     let key = edge_key(edge)
     let vnodes = match edge_vnodes.get(key) {
@@ -2717,6 +2729,14 @@ fn build_virtual_slack_edges(
     let head = edge.head().name()
     let tail_port_name = edge_port_name(edge.tail_port())
     let head_port_name = edge_port_name(edge.head_port())
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
@@ -2724,6 +2744,18 @@ fn build_virtual_slack_edges(
     let head_rank = match ranks.get(head) {
       Some(value) => value
       None => continue
+    }
+    if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
+      let cluster_key = intercluster_edge_key(
+        tail_cluster,
+        head_cluster,
+        tail_rank,
+        head_rank,
+      )
+      if intercluster_seen.get(cluster_key) is Some(_) {
+        continue
+      }
+      intercluster_seen[cluster_key] = true
     }
     let low = if tail_rank <= head_rank { tail } else { head }
     let high = if tail_rank <= head_rank { head } else { tail }
@@ -4281,6 +4313,7 @@ pub fn layout_dot(
     vnode_info.edge_vnodes,
     vnode_info.vnode_ranks,
     node_singletons,
+    cluster_keys,
   )
   let order_index = build_order_index(ordered_groups)
   let vnode_order_keys = build_vnode_order_keys(

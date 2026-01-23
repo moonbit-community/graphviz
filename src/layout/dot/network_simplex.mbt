@@ -2114,6 +2114,7 @@ fn build_constraint_graph(
   }
   let port_offsets = port_offsets_for_nodes(ordered_nodes, sizes)
   let slack_edges : Array[@cgraph.Edge] = []
+  let intercluster_seen : Map[String, Bool] = Map::new()
   for node in ordered_nodes {
     let tail_name = node.name()
     let list = match outgoing_edges.get(tail_name) {
@@ -2124,6 +2125,35 @@ fn build_constraint_graph(
       match edge_vnodes.get(edge_key(edge)) {
         Some(_) => continue
         None => ()
+      }
+      let head_name = edge.head().name()
+      let tail_cluster = match cluster_keys.get(tail_name) {
+        Some(value) => value
+        None => ""
+      }
+      let head_cluster = match cluster_keys.get(head_name) {
+        Some(value) => value
+        None => ""
+      }
+      if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
+        let tail_rank = match ranks.get(tail_name) {
+          Some(value) => value
+          None => 0
+        }
+        let head_rank = match ranks.get(head_name) {
+          Some(value) => value
+          None => 0
+        }
+        let key = intercluster_edge_key(
+          tail_cluster,
+          head_cluster,
+          tail_rank,
+          head_rank,
+        )
+        if intercluster_seen.get(key) is Some(_) {
+          continue
+        }
+        intercluster_seen[key] = true
       }
       slack_edges.push(edge)
     }
