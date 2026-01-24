@@ -436,6 +436,11 @@ test "dot layout tier2 snapshots" {
     0.01,
   )
   assert_snapshot_nodes_only(
+    "tests/layout/dot/edge_vnode_spacing.dot",
+    "tests/layout/dot/edge_vnode_spacing.gv.dot",
+    18.0,
+  )
+  assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
     30.0,
   )

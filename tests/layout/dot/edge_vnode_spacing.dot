@@ -1,0 +1,16 @@
+digraph edge_vnode_spacing {
+  nodesep="0.25";
+  ranksep="0.5";
+  node [shape=box];
+  {rank=same; a; b;}
+  {rank=same; c; d;}
+  {rank=same; e; f;}
+  {rank=same; g; h;}
+  a -> c;
+  c -> e;
+  e -> g;
+  b -> d;
+  d -> f;
+  f -> h;
+  a -> h [label="Very Long Edge Label"];
+}
