@@ -2134,6 +2134,10 @@ fn build_constraint_graph(
     }
   }
   let port_offsets = port_offsets_for_nodes(ordered_nodes, sizes)
+  let actual_names : Map[String, Bool] = Map::new()
+  for node in ordered_nodes {
+    actual_names[node.name()] = true
+  }
   let slack_edges : Array[@cgraph.Edge] = []
   let intercluster_seen : Map[String, Bool] = Map::new()
   for node in ordered_nodes {
@@ -2267,27 +2271,41 @@ fn build_constraint_graph(
     let edge = slack_edges[i]
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
-    let tail_idx = match index.get(tail_name) {
+    let (tail_node, use_tail_port) =
+      (tail_name, actual_names.get(tail_name) is Some(_))
+    let (head_node, use_head_port) =
+      (head_name, actual_names.get(head_name) is Some(_))
+    let tail_idx = match index.get(tail_node) {
       Some(value) => value
       None => 0
     }
-    let head_idx = match index.get(head_name) {
+    let head_idx = match index.get(head_node) {
       Some(value) => value
       None => 0
     }
     let slack_idx = slack_indices[i]
-    let tail_offset = edge_port_offset(
-      tail_name,
-      edge.tail_port(),
-      port_offsets,
-      sizes,
-    )
-    let head_offset = edge_port_offset(
-      head_name,
-      edge.head_port(),
-      port_offsets,
-      sizes,
-    )
+    let tail_offset =
+      if use_tail_port {
+        edge_port_offset(
+          tail_name,
+          edge.tail_port(),
+          port_offsets,
+          sizes,
+        )
+      } else {
+        0.0
+      }
+    let head_offset =
+      if use_head_port {
+        edge_port_offset(
+          head_name,
+          edge.head_port(),
+          port_offsets,
+          sizes,
+        )
+      } else {
+        0.0
+      }
     let delta = head_offset - tail_offset
     let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
     let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
@@ -2306,23 +2324,29 @@ fn build_constraint_graph(
 
   }
   for extra in extra_slack_edges {
-    let tail_idx = match index.get(extra.tail) {
+    let (tail_node, use_tail_port) =
+      (extra.tail, actual_names.get(extra.tail) is Some(_))
+    let (head_node, use_head_port) =
+      (extra.head, actual_names.get(extra.head) is Some(_))
+    let tail_port = if use_tail_port { extra.tail_port } else { None }
+    let head_port = if use_head_port { extra.head_port } else { None }
+    let tail_idx = match index.get(tail_node) {
       Some(value) => value
       None => 0
     }
-    let head_idx = match index.get(extra.head) {
+    let head_idx = match index.get(head_node) {
       Some(value) => value
       None => 0
     }
     let slack_idx = add_node(graph, "")
     let tail_offset = edge_port_offset_by_name(
-      extra.tail,
-      extra.tail_port,
+      tail_node,
+      tail_port,
       port_offsets,
     )
     let head_offset = edge_port_offset_by_name(
-      extra.head,
-      extra.head_port,
+      head_node,
+      head_port,
       port_offsets,
     )
     let delta = head_offset - tail_offset
@@ -2363,8 +2387,20 @@ fn x_positions_from_simplex(
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Double] {
   let (graph, index) = build_constraint_graph(
-    nodes, edges, ranks, rank_keys, groups, sizes, cluster_keys, nodesep_pt, ordering, has_edge_labels,
-    extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    cluster_keys,
+    nodesep_pt,
+    ordering,
+    has_edge_labels,
+    extra_nodes,
+    extra_edges,
+    extra_slack_edges,
+    edge_vnodes,
   )
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let positions : Map[String, Double] = Map::new()
@@ -2413,7 +2449,19 @@ fn compute_x_positions(
     all_extra_nodes.push(pair)
   }
   x_positions_from_simplex(
-    nodes, edges, ranks, rank_keys, groups, sizes, cluster_keys, nodesep_pt, ordering, has_edge_labels,
-    all_extra_nodes, extra_edges, extra_slack_edges, edge_vnodes,
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    cluster_keys,
+    nodesep_pt,
+    ordering,
+    has_edge_labels,
+    all_extra_nodes,
+    extra_edges,
+    extra_slack_edges,
+    edge_vnodes,
   )
 }

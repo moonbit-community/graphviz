@@ -2803,6 +2803,7 @@ fn adjust_intercluster_alignment(
   ranks : Map[String, Int],
   x_positions : Map[String, Double],
   cluster_keys : Map[String, String],
+  intercluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
 ) -> Unit {
@@ -2832,11 +2833,11 @@ fn adjust_intercluster_alignment(
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
-    let tail_cluster = match cluster_keys.get(tail) {
+    let tail_cluster = match intercluster_keys.get(tail) {
       Some(value) => value
       None => ""
     }
-    let head_cluster = match cluster_keys.get(head) {
+    let head_cluster = match intercluster_keys.get(head) {
       Some(value) => value
       None => ""
     }
@@ -5456,6 +5457,10 @@ pub fn layout_dot(
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
   }
+  let intercluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    intercluster_keys[node.name()] = node_local_cluster_key(node)
+  }
   let rank_same_groups : Map[String, Int] = Map::new()
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
@@ -5539,6 +5544,7 @@ pub fn layout_dot(
     ranks,
     x_positions,
     cluster_keys,
+    intercluster_keys,
     nodesep_pt,
     has_edge_labels,
   )
