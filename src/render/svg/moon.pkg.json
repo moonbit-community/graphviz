@@ -17,5 +17,8 @@
   "test-import": [
     "moonbitlang/x/fs",
     "moonbit-community/graphviz/dot"
+  ],
+  "wbtest-import": [
+    "moonbit-community/graphviz/dot"
   ]
 }
