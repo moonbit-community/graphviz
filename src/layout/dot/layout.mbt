@@ -1333,9 +1333,19 @@ fn edge_polyline_points(
         None => ""
       }
       let is_dotted = style_value.contains("dotted")
+      let has_explicit_port =
+        port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
       let vnode_weight =
         if use_cluster_tuning {
-          if is_dotted { dotted_weight } else { if split_label { 0.3 } else { 0.0 } }
+          if is_dotted {
+            dotted_weight
+          } else if split_label {
+            0.3
+          } else if label_width_pt > 0.0 && !has_explicit_port {
+            0.4
+          } else {
+            0.0
+          }
         } else {
           0.5
         }
@@ -5125,8 +5135,7 @@ pub fn layout_dot(
           same_outer_cluster &&
           diff_local_cluster &&
           abs_dx > label_width_pt
-        let dotted_weight =
-          if enable_complex_tuning && same_outer_cluster { 1.0 } else { 0.8 }
+        let dotted_weight = if enable_complex_tuning { 1.0 } else { 0.8 }
         let mut points = edge_polyline_points(
           edge,
           tail_anchor,
@@ -5165,6 +5174,7 @@ pub fn layout_dot(
         }
         let curve_offset_for = () => {
           let mut curve_offset = 0.0
+          let mut curve_skew = 1.0
           if enable_complex_tuning {
             let head_port = port_key(edge.head_port())
             let key =
@@ -5194,13 +5204,27 @@ pub fn layout_dot(
                 if span > 0.0 {
                   let t = (dist - min_dist) / span
                   let label_factor = if label_width_pt > 0.0 { 1.0 } else { 0.5 }
-                  curve_offset = nodesep_pt * t * t * label_factor
+                  let port_scale = if head_port == "" { 0.6 } else { 2.4 }
+                  curve_offset = nodesep_pt * t * t * label_factor * port_scale
+                  if head_port != "" {
+                    match rankdir {
+                      RankDir::TB | RankDir::BT =>
+                        if dx < 0.0 {
+                          curve_skew = 0.5
+                        }
+                      RankDir::LR | RankDir::RL =>
+                        if dy < 0.0 {
+                          curve_skew = 0.5
+                        }
+                    }
+                  }
                 }
               }
             }
           }
-          curve_offset
+          (curve_offset, curve_skew)
         }
+        let (curve_offset, curve_skew) = curve_offset_for()
         if points.length() > 2 {
           let clipped = clip_polyline_ends(
             points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
@@ -5238,10 +5262,22 @@ pub fn layout_dot(
               include_tail,
               include_head,
               rankdir,
-              curve_offset_for(),
+              curve_offset,
+              curve_skew,
             )
           } else {
-            edge_spline_for_points(edge, adjusted, include_tail, include_head)
+            let spline = edge_spline_for_points(edge, adjusted, include_tail, include_head)
+            if is_dotted && !same_outer_cluster && spline.points.length() > 1 {
+              let tuned = spline.points.copy()
+              let tail_bias = 0.7
+              tuned[1] = {
+                x: tuned[1].x,
+                y: tuned[1].y * (1.0 - tail_bias) + tail_anchor.y * tail_bias,
+              }
+              { start: spline.start, end: spline.end, points: tuned }
+            } else {
+              spline
+            }
           }
         } else {
           edge_spline_for_line(
@@ -5253,7 +5289,8 @@ pub fn layout_dot(
             include_tail,
             include_head,
             rankdir,
-            curve_offset_for(),
+            curve_offset,
+            curve_skew,
           )
         }
       }

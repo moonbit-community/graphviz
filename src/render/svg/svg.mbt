@@ -520,9 +520,15 @@ fn arrow_primitives(
     return []
   }
   let tip = if at_head {
-    spline.points[spline.points.length() - 1]
+    match spline.end {
+      Some(point) => point
+      None => spline.points[spline.points.length() - 1]
+    }
   } else {
-    spline.points[0]
+    match spline.start {
+      Some(point) => point
+      None => spline.points[0]
+    }
   }
   let from = if at_head {
     spline.points[spline.points.length() - 2]

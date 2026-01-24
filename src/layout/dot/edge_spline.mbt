@@ -723,6 +723,7 @@ fn edge_spline_for_line(
   include_head : Bool,
   rankdir : RankDir,
   curve_offset : Double,
+  curve_skew : Double,
 ) -> @geom.Spline {
   let (tail_seed, head_seed) = nudge_endpoints(tail_center, head_center)
   let mut points =
@@ -752,6 +753,27 @@ fn edge_spline_for_line(
                 if perp_a.x <= perp_b.x { perp_a } else { perp_b }
               }
             }
+          }
+        let perp =
+          if curve_skew != 1.0 {
+            match rankdir {
+              RankDir::TB | RankDir::BT => {
+                let adjusted = point(perp.x, perp.y * curve_skew)
+                let len = Double::sqrt(
+                  adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+                )
+                if len <= 0.0 { perp } else { point(adjusted.x / len, adjusted.y / len) }
+              }
+              RankDir::LR | RankDir::RL => {
+                let adjusted = point(perp.x * curve_skew, perp.y)
+                let len = Double::sqrt(
+                  adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+                )
+                if len <= 0.0 { perp } else { point(adjusted.x / len, adjusted.y / len) }
+              }
+            }
+          } else {
+            perp
           }
         let c1_weight = 0.6
         let c2_weight = 1.2
