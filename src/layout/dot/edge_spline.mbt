@@ -721,9 +721,53 @@ fn edge_spline_for_line(
   head_size : NodeSize,
   include_tail : Bool,
   include_head : Bool,
+  rankdir : RankDir,
+  curve_offset : Double,
 ) -> @geom.Spline {
   let (tail_seed, head_seed) = nudge_endpoints(tail_center, head_center)
-  let mut points = straight_bezier(tail_seed, head_seed)
+  let mut points =
+    if curve_offset > 0.0 {
+      let dx = head_seed.x - tail_seed.x
+      let dy = head_seed.y - tail_seed.y
+      let dist = Double::sqrt(dx * dx + dy * dy)
+      if dist <= 0.0 {
+        straight_bezier(tail_seed, head_seed)
+      } else {
+        let inv = 1.0 / dist
+        let perp_a = point(-dy * inv, dx * inv)
+        let perp_b = point(dy * inv, -dx * inv)
+        let perp =
+          match rankdir {
+            RankDir::TB | RankDir::BT => {
+              if dx < 0.0 {
+                if perp_a.y >= perp_b.y { perp_a } else { perp_b }
+              } else {
+                if perp_a.y <= perp_b.y { perp_a } else { perp_b }
+              }
+            }
+            RankDir::LR | RankDir::RL => {
+              if dy < 0.0 {
+                if perp_a.x >= perp_b.x { perp_a } else { perp_b }
+              } else {
+                if perp_a.x <= perp_b.x { perp_a } else { perp_b }
+              }
+            }
+          }
+        let c1_weight = 0.6
+        let c2_weight = 1.2
+        let c1 = point(
+          tail_seed.x + dx / 3.0 + perp.x * curve_offset * c1_weight,
+          tail_seed.y + dy / 3.0 + perp.y * curve_offset * c1_weight,
+        )
+        let c2 = point(
+          tail_seed.x + dx * 2.0 / 3.0 + perp.x * curve_offset * c2_weight,
+          tail_seed.y + dy * 2.0 / 3.0 + perp.y * curve_offset * c2_weight,
+        )
+        [tail_seed, c1, c2, head_seed]
+      }
+    } else {
+      straight_bezier(tail_seed, head_seed)
+    }
   let tail_penwidth = node_penwidth_pt(edge.tail())
   let head_penwidth = node_penwidth_pt(edge.head())
   points = clip_spline_to_rect(

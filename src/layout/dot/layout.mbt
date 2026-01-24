@@ -4934,6 +4934,105 @@ pub fn layout_dot(
     }
   }
   let enable_complex_tuning = has_clusters && has_dotted_edges
+  let head_port_counts : Map[String, Int] = Map::new()
+  let head_port_min_dist : Map[String, Double] = Map::new()
+  let head_port_max_dist : Map[String, Double] = Map::new()
+  if enable_complex_tuning {
+    for edge in edges {
+      let tail_name = edge.tail().name()
+      let head_name = edge.head().name()
+      let head_port = port_key(edge.head_port())
+      let key =
+        if head_port == "" {
+        if is_record_shape(edge.head()) { head_name } else { "" }
+      } else {
+        "\{head_name}:\{head_port}"
+      }
+      if key == "" {
+        continue
+      }
+      let tail_pos = match positions.get(tail_name) {
+        Some(value) => value
+        None => { x: 0.0, y: 0.0 }
+      }
+      let head_pos = match positions.get(head_name) {
+        Some(value) => value
+        None => { x: 0.0, y: 0.0 }
+      }
+      let tail_size = match sizes.get(tail_name) {
+        Some(value) => value
+        None => node_size(edge.tail())
+      }
+      let head_size = match sizes.get(head_name) {
+        Some(value) => value
+        None => node_size(edge.head())
+      }
+      let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
+        tail_name,
+        edge.tail_port(),
+        label_ports_map,
+        tail_pos,
+        tail_size,
+      )
+      let (raw_head_anchor, raw_head_anchor_size) = port_geometry(
+        head_name,
+        edge.head_port(),
+        label_ports_map,
+        head_pos,
+        head_size,
+      )
+      let mut tail_anchor = raw_tail_anchor
+      let mut tail_anchor_size = raw_tail_anchor_size
+      let mut head_anchor = raw_head_anchor
+      let mut head_anchor_size = raw_head_anchor_size
+      if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+        let (anchor, size) = record_port_boundary_anchor(
+          tail_anchor,
+          tail_anchor_size,
+          tail_pos,
+          tail_size,
+          head_anchor,
+        )
+        tail_anchor = anchor
+        tail_anchor_size = size
+      }
+      if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+        let (anchor, size) = record_port_boundary_anchor(
+          head_anchor,
+          head_anchor_size,
+          head_pos,
+          head_size,
+          tail_anchor,
+        )
+        head_anchor = anchor
+        head_anchor_size = size
+      }
+      let dx = head_anchor.x - tail_anchor.x
+      let dy = head_anchor.y - tail_anchor.y
+      let dist = Double::sqrt(dx * dx + dy * dy)
+      let current = match head_port_counts.get(key) {
+        Some(value) => value
+        None => 0
+      }
+      head_port_counts[key] = current + 1
+      let mut min_dist = match head_port_min_dist.get(key) {
+        Some(value) => value
+        None => dist
+      }
+      let mut max_dist = match head_port_max_dist.get(key) {
+        Some(value) => value
+        None => dist
+      }
+      if dist < min_dist {
+        min_dist = dist
+      }
+      if dist > max_dist {
+        max_dist = dist
+      }
+      head_port_min_dist[key] = min_dist
+      head_port_max_dist[key] = max_dist
+    }
+  }
   let edges_out : Array[DotLayoutEdge] = []
   for edge in edges {
     let tail_name = edge.tail().name()
@@ -5064,6 +5163,44 @@ pub fn layout_dot(
           Some(list) => list.length() > 0
           None => false
         }
+        let curve_offset_for = () => {
+          let mut curve_offset = 0.0
+          if enable_complex_tuning {
+            let head_port = port_key(edge.head_port())
+            let key =
+              if head_port == "" {
+              if is_record_shape(edge.head()) { head_name } else { "" }
+            } else {
+              "\{head_name}:\{head_port}"
+            }
+            if key != "" {
+              let count = match head_port_counts.get(key) {
+                Some(value) => value
+                None => 0
+              }
+              if count > 1 {
+                let dx = head_anchor.x - tail_anchor.x
+                let dy = head_anchor.y - tail_anchor.y
+                let dist = Double::sqrt(dx * dx + dy * dy)
+                let min_dist = match head_port_min_dist.get(key) {
+                  Some(value) => value
+                  None => dist
+                }
+                let max_dist = match head_port_max_dist.get(key) {
+                  Some(value) => value
+                  None => dist
+                }
+                let span = max_dist - min_dist
+                if span > 0.0 {
+                  let t = (dist - min_dist) / span
+                  let label_factor = if label_width_pt > 0.0 { 1.0 } else { 0.5 }
+                  curve_offset = nodesep_pt * t * t * label_factor
+                }
+              }
+            }
+          }
+          curve_offset
+        }
         if points.length() > 2 {
           let clipped = clip_polyline_ends(
             points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
@@ -5091,11 +5228,32 @@ pub fn layout_dot(
           }
           tail_clip = adjusted[0]
           head_clip = adjusted[adjusted.length() - 1]
-          edge_spline_for_points(edge, adjusted, include_tail, include_head)
+          if adjusted.length() <= 2 {
+            edge_spline_for_line(
+              edge,
+              tail_anchor,
+              head_anchor,
+              tail_anchor_size,
+              head_anchor_size,
+              include_tail,
+              include_head,
+              rankdir,
+              curve_offset_for(),
+            )
+          } else {
+            edge_spline_for_points(edge, adjusted, include_tail, include_head)
+          }
         } else {
           edge_spline_for_line(
-            edge, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size, include_tail,
+            edge,
+            tail_anchor,
+            head_anchor,
+            tail_anchor_size,
+            head_anchor_size,
+            include_tail,
             include_head,
+            rankdir,
+            curve_offset_for(),
           )
         }
       }
