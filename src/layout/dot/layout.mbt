@@ -4602,35 +4602,52 @@ fn sample_spline_points(
 }
 
 ///|
-fn polyline_point_at(
+fn polyline_point_with_dir(
   points : Array[@geom.Point],
   target_len : Double,
-) -> @geom.Point? {
+) -> (@geom.Point, @geom.Point)? {
   if points.length() == 0 {
     return None
   }
   if points.length() == 1 {
-    return Some(points[0])
+    return Some((points[0], point(1.0, 0.0)))
   }
   let mut remaining = target_len
+  let mut last_dir = point(1.0, 0.0)
+  let mut last_pos = points[points.length() - 1]
   for i in 0..<(points.length() - 1) {
     let a = points[i]
     let b = points[i + 1]
     let seg_len = segment_length(a, b)
+    if seg_len > 0.0 {
+      let delta = point_sub(b, a)
+      let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
+      if len > 0.0 {
+        last_dir = point_scale(delta, 1.0 / len)
+        last_pos = b
+      }
+    }
     if seg_len <= 0.0 {
       continue
     }
     if remaining <= seg_len {
       let t = remaining / seg_len
-      return Some(point_lerp(a, b, t))
+      let pos = point_lerp(a, b, t)
+      let delta = point_sub(b, a)
+      let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
+      let dir =
+        if len <= 0.0 { point(1.0, 0.0) } else { point_scale(delta, 1.0 / len) }
+      return Some((pos, dir))
     }
     remaining = remaining - seg_len
   }
-  Some(points[points.length() - 1])
+  Some((last_pos, last_dir))
 }
 
 ///|
-fn spline_label_pos(spline : @geom.Spline) -> @geom.Point? {
+fn spline_label_pos_with_dir(
+  spline : @geom.Spline,
+) -> (@geom.Point, @geom.Point)? {
   let points = spline.points
   if points.length() == 0 {
     return None
@@ -4640,10 +4657,62 @@ fn spline_label_pos(spline : @geom.Spline) -> @geom.Point? {
     return None
   }
   let total_len = polyline_length(samples)
-  if total_len <= 0.0 {
-    Some(samples[0])
+  let target = if total_len <= 0.0 { 0.0 } else { total_len / 2.0 }
+  polyline_point_with_dir(samples, target)
+}
+
+///|
+fn edge_label_pos(
+  edge : @cgraph.Edge,
+  spline : @geom.Spline,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  let (base_pos, dir) = match spline_label_pos_with_dir(spline) {
+    Some((pos, tangent)) => (pos, tangent)
+    None => {
+      let mid = point(
+        (tail_clip.x + head_clip.x) / 2.0,
+        (tail_clip.y + head_clip.y) / 2.0,
+      )
+      let delta = point_sub(head_clip, tail_clip)
+      let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
+      let tangent =
+        if len <= 0.0 { point(1.0, 0.0) } else { point_scale(delta, 1.0 / len) }
+      (mid, tangent)
+    }
+  }
+  if edge.tail().name() == edge.head().name() {
+    return Some(base_pos)
+  }
+  match rankdir {
+    RankDir::LR | RankDir::RL => return Some(base_pos)
+    _ => ()
+  }
+  if spline.points.length() > 4 {
+    return Some(base_pos)
+  }
+  let (width, height) = match edge_mid_label_metrics(edge) {
+    Some((w, h)) => (w, h)
+    None => return Some(base_pos)
+  }
+  let normal = point(-dir.y, dir.x)
+  let axis_threshold = 0.1
+  let abs_dx = Double::abs(dir.x)
+  let abs_dy = Double::abs(dir.y)
+  let offset =
+    if abs_dx <= axis_threshold {
+      width / 2.0
+    } else if abs_dy <= axis_threshold {
+      height / 2.0
+    } else {
+      0.0
+    }
+  if offset <= 0.0 {
+    Some(base_pos)
   } else {
-    polyline_point_at(samples, total_len / 2.0)
+    Some(point_add(base_pos, point_scale(normal, offset)))
   }
 }
 
@@ -5753,14 +5822,7 @@ pub fn layout_dot(
         if value == "" {
           None
         } else {
-          match spline_label_pos(spline) {
-            Some(pos) => Some(pos)
-            None =>
-              Some({
-                x: (tail_clip.x + head_clip.x) / 2.0,
-                y: (tail_clip.y + head_clip.y) / 2.0,
-              })
-          }
+          edge_label_pos(edge, spline, tail_clip, head_clip, rankdir)
         }
       None => None
     }

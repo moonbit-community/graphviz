@@ -97,7 +97,7 @@
     <path d="M 829.5178108 409.66344281635656 C 829.5178108 383.42933442478335 829.5178108 344.6733033536147 829.5178108 318.3663776474248" fill="none" stroke="black"/>
     <polygon points="829.5178108,306.9035235624529 832.5178108,316.9035235624529 826.5178108,316.9035235624529" fill="black" stroke="black"/>
     <polygon points="829.5178108,420.7861988961696 826.5178108,410.7861988961696 832.5178108,410.7861988961696" fill="black" stroke="black"/>
-    <text x="829.5178108" y="-382.45020000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Raw PROT_G</text>
+    <text x="869.338617" y="-382.45020000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Raw PROT_G</text>
     <rect x="213.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="278.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application ..</text>
     <rect x="362.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
