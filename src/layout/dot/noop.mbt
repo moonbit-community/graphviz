@@ -359,6 +359,8 @@ pub fn layout_neato_noop(
   }
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(active_graph))
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
   for node in ordered_nodes(active_graph) {
@@ -378,7 +380,7 @@ pub fn layout_neato_noop(
     }
     let pos = scale_point(parsed, scale_factor)
     positions[node.name()] = pos
-    let size = node_size(node)
+    let size = node_size(node, record_orientation)
     nodes_out.push({
       node,
       pos,
@@ -402,8 +404,8 @@ pub fn layout_neato_noop(
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let tail_size = node_size(tail)
-    let head_size = node_size(head)
+    let tail_size = node_size(tail, record_orientation)
+    let head_size = node_size(head, record_orientation)
     let splines = if use_edge_pos {
       match edge.get_attr("pos") {
         Some(value) => {

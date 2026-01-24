@@ -85,11 +85,11 @@
     <path d="M 848.942690277937 261.0514934662051 C 856.9671009456399 250.04300508145025 866.2460675705222 237.3134227429399 874.2536015115022 226.328087117658" fill="none" stroke="black"/>
     <polygon points="880.8997375119288,217.21041929207266 877.4335642873,227.05854820963188 872.5849714706924,223.5242664298723" fill="black" stroke="black"/>
     <polygon points="842.1621513151367,270.3535453557968 845.6283245397656,260.5054164382376 850.4769173563732,264.03969821799717" fill="black" stroke="black"/>
-    <text x="908.3091115811836" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.9409376" lengthAdjust="spacing">MechCmd</text>
+    <text x="918.4798243811838" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.9409376" lengthAdjust="spacing">MechCmd</text>
     <path d="M 787.3206173436257 169.38671269599035 C 787.2863484957504 164.25780846399357 787.0736135059118 159.12699133169804 787.2178107999999 154 C 787.879886633864 130.45963412410654 790.179198734902 106.99384230314202 791.6598927023531 83.49076345471303" fill="none" stroke="black"/>
     <polygon points="792.3838108,72 794.7491214892979,82.16883992120503 788.7609931619614,81.79158783658283" fill="black" stroke="black"/>
     <polygon points="787.3975435394209,180.9 784.3307968477185,170.92026730172938 790.3306629242953,170.88017910968097" fill="black" stroke="black"/>
-    <text x="823.8588958009395" y="-148.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="71.7059868" lengthAdjust="spacing">SCADA_A()</text>
+    <text x="823.8588958009395" y="-160.6506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="71.7059868" lengthAdjust="spacing">SCADA_A()</text>
     <path d="M 887.9798126257184 169.63643074625548 C 883.0980528179497 144.72202087017922 876.0193766051774 108.59549119856597 871.118827292748 83.58518774334674" fill="none" stroke="black"/>
     <polygon points="868.9072432657009,72.29821069102383 873.7741086756283,81.53474797951307 867.8860736784903,82.6884567263281" fill="black" stroke="black"/>
     <polygon points="890.1403565787514,180.66292113512756 885.273491168824,171.42638384663832 891.161526165962,170.2726750998233" fill="black" stroke="black"/>
@@ -97,7 +97,7 @@
     <path d="M 829.5178108 409.66344281635656 C 829.5178108 383.42933442478335 829.5178108 344.6733033536147 829.5178108 318.3663776474248" fill="none" stroke="black"/>
     <polygon points="829.5178108,306.9035235624529 832.5178108,316.9035235624529 826.5178108,316.9035235624529" fill="black" stroke="black"/>
     <polygon points="829.5178108,420.7861988961696 826.5178108,410.7861988961696 832.5178108,410.7861988961696" fill="black" stroke="black"/>
-    <text x="869.338617" y="-383.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="79.6416124" lengthAdjust="spacing">Raw PROT_G</text>
+    <text x="869.338617" y="-395.35060000000004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="79.6416124" lengthAdjust="spacing">Raw PROT_G</text>
     <rect x="213.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
     <text x="278.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="115.3111624" lengthAdjust="spacing">xvm_a Application ..</text>
     <rect x="362.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>

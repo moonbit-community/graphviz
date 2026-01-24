@@ -169,6 +169,8 @@ pub fn layout_neato(
   }
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(active_graph))
   let nodes = ordered_nodes(active_graph)
   let node_count = nodes.length()
   let sizes : Map[String, NodeSize] = Map::new()
@@ -177,7 +179,7 @@ pub fn layout_neato(
   let mut max_half = 0.0
   for i in 0..<node_count {
     let node = nodes[i]
-    let size = node_size(node)
+    let size = node_size(node, record_orientation)
     sizes[node.name()] = size
     indices[node.name()] = i
     let half = if size.width_pt > size.height_pt {
@@ -268,7 +270,7 @@ pub fn layout_neato(
     positions_map[node.name()] = scaled
     let size = match sizes.get(node.name()) {
       Some(value) => value
-      None => node_size(node)
+      None => node_size(node, record_orientation)
     }
     nodes_out.push({
       node,
@@ -292,11 +294,11 @@ pub fn layout_neato(
     }
     let tail_size = match sizes.get(tail.name()) {
       Some(value) => value
-      None => node_size(tail)
+      None => node_size(tail, record_orientation)
     }
     let head_size = match sizes.get(head.name()) {
       Some(value) => value
-      None => node_size(head)
+      None => node_size(head, record_orientation)
     }
     edges_out.push({
       edge,

@@ -82,6 +82,26 @@ fn parse_rankdir(value : String) -> RankDir? {
 }
 
 ///|
+fn graph_rankdir(graph : @cgraph.Graph) -> RankDir {
+  let mut current = graph
+  while true {
+    match current.get_attr("rankdir") {
+      Some(value) =>
+        match parse_rankdir(value) {
+          Some(parsed) => return parsed
+          None => ()
+        }
+      None => ()
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  RankDir::TB
+}
+
+///|
 fn parse_splines(value : String) -> SplinesMode? {
   match value.to_lower() {
     "true" | "spline" | "splines" => Some(SplinesMode::Spline)
@@ -408,6 +428,11 @@ priv struct RecordPort {
 priv enum RecordOrientation {
   Horizontal
   Vertical
+}
+
+///|
+fn record_layout_orientation(_rankdir : RankDir) -> RecordOrientation {
+  RecordOrientation::Horizontal
 }
 
 ///|
@@ -768,6 +793,7 @@ fn record_rects(
   node : @cgraph.Node,
   pos : @geom.Point,
   size : NodeSize,
+  orientation : RecordOrientation,
 ) -> Array[@geom.Rect] {
   let label = label_text(node)
   let nodes = record_nodes(label)
@@ -785,7 +811,7 @@ fn record_rects(
   record_layout_nodes(
     nodes,
     rect,
-    RecordOrientation::Horizontal,
+    orientation,
     font,
     font_size_pt,
     pad_x_pt,
@@ -801,6 +827,7 @@ fn record_ports(
   node : @cgraph.Node,
   pos : @geom.Point,
   size : NodeSize,
+  orientation : RecordOrientation,
 ) -> Map[String, RecordPort] {
   let label = label_text(node)
   let nodes = record_nodes(label)
@@ -818,7 +845,7 @@ fn record_ports(
   record_layout_nodes(
     nodes,
     rect,
-    RecordOrientation::Horizontal,
+    orientation,
     font,
     font_size_pt,
     pad_x_pt,
@@ -1060,7 +1087,10 @@ fn record_port_boundary_anchor(
 }
 
 ///|
-fn node_size(node : @cgraph.Node) -> NodeSize {
+fn node_size(
+  node : @cgraph.Node,
+  record_orientation : RecordOrientation,
+) -> NodeSize {
   let shape = match node.get_attr("shape") {
     Some(value) => value.to_lower()
     None => ""
@@ -1101,7 +1131,7 @@ fn node_size(node : @cgraph.Node) -> NodeSize {
     let nodes = record_nodes(label)
     let record_size = record_group_size(
       nodes,
-      RecordOrientation::Horizontal,
+      record_orientation,
       font,
       font_size_pt,
       pad_x_pt,
@@ -5267,8 +5297,9 @@ pub fn layout_dot(
     node_order[nodes[i].name()] = i
   }
   let sizes : Map[String, NodeSize] = Map::new()
+  let record_orientation = record_layout_orientation(rankdir)
   for node in nodes {
-    sizes[node.name()] = node_size(node)
+    sizes[node.name()] = node_size(node, record_orientation)
   }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
     compute_ranks_directed(graph, nodes, edges, has_edge_labels)
@@ -5551,7 +5582,7 @@ pub fn layout_dot(
     }
     let size = match sizes.get(name) {
       Some(value) => value
-      None => node_size(node)
+      None => node_size(node, record_orientation)
     }
     nodes_out.push({
       node,
@@ -5568,7 +5599,12 @@ pub fn layout_dot(
       node_layout.height_in * 72.0,
     )
     if is_record_shape(node_layout.node) {
-      let ports = record_ports(node_layout.node, node_layout.pos, size)
+      let ports = record_ports(
+        node_layout.node,
+        node_layout.pos,
+        size,
+        record_orientation,
+      )
       label_ports_map[node_layout.node.name()] = ports
     } else {
       match @html_label.parse_html_label(label_text(node_layout.node)) {
@@ -5631,11 +5667,11 @@ pub fn layout_dot(
       }
       let tail_size = match sizes.get(tail_name) {
         Some(value) => value
-        None => node_size(edge.tail())
+        None => node_size(edge.tail(), record_orientation)
       }
       let head_size = match sizes.get(head_name) {
         Some(value) => value
-        None => node_size(edge.head())
+        None => node_size(edge.head(), record_orientation)
       }
       let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
         tail_name,
@@ -5717,11 +5753,11 @@ pub fn layout_dot(
     }
     let tail_size = match sizes.get(tail_name) {
       Some(value) => value
-      None => node_size(edge.tail())
+      None => node_size(edge.tail(), record_orientation)
     }
     let head_size = match sizes.get(head_name) {
       Some(value) => value
-      None => node_size(edge.head())
+      None => node_size(edge.head(), record_orientation)
     }
     let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
       tail_name,
@@ -6049,7 +6085,11 @@ pub fn layout_dot(
     subgraphs,
   }
   let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
-  let adjusted = adjust_edge_labels_for_label_overlaps(adjusted, nodesep_pt, rankdir)
+  let adjusted = adjust_edge_labels_for_label_overlaps(
+    adjusted,
+    nodesep_pt,
+    rankdir,
+  )
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly
@@ -6072,6 +6112,8 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
       None => ()
     }
   }
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(self.graph))
   if write_bb {
     self.graph.set_attr("bb", format_rect(self.bbox))
   }
@@ -6089,7 +6131,12 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
         node_layout.width_in * 72.0,
         node_layout.height_in * 72.0,
       )
-      let rects = record_rects(node, node_layout.pos, size)
+      let rects = record_rects(
+        node,
+        node_layout.pos,
+        size,
+        record_orientation,
+      )
       if rects.length() > 0 {
         node.set_attr("rects", format_rects(rects))
       }

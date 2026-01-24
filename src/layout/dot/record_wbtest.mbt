@@ -50,9 +50,16 @@ test "record_ports include nested port names" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",
   )
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(graph))
   let node = graph.node("a")
-  let size = node_size(node)
-  let ports = record_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
+  let size = node_size(node, record_orientation)
+  let ports = record_ports(
+    node,
+    @geom.Point::{ x: 0.0, y: 0.0 },
+    size,
+    record_orientation,
+  )
   match ports.get("here") {
     Some(port) => {
       let half_w = size.width_pt / 2.0
@@ -69,8 +76,10 @@ test "html_ports include td port names" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=plaintext]; a [label=<<TABLE><TR><TD PORT=\\\"p1\\\">one</TD></TR></TABLE>>]; }",
   )
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(graph))
   let node = graph.node("a")
-  let size = node_size(node)
+  let size = node_size(node, record_orientation)
   let ports = html_ports(node, @geom.Point::{ x: 0.0, y: 0.0 }, size)
   match ports.get("p1") {
     Some(port) => {

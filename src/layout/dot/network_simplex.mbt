@@ -1985,15 +1985,20 @@ fn port_offsets_for_nodes(
   sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
   let offsets : Map[String, Map[String, RecordPort]] = Map::new()
+  let record_orientation = if nodes.length() > 0 {
+    record_layout_orientation(graph_rankdir(nodes[0].graph()))
+  } else {
+    record_layout_orientation(RankDir::TB)
+  }
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   for node in nodes {
     let name = node.name()
     let size = match sizes.get(name) {
       Some(value) => value
-      None => node_size(node)
+      None => node_size(node, record_orientation)
     }
     let ports = if is_record_shape(node) {
-      record_ports(node, origin, size)
+      record_ports(node, origin, size, record_orientation)
     } else {
       html_ports(node, origin, size)
     }
