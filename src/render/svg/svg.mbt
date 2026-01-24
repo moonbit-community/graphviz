@@ -1824,23 +1824,6 @@ pub fn render_svg(
   )
   let cluster_indent = if pretty { "    " } else { "" }
   write_cluster_graphs(sb, layout, padded_bbox, cluster_indent, pretty)
-  let collision_pad = 8.0
-  let cluster_label_rects = collect_cluster_label_rects(
-    layout.subgraphs,
-    collision_pad,
-  )
-  match layout.label_pos {
-    Some(pos) =>
-      match graph_label_metrics(layout.graph) {
-        Some((_text, width, height)) =>
-          cluster_label_rects.push(
-            rect_from_center(pos, width, height, collision_pad),
-          )
-        None => ()
-      }
-    None => ()
-  }
-  let edge_label_rects : Array[@geom.Rect] = []
   let edge_indent = if pretty { "    " } else { "" }
   let kind = layout.graph.kind()
   for edge_layout in layout.edges {
@@ -1899,46 +1882,13 @@ pub fn render_svg(
           default="black",
         )
         if label_text != "" {
-          let (_lines, width, height) = label_metrics(label_text, font, size)
-          let mut adjusted_pos = pos
-          let mut adjusted_rect = rect_from_center(
-            adjusted_pos,
-            width,
-            height,
-            collision_pad,
-          )
-          for rect in cluster_label_rects {
-            let (next_pos, next_rect) = nudge_label_rect(
-              adjusted_pos,
-              adjusted_rect,
-              rect,
-              width,
-              height,
-              collision_pad,
-            )
-            adjusted_pos = next_pos
-            adjusted_rect = next_rect
-          }
-          for rect in edge_label_rects {
-            let (next_pos, next_rect) = nudge_label_rect(
-              adjusted_pos,
-              adjusted_rect,
-              rect,
-              width,
-              height,
-              collision_pad,
-            )
-            adjusted_pos = next_pos
-            adjusted_rect = next_rect
-          }
-          edge_label_rects.push(adjusted_rect)
           write_label_lines(
             sb,
             label_text,
             font,
             size,
             font_color,
-            adjusted_pos,
+            pos,
             padded_bbox,
             edge_indent,
             pretty,

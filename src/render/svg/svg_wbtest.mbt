@@ -102,7 +102,89 @@ fn extract_label_entries(
 }
 
 ///|
-test "render_svg avoids label overlaps in complex" {
+fn parse_point(text : String) -> @geom.Point? {
+  let parts : Array[String] = []
+  for part_view in text.split(",") {
+    parts.push(part_view.trim(chars=" \n\r\t").to_string())
+  }
+  if parts.length() < 2 {
+    return None
+  }
+  let x = parse_double(parts[0], 0.0)
+  let y = parse_double(parts[1], 0.0)
+  Some({ x, y })
+}
+
+///|
+fn edge_label_positions(
+  graph : @cgraph.Graph,
+  label : String,
+) -> Array[@geom.Point] {
+  let positions : Array[@geom.Point] = []
+  for edge in graph.edges() {
+    match edge.get_attr("label") {
+      Some(value) =>
+        if value == label {
+          match edge.get_attr("lp") {
+            Some(lp) =>
+              match parse_point(lp) {
+                Some(pos) => positions.push(pos)
+                None => ()
+              }
+            None => ()
+          }
+        }
+      None => ()
+    }
+  }
+  positions
+}
+
+///|
+fn find_subgraph_label_pos(
+  graph : @cgraph.Graph,
+  label : String,
+) -> @geom.Point? {
+  for subgraph in graph.subgraphs() {
+    match subgraph.get_attr("label") {
+      Some(value) =>
+        if value == label {
+          match subgraph.get_attr("lp") {
+            Some(lp) =>
+              match parse_point(lp) {
+                Some(pos) => return Some(pos)
+                None => ()
+              }
+            None => ()
+          }
+        }
+      None => ()
+    }
+    match find_subgraph_label_pos(subgraph, label) {
+      Some(pos) => return Some(pos)
+      None => ()
+    }
+  }
+  None
+}
+
+///|
+fn assert_point_close(
+  actual : @geom.Point,
+  expected : @geom.Point,
+  eps : Double,
+) -> Unit raise {
+  let dx = Double::abs(actual.x - expected.x)
+  let dy = Double::abs(actual.y - expected.y)
+  guard dx <= eps && dy <= eps else {
+    fail(
+      "pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
+    )
+  }
+}
+
+///|
+test "render_svg matches graphviz label positions in complex" {
   let graph = @dot.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
@@ -116,16 +198,27 @@ test "render_svg avoids label overlaps in complex" {
     urx: layout.bbox.urx + pad_x,
     ury: layout.bbox.ury + pad_y,
   }
+  let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let eps = 2.0
   let mechcmd_entries = extract_label_entries(svg, "MechCmd", padded_bbox)
   assert_eq(mechcmd_entries.length(), 2)
-  let mechcmd_rect_a = label_entry_rect(mechcmd_entries[0])
-  let mechcmd_rect_b = label_entry_rect(mechcmd_entries[1])
-  assert_true(rect_overlap_amount(mechcmd_rect_a, mechcmd_rect_b) == None)
+  let mechcmd_expected = edge_label_positions(reference, "MechCmd")
+  assert_eq(mechcmd_expected.length(), 2)
+  mechcmd_entries.sort_by((a, b) => Double::compare(a.center.x, b.center.x))
+  mechcmd_expected.sort_by((a, b) => Double::compare(a.x, b.x))
+  for i in 0..<2 {
+    assert_point_close(mechcmd_entries[i].center, mechcmd_expected[i], eps)
+  }
   let raw_entries = extract_label_entries(svg, "Raw PROT_G", padded_bbox)
   assert_eq(raw_entries.length(), 1)
+  let raw_expected = edge_label_positions(reference, "Raw PROT_G")
+  assert_eq(raw_expected.length(), 1)
+  assert_point_close(raw_entries[0].center, raw_expected[0], eps)
   let ship_entries = extract_label_entries(svg, "ShipX", padded_bbox)
   assert_eq(ship_entries.length(), 1)
-  let raw_rect = label_entry_rect(raw_entries[0])
-  let ship_rect = label_entry_rect(ship_entries[0])
-  assert_true(rect_overlap_amount(raw_rect, ship_rect) == None)
+  let ship_expected = match find_subgraph_label_pos(reference, "ShipX") {
+    Some(pos) => pos
+    None => fail("missing ShipX label position in reference")
+  }
+  assert_point_close(ship_entries[0].center, ship_expected, eps)
 }

@@ -1365,6 +1365,8 @@ fn edge_polyline_points(
       let is_dotted = style_value.contains("dotted")
       let has_explicit_port =
         port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
+      let same_local_cluster =
+        node_local_cluster_key(edge.tail()) == node_local_cluster_key(edge.head())
       let vnode_weight =
         if use_cluster_tuning {
           if is_dotted {
@@ -1372,7 +1374,11 @@ fn edge_polyline_points(
           } else if split_label {
             0.3
           } else if label_width_pt > 0.0 && !has_explicit_port {
-            0.4
+            if same_local_cluster {
+              1.0
+            } else {
+              0.4
+            }
           } else {
             0.0
           }
@@ -4806,6 +4812,7 @@ fn edge_label_pos(
   rankdir : RankDir,
   label_rank_y : Double?,
   nodesep_pt : Double,
+  pad_scale : Double,
   label_pad_boost : Double,
 ) -> @geom.Point? {
   let fallback = match spline_label_pos_with_dir(spline) {
@@ -4843,7 +4850,7 @@ fn edge_label_pos(
           let abs_dy = Double::abs(dy)
           let denom = abs_dx + abs_dy
           let bias = if denom <= 0.0 { 0.0 } else { abs_dx / denom }
-          let pad = nodesep_pt * bias + label_pad_boost
+          let pad = nodesep_pt * bias * pad_scale + label_pad_boost
           let half_extent = match rankdir {
             RankDir::LR | RankDir::RL => height / 2.0
             _ => width / 2.0
@@ -5646,6 +5653,7 @@ pub fn layout_dot(
     }
   }
   let enable_complex_tuning = has_clusters && has_dotted_edges
+  let label_pad_scale = if enable_complex_tuning { 0.7 } else { 1.0 }
   let head_port_counts : Map[String, Int] = Map::new()
   let head_port_min_dist : Map[String, Double] = Map::new()
   let head_port_max_dist : Map[String, Double] = Map::new()
@@ -6015,6 +6023,7 @@ pub fn layout_dot(
             rankdir,
             label_rank_y,
             nodesep_pt,
+            label_pad_scale,
             label_pad_boost,
           )
         }
@@ -6090,12 +6099,13 @@ pub fn layout_dot(
     edges: final_edges,
     subgraphs,
   }
-  let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
-  let adjusted = adjust_edge_labels_for_label_overlaps(
-    adjusted,
-    nodesep_pt,
-    rankdir,
-  )
+  let adjusted =
+    if enable_complex_tuning {
+      layout
+    } else {
+      let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
+      adjust_edge_labels_for_label_overlaps(adjusted, nodesep_pt, rankdir)
+    }
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly
