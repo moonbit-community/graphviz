@@ -319,6 +319,12 @@ test "dot layout tier2 snapshots" {
     "tests/layout/dot/compound.dot", "tests/layout/dot/compound.gv.dot", 0.01,
   )
   assert_snapshot(
+    "refs/graphviz/graphs/directed/clust1.gv", "tests/layout/dot/clust1.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/try.gv", "tests/layout/dot/try.gv.dot", 0.01,
+  )
+  assert_snapshot(
     "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
   )
   assert_snapshot(
