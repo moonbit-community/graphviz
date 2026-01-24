@@ -1,0 +1,37 @@
+digraph g {
+  graph [bb="0,0,780.98,228.57"];
+  node [label="\N", fontsize=14, fontname="Times-Roman", fontcolor=black, shape=box, color=black, width=0.5];
+  edge [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black];
+  23296 [label="23296\n?", pname="?", kind=proc, pos="286.48,207.52", width=0.69404, height=0.57778];
+  23310 [label="23310\ncat", pname=cat, kind=proc, pos="354.48,129.92", width=0.69404, height=0.57778];
+  23311 [label="23311\ncat", pname=cat, kind=proc, pos="146.48,129.92", width=0.69404, height=0.57778];
+  23312 [label="23312\ncat", pname=cat, kind=proc, pos="286.48,129.92", width=0.69404, height=0.57778];
+  23313 [label="23313\ncat", pname=cat, kind=proc, pos="422.48,129.92", width=0.69404, height=0.57778];
+  23314 [label="23314\ncat", pname=cat, kind=proc, pos="538.48,129.92", width=0.69404, height=0.57778];
+  "85+2560" [label="85+2560\n?", fname="?", shape=ellipse, kind=file, pos="53.48,43.71", width=1.26551, height=0.8171];
+  "182948-1" [label="182948-1\n182949-1\npipe", fontsize=7, fname=pipe, shape=doublecircle, subkind=pipe, kind=file, pos="223.48,43.71", width=0.82579, height=0.65211];
+  "182950-1" [label="182950-1\n182951-1\npipe", fontsize=7, fname=pipe, shape=doublecircle, subkind=pipe, kind=file, pos="146.48,43.71", width=0.82579, height=0.65211];
+  "182952-1" [label="182952-1\n182953-1\npipe", fontsize=7, fname=pipe, shape=doublecircle, subkind=pipe, kind=file, pos="300.48,43.71", width=0.82579, height=0.65211];
+  "182954-1" [label="182954-1\n182955-1\npipe", fontsize=7, fname=pipe, shape=doublecircle, subkind=pipe, kind=file, pos="586.48,43.71", width=0.82579, height=0.65211];
+  "79893+2568" [label="79893+2568\n/usr/share/lib/termcap", fname="/usr/share/lib/termcap", shape=ellipse, kind=file, pos="443.48,43.71", width=2.64192, height=0.8171];
+  "4151865284+0" [label="4151865284+0\n/tmp/termcap", fname="/tmp/termcap", shape=ellipse, kind=file, pos="703.48,43.71", width=1.93276, height=0.8171];
+  23296 -> 23310 [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black, pos="e,354.48,150.72 286.48,186.72 286.48,180.72 282.24,172.96 286.48,168.72 302.51,152.69 345.70,177.50 354.48,168.72 356.01,167.19 354.48,164.10 354.48,162.24"];
+  23296 -> 23311 [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black, pos="e,171.46,129.92 261.49,207.52 246.49,207.52 227.09,218.13 216.48,207.52 198.19,189.23 229.57,143.01 216.48,129.92 208.58,122.03 193.19,129.92 182.98,129.92"];
+  23311 -> "182948-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=back, color=black, pos="s,146.48,109.12 146.48,97.61 146.48,94.01 143.93,89.36 146.48,86.81 164.63,68.66 212.09,98.20 223.48,86.81 228.11,82.19 223.48,72.99 223.48,67.18"];
+  23310 -> "182948-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=forward, color=black, pos="e,253.21,43.71 329.49,129.92 315.99,129.92 298.53,139.47 288.98,129.92 268.66,109.60 302,56.73 288.98,43.71 283.26,37.99 271.93,43.71 264.72,43.71"];
+  23296 -> 23312 [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black, pos="e,286.48,150.72 286.48,186.72 286.48,181.30 286.48,172.80 286.48,168.72 286.48,166.56 286.48,164.19 286.48,162.24"];
+  23312 -> "182952-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=forward, color=black, pos="e,300.48,67.18 286.48,109.12 286.48,102.10 282.20,91.09 286.48,86.81 289.78,83.51 297.87,89.42 300.48,86.81 302.39,84.90 300.48,81.23 300.48,78.70"];
+  23312 -> "182950-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=back, color=black, pos="s,261.49,129.92 249.98,129.92 238.81,129.92 224.37,137.82 216.48,129.92 196.16,109.60 231.38,58.61 216.48,43.71 206.99,34.21 188.56,43.71 176.21,43.71"];
+  23296 -> 23313 [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black, pos="e,397.49,129.92 311.46,207.52 325.80,207.52 344.34,217.66 354.48,207.52 372.77,189.23 341.62,142.78 354.48,129.92 361.90,122.50 376.41,129.92 385.98,129.92"];
+  23313 -> "182954-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=forward, color=black, pos="e,556.75,43.71 447.46,129.92 466.47,129.92 491.04,143.36 504.48,129.92 524.80,109.60 489.51,58.67 504.48,43.71 514.09,34.10 532.72,43.71 545.24,43.71"];
+  23311 -> "182950-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=forward, color=black, pos="e,146.48,67.18 146.48,109.12 146.48,102.40 146.48,91.88 146.48,86.81 146.48,84.11 146.48,81.14 146.48,78.70"];
+  23310 -> "79893+2568" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=back, color=black, pos="s,379.46,129.92 390.98,129.92 393.64,129.92 397.09,131.81 398.98,129.92 419.30,109.60 415.10,59.83 398.98,43.71 387.05,31.78 364.19,43.71 348.37,43.71"];
+  23296 -> "85+2560" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=both, color=black, pos="s,261.49,188.56 e,99.04,70.11 252.32,181.60 232.31,166.41 178.73,146.27 184.23,129.92 186.14,124.23 200.67,135.72 202.23,129.92 211.55,95.23 140.07,93.90 109,75.89"];
+  23296 -> 23314 [fontsize=14, fontname="Times-Roman", fontcolor=black, color=black, pos="e,513.49,129.92 311.46,207.52 343.96,207.52 391.43,228.57 412.48,207.52 430.77,189.23 394.19,148.21 412.48,129.92 433.57,108.83 472.15,129.92 501.98,129.92"];
+  23314 -> "85+2560" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=both, color=black, pos="s,513.49,129.92 e,99.04,43.71 501.98,129.92 439.30,129.92 330.42,164.36 295.98,129.92 275.66,109.60 316.30,64.03 295.98,43.71 252.27,0 172.36,43.71 110.55,43.71"];
+  23314 -> "182954-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=back, color=black, pos="s,538.48,109.12 538.48,97.61 538.48,94.01 535.93,89.36 538.48,86.81 549.79,75.50 578.51,94.78 586.48,86.81 591.11,82.19 586.48,73.15 586.48,67.18"];
+  23296 -> "85+2560" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=both, color=black, pos="s,261.49,188.56 e,99.04,70.11 252.32,181.60 232.31,166.41 178.73,146.27 184.23,129.92 186.14,124.23 200.67,135.72 202.23,129.92 211.55,95.23 140.07,93.90 109,75.89"];
+  23314 -> "4151865284+0" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=forward, color=black, pos="e,633.90,43.71 563.46,129.92 582.64,129.92 607.42,143.48 620.98,129.92 641.30,109.60 610.65,54.03 620.98,43.71 621.31,43.37 621.99,43.71 622.39,43.71"];
+  23313 -> "182952-1" [fontsize=14, fontname="Times-Roman", fontcolor=black, dir=back, color=black, pos="s,397.49,129.92 385.98,129.92 377.81,129.92 367.25,135.70 361.48,129.92 341.16,109.60 375.32,57.55 361.48,43.71 354.11,36.34 339.63,43.71 330.21,43.71"];
+}
+

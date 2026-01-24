@@ -414,6 +414,27 @@ test "dot layout tier2 snapshots" {
     "tests/layout/dot/viewfile.gv.dot",
     0.01,
   )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/ldbxtried.gv",
+    "tests/layout/dot/ldbxtried.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/proc3d.gv", "tests/layout/dot/proc3d.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/world.gv", "tests/layout/dot/world.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/pmpipe.gv", "tests/layout/dot/pmpipe.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/polypoly.gv",
+    "tests/layout/dot/polypoly.gv.dot",
+    0.01,
+  )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
     30.0,
