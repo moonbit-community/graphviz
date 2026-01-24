@@ -367,6 +367,53 @@ test "dot layout tier2 snapshots" {
   assert_snapshot(
     "refs/graphviz/graphs/directed/tree.gv", "tests/layout/dot/tree.gv.dot", 0.01,
   )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/abstract.gv", "tests/layout/dot/abstract.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/arrows.gv", "tests/layout/dot/arrows.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/biological.gv",
+    "tests/layout/dot/biological.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/ctext.gv", "tests/layout/dot/ctext.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/fig6.gv", "tests/layout/dot/fig6.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/hashtable.gv",
+    "tests/layout/dot/hashtable.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/records.gv", "tests/layout/dot/records.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/switch.gv", "tests/layout/dot/switch.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/trapeziumlr.gv",
+    "tests/layout/dot/trapeziumlr.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/triedds.gv", "tests/layout/dot/triedds.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/unix.gv", "tests/layout/dot/unix.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/viewfile.gv",
+    "tests/layout/dot/viewfile.gv.dot",
+    0.01,
+  )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
     30.0,
