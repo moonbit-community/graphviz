@@ -195,6 +195,8 @@ test "svg spot-check outputs" {
   ensure_dir(out_dir)
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "graph1"),
+    ("refs/graphviz/graphs/directed/arrows.gv", "arrows"),
+    ("refs/graphviz/graphs/directed/records.gv", "records"),
     ("refs/graphviz/graphs/directed/clust.gv", "clust"),
     ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
     ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
