@@ -4560,6 +4560,94 @@ fn edge_tail_point(edge_layout : DotLayoutEdge) -> @geom.Point? {
 }
 
 ///|
+fn bezier_point(
+  p0 : @geom.Point,
+  p1 : @geom.Point,
+  p2 : @geom.Point,
+  p3 : @geom.Point,
+  t : Double,
+) -> @geom.Point {
+  let p01 = point_lerp(p0, p1, t)
+  let p12 = point_lerp(p1, p2, t)
+  let p23 = point_lerp(p2, p3, t)
+  let p012 = point_lerp(p01, p12, t)
+  let p123 = point_lerp(p12, p23, t)
+  point_lerp(p012, p123, t)
+}
+
+///|
+fn sample_spline_points(
+  points : Array[@geom.Point],
+  steps : Int,
+) -> Array[@geom.Point] {
+  let samples : Array[@geom.Point] = []
+  if points.length() == 0 || steps <= 0 {
+    return samples
+  }
+  samples.push(points[0])
+  let mut index = 0
+  let step_count = steps.to_double()
+  while index + 3 < points.length() {
+    let p0 = points[index]
+    let p1 = points[index + 1]
+    let p2 = points[index + 2]
+    let p3 = points[index + 3]
+    for step in 1..=steps {
+      let t = step.to_double() / step_count
+      samples.push(bezier_point(p0, p1, p2, p3, t))
+    }
+    index = index + 3
+  }
+  samples
+}
+
+///|
+fn polyline_point_at(
+  points : Array[@geom.Point],
+  target_len : Double,
+) -> @geom.Point? {
+  if points.length() == 0 {
+    return None
+  }
+  if points.length() == 1 {
+    return Some(points[0])
+  }
+  let mut remaining = target_len
+  for i in 0..<(points.length() - 1) {
+    let a = points[i]
+    let b = points[i + 1]
+    let seg_len = segment_length(a, b)
+    if seg_len <= 0.0 {
+      continue
+    }
+    if remaining <= seg_len {
+      let t = remaining / seg_len
+      return Some(point_lerp(a, b, t))
+    }
+    remaining = remaining - seg_len
+  }
+  Some(points[points.length() - 1])
+}
+
+///|
+fn spline_label_pos(spline : @geom.Spline) -> @geom.Point? {
+  let points = spline.points
+  if points.length() == 0 {
+    return None
+  }
+  let samples = sample_spline_points(points, 12)
+  if samples.length() == 0 {
+    return None
+  }
+  let total_len = polyline_length(samples)
+  if total_len <= 0.0 {
+    Some(samples[0])
+  } else {
+    polyline_point_at(samples, total_len / 2.0)
+  }
+}
+
+///|
 fn collect_cluster_label_rects(
   graphs : Array[DotLayoutGraph],
   pad : Double,
@@ -5665,10 +5753,14 @@ pub fn layout_dot(
         if value == "" {
           None
         } else {
-          Some({
-            x: (tail_clip.x + head_clip.x) / 2.0,
-            y: (tail_clip.y + head_clip.y) / 2.0,
-          })
+          match spline_label_pos(spline) {
+            Some(pos) => Some(pos)
+            None =>
+              Some({
+                x: (tail_clip.x + head_clip.x) / 2.0,
+                y: (tail_clip.y + head_clip.y) / 2.0,
+              })
+          }
         }
       None => None
     }
