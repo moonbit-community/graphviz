@@ -322,7 +322,16 @@ test "dot layout tier2 snapshots" {
     "refs/graphviz/graphs/directed/clust1.gv", "tests/layout/dot/clust1.gv.dot", 0.01,
   )
   assert_snapshot(
+    "refs/graphviz/graphs/directed/clust2.gv", "tests/layout/dot/clust2.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/clust3.gv", "tests/layout/dot/clust3.gv.dot", 0.01,
+  )
+  assert_snapshot(
     "refs/graphviz/graphs/directed/clust4.gv", "tests/layout/dot/clust4.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/clust5.gv", "tests/layout/dot/clust5.gv.dot", 0.01,
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/try.gv", "tests/layout/dot/try.gv.dot", 0.01,
@@ -335,6 +344,9 @@ test "dot layout tier2 snapshots" {
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/states.gv", "tests/layout/dot/states.gv.dot", 0.01,
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/record2.gv", "tests/layout/dot/record2.gv.dot", 0.01,
@@ -351,6 +363,9 @@ test "dot layout tier2 snapshots" {
   assert_snapshot(
     "refs/graphviz/graphs/directed/train11.gv", "tests/layout/dot/train11.gv.dot",
     0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/tree.gv", "tests/layout/dot/tree.gv.dot", 0.01,
   )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
