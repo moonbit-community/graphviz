@@ -34,6 +34,27 @@ fn assert_non_ascii_layout(path : String) -> Unit raise {
   guard graph.nodes().length() > 0 else {
     fail("expected nodes in \{path}")
   }
+  guard graph.get_attr("bb") is Some(_) else {
+    fail("missing bb for \{path}")
+  }
+  for node in graph.nodes() {
+    guard node.get_attr("pos") is Some(_) else {
+      fail("missing pos for node \{node.name()} in \{path}")
+    }
+    guard node.get_attr("width") is Some(_) else {
+      fail("missing width for node \{node.name()} in \{path}")
+    }
+    guard node.get_attr("height") is Some(_) else {
+      fail("missing height for node \{node.name()} in \{path}")
+    }
+  }
+  for edge in graph.edges() {
+    guard edge.get_attr("pos") is Some(_) else {
+      fail(
+        "missing pos for edge \{edge.tail().name()} -> \{edge.head().name()} in \{path}",
+      )
+    }
+  }
   guard graph_has_non_ascii(graph) else {
     fail("expected non-ascii labels in \{path}")
   }
