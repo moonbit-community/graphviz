@@ -1,0 +1,5 @@
+digraph G {
+  graph [charset=latin1, bb="0,0,192.67,36"];
+  node [label="\N", fontsize=10];
+  a [label="áâãäåæçèéêëìíîïðñòóôõöøùúûü", pos="96.34,18", width=2.45598, height=0.5];
+}
