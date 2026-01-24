@@ -1657,6 +1657,19 @@ fn edge_mid_label_width_pt(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+fn edge_mid_label_metrics(edge : @cgraph.Edge) -> (Double, Double)? {
+  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
+  let font = @attrs.font_name(edge.get_attr("fontname"))
+  match edge_mid_label_text(edge) {
+    Some(text) => {
+      let (width, height) = label_text_dimensions(text, font, font_size_pt)
+      Some((width, height))
+    }
+    None => None
+  }
+}
+
+///|
 fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
   let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
   let font = @attrs.font_name(edge.get_attr("fontname"))
@@ -4446,6 +4459,232 @@ fn graph_label_pos(
 }
 
 ///|
+fn min_double(a : Double, b : Double) -> Double {
+  if a < b { a } else { b }
+}
+
+///|
+fn max_double(a : Double, b : Double) -> Double {
+  if a > b { a } else { b }
+}
+
+///|
+fn rect_center(rect : @geom.Rect) -> @geom.Point {
+  { x: (rect.llx + rect.urx) / 2.0, y: (rect.lly + rect.ury) / 2.0 }
+}
+
+///|
+fn rect_from_center(
+  center : @geom.Point,
+  width : Double,
+  height : Double,
+  pad : Double,
+) -> @geom.Rect {
+  let half_w = width / 2.0 + pad
+  let half_h = height / 2.0 + pad
+  {
+    llx: center.x - half_w,
+    lly: center.y - half_h,
+    urx: center.x + half_w,
+    ury: center.y + half_h,
+  }
+}
+
+///|
+fn rect_overlap_amount(
+  a : @geom.Rect,
+  b : @geom.Rect,
+) -> (Double, Double)? {
+  let overlap_x = min_double(a.urx, b.urx) - max_double(a.llx, b.llx)
+  let overlap_y = min_double(a.ury, b.ury) - max_double(a.lly, b.lly)
+  if overlap_x > 0.0 && overlap_y > 0.0 {
+    Some((overlap_x, overlap_y))
+  } else {
+    None
+  }
+}
+
+///|
+fn nudge_label_rect(
+  label_pos : @geom.Point,
+  label_rect : @geom.Rect,
+  other_rect : @geom.Rect,
+  label_width : Double,
+  label_height : Double,
+  pad : Double,
+) -> (@geom.Point, @geom.Rect) {
+  match rect_overlap_amount(label_rect, other_rect) {
+    Some((overlap_x, overlap_y)) => {
+      let other_center = rect_center(other_rect)
+      if overlap_x < overlap_y {
+        let dir = if label_pos.x < other_center.x { -1.0 } else { 1.0 }
+        let shift = overlap_x + pad
+        let new_pos : @geom.Point = {
+          x: label_pos.x + dir * shift,
+          y: label_pos.y,
+        }
+        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
+      } else {
+        let dir = if label_pos.y < other_center.y { -1.0 } else { 1.0 }
+        let shift = overlap_y + pad
+        let new_pos : @geom.Point = {
+          x: label_pos.x,
+          y: label_pos.y + dir * shift,
+        }
+        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
+      }
+    }
+    None => (label_pos, label_rect)
+  }
+}
+
+///|
+fn collect_cluster_label_rects(
+  graphs : Array[DotLayoutGraph],
+  pad : Double,
+) -> Array[@geom.Rect] {
+  let rects : Array[@geom.Rect] = []
+  for subgraph in graphs {
+    match subgraph.label_pos {
+      Some(pos) =>
+        match graph_label_metrics(subgraph.graph) {
+          Some((width, height)) => rects.push(rect_from_center(pos, width, height, pad))
+          None => ()
+        }
+      None => ()
+    }
+    let nested = collect_cluster_label_rects(subgraph.subgraphs, pad)
+    for rect in nested {
+      rects.push(rect)
+    }
+  }
+  rects
+}
+
+///|
+fn adjust_edge_label_positions(
+  edges : Array[DotLayoutEdge],
+  label_rects : Array[@geom.Rect],
+  pad : Double,
+) -> (Array[DotLayoutEdge], Map[String, @geom.Point]) {
+  let adjusted : Array[DotLayoutEdge] = []
+  let updates : Map[String, @geom.Point] = Map::new()
+  for edge_layout in edges {
+    let mut label_pos = edge_layout.label_pos
+    match label_pos {
+      Some(pos) =>
+        match edge_mid_label_metrics(edge_layout.edge) {
+          Some((width, height)) => {
+            let mut current_pos = pos
+            let mut current_rect = rect_from_center(current_pos, width, height, pad)
+            for rect in label_rects {
+              let (next_pos, next_rect) = nudge_label_rect(
+                current_pos,
+                current_rect,
+                rect,
+                width,
+                height,
+                pad,
+              )
+              current_pos = next_pos
+              current_rect = next_rect
+            }
+            label_pos = Some(current_pos)
+          }
+          None => ()
+        }
+      None => ()
+    }
+    match label_pos {
+      Some(pos) => updates[edge_key(edge_layout.edge)] = pos
+      None => ()
+    }
+    adjusted.push({
+      edge: edge_layout.edge,
+      splines: edge_layout.splines,
+      label_pos,
+      head_label_pos: edge_layout.head_label_pos,
+      tail_label_pos: edge_layout.tail_label_pos,
+    })
+  }
+  (adjusted, updates)
+}
+
+///|
+fn apply_edge_label_updates(
+  graphs : Array[DotLayoutGraph],
+  updates : Map[String, @geom.Point],
+) -> Array[DotLayoutGraph] {
+  let updated : Array[DotLayoutGraph] = []
+  for graph in graphs {
+    let edges : Array[DotLayoutEdge] = []
+    for edge_layout in graph.edges {
+      let label_pos = match updates.get(edge_key(edge_layout.edge)) {
+        Some(pos) => Some(pos)
+        None => edge_layout.label_pos
+      }
+      edges.push({
+        edge: edge_layout.edge,
+        splines: edge_layout.splines,
+        label_pos,
+        head_label_pos: edge_layout.head_label_pos,
+        tail_label_pos: edge_layout.tail_label_pos,
+      })
+    }
+    let subgraphs = apply_edge_label_updates(graph.subgraphs, updates)
+    updated.push({
+      graph: graph.graph,
+      bbox: graph.bbox,
+      label_pos: graph.label_pos,
+      nodes: graph.nodes,
+      edges,
+      subgraphs,
+    })
+  }
+  updated
+}
+
+///|
+fn adjust_edge_labels_for_cluster_labels(
+  layout : DotLayoutGraph,
+  nodesep_pt : Double,
+) -> DotLayoutGraph {
+  let pad = if nodesep_pt * 0.2 < 2.0 { 2.0 } else { nodesep_pt * 0.2 }
+  let label_rects : Array[@geom.Rect] = []
+  match layout.label_pos {
+    Some(pos) =>
+      match graph_label_metrics(layout.graph) {
+        Some((width, height)) =>
+          label_rects.push(rect_from_center(pos, width, height, pad))
+        None => ()
+      }
+    None => ()
+  }
+  let subgraph_rects = collect_cluster_label_rects(layout.subgraphs, pad)
+  for rect in subgraph_rects {
+    label_rects.push(rect)
+  }
+  if label_rects.length() == 0 {
+    layout
+  } else {
+    let (edges, updates) = adjust_edge_label_positions(
+      layout.edges,
+      label_rects,
+      pad,
+    )
+    let subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
+    {
+      graph: layout.graph,
+      bbox: layout.bbox,
+      label_pos: layout.label_pos,
+      nodes: layout.nodes,
+      edges,
+      subgraphs,
+    }
+  }
+}
+
+///|
 fn expand_bbox_for_label(
   bbox : @geom.Rect,
   label_width_pt : Double,
@@ -5377,16 +5616,17 @@ pub fn layout_dot(
     edges: final_edges,
     subgraphs,
   }
+  let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
   if graph.is_root() {
-    let dx = -layout.bbox.llx
-    let dy = -layout.bbox.lly
+    let dx = -adjusted.bbox.llx
+    let dy = -adjusted.bbox.lly
     if dx != 0.0 || dy != 0.0 {
-      shift_layout_graph(layout, dx, dy)
+      shift_layout_graph(adjusted, dx, dy)
     } else {
-      layout
+      adjusted
     }
   } else {
-    layout
+    adjusted
   }
 }
 
