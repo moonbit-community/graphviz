@@ -4491,6 +4491,14 @@ fn rect_from_center(
 }
 
 ///|
+priv struct EdgeLabelEntry {
+  key : String
+  pos : @geom.Point
+  base_axis : Double
+  half_axis : Double
+}
+
+///|
 fn rect_overlap_amount(
   a : @geom.Rect,
   b : @geom.Rect,
@@ -4535,6 +4543,19 @@ fn nudge_label_rect(
       }
     }
     None => (label_pos, label_rect)
+  }
+}
+
+///|
+fn edge_tail_point(edge_layout : DotLayoutEdge) -> @geom.Point? {
+  match edge_layout.splines.get(0) {
+    Some(spline) =>
+      match spline.start {
+        Some(point) => Some(point)
+        None =>
+          if spline.points.length() > 0 { Some(spline.points[0]) } else { None }
+      }
+    None => None
   }
 }
 
@@ -4672,6 +4693,111 @@ fn adjust_edge_labels_for_cluster_labels(
       label_rects,
       pad,
     )
+    let subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
+    {
+      graph: layout.graph,
+      bbox: layout.bbox,
+      label_pos: layout.label_pos,
+      nodes: layout.nodes,
+      edges,
+      subgraphs,
+    }
+  }
+}
+
+///|
+fn adjust_edge_labels_for_label_overlaps(
+  layout : DotLayoutGraph,
+  nodesep_pt : Double,
+  rankdir : RankDir,
+) -> DotLayoutGraph {
+  let axis_is_x = match rankdir {
+    RankDir::TB | RankDir::BT => true
+    RankDir::LR | RankDir::RL => false
+  }
+  let tail_pad = max_double(2.0, nodesep_pt * 0.3)
+  let gap = max_double(4.0, nodesep_pt * 0.8)
+  let groups : Map[String, Array[EdgeLabelEntry]] = Map::new()
+  for edge_layout in layout.edges {
+    match edge_layout.label_pos {
+      Some(pos) =>
+        match edge_mid_label_metrics(edge_layout.edge) {
+          Some((width, height)) => {
+            let pos_axis = if axis_is_x { pos.x } else { pos.y }
+            let tail_axis = match edge_tail_point(edge_layout) {
+              Some(point) => if axis_is_x { point.x } else { point.y }
+              None => pos_axis
+            }
+            let base_axis =
+              if tail_axis + tail_pad > pos_axis { tail_axis + tail_pad } else { pos_axis }
+            let half_axis = if axis_is_x { width / 2.0 } else { height / 2.0 }
+            let entry = {
+              key: edge_key(edge_layout.edge),
+              pos,
+              base_axis,
+              half_axis,
+            }
+            let tail_name = edge_layout.edge.tail().name()
+            let list = match groups.get(tail_name) {
+              Some(value) => value
+              None => []
+            }
+            list.push(entry)
+            groups[tail_name] = list
+          }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  let updates : Map[String, @geom.Point] = Map::new()
+  for _, entries in groups {
+    if entries.length() < 2 {
+      continue
+    }
+    entries.sort_by((a, b) => Double::compare(a.base_axis, b.base_axis))
+    let mut last_axis = 0.0
+    let mut last_half = 0.0
+    let mut first = true
+    for entry in entries {
+      let mut axis_value = entry.base_axis
+      if !first {
+        let min_axis = last_axis + last_half + entry.half_axis + gap
+        if axis_value < min_axis {
+          axis_value = min_axis
+        }
+      }
+      let new_pos : @geom.Point =
+        if axis_is_x {
+        { x: axis_value, y: entry.pos.y }
+      } else {
+        { x: entry.pos.x, y: axis_value }
+      }
+      if new_pos.x != entry.pos.x || new_pos.y != entry.pos.y {
+        updates[entry.key] = new_pos
+      }
+      last_axis = axis_value
+      last_half = entry.half_axis
+      first = false
+    }
+  }
+  if updates.length() == 0 {
+    layout
+  } else {
+    let edges : Array[DotLayoutEdge] = []
+    for edge_layout in layout.edges {
+      let label_pos = match updates.get(edge_key(edge_layout.edge)) {
+        Some(pos) => Some(pos)
+        None => edge_layout.label_pos
+      }
+      edges.push({
+        edge: edge_layout.edge,
+        splines: edge_layout.splines,
+        label_pos,
+        head_label_pos: edge_layout.head_label_pos,
+        tail_label_pos: edge_layout.tail_label_pos,
+      })
+    }
     let subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
     {
       graph: layout.graph,
@@ -5617,6 +5743,7 @@ pub fn layout_dot(
     subgraphs,
   }
   let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
+  let adjusted = adjust_edge_labels_for_label_overlaps(adjusted, nodesep_pt, rankdir)
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly
