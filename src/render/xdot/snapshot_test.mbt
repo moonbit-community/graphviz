@@ -597,6 +597,8 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot",
     ),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
+    ("refs/graphviz/graphs/directed/longflat.gv", "tests/render/xdot/longflat.xdot"),
+    ("refs/graphviz/graphs/directed/structs.gv", "tests/render/xdot/structs.xdot"),
     ("tests/layout/dot/compound.dot", "tests/render/xdot/compound.xdot"),
     ("tests/layout/dot/complex.dot", "tests/render/xdot/complex.xdot"),
     (

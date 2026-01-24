@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="297.80739300000005pt" height="154.4pt" viewBox="0 0 297.80739300000005 154.4">
+  <rect x="0" y="0" width="297.80739300000005" height="154.4" fill="white"/>
+  <g transform="translate(0 154.4) scale(1 -1)">
+    <path d="M 87.5416496 114.4 C 78.1896038 114.4 66.09840720314718 121.01289500314718 59.4855122 114.4 C 46.47474742616753 101.38923522616753 67.94045788099115 67.65494568099115 59.4855122 59.2 C 55.586385611850176 55.300873411850176 47.87786520757214 59.2 42.94291909288693 59.2" fill="none" stroke="black"/>
+    <polygon points="31.429374799999998,59.2 41.4293748,56.2 41.4293748,62.2" fill="black" stroke="black"/>
+    <path d="M 138.647281 114.4 C 138.647281 102.2 130.0205782695241 86.42670273047588 138.647281 77.80000000000001 C 151.924745804178 64.52253519582197 186.8449478546239 85.9338455453761 194.9787934 77.80000000000001 C 197.96901968657414 74.80977371342587 194.9787934 68.85089631418043 194.9787934 65.11354429288694" fill="none" stroke="black"/>
+    <polygon points="194.9787934,53.60000000000001 197.9787934,63.60000000000001 191.9787934,63.60000000000001" fill="black" stroke="black"/>
+    <rect x="21.4583748" y="114.4" width="139.7217" height="36" fill="none" stroke="black"/>
+    <line x1="58.81621866856906" y1="114.4" x2="58.81621866856906" y2="150.4" stroke="black"/>
+    <line x1="116.2978150590732" y1="114.4" x2="116.2978150590732" y2="150.4" stroke="black"/>
+    <text x="40.13729673428453" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> left</text>
+    <text x="87.55701686382113" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> middle</text>
+    <text x="138.7389449295366" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> right</text>
+    <rect x="11.920000000000002" y="23.200000000000003" width="78.7984496" height="36" fill="none" stroke="black"/>
+    <line x1="50.9387496" y1="23.200000000000003" x2="50.9387496" y2="59.2" stroke="black"/>
+    <text x="31.4293748" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> one</text>
+    <text x="70.8285996" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> two</text>
+    <rect x="108.75105659999998" y="4" width="177.13633640000006" height="74.4" fill="none" stroke="black"/>
+    <line x1="159.8498938" y1="4" x2="159.8498938" y2="78.4" stroke="black"/>
+    <line x1="230.107693" y1="4" x2="230.107693" y2="78.4" stroke="black"/>
+    <line x1="259.696093" y1="4" x2="259.696093" y2="78.4" stroke="black"/>
+    <line x1="159.8498938" y1="53.60000000000001" x2="230.107693" y2="53.60000000000001" stroke="black"/>
+    <line x1="159.8498938" y1="28.800000000000008" x2="230.107693" y2="28.800000000000008" stroke="black"/>
+    <line x1="181.8831434" y1="28.800000000000008" x2="181.8831434" y2="53.60000000000001" stroke="black"/>
+    <line x1="208.0744434" y1="28.800000000000008" x2="208.0744434" y2="53.60000000000001" stroke="black"/>
+    <text x="134.3004752" y="-44.400400000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">hello</text>
+    <text x="134.3004752" y="-27.900000000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">world </text>
+    <text x="194.9787934" y="-60.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> b </text>
+    <text x="170.8665186" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">c</text>
+    <text x="194.9787934" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> d</text>
+    <text x="219.0910682" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">e</text>
+    <text x="194.9787934" y="-11.350200000000008" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> f</text>
+    <text x="244.90189300000003" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> g </text>
+    <text x="272.791743" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> h</text>
+  </g>
+</svg>

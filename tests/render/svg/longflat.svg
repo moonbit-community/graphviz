@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="150.83999999999997pt" height="116pt" viewBox="0 0 150.83999999999997 116">
+  <rect x="0" y="0" width="150.83999999999997" height="116" fill="white"/>
+  <g transform="translate(0 116) scale(1 -1)">
+    <path d="M 56.92 94 C 62.510989452022315 94 71.17225738214782 94 75.42 94 C 77.74881856903768 94 80.29503948195143 94 82.40645570711307 94" fill="none" stroke="black"/>
+    <polygon points="93.92,94 83.92,97 83.92,91" fill="black" stroke="black"/>
+    <path d="M 111.92 49 C 111.92 51.16215190237102 111.92 53.324303804742044 111.92 55.486455707113066" fill="none" stroke="black"/>
+    <polygon points="111.92,67 108.92,57 114.92,57" fill="black" stroke="black"/>
+    <text x="111.92" y="-52.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">long long long</text>
+    <ellipse cx="111.92" cy="94" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
+    <text x="111.92" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">b</text>
+    <ellipse cx="111.92" cy="22" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
+    <text x="111.92" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">c</text>
+    <ellipse cx="38.92" cy="94" rx="27" ry="18" fill="none" stroke="black"/>
+    <text x="38.92" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">a</text>
+  </g>
+</svg>

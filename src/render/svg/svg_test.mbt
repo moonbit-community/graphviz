@@ -200,6 +200,8 @@ test "svg spot-check outputs" {
     ("refs/graphviz/graphs/directed/clust.gv", "clust"),
     ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
     ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
+    ("refs/graphviz/graphs/directed/longflat.gv", "longflat"),
+    ("refs/graphviz/graphs/directed/structs.gv", "structs"),
     ("tests/layout/dot/compound.dot", "compound"),
     ("tests/layout/dot/complex.dot", "complex"),
   ]
