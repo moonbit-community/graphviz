@@ -104,6 +104,14 @@ fn complex_edge_points(edge : @cgraph.Edge) -> Array[@geom.Point] {
 }
 
 ///|
+fn complex_edge_label_pos(edge : @cgraph.Edge) -> @geom.Point? {
+  match edge.get_attr("lp") {
+    Some(value) => Some(complex_parse_point(value))
+    None => None
+  }
+}
+
+///|
 test "dot layout handles complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
@@ -216,5 +224,35 @@ test "dot layout matches graphviz edge control points for complex sample" {
     fail(
       "edge \{worst_tail} -> \{worst_head} pos drift: max \{Double::sqrt(worst_sq)} > \{tol}",
     )
+  }
+}
+
+///|
+test "dot layout matches graphviz edge label positions for complex sample" {
+  let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
+  let layout = layout_dot(graph)
+  layout.apply()
+  let eps = 12.0
+  for edge in reference.edges() {
+    let expected = match complex_edge_label_pos(edge) {
+      Some(value) => value
+      None => continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let actual_edge = match complex_find_edge(graph, tail, head) {
+      Some(value) => value
+      None => fail("missing edge \{tail} -> \{head} in layout")
+    }
+    let actual = match complex_edge_label_pos(actual_edge) {
+      Some(value) => value
+      None => fail("missing label pos for edge \{tail} -> \{head}")
+    }
+    if !complex_pos_close(actual, expected, eps) {
+      fail(
+        "edge \{tail} -> \{head} label pos drift: got (\{actual.x},\{actual.y}) expected (\{expected.x},\{expected.y})",
+      )
+    }
   }
 }

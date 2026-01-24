@@ -6,7 +6,7 @@
     <polygon points="93.92,94 83.92,97 83.92,91" fill="black" stroke="black"/>
     <path d="M 111.92 49 C 111.92 51.16215190237102 111.92 53.324303804742044 111.92 55.486455707113066" fill="none" stroke="black"/>
     <polygon points="111.92,67 108.92,57 114.92,57" fill="black" stroke="black"/>
-    <text x="111.92" y="-47.193427853556535" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">long long long</text>
+    <text x="103.52" y="-47.193427853556535" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">long long long</text>
     <ellipse cx="111.92" cy="94" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
     <text x="111.92" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">b</text>
     <ellipse cx="111.92" cy="22" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
