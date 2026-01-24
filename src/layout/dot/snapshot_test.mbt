@@ -435,6 +435,31 @@ test "dot layout tier2 snapshots" {
     "tests/layout/dot/polypoly.gv.dot",
     0.01,
   )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/alf.gv",
+    "tests/layout/dot/alf.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/clust.gv",
+    "tests/layout/dot/clust.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/jcctree.gv",
+    "tests/layout/dot/jcctree.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/jsort.gv",
+    "tests/layout/dot/jsort.gv.dot",
+    0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/shells.gv",
+    "tests/layout/dot/shells.gv.dot",
+    0.01,
+  )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_vnode_spacing.dot",
     "tests/layout/dot/edge_vnode_spacing.gv.dot",
