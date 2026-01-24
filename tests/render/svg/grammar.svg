@@ -87,91 +87,90 @@
     <path d="M 535.2968682 508 C 535.2968682 502 531.0542275128806 494.24264068711926 535.2968682 490 C 545.1963631366116 480.1005050633883 571.5826845956332 495.7141836043668 577.2968682 490 C 578.8257404721219 488.47112772787807 577.2968682 485.40146163328365 577.2968682 483.51354429288693" fill="none" stroke="black"/>
     <polygon points="577.2968682,472 580.2968682,482 574.2968682,482" fill="black" stroke="black"/>
     <rect x="250.2968682" y="652" width="54" height="36" fill="none" stroke="black"/>
-    <text x="277.2968682" y="-664.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">E</text>
+    <text x="277.2968682" y="-664.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">E</text>
     <rect x="106.2968682" y="580" width="54" height="36" fill="none" stroke="black"/>
-    <text x="133.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="133.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="65.2968682" y="508" width="54" height="36" fill="none" stroke="black"/>
-    <text x="92.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="92.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="11.920000000000002" y="436" width="76.75373640000001" height="36" fill="none" stroke="black"/>
-    <text x="50.296868200000006" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : a </text>
+    <text x="50.296868200000006" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="60.7537364" lengthAdjust="spacing">IDENT : a </text>
     <rect x="178.2968682" y="580" width="54" height="36" fill="none" stroke="black"/>
-    <text x="205.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">+</text>
+    <text x="205.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.6638576" lengthAdjust="spacing">+</text>
     <rect x="250.2968682" y="580" width="54" height="36" fill="none" stroke="black"/>
-    <text x="277.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="277.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="178.2968682" y="508" width="54" height="36" fill="none" stroke="black"/>
-    <text x="205.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="205.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="106.2968682" y="436" width="54" height="36" fill="none" stroke="black"/>
-    <text x="133.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(</text>
+    <text x="133.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">(</text>
     <rect x="178.2968682" y="436" width="54" height="36" fill="none" stroke="black"/>
-    <text x="205.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">E</text>
+    <text x="205.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">E</text>
     <rect x="160.2968682" y="364" width="54" height="36" fill="none" stroke="black"/>
-    <text x="187.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="187.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="70.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="97.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="97.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="58.53952480000001" y="220" width="77.51468679999999" height="36" fill="none" stroke="black"/>
-    <text x="97.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : b </text>
+    <text x="97.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="61.5146868" lengthAdjust="spacing">IDENT : b </text>
     <rect x="142.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="169.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">*</text>
+    <text x="169.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">*</text>
     <rect x="214.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="241.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="241.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="190.92000000000002" y="220" width="76.75373639999998" height="36" fill="none" stroke="black"/>
-    <text x="229.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : c </text>
+    <text x="229.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="60.7537364" lengthAdjust="spacing">IDENT : c </text>
     <rect x="250.2968682" y="436" width="54" height="36" fill="none" stroke="black"/>
-    <text x="277.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">)</text>
+    <text x="277.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">)</text>
     <rect x="250.2968682" y="508" width="54" height="36" fill="none" stroke="black"/>
-    <text x="277.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">*</text>
+    <text x="277.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">*</text>
     <rect x="358.2968682" y="508" width="54" height="36" fill="none" stroke="black"/>
-    <text x="385.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="385.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="322.2968682" y="436" width="54" height="36" fill="none" stroke="black"/>
-    <text x="349.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(</text>
+    <text x="349.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">(</text>
     <rect x="394.2968682" y="436" width="54" height="36" fill="none" stroke="black"/>
-    <text x="421.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">E</text>
+    <text x="421.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">E</text>
     <rect x="358.2968682" y="364" width="54" height="36" fill="none" stroke="black"/>
-    <text x="385.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="385.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="286.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="313.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="313.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="285.5395248" y="220" width="77.51468680000005" height="36" fill="none" stroke="black"/>
-    <text x="324.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : d </text>
+    <text x="324.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="61.5146868" lengthAdjust="spacing">IDENT : d </text>
     <rect x="358.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="385.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">*</text>
+    <text x="385.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">*</text>
     <rect x="430.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="457.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="457.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="404.92" y="220" width="76.75373639999998" height="36" fill="none" stroke="black"/>
-    <text x="443.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : e </text>
+    <text x="443.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="60.7537364" lengthAdjust="spacing">IDENT : e </text>
     <rect x="430.2968682" y="364" width="54" height="36" fill="none" stroke="black"/>
-    <text x="457.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">+</text>
+    <text x="457.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.6638576" lengthAdjust="spacing">+</text>
     <rect x="502.29686819999995" y="364" width="54" height="36" fill="none" stroke="black"/>
-    <text x="529.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="529.2968682" y="-376.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="519.2968682" y="292" width="54" height="36" fill="none" stroke="black"/>
-    <text x="546.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="546.2968682" y="-304.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="499.29686819999995" y="220" width="54" height="36" fill="none" stroke="black"/>
-    <text x="526.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(</text>
+    <text x="526.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">(</text>
     <rect x="571.2968682" y="220" width="54" height="36" fill="none" stroke="black"/>
-    <text x="598.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">E</text>
+    <text x="598.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">E</text>
     <rect x="571.2968682" y="148" width="54" height="36" fill="none" stroke="black"/>
-    <text x="598.2968682" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="598.2968682" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="499.29686819999995" y="76" width="54" height="36" fill="none" stroke="black"/>
-    <text x="526.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="526.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="487.91999999999996" y="4" width="76.75373639999998" height="36" fill="none" stroke="black"/>
-    <text x="526.2968682" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : a </text>
+    <text x="526.2968682" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="60.7537364" lengthAdjust="spacing">IDENT : a </text>
     <rect x="571.2968682" y="76" width="54" height="36" fill="none" stroke="black"/>
-    <text x="598.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">*</text>
+    <text x="598.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">*</text>
     <rect x="643.2968682" y="76" width="54" height="36" fill="none" stroke="black"/>
-    <text x="670.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="670.2968682" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="631.5395248" y="4" width="77.51468679999994" height="36" fill="none" stroke="black"/>
-    <text x="670.2968682" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : b </text>
+    <text x="670.2968682" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="61.5146868" lengthAdjust="spacing">IDENT : b </text>
     <rect x="643.2968682" y="220" width="54" height="36" fill="none" stroke="black"/>
-    <text x="670.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">)</text>
+    <text x="670.2968682" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">)</text>
     <rect x="466.2968682" y="436" width="54.00000000000006" height="36" fill="none" stroke="black"/>
-    <text x="493.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">)</text>
+    <text x="493.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">)</text>
     <rect x="322.2968682" y="580" width="54" height="36" fill="none" stroke="black"/>
-    <text x="349.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">+</text>
+    <text x="349.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.6638576" lengthAdjust="spacing">+</text>
     <rect x="394.2968682" y="580" width="54" height="36" fill="none" stroke="black"/>
-    <text x="421.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">T</text>
+    <text x="421.2968682" y="-592.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="8.3025124" lengthAdjust="spacing">T</text>
     <rect x="508.29686819999995" y="508" width="54" height="36" fill="none" stroke="black"/>
-    <text x="535.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">F</text>
+    <text x="535.2968682" y="-520.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.5551504000000005" lengthAdjust="spacing">F</text>
     <rect x="538.5395248" y="436" width="77.51468679999994" height="36" fill="none" stroke="black"/>
-    <text x="577.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">IDENT : q </text>
+    <text x="577.2968682" y="-448.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="61.5146868" lengthAdjust="spacing">IDENT : q </text>
   </g>
 </svg>
-

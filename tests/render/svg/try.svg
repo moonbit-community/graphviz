@@ -3,9 +3,9 @@
   <rect x="0" y="0" width="111.84" height="545.6" fill="white"/>
   <g transform="translate(0 545.6) scale(1 -1)">
     <rect x="29.92" y="12" width="70" height="148.8" fill="none" stroke="black"/>
-    <text x="64.92" y="-143.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">small</text>
+    <text x="64.92" y="-143.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="30.016775600000003" lengthAdjust="spacing">small</text>
     <rect x="11.92" y="168.8" width="88" height="364.8" fill="none" stroke="black"/>
-    <text x="55.92" y="-516.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">big</text>
+    <text x="55.92" y="-516.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.3659752" lengthAdjust="spacing">big</text>
     <path d="M 64.92 92 C 64.92 86.57567721464434 64.92 78.08107595118551 64.92 74 C 64.92 71.83784809762898 64.92 69.46824593112547 64.92 67.51354429288693" fill="none" stroke="black"/>
     <polygon points="64.92,56 67.92,66 61.92,66" fill="black" stroke="black"/>
     <path d="M 55.92 464.8 C 55.92 459.25 59.10198051533946 449.9819805153395 55.92 446.8 C 53.798679656440356 444.67867965644035 48.74509630784079 448.6250963078408 46.92 446.8 C 45.39112772787806 445.2711277278781 46.92 442.38511845234865 46.92 440.31354429288695" fill="none" stroke="black"/>
@@ -23,19 +23,18 @@
     <path d="M 71.22 56 C 77.52 74 87.12452138720876 91.16606499213958 90.12 110 C 94.56092007140795 137.92208218173943 88.92402193406156 168.66671313402918 88.32000000000001 194.8 C 87.76525982713812 218.80108879489873 87.11999999999999 242.8 86.52 266.8 C 85.92 290.8 89.81263761095755 319.201089772452 84.72 338.8 C 80.57240482956728 354.7619339947965 69.02794787374849 368.68962309762196 61.721885684855785 382.60593202884615" fill="none" stroke="black"/>
     <polygon points="56.370000000000005,392.8 58.362145281385374,382.5515192746508 63.67453269841304,385.3405226685903" fill="black" stroke="black"/>
     <ellipse cx="64.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="64.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">a</text>
+    <text x="64.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.0332496" lengthAdjust="spacing">a</text>
     <ellipse cx="64.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="64.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">b</text>
+    <text x="64.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">b</text>
     <ellipse cx="55.92" cy="482.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="55.92" y="-477.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">p</text>
+    <text x="55.92" y="-477.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">p</text>
     <ellipse cx="46.92" cy="410.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-405.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">q</text>
+    <text x="46.92" y="-405.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">q</text>
     <ellipse cx="46.92" cy="338.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-333.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">r</text>
+    <text x="46.92" y="-333.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="4.5249372" lengthAdjust="spacing">r</text>
     <ellipse cx="46.92" cy="266.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-261.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">s</text>
+    <text x="46.92" y="-261.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.2858876" lengthAdjust="spacing">s</text>
     <ellipse cx="64.92" cy="194.8" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="64.92" y="-189.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">t</text>
+    <text x="64.92" y="-189.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.7775752000000002" lengthAdjust="spacing">t</text>
   </g>
 </svg>
-

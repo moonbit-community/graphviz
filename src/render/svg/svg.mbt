@@ -1275,12 +1275,18 @@ fn write_html_text_lines(
       continue
     }
     let line_y = start_y - line_step * i.to_double()
+    let length_attr =
+      if line.width_pt > 0.0 {
+        " textLength=\"\{line.width_pt}\" lengthAdjust=\"spacing\""
+      } else {
+        ""
+      }
     let x = line_x - bbox.llx
     let y = bbox.lly - line_y
     let escaped = escape_xml(line.text)
     write_line(
       sb,
-      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\"\{length_attr}>\{escaped}</text>",
       indent,
       pretty,
     )
@@ -1593,12 +1599,18 @@ fn write_label_lines(
       @render.TextAlign::Right => "end"
       @render.TextAlign::Center => "middle"
     }
+    let length_attr =
+      if line.width_pt > 0.0 {
+        " textLength=\"\{line.width_pt}\" lengthAdjust=\"spacing\""
+      } else {
+        ""
+      }
     let x = line_x - bbox.llx
     let y = bbox.lly - line_y
     let escaped = escape_xml(line.text)
     write_line(
       sb,
-      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\"\{length_attr}>\{escaped}</text>",
       indent,
       pretty,
     )

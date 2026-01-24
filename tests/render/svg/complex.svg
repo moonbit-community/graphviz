@@ -3,33 +3,33 @@
   <rect x="0" y="0" width="1276.7268856" height="985.5999999999998" fill="white"/>
   <g transform="translate(0 985.5999999999998) scale(1 -1)">
     <rect x="205.14758599999996" y="598.1999999999999" width="295.74044960000003" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="353.0178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Clients</text>
+    <text x="353.0178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="79.4649632" lengthAdjust="spacing">xvm_a Clients</text>
     <rect x="27.490142200000008" y="743.9" width="238.05533719999997" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="146.51781079999998" y="-803.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Clients</text>
+    <text x="146.51781079999998" y="-803.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="50.209137999999996" lengthAdjust="spacing">Z Clients</text>
     <rect x="11.92" y="598.1999999999999" width="185.1956216" height="110.39999999999998" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="104.5178108" y="-690.8505999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifters</text>
-    <text x="104.5178108" y="-674.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">(Configurable</text>
-    <text x="104.5178108" y="-657.8497999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter)</text>
+    <text x="104.5178108" y="-690.8505999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="84.9139116" lengthAdjust="spacing">Z Shapeshifters</text>
+    <text x="104.5178108" y="-674.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="76.230924" lengthAdjust="spacing">(Configurable</text>
+    <text x="104.5178108" y="-657.8497999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="84.15296120000001" lengthAdjust="spacing">Z Shapeshifter)</text>
     <rect x="222.21917439999996" y="486.09999999999997" width="298.59727280000004" height="76.7999999999999" fill="none" stroke="black"/>
-    <text x="371.5178108" y="-545.4501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Shapeshifter</text>
+    <text x="371.5178108" y="-545.4501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="118.87132319999999" lengthAdjust="spacing">Machsrv Shapeshifter</text>
     <rect x="916.2636186" y="598.1999999999999" width="136.50838440000007" height="76.79999999999995" fill="none" stroke="black"/>
-    <text x="984.5178107999999" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Shapeshifter</text>
+    <text x="984.5178107999999" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="107.552186" lengthAdjust="spacing">NOXd Shapeshifter</text>
     <rect x="528.564401264946" y="405.09999999999997" width="380.23781493505396" height="543.6999999999998" fill="none" stroke="black"/>
-    <text x="718.6833087324729" y="-931.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly</text>
+    <text x="718.6833087324729" y="-931.3501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="63.4034744" lengthAdjust="spacing">YoursTruly</text>
     <rect x="758.2334054" y="413.09999999999997" width="142.56881079999994" height="261.8999999999999" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Reactor</text>
+    <text x="829.5178108" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="66.8005744" lengthAdjust="spacing">Foo Reactor</text>
     <rect x="536.564401264946" y="598.1999999999999" width="213.88542813505398" height="317.79999999999995" fill="none" stroke="black"/>
-    <text x="643.5071153324731" y="-898.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YoursTruly Front-End</text>
+    <text x="643.5071153324731" y="-898.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="122.6624868" lengthAdjust="spacing">YoursTruly Front-End</text>
     <rect x="1060.7370484" y="598.1999999999999" width="204.06983719999994" height="76.79999999999995" fill="none" stroke="black" stroke-dasharray="5,2"/>
-    <text x="1162.7719670000001" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Shapeshifters</text>
+    <text x="1162.7719670000001" y="-657.5501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="107.552186" lengthAdjust="spacing">Other Shapeshifters</text>
     <rect x="728.6160054000001" y="12" width="226.06607939999992" height="360.3" fill="none" stroke="black"/>
-    <text x="841.6490451000001" y="-354.85020000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ShipX</text>
+    <text x="841.6490451000001" y="-354.85020000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="34.7319504" lengthAdjust="spacing">ShipX</text>
     <rect x="750.5178108" y="20" width="158" height="117.6" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-120.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorX</text>
+    <text x="829.5178108" y="-120.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="52.070748800000004" lengthAdjust="spacing">ReactorX</text>
     <rect x="758.5178108" y="28" width="142" height="76.8" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-87.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Tungsten</text>
+    <text x="829.5178108" y="-87.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="50.5760248" lengthAdjust="spacing">Tungsten</text>
     <rect x="736.6160054000001" y="172.9" width="210.06607939999992" height="166.6" fill="none" stroke="black"/>
-    <text x="841.6490451000001" y="-322.0502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ReactorY</text>
+    <text x="841.6490451000001" y="-322.0502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="52.070748800000004" lengthAdjust="spacing">ReactorY</text>
     <path d="M 90.07795248346677 740.4782022269903 C 93.21622664560374 715.4243134992636 97.76680421095742 679.0955359358569 100.9171573403762 653.9452167859968" fill="none" stroke="black"/>
     <polygon points="102.33888992919225,642.5950516186153 104.07273101670039,652.8903804177975 98.11925516783732,652.1446423156434" fill="black" stroke="black"/>
     <polygon points="88.6890313708027,751.5664224430919 86.95519028329456,741.2710936439098 92.90866613215762,742.0168317460639" fill="black" stroke="black"/>
@@ -39,7 +39,7 @@
     <path d="M 119.66654196192357 596.0056664536289 C 142.37144147287347 557.1218479332747 169.26129509909137 523.0159988851512 218.62419089043433 514.5676615935812" fill="none" stroke="black"/>
     <polygon points="229.86044158771395,513.1306277814879 220.4738936529855,517.7014830481799 219.50789866971576,511.77975579236187" fill="black" stroke="black"/>
     <polygon points="114.04853046742457,605.8469275520202 116.48033764822691,595.6937844999699 121.66764089472764,598.7090597824016" fill="black" stroke="black"/>
-    <text x="175.13061466976697" y="-574.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo SCADA</text>
+    <text x="175.13061466976697" y="-574.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="70.59173799999999" lengthAdjust="spacing">Foo SCADA</text>
     <path d="M 372.11306860735704 601.4243762981008 C 336.66181833693025 586.0318641924573 304.7987809577123 567.70529152587 283.64597375882596 540.6210266811706" fill="none" stroke="black"/>
     <polygon points="277.16354342674543,531.5123241503964 285.6166590433572,537.639708288199 280.8478596913648,541.2809378525683" fill="black" stroke="black"/>
     <polygon points="382.4667692304928,605.8024211674255 372.0966406179882,604.5939375886727 374.47435923955015,599.0851760076386" fill="black" stroke="black"/>
@@ -64,14 +64,14 @@
     <path d="M 638.309768608299 746.0973174611009 C 640.0791160055327 745.0648783074006 641.7457818082164 743.831882366752 643.6178107999999 743 C 679.7770252022376 726.9317590759274 729.7422084883581 724.6413490920013 756.7332137 707 C 777.5937579918535 693.3655265442648 790.5537357982233 668.5256614543671 806.093578405062 650.8474847643398" fill="none" stroke="black"/>
     <polygon points="813.6950723,642.1999999999999 809.3460653059248,651.6913717746954 804.839641630802,647.7300404757134" fill="black" stroke="black"/>
     <polygon points="628.3653944431227,751.9 635.490541309127,744.268992062783 638.514466379264,749.4512577034267" fill="black" stroke="black"/>
-    <text x="802.3806336978761" y="-719.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT over PROT_G</text>
+    <text x="802.3806336978761" y="-719.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="126.8205372" lengthAdjust="spacing">XPROT over PROT_G</text>
     <path d="M 600.0890242380593 740.4782022269903 C 602.3555555773805 715.4243134992636 605.6420838190248 679.0955359358569 607.9173388569384 653.9452167859968" fill="none" stroke="black"/>
     <polygon points="608.9441457266388,642.5950516186153 611.030961238635,652.8246753174076 605.055363980438,652.2840854471463" fill="black" stroke="black"/>
     <polygon points="599.0859145455797,751.5664224430919 596.9990990335835,741.3367987442997 602.9746962917806,741.877388614561" fill="black" stroke="black"/>
     <path d="M 562.223663192706 600.952361290531 C 520.6868728879372 581.8176306940663 461.083656787137 554.3602495530702 419.6065649980725 535.2530202393629" fill="none" stroke="black"/>
     <polygon points="409.210892913577,530.4640516347481 419.54870972985634,531.9233471747442 417.0382653712069,537.372903956917" fill="black" stroke="black"/>
     <polygon points="572.6475503080328,605.7543276980518 562.3097334917535,604.2950321580557 564.820177850403,598.845475375883" fill="black" stroke="black"/>
-    <text x="590.9308156365065" y="-574.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT over PROT_G</text>
+    <text x="590.9308156365065" y="-574.2502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="126.8205372" lengthAdjust="spacing">XPROT over PROT_G</text>
     <path d="M 753.8179644692949 760.7059579170084 C 843.8900457530247 762.8060581346292 1007.7233841142088 747.3440005526924 1059.7370484 711.62 C 1078.6324678399362 698.6422568668359 1084.1086318877378 669.6638786697292 1094.2787951144705 652.1557589160768" fill="none" stroke="black" stroke-dasharray="1,5"/>
     <polygon points="1100.0619228658888,642.1999999999999 1097.6331311702484,652.3538648257295 1092.4449326471085,649.3401302514033" fill="black" stroke="black"/>
     <polygon points="742.4498294,762.5300213014708 752.4579558784117,759.5572440827551 752.4416288739303,765.5572218684578" fill="black" stroke="black"/>
@@ -81,68 +81,67 @@
     <path d="M 812.5358621503055 260.87191626382173 C 809.1472224193935 255.31899933250972 804.6791166563894 249.36787996944167 802.1178108 243.8 C 799.7812609165289 238.72070450652097 798.6181938678234 233.03747943460746 796.9311478358868 227.8492351309123" fill="none" stroke="black"/>
     <polygon points="793.3708174815145,216.9 799.3160770119572,225.48218440233484 793.6101528313328,227.33756286641318" fill="black" stroke="black"/>
     <polygon points="818.5334010004455,270.7 810.7634530648473,263.7266285716237 815.8851168129514,260.60115893469606" fill="black" stroke="black"/>
-    <text x="836.5388867811837" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MechCmd</text>
+    <text x="836.5388867811837" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.9409376" lengthAdjust="spacing">MechCmd</text>
     <path d="M 848.942690277937 261.0514934662051 C 856.9671009456399 250.04300508145025 866.2460675705222 237.3134227429399 874.2536015115022 226.328087117658" fill="none" stroke="black"/>
     <polygon points="880.8997375119288,217.21041929207266 877.4335642873,227.05854820963188 872.5849714706924,223.5242664298723" fill="black" stroke="black"/>
     <polygon points="842.1621513151367,270.3535453557968 845.6283245397656,260.5054164382376 850.4769173563732,264.03969821799717" fill="black" stroke="black"/>
-    <text x="908.3091115811836" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">MechCmd</text>
+    <text x="908.3091115811836" y="-238.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.9409376" lengthAdjust="spacing">MechCmd</text>
     <path d="M 787.3206173436257 169.38671269599035 C 787.2863484957504 164.25780846399357 787.0736135059118 159.12699133169804 787.2178107999999 154 C 787.879886633864 130.45963412410654 790.179198734902 106.99384230314202 791.6598927023531 83.49076345471303" fill="none" stroke="black"/>
     <polygon points="792.3838108,72 794.7491214892979,82.16883992120503 788.7609931619614,81.79158783658283" fill="black" stroke="black"/>
     <polygon points="787.3975435394209,180.9 784.3307968477185,170.92026730172938 790.3306629242953,170.88017910968097" fill="black" stroke="black"/>
-    <text x="823.8588958009395" y="-148.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">SCADA_A()</text>
+    <text x="823.8588958009395" y="-148.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="71.7059868" lengthAdjust="spacing">SCADA_A()</text>
     <path d="M 887.9798126257184 169.63643074625548 C 883.0980528179497 144.72202087017922 876.0193766051774 108.59549119856597 871.118827292748 83.58518774334674" fill="none" stroke="black"/>
     <polygon points="868.9072432657009,72.29821069102383 873.7741086756283,81.53474797951307 867.8860736784903,82.6884567263281" fill="black" stroke="black"/>
     <polygon points="890.1403565787514,180.66292113512756 885.273491168824,171.42638384663832 891.161526165962,170.2726750998233" fill="black" stroke="black"/>
-    <text x="923.4937959428422" y="-148.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">SCADA_A()</text>
+    <text x="923.4937959428422" y="-148.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="71.7059868" lengthAdjust="spacing">SCADA_A()</text>
     <path d="M 829.5178108 409.66344281635656 C 829.5178108 383.42933442478335 829.5178108 344.6733033536147 829.5178108 318.3663776474248" fill="none" stroke="black"/>
     <polygon points="829.5178108,306.9035235624529 832.5178108,316.9035235624529 826.5178108,316.9035235624529" fill="black" stroke="black"/>
     <polygon points="829.5178108,420.7861988961696 826.5178108,410.7861988961696 832.5178108,410.7861988961696" fill="black" stroke="black"/>
-    <text x="869.338617" y="-383.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Raw PROT_G</text>
+    <text x="869.338617" y="-383.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="79.6416124" lengthAdjust="spacing">Raw PROT_G</text>
     <rect x="213.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="278.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application ..</text>
+    <text x="278.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="115.3111624" lengthAdjust="spacing">xvm_a Application ..</text>
     <rect x="362.147586" y="606.1999999999999" width="130.74044960000003" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="427.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">xvm_a Application 1</text>
+    <text x="427.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="115.3111624" lengthAdjust="spacing">xvm_a Application 1</text>
     <rect x="155.49014219999998" y="751.9" width="102.0553372" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="206.51781079999998" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application ..</text>
+    <text x="206.51781079999998" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="86.0553372" lengthAdjust="spacing">Z Application ..</text>
     <rect x="35.49014220000001" y="751.9" width="102.0553372" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="86.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Application 1</text>
+    <text x="86.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="86.0553372" lengthAdjust="spacing">Z Application 1</text>
     <rect x="19.92" y="606.1999999999999" width="169.19562159999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="104.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Z Shapeshifter Appearances</text>
+    <text x="104.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="153.1956216" lengthAdjust="spacing">Z Shapeshifter Appearances</text>
     <rect x="230.21917439999999" y="494.09999999999997" width="282.59727280000004" height="35.99999999999994" rx="6" ry="6" fill="none" stroke="black"/>
     <line x1="323.5779356" y1="494.09999999999997" x2="323.5779356" y2="530.0999999999999" stroke="black"/>
-    <text x="276.898555" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Machsrv Core</text>
-    <text x="418.19719139999995" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">PROT_A-to-XPROT Converter</text>
+    <text x="276.898555" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="77.3587612" lengthAdjust="spacing">Machsrv Core</text>
+    <text x="418.19719139999995" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="173.2385116" lengthAdjust="spacing">PROT_A-to-XPROT Converter</text>
     <rect x="924.2636186" y="606.1999999999999" width="120.50838440000007" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="984.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOXd Appearance</text>
+    <text x="984.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="104.5083844" lengthAdjust="spacing">NOXd Appearance</text>
     <rect x="766.2334054" y="606.1999999999999" width="126.56881079999994" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Ingress Shapeshifter</text>
+    <text x="829.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="110.56881080000001" lengthAdjust="spacing">Ingress Shapeshifter</text>
     <rect x="771.1388178" y="494.09999999999997" width="116.75798600000007" height="35.99999999999994" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">NOX Shapeshifter</text>
+    <text x="829.5178108" y="-507.05019999999985" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="100.757986" lengthAdjust="spacing">NOX Shapeshifter</text>
     <rect x="767.7417178000001" y="421.09999999999997" width="123.55218599999989" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-434.05019999999996" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Egress Shapeshifter</text>
+    <text x="829.5178108" y="-434.05019999999996" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="107.552186" lengthAdjust="spacing">Egress Shapeshifter</text>
     <rect x="650.5857922" y="751.9" width="91.86403719999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="696.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Other Chunks</text>
+    <text x="696.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="75.86403720000001" lengthAdjust="spacing">Other Chunks</text>
     <rect x="544.705963" y="606.1999999999999" width="131.62369560000002" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="610.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">XPROT &quot;crystalizer&quot;</text>
+    <text x="610.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="115.6236956" lengthAdjust="spacing">XPROT &quot;crystalizer&quot;</text>
     <rect x="562.9049294" y="751.9" width="69.22576279999998" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="597.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">JZ Chunk</text>
+    <text x="597.5178108" y="-764.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="53.225762800000005" lengthAdjust="spacing">JZ Chunk</text>
     <rect x="547.434536" y="847.1999999999999" width="100.16654960000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="597.5178108" y="-860.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Arbiter Chunks</text>
+    <text x="597.5178108" y="-860.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="84.1665496" lengthAdjust="spacing">Arbiter Chunks</text>
     <rect x="1170.228736" y="606.1999999999999" width="86.57814959999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="1213.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift X</text>
+    <text x="1213.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="70.5781496" lengthAdjust="spacing">Shapeshift X</text>
     <rect x="1068.7370484" y="606.1999999999999" width="83.56152479999992" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="1110.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Shapeshift 1</text>
+    <text x="1110.5178108" y="-619.1501999999999" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="67.5615248" lengthAdjust="spacing">Shapeshift 1</text>
     <rect x="766.5178108" y="36" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="793.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ</text>
+    <text x="793.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.9075372" lengthAdjust="spacing">ZZZ</text>
     <rect x="838.5178108" y="36" width="54" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="865.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY</text>
+    <text x="865.5178108" y="-48.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="29.4324744" lengthAdjust="spacing">YYY</text>
     <rect x="744.6160054" y="180.9" width="85.80361080000011" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="787.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">ZZZ Worker</text>
+    <text x="787.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="69.8036108" lengthAdjust="spacing">ZZZ Worker</text>
     <rect x="848.3535368" y="180.9" width="90.32854799999996" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="893.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">YYY Worker</text>
+    <text x="893.5178108" y="-193.8502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="74.328548" lengthAdjust="spacing">YYY Worker</text>
     <rect x="792.6424608" y="270.7" width="73.75070000000005" height="36" rx="6" ry="6" fill="none" stroke="black"/>
-    <text x="829.5178108" y="-283.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Foo Agent</text>
-    <text x="638.3634427999999" y="-964.1501999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">Complex Architecture</text>
+    <text x="829.5178108" y="-283.6502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.7507" lengthAdjust="spacing">Foo Agent</text>
+    <text x="638.3634427999999" y="-964.1501999999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="121.71129880000001" lengthAdjust="spacing">Complex Architecture</text>
   </g>
 </svg>
-

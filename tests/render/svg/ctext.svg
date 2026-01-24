@@ -15,22 +15,21 @@
     <path d="M 259.5067982408232 94 C 264.05546201205743 94 269.9363985565486 97.21639099797731 273.15278955452595 94 C 289.52135265693164 77.63143689759428 273.15278955452595 47.702712128036026 273.15278955452595 24.554068192054046" fill="none" stroke="black"/>
     <polygon points="282.11226565535884,22 281.65352758538944,32.430223362093486 275.98787514074576,30.45528478671875" fill="black" stroke="black"/>
     <ellipse cx="83.65278955452594" cy="191.84062043356596" rx="50.51058327013467" ry="43.84062043356596" fill="white" stroke="slateblue"/>
-    <text x="83.65278955452594" y="-196.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink">hello</text>
-    <text x="83.65278955452594" y="-169.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink">world</text>
+    <text x="83.65278955452594" y="-196.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink" textLength="47.520576000000005" lengthAdjust="spacing">hello</text>
+    <text x="83.65278955452594" y="-169.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink" textLength="55.43275190400001" lengthAdjust="spacing">world</text>
     <ellipse cx="179.65278955452592" cy="191.84062043356596" rx="27" ry="18" fill="white" stroke="red"/>
-    <text x="179.65278955452592" y="-186.79082043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">red</text>
+    <text x="179.65278955452592" y="-186.79082043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.3523868" lengthAdjust="spacing">red</text>
     <ellipse cx="227.65278955452592" cy="94" rx="31.85400868629725" ry="18" fill="white" stroke="green"/>
-    <text x="227.65278955452592" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">green</text>
+    <text x="227.65278955452592" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="30.1798364" lengthAdjust="spacing">green</text>
     <ellipse cx="130.65278955452595" cy="94" rx="27.17686650385314" ry="18" fill="white" stroke="blue"/>
-    <text x="130.65278955452595" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">blue</text>
+    <text x="130.65278955452595" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.3992248" lengthAdjust="spacing">blue</text>
     <ellipse cx="40.65278955452594" cy="22" rx="28.732789554525937" ry="18" fill="white" stroke="cyan"/>
-    <text x="40.65278955452594" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">cyan</text>
+    <text x="40.65278955452594" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="25.6548992" lengthAdjust="spacing">cyan</text>
     <ellipse cx="130.65278955452595" cy="22" rx="42.792335193135465" ry="18" fill="white" stroke="magenta"/>
-    <text x="130.65278955452595" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">magenta</text>
+    <text x="130.65278955452595" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="46.608212" lengthAdjust="spacing">magenta</text>
     <ellipse cx="227.65278955452592" cy="22" rx="36.54989692959285" ry="18" fill="white" stroke="yellow"/>
-    <text x="227.65278955452592" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">yellow</text>
+    <text x="227.65278955452592" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="36.9876248" lengthAdjust="spacing">yellow</text>
     <ellipse cx="318.65278955452595" cy="22" rx="36.54052389916711" ry="18" fill="white" stroke="orange"/>
-    <text x="318.65278955452595" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">orange</text>
+    <text x="318.65278955452595" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="36.974036399999996" lengthAdjust="spacing">orange</text>
   </g>
 </svg>
-

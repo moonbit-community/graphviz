@@ -21,21 +21,20 @@
     <path d="M 261.76837576571825 94 C 261.71446142207213 94 261.64475593277524 94.0381231979954 261.60663273477985 94 C 246.45231910910266 78.84568637432281 261.60663273477985 51.137128284223834 261.60663273477985 29.70569242633576" fill="none" stroke="black"/>
     <polygon points="257.7987808682287,22 262.0693392238611,31.52692664667562 256.1199295981554,32.304438772343374" fill="black" stroke="black"/>
     <ellipse cx="137.10663273477985" cy="238" rx="29.782568962208785" ry="18" fill="none" stroke="black"/>
-    <text x="137.10663273477985" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">main</text>
+    <text x="137.10663273477985" y="-232.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="27.7475128" lengthAdjust="spacing">main</text>
     <ellipse cx="218.10663273477985" cy="166" rx="30.813602309040164" ry="18" fill="none" stroke="black"/>
-    <text x="218.10663273477985" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">parse</text>
+    <text x="218.10663273477985" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="28.671524" lengthAdjust="spacing">parse</text>
     <ellipse cx="222.10663273477985" cy="94" rx="39.66174303093841" ry="18" fill="none" stroke="black"/>
-    <text x="222.10663273477985" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">execute</text>
+    <text x="222.10663273477985" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="41.4989736" lengthAdjust="spacing">execute</text>
     <ellipse cx="101.10663273477984" cy="94" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="101.10663273477984" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">init</text>
+    <text x="101.10663273477984" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="18.1269256" lengthAdjust="spacing">init</text>
     <ellipse cx="52.10663273477984" cy="166" rx="40.18663273477984" ry="18" fill="none" stroke="black"/>
-    <text x="52.10663273477984" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">cleanup</text>
+    <text x="52.10663273477984" y="-160.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="42.259924" lengthAdjust="spacing">cleanup</text>
     <ellipse cx="101.10663273477984" cy="22" rx="57.37677053558645" ry="18" fill="none" stroke="black"/>
-    <text x="101.10663273477984" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">make_string</text>
+    <text x="101.10663273477984" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="67.7517624" lengthAdjust="spacing">make_string</text>
     <ellipse cx="208.10663273477985" cy="22" rx="31.863381716722984" ry="18" fill="none" stroke="black"/>
-    <text x="208.10663273477985" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">printf</text>
+    <text x="208.10663273477985" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="30.1934248" lengthAdjust="spacing">printf</text>
     <ellipse cx="301.10663273477985" cy="22" rx="43.307851866551175" ry="18" fill="none" stroke="black"/>
-    <text x="301.10663273477985" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">compare</text>
+    <text x="301.10663273477985" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="47.355574" lengthAdjust="spacing">compare</text>
   </g>
 </svg>
-

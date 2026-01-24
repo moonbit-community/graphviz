@@ -9,13 +9,13 @@
     <rect x="21.4583748" y="114.4" width="139.7217" height="36" fill="none" stroke="black"/>
     <line x1="58.81621866856906" y1="114.4" x2="58.81621866856906" y2="150.4" stroke="black"/>
     <line x1="116.2978150590732" y1="114.4" x2="116.2978150590732" y2="150.4" stroke="black"/>
-    <text x="40.13729673428453" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> left</text>
-    <text x="87.55701686382113" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> middle</text>
-    <text x="138.7389449295366" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> right</text>
+    <text x="40.13729673428453" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.510437200000002" lengthAdjust="spacing"> left</text>
+    <text x="87.55701686382113" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="41.716388" lengthAdjust="spacing"> middle</text>
+    <text x="138.7389449295366" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="29.0655876" lengthAdjust="spacing"> right</text>
     <rect x="11.920000000000002" y="23.200000000000003" width="78.7984496" height="36" fill="none" stroke="black"/>
     <line x1="50.9387496" y1="23.200000000000003" x2="50.9387496" y2="59.2" stroke="black"/>
-    <text x="31.4293748" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> one</text>
-    <text x="70.8285996" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> two</text>
+    <text x="31.4293748" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.0187496" lengthAdjust="spacing"> one</text>
+    <text x="70.8285996" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.779700000000002" lengthAdjust="spacing"> two</text>
     <rect x="108.75105659999998" y="4" width="177.13633640000006" height="74.4" fill="none" stroke="black"/>
     <line x1="159.8498938" y1="4" x2="159.8498938" y2="78.4" stroke="black"/>
     <line x1="230.107693" y1="4" x2="230.107693" y2="78.4" stroke="black"/>
@@ -24,15 +24,14 @@
     <line x1="159.8498938" y1="28.800000000000008" x2="230.107693" y2="28.800000000000008" stroke="black"/>
     <line x1="181.8831434" y1="28.800000000000008" x2="181.8831434" y2="53.60000000000001" stroke="black"/>
     <line x1="208.0744434" y1="28.800000000000008" x2="208.0744434" y2="53.60000000000001" stroke="black"/>
-    <text x="134.3004752" y="-44.400400000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">hello</text>
-    <text x="134.3004752" y="-27.900000000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">world </text>
-    <text x="194.9787934" y="-60.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> b </text>
-    <text x="170.8665186" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">c</text>
-    <text x="194.9787934" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> d</text>
-    <text x="219.0910682" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black">e</text>
-    <text x="194.9787934" y="-11.350200000000008" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> f</text>
-    <text x="244.90189300000003" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> g </text>
-    <text x="272.791743" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black"> h</text>
+    <text x="134.3004752" y="-44.400400000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="27.1768" lengthAdjust="spacing">hello</text>
+    <text x="134.3004752" y="-27.900000000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="35.0988372" lengthAdjust="spacing">world </text>
+    <text x="194.9787934" y="-60.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing"> b </text>
+    <text x="170.8665186" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.0332496" lengthAdjust="spacing">c</text>
+    <text x="194.9787934" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="10.191300000000002" lengthAdjust="spacing"> d</text>
+    <text x="219.0910682" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.0332496" lengthAdjust="spacing">e</text>
+    <text x="194.9787934" y="-11.350200000000008" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="7.9220372" lengthAdjust="spacing"> f</text>
+    <text x="244.90189300000003" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing"> g </text>
+    <text x="272.791743" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="10.191300000000002" lengthAdjust="spacing"> h</text>
   </g>
 </svg>
-
