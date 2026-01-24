@@ -118,7 +118,11 @@ fn Lexer::skip_whitespace_and_comments(self : Lexer) -> Unit {
 
 ///|
 fn is_id_char(ch : Char) -> Bool {
-  ch.is_ascii_alphabetic() || ch.is_ascii_digit() || ch == '_' || ch == '.'
+  if ch.is_ascii() {
+    ch.is_ascii_alphabetic() || ch.is_ascii_digit() || ch == '_' || ch == '.'
+  } else {
+    !ch.is_whitespace()
+  }
 }
 
 ///|
