@@ -1,130 +1,490 @@
 digraph yours_truly {
-  graph [splines=true, nodesep=0.25, label="Complex Architecture", labelloc=t, bb="0,0,1268.73,977.60", lp="634.36,965.2", xdotversion=1.7, _draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 977.6 1268.73 977.6 1268.73 0", lwidth=1.69, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 634.36 960.15 0 121.71 20 -Complex Architecture"];
-  node [label="\N"];
-  subgraph cluster_clients_mobvm_a {
-    graph [label="xvm_a Clients", style=dashed, bb="201.15,594.20,496.89,671", lp="349.02,658.6", _draw_="S 6 -dashed c 7 -#000000 p 4 201.15 594.2 201.15 671 496.89 671 496.89 594.2", lwidth=1.1, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 349.02 653.55 0 79.46 13 -xvm_a Clients"];
-    subgraph {
-      graph [rank=same];
-      mobvm_a_req [label="xvm_a Application ..", shape=Mrecord, pos="274.52,620.20", width=1.81584, height=0.5, rects="209.15,602.20,339.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 209.15 602.2 209.15 638.2 339.89 638.2 339.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 274.52 615.15 0 115.31 20 -xvm_a Application .."];
-      mobvm_a_req1 [label="xvm_a Application 1", shape=Mrecord, pos="423.52,620.20", width=1.81584, height=0.5, rects="358.15,602.20,488.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 358.15 602.2 358.15 638.2 488.89 638.2 488.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 423.52 615.15 0 115.31 19 -xvm_a Application 1"];
-    }
-    mobvm_a_req [label="xvm_a Application ..", shape=Mrecord, pos="274.52,620.20", width=1.81584, height=0.5, rects="209.15,602.20,339.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 209.15 602.2 209.15 638.2 339.89 638.2 339.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 274.52 615.15 0 115.31 20 -xvm_a Application .."];
-    mobvm_a_req1 [label="xvm_a Application 1", shape=Mrecord, pos="423.52,620.20", width=1.81584, height=0.5, rects="358.15,602.20,488.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 358.15 602.2 358.15 638.2 488.89 638.2 488.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 423.52 615.15 0 115.31 19 -xvm_a Application 1"];
-  }
-  subgraph cluster_clients_prot_a {
-    graph [label="Z Clients", style=dashed, bb="23.49,739.90,261.55,816.70", lp="142.52,804.3", _draw_="S 6 -dashed c 7 -#000000 p 4 23.49 739.9 23.49 816.7 261.55 816.7 261.55 739.9", lwidth=0.7, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 142.52 799.25 0 50.21 9 -Z Clients"];
-    subgraph {
-      graph [rank=same];
-      z_req [label="Z Application ..", shape=Mrecord, pos="202.52,765.90", width=1.41744, height=0.5, rects="151.49,747.90,253.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 151.49 747.9 151.49 783.9 253.55 783.9 253.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 202.52 760.85 0 86.06 16 -Z Application .."];
-      z_req1 [label="Z Application 1", shape=Mrecord, pos="82.52,765.90", width=1.41744, height=0.5, rects="31.49,747.90,133.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 31.49 747.9 31.49 783.9 133.55 783.9 133.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 82.52 760.85 0 86.06 15 -Z Application 1"];
-    }
-    z_req [label="Z Application ..", shape=Mrecord, pos="202.52,765.90", width=1.41744, height=0.5, rects="151.49,747.90,253.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 151.49 747.9 151.49 783.9 253.55 783.9 253.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 202.52 760.85 0 86.06 16 -Z Application .."];
-    z_req1 [label="Z Application 1", shape=Mrecord, pos="82.52,765.90", width=1.41744, height=0.5, rects="31.49,747.90,133.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 31.49 747.9 31.49 783.9 133.55 783.9 133.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 82.52 760.85 0 86.06 15 -Z Application 1"];
-  }
-  subgraph cluster_prot_asrv {
-    graph [label="Z Shapeshifters\n(Configurable\nZ Shapeshifter)", style=dashed, bb="7.92,594.20,193.12,704.60", lp="100.52,675.4", _draw_="S 6 -dashed c 7 -#000000 p 4 7.92 594.2 7.92 704.6 193.12 704.6 193.12 594.2", lwidth=1.18, lheight=0.69, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 100.52 686.85 0 84.91 15 -Z Shapeshifters F 14 11 -Times-Roman c 7 -#000000 T 100.52 670.35 0 76.23 13 -(Configurable F 14 11 -Times-Roman c 7 -#000000 T 100.52 653.85 0 84.15 15 -Z Shapeshifter)"];
-    z_shapeshifter [label="Z Shapeshifter Appearances", shape=Mrecord, pos="100.52,620.20", width=2.34994, height=0.5, rects="15.92,602.20,185.12,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 15.92 602.2 15.92 638.2 185.12 638.2 185.12 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 100.52 615.15 0 153.2 26 -Z Shapeshifter Appearances"];
-  }
-  subgraph cluster_machsrv {
-    graph [label="Machsrv Shapeshifter", bb="218.22,482.10,516.82,558.90", lp="367.52,546.5", _draw_="c 7 -#000000 p 4 218.22 482.1 218.22 558.9 516.82 558.9 516.82 482.1", lwidth=1.65, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 367.52 541.45 0 118.87 20 -Machsrv Shapeshifter"];
-    machsrv_xprot_gen [label="<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter", shape=Mrecord, pos="367.52,508.10", width=3.92496, height=0.5, rects="226.22,490.10,319.58,526.10 319.58,490.10,508.82,526.10", _draw_="S 7 -rounded c 7 -#000000 p 4 226.22 490.1 226.22 526.1 508.82 526.1 508.82 490.1 c 7 -#000000 L 2 319.58 490.1 319.58 526.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 272.9 503.05 0 77.36 12 -Machsrv Core F 14 11 -Times-Roman c 7 -#000000 T 414.2 503.05 0 173.24 25 -PROT_A-to-XPROT Converter"];
-  }
-  subgraph cluster_accel {
-    graph [label="NOXd Shapeshifter", bb="912.26,594.20,1048.77,671", lp="980.52,658.6", _draw_="c 7 -#000000 p 4 912.26 594.2 912.26 671 1048.77 671 1048.77 594.2", lwidth=1.49, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 980.52 653.55 0 107.55 17 -NOXd Shapeshifter"];
-    accel_appearance [label="NOXd Appearance", shape=Mrecord, pos="980.52,620.20", width=1.67373, height=0.5, rects="920.26,602.20,1040.77,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 920.26 602.2 920.26 638.2 1040.77 638.2 1040.77 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 980.52 615.15 0 104.51 15 -NOXd Appearance"];
-  }
-  subgraph cluster_yours_trulybox {
-    graph [label=YoursTruly, bb="524.56,401.10,904.80,944.80", lp="714.68,932.4", _draw_="c 7 -#000000 p 4 524.56 401.1 524.56 944.8 904.8 944.8 904.8 401.1", lwidth=0.88, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 714.68 927.35 0 63.4 10 -YoursTruly"];
-    subgraph cluster_tunnel {
-      graph [label="Foo Reactor", bb="754.23,409.10,896.80,671", lp="825.52,658.6", _draw_="c 7 -#000000 p 4 754.23 409.1 754.23 671 896.8 671 896.8 409.1", lwidth=0.93, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 653.55 0 66.8 11 -Foo Reactor"];
-      accel [label="NOX Shapeshifter", shape=Mrecord, pos="825.52,508.10", width=1.62164, height=0.5, rects="767.14,490.10,883.90,526.10", _draw_="S 7 -rounded c 7 -#000000 p 4 767.14 490.1 767.14 526.1 883.9 526.1 883.9 490.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 503.05 0 100.76 16 -NOX Shapeshifter"];
-      tunnel_egress [label="Egress Shapeshifter", shape=Mrecord, pos="825.52,435.10", width=1.716, height=0.5, rects="763.74,417.10,887.29,453.10", _draw_="S 7 -rounded c 7 -#000000 p 4 763.74 417.1 763.74 453.1 887.29 453.1 887.29 417.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 430.05 0 107.55 19 -Egress Shapeshifter"];
-      tunnel_ingress [label="Ingress Shapeshifter", shape=Mrecord, pos="825.52,620.20", width=1.7579, height=0.5, rects="762.23,602.20,888.80,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 762.23 602.2 762.23 638.2 888.8 638.2 888.8 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 615.15 0 110.57 20 -Ingress Shapeshifter"];
-    }
-    subgraph cluster_frontend {
-      graph [label="YoursTruly Front-End", bb="532.56,594.20,746.45,912", lp="639.51,899.6", _draw_="c 7 -#000000 p 4 532.56 594.2 532.56 912 746.45 912 746.45 594.2", lwidth=1.7, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 639.51 894.55 0 122.66 20 -YoursTruly Front-End"];
-      others [label="Other Chunks", shape=Mrecord, pos="692.52,765.90", width=1.27589, height=0.5, rects="646.59,747.90,738.45,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 646.59 747.9 646.59 783.9 738.45 783.9 738.45 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 692.52 760.85 0 75.86 12 -Other Chunks"];
-      other_xprot [label="XPROT \"crystalizer\"", shape=Mrecord, pos="606.52,620.20", width=1.82811, height=0.5, rects="540.71,602.20,672.33,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 540.71 602.2 540.71 638.2 672.33 638.2 672.33 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 606.52 615.15 0 115.62 19 -XPROT \"crystalizer\""];
-      front_end_jz [label="JZ Chunk", shape=Mrecord, pos="593.52,765.90", width=0.96147, height=0.5, rects="558.90,747.90,628.13,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 558.9 747.9 558.9 783.9 628.13 783.9 628.13 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 760.85 0 53.23 8 -JZ Chunk"];
-      arbiter_vadam [label="Arbiter Chunks", shape=Mrecord, pos="593.52,861.20", width=1.3912, height=0.5, rects="543.43,843.20,643.60,879.20", _draw_="S 7 -rounded c 7 -#000000 p 4 543.43 843.2 543.43 879.2 643.6 879.2 643.6 843.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 856.15 0 84.17 14 -Arbiter Chunks"];
-    }
-    accel [label="NOX Shapeshifter", shape=Mrecord, pos="825.52,508.10", width=1.62164, height=0.5, rects="767.14,490.10,883.90,526.10", _draw_="S 7 -rounded c 7 -#000000 p 4 767.14 490.1 767.14 526.1 883.9 526.1 883.9 490.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 503.05 0 100.76 16 -NOX Shapeshifter"];
-    others [label="Other Chunks", shape=Mrecord, pos="692.52,765.90", width=1.27589, height=0.5, rects="646.59,747.90,738.45,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 646.59 747.9 646.59 783.9 738.45 783.9 738.45 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 692.52 760.85 0 75.86 12 -Other Chunks"];
-    other_xprot [label="XPROT \"crystalizer\"", shape=Mrecord, pos="606.52,620.20", width=1.82811, height=0.5, rects="540.71,602.20,672.33,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 540.71 602.2 540.71 638.2 672.33 638.2 672.33 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 606.52 615.15 0 115.62 19 -XPROT \"crystalizer\""];
-    front_end_jz [label="JZ Chunk", shape=Mrecord, pos="593.52,765.90", width=0.96147, height=0.5, rects="558.90,747.90,628.13,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 558.9 747.9 558.9 783.9 628.13 783.9 628.13 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 760.85 0 53.23 8 -JZ Chunk"];
-    arbiter_vadam [label="Arbiter Chunks", shape=Mrecord, pos="593.52,861.20", width=1.3912, height=0.5, rects="543.43,843.20,643.60,879.20", _draw_="S 7 -rounded c 7 -#000000 p 4 543.43 843.2 543.43 879.2 643.6 879.2 643.6 843.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 856.15 0 84.17 14 -Arbiter Chunks"];
-    tunnel_egress [label="Egress Shapeshifter", shape=Mrecord, pos="825.52,435.10", width=1.716, height=0.5, rects="763.74,417.10,887.29,453.10", _draw_="S 7 -rounded c 7 -#000000 p 4 763.74 417.1 763.74 453.1 887.29 453.1 887.29 417.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 430.05 0 107.55 19 -Egress Shapeshifter"];
-    tunnel_ingress [label="Ingress Shapeshifter", shape=Mrecord, pos="825.52,620.20", width=1.7579, height=0.5, rects="762.23,602.20,888.80,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 762.23 602.2 762.23 638.2 888.8 638.2 888.8 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 615.15 0 110.57 20 -Ingress Shapeshifter"];
-  }
-  subgraph cluster_shapeshifter_misc {
-    graph [label="Other Shapeshifters", style=dashed, bb="1056.74,594.20,1260.81,671", lp="1158.77,658.6", _draw_="S 6 -dashed c 7 -#000000 p 4 1056.74 594.2 1056.74 671 1260.81 671 1260.81 594.2", lwidth=1.49, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1158.77 653.55 0 107.55 19 -Other Shapeshifters"];
-    handle_1 [label="Shapeshift 1", shape=Mrecord, pos="1106.52,620.20", width=1.16058, height=0.5, rects="1064.74,602.20,1148.30,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 1064.74 602.2 1064.74 638.2 1148.3 638.2 1148.3 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1106.52 615.15 0 67.56 12 -Shapeshift 1"];
-    handle_x [label="Shapeshift X", shape=Mrecord, pos="1209.52,620.20", width=1.20247, height=0.5, rects="1166.23,602.20,1252.81,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 1166.23 602.2 1166.23 638.2 1252.81 638.2 1252.81 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1209.52 615.15 0 70.58 12 -Shapeshift X"];
-  }
-  subgraph cluster_space_ship_a {
-    graph [label=ShipX, bb="724.62,8,950.68,368.30", lp="837.65,355.9", _draw_="c 7 -#000000 p 4 724.62 8 724.62 368.3 950.68 368.3 950.68 8", lwidth=0.48, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 837.65 350.85 0 34.73 5 -ShipX"];
-    subgraph cluster_vm_a {
-      graph [label=ReactorX, bb="746.52,16,904.52,133.60", lp="825.52,121.2", _draw_="c 7 -#000000 p 4 746.52 16 746.52 133.6 904.52 133.6 904.52 16", lwidth=0.72, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 116.15 0 52.07 8 -ReactorX"];
-      subgraph cluster_tungsten {
-        graph [label=Tungsten, bb="754.52,24,896.52,100.80", lp="825.52,88.4", _draw_="c 7 -#000000 p 4 754.52 24 754.52 100.8 896.52 100.8 896.52 24", lwidth=0.7, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 83.35 0 50.58 8 -Tungsten"];
-        yyy [label=YYY, shape=Mrecord, pos="861.52,50", width=0.75, height=0.5, rects="834.52,32,887.95,68", _draw_="S 7 -rounded c 7 -#000000 p 4 834.52 32 834.52 68 888.52 68 888.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 861.52 44.95 0 29.43 3 -YYY"];
-        zzz [label=ZZZ, shape=Mrecord, pos="789.52,50", width=0.75, height=0.5, rects="762.52,32,816.43,68", _draw_="S 7 -rounded c 7 -#000000 p 4 762.52 32 762.52 68 816.52 68 816.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 789.52 44.95 0 24.91 3 -ZZZ"];
-      }
-      yyy [label=YYY, shape=Mrecord, pos="861.52,50", width=0.75, height=0.5, rects="834.52,32,887.95,68", _draw_="S 7 -rounded c 7 -#000000 p 4 834.52 32 834.52 68 888.52 68 888.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 861.52 44.95 0 29.43 3 -YYY"];
-      zzz [label=ZZZ, shape=Mrecord, pos="789.52,50", width=0.75, height=0.5, rects="762.52,32,816.43,68", _draw_="S 7 -rounded c 7 -#000000 p 4 762.52 32 762.52 68 816.52 68 816.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 789.52 44.95 0 24.91 3 -ZZZ"];
-    }
-    subgraph cluster_piston {
-      graph [label=ReactorY, bb="732.62,168.90,942.68,335.50", lp="837.65,323.1", _draw_="c 7 -#000000 p 4 732.62 168.9 732.62 335.5 942.68 335.5 942.68 168.9", lwidth=0.72, lheight=0.23, _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 837.65 318.05 0 52.07 8 -ReactorY"];
-      foo_agent [label="{Foo Agent}", shape=Mrecord, pos="825.52,284.70", width=1.02432, height=0.5, rects="788.64,266.70,862.39,302.70", _draw_="S 7 -rounded c 7 -#000000 p 4 788.64 266.7 788.64 302.7 862.39 302.7 862.39 266.7", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 279.65 0 57.75 9 -Foo Agent"];
-      yyy_worker [label="{YYY Worker}", shape=Mrecord, pos="889.52,194.90", width=1.25456, height=0.5, rects="844.35,176.90,934.68,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 844.35 176.9 844.35 212.9 934.68 212.9 934.68 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 889.52 189.85 0 74.33 10 -YYY Worker"];
-      zzz_worker [label="{ZZZ Worker}", shape=Mrecord, pos="783.52,194.90", width=1.19172, height=0.5, rects="740.62,176.90,826.42,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 740.62 176.9 740.62 212.9 826.42 212.9 826.42 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 783.52 189.85 0 69.8 10 -ZZZ Worker"];
-    }
-    yyy [label=YYY, shape=Mrecord, pos="861.52,50", width=0.75, height=0.5, rects="834.52,32,887.95,68", _draw_="S 7 -rounded c 7 -#000000 p 4 834.52 32 834.52 68 888.52 68 888.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 861.52 44.95 0 29.43 3 -YYY"];
-    zzz [label=ZZZ, shape=Mrecord, pos="789.52,50", width=0.75, height=0.5, rects="762.52,32,816.43,68", _draw_="S 7 -rounded c 7 -#000000 p 4 762.52 32 762.52 68 816.52 68 816.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 789.52 44.95 0 24.91 3 -ZZZ"];
-    foo_agent [label="{Foo Agent}", shape=Mrecord, pos="825.52,284.70", width=1.02432, height=0.5, rects="788.64,266.70,862.39,302.70", _draw_="S 7 -rounded c 7 -#000000 p 4 788.64 266.7 788.64 302.7 862.39 302.7 862.39 266.7", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 279.65 0 57.75 9 -Foo Agent"];
-    yyy_worker [label="{YYY Worker}", shape=Mrecord, pos="889.52,194.90", width=1.25456, height=0.5, rects="844.35,176.90,934.68,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 844.35 176.9 844.35 212.9 934.68 212.9 934.68 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 889.52 189.85 0 74.33 10 -YYY Worker"];
-    zzz_worker [label="{ZZZ Worker}", shape=Mrecord, pos="783.52,194.90", width=1.19172, height=0.5, rects="740.62,176.90,826.42,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 740.62 176.9 740.62 212.9 826.42 212.9 826.42 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 783.52 189.85 0 69.8 10 -ZZZ Worker"];
-  }
-  yyy [label=YYY, shape=Mrecord, pos="861.52,50", width=0.75, height=0.5, rects="834.52,32,887.95,68", _draw_="S 7 -rounded c 7 -#000000 p 4 834.52 32 834.52 68 888.52 68 888.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 861.52 44.95 0 29.43 3 -YYY"];
-  zzz [label=ZZZ, shape=Mrecord, pos="789.52,50", width=0.75, height=0.5, rects="762.52,32,816.43,68", _draw_="S 7 -rounded c 7 -#000000 p 4 762.52 32 762.52 68 816.52 68 816.52 32", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 789.52 44.95 0 24.91 3 -ZZZ"];
-  accel [label="NOX Shapeshifter", shape=Mrecord, pos="825.52,508.10", width=1.62164, height=0.5, rects="767.14,490.10,883.90,526.10", _draw_="S 7 -rounded c 7 -#000000 p 4 767.14 490.1 767.14 526.1 883.9 526.1 883.9 490.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 503.05 0 100.76 16 -NOX Shapeshifter"];
-  z_req [label="Z Application ..", shape=Mrecord, pos="202.52,765.90", width=1.41744, height=0.5, rects="151.49,747.90,253.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 151.49 747.9 151.49 783.9 253.55 783.9 253.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 202.52 760.85 0 86.06 16 -Z Application .."];
-  others [label="Other Chunks", shape=Mrecord, pos="692.52,765.90", width=1.27589, height=0.5, rects="646.59,747.90,738.45,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 646.59 747.9 646.59 783.9 738.45 783.9 738.45 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 692.52 760.85 0 75.86 12 -Other Chunks"];
-  z_req1 [label="Z Application 1", shape=Mrecord, pos="82.52,765.90", width=1.41744, height=0.5, rects="31.49,747.90,133.55,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 31.49 747.9 31.49 783.9 133.55 783.9 133.55 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 82.52 760.85 0 86.06 15 -Z Application 1"];
-  handle_1 [label="Shapeshift 1", shape=Mrecord, pos="1106.52,620.20", width=1.16058, height=0.5, rects="1064.74,602.20,1148.30,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 1064.74 602.2 1064.74 638.2 1148.3 638.2 1148.3 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1106.52 615.15 0 67.56 12 -Shapeshift 1"];
-  handle_x [label="Shapeshift X", shape=Mrecord, pos="1209.52,620.20", width=1.20247, height=0.5, rects="1166.23,602.20,1252.81,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 1166.23 602.2 1166.23 638.2 1252.81 638.2 1252.81 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1209.52 615.15 0 70.58 12 -Shapeshift X"];
-  foo_agent [label="{Foo Agent}", shape=Mrecord, pos="825.52,284.70", width=1.02432, height=0.5, rects="788.64,266.70,862.39,302.70", _draw_="S 7 -rounded c 7 -#000000 p 4 788.64 266.7 788.64 302.7 862.39 302.7 862.39 266.7", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 279.65 0 57.75 9 -Foo Agent"];
-  yyy_worker [label="{YYY Worker}", shape=Mrecord, pos="889.52,194.90", width=1.25456, height=0.5, rects="844.35,176.90,934.68,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 844.35 176.9 844.35 212.9 934.68 212.9 934.68 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 889.52 189.85 0 74.33 10 -YYY Worker"];
-  zzz_worker [label="{ZZZ Worker}", shape=Mrecord, pos="783.52,194.90", width=1.19172, height=0.5, rects="740.62,176.90,826.42,212.90", _draw_="S 7 -rounded c 7 -#000000 p 4 740.62 176.9 740.62 212.9 826.42 212.9 826.42 176.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 783.52 189.85 0 69.8 10 -ZZZ Worker"];
-  mobvm_a_req [label="xvm_a Application ..", shape=Mrecord, pos="274.52,620.20", width=1.81584, height=0.5, rects="209.15,602.20,339.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 209.15 602.2 209.15 638.2 339.89 638.2 339.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 274.52 615.15 0 115.31 20 -xvm_a Application .."];
-  other_xprot [label="XPROT \"crystalizer\"", shape=Mrecord, pos="606.52,620.20", width=1.82811, height=0.5, rects="540.71,602.20,672.33,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 540.71 602.2 540.71 638.2 672.33 638.2 672.33 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 606.52 615.15 0 115.62 19 -XPROT \"crystalizer\""];
-  front_end_jz [label="JZ Chunk", shape=Mrecord, pos="593.52,765.90", width=0.96147, height=0.5, rects="558.90,747.90,628.13,783.90", _draw_="S 7 -rounded c 7 -#000000 p 4 558.9 747.9 558.9 783.9 628.13 783.9 628.13 747.9", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 760.85 0 53.23 8 -JZ Chunk"];
-  mobvm_a_req1 [label="xvm_a Application 1", shape=Mrecord, pos="423.52,620.20", width=1.81584, height=0.5, rects="358.15,602.20,488.89,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 358.15 602.2 358.15 638.2 488.89 638.2 488.89 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 423.52 615.15 0 115.31 19 -xvm_a Application 1"];
-  arbiter_vadam [label="Arbiter Chunks", shape=Mrecord, pos="593.52,861.20", width=1.3912, height=0.5, rects="543.43,843.20,643.60,879.20", _draw_="S 7 -rounded c 7 -#000000 p 4 543.43 843.2 543.43 879.2 643.6 879.2 643.6 843.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 593.52 856.15 0 84.17 14 -Arbiter Chunks"];
-  tunnel_egress [label="Egress Shapeshifter", shape=Mrecord, pos="825.52,435.10", width=1.716, height=0.5, rects="763.74,417.10,887.29,453.10", _draw_="S 7 -rounded c 7 -#000000 p 4 763.74 417.1 763.74 453.1 887.29 453.1 887.29 417.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 430.05 0 107.55 19 -Egress Shapeshifter"];
-  tunnel_ingress [label="Ingress Shapeshifter", shape=Mrecord, pos="825.52,620.20", width=1.7579, height=0.5, rects="762.23,602.20,888.80,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 762.23 602.2 762.23 638.2 888.8 638.2 888.8 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 825.52 615.15 0 110.57 20 -Ingress Shapeshifter"];
-  z_shapeshifter [label="Z Shapeshifter Appearances", shape=Mrecord, pos="100.52,620.20", width=2.34994, height=0.5, rects="15.92,602.20,185.12,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 15.92 602.2 15.92 638.2 185.12 638.2 185.12 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 100.52 615.15 0 153.2 26 -Z Shapeshifter Appearances"];
-  accel_appearance [label="NOXd Appearance", shape=Mrecord, pos="980.52,620.20", width=1.67373, height=0.5, rects="920.26,602.20,1040.77,638.20", _draw_="S 7 -rounded c 7 -#000000 p 4 920.26 602.2 920.26 638.2 1040.77 638.2 1040.77 602.2", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 980.52 615.15 0 104.51 15 -NOXd Appearance"];
-  machsrv_xprot_gen [label="<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter", shape=Mrecord, pos="367.52,508.10", width=3.92496, height=0.5, rects="226.22,490.10,319.58,526.10 319.58,490.10,508.82,526.10", _draw_="S 7 -rounded c 7 -#000000 p 4 226.22 490.1 226.22 526.1 508.82 526.1 508.82 490.1 c 7 -#000000 L 2 319.58 490.1 319.58 526.1", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 272.9 503.05 0 77.36 12 -Machsrv Core F 14 11 -Times-Roman c 7 -#000000 T 414.2 503.05 0 173.24 25 -PROT_A-to-XPROT Converter"];
-  z_req1 -> z_shapeshifter [dir=both, constraint=true, pos="s,84.69,747.57 e,98.34,638.60 86.08,736.48 89.22,711.42 93.77,675.10 96.92,649.95", _draw_="c 7 -#000000 B 4 86.08 736.48 89.22 711.42 93.77 675.1 96.92 649.95", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 98.34 638.6 100.07 648.89 94.12 648.14", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 84.69 747.57 82.96 737.27 88.91 738.02"];
-  z_req -> z_shapeshifter [dir=both, constraint=true, pos="s,188.79,747.63 e,110.53,638.47 181.96,738.97 158.80,709.54 136.25,679.67 116.34,647.93", _draw_="c 7 -#000000 B 4 181.96 738.97 158.8 709.54 136.25 679.67 116.34 647.93", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 110.53 638.47 118.37 645.37 113.28 648.54", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 188.79 747.63 180.25 741.63 184.96 737.92"];
-  z_shapeshifter -> machsrv_xprot_gen:f0 [label="Foo SCADA", dir=both, constraint=true, pos="s,110.05,601.85 e,225.86,509.13 115.67,592.01 138.37,553.12 165.26,519.02 214.62,510.57", lp="171.13,575.30", _draw_="c 7 -#000000 B 4 115.67 592.01 138.37 553.12 165.26 519.02 214.62 510.57", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 171.13 570.25 0 70.59 9 -Foo SCADA", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 225.86 509.13 216.47 513.7 215.51 507.78", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 110.05 601.85 112.48 591.69 117.67 594.71"];
-  mobvm_a_req1 -> machsrv_xprot_gen:f0 [dir=both, constraint=true, pos="s,378.47,601.80 e,273.16,527.51 368.11,597.42 332.66,582.03 300.80,563.71 279.65,536.62", _draw_="c 7 -#000000 B 4 368.11 597.42 332.66 582.03 300.8 563.71 279.65 536.62", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 273.16 527.51 281.62 533.64 276.85 537.28", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 378.47 601.8 368.1 600.59 370.47 595.09"];
-  mobvm_a_req -> machsrv_xprot_gen:f0 [dir=both, constraint=true, pos="s,274.21,601.88 e,272.90,527.24 274.02,590.66 273.71,573.14 273.33,551.65 273.10,538.68", _draw_="c 7 -#000000 B 4 274.02 590.66 273.71 573.14 273.33 551.65 273.1 538.68", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 272.9 527.24 276.08 537.18 270.08 537.29", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 274.21 601.88 271.04 591.93 277.04 591.83"];
-  tunnel_ingress -> accel [dir=both, pos="s,825.52,602 e,825.52,526.55 825.52,590.61 825.52,574.44 825.52,554.28 825.52,538.06", _draw_="c 7 -#000000 B 4 825.52 590.61 825.52 574.44 825.52 554.28 825.52 538.06", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 526.55 828.52 536.55 822.52 536.55", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 602 822.52 592 828.52 592"];
-  accel -> tunnel_egress [dir=both, pos="s,825.52,489.91 e,825.52,453.13 825.52,478.68 825.52,473.94 825.52,469.04 825.52,464.31", _draw_="c 7 -#000000 B 4 825.52 478.68 825.52 473.94 825.52 469.04 825.52 464.31", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 453.13 828.52 463.13 822.52 463.13", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 489.91 822.52 479.91 828.52 479.91"];
-  accel_appearance -> accel [dir=both, constraint=true, pos="s,953.25,601.80 e,845.87,526.22 943.76,595.68 913.29,575.95 883.25,555.64 854.69,533.24", _draw_="c 7 -#000000 B 4 943.76 595.68 913.29 575.95 883.25 555.64 854.69 533.24", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 845.87 526.22 855.59 530.05 851.88 534.76", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 953.25 601.8 943.23 598.89 946.48 593.85"];
-  arbiter_vadam -> other_xprot [style=dotted, pos="e,596.34,638.20 571.82,843.20 564.39,834.19 553.47,827.17 549.52,816.18 540.56,791.27 543.70,762.59 549.52,736.76 556.67,705.02 577.44,677.99 591.40,648.60", _draw_="S 6 -dotted c 7 -#000000 B 10 571.82 843.2 564.39 834.19 553.47 827.17 549.52 816.18 540.56 791.27 543.7 762.59 549.52 736.76 556.67 705.02 577.44 677.99 591.4 648.6", _hdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 596.34 638.2 594.76 648.52 589.34 645.95"];
-  arbiter_vadam -> front_end_jz [style=dotted, pos="e,593.52,784.22 593.52,843.09 593.52,829.76 593.52,810.96 593.52,795.37", _draw_="S 6 -dotted c 7 -#000000 B 4 593.52 843.09 593.52 829.76 593.52 810.96 593.52 795.37", _hdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 593.52 784.22 596.52 794.22 590.52 794.22"];
-  arbiter_vadam -> others [style=dotted, pos="e,674.14,784.22 611.68,843.09 626.93,828.71 648.93,807.98 666.13,791.77", _draw_="S 6 -dotted c 7 -#000000 B 4 611.68 843.09 626.93 828.71 648.93 807.98 666.13 791.77", _hdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 674.14 784.22 668.92 793.26 664.8 788.9"];
-  front_end_jz -> tunnel_ingress [dir=both, label="XPROT over PROT_G", pos="s,624.37,747.90 e,809.70,638.20 634.31,742.10 636.08,741.06 637.75,739.83 639.62,739 675.78,722.93 725.74,720.64 752.73,703 773.59,689.37 786.55,664.53 802.09,646.85", lp="798.38,721", _draw_="c 7 -#000000 B 10 634.31 742.1 636.08 741.06 637.75 739.83 639.62 739 675.78 722.93 725.74 720.64 752.73 703 773.59 689.37 786.55 664.53 802.09 646.85", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 798.38 715.95 0 126.82 17 -XPROT over PROT_G", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 809.7 638.2 805.35 647.69 800.84 643.73", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 624.37 747.9 631.49 740.27 634.51 745.45"];
-  front_end_jz -> other_xprot [dir=both, pos="s,595.09,747.57 e,604.94,638.60 596.09,736.48 598.36,711.42 601.64,675.10 603.92,649.95", _draw_="c 7 -#000000 B 4 596.09 736.48 598.36 711.42 601.64 675.1 603.92 649.95", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 604.94 638.6 607.03 648.82 601.06 648.28", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 595.09 747.57 593 737.34 598.97 737.88"];
-  other_xprot -> machsrv_xprot_gen [dir=both, label="XPROT over PROT_G", constraint=true, pos="s,568.65,601.75 e,405.21,526.46 558.22,596.95 516.69,577.82 457.08,550.36 415.61,531.25", lp="586.93,575.30", _draw_="c 7 -#000000 B 4 558.22 596.95 516.69 577.82 457.08 550.36 415.61 531.25", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 586.93 570.25 0 126.82 17 -XPROT over PROT_G", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 405.21 526.46 415.55 527.92 413.04 533.37", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 568.65 601.75 558.31 600.3 560.82 594.85"];
-  others -> handle_1 [style=dotted, dir=both, constraint=true, pos="s,738.45,758.53 e,1096.06,638.20 749.82,756.71 839.89,758.81 1003.72,743.34 1055.74,707.62 1074.63,694.64 1080.11,665.66 1090.28,648.16", _draw_="S 6 -dotted c 7 -#000000 B 7 749.82 756.71 839.89 758.81 1003.72 743.34 1055.74 707.62 1074.63 694.64 1080.11 665.66 1090.28 648.16", _hdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 1096.06 638.2 1093.63 648.35 1088.44 645.34", _tdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 738.45 758.53 748.46 755.56 748.44 761.56"];
-  others -> handle_x [style=dotted, dir=both, constraint=true, pos="s,738.45,760.14 e,1198.75,638.20 749.87,758.71 868.73,759.27 1090.25,751.34 1157.23,707.62 1176.59,694.98 1182.45,665.45 1192.84,648.08", _draw_="S 6 -dotted c 7 -#000000 B 7 749.87 758.71 868.73 759.27 1090.25 751.34 1157.23 707.62 1176.59 694.98 1182.45 665.45 1192.84 648.08", _hdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 1198.75 638.2 1196.19 648.32 1191.04 645.24", _tdraw_="S 6 -dotted c 7 -#000000 C 7 -#000000 P 3 738.45 760.14 748.43 757.07 748.47 763.07"];
-  foo_agent -> zzz_worker [dir=both, constraint=true, label=MechCmd, pos="s,814.53,266.70 e,789.37,212.90 808.54,256.87 805.15,251.32 800.68,245.37 798.12,239.80 795.78,234.72 794.62,229.04 792.93,223.85", lp="832.54,239.80", _draw_="c 7 -#000000 B 7 808.54 256.87 805.15 251.32 800.68 245.37 798.12 239.8 795.78 234.72 794.62 229.04 792.93 223.85", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 832.54 234.75 0 57.94 7 -MechCmd", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 789.37 212.9 795.32 221.48 789.61 223.34", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 814.53 266.7 806.76 259.73 811.89 256.6"];
-  foo_agent -> yyy_worker [dir=both, constraint=true, label=MechCmd, pos="s,838.16,266.35 e,876.90,213.21 844.94,257.05 852.97,246.04 862.25,233.31 870.25,222.33", lp="904.31,239.80", _draw_="c 7 -#000000 B 4 844.94 257.05 852.97 246.04 862.25 233.31 870.25 222.33", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 904.31 234.75 0 57.94 7 -MechCmd", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 876.9 213.21 873.43 223.06 868.58 219.52", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 838.16 266.35 841.63 256.51 846.48 260.04"];
-  zzz_worker -> zzz [dir=both, constraint=true, label="SCADA_A()", pos="s,783.40,176.90 e,788.38,68 783.32,165.39 783.29,160.26 783.07,155.13 783.22,150 783.88,126.46 786.18,102.99 787.66,79.49", lp="819.86,150", _draw_="c 7 -#000000 B 7 783.32 165.39 783.29 160.26 783.07 155.13 783.22 150 783.88 126.46 786.18 102.99 787.66 79.49", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 819.86 144.95 0 71.71 9 -SCADA_A()", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 788.38 68 790.75 78.17 784.76 77.79", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 783.4 176.9 780.33 166.92 786.33 166.88"];
-  yyy_worker -> yyy [dir=both, constraint=true, label="SCADA_A()", pos="s,886.14,176.66 e,864.91,68.30 883.98,165.64 879.10,140.72 872.02,104.60 867.12,79.59", lp="919.49,150", _draw_="c 7 -#000000 B 4 883.98 165.64 879.1 140.72 872.02 104.6 867.12 79.59", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 919.49 144.95 0 71.71 9 -SCADA_A()", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 864.91 68.3 869.77 77.53 863.89 78.69", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 886.14 176.66 881.27 167.43 887.16 166.27"];
-  tunnel_egress -> foo_agent [dir=both, label="Raw PROT_G", constraint=true, pos="s,825.52,416.79 e,825.52,302.90 825.52,405.66 825.52,379.43 825.52,340.67 825.52,314.37", lp="865.34,384.70", _draw_="c 7 -#000000 B 4 825.52 405.66 825.52 379.43 825.52 340.67 825.52 314.37", _ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 865.34 379.65 0 79.64 10 -Raw PROT_G", _hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 302.9 828.52 312.9 822.52 312.9", _tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 825.52 416.79 822.52 406.79 828.52 406.79"];
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 978.5 1270 978.5 1270 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 635 961.2 0 120.75 20 -Complex Architecture ",
+		bb="0,0,1270,978.5",
+		label="Complex Architecture",
+		labelloc=t,
+		lheight=0.23,
+		lp="635,966.25",
+		lwidth=1.68,
+		nodesep=0.25,
+		splines=true,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_clients_mobvm_a {
+		graph [_draw_="S 6 -dashed c 7 -#000000 p 4 200 594.5 200 672 496 672 496 594.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 348 654.7 0 79.5 13 -xvm_a Clients ",
+			bb="200,594.5,496,672",
+			label="xvm_a Clients",
+			lheight=0.23,
+			lp="348,659.75",
+			lwidth=1.10,
+			style=dashed
+		];
+		{
+			graph [rank=same];
+			mobvm_a_req	[_draw_="c 7 -#000000 B 25 220.25 603 220.25 603 327.75 603 327.75 603 333.75 603 339.75 609 339.75 615 339.75 615 339.75 627 339.75 627 \
+339.75 633 333.75 639 327.75 639 327.75 639 220.25 639 220.25 639 214.25 639 208.25 633 208.25 627 208.25 627 208.25 615 208.25 \
+615 208.25 609 214.25 603 220.25 603 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 274 615.95 0 115.5 20 -xvm_a Application .. ",
+				height=0.51389,
+				label="xvm_a Application ..",
+				pos="274,621",
+				shape=Mrecord,
+				width=1.8264];
+			mobvm_a_req1	[_draw_="c 7 -#000000 B 25 369.62 603 369.62 603 476.38 603 476.38 603 482.38 603 488.38 609 488.38 615 488.38 615 488.38 627 488.38 627 \
+488.38 633 482.38 639 476.38 639 476.38 639 369.62 639 369.62 639 363.62 639 357.62 633 357.62 627 357.62 627 357.62 615 357.62 \
+615 357.62 609 363.62 603 369.62 603 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 423 615.95 0 114.75 19 -xvm_a Application 1 ",
+				height=0.51389,
+				label="xvm_a Application 1",
+				pos="423,621",
+				shape=Mrecord,
+				width=1.816];
+		}
+	}
+	subgraph cluster_clients_prot_a {
+		graph [_draw_="S 6 -dashed c 7 -#000000 p 4 23 739.5 23 817 261 817 261 739.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 142 799.7 0 50.25 9 -Z Clients ",
+			bb="23,739.5,261,817",
+			label="Z Clients",
+			lheight=0.23,
+			lp="142,804.75",
+			lwidth=0.70,
+			style=dashed
+		];
+		{
+			graph [rank=same];
+			z_req	[_draw_="c 7 -#000000 B 25 162.88 748 162.88 748 241.12 748 241.12 748 247.12 748 253.12 754 253.12 760 253.12 760 253.12 772 253.12 772 \
+253.12 778 247.12 784 241.12 784 241.12 784 162.88 784 162.88 784 156.88 784 150.88 778 150.88 772 150.88 772 150.88 760 150.88 \
+760 150.88 754 156.88 748 162.88 748 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 202 760.95 0 86.25 16 -Z Application .. ",
+				height=0.51389,
+				label="Z Application ..",
+				pos="202,766",
+				shape=Mrecord,
+				width=1.4201];
+			z_req1	[_draw_="c 7 -#000000 B 25 43.25 748 43.25 748 120.75 748 120.75 748 126.75 748 132.75 754 132.75 760 132.75 760 132.75 772 132.75 772 132.75 \
+778 126.75 784 120.75 784 120.75 784 43.25 784 43.25 784 37.25 784 31.25 778 31.25 772 31.25 772 31.25 760 31.25 760 31.25 754 37.25 \
+748 43.25 748 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 82 760.95 0 85.5 15 -Z Application 1 ",
+				height=0.51389,
+				label="Z Application 1",
+				pos="82,766",
+				shape=Mrecord,
+				width=1.4097];
+		}
+	}
+	subgraph cluster_prot_asrv {
+		graph [_draw_="S 6 -dashed c 7 -#000000 p 4 8 594.5 8 705 192 705 192 594.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 100 687.7 0 84.75 15 -Z Shapeshifters F 14 11 -Times-Roman c 7 -#000000 T 100 671.2 0 75.75 \
+13 -(Configurable F 14 11 -Times-Roman c 7 -#000000 T 100 654.7 0 84 15 -Z Shapeshifter) ",
+			bb="8,594.5,192,705",
+			label="Z Shapeshifters\n(Configurable\nZ Shapeshifter)",
+			lheight=0.69,
+			lp="100,676.25",
+			lwidth=1.18,
+			style=dashed
+		];
+		z_shapeshifter	[_draw_="c 7 -#000000 B 25 27.88 603 27.88 603 172.12 603 172.12 603 178.12 603 184.12 609 184.12 615 184.12 615 184.12 627 184.12 627 184.12 \
+633 178.12 639 172.12 639 172.12 639 27.87 639 27.87 639 21.87 639 15.88 633 15.88 627 15.88 627 15.88 615 15.88 615 15.88 609 21.88 \
+603 27.88 603 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 100 615.95 0 152.25 26 -Z Shapeshifter Appearances ",
+			height=0.51389,
+			label="Z Shapeshifter Appearances",
+			pos="100,621",
+			shape=Mrecord,
+			width=2.3368];
+	}
+	subgraph cluster_machsrv {
+		graph [_draw_="c 7 -#000000 p 4 218 482.5 218 560 516 560 516 482.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 367 542.7 0 119.25 20 -Machsrv Shapeshifter ",
+			bb="218,482.5,516,560",
+			label="Machsrv Shapeshifter",
+			lheight=0.23,
+			lp="367,547.75",
+			lwidth=1.66
+		];
+		machsrv_xprot_gen	[_draw_="c 7 -#000000 B 25 238.12 491 238.12 491 495.88 491 495.88 491 501.88 491 507.88 497 507.88 503 507.88 503 507.88 515 507.88 515 \
+507.88 521 501.88 527 495.88 527 495.88 527 238.12 527 238.12 527 232.12 527 226.12 521 226.12 515 226.12 515 226.12 503 226.12 \
+503 226.12 497 232.12 491 238.12 491 c 7 -#000000 L 2 320.12 491 320.12 527 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 273.12 503.95 0 78 12 -Machsrv Core F 14 11 -Times-Roman c 7 -#000000 T 414 503.95 0 171.75 \
+25 -PROT_A-to-XPROT Converter ",
+			height=0.51389,
+			label="<f0>Machsrv Core|<f1>PROT_A-to-XPROT Converter",
+			pos="367,509",
+			shape=Mrecord,
+			width=3.9132];
+	}
+	subgraph cluster_accel {
+		graph [_draw_="c 7 -#000000 p 4 914 594.5 914 672 1050 672 1050 594.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 982 654.7 0 107.25 17 -NOXd Shapeshifter ",
+			bb="914,594.5,1050,672",
+			label="NOXd Shapeshifter",
+			lheight=0.23,
+			lp="982,659.75",
+			lwidth=1.49
+		];
+		accel_appearance	[_draw_="c 7 -#000000 B 25 934.25 603 934.25 603 1029.75 603 1029.75 603 1035.75 603 1041.75 609 1041.75 615 1041.75 615 1041.75 627 1041.75 \
+627 1041.75 633 1035.75 639 1029.75 639 1029.75 639 934.25 639 934.25 639 928.25 639 922.25 633 922.25 627 922.25 627 922.25 615 \
+922.25 615 922.25 609 928.25 603 934.25 603 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 982 615.95 0 103.5 15 -NOXd Appearance ",
+			height=0.51389,
+			label="NOXd Appearance",
+			pos="982,621",
+			shape=Mrecord,
+			width=1.6597];
+	}
+	subgraph cluster_yours_trulybox {
+		graph [_draw_="c 7 -#000000 p 4 524 400.5 524 946 906 946 906 400.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 715 928.7 0 62.25 10 -YoursTruly ",
+			bb="524,400.5,906,946",
+			label=YoursTruly,
+			lheight=0.23,
+			lp="715,933.75",
+			lwidth=0.86
+		];
+		subgraph cluster_tunnel {
+			graph [_draw_="c 7 -#000000 p 4 756 408.5 756 672 898 672 898 408.5 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 827 654.7 0 66.75 11 -Foo Reactor ",
+				bb="756,408.5,898,672",
+				label="Foo Reactor",
+				lheight=0.23,
+				lp="827,659.75",
+				lwidth=0.93
+			];
+			tunnel_ingress	[_draw_="c 7 -#000000 B 25 775.88 603 775.88 603 878.12 603 878.12 603 884.12 603 890.12 609 890.12 615 890.12 615 890.12 627 890.12 627 \
+890.12 633 884.12 639 878.12 639 878.12 639 775.88 639 775.88 639 769.88 639 763.88 633 763.88 627 763.88 627 763.88 615 763.88 \
+615 763.88 609 769.88 603 775.88 603 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 827 615.95 0 110.25 20 -Ingress Shapeshifter ",
+				height=0.51389,
+				label="Ingress Shapeshifter",
+				pos="827,621",
+				shape=Mrecord,
+				width=1.7535];
+			accel	[_draw_="c 7 -#000000 B 25 780.75 491 780.75 491 873.25 491 873.25 491 879.25 491 885.25 497 885.25 503 885.25 503 885.25 515 885.25 515 \
+885.25 521 879.25 527 873.25 527 873.25 527 780.75 527 780.75 527 774.75 527 768.75 521 768.75 515 768.75 515 768.75 503 768.75 \
+503 768.75 497 774.75 491 780.75 491 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 827 503.95 0 100.5 16 -NOX Shapeshifter ",
+				height=0.51389,
+				label="NOX Shapeshifter",
+				pos="827,509",
+				shape=Mrecord,
+				width=1.6181];
+			tunnel_ingress -> accel	[_draw_="c 7 -#000000 B 4 827 591.43 827 575.28 827 555.14 827 538.93 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 830.5 538.94 827 528.94 823.5 538.94 ",
+				_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 823.5 591.3 827 601.3 830.5 591.3 ",
+				dir=both,
+				pos="s,827,602.81 e,827,527.43 827,591.43 827,575.28 827,555.14 827,538.93"];
+			tunnel_egress	[_draw_="c 7 -#000000 B 25 777.38 417 777.38 417 876.62 417 876.62 417 882.62 417 888.62 423 888.62 429 888.62 429 888.62 441 888.62 441 \
+888.62 447 882.62 453 876.62 453 876.62 453 777.38 453 777.38 453 771.38 453 765.38 447 765.38 441 765.38 441 765.38 429 765.38 \
+429 765.38 423 771.38 417 777.38 417 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 827 429.95 0 107.25 19 -Egress Shapeshifter ",
+				height=0.51389,
+				label="Egress Shapeshifter",
+				pos="827,435",
+				shape=Mrecord,
+				width=1.7118];
+			accel -> tunnel_egress	[_draw_="c 7 -#000000 B 4 827 479.18 827 474.38 827 469.4 827 464.6 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 830.5 464.78 827 454.78 823.5 464.78 ",
+				_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 823.5 479.06 827 489.06 830.5 479.06 ",
+				dir=both,
+				pos="s,827,490.57 e,827,453.27 827,479.18 827,474.38 827,469.4 827,464.6"];
+		}
+		subgraph cluster_frontend {
+			graph [_draw_="c 7 -#000000 p 4 532 594.5 532 913.5 748 913.5 748 594.5 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 640 896.2 0 121.5 20 -YoursTruly Front-End ",
+				bb="532,594.5,748,913.5",
+				label="YoursTruly Front-End",
+				lheight=0.23,
+				lp="640,901.25",
+				lwidth=1.69
+			];
+			others	[_draw_="c 7 -#000000 B 25 660.12 748 660.12 748 727.88 748 727.88 748 733.88 748 739.88 754 739.88 760 739.88 760 739.88 772 739.88 772 \
+739.88 778 733.88 784 727.88 784 727.88 784 660.12 784 660.12 784 654.12 784 648.12 778 648.12 772 648.12 772 648.12 760 648.12 \
+760 648.12 754 654.12 748 660.12 748 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 694 760.95 0 75.75 12 -Other Chunks ",
+				height=0.51389,
+				label="Other Chunks",
+				pos="694,766",
+				shape=Mrecord,
+				width=1.2743];
+			other_xprot	[_draw_="c 7 -#000000 B 25 552.25 603 552.25 603 659.75 603 659.75 603 665.75 603 671.75 609 671.75 615 671.75 615 671.75 627 671.75 627 \
+671.75 633 665.75 639 659.75 639 659.75 639 552.25 639 552.25 639 546.25 639 540.25 633 540.25 627 540.25 627 540.25 615 540.25 \
+615 540.25 609 546.25 603 552.25 603 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 606 615.95 0 115.5 19 -XPROT \"crystalizer\" ",
+				height=0.51389,
+				label="XPROT \"crystalizer\"",
+				pos="606,621",
+				shape=Mrecord,
+				width=1.8264];
+			front_end_jz	[_draw_="c 7 -#000000 B 25 572.38 748 572.38 748 617.62 748 617.62 748 623.62 748 629.62 754 629.62 760 629.62 760 629.62 772 629.62 772 \
+629.62 778 623.62 784 617.62 784 617.62 784 572.38 784 572.38 784 566.38 784 560.38 778 560.38 772 560.38 772 560.38 760 560.38 \
+760 560.38 754 566.38 748 572.38 748 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 595 760.95 0 53.25 8 -JZ Chunk ",
+				height=0.51389,
+				label="JZ Chunk",
+				pos="595,766",
+				shape=Mrecord,
+				width=0.96181];
+			front_end_jz -> other_xprot	[_draw_="c 7 -#000000 B 4 597.21 736.33 599.12 711.39 601.89 675.45 603.8 650.55 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 607.27 651.06 604.55 640.82 600.3 650.52 ",
+				_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 593.72 736 596.44 746.24 600.7 736.54 ",
+				dir=both,
+				pos="s,596.33,747.75 e,604.67,639.31 597.21,736.33 599.12,711.39 601.89,675.45 603.8,650.55"];
+			arbiter_vadam	[_draw_="c 7 -#000000 B 25 557 844.5 557 844.5 633 844.5 633 844.5 639 844.5 645 850.5 645 856.5 645 856.5 645 868.5 645 868.5 645 874.5 \
+639 880.5 633 880.5 633 880.5 557 880.5 557 880.5 551 880.5 545 874.5 545 868.5 545 868.5 545 856.5 545 856.5 545 850.5 551 844.5 \
+557 844.5 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 595 857.45 0 84 14 -Arbiter Chunks ",
+				height=0.51389,
+				label="Arbiter Chunks",
+				pos="595,862.5",
+				shape=Mrecord,
+				width=1.3889];
+			arbiter_vadam -> others	[_draw_="S 6 -dotted c 7 -#000000 B 4 613.16 844.17 628.51 829.51 650.69 808.34 667.94 791.88 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 670.05 794.7 674.86 785.27 665.21 789.64 ",
+				pos="e,675.96,784.22 613.16,844.17 628.51,829.51 650.69,808.34 667.94,791.88",
+				style=dotted];
+			arbiter_vadam -> other_xprot	[_draw_="S 6 -dotted c 7 -#000000 B 10 571.43 844.12 563.36 836.76 555.29 827.45 551 817 537.91 785.14 543.52 773.12 551 739.5 558.3 706.71 \
+575.76 672.24 589.07 649.18 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 591.98 651.13 594.07 640.74 585.96 647.56 ",
+				pos="e,594.84,639.44 571.43,844.12 563.36,836.76 555.29,827.45 551,817 537.91,785.14 543.52,773.12 551,739.5 558.3,706.71 575.76,672.24 \
+589.07,649.18",
+				style=dotted];
+			arbiter_vadam -> front_end_jz	[_draw_="S 6 -dotted c 7 -#000000 B 4 595 844.17 595 830.58 595 811.39 595 795.54 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 598.5 795.74 595 785.74 591.5 795.74 ",
+				pos="e,595,784.22 595,844.17 595,830.58 595,811.39 595,795.54",
+				style=dotted];
+		}
+		front_end_jz -> tunnel_ingress	[_draw_="c 7 -#000000 B 10 632.94 742.31 634.97 741.31 637 740.37 639 739.5 687.14 718.53 707.68 733.17 752 705 774.92 690.43 795.19 667.01 \
+808.85 648.75 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 811.64 650.87 814.67 640.72 805.97 646.76 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 799.98 716.2 0 126 17 -XPROT over PROT_G ",
+			_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 631.48 739.12 624.25 746.85 634.73 745.32 ",
+			dir=both,
+			label="XPROT over PROT_G",
+			lp="799.98,721.25",
+			pos="s,622.91,747.56 e,815.56,639.49 632.94,742.31 634.97,741.31 637,740.37 639,739.5 687.14,718.53 707.68,733.17 752,705 774.92,690.43 \
+795.19,667.01 808.85,648.75"];
+	}
+	subgraph cluster_shapeshifter_misc {
+		graph [_draw_="S 6 -dashed c 7 -#000000 p 4 1058 594.5 1058 672 1262 672 1262 594.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1160 654.7 0 107.25 19 -Other Shapeshifters ",
+			bb="1058,594.5,1262,672",
+			label="Other Shapeshifters",
+			lheight=0.23,
+			lp="1160,659.75",
+			lwidth=1.49,
+			style=dashed
+		];
+		handle_x	[_draw_="c 7 -#000000 B 25 1179.75 603 1179.75 603 1242.25 603 1242.25 603 1248.25 603 1254.25 609 1254.25 615 1254.25 615 1254.25 627 1254.25 \
+627 1254.25 633 1248.25 639 1242.25 639 1242.25 639 1179.75 639 1179.75 639 1173.75 639 1167.75 633 1167.75 627 1167.75 627 1167.75 \
+615 1167.75 615 1167.75 609 1173.75 603 1179.75 603 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1211 615.95 0 70.5 12 -Shapeshift X ",
+			height=0.51389,
+			label="Shapeshift X",
+			pos="1211,621",
+			shape=Mrecord,
+			width=1.2014];
+		handle_1	[_draw_="c 7 -#000000 B 25 1078.25 603 1078.25 603 1137.75 603 1137.75 603 1143.75 603 1149.75 609 1149.75 615 1149.75 615 1149.75 627 1149.75 \
+627 1149.75 633 1143.75 639 1137.75 639 1137.75 639 1078.25 639 1078.25 639 1072.25 639 1066.25 633 1066.25 627 1066.25 627 1066.25 \
+615 1066.25 615 1066.25 609 1072.25 603 1078.25 603 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 1108 615.95 0 67.5 12 -Shapeshift 1 ",
+			height=0.51389,
+			label="Shapeshift 1",
+			pos="1108,621",
+			shape=Mrecord,
+			width=1.1597];
+	}
+	subgraph cluster_space_ship_a {
+		graph [_draw_="c 7 -#000000 p 4 725 8 725 368 950 368 950 8 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 837.5 350.7 0 34.5 5 -ShipX ",
+			bb="725,8,950,368",
+			label=ShipX,
+			lheight=0.23,
+			lp="837.5,355.75",
+			lwidth=0.48
+		];
+		subgraph cluster_vm_a {
+			graph [_draw_="c 7 -#000000 p 4 745 16 745 134 903 134 903 16 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 824 116.7 0 51.75 8 -ReactorX ",
+				bb="745,16,903,134",
+				label=ReactorX,
+				lheight=0.23,
+				lp="824,121.75",
+				lwidth=0.72
+			];
+			subgraph cluster_tungsten {
+				graph [_draw_="c 7 -#000000 p 4 753 24 753 101.5 895 101.5 895 24 ",
+					_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 824 84.2 0 50.25 8 -Tungsten ",
+					bb="753,24,895,101.5",
+					label=Tungsten,
+					lheight=0.23,
+					lp="824,89.25",
+					lwidth=0.70
+				];
+				zzz	[_draw_="c 7 -#000000 B 25 773 32.5 773 32.5 803 32.5 803 32.5 809 32.5 815 38.5 815 44.5 815 44.5 815 56.5 815 56.5 815 62.5 809 68.5 803 \
+68.5 803 68.5 773 68.5 773 68.5 767 68.5 761 62.5 761 56.5 761 56.5 761 44.5 761 44.5 761 38.5 767 32.5 773 32.5 ",
+					_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 787.88 45.45 0 24.75 3 -ZZZ ",
+					height=0.51389,
+					label=ZZZ,
+					pos="788,50.5",
+					shape=Mrecord,
+					width=0.75];
+				yyy	[_draw_="c 7 -#000000 B 25 845 32.5 845 32.5 875 32.5 875 32.5 881 32.5 887 38.5 887 44.5 887 44.5 887 56.5 887 56.5 887 62.5 881 68.5 875 \
+68.5 875 68.5 845 68.5 845 68.5 839 68.5 833 62.5 833 56.5 833 56.5 833 44.5 833 44.5 833 38.5 839 32.5 845 32.5 ",
+					_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 859.62 45.45 0 29.25 3 -YYY ",
+					height=0.51389,
+					label=YYY,
+					pos="860,50.5",
+					shape=Mrecord,
+					width=0.75];
+			}
+		}
+		subgraph cluster_piston {
+			graph [_draw_="c 7 -#000000 p 4 733 168.5 733 335.5 942 335.5 942 168.5 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 837.5 318.2 0 51.75 8 -ReactorY ",
+				bb="733,168.5,942,335.5",
+				label=ReactorY,
+				lheight=0.23,
+				lp="837.5,323.25",
+				lwidth=0.72
+			];
+			zzz_worker	[_draw_="c 7 -#000000 B 25 753.5 177 753.5 177 814.5 177 814.5 177 820.5 177 826.5 183 826.5 189 826.5 189 826.5 201 826.5 201 826.5 207 \
+820.5 213 814.5 213 814.5 213 753.5 213 753.5 213 747.5 213 741.5 207 741.5 201 741.5 201 741.5 189 741.5 189 741.5 183 747.5 177 \
+753.5 177 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 784 190.2 0 69 10 -ZZZ Worker ",
+				height=0.51389,
+				label="{ZZZ Worker}",
+				pos="784,195",
+				shape=Mrecord,
+				width=1.1806];
+			yyy_worker	[_draw_="c 7 -#000000 B 25 856.25 177 856.25 177 921.75 177 921.75 177 927.75 177 933.75 183 933.75 189 933.75 189 933.75 201 933.75 201 \
+933.75 207 927.75 213 921.75 213 921.75 213 856.25 213 856.25 213 850.25 213 844.25 207 844.25 201 844.25 201 844.25 189 844.25 \
+189 844.25 183 850.25 177 856.25 177 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 889 190.2 0 73.5 10 -YYY Worker ",
+				height=0.51389,
+				label="{YYY Worker}",
+				pos="889,195",
+				shape=Mrecord,
+				width=1.2431];
+			foo_agent	[_draw_="c 7 -#000000 B 25 802.5 266.5 802.5 266.5 851.5 266.5 851.5 266.5 857.5 266.5 863.5 272.5 863.5 278.5 863.5 278.5 863.5 290.5 863.5 \
+290.5 863.5 296.5 857.5 302.5 851.5 302.5 851.5 302.5 802.5 302.5 802.5 302.5 796.5 302.5 790.5 296.5 790.5 290.5 790.5 290.5 790.5 \
+278.5 790.5 278.5 790.5 272.5 796.5 266.5 802.5 266.5 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 827 279.7 0 57 9 -Foo Agent ",
+				height=0.51389,
+				label="{Foo Agent}",
+				pos="827,284.5",
+				shape=Mrecord,
+				width=1.0139];
+			foo_agent -> zzz_worker	[_draw_="c 7 -#000000 B 7 797.65 257.63 795.29 254.58 793.18 251.35 791.5 248 787.92 240.85 785.91 232.5 784.82 224.61 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 788.31 224.35 783.92 214.71 781.34 224.99 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 820.75 234.7 0 58.5 7 -MechCmd ",
+				_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 795 259.91 804.26 265.06 800.23 255.26 ",
+				constraint=true,
+				dir=both,
+				label=MechCmd,
+				lp="820.75,239.75",
+				pos="s,805.27,266.19 e,783.78,213.2 797.65,257.63 795.29,254.58 793.18,251.35 791.5,248 787.92,240.85 785.91,232.5 784.82,224.61"];
+			foo_agent -> yyy_worker	[_draw_="c 7 -#000000 B 4 845.82 256.94 853.59 245.97 862.58 233.29 870.34 222.34 ",
+				_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 872.98 224.67 875.9 214.49 867.26 220.62 ",
+				_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 892.8 234.7 0 58.5 7 -MechCmd ",
+				_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 843.05 254.79 840.12 264.98 848.76 258.84 ",
+				constraint=true,
+				dir=both,
+				label=MechCmd,
+				lp="892.8,239.75",
+				pos="s,839.25,266.21 e,876.78,213.25 845.82,256.94 853.59,245.97 862.58,233.29 870.34,222.34"];
+		}
+		zzz_worker -> zzz	[_draw_="c 7 -#000000 B 7 778.52 165.38 778.21 163.06 777.95 160.74 777.75 158.5 775.43 131.96 778.89 101.74 782.4 80.2 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 785.84 80.86 784.11 70.4 778.94 79.65 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 813.38 145.2 0 71.25 9 -SCADA_A() ",
+			_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 775.06 165.93 780.1 175.25 781.98 164.82 ",
+			constraint=true,
+			dir=both,
+			label="SCADA_A()",
+			lp="813.38,150.25",
+			pos="s,780.34,176.75 e,784.37,68.913 778.52,165.38 778.21,163.06 777.95,160.74 777.75,158.5 775.43,131.96 778.89,101.74 782.4,80.202"];
+		yyy_worker -> yyy	[_draw_="c 7 -#000000 B 4 883.2 165.5 878.14 140.63 870.83 104.72 865.78 79.88 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 869.22 79.26 863.8 70.15 862.36 80.65 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 916.85 145.2 0 71.25 9 -SCADA_A() ",
+			_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 879.72 165.94 885.14 175.04 886.58 164.55 ",
+			constraint=true,
+			dir=both,
+			label="SCADA_A()",
+			lp="916.85,150.25",
+			pos="s,885.44,176.53 e,863.49,68.671 883.2,165.5 878.14,140.63 870.83,104.72 865.78,79.88"];
+	}
+	mobvm_a_req -> machsrv_xprot_gen:f0	[_draw_="c 7 -#000000 B 4 273.59 591.44 273.4 576.47 273.21 557.52 273.15 539.42 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 276.65 539.51 273.13 529.51 269.65 539.52 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 270.09 591.24 273.72 601.19 277.08 591.15 ",
+		constraint=true,
+		dir=both,
+		pos="s,273.74,602.71 e,273.12,528 273.59,591.44 273.4,576.47 273.21,557.52 273.15,539.42"];
+	mobvm_a_req1 -> machsrv_xprot_gen:f0	[_draw_="c 7 -#000000 B 4 368.47 598.09 332.15 582 288.9 559.44 276.56 538.86 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 279.93 537.92 273.58 529.44 273.26 540.03 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 366.89 601.22 377.45 601.99 369.68 594.8 ",
+		constraint=true,
+		dir=both,
+		pos="s,378.84,602.59 e,273.12,528 368.47,598.09 332.15,582 288.9,559.44 276.56,538.86"];
+	z_req -> z_shapeshifter	[_draw_="c 7 -#000000 B 4 183.19 738.63 164.88 712.96 137.21 674.16 118.88 648.46 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 121.88 646.65 113.23 640.54 116.18 650.72 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 180.16 740.41 188.82 746.52 185.86 736.34 ",
+		constraint=true,
+		dir=both,
+		pos="s,189.7,747.75 e,112.35,639.31 183.19,738.63 164.88,712.96 137.21,674.16 118.88,648.46"];
+	z_req1 -> z_shapeshifter	[_draw_="c 7 -#000000 B 4 85.61 736.33 88.75 711.39 93.27 675.45 96.41 650.55 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 99.86 651.17 97.63 640.81 92.91 650.3 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 82.14 735.89 84.36 746.25 89.08 736.76 ",
+		constraint=true,
+		dir=both,
+		pos="s,84.171,747.75 e,97.821,639.31 85.609,736.33 88.748,711.39 93.272,675.45 96.406,650.55"];
+	z_shapeshifter -> machsrv_xprot_gen:f0	[_draw_="c 7 -#000000 B 4 114.74 593.13 133.41 562.78 168.67 516.71 213.77 509.86 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 213.91 513.36 223.62 509.11 213.38 506.38 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 165.66 571.2 0 70.5 9 -Foo SCADA ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 111.95 590.97 109.87 601.35 117.97 594.53 ",
+		constraint=true,
+		dir=both,
+		label="Foo SCADA",
+		lp="165.66,576.25",
+		pos="s,109.1,602.66 e,225.12,509 114.74,593.13 133.41,562.78 168.67,516.71 213.77,509.86"];
+	accel_appearance -> accel	[_draw_="c 7 -#000000 B 4 948.43 596.18 922.42 577.72 886.55 552.26 860.54 533.8 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 862.86 531.16 852.68 528.22 858.81 536.87 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 946.02 598.76 956.21 601.69 950.08 593.05 ",
+		constraint=true,
+		dir=both,
+		pos="s,957.44,602.57 e,851.45,527.35 948.43,596.18 922.42,577.72 886.55,552.26 860.54,533.8"];
+	tunnel_egress -> foo_agent	[_draw_="c 7 -#000000 B 4 827 405.54 827 379.29 827 340.51 827 314.19 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 830.5 314.23 827 304.23 823.5 314.23 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 866.75 379.2 0 79.5 10 -Raw PROT_G ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 823.5 405.16 827 415.16 830.5 405.16 ",
+		constraint=true,
+		dir=both,
+		label="Raw PROT_G",
+		lp="866.75,384.25",
+		pos="s,827,416.67 e,827,302.72 827,405.54 827,379.29 827,340.51 827,314.19"];
+	others -> handle_x	[_draw_="S 6 -dotted c 7 -#000000 B 7 751.64 763.94 861.06 760.91 1093.79 749.29 1159 705 1178.55 691.72 1192.19 668.41 1200.59 649.86 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 1203.78 651.3 1204.44 640.73 1197.33 648.58 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 751.6 760.44 741.7 764.2 751.78 767.44 ",
+		constraint=true,
+		dir=both,
+		pos="s,740.18,764.24 e,1205,639.33 751.64,763.94 861.06,760.91 1093.8,749.29 1159,705 1178.5,691.72 1192.2,668.41 1200.6,649.86",
+		style=dotted];
+	others -> handle_1	[_draw_="S 6 -dotted c 7 -#000000 B 7 751.85 761.01 840.61 753.95 1005.23 736.92 1054 705 1074.08 691.86 1088.32 668.37 1097.11 649.72 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 1100.21 651.36 1101.06 640.8 1093.81 648.54 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 751.58 757.52 741.88 761.78 752.12 764.5 ",
+		constraint=true,
+		dir=both,
+		pos="s,740.37,761.9 e,1101.7,639.42 751.85,761.01 840.61,753.95 1005.2,736.92 1054,705 1074.1,691.86 1088.3,668.37 1097.1,649.72",
+		style=dotted];
+	other_xprot -> machsrv_xprot_gen	[_draw_="c 7 -#000000 B 4 557.71 597.77 516.17 578.66 456.57 551.22 415.09 532.13 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 416.62 528.98 406.07 527.98 413.69 535.34 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 591.69 571.2 0 126 17 -XPROT over PROT_G ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 556.21 600.94 566.75 601.94 559.13 594.58 ",
+		constraint=true,
+		dir=both,
+		label="XPROT over PROT_G",
+		lp="591.69,576.25",
+		pos="s,568.13,602.57 e,404.69,527.35 557.71,597.77 516.17,578.66 456.57,551.22 415.09,532.13"];
 }

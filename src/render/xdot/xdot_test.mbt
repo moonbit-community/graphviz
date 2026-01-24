@@ -120,7 +120,7 @@ test "render_xdot fills cluster background" {
     Some(value) => value
     None => fail("missing cluster _draw_")
   }
-  assert_true(draw.contains("-lightgrey"))
+  assert_true(draw.contains("-#d3d3d3"))
   assert_true(draw.contains("P "))
 }
 

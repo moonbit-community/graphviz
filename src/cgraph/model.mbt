@@ -156,6 +156,30 @@ fn resolve_default(
 }
 
 ///|
+fn collect_defaults(
+  root : Root,
+  graph_id : Int,
+  kind : AttrKind,
+) -> Map[String, String] {
+  let resolved : Map[String, String] = Map::new()
+  let mut current : Int? = Some(graph_id)
+  while current is Some(id) {
+    let defaults = match kind {
+      AttrKind::Graph => root.graphs[id].defaults_graph
+      AttrKind::Node => root.graphs[id].defaults_node
+      AttrKind::Edge => root.graphs[id].defaults_edge
+    }
+    for key, value in defaults {
+      if resolved.get(key) is None {
+        resolved[key] = value
+      }
+    }
+    current = root.graphs[id].parent
+  }
+  resolved
+}
+
+///|
 pub fn Graph::new(
   kind : GraphKind,
   name? : String,
@@ -242,10 +266,11 @@ pub fn Graph::node(self : Graph, name : String) -> Node {
     Some(id) => id
     None => {
       let new_id = self.root.nodes.length()
+      let attrs = collect_defaults(self.root, self.id, AttrKind::Node)
       let state : NodeState = {
         name,
         home_graph_id: self.id,
-        attrs: Map::new(),
+        attrs,
       }
       self.root.nodes.push(state)
       self.root.nodes_by_name[name] = new_id
@@ -296,6 +321,7 @@ pub fn Graph::edge(
     Some(id) => id
     None => {
       let new_id = self.root.edges.length()
+      let attrs = collect_defaults(self.root, self.id, AttrKind::Edge)
       let state : EdgeState = {
         tail: tail_id,
         head: head_id,
@@ -303,7 +329,7 @@ pub fn Graph::edge(
         tail_port,
         head_port,
         home_graph_id: self.id,
-        attrs: Map::new(),
+        attrs,
       }
       self.root.edges.push(state)
       if self.root.strict {
@@ -427,14 +453,7 @@ pub fn Node::set_attr(self : Node, name : String, value : String) -> Unit {
 
 ///|
 pub fn Node::get_attr(self : Node, name : String) -> String? {
-  let value = self.root.nodes[self.id].attrs.get(name)
-  match value {
-    Some(_) => value
-    None => {
-      let home = self.root.nodes[self.id].home_graph_id
-      resolve_default(self.root, home, AttrKind::Node, name)
-    }
-  }
+  self.root.nodes[self.id].attrs.get(name)
 }
 
 ///|
@@ -444,14 +463,7 @@ pub fn Edge::set_attr(self : Edge, name : String, value : String) -> Unit {
 
 ///|
 pub fn Edge::get_attr(self : Edge, name : String) -> String? {
-  let value = self.root.edges[self.id].attrs.get(name)
-  match value {
-    Some(_) => value
-    None => {
-      let home = self.root.edges[self.id].home_graph_id
-      resolve_default(self.root, home, AttrKind::Edge, name)
-    }
-  }
+  self.root.edges[self.id].attrs.get(name)
 }
 
 ///|

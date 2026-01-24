@@ -156,6 +156,20 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
       right: false,
     })
   }
+  if shapes.length() > 4 {
+    let trimmed : Array[ArrowShape] = []
+    for i in 0..<4 {
+      trimmed.push(shapes[i])
+    }
+    return trimmed
+  }
+  if shapes.length() == 4 && shapes[3].base == ArrowBase::None {
+    let trimmed : Array[ArrowShape] = []
+    for i in 0..<3 {
+      trimmed.push(shapes[i])
+    }
+    return trimmed
+  }
   shapes
 }
 

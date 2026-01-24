@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="106.69735559564305pt" height="185.60000000000002pt" viewBox="0 0 106.69735559564305 185.60000000000002">
-  <rect x="0" y="0" width="106.69735559564305" height="185.60000000000002" fill="white"/>
-  <g transform="translate(0 185.60000000000002) scale(1 -1)">
-    <rect x="11.92" y="96.8" width="82.85735559564304" height="76.80000000000003" fill="none" stroke="black"/>
-    <text x="53.34867779782152" y="-156.1502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="49.8150744" lengthAdjust="spacing">cluster_1</text>
-    <rect x="11.92" y="12" width="82.85735559564304" height="76.8" fill="none" stroke="black"/>
-    <text x="53.34867779782152" y="-71.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="49.8150744" lengthAdjust="spacing">cluster_2</text>
-    <path d="M 53.34867779782152 104.8 C 53.34867779782152 97.24234388131102 53.34867779782152 86.61440928451884 53.34867779782152 80.4 C 53.34867779782152 76.10451476429564 53.34867779782152 71.50499514629176 53.34867779782152 67.51354429288693" fill="none" stroke="black"/>
-    <polygon points="53.34867779782152,56 56.34867779782152,66 50.34867779782152,66" fill="black" stroke="black"/>
-    <ellipse cx="53.34867779782152" cy="122.8" rx="33.42867779782152" ry="18.000000000000007" fill="none" stroke="black"/>
-    <text x="53.34867779782152" y="-117.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="32.4626876" lengthAdjust="spacing">C1N1</text>
-    <ellipse cx="53.34867779782152" cy="38" rx="33.42867779782152" ry="18" fill="none" stroke="black"/>
-    <text x="53.34867779782152" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="32.4626876" lengthAdjust="spacing">C2N1</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="106.79987959605977pt" height="185.00080000000003pt" viewBox="0 0 106.79987959605977 185.00080000000003">
+  <rect x="0" y="0" width="106.79987959605977" height="185.00080000000003" fill="white"/>
+  <g transform="translate(0 185.00080000000003) scale(1 -1)">
+    <rect x="11.92" y="96.5004" width="82.95987959605976" height="76.50040000000003" fill="none" stroke="black"/>
+    <text x="53.399939798029884" y="-155.70080000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="49.4345992" lengthAdjust="spacing">cluster_1</text>
+    <rect x="11.92" y="12" width="82.95987959605976" height="76.5004" fill="none" stroke="black"/>
+    <text x="53.399939798029884" y="-71.2004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="49.4345992" lengthAdjust="spacing">cluster_2</text>
+    <path d="M 53.399939798029884 104.5004 C 53.399939798029884 96.99267721464435 53.399939798029884 86.41467595118552 53.399939798029884 80.2502 C 53.399939798029884 76.00464809762899 53.399939798029884 71.45673982370825 53.399939798029884 67.51354429288693" fill="none" stroke="black"/>
+    <polygon points="53.399939798029884,56 56.399939798029884,66 50.399939798029884,66" fill="black" stroke="black"/>
+    <ellipse cx="53.399939798029884" cy="122.5004" rx="33.47993979802988" ry="18.000000000000007" fill="none" stroke="black"/>
+    <text x="53.399939798029884" y="-117.45060000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="33.0605772" lengthAdjust="spacing">C1N1</text>
+    <ellipse cx="53.399939798029884" cy="38" rx="33.47993979802988" ry="18" fill="none" stroke="black"/>
+    <text x="53.399939798029884" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="33.0605772" lengthAdjust="spacing">C2N1</text>
   </g>
 </svg>

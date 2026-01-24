@@ -32,28 +32,28 @@
     <path d="M 349.92 110 C 317.42 110 268.4260966544099 130.50609665440987 247.92 110 C 230.94943725152285 93.02943725152286 264.8905627484771 54.970562748477136 247.92 38 C 226.5921378546547 16.67213785465473 187.59569619525794 38 157.43354429288692 38" fill="none" stroke="black"/>
     <polygon points="145.92,38 155.92,35 155.92,41" fill="black" stroke="black"/>
     <ellipse cx="144.92" cy="254" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="144.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.0332496" lengthAdjust="spacing">a</text>
+    <text x="144.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">a</text>
     <ellipse cx="90.92" cy="182" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="90.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">b</text>
+    <text x="90.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
     <ellipse cx="376.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="376.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.0332496" lengthAdjust="spacing">c</text>
+    <text x="376.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">c</text>
     <ellipse cx="198.92" cy="182" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="198.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">x0</text>
+    <text x="198.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">x0</text>
     <ellipse cx="304.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="304.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">y0</text>
+    <text x="304.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">y0</text>
     <ellipse cx="196.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="196.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">z0</text>
+    <text x="196.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">z0</text>
     <ellipse cx="90.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="90.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">x1</text>
+    <text x="90.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">x1</text>
     <ellipse cx="46.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">y1</text>
+    <text x="46.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">y1</text>
     <ellipse cx="118.92" cy="38" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
-    <text x="118.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">z1</text>
+    <text x="118.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">z1</text>
     <ellipse cx="448.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="448.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">x2</text>
+    <text x="448.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">x2</text>
     <ellipse cx="518.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="518.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">y2</text>
+    <text x="518.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">y2</text>
     <ellipse cx="446.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="446.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">z2</text>
+    <text x="446.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">z2</text>
   </g>
 </svg>

@@ -21,16 +21,18 @@ fn parse_double(value : String, fallback : Double) -> Double {
 
 ///|
 pub fn is_html_label_text(label : String) -> Bool {
-  label.length() >= 4 && label.has_prefix("<<") && label.has_suffix(">>")
+  let trimmed = label.trim(chars=" \n\r\t").to_string()
+  trimmed.length() >= 3 && trimmed.has_prefix("<<") && trimmed.has_suffix(">")
 }
 
 ///|
 pub fn strip_html_wrappers(label : String) -> String? {
-  if !is_html_label_text(label) {
+  let trimmed = label.trim(chars=" \n\r\t").to_string()
+  if !is_html_label_text(trimmed) {
     return None
   }
-  let len = label.length()
-  let inner = label.unsafe_substring(start=1, end=len - 1)
+  let len = trimmed.length()
+  let inner = trimmed.unsafe_substring(start=1, end=len - 1)
   let unescaped = inner
     .replace_all(old="\\\"", new="\"")
     .replace_all(old="\\'", new="'")
@@ -421,8 +423,11 @@ fn parse_html_table_from_attrs(
   parser : HtmlParser,
   attrs : Map[String, String],
 ) -> HtmlTable {
-  let border_pt = html_parse_double(attrs.get("border"), 0.0)
-  let cell_border_pt = html_parse_double(attrs.get("cellborder"), 0.0)
+  let border_pt = html_parse_double(attrs.get("border"), 1.0)
+  let cell_border_pt = match attrs.get("cellborder") {
+    Some(value) => parse_double(value, 0.0)
+    None => if border_pt <= 0.0 { 0.0 } else { 1.0 }
+  }
   let cell_spacing_pt = html_parse_double(attrs.get("cellspacing"), 2.0)
   let cell_padding_pt = html_parse_double(attrs.get("cellpadding"), 2.0)
   let bg_color = attrs.get("bgcolor")
@@ -620,6 +625,7 @@ pub fn html_table_metrics(
     for width in col_widths {
       total_width = total_width + width
     }
+    total_width = total_width + table.cell_spacing_pt * 2.0
   }
   if row_heights.length() > 0 {
     total_height = total_height +
@@ -627,6 +633,7 @@ pub fn html_table_metrics(
     for height in row_heights {
       total_height = total_height + height
     }
+    total_height = total_height + table.cell_spacing_pt * 2.0
   }
   { placements, col_widths, row_heights, total_width, total_height }
 }
@@ -657,7 +664,7 @@ pub fn html_table_layout(
   let spacing_x = table.cell_spacing_pt * scale_x
   let spacing_y = table.cell_spacing_pt * scale_y
   let col_positions : Array[(Double, Double)] = []
-  let mut cursor_x = rect.llx + border_x
+  let mut cursor_x = rect.llx + border_x + spacing_x
   for width in metrics.col_widths {
     let scaled = width * scale_x
     let start = cursor_x
@@ -666,7 +673,7 @@ pub fn html_table_layout(
     cursor_x = end + spacing_x
   }
   let row_positions : Array[(Double, Double)] = []
-  let mut cursor_y = rect.ury - border_y
+  let mut cursor_y = rect.ury - border_y - spacing_y
   for height in metrics.row_heights {
     let scaled = height * scale_y
     let top = cursor_y

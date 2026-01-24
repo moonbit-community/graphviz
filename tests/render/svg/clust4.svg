@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="219.83999999999997pt" height="424.8pt" viewBox="0 0 219.83999999999997 424.8">
-  <rect x="0" y="0" width="219.83999999999997" height="424.8" fill="white"/>
-  <g transform="translate(0 424.8) scale(1 -1)">
-    <rect x="11.92" y="76" width="74" height="292.8" fill="lightgrey" stroke="lightgrey"/>
-    <text x="48.92" y="-351.35020000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.737111600000006" lengthAdjust="spacing">process #1</text>
-    <rect x="133.92" y="76" width="74" height="292.8" fill="none" stroke="blue"/>
-    <text x="170.92" y="-351.35020000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.737111600000006" lengthAdjust="spacing">process #2</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="219.83999999999997pt" height="424.5004pt" viewBox="0 0 219.83999999999997 424.5004">
+  <rect x="0" y="0" width="219.83999999999997" height="424.5004" fill="white"/>
+  <g transform="translate(0 424.5004) scale(1 -1)">
+    <rect x="11.92" y="76" width="74" height="292.5004" fill="lightgrey" stroke="lightgrey"/>
+    <text x="48.92" y="-351.2004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.356636400000006" lengthAdjust="spacing">process #1</text>
+    <rect x="133.92" y="76" width="74" height="292.5004" fill="none" stroke="blue"/>
+    <text x="170.92" y="-351.2004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="57.356636400000006" lengthAdjust="spacing">process #2</text>
     <path d="M 50.92 300 C 50.92 294.7 53.51272486435067 284.59272486435066 50.92 282 C 49.977190958417935 281.05719095841795 47.86280904158206 282.94280904158205 46.92 282 C 45.39112772787806 280.47112772787807 46.92 277.67569619525796 46.92 275.51354429288693" fill="none" stroke="black"/>
     <polygon points="46.92,264 49.92,274 43.92,274" fill="black" stroke="black"/>
     <path d="M 46.92 228 C 46.92 222.57567721464434 46.92 214.0810759511855 46.92 210 C 46.92 207.83784809762898 46.92 205.46824593112547 46.92 203.51354429288693" fill="none" stroke="black"/>
@@ -18,9 +18,9 @@
     <polygon points="172.92,192 175.92,202 169.92,202" fill="black" stroke="black"/>
     <path d="M 172.92 156 C 172.92 150.7 175.51272486435067 140.59272486435069 172.92 138 C 171.97719095841794 137.05719095841795 169.86280904158204 138.94280904158205 168.92 138 C 167.39112772787806 136.47112772787807 168.92 133.67569619525796 168.92 131.51354429288693" fill="none" stroke="black"/>
     <polygon points="168.92,120 171.92,130 165.92,130" fill="black" stroke="black"/>
-    <path d="M 109.92 376.8 C 109.92 370 114.72832611206853 361.2083261120685 109.92 356.4 C 96.01356663666458 342.4935666366645 58.920495530203304 364.4004955302033 50.92 356.4 C 48.82544230292882 354.3054423029288 50.92 350.0982963717959 50.92 347.51354429288693" fill="none" stroke="black"/>
+    <path d="M 109.92 376.5004 C 109.92 369.75033333333334 114.69301791346128 361.0232179134613 109.92 356.2502 C 96.01356663666458 342.34376663666455 58.902841430899684 364.2330414308997 50.92 356.2502 C 48.86075050153607 354.19095050153607 50.92 350.0536157994034 50.92 347.51354429288693" fill="none" stroke="black"/>
     <polygon points="50.92,336 53.92,346 47.92,346" fill="black" stroke="black"/>
-    <path d="M 109.92 376.8 C 109.92 370 105.11167388793147 361.2083261120685 109.92 356.4 C 124.06213562373095 342.257864376269 161.80165333959891 364.51834666040105 169.92 356.4 C 172.01455769707115 354.3054423029288 169.92 350.0971809890977 169.92 347.51354429288693" fill="none" stroke="black"/>
+    <path d="M 109.92 376.5004 C 109.92 369.75033333333334 105.14698208653873 361.0232179134613 109.92 356.2502 C 124.06213562373095 342.10806437626906 161.81930743890254 364.35089256109745 169.92 356.2502 C 171.97924949846393 354.19095050153607 169.92 350.0525377040228 169.92 347.51354429288693" fill="none" stroke="black"/>
     <polygon points="169.92,336 172.92,346 166.92,346" fill="black" stroke="black"/>
     <path d="M 63.545 228 C 79.59866861787961 210.61858435357397 99.4230710933064 190.57716607321964 113.42 174 C 125.60610929592843 159.56746562537688 136.8802322631155 143.56510409109342 148.01589070882778 129.11884448584502" fill="none" stroke="black"/>
     <polygon points="155.045,120 151.31595198819775,129.75162555298726 146.56389080501617,126.08857839095144" fill="black" stroke="black"/>
@@ -33,24 +33,32 @@
     <path d="M 168.92 84 C 168.92 78 173.16264068711928 70.24264068711929 168.92 66 C 155.01356663666456 52.09356663666457 117.63765281772869 73.71765281772869 109.92 66 C 108.39112772787806 64.47112772787806 109.92 61.38702943332632 109.92 59.513544292886934" fill="none" stroke="black"/>
     <polygon points="109.92,48 112.92,58 106.92,58" fill="black" stroke="black"/>
     <ellipse cx="50.92" cy="318" rx="27" ry="18" fill="white" stroke="white"/>
-    <text x="50.92" y="-312.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a0</text>
+    <text x="50.92" y="-312.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a0</text>
     <ellipse cx="46.92" cy="246" rx="27" ry="18" fill="white" stroke="white"/>
-    <text x="46.92" y="-240.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a1</text>
+    <text x="46.92" y="-240.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a1</text>
     <ellipse cx="46.92" cy="174" rx="27" ry="18" fill="white" stroke="white"/>
-    <text x="46.92" y="-168.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a2</text>
+    <text x="46.92" y="-168.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a2</text>
     <ellipse cx="50.92" cy="102" rx="27" ry="18" fill="white" stroke="white"/>
-    <text x="50.92" y="-96.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a3</text>
-    <ellipse cx="169.92" cy="318" rx="27" ry="18" fill="white" stroke="black"/>
-    <text x="169.92" y="-312.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b0</text>
-    <ellipse cx="170.92" cy="246" rx="27" ry="18" fill="white" stroke="black"/>
-    <text x="170.92" y="-240.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b1</text>
-    <ellipse cx="172.92" cy="174" rx="27" ry="18" fill="white" stroke="black"/>
-    <text x="172.92" y="-168.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b2</text>
-    <ellipse cx="168.92" cy="102" rx="27" ry="18" fill="white" stroke="black"/>
-    <text x="168.92" y="-96.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b3</text>
-    <ellipse cx="109.92" cy="394.8" rx="27.17686650385314" ry="18" fill="none" stroke="black"/>
-    <text x="109.92" y="-389.7502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.3992248" lengthAdjust="spacing">start</text>
-    <ellipse cx="109.92" cy="30" rx="27.000000000000007" ry="18" fill="none" stroke="black"/>
-    <text x="109.92" y="-24.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="19.6216496" lengthAdjust="spacing">end</text>
+    <text x="50.92" y="-96.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a3</text>
+    <ellipse cx="169.92" cy="318" rx="27" ry="18" fill="lightgrey" stroke="black"/>
+    <text x="169.92" y="-312.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b0</text>
+    <ellipse cx="170.92" cy="246" rx="27" ry="18" fill="lightgrey" stroke="black"/>
+    <text x="170.92" y="-240.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b1</text>
+    <ellipse cx="172.92" cy="174" rx="27" ry="18" fill="lightgrey" stroke="black"/>
+    <text x="172.92" y="-168.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b2</text>
+    <ellipse cx="168.92" cy="102" rx="27" ry="18" fill="lightgrey" stroke="black"/>
+    <text x="168.92" y="-96.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b3</text>
+    <polygon points="109.92000000000002,412.5004 72.02741246998254,394.5004 109.92000000000002,376.5004 147.81258753001748,394.5004" fill="none" stroke="black"/>
+    <line x1="82.86662933882205" y1="399.6493200489292" x2="82.86662933882205" y2="389.3514799510708" stroke="black"/>
+    <line x1="99.0807831311605" y1="381.6493200489292" x2="120.75921686883953" y2="381.6493200489292" stroke="black"/>
+    <line x1="136.97337066117797" y1="389.3514799510708" x2="136.97337066117797" y2="399.6493200489292" stroke="black"/>
+    <line x1="120.75921686883953" y1="407.3514799510708" x2="99.0807831311605" y2="407.3514799510708" stroke="black"/>
+    <text x="109.92" y="-389.4506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.1274568" lengthAdjust="spacing">start</text>
+    <polygon points="127.92,48 91.92,48 91.92,12 127.92,12" fill="none" stroke="black"/>
+    <line x1="103.92" y1="48" x2="91.92" y2="36" stroke="black"/>
+    <line x1="91.92" y1="23.999999999999996" x2="103.92" y2="12" stroke="black"/>
+    <line x1="115.92" y1="12" x2="127.92" y2="24" stroke="black"/>
+    <line x1="127.92" y1="36" x2="115.92" y2="48" stroke="black"/>
+    <text x="109.92" y="-24.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="19.4585888" lengthAdjust="spacing">end</text>
   </g>
 </svg>

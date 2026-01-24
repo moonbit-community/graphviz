@@ -25,22 +25,22 @@
     <path d="M 46.92 308 C 46.92 302.5756772146444 46.92 294.08107595118554 46.92 290 C 46.92 287.837848097629 46.92 285.46824593112547 46.92 283.51354429288693" fill="none" stroke="black"/>
     <polygon points="46.92,272 49.92,282 43.92,282" fill="black" stroke="black"/>
     <ellipse cx="46.92" cy="254" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a0</text>
+    <text x="46.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a0</text>
     <ellipse cx="64.92" cy="182" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="64.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a1</text>
+    <text x="64.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a1</text>
     <ellipse cx="55.92" cy="398" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="55.92" y="-392.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a2</text>
+    <text x="55.92" y="-392.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a2</text>
     <ellipse cx="46.92" cy="326" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="46.92" y="-320.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.8274496" lengthAdjust="spacing">a3</text>
+    <text x="46.92" y="-320.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="12.773095999999999" lengthAdjust="spacing">a3</text>
     <ellipse cx="154.92" cy="254" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="154.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b0</text>
+    <text x="154.92" y="-248.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b0</text>
     <ellipse cx="154.92" cy="182" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="154.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b1</text>
+    <text x="154.92" y="-176.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b1</text>
     <ellipse cx="154.92" cy="110" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="154.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b2</text>
+    <text x="154.92" y="-104.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b2</text>
     <ellipse cx="154.92" cy="38" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="154.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing">b3</text>
+    <text x="154.92" y="-32.950199999999995" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.534046400000001" lengthAdjust="spacing">b3</text>
     <ellipse cx="145.92" cy="326" rx="27" ry="18" fill="none" stroke="black"/>
-    <text x="145.92" y="-320.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">x</text>
+    <text x="145.92" y="-320.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">x</text>
   </g>
 </svg>

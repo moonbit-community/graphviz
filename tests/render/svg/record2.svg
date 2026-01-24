@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="211.46980779999996pt" height="154.4pt" viewBox="0 0 211.46980779999996 154.4">
-  <rect x="0" y="0" width="211.46980779999996" height="154.4" fill="white"/>
-  <g transform="translate(0 154.4) scale(1 -1)">
-    <path d="M 82.71420000000002 114.4 C 82.71420000000002 109.29045402000001 80.57037956580348 98.54382043419655 82.71420000000002 96.4 C 82.75920018127383 96.3549998187262 82.8601194187262 96.44500018127381 82.9051196 96.4 C 84.43399187212195 94.87112772787806 82.9051196 92.07569619525796 82.9051196 89.91354429288694" fill="none" stroke="black"/>
-    <polygon points="82.9051196,78.4 85.9051196,88.4 79.9051196,88.4" fill="black" stroke="black"/>
-    <rect x="62.260431400000016" y="114.4" width="137.28937639999998" height="36" fill="none" stroke="black"/>
-    <line x1="103.16796860000002" y1="114.4" x2="103.16796860000002" y2="150.4" stroke="black"/>
-    <line x1="132.75636860000003" y1="114.4" x2="132.75636860000003" y2="150.4" stroke="black"/>
-    <text x="82.71420000000002" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.9075372" lengthAdjust="spacing"> foo </text>
-    <text x="117.96216860000003" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing"> x </text>
-    <text x="166.1530882" y="-127.35020000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="50.7934392" lengthAdjust="spacing"> &lt;f1&gt; bar</text>
-    <rect x="11.920000000000002" y="4" width="141.97023919999998" height="74.4" fill="none" stroke="black"/>
-    <line x1="37.350349599999994" y1="4" x2="37.350349599999994" y2="78.4" stroke="black"/>
-    <line x1="56.747449599999996" y1="4" x2="56.747449599999996" y2="78.4" stroke="black"/>
-    <line x1="127.69893919999998" y1="4" x2="127.69893919999998" y2="78.4" stroke="black"/>
-    <line x1="56.747449599999996" y1="53.60000000000001" x2="127.69893919999998" y2="53.60000000000001" stroke="black"/>
-    <line x1="56.747449599999996" y1="28.800000000000008" x2="127.69893919999998" y2="28.800000000000008" stroke="black"/>
-    <text x="24.635174799999998" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="9.4303496" lengthAdjust="spacing">a </text>
-    <text x="47.0488996" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="92.22319439999998" y="-60.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="54.9514896" lengthAdjust="spacing"> &lt;f0&gt; foo </text>
-    <text x="92.22319439999998" y="-36.15020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="13.5884" lengthAdjust="spacing"> x </text>
-    <text x="92.22319439999998" y="-11.350200000000008" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="54.190539199999996" lengthAdjust="spacing"> &lt;f1&gt; bar </text>
-    <text x="140.79458919999996" y="-36.150200000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="10.191300000000002" lengthAdjust="spacing"> b</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="135.2772946pt" height="167.4914pt" viewBox="0 0 135.2772946 167.4914">
+  <rect x="0" y="0" width="135.2772946" height="167.4914" fill="white"/>
+  <g transform="translate(0 167.4914) scale(1 -1)">
+    <path d="M 33.2876082 144.9914 C 33.2876082 127.63978993333335 24.356865109963092 95.79664309003692 33.2876082 86.86590000000001 C 37.44878264345426 82.70472555654575 46.780801756545735 91.02707444345427 50.9419762 86.86590000000001 C 59.041119691325065 78.76675650867494 50.9419762 63.95806286192463 50.9419762 52.50414429288695" fill="none" stroke="black"/>
+    <polygon points="50.9419762,40.990600000000015 53.9419762,50.990600000000015 47.9419762,50.990600000000015" fill="black" stroke="black"/>
+    <rect x="33.287608199999994" y="126.4914" width="90.0696864" height="37" fill="none" stroke="black"/>
+    <line x1="67.30974328613907" y1="126.9914" x2="67.30974328613907" y2="162.9914" stroke="black"/>
+    <line x1="90.09772053096802" y1="126.9914" x2="90.09772053096802" y2="162.9914" stroke="black"/>
+    <text x="50.29867574306953" y="-139.9416" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.9502764" lengthAdjust="spacing">foo</text>
+    <text x="78.70373190855355" y="-139.9416" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">x</text>
+    <text x="106.727507565484" y="-139.9416" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.189326" lengthAdjust="spacing">bar</text>
+    <rect x="11.920000000000002" y="15.990200000000002" width="78.8049028" height="74.50120000000001" fill="none" stroke="black"/>
+    <line x1="33.93685986874554" y1="16.4902" x2="33.93685986874554" y2="89.99140000000001" stroke="black"/>
+    <line x1="67.94577815126434" y1="16.4902" x2="67.94577815126434" y2="89.99140000000001" stroke="black"/>
+    <line x1="33.93685986874554" y1="65.49100000000001" x2="67.94577815126434" y2="65.49100000000001" stroke="black"/>
+    <line x1="33.93685986874554" y1="40.990600000000015" x2="67.94577815126434" y2="40.990600000000015" stroke="black"/>
+    <text x="22.928429934372772" y="-48.19100000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">a</text>
+    <text x="50.94131901000493" y="-72.69140000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.9502764" lengthAdjust="spacing">foo</text>
+    <text x="50.94131901000493" y="-48.19100000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">x</text>
+    <text x="50.94131901000493" y="-23.690600000000014" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.189326" lengthAdjust="spacing">bar</text>
+    <text x="79.33534047563217" y="-48.19100000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
   </g>
 </svg>

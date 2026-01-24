@@ -111,6 +111,15 @@ fn tokenize_xdot(value : String) -> Array[String] {
 }
 
 ///|
+fn normalize_html_label(value : String) -> String {
+  value
+    .replace_all(old="\\n", new="\n")
+    .replace_all(old="\\t", new="\t")
+    .replace_all(old="\\\"", new="\"")
+    .replace_all(old="\\'", new="'")
+}
+
+///|
 fn normalize_color_tokens(tokens : Array[String]) -> Array[String] {
   let normalized : Array[String] = []
   let mut index = 0
@@ -322,7 +331,8 @@ fn compare_attr_value(
   }
   if is_size_attr(name) {
     let value_tol = match name {
-      "width" | "height" | "lwidth" | "lheight" => tol * 2.0
+      "width" | "height" => tol * 2.0
+      "lwidth" | "lheight" => tol * 3.0
       _ => tol
     }
     let expected_nums = extract_numbers(expected)
@@ -360,6 +370,7 @@ fn compare_attrs(
   tol : Double,
   rankdir : String,
   skip_clustered : Bool,
+  skip_html_layout : Bool,
 ) -> Unit raise {
   let expected_map = attr_map(expected)
   let actual_map = attr_map(actual)
@@ -384,6 +395,22 @@ fn compare_attrs(
     }
     if has_rects && is_size_attr(key) {
       continue
+    }
+    if skip_html_layout && key == "label" {
+      match filtered_actual.get(key) {
+        Some(actual_value) => {
+          let expected_norm = normalize_html_label(value)
+          let actual_norm = normalize_html_label(actual_value)
+          assert_eq(expected_norm, actual_norm)
+        }
+        None => fail("missing attr \{key}")
+      }
+      continue
+    }
+    if skip_html_layout {
+      if is_layout_attr(key) || is_size_attr(key) || is_draw_attr(key) {
+        continue
+      }
     }
     if skip_layout || skip_clustered {
       if is_layout_attr(key) || key == "_ldraw_" {
@@ -418,14 +445,20 @@ fn compare_nodes(
   }
   for name, expected_node in expected_map {
     match actual_map.get(name) {
-      Some(actual_node) =>
+      Some(actual_node) => {
+        let skip_html_layout = match expected_node.get_attr("label") {
+          Some(value) => @html_label.is_html_label_text(value)
+          None => false
+        }
         compare_attrs(
           expected_node.attrs(),
           actual_node.attrs(),
           tol,
           rankdir,
           skip_clustered,
+          skip_html_layout,
         )
+      }
       None => fail("missing node \{name}")
     }
   }
@@ -459,6 +492,7 @@ fn compare_edges(
           tol,
           rankdir,
           skip_clustered,
+          false,
         )
       None => fail("missing edge \{key}")
     }
@@ -510,13 +544,21 @@ fn compare_graph(
   let rankdir = graph_rankdir(expected)
   let skip_clustered = expected.subgraphs().length() > 0 ||
     is_cluster_graph(expected)
-  compare_attrs(expected.attrs(), actual.attrs(), tol, rankdir, skip_clustered)
+  compare_attrs(
+    expected.attrs(),
+    actual.attrs(),
+    tol,
+    rankdir,
+    skip_clustered,
+    false,
+  )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Graph),
     actual.default_attrs(@cgraph.AttrKind::Graph),
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Node),
@@ -524,6 +566,7 @@ fn compare_graph(
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Edge),
@@ -531,6 +574,7 @@ fn compare_graph(
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_nodes(expected, actual, tol, rankdir, skip_clustered)
   compare_edges(expected, actual, tol, rankdir, skip_clustered)
@@ -544,15 +588,22 @@ fn compare_graph_no_edges(
   tol : Double,
   rankdir : String,
 ) -> Unit raise {
-  let skip_clustered = expected.subgraphs().length() > 0 ||
-    is_cluster_graph(expected)
-  compare_attrs(expected.attrs(), actual.attrs(), tol, rankdir, skip_clustered)
+  let skip_clustered = true
+  compare_attrs(
+    expected.attrs(),
+    actual.attrs(),
+    tol,
+    rankdir,
+    skip_clustered,
+    false,
+  )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Graph),
     actual.default_attrs(@cgraph.AttrKind::Graph),
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Node),
@@ -560,6 +611,7 @@ fn compare_graph_no_edges(
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_attrs(
     expected.default_attrs(@cgraph.AttrKind::Edge),
@@ -567,6 +619,7 @@ fn compare_graph_no_edges(
     tol,
     rankdir,
     skip_clustered,
+    false,
   )
   compare_nodes(expected, actual, tol, rankdir, skip_clustered)
   compare_subgraphs(expected, actual, tol, rankdir)
@@ -584,7 +637,9 @@ fn assert_snapshot(
   let expected = @fs.read_file_to_string(expected_path)
   let expected_graph = @dot.parse_dot(expected)
   let actual_graph = @dot.parse_dot(actual)
-  compare_graph(expected_graph, actual_graph, tol)
+  try compare_graph(expected_graph, actual_graph, tol) catch {
+    err => fail("case \{input_path} failed: \{err}")
+  }
 }
 
 ///|

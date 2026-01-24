@@ -29,6 +29,20 @@ const PAD_Y_PT : Double = 8.0
 const DEFAULT_GRAPH_PAD_PT : Double = 4.0
 
 ///|
+const RECORD_BORDER_PT : Double = 0.5
+
+const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
+
+///|
+const DIAGONAL_RBCONST : Double = 12.0
+
+///|
+const MCIRCLE_X : Double = 0.6614
+
+///|
+const MCIRCLE_Y : Double = 0.75
+
+///|
 fn font_width_scale(font_name : String) -> Double {
   let lower = font_name.to_lower()
   if lower.contains("palatino") {
@@ -56,8 +70,8 @@ priv struct LabelLine {
 }
 
 ///|
-fn char_width_units(ch : Char) -> Int {
-  match ch {
+fn char_width_units_base(ch : Char) -> Int {
+  let base = match ch {
     ' ' => 250
     '\t' => 250
     '!' => 333
@@ -137,6 +151,33 @@ fn char_width_units(ch : Char) -> Int {
     '}' => 480
     '~' => 541
     _ => 500
+  }
+  if ch.is_ascii_lowercase() {
+    base - 2
+  } else {
+    base
+  }
+}
+
+///|
+fn char_width_units(ch : Char) -> Int {
+  let base = char_width_units_base(ch)
+  if ch.is_ascii_uppercase() {
+    base + 22
+  } else if ch.is_ascii_lowercase() {
+    base - 2
+  } else {
+    base
+  }
+}
+
+///|
+fn record_char_width_units(ch : Char) -> Int {
+  let base = char_width_units_base(ch)
+  if ch.is_ascii_lowercase() {
+    base - 2
+  } else {
+    base
   }
 }
 
@@ -301,6 +342,124 @@ fn label_metrics(
 }
 
 ///|
+fn record_label_lines(
+  label : String,
+  font_size_pt : Double,
+) -> Array[LabelLine] {
+  let lines : Array[LabelLine] = []
+  let mut sb = StringBuilder::new()
+  let mut current_units = 0
+  let mut has_chars = false
+  let mut escaping = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      match ch {
+        'n' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Center,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
+        }
+        'l' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Left,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
+        }
+        'r' => {
+          push_label_line(
+            lines,
+            sb.to_string(),
+            @render.TextAlign::Right,
+            current_units,
+            font_size_pt,
+          )
+          sb = StringBuilder::new()
+          current_units = 0
+          has_chars = false
+        }
+        _ => {
+          sb.write_char(ch)
+          current_units = current_units + record_char_width_units(ch)
+          has_chars = true
+        }
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == '\n' || ch == '\r' {
+      push_label_line(
+        lines,
+        sb.to_string(),
+        @render.TextAlign::Center,
+        current_units,
+        font_size_pt,
+      )
+      sb = StringBuilder::new()
+      current_units = 0
+      has_chars = false
+      continue
+    }
+    sb.write_char(ch)
+    current_units = current_units + record_char_width_units(ch)
+    has_chars = true
+  }
+  if escaping {
+    sb.write_char('\\')
+    current_units = current_units + record_char_width_units('\\')
+    has_chars = true
+  }
+  if has_chars || lines.length() == 0 {
+    push_label_line(
+      lines,
+      sb.to_string(),
+      @render.TextAlign::Center,
+      current_units,
+      font_size_pt,
+    )
+  }
+  lines
+}
+
+///|
+fn record_label_metrics(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> (Array[LabelLine], Double, Double) {
+  let raw_lines = record_label_lines(label, font_size_pt)
+  let width_scale = font_width_scale(font_name)
+  let lines : Array[LabelLine] = []
+  let mut max_width = 0.0
+  for line in raw_lines {
+    let width_pt = line.width_pt * width_scale
+    if width_pt > max_width {
+      max_width = width_pt
+    }
+    lines.push({ text: line.text, align: line.align, width_pt })
+  }
+  let height_pt = line_height(font_name, font_size_pt) *
+    lines.length().to_double()
+  (lines, max_width, height_pt)
+}
+
+///|
 fn extract_numbers(value : String) -> Array[Double] {
   let sb = StringBuilder::new()
   for ch in value {
@@ -418,6 +577,9 @@ fn shape_kind(value : String?) -> String {
     "octagon" => "octagon"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
+    "mdiamond" => "mdiamond"
+    "msquare" => "msquare"
+    "mcircle" => "mcircle"
     "ellipse" | "oval" | "circle" => "ellipse"
     _ => "ellipse"
   }
@@ -504,6 +666,70 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+const MIN_ARROW_DIST2 : Double = 0.00000001
+
+///|
+fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
+  let dx = a.x - b.x
+  let dy = a.y - b.y
+  dx * dx + dy * dy
+}
+
+///|
+fn points_close(a : @geom.Point, b : @geom.Point) -> Bool {
+  point_dist2(a, b) <= MIN_ARROW_DIST2
+}
+
+///|
+fn fallback_arrow_from(tip : @geom.Point, at_head : Bool) -> @geom.Point {
+  if at_head {
+    { x: tip.x - 1.0, y: tip.y }
+  } else {
+    { x: tip.x + 1.0, y: tip.y }
+  }
+}
+
+///|
+fn select_arrow_from(
+  spline : @geom.Spline,
+  tip : @geom.Point,
+  from : @geom.Point,
+  at_head : Bool,
+) -> @geom.Point {
+  if !points_close(tip, from) {
+    return from
+  }
+  if at_head {
+    let mut idx = spline.points.length()
+    while idx > 0 {
+      idx = idx - 1
+      let candidate = spline.points[idx]
+      if !points_close(candidate, tip) {
+        return candidate
+      }
+    }
+    match spline.start {
+      Some(point) => if !points_close(point, tip) { return point }
+      None => ()
+    }
+  } else {
+    let mut idx = 0
+    while idx < spline.points.length() {
+      let candidate = spline.points[idx]
+      if !points_close(candidate, tip) {
+        return candidate
+      }
+      idx = idx + 1
+    }
+    match spline.end {
+      Some(point) => if !points_close(point, tip) { return point }
+      None => ()
+    }
+  }
+  fallback_arrow_from(tip, at_head)
+}
+
+///|
 fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -530,11 +756,12 @@ fn arrow_primitives(
       None => spline.points[0]
     }
   }
-  let from = if at_head {
+  let from_raw = if at_head {
     spline.points[spline.points.length() - 2]
   } else {
     spline.points[1]
   }
+  let from = select_arrow_from(spline, tip, from_raw, at_head)
   let arrowhead = if at_head {
     layout.edge.get_attr("arrowhead")
   } else {
@@ -572,6 +799,28 @@ fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
 }
 
 ///|
+fn rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+///|
+fn mdiamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: rect.ury },
+    { x: rect.llx, y: cy },
+    { x: cx, y: rect.lly },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+///|
 fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let cx = (rect.llx + rect.urx) / 2.0
   let cy = (rect.lly + rect.ury) / 2.0
@@ -580,6 +829,70 @@ fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
     { x: rect.urx, y: cy },
     { x: cx, y: rect.lly },
     { x: rect.llx, y: cy },
+  ]
+}
+
+///|
+fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
+  { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+}
+
+///|
+fn diagonal_segments(
+  points : Array[@geom.Point],
+) -> Array[(@geom.Point, @geom.Point)] {
+  let segments : Array[(@geom.Point, @geom.Point)] = []
+  let count = points.length()
+  if count < 2 {
+    return segments
+  }
+  let mut rbconst = DIAGONAL_RBCONST
+  for i in 0..<count {
+    let p0 = points[i]
+    let p1 = points[(i + 1) % count]
+    let dx = p1.x - p0.x
+    let dy = p1.y - p0.y
+    let d = Double::sqrt(dx * dx + dy * dy)
+    if d > 0.0001 {
+      let candidate = d / 3.0
+      if candidate < rbconst {
+        rbconst = candidate
+      }
+    }
+  }
+  for i in 0..<count {
+    let p0 = points[i]
+    let p1 = points[(i + 1) % count]
+    let p2 = points[(i + 2) % count]
+    let dx0 = p1.x - p0.x
+    let dy0 = p1.y - p0.y
+    let d0 = Double::sqrt(dx0 * dx0 + dy0 * dy0)
+    let dx1 = p2.x - p1.x
+    let dy1 = p2.y - p1.y
+    let d1 = Double::sqrt(dx1 * dx1 + dy1 * dy1)
+    if d0 < 0.0001 || d1 < 0.0001 {
+      continue
+    }
+    let t0 = rbconst / d0
+    let t1 = rbconst / d1
+    let start = point_at(p0, p1, 1.0 - t0)
+    let end = point_at(p1, p2, t1)
+    segments.push((start, end))
+  }
+  segments
+}
+
+///|
+fn mcircle_segments(rect : @geom.Rect) -> Array[(@geom.Point, @geom.Point)] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let rx = (rect.urx - rect.llx) / 2.0
+  let ry = (rect.ury - rect.lly) / 2.0
+  let dx = rx * MCIRCLE_X
+  let dy = ry * MCIRCLE_Y
+  [
+    ({ x: cx + dx, y: cy + dy }, { x: cx - dx, y: cy + dy }),
+    ({ x: cx + dx, y: cy - dy }, { x: cx - dx, y: cy - dy }),
   ]
 }
 
@@ -705,7 +1018,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
     }
     if !in_port && ch == '{' {
       let text = sb.to_string()
-      if text != "" {
+      if text.trim(chars=" \n\r\t") != "" {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
         segment_has_node = true
       }
@@ -747,22 +1060,25 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
 
 ///|
 fn record_field_from_text(field : String) -> RecordField {
-  if field.has_prefix("<") {
-    match field.find(">") {
+  let trimmed = field.trim(chars=" \n\r\t").to_string()
+  let raw_text = if trimmed.has_prefix("<") {
+    match trimmed.find(">") {
       Some(pos) => {
-        let len = field.length()
-        let text = if pos + 1 < len {
-          field.unsafe_substring(start=pos + 1, end=len)
+        let len = trimmed.length()
+        if pos + 1 < len {
+          trimmed.unsafe_substring(start=pos + 1, end=len)
         } else {
           ""
         }
-        { text, }
       }
-      None => { text: field }
+      None => trimmed
     }
   } else {
-    { text: field }
+    trimmed
   }
+  let normalized = raw_text.trim(chars=" \n\r\t").to_string()
+  let text = if normalized == "" { " " } else { normalized }
+  { text }
 }
 
 ///|
@@ -804,7 +1120,7 @@ fn record_nodes_sizes(
     match node {
       RecordNode::Field(field) => {
         let text = resolve_label(field.text, name)
-        let (_, text_width_pt, text_height_pt) = label_metrics(
+        let (_, text_width_pt, text_height_pt) = record_label_metrics(
           text, font_name, font_size_pt,
         )
         sizes.push({
@@ -1099,6 +1415,12 @@ fn write_record_node(
     Some(value) => value.to_lower() == "mrecord"
     None => false
   }
+  let inner_rect : @geom.Rect = {
+    llx: rect.llx,
+    lly: rect.lly + RECORD_BORDER_PT,
+    urx: rect.urx,
+    ury: rect.ury - RECORD_BORDER_PT,
+  }
   write_line(
     sb,
     if rounded {
@@ -1115,7 +1437,7 @@ fn write_record_node(
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let layouts = record_layout_nodes(
     nodes,
-    rect,
+    inner_rect,
     RecordOrientation::Horizontal,
     node.name(),
     font,
@@ -1127,7 +1449,7 @@ fn write_record_node(
     sb,
     layouts,
     RecordOrientation::Horizontal,
-    rect,
+    inner_rect,
     stroke,
     stroke_dash,
     bbox,
@@ -1485,6 +1807,30 @@ fn polygon_points(
 }
 
 ///|
+fn write_line_segment(
+  sb : StringBuilder,
+  start : @geom.Point,
+  end : @geom.Point,
+  stroke : String,
+  stroke_dash : String,
+  llx : Double,
+  lly : Double,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  let x1 = start.x - llx
+  let y1 = start.y - lly
+  let x2 = end.x - llx
+  let y2 = end.y - lly
+  write_line(
+    sb,
+    "<line x1=\"\{x1}\" y1=\"\{y1}\" x2=\"\{x2}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+    indent,
+    pretty,
+  )
+}
+
+///|
 fn write_arrow_ops(
   sb : StringBuilder,
   ops : Array[@render.DrawOp],
@@ -1620,6 +1966,21 @@ fn write_label_lines(
 ///|
 fn rect_center(rect : @geom.Rect) -> @geom.Point {
   { x: (rect.llx + rect.urx) / 2.0, y: (rect.lly + rect.ury) / 2.0 }
+}
+
+///|
+fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
+  let width = rect.urx - rect.llx
+  let height = rect.ury - rect.lly
+  if width <= gap * 2.0 || height <= gap * 2.0 {
+    return None
+  }
+  Some({
+    llx: rect.llx + gap,
+    lly: rect.lly + gap,
+    urx: rect.urx - gap,
+    ury: rect.ury - gap,
+  })
 }
 
 ///|
@@ -1940,7 +2301,12 @@ pub fn render_svg(
   for node_layout in layout.nodes {
     let node = node_layout.node
     let rect = node_rect(node_layout)
+    let raw_shape = match node.get_attr("shape") {
+      Some(value) => value.to_lower()
+      None => ""
+    }
     let kind = shape_kind(node.get_attr("shape"))
+    let is_doublecircle = raw_shape == "doublecircle"
     let stroke = @attrs.color(node.get_attr("color"), default="black")
     let style = @attrs.parse_style(node.get_attr("style"))
     let filled = if kind == "point" { true } else { style.filled }
@@ -1948,7 +2314,12 @@ pub fn render_svg(
     let fill = if filled {
       match node.get_attr("fillcolor") {
         Some(value) => value
-        None => if kind == "point" { stroke } else { "white" }
+        None =>
+          if kind == "point" {
+            stroke
+          } else {
+            @attrs.color(node.get_attr("color"), default="lightgrey")
+          }
       }
     } else {
       "none"
@@ -1961,6 +2332,103 @@ pub fn render_svg(
     }
     if kind == "plaintext" {
       // No outline for plaintext/none nodes.
+    } else if kind == "msquare" {
+      let points = rect_points(rect)
+      let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
+      write_line(
+        sb,
+        "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+        node_indent,
+        pretty,
+      )
+      for segment in diagonal_segments(points) {
+        let (start, end) = segment
+        write_line_segment(
+          sb,
+          start,
+          end,
+          stroke,
+          dash,
+          padded_bbox.llx,
+          padded_bbox.lly,
+          node_indent,
+          pretty,
+        )
+      }
+    } else if kind == "mdiamond" {
+      let points = mdiamond_points(rect)
+      let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
+      write_line(
+        sb,
+        "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+        node_indent,
+        pretty,
+      )
+      for segment in diagonal_segments(points) {
+        let (start, end) = segment
+        write_line_segment(
+          sb,
+          start,
+          end,
+          stroke,
+          dash,
+          padded_bbox.llx,
+          padded_bbox.lly,
+          node_indent,
+          pretty,
+        )
+      }
+    } else if is_doublecircle {
+      let cx = node_layout.pos.x - padded_bbox.llx
+      let cy = node_layout.pos.y - padded_bbox.lly
+      let rx = (rect.urx - rect.llx) / 2.0
+      let ry = (rect.ury - rect.lly) / 2.0
+      write_line(
+        sb,
+        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+        node_indent,
+        pretty,
+      )
+      match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
+        Some(inner) => {
+          let inner_cx = (inner.llx + inner.urx) / 2.0 - padded_bbox.llx
+          let inner_cy = (inner.lly + inner.ury) / 2.0 - padded_bbox.lly
+          let inner_rx = (inner.urx - inner.llx) / 2.0
+          let inner_ry = (inner.ury - inner.lly) / 2.0
+          write_line(
+            sb,
+            "<ellipse cx=\"\{inner_cx}\" cy=\"\{inner_cy}\" rx=\"\{inner_rx}\" ry=\"\{inner_ry}\" fill=\"none\" stroke=\"\{stroke}\"\{dash}/>",
+            node_indent,
+            pretty,
+          )
+        }
+        None => ()
+      }
+    } else if kind == "mcircle" {
+      let cx = node_layout.pos.x - padded_bbox.llx
+      let cy = node_layout.pos.y - padded_bbox.lly
+      let rx = (rect.urx - rect.llx) / 2.0
+      let ry = (rect.ury - rect.lly) / 2.0
+      write_line(
+        sb,
+        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+        node_indent,
+        pretty,
+      )
+      for segment in mcircle_segments(rect) {
+        let (start, end) = segment
+        write_line_segment(
+          sb,
+          start,
+          end,
+          stroke,
+          dash,
+          padded_bbox.llx,
+          padded_bbox.lly,
+          node_indent,
+          pretty,
+        )
+      }
     } else {
       match shape_polygon_points(kind, rect) {
         Some(points) => {
@@ -1997,6 +2465,9 @@ pub fn render_svg(
             )
           }
       }
+    }
+    if kind == "point" {
+      continue
     }
     let text = label_text(node.get_attr("label"), node.name())
     let font = @attrs.font_name(node.get_attr("fontname"))

@@ -160,10 +160,19 @@ const PAD_X_PT : Double = 16.0
 const PAD_Y_PT : Double = 8.0
 
 ///|
-const EDGE_LABEL_NODESEP_PT : Double = 5.0
+const RECORD_BORDER_PT : Double = 0.5
+
+const PERIPHERY_GAP_PT : Double = 4.0
+
+///|
+// Graphviz keeps edge-label ranks tight; zero nodesep matches label positions.
+const EDGE_LABEL_NODESEP_PT : Double = 0.0
 
 ///|
 const DEFAULT_GRAPH_MARGIN_IN : Double = 0.11
+
+///|
+const ELLIPSE_LABEL_SCALE : Double = 1.0
 
 
 ///|
@@ -180,7 +189,28 @@ fn font_width_scale(font_name : String) -> Double {
 }
 
 ///|
-fn char_width_units(ch : Char) -> Int {
+fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
+  let lower = font_name.to_lower()
+  if lower.contains("palatino") {
+    1.125
+  } else if lower.contains("times") {
+    let min_size = 10.0
+    let max_size = 14.0
+    if font_size_pt <= min_size {
+      1.125
+    } else if font_size_pt >= max_size {
+      1.1786
+    } else {
+      let t = (font_size_pt - min_size) / (max_size - min_size)
+      1.125 + t * (1.1786 - 1.125)
+    }
+  } else {
+    LINE_SPACING
+  }
+}
+
+///|
+fn char_width_units_base(ch : Char) -> Int {
   match ch {
     ' ' => 250
     '\t' => 250
@@ -265,6 +295,28 @@ fn char_width_units(ch : Char) -> Int {
 }
 
 ///|
+fn char_width_units(ch : Char, uppercase_boost : Bool) -> Int {
+  let base = char_width_units_base(ch)
+  if uppercase_boost && ch.is_ascii_uppercase() {
+    base + 22
+  } else if ch.is_ascii_lowercase() {
+    base - 2
+  } else {
+    base
+  }
+}
+
+///|
+fn record_char_width_units(ch : Char) -> Int {
+  let base = char_width_units_base(ch)
+  if ch.is_ascii_lowercase() {
+    base - 2
+  } else {
+    base
+  }
+}
+
+///|
 fn label_text_dimensions(
   label : String,
   font_name : String,
@@ -273,11 +325,28 @@ fn label_text_dimensions(
   if label == "" {
     return (0.0, 0.0)
   }
-  let line_height = if font_name.to_lower().contains("palatino") {
-    font_size_pt * 1.125
-  } else {
-    font_size_pt * LINE_SPACING
+  let mut has_lowercase = false
+  let mut scan_escape = false
+  for ch in label {
+    if scan_escape {
+      scan_escape = false
+      if ch != 'n' && ch != 'l' && ch != 'r' && ch.is_ascii_lowercase() {
+        has_lowercase = true
+        break
+      }
+      continue
+    }
+    if ch == '\\' {
+      scan_escape = true
+      continue
+    }
+    if ch.is_ascii_lowercase() {
+      has_lowercase = true
+      break
+    }
   }
+  let uppercase_boost = !has_lowercase
+  let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
   let mut max_units = 0
   let mut current_units = 0
   let mut lines = 1
@@ -292,7 +361,7 @@ fn label_text_dimensions(
         current_units = 0
         lines = lines + 1
       } else {
-        current_units = current_units + char_width_units(ch)
+        current_units = current_units + char_width_units(ch, uppercase_boost)
       }
       continue
     }
@@ -307,11 +376,69 @@ fn label_text_dimensions(
       current_units = 0
       lines = lines + 1
     } else {
-      current_units = current_units + char_width_units(ch)
+      current_units = current_units + char_width_units(ch, uppercase_boost)
     }
   }
   if escaping {
-    current_units = current_units + char_width_units('\\')
+    current_units = current_units + char_width_units('\\', uppercase_boost)
+  }
+  if current_units > max_units {
+    max_units = current_units
+  }
+  let width_scale = font_width_scale(font_name)
+  let width_pt = max_units.to_double() *
+    font_size_pt *
+    TEXT_SCALE *
+    width_scale /
+    1000.0
+  let height_pt = lines.to_double() * line_height
+  (width_pt, height_pt)
+}
+
+///|
+fn record_label_text_dimensions(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> (Double, Double) {
+  if label == "" {
+    return (0.0, 0.0)
+  }
+  let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
+  let mut max_units = 0
+  let mut current_units = 0
+  let mut lines = 1
+  let mut escaping = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      if ch == 'n' || ch == 'l' || ch == 'r' {
+        if current_units > max_units {
+          max_units = current_units
+        }
+        current_units = 0
+        lines = lines + 1
+      } else {
+        current_units = current_units + record_char_width_units(ch)
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == '\n' || ch == '\r' {
+      if current_units > max_units {
+        max_units = current_units
+      }
+      current_units = 0
+      lines = lines + 1
+    } else {
+      current_units = current_units + record_char_width_units(ch)
+    }
+  }
+  if escaping {
+    current_units = current_units + record_char_width_units('\\')
   }
   if current_units > max_units {
     max_units = current_units
@@ -492,7 +619,7 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
     }
     if !in_port && ch == '{' {
       let text = sb.to_string()
-      if text != "" {
+      if text.trim(chars=" \n\r\t") != "" {
         nodes.push(RecordNode::Field(record_field_from_text(text)))
         segment_has_node = true
       }
@@ -534,28 +661,32 @@ fn parse_record_nodes(parser : RecordParser) -> Array[RecordNode] {
 
 ///|
 fn record_field_from_text(field : String) -> RecordField {
-  if field.has_prefix("<") {
-    match field.find(">") {
+  let trimmed = field.trim(chars=" \n\r\t").to_string()
+  let (port_name, raw_text) : (String?, String) = if trimmed.has_prefix("<") {
+    match trimmed.find(">") {
       Some(pos) => {
         let name = if pos > 1 {
-          field.unsafe_substring(start=1, end=pos)
+          trimmed.unsafe_substring(start=1, end=pos)
         } else {
           ""
         }
-        let len = field.length()
+        let len = trimmed.length()
         let text = if pos + 1 < len {
-          field.unsafe_substring(start=pos + 1, end=len)
+          trimmed.unsafe_substring(start=pos + 1, end=len)
         } else {
           ""
         }
         let port_name : String? = if name == "" { None } else { Some(name) }
-        { name: port_name, text }
+        (port_name, text)
       }
-      None => { name: None, text: field }
+      None => (None, trimmed)
     }
   } else {
-    { name: None, text: field }
+    (None, trimmed)
   }
+  let normalized = raw_text.trim(chars=" \n\r\t").to_string()
+  let text = if normalized == "" { " " } else { normalized }
+  { name: port_name, text }
 }
 
 ///|
@@ -595,7 +726,7 @@ fn record_nodes_sizes(
   for node in nodes {
     match node {
       RecordNode::Field(field) => {
-        let (text_width_pt, text_height_pt) = label_text_dimensions(
+        let (text_width_pt, text_height_pt) = record_label_text_dimensions(
           field.text,
           font_name,
           font_size_pt,
@@ -808,9 +939,15 @@ fn record_rects(
     urx: pos.x + size.width_pt / 2.0,
     ury: pos.y + size.height_pt / 2.0,
   }
+  let inner_rect : @geom.Rect = {
+    llx: rect.llx,
+    lly: rect.lly + RECORD_BORDER_PT,
+    urx: rect.urx,
+    ury: rect.ury - RECORD_BORDER_PT,
+  }
   record_layout_nodes(
     nodes,
-    rect,
+    inner_rect,
     orientation,
     font,
     font_size_pt,
@@ -842,9 +979,15 @@ fn record_ports(
     urx: pos.x + size.width_pt / 2.0,
     ury: pos.y + size.height_pt / 2.0,
   }
+  let inner_rect : @geom.Rect = {
+    llx: rect.llx,
+    lly: rect.lly + RECORD_BORDER_PT,
+    urx: rect.urx,
+    ury: rect.ury - RECORD_BORDER_PT,
+  }
   record_layout_nodes(
     nodes,
-    rect,
+    inner_rect,
     orientation,
     font,
     font_size_pt,
@@ -856,6 +999,61 @@ fn record_ports(
   ports
 }
 
+///|
+fn record_port_padding_y(
+  edges : Array[@cgraph.Edge],
+  positions : Map[String, @geom.Point],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+) -> (Double, Double) {
+  let mut extra_below = 0.0
+  let mut extra_above = 0.0
+  let update_padding = (node_name : String, port : @cgraph.Port?) => {
+    match port {
+      Some(value) =>
+        match value.name {
+          Some(port_name) =>
+            match label_ports_map.get(node_name) {
+              Some(ports) =>
+                match ports.get(port_name) {
+                  Some(port_info) =>
+                    match positions.get(node_name) {
+                      Some(node_pos) => {
+                        let dy = port_info.center.y - node_pos.y
+                        let half_height =
+                          port_info.size.height_pt / 2.0 -
+                          RECORD_BORDER_PT / 2.0 -
+                          0.01
+                        let adjusted =
+                          if half_height < 0.0 { 0.0 } else { half_height }
+                        if dy < 0.0 && adjusted > extra_below {
+                          extra_below = adjusted
+                        } else if dy > 0.0 && adjusted > extra_above {
+                          extra_above = adjusted
+                        }
+                      }
+                      None => ()
+                    }
+                  None => ()
+                }
+              None => ()
+            }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  for edge in edges {
+    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+      update_padding(edge.tail().name(), edge.tail_port())
+    }
+    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+      update_padding(edge.head().name(), edge.head_port())
+    }
+  }
+  (extra_below, extra_above)
+}
+
+///|
 ///|
 fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
@@ -1095,12 +1293,19 @@ fn node_size(
     Some(value) => value.to_lower()
     None => ""
   }
+  let regular_shape =
+    shape == "msquare" ||
+    shape == "mcircle" ||
+    shape == "circle" ||
+    shape == "doublecircle"
   let scale_ellipse = match shape {
     "box"
     | "rect"
     | "rectangle"
     | "record"
     | "mrecord"
+    | "msquare"
+    | "mdiamond"
     | "point"
     | "dot"
     | "plaintext"
@@ -1110,6 +1315,9 @@ fn node_size(
   }
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
     (default_point_size_in(), default_point_size_in())
+  } else if regular_shape {
+    let height = default_node_height_in()
+    (height, height)
   } else {
     (default_node_width_in(), default_node_height_in())
   }
@@ -1126,6 +1334,9 @@ fn node_size(
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
+  if shape == "point" || shape == "dot" {
+    return node_size_from_points(base_width_pt, base_height_pt)
+  }
   if is_record_shape(node) {
     let label = label_text(node)
     let nodes = record_nodes(label)
@@ -1147,7 +1358,8 @@ fn node_size(
     } else {
       base_height_pt
     }
-    return node_size_from_points(width_pt, height_pt)
+    let bordered_height = height_pt + RECORD_BORDER_PT * 2.0
+    return node_size_from_points(width_pt, bordered_height)
   }
   let label = label_text(node)
   if @html_label.is_html_label_text(label) {
@@ -1156,13 +1368,13 @@ fn node_size(
         let (html_width_pt, html_height_pt) = html_label_size(
           html_label, font, font_size_pt,
         )
-        let width_pt = if html_width_pt + pad_x_pt > base_width_pt {
-          html_width_pt + pad_x_pt
+        let width_pt = if html_width_pt > base_width_pt {
+          html_width_pt
         } else {
           base_width_pt
         }
-        let height_pt = if html_height_pt + pad_y_pt > base_height_pt {
-          html_height_pt + pad_y_pt
+        let height_pt = if html_height_pt > base_height_pt {
+          html_height_pt
         } else {
           base_height_pt
         }
@@ -1179,7 +1391,7 @@ fn node_size(
   let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
   let mut scaled_label_width_pt = label_width_pt
   let mut scaled_label_height_pt = label_height_pt
-  if scale_ellipse && has_label {
+  if shape == "mdiamond" && has_label {
     let sqrt2 = Double::sqrt(2.0)
     let temp = label_height_pt * sqrt2
     if base_height_pt > temp {
@@ -1196,18 +1408,49 @@ fn node_size(
       scaled_label_width_pt = label_width_pt * sqrt2
       scaled_label_height_pt = temp
     }
+    let cos_val = sqrt2 / 2.0
+    scaled_label_width_pt = scaled_label_width_pt / cos_val
+    scaled_label_height_pt = scaled_label_height_pt / cos_val
+  } else if scale_ellipse && has_label {
+    let sqrt2 = Double::sqrt(2.0)
+    let temp = label_height_pt * sqrt2
+    if base_height_pt > temp {
+      let ratio = label_height_pt / base_height_pt
+      let denom = 1.0 - ratio * ratio
+      if denom > 0.0 {
+        let scale = Double::sqrt(1.0 / denom)
+        scaled_label_width_pt = label_width_pt * scale
+      } else {
+        scaled_label_width_pt = label_width_pt * sqrt2
+        scaled_label_height_pt = temp
+      }
+    } else {
+      scaled_label_width_pt = label_width_pt * sqrt2
+      scaled_label_height_pt = temp
+    }
+    scaled_label_width_pt = scaled_label_width_pt * ELLIPSE_LABEL_SCALE
   }
   let scaled_label_width_in = scaled_label_width_pt / 72.0
   let scaled_label_height_in = scaled_label_height_pt / 72.0
-  let width_in = if scaled_label_width_in > base_width_in {
+  let mut width_in = if scaled_label_width_in > base_width_in {
     scaled_label_width_in
   } else {
     base_width_in
   }
-  let height_in = if scaled_label_height_in > base_height_in {
+  let mut height_in = if scaled_label_height_in > base_height_in {
     scaled_label_height_in
   } else {
     base_height_in
+  }
+  if regular_shape {
+    let size_in = if width_in > height_in { width_in } else { height_in }
+    width_in = size_in
+    height_in = size_in
+  }
+  if shape == "doublecircle" {
+    let gap_in = PERIPHERY_GAP_PT * 2.0 / 72.0
+    width_in = width_in + gap_in
+    height_in = height_in + gap_in
   }
   let width_pt = width_in * 72.0
   let half = width_pt / 2.0
@@ -4850,7 +5093,8 @@ fn edge_label_pos(
           let abs_dy = Double::abs(dy)
           let denom = abs_dx + abs_dy
           let bias = if denom <= 0.0 { 0.0 } else { abs_dx / denom }
-          let pad = nodesep_pt * bias * pad_scale + label_pad_boost
+          let pad_bias = if bias < 0.25 { 0.25 } else { bias }
+          let pad = nodesep_pt * pad_bias * pad_scale + label_pad_boost
           let half_extent = match rankdir {
             RankDir::LR | RankDir::RL => height / 2.0
             _ => width / 2.0
@@ -4886,7 +5130,8 @@ fn edge_label_pos(
       if offset <= 0.0 {
         Some(base_pos)
       } else {
-        Some(point_add(base_pos, point_scale(normal, offset)))
+        let pad = nodesep_pt * 0.2 * pad_scale + label_pad_boost
+        Some(point_add(base_pos, point_scale(normal, offset + pad)))
       }
     }
   }
@@ -5653,7 +5898,13 @@ pub fn layout_dot(
     }
   }
   let enable_complex_tuning = has_clusters && has_dotted_edges
-  let label_pad_scale = if enable_complex_tuning { 0.7 } else { 1.0 }
+  let label_pad_scale = 1.0
+  let (port_pad_below, port_pad_above) =
+    if has_clusters {
+    (0.0, 0.0)
+  } else {
+    record_port_padding_y(edges, positions, label_ports_map)
+  }
   let head_port_counts : Map[String, Int] = Map::new()
   let head_port_min_dist : Map[String, Double] = Map::new()
   let head_port_max_dist : Map[String, Double] = Map::new()
@@ -6066,6 +6317,16 @@ pub fn layout_dot(
       ury: final_bbox.ury + pad,
     }
   }
+  if graph.is_root() && (rankdir == RankDir::TB || rankdir == RankDir::BT) {
+    if port_pad_below > 0.0 || port_pad_above > 0.0 {
+      final_bbox = {
+        llx: final_bbox.llx,
+        lly: final_bbox.lly - port_pad_below,
+        urx: final_bbox.urx,
+        ury: final_bbox.ury + port_pad_above,
+      }
+    }
+  }
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
     match graph_label_metrics(graph) {
@@ -6099,13 +6360,13 @@ pub fn layout_dot(
     edges: final_edges,
     subgraphs,
   }
-  let adjusted =
-    if enable_complex_tuning {
-      layout
-    } else {
-      let adjusted = adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
-      adjust_edge_labels_for_label_overlaps(adjusted, nodesep_pt, rankdir)
-    }
+  let adjusted_for_clusters =
+    adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
+  let adjusted = adjust_edge_labels_for_label_overlaps(
+    adjusted_for_clusters,
+    nodesep_pt,
+    rankdir,
+  )
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly
