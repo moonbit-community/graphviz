@@ -591,11 +591,13 @@ fn assert_snapshot(
 test "xdot snapshot parity" {
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
+    ("refs/graphviz/graphs/directed/arr_none.gv", "tests/render/xdot/arr_none.xdot"),
     ("refs/graphviz/graphs/directed/arrows.gv", "tests/render/xdot/arrows.xdot"),
     ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
     (
       "refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot",
     ),
+    ("refs/graphviz/graphs/directed/record2.gv", "tests/render/xdot/record2.xdot"),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
     ("refs/graphviz/graphs/directed/longflat.gv", "tests/render/xdot/longflat.xdot"),
     ("refs/graphviz/graphs/directed/structs.gv", "tests/render/xdot/structs.xdot"),

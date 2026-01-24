@@ -196,7 +196,9 @@ test "svg spot-check outputs" {
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "graph1"),
     ("refs/graphviz/graphs/directed/arrows.gv", "arrows"),
+    ("refs/graphviz/graphs/directed/arr_none.gv", "arr_none"),
     ("refs/graphviz/graphs/directed/records.gv", "records"),
+    ("refs/graphviz/graphs/directed/record2.gv", "record2"),
     ("refs/graphviz/graphs/directed/clust.gv", "clust"),
     ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
     ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),

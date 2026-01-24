@@ -322,7 +322,13 @@ test "dot layout tier2 snapshots" {
     "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
   )
   assert_snapshot(
+    "refs/graphviz/graphs/directed/record2.gv", "tests/layout/dot/record2.gv.dot", 0.01,
+  )
+  assert_snapshot(
     "refs/graphviz/graphs/directed/structs.gv", "tests/layout/dot/structs.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/arr_none.gv", "tests/layout/dot/arr_none.gv.dot", 0.01,
   )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
