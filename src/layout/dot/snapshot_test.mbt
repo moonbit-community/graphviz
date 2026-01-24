@@ -331,6 +331,9 @@ test "dot layout tier2 snapshots" {
     "refs/graphviz/graphs/directed/fsm.gv", "tests/layout/dot/fsm.gv.dot", 0.01,
   )
   assert_snapshot(
+    "refs/graphviz/graphs/directed/dfa.gv", "tests/layout/dot/dfa.gv.dot", 0.01,
+  )
+  assert_snapshot(
     "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
   )
   assert_snapshot(
@@ -344,6 +347,10 @@ test "dot layout tier2 snapshots" {
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/table.gv", "tests/layout/dot/table.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/train11.gv", "tests/layout/dot/train11.gv.dot",
+    0.01,
   )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
