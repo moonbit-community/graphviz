@@ -322,7 +322,13 @@ test "dot layout tier2 snapshots" {
     "refs/graphviz/graphs/directed/clust1.gv", "tests/layout/dot/clust1.gv.dot", 0.01,
   )
   assert_snapshot(
+    "refs/graphviz/graphs/directed/clust4.gv", "tests/layout/dot/clust4.gv.dot", 0.01,
+  )
+  assert_snapshot(
     "refs/graphviz/graphs/directed/try.gv", "tests/layout/dot/try.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/fsm.gv", "tests/layout/dot/fsm.gv.dot", 0.01,
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
@@ -335,6 +341,9 @@ test "dot layout tier2 snapshots" {
   )
   assert_snapshot(
     "refs/graphviz/graphs/directed/arr_none.gv", "tests/layout/dot/arr_none.gv.dot", 0.01,
+  )
+  assert_snapshot(
+    "refs/graphviz/graphs/directed/table.gv", "tests/layout/dot/table.gv.dot", 0.01,
   )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",

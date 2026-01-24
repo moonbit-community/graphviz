@@ -1,0 +1,36 @@
+digraph structs {
+  graph [bb="0,0,663.70,438"];
+  node [label="\N", shape=plaintext];
+  struct1 [label=<<TABLE CELLPADDING="10" BORDER="0">
+	<TR>
+	    <TD HEIGHT="30" WIDTH="90">a</TD>
+	    <TD>b</TD>
+	    <TD>c</TD>
+	</TR>
+    </TABLE>>, pos="385.41,409", width=2.53927, height=0.80556];
+  struct2 [label="<<TABLE>\n\t<TR>\n\t    <TD COLSPAN=\"3\">elefantel</TD>\n\t    <TD ROWSPAN=\"2\" VALIGN=\"bottom\" ALIGN=\"right\">two</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ROWSPAN=\"2\"><TABLE BGCOLOR=\"grey\">\n\t\t<TR>\n\t\t    <TD>buca</TD>\n\t\t</TR><TR>\n\t\t    <TD BGCOLOR=\"yellow\">c</TD>\n\t\t</TR><TR>\n\t\t    <TD>f</TD>\n\t\t</TR>\n\t    </TABLE></TD>\n\t    <TD>patratos</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ALIGN=\"right\">4</TD>\n\t</TR>\n\t</TABLE>\n    >", pos="219.41,172", width=5.87481, height=4.77778];
+  struct3 [label=<<TABLE CELLPADDING="5">
+	<TR>
+	    <TD ROWSPAN="3">Hello</TD>
+	    <TD ROWSPAN="2" COLSPAN="3"><TABLE BORDER="4">
+		<TR>
+		    <TD COLSPAN="3">b</TD>
+		</TR><TR>
+		    <TD>a</TD>
+		    <TD>dino</TD>
+		    <TD>y</TD>
+		</TR><TR>
+		    <TD COLSPAN="3">rhino</TD>
+		</TR>
+	    </TABLE></TD>
+	</TR><TR>
+	    <TD COLSPAN="2">climb</TD>
+	    <TD ROWSPAN="2">Up</TD>
+	</TR><TR>
+	    <TD COLSPAN="3">low</TD>
+	</TR>
+    </TABLE>>, pos="552.41,172", width=2.8714, height=1.71111];
+  struct1 -> struct3 [pos="e,552.41,233.60 385.41,380 385.41,350.17 364.32,311.60 385.41,290.50 424.78,251.14 527.38,315.53 552.41,290.50 563.11,279.80 552.41,258.59 552.41,245.11"];
+  struct1 -> struct2 [pos="e,219.41,344 385.41,380 385.41,350.17 406.51,311.60 385.41,290.50 346.29,251.37 243.92,265.99 219.41,290.50 209.52,300.40 219.41,320.06 219.41,332.49"];
+}
+

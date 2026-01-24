@@ -595,15 +595,18 @@ test "xdot snapshot parity" {
     ("refs/graphviz/graphs/directed/arrows.gv", "tests/render/xdot/arrows.xdot"),
     ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
     ("refs/graphviz/graphs/directed/clust1.gv", "tests/render/xdot/clust1.xdot"),
+    ("refs/graphviz/graphs/directed/clust4.gv", "tests/render/xdot/clust4.xdot"),
     (
       "refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot",
     ),
     ("refs/graphviz/graphs/directed/record2.gv", "tests/render/xdot/record2.xdot"),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
+    ("refs/graphviz/graphs/directed/fsm.gv", "tests/render/xdot/fsm.xdot"),
     ("refs/graphviz/graphs/directed/longflat.gv", "tests/render/xdot/longflat.xdot"),
     ("refs/graphviz/graphs/directed/structs.gv", "tests/render/xdot/structs.xdot"),
     ("tests/layout/dot/compound.dot", "tests/render/xdot/compound.xdot"),
     ("tests/layout/dot/complex.dot", "tests/render/xdot/complex.xdot"),
+    ("refs/graphviz/graphs/directed/table.gv", "tests/render/xdot/table.xdot"),
     ("refs/graphviz/graphs/directed/try.gv", "tests/render/xdot/try.xdot"),
     (
       "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
