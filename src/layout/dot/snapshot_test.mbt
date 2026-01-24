@@ -315,6 +315,9 @@ test "dot layout tier2 snapshots" {
   assert_snapshot(
     "refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot", 0.01,
   )
+  assert_snapshot(
+    "tests/layout/dot/compound.dot", "tests/layout/dot/compound.gv.dot", 0.01,
+  )
   assert_snapshot_nodes_only(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
     30.0,
