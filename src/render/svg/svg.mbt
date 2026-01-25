@@ -962,6 +962,27 @@ priv enum RecordOrientation {
 }
 
 ///|
+fn record_layout_orientation(graph : @cgraph.Graph) -> RecordOrientation {
+  let mut current = graph
+  while true {
+    match current.get_attr("rankdir") {
+      Some(value) =>
+        match value.to_lower() {
+          "lr" | "rl" => return RecordOrientation::Vertical
+          "tb" | "bt" => return RecordOrientation::Horizontal
+          _ => ()
+        }
+      None => ()
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  RecordOrientation::Horizontal
+}
+
+///|
 priv enum RecordNode {
   Field(RecordField)
   Group(Array[RecordNode])
@@ -1221,15 +1242,15 @@ fn record_layout_nodes(
     RecordOrientation::Horizontal => rect.urx - rect.llx
   }
   if axis_sizes.length() > 0 {
-    if axis_sum <= 0.0 {
-      let equal = axis_total / axis_sizes.length().to_double()
+    // Match Graphviz resize_reclbl: distribute extra size evenly with int rounding.
+    let delta = axis_total - axis_sum
+    if delta != 0.0 {
+      let inc = delta / axis_sizes.length().to_double()
       for i in 0..<axis_sizes.length() {
-        axis_sizes[i] = equal
-      }
-    } else {
-      let scale = axis_total / axis_sum
-      for i in 0..<axis_sizes.length() {
-        axis_sizes[i] = axis_sizes[i] * scale
+        let before = (i.to_double() * inc).trunc().to_int()
+        let after = ((i + 1).to_double() * inc).trunc().to_int()
+        let amt = after - before
+        axis_sizes[i] = axis_sizes[i] + Double::from_int(amt)
       }
     }
   }
@@ -1435,10 +1456,11 @@ fn write_record_node(
   let size = @attrs.font_size(node.get_attr("fontsize"))
   let color = @attrs.color(node.get_attr("fontcolor"), default="black")
   let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let orientation = record_layout_orientation(node.graph())
   let layouts = record_layout_nodes(
     nodes,
     inner_rect,
-    RecordOrientation::Horizontal,
+    orientation,
     node.name(),
     font,
     size,
@@ -1448,7 +1470,7 @@ fn write_record_node(
   write_record_separators(
     sb,
     layouts,
-    RecordOrientation::Horizontal,
+    orientation,
     inner_rect,
     stroke,
     stroke_dash,

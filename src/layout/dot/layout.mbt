@@ -562,7 +562,10 @@ priv enum RecordOrientation {
 
 ///|
 fn record_layout_orientation(_rankdir : RankDir) -> RecordOrientation {
-  RecordOrientation::Horizontal
+  match _rankdir {
+    RankDir::LR | RankDir::RL => RecordOrientation::Vertical
+    RankDir::TB | RankDir::BT => RecordOrientation::Horizontal
+  }
 }
 
 ///|
