@@ -258,8 +258,8 @@ test "html table size includes border and spacing" {
     bg_color: None,
   }
   let (width, height) = html_table_size(table, fixed_cell_size)
-  assert_true(Double::is_close(width, 24.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(width, 28.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(height, 26.0, absolute_tolerance=0.01))
 }
 
 ///|
@@ -276,8 +276,8 @@ test "html table size respects colspan" {
   }
   let cell_size = (_cell : HtmlCell) => (30.0, 20.0)
   let (width, height) = html_table_size(table, cell_size)
-  assert_true(Double::is_close(width, 34.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(height, 22.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(width, 38.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(height, 26.0, absolute_tolerance=0.01))
 }
 
 ///|

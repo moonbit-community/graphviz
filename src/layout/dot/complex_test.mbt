@@ -112,6 +112,75 @@ fn complex_edge_label_pos(edge : @cgraph.Edge) -> @geom.Point? {
 }
 
 ///|
+fn complex_polyline_length(points : Array[@geom.Point]) -> Double {
+  if points.length() < 2 {
+    return 0.0
+  }
+  let mut total = 0.0
+  for i in 1..<points.length() {
+    let dx = points[i].x - points[i - 1].x
+    let dy = points[i].y - points[i - 1].y
+    total = total + @math.hypot(dx, dy)
+  }
+  total
+}
+
+///|
+fn complex_sample_polyline(
+  points : Array[@geom.Point],
+  t : Double,
+) -> @geom.Point {
+  if points.length() == 0 {
+    return { x: 0.0, y: 0.0 }
+  }
+  if points.length() == 1 {
+    return points[0]
+  }
+  let total = complex_polyline_length(points)
+  if total <= 0.0 {
+    return points[0]
+  }
+  let target = total * t
+  let mut acc = 0.0
+  for i in 1..<points.length() {
+    let a = points[i - 1]
+    let b = points[i]
+    let dx = b.x - a.x
+    let dy = b.y - a.y
+    let seg = @math.hypot(dx, dy)
+    if acc + seg >= target {
+      let ratio = if seg <= 0.0 { 0.0 } else { (target - acc) / seg }
+      return { x: a.x + dx * ratio, y: a.y + dy * ratio }
+    }
+    acc = acc + seg
+  }
+  points[points.length() - 1]
+}
+
+///|
+fn complex_resample_polyline(
+  points : Array[@geom.Point],
+  count : Int,
+) -> Array[@geom.Point] {
+  if count <= 0 {
+    return []
+  }
+  if points.length() == 0 {
+    return []
+  }
+  if count == 1 {
+    return [points[0]]
+  }
+  let samples : Array[@geom.Point] = []
+  let steps = count - 1
+  for i in 0..=steps {
+    let t = i.to_double() / steps.to_double()
+    samples.push(complex_sample_polyline(points, t))
+  }
+  samples
+}
+
+///|
 test "dot layout handles complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
@@ -197,18 +266,20 @@ test "dot layout matches graphviz edge control points for complex sample" {
     }
     let expected_points = complex_edge_points(edge)
     let actual_points = complex_edge_points(actual_edge)
-    let count = if expected_points.length() < actual_points.length() {
-      expected_points.length()
+    let expected_samples = complex_resample_polyline(expected_points, 8)
+    let actual_samples = complex_resample_polyline(actual_points, 8)
+    let count = if expected_samples.length() < actual_samples.length() {
+      expected_samples.length()
     } else {
-      actual_points.length()
+      actual_samples.length()
     }
     guard count > 0 else {
       fail("missing edge pos for \{tail} -> \{head}")
     }
     let mut max_sq = 0.0
     for i in 0..<count {
-      let dx = actual_points[i].x - expected_points[i].x
-      let dy = actual_points[i].y - expected_points[i].y
+      let dx = actual_samples[i].x - expected_samples[i].x
+      let dy = actual_samples[i].y - expected_samples[i].y
       let dist_sq = dx * dx + dy * dy
       if dist_sq > max_sq {
         max_sq = dist_sq

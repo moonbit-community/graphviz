@@ -562,10 +562,7 @@ priv enum RecordOrientation {
 
 ///|
 fn record_layout_orientation(_rankdir : RankDir) -> RecordOrientation {
-  match _rankdir {
-    RankDir::LR | RankDir::RL => RecordOrientation::Vertical
-    RankDir::TB | RankDir::BT => RecordOrientation::Horizontal
-  }
+  RecordOrientation::Horizontal
 }
 
 ///|
@@ -6260,15 +6257,14 @@ pub fn layout_dot(
           let keep_label_kink =
             label_width_pt > 0.0 &&
             (has_explicit_port ||
-              diff_local_cluster ||
               (same_outer_cluster &&
                 (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
           let simplified =
-            if enable_complex_tuning && has_vnodes && !(split_label || keep_label_kink) {
-            simplify_polyline(clipped, simplify_tol)
-          } else {
-            clipped
-          }
+            if enable_complex_tuning && has_vnodes && !split_label && !keep_label_kink {
+              simplify_polyline(clipped, simplify_tol)
+            } else {
+              clipped
+            }
           let adjusted =
             if is_dotted && same_outer_cluster {
             adjust_intracluster_dotted_points(simplified)
