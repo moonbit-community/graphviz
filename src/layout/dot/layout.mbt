@@ -4997,7 +4997,7 @@ fn spline_label_pos_with_dir(
   if points.length() == 0 {
     return None
   }
-  let samples = sample_spline_points(points, 24)
+  let samples = sample_spline_points(points, 96)
   if samples.length() == 0 {
     return None
   }
@@ -5016,7 +5016,7 @@ fn spline_label_pos_at_axis(
   if points.length() == 0 {
     return None
   }
-  let samples = sample_spline_points(points, 12)
+  let samples = sample_spline_points(points, 48)
   if samples.length() == 0 {
     return None
   }
@@ -5141,9 +5141,9 @@ fn edge_label_pos(
         Some((width, height)) => {
           let mut pad = label_pad_boost
           if apply_label_pad {
-            pad = pad + nodesep_pt * 0.25
+            pad = pad + nodesep_pt * 0.22
           } else if label_rank_x is None && width >= EDGE_LABEL_PAD_WIDTH_PT {
-            pad = pad + nodesep_pt * 0.25
+            pad = pad + nodesep_pt * 0.22
           }
           let half_extent = match rankdir {
             RankDir::LR | RankDir::RL => height / 2.0
@@ -6252,10 +6252,14 @@ pub fn layout_dot(
             Some(value) => value > 1
             None => false
           }
+          let has_explicit_port =
+            port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
           let keep_label_kink =
             label_width_pt > 0.0 &&
-            same_outer_cluster &&
-            (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))
+            (has_explicit_port ||
+              diff_local_cluster ||
+              (same_outer_cluster &&
+                (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
           let simplified =
             if enable_complex_tuning && has_vnodes && !(split_label || keep_label_kink) {
             simplify_polyline(clipped, simplify_tol)
