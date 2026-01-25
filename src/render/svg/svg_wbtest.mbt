@@ -105,7 +105,7 @@ fn extract_label_entries(
 fn parse_point(text : String) -> @geom.Point? {
   let parts : Array[String] = []
   for part_view in text.split(",") {
-    parts.push(part_view.trim(chars=" \n\r\t").to_string())
+    parts.push(part_view.trim(chars=" \n\r\t!").to_string())
   }
   if parts.length() < 2 {
     return None
@@ -113,6 +113,75 @@ fn parse_point(text : String) -> @geom.Point? {
   let x = parse_double(parts[0], 0.0)
   let y = parse_double(parts[1], 0.0)
   Some({ x, y })
+}
+
+///|
+fn is_simple_label(text : String) -> Bool {
+  if text == "" {
+    return false
+  }
+  for ch in text {
+    if ch == '\n' ||
+      ch == '\r' ||
+      ch == '{' ||
+      ch == '}' ||
+      ch == '|' ||
+      ch == '<' ||
+      ch == '>' ||
+      ch == '\\' {
+      return false
+    }
+  }
+  true
+}
+
+///|
+fn node_label_text(node : @cgraph.Node) -> String {
+  label_text(node.get_attr("label"), node.name())
+}
+
+///|
+fn unique_simple_node_labels(graph : @cgraph.Graph) -> Array[String] {
+  let counts : Map[String, Int] = Map::new()
+  for node in graph.nodes() {
+    let label = node_label_text(node)
+    if is_simple_label(label) {
+      let count = match counts.get(label) {
+        Some(value) => value
+        None => 0
+      }
+      counts[label] = count + 1
+    }
+  }
+  let labels : Array[String] = []
+  for label, count in counts {
+    if count == 1 {
+      labels.push(label)
+    }
+  }
+  labels.sort_by(String::compare)
+  labels
+}
+
+///|
+fn node_label_positions(
+  graph : @cgraph.Graph,
+  label : String,
+) -> Array[@geom.Point] {
+  let positions : Array[@geom.Point] = []
+  for node in graph.nodes() {
+    if node_label_text(node) == label {
+      match node.get_attr("pos") {
+        Some(pos) =>
+          match parse_point(pos) {
+            Some(point) => positions.push(point)
+            None => ()
+          }
+        None => ()
+      }
+    }
+  }
+  positions
 }
 
 ///|
@@ -246,6 +315,22 @@ test "render_svg matches graphviz label positions in complex" {
   assert_edge_label_parity(svg, padded_bbox, reference, "MechCmd", eps)
   assert_edge_label_parity(svg, padded_bbox, reference, "Raw PROT_G", eps)
   assert_cluster_label_parity(svg, padded_bbox, reference, "ShipX", eps)
+}
+
+///|
+test "render_svg matches graphviz node label positions in complex" {
+  let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
+  let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
+  let labels = unique_simple_node_labels(reference)
+  let eps = 3.0
+  for label in labels {
+    let entries = extract_label_entries(svg, label, padded_bbox)
+    let expected = node_label_positions(reference, label)
+    if entries.length() != 1 || expected.length() != 1 {
+      fail("unexpected label count for \{label}")
+    }
+    assert_point_close(entries[0].center, expected[0], eps)
+  }
 }
 
 ///|
