@@ -1,15 +1,14 @@
 digraph if {
-  graph [rankdir=LR, bb="0,0,142.84,108"];
+  graph [rankdir=LR, bb="0,0,127,108"];
   node [label="\N"];
   subgraph {
     graph [rank=same];
-    b [pos="107.92,90", width=0.75, height=0.5];
-    c [pos="107.92,18", width=0.75, height=0.5];
+    b [pos="100,90", width=0.75, height=0.5];
+    c [pos="100,18", width=0.75, height=0.5];
   }
-  a [pos="34.92,90", width=0.75, height=0.5];
-  b [pos="107.92,90", width=0.75, height=0.5];
-  c [pos="107.92,18", width=0.75, height=0.5];
-  a -> b [pos="e,89.92,90 52.92,90 58.51,90 67.17,90 71.42,90 73.75,90 76.30,90 78.41,90"];
-  c -> b [label="long long long", pos="e,107.92,63 107.92,45 107.92,47.16 107.92,49.32 107.92,51.49", lp="99.52,48.24"];
+  a [pos="27,90", width=0.75, height=0.5];
+  b [pos="100,90", width=0.75, height=0.5];
+  c [pos="100,18", width=0.75, height=0.5];
+  a -> b [pos="e,82,90 45,90 50.59,90 59.25,90 63.50,90 65.83,90 68.38,90 70.49,90"];
+  c -> b [label="long long long", pos="e,100,63 100,45 100,47.16 100,49.32 100,51.49", lp="91.75,48.24"];
 }
-

@@ -1,6 +1,7 @@
 digraph edge_labels {
   nodesep="0.25";
   ranksep="0.5";
+  margin=0;
   a [shape=box];
   b [shape=box];
   c [shape=box];

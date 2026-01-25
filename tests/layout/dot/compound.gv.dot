@@ -1,16 +1,15 @@
 digraph compound_clusters {
-  graph [compound=true, bb="0,0,98.70,177.60"];
+  graph [compound=true, bb="0,0,98.80,177"];
   node [label="\N"];
   subgraph cluster_1 {
-    graph [label=cluster_1, bb="7.92,92.80,90.78,169.60", lp="49.35,157.20"];
-    C1N1 [pos="49.35,118.80", width=0.92857, height=0.5];
+    graph [label=cluster_1, bb="7.92,92.50,90.88,169", lp="49.40,156.75"];
+    C1N1 [pos="49.40,118.50", width=0.93, height=0.5];
   }
   subgraph cluster_2 {
-    graph [label=cluster_2, bb="7.92,8,90.78,84.80", lp="49.35,72.40"];
-    C2N1 [pos="49.35,34", width=0.92857, height=0.5];
+    graph [label=cluster_2, bb="7.92,8,90.88,84.50", lp="49.40,72.25"];
+    C2N1 [pos="49.40,34", width=0.93, height=0.5];
   }
-  C1N1 [pos="49.35,118.80", width=0.92857, height=0.5];
-  C2N1 [pos="49.35,34", width=0.92857, height=0.5];
-  C1N1 -> C2N1 [lhead=cluster_2, ltail=cluster_1, pos="e,49.35,52 49.35,100.80 49.35,93.24 49.35,82.61 49.35,76.40 49.35,72.10 49.35,67.50 49.35,63.51"];
+  C1N1 [pos="49.40,118.50", width=0.93, height=0.5];
+  C2N1 [pos="49.40,34", width=0.93, height=0.5];
+  C1N1 -> C2N1 [lhead=cluster_2, ltail=cluster_1, pos="e,49.40,52 49.40,100.50 49.40,92.99 49.40,82.41 49.40,76.25 49.40,72 49.40,67.46 49.40,63.51"];
 }
-

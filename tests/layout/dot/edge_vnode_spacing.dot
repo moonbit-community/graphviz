@@ -1,6 +1,7 @@
 digraph edge_vnode_spacing {
   nodesep="0.25";
   ranksep="0.5";
+  margin=0;
   node [shape=box];
   {rank=same; a; b;}
   {rank=same; c; d;}

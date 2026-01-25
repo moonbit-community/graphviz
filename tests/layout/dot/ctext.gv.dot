@@ -1,19 +1,18 @@
 digraph G {
-  graph [bb="0,0,359.11,231.68"];
+  graph [bb="0,0,339.39,231.68"];
   node [label="\N", style=filled];
-  red [color=red, pos="175.65,187.84", width=0.75, height=0.5];
-  xyz [label="hello\nworld", color=slateblue, fontsize=24, fontname="Palatino-Italic", style=filled, fontcolor=hotpink, pos="79.65,187.84", width=1.40307, height=1.2178];
-  blue [color=blue, fontcolor=black, pos="126.65,90", width=0.75491, height=0.5];
-  cyan [color=cyan, pos="36.65,18", width=0.79813, height=0.5];
-  green [color=green, pos="223.65,90", width=0.88483, height=0.5];
-  orange [color=orange, pos="314.65,18", width=1.01501, height=0.5];
-  yellow [color=yellow, pos="223.65,18", width=1.01527, height=0.5];
-  magenta [color=magenta, pos="126.65,18", width=1.18868, height=0.5];
-  red -> green [pos="e,223.65,108 175.65,169.84 175.65,159.53 168.36,146.21 175.65,138.92 186.97,127.61 215.71,146.86 223.65,138.92 228.23,134.35 223.65,125.40 223.65,119.51"];
-  red -> blue [pos="e,126.65,108 175.65,169.84 175.65,159.53 182.94,146.21 175.65,138.92 164.10,127.37 134.71,146.98 126.65,138.92 122.08,134.35 126.65,125.40 126.65,119.51"];
-  blue -> cyan [pos="e,65.39,18 99.48,90 93.53,90 85.85,94.20 81.65,90 64.68,73.03 90.70,27.05 81.65,18 80.53,16.88 78.26,18 76.90,18"];
-  blue -> magenta [pos="e,126.65,36 126.65,72 126.65,66.58 126.65,58.08 126.65,54 126.65,51.84 126.65,49.47 126.65,47.51"];
-  green -> yellow [pos="e,223.65,36 223.65,72 223.65,66.58 223.65,58.08 223.65,54 223.65,51.84 223.65,49.47 223.65,47.51"];
-  green -> orange [pos="e,278.11,18 255.51,90 260.06,90 265.94,93.22 269.15,90 285.52,73.63 269.15,43.70 269.15,20.55"];
+  red [style=filled, color=red, pos="165.35,187.84", width=0.75, height=0.5];
+  xyz [label="hello\nworld", color=slateblue, fontsize=24, fontname="Palatino-Italic", style=filled, fontcolor=hotpink, pos="70.35,187.84", width=1.3984, height=1.2178];
+  blue [style=filled, color=blue, fontcolor=black, pos="117.35,90", width=0.75, height=0.5];
+  cyan [style=filled, color=cyan, pos="28.35,18", width=0.78755, height=0.5];
+  green [style=filled, color=green, pos="213.35,90", width=0.87281, height=0.5];
+  orange [style=filled, color=orange, pos="303.35,18", width=1.00109, height=0.5];
+  yellow [style=filled, color=yellow, pos="213.35,18", width=1.00135, height=0.5];
+  magenta [style=filled, color=magenta, pos="117.35,18", width=1.17238, height=0.5];
+  red -> green [pos="e,213.35,108 165.35,169.84 165.35,159.53 158.06,146.21 165.35,138.92 176.67,127.61 205.41,146.86 213.35,138.92 217.93,134.35 213.35,125.40 213.35,119.51"];
+  red -> blue [pos="e,117.35,108 165.35,169.84 165.35,159.53 172.64,146.21 165.35,138.92 154.04,127.61 125.30,146.86 117.35,138.92 112.78,134.35 117.35,125.40 117.35,119.51"];
+  blue -> cyan [pos="e,56.70,18 90.35,90 84.52,90 76.98,94.12 72.85,90 55.88,73.03 81.88,27.03 72.85,18 71.76,16.91 69.55,18 68.22,18"];
+  blue -> magenta [pos="e,117.35,36 117.35,72 117.35,66.58 117.35,58.08 117.35,54 117.35,51.84 117.35,49.47 117.35,47.51"];
+  green -> yellow [pos="e,213.35,36 213.35,72 213.35,66.58 213.35,58.08 213.35,54 213.35,51.84 213.35,49.47 213.35,47.51"];
+  green -> orange [pos="e,267.31,18 244.77,90 249.30,90 255.15,93.20 258.35,90 274.72,73.63 258.35,43.70 258.35,20.55"];
 }
-
