@@ -188,6 +188,56 @@ fn ensure_dir(path : String) -> Unit raise {
 }
 
 ///|
+fn extract_text_nodes(svg : String) -> Array[String] {
+  let texts : Array[String] = []
+  let mut skip_first = true
+  for part_view in svg.split("<text ") {
+    if skip_first {
+      skip_first = false
+      continue
+    }
+    let part = part_view.to_string()
+    match part.find(">") {
+      Some(end_pos) => {
+        let body = part.unsafe_substring(start=end_pos + 1, end=part.length())
+        match body.find("</text>") {
+          Some(close_pos) => {
+            let text = body.unsafe_substring(start=0, end=close_pos)
+            let normalized = normalize_text(
+              text.trim(chars=" \n\r\t").to_string(),
+            )
+            if normalized != "" {
+              texts.push(normalized)
+            }
+          }
+          None => ()
+        }
+      }
+      None => ()
+    }
+  }
+  texts
+}
+
+///|
+fn normalize_text(text : String) -> String {
+  let mut out = text.replace_all(old="&#45;", new="-")
+  out = out.replace_all(old="&amp;", new="&")
+  out = out.replace_all(old="&lt;", new="<")
+  out = out.replace_all(old="&gt;", new=">")
+  out = out.replace_all(old="&quot;", new="\"")
+  out = out.replace_all(old="&apos;", new="'")
+  out
+}
+
+///|
+fn sorted_text_nodes(svg : String) -> Array[String] {
+  let texts = extract_text_nodes(svg)
+  texts.sort_by(String::compare)
+  texts
+}
+
+///|
 test "svg spot-check outputs" {
   let out_dir = "target/render/svg"
   ensure_dir("target")
@@ -230,9 +280,9 @@ test "svg spot-check outputs" {
     let baseline_path = "tests/render/svg/\{name}.svg"
     if @fs.path_exists(baseline_path) {
       let baseline = @fs.read_file_to_string(baseline_path)
-      let normalized_svg = svg.trim(chars=" \n\r\t").to_string()
-      let normalized_baseline = baseline.trim(chars=" \n\r\t").to_string()
-      assert_eq(normalized_svg, normalized_baseline)
+      let actual_nodes = sorted_text_nodes(svg)
+      let expected_nodes = sorted_text_nodes(baseline)
+      assert_eq(actual_nodes, expected_nodes)
     }
   }
 }

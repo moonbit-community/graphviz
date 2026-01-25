@@ -1,35 +1,98 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="347.39125813547537pt" height="239.68124086713192pt" viewBox="0 0 347.39125813547537 239.68124086713192">
-  <rect x="0" y="0" width="347.39125813547537" height="239.68124086713192" fill="white"/>
-  <g transform="translate(0 239.68124086713192) scale(1 -1)">
-    <path d="M 169.3519698785238 173.84062043356596 C 169.3519698785238 163.53385036130496 162.06398286829747 150.2082972270093 169.3519698785238 142.92031021678298 C 180.66567837750856 131.6066017177982 209.4080063314169 150.86427376388986 217.3519698785238 142.92031021678298 C 221.92618847375275 138.34609162155402 217.3519698785238 129.40444314176676 217.3519698785238 123.51354429288693" fill="none" stroke="black"/>
-    <polygon points="217.3519698785238,112 220.3519698785238,122 214.3519698785238,122" fill="black" stroke="black"/>
-    <path d="M 169.3519698785238 173.84062043356596 C 169.3519698785238 163.53385036130496 176.6399568887501 150.2082972270093 169.3519698785238 142.92031021678298 C 158.03826137953902 131.6066017177982 129.29593342563066 150.86427376388986 121.35196987852379 142.92031021678298 C 116.77775128329482 138.34609162155402 121.35196987852379 129.40444314176676 121.35196987852379 123.51354429288693" fill="none" stroke="black"/>
-    <polygon points="121.35196987852379,112 124.35196987852379,122 118.35196987852379,122" fill="black" stroke="black"/>
-    <path d="M 94.35196987852379 94 C 88.51863654519046 94 80.97675943544532 98.12478955692153 76.85196987852379 94 C 59.881407130046654 77.02943725152286 85.8834306455471 31.031460767023308 76.85196987852379 22 C 75.75961109295432 20.907641214430523 73.54550396448994 22 72.21748404993451 22" fill="none" stroke="black"/>
-    <polygon points="60.70393975704758,22 70.70393975704758,19 70.70393975704758,25" fill="black" stroke="black"/>
-    <path d="M 121.35196987852379 76 C 121.35196987852379 70.57567721464434 121.35196987852379 62.08107595118551 121.35196987852379 58 C 121.35196987852379 55.83784809762898 121.35196987852379 53.468245931125466 121.35196987852379 51.513544292886934" fill="none" stroke="black"/>
-    <polygon points="121.35196987852379,40 124.35196987852379,50 118.35196987852379,50" fill="black" stroke="black"/>
-    <path d="M 217.3519698785238 76 C 217.3519698785238 70.57567721464434 217.3519698785238 62.08107595118551 217.3519698785238 58 C 217.3519698785238 55.83784809762898 217.3519698785238 53.468245931125466 217.3519698785238 51.513544292886934" fill="none" stroke="black"/>
-    <polygon points="217.3519698785238,40 220.3519698785238,50 214.3519698785238,50" fill="black" stroke="black"/>
-    <path d="M 248.77330330742103 94 C 253.2995254977886 94 259.1514474745578 97.20052240396595 262.3519698785238 94 C 278.7208242245927 77.63114565393104 262.3519698785238 47.701888366559004 262.3519698785238 24.552832549838513" fill="none" stroke="black"/>
-    <polygon points="271.3126816215722,22 270.8533925442606,32.43019911331813 265.1878444396049,30.454961235534462" fill="black" stroke="black"/>
-    <ellipse cx="74.35196987852379" cy="191.84062043356596" rx="50.3425726624572" ry="43.84062043356596" fill="slateblue" stroke="slateblue"/>
-    <text x="74.35196987852379" y="-196.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink" textLength="47.045370240000004" lengthAdjust="spacing">hello</text>
-    <text x="74.35196987852379" y="-169.04062043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Palatino-Italic" font-size="24" fill="hotpink" textLength="54.957546144000005" lengthAdjust="spacing">world</text>
-    <ellipse cx="169.3519698785238" cy="191.84062043356596" rx="27" ry="18" fill="red" stroke="red"/>
-    <text x="169.3519698785238" y="-186.79082043356595" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="17.189326" lengthAdjust="spacing">red</text>
-    <ellipse cx="217.3519698785238" cy="94" rx="31.421333428897242" ry="18" fill="green" stroke="green"/>
-    <text x="217.3519698785238" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="29.9080684" lengthAdjust="spacing">green</text>
-    <ellipse cx="121.35196987852379" cy="94" rx="27" ry="18" fill="blue" stroke="blue"/>
-    <text x="121.35196987852379" y="-88.95020000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="23.181810400000003" lengthAdjust="spacing">blue</text>
-    <ellipse cx="32.35196987852379" cy="22" rx="28.351969878523786" ry="18" fill="cyan" stroke="cyan"/>
-    <text x="32.35196987852379" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="25.437484800000004" lengthAdjust="spacing">cyan</text>
-    <ellipse cx="121.35196987852379" cy="22" rx="42.205834362686744" ry="18" fill="magenta" stroke="magenta"/>
-    <text x="121.35196987852379" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="46.227736799999995" lengthAdjust="spacing">magenta</text>
-    <ellipse cx="217.3519698785238" cy="22" rx="36.04856125861431" ry="18" fill="yellow" stroke="yellow"/>
-    <text x="217.3519698785238" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="36.6615032" lengthAdjust="spacing">yellow</text>
-    <ellipse cx="307.3519698785238" cy="22" rx="36.03928825695158" ry="18" fill="orange" stroke="orange"/>
-    <text x="307.3519698785238" y="-16.9502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="36.647914799999995" lengthAdjust="spacing">orange</text>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: G Pages: 1 -->
+<svg width="348pt" height="240pt"
+ viewBox="0.00 0.00 348.00 240.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 235.68)">
+<title>G</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-235.68 343.65,-235.68 343.65,4 -4,4"/>
+<!-- xyz -->
+<g id="node1" class="node">
+<title>xyz</title>
+<ellipse fill="slateblue" stroke="slateblue" cx="71" cy="-187.84" rx="50.56" ry="43.84"/>
+<text xml:space="preserve" text-anchor="middle" x="71" y="-192.04" font-family="Palatino Linotype,serif" font-style="italic" font-size="24.00" fill="hotpink">hello</text>
+<text xml:space="preserve" text-anchor="middle" x="71" y="-165.04" font-family="Palatino Linotype,serif" font-style="italic" font-size="24.00" fill="hotpink">world</text>
+</g>
+<!-- red -->
+<g id="node2" class="node">
+<title>red</title>
+<ellipse fill="red" stroke="red" cx="167" cy="-187.84" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="167" y="-182.79" font-family="Times,serif" font-size="14.00">red</text>
+</g>
+<!-- green -->
+<g id="node3" class="node">
+<title>green</title>
+<ellipse fill="green" stroke="green" cx="126" cy="-90" rx="31.39" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="126" y="-84.95" font-family="Times,serif" font-size="14.00">green</text>
+</g>
+<!-- red&#45;&gt;green -->
+<g id="edge1" class="edge">
+<title>red&#45;&gt;green</title>
+<path fill="none" stroke="black" d="M159.86,-170.15C153.72,-155.8 144.76,-134.85 137.59,-118.11"/>
+<polygon fill="black" stroke="black" points="140.94,-117.03 133.79,-109.22 134.51,-119.79 140.94,-117.03"/>
+</g>
+<!-- blue -->
+<g id="node4" class="node">
+<title>blue</title>
+<ellipse fill="blue" stroke="blue" cx="208" cy="-90" rx="27" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="208" y="-84.95" font-family="Times,serif" font-size="14.00">blue</text>
+</g>
+<!-- red&#45;&gt;blue -->
+<g id="edge2" class="edge">
+<title>red&#45;&gt;blue</title>
+<path fill="none" stroke="black" d="M174.14,-170.15C180.27,-155.8 189.24,-134.85 196.4,-118.11"/>
+<polygon fill="black" stroke="black" points="199.49,-119.79 200.2,-109.22 193.05,-117.03 199.49,-119.79"/>
+</g>
+<!-- yellow -->
+<g id="node7" class="node">
+<title>yellow</title>
+<ellipse fill="yellow" stroke="yellow" cx="36" cy="-18" rx="36" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="36" y="-12.95" font-family="Times,serif" font-size="14.00">yellow</text>
+</g>
+<!-- green&#45;&gt;yellow -->
+<g id="edge5" class="edge">
+<title>green&#45;&gt;yellow</title>
+<path fill="none" stroke="black" d="M107.78,-74.83C95.14,-65 78.07,-51.72 63.75,-40.58"/>
+<polygon fill="black" stroke="black" points="66.04,-37.93 56,-34.56 61.74,-43.46 66.04,-37.93"/>
+</g>
+<!-- orange -->
+<g id="node8" class="node">
+<title>orange</title>
+<ellipse fill="orange" stroke="orange" cx="126" cy="-18" rx="36" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="126" y="-12.95" font-family="Times,serif" font-size="14.00">orange</text>
+</g>
+<!-- green&#45;&gt;orange -->
+<g id="edge6" class="edge">
+<title>green&#45;&gt;orange</title>
+<path fill="none" stroke="black" d="M126,-71.7C126,-64.41 126,-55.73 126,-47.54"/>
+<polygon fill="black" stroke="black" points="129.5,-47.62 126,-37.62 122.5,-47.62 129.5,-47.62"/>
+</g>
+<!-- cyan -->
+<g id="node5" class="node">
+<title>cyan</title>
+<ellipse fill="cyan" stroke="cyan" cx="208" cy="-18" rx="28.32" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="208" y="-12.95" font-family="Times,serif" font-size="14.00">cyan</text>
+</g>
+<!-- blue&#45;&gt;cyan -->
+<g id="edge3" class="edge">
+<title>blue&#45;&gt;cyan</title>
+<path fill="none" stroke="black" d="M208,-71.7C208,-64.41 208,-55.73 208,-47.54"/>
+<polygon fill="black" stroke="black" points="211.5,-47.62 208,-37.62 204.5,-47.62 211.5,-47.62"/>
+</g>
+<!-- magenta -->
+<g id="node6" class="node">
+<title>magenta</title>
+<ellipse fill="magenta" stroke="magenta" cx="297" cy="-18" rx="42.65" ry="18"/>
+<text xml:space="preserve" text-anchor="middle" x="297" y="-12.95" font-family="Times,serif" font-size="14.00">magenta</text>
+</g>
+<!-- blue&#45;&gt;magenta -->
+<g id="edge4" class="edge">
+<title>blue&#45;&gt;magenta</title>
+<path fill="none" stroke="black" d="M224.74,-75.83C237.05,-66.15 254.07,-52.76 268.51,-41.41"/>
+<polygon fill="black" stroke="black" points="270.66,-44.17 276.35,-35.24 266.33,-38.67 270.66,-44.17"/>
+</g>
+</g>
 </svg>

@@ -1,53 +1,80 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="370.4781712pt" height="232.00160000000005pt" viewBox="0 0 370.4781712 232.00160000000005">
-  <rect x="0" y="0" width="370.4781712" height="232.00160000000005" fill="white"/>
-  <g transform="translate(0 232.00160000000005) scale(1 -1)">
-    <path d="M 164.3253608 174.00160000000005 C 164.3253608 161.33480000000006 155.36858062406623 144.9579801759338 164.3253608 136.00120000000004 C 184.47480592427183 115.85175487572819 221.31659793807538 136.00120000000004 249.81221650711305 136.00120000000004" fill="none" stroke="black"/>
-    <polygon points="259.3253608,138.00160000000002 249.18150997405348,140.4718814456949 249.49685335135024,134.480173963316" fill="black" stroke="black"/>
-    <path d="M 164.3253608 174.00160000000005 C 164.3253608 161.33480000000006 173.28214097593377 144.9579801759338 164.3253608 136.00120000000004 C 142.99759293555888 114.67343213555893 104.0013236619246 136.00120000000004 73.83930509288692 136.00120000000004" fill="none" stroke="black"/>
-    <polygon points="69.3253608,129.00160000000002 79.72125005640036,128.03957787517157 78.53405116534073,133.9209517616939" fill="black" stroke="black"/>
-    <text x="135.95696051568981" y="-195.95180000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">a</text>
-    <text x="206.34928816059067" y="-195.95180000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
-    <text x="234.7176884449009" y="-195.95180000000005" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">c</text>
-    <rect x="4" y="13.000000000000007" width="130.6507216" height="116.00160000000002" fill="none" stroke="black"/>
-    <rect x="7.009389797121305" y="103.50120000000001" width="96.32407755644248" height="22.500400000000013" fill="none" stroke="black"/>
-    <text x="55.171428575342546" y="-109.70160000000003" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="46.295678800000005" lengthAdjust="spacing">elefantel</text>
-    <rect x="105.33972721831131" y="59.7506" width="26.301604584567357" height="66.25100000000003" fill="none" stroke="black"/>
-    <text x="128.63194200575737" y="-65.95100000000001" transform="scale(1 -1)" text-anchor="end" font-family="Times-Roman" font-size="14" fill="black" textLength="20.2195392" lengthAdjust="spacing">two</text>
-    <rect x="7.009389797121305" y="15.999999999999986" width="45.57970105465813" height="85.50120000000003" fill="none" stroke="black"/>
-    <rect x="10.01877959424261" y="18.999999999999986" width="39.56092146041552" height="79.50120000000003" fill="grey" stroke="none"/>
-    <rect x="10.01877959424261" y="18.999999999999986" width="39.56092146041552" height="79.50120000000003" fill="none" stroke="black"/>
-    <rect x="13.188938193712588" y="72.34273535067845" width="33.220604261475565" height="23.081046493215595" fill="none" stroke="black"/>
-    <text x="29.79924032445037" y="-78.83345859728627" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="25.437484800000004" lengthAdjust="spacing">buca</text>
-    <rect x="13.188938193712588" y="47.210076753392215" width="33.220604261475565" height="23.081046493215595" fill="yellow" stroke="none"/>
-    <rect x="13.188938193712588" y="47.210076753392215" width="33.220604261475565" height="23.081046493215595" fill="none" stroke="black"/>
-    <text x="29.79924032445037" y="-53.700800000000015" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">c</text>
-    <rect x="13.188938193712588" y="22.077418156105967" width="33.220604261475565" height="23.0810464932156" fill="none" stroke="black"/>
-    <text x="29.79924032445037" y="-28.568141402713767" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="4.4705836" lengthAdjust="spacing">f</text>
-    <rect x="54.595350716526966" y="59.7506" width="48.73811663703681" height="41.75060000000001" fill="none" stroke="black"/>
-    <text x="78.96440903504538" y="-75.57610000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="42.5860456" lengthAdjust="spacing">patratos</text>
-    <rect x="54.595350716526966" y="15.999999999999986" width="77.0459810863517" height="41.75060000000001" fill="none" stroke="black"/>
-    <text x="128.63194200575737" y="-31.825499999999995" transform="scale(1 -1)" text-anchor="end" font-family="Times-Roman" font-size="14" fill="black" textLength="6.7942" lengthAdjust="spacing">4</text>
-    <rect x="152.1725504" y="4" width="214.3056208" height="134.00160000000002" fill="none" stroke="black"/>
-    <rect x="155.16231357429584" y="7.000000000000011" width="42.1307014173222" height="128.00160000000002" fill="none" stroke="black"/>
-    <text x="176.22766428295694" y="-65.95100000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="30.2749552" lengthAdjust="spacing">Hello</text>
-    <rect x="199.2861904411486" y="37.50040000000001" width="86.36579029882714" height="97.50120000000001" fill="none" stroke="black"/>
-    <rect x="205.26571678974028" y="43.50040000000001" width="74.40673760164378" height="85.50120000000001" fill="none" stroke="black"/>
-    <rect x="211.58373162656395" y="99.81856549893895" width="61.770707927996426" height="23.03932399151151" fill="none" stroke="black"/>
-    <text x="242.46908559056214" y="-106.28842749469472" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
-    <rect x="211.58373162656395" y="74.73133800424425" width="12.613807109461277" height="23.03932399151151" fill="none" stroke="black"/>
-    <text x="217.89063518129458" y="-81.20120000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">a</text>
-    <rect x="226.3035436816331" y="74.73133800424425" width="31.529801164976988" height="23.03932399151151" fill="none" stroke="black"/>
-    <text x="242.06844426412158" y="-81.20120000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="23.9427608" lengthAdjust="spacing">dino</text>
-    <rect x="259.93934979221797" y="74.73133800424425" width="13.415089762342404" height="23.03932399151151" fill="none" stroke="black"/>
-    <text x="266.64689467338917" y="-81.20120000000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">y</text>
-    <rect x="211.58373162656395" y="49.64411050954955" width="61.770707927996426" height="23.03932399151151" fill="none" stroke="black"/>
-    <text x="242.46908559056214" y="-56.11397250530531" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="28.413344400000003" lengthAdjust="spacing">rhino</text>
-    <rect x="287.6451561895063" y="37.50040000000001" width="45.098903216875215" height="47.750600000000006" fill="none" stroke="black"/>
-    <text x="310.1946077979439" y="-56.32590000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="31.25332" lengthAdjust="spacing">climb</text>
-    <rect x="334.73723485591205" y="7.000000000000011" width="28.751173169792082" height="78.251" fill="none" stroke="black"/>
-    <text x="349.1128214408081" y="-41.07570000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="16.849616" lengthAdjust="spacing">Up</text>
-    <rect x="199.2861904411486" y="7.000000000000011" width="86.36579029882714" height="28.500400000000003" fill="none" stroke="black"/>
-    <text x="242.46908559056217" y="-16.200400000000013" transform="scale(1 -1)" text-anchor="middle" font-family="Times-Roman" font-size="14" fill="black" textLength="20.2195392" lengthAdjust="spacing">low</text>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.1 (20251213.1925)
+ -->
+<!-- Title: structs Pages: 1 -->
+<svg width="414pt" height="251pt"
+ viewBox="0.00 0.00 414.00 251.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 246.5)">
+<title>structs</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-246.5 409.62,-246.5 409.62,4 -4,4"/>
+<!-- struct1 -->
+<g id="node1" class="node">
+<title>struct1</title>
+<text xml:space="preserve" text-anchor="start" x="146.88" y="-213.2" font-family="Times,serif" font-size="14.00">a</text>
+<text xml:space="preserve" text-anchor="start" x="206.88" y="-213.2" font-family="Times,serif" font-size="14.00">b</text>
+<text xml:space="preserve" text-anchor="start" x="235.62" y="-213.2" font-family="Times,serif" font-size="14.00">c</text>
+</g>
+<!-- struct2 -->
+<g id="node2" class="node">
+<title>struct2</title>
+<polygon fill="none" stroke="black" points="11,-110.5 11,-133 105.25,-133 105.25,-110.5 11,-110.5"/>
+<text xml:space="preserve" text-anchor="start" x="34.88" y="-116.7" font-family="Times,serif" font-size="14.00">elefantel</text>
+<polygon fill="none" stroke="black" points="107.25,-67.75 107.25,-133 133.5,-133 133.5,-67.75 107.25,-67.75"/>
+<text xml:space="preserve" text-anchor="start" x="110.25" y="-73.95" font-family="Times,serif" font-size="14.00">two</text>
+<polygon fill="none" stroke="black" points="11,-25 11,-108.5 54.5,-108.5 54.5,-25 11,-25"/>
+<polygon fill="grey" stroke="none" points="14,-28 14,-105.5 51.5,-105.5 51.5,-28 14,-28"/>
+<polygon fill="none" stroke="black" points="17,-80 17,-102.5 48.5,-102.5 48.5,-80 17,-80"/>
+<text xml:space="preserve" text-anchor="start" x="20" y="-86.2" font-family="Times,serif" font-size="14.00">buca</text>
+<polygon fill="yellow" stroke="none" points="17,-55.5 17,-78 48.5,-78 48.5,-55.5 17,-55.5"/>
+<polygon fill="none" stroke="black" points="17,-55.5 17,-78 48.5,-78 48.5,-55.5 17,-55.5"/>
+<text xml:space="preserve" text-anchor="start" x="29.75" y="-61.7" font-family="Times,serif" font-size="14.00">c</text>
+<polygon fill="none" stroke="black" points="17,-31 17,-53.5 48.5,-53.5 48.5,-31 17,-31"/>
+<text xml:space="preserve" text-anchor="start" x="30.5" y="-37.2" font-family="Times,serif" font-size="14.00">f</text>
+<polygon fill="none" stroke="black" points="14,-28 14,-105.5 51.5,-105.5 51.5,-28 14,-28"/>
+<polygon fill="none" stroke="black" points="56.5,-67.75 56.5,-108.5 105.25,-108.5 105.25,-67.75 56.5,-67.75"/>
+<text xml:space="preserve" text-anchor="start" x="59.5" y="-83.08" font-family="Times,serif" font-size="14.00">patratos</text>
+<polygon fill="none" stroke="black" points="56.5,-25 56.5,-65.75 133.5,-65.75 133.5,-25 56.5,-25"/>
+<text xml:space="preserve" text-anchor="start" x="123.75" y="-40.33" font-family="Times,serif" font-size="14.00">4</text>
+<polygon fill="none" stroke="black" points="8,-22 8,-136 136.5,-136 136.5,-22 8,-22"/>
+</g>
+<!-- struct1&#45;&gt;struct2 -->
+<g id="edge2" class="edge">
+<title>struct1&#45;&gt;struct2</title>
+<path fill="none" stroke="black" d="M160.51,-194.28C150.76,-181.66 138.1,-165.27 125.43,-148.86"/>
+<polygon fill="black" stroke="black" points="128.22,-146.74 119.33,-140.96 122.68,-151.02 128.22,-146.74"/>
+</g>
+<!-- struct3 -->
+<g id="node3" class="node">
+<title>struct3</title>
+<polygon fill="none" stroke="black" points="173.88,-7 173.88,-151 215.88,-151 215.88,-7 173.88,-7"/>
+<text xml:space="preserve" text-anchor="start" x="179.88" y="-73.95" font-family="Times,serif" font-size="14.00">Hello</text>
+<polygon fill="none" stroke="black" points="217.88,-37.5 217.88,-151 318.62,-151 318.62,-37.5 217.88,-37.5"/>
+<polygon fill="none" stroke="black" stroke-width="4" points="231.88,-112.5 231.88,-137 304.62,-137 304.62,-112.5 231.88,-112.5"/>
+<text xml:space="preserve" text-anchor="start" x="264.88" y="-119.7" font-family="Times,serif" font-size="14.00">b</text>
+<polygon fill="none" stroke="black" stroke-width="4" points="231.88,-82 231.88,-106.5 245.88,-106.5 245.88,-82 231.88,-82"/>
+<text xml:space="preserve" text-anchor="start" x="235.88" y="-89.2" font-family="Times,serif" font-size="14.00">a</text>
+<polygon fill="none" stroke="black" stroke-width="4" points="251.88,-82 251.88,-106.5 283.88,-106.5 283.88,-82 251.88,-82"/>
+<text xml:space="preserve" text-anchor="start" x="255.88" y="-89.2" font-family="Times,serif" font-size="14.00">dino</text>
+<polygon fill="none" stroke="black" stroke-width="4" points="289.88,-82 289.88,-106.5 304.62,-106.5 304.62,-82 289.88,-82"/>
+<text xml:space="preserve" text-anchor="start" x="293.88" y="-89.2" font-family="Times,serif" font-size="14.00">y</text>
+<polygon fill="none" stroke="black" stroke-width="4" points="231.88,-51.5 231.88,-76 304.62,-76 304.62,-51.5 231.88,-51.5"/>
+<text xml:space="preserve" text-anchor="start" x="254" y="-58.7" font-family="Times,serif" font-size="14.00">rhino</text>
+<polygon fill="none" stroke="black" stroke-width="4" points="225.88,-45.5 225.88,-143 310.62,-143 310.62,-45.5 225.88,-45.5"/>
+<polygon fill="none" stroke="black" points="320.62,-37.5 320.62,-107.5 364.12,-107.5 364.12,-37.5 320.62,-37.5"/>
+<text xml:space="preserve" text-anchor="start" x="326.62" y="-67.45" font-family="Times,serif" font-size="14.00">climb</text>
+<polygon fill="none" stroke="black" points="366.12,-7 366.12,-107.5 394.62,-107.5 394.62,-7 366.12,-7"/>
+<text xml:space="preserve" text-anchor="start" x="372.12" y="-52.2" font-family="Times,serif" font-size="14.00">Up</text>
+<polygon fill="none" stroke="black" points="217.88,-7 217.88,-35.5 318.62,-35.5 318.62,-7 217.88,-7"/>
+<text xml:space="preserve" text-anchor="start" x="258.12" y="-16.2" font-family="Times,serif" font-size="14.00">low</text>
+<polygon fill="none" stroke="black" points="170.88,-4 170.88,-154 397.62,-154 397.62,-4 170.88,-4"/>
+</g>
+<!-- struct1&#45;&gt;struct3 -->
+<g id="edge1" class="edge">
+<title>struct1&#45;&gt;struct3</title>
+<path fill="none" stroke="black" d="M195.99,-194.28C202.15,-186.31 209.46,-176.84 217.21,-166.81"/>
+<polygon fill="black" stroke="black" points="219.84,-169.13 223.18,-159.07 214.3,-164.85 219.84,-169.13"/>
+</g>
+</g>
 </svg>
