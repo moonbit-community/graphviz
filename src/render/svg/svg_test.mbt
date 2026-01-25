@@ -231,6 +231,326 @@ fn normalize_text(text : String) -> String {
 }
 
 ///|
+fn parse_double(value : String, fallback : Double) -> Double {
+  try @strconv.parse_double(value) catch {
+    _ => fallback
+  } noraise {
+    parsed => parsed
+  }
+}
+
+///|
+const DEFAULT_GRAPH_PAD_PT : Double = 4.0
+
+///|
+fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
+  match graph.get_attr("pad") {
+    Some(value) => {
+      let parts : Array[String] = []
+      for part in value.split(",") {
+        parts.push(part.trim().to_string())
+      }
+      let x_in = if parts.length() > 0 {
+        parse_double(parts[0], DEFAULT_GRAPH_PAD_PT / 72.0)
+      } else {
+        DEFAULT_GRAPH_PAD_PT / 72.0
+      }
+      let y_in = if parts.length() > 1 {
+        parse_double(parts[1], x_in)
+      } else {
+        x_in
+      }
+      (x_in * 72.0, y_in * 72.0)
+    }
+    None => (DEFAULT_GRAPH_PAD_PT, DEFAULT_GRAPH_PAD_PT)
+  }
+}
+
+///|
+fn find_from(text : String, needle : String, start : Int) -> Int? {
+  if start < 0 || start >= text.length() {
+    return None
+  }
+  let rest = text.unsafe_substring(start=start, end=text.length())
+  match rest.find(needle) {
+    Some(offset) => Some(start + offset)
+    None => None
+  }
+}
+
+///|
+fn parse_attr_string(tag : String, name : String) -> String? {
+  let needle = "\{name}=\""
+  match tag.find(needle) {
+    Some(start) => {
+      let value_start = start + needle.length()
+      let rest = tag.unsafe_substring(start=value_start, end=tag.length())
+      match rest.find("\"") {
+        Some(end_pos) => Some(rest.unsafe_substring(start=0, end=end_pos))
+        None => None
+      }
+    }
+    None => None
+  }
+}
+
+///|
+fn parse_attr_double(tag : String, name : String) -> Double? {
+  match parse_attr_string(tag, name) {
+    Some(value) => Some(parse_double(value, 0.0))
+    None => None
+  }
+}
+
+///|
+fn polygon_bbox(points : String) -> @geom.Rect? {
+  let mut has_point = false
+  let mut min_x = 0.0
+  let mut max_x = 0.0
+  let mut min_y = 0.0
+  let mut max_y = 0.0
+  for part_view in points.split(" ") {
+    let token = part_view.trim(chars=" \n\r\t").to_string()
+    if token == "" {
+      continue
+    }
+    match token.find(",") {
+      Some(comma) => {
+        let x_text = token.unsafe_substring(start=0, end=comma)
+        let y_text = token.unsafe_substring(start=comma + 1, end=token.length())
+        let x = parse_double(x_text, 0.0)
+        let y = -parse_double(y_text, 0.0)
+        if !has_point {
+          min_x = x
+          max_x = x
+          min_y = y
+          max_y = y
+          has_point = true
+        } else {
+          if x < min_x {
+            min_x = x
+          }
+          if x > max_x {
+            max_x = x
+          }
+          if y < min_y {
+            min_y = y
+          }
+          if y > max_y {
+            max_y = y
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  if has_point {
+    Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y })
+  } else {
+    None
+  }
+}
+
+///|
+fn extract_cluster_boxes_graphviz(svg : String) -> Map[String, @geom.Rect] {
+  let boxes : Map[String, @geom.Rect] = Map::new()
+  let mut cursor = 0
+  let close_tag = "</g>"
+  while true {
+    match find_from(svg, "<g", cursor) {
+      Some(start) => {
+        let tag_end = match find_from(svg, ">", start) {
+          Some(value) => value
+          None => break
+        }
+        let tag = svg.unsafe_substring(start=start, end=tag_end + 1)
+        if !tag.contains("class=\"cluster\"") {
+          cursor = tag_end + 1
+          continue
+        }
+        let block_end = match find_from(svg, close_tag, tag_end + 1) {
+          Some(value) => value
+          None => break
+        }
+        let block = svg.unsafe_substring(start=tag_end + 1, end=block_end)
+        let polygon_start = match block.find("<polygon") {
+          Some(value) => value
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let polygon_rest = block.unsafe_substring(start=polygon_start, end=block.length())
+        let polygon_end = match polygon_rest.find(">") {
+          Some(value) => value
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let polygon_tag = polygon_rest.unsafe_substring(start=0, end=polygon_end + 1)
+        let rect = match parse_attr_string(polygon_tag, "points") {
+          Some(points) =>
+            match polygon_bbox(points) {
+              Some(value) => value
+              None => {
+                cursor = block_end + close_tag.length()
+                continue
+              }
+            }
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let text_start = match block.find("<text") {
+          Some(value) => value
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let text_rest = block.unsafe_substring(start=text_start, end=block.length())
+        let text_tag_end = match text_rest.find(">") {
+          Some(value) => value
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let body = text_rest.unsafe_substring(
+          start=text_tag_end + 1,
+          end=text_rest.length(),
+        )
+        let close_pos = match body.find("</text>") {
+          Some(value) => value
+          None => {
+            cursor = block_end + close_tag.length()
+            continue
+          }
+        }
+        let label = normalize_text(
+          body.unsafe_substring(start=0, end=close_pos)
+            .trim(chars=" \n\r\t")
+            .to_string(),
+        )
+        if label != "" {
+          boxes[label] = rect
+        }
+        cursor = block_end + close_tag.length()
+      }
+      None => break
+    }
+  }
+  boxes
+}
+
+///|
+fn extract_cluster_boxes(
+  svg : String,
+  padded_bbox : @geom.Rect,
+) -> Map[String, @geom.Rect] {
+  let boxes : Map[String, @geom.Rect] = Map::new()
+  let section = match svg.find("<path") {
+    Some(pos) => svg.unsafe_substring(start=0, end=pos)
+    None => svg
+  }
+  let mut cursor = 0
+  let mut pending_rect : @geom.Rect? = None
+  let mut pending_used = false
+  while true {
+    let next_rect = find_from(section, "<rect", cursor)
+    let next_text = find_from(section, "<text", cursor)
+    let next = match (next_rect, next_text) {
+      (None, None) => break
+      (Some(a), None) => ("rect", a)
+      (None, Some(b)) => ("text", b)
+      (Some(a), Some(b)) => if a <= b { ("rect", a) } else { ("text", b) }
+    }
+    match next {
+      ("rect", start) => {
+        let tag_end = match find_from(section, ">", start) {
+          Some(value) => value
+          None => break
+        }
+        let tag = section.unsafe_substring(start=start, end=tag_end + 1)
+        match (
+          parse_attr_double(tag, "x"),
+          parse_attr_double(tag, "y"),
+          parse_attr_double(tag, "width"),
+          parse_attr_double(tag, "height"),
+        ) {
+          (Some(x), Some(y), Some(width), Some(height)) => {
+            let llx = x + padded_bbox.llx
+            let lly = y + padded_bbox.lly
+            pending_rect = Some({
+              llx,
+              lly,
+              urx: llx + width,
+              ury: lly + height,
+            })
+            pending_used = false
+          }
+          _ => {
+            pending_rect = None
+            pending_used = false
+          }
+        }
+        cursor = tag_end + 1
+      }
+      ("text", start) => {
+        let tag_end = match find_from(section, ">", start) {
+          Some(value) => value
+          None => break
+        }
+        let text_rest = section.unsafe_substring(start=tag_end + 1, end=section.length())
+        let close_pos = match text_rest.find("</text>") {
+          Some(value) => value
+          None => break
+        }
+        if !pending_used {
+          match pending_rect {
+            Some(rect) => {
+              let label = normalize_text(
+                text_rest.unsafe_substring(start=0, end=close_pos)
+                  .trim(chars=" \n\r\t")
+                  .to_string(),
+              )
+              if label != "" {
+                boxes[label] = rect
+                pending_used = true
+              }
+            }
+            None => ()
+          }
+        }
+        cursor = tag_end + close_pos + "</text>".length()
+      }
+      _ => ()
+    }
+  }
+  boxes
+}
+
+///|
+fn assert_rect_close(
+  label : String,
+  actual : @geom.Rect,
+  expected : @geom.Rect,
+  eps : Double,
+) -> Unit raise {
+  let dx1 = Double::abs(actual.llx - expected.llx)
+  let dy1 = Double::abs(actual.lly - expected.lly)
+  let dx2 = Double::abs(actual.urx - expected.urx)
+  let dy2 = Double::abs(actual.ury - expected.ury)
+  guard dx1 <= eps && dy1 <= eps && dx2 <= eps && dy2 <= eps else {
+    fail(
+      "cluster bbox drift for \{label}: got (\{actual.llx},\{actual.lly},\{actual.urx},\{actual.ury}) expected (\{expected.llx},\{expected.lly},\{expected.urx},\{expected.ury})",
+    )
+  }
+}
+
+///|
 fn sorted_text_nodes(svg : String) -> Array[String] {
   let texts = extract_text_nodes(svg)
   texts.sort_by(String::compare)
@@ -283,6 +603,30 @@ test "svg spot-check outputs" {
       let actual_nodes = sorted_text_nodes(svg)
       let expected_nodes = sorted_text_nodes(baseline)
       assert_eq(actual_nodes, expected_nodes)
+    }
+  }
+}
+
+///|
+test "render_svg cluster boxes match graphviz" {
+  let graph = @dot.parse_dot_file("tests/layout/dot/complex.dot")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout)
+  let (pad_x, pad_y) = graph_pad_pt(layout.graph)
+  let padded_bbox : @geom.Rect = {
+    llx: layout.bbox.llx - pad_x,
+    lly: layout.bbox.lly - pad_y,
+    urx: layout.bbox.urx + pad_x,
+    ury: layout.bbox.ury + pad_y,
+  }
+  let expected_svg = @fs.read_file_to_string("tests/render/svg/complex.svg")
+  let expected = extract_cluster_boxes_graphviz(expected_svg)
+  let actual = extract_cluster_boxes(svg, padded_bbox)
+  let eps = 3.0
+  for label, rect in expected {
+    match actual.get(label) {
+      Some(actual_rect) => assert_rect_close(label, actual_rect, rect, eps)
+      None => fail("missing cluster box for \{label}")
     }
   }
 }
