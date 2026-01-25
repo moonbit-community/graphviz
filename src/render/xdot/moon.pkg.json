@@ -12,7 +12,9 @@
     "moonbit-community/graphviz/render",
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/dot",
-    "moonbit-community/graphviz/cgraph"
+    "moonbit-community/graphviz/cgraph",
+    "moonbitlang/core/math",
+    "moonbitlang/core/strconv"
   ],
   "test-import": [
     "moonbitlang/x/fs",

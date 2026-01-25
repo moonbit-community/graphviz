@@ -12,6 +12,7 @@
     "moonbit-community/graphviz/render",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math",
     "moonbitlang/core/strconv"
   ],
   "test-import": [
