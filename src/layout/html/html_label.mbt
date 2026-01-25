@@ -625,7 +625,6 @@ pub fn html_table_metrics(
     for width in col_widths {
       total_width = total_width + width
     }
-    total_width = total_width + table.cell_spacing_pt * 2.0
   }
   if row_heights.length() > 0 {
     total_height = total_height +
@@ -633,7 +632,6 @@ pub fn html_table_metrics(
     for height in row_heights {
       total_height = total_height + height
     }
-    total_height = total_height + table.cell_spacing_pt * 2.0
   }
   { placements, col_widths, row_heights, total_width, total_height }
 }
@@ -664,7 +662,7 @@ pub fn html_table_layout(
   let spacing_x = table.cell_spacing_pt * scale_x
   let spacing_y = table.cell_spacing_pt * scale_y
   let col_positions : Array[(Double, Double)] = []
-  let mut cursor_x = rect.llx + border_x + spacing_x
+  let mut cursor_x = rect.llx + border_x
   for width in metrics.col_widths {
     let scaled = width * scale_x
     let start = cursor_x
@@ -673,7 +671,7 @@ pub fn html_table_layout(
     cursor_x = end + spacing_x
   }
   let row_positions : Array[(Double, Double)] = []
-  let mut cursor_y = rect.ury - border_y - spacing_y
+  let mut cursor_y = rect.ury - border_y
   for height in metrics.row_heights {
     let scaled = height * scale_y
     let top = cursor_y
