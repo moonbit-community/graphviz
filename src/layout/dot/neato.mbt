@@ -167,6 +167,7 @@ pub fn layout_neato(
   } else {
     graph
   }
+  validate_layout_graph(active_graph)
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
   let record_orientation =

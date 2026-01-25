@@ -21,26 +21,9 @@ const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
 const CLUSTER_RN_PREFIX : String = "_mbt_cluster_rn_"
 
 ///|
-
-///|
-priv enum OrderingMode {
-  Out
-  In
-}
-
-///|
 priv enum BalanceMode {
   LR
   TB
-}
-
-///|
-fn parse_ordering(value : String) -> OrderingMode? {
-  match value.to_lower() {
-    "out" => Some(OrderingMode::Out)
-    "in" => Some(OrderingMode::In)
-    _ => None
-  }
 }
 
 ///|
@@ -2116,7 +2099,6 @@ fn build_constraint_graph(
   sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
-  ordering : OrderingMode?,
   has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
@@ -2266,7 +2248,6 @@ fn build_constraint_graph(
     }
   }
   ignore(ranks)
-  ignore(ordering)
   for i in 0..<slack_edges.length() {
     let edge = slack_edges[i]
     let tail_name = edge.tail().name()
@@ -2379,7 +2360,6 @@ fn x_positions_from_simplex(
   sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
-  ordering : OrderingMode?,
   has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
   extra_edges : Array[ConstraintEdge],
@@ -2395,7 +2375,6 @@ fn x_positions_from_simplex(
     sizes,
     cluster_keys,
     nodesep_pt,
-    ordering,
     has_edge_labels,
     extra_nodes,
     extra_edges,
@@ -2434,7 +2413,6 @@ fn compute_x_positions(
   sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
-  ordering : OrderingMode?,
   has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
   edge_vnodes : Map[String, Array[String]],
@@ -2457,7 +2435,6 @@ fn compute_x_positions(
     sizes,
     cluster_keys,
     nodesep_pt,
-    ordering,
     has_edge_labels,
     all_extra_nodes,
     extra_edges,

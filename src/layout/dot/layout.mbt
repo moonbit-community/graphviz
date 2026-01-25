@@ -71,6 +71,76 @@ fn parse_first_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+fn validate_nonnegative_attr(
+  owner : String,
+  attr_name : String,
+  raw_value : String,
+  value : Double,
+) -> Unit raise DotLayoutError {
+  if value < 0.0 {
+    raise DotLayoutError::InvalidGraph(
+      message="\{owner} has negative \{attr_name}: \{raw_value}",
+    )
+  }
+}
+
+///|
+fn validate_graph_spacing(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
+  match graph.get_attr("nodesep") {
+    Some(value) =>
+      validate_nonnegative_attr(
+        "graph",
+        "nodesep",
+        value,
+        parse_first_double(value, 0.0),
+      )
+    None => ()
+  }
+  match graph.get_attr("ranksep") {
+    Some(value) =>
+      validate_nonnegative_attr(
+        "graph",
+        "ranksep",
+        value,
+        parse_first_double(value, 0.0),
+      )
+    None => ()
+  }
+}
+
+///|
+fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
+  for node in graph.nodes() {
+    match node.get_attr("width") {
+      Some(value) =>
+        validate_nonnegative_attr(
+          "node \{node.name()}",
+          "width",
+          value,
+          parse_first_double(value, 0.0),
+        )
+      None => ()
+    }
+    match node.get_attr("height") {
+      Some(value) =>
+        validate_nonnegative_attr(
+          "node \{node.name()}",
+          "height",
+          value,
+          parse_first_double(value, 0.0),
+        )
+      None => ()
+    }
+  }
+}
+
+///|
+fn validate_layout_graph(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
+  validate_graph_spacing(graph)
+  validate_node_dimensions(graph)
+}
+
+///|
 fn parse_rankdir(value : String) -> RankDir? {
   match value.to_lower() {
     "tb" => Some(RankDir::TB)
@@ -110,6 +180,14 @@ fn parse_splines(value : String) -> SplinesMode? {
     "ortho" => Some(SplinesMode::Ortho)
     "curved" => Some(SplinesMode::Curved)
     _ => None
+  }
+}
+
+///|
+fn ordering_is_set(value : String) -> Bool {
+  match value.to_lower() {
+    "out" | "in" => true
+    _ => false
   }
 }
 
@@ -2886,14 +2964,6 @@ fn compute_desired_positions_with_rank_fallback(
 ///|
 
 ///|
-fn node_width_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
-  match sizes.get(name) {
-    Some(value) => value.width_pt
-    None => default_node_width_in() * 72.0
-  }
-}
-
-///|
 fn node_left_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
   match sizes.get(name) {
     Some(value) => value.left_pt
@@ -2906,90 +2976,6 @@ fn node_right_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
   match sizes.get(name) {
     Some(value) => value.right_pt
     None => default_node_width_in() * 72.0 / 2.0
-  }
-}
-
-///|
-fn adjust_rank_positions(
-  names : Array[String],
-  x_positions : Map[String, Double],
-  sizes : Map[String, NodeSize],
-  desired : Map[String, Double],
-  nodesep_pt : Double,
-) -> Unit {
-  let len = names.length()
-  if len == 0 {
-    return ()
-  }
-  let lefts : Array[Double] = []
-  let rights : Array[Double] = []
-  let targets : Array[Double] = []
-  let cumulative : Array[Double] = []
-  let mut cum = 0.0
-  for i in 0..<len {
-    let name = names[i]
-    let left = node_left_pt(name, sizes)
-    let right = node_right_pt(name, sizes)
-    lefts.push(left)
-    rights.push(right)
-    let fallback = match x_positions.get(name) {
-      Some(value) => value
-      None => left
-    }
-    let target = match desired.get(name) {
-      Some(value) => (value + fallback) / 2.0
-      None => fallback
-    }
-    targets.push(target)
-    if i == 0 {
-      cum = 0.0
-    } else {
-      let prev_right = rights[i - 1]
-      let sep = prev_right + left + nodesep_pt
-      cum = cum + sep
-    }
-    cumulative.push(cum)
-  }
-  let block_values : Array[Double] = []
-  let block_weights : Array[Int] = []
-  let block_counts : Array[Int] = []
-  for i in 0..<len {
-    let t = targets[i] - cumulative[i]
-    block_values.push(t)
-    block_weights.push(1)
-    block_counts.push(1)
-    while block_values.length() >= 2 {
-      let last = block_values.length() - 1
-      let prev = last - 1
-      if block_values[prev] <= block_values[last] {
-        break
-      }
-      let weight = block_weights[prev] + block_weights[last]
-      let left = block_values[prev] * block_weights[prev].to_double()
-      let right = block_values[last] * block_weights[last].to_double()
-      let value = (left + right) / weight.to_double()
-      let count = block_counts[prev] + block_counts[last]
-      block_values[prev] = value
-      block_weights[prev] = weight
-      block_counts[prev] = count
-      let _ = block_values.pop()
-      let _ = block_weights.pop()
-      let _ = block_counts.pop()
-
-    }
-  }
-  let y_values : Array[Double] = []
-  for i in 0..<block_values.length() {
-    let value = block_values[i]
-    let count = block_counts[i]
-    for _j in 0..<count {
-      y_values.push(value)
-    }
-  }
-  for i in 0..<len {
-    let name = names[i]
-    let x = y_values[i] + cumulative[i]
-    x_positions[name] = x
   }
 }
 
@@ -5553,6 +5539,7 @@ pub fn layout_dot(
   options? : DotLayoutOptions = DotLayoutOptions::default(),
 ) -> DotLayoutGraph raise DotLayoutError {
   let opts = options
+  validate_layout_graph(graph)
   let rankdir = match opts.rankdir {
     Some(value) => value
     None =>
@@ -5580,6 +5567,12 @@ pub fn layout_dot(
         Some(value) => parse_first_double(value, default_ranksep_in())
         None => default_ranksep_in()
       }
+  }
+  if nodesep_in < 0.0 {
+    raise DotLayoutError::InvalidGraph(message="nodesep must be non-negative")
+  }
+  if ranksep_in < 0.0 {
+    raise DotLayoutError::InvalidGraph(message="ranksep must be non-negative")
   }
   let splines = match opts.splines {
     Some(value) => value
@@ -5752,8 +5745,8 @@ pub fn layout_dot(
     }
   }
   let ordering = match graph.get_attr("ordering") {
-    Some(value) => parse_ordering(value)
-    None => None
+    Some(value) => ordering_is_set(value)
+    None => false
   }
   let cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
@@ -5767,20 +5760,19 @@ pub fn layout_dot(
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   let edge_order = collect_edge_order(edges)
-  let ordered_groups = match ordering {
-    Some(_) => groups
-    None => {
-      let (parents, children) = build_edge_index(nodes, edges)
-      reorder_rank_groups(
-        rank_keys, groups, edges, parents, children, cluster_keys, rank_same_groups,
-        rank_same_order,
-        edge_order,
-        node_order,
-        sizes,
-        nodesep_pt,
-        has_edge_labels,
-      )
-    }
+  let ordered_groups = if ordering {
+    groups
+  } else {
+    let (parents, children) = build_edge_index(nodes, edges)
+    reorder_rank_groups(
+      rank_keys, groups, edges, parents, children, cluster_keys, rank_same_groups,
+      rank_same_order,
+      edge_order,
+      node_order,
+      sizes,
+      nodesep_pt,
+      has_edge_labels,
+    )
   }
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -5839,7 +5831,6 @@ pub fn layout_dot(
     x_sizes,
     x_cluster_keys,
     nodesep_pt,
-    ordering,
     has_edge_labels,
     vnode_extra_nodes,
     vnode_info.edge_vnodes,
