@@ -1,14 +1,14 @@
 digraph G {
   graph [bb="0,0,339.39,231.68"];
   node [label="\N", style=filled];
-  red [style=filled, color=red, pos="165.35,187.84", width=0.75, height=0.5];
-  xyz [label="hello\nworld", color=slateblue, fontsize=24, fontname="Palatino-Italic", style=filled, fontcolor=hotpink, pos="70.35,187.84", width=1.3984, height=1.2178];
-  blue [style=filled, color=blue, fontcolor=black, pos="117.35,90", width=0.75, height=0.5];
-  cyan [style=filled, color=cyan, pos="28.35,18", width=0.78755, height=0.5];
-  green [style=filled, color=green, pos="213.35,90", width=0.87281, height=0.5];
-  orange [style=filled, color=orange, pos="303.35,18", width=1.00109, height=0.5];
-  yellow [style=filled, color=yellow, pos="213.35,18", width=1.00135, height=0.5];
-  magenta [style=filled, color=magenta, pos="117.35,18", width=1.17238, height=0.5];
+  red [color=red, pos="165.35,187.84", width=0.75, height=0.5];
+  xyz [label="hello\nworld", color=slateblue, fontsize=24, fontname="Palatino-Italic", fontcolor=hotpink, pos="70.35,187.84", width=1.3984, height=1.2178];
+  blue [color=blue, fontcolor=black, pos="117.35,90", width=0.75, height=0.5];
+  cyan [color=cyan, pos="28.35,18", width=0.78755, height=0.5];
+  green [color=green, pos="213.35,90", width=0.87281, height=0.5];
+  orange [color=orange, pos="303.35,18", width=1.00109, height=0.5];
+  yellow [color=yellow, pos="213.35,18", width=1.00135, height=0.5];
+  magenta [color=magenta, pos="117.35,18", width=1.17238, height=0.5];
   red -> green [pos="e,213.35,108 165.35,169.84 165.35,159.53 158.06,146.21 165.35,138.92 176.67,127.61 205.41,146.86 213.35,138.92 217.93,134.35 213.35,125.40 213.35,119.51"];
   red -> blue [pos="e,117.35,108 165.35,169.84 165.35,159.53 172.64,146.21 165.35,138.92 154.04,127.61 125.30,146.86 117.35,138.92 112.78,134.35 117.35,125.40 117.35,119.51"];
   blue -> cyan [pos="e,56.70,18 90.35,90 84.52,90 76.98,94.12 72.85,90 55.88,73.03 81.88,27.03 72.85,18 71.76,16.91 69.55,18 68.22,18"];

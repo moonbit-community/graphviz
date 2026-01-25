@@ -1,8 +1,8 @@
 digraph automata_0 {
   graph [size="8.5, 11", bb="0,0,192.28,133.50"];
   node [label="\N", shape=circle];
-  0 [shape=circle, style=filled, color=lightgrey, pos="50,115.50", width=0.5, height=0.5];
-  1 [shape=circle, pos="80,22", width=0.5, height=0.5];
+  0 [style=filled, color=lightgrey, pos="50,115.50", width=0.5, height=0.5];
+  1 [pos="80,22", width=0.5, height=0.5];
   2 [shape=doublecircle, pos="22,22", width=0.61111, height=0.61111];
   "Machine: a" [shape=plaintext, pos="154,22", width=1.06338, height=0.5];
   0 -> 2 [label="a ", pos="e,28.77,44 44.77,97.50 42.34,89.13 39.12,77.83 37,70.75 35.43,65.49 33.67,59.93 32.16,55", lp="50.17,70.75"];

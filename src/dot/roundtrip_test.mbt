@@ -16,6 +16,17 @@ fn roundtrip_file(path : String) -> Unit raise {
 }
 
 ///|
+test "write_dot omits implicit node label defaults" {
+  let graph = try @dot.parse_dot("digraph { a }") catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  assert_true(!output.contains("label=\"\\N\""))
+}
+
+///|
 test "dot roundtrip tier0" {
   let paths : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",

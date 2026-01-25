@@ -2,95 +2,95 @@ digraph L0 {
   graph [size="8,8", ordering=out, bb="0,0,697.11,684"];
   node [label="\N", shape=box];
   subgraph {
-    n1 [shape=box, label=T, pos="121.36,594", width=0.75, height=0.5];
-    n4 [shape=box, label="+", pos="193.36,594", width=0.75, height=0.5];
-    n5 [shape=box, label=T, pos="265.36,594", width=0.75, height=0.5];
-    n39 [shape=box, label="+", pos="337.36,594", width=0.75, height=0.5];
-    n40 [shape=box, label=T, pos="409.36,594", width=0.75, height=0.5];
+    n1 [label=T, pos="121.36,594", width=0.75, height=0.5];
+    n4 [label="+", pos="193.36,594", width=0.75, height=0.5];
+    n5 [label=T, pos="265.36,594", width=0.75, height=0.5];
+    n39 [label="+", pos="337.36,594", width=0.75, height=0.5];
+    n40 [label=T, pos="409.36,594", width=0.75, height=0.5];
   }
   subgraph {
-    n6 [shape=box, label=F, pos="193.36,522", width=0.75, height=0.5];
-    n16 [shape=box, label="*", pos="265.36,522", width=0.75, height=0.5];
-    n17 [shape=box, label=F, pos="373.36,522", width=0.75, height=0.5];
+    n6 [label=F, pos="193.36,522", width=0.75, height=0.5];
+    n16 [label="*", pos="265.36,522", width=0.75, height=0.5];
+    n17 [label=F, pos="373.36,522", width=0.75, height=0.5];
   }
   subgraph {
-    n7 [shape=box, label="(", pos="121.36,450", width=0.75, height=0.5];
-    n8 [shape=box, label=E, pos="193.36,450", width=0.75, height=0.5];
-    n15 [shape=box, label=")", pos="265.36,450", width=0.75, height=0.5];
+    n7 [label="(", pos="121.36,450", width=0.75, height=0.5];
+    n8 [label=E, pos="193.36,450", width=0.75, height=0.5];
+    n15 [label=")", pos="265.36,450", width=0.75, height=0.5];
   }
   subgraph {
-    n10 [shape=box, label=F, pos="85.36,306", width=0.75, height=0.5];
-    n12 [shape=box, label="*", pos="157.36,306", width=0.75, height=0.5];
-    n13 [shape=box, label=F, pos="229.36,306", width=0.75, height=0.5];
+    n10 [label=F, pos="85.36,306", width=0.75, height=0.5];
+    n12 [label="*", pos="157.36,306", width=0.75, height=0.5];
+    n13 [label=F, pos="229.36,306", width=0.75, height=0.5];
   }
   subgraph {
-    n18 [shape=box, label="(", pos="337.36,450", width=0.75, height=0.5];
-    n19 [shape=box, label=E, pos="409.36,450", width=0.75, height=0.5];
-    n38 [shape=box, label=")", pos="481.36,450", width=0.75, height=0.5];
+    n18 [label="(", pos="337.36,450", width=0.75, height=0.5];
+    n19 [label=E, pos="409.36,450", width=0.75, height=0.5];
+    n38 [label=")", pos="481.36,450", width=0.75, height=0.5];
   }
   subgraph {
-    n20 [shape=box, label=T, pos="373.36,378", width=0.75, height=0.5];
-    n26 [shape=box, label="+", pos="445.36,378", width=0.75, height=0.5];
-    n27 [shape=box, label=T, pos="517.36,378", width=0.75, height=0.5];
+    n20 [label=T, pos="373.36,378", width=0.75, height=0.5];
+    n26 [label="+", pos="445.36,378", width=0.75, height=0.5];
+    n27 [label=T, pos="517.36,378", width=0.75, height=0.5];
   }
   subgraph {
-    n21 [shape=box, label=F, pos="301.36,306", width=0.75, height=0.5];
-    n23 [shape=box, label="*", pos="373.36,306", width=0.75, height=0.5];
-    n24 [shape=box, label=F, pos="445.36,306", width=0.75, height=0.5];
+    n21 [label=F, pos="301.36,306", width=0.75, height=0.5];
+    n23 [label="*", pos="373.36,306", width=0.75, height=0.5];
+    n24 [label=F, pos="445.36,306", width=0.75, height=0.5];
   }
   subgraph {
-    n29 [shape=box, label="(", pos="514.36,234", width=0.75, height=0.5];
-    n30 [shape=box, label=E, pos="586.36,234", width=0.75, height=0.5];
-    n37 [shape=box, label=")", pos="658.36,234", width=0.75, height=0.5];
+    n29 [label="(", pos="514.36,234", width=0.75, height=0.5];
+    n30 [label=E, pos="586.36,234", width=0.75, height=0.5];
+    n37 [label=")", pos="658.36,234", width=0.75, height=0.5];
   }
   subgraph {
-    n32 [shape=box, label=F, pos="514.36,90", width=0.75, height=0.5];
-    n34 [shape=box, label="*", pos="586.36,90", width=0.75, height=0.5];
-    n35 [shape=box, label=F, pos="658.36,90", width=0.75, height=0.5];
+    n32 [label=F, pos="514.36,90", width=0.75, height=0.5];
+    n34 [label="*", pos="586.36,90", width=0.75, height=0.5];
+    n35 [label=F, pos="658.36,90", width=0.75, height=0.5];
   }
-  n0 [shape=box, label=E, pos="265.36,666", width=0.75, height=0.5];
-  n1 [shape=box, label=T, pos="121.36,594", width=0.75, height=0.5];
-  n2 [shape=box, label=F, pos="80.36,522", width=0.75, height=0.5];
-  n3 [shape=box, label="IDENT : a ", pos="38.36,450", width=1.06565, height=0.5];
-  n4 [shape=box, label="+", pos="193.36,594", width=0.75, height=0.5];
-  n5 [shape=box, label=T, pos="265.36,594", width=0.75, height=0.5];
-  n6 [shape=box, label=F, pos="193.36,522", width=0.75, height=0.5];
-  n7 [shape=box, label="(", pos="121.36,450", width=0.75, height=0.5];
-  n8 [shape=box, label=E, pos="193.36,450", width=0.75, height=0.5];
-  n9 [shape=box, label=T, pos="175.36,378", width=0.75, height=0.5];
-  n10 [shape=box, label=F, pos="85.36,306", width=0.75, height=0.5];
-  n11 [shape=box, label="IDENT : b ", pos="85.36,234", width=1.07622, height=0.5];
-  n12 [shape=box, label="*", pos="157.36,306", width=0.75, height=0.5];
-  n13 [shape=box, label=F, pos="229.36,306", width=0.75, height=0.5];
-  n14 [shape=box, label="IDENT : c ", pos="217.36,234", width=1.06565, height=0.5];
-  n15 [shape=box, label=")", pos="265.36,450", width=0.75, height=0.5];
-  n16 [shape=box, label="*", pos="265.36,522", width=0.75, height=0.5];
-  n17 [shape=box, label=F, pos="373.36,522", width=0.75, height=0.5];
-  n18 [shape=box, label="(", pos="337.36,450", width=0.75, height=0.5];
-  n19 [shape=box, label=E, pos="409.36,450", width=0.75, height=0.5];
-  n20 [shape=box, label=T, pos="373.36,378", width=0.75, height=0.5];
-  n21 [shape=box, label=F, pos="301.36,306", width=0.75, height=0.5];
-  n22 [shape=box, label="IDENT : d ", pos="312.36,234", width=1.07622, height=0.5];
-  n23 [shape=box, label="*", pos="373.36,306", width=0.75, height=0.5];
-  n24 [shape=box, label=F, pos="445.36,306", width=0.75, height=0.5];
-  n25 [shape=box, label="IDENT : e ", pos="431.36,234", width=1.06565, height=0.5];
-  n26 [shape=box, label="+", pos="445.36,378", width=0.75, height=0.5];
-  n27 [shape=box, label=T, pos="517.36,378", width=0.75, height=0.5];
-  n28 [shape=box, label=F, pos="534.36,306", width=0.75, height=0.5];
-  n29 [shape=box, label="(", pos="514.36,234", width=0.75, height=0.5];
-  n30 [shape=box, label=E, pos="586.36,234", width=0.75, height=0.5];
-  n31 [shape=box, label=T, pos="586.36,162", width=0.75, height=0.5];
-  n32 [shape=box, label=F, pos="514.36,90", width=0.75, height=0.5];
-  n33 [shape=box, label="IDENT : a ", pos="514.36,18", width=1.06565, height=0.5];
-  n34 [shape=box, label="*", pos="586.36,90", width=0.75, height=0.5];
-  n35 [shape=box, label=F, pos="658.36,90", width=0.75, height=0.5];
-  n36 [shape=box, label="IDENT : b ", pos="658.36,18", width=1.07622, height=0.5];
-  n37 [shape=box, label=")", pos="658.36,234", width=0.75, height=0.5];
-  n38 [shape=box, label=")", pos="481.36,450", width=0.75, height=0.5];
-  n39 [shape=box, label="+", pos="337.36,594", width=0.75, height=0.5];
-  n40 [shape=box, label=T, pos="409.36,594", width=0.75, height=0.5];
-  n41 [shape=box, label=F, pos="523.36,522", width=0.75, height=0.5];
-  n42 [shape=box, label="IDENT : q ", pos="565.36,450", width=1.07622, height=0.5];
+  n0 [label=E, pos="265.36,666", width=0.75, height=0.5];
+  n1 [label=T, pos="121.36,594", width=0.75, height=0.5];
+  n2 [label=F, pos="80.36,522", width=0.75, height=0.5];
+  n3 [label="IDENT : a ", pos="38.36,450", width=1.06565, height=0.5];
+  n4 [label="+", pos="193.36,594", width=0.75, height=0.5];
+  n5 [label=T, pos="265.36,594", width=0.75, height=0.5];
+  n6 [label=F, pos="193.36,522", width=0.75, height=0.5];
+  n7 [label="(", pos="121.36,450", width=0.75, height=0.5];
+  n8 [label=E, pos="193.36,450", width=0.75, height=0.5];
+  n9 [label=T, pos="175.36,378", width=0.75, height=0.5];
+  n10 [label=F, pos="85.36,306", width=0.75, height=0.5];
+  n11 [label="IDENT : b ", pos="85.36,234", width=1.07622, height=0.5];
+  n12 [label="*", pos="157.36,306", width=0.75, height=0.5];
+  n13 [label=F, pos="229.36,306", width=0.75, height=0.5];
+  n14 [label="IDENT : c ", pos="217.36,234", width=1.06565, height=0.5];
+  n15 [label=")", pos="265.36,450", width=0.75, height=0.5];
+  n16 [label="*", pos="265.36,522", width=0.75, height=0.5];
+  n17 [label=F, pos="373.36,522", width=0.75, height=0.5];
+  n18 [label="(", pos="337.36,450", width=0.75, height=0.5];
+  n19 [label=E, pos="409.36,450", width=0.75, height=0.5];
+  n20 [label=T, pos="373.36,378", width=0.75, height=0.5];
+  n21 [label=F, pos="301.36,306", width=0.75, height=0.5];
+  n22 [label="IDENT : d ", pos="312.36,234", width=1.07622, height=0.5];
+  n23 [label="*", pos="373.36,306", width=0.75, height=0.5];
+  n24 [label=F, pos="445.36,306", width=0.75, height=0.5];
+  n25 [label="IDENT : e ", pos="431.36,234", width=1.06565, height=0.5];
+  n26 [label="+", pos="445.36,378", width=0.75, height=0.5];
+  n27 [label=T, pos="517.36,378", width=0.75, height=0.5];
+  n28 [label=F, pos="534.36,306", width=0.75, height=0.5];
+  n29 [label="(", pos="514.36,234", width=0.75, height=0.5];
+  n30 [label=E, pos="586.36,234", width=0.75, height=0.5];
+  n31 [label=T, pos="586.36,162", width=0.75, height=0.5];
+  n32 [label=F, pos="514.36,90", width=0.75, height=0.5];
+  n33 [label="IDENT : a ", pos="514.36,18", width=1.06565, height=0.5];
+  n34 [label="*", pos="586.36,90", width=0.75, height=0.5];
+  n35 [label=F, pos="658.36,90", width=0.75, height=0.5];
+  n36 [label="IDENT : b ", pos="658.36,18", width=1.07622, height=0.5];
+  n37 [label=")", pos="658.36,234", width=0.75, height=0.5];
+  n38 [label=")", pos="481.36,450", width=0.75, height=0.5];
+  n39 [label="+", pos="337.36,594", width=0.75, height=0.5];
+  n40 [label=T, pos="409.36,594", width=0.75, height=0.5];
+  n41 [label=F, pos="523.36,522", width=0.75, height=0.5];
+  n42 [label="IDENT : q ", pos="565.36,450", width=1.07622, height=0.5];
   n0 -> n1 [pos="e,148.36,594 238.36,666 223.36,666 203.97,676.61 193.36,666 176.39,649.03 205.79,606.43 193.36,594 185.47,586.11 170.14,594 159.88,594"];
   n0 -> n4 [pos="e,220.36,594 238.36,666 235.36,666 231.48,668.12 229.36,666 212.99,649.62 229.36,619.68 229.36,596.51"];
   n0 -> n5 [pos="e,265.36,612 265.36,648 265.36,642.58 265.36,634.08 265.36,630 265.36,627.84 265.36,625.47 265.36,623.51"];

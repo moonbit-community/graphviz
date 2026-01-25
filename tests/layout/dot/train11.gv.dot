@@ -1,17 +1,17 @@
 digraph G {
   graph [size="6,6", rankdir=LR, bb="0,0,573,216"];
   node [label="\N", shape=circle, fontsize=8];
-  st0 [shape=circle, fontsize=8, pos="286.50,18", width=0.5, height=0.5];
-  st1 [shape=circle, fontsize=8, pos="18,144", width=0.5, height=0.5];
-  st2 [shape=circle, fontsize=8, pos="376,36", width=0.5, height=0.5];
-  st3 [shape=circle, fontsize=8, pos="107.50,198", width=0.5, height=0.5];
-  st4 [shape=circle, fontsize=8, pos="197,198", width=0.5, height=0.5];
-  st5 [shape=circle, fontsize=8, pos="107.50,144", width=0.5, height=0.5];
-  st6 [shape=circle, fontsize=8, pos="197,144", width=0.5, height=0.5];
-  st7 [shape=circle, fontsize=8, pos="107.50,39", width=0.5, height=0.5];
-  st8 [shape=circle, fontsize=8, pos="197,18", width=0.5, height=0.5];
-  st9 [shape=circle, fontsize=8, pos="465.50,36", width=0.5, height=0.5];
-  st10 [shape=circle, fontsize=8, pos="555,58", width=0.5, height=0.5];
+  st0 [pos="286.50,18", width=0.5, height=0.5];
+  st1 [pos="18,144", width=0.5, height=0.5];
+  st2 [pos="376,36", width=0.5, height=0.5];
+  st3 [pos="107.50,198", width=0.5, height=0.5];
+  st4 [pos="197,198", width=0.5, height=0.5];
+  st5 [pos="107.50,144", width=0.5, height=0.5];
+  st6 [pos="197,144", width=0.5, height=0.5];
+  st7 [pos="107.50,39", width=0.5, height=0.5];
+  st8 [pos="197,18", width=0.5, height=0.5];
+  st9 [pos="465.50,36", width=0.5, height=0.5];
+  st10 [pos="555,58", width=0.5, height=0.5];
   st9 -> st9 [label="11/1", pos="e,465.50,36 465.50,36 465.50,36 465.50,36 465.50,36", lp="465.50,41.40"];
   st9 -> st10 [label="10/1", pos="e,537,51.56 483.50,38.41 491.92,39.54 503.14,40.27 510.25,42 515.72,43.33 521.16,45.90 526.16,47.69", lp="510.25,72.30"];
   st8 -> st8 [label="10/1", pos="e,197,18 197,18 197,18 197,18 197,18", lp="197,23.40"];

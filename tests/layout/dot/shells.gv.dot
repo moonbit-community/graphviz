@@ -5,63 +5,63 @@ digraph shells {
   subgraph {
     graph [rank=same];
     1976 [fontsize=24, shape=plaintext, pos="112.29,451.86", width=0.86929, height=0.50398];
-    Bourne [fontsize=20, shape=box, pos="341.29,451.86", width=1.01326, height=0.5];
-    Mashey [fontsize=20, shape=box, pos="248.29,451.86", width=1.07311, height=0.5];
+    Bourne [pos="341.29,451.86", width=1.01326, height=0.5];
+    Mashey [pos="248.29,451.86", width=1.07311, height=0.5];
   }
   subgraph {
     graph [rank=same];
-    csh [fontsize=20, shape=box, pos="588.29,379.58", width=0.75, height=0.5];
+    csh [pos="588.29,379.58", width=0.75, height=0.5];
     1978 [fontsize=24, shape=plaintext, pos="112.29,379.58", width=0.86929, height=0.50398];
-    Formshell [fontsize=20, shape=box, pos="496.29,379.58", width=1.31145, height=0.5];
+    Formshell [pos="496.29,379.58", width=1.31145, height=0.5];
   }
   subgraph {
     graph [rank=same];
-    esh [fontsize=20, shape=box, pos="224.29,379.58", width=0.75, height=0.5];
-    vsh [fontsize=20, shape=box, pos="368.29,379.58", width=0.75, height=0.5];
+    esh [pos="224.29,379.58", width=0.75, height=0.5];
+    vsh [pos="368.29,379.58", width=0.75, height=0.5];
     1980 [fontsize=24, shape=plaintext, pos="31.29,379.58", width=0.86929, height=0.50398];
   }
   subgraph {
     graph [rank=same];
-    ksh [fontsize=20, shape=box, pos="106.29,307.29", width=0.75, height=0.5];
+    ksh [pos="106.29,307.29", width=0.75, height=0.5];
     1982 [fontsize=24, shape=plaintext, pos="182.29,307.29", width=0.86929, height=0.50398];
-    "System-V" [fontsize=20, shape=box, pos="278.29,307.29", width=1.29797, height=0.5];
+    "System-V" [pos="278.29,307.29", width=1.29797, height=0.5];
   }
   subgraph {
     graph [rank=same];
     1984 [fontsize=24, shape=plaintext, pos="410.29,307.29", width=0.86929, height=0.50398];
-    tcsh [fontsize=20, shape=box, pos="486.29,307.29", width=0.75, height=0.5];
-    v9sh [fontsize=20, shape=box, pos="558.29,307.29", width=0.75, height=0.5];
+    tcsh [pos="486.29,307.29", width=0.75, height=0.5];
+    v9sh [pos="558.29,307.29", width=0.75, height=0.5];
   }
   subgraph {
     graph [rank=same];
     1986 [fontsize=24, shape=plaintext, pos="221.29,235", width=0.86929, height=0.50398];
-    "ksh-i" [fontsize=20, shape=box, pos="298.29,235", width=0.75929, height=0.5];
+    "ksh-i" [pos="298.29,235", width=0.75929, height=0.5];
   }
   subgraph {
     graph [rank=same];
-    rc [fontsize=20, shape=box, pos="110.29,162.72", width=0.75, height=0.5];
+    rc [pos="110.29,162.72", width=0.75, height=0.5];
     1988 [fontsize=24, shape=plaintext, pos="294.29,162.72", width=0.86929, height=0.50398];
-    Perl [fontsize=20, shape=box, pos="182.29,162.72", width=0.75, height=0.5];
-    KornShell [fontsize=20, shape=box, pos="463.29,162.72", width=1.32682, height=0.5];
+    Perl [pos="182.29,162.72", width=0.75, height=0.5];
+    KornShell [pos="463.29,162.72", width=1.32682, height=0.5];
   }
   subgraph {
     graph [rank=same];
-    tcl [fontsize=20, shape=box, pos="262.29,90.43", width=0.75, height=0.5];
+    tcl [pos="262.29,90.43", width=0.75, height=0.5];
     1990 [fontsize=24, shape=plaintext, pos="186.29,90.43", width=0.86929, height=0.50398];
-    Bash [fontsize=20, shape=box, pos="334.29,90.43", width=0.75983, height=0.5];
+    Bash [pos="334.29,90.43", width=0.75983, height=0.5];
   }
   subgraph {
     graph [rank=same];
-    POSIX [fontsize=20, shape=box, pos="514.29,18.14", width=1.03079, height=0.5];
+    POSIX [pos="514.29,18.14", width=1.03079, height=0.5];
     future [fontsize=24, shape=plaintext, pos="186.29,18.14", width=0.99094, height=0.50398];
-    "ksh-POSIX" [fontsize=20, shape=box, pos="406.29,18.14", width=1.46378, height=0.5];
+    "ksh-POSIX" [pos="406.29,18.14", width=1.46378, height=0.5];
   }
-  rc [fontsize=20, shape=box, pos="110.29,162.72", width=0.75, height=0.5];
-  csh [fontsize=20, shape=box, pos="588.29,379.58", width=0.75, height=0.5];
-  esh [fontsize=20, shape=box, pos="224.29,379.58", width=0.75, height=0.5];
-  ksh [fontsize=20, shape=box, pos="106.29,307.29", width=0.75, height=0.5];
-  tcl [fontsize=20, shape=box, pos="262.29,90.43", width=0.75, height=0.5];
-  vsh [fontsize=20, shape=box, pos="368.29,379.58", width=0.75, height=0.5];
+  rc [pos="110.29,162.72", width=0.75, height=0.5];
+  csh [pos="588.29,379.58", width=0.75, height=0.5];
+  esh [pos="224.29,379.58", width=0.75, height=0.5];
+  ksh [pos="106.29,307.29", width=0.75, height=0.5];
+  tcl [pos="262.29,90.43", width=0.75, height=0.5];
+  vsh [pos="368.29,379.58", width=0.75, height=0.5];
   1972 [fontsize=24, shape=plaintext, pos="112.29,524.15", width=0.86929, height=0.50398];
   1976 [fontsize=24, shape=plaintext, pos="112.29,451.86", width=0.86929, height=0.50398];
   1978 [fontsize=24, shape=plaintext, pos="112.29,379.58", width=0.86929, height=0.50398];
@@ -71,20 +71,20 @@ digraph shells {
   1986 [fontsize=24, shape=plaintext, pos="221.29,235", width=0.86929, height=0.50398];
   1988 [fontsize=24, shape=plaintext, pos="294.29,162.72", width=0.86929, height=0.50398];
   1990 [fontsize=24, shape=plaintext, pos="186.29,90.43", width=0.86929, height=0.50398];
-  Bash [fontsize=20, shape=box, pos="334.29,90.43", width=0.75983, height=0.5];
-  Perl [fontsize=20, shape=box, pos="182.29,162.72", width=0.75, height=0.5];
-  tcsh [fontsize=20, shape=box, pos="486.29,307.29", width=0.75, height=0.5];
-  v9sh [fontsize=20, shape=box, pos="558.29,307.29", width=0.75, height=0.5];
-  POSIX [fontsize=20, shape=box, pos="514.29,18.14", width=1.03079, height=0.5];
-  "ksh-i" [fontsize=20, shape=box, pos="298.29,235", width=0.75929, height=0.5];
-  Bourne [fontsize=20, shape=box, pos="341.29,451.86", width=1.01326, height=0.5];
-  Mashey [fontsize=20, shape=box, pos="248.29,451.86", width=1.07311, height=0.5];
+  Bash [pos="334.29,90.43", width=0.75983, height=0.5];
+  Perl [pos="182.29,162.72", width=0.75, height=0.5];
+  tcsh [pos="486.29,307.29", width=0.75, height=0.5];
+  v9sh [pos="558.29,307.29", width=0.75, height=0.5];
+  POSIX [pos="514.29,18.14", width=1.03079, height=0.5];
+  "ksh-i" [pos="298.29,235", width=0.75929, height=0.5];
+  Bourne [pos="341.29,451.86", width=1.01326, height=0.5];
+  Mashey [pos="248.29,451.86", width=1.07311, height=0.5];
   future [fontsize=24, shape=plaintext, pos="186.29,18.14", width=0.99094, height=0.50398];
-  "System-V" [fontsize=20, shape=box, pos="278.29,307.29", width=1.29797, height=0.5];
-  Thompson [fontsize=20, shape=box, pos="341.29,524.15", width=1.37184, height=0.5];
-  Formshell [fontsize=20, shape=box, pos="496.29,379.58", width=1.31145, height=0.5];
-  KornShell [fontsize=20, shape=box, pos="463.29,162.72", width=1.32682, height=0.5];
-  "ksh-POSIX" [fontsize=20, shape=box, pos="406.29,18.14", width=1.46378, height=0.5];
+  "System-V" [pos="278.29,307.29", width=1.29797, height=0.5];
+  Thompson [pos="341.29,524.15", width=1.37184, height=0.5];
+  Formshell [pos="496.29,379.58", width=1.31145, height=0.5];
+  KornShell [pos="463.29,162.72", width=1.32682, height=0.5];
+  "ksh-POSIX" [pos="406.29,18.14", width=1.46378, height=0.5];
   1972 -> 1976 [pos="e,112.29,470 112.29,506 112.29,500.58 112.29,492.09 112.29,488 112.29,485.84 112.29,483.47 112.29,481.52"];
   1976 -> 1978 [pos="e,112.29,397.72 112.29,433.72 112.29,428.29 112.29,419.80 112.29,415.72 112.29,413.56 112.29,411.19 112.29,409.23"];
   1978 -> 1980 [pos="e,62.59,379.58 81,379.58 78.70,379.58 76.40,379.58 74.10,379.58"];
@@ -117,10 +117,10 @@ digraph shells {
   "ksh-i" -> KornShell [pos="e,415.53,162.72 325.63,235 344.02,235 367.79,248.01 380.79,235 397.83,217.96 369.54,173.97 380.79,162.72 386.27,157.24 397.06,162.72 404.02,162.72"];
   KornShell -> "ksh-POSIX" [pos="e,410.78,36.14 453.58,144.72 444.23,127.38 430.68,106.92 424.29,90.43 418.95,76.62 416.99,61.08 413.56,47.32"];
   Bourne -> Formshell [pos="e,449.08,379.58 377.77,451.86 391.45,451.86 409.13,461.53 418.79,451.86 435.83,434.82 408.06,390.31 418.79,379.58 423.22,375.15 432.01,379.58 437.57,379.58"];
-  1984 -> v9sh [style=invis, pos="e,531.29,307.29 441.59,307.29 455.46,307.29 471.26,307.29 484.29,307.29 496.12,307.29 508.25,307.29 519.78,307.29"];
-  v9sh -> tcsh [style=invis, pos="e,513.29,307.29 531.29,307.29 529.13,307.29 526.97,307.29 524.81,307.29"];
-  1988 -> rc [style=invis, pos="e,137.29,162.72 263,162.72 243.13,162.72 221.33,162.72 202.29,162.72 184.47,162.72 166.32,162.72 148.81,162.72"];
-  rc -> KornShell [style=invis, pos="e,415.53,162.72 137.29,162.72 185.51,162.72 242.34,162.72 286.79,162.72 325.87,162.72 366.21,162.72 404.02,162.72"];
-  Formshell -> csh [style=invis, pos="e,561.29,379.58 543.51,379.58 543.10,379.58 541.89,379.58 542.29,379.58 544.79,379.58 547.29,379.58 549.78,379.58"];
-  KornShell -> Perl [style=invis, pos="e,209.29,162.72 415.53,162.72 384.62,162.72 353.71,162.72 322.79,162.72 288.80,162.72 254.80,162.72 220.81,162.72"];
+  1984 -> v9sh [pos="e,531.29,307.29 441.59,307.29 455.46,307.29 471.26,307.29 484.29,307.29 496.12,307.29 508.25,307.29 519.78,307.29"];
+  v9sh -> tcsh [pos="e,513.29,307.29 531.29,307.29 529.13,307.29 526.97,307.29 524.81,307.29"];
+  1988 -> rc [pos="e,137.29,162.72 263,162.72 243.13,162.72 221.33,162.72 202.29,162.72 184.47,162.72 166.32,162.72 148.81,162.72"];
+  rc -> KornShell [pos="e,415.53,162.72 137.29,162.72 185.51,162.72 242.34,162.72 286.79,162.72 325.87,162.72 366.21,162.72 404.02,162.72"];
+  Formshell -> csh [pos="e,561.29,379.58 543.51,379.58 543.10,379.58 541.89,379.58 542.29,379.58 544.79,379.58 547.29,379.58 549.78,379.58"];
+  KornShell -> Perl [pos="e,209.29,162.72 415.53,162.72 384.62,162.72 353.71,162.72 322.79,162.72 288.80,162.72 254.80,162.72 220.81,162.72"];
 }

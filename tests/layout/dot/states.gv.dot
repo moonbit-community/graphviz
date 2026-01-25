@@ -1,10 +1,10 @@
 digraph states {
   graph [size="3,2", rankdir=LR, bb="0,0,331.08,160.31"];
   node [label="\N", shape=ellipse];
-  full [shape=ellipse, label=Full, pos="304.08,131", width=0.75, height=0.5];
-  empty [shape=ellipse, label=Empty, pos="35.58,99", width=0.98821, height=0.5];
-  stolen [shape=ellipse, label=Stolen, pos="125.08,24", width=0.95911, height=0.5];
-  waiting [shape=ellipse, label=Waiting, pos="214.58,18", width=1.13014, height=0.5];
+  full [label=Full, pos="304.08,131", width=0.75, height=0.5];
+  empty [label=Empty, pos="35.58,99", width=0.98821, height=0.5];
+  stolen [label=Stolen, pos="125.08,24", width=0.95911, height=0.5];
+  waiting [label=Waiting, pos="214.58,18", width=1.13014, height=0.5];
   empty -> full [label=return, pos="e,286.08,112.90 53.58,93.77 62.49,91.18 71.13,87.31 80.33,86 95.09,83.90 110.16,86 125.08,86 139.99,86 154.91,86 169.83,86 184.74,86 199.66,86 214.58,86 229.49,86 248.37,81.45 259.33,86 267.46,89.38 272.13,98.87 277.96,104.74", lp="215.19,99.17"];
   empty -> stolen [label=dispatch, wt=28, pos="e,107.72,58.53 53.58,104.63 62.49,107.42 71.72,116.65 80.33,113 95.50,106.57 95.14,83.54 102.54,68.81", lp="80.33,130.07"];
   stolen -> full [label=return, pos="e,286.08,131 139.52,58.53 148.97,81.13 152.72,119.61 169.83,131 182.24,139.27 199.66,131 214.58,131 229.49,131 249.33,131 259.33,131 264.41,131 269.99,131 274.56,131", lp="170.19,139.25"];

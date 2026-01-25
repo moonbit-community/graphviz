@@ -2,13 +2,13 @@ digraph finite_state_machine {
   graph [rankdir=LR, bb="0,0,680.91,282.90"];
   node [label="\N", shape=circle];
   LR_0 [shape=doublecircle, pos="36.45,84.45", width=1.01252, height=1.01252];
-  LR_1 [shape=circle, pos="158.85,43.45", width=0.90141, height=0.90141];
-  LR_2 [shape=circle, pos="158.85,137.45", width=0.90141, height=0.90141];
+  LR_1 [pos="158.85,43.45", width=0.90141, height=0.90141];
+  LR_2 [pos="158.85,137.45", width=0.90141, height=0.90141];
   LR_3 [shape=doublecircle, pos="281.25,37.45", width=1.01252, height=1.01252];
   LR_4 [shape=doublecircle, pos="281.25,246.45", width=1.01252, height=1.01252];
-  LR_5 [shape=circle, pos="281.25,159.45", width=0.90141, height=0.90141];
-  LR_6 [shape=circle, pos="648.46,140.45", width=0.90141, height=0.90141];
-  LR_7 [shape=circle, pos="403.66,32.45", width=0.90141, height=0.90141];
+  LR_5 [pos="281.25,159.45", width=0.90141, height=0.90141];
+  LR_6 [pos="648.46,140.45", width=0.90141, height=0.90141];
+  LR_7 [pos="403.66,32.45", width=0.90141, height=0.90141];
   LR_8 [shape=doublecircle, pos="526.06,77.45", width=1.01252, height=1.01252];
   LR_0 -> LR_2 [label="SS(B)", pos="e,126.40,129.78 72.90,106.94 81.16,112.04 92.35,120.43 99.65,123.45 104.57,125.49 110.40,125.99 115.20,127.13", lp="99.65,131.70"];
   LR_0 -> LR_1 [label="SS(S)", pos="e,126.40,52.22 72.90,70.03 81.23,66.74 92.54,61.81 99.65,59.45 104.78,57.75 110.42,56.54 115.29,55.22", lp="99.65,75.43"];

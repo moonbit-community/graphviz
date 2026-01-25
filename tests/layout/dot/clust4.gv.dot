@@ -4,18 +4,18 @@ digraph G {
   subgraph cluster_0 {
     graph [style=filled, color=lightgrey, label="process #1", bb="7.92,72,81.92,364.50", lp="44.92,352.25"];
     node [style=filled, color=white];
-    a0 [style=filled, color=white, pos="46.92,314", width=0.75, height=0.5];
-    a1 [style=filled, color=white, pos="42.92,242", width=0.75, height=0.5];
-    a2 [style=filled, color=white, pos="42.92,170", width=0.75, height=0.5];
-    a3 [style=filled, color=white, pos="46.92,98", width=0.75, height=0.5];
+    a0 [pos="46.92,314", width=0.75, height=0.5];
+    a1 [pos="42.92,242", width=0.75, height=0.5];
+    a2 [pos="42.92,170", width=0.75, height=0.5];
+    a3 [pos="46.92,98", width=0.75, height=0.5];
   }
   subgraph cluster_1 {
     graph [label="process #2", color=blue, bb="129.92,72,203.92,364.50", lp="166.92,352.25"];
     node [style=filled];
-    b0 [style=filled, pos="165.92,314", width=0.75, height=0.5];
-    b1 [style=filled, pos="166.92,242", width=0.75, height=0.5];
-    b2 [style=filled, pos="168.92,170", width=0.75, height=0.5];
-    b3 [style=filled, pos="164.92,98", width=0.75, height=0.5];
+    b0 [pos="165.92,314", width=0.75, height=0.5];
+    b1 [pos="166.92,242", width=0.75, height=0.5];
+    b2 [pos="168.92,170", width=0.75, height=0.5];
+    b3 [pos="164.92,98", width=0.75, height=0.5];
   }
   a0 [style=filled, color=white, pos="46.92,314", width=0.75, height=0.5];
   a1 [style=filled, color=white, pos="42.92,242", width=0.75, height=0.5];

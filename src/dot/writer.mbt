@@ -168,6 +168,78 @@ fn merge_attrs(
 }
 
 ///|
+fn should_emit_default_node_label(graph : @cgraph.Graph) -> Bool {
+  graph.get_attr("bb") is Some(_)
+}
+
+///|
+fn root_graph(graph : @cgraph.Graph) -> @cgraph.Graph {
+  let mut current = graph
+  while true {
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  current
+}
+
+///|
+fn collect_effective_defaults(
+  graph : @cgraph.Graph,
+  kind : @cgraph.AttrKind,
+  implicit_node_label : String?,
+) -> Map[String, String] {
+  let chain : Array[@cgraph.Graph] = []
+  let mut current : @cgraph.Graph? = Some(graph)
+  while current is Some(value) {
+    chain.push(value)
+    current = value.parent()
+  }
+  let merged : Map[String, String] = Map::new()
+  let mut index = chain.length()
+  while index > 0 {
+    index = index - 1
+    let entry = chain[index]
+    match kind {
+      @cgraph.AttrKind::Node =>
+        if entry.is_root() {
+          match implicit_node_label {
+            Some(value) => merged["label"] = value
+            None => ()
+          }
+        }
+      _ => ()
+    }
+    for pair in entry.default_attrs(kind) {
+      let (key, value) = pair
+      merged[key] = value
+    }
+  }
+  merged
+}
+
+///|
+fn filter_attrs(
+  attrs : Array[(String, String)],
+  defaults : Map[String, String],
+) -> Array[(String, String)] {
+  let filtered : Array[(String, String)] = []
+  for pair in attrs {
+    let (key, value) = pair
+    match defaults.get(key) {
+      Some(default_value) =>
+        if default_value == value {
+          continue
+        }
+      None => ()
+    }
+    filtered.push((key, value))
+  }
+  filtered
+}
+
+///|
 fn write_graph(
   graph : @cgraph.Graph,
   sb : StringBuilder,
@@ -206,26 +278,48 @@ fn write_graph(
     write_attr_list(sb, graph_defaults)
     sb.write_string(";\n")
   }
+  let is_layout_output = should_emit_default_node_label(root_graph(graph))
+  let implicit_label = if is_layout_output { Some("\\N") } else { None }
   let node_defaults : Map[String, String] = Map::new()
-  if is_root {
-    node_defaults["label"] = "\\N"
-  }
-  for pair in graph.default_attrs(@cgraph.AttrKind::Node) {
-    let (key, value) = pair
-    node_defaults[key] = value
+  if is_layout_output {
+    if is_root {
+      match implicit_label {
+        Some(value) => node_defaults["label"] = value
+        None => ()
+      }
+    }
+    for pair in graph.default_attrs(@cgraph.AttrKind::Node) {
+      let (key, value) = pair
+      node_defaults[key] = value
+    }
   }
   let node_defaults_list : Array[(String, String)] = []
   for key, value in node_defaults {
     node_defaults_list.push((key, value))
   }
-  if node_defaults_list.length() > 0 {
+  let node_effective_defaults = if is_layout_output {
+    collect_effective_defaults(
+      graph,
+      @cgraph.AttrKind::Node,
+      implicit_label,
+    )
+  } else {
+    Map::new()
+  }
+  if is_layout_output && node_defaults_list.length() > 0 {
     write_indent(sb, inner)
     sb.write_string("node ")
     write_attr_list(sb, node_defaults_list)
     sb.write_string(";\n")
   }
-  let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
-  if edge_defaults.length() > 0 {
+  let edge_defaults : Array[(String, String)] =
+    if is_layout_output { graph.default_attrs(@cgraph.AttrKind::Edge) } else { [] }
+  let edge_effective_defaults = if is_layout_output {
+    collect_effective_defaults(graph, @cgraph.AttrKind::Edge, None)
+  } else {
+    Map::new()
+  }
+  if is_layout_output && edge_defaults.length() > 0 {
     write_indent(sb, inner)
     sb.write_string("edge ")
     write_attr_list(sb, edge_defaults)
@@ -239,7 +333,11 @@ fn write_graph(
   for node in nodes {
     write_indent(sb, inner)
     sb.write_string(write_id(node.name()))
-    let attrs = node.attrs()
+    let attrs = if is_layout_output {
+      filter_attrs(node.attrs(), node_effective_defaults)
+    } else {
+      node.attrs()
+    }
     if attrs.length() > 0 {
       sb.write_char(' ')
       write_attr_list(sb, attrs)
@@ -262,7 +360,11 @@ fn write_graph(
       sb.write_char(' ')
       sb.write_string(write_id(head.name()))
       sb.write_string(write_port(edge.head_port()))
-      let attrs = edge.attrs()
+      let attrs = if is_layout_output {
+        filter_attrs(edge.attrs(), edge_effective_defaults)
+      } else {
+        edge.attrs()
+      }
       if attrs.length() > 0 {
         sb.write_char(' ')
         write_attr_list(sb, attrs)

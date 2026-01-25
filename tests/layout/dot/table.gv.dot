@@ -1,15 +1,15 @@
 digraph structs {
   graph [bb="0,0,362.48,224"];
   node [label="\N", shape=plaintext];
-  struct1 [shape=plaintext, label=<<TABLE CELLPADDING="10" BORDER="0">
+  struct1 [label=<<TABLE CELLPADDING="10" BORDER="0">
 	<TR>
 	    <TD HEIGHT="30" WIDTH="90">a</TD>
 	    <TD>b</TD>
 	    <TD>c</TD>
 	</TR>
     </TABLE>>, pos="160.33,197", width=2.37185, height=0.75];
-  struct2 [shape=plaintext, label="<<TABLE>\n\t<TR>\n\t    <TD COLSPAN=\"3\">elefantel</TD>\n\t    <TD ROWSPAN=\"2\" VALIGN=\"bottom\" ALIGN=\"right\">two</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ROWSPAN=\"2\"><TABLE BGCOLOR=\"grey\">\n\t\t<TR>\n\t\t    <TD>buca</TD>\n\t\t</TR><TR>\n\t\t    <TD BGCOLOR=\"yellow\">c</TD>\n\t\t</TR><TR>\n\t\t    <TD>f</TD>\n\t\t</TR>\n\t    </TABLE></TD>\n\t    <TD>patratos</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ALIGN=\"right\">4</TD>\n\t</TR>\n\t</TABLE>\n    >", pos="65.33,67", width=1.81459, height=1.61113];
-  struct3 [shape=plaintext, label=<<TABLE CELLPADDING="5">
+  struct2 [label="<<TABLE>\n\t<TR>\n\t    <TD COLSPAN=\"3\">elefantel</TD>\n\t    <TD ROWSPAN=\"2\" VALIGN=\"bottom\" ALIGN=\"right\">two</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ROWSPAN=\"2\"><TABLE BGCOLOR=\"grey\">\n\t\t<TR>\n\t\t    <TD>buca</TD>\n\t\t</TR><TR>\n\t\t    <TD BGCOLOR=\"yellow\">c</TD>\n\t\t</TR><TR>\n\t\t    <TD>f</TD>\n\t\t</TR>\n\t    </TABLE></TD>\n\t    <TD>patratos</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ALIGN=\"right\">4</TD>\n\t</TR>\n\t</TABLE>\n    >", pos="65.33,67", width=1.81459, height=1.61113];
+  struct3 [label=<<TABLE CELLPADDING="5">
 	<TR>
 	    <TD ROWSPAN="3">Hello</TD>
 	    <TD ROWSPAN="2" COLSPAN="3"><TABLE BORDER="4">
