@@ -22,6 +22,7 @@ pairs=(
   "refs/graphviz/graphs/directed/clust5.gv tests/render/svg/clust5.svg"
   "refs/graphviz/graphs/directed/ctext.gv tests/render/svg/ctext.svg"
   "refs/graphviz/graphs/directed/dfa.gv tests/render/svg/dfa.svg"
+  "refs/graphviz/graphs/directed/fig6.gv tests/render/svg/fig6.svg"
   "refs/graphviz/graphs/directed/fsm.gv tests/render/svg/fsm.svg"
   "refs/graphviz/graphs/directed/grammar.gv tests/render/svg/grammar.svg"
   "refs/graphviz/graphs/directed/longflat.gv tests/render/svg/longflat.svg"

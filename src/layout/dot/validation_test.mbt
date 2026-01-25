@@ -68,6 +68,16 @@ test "layout_dot rejects negative node height" {
 }
 
 ///|
+test "layout_dot rejects negative edge minlen" {
+  assert_layout_error("digraph { a -> b [minlen=-1]; }", "minlen")
+}
+
+///|
+test "layout_dot rejects negative edge weight" {
+  assert_layout_error("digraph { a -> b [weight=-1]; }", "weight")
+}
+
+///|
 test "layout_dot rejects negative nodesep option" {
   assert_layout_error_with_options(
     "digraph { a; }",
@@ -108,4 +118,14 @@ test "layout_neato rejects negative node width" {
 ///|
 test "layout_neato rejects negative node height" {
   assert_neato_error("graph { a [height=-1]; b; a -- b; }", "height")
+}
+
+///|
+test "layout_neato rejects negative edge len" {
+  assert_neato_error("graph { a -- b [len=-1]; }", "len")
+}
+
+///|
+test "layout_neato rejects negative edge weight" {
+  assert_neato_error("graph { a -- b [weight=-1]; }", "weight")
 }

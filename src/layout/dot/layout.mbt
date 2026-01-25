@@ -135,9 +135,39 @@ fn validate_node_dimensions(graph : @cgraph.Graph) -> Unit raise DotLayoutError 
 }
 
 ///|
+fn validate_edge_attributes(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
+  for edge in graph.edges() {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let owner = "edge \{tail} -> \{head}"
+    match edge.get_attr("minlen") {
+      Some(value) =>
+        validate_nonnegative_attr(
+          owner,
+          "minlen",
+          value,
+          parse_first_double(value, 0.0),
+        )
+      None => ()
+    }
+    match edge.get_attr("weight") {
+      Some(value) =>
+        validate_nonnegative_attr(
+          owner,
+          "weight",
+          value,
+          parse_first_double(value, 0.0),
+        )
+      None => ()
+    }
+  }
+}
+
+///|
 fn validate_layout_graph(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
   validate_graph_spacing(graph)
   validate_node_dimensions(graph)
+  validate_edge_attributes(graph)
 }
 
 ///|

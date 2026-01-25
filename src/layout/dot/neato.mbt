@@ -52,6 +52,22 @@ fn neato_nodesep_pt(graph : @cgraph.Graph) -> Double {
 }
 
 ///|
+fn validate_neato_edge_lengths(graph : @cgraph.Graph) -> Unit raise DotLayoutError {
+  for edge in graph.edges() {
+    match edge.get_attr("len") {
+      Some(value) =>
+        validate_nonnegative_attr(
+          "edge \{edge.tail().name()} -> \{edge.head().name()}",
+          "len",
+          value,
+          parse_first_double(value, 0.0),
+        )
+      None => ()
+    }
+  }
+}
+
+///|
 fn relax_positions(
   positions : Array[@geom.Point],
   pinned : Array[Bool],
@@ -168,6 +184,7 @@ pub fn layout_neato(
     graph
   }
   validate_layout_graph(active_graph)
+  validate_neato_edge_lengths(active_graph)
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
   let record_orientation =

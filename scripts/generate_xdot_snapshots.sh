@@ -22,6 +22,7 @@ pairs=(
   "refs/graphviz/graphs/directed/record2.gv tests/render/xdot/record2.xdot"
   "refs/graphviz/graphs/directed/ctext.gv tests/render/xdot/ctext.xdot"
   "refs/graphviz/graphs/directed/dfa.gv tests/render/xdot/dfa.xdot"
+  "refs/graphviz/graphs/directed/fig6.gv tests/render/xdot/fig6.xdot"
   "refs/graphviz/graphs/directed/fsm.gv tests/render/xdot/fsm.xdot"
   "refs/graphviz/graphs/directed/longflat.gv tests/render/xdot/longflat.xdot"
   "refs/graphviz/graphs/directed/states.gv tests/render/xdot/states.xdot"

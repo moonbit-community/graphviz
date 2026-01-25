@@ -578,6 +578,7 @@ test "svg spot-check outputs" {
     ("refs/graphviz/graphs/directed/clust5.gv", "clust5"),
     ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
     ("refs/graphviz/graphs/directed/dfa.gv", "dfa"),
+    ("refs/graphviz/graphs/directed/fig6.gv", "fig6"),
     ("refs/graphviz/graphs/directed/fsm.gv", "fsm"),
     ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
     ("refs/graphviz/graphs/directed/longflat.gv", "longflat"),
