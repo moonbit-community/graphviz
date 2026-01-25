@@ -165,8 +165,11 @@ const RECORD_BORDER_PT : Double = 0.5
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|
-// Graphviz keeps edge-label ranks tight; zero nodesep matches label positions.
-const EDGE_LABEL_NODESEP_PT : Double = 0.0
+// Graphviz keeps edge-label ranks tight; use a fraction of nodesep on label ranks.
+const EDGE_LABEL_NODESEP_SCALE : Double = 0.0
+
+///|
+const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
 
 ///|
 const DEFAULT_GRAPH_MARGIN_IN : Double = 0.11
@@ -1626,7 +1629,7 @@ fn edge_polyline_points(
             0.0
           }
         } else {
-          0.5
+          1.0
         }
       let span_f = Double::from_int(span)
       let push_point = (name : String) => {
@@ -3163,7 +3166,7 @@ fn rank_nodesep_pt(
   has_edge_labels : Bool,
 ) -> Double {
   if has_edge_labels && rank % 2 != 0 {
-    EDGE_LABEL_NODESEP_PT
+    nodesep_pt * EDGE_LABEL_NODESEP_SCALE
   } else {
     nodesep_pt
   }
@@ -5021,11 +5024,10 @@ fn spline_label_pos_at_axis(
 }
 
 ///|
-fn edge_label_rank_y(
+fn edge_label_rank_info(
   edge : @cgraph.Edge,
   ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-) -> Double? {
+) -> (Int, Int)? {
   if edge_mid_label_width_pt(edge) <= 0.0 {
     return None
   }
@@ -5039,11 +5041,51 @@ fn edge_label_rank_y(
   }
   let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
   let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-  if max_rank - min_rank <= 1 {
+  let span = max_rank - min_rank
+  if span <= 1 {
     return None
   }
   let label_rank = (min_rank + max_rank) / 2
-  rank_y.get(label_rank)
+  Some((label_rank, span))
+}
+
+///|
+fn edge_label_rank_y(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+) -> Double? {
+  match edge_label_rank_info(edge, ranks) {
+    Some((label_rank, _span)) => rank_y.get(label_rank)
+    None => None
+  }
+}
+
+///|
+fn edge_label_rank_x(
+  edge : @cgraph.Edge,
+  label_rank : Int,
+  vnode_ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_positions : Map[String, @geom.Point],
+) -> Double? {
+  match edge_vnodes.get(edge_key(edge)) {
+    Some(vnodes) =>
+      for name in vnodes {
+        match vnode_ranks.get(name) {
+          Some(rank) =>
+            if rank == label_rank {
+              match vnode_positions.get(name) {
+                Some(pos) => return Some(pos.x)
+                None => ()
+              }
+            }
+          None => ()
+        }
+      }
+    None => ()
+  }
+  None
 }
 
 ///|
@@ -5054,8 +5096,9 @@ fn edge_label_pos(
   head_clip : @geom.Point,
   rankdir : RankDir,
   label_rank_y : Double?,
+  label_rank_x : Double?,
+  apply_label_pad : Bool,
   nodesep_pt : Double,
-  pad_scale : Double,
   label_pad_boost : Double,
 ) -> @geom.Point? {
   let fallback = match spline_label_pos_with_dir(spline) {
@@ -5072,7 +5115,7 @@ fn edge_label_pos(
       (mid, tangent)
     }
   }
-  let (base_pos, dir) = match label_rank_y {
+  let (raw_pos, dir) = match label_rank_y {
     Some(axis) =>
       match spline_label_pos_at_axis(spline, axis, false) {
         Some((pos, tangent)) => (pos, tangent)
@@ -5080,6 +5123,15 @@ fn edge_label_pos(
       }
     None => fallback
   }
+  let base_pos =
+    match label_rank_x {
+      Some(value) =>
+        match rankdir {
+          RankDir::LR | RankDir::RL => point(raw_pos.x, value)
+          _ => point(value, raw_pos.y)
+        }
+      None => raw_pos
+    }
   if edge.tail().name() == edge.head().name() {
     return Some(base_pos)
   }
@@ -5087,14 +5139,12 @@ fn edge_label_pos(
     Some(_) =>
       match edge_mid_label_metrics(edge) {
         Some((width, height)) => {
-          let dx = head_clip.x - tail_clip.x
-          let dy = head_clip.y - tail_clip.y
-          let abs_dx = Double::abs(dx)
-          let abs_dy = Double::abs(dy)
-          let denom = abs_dx + abs_dy
-          let bias = if denom <= 0.0 { 0.0 } else { abs_dx / denom }
-          let pad_bias = if bias < 0.25 { 0.25 } else { bias }
-          let pad = nodesep_pt * pad_bias * pad_scale + label_pad_boost
+          let mut pad = label_pad_boost
+          if apply_label_pad {
+            pad = pad + nodesep_pt * 0.25
+          } else if label_rank_x is None && width >= EDGE_LABEL_PAD_WIDTH_PT {
+            pad = pad + nodesep_pt * 0.25
+          }
           let half_extent = match rankdir {
             RankDir::LR | RankDir::RL => height / 2.0
             _ => width / 2.0
@@ -5108,9 +5158,6 @@ fn edge_label_pos(
         None => Some(base_pos)
       }
     None => {
-      if spline.points.length() > 4 {
-        return Some(base_pos)
-      }
       let (width, height) = match edge_mid_label_metrics(edge) {
         Some((w, h)) => (w, h)
         None => return Some(base_pos)
@@ -5119,6 +5166,11 @@ fn edge_label_pos(
       let axis_threshold = 0.1
       let abs_dx = Double::abs(dir.x)
       let abs_dy = Double::abs(dir.y)
+      if spline.points.length() > 4 &&
+        abs_dx > axis_threshold &&
+        abs_dy > axis_threshold {
+        return Some(base_pos)
+      }
       let offset =
         if abs_dx <= axis_threshold {
           width / 2.0
@@ -5130,7 +5182,7 @@ fn edge_label_pos(
       if offset <= 0.0 {
         Some(base_pos)
       } else {
-        let pad = nodesep_pt * 0.2 * pad_scale + label_pad_boost
+        let pad = label_pad_boost
         Some(point_add(base_pos, point_scale(normal, offset + pad)))
       }
     }
@@ -5611,15 +5663,12 @@ pub fn layout_dot(
         Some(value) => value
         None => continue
       }
-      let minlen = edge_minlen(edge) * 2
-      if minlen < 2 {
+      let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+      let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+      if max_rank - min_rank <= 1 {
         continue
       }
-      let label_rank = if tail_rank < head_rank {
-        tail_rank + minlen / 2
-      } else {
-        head_rank + minlen / 2
-      }
+      let label_rank = (min_rank + max_rank) / 2
       let half_height = edge_label_height_pt(edge) / 2.0
       let current = match rank_pht.get(label_rank) {
         Some(value) => value
@@ -5644,6 +5693,7 @@ pub fn layout_dot(
     graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
   )
   let nodesep_pt = nodesep_in * 72.0
+  let has_clusters = graph_has_cluster(graph)
   let mut ranksep_pt = ranksep_in * 72.0
   if has_edge_labels {
     ranksep_pt = (ranksep_pt + 1.0) / 2.0
@@ -5723,7 +5773,12 @@ pub fn layout_dot(
       let (parents, children) = build_edge_index(nodes, edges)
       reorder_rank_groups(
         rank_keys, groups, edges, parents, children, cluster_keys, rank_same_groups,
-        rank_same_order, edge_order, node_order, sizes, nodesep_pt, has_edge_labels,
+        rank_same_order,
+        edge_order,
+        node_order,
+        sizes,
+        nodesep_pt,
+        has_edge_labels,
       )
     }
   }
@@ -5874,7 +5929,6 @@ pub fn layout_dot(
       }
     }
   }
-  let has_clusters = graph_has_cluster(graph)
   let mut has_dotted_edges = false
   for edge in edges {
     match edge.get_attr("style") {
@@ -5898,7 +5952,6 @@ pub fn layout_dot(
     }
   }
   let enable_complex_tuning = has_clusters && has_dotted_edges
-  let label_pad_scale = 1.0
   let (port_pad_below, port_pad_above) =
     if has_clusters {
     (0.0, 0.0)
@@ -6260,7 +6313,33 @@ pub fn layout_dot(
         }
       }
     }
+    let label_rank_info = edge_label_rank_info(edge, ranks)
     let label_rank_y = edge_label_rank_y(edge, ranks, rank_y)
+    let label_rank_x = match label_rank_info {
+      Some((label_rank, span)) =>
+        if span > 2 {
+          let base = edge_label_rank_x(
+            edge,
+            label_rank,
+            vnode_info.vnode_ranks,
+            vnode_info.edge_vnodes,
+            vnode_positions,
+          )
+          match base {
+            Some(value) =>
+              if has_clusters {
+              Some(value)
+            } else {
+              Some(value - nodesep_pt * 0.1)
+            }
+            None => None
+          }
+        } else {
+          None
+        }
+      None => None
+    }
+    let apply_label_pad = has_clusters
     let label_pos : @geom.Point? = match edge.get_attr("label") {
       Some(value) =>
         if value == "" {
@@ -6273,8 +6352,9 @@ pub fn layout_dot(
             head_clip,
             rankdir,
             label_rank_y,
+            label_rank_x,
+            apply_label_pad,
             nodesep_pt,
-            label_pad_scale,
             label_pad_boost,
           )
         }
@@ -6342,7 +6422,11 @@ pub fn layout_dot(
     }
   }
   if graph.is_root() {
-    let margin_x = graph_margin_x_pt(graph)
+    let margin_x = if graph_has_cluster(graph) {
+      graph_margin_x_pt(graph)
+    } else {
+      0.0
+    }
     if margin_x > 0.0 {
       final_bbox = {
         llx: final_bbox.llx - margin_x,

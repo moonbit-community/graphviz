@@ -1,103 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="596.8423999999999pt" height="224pt" viewBox="0 0 596.8423999999999 224">
-  <rect x="0" y="0" width="596.8423999999999" height="224" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="581.0024pt" height="224pt" viewBox="0 0 581.0024 224">
+  <rect x="0" y="0" width="581.0024" height="224" fill="white"/>
   <g transform="translate(0 224) scale(1 -1)">
-    <path d="M 477.42199999999997 40 C 477.42199999999997 40 477.42199999999997 40 477.42199999999997 40" fill="none" stroke="black"/>
-    <polygon points="477.42199999999997,40 467.42199999999997,43 467.42199999999997,37" fill="black" stroke="black"/>
-    <text x="477.42199999999997" y="-40.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
-    <path d="M 495.42199999999997 43.41897913305415 C 503.8081651855806 45.01187489837889 515.1053719129308 46.768008706675516 522.1722 48.5 C 527.4905934534289 49.80347180408531 532.9690171597506 51.75712581522841 537.8995181686622 53.24453287978467" fill="none" stroke="black"/>
-    <polygon points="548.9223999999999,56.56985667103164 538.4821058013333,56.553824039049644 540.2150163838555,50.809520694606334" fill="black" stroke="black"/>
-    <text x="522.1722" y="-71.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
-    <path d="M 208.92079999999996 22 C 208.92079999999996 22 208.92079999999996 22 208.92079999999996 22" fill="none" stroke="black"/>
-    <polygon points="208.92079999999996,22 198.92079999999996,25 198.92079999999996,19" fill="black" stroke="black"/>
-    <text x="208.92079999999996" y="-22.350199999999997" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
-    <path d="M 226.92079999999996 22 C 235.26185611868894 22 246.67319071548113 22 253.67099999999996 22 C 258.74988523570437 22 264.15667065600417 22 268.90765570711307 22" fill="none" stroke="black"/>
-    <polygon points="280.4212,22 270.4212,25 270.4212,19" fill="black" stroke="black"/>
-    <text x="253.67099999999996" y="-53.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
-    <path d="M 137.42039999999994 37.871531300418766 C 145.75397498248284 35.497171386347844 157.1110537781552 31.902462518719734 164.17059999999995 30.25 C 169.26212250758178 29.058202419446967 174.79189645272115 28.29189264550885 179.59806318064992 27.4058435215851" fill="none" stroke="black"/>
-    <polygon points="190.92079999999996,25.318420923258444 181.63042879218665,30.08171839675653 180.54261992366145,24.18115301151098" fill="black" stroke="black"/>
-    <text x="164.17059999999995" y="-38.22173130041877" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
-    <path d="M 119.42039999999996 43 C 119.42039999999996 43 119.42039999999996 43 119.42039999999996 43" fill="none" stroke="black"/>
-    <polygon points="119.42039999999996,43 109.42039999999996,46 109.42039999999996,40" fill="black" stroke="black"/>
-    <text x="119.42039999999996" y="-69.12213130041877" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
-    <path d="M 208.92079999999996 148 C 208.92079999999996 148 208.92079999999996 148 208.92079999999996 148" fill="none" stroke="black"/>
-    <polygon points="208.92079999999996,148 198.92079999999996,151 198.92079999999996,145" fill="black" stroke="black"/>
-    <text x="208.92079999999996" y="-164.77021778941773" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
-    <path d="M 226.92079999999996 133.5196177894177 C 235.8375333333333 126.3464118596118 246.49847598510163 120.91728186752484 253.67099999999996 112 C 268.06457681450036 94.1051025733527 274.1203671576884 70.87296494335315 284.34505073653264 50.30944741502973" fill="none" stroke="black"/>
-    <polygon points="289.47116,40 287.7051746637429,50.28986374021177 282.3326600916321,47.61851816682429" fill="black" stroke="black"/>
-    <text x="253.67099999999996" y="-133.8698177894177" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
-    <path d="M 137.42039999999994 148 C 145.76145611868893 148 157.1727907154811 148 164.17059999999995 148 C 169.24948523570433 148 174.65627065600412 148 179.40725570711302 148" fill="none" stroke="black"/>
-    <polygon points="190.92079999999996,148 180.92079999999996,151 180.92079999999996,145" fill="black" stroke="black"/>
-    <text x="164.17059999999995" y="-179.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
-    <path d="M 119.42039999999996 148 C 119.42039999999996 148 119.42039999999996 148 119.42039999999996 148" fill="none" stroke="black"/>
-    <polygon points="119.42039999999996,148 109.42039999999996,151 109.42039999999996,145" fill="black" stroke="black"/>
-    <text x="119.42039999999996" y="-148.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
-    <path d="M 208.92079999999996 202 C 208.92079999999996 202 208.92079999999996 202 208.92079999999996 202" fill="none" stroke="black"/>
-    <polygon points="208.92079999999996,202 198.92079999999996,205 198.92079999999996,199" fill="black" stroke="black"/>
-    <text x="208.92079999999996" y="-215.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
-    <path d="M 224.7149882352941 184 C 234.36699215686272 173 246.30999194480327 163.6481911795049 253.67099999999996 151 C 271.4395404481468 120.46886963256811 276.8260196464954 84.25175006149894 288.40352946974315 50.8776250922484" fill="none" stroke="black"/>
-    <polygon points="292.1769860465116,40 291.73388265791465,50.43089926070681 286.06527628500027,48.464455315674314" fill="black" stroke="black"/>
-    <text x="253.67099999999996" y="-184.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
-    <path d="M 137.42039999999994 202 C 145.76145611868893 202 157.1727907154811 202 164.17059999999995 202 C 169.24948523570433 202 174.65627065600412 202 179.40725570711302 202" fill="none" stroke="black"/>
-    <polygon points="190.92079999999996,202 180.92079999999996,205 180.92079999999996,199" fill="black" stroke="black"/>
-    <text x="164.17059999999995" y="-233.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
-    <path d="M 119.42039999999996 202 C 119.42039999999996 202 119.42039999999996 202 119.42039999999996 202" fill="none" stroke="black"/>
-    <polygon points="119.42039999999996,202 109.42039999999996,205 109.42039999999996,199" fill="black" stroke="black"/>
-    <text x="119.42039999999996" y="-202.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
-    <path d="M 405.92159999999996 40 C 414.262656118689 40 425.6739907154811 40 432.6718 40 C 437.75068523570434 40 443.15747065600414 40 447.90845570711303 40" fill="none" stroke="black"/>
-    <polygon points="459.42199999999997,40 449.42199999999997,43 449.42199999999997,37" fill="black" stroke="black"/>
-    <text x="432.6718" y="-71.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
-    <path d="M 369.92159999999996 45.53070153876407 C 361.00486666666666 48.27046769250938 352.3922199146228 52.338996096007726 343.1714 53.75 C 328.4260750209239 56.00638406386361 313.33793333333335 53.916666666666664 298.4212 54 C 283.50446666666664 54.083333333333336 268.58773333333335 54.166666666666664 253.67099999999996 54.25 C 238.7542666666666 54.333333333333336 223.8375333333333 54.416666666666664 208.92079999999996 54.5 C 194.0040666666666 54.583333333333336 174.2397109974858 56.02130150191934 164.17059999999995 54.75 C 158.83185148194613 54.07594257714845 153.26210399020826 51.88577083197276 148.5564687717043 50.65021850332571" fill="none" stroke="black"/>
-    <polygon points="137.42039999999994,47.72623586039839 147.85442731511986,47.36419444380219 146.3306657859787,53.16748237413181" fill="black" stroke="black"/>
-    <text x="253.67099999999996" y="-102.15100000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
-    <path d="M 387.92159999999996 40 C 387.92159999999996 40 387.92159999999996 40 387.92159999999996 40" fill="none" stroke="black"/>
-    <polygon points="387.92159999999996,40 377.92159999999996,43 377.92159999999996,37" fill="black" stroke="black"/>
-    <text x="387.92159999999996" y="-40.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
-    <path d="M 566.9223999999999 62 C 566.9223999999999 62 566.9223999999999 62 566.9223999999999 62" fill="none" stroke="black"/>
-    <polygon points="566.9223999999999,62 556.9223999999999,65 556.9223999999999,59" fill="black" stroke="black"/>
-    <text x="566.9223999999999" y="-62.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
-    <path d="M 548.9223999999999 65.28490151999321 C 540.0056666666666 66.91215656888437 531.22343445985 69.68578509627528 522.1722 70.16666666666667 C 507.23520819923715 70.96025168602911 492.3387333333333 67.94444444444446 477.42199999999997 66.83333333333334 C 462.50526666666667 65.72222222222223 447.5885333333333 64.61111111111111 432.6718 63.5 C 417.75506666666666 62.388888888888886 402.8383333333333 61.277777777777786 387.92159999999996 60.16666666666667 C 373.00486666666666 59.05555555555556 353.6312569962624 60.86494418896311 343.1714 56.83333333333333 C 336.20888028539304 54.14972398055001 330.9523145352661 47.322057919557245 325.50672328774635 43.08323674955265" fill="none" stroke="black"/>
-    <polygon points="316.4212,36.011110564868986 326.1550932808685,39.78620282820012 322.46962892439603,44.52089948977948" fill="black" stroke="black"/>
-    <text x="432.6718" y="-93.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
-    <path d="M 47.92 148 C 56.26105611868893 148 67.67239071548117 148 74.67019999999995 148 C 79.74908523570433 148 85.15587065600413 148 89.90685570711302 148" fill="none" stroke="black"/>
-    <polygon points="101.42039999999996,148 91.42039999999996,151 91.42039999999996,145" fill="black" stroke="black"/>
-    <text x="74.67019999999995" y="-179.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
-    <path d="M 47.92 163.08373146935656 C 56.15060620364231 169.9808566807877 67.1870347783685 181.16197643143664 74.67019999999995 185.5 C 79.57182714526213 188.34149466845815 85.7109592006771 189.57087626002058 90.61776990987777 191.38008329600726" fill="none" stroke="black"/>
-    <polygon points="101.42039999999996,195.3631581534831 91.00001836758028,194.71845152661257 93.0756997161655,189.0889269517363" fill="black" stroke="black"/>
-    <text x="74.67019999999995" y="-210.15100000000004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
-    <path d="M 29.92 148 C 29.92 148 29.92 148 29.92 148" fill="none" stroke="black"/>
-    <polygon points="29.92,148 19.92,151 19.92,145" fill="black" stroke="black"/>
-    <text x="29.92" y="-148.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
-    <path d="M 314.694 40 C 323.47343070682416 49.71128218394098 332.6263496880792 70.32249253846642 343.1714 71.5 C 350.1941821523527 72.2841952518493 355.1622865440198 63.059525406889236 360.5066525525039 59.29758625874579" fill="none" stroke="black"/>
-    <polygon points="369.92159999999996,52.67033443425951 363.47113460791525,60.879566811620826 360.01750556585876,55.97319886375306" fill="black" stroke="black"/>
-    <text x="343.1714" y="-79.20040000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">01/-</text>
-    <path d="M 282.62701176470586 40 C 272.97500784313723 51 266.2189896244826 65.4694531350072 253.67099999999996 73 C 240.533436159054 80.88437376478606 223.8375333333333 80 208.92079999999996 83.5 C 194.0040666666666 87 179.0873333333333 90.5 164.17059999999995 94 C 149.2538666666666 97.5 134.3371333333333 101 119.42039999999996 104.5 C 104.5036666666666 108 84.91084855687704 110.26698083493157 74.67019999999995 115 C 68.0971208675624 118.0379432840165 62.55332893952418 123.93530632255725 57.18645762387091 127.89298144840158" fill="none" stroke="black"/>
-    <polygon points="47.92,134.72631630696623 54.18779815383158,126.37678300846233 57.748822292742275,131.2057691424345" fill="black" stroke="black"/>
-    <text x="164.17059999999995" y="-110.10080000000004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">10/-</text>
-    <path d="M 298.4212 22 C 298.4212 22 298.4212 22 298.4212 22" fill="none" stroke="black"/>
-    <polygon points="298.4212,22 288.4212,25 288.4212,19" fill="black" stroke="black"/>
-    <text x="298.4212" y="-22.350199999999997" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/0</text>
-    <ellipse cx="477.42199999999997" cy="40" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="477.42199999999997" y="-36.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st9</text>
-    <ellipse cx="566.9223999999999" cy="62" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="566.9223999999999" y="-58.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="12.8818032" lengthAdjust="spacing">st10</text>
-    <ellipse cx="208.92079999999996" cy="22" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="208.92079999999996" y="-18.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st8</text>
-    <ellipse cx="298.4212" cy="22" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="298.4212" y="-18.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st0</text>
-    <ellipse cx="119.42039999999996" cy="43" rx="18.000000000000007" ry="18" fill="none" stroke="black"/>
-    <text x="119.42039999999996" y="-39.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st7</text>
-    <ellipse cx="208.92079999999996" cy="148" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="208.92079999999996" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st6</text>
-    <ellipse cx="119.42039999999996" cy="148" rx="18.000000000000007" ry="18" fill="none" stroke="black"/>
-    <text x="119.42039999999996" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st5</text>
-    <ellipse cx="208.92079999999996" cy="202" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="208.92079999999996" y="-198.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st4</text>
-    <ellipse cx="119.42039999999996" cy="202" rx="18.000000000000007" ry="18" fill="none" stroke="black"/>
-    <text x="119.42039999999996" y="-198.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st3</text>
-    <ellipse cx="387.92159999999996" cy="40" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="387.92159999999996" y="-36.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st2</text>
-    <ellipse cx="29.92" cy="148" rx="18" ry="18" fill="none" stroke="black"/>
-    <text x="29.92" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st1</text>
+    <path d="M 469.50199999999995 40 C 469.50199999999995 40 469.50199999999995 40 469.50199999999995 40" fill="none" stroke="black"/>
+    <polygon points="469.50199999999995,40 459.50199999999995,43 459.50199999999995,37" fill="black" stroke="black"/>
+    <text x="469.50199999999995" y="-40.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
+    <path d="M 487.50199999999995 42.41339703509705 C 495.91848399826415 43.54185911994997 507.14483839414333 44.27328818613703 514.2521999999999 46 C 519.7246982270374 47.32952674480261 525.1555585747906 49.898390112148086 530.160978259669 51.688029375392865" fill="none" stroke="black"/>
+    <polygon points="541.0024,55.564274573074535 530.5761620021563,55.02246167887496 532.5961717050293,49.37272179103067" fill="black" stroke="black"/>
+    <text x="514.2521999999999" y="-71.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
+    <path d="M 201.00079999999997 22 C 201.00079999999997 22 201.00079999999997 22 201.00079999999997 22" fill="none" stroke="black"/>
+    <polygon points="201.00079999999997,22 191.00079999999997,25 191.00079999999997,19" fill="black" stroke="black"/>
+    <text x="201.00079999999997" y="-22.350199999999997" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
+    <path d="M 219.00079999999997 22 C 227.34185611868895 22 238.75319071548114 22 245.75099999999998 22 C 250.82988523570435 22 256.23667065600415 22 260.98765570711305 22" fill="none" stroke="black"/>
+    <polygon points="272.5012,22 262.5012,25 262.5012,19" fill="black" stroke="black"/>
+    <text x="245.75099999999998" y="-53.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
+    <path d="M 129.50039999999996 36.96650741225738 C 137.81330514039354 34.18007121519226 149.15812576223175 29.648342486566875 156.25059999999996 28 C 161.27535849658727 26.83220965815323 166.82268595363485 26.58251995026147 171.58936937101606 25.943414415441797" fill="none" stroke="black"/>
+    <polygon points="183.00079999999997,24.41339703509705 173.4881554691174,28.715674807285897 172.6908245996179,22.76888882790652" fill="black" stroke="black"/>
+    <text x="156.25059999999996" y="-37.31670741225738" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
+    <path d="M 111.50039999999996 43 C 111.50039999999996 43 111.50039999999996 43 111.50039999999996 43" fill="none" stroke="black"/>
+    <polygon points="111.50039999999996,43 101.50039999999996,46 101.50039999999996,40" fill="black" stroke="black"/>
+    <text x="111.50039999999996" y="-68.21710741225739" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
+    <path d="M 201.00079999999997 148 C 201.00079999999997 148 201.00079999999997 148 201.00079999999997 148" fill="none" stroke="black"/>
+    <polygon points="201.00079999999997,148 191.00079999999997,151 191.00079999999997,145" fill="black" stroke="black"/>
+    <text x="201.00079999999997" y="-175.63050444735444" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
+    <path d="M 219.00079999999997 144.37990444735442 C 227.91753333333332 142.58660296490294 238.80614166390916 144.87307468336394 245.75099999999998 139 C 269.79848985454703 118.66370269509497 268.25262702626367 80.16919338745183 279.5034405393955 50.753790081177755" fill="none" stroke="black"/>
+    <polygon points="283.6165538461538,40 282.8461774443772,50.4118451870735 277.2421046371072,48.26839750382654" fill="black" stroke="black"/>
+    <text x="245.75099999999998" y="-144.73010444735442" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
+    <path d="M 129.50039999999996 148 C 137.84145611868894 148 149.25279071548113 148 156.25059999999996 148 C 161.32948523570434 148 166.73627065600414 148 171.48725570711304 148" fill="none" stroke="black"/>
+    <polygon points="183.00079999999997,148 173.00079999999997,151 173.00079999999997,145" fill="black" stroke="black"/>
+    <text x="156.25059999999996" y="-179.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
+    <path d="M 111.50039999999996 148 C 111.50039999999996 148 111.50039999999996 148 111.50039999999996 148" fill="none" stroke="black"/>
+    <polygon points="111.50039999999996,148 101.50039999999996,151 101.50039999999996,145" fill="black" stroke="black"/>
+    <text x="111.50039999999996" y="-148.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
+    <path d="M 201.00079999999997 202 C 201.00079999999997 202 201.00079999999997 202 201.00079999999997 202" fill="none" stroke="black"/>
+    <polygon points="201.00079999999997,202 191.00079999999997,205 191.00079999999997,199" fill="black" stroke="black"/>
+    <text x="201.00079999999997" y="-228.42380592980592" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
+    <path d="M 219.00079999999997 197.1732059298059 C 227.91753333333332 194.78213728653728 239.22860173236558 196.53327356177283 245.75099999999998 190 C 279.597134384595 156.09743136349692 270.41233632375094 97.41707294291069 282.7430044856264 51.125609414366046" fill="none" stroke="black"/>
+    <polygon points="285.7065357142857,40 286.0315021938793,50.435247806695365 280.2336648999857,48.89087650628347" fill="black" stroke="black"/>
+    <text x="245.75099999999998" y="-197.5234059298059" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
+    <path d="M 129.50039999999996 202 C 137.84145611868894 202 149.25279071548113 202 156.25059999999996 202 C 161.32948523570434 202 166.73627065600414 202 171.48725570711304 202" fill="none" stroke="black"/>
+    <polygon points="183.00079999999997,202 173.00079999999997,205 173.00079999999997,199" fill="black" stroke="black"/>
+    <text x="156.25059999999996" y="-233.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
+    <path d="M 111.50039999999996 202 C 111.50039999999996 202 111.50039999999996 202 111.50039999999996 202" fill="none" stroke="black"/>
+    <polygon points="111.50039999999996,202 101.50039999999996,205 101.50039999999996,199" fill="black" stroke="black"/>
+    <text x="111.50039999999996" y="-202.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
+    <path d="M 398.00159999999994 40 C 406.342656118689 40 417.7539907154811 40 424.7518 40 C 429.8306852357043 40 435.2374706560041 40 439.988455707113 40" fill="none" stroke="black"/>
+    <polygon points="451.50199999999995,40 441.50199999999995,43 441.50199999999995,37" fill="black" stroke="black"/>
+    <text x="424.7518" y="-71.2506" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
+    <path d="M 362.00159999999994 50.860286657936726 C 353.08486666666664 56.24019110529115 345.28410683524316 64.2078146983936 335.2514 67 C 320.8808279692271 70.99944906782751 305.4179333333333 67 290.5012 67 C 275.58446666666663 67 260.66773333333333 67 245.75099999999998 67 C 230.83426666666662 67 215.91753333333332 67 201.00079999999997 67 C 186.08406666666662 67 166.529690431068 69.58241773090371 156.25059999999996 67 C 150.1595788376041 65.46975166192341 144.70076750353178 60.80570411047914 139.64683968458792 58.095229796293886" fill="none" stroke="black"/>
+    <polygon points="129.50039999999996,52.653588140388194 139.73090060148434,54.73610043159518 136.89512309415278,60.02366754028633" fill="black" stroke="black"/>
+    <text x="515.8024" y="-102.15100000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
+    <path d="M 380.00159999999994 40 C 380.00159999999994 40 380.00159999999994 40 380.00159999999994 40" fill="none" stroke="black"/>
+    <polygon points="380.00159999999994,40 370.00159999999994,43 370.00159999999994,37" fill="black" stroke="black"/>
+    <text x="380.00159999999994" y="-40.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">01/1</text>
+    <path d="M 559.0024 62 C 559.0024 62 559.0024 62 559.0024 62" fill="none" stroke="black"/>
+    <polygon points="559.0024,62 549.0024,65 549.0024,59" fill="black" stroke="black"/>
+    <text x="559.0024" y="-62.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
+    <path d="M 541.0024 71.25135530120536 C 532.0856666666666 75.83423686747024 523.9965772054895 82.64244837483386 514.2521999999999 85 C 499.7537641030968 88.50774712332104 484.4187333333333 85 469.50199999999995 85 C 454.58526666666666 85 439.6685333333333 85 424.7518 85 C 409.83506666666665 85 394.9183333333333 85 380.00159999999994 85 C 365.08486666666664 85 348.3479306015507 91.76151038134554 335.2514 85 C 322.31282670488076 78.32004022161489 318.3565964997213 61.215243272263486 309.9544153975962 49.38652721213677" fill="none" stroke="black"/>
+    <polygon points="303.2869714285714,40 311.52370712995287,46.41530864304971 306.632149687679,49.88988283119643" fill="black" stroke="black"/>
+    <text x="497.8024" y="-93.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">00/-</text>
+    <path d="M 40 148 C 48.341056118688925 148 59.75239071548117 148 66.75019999999995 148 C 71.82908523570433 148 77.23587065600412 148 81.98685570711302 148" fill="none" stroke="black"/>
+    <polygon points="93.50039999999996,148 83.50039999999996,151 83.50039999999996,145" fill="black" stroke="black"/>
+    <text x="66.75019999999995" y="-179.25060000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">11/1</text>
+    <path d="M 38.78132500000004 166 C 47.23350443260233 175.06598434788918 58.38529742364176 191.67855206643762 66.75019999999995 196 C 71.33339438351385 198.36775452158028 77.45360126989891 197.43508649390157 82.08896937101605 198.0565855845582" fill="none" stroke="black"/>
+    <polygon points="93.50039999999996,199.58660296490294 83.19042459961791,201.23111117209348 83.9877554691174,195.28432519271408" fill="black" stroke="black"/>
+    <text x="66.75019999999995" y="-210.15100000000004" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/1</text>
+    <path d="M 22 148 C 22 148 22 148 22 148" fill="none" stroke="black"/>
+    <polygon points="22,148 12,151 12,145" fill="black" stroke="black"/>
+    <text x="22" y="-148.3502" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">10/1</text>
+    <path d="M 299.45124 40 C 310.75368727350747 62.731077282686456 313.1967995651373 110.95520052170875 335.2514 112 C 352.5875349387606 112.82127013786078 354.0590581411251 81.73976907005986 362.73629943509854 67.77868346226167" fill="none" stroke="black"/>
+    <polygon points="368.81404999999995,58 366.08322667901325,68.07683501847455 360.9873066668049,64.90956502222002" fill="black" stroke="black"/>
+    <text x="335.2514" y="-137.10080000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">01/-</text>
+    <path d="M 280.5567111111111 40 C 269.6130804683528 59.80849430982259 262.5063941214696 93.1144384172679 245.75099999999998 103 C 232.90363556910063 110.57985227543652 215.91753333333332 103 201.00079999999997 103 C 186.08406666666662 103 171.16733333333332 103 156.25059999999996 103 C 141.3338666666666 103 126.41713333333331 103 111.50039999999996 103 C 96.5836666666666 103 77.72487426635064 98.4362375930016 66.75019999999995 103 C 58.5741587429128 106.39996512165915 53.88191932267853 115.94011268060174 48.01869426120709 121.83606683871095" fill="none" stroke="black"/>
+    <polygon points="39.90008,130 44.824223398938315,120.79387096621538 49.07865606725197,125.02468680607247" fill="black" stroke="black"/>
+    <text x="479.8024" y="-106.20040000000002" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.8909124" lengthAdjust="spacing">10/-</text>
+    <path d="M 290.5012 22 C 290.5012 22 290.5012 22 290.5012 22" fill="none" stroke="black"/>
+    <polygon points="290.5012,22 280.5012,25 280.5012,19" fill="black" stroke="black"/>
+    <text x="290.5012" y="-22.350199999999997" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="24.1601752" lengthAdjust="spacing">00/0</text>
+    <ellipse cx="469.50199999999995" cy="40" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="469.50199999999995" y="-36.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st9</text>
+    <ellipse cx="559.0024" cy="62" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="559.0024" y="-58.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="12.8818032" lengthAdjust="spacing">st10</text>
+    <ellipse cx="201.00079999999997" cy="22" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="201.00079999999997" y="-18.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st8</text>
+    <ellipse cx="290.5012" cy="22" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="290.5012" y="-18.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st0</text>
+    <ellipse cx="111.50039999999996" cy="43" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="111.50039999999996" y="-39.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st7</text>
+    <ellipse cx="201.00079999999997" cy="148" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="201.00079999999997" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st6</text>
+    <ellipse cx="111.50039999999996" cy="148" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="111.50039999999996" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st5</text>
+    <ellipse cx="201.00079999999997" cy="202" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="201.00079999999997" y="-198.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st4</text>
+    <ellipse cx="111.50039999999996" cy="202" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="111.50039999999996" y="-198.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st3</text>
+    <ellipse cx="380.00159999999994" cy="40" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="380.00159999999994" y="-36.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st2</text>
+    <ellipse cx="22" cy="148" rx="18" ry="18" fill="none" stroke="black"/>
+    <text x="22" y="-144.9" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="8" fill="black" textLength="8.999403200000001" lengthAdjust="spacing">st1</text>
   </g>
 </svg>

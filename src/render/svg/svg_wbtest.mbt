@@ -184,8 +184,8 @@ fn assert_point_close(
 }
 
 ///|
-test "render_svg matches graphviz label positions in complex" {
-  let graph = @dot.parse_dot_file("tests/layout/dot/complex.dot")
+fn svg_with_bbox(graph_path : String) -> (String, @geom.Rect) raise {
+  let graph = @dot.parse_dot_file(graph_path)
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout, options={
     pretty: Some(false),
@@ -198,27 +198,85 @@ test "render_svg matches graphviz label positions in complex" {
     urx: layout.bbox.urx + pad_x,
     ury: layout.bbox.ury + pad_y,
   }
+  (svg, padded_bbox)
+}
+
+///|
+fn assert_edge_label_parity(
+  svg : String,
+  bbox : @geom.Rect,
+  reference : @cgraph.Graph,
+  label : String,
+  eps : Double,
+) -> Unit raise {
+  let entries = extract_label_entries(svg, label, bbox)
+  let expected = edge_label_positions(reference, label)
+  assert_eq(entries.length(), expected.length())
+  if entries.length() > 1 {
+    entries.sort_by((a, b) => Double::compare(a.center.x, b.center.x))
+    expected.sort_by((a, b) => Double::compare(a.x, b.x))
+  }
+  for i in 0..<entries.length() {
+    assert_point_close(entries[i].center, expected[i], eps)
+  }
+}
+
+///|
+fn assert_cluster_label_parity(
+  svg : String,
+  bbox : @geom.Rect,
+  reference : @cgraph.Graph,
+  label : String,
+  eps : Double,
+) -> Unit raise {
+  let entries = extract_label_entries(svg, label, bbox)
+  assert_eq(entries.length(), 1)
+  let expected = match find_subgraph_label_pos(reference, label) {
+    Some(pos) => pos
+    None => fail("missing \{label} label position in reference")
+  }
+  assert_point_close(entries[0].center, expected, eps)
+}
+
+///|
+test "render_svg matches graphviz label positions in complex" {
+  let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
   let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let eps = 2.0
-  let mechcmd_entries = extract_label_entries(svg, "MechCmd", padded_bbox)
-  assert_eq(mechcmd_entries.length(), 2)
-  let mechcmd_expected = edge_label_positions(reference, "MechCmd")
-  assert_eq(mechcmd_expected.length(), 2)
-  mechcmd_entries.sort_by((a, b) => Double::compare(a.center.x, b.center.x))
-  mechcmd_expected.sort_by((a, b) => Double::compare(a.x, b.x))
-  for i in 0..<2 {
-    assert_point_close(mechcmd_entries[i].center, mechcmd_expected[i], eps)
-  }
-  let raw_entries = extract_label_entries(svg, "Raw PROT_G", padded_bbox)
-  assert_eq(raw_entries.length(), 1)
-  let raw_expected = edge_label_positions(reference, "Raw PROT_G")
-  assert_eq(raw_expected.length(), 1)
-  assert_point_close(raw_entries[0].center, raw_expected[0], eps)
-  let ship_entries = extract_label_entries(svg, "ShipX", padded_bbox)
-  assert_eq(ship_entries.length(), 1)
-  let ship_expected = match find_subgraph_label_pos(reference, "ShipX") {
-    Some(pos) => pos
-    None => fail("missing ShipX label position in reference")
-  }
-  assert_point_close(ship_entries[0].center, ship_expected, eps)
+  assert_edge_label_parity(svg, padded_bbox, reference, "MechCmd", eps)
+  assert_edge_label_parity(svg, padded_bbox, reference, "Raw PROT_G", eps)
+  assert_cluster_label_parity(svg, padded_bbox, reference, "ShipX", eps)
+}
+
+///|
+test "render_svg matches graphviz edge label spacing" {
+  let (svg, padded_bbox) =
+    svg_with_bbox("tests/layout/dot/edge_label_spacing.dot")
+  let reference =
+    @dot.parse_dot_file("tests/layout/dot/edge_label_spacing.gv.dot")
+  let eps = 1.5
+  assert_edge_label_parity(svg, padded_bbox, reference, "Edge Label A", eps)
+  assert_edge_label_parity(
+    svg,
+    padded_bbox,
+    reference,
+    "Edge Label B Longer",
+    eps,
+  )
+}
+
+///|
+test "render_svg matches graphviz vnode edge label spacing" {
+  let (svg, padded_bbox) =
+    svg_with_bbox("tests/layout/dot/edge_vnode_spacing.dot")
+  let reference =
+    @dot.parse_dot_file("tests/layout/dot/edge_vnode_spacing.gv.dot")
+  let eps = 1.5
+  assert_edge_label_parity(
+    svg,
+    padded_bbox,
+    reference,
+    "Very Long Edge Label",
+    eps,
+  )
 }

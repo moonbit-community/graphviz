@@ -1,142 +1,142 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="357.44000000000005pt" height="51.199999999999996pt" viewBox="0 0 357.44000000000005 51.199999999999996">
-  <rect x="0" y="0" width="357.44000000000005" height="51.199999999999996" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="341.6pt" height="51.199999999999996pt" viewBox="0 0 341.6 51.199999999999996">
+  <rect x="0" y="0" width="341.6" height="51.199999999999996" fill="white"/>
   <g transform="translate(0 51.199999999999996) scale(1 -1)">
-    <path d="M 13.72 43.6 C 13.72 38.175677214644345 13.72 29.68107595118551 13.72 25.599999999999998 C 13.72 23.437848097628976 13.72 21.068245931125468 13.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="13.72,7.6 13.72,11.6" fill="none" stroke="black"/>
-    <polyline points="13.72,17.6 13.72,21.6" fill="none" stroke="black"/>
-    <polyline points="13.72,27.6 13.72,31.6" fill="none" stroke="black"/>
-    <path d="M 35.72 43.6 C 35.72 38.175677214644345 35.72 29.68107595118551 35.72 25.599999999999998 C 35.72 23.437848097628976 35.72 21.068245931125468 35.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="38.72,7.6 32.72,7.6 32.72,10.6 38.72,10.6" fill="black" stroke="black"/>
-    <polyline points="35.72,10.6 35.72,16.6" fill="none" stroke="black"/>
-    <polyline points="35.72,17.6 35.72,21.6" fill="none" stroke="black"/>
-    <polyline points="35.72,27.6 35.72,31.6" fill="none" stroke="black"/>
-    <path d="M 57.72 43.6 C 57.72 38.175677214644345 57.72 29.68107595118551 57.72 25.599999999999998 C 57.72 23.437848097628976 57.72 21.068245931125468 57.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="57.72,7.6 57.72,11.6" fill="none" stroke="black"/>
-    <polygon points="60.72,17.6 54.72,17.6 54.72,20.6 60.72,20.6" fill="black" stroke="black"/>
-    <polyline points="57.72,20.6 57.72,26.6" fill="none" stroke="black"/>
-    <polyline points="57.72,27.6 57.72,31.6" fill="none" stroke="black"/>
-    <path d="M 79.72 43.6 C 79.72 38.175677214644345 79.72 29.68107595118551 79.72 25.599999999999998 C 79.72 23.437848097628976 79.72 21.068245931125468 79.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="82.72,7.6 76.72,7.6 76.72,10.6 82.72,10.6" fill="black" stroke="black"/>
-    <polyline points="79.72,10.6 79.72,16.6" fill="none" stroke="black"/>
-    <polygon points="82.72,17.6 76.72,17.6 76.72,20.6 82.72,20.6" fill="black" stroke="black"/>
-    <polyline points="79.72,20.6 79.72,26.6" fill="none" stroke="black"/>
-    <polyline points="79.72,27.6 79.72,31.6" fill="none" stroke="black"/>
-    <path d="M 101.72 43.6 C 101.72 38.175677214644345 101.72 29.68107595118551 101.72 25.599999999999998 C 101.72 23.437848097628976 101.72 21.068245931125468 101.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="101.72,7.6 101.72,11.6" fill="none" stroke="black"/>
-    <polyline points="101.72,17.6 101.72,21.6" fill="none" stroke="black"/>
-    <polygon points="104.72,27.6 98.72,27.6 98.72,30.6 104.72,30.6" fill="black" stroke="black"/>
-    <polyline points="101.72,30.6 101.72,36.6" fill="none" stroke="black"/>
-    <path d="M 123.72 43.6 C 123.72 38.175677214644345 123.72 29.68107595118551 123.72 25.599999999999998 C 123.72 23.437848097628976 123.72 21.068245931125468 123.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="126.72,7.6 120.72,7.6 120.72,10.6 126.72,10.6" fill="black" stroke="black"/>
-    <polyline points="123.72,10.6 123.72,16.6" fill="none" stroke="black"/>
-    <polyline points="123.72,17.6 123.72,21.6" fill="none" stroke="black"/>
-    <polygon points="126.72,27.6 120.72,27.6 120.72,30.6 126.72,30.6" fill="black" stroke="black"/>
-    <polyline points="123.72,30.6 123.72,36.6" fill="none" stroke="black"/>
-    <path d="M 145.72 43.6 C 145.72 38.175677214644345 145.72 29.68107595118551 145.72 25.599999999999998 C 145.72 23.437848097628976 145.72 21.068245931125468 145.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="145.72,7.6 145.72,11.6" fill="none" stroke="black"/>
-    <polygon points="148.72,17.6 142.72,17.6 142.72,20.6 148.72,20.6" fill="black" stroke="black"/>
-    <polyline points="145.72,20.6 145.72,26.6" fill="none" stroke="black"/>
-    <polygon points="148.72,27.6 142.72,27.6 142.72,30.6 148.72,30.6" fill="black" stroke="black"/>
-    <polyline points="145.72,30.6 145.72,36.6" fill="none" stroke="black"/>
-    <path d="M 167.72 43.6 C 167.72 38.175677214644345 167.72 29.68107595118551 167.72 25.599999999999998 C 167.72 23.437848097628976 167.72 21.068245931125468 167.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="170.72,7.6 164.72,7.6 164.72,10.6 170.72,10.6" fill="black" stroke="black"/>
-    <polyline points="167.72,10.6 167.72,16.6" fill="none" stroke="black"/>
-    <polygon points="170.72,17.6 164.72,17.6 164.72,20.6 170.72,20.6" fill="black" stroke="black"/>
-    <polyline points="167.72,20.6 167.72,26.6" fill="none" stroke="black"/>
-    <polygon points="170.72,27.6 164.72,27.6 164.72,30.6 170.72,30.6" fill="black" stroke="black"/>
-    <polyline points="167.72,30.6 167.72,36.6" fill="none" stroke="black"/>
-    <path d="M 189.72 43.6 C 189.72 38.175677214644345 189.72 29.68107595118551 189.72 25.599999999999998 C 189.72 23.437848097628976 189.72 21.068245931125468 189.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="189.72,7.6 189.72,11.6" fill="none" stroke="black"/>
-    <polyline points="189.72,17.6 189.72,21.6" fill="none" stroke="black"/>
-    <polyline points="189.72,27.6 189.72,31.6" fill="none" stroke="black"/>
-    <polygon points="192.72,37.6 186.72,37.6 186.72,40.6 192.72,40.6" fill="black" stroke="black"/>
-    <polyline points="189.72,40.6 189.72,46.6" fill="none" stroke="black"/>
-    <path d="M 211.72 43.6 C 211.72 38.175677214644345 211.72 29.68107595118551 211.72 25.599999999999998 C 211.72 23.437848097628976 211.72 21.068245931125468 211.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="214.72,7.6 208.72,7.6 208.72,10.6 214.72,10.6" fill="black" stroke="black"/>
-    <polyline points="211.72,10.6 211.72,16.6" fill="none" stroke="black"/>
-    <polyline points="211.72,17.6 211.72,21.6" fill="none" stroke="black"/>
-    <polyline points="211.72,27.6 211.72,31.6" fill="none" stroke="black"/>
-    <polygon points="214.72,37.6 208.72,37.6 208.72,40.6 214.72,40.6" fill="black" stroke="black"/>
-    <polyline points="211.72,40.6 211.72,46.6" fill="none" stroke="black"/>
-    <path d="M 233.72 43.6 C 233.72 38.175677214644345 233.72 29.68107595118551 233.72 25.599999999999998 C 233.72 23.437848097628976 233.72 21.068245931125468 233.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="233.72,7.6 233.72,11.6" fill="none" stroke="black"/>
-    <polygon points="236.72,17.6 230.72,17.6 230.72,20.6 236.72,20.6" fill="black" stroke="black"/>
-    <polyline points="233.72,20.6 233.72,26.6" fill="none" stroke="black"/>
-    <polyline points="233.72,27.6 233.72,31.6" fill="none" stroke="black"/>
-    <polygon points="236.72,37.6 230.72,37.6 230.72,40.6 236.72,40.6" fill="black" stroke="black"/>
-    <polyline points="233.72,40.6 233.72,46.6" fill="none" stroke="black"/>
-    <path d="M 255.72 43.6 C 255.72 38.175677214644345 255.72 29.68107595118551 255.72 25.599999999999998 C 255.72 23.437848097628976 255.72 21.068245931125468 255.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="258.72,7.6 252.72,7.6 252.72,10.6 258.72,10.6" fill="black" stroke="black"/>
-    <polyline points="255.72,10.6 255.72,16.6" fill="none" stroke="black"/>
-    <polygon points="258.72,17.6 252.72,17.6 252.72,20.6 258.72,20.6" fill="black" stroke="black"/>
-    <polyline points="255.72,20.6 255.72,26.6" fill="none" stroke="black"/>
-    <polyline points="255.72,27.6 255.72,31.6" fill="none" stroke="black"/>
-    <polygon points="258.72,37.6 252.72,37.6 252.72,40.6 258.72,40.6" fill="black" stroke="black"/>
-    <polyline points="255.72,40.6 255.72,46.6" fill="none" stroke="black"/>
-    <path d="M 277.72 43.6 C 277.72 38.175677214644345 277.72 29.68107595118551 277.72 25.599999999999998 C 277.72 23.437848097628976 277.72 21.068245931125468 277.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="277.72,7.6 277.72,11.6" fill="none" stroke="black"/>
-    <polyline points="277.72,17.6 277.72,21.6" fill="none" stroke="black"/>
-    <polygon points="280.72,27.6 274.72,27.6 274.72,30.6 280.72,30.6" fill="black" stroke="black"/>
-    <polyline points="277.72,30.6 277.72,36.6" fill="none" stroke="black"/>
-    <polygon points="280.72,37.6 274.72,37.6 274.72,40.6 280.72,40.6" fill="black" stroke="black"/>
-    <polyline points="277.72,40.6 277.72,46.6" fill="none" stroke="black"/>
-    <path d="M 299.72 43.6 C 299.72 38.175677214644345 299.72 29.68107595118551 299.72 25.599999999999998 C 299.72 23.437848097628976 299.72 21.068245931125468 299.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="302.72,7.6 296.72,7.6 296.72,10.6 302.72,10.6" fill="black" stroke="black"/>
-    <polyline points="299.72,10.6 299.72,16.6" fill="none" stroke="black"/>
-    <polyline points="299.72,17.6 299.72,21.6" fill="none" stroke="black"/>
-    <polygon points="302.72,27.6 296.72,27.6 296.72,30.6 302.72,30.6" fill="black" stroke="black"/>
-    <polyline points="299.72,30.6 299.72,36.6" fill="none" stroke="black"/>
-    <polygon points="302.72,37.6 296.72,37.6 296.72,40.6 302.72,40.6" fill="black" stroke="black"/>
-    <polyline points="299.72,40.6 299.72,46.6" fill="none" stroke="black"/>
-    <path d="M 321.72 43.6 C 321.72 38.175677214644345 321.72 29.68107595118551 321.72 25.599999999999998 C 321.72 23.437848097628976 321.72 21.068245931125468 321.72 19.113544292886935" fill="none" stroke="black"/>
-    <polyline points="321.72,7.6 321.72,11.6" fill="none" stroke="black"/>
-    <polygon points="324.72,17.6 318.72,17.6 318.72,20.6 324.72,20.6" fill="black" stroke="black"/>
-    <polyline points="321.72,20.6 321.72,26.6" fill="none" stroke="black"/>
-    <polygon points="324.72,27.6 318.72,27.6 318.72,30.6 324.72,30.6" fill="black" stroke="black"/>
-    <polyline points="321.72,30.6 321.72,36.6" fill="none" stroke="black"/>
-    <polygon points="324.72,37.6 318.72,37.6 318.72,40.6 324.72,40.6" fill="black" stroke="black"/>
-    <polyline points="321.72,40.6 321.72,46.6" fill="none" stroke="black"/>
-    <path d="M 343.72 43.6 C 343.72 38.175677214644345 343.72 29.68107595118551 343.72 25.599999999999998 C 343.72 23.437848097628976 343.72 21.068245931125468 343.72 19.113544292886935" fill="none" stroke="black"/>
-    <polygon points="346.72,7.6 340.72,7.6 340.72,10.6 346.72,10.6" fill="black" stroke="black"/>
-    <polyline points="343.72,10.6 343.72,16.6" fill="none" stroke="black"/>
-    <polygon points="346.72,17.6 340.72,17.6 340.72,20.6 346.72,20.6" fill="black" stroke="black"/>
-    <polyline points="343.72,20.6 343.72,26.6" fill="none" stroke="black"/>
-    <polygon points="346.72,27.6 340.72,27.6 340.72,30.6 346.72,30.6" fill="black" stroke="black"/>
-    <polyline points="343.72,30.6 343.72,36.6" fill="none" stroke="black"/>
-    <polygon points="346.72,37.6 340.72,37.6 340.72,40.6 346.72,40.6" fill="black" stroke="black"/>
-    <polyline points="343.72,40.6 343.72,46.6" fill="none" stroke="black"/>
-    <ellipse cx="13.72" cy="45.4" rx="1.8000000000000003" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="13.72" cy="5.8" rx="1.8000000000000003" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="35.72" cy="45.4" rx="1.799999999999999" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="35.72" cy="5.8" rx="1.799999999999999" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="57.72" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="57.72" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="79.72" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="79.72" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="101.72" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="101.72" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="123.72" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="123.72" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="145.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="145.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="167.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="167.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="189.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="189.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="211.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="211.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="233.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="233.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="255.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="255.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="277.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="277.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="299.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="299.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="321.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="321.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
-    <ellipse cx="343.72" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
-    <ellipse cx="343.72" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <path d="M 5.8 43.6 C 5.8 38.175677214644345 5.8 29.68107595118551 5.8 25.599999999999998 C 5.8 23.437848097628976 5.8 21.068245931125468 5.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="5.8,7.6 5.8,11.6" fill="none" stroke="black"/>
+    <polyline points="5.8,17.6 5.8,21.6" fill="none" stroke="black"/>
+    <polyline points="5.8,27.6 5.8,31.6" fill="none" stroke="black"/>
+    <path d="M 27.8 43.6 C 27.8 38.175677214644345 27.8 29.68107595118551 27.8 25.599999999999998 C 27.8 23.437848097628976 27.8 21.068245931125468 27.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="30.8,7.6 24.8,7.6 24.8,10.6 30.8,10.6" fill="black" stroke="black"/>
+    <polyline points="27.8,10.6 27.8,16.6" fill="none" stroke="black"/>
+    <polyline points="27.8,17.6 27.8,21.6" fill="none" stroke="black"/>
+    <polyline points="27.8,27.6 27.8,31.6" fill="none" stroke="black"/>
+    <path d="M 49.8 43.6 C 49.8 38.175677214644345 49.8 29.68107595118551 49.8 25.599999999999998 C 49.8 23.437848097628976 49.8 21.068245931125468 49.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="49.8,7.6 49.8,11.6" fill="none" stroke="black"/>
+    <polygon points="52.8,17.6 46.8,17.6 46.8,20.6 52.8,20.6" fill="black" stroke="black"/>
+    <polyline points="49.8,20.6 49.8,26.6" fill="none" stroke="black"/>
+    <polyline points="49.8,27.6 49.8,31.6" fill="none" stroke="black"/>
+    <path d="M 71.8 43.6 C 71.8 38.175677214644345 71.8 29.68107595118551 71.8 25.599999999999998 C 71.8 23.437848097628976 71.8 21.068245931125468 71.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="74.8,7.6 68.8,7.6 68.8,10.6 74.8,10.6" fill="black" stroke="black"/>
+    <polyline points="71.8,10.6 71.8,16.6" fill="none" stroke="black"/>
+    <polygon points="74.8,17.6 68.8,17.6 68.8,20.6 74.8,20.6" fill="black" stroke="black"/>
+    <polyline points="71.8,20.6 71.8,26.6" fill="none" stroke="black"/>
+    <polyline points="71.8,27.6 71.8,31.6" fill="none" stroke="black"/>
+    <path d="M 93.8 43.6 C 93.8 38.175677214644345 93.8 29.68107595118551 93.8 25.599999999999998 C 93.8 23.437848097628976 93.8 21.068245931125468 93.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="93.8,7.6 93.8,11.6" fill="none" stroke="black"/>
+    <polyline points="93.8,17.6 93.8,21.6" fill="none" stroke="black"/>
+    <polygon points="96.8,27.6 90.8,27.6 90.8,30.6 96.8,30.6" fill="black" stroke="black"/>
+    <polyline points="93.8,30.6 93.8,36.6" fill="none" stroke="black"/>
+    <path d="M 115.8 43.6 C 115.8 38.175677214644345 115.8 29.68107595118551 115.8 25.599999999999998 C 115.8 23.437848097628976 115.8 21.068245931125468 115.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="118.8,7.6 112.8,7.6 112.8,10.6 118.8,10.6" fill="black" stroke="black"/>
+    <polyline points="115.8,10.6 115.8,16.6" fill="none" stroke="black"/>
+    <polyline points="115.8,17.6 115.8,21.6" fill="none" stroke="black"/>
+    <polygon points="118.8,27.6 112.8,27.6 112.8,30.6 118.8,30.6" fill="black" stroke="black"/>
+    <polyline points="115.8,30.6 115.8,36.6" fill="none" stroke="black"/>
+    <path d="M 137.8 43.6 C 137.8 38.175677214644345 137.8 29.68107595118551 137.8 25.599999999999998 C 137.8 23.437848097628976 137.8 21.068245931125468 137.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="137.8,7.6 137.8,11.6" fill="none" stroke="black"/>
+    <polygon points="140.8,17.6 134.8,17.6 134.8,20.6 140.8,20.6" fill="black" stroke="black"/>
+    <polyline points="137.8,20.6 137.8,26.6" fill="none" stroke="black"/>
+    <polygon points="140.8,27.6 134.8,27.6 134.8,30.6 140.8,30.6" fill="black" stroke="black"/>
+    <polyline points="137.8,30.6 137.8,36.6" fill="none" stroke="black"/>
+    <path d="M 159.8 43.6 C 159.8 38.175677214644345 159.8 29.68107595118551 159.8 25.599999999999998 C 159.8 23.437848097628976 159.8 21.068245931125468 159.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="162.8,7.6 156.8,7.6 156.8,10.6 162.8,10.6" fill="black" stroke="black"/>
+    <polyline points="159.8,10.6 159.8,16.6" fill="none" stroke="black"/>
+    <polygon points="162.8,17.6 156.8,17.6 156.8,20.6 162.8,20.6" fill="black" stroke="black"/>
+    <polyline points="159.8,20.6 159.8,26.6" fill="none" stroke="black"/>
+    <polygon points="162.8,27.6 156.8,27.6 156.8,30.6 162.8,30.6" fill="black" stroke="black"/>
+    <polyline points="159.8,30.6 159.8,36.6" fill="none" stroke="black"/>
+    <path d="M 181.8 43.6 C 181.8 38.175677214644345 181.8 29.68107595118551 181.8 25.599999999999998 C 181.8 23.437848097628976 181.8 21.068245931125468 181.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="181.8,7.6 181.8,11.6" fill="none" stroke="black"/>
+    <polyline points="181.8,17.6 181.8,21.6" fill="none" stroke="black"/>
+    <polyline points="181.8,27.6 181.8,31.6" fill="none" stroke="black"/>
+    <polygon points="184.8,37.6 178.8,37.6 178.8,40.6 184.8,40.6" fill="black" stroke="black"/>
+    <polyline points="181.8,40.6 181.8,46.6" fill="none" stroke="black"/>
+    <path d="M 203.8 43.6 C 203.8 38.175677214644345 203.8 29.68107595118551 203.8 25.599999999999998 C 203.8 23.437848097628976 203.8 21.068245931125468 203.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="206.8,7.6 200.8,7.6 200.8,10.6 206.8,10.6" fill="black" stroke="black"/>
+    <polyline points="203.8,10.6 203.8,16.6" fill="none" stroke="black"/>
+    <polyline points="203.8,17.6 203.8,21.6" fill="none" stroke="black"/>
+    <polyline points="203.8,27.6 203.8,31.6" fill="none" stroke="black"/>
+    <polygon points="206.8,37.6 200.8,37.6 200.8,40.6 206.8,40.6" fill="black" stroke="black"/>
+    <polyline points="203.8,40.6 203.8,46.6" fill="none" stroke="black"/>
+    <path d="M 225.8 43.6 C 225.8 38.175677214644345 225.8 29.68107595118551 225.8 25.599999999999998 C 225.8 23.437848097628976 225.8 21.068245931125468 225.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="225.8,7.6 225.8,11.6" fill="none" stroke="black"/>
+    <polygon points="228.8,17.6 222.8,17.6 222.8,20.6 228.8,20.6" fill="black" stroke="black"/>
+    <polyline points="225.8,20.6 225.8,26.6" fill="none" stroke="black"/>
+    <polyline points="225.8,27.6 225.8,31.6" fill="none" stroke="black"/>
+    <polygon points="228.8,37.6 222.8,37.6 222.8,40.6 228.8,40.6" fill="black" stroke="black"/>
+    <polyline points="225.8,40.6 225.8,46.6" fill="none" stroke="black"/>
+    <path d="M 247.8 43.6 C 247.8 38.175677214644345 247.8 29.68107595118551 247.8 25.599999999999998 C 247.8 23.437848097628976 247.8 21.068245931125468 247.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="250.8,7.6 244.8,7.6 244.8,10.6 250.8,10.6" fill="black" stroke="black"/>
+    <polyline points="247.8,10.6 247.8,16.6" fill="none" stroke="black"/>
+    <polygon points="250.8,17.6 244.8,17.6 244.8,20.6 250.8,20.6" fill="black" stroke="black"/>
+    <polyline points="247.8,20.6 247.8,26.6" fill="none" stroke="black"/>
+    <polyline points="247.8,27.6 247.8,31.6" fill="none" stroke="black"/>
+    <polygon points="250.8,37.6 244.8,37.6 244.8,40.6 250.8,40.6" fill="black" stroke="black"/>
+    <polyline points="247.8,40.6 247.8,46.6" fill="none" stroke="black"/>
+    <path d="M 269.8 43.6 C 269.8 38.175677214644345 269.8 29.68107595118551 269.8 25.599999999999998 C 269.8 23.437848097628976 269.8 21.068245931125468 269.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="269.8,7.6 269.8,11.6" fill="none" stroke="black"/>
+    <polyline points="269.8,17.6 269.8,21.6" fill="none" stroke="black"/>
+    <polygon points="272.8,27.6 266.8,27.6 266.8,30.6 272.8,30.6" fill="black" stroke="black"/>
+    <polyline points="269.8,30.6 269.8,36.6" fill="none" stroke="black"/>
+    <polygon points="272.8,37.6 266.8,37.6 266.8,40.6 272.8,40.6" fill="black" stroke="black"/>
+    <polyline points="269.8,40.6 269.8,46.6" fill="none" stroke="black"/>
+    <path d="M 291.8 43.6 C 291.8 38.175677214644345 291.8 29.68107595118551 291.8 25.599999999999998 C 291.8 23.437848097628976 291.8 21.068245931125468 291.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="294.8,7.6 288.8,7.6 288.8,10.6 294.8,10.6" fill="black" stroke="black"/>
+    <polyline points="291.8,10.6 291.8,16.6" fill="none" stroke="black"/>
+    <polyline points="291.8,17.6 291.8,21.6" fill="none" stroke="black"/>
+    <polygon points="294.8,27.6 288.8,27.6 288.8,30.6 294.8,30.6" fill="black" stroke="black"/>
+    <polyline points="291.8,30.6 291.8,36.6" fill="none" stroke="black"/>
+    <polygon points="294.8,37.6 288.8,37.6 288.8,40.6 294.8,40.6" fill="black" stroke="black"/>
+    <polyline points="291.8,40.6 291.8,46.6" fill="none" stroke="black"/>
+    <path d="M 313.8 43.6 C 313.8 38.175677214644345 313.8 29.68107595118551 313.8 25.599999999999998 C 313.8 23.437848097628976 313.8 21.068245931125468 313.8 19.113544292886935" fill="none" stroke="black"/>
+    <polyline points="313.8,7.6 313.8,11.6" fill="none" stroke="black"/>
+    <polygon points="316.8,17.6 310.8,17.6 310.8,20.6 316.8,20.6" fill="black" stroke="black"/>
+    <polyline points="313.8,20.6 313.8,26.6" fill="none" stroke="black"/>
+    <polygon points="316.8,27.6 310.8,27.6 310.8,30.6 316.8,30.6" fill="black" stroke="black"/>
+    <polyline points="313.8,30.6 313.8,36.6" fill="none" stroke="black"/>
+    <polygon points="316.8,37.6 310.8,37.6 310.8,40.6 316.8,40.6" fill="black" stroke="black"/>
+    <polyline points="313.8,40.6 313.8,46.6" fill="none" stroke="black"/>
+    <path d="M 335.8 43.6 C 335.8 38.175677214644345 335.8 29.68107595118551 335.8 25.599999999999998 C 335.8 23.437848097628976 335.8 21.068245931125468 335.8 19.113544292886935" fill="none" stroke="black"/>
+    <polygon points="338.8,7.6 332.8,7.6 332.8,10.6 338.8,10.6" fill="black" stroke="black"/>
+    <polyline points="335.8,10.6 335.8,16.6" fill="none" stroke="black"/>
+    <polygon points="338.8,17.6 332.8,17.6 332.8,20.6 338.8,20.6" fill="black" stroke="black"/>
+    <polyline points="335.8,20.6 335.8,26.6" fill="none" stroke="black"/>
+    <polygon points="338.8,27.6 332.8,27.6 332.8,30.6 338.8,30.6" fill="black" stroke="black"/>
+    <polyline points="335.8,30.6 335.8,36.6" fill="none" stroke="black"/>
+    <polygon points="338.8,37.6 332.8,37.6 332.8,40.6 338.8,40.6" fill="black" stroke="black"/>
+    <polyline points="335.8,40.6 335.8,46.6" fill="none" stroke="black"/>
+    <ellipse cx="5.8" cy="45.4" rx="1.8" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="5.8" cy="5.8" rx="1.8" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="27.8" cy="45.4" rx="1.8000000000000007" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="27.8" cy="5.8" rx="1.8000000000000007" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="49.8" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="49.8" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="71.8" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="71.8" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="93.8" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="93.8" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="115.8" cy="45.4" rx="1.7999999999999972" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="115.8" cy="5.8" rx="1.7999999999999972" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="137.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="137.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="159.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="159.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="181.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="181.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="203.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="203.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="225.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="225.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="247.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="247.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="269.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="269.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="291.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="291.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="313.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="313.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
+    <ellipse cx="335.8" cy="45.4" rx="1.8000000000000114" ry="1.7999999999999972" fill="black" stroke="black"/>
+    <ellipse cx="335.8" cy="5.8" rx="1.8000000000000114" ry="1.8" fill="black" stroke="black"/>
   </g>
 </svg>

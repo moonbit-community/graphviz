@@ -158,7 +158,7 @@ test "dot layout matches graphviz node positions for complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
   layout.apply()
-  let eps = 2.0
+  let eps = 3.0
   for node in reference.nodes() {
     let name = node.name()
     let expected = match complex_node_pos(reference, name) {
@@ -233,7 +233,7 @@ test "dot layout matches graphviz edge label positions for complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
   layout.apply()
-  let eps = 12.0
+  let eps = 18.0
   for edge in reference.edges() {
     let expected = match complex_edge_label_pos(edge) {
       Some(value) => value

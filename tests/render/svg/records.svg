@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="289.3103654pt" height="296.0508508647403pt" viewBox="0 0 289.3103654 296.0508508647403">
-  <rect x="0" y="0" width="289.3103654" height="296.0508508647403" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="273.4703654pt" height="296.0508508647403pt" viewBox="0 0 273.4703654 296.0508508647403">
+  <rect x="0" y="0" width="273.4703654" height="296.0508508647403" fill="white"/>
   <g transform="translate(0 296.0508508647403) scale(1 -1)">
-    <path d="M 89.8591538 23.841457800000004 C 103.18174924333334 23.841457800000004 123.36303521444083 15.470039214440813 131.7344538 23.841457800000004 C 138.60718810637803 30.71419210637804 124.86171949362196 46.127265693621965 131.7344538 53 C 138.890788249743 60.156334449743014 151.97562427140872 53 162.09620950711306 53" fill="none" stroke="black"/>
-    <polygon points="173.6097538,53 163.6097538,56 163.6097538,50" fill="black" stroke="black"/>
-    <path d="M 89.8591538 138.1871618 C 89.8591538 153.3642351 79.1273423510047 172.9865702510047 89.8591538 183.7183817 C 109.5993595294807 203.4585874294807 160.7287094613942 170.8373373613942 173.6097538 183.7183817 C 179.63163674773094 189.74026464773092 173.6097538 201.63858310551257 173.6097538 209.26706730711305" fill="none" stroke="black"/>
-    <polygon points="173.6097538,220.7806116 170.6097538,210.7806116 176.6097538,210.7806116" fill="black" stroke="black"/>
-    <path d="M 89.8591538 179.71976540000003 C 103.65981040333335 179.71976540000003 122.23623425424779 189.21798494575225 131.7344538 179.71976540000003 C 140.86079002676408 170.59342917323593 123.59311846174646 149.1413353382535 131.7344538 140.99999999999994 C 138.890788249743 133.84366555025693 152.3033171769204 140.99999999999994 162.09620950711306 140.99999999999994" fill="none" stroke="black"/>
-    <polygon points="173.6097538,140.99999999999994 163.6097538,143.99999999999994 163.6097538,137.99999999999994" fill="black" stroke="black"/>
-    <path d="M 89.8591538 221.38047519999998 C 103.04382895333333 221.38047519999998 123.68811645551486 213.33413785551483 131.7344538 221.38047519999998 C 137.95702562422994 227.6030470242299 127.22524657167207 243.27140437167205 131.7344538 247.7806116 C 134.53029643242598 250.57645423242596 139.96890046300956 247.7806116 143.59620950711306 247.7806116" fill="none" stroke="black"/>
-    <polygon points="155.1097538,247.7806116 145.1097538,250.7806116 145.1097538,244.7806116" fill="black" stroke="black"/>
-    <path d="M 173.6097538 72.3971 C 173.6097538 62.89483526666666 166.89063797043022 50.60942162956978 173.6097538 43.89030579999999 C 190.81601880887266 26.68404079112734 234.66238788059817 55.837671719401825 246.6097538 43.89030579999999 C 253.29822062993102 37.20183897006898 246.6097538 24.105161373074612 246.6097538 15.513544292886932" fill="none" stroke="black"/>
-    <polygon points="246.6097538,4 249.6097538,14 243.6097538,14" fill="black" stroke="black"/>
-    <path d="M 89.8591538 282.180748 C 103.81758713333335 282.180748 121.86435093525967 292.0508508647403 131.7344538 282.180748 C 150.50095576697683 263.4142460330232 118.77303559164008 215.5226414083599 131.7344538 202.56122319999997 C 138.890788249743 195.40488875025696 152.91481120805042 202.56122319999997 162.09620950711306 202.56122319999997" fill="none" stroke="black"/>
-    <polygon points="173.6097538,202.56122319999997 163.6097538,205.56122319999997 163.6097538,199.56122319999997" fill="black" stroke="black"/>
-    <path d="M 173.6097538 53 C 173.6097538 68.19679133333334 162.86399959592305 87.84461979592305 173.6097538 98.590374 C 190.81601880887266 115.79663900887266 233.99062840102388 85.97124860102386 246.6097538 98.590374 C 254.6417395890796 106.62235978907961 246.6097538 122.21673872190985 246.6097538 132.66720370711306" fill="none" stroke="black"/>
-    <polygon points="246.6097538,144.180748 243.6097538,134.180748 249.6097538,134.180748" fill="black" stroke="black"/>
-    <rect x="11.920000000000002" y="72.5300116" width="155.87830759999997" height="58.50120000000001" fill="none" stroke="black"/>
-    <line x1="88.91914703332236" y1="73.0300116" x2="88.91914703332236" y2="130.5312116" stroke="black"/>
-    <line x1="126.43764338565713" y1="73.0300116" x2="126.43764338565713" y2="130.5312116" stroke="black"/>
-    <text x="19.736966316661178" y="-104.9810116" transform="scale(1 -1)" text-anchor="start" font-family="Times,serif" font-size="14" fill="black" textLength="61.365214400000006" lengthAdjust="spacing">Graphs can</text>
-    <text x="19.736966316661178" y="-88.4806116" transform="scale(1 -1)" text-anchor="start" font-family="Times,serif" font-size="14" fill="black" textLength="34.066118800000005" lengthAdjust="spacing">be fun</text>
-    <text x="107.67839520948974" y="-96.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.5512024" lengthAdjust="spacing">mid</text>
-    <text x="159.81633529282854" y="-96.73081160000001" transform="scale(1 -1)" text-anchor="end" font-family="Times,serif" font-size="14" fill="black" textLength="25.3967196" lengthAdjust="spacing">right</text>
-    <rect x="142.82914219999998" y="65.2806116" width="61.56122320000003" height="37" fill="none" stroke="black"/>
-    <line x1="162.23480902012835" y1="65.7806116" x2="162.23480902012835" y2="101.7806116" stroke="black"/>
-    <line x1="184.9846985798716" y1="65.7806116" x2="184.9846985798716" y2="101.7806116" stroke="black"/>
-    <text x="152.53197561006417" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="173.60975379999996" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
-    <text x="194.6875319899358" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <rect x="59.4590174" y="233.2806116" width="60.80027280000001" height="37" fill="none" stroke="black"/>
-    <line x1="78.86479148675839" y1="233.7806116" x2="78.86479148675839" y2="269.7806116" stroke="black"/>
-    <line x1="100.85351611324161" y1="233.7806116" x2="100.85351611324161" y2="269.7806116" stroke="black"/>
-    <text x="69.1619044433792" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="89.8591538" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">c</text>
-    <text x="110.5564031566208" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <rect x="215.82914219999998" y="16.280611600000004" width="61.56122320000003" height="37" fill="none" stroke="black"/>
-    <line x1="235.23480902012835" y1="16.780611600000004" x2="235.23480902012835" y2="52.7806116" stroke="black"/>
-    <line x1="257.98469857987163" y1="16.780611600000004" x2="257.98469857987163" y2="52.7806116" stroke="black"/>
-    <text x="225.53197561006417" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="246.60975379999996" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">x</text>
-    <text x="267.6875319899358" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <rect x="142.82914219999998" y="153.2806116" width="61.56122320000003" height="37" fill="none" stroke="black"/>
-    <line x1="162.23480902012835" y1="153.7806116" x2="162.23480902012835" y2="189.7806116" stroke="black"/>
-    <line x1="184.9846985798716" y1="153.7806116" x2="184.9846985798716" y2="189.7806116" stroke="black"/>
-    <text x="152.53197561006417" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="173.60975379999996" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">y</text>
-    <text x="194.6875319899358" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <rect x="216.20961739999998" y="95.2806116" width="60.80027279999999" height="36.999999999999986" fill="none" stroke="black"/>
-    <line x1="235.61539148675837" y1="95.7806116" x2="235.61539148675837" y2="131.7806116" stroke="black"/>
-    <line x1="257.6041161132416" y1="95.7806116" x2="257.6041161132416" y2="131.7806116" stroke="black"/>
-    <text x="225.9125044433792" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <text x="246.60975379999996" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">z</text>
-    <text x="267.3070031566208" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
-    <rect x="146.6097538" y="229.2806116" width="54" height="37" fill="none" stroke="black"/>
-    <text x="173.6097538" y="-242.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">d</text>
+    <path d="M 81.9391538 23.841457800000004 C 95.26174924333334 23.841457800000004 115.44303521444083 15.470039214440813 123.81445380000001 23.841457800000004 C 130.68718810637804 30.71419210637804 116.94171949362196 46.127265693621965 123.81445380000001 53 C 130.970788249743 60.156334449743014 144.05562427140873 53 154.17620950711307 53" fill="none" stroke="black"/>
+    <polygon points="165.6897538,53 155.6897538,56 155.6897538,50" fill="black" stroke="black"/>
+    <path d="M 81.9391538 138.1871618 C 81.9391538 153.3642351 71.2073423510047 172.9865702510047 81.9391538 183.7183817 C 101.67935952948069 203.4585874294807 152.80870946139422 170.8373373613942 165.6897538 183.7183817 C 171.71163674773095 189.74026464773092 165.6897538 201.63858310551257 165.6897538 209.26706730711305" fill="none" stroke="black"/>
+    <polygon points="165.6897538,220.7806116 162.6897538,210.7806116 168.6897538,210.7806116" fill="black" stroke="black"/>
+    <path d="M 81.9391538 179.71976540000003 C 95.73981040333335 179.71976540000003 114.31623425424779 189.21798494575225 123.81445380000001 179.71976540000003 C 132.9407900267641 170.59342917323593 115.67311846174645 149.1413353382535 123.81445380000001 140.99999999999994 C 130.970788249743 133.84366555025693 144.3833171769204 140.99999999999994 154.17620950711307 140.99999999999994" fill="none" stroke="black"/>
+    <polygon points="165.6897538,140.99999999999994 155.6897538,143.99999999999994 155.6897538,137.99999999999994" fill="black" stroke="black"/>
+    <path d="M 81.9391538 221.38047519999998 C 95.12382895333333 221.38047519999998 115.76811645551486 213.33413785551483 123.81445380000001 221.38047519999998 C 130.03702562422995 227.6030470242299 119.30524657167207 243.27140437167205 123.81445380000001 247.7806116 C 126.61029643242598 250.57645423242596 132.04890046300957 247.7806116 135.67620950711307 247.7806116" fill="none" stroke="black"/>
+    <polygon points="147.1897538,247.7806116 137.1897538,250.7806116 137.1897538,244.7806116" fill="black" stroke="black"/>
+    <path d="M 165.6897538 72.3971 C 165.6897538 62.89483526666666 158.97063797043023 50.60942162956978 165.6897538 43.89030579999999 C 182.89601880887267 26.68404079112734 226.7423878805982 55.837671719401825 238.6897538 43.89030579999999 C 245.37822062993104 37.20183897006898 238.6897538 24.105161373074612 238.6897538 15.513544292886932" fill="none" stroke="black"/>
+    <polygon points="238.6897538,4 241.6897538,14 235.6897538,14" fill="black" stroke="black"/>
+    <path d="M 81.9391538 282.180748 C 95.89758713333335 282.180748 113.94435093525966 292.0508508647403 123.81445380000001 282.180748 C 142.58095576697684 263.4142460330232 110.85303559164008 215.5226414083599 123.81445380000001 202.56122319999997 C 130.970788249743 195.40488875025696 144.99481120805044 202.56122319999997 154.17620950711307 202.56122319999997" fill="none" stroke="black"/>
+    <polygon points="165.6897538,202.56122319999997 155.6897538,205.56122319999997 155.6897538,199.56122319999997" fill="black" stroke="black"/>
+    <path d="M 165.6897538 53 C 165.6897538 68.19679133333334 154.94399959592306 87.84461979592305 165.6897538 98.590374 C 182.89601880887267 115.79663900887266 226.0706284010239 85.97124860102386 238.6897538 98.590374 C 246.72173958907962 106.62235978907961 238.6897538 122.21673872190985 238.6897538 132.66720370711306" fill="none" stroke="black"/>
+    <polygon points="238.6897538,144.180748 235.6897538,134.180748 241.6897538,134.180748" fill="black" stroke="black"/>
+    <rect x="4" y="72.5300116" width="155.8783076" height="58.50120000000001" fill="none" stroke="black"/>
+    <line x1="80.99914703332237" y1="73.0300116" x2="80.99914703332237" y2="130.5312116" stroke="black"/>
+    <line x1="118.51764338565715" y1="73.0300116" x2="118.51764338565715" y2="130.5312116" stroke="black"/>
+    <text x="11.816966316661183" y="-104.9810116" transform="scale(1 -1)" text-anchor="start" font-family="Times,serif" font-size="14" fill="black" textLength="61.365214400000006" lengthAdjust="spacing">Graphs can</text>
+    <text x="11.816966316661183" y="-88.4806116" transform="scale(1 -1)" text-anchor="start" font-family="Times,serif" font-size="14" fill="black" textLength="34.066118800000005" lengthAdjust="spacing">be fun</text>
+    <text x="99.75839520948976" y="-96.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="21.5512024" lengthAdjust="spacing">mid</text>
+    <text x="151.89633529282855" y="-96.73081160000001" transform="scale(1 -1)" text-anchor="end" font-family="Times,serif" font-size="14" fill="black" textLength="25.3967196" lengthAdjust="spacing">right</text>
+    <rect x="134.9091422" y="65.2806116" width="61.56122320000003" height="37" fill="none" stroke="black"/>
+    <line x1="154.3148090201284" y1="65.7806116" x2="154.3148090201284" y2="101.7806116" stroke="black"/>
+    <line x1="177.06469857987165" y1="65.7806116" x2="177.06469857987165" y2="101.7806116" stroke="black"/>
+    <text x="144.61197561006418" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <text x="165.6897538" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">b</text>
+    <text x="186.76753198993583" y="-78.73081160000001" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <rect x="51.5390174" y="233.2806116" width="60.800272799999995" height="37" fill="none" stroke="black"/>
+    <line x1="70.94479148675839" y1="233.7806116" x2="70.94479148675839" y2="269.7806116" stroke="black"/>
+    <line x1="92.93351611324161" y1="233.7806116" x2="92.93351611324161" y2="269.7806116" stroke="black"/>
+    <text x="61.2419044433792" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <text x="81.9391538" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">c</text>
+    <text x="102.6364031566208" y="-246.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <rect x="207.9091422" y="16.280611600000004" width="61.5612232" height="37" fill="none" stroke="black"/>
+    <line x1="227.31480902012837" y1="16.780611600000004" x2="227.31480902012837" y2="52.7806116" stroke="black"/>
+    <line x1="250.06469857987162" y1="16.780611600000004" x2="250.06469857987162" y2="52.7806116" stroke="black"/>
+    <text x="217.61197561006418" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <text x="238.6897538" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">x</text>
+    <text x="259.76753198993583" y="-29.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <rect x="134.9091422" y="153.2806116" width="61.56122320000003" height="37" fill="none" stroke="black"/>
+    <line x1="154.3148090201284" y1="153.7806116" x2="154.3148090201284" y2="189.7806116" stroke="black"/>
+    <line x1="177.06469857987165" y1="153.7806116" x2="177.06469857987165" y2="189.7806116" stroke="black"/>
+    <text x="144.61197561006418" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <text x="165.6897538" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">y</text>
+    <text x="186.76753198993583" y="-166.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <rect x="208.2896174" y="95.2806116" width="60.800272800000016" height="36.999999999999986" fill="none" stroke="black"/>
+    <line x1="227.6953914867584" y1="95.7806116" x2="227.6953914867584" y2="131.7806116" stroke="black"/>
+    <line x1="249.68411611324163" y1="95.7806116" x2="249.68411611324163" y2="131.7806116" stroke="black"/>
+    <text x="217.9925044433792" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <text x="238.6897538" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="5.978896" lengthAdjust="spacing">z</text>
+    <text x="259.38700315662084" y="-108.7308116" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="3.3971" lengthAdjust="spacing"> </text>
+    <rect x="138.6897538" y="229.2806116" width="54" height="37" fill="none" stroke="black"/>
+    <text x="165.6897538" y="-242.73081159999998" transform="scale(1 -1)" text-anchor="middle" font-family="Times,serif" font-size="14" fill="black" textLength="6.7398464" lengthAdjust="spacing">d</text>
   </g>
 </svg>
