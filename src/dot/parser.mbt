@@ -382,7 +382,7 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
   } noraise {
     data => data
   }
-  let src = try @encoding/utf8.decode(bytes) catch {
+  let src = try @utf8.decode(bytes) catch {
     _ => {
       let buf = @buffer.new(size_hint=bytes.length() * 2)
       for b in bytes {
@@ -397,7 +397,7 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
         }
       }
       let utf8_bytes = buf.to_bytes()
-      try @encoding/utf8.decode(utf8_bytes) catch {
+      try @utf8.decode(utf8_bytes) catch {
         _ =>
           raise DotParseError::InvalidSyntax(
             pos={ line: 1, column: 1, offset: 0 },

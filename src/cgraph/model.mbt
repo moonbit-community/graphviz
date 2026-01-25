@@ -28,7 +28,6 @@ priv struct EdgeState {
   name : String?
   tail_port : Port?
   head_port : Port?
-  home_graph_id : Int
   attrs : Map[String, String]
 }
 
@@ -328,7 +327,6 @@ pub fn Graph::edge(
         name,
         tail_port,
         head_port,
-        home_graph_id: self.id,
         attrs,
       }
       self.root.edges.push(state)
