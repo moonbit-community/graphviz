@@ -1780,6 +1780,78 @@ fn graph_pad_pt(graph : @cgraph.Graph) -> (Double, Double) {
 }
 
 ///|
+fn parse_size_attr(graph : @cgraph.Graph) -> (Double, Double, Bool)? {
+  match graph.get_attr("size") {
+    Some(value) => {
+      let parts : Array[String] = []
+      let mut force = false
+      for part_view in value.split(",") {
+        let part = part_view.trim().to_string()
+        if part.contains("!") {
+          force = true
+        }
+        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        if cleaned != "" {
+          parts.push(cleaned)
+        }
+      }
+      if parts.length() == 0 {
+        return None
+      }
+      let width_in = parse_double(parts[0], -1.0)
+      let height_in = if parts.length() > 1 {
+        parse_double(parts[1], -1.0)
+      } else {
+        width_in
+      }
+      if width_in <= 0.0 || height_in <= 0.0 {
+        return None
+      }
+      Some((width_in, height_in, force))
+    }
+    None => None
+  }
+}
+
+///|
+fn svg_output_scale(
+  graph : @cgraph.Graph,
+  width_pt : Double,
+  height_pt : Double,
+) -> (Double, Double, Double, Double) {
+  let mut scale_x = 1.0
+  let mut scale_y = 1.0
+  let mut out_width = width_pt
+  let mut out_height = height_pt
+  match parse_size_attr(graph) {
+    Some((width_in, height_in, force)) =>
+      if width_pt > 0.0 && height_pt > 0.0 {
+        let max_width = width_in * 72.0
+        let max_height = height_in * 72.0
+        let sx = max_width / width_pt
+        let sy = max_height / height_pt
+        if force {
+          scale_x = sx
+          scale_y = sy
+          out_width = max_width
+          out_height = max_height
+        } else {
+          let mut scale = if sx < sy { sx } else { sy }
+          if scale > 1.0 {
+            scale = 1.0
+          }
+          scale_x = scale
+          scale_y = scale
+          out_width = width_pt * scale
+          out_height = height_pt * scale
+        }
+      }
+    None => ()
+  }
+  (scale_x, scale_y, out_width, out_height)
+}
+
+///|
 fn spline_path(spline : @geom.Spline, llx : Double, lly : Double) -> String {
   let sb = StringBuilder::new()
   let points = spline.points
@@ -2076,13 +2148,18 @@ pub fn render_svg(
   }
   let width = padded_bbox.urx - padded_bbox.llx
   let height = padded_bbox.ury - padded_bbox.lly
+  let (scale_x, scale_y, out_width, out_height) = svg_output_scale(
+    layout.graph,
+    width,
+    height,
+  )
   let sb = StringBuilder::new()
   if include_xml_decl {
     write_line(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "", pretty)
   }
   write_line(
     sb,
-    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\{width}pt\" height=\"\{height}pt\" viewBox=\"0 0 \{width} \{height}\">",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\{out_width}pt\" height=\"\{out_height}pt\" viewBox=\"0 0 \{out_width} \{out_height}\">",
     "",
     pretty,
   )
@@ -2094,12 +2171,17 @@ pub fn render_svg(
     let rect_indent = if pretty { "  " } else { "" }
     write_line(
       sb,
-      "<rect x=\"0\" y=\"0\" width=\"\{width}\" height=\"\{height}\" fill=\"\{fill}\"/>",
+      "<rect x=\"0\" y=\"0\" width=\"\{out_width}\" height=\"\{out_height}\" fill=\"\{fill}\"/>",
       rect_indent,
       pretty,
     )
   }
-  write_line(sb, "<g transform=\"translate(0 \{height})\">", "  ", pretty)
+  let transform = if scale_x == 1.0 && scale_y == 1.0 {
+    "translate(0 \{height})"
+  } else {
+    "scale(\{scale_x} \{scale_y}) translate(0 \{height})"
+  }
+  write_line(sb, "<g transform=\"\{transform}\">", "  ", pretty)
   let cluster_indent = if pretty { "    " } else { "" }
   write_cluster_graphs(sb, layout, padded_bbox, cluster_indent, pretty)
   let edge_indent = if pretty { "    " } else { "" }
