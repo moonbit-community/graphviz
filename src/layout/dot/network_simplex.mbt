@@ -1365,7 +1365,11 @@ fn nodesep_minlen(
     nodesep_pt
   }
   let minlen = tail_right + head_left + sep
-  round_int(minlen)
+  if minlen <= 0.0 {
+    0
+  } else {
+    minlen.ceil().to_int()
+  }
 }
 
 ///|
@@ -1965,30 +1969,32 @@ fn build_cluster_constraints(
 ///|
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
-  sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
   let offsets : Map[String, Map[String, RecordPort]] = Map::new()
-  let record_orientation = if nodes.length() > 0 {
-    record_layout_orientation(graph_rankdir(nodes[0].graph()))
+  let rankdir = if nodes.length() > 0 {
+    graph_rankdir(nodes[0].graph())
   } else {
-    record_layout_orientation(RankDir::TB)
+    RankDir::TB
   }
+  let record_orientation = record_layout_orientation(rankdir)
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   for node in nodes {
     let name = node.name()
-    let size = match sizes.get(name) {
-      Some(value) => value
-      None => node_size(node, record_orientation)
-    }
+    let base_size = node_size(node, record_orientation)
     let ports = if is_record_shape(node) {
-      record_ports(node, origin, size, record_orientation)
+      record_ports(node, origin, base_size, record_orientation)
     } else {
-      html_ports(node, origin, size)
+      html_ports(node, origin, base_size)
     }
     if ports.length() > 0 {
       let node_offsets : Map[String, RecordPort] = Map::new()
       for port_name, port_info in ports {
-        node_offsets[port_name] = port_info
+        let offset = layout_port_offset(port_info.center, rankdir)
+        let size = match rankdir {
+          RankDir::LR | RankDir::RL => swap_node_size(port_info.size)
+          _ => port_info.size
+        }
+        node_offsets[port_name] = { center: offset, size }
       }
       offsets[name] = node_offsets
     }
@@ -2115,7 +2121,7 @@ fn build_constraint_graph(
       None => outgoing_edges[tail] = [edge]
     }
   }
-  let port_offsets = port_offsets_for_nodes(ordered_nodes, sizes)
+  let port_offsets = port_offsets_for_nodes(ordered_nodes)
   let actual_names : Map[String, Bool] = Map::new()
   for node in ordered_nodes {
     actual_names[node.name()] = true

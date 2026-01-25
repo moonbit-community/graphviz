@@ -262,6 +262,9 @@ const LINE_SPACING : Double = 1.2
 const TEXT_SCALE : Double = 0.9706
 
 ///|
+const RECORD_TEXT_SCALE : Double = 0.9675
+
+///|
 const PAD_X_PT : Double = 16.0
 
 ///|
@@ -271,6 +274,11 @@ const PAD_Y_PT : Double = 8.0
 const RECORD_BORDER_PT : Double = 0.5
 
 const PERIPHERY_GAP_PT : Double = 4.0
+
+///|
+fn round_quarter_pt(value : Double) -> Double {
+  (value * 4.0).round() / 4.0
+}
 
 ///|
 // Graphviz keeps edge-label ranks tight; use a fraction of nodesep on label ranks.
@@ -419,7 +427,14 @@ fn char_width_units(ch : Char, uppercase_boost : Bool) -> Int {
 
 ///|
 fn record_char_width_units(ch : Char) -> Int {
-  let base = char_width_units_base(ch)
+  let base =
+    if ch == ' ' {
+      276
+    } else if ch.is_ascii_digit() {
+      char_width_units_base(ch) - 4
+    } else {
+      char_width_units_base(ch)
+    }
   if ch.is_ascii_lowercase() {
     base - 2
   } else {
@@ -520,6 +535,7 @@ fn record_label_text_dimensions(
   let mut current_units = 0
   let mut lines = 1
   let mut escaping = false
+  let mut ended_with_break = false
   for ch in label {
     if escaping {
       escaping = false
@@ -529,8 +545,10 @@ fn record_label_text_dimensions(
         }
         current_units = 0
         lines = lines + 1
+        ended_with_break = true
       } else {
         current_units = current_units + record_char_width_units(ch)
+        ended_with_break = false
       }
       continue
     }
@@ -544,20 +562,26 @@ fn record_label_text_dimensions(
       }
       current_units = 0
       lines = lines + 1
+      ended_with_break = true
     } else {
       current_units = current_units + record_char_width_units(ch)
+      ended_with_break = false
     }
   }
   if escaping {
     current_units = current_units + record_char_width_units('\\')
+    ended_with_break = false
   }
   if current_units > max_units {
     max_units = current_units
   }
+  if ended_with_break && lines > 1 {
+    lines = lines - 1
+  }
   let width_scale = font_width_scale(font_name)
   let width_pt = max_units.to_double() *
     font_size_pt *
-    TEXT_SCALE *
+    RECORD_TEXT_SCALE *
     width_scale /
     1000.0
   let height_pt = lines.to_double() * line_height
@@ -670,7 +694,10 @@ priv enum RecordOrientation {
 
 ///|
 fn record_layout_orientation(_rankdir : RankDir) -> RecordOrientation {
-  RecordOrientation::Horizontal
+  match _rankdir {
+    RankDir::LR | RankDir::RL => RecordOrientation::Vertical
+    _ => RecordOrientation::Horizontal
+  }
 }
 
 ///|
@@ -807,15 +834,7 @@ fn record_nodes(label : String) -> Array[RecordNode] {
     chars.push(ch)
   }
   let parser = RecordParser::{ chars, index: 0 }
-  let nodes = parse_record_nodes(parser)
-  if nodes.length() == 1 {
-    match nodes[0] {
-      RecordNode::Group(children) => children
-      _ => nodes
-    }
-  } else {
-    nodes
-  }
+  parse_record_nodes(parser)
 }
 
 ///|
@@ -842,10 +861,9 @@ fn record_nodes_sizes(
           font_name,
           font_size_pt,
         )
-        sizes.push({
-          width_pt: text_width_pt + pad_x_pt,
-          height_pt: text_height_pt + pad_y_pt,
-        })
+        let width_pt = round_quarter_pt(text_width_pt + pad_x_pt)
+        let height_pt = round_quarter_pt(text_height_pt + pad_y_pt)
+        sizes.push({ width_pt, height_pt })
       }
       RecordNode::Group(children) => {
         let size = record_group_size(
@@ -903,6 +921,16 @@ fn record_group_size(
 fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
+  let half = width_pt / 2.0
+  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
+}
+
+///|
+fn swap_node_size(size : NodeSize) -> NodeSize {
+  let width_in = size.height_in
+  let height_in = size.width_in
+  let width_pt = size.height_pt
+  let height_pt = size.width_pt
   let half = width_pt / 2.0
   { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
 }
@@ -1304,6 +1332,38 @@ fn html_ports(
     _ => ()
   }
   ports
+}
+
+///|
+fn layout_port_offset(offset : @geom.Point, rankdir : RankDir) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => offset
+    RankDir::BT => { x: offset.x, y: -offset.y }
+    RankDir::LR => { x: offset.y, y: -offset.x }
+    RankDir::RL => { x: -offset.y, y: offset.x }
+  }
+}
+
+///|
+fn layout_ports_from_final(
+  ports : Map[String, RecordPort],
+  layout_pos : @geom.Point,
+  rankdir : RankDir,
+) -> Map[String, RecordPort] {
+  let rotated : Map[String, RecordPort] = Map::new()
+  for name, port in ports {
+    let offset = layout_port_offset(port.center, rankdir)
+    let center = @geom.Point::{
+      x: layout_pos.x + offset.x,
+      y: layout_pos.y + offset.y,
+    }
+    let size = match rankdir {
+      RankDir::LR | RankDir::RL => swap_node_size(port.size)
+      _ => port.size
+    }
+    rotated[name] = { center, size }
+  }
+  rotated
 }
 
 ///|
@@ -1790,20 +1850,6 @@ fn edge_polyline_points(
           push_point(name)
         }
       }
-    }
-  }
-  if points.length() == 1 && tail_anchor != head_anchor {
-    let dx = head_anchor.x - tail_anchor.x
-    let dy = head_anchor.y - tail_anchor.y
-    let horizontal_first = Double::abs(dx) >= Double::abs(dy)
-    if horizontal_first {
-      let mid_x = (tail_anchor.x + head_anchor.x) / 2.0
-      points.push({ x: mid_x, y: tail_anchor.y })
-      points.push({ x: mid_x, y: head_anchor.y })
-    } else {
-      let mid_y = (tail_anchor.y + head_anchor.y) / 2.0
-      points.push({ x: tail_anchor.x, y: mid_y })
-      points.push({ x: head_anchor.x, y: mid_y })
     }
   }
   points.push(head_anchor)
@@ -2565,31 +2611,6 @@ fn build_edge_index(
 }
 
 ///|
-fn median_positions(
-  names : Array[String],
-  x_positions : Map[String, Double],
-) -> Double? {
-  let values : Array[Double] = []
-  for name in names {
-    match x_positions.get(name) {
-      Some(value) => values.push(value)
-      None => ()
-    }
-  }
-  if values.length() == 0 {
-    None
-  } else {
-    values.sort()
-    let mid = values.length() / 2
-    if values.length() % 2 == 0 {
-      Some((values[mid - 1] + values[mid]) / 2.0)
-    } else {
-      Some(values[mid])
-    }
-  }
-}
-
-///|
 fn position_key(
   name : String,
   desired : Map[String, Double],
@@ -2619,6 +2640,7 @@ fn sort_by_positions(
   node_order : Map[String, Int],
   port_edge_nodes : Map[String, Bool],
   edge_pair_order : Map[String, Int],
+  port_order_positions : Map[String, Double],
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
@@ -2646,6 +2668,19 @@ fn sort_by_positions(
         break
       }
       if Double::abs(diff) <= 0.000001 {
+        match port_order_positions.get(prev) {
+          Some(prev_port) =>
+            match port_order_positions.get(current) {
+              Some(current_port) =>
+                if prev_port != current_port {
+                  if prev_port <= current_port {
+                    break
+                  }
+                }
+              None => ()
+            }
+          None => ()
+        }
         let prev_degree = match primary.get(prev) {
           Some(list) => list.length()
           None => 0
@@ -2814,6 +2849,7 @@ fn order_rank_by_cluster(
   node_order : Map[String, Int],
   port_edge_nodes : Map[String, Bool],
   edge_pair_order : Map[String, Int],
+  port_order_positions : Map[String, Double],
 ) -> Array[String] {
   if names.length() < 2 {
     return names.copy()
@@ -2907,6 +2943,7 @@ fn order_rank_by_cluster(
     let ordered_group = sort_by_positions(
       group, desired, x_positions, primary, secondary, parents_map, rank_same_groups,
       rank_same_order, edge_order, node_order, port_edge_nodes, edge_pair_order,
+      port_order_positions,
     )
     for name in ordered_group {
       result.push(name)
@@ -2920,22 +2957,49 @@ fn compute_desired_positions(
   names : Array[String],
   neighbors : Map[String, Array[String]],
   x_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Double] {
   let desired : Map[String, Double] = Map::new()
   for name in names {
+    match port_order_contrib.get(name) {
+      Some(list) => {
+        let mut sum = 0.0
+        let mut count = 0
+        for entry in list {
+          let (anchor, offset) = entry
+          match x_positions.get(anchor) {
+            Some(anchor_pos) => {
+              sum = sum + anchor_pos + offset
+              count = count + 1
+            }
+            None => ()
+          }
+        }
+        if count > 0 {
+          desired[name] = sum / count.to_double()
+          continue
+        }
+      }
+      None => ()
+    }
     let list = match neighbors.get(name) {
       Some(value) => value
       None => []
     }
-    match median_positions(list, x_positions) {
+    let values : Array[Double] = []
+    for neighbor in list {
+      match x_positions.get(neighbor) {
+        Some(value) => values.push(value)
+        None => ()
+      }
+    }
+    match median_value(values) {
       Some(value) => desired[name] = value
       None => ()
     }
   }
   desired
 }
-
-///|
 
 ///|
 fn compute_desired_positions_with_rank_fallback(
@@ -2945,9 +3009,31 @@ fn compute_desired_positions_with_rank_fallback(
   x_positions : Map[String, Double],
   ranks : Map[String, Int],
   rank_sizes : Map[Int, Int],
+  port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[String, Double] {
   let desired : Map[String, Double] = Map::new()
   for name in names {
+    match port_order_contrib.get(name) {
+      Some(list) => {
+        let mut sum = 0.0
+        let mut count = 0
+        for entry in list {
+          let (anchor, offset) = entry
+          match x_positions.get(anchor) {
+            Some(anchor_pos) => {
+              sum = sum + anchor_pos + offset
+              count = count + 1
+            }
+            None => ()
+          }
+        }
+        if count > 0 {
+          desired[name] = sum / count.to_double()
+          continue
+        }
+      }
+      None => ()
+    }
     let child_list = match children.get(name) {
       Some(value) => value
       None => []
@@ -2973,7 +3059,14 @@ fn compute_desired_positions_with_rank_fallback(
       Some(value) => value
       None => []
     }
-    match median_positions(list, x_positions) {
+    let values : Array[Double] = []
+    for neighbor in list {
+      match x_positions.get(neighbor) {
+        Some(value) => values.push(value)
+        None => ()
+      }
+    }
+    match median_value(values) {
       Some(value) => desired[name] = value
       None => ()
     }
@@ -2982,7 +3075,14 @@ fn compute_desired_positions_with_rank_fallback(
         Some(value) => value
         None => []
       }
-      match median_positions(fallback_list, x_positions) {
+      let fallback_values : Array[Double] = []
+      for neighbor in fallback_list {
+        match x_positions.get(neighbor) {
+          Some(value) => fallback_values.push(value)
+          None => ()
+        }
+      }
+      match median_value(fallback_values) {
         Some(value) => desired[name] = value
         None => ()
       }
@@ -3993,6 +4093,8 @@ fn reorder_rank_groups(
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[Int, Array[String]] {
   let ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
@@ -4033,6 +4135,11 @@ fn reorder_rank_groups(
   let mut x_positions = compute_rank_positions(
     rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
   )
+  let mut has_port_order = false
+  for _name, _ in port_order_positions {
+    has_port_order = true
+    break
+  }
   if rank_keys.length() > 1 {
     let iterations = 1
     let mut iter = 0
@@ -4045,11 +4152,16 @@ fn reorder_rank_groups(
           None => []
         }
         if names.length() > 1 {
-          let desired = compute_desired_positions(names, children, x_positions)
+          let desired = compute_desired_positions(
+            names,
+            children,
+            x_positions,
+            port_order_contrib,
+          )
           ordered[rank] = order_rank_by_cluster(
             names, desired, x_positions, children, parents, parents, cluster_keys,
             rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-            edge_pair_order,
+            edge_pair_order, port_order_positions,
           )
           x_positions = compute_rank_positions(
             rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
@@ -4057,20 +4169,27 @@ fn reorder_rank_groups(
         }
         idx = idx - 1
       }
-      let _ = transpose_rank_groups_limited(
-        rank_keys, ordered, parents, children, node_ranks, true, 2,
-      )
+      if !has_port_order {
+        let _ = transpose_rank_groups_limited(
+          rank_keys, ordered, parents, children, node_ranks, true, 2,
+        )
+      }
       for rank in rank_keys {
         let names = match ordered.get(rank) {
           Some(list) => list
           None => []
         }
         if names.length() > 1 {
-          let desired = compute_desired_positions(names, children, x_positions)
+          let desired = compute_desired_positions(
+            names,
+            children,
+            x_positions,
+            port_order_contrib,
+          )
           ordered[rank] = order_rank_by_cluster(
             names, desired, x_positions, children, parents, parents, cluster_keys,
             rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-            edge_pair_order,
+            edge_pair_order, port_order_positions,
           )
         }
       }
@@ -4087,11 +4206,16 @@ fn reorder_rank_groups(
           None => []
         }
         if names.length() > 1 {
-          let desired = compute_desired_positions(names, parents, x_positions)
+          let desired = compute_desired_positions(
+            names,
+            parents,
+            x_positions,
+            port_order_contrib,
+          )
           ordered[rank] = order_rank_by_cluster(
             names, desired, x_positions, parents, children, parents, cluster_keys,
             rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-            edge_pair_order,
+            edge_pair_order, port_order_positions,
           )
           x_positions = compute_rank_positions(
             rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
@@ -4099,20 +4223,27 @@ fn reorder_rank_groups(
         }
         j = j + 1
       }
-      let _ = transpose_rank_groups_limited(
-        rank_keys, ordered, parents, children, node_ranks, false, 2,
-      )
+      if !has_port_order {
+        let _ = transpose_rank_groups_limited(
+          rank_keys, ordered, parents, children, node_ranks, false, 2,
+        )
+      }
       for rank in rank_keys {
         let names = match ordered.get(rank) {
           Some(list) => list
           None => []
         }
         if names.length() > 1 {
-          let desired = compute_desired_positions(names, parents, x_positions)
+          let desired = compute_desired_positions(
+            names,
+            parents,
+            x_positions,
+            port_order_contrib,
+          )
           ordered[rank] = order_rank_by_cluster(
             names, desired, x_positions, parents, children, parents, cluster_keys,
             rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-            edge_pair_order,
+            edge_pair_order, port_order_positions,
           )
         }
       }
@@ -4135,12 +4266,18 @@ fn reorder_rank_groups(
     }
     if names.length() > 1 {
       let desired = compute_desired_positions_with_rank_fallback(
-        names, children, parents, final_positions, node_ranks, rank_sizes,
+        names,
+        children,
+        parents,
+        final_positions,
+        node_ranks,
+        rank_sizes,
+        port_order_contrib,
       )
       final_ordered[rank] = order_rank_by_cluster(
         names, desired, final_positions, children, parents, parents, cluster_keys,
         rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
-        edge_pair_order,
+        edge_pair_order, port_order_positions,
       )
     }
   }
@@ -5624,10 +5761,100 @@ pub fn layout_dot(
   for i in 0..<nodes.length() {
     node_order[nodes[i].name()] = i
   }
-  let sizes : Map[String, NodeSize] = Map::new()
+  if rankdir == RankDir::RL {
+    let total = nodes.length()
+    for node in nodes {
+      let name = node.name()
+      let base = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      node_order[name] = total - 1 - base
+    }
+  }
   let record_orientation = record_layout_orientation(rankdir)
+  let output_sizes : Map[String, NodeSize] = Map::new()
+  let sizes : Map[String, NodeSize] = Map::new()
   for node in nodes {
-    sizes[node.name()] = node_size(node, record_orientation)
+    let size = node_size(node, record_orientation)
+    output_sizes[node.name()] = size
+    sizes[node.name()] =
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      if is_record_shape(node) { swap_node_size(size) } else { size }
+    } else {
+      size
+    }
+  }
+  let port_order_positions : Map[String, Double] = Map::new()
+  let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
+  if rankdir == RankDir::LR || rankdir == RankDir::RL {
+    let record_port_order : Map[String, Map[String, Double]] = Map::new()
+    for node in nodes {
+      if is_record_shape(node) {
+        let name = node.name()
+        let size = match output_sizes.get(name) {
+          Some(value) => value
+          None => node_size(node, record_orientation)
+        }
+        let raw_ports = record_ports(
+          node,
+          { x: 0.0, y: 0.0 },
+          size,
+          record_orientation,
+        )
+        let order_map : Map[String, Double] = Map::new()
+        for port_name, port in raw_ports {
+          let offset = layout_port_offset(port.center, rankdir)
+          order_map[port_name] = offset.x
+        }
+        record_port_order[name] = order_map
+      }
+    }
+    let order_sum : Map[String, (Double, Int)] = Map::new()
+    let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
+      match port {
+        Some(value) =>
+          match value.name {
+            Some(port_name) =>
+              match record_port_order.get(anchor) {
+                Some(ports) =>
+                  match ports.get(port_name) {
+                    Some(order) => {
+                      let (sum, count) = match order_sum.get(target) {
+                        Some(value) => value
+                        None => (0.0, 0)
+                      }
+                      order_sum[target] = (sum + order, count + 1)
+                      match port_order_contrib.get(target) {
+                        Some(list) => list.push((anchor, order))
+                        None => port_order_contrib[target] = [(anchor, order)]
+                      }
+                    }
+                    None => ()
+                  }
+                None => ()
+              }
+            None => ()
+          }
+        None => ()
+      }
+    }
+    for edge in edges {
+      let tail_name = edge.tail().name()
+      let head_name = edge.head().name()
+      if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+        update_order(head_name, tail_name, edge.tail_port())
+      }
+      if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+        update_order(tail_name, head_name, edge.head_port())
+      }
+    }
+    for name, entry in order_sum {
+      let (sum, count) = entry
+      if count > 0 {
+      port_order_positions[name] = sum / count.to_double()
+    }
+  }
   }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
     compute_ranks_directed(graph, nodes, edges, has_edge_labels)
@@ -5802,6 +6029,8 @@ pub fn layout_dot(
       sizes,
       nodesep_pt,
       has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
     )
   }
   let existing_names : Map[String, Bool] = Map::new()
@@ -5914,7 +6143,7 @@ pub fn layout_dot(
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let size = match sizes.get(name) {
+    let size = match output_sizes.get(name) {
       Some(value) => value
       None => node_size(node, record_orientation)
     }
@@ -5928,23 +6157,32 @@ pub fn layout_dot(
   }
   let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
   for node_layout in nodes_out {
-    let size = node_size_from_points(
-      node_layout.width_in * 72.0,
-      node_layout.height_in * 72.0,
-    )
+    let name = node_layout.node.name()
+    let final_size = match output_sizes.get(name) {
+      Some(value) => value
+      None => node_size(node_layout.node, record_orientation)
+    }
     if is_record_shape(node_layout.node) {
-      let ports = record_ports(
+      let raw_ports = record_ports(
         node_layout.node,
-        node_layout.pos,
-        size,
+        { x: 0.0, y: 0.0 },
+        final_size,
         record_orientation,
       )
-      label_ports_map[node_layout.node.name()] = ports
+      let ports =
+        layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+      label_ports_map[name] = ports
     } else {
       match @html_label.parse_html_label(label_text(node_layout.node)) {
         Some(@html_label.HtmlLabel::Table(_)) => {
-          let ports = html_ports(node_layout.node, node_layout.pos, size)
-          label_ports_map[node_layout.node.name()] = ports
+          let raw_ports = html_ports(
+            node_layout.node,
+            { x: 0.0, y: 0.0 },
+            final_size,
+          )
+          let ports =
+            layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+          label_ports_map[name] = ports
         }
         _ => ()
       }
