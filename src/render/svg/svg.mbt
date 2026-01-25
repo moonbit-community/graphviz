@@ -1099,7 +1099,7 @@ fn record_field_from_text(field : String) -> RecordField {
   }
   let normalized = raw_text.trim(chars=" \n\r\t").to_string()
   let text = if normalized == "" { " " } else { normalized }
-  { text }
+  { text, }
 }
 
 ///|
@@ -1984,11 +1984,6 @@ fn write_label_lines(
 }
 
 ///|
-fn rect_center(rect : @geom.Rect) -> @geom.Point {
-  { x: (rect.llx + rect.urx) / 2.0, y: (rect.lly + rect.ury) / 2.0 }
-}
-
-///|
 fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
   let width = rect.urx - rect.llx
   let height = rect.ury - rect.lly
@@ -2001,99 +1996,6 @@ fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
     urx: rect.urx - gap,
     ury: rect.ury - gap,
   })
-}
-
-///|
-fn rect_from_center(
-  center : @geom.Point,
-  width : Double,
-  height : Double,
-  pad : Double,
-) -> @geom.Rect {
-  let half_w = width / 2.0 + pad
-  let half_h = height / 2.0 + pad
-  {
-    llx: center.x - half_w,
-    lly: center.y - half_h,
-    urx: center.x + half_w,
-    ury: center.y + half_h,
-  }
-}
-
-///|
-fn rect_overlap_amount(
-  a : @geom.Rect,
-  b : @geom.Rect,
-) -> (Double, Double)? {
-  let overlap_x = (if a.urx < b.urx { a.urx } else { b.urx }) -
-    (if a.llx > b.llx { a.llx } else { b.llx })
-  let overlap_y = (if a.ury < b.ury { a.ury } else { b.ury }) -
-    (if a.lly > b.lly { a.lly } else { b.lly })
-  if overlap_x > 0.0 && overlap_y > 0.0 {
-    Some((overlap_x, overlap_y))
-  } else {
-    None
-  }
-}
-
-///|
-fn nudge_label_rect(
-  label_pos : @geom.Point,
-  label_rect : @geom.Rect,
-  other_rect : @geom.Rect,
-  label_width : Double,
-  label_height : Double,
-  pad : Double,
-) -> (@geom.Point, @geom.Rect) {
-  match rect_overlap_amount(label_rect, other_rect) {
-    Some((overlap_x, overlap_y)) => {
-      let other_center = rect_center(other_rect)
-      if overlap_x < overlap_y {
-        let dir = if label_pos.x < other_center.x { -1.0 } else { 1.0 }
-        let shift = overlap_x + pad
-        let new_pos : @geom.Point = {
-          x: label_pos.x + dir * shift,
-          y: label_pos.y,
-        }
-        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
-      } else {
-        let dir = if label_pos.y < other_center.y { -1.0 } else { 1.0 }
-        let shift = overlap_y + pad
-        let new_pos : @geom.Point = {
-          x: label_pos.x,
-          y: label_pos.y + dir * shift,
-        }
-        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
-      }
-    }
-    None => (label_pos, label_rect)
-  }
-}
-
-///|
-fn collect_cluster_label_rects(
-  graphs : Array[@layout_dot.DotLayoutGraph],
-  pad : Double,
-) -> Array[@geom.Rect] {
-  let rects : Array[@geom.Rect] = []
-  for subgraph in graphs {
-    if is_cluster_graph(subgraph.graph) {
-      match subgraph.label_pos {
-        Some(pos) =>
-          match graph_label_metrics(subgraph.graph) {
-            Some((_text, width, height)) =>
-              rects.push(rect_from_center(pos, width, height, pad))
-            None => ()
-          }
-        None => ()
-      }
-    }
-    let nested = collect_cluster_label_rects(subgraph.subgraphs, pad)
-    for rect in nested {
-      rects.push(rect)
-    }
-  }
-  rects
 }
 
 ///|

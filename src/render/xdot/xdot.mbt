@@ -1162,7 +1162,7 @@ fn record_field_from_text(field : String) -> RecordField {
   }
   let normalized = raw_text.trim(chars=" \n\r\t").to_string()
   let text = if normalized == "" { " " } else { normalized }
-  { text }
+  { text, }
 }
 
 ///|

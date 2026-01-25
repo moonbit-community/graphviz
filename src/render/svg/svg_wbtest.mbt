@@ -1,8 +1,6 @@
 ///|
 priv struct SvgLabelEntry {
   center : @geom.Point
-  width : Double
-  height : Double
 }
 
 ///|
@@ -27,11 +25,6 @@ fn parse_attr_double(tag : String, name : String) -> Double? {
     Some(value) => Some(parse_double(value, 0.0))
     None => None
   }
-}
-
-///|
-fn label_entry_rect(entry : SvgLabelEntry) -> @geom.Rect {
-  rect_from_center(entry.center, entry.width, entry.height, 0.0)
 }
 
 ///|
@@ -85,8 +78,6 @@ fn extract_label_entries(
                   centerline_offset(size)
                 entries.push({
                   center: { x: center_x, y: center_y },
-                  width,
-                  height,
                 })
               }
               _ => ()

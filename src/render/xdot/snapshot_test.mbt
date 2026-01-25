@@ -232,7 +232,7 @@ fn compare_draw_attr(
 }
 
 ///|
-fn text_y_positions(tokens : Array[String]) -> Array[Double] raise {
+fn text_y_positions(tokens : Array[String]) -> Array[Double] {
   let ys : Array[Double] = []
   let mut i = 0
   while i < tokens.length() {
