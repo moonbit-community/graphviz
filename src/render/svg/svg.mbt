@@ -1304,10 +1304,10 @@ fn write_record_separators(
   if layouts.length() > 1 {
     match orientation {
       RecordOrientation::Vertical => {
-        let x1 = rect.llx - bbox.llx
-        let x2 = rect.urx - bbox.llx
+        let x1 = svg_x(rect.llx, bbox.llx)
+        let x2 = svg_x(rect.urx, bbox.llx)
         for i in 1..<layouts.length() {
-          let line_y = layouts[i].rect.ury - bbox.lly
+          let line_y = svg_y(layouts[i].rect.ury, bbox.lly)
           write_line(
             sb,
             "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
@@ -1317,10 +1317,10 @@ fn write_record_separators(
         }
       }
       RecordOrientation::Horizontal => {
-        let y1 = rect.lly - bbox.lly
-        let y2 = rect.ury - bbox.lly
+        let y1 = svg_y(rect.lly, bbox.lly)
+        let y2 = svg_y(rect.ury, bbox.lly)
         for i in 1..<layouts.length() {
-          let line_x = layouts[i].rect.llx - bbox.llx
+          let line_x = svg_x(layouts[i].rect.llx, bbox.llx)
           write_line(
             sb,
             "<line x1=\"\{line_x}\" y1=\"\{y1}\" x2=\"\{line_x}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
@@ -1407,8 +1407,8 @@ fn write_record_node(
   let node = layout.node
   let label = label_text(node.get_attr("label"), node.name())
   let nodes = record_nodes(label)
-  let x = rect.llx - bbox.llx
-  let y = rect.lly - bbox.lly
+  let x = svg_x(rect.llx, bbox.llx)
+  let y = svg_y(rect.ury, bbox.lly)
   let w = rect.urx - rect.llx
   let h = rect.ury - rect.lly
   let rounded = match node.get_attr("shape") {
@@ -1597,18 +1597,12 @@ fn write_html_text_lines(
       continue
     }
     let line_y = start_y - line_step * i.to_double()
-    let length_attr =
-      if line.width_pt > 0.0 {
-        " textLength=\"\{line.width_pt}\" lengthAdjust=\"spacing\""
-      } else {
-        ""
-      }
-    let x = line_x - bbox.llx
-    let y = bbox.lly - line_y
+    let x = svg_x(line_x, bbox.llx)
+    let y = svg_y(line_y, bbox.lly)
     let escaped = escape_xml(line.text)
     write_line(
       sb,
-      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\"\{length_attr}>\{escaped}</text>",
+      "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
       indent,
       pretty,
     )
@@ -1633,8 +1627,8 @@ fn write_html_table(
   let layout = html_table_layout(table, rect, name, font, size)
   match table.bg_color {
     Some(color) => {
-      let x = rect.llx - bbox.llx
-      let y = rect.lly - bbox.lly
+      let x = svg_x(rect.llx, bbox.llx)
+      let y = svg_y(rect.ury, bbox.lly)
       let w = rect.urx - rect.llx
       let h = rect.ury - rect.lly
       write_line(
@@ -1647,8 +1641,8 @@ fn write_html_table(
     None => ()
   }
   if table.border_pt > 0.0 {
-    let x = rect.llx - bbox.llx
-    let y = rect.lly - bbox.lly
+    let x = svg_x(rect.llx, bbox.llx)
+    let y = svg_y(rect.ury, bbox.lly)
     let w = rect.urx - rect.llx
     let h = rect.ury - rect.lly
     write_line(
@@ -1666,8 +1660,8 @@ fn write_html_table(
     let cell_rect = cell_layout.rect
     match cell_layout.cell.bg_color {
       Some(color) => {
-        let x = cell_rect.llx - bbox.llx
-        let y = cell_rect.lly - bbox.lly
+        let x = svg_x(cell_rect.llx, bbox.llx)
+        let y = svg_y(cell_rect.ury, bbox.lly)
         let w = cell_rect.urx - cell_rect.llx
         let h = cell_rect.ury - cell_rect.lly
         write_line(
@@ -1680,8 +1674,8 @@ fn write_html_table(
       None => ()
     }
     if table.cell_border_pt > 0.0 {
-      let x = cell_rect.llx - bbox.llx
-      let y = cell_rect.lly - bbox.lly
+      let x = svg_x(cell_rect.llx, bbox.llx)
+      let y = svg_y(cell_rect.ury, bbox.lly)
       let w = cell_rect.urx - cell_rect.llx
       let h = cell_rect.ury - cell_rect.lly
       write_line(
@@ -1725,8 +1719,18 @@ fn write_html_table(
 }
 
 ///|
+fn svg_x(x : Double, llx : Double) -> Double {
+  x - llx
+}
+
+///|
+fn svg_y(y : Double, lly : Double) -> Double {
+  -(y - lly)
+}
+
+///|
 fn shift_point(point : @geom.Point, llx : Double, lly : Double) -> @geom.Point {
-  { x: point.x - llx, y: point.y - lly }
+  { x: svg_x(point.x, llx), y: svg_y(point.y, lly) }
 }
 
 ///|
@@ -1818,10 +1822,10 @@ fn write_line_segment(
   indent : String,
   pretty : Bool,
 ) -> Unit {
-  let x1 = start.x - llx
-  let y1 = start.y - lly
-  let x2 = end.x - llx
-  let y2 = end.y - lly
+  let x1 = svg_x(start.x, llx)
+  let y1 = svg_y(start.y, lly)
+  let x2 = svg_x(end.x, llx)
+  let y2 = svg_y(end.y, lly)
   write_line(
     sb,
     "<line x1=\"\{x1}\" y1=\"\{y1}\" x2=\"\{x2}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
@@ -1945,18 +1949,12 @@ fn write_label_lines(
       @render.TextAlign::Right => "end"
       @render.TextAlign::Center => "middle"
     }
-    let length_attr =
-      if line.width_pt > 0.0 {
-        " textLength=\"\{line.width_pt}\" lengthAdjust=\"spacing\""
-      } else {
-        ""
-      }
-    let x = line_x - bbox.llx
-    let y = bbox.lly - line_y
+    let x = svg_x(line_x, bbox.llx)
+    let y = svg_y(line_y, bbox.lly)
     let escaped = escape_xml(line.text)
     write_line(
       sb,
-      "<text x=\"\{x}\" y=\"\{y}\" transform=\"scale(1 -1)\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\"\{length_attr}>\{escaped}</text>",
+      "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
       indent,
       pretty,
     )
@@ -2088,8 +2086,8 @@ fn write_cluster_graphs(
     let graph = subgraph.graph
     if is_cluster_graph(graph) {
       let rect = subgraph.bbox
-      let x = rect.llx - bbox.llx
-      let y = rect.lly - bbox.lly
+      let x = svg_x(rect.llx, bbox.llx)
+      let y = svg_y(rect.ury, bbox.lly)
       let w = rect.urx - rect.llx
       let h = rect.ury - rect.lly
       let stroke = @attrs.color(graph.get_attr("color"), default="black")
@@ -2177,12 +2175,7 @@ pub fn render_svg(
       pretty,
     )
   }
-  write_line(
-    sb,
-    "<g transform=\"translate(0 \{height}) scale(1 -1)\">",
-    "  ",
-    pretty,
-  )
+  write_line(sb, "<g transform=\"translate(0 \{height})\">", "  ", pretty)
   let cluster_indent = if pretty { "    " } else { "" }
   write_cluster_graphs(sb, layout, padded_bbox, cluster_indent, pretty)
   let edge_indent = if pretty { "    " } else { "" }
@@ -2379,8 +2372,8 @@ pub fn render_svg(
         )
       }
     } else if is_doublecircle {
-      let cx = node_layout.pos.x - padded_bbox.llx
-      let cy = node_layout.pos.y - padded_bbox.lly
+      let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
+      let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
       let rx = (rect.urx - rect.llx) / 2.0
       let ry = (rect.ury - rect.lly) / 2.0
       write_line(
@@ -2391,8 +2384,8 @@ pub fn render_svg(
       )
       match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
         Some(inner) => {
-          let inner_cx = (inner.llx + inner.urx) / 2.0 - padded_bbox.llx
-          let inner_cy = (inner.lly + inner.ury) / 2.0 - padded_bbox.lly
+          let inner_cx = svg_x((inner.llx + inner.urx) / 2.0, padded_bbox.llx)
+          let inner_cy = svg_y((inner.lly + inner.ury) / 2.0, padded_bbox.lly)
           let inner_rx = (inner.urx - inner.llx) / 2.0
           let inner_ry = (inner.ury - inner.lly) / 2.0
           write_line(
@@ -2405,8 +2398,8 @@ pub fn render_svg(
         None => ()
       }
     } else if kind == "mcircle" {
-      let cx = node_layout.pos.x - padded_bbox.llx
-      let cy = node_layout.pos.y - padded_bbox.lly
+      let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
+      let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
       let rx = (rect.urx - rect.llx) / 2.0
       let ry = (rect.ury - rect.lly) / 2.0
       write_line(
@@ -2442,8 +2435,8 @@ pub fn render_svg(
         }
         None =>
           if kind == "box" {
-            let x = rect.llx - padded_bbox.llx
-            let y = rect.lly - padded_bbox.lly
+            let x = svg_x(rect.llx, padded_bbox.llx)
+            let y = svg_y(rect.ury, padded_bbox.lly)
             let w = rect.urx - rect.llx
             let h = rect.ury - rect.lly
             write_line(
@@ -2453,8 +2446,8 @@ pub fn render_svg(
               pretty,
             )
           } else {
-            let cx = node_layout.pos.x - padded_bbox.llx
-            let cy = node_layout.pos.y - padded_bbox.lly
+            let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
+            let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
             let rx = (rect.urx - rect.llx) / 2.0
             let ry = (rect.ury - rect.lly) / 2.0
             write_line(

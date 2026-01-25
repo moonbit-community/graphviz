@@ -482,12 +482,13 @@ fn extract_cluster_boxes(
         ) {
           (Some(x), Some(y), Some(width), Some(height)) => {
             let llx = x + padded_bbox.llx
-            let lly = y + padded_bbox.lly
+            let ury = padded_bbox.lly - y
+            let lly = ury - height
             pending_rect = Some({
               llx,
               lly,
               urx: llx + width,
-              ury: lly + height,
+              ury,
             })
             pending_used = false
           }
