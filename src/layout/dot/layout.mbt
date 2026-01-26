@@ -262,7 +262,7 @@ const LINE_SPACING : Double = 1.2
 const TEXT_SCALE : Double = 0.9706
 
 ///|
-const RECORD_TEXT_SCALE : Double = 0.9675
+const RECORD_TEXT_SCALE : Double = 0.97036
 
 ///|
 const PAD_X_PT : Double = 16.0
@@ -276,19 +276,11 @@ const RECORD_BORDER_PT : Double = 0.5
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|
-fn round_quarter_pt(value : Double) -> Double {
-  (value * 4.0).round() / 4.0
-}
-
-///|
 // Graphviz keeps edge-label ranks tight; use a fraction of nodesep on label ranks.
 const EDGE_LABEL_NODESEP_SCALE : Double = 0.0
 
 ///|
 const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
-
-///|
-const DEFAULT_GRAPH_MARGIN_IN : Double = 0.11
 
 ///|
 const ELLIPSE_LABEL_SCALE : Double = 1.0
@@ -329,7 +321,16 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
 }
 
 ///|
-fn char_width_units_base(ch : Char) -> Int {
+fn char_width_units_base(ch : Char) -> Double {
+  if HAS_FONT_METRICS {
+    let code = ch.to_int()
+    if code >= 0 && code < font_metrics.length() {
+      let width = font_metrics[code]
+      if width > 0.0 {
+        return width
+      }
+    }
+  }
   match ch {
     ' ' => 250
     '\t' => 250
@@ -414,32 +415,53 @@ fn char_width_units_base(ch : Char) -> Int {
 }
 
 ///|
-fn char_width_units(ch : Char, uppercase_boost : Bool) -> Int {
+fn char_width_units(ch : Char, uppercase_boost : Bool) -> Double {
   let base = char_width_units_base(ch)
-  if uppercase_boost && ch.is_ascii_uppercase() {
-    base + 22
+  if HAS_FONT_METRICS {
+    base
+  } else if uppercase_boost && ch.is_ascii_uppercase() {
+    base + 22.0
   } else if ch.is_ascii_lowercase() {
-    base - 2
+    base - 2.0
   } else {
     base
   }
 }
 
 ///|
-fn record_char_width_units(ch : Char) -> Int {
+fn record_char_width_units(ch : Char) -> Double {
+  if HAS_FONT_METRICS {
+    return char_width_units_base(ch)
+  }
   let base =
     if ch == ' ' {
-      276
+      276.0
     } else if ch.is_ascii_digit() {
-      char_width_units_base(ch) - 4
+      char_width_units_base(ch) - 4.0
     } else {
       char_width_units_base(ch)
     }
   if ch.is_ascii_lowercase() {
-    base - 2
+    base - 2.0
   } else {
     base
   }
+}
+
+///|
+fn char_kerning_units(prev : Char, curr : Char) -> Double {
+  if !HAS_FONT_KERNING {
+    return 0.0
+  }
+  let left = prev.to_int()
+  let right = curr.to_int()
+  if left >= 0 && left < 128 && right >= 0 && right < 128 {
+    let idx = left * 128 + right
+    if idx >= 0 && idx < font_kerning.length() {
+      return font_kerning[idx]
+    }
+  }
+  0.0
 }
 
 ///|
@@ -473,10 +495,11 @@ fn label_text_dimensions(
   }
   let uppercase_boost = !has_lowercase
   let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
-  let mut max_units = 0
-  let mut current_units = 0
+  let mut max_units = 0.0
+  let mut current_units = 0.0
   let mut lines = 1
   let mut escaping = false
+  let mut prev_char : Char? = None
   for ch in label {
     if escaping {
       escaping = false
@@ -486,8 +509,14 @@ fn label_text_dimensions(
         }
         current_units = 0
         lines = lines + 1
+        prev_char = None
       } else {
+        match prev_char {
+          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+          None => ()
+        }
         current_units = current_units + char_width_units(ch, uppercase_boost)
+        prev_char = Some(ch)
       }
       continue
     }
@@ -501,20 +530,33 @@ fn label_text_dimensions(
       }
       current_units = 0
       lines = lines + 1
+      prev_char = None
     } else {
+      match prev_char {
+        Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+        None => ()
+      }
       current_units = current_units + char_width_units(ch, uppercase_boost)
+      prev_char = Some(ch)
     }
   }
   if escaping {
+    let ch = '\\'
+    match prev_char {
+      Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+      None => ()
+    }
     current_units = current_units + char_width_units('\\', uppercase_boost)
+    prev_char = Some('\\')
   }
   if current_units > max_units {
     max_units = current_units
   }
   let width_scale = font_width_scale(font_name)
-  let width_pt = max_units.to_double() *
+  let text_scale = if HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
+  let width_pt = max_units *
     font_size_pt *
-    TEXT_SCALE *
+    text_scale *
     width_scale /
     1000.0
   let height_pt = lines.to_double() * line_height
@@ -531,11 +573,12 @@ fn record_label_text_dimensions(
     return (0.0, 0.0)
   }
   let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
-  let mut max_units = 0
-  let mut current_units = 0
+  let mut max_units = 0.0
+  let mut current_units = 0.0
   let mut lines = 1
   let mut escaping = false
   let mut ended_with_break = false
+  let mut prev_char : Char? = None
   for ch in label {
     if escaping {
       escaping = false
@@ -546,9 +589,15 @@ fn record_label_text_dimensions(
         current_units = 0
         lines = lines + 1
         ended_with_break = true
+        prev_char = None
       } else {
+        match prev_char {
+          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+          None => ()
+        }
         current_units = current_units + record_char_width_units(ch)
         ended_with_break = false
+        prev_char = Some(ch)
       }
       continue
     }
@@ -563,14 +612,26 @@ fn record_label_text_dimensions(
       current_units = 0
       lines = lines + 1
       ended_with_break = true
+      prev_char = None
     } else {
+      match prev_char {
+        Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+        None => ()
+      }
       current_units = current_units + record_char_width_units(ch)
       ended_with_break = false
+      prev_char = Some(ch)
     }
   }
   if escaping {
-    current_units = current_units + record_char_width_units('\\')
+    let ch = '\\'
+    match prev_char {
+      Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+      None => ()
+    }
+    current_units = current_units + record_char_width_units(ch)
     ended_with_break = false
+    prev_char = Some('\\')
   }
   if current_units > max_units {
     max_units = current_units
@@ -579,9 +640,10 @@ fn record_label_text_dimensions(
     lines = lines - 1
   }
   let width_scale = font_width_scale(font_name)
-  let width_pt = max_units.to_double() *
+  let text_scale = if HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
+  let width_pt = max_units *
     font_size_pt *
-    RECORD_TEXT_SCALE *
+    text_scale *
     width_scale /
     1000.0
   let height_pt = lines.to_double() * line_height
@@ -630,9 +692,9 @@ fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
     Some(value) =>
       match parse_margin(value) {
         Some((margin_x, _margin_y)) => margin_x * 72.0
-        None => DEFAULT_GRAPH_MARGIN_IN * 72.0
+        None => CLUSTER_MARGIN_PT
       }
-    None => DEFAULT_GRAPH_MARGIN_IN * 72.0
+    None => CLUSTER_MARGIN_PT
   }
 }
 
@@ -834,7 +896,15 @@ fn record_nodes(label : String) -> Array[RecordNode] {
     chars.push(ch)
   }
   let parser = RecordParser::{ chars, index: 0 }
-  parse_record_nodes(parser)
+  let nodes = parse_record_nodes(parser)
+  if nodes.length() == 1 {
+    match nodes[0] {
+      RecordNode::Group(children) => children
+      _ => nodes
+    }
+  } else {
+    nodes
+  }
 }
 
 ///|
@@ -861,8 +931,8 @@ fn record_nodes_sizes(
           font_name,
           font_size_pt,
         )
-        let width_pt = round_quarter_pt(text_width_pt + pad_x_pt)
-        let height_pt = round_quarter_pt(text_height_pt + pad_y_pt)
+        let width_pt = text_width_pt + pad_x_pt
+        let height_pt = text_height_pt + pad_y_pt
         sizes.push({ width_pt, height_pt })
       }
       RecordNode::Group(children) => {
@@ -1367,6 +1437,99 @@ fn layout_ports_from_final(
 }
 
 ///|
+fn port_side_anchor_from_raw(
+  raw_port : RecordPort,
+  node_size : NodeSize,
+  node_pos : @geom.Point,
+  target_pos : @geom.Point,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  let half_w = raw_port.size.width_pt / 2.0
+  let half_h = raw_port.size.height_pt / 2.0
+  let port_rect : @geom.Rect = {
+    llx: raw_port.center.x - half_w,
+    lly: raw_port.center.y - half_h,
+    urx: raw_port.center.x + half_w,
+    ury: raw_port.center.y + half_h,
+  }
+  let node_rect : @geom.Rect = {
+    llx: -node_size.width_pt / 2.0,
+    lly: -node_size.height_pt / 2.0,
+    urx: node_size.width_pt / 2.0,
+    ury: node_size.height_pt / 2.0,
+  }
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let candidates : Array[(@geom.Point, @geom.Point)] = []
+  let mid_x = (port_rect.llx + port_rect.urx) / 2.0
+  let mid_y = (port_rect.lly + port_rect.ury) / 2.0
+  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
+    candidates.push((point(port_rect.llx, mid_y), point(-1.0, 0.0)))
+  }
+  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
+    candidates.push((point(port_rect.urx, mid_y), point(1.0, 0.0)))
+  }
+  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
+    candidates.push((point(mid_x, port_rect.lly), point(0.0, -1.0)))
+  }
+  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
+    candidates.push((point(mid_x, port_rect.ury), point(0.0, 1.0)))
+  }
+  if candidates.length() == 0 || candidates.length() == 4 {
+    return None
+  }
+  let mut best_pos = candidates[0].0
+  let mut best_dist = 0.0
+  let mut seen = false
+  for pair in candidates {
+    let (pos_final, _) = pair
+    let pos_layout = point_add(node_pos, layout_port_offset(pos_final, rankdir))
+    let dist = point_dist2(pos_layout, target_pos)
+    if !seen || dist < best_dist {
+      best_dist = dist
+      best_pos = pos_final
+      seen = true
+    }
+  }
+  let offset_layout = layout_port_offset(best_pos, rankdir)
+  Some(point_add(node_pos, offset_layout))
+}
+
+///|
+fn port_rect_from_geometry(
+  port : @cgraph.Port?,
+  center : @geom.Point,
+  size : NodeSize,
+  node_size : NodeSize,
+) -> @geom.Rect? {
+  if !port_is_explicit(port) {
+    return None
+  }
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let is_port_rect =
+    Double::abs(size.width_pt - node_size.width_pt) > eps ||
+      Double::abs(size.height_pt - node_size.height_pt) > eps
+  if !is_port_rect {
+    return None
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  Some({
+    llx: center.x - half_w,
+    lly: center.y - half_h,
+    urx: center.x + half_w,
+    ury: center.y + half_h,
+  })
+}
+
+///|
 fn port_geometry(
   node_name : String,
   port : @cgraph.Port?,
@@ -1390,69 +1553,6 @@ fn port_geometry(
       }
     None => (node_pos, node_size)
   }
-}
-
-///|
-fn record_port_boundary_anchor(
-  center : @geom.Point,
-  size : NodeSize,
-  node_pos : @geom.Point,
-  node_size : NodeSize,
-  target : @geom.Point,
-) -> (@geom.Point, NodeSize) {
-  let half_w = size.width_pt / 2.0
-  let half_h = size.height_pt / 2.0
-  let port_rect : @geom.Rect = {
-    llx: center.x - half_w,
-    lly: center.y - half_h,
-    urx: center.x + half_w,
-    ury: center.y + half_h,
-  }
-  let node_half_w = node_size.width_pt / 2.0
-  let node_half_h = node_size.height_pt / 2.0
-  let node_rect : @geom.Rect = {
-    llx: node_pos.x - node_half_w,
-    lly: node_pos.y - node_half_h,
-    urx: node_pos.x + node_half_w,
-    ury: node_pos.y + node_half_h,
-  }
-  let eps = 0.01
-  let left_outer = Double::abs(port_rect.llx - node_rect.llx) <= eps
-  let right_outer = Double::abs(port_rect.urx - node_rect.urx) <= eps
-  let bottom_outer = Double::abs(port_rect.lly - node_rect.lly) <= eps
-  let top_outer = Double::abs(port_rect.ury - node_rect.ury) <= eps
-  let dx = target.x - center.x
-  let dy = target.y - center.y
-  let prefer_horizontal = Double::abs(dx) >= Double::abs(dy)
-  let mut anchor = center
-  if prefer_horizontal {
-    if dx < 0.0 && left_outer {
-      anchor = { x: port_rect.llx, y: center.y }
-    } else if dx > 0.0 && right_outer {
-      anchor = { x: port_rect.urx, y: center.y }
-    }
-  }
-  if anchor == center {
-    if dy > 0.0 && top_outer {
-      anchor = { x: center.x, y: port_rect.ury }
-    } else if dy < 0.0 && bottom_outer {
-      anchor = { x: center.x, y: port_rect.lly }
-    } else if left_outer {
-      anchor = { x: port_rect.llx, y: center.y }
-    } else if right_outer {
-      anchor = { x: port_rect.urx, y: center.y }
-    } else if top_outer {
-      anchor = { x: center.x, y: port_rect.ury }
-    } else if bottom_outer {
-      anchor = { x: center.x, y: port_rect.lly }
-    }
-  }
-  let size_out = if anchor == center {
-    size
-  } else {
-    node_size_from_points(0.0, 0.0)
-  }
-  (anchor, size_out)
 }
 
 ///|
@@ -1655,22 +1755,61 @@ fn clip_to_rect(
 }
 
 ///|
-fn clip_polyline_ends(
-  points : Array[@geom.Point],
-  tail_anchor : @geom.Point,
-  head_anchor : @geom.Point,
-  tail_size : NodeSize,
-  head_size : NodeSize,
-) -> Array[@geom.Point] {
-  if points.length() < 2 {
-    return points
+fn point_inside_bbox(point : @geom.Point, rect : @geom.Rect) -> Bool {
+  point.x >= rect.llx &&
+  point.x <= rect.urx &&
+  point.y >= rect.lly &&
+  point.y <= rect.ury
+}
+
+///|
+fn clip_to_bbox(
+  from : @geom.Point,
+  rect : @geom.Rect,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - from.x
+  let dy = target.y - from.y
+  if dx == 0.0 && dy == 0.0 {
+    return from
   }
-  let out = points.copy()
-  let tail_target = out[1]
-  let head_target = out[out.length() - 2]
-  out[0] = clip_to_rect(tail_anchor, tail_size, tail_target)
-  out[out.length() - 1] = clip_to_rect(head_anchor, head_size, head_target)
-  out
+  if point_inside_bbox(target, rect) {
+    return target
+  }
+  let eps = 0.000001
+  let mut best : Double? = None
+  let consider = (t : Double) => {
+    if t <= 0.0 || t > 1.0 + eps {
+      return
+    }
+    let x = from.x + dx * t
+    let y = from.y + dy * t
+    if x + eps < rect.llx || x - eps > rect.urx {
+      return
+    }
+    if y + eps < rect.lly || y - eps > rect.ury {
+      return
+    }
+    match best {
+      Some(value) =>
+        if t < value {
+        best = Some(t)
+      }
+      None => best = Some(t)
+    }
+  }
+  if dx != 0.0 {
+    consider((rect.llx - from.x) / dx)
+    consider((rect.urx - from.x) / dx)
+  }
+  if dy != 0.0 {
+    consider((rect.lly - from.y) / dy)
+    consider((rect.ury - from.y) / dy)
+  }
+  match best {
+    Some(t) => point(from.x + dx * t, from.y + dy * t)
+    None => from
+  }
 }
 
 ///|
@@ -1753,103 +1892,102 @@ fn edge_polyline_points(
     Some(list) => list
     None => []
   }
+  let tail_rank_opt = ranks.get(edge.tail().name())
+  let head_rank_opt = ranks.get(edge.head().name())
   if vnodes.length() > 0 {
-    let tail_rank = match ranks.get(edge.tail().name()) {
-      Some(value) => value
-      None => 0
-    }
-    let head_rank = match ranks.get(edge.head().name()) {
-      Some(value) => value
-      None => 0
-    }
-    let span = head_rank - tail_rank
-    if span != 0 {
-      let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-      let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-      let label_rank = if label_width_pt > 0.0 {
-        (min_rank + max_rank) / 2
-      } else {
-        -1
-      }
-      let y_dir = if head_anchor.y < tail_anchor.y { 1.0 } else { -1.0 }
-      let style_value = match edge.get_attr("style") {
-        Some(value) => value.to_lower()
-        None => ""
-      }
-      let is_dotted = style_value.contains("dotted")
-      let has_explicit_port =
-        port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
-      let same_local_cluster =
-        node_local_cluster_key(edge.tail()) == node_local_cluster_key(edge.head())
-      let vnode_weight =
-        if use_cluster_tuning {
-          if is_dotted {
-            dotted_weight
-          } else if split_label {
-            0.3
-          } else if label_width_pt > 0.0 && !has_explicit_port {
-            if same_local_cluster {
-              1.0
-            } else {
-              0.4
-            }
+    match (tail_rank_opt, head_rank_opt) {
+      (Some(tail_rank), Some(head_rank)) => {
+        let span = head_rank - tail_rank
+        if span != 0 {
+          let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+          let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+          let label_rank = if label_width_pt > 0.0 {
+            (min_rank + max_rank) / 2
           } else {
-            0.0
+            -1
           }
-        } else {
-          1.0
-        }
-      let span_f = Double::from_int(span)
-      let push_point = (name : String) => {
-        match vnode_positions.get(name) {
-          Some(pos) =>
-            match vnode_ranks.get(name) {
-              Some(rank) => {
-                let t_raw = Double::from_int(rank - tail_rank) / span_f
-                let t =
-                  if use_cluster_tuning && !is_dotted && head_anchor.x >= tail_anchor.x {
-                    if split_label && rank == label_rank {
-                      t_raw
-                    } else {
-                      t_raw * t_raw
-                    }
-                  } else {
-                    t_raw
-                  }
-                let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
-                let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
-                if split_label && rank == label_rank {
-                  let split_width = label_width_pt * 1.5
-                  let split_x = x - nodesep_pt * 1.25
-                  points.push({
-                    x: split_x - nodesep_pt,
-                    y: pos.y + nodesep_pt * y_dir,
-                  })
-                  points.push({
-                    x: split_x + split_width * 0.5,
-                    y: pos.y - nodesep_pt * y_dir,
-                  })
+          let y_dir = if head_anchor.y < tail_anchor.y { 1.0 } else { -1.0 }
+          let style_value = match edge.get_attr("style") {
+            Some(value) => value.to_lower()
+            None => ""
+          }
+          let is_dotted = style_value.contains("dotted")
+          let has_explicit_port =
+            port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
+          let same_local_cluster =
+            node_local_cluster_key(edge.tail()) == node_local_cluster_key(edge.head())
+          let vnode_weight =
+            if use_cluster_tuning {
+              if is_dotted {
+                dotted_weight
+              } else if split_label {
+                0.3
+              } else if label_width_pt > 0.0 && !has_explicit_port {
+                if same_local_cluster {
+                  1.0
                 } else {
-                  points.push({ x, y: pos.y })
+                  0.4
                 }
+              } else {
+                0.0
               }
+            } else {
+              1.0
+            }
+          let span_f = Double::from_int(span)
+          let push_point = (name : String) => {
+            match vnode_positions.get(name) {
+              Some(pos) =>
+                match vnode_ranks.get(name) {
+                  Some(rank) => {
+                    let t_raw = Double::from_int(rank - tail_rank) / span_f
+                    let t =
+                      if use_cluster_tuning && !is_dotted && head_anchor.x >= tail_anchor.x {
+                        if split_label && rank == label_rank {
+                          t_raw
+                        } else {
+                          t_raw * t_raw
+                        }
+                      } else {
+                        t_raw
+                      }
+                    let interp_x = tail_anchor.x + (head_anchor.x - tail_anchor.x) * t
+                    let x = pos.x * vnode_weight + interp_x * (1.0 - vnode_weight)
+                    if split_label && rank == label_rank {
+                      let split_width = label_width_pt * 1.5
+                      let split_x = x - nodesep_pt * 1.25
+                      points.push({
+                        x: split_x - nodesep_pt,
+                        y: pos.y + nodesep_pt * y_dir,
+                      })
+                      points.push({
+                        x: split_x + split_width * 0.5,
+                        y: pos.y - nodesep_pt * y_dir,
+                      })
+                    } else {
+                      points.push({ x, y: pos.y })
+                    }
+                  }
+                  None => ()
+                }
               None => ()
             }
-          None => ()
+          }
+          if tail_rank <= head_rank {
+            for name in vnodes {
+              push_point(name)
+            }
+          } else {
+            let mut idx = vnodes.length()
+            while idx > 0 {
+              idx = idx - 1
+              let name = vnodes[idx]
+              push_point(name)
+            }
+          }
         }
       }
-      if tail_rank <= head_rank {
-        for name in vnodes {
-          push_point(name)
-        }
-      } else {
-        let mut idx = vnodes.length()
-        while idx > 0 {
-          idx = idx - 1
-          let name = vnodes[idx]
-          push_point(name)
-        }
-      }
+      _ => ()
     }
   }
   points.push(head_anchor)
@@ -2516,11 +2654,143 @@ fn collect_rank_same_order(
 }
 
 ///|
+fn remove_edge_at(list : Array[Int], idx : Int) -> Unit {
+  let last = list.length() - 1
+  list[idx] = list[last]
+  let _ = list.pop()
+}
+
+///|
+fn acyclic_dfs(
+  idx : Int,
+  node_index : Map[String, Int],
+  out_edges : Array[Array[Int]],
+  edge_is_active : Array[Bool],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  marked : Array[Bool],
+  onstack : Array[Bool],
+) -> Unit {
+  if marked[idx] {
+    return ()
+  }
+  marked[idx] = true
+  onstack[idx] = true
+  let mut i = 0
+  while i < out_edges[idx].length() {
+    let edge_idx = out_edges[idx][i]
+    if !edge_is_active[edge_idx] {
+      i = i + 1
+      continue
+    }
+    let head_name = edge_head[edge_idx]
+    let head_idx = match node_index.get(head_name) {
+      Some(value) => value
+      None => {
+        i = i + 1
+        continue
+      }
+    }
+    if onstack[head_idx] {
+      // Reverse the edge and update adjacency to match Graphviz's acyclic pass.
+      let old_tail = edge_tail[edge_idx]
+      edge_tail[edge_idx] = edge_head[edge_idx]
+      edge_head[edge_idx] = old_tail
+      remove_edge_at(out_edges[idx], i)
+      out_edges[head_idx].push(edge_idx)
+      continue
+    }
+    if !marked[head_idx] {
+      acyclic_dfs(
+        head_idx,
+        node_index,
+        out_edges,
+        edge_is_active,
+        edge_tail,
+        edge_head,
+        marked,
+        onstack,
+      )
+    }
+    i = i + 1
+  }
+  onstack[idx] = false
+}
+
+///|
+fn acyclic_edge_directions(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+) -> (Array[String], Array[String]) {
+  let node_index : Map[String, Int] = Map::new()
+  for i in 0..<nodes.length() {
+    node_index[nodes[i].name()] = i
+  }
+  let edge_tail : Array[String] = []
+  let edge_head : Array[String] = []
+  let edge_is_active : Array[Bool] = []
+  let out_edges : Array[Array[Int]] = []
+  for _ in 0..<nodes.length() {
+    out_edges.push([])
+  }
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    edge_tail.push(tail)
+    edge_head.push(head)
+    let active = edge_is_constraint(edge)
+    edge_is_active.push(active)
+    if active {
+      match node_index.get(tail) {
+        Some(idx) => out_edges[idx].push(edge_tail.length() - 1)
+        None => ()
+      }
+    }
+  }
+  let marked : Array[Bool] = []
+  let onstack : Array[Bool] = []
+  for _ in 0..<nodes.length() {
+    marked.push(false)
+    onstack.push(false)
+  }
+  for i in 0..<nodes.length() {
+    if !marked[i] {
+      acyclic_dfs(
+        i,
+        node_index,
+        out_edges,
+        edge_is_active,
+        edge_tail,
+        edge_head,
+        marked,
+        onstack,
+      )
+    }
+  }
+  (edge_tail, edge_head)
+}
+
+///|
+fn edge_endpoints_from_edges(
+  edges : Array[@cgraph.Edge],
+) -> (Array[String], Array[String]) {
+  let edge_tail : Array[String] = []
+  let edge_head : Array[String] = []
+  for edge in edges {
+    edge_tail.push(edge.tail().name())
+    edge_head.push(edge.head().name())
+  }
+  (edge_tail, edge_head)
+}
+
+///|
 fn compute_ranks_directed(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
+  edge_tail : Array[String],
+  edge_head : Array[String],
 ) -> Map[String, Int] {
   let graph = new_graph()
   let index : Map[String, Int] = Map::new()
@@ -2528,12 +2798,13 @@ fn compute_ranks_directed(
     let name = node.name()
     index[name] = add_node(graph, name)
   }
-  for edge in edges {
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
     if !edge_is_constraint(edge) {
       continue
     }
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
     let tail_idx = match index.get(tail) {
       Some(value) => value
       None => 0
@@ -2587,6 +2858,8 @@ fn compute_ranks_directed(
 fn build_edge_index(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
   let parents : Map[String, Array[String]] = Map::new()
   let children : Map[String, Array[String]] = Map::new()
@@ -2595,9 +2868,9 @@ fn build_edge_index(
     parents[name] = []
     children[name] = []
   }
-  for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+  for edge_idx in 0..<edges.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
     match parents.get(head) {
       Some(list) => list.push(tail)
       None => parents[head] = [tail]
@@ -3110,61 +3383,6 @@ fn node_right_pt(name : String, sizes : Map[String, NodeSize]) -> Double {
 }
 
 ///|
-fn normalize_x_positions(
-  nodes : Array[@cgraph.Node],
-  extra_names : Array[String],
-  x_positions : Map[String, Double],
-  sizes : Map[String, NodeSize],
-) -> Unit {
-  let mut min_x = 0.0
-  let mut seen = false
-  for node in nodes {
-    let name = node.name()
-    let left_width = node_left_pt(name, sizes)
-    let pos = match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    let left = pos - left_width
-    if !seen {
-      min_x = left
-      seen = true
-    } else if left < min_x {
-      min_x = left
-    }
-  }
-  for name in extra_names {
-    let left_width = node_left_pt(name, sizes)
-    let pos = match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    let left = pos - left_width
-    if !seen {
-      min_x = left
-      seen = true
-    } else if left < min_x {
-      min_x = left
-    }
-  }
-  if seen && min_x != 0.0 {
-    for node in nodes {
-      let name = node.name()
-      match x_positions.get(name) {
-        Some(value) => x_positions[name] = value - min_x
-        None => ()
-      }
-    }
-    for name in extra_names {
-      match x_positions.get(name) {
-        Some(value) => x_positions[name] = value - min_x
-        None => ()
-      }
-    }
-  }
-}
-
-///|
 fn adjust_intercluster_alignment(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -3473,7 +3691,7 @@ fn build_edge_vnodes(
         if rank == label_rank && label_width > 0.0 {
           (nodesep_pt, label_width)
         } else {
-          let half = nodesep_pt / 2.0
+          let half = nodesep_pt / 2.0 + 1.0
           (half, half)
         }
       let name = unique_virtual_node_name(
@@ -3713,9 +3931,6 @@ fn build_virtual_slack_edges(
 }
 
 ///|
-
-
-///|
 fn merge_sizes_with_vnodes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
@@ -3878,15 +4093,18 @@ fn count_crossings(
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
 ) -> Int {
   let order = build_order_index(groups)
   let edge_groups : Map[String, Array[(Int, Int)]] = Map::new()
-  for edge in edges {
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
     if !edge_is_constraint(edge) {
       continue
     }
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
@@ -4083,6 +4301,8 @@ fn reorder_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   cluster_keys : Map[String, String],
@@ -4113,25 +4333,26 @@ fn reorder_rank_groups(
     rank_sizes[rank] = names.length()
   }
   let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge in edges {
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
     let ported = port_is_explicit(edge.tail_port()) ||
       port_is_explicit(edge.head_port())
     if ported {
-      port_edge_nodes[edge.tail().name()] = true
-      port_edge_nodes[edge.head().name()] = true
+      port_edge_nodes[edge_tail[edge_idx]] = true
+      port_edge_nodes[edge_head[edge_idx]] = true
     }
   }
   let edge_pair_order : Map[String, Int] = Map::new()
   let mut edge_idx = 0
-  for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+  for _edge in edges {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
     edge_pair_order["\{tail}|\{head}"] = edge_idx
     edge_idx = edge_idx + 1
   }
   let node_ranks = build_node_ranks(ordered)
   let mut best_ordered = clone_rank_groups(ordered)
-  let mut best_cross = count_crossings(ordered, node_ranks, edges)
+  let mut best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   let mut x_positions = compute_rank_positions(
     rank_keys, ordered, sizes, nodesep_pt, has_edge_labels,
   )
@@ -4193,7 +4414,7 @@ fn reorder_rank_groups(
           )
         }
       }
-      let down_cross = count_crossings(ordered, node_ranks, edges)
+      let down_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
       if down_cross <= best_cross {
         best_cross = down_cross
         best_ordered = clone_rank_groups(ordered)
@@ -4247,7 +4468,7 @@ fn reorder_rank_groups(
           )
         }
       }
-      let up_cross = count_crossings(ordered, node_ranks, edges)
+      let up_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
       if up_cross < best_cross {
         best_cross = up_cross
         best_ordered = clone_rank_groups(ordered)
@@ -4556,6 +4777,16 @@ fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
     } else {
       other.ury
     },
+  }
+}
+
+///|
+fn round_bbox(bbox : @geom.Rect) -> @geom.Rect {
+  {
+    llx: bbox.llx.round(),
+    lly: bbox.lly,
+    urx: bbox.urx.round(),
+    ury: bbox.ury,
   }
 }
 
@@ -5620,6 +5851,174 @@ fn expand_bbox_for_label(
 }
 
 ///|
+fn compute_nodes_bbox(
+  graph : @cgraph.Graph,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+) -> @geom.Rect? {
+  let mut bbox_set = false
+  let mut min_x = 0.0
+  let mut max_x = 0.0
+  let mut min_y = 0.0
+  let mut max_y = 0.0
+  for node in graph.nodes() {
+    let name = node.name()
+    let pos = match positions.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let size = match sizes.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    let half_w = size.width_pt / 2.0
+    let half_h = size.height_pt / 2.0
+    let left = pos.x - half_w
+    let right = pos.x + half_w
+    let bottom = pos.y - half_h
+    let top = pos.y + half_h
+    if !bbox_set {
+      min_x = left
+      max_x = right
+      min_y = bottom
+      max_y = top
+      bbox_set = true
+    } else {
+      if left < min_x {
+        min_x = left
+      }
+      if right > max_x {
+        max_x = right
+      }
+      if bottom < min_y {
+        min_y = bottom
+      }
+      if top > max_y {
+        max_y = top
+      }
+    }
+  }
+  if bbox_set {
+    Some({ llx: min_x, lly: min_y, urx: max_x, ury: max_y })
+  } else {
+    None
+  }
+}
+
+///|
+fn collect_cluster_names(
+  graph : @cgraph.Graph,
+  out : Map[String, Bool],
+) -> Unit {
+  if is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => out[name] = true
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_names(child, out)
+  }
+}
+
+///|
+fn shift_graph_positions(
+  graph : @cgraph.Graph,
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_clusters : Map[String, String],
+  dx : Double,
+  dy : Double,
+) -> Unit {
+  let members : Map[String, Bool] = Map::new()
+  collect_graph_nodes(graph, members)
+  for name, _ in members {
+    match positions.get(name) {
+      Some(pos) => positions[name] = shift_point(pos, dx, dy)
+      None => ()
+    }
+  }
+  let clusters : Map[String, Bool] = Map::new()
+  collect_cluster_names(graph, clusters)
+  for vnode, key in vnode_clusters {
+    if clusters.get(key) is Some(_) {
+      match vnode_positions.get(vnode) {
+        Some(pos) => vnode_positions[vnode] = shift_point(pos, dx, dy)
+        None => ()
+      }
+    }
+  }
+}
+
+///|
+fn adjust_cluster_positions_for_rounding(
+  graph : @cgraph.Graph,
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_clusters : Map[String, String],
+  sizes : Map[String, NodeSize],
+) -> @geom.Rect? {
+  let mut bbox = compute_nodes_bbox(graph, positions, sizes)
+  for child in graph.subgraphs() {
+    match adjust_cluster_positions_for_rounding(
+      child,
+      positions,
+      vnode_positions,
+      vnode_clusters,
+      sizes,
+    ) {
+      Some(child_bbox) =>
+        bbox = Some(match bbox {
+          Some(current) => merge_bbox(current, child_bbox)
+          None => child_bbox
+        })
+      None => ()
+    }
+  }
+  let mut current = match bbox {
+    Some(value) => value
+    None => return None
+  }
+  if is_cluster_graph(graph) {
+    let pad = cluster_margin_pt(graph)
+    current = {
+      llx: current.llx - pad,
+      lly: current.lly - pad,
+      urx: current.urx + pad,
+      ury: current.ury + pad,
+    }
+    match graph_label_metrics(graph) {
+      Some((width_pt, height_pt)) => {
+        let loc = graph_label_loc(graph)
+        current = expand_bbox_for_label(current, width_pt, height_pt, loc)
+      }
+      None => ()
+    }
+    let rounded = round_bbox(current)
+    let center_shift = (rounded.llx + rounded.urx) / 2.0 -
+      (current.llx + current.urx) / 2.0
+    if center_shift != 0.0 {
+      shift_graph_positions(
+        graph,
+        positions,
+        vnode_positions,
+        vnode_clusters,
+        center_shift,
+        0.0,
+      )
+      current = {
+        llx: current.llx + center_shift,
+        lly: current.lly,
+        urx: current.urx + center_shift,
+        ury: current.ury,
+      }
+    }
+    return Some(round_bbox(current))
+  }
+  Some(current)
+}
+
+///|
 fn layout_subgraphs(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
@@ -5675,6 +6074,7 @@ fn layout_subgraphs(
         }
         None => ()
       }
+      bbox = round_bbox(bbox)
     }
     match label_info {
       Some((width_pt, height_pt, loc, just)) =>
@@ -5691,6 +6091,24 @@ fn layout_subgraphs(
     })
   }
   result
+}
+
+///|
+fn collect_cluster_bboxes(
+  subgraphs : Array[DotLayoutGraph],
+  out : Map[String, @geom.Rect],
+) -> Unit {
+  for layout in subgraphs {
+    if is_cluster_graph(layout.graph) {
+      match layout.graph.name() {
+        Some(name) => out[name] = layout.bbox
+        None => ()
+      }
+    }
+    if layout.subgraphs.length() > 0 {
+      collect_cluster_bboxes(layout.subgraphs, out)
+    }
+  }
 }
 
 ///|
@@ -5756,6 +6174,17 @@ pub fn layout_dot(
   let _ = splines
   let nodes = ordered_nodes(graph)
   let edges = graph.edges()
+  let mut has_dotted_edges = false
+  for edge in edges {
+    match edge.get_attr("style") {
+      Some(value) =>
+        if value.to_lower().contains("dotted") {
+          has_dotted_edges = true
+          break
+        }
+      None => ()
+    }
+  }
   let has_edge_labels = graph_has_edge_labels(edges)
   let node_order : Map[String, Int] = Map::new()
   for i in 0..<nodes.length() {
@@ -5849,15 +6278,28 @@ pub fn layout_dot(
         update_order(tail_name, head_name, edge.head_port())
       }
     }
-    for name, entry in order_sum {
-      let (sum, count) = entry
-      if count > 0 {
-      port_order_positions[name] = sum / count.to_double()
-    }
+  for name, entry in order_sum {
+    let (sum, count) = entry
+    if count > 0 {
+    port_order_positions[name] = sum / count.to_double()
   }
+}
+}
+  let (edge_tail, edge_head) =
+    if graph.kind() == @cgraph.GraphKind::Directed {
+    acyclic_edge_directions(nodes, edges)
+  } else {
+    edge_endpoints_from_edges(edges)
   }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
-    compute_ranks_directed(graph, nodes, edges, has_edge_labels)
+    compute_ranks_directed(
+      graph,
+      nodes,
+      edges,
+      has_edge_labels,
+      edge_tail,
+      edge_head,
+    )
   } else {
     let base : Map[String, Int] = Map::new()
     for node in nodes {
@@ -6020,9 +6462,17 @@ pub fn layout_dot(
   let ordered_groups = if ordering {
     groups
   } else {
-    let (parents, children) = build_edge_index(nodes, edges)
+    let (parents, children) = build_edge_index(nodes, edges, edge_tail, edge_head)
     reorder_rank_groups(
-      rank_keys, groups, edges, parents, children, cluster_keys, rank_same_groups,
+      rank_keys,
+      groups,
+      edges,
+      edge_tail,
+      edge_head,
+      parents,
+      children,
+      cluster_keys,
+      rank_same_groups,
       rank_same_order,
       edge_order,
       node_order,
@@ -6095,22 +6545,24 @@ pub fn layout_dot(
     vnode_info.edge_vnodes,
     virtual_slack_edges,
   )
-  adjust_intercluster_alignment(
-    nodes,
-    edges,
-    ranks,
-    x_positions,
-    cluster_keys,
-    intercluster_keys,
-    nodesep_pt,
-    has_edge_labels,
-  )
+  if has_clusters && has_dotted_edges {
+    adjust_intercluster_alignment(
+      nodes,
+      edges,
+      ranks,
+      x_positions,
+      cluster_keys,
+      intercluster_keys,
+      nodesep_pt,
+      has_edge_labels,
+    )
+  }
   let vnode_names : Array[String] = []
   for pair in vnode_extra_nodes {
     let (name, _rank) = pair
     vnode_names.push(name)
   }
-  normalize_x_positions(nodes, vnode_names, x_positions, x_sizes)
+  // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions : Map[String, @geom.Point] = Map::new()
   for name, rank in vnode_info.vnode_ranks {
     let pos_x = match x_positions.get(name) {
@@ -6136,6 +6588,15 @@ pub fn layout_dot(
     }
     positions[name] = { x: pos_x, y: pos_y }
   }
+  if has_clusters {
+    let _ = adjust_cluster_positions_for_rounding(
+      graph,
+      positions,
+      vnode_positions,
+      vnode_info.vnode_clusters,
+      sizes,
+    )
+  }
   let nodes_out : Array[DotLayoutNode] = []
   for node in nodes {
     let name = node.name()
@@ -6156,6 +6617,7 @@ pub fn layout_dot(
     })
   }
   let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
+  let label_ports_raw : Map[String, Map[String, RecordPort]] = Map::new()
   for node_layout in nodes_out {
     let name = node_layout.node.name()
     let final_size = match output_sizes.get(name) {
@@ -6169,6 +6631,7 @@ pub fn layout_dot(
         final_size,
         record_orientation,
       )
+      label_ports_raw[name] = raw_ports
       let ports =
         layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
       label_ports_map[name] = ports
@@ -6180,6 +6643,7 @@ pub fn layout_dot(
             { x: 0.0, y: 0.0 },
             final_size,
           )
+          label_ports_raw[name] = raw_ports
           let ports =
             layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
           label_ports_map[name] = ports
@@ -6188,16 +6652,10 @@ pub fn layout_dot(
       }
     }
   }
-  let mut has_dotted_edges = false
-  for edge in edges {
-    match edge.get_attr("style") {
-      Some(value) =>
-        if value.to_lower().contains("dotted") {
-          has_dotted_edges = true
-          break
-        }
-      None => ()
-    }
+  let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
+  if graph_has_cluster(graph) {
+    let cluster_layouts = layout_subgraphs(graph, nodes_out, [])
+    collect_cluster_bboxes(cluster_layouts, cluster_bboxes)
   }
   let label_edge_counts : Map[String, Int] = Map::new()
   for edge in edges {
@@ -6250,46 +6708,20 @@ pub fn layout_dot(
         Some(value) => value
         None => node_size(edge.head(), record_orientation)
       }
-      let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
+      let (tail_anchor, _) = port_geometry(
         tail_name,
         edge.tail_port(),
         label_ports_map,
         tail_pos,
         tail_size,
       )
-      let (raw_head_anchor, raw_head_anchor_size) = port_geometry(
+      let (head_anchor, _) = port_geometry(
         head_name,
         edge.head_port(),
         label_ports_map,
         head_pos,
         head_size,
       )
-      let mut tail_anchor = raw_tail_anchor
-      let mut tail_anchor_size = raw_tail_anchor_size
-      let mut head_anchor = raw_head_anchor
-      let mut head_anchor_size = raw_head_anchor_size
-      if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
-        let (anchor, size) = record_port_boundary_anchor(
-          tail_anchor,
-          tail_anchor_size,
-          tail_pos,
-          tail_size,
-          head_anchor,
-        )
-        tail_anchor = anchor
-        tail_anchor_size = size
-      }
-      if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
-        let (anchor, size) = record_port_boundary_anchor(
-          head_anchor,
-          head_anchor_size,
-          head_pos,
-          head_size,
-          tail_anchor,
-        )
-        head_anchor = anchor
-        head_anchor_size = size
-      }
       let dx = head_anchor.x - tail_anchor.x
       let dy = head_anchor.y - tail_anchor.y
       let dist = Double::sqrt(dx * dx + dy * dy)
@@ -6350,34 +6782,218 @@ pub fn layout_dot(
       head_pos,
       head_size,
     )
-    let mut tail_anchor = raw_tail_anchor
-    let mut tail_anchor_size = raw_tail_anchor_size
-    let mut head_anchor = raw_head_anchor
-    let mut head_anchor_size = raw_head_anchor_size
-    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
-      let (anchor, size) = record_port_boundary_anchor(
-        tail_anchor,
-        tail_anchor_size,
-        tail_pos,
-        tail_size,
-        head_anchor,
-      )
-      tail_anchor = anchor
-      tail_anchor_size = size
+    let tail_port_rect = port_rect_from_geometry(
+      edge.tail_port(),
+      raw_tail_anchor,
+      raw_tail_anchor_size,
+      tail_size,
+    )
+    let head_port_rect = port_rect_from_geometry(
+      edge.head_port(),
+      raw_head_anchor,
+      raw_head_anchor_size,
+      head_size,
+    )
+    let tail_port_sides = match tail_port_rect {
+      Some(rect) => port_side_count(rect, tail_pos, tail_size)
+      None => 0
     }
-    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
-      let (anchor, size) = record_port_boundary_anchor(
-        head_anchor,
-        head_anchor_size,
-        head_pos,
-        head_size,
-        tail_anchor,
-      )
-      head_anchor = anchor
-      head_anchor_size = size
+    let head_port_sides = match head_port_rect {
+      Some(rect) => port_side_count(rect, head_pos, head_size)
+      None => 0
     }
-    let mut tail_clip = clip_to_rect(tail_anchor, tail_anchor_size, head_anchor)
-    let mut head_clip = clip_to_rect(head_anchor, head_anchor_size, tail_anchor)
+    let force_segmented = tail_port_sides >= 3 || head_port_sides >= 3
+    let tail_anchor_size = raw_tail_anchor_size
+    let head_anchor_size = raw_head_anchor_size
+    let tail_cluster_name = match edge.get_attr("ltail") {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster_name = match edge.get_attr("lhead") {
+      Some(value) => value
+      None => ""
+    }
+    let tail_rank = match ranks.get(tail_name) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match ranks.get(head_name) {
+      Some(value) => value
+      None => 0
+    }
+    let is_flat_edge = tail_rank == head_rank
+    let has_cluster = tail_cluster_name != "" || head_cluster_name != ""
+    let allow_offset =
+      !is_flat_edge &&
+      !has_cluster &&
+      !port_is_explicit(edge.tail_port()) &&
+      !port_is_explicit(edge.head_port())
+    let (tail_offset, head_offset) = if allow_offset {
+      (
+        layout_port_offset(point(0.0, -1.0), rankdir),
+        layout_port_offset(point(0.0, 1.0), rankdir),
+      )
+    } else {
+      (point(0.0, 0.0), point(0.0, 0.0))
+    }
+    let tail_cluster_bbox : @geom.Rect? =
+      if tail_cluster_name == "" {
+      None
+    } else {
+      cluster_bboxes.get(tail_cluster_name)
+    }
+    let head_cluster_bbox : @geom.Rect? =
+      if head_cluster_name == "" {
+      None
+    } else {
+      cluster_bboxes.get(head_cluster_name)
+    }
+    let tail_side_anchor =
+      match (edge.tail_port(), label_ports_raw.get(tail_name)) {
+        (Some(port), Some(raw_ports)) =>
+          match port.compass {
+            Some(_) => (None : @geom.Point?)
+            None =>
+              match port.name {
+                Some(port_name) =>
+                  match raw_ports.get(port_name) {
+                    Some(raw_port) =>
+                      port_side_anchor_from_raw(
+                        raw_port,
+                        match output_sizes.get(tail_name) {
+                          Some(value) => value
+                          None => tail_size
+                        },
+                        tail_pos,
+                        head_pos,
+                        rankdir,
+                      )
+                    None => None
+                  }
+                None => None
+              }
+          }
+        _ => None
+      }
+    let head_side_anchor =
+      match (edge.head_port(), label_ports_raw.get(head_name)) {
+        (Some(port), Some(raw_ports)) =>
+          match port.compass {
+            Some(_) => (None : @geom.Point?)
+            None =>
+              match port.name {
+                Some(port_name) =>
+                  match raw_ports.get(port_name) {
+                    Some(raw_port) =>
+                      port_side_anchor_from_raw(
+                        raw_port,
+                        match output_sizes.get(head_name) {
+                          Some(value) => value
+                          None => head_size
+                        },
+                        head_pos,
+                        tail_pos,
+                        rankdir,
+                      )
+                    None => None
+                  }
+                None => None
+              }
+          }
+        _ => None
+      }
+    let tail_anchor_base = match tail_side_anchor {
+      Some(pos) => pos
+      None => raw_tail_anchor
+    }
+    let head_anchor_base = match head_side_anchor {
+      Some(pos) => pos
+      None => raw_head_anchor
+    }
+    let tail_anchor = point_add(tail_anchor_base, tail_offset)
+    let head_anchor = point_add(head_anchor_base, head_offset)
+    let tail_clip_center =
+      if is_record_shape(edge.tail()) && port_is_explicit(edge.tail_port()) {
+      tail_pos
+    } else {
+      raw_tail_anchor
+    }
+    let tail_clip_size =
+      if is_record_shape(edge.tail()) && port_is_explicit(edge.tail_port()) {
+      tail_size
+    } else {
+      tail_anchor_size
+    }
+    let head_clip_center =
+      if is_record_shape(edge.head()) && port_is_explicit(edge.head_port()) {
+      head_pos
+    } else {
+      raw_head_anchor
+    }
+    let head_clip_size =
+      if is_record_shape(edge.head()) && port_is_explicit(edge.head_port()) {
+      head_size
+    } else {
+      head_anchor_size
+    }
+    let tail_target = match tail_port_rect {
+      Some(_) => head_pos
+      None => head_anchor
+    }
+    let head_target = match head_port_rect {
+      Some(_) => tail_pos
+      None => tail_anchor
+    }
+    let tail_slope = endpoint_slope_for_anchor(
+      edge.tail_port(),
+      tail_anchor,
+      tail_pos,
+      tail_size,
+      tail_target,
+      rankdir,
+      true,
+      tail_port_rect,
+    )
+    let head_slope = endpoint_slope_for_anchor(
+      edge.head_port(),
+      head_anchor,
+      head_pos,
+      head_size,
+      head_target,
+      rankdir,
+      false,
+      head_port_rect,
+    )
+    let tail_clip_target =
+      if port_is_explicit(edge.tail_port()) &&
+        (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
+        point_add(tail_clip_center, tail_slope)
+      } else {
+        head_anchor
+      }
+    let head_clip_target =
+      if port_is_explicit(edge.head_port()) &&
+        (head_slope.x != 0.0 || head_slope.y != 0.0) {
+        point_add(head_clip_center, head_slope)
+      } else {
+        tail_anchor
+      }
+    let tail_clip = match tail_cluster_bbox {
+      Some(rect) => clip_to_bbox(tail_anchor, rect, head_anchor)
+      None =>
+        match tail_side_anchor {
+          Some(pos) => pos
+          None => clip_to_rect(tail_clip_center, tail_clip_size, tail_clip_target)
+        }
+    }
+    let head_clip = match head_cluster_bbox {
+      Some(rect) => clip_to_bbox(head_anchor, rect, tail_anchor)
+      None =>
+        match head_side_anchor {
+          Some(pos) => pos
+          None => clip_to_rect(head_clip_center, head_clip_size, head_clip_target)
+        }
+    }
     let dir = edge_dir_for(edge, graph.kind())
     let include_tail = match dir {
       EdgeDir::Back | EdgeDir::Both => true
@@ -6387,15 +7003,58 @@ pub fn layout_dot(
       EdgeDir::Forward | EdgeDir::Both => true
       _ => false
     }
+    let arrow_len_override : Double? =
+      if include_tail || include_head {
+      if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
+        let base = arrow_length_for_edge(edge)
+        let span = point_dist(tail_clip, head_clip)
+        let max_len = span * 0.25
+        if max_len > 0.0 && max_len < base {
+          Some(max_len)
+        } else {
+          None
+        }
+      } else {
+        None
+      }
+    } else {
+      None
+    }
     let mut label_pad_boost = 0.0
     let spline = match splines {
       SplinesMode::Polyline =>
         edge_spline_for_polyline(
-          edge, tail_clip, head_clip, rankdir, false, include_tail, include_head,
+          edge,
+          tail_clip_center,
+          head_clip_center,
+          tail_clip_size,
+          head_clip_size,
+          tail_clip,
+          head_clip,
+          rankdir,
+          false,
+          include_tail,
+          include_head,
+          arrow_len_override=arrow_len_override,
+          tail_cluster_bbox=tail_cluster_bbox,
+          head_cluster_bbox=head_cluster_bbox,
         )
       SplinesMode::Ortho =>
         edge_spline_for_polyline(
-          edge, tail_clip, head_clip, rankdir, true, include_tail, include_head,
+          edge,
+          tail_clip_center,
+          head_clip_center,
+          tail_clip_size,
+          head_clip_size,
+          tail_clip,
+          head_clip,
+          rankdir,
+          true,
+          include_tail,
+          include_head,
+          arrow_len_override=arrow_len_override,
+          tail_cluster_bbox=tail_cluster_bbox,
+          head_cluster_bbox=head_cluster_bbox,
         )
       _ => {
         let label_width_pt = edge_mid_label_width_pt(edge)
@@ -6444,6 +7103,22 @@ pub fn layout_dot(
             head_anchor_size,
             nodesep_pt,
           )
+        }
+        let has_explicit_port =
+          port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
+        let has_side_anchor =
+          tail_side_anchor is Some(_) || head_side_anchor is Some(_)
+        if has_explicit_port && has_side_anchor && points.length() <= 2 {
+          let offset = max_double(4.0, nodesep_pt * 0.5)
+          let kinked : Array[@geom.Point] = [tail_anchor]
+          if tail_slope.x != 0.0 || tail_slope.y != 0.0 {
+            kinked.push(point_add(tail_anchor, point_scale(tail_slope, offset)))
+          }
+          if head_slope.x != 0.0 || head_slope.y != 0.0 {
+            kinked.push(point_add(head_anchor, point_scale(head_slope, -offset)))
+          }
+          kinked.push(head_anchor)
+          points = kinked
         }
         let has_vnodes = match vnode_info.edge_vnodes.get(edge_key(edge)) {
           Some(list) => list.length() > 0
@@ -6503,20 +7178,16 @@ pub fn layout_dot(
         }
         let (curve_offset, curve_skew) = curve_offset_for()
         if points.length() > 2 {
-          let clipped = clip_polyline_ends(
-            points, tail_anchor, head_anchor, tail_anchor_size, head_anchor_size,
-          )
+          let clipped = points
           let simplify_tol = nodesep_pt * 0.8
           let tail_label_edges = match label_edge_counts.get(tail_name) {
             Some(value) => value > 1
             None => false
           }
-          let has_explicit_port =
-            port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
-          let keep_label_kink =
-            label_width_pt > 0.0 &&
-            (has_explicit_port ||
-              (same_outer_cluster &&
+        let keep_label_kink =
+          label_width_pt > 0.0 &&
+          (has_explicit_port ||
+            (same_outer_cluster &&
                 (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
           let simplified =
             if enable_complex_tuning && has_vnodes && !split_label && !keep_label_kink {
@@ -6530,23 +7201,56 @@ pub fn layout_dot(
           } else {
             simplified
           }
-          tail_clip = adjusted[0]
-          head_clip = adjusted[adjusted.length() - 1]
           if adjusted.length() <= 2 {
             edge_spline_for_line(
               edge,
-              tail_anchor,
-              head_anchor,
-              tail_anchor_size,
-              head_anchor_size,
+              adjusted[0],
+              adjusted[adjusted.length() - 1],
+              tail_clip_center,
+              head_clip_center,
+              tail_clip_size,
+              head_clip_size,
+              tail_slope,
+              head_slope,
               include_tail,
               include_head,
               rankdir,
               curve_offset,
               curve_skew,
+              arrow_len_override=arrow_len_override,
+              tail_cluster_bbox=tail_cluster_bbox,
+              head_cluster_bbox=head_cluster_bbox,
             )
           } else {
-            let spline = edge_spline_for_points(edge, adjusted, include_tail, include_head)
+            let tail_slope_for =
+              if port_is_explicit(edge.tail_port()) {
+                tail_slope
+              } else {
+                point(0.0, 0.0)
+              }
+            let head_slope_for =
+              if port_is_explicit(edge.head_port()) {
+                head_slope
+              } else {
+                point(0.0, 0.0)
+              }
+            let spline =
+              edge_spline_for_points(
+                edge,
+                adjusted,
+                tail_clip_center,
+                head_clip_center,
+                tail_clip_size,
+                head_clip_size,
+                tail_slope_for,
+                head_slope_for,
+                force_segmented,
+                include_tail,
+                include_head,
+                arrow_len_override=arrow_len_override,
+                tail_cluster_bbox=tail_cluster_bbox,
+                head_cluster_bbox=head_cluster_bbox,
+              )
             if is_dotted && !same_outer_cluster && spline.points.length() > 1 {
               let tuned = spline.points.copy()
               let tail_bias = 0.7
@@ -6564,13 +7268,20 @@ pub fn layout_dot(
             edge,
             tail_anchor,
             head_anchor,
-            tail_anchor_size,
-            head_anchor_size,
+            tail_clip_center,
+            head_clip_center,
+            tail_clip_size,
+            head_clip_size,
+            tail_slope,
+            head_slope,
             include_tail,
             include_head,
             rankdir,
             curve_offset,
             curve_skew,
+            arrow_len_override=arrow_len_override,
+            tail_cluster_bbox=tail_cluster_bbox,
+            head_cluster_bbox=head_cluster_bbox,
           )
         }
       }
@@ -6650,14 +7361,11 @@ pub fn layout_dot(
   } else {
     bbox
   }
-  if graph.is_root() && graph_has_cluster(graph) {
-    let pad = cluster_margin_pt(graph)
-    final_bbox = {
-      llx: final_bbox.llx,
-      lly: final_bbox.lly - pad,
-      urx: final_bbox.urx,
-      ury: final_bbox.ury + pad,
-    }
+  let root_cluster_pad =
+    if graph.is_root() && graph_has_cluster(graph) {
+    cluster_margin_pt(graph)
+  } else {
+    0.0
   }
   if graph.is_root() && (rankdir == RankDir::TB || rankdir == RankDir::BT) {
     if port_pad_below > 0.0 || port_pad_above > 0.0 {
@@ -6684,11 +7392,7 @@ pub fn layout_dot(
     }
   }
   if graph.is_root() {
-    let margin_x = if graph_has_cluster(graph) {
-      graph_margin_x_pt(graph)
-    } else {
-      0.0
-    }
+    let margin_x = graph_margin_x_pt(graph)
     if margin_x > 0.0 {
       final_bbox = {
         llx: final_bbox.llx - margin_x,
@@ -6716,10 +7420,37 @@ pub fn layout_dot(
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly
-    if dx != 0.0 || dy != 0.0 {
+    let shifted =
+      if dx != 0.0 || dy != 0.0 {
       shift_layout_graph(adjusted, dx, dy)
     } else {
       adjusted
+    }
+    if root_cluster_pad > 0.0 {
+      let padded_bbox : @geom.Rect = {
+        llx: shifted.bbox.llx,
+        lly: shifted.bbox.lly,
+        urx: shifted.bbox.urx,
+        ury: shifted.bbox.ury + root_cluster_pad,
+      }
+      let label_pos = match graph_label_metrics(graph) {
+        Some((width_pt, height_pt)) => {
+          let loc = graph_label_loc(graph)
+          let just = graph_label_just(graph)
+          Some(graph_label_pos(padded_bbox, width_pt, height_pt, loc, just))
+        }
+        None => shifted.label_pos
+      }
+      {
+        graph: shifted.graph,
+        bbox: padded_bbox,
+        label_pos,
+        nodes: shifted.nodes,
+        edges: shifted.edges,
+        subgraphs: shifted.subgraphs,
+      }
+    } else {
+      shifted
     }
   } else {
     adjusted

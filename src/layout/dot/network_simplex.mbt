@@ -11,7 +11,7 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const CLUSTER_LABEL_PAD_PT : Double = 8.0
 
 ///|
-const CLUSTER_COMPACT_WEIGHT : Int = 128
+const CLUSTER_COMPACT_WEIGHT : Int = 1
 
 
 ///|
@@ -1368,7 +1368,7 @@ fn nodesep_minlen(
   if minlen <= 0.0 {
     0
   } else {
-    minlen.ceil().to_int()
+    round_int(minlen)
   }
 }
 
@@ -1724,11 +1724,6 @@ fn build_cluster_constraints(
           while j >= 0 {
             let outside = names[j]
             if related.get(outside) is None {
-              // Skip nodes already contained in other clusters; cluster separation already adds bounds.
-              if node_in_any_cluster.get(outside) is Some(_) {
-                j = j - 1
-                continue
-              }
               let minlen = round_int(
                 node_right_pt(outside, sizes) + margin,
               )
@@ -1748,11 +1743,6 @@ fn build_cluster_constraints(
           while j < names.length() {
             let outside = names[j]
             if related.get(outside) is None {
-              // Skip nodes already contained in other clusters; cluster separation already adds bounds.
-              if node_in_any_cluster.get(outside) is Some(_) {
-                j = j + 1
-                continue
-              }
               let minlen = round_int(
                 node_left_pt(outside, sizes) + margin,
               )

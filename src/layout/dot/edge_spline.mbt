@@ -11,6 +11,15 @@ const ARR_MOD_LEFT : Int = 1 << 6
 const ARR_MOD_RIGHT : Int = 1 << 7
 
 ///|
+const BEZIER_CLIP_EPS : Double = 0.5
+
+///|
+const ARROW_CLIP_EPS : Double = 0.5
+
+///|
+const ARROW_CLIP_EPS_CLUSTER : Double = 0.005
+
+///|
 priv struct Triangle {
   p0 : @geom.Point
   p1 : @geom.Point
@@ -45,26 +54,12 @@ fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
+///|
 fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   point_add(a, point_scale(point_sub(b, a), t))
 }
 
 ///|
-fn clip_spline_to_rect(
-  points : Array[@geom.Point],
-  center : @geom.Point,
-  half_w : Double,
-  half_h : Double,
-  left_inside : Bool,
-) -> Array[@geom.Point] {
-  let inside = (p : @geom.Point) => {
-    let dx = p.x - center.x
-    let dy = p.y - center.y
-    Double::abs(dx) <= half_w && Double::abs(dy) <= half_h
-  }
-  bezier_clip(points, inside, left_inside)
-}
-
 ///|
 fn bezier_split(
   points : Array[@geom.Point],
@@ -90,6 +85,16 @@ fn bezier_clip(
   points : Array[@geom.Point],
   inside : (@geom.Point) -> Bool,
   left_inside : Bool,
+) -> Array[@geom.Point] {
+  bezier_clip_eps(points, inside, left_inside, BEZIER_CLIP_EPS)
+}
+
+///|
+fn bezier_clip_eps(
+  points : Array[@geom.Point],
+  inside : (@geom.Point) -> Bool,
+  left_inside : Bool,
+  eps : Double,
 ) -> Array[@geom.Point] {
   let mut low = 0.0
   let mut high = 1.0
@@ -117,7 +122,7 @@ fn bezier_clip(
     } else {
       low = t
     }
-    if Double::abs(opt.x - pt.x) <= 0.5 && Double::abs(opt.y - pt.y) <= 0.5 {
+    if Double::abs(opt.x - pt.x) <= eps && Double::abs(opt.y - pt.y) <= eps {
       break
     }
   }
@@ -338,6 +343,13 @@ fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+priv enum ClipShape {
+  None
+  Rect
+  Ellipse
+}
+
+///|
 fn node_penwidth_pt(node : @cgraph.Node) -> Double {
   match node.get_attr("penwidth") {
     Some(value) => parse_double(value, 1.0)
@@ -346,9 +358,501 @@ fn node_penwidth_pt(node : @cgraph.Node) -> Double {
 }
 
 ///|
+fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
+  if pad_pt <= 0.0 {
+    return size
+  }
+  let width_pt = size.width_pt + pad_pt * 2.0
+  let height_pt = size.height_pt + pad_pt * 2.0
+  let half = width_pt / 2.0
+  {
+    width_in: width_pt / 72.0,
+    height_in: height_pt / 72.0,
+    width_pt,
+    height_pt,
+    left_pt: half,
+    right_pt: half,
+  }
+}
+
+///|
+///|
+///|
+fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
+  if port_is_explicit(port) && is_record_shape(node) {
+    return ClipShape::Rect
+  }
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "" => ClipShape::Ellipse
+    "box" | "rect" | "rectangle" | "record" | "mrecord" | "plaintext" | "plain" =>
+      ClipShape::Rect
+    "none" => ClipShape::None
+    "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
+      ClipShape::Ellipse
+    _ => ClipShape::None
+  }
+}
+
+///|
+fn point_inside_rect(
+  point : @geom.Point,
+  center : @geom.Point,
+  size : NodeSize,
+) -> Bool {
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  let dx = Double::abs(point.x - center.x)
+  let dy = Double::abs(point.y - center.y)
+  dx <= half_w && dy <= half_h
+}
+
+///|
+fn point_inside_ellipse(
+  point : @geom.Point,
+  center : @geom.Point,
+  size : NodeSize,
+) -> Bool {
+  let rx = size.width_pt / 2.0
+  let ry = size.height_pt / 2.0
+  if rx <= 0.0 || ry <= 0.0 {
+    return false
+  }
+  let dx = (point.x - center.x) / rx
+  let dy = (point.y - center.y) / ry
+  dx * dx + dy * dy <= 1.0
+}
+
+///|
+fn point_inside_shape(
+  point : @geom.Point,
+  center : @geom.Point,
+  size : NodeSize,
+  shape : ClipShape,
+) -> Bool {
+  match shape {
+    ClipShape::Rect => point_inside_rect(point, center, size)
+    ClipShape::Ellipse => point_inside_ellipse(point, center, size)
+    ClipShape::None => false
+  }
+}
+
+///|
+fn clip_spline_start(
+  points : Array[@geom.Point],
+  center : @geom.Point,
+  size : NodeSize,
+  shape : ClipShape,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  match shape {
+    ClipShape::None => return points
+    _ => ()
+  }
+  let inside = (p : @geom.Point) => point_inside_shape(p, center, size, shape)
+  let mut start = 0
+  while start + 3 < points.length() && inside(points[start + 3]) {
+    start += 3
+  }
+  if start + 3 >= points.length() || !inside(points[start]) {
+    return points
+  }
+  let segment : Array[@geom.Point] = [
+    points[start],
+    points[start + 1],
+    points[start + 2],
+    points[start + 3],
+  ]
+  let clipped = bezier_clip(segment, inside, true)
+  let out = points.copy()
+  out[start] = clipped[0]
+  out[start + 1] = clipped[1]
+  out[start + 2] = clipped[2]
+  out[start + 3] = clipped[3]
+  out
+}
+
+///|
+fn clip_spline_end(
+  points : Array[@geom.Point],
+  center : @geom.Point,
+  size : NodeSize,
+  shape : ClipShape,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  match shape {
+    ClipShape::None => return points
+    _ => ()
+  }
+  let inside = (p : @geom.Point) => point_inside_shape(p, center, size, shape)
+  let mut end = points.length() - 4
+  while end > 0 && inside(points[end]) {
+    end -= 3
+  }
+  if end + 3 >= points.length() || !inside(points[end + 3]) {
+    return points
+  }
+  let segment : Array[@geom.Point] = [
+    points[end],
+    points[end + 1],
+    points[end + 2],
+    points[end + 3],
+  ]
+  let clipped = bezier_clip(segment, inside, false)
+  let out = points.copy()
+  out[end] = clipped[0]
+  out[end + 1] = clipped[1]
+  out[end + 2] = clipped[2]
+  out[end + 3] = clipped[3]
+  out
+}
+
+///|
+fn cmp_double(a : Double, b : Double) -> Int {
+  if a < b {
+    -1
+  } else if a > b {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+fn count_vert_cross(points : Array[@geom.Point], xcoord : Double) -> Int {
+  let mut sign = cmp_double(points[0].x, xcoord)
+  let mut crossings = 0
+  if sign == 0 {
+    crossings = crossings + 1
+  }
+  for i in 1..=3 {
+    let old_sign = sign
+    sign = cmp_double(points[i].x, xcoord)
+    if sign != old_sign && old_sign != 0 {
+      crossings = crossings + 1
+    }
+  }
+  crossings
+}
+
+///|
+fn count_horz_cross(points : Array[@geom.Point], ycoord : Double) -> Int {
+  let mut sign = cmp_double(points[0].y, ycoord)
+  let mut crossings = 0
+  if sign == 0 {
+    crossings = crossings + 1
+  }
+  for i in 1..=3 {
+    let old_sign = sign
+    sign = cmp_double(points[i].y, ycoord)
+    if sign != old_sign && old_sign != 0 {
+      crossings = crossings + 1
+    }
+  }
+  crossings
+}
+
+///|
+fn find_vertical(
+  points : Array[@geom.Point],
+  tmin : Double,
+  tmax : Double,
+  xcoord : Double,
+  ymin : Double,
+  ymax : Double,
+) -> Double {
+  if tmin == tmax {
+    return tmin
+  }
+  let no_cross = count_vert_cross(points, xcoord)
+  if no_cross == 0 {
+    return -1.0
+  }
+  if no_cross == 1 && Double::abs(points[3].x - xcoord) <= 0.005 {
+    if ymin <= points[3].y && points[3].y <= ymax {
+      return tmax
+    }
+    return -1.0
+  }
+  let mid = (tmin + tmax) / 2.0
+  let (_, left, right) = bezier_split(points, 0.5)
+  let t = find_vertical(left, tmin, mid, xcoord, ymin, ymax)
+  if t >= 0.0 {
+    return t
+  }
+  find_vertical(right, mid, tmax, xcoord, ymin, ymax)
+}
+
+///|
+fn find_horizontal(
+  points : Array[@geom.Point],
+  tmin : Double,
+  tmax : Double,
+  ycoord : Double,
+  xmin : Double,
+  xmax : Double,
+) -> Double {
+  if tmin == tmax {
+    return tmin
+  }
+  let no_cross = count_horz_cross(points, ycoord)
+  if no_cross == 0 {
+    return -1.0
+  }
+  if no_cross == 1 && Double::abs(points[3].y - ycoord) <= 0.005 {
+    if xmin <= points[3].x && points[3].x <= xmax {
+      return tmax
+    }
+    return -1.0
+  }
+  let mid = (tmin + tmax) / 2.0
+  let (_, left, right) = bezier_split(points, 0.5)
+  let t = find_horizontal(left, tmin, mid, ycoord, xmin, xmax)
+  if t >= 0.0 {
+    return t
+  }
+  find_horizontal(right, mid, tmax, ycoord, xmin, xmax)
+}
+
+///|
+fn spline_intersect_bbox(
+  points : Array[@geom.Point],
+  rect : @geom.Rect,
+) -> Array[@geom.Point]? {
+  let orig = points
+  let mut tmin = 2.0
+  let mut best : Array[@geom.Point]? = None
+  let update = (t : Double) => {
+    if t >= 0.0 && t < tmin {
+      let (_, left, _) = bezier_split(orig, t)
+      tmin = t
+      best = Some(left)
+    }
+  }
+  update(find_vertical(orig, 0.0, 1.0, rect.llx, rect.lly, rect.ury))
+  update(find_vertical(orig, 0.0, 1.0, rect.urx, rect.lly, rect.ury))
+  update(find_horizontal(orig, 0.0, 1.0, rect.lly, rect.llx, rect.urx))
+  update(find_horizontal(orig, 0.0, 1.0, rect.ury, rect.llx, rect.urx))
+  if tmin < 2.0 {
+    best
+  } else {
+    None
+  }
+}
+
+///|
+fn clip_spline_end_to_bbox(
+  points : Array[@geom.Point],
+  rect : @geom.Rect,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  let mut idx = 0
+  while idx + 3 < points.length() {
+    let segment : Array[@geom.Point] = [
+      points[idx],
+      points[idx + 1],
+      points[idx + 2],
+      points[idx + 3],
+    ]
+    match spline_intersect_bbox(segment, rect) {
+      Some(clipped) => {
+        let out : Array[@geom.Point] = []
+        for i in 0..<idx {
+          out.push(points[i])
+        }
+        for point in clipped {
+          out.push(point)
+        }
+        return out
+      }
+      None => ()
+    }
+    idx += 3
+  }
+  points
+}
+
+///|
+fn reverse_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  let mut idx = points.length()
+  while idx > 0 {
+    idx = idx - 1
+    out.push(points[idx])
+  }
+  out
+}
+
+///|
+fn clip_spline_start_to_bbox(
+  points : Array[@geom.Point],
+  rect : @geom.Rect,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  let reversed = reverse_points(points)
+  let clipped = clip_spline_end_to_bbox(reversed, rect)
+  reverse_points(clipped)
+}
+
+///|
+fn clip_spline_to_nodes(
+  edge : @cgraph.Edge,
+  points : Array[@geom.Point],
+  tail_clip_center : @geom.Point,
+  tail_size : NodeSize,
+  head_clip_center : @geom.Point,
+  head_size : NodeSize,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  let tail_shape = clip_shape_kind(edge.tail(), edge.tail_port())
+  let head_shape = clip_shape_kind(edge.head(), edge.head_port())
+  let tail_center = tail_clip_center
+  let head_center = head_clip_center
+  let tail_base_size = tail_size
+  let head_base_size = head_size
+  let tail_penwidth = node_penwidth_pt(edge.tail())
+  let head_penwidth = node_penwidth_pt(edge.head())
+  let tail_clip_size = match tail_shape {
+    ClipShape::Rect | ClipShape::Ellipse =>
+      if tail_penwidth > 0.0 {
+      inflate_node_size(tail_base_size, tail_penwidth / 2.0)
+    } else {
+      tail_base_size
+    }
+    _ => tail_base_size
+  }
+  let head_clip_size = match head_shape {
+    ClipShape::Rect | ClipShape::Ellipse =>
+      if head_penwidth > 0.0 {
+      inflate_node_size(head_base_size, head_penwidth / 2.0)
+    } else {
+      head_base_size
+    }
+    _ => head_base_size
+  }
+  let tail_clipped = match tail_shape {
+    ClipShape::None => points
+    _ => clip_spline_start(points, tail_center, tail_clip_size, tail_shape)
+  }
+  let head_clipped = match head_shape {
+    ClipShape::None => tail_clipped
+    _ => clip_spline_end(tail_clipped, head_center, head_clip_size, head_shape)
+  }
+  let head_cluster_clipped = match head_cluster_bbox {
+    Some(rect) => clip_spline_end_to_bbox(head_clipped, rect)
+    None => head_clipped
+  }
+  match tail_cluster_bbox {
+    Some(rect) => clip_spline_start_to_bbox(head_cluster_clipped, rect)
+    None => head_cluster_clipped
+  }
+}
+
+///|
+fn arrow_clip_start_segment(
+  points : Array[@geom.Point],
+  arrow_len : Double,
+  eps : Double,
+) -> (Array[@geom.Point], @geom.Point) {
+  let start_point = points[0]
+  if arrow_len <= 0.0 || points.length() < 4 {
+    return (points, start_point)
+  }
+  let len2 = arrow_len * arrow_len
+  let mut start = 0
+  if points.length() > 4 && point_dist2(points[start], points[start + 3]) < len2 {
+    start += 3
+  }
+  let segment : Array[@geom.Point] = [
+    points[start],
+    points[start + 1],
+    points[start + 2],
+    points[start + 3],
+  ]
+  let (clipped, _) = arrow_start_clip(segment, arrow_len, eps)
+  let out = points.copy()
+  out[start] = clipped[0]
+  out[start + 1] = clipped[1]
+  out[start + 2] = clipped[2]
+  out[start + 3] = clipped[3]
+  (out, start_point)
+}
+
+///|
+fn arrow_clip_end_segment(
+  points : Array[@geom.Point],
+  arrow_len : Double,
+  eps : Double,
+) -> (Array[@geom.Point], @geom.Point) {
+  let end_point = points[points.length() - 1]
+  if arrow_len <= 0.0 || points.length() < 4 {
+    return (points, end_point)
+  }
+  let len2 = arrow_len * arrow_len
+  let mut end = points.length() - 4
+  if end > 0 && point_dist2(points[end], points[end + 3]) < len2 {
+    end -= 3
+  }
+  let segment : Array[@geom.Point] = [
+    points[end],
+    points[end + 1],
+    points[end + 2],
+    points[end + 3],
+  ]
+  let (clipped, _) = arrow_end_clip(segment, arrow_len, eps)
+  let out = points.copy()
+  out[end] = clipped[0]
+  out[end + 1] = clipped[1]
+  out[end + 2] = clipped[2]
+  out[end + 3] = clipped[3]
+  (out, end_point)
+}
+
+///|
+fn clip_spline_arrows(
+  points : Array[@geom.Point],
+  arrow_len : Double,
+  include_tail : Bool,
+  include_head : Bool,
+  eps : Double,
+) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
+  let mut out = points
+  let mut start_point : @geom.Point? = None
+  let mut end_point : @geom.Point? = None
+  if include_tail {
+    let (clipped, start) = arrow_clip_start_segment(out, arrow_len, eps)
+    out = clipped
+    start_point = Some(start)
+  }
+  if include_head {
+    let (clipped, end) = arrow_clip_end_segment(out, arrow_len, eps)
+    out = clipped
+    end_point = Some(end)
+  }
+  (out, start_point, end_point)
+}
+
+///|
+///|
 fn arrow_end_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
+  eps : Double,
 ) -> (Array[@geom.Point], @geom.Point) {
   let end_point = points[3]
   if arrow_len <= 0.0 {
@@ -356,7 +860,8 @@ fn arrow_end_clip(
   }
   let sp = [end_point, points[2], points[1], points[0]]
   let len2 = arrow_len * arrow_len
-  let clipped = bezier_clip(sp, p => point_dist2(p, end_point) <= len2, true)
+  let clipped =
+    bezier_clip_eps(sp, p => point_dist2(p, end_point) <= len2, true, eps)
   let new_points : Array[@geom.Point] = [
     clipped[3],
     clipped[2],
@@ -370,6 +875,7 @@ fn arrow_end_clip(
 fn arrow_start_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
+  eps : Double,
 ) -> (Array[@geom.Point], @geom.Point) {
   let start_point = points[0]
   if arrow_len <= 0.0 {
@@ -377,7 +883,8 @@ fn arrow_start_clip(
   }
   let sp = [points[3], points[2], points[1], start_point]
   let len2 = arrow_len * arrow_len
-  let clipped = bezier_clip(sp, p => point_dist2(p, start_point) <= len2, false)
+  let clipped =
+    bezier_clip_eps(sp, p => point_dist2(p, start_point) <= len2, false, eps)
   let new_points : Array[@geom.Point] = [
     clipped[3],
     clipped[2],
@@ -393,6 +900,16 @@ fn straight_bezier(
   head : @geom.Point,
 ) -> Array[@geom.Point] {
   [tail, tail, head, head]
+}
+
+///|
+fn linear_bezier(
+  tail : @geom.Point,
+  head : @geom.Point,
+) -> Array[@geom.Point] {
+  let c1 = point_lerp(tail, head, 1.0 / 3.0)
+  let c2 = point_lerp(tail, head, 2.0 / 3.0)
+  [tail, c1, c2, head]
 }
 
 ///|
@@ -538,6 +1055,7 @@ fn trim_polyline_end(
 }
 
 ///|
+///|
 fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
   if points.length() < 2 {
@@ -557,104 +1075,599 @@ fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
-fn smooth_polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
+fn point_dot(a : @geom.Point, b : @geom.Point) -> Double {
+  a.x * b.x + a.y * b.y
+}
+
+///|
+fn point_len(a : @geom.Point) -> Double {
+  @math.hypot(a.x, a.y)
+}
+
+///|
+fn point_norm(a : @geom.Point) -> @geom.Point {
+  let len = point_len(a)
+  if len <= 0.000001 {
+    point(0.0, 0.0)
+  } else {
+    point(a.x / len, a.y / len)
+  }
+}
+
+///|
+fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
+  @math.hypot(a.x - b.x, a.y - b.y)
+}
+
+///|
+fn bezier_b0(t : Double) -> Double {
+  let tmp = 1.0 - t
+  tmp * tmp * tmp
+}
+
+///|
+fn bezier_b1(t : Double) -> Double {
+  let tmp = 1.0 - t
+  3.0 * t * tmp * tmp
+}
+
+///|
+fn bezier_b2(t : Double) -> Double {
+  let tmp = 1.0 - t
+  3.0 * t * t * tmp
+}
+
+///|
+fn bezier_b3(t : Double) -> Double {
+  t * t * t
+}
+
+///|
+fn bezier_b01(t : Double) -> Double {
+  let tmp = 1.0 - t
+  tmp * tmp * (tmp + 3.0 * t)
+}
+
+///|
+fn bezier_b23(t : Double) -> Double {
+  let tmp = 1.0 - t
+  t * t * (3.0 * tmp + t)
+}
+
+///|
+fn route_bezier_point(
+  p0 : @geom.Point,
+  c1 : @geom.Point,
+  c2 : @geom.Point,
+  p3 : @geom.Point,
+  t : Double,
+) -> @geom.Point {
+  let b0 = bezier_b0(t)
+  let b1 = bezier_b1(t)
+  let b2 = bezier_b2(t)
+  let b3 = bezier_b3(t)
+  point(
+    b0 * p0.x + b1 * c1.x + b2 * c2.x + b3 * p3.x,
+    b0 * p0.y + b1 * c1.y + b2 * c2.y + b3 * p3.y,
+  )
+}
+
+///|
+fn slice_points_range(
+  points : Array[@geom.Point],
+  start : Int,
+  end : Int,
+) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
-  if points.length() < 2 {
-    return out
-  }
-  let seg_dirs : Array[@geom.Point] = []
-  let seg_lens : Array[Double] = []
-  for i in 0..<(points.length() - 1) {
-    let dx = points[i + 1].x - points[i].x
-    let dy = points[i + 1].y - points[i].y
-    let len = Double::sqrt(dx * dx + dy * dy)
-    seg_lens.push(len)
-    if len <= 0.0 {
-      seg_dirs.push(point(0.0, 0.0))
-    } else {
-      seg_dirs.push(point(dx / len, dy / len))
-    }
-  }
-  let dir_points : Array[@geom.Point] = []
-  let last = points.length() - 1
-  for i in 0..=last {
-    let mut dir = point(0.0, 0.0)
-    if points.length() == 2 {
-      dir = seg_dirs[0]
-    } else if i == 0 {
-      dir = seg_dirs[0]
-    } else if i == last {
-      dir = seg_dirs[last - 1]
-    } else {
-      dir = point(
-        seg_dirs[i - 1].x + seg_dirs[i].x,
-        seg_dirs[i - 1].y + seg_dirs[i].y,
-      )
-    }
-    let dir_len = Double::sqrt(dir.x * dir.x + dir.y * dir.y)
-    if dir_len <= 0.0 {
-      if i == 0 {
-        dir = seg_dirs[0]
-      } else {
-        dir = seg_dirs[seg_dirs.length() - 1]
-      }
-    } else {
-      dir = point(dir.x / dir_len, dir.y / dir_len)
-    }
-    dir_points.push(dir)
-  }
-  out.push(points[0])
-  let handle_base = 1.0 / 3.0
-  let mut i = 0
-  let last_seg = points.length() - 2
-  while i <= last_seg {
-    let p0 = points[i]
-    let p1 = points[i + 1]
-    let seg_len = seg_lens[i]
-    let dir0 = dir_points[i]
-    let dir1 = dir_points[i + 1]
-    let c1_scale =
-      if i == 0 {
-        let next_len = if points.length() > 2 { seg_lens[1] } else { seg_len }
-        let ratio = if seg_len <= 0.0 { 1.0 } else { next_len / seg_len }
-        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
-        0.85 + 0.15 * clamped
-      } else {
-        1.0
-      }
-    let c1_len = seg_len * handle_base * c1_scale
-    let c1 = point(p0.x + dir0.x * c1_len, p0.y + dir0.y * c1_len)
-    let c2_scale =
-      if i == last_seg {
-        let prev_len = if points.length() > 2 { seg_lens[last_seg - 1] } else { seg_len }
-        let ratio = if prev_len <= 0.0 { 1.0 } else { seg_len / prev_len }
-        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
-        0.85 + 0.15 * clamped
-      } else {
-        let next_len = seg_lens[i + 1]
-        let ratio = if seg_len <= 0.0 { 1.0 } else { next_len / seg_len }
-        let clamped = if ratio < 1.0 { ratio } else { 1.0 }
-        0.5 + 0.5 * clamped
-      }
-    let c2_len = seg_len * handle_base * c2_scale
-    let c2 = point(p1.x - dir1.x * c2_len, p1.y - dir1.y * c2_len)
-    out.push(c1)
-    out.push(c2)
-    out.push(p1)
-    i = i + 1
+  for i in start..<end {
+    out.push(points[i])
   }
   out
 }
 
 ///|
+
+///|
+fn route_spline_recursive(
+  points : Array[@geom.Point],
+  ev0 : @geom.Point,
+  ev1 : @geom.Point,
+  out : Array[@geom.Point],
+  allow_spline_fit : Bool,
+  min_len_ratio : Double,
+  bound_eps : Double,
+  prev_len : Double?,
+  next_len : Double?,
+) -> Bool {
+  let inpn = points.length()
+  if inpn < 2 {
+    return true
+  }
+  let ts : Array[Double] = []
+  ts.push(0.0)
+  for i in 1..<inpn {
+    ts.push(ts[i - 1] + point_dist(points[i], points[i - 1]))
+  }
+  let total = ts[inpn - 1]
+  if total <= 0.0 {
+    let p0 = points[0]
+    let p3 = points[inpn - 1]
+    out.push(point_lerp(p0, p3, 1.0 / 3.0))
+    out.push(point_lerp(p0, p3, 2.0 / 3.0))
+    out.push(p3)
+    return true
+  }
+  for i in 1..<inpn {
+    ts[i] = ts[i] / total
+  }
+  let mut c00 = 0.0
+  let mut c01 = 0.0
+  let mut c11 = 0.0
+  let mut x0 = 0.0
+  let mut x1 = 0.0
+  let p0 = points[0]
+  let p3 = points[inpn - 1]
+  for i in 0..<inpn {
+    let t = ts[i]
+    let a0 = point_scale(ev0, bezier_b1(t))
+    let a1 = point_scale(ev1, bezier_b2(t))
+    c00 = c00 + point_dot(a0, a0)
+    c01 = c01 + point_dot(a0, a1)
+    c11 = c11 + point_dot(a1, a1)
+    let tmp = point_sub(
+      points[i],
+      point_add(point_scale(p0, bezier_b01(t)), point_scale(p3, bezier_b23(t))),
+    )
+    x0 = x0 + point_dot(a0, tmp)
+    x1 = x1 + point_dot(a1, tmp)
+  }
+  let det01 = c00 * c11 - c01 * c01
+  let mut scale0 = 0.0
+  let mut scale3 = 0.0
+  if Double::abs(det01) >= 0.000001 {
+    let det0x = c00 * x1 - c01 * x0
+    let detx1 = x0 * c11 - x1 * c01
+    scale0 = detx1 / det01
+    scale3 = det0x / det01
+  }
+  if Double::abs(det01) < 0.000001 || scale0 <= 0.0 || scale3 <= 0.0 {
+    let d01 = point_dist(p0, p3) / 3.0
+    scale0 = d01
+    scale3 = d01
+  }
+  let v0 = point_scale(ev0, scale0)
+  let v1 = point_scale(ev1, scale3)
+  let fit_scale = 4.0
+  let forceflag = inpn == 2
+  if allow_spline_fit || forceflag {
+    let mut min_x = points[0].x
+    let mut max_x = points[0].x
+    let mut min_y = points[0].y
+    let mut max_y = points[0].y
+    for point in points {
+      if point.x < min_x {
+        min_x = point.x
+      }
+      if point.x > max_x {
+        max_x = point.x
+      }
+      if point.y < min_y {
+        min_y = point.y
+      }
+      if point.y > max_y {
+        max_y = point.y
+      }
+    }
+    let shortcut_eps = 0.001
+    let mut scale = fit_scale
+    let mut first = true
+    while true {
+      let c1_try = point_add(p0, point_scale(v0, scale / 3.0))
+      let c2_try = point_sub(p3, point_scale(v1, scale / 3.0))
+      if first {
+        let control_len = polyline_length([p0, c1_try, c2_try, p3])
+        let min_len = total * min_len_ratio
+        if control_len + shortcut_eps < min_len {
+          break
+        }
+      }
+      let bounds_ok =
+        c1_try.x >= min_x - bound_eps &&
+        c1_try.x <= max_x + bound_eps &&
+        c1_try.y >= min_y - bound_eps &&
+        c1_try.y <= max_y + bound_eps &&
+        c2_try.x >= min_x - bound_eps &&
+        c2_try.x <= max_x + bound_eps &&
+        c2_try.y >= min_y - bound_eps &&
+        c2_try.y <= max_y + bound_eps
+      if bounds_ok {
+        out.push(c1_try)
+        out.push(c2_try)
+        out.push(p3)
+        return true
+      }
+      if scale < 0.005 {
+        if forceflag {
+          out.push(c1_try)
+          out.push(c2_try)
+          out.push(p3)
+          return true
+        }
+        break
+      }
+      if scale > 0.01 {
+        scale = scale / 2.0
+      } else {
+        scale = 0.0
+      }
+      first = false
+    }
+  }
+  let c1 = point_add(p0, point_scale(v0, 1.0 / 3.0))
+  let c2 = point_sub(p3, point_scale(v1, 1.0 / 3.0))
+  let mut maxi = -1
+  let mut maxd = -1.0
+  for i in 1..<(inpn - 1) {
+    let t = ts[i]
+    let p = route_bezier_point(p0, c1, c2, p3, t)
+    let d = point_dist(p, points[i])
+    if d > maxd {
+      maxd = d
+      maxi = i
+    }
+  }
+  if maxi <= 0 || maxi >= inpn - 1 {
+    if inpn <= 2 {
+      let fallback = polyline_to_bezier(points)
+      for i in 1..<fallback.length() {
+        out.push(fallback[i])
+      }
+      return true
+    }
+    maxi = inpn / 2
+  }
+  let splitv1 = point_norm(point_sub(points[maxi], points[maxi - 1]))
+  let splitv2 = point_norm(point_sub(points[maxi + 1], points[maxi]))
+  let splitv = point_norm(point_add(splitv1, splitv2))
+  let left = slice_points_range(points, 0, maxi + 1)
+  let right = slice_points_range(points, maxi, inpn)
+  let left_len = point_dist(points[maxi], points[maxi - 1])
+  let right_len = point_dist(points[maxi + 1], points[maxi])
+  let left_path_len = polyline_length(slice_points_range(points, 0, maxi + 1))
+  let left_next = if right_len > 0.0 {
+    match next_len {
+      Some(next) =>
+        if left_path_len < ARROW_LENGTH && next > right_len {
+          Some(next)
+        } else {
+          Some(right_len)
+        }
+      None => Some(right_len)
+    }
+  } else {
+    next_len
+  }
+  let right_prev = match prev_len {
+    Some(_) => if left_len > 0.0 { Some(left_len) } else { prev_len }
+    None => if left_len > 0.0 { Some(left_len) } else { None }
+  }
+  if !route_spline_recursive(
+    left,
+    ev0,
+    splitv,
+    out,
+    allow_spline_fit,
+    min_len_ratio,
+    bound_eps,
+    prev_len,
+    left_next,
+  ) {
+    return false
+  }
+  if !route_spline_recursive(
+    right,
+    splitv,
+    ev1,
+    out,
+    allow_spline_fit,
+    min_len_ratio,
+    bound_eps,
+    right_prev,
+    next_len,
+  ) {
+    return false
+  }
+  true
+}
+///|
+fn route_polyline_to_bezier(
+  points : Array[@geom.Point],
+  start_slope : @geom.Point,
+  end_slope : @geom.Point,
+  allow_spline_fit : Bool,
+  min_len_ratio : Double,
+  bound_eps : Double,
+) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  if points.length() < 2 {
+    return out
+  }
+  out.push(points[0])
+  let ev0 = point_norm(start_slope)
+  let ev1 = point_norm(end_slope)
+  let _ok =
+    route_spline_recursive(
+      points,
+      ev0,
+      ev1,
+      out,
+      allow_spline_fit,
+      min_len_ratio,
+      bound_eps,
+      None,
+      None,
+    )
+  out
+}
+
+///|
+fn compass_angle(compass : @cgraph.Compass) -> Double? {
+  match compass {
+    @cgraph.Compass::N => Some(@math.PI * 0.5)
+    @cgraph.Compass::NE => Some(@math.PI * 0.25)
+    @cgraph.Compass::E => Some(0.0)
+    @cgraph.Compass::SE => Some(-@math.PI * 0.25)
+    @cgraph.Compass::S => Some(-@math.PI * 0.5)
+    @cgraph.Compass::SW => Some(-@math.PI * 0.75)
+    @cgraph.Compass::W => Some(@math.PI)
+    @cgraph.Compass::NW => Some(@math.PI * 0.75)
+    @cgraph.Compass::C => None
+  }
+}
+
+///|
+fn invflip_angle(angle : Double, rankdir : RankDir) -> Double {
+  match rankdir {
+    RankDir::TB => angle
+    RankDir::BT => -angle
+    RankDir::LR => angle - @math.PI * 0.5
+    RankDir::RL => {
+      if angle == @math.PI {
+        -@math.PI * 0.5
+      } else if angle == @math.PI * 0.75 {
+        -@math.PI * 0.25
+      } else if angle == @math.PI * 0.5 {
+        0.0
+      } else if angle == 0.0 {
+        @math.PI * 0.5
+      } else if angle == -@math.PI * 0.25 {
+        @math.PI * 0.75
+      } else if angle == -@math.PI * 0.5 {
+        @math.PI
+      } else {
+        angle
+      }
+    }
+  }
+}
+
+///|
+fn compass_vector(compass : @cgraph.Compass, rankdir : RankDir) -> @geom.Point? {
+  match compass_angle(compass) {
+    Some(angle) => {
+      let theta = invflip_angle(angle, rankdir)
+      Some(point(@math.cos(theta), @math.sin(theta)))
+    }
+    None => None
+  }
+}
+
+///|
+fn axis_direction(dir : @geom.Point) -> @geom.Point {
+  let abs_dx = Double::abs(dir.x)
+  let abs_dy = Double::abs(dir.y)
+  if abs_dx <= 0.000001 && abs_dy <= 0.000001 {
+    point(0.0, 0.0)
+  } else if abs_dx >= abs_dy {
+    let sign = if dir.x >= 0.0 { 1.0 } else { -1.0 }
+    point(sign, 0.0)
+  } else {
+    let sign = if dir.y >= 0.0 { 1.0 } else { -1.0 }
+    point(0.0, sign)
+  }
+}
+
+///|
+fn rotate_dir_for_rankdir(
+  dir : @geom.Point,
+  rankdir : RankDir,
+) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => dir
+    RankDir::BT => point(dir.x, -dir.y)
+    RankDir::LR => point(-dir.y, dir.x)
+    RankDir::RL => point(dir.y, -dir.x)
+  }
+}
+
+///|
+fn port_side_direction(
+  port_rect : @geom.Rect,
+  anchor : @geom.Point,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+  target : @geom.Point,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  let mid_x = (port_rect.llx + port_rect.urx) / 2.0
+  let mid_y = (port_rect.lly + port_rect.ury) / 2.0
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let node_rect = port_side_rect(node_pos, node_size)
+  let candidates : Array[(@geom.Point, @geom.Point)] = []
+  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
+    candidates.push((point(port_rect.llx, mid_y), point(-1.0, 0.0)))
+  }
+  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
+    candidates.push((point(port_rect.urx, mid_y), point(1.0, 0.0)))
+  }
+  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
+    candidates.push((point(mid_x, port_rect.lly), point(0.0, -1.0)))
+  }
+  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
+    candidates.push((point(mid_x, port_rect.ury), point(0.0, 1.0)))
+  }
+  if candidates.length() == 0 || candidates.length() == 4 {
+    return None
+  }
+  let target_rel = point_sub(target, anchor)
+  let target_rot = rotate_dir_for_rankdir(target_rel, rankdir)
+  let mut best_dir = point(0.0, 0.0)
+  let mut best_dist = 0.0
+  let mut seen = false
+  for pair in candidates {
+    let (pos, dir) = pair
+    let cand_rel = point_sub(pos, anchor)
+    let cand_rot = rotate_dir_for_rankdir(cand_rel, rankdir)
+    let dist = point_dist2(cand_rot, target_rot)
+    if !seen || dist < best_dist {
+      best_dist = dist
+      best_dir = dir
+      seen = true
+    }
+  }
+  if seen { Some(best_dir) } else { None }
+}
+
+///|
+fn port_side_rect(
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> @geom.Rect {
+  let node_half_w = node_size.width_pt / 2.0
+  let node_half_h = node_size.height_pt / 2.0
+  {
+    llx: node_pos.x - node_half_w,
+    lly: node_pos.y - node_half_h,
+    urx: node_pos.x + node_half_w,
+    ury: node_pos.y + node_half_h,
+  }
+}
+
+///|
+fn port_side_count(
+  port_rect : @geom.Rect,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> Int {
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let node_rect = port_side_rect(node_pos, node_size)
+  let mut count = 0
+  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
+    count = count + 1
+  }
+  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
+    count = count + 1
+  }
+  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
+    count = count + 1
+  }
+  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
+    count = count + 1
+  }
+  count
+}
+
+///|
+///|
+fn endpoint_slope_for_anchor(
+  port : @cgraph.Port?,
+  anchor : @geom.Point,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+  target : @geom.Point,
+  rankdir : RankDir,
+  tail : Bool,
+  port_rect : @geom.Rect?,
+) -> @geom.Point {
+  if !port_is_explicit(port) {
+    return point(0.0, 0.0)
+  }
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(compass) =>
+          match compass_vector(compass, rankdir) {
+            Some(vec) => if tail { vec } else { point(-vec.x, -vec.y) }
+            None => point(0.0, 0.0)
+          }
+        None => {
+          match port_rect {
+            Some(rect) =>
+              match port_side_direction(
+                rect,
+                anchor,
+                node_pos,
+                node_size,
+                target,
+                rankdir,
+              ) {
+                Some(dir) =>
+                  return if tail { dir } else { point(-dir.x, -dir.y) }
+                None => ()
+              }
+            None => ()
+          }
+          let half_w = node_size.width_pt / 2.0
+          let half_h = node_size.height_pt / 2.0
+          let left = node_pos.x - half_w
+          let right = node_pos.x + half_w
+          let bottom = node_pos.y - half_h
+          let top = node_pos.y + half_h
+          let eps = 0.01
+          let mut dir = point(0.0, 0.0)
+          if anchor.x <= left + eps {
+            dir = point(-1.0, 0.0)
+          } else if anchor.x >= right - eps {
+            dir = point(1.0, 0.0)
+          } else if anchor.y <= bottom + eps {
+            dir = point(0.0, -1.0)
+          } else if anchor.y >= top - eps {
+            dir = point(0.0, 1.0)
+          } else {
+            dir = axis_direction(point_sub(target, anchor))
+          }
+          if tail { dir } else { point(-dir.x, -dir.y) }
+        }
+      }
+    None => point(0.0, 0.0)
+  }
+}
+
+
+///|
 fn edge_spline_for_polyline(
   edge : @cgraph.Edge,
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_anchor_size : NodeSize,
+  head_anchor_size : NodeSize,
   tail_clip : @geom.Point,
   head_clip : @geom.Point,
   rankdir : RankDir,
   orthogonal : Bool,
   include_tail : Bool,
   include_head : Bool,
+  arrow_len_override~ : Double?,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
 ) -> @geom.Spline {
   let (tail, head) = if tail_clip == head_clip {
     (tail_clip, point(head_clip.x + 1.0, head_clip.y))
@@ -666,21 +1679,52 @@ fn edge_spline_for_polyline(
   } else {
     [tail, head]
   }
-  let arrow_len = if include_tail || include_head {
-    arrow_length_for_edge(edge)
+  let arrow_len =
+    if include_tail || include_head {
+      let base = arrow_length_for_edge(edge)
+      match arrow_len_override {
+        Some(value) =>
+          if value > 0.0 && value < base {
+          value
+        } else {
+          base
+        }
+        None => base
+      }
+    } else {
+      0.0
+    }
+  let polyline = compact_polyline(raw_points)
+  let bezier = polyline_to_bezier(compact_polyline(polyline))
+  let clipped =
+    clip_spline_to_nodes(
+      edge,
+      bezier,
+      tail_clip_center,
+      tail_anchor_size,
+      head_clip_center,
+      head_anchor_size,
+      tail_cluster_bbox=tail_cluster_bbox,
+      head_cluster_bbox=head_cluster_bbox,
+    )
+  let arrow_clip_eps =
+    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
+    ARROW_CLIP_EPS_CLUSTER
   } else {
-    0.0
+    ARROW_CLIP_EPS
   }
-  let mut polyline = compact_polyline(raw_points)
-  if include_tail {
-    polyline = trim_polyline_start(polyline, arrow_len)
+  let (points, start_point, end_point) =
+    if include_tail || include_head {
+    clip_spline_arrows(
+      clipped,
+      arrow_len,
+      include_tail,
+      include_head,
+      arrow_clip_eps,
+    )
+  } else {
+    (clipped, None, None)
   }
-  if include_head {
-    polyline = trim_polyline_end(polyline, arrow_len)
-  }
-  let points = polyline_to_bezier(compact_polyline(polyline))
-  let start_point = if include_tail { Some(tail) } else { None }
-  let end_point = if include_head { Some(head) } else { None }
   { start: start_point, end: end_point, points }
 }
 
@@ -688,17 +1732,37 @@ fn edge_spline_for_polyline(
 fn edge_spline_for_points(
   edge : @cgraph.Edge,
   points : Array[@geom.Point],
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_anchor_size : NodeSize,
+  head_anchor_size : NodeSize,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  force_segmented : Bool,
   include_tail : Bool,
   include_head : Bool,
+  arrow_len_override~ : Double?,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
 ) -> @geom.Spline {
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let arrow_len = if include_tail || include_head {
-    arrow_length_for_edge(edge)
-  } else {
-    0.0
-  }
+  let arrow_len =
+    if include_tail || include_head {
+      let base = arrow_length_for_edge(edge)
+      match arrow_len_override {
+        Some(value) =>
+          if value > 0.0 && value < base {
+          value
+        } else {
+          base
+        }
+        None => base
+      }
+    } else {
+      0.0
+    }
   let mut polyline = compact_polyline(points)
   if include_tail {
     polyline = trim_polyline_start(polyline, arrow_len)
@@ -706,10 +1770,39 @@ fn edge_spline_for_points(
   if include_head {
     polyline = trim_polyline_end(polyline, arrow_len)
   }
-  let bezier = smooth_polyline_to_bezier(compact_polyline(polyline))
+  let compacted = compact_polyline(polyline)
+  let allow_spline_fit = !force_segmented
+  let has_explicit_port =
+    port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
+  let min_len_ratio = 1.0
+  let bound_eps = if has_explicit_port { 0.5 } else { 4.0 }
+  let bezier =
+    route_polyline_to_bezier(
+      compacted,
+      tail_slope,
+      head_slope,
+      allow_spline_fit,
+      min_len_ratio,
+      bound_eps,
+    )
+  let spline_points =
+    clip_spline_to_nodes(
+      edge,
+      bezier,
+      tail_clip_center,
+      tail_anchor_size,
+      head_clip_center,
+      head_anchor_size,
+      tail_cluster_bbox=tail_cluster_bbox,
+      head_cluster_bbox=head_cluster_bbox,
+    )
   let start_point = if include_tail { Some(points[0]) } else { None }
-  let end_point = if include_head { Some(points[points.length() - 1]) } else { None }
-  { start: start_point, end: end_point, points: bezier }
+  let end_point = if include_head {
+    Some(points[points.length() - 1])
+  } else {
+    None
+  }
+  { start: start_point, end: end_point, points: spline_points }
 }
 
 ///|
@@ -717,15 +1810,44 @@ fn edge_spline_for_line(
   edge : @cgraph.Edge,
   tail_center : @geom.Point,
   head_center : @geom.Point,
-  tail_size : NodeSize,
-  head_size : NodeSize,
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_anchor_size : NodeSize,
+  head_anchor_size : NodeSize,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
   include_tail : Bool,
   include_head : Bool,
   rankdir : RankDir,
   curve_offset : Double,
   curve_skew : Double,
+  arrow_len_override~ : Double?,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
 ) -> @geom.Spline {
-  let (tail_seed, head_seed) = nudge_endpoints(tail_center, head_center)
+  let arrow_len =
+    if include_tail || include_head {
+      let base = arrow_length_for_edge(edge)
+      match arrow_len_override {
+        Some(value) =>
+          if value > 0.0 && value < base {
+          value
+        } else {
+          base
+        }
+        None => base
+      }
+    } else {
+      0.0
+    }
+  let (tail_base, head_base) =
+    if point_dist(tail_center, head_center) <= 0.000001 {
+    nudge_endpoints(tail_center, head_center)
+  } else {
+    (tail_center, head_center)
+  }
+  let tail_seed = tail_base
+  let head_seed = head_base
   let mut points =
     if curve_offset > 0.0 {
       let dx = head_seed.x - tail_seed.x
@@ -788,40 +1910,56 @@ fn edge_spline_for_line(
         [tail_seed, c1, c2, head_seed]
       }
     } else {
-      straight_bezier(tail_seed, head_seed)
+      let use_linear =
+        tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_)
+      if use_linear {
+        linear_bezier(tail_seed, head_seed)
+      } else {
+        let spline =
+          route_polyline_to_bezier(
+            [tail_seed, head_seed],
+            tail_slope,
+            head_slope,
+            false,
+            1.0,
+            4.0,
+          )
+        if spline.length() > 0 {
+          spline
+        } else {
+          straight_bezier(tail_seed, head_seed)
+        }
+      }
     }
-  let tail_penwidth = node_penwidth_pt(edge.tail())
-  let head_penwidth = node_penwidth_pt(edge.head())
-  points = clip_spline_to_rect(
-    points,
-    tail_center,
-    tail_size.width_pt / 2.0 + tail_penwidth / 2.0,
-    tail_size.height_pt / 2.0 + tail_penwidth / 2.0,
-    true,
-  )
-  points = clip_spline_to_rect(
-    points,
-    head_center,
-    head_size.width_pt / 2.0 + head_penwidth / 2.0,
-    head_size.height_pt / 2.0 + head_penwidth / 2.0,
-    false,
-  )
-  let mut start_point : @geom.Point? = None
-  let mut end_point : @geom.Point? = None
-  let arrow_len = if include_tail || include_head {
-    arrow_length_for_edge(edge)
+  points =
+    clip_spline_to_nodes(
+      edge,
+      points,
+      tail_clip_center,
+      tail_anchor_size,
+      head_clip_center,
+      head_anchor_size,
+      tail_cluster_bbox=tail_cluster_bbox,
+      head_cluster_bbox=head_cluster_bbox,
+    )
+  let arrow_clip_eps =
+    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
+    ARROW_CLIP_EPS_CLUSTER
   } else {
-    0.0
+    ARROW_CLIP_EPS
   }
-  if include_tail {
-    let (clipped, start) = arrow_start_clip(points, arrow_len)
-    points = clipped
-    start_point = Some(start)
-  }
-  if include_head {
-    let (clipped, end) = arrow_end_clip(points, arrow_len)
-    points = clipped
-    end_point = Some(end)
-  }
+  let (clipped, start_point, end_point) =
+    if include_tail || include_head {
+      clip_spline_arrows(
+        points,
+        arrow_len,
+        include_tail,
+        include_head,
+        arrow_clip_eps,
+      )
+    } else {
+      (points, None, None)
+    }
+  points = clipped
   { start: start_point, end: end_point, points }
 }
