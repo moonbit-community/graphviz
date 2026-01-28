@@ -375,6 +375,11 @@ pub fn Edge::head(self : Edge) -> Node {
 }
 
 ///|
+pub fn Edge::id(self : Edge) -> Int {
+  self.id
+}
+
+///|
 pub fn Edge::name(self : Edge) -> String? {
   self.root.edges[self.id].name
 }

@@ -184,6 +184,7 @@ pub fn layout_neato(
     graph
   }
   validate_layout_graph(active_graph)
+  reset_label_caches()
   validate_neato_edge_lengths(active_graph)
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value

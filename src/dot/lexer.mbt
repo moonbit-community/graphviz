@@ -24,15 +24,15 @@ priv struct TokenWithPos {
 
 ///|
 priv struct Lexer {
-  src : String
+  bytes : Bytes
   mut index : Int
   mut line : Int
   mut column : Int
 }
 
 ///|
-fn Lexer::new(src : String) -> Lexer {
-  { src, index: 0, line: 1, column: 1 }
+fn Lexer::new(bytes : Bytes) -> Lexer {
+  { bytes, index: 0, line: 1, column: 1 }
 }
 
 ///|
@@ -41,17 +41,17 @@ fn Lexer::position(self : Lexer) -> Position {
 }
 
 ///|
-fn Lexer::peek_char(self : Lexer, offset? : Int = 0) -> Char? {
-  self.src.get_char(self.index + offset)
+fn Lexer::peek_byte(self : Lexer, offset? : Int = 0) -> Byte? {
+  self.bytes.get(self.index + offset)
 }
 
 ///|
 fn Lexer::advance(self : Lexer) -> Unit {
-  let ch = self.peek_char()
+  let ch = self.peek_byte()
   match ch {
     Some(value) => {
       self.index = self.index + 1
-      if value == '\n' {
+      if value == b'\n' {
         self.line = self.line + 1
         self.column = 1
       } else {
@@ -65,32 +65,32 @@ fn Lexer::advance(self : Lexer) -> Unit {
 ///|
 fn Lexer::skip_whitespace_and_comments(self : Lexer) -> Unit {
   while true {
-    let ch = self.peek_char()
+    let ch = self.peek_byte()
     match ch {
-      Some(value) if value.is_ascii_whitespace() => {
+      Some(value) if is_ascii_whitespace_byte(value) => {
         self.advance()
         continue
       }
-      Some('/') => {
-        match self.peek_char(offset=1) {
-          Some('/') => {
+      Some(value) if value == b'/' => {
+        match self.peek_byte(offset=1) {
+          Some(next) if next == b'/' => {
             self.advance()
             self.advance()
-            while self.peek_char() is Some(next) && next != '\n' {
+            while self.peek_byte() is Some(next) && next != b'\n' {
               self.advance()
             }
             continue
           }
-          Some('*') => {
+          Some(next) if next == b'*' => {
             self.advance()
             self.advance()
             let mut done = false
             while !done {
-              let next = self.peek_char()
+              let next = self.peek_byte()
               if next is None {
                 break
               }
-              if next == Some('*') && self.peek_char(offset=1) == Some('/') {
+              if next == Some(b'*') && self.peek_byte(offset=1) == Some(b'/') {
                 self.advance()
                 self.advance()
                 done = true
@@ -104,9 +104,9 @@ fn Lexer::skip_whitespace_and_comments(self : Lexer) -> Unit {
         }
         break
       }
-      Some('#') => {
+      Some(value) if value == b'#' => {
         self.advance()
-        while self.peek_char() is Some(next) && next != '\n' {
+        while self.peek_byte() is Some(next) && next != b'\n' {
           self.advance()
         }
         continue
@@ -117,11 +117,35 @@ fn Lexer::skip_whitespace_and_comments(self : Lexer) -> Unit {
 }
 
 ///|
-fn is_id_char(ch : Char) -> Bool {
-  if ch.is_ascii() {
-    ch.is_ascii_alphabetic() || ch.is_ascii_digit() || ch == '_' || ch == '.'
+fn is_ascii_whitespace_byte(ch : Byte) -> Bool {
+  let code = ch.to_int()
+  code == 0x20 ||
+    code == 0x09 ||
+    code == 0x0a ||
+    code == 0x0d ||
+    code == 0x0b ||
+    code == 0x0c
+}
+
+///|
+fn is_id_byte(ch : Byte) -> Bool {
+  if ch.to_int() < 0x80 {
+    (ch >= b'a' && ch <= b'z') ||
+      (ch >= b'A' && ch <= b'Z') ||
+      (ch >= b'0' && ch <= b'9') ||
+      ch == b'_' ||
+      ch == b'.'
   } else {
-    !ch.is_whitespace()
+    true
+  }
+}
+
+///|
+fn decode_bytes(view : BytesView) -> String {
+  try @utf8.decode(view) catch {
+    _ => view.to_string()
+  } noraise {
+    text => text
   }
 }
 
@@ -129,122 +153,118 @@ fn is_id_char(ch : Char) -> Bool {
 fn Lexer::read_quoted_string(self : Lexer) -> String raise DotParseError {
   let start = self.position()
   self.advance()
-  let sb = StringBuilder::new()
+  let start_index = self.index
   while true {
-    let ch = self.peek_char()
+    let ch = self.peek_byte()
     match ch {
       None => raise DotParseError::UnexpectedEof(pos=start)
-      Some('"') => {
+      Some(value) if value == b'"' => {
+        let end_index = self.index
         self.advance()
-        break
+        let view = self.bytes.sub(start=start_index, end=end_index)
+        return decode_bytes(view)
       }
-      Some('\\') => {
+      Some(value) if value == b'\\' => {
         self.advance()
-        let escaped = self.peek_char()
+        let escaped = self.peek_byte()
         match escaped {
           None => raise DotParseError::UnexpectedEof(pos=start)
-          Some(value) => {
-            self.advance()
-            sb.write_char('\\')
-            sb.write_char(value)
-          }
+          Some(_) => self.advance()
         }
       }
-      Some(value) => {
+      Some(_) => {
         self.advance()
-        sb.write_char(value)
       }
     }
   }
-  sb.to_string()
+  ""
 }
 
 ///|
 fn Lexer::read_html(self : Lexer) -> String raise DotParseError {
   let start = self.position()
-  let sb = StringBuilder::new()
+  let start_index = self.index
   self.advance()
-  self.advance()
-  sb.write_string("<<")
-  let mut depth = 2
+  let mut depth = 1
   while true {
-    let ch = self.peek_char()
+    let ch = self.peek_byte()
     match ch {
       None => raise DotParseError::UnexpectedEof(pos=start)
       Some(value) => {
         self.advance()
-        sb.write_char(value)
-        if value == '<' {
+        if value == b'<' {
           depth = depth + 1
-        } else if value == '>' {
+        } else if value == b'>' {
           depth = depth - 1
           if depth == 0 {
-            break
+            let end_index = self.index
+            let view = self.bytes.sub(start=start_index, end=end_index)
+            return decode_bytes(view)
           }
         }
       }
     }
   }
-  sb.to_string()
+  ""
 }
 
 ///|
 fn Lexer::read_id(self : Lexer) -> String {
-  let sb = StringBuilder::new()
-  while self.peek_char() is Some(ch) && is_id_char(ch) {
+  let start = self.index
+  while self.peek_byte() is Some(ch) && is_id_byte(ch) {
     self.advance()
-    sb.write_char(ch)
   }
-  sb.to_string()
+  let view = self.bytes.sub(start=start, end=self.index)
+  decode_bytes(view)
 }
 
 ///|
 fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
   self.skip_whitespace_and_comments()
   let pos = self.position()
-  let ch = self.peek_char()
+  let ch = self.peek_byte()
   match ch {
     None => { token: Eof, pos }
-    Some('{') => {
+    Some(value) if value == b'{' => {
       self.advance()
       { token: LBrace, pos }
     }
-    Some('}') => {
+    Some(value) if value == b'}' => {
       self.advance()
       { token: RBrace, pos }
     }
-    Some('[') => {
+    Some(value) if value == b'[' => {
       self.advance()
       { token: LBracket, pos }
     }
-    Some(']') => {
+    Some(value) if value == b']' => {
       self.advance()
       { token: RBracket, pos }
     }
-    Some(';') => {
+    Some(value) if value == b';' => {
       self.advance()
       { token: Semi, pos }
     }
-    Some(',') => {
+    Some(value) if value == b',' => {
       self.advance()
       { token: Comma, pos }
     }
-    Some('=') => {
+    Some(value) if value == b'=' => {
       self.advance()
       { token: Eq, pos }
     }
-    Some(':') => {
+    Some(value) if value == b':' => {
       self.advance()
       { token: Colon, pos }
     }
-    Some('-') =>
-      match self.peek_char(offset=1) {
-        Some('>') => {
+    Some(value) if value == b'-' =>
+      match self.peek_byte(offset=1) {
+        Some(next) if next == b'>' => {
           self.advance()
           self.advance()
           { token: EdgeDirected, pos }
         }
-        Some('-') => {
+        Some(next) if next == b'-' => {
           self.advance()
           self.advance()
           { token: EdgeUndirected, pos }
@@ -255,25 +275,25 @@ fn Lexer::next_token(self : Lexer) -> TokenWithPos raise DotParseError {
           let id = if rest == "" { "-" } else { "-\{rest}" }
           { token: Id(id), pos }
         }
-      }
-    Some('"') => {
+    }
+    Some(value) if value == b'\"' => {
       let value = self.read_quoted_string()
       { token: String(value), pos }
     }
-    Some('<') =>
-      if self.peek_char(offset=1) == Some('<') {
+    Some(value) if value == b'<' =>
+      {
         let value = self.read_html()
         { token: Html(value), pos }
-      } else {
-        let id = self.read_id()
-        { token: Id(id), pos }
       }
-    Some(value) if is_id_char(value) => {
+    Some(value) if is_id_byte(value) => {
       let id = self.read_id()
       { token: Id(id), pos }
     }
     Some(value) =>
-      raise DotParseError::InvalidToken(pos~, token=value.to_string())
+      raise DotParseError::InvalidToken(
+        pos~,
+        token=value.to_char().to_string(),
+      )
   }
 }
 

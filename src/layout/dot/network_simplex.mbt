@@ -14,6 +14,7 @@ const CLUSTER_LABEL_PAD_PT : Double = 8.0
 const CLUSTER_COMPACT_WEIGHT : Int = 1
 
 
+
 ///|
 const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
 
@@ -253,6 +254,22 @@ priv struct DfsState {
 }
 
 ///|
+priv struct CutState {
+  node : Int
+  parent_edge : Int
+  mut tree_out_i : Int
+  mut tree_in_i : Int
+}
+
+///|
+priv struct InterTreeState {
+  node : Int
+  parent : Int
+  mut out_i : Int
+  mut in_i : Int
+}
+
+///|
 fn subtree_on_heap(subtrees : Array[Subtree], idx : Int) -> Bool {
   subtrees[idx].heap_index != NO_HEAP
 }
@@ -464,59 +481,78 @@ fn inter_tree_edge_search(
     Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
     None => ()
   }
-  for edge_idx in graph.nodes[v].out_edges {
-    if is_tree_edge(graph, edge_idx) {
+  let stack : Array[InterTreeState] = [{ node: v, parent: from, out_i: 0, in_i: 0 }]
+  while stack.length() > 0 {
+    let last = stack.length() - 1
+    let state = stack[last]
+    let mut pushed = false
+    while state.out_i < graph.nodes[state.node].out_edges.length() {
+      let edge_idx = graph.nodes[state.node].out_edges[state.out_i]
+      state.out_i = state.out_i + 1
+      if is_tree_edge(graph, edge_idx) {
+        let head = graph.edges[edge_idx].head
+        if head != state.parent {
+          stack[last] = state
+          stack.push({ node: head, parent: state.node, out_i: 0, in_i: 0 })
+          pushed = true
+          break
+        }
+        continue
+      }
       let head = graph.edges[edge_idx].head
-      if head != from {
-        current = inter_tree_edge_search(
-          graph, node_subtree, subtrees, root, head, v, current,
-        )
+      let head_sub = node_subtree[head]
+      if head_sub != NONE_EDGE && subtree_find(subtrees, head_sub) != root {
+        let slack = edge_slack(graph, edge_idx)
         match current {
-          Some(found) => if edge_slack(graph, found) == 0 { return current }
-          None => ()
+          Some(best_edge) =>
+            if slack < edge_slack(graph, best_edge) {
+              current = Some(edge_idx)
+            }
+          None => current = Some(edge_idx)
         }
       }
+    }
+    match current {
+      Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
+      None => ()
+    }
+    if pushed {
       continue
     }
-    let head = graph.edges[edge_idx].head
-    let head_sub = node_subtree[head]
-    if head_sub != NONE_EDGE && subtree_find(subtrees, head_sub) != root {
-      let slack = edge_slack(graph, edge_idx)
-      match current {
-        Some(best_edge) =>
-          if slack < edge_slack(graph, best_edge) {
-            current = Some(edge_idx)
-          }
-        None => current = Some(edge_idx)
+    while state.in_i < graph.nodes[state.node].in_edges.length() {
+      let edge_idx = graph.nodes[state.node].in_edges[state.in_i]
+      state.in_i = state.in_i + 1
+      if is_tree_edge(graph, edge_idx) {
+        let tail = graph.edges[edge_idx].tail
+        if tail != state.parent {
+          stack[last] = state
+          stack.push({ node: tail, parent: state.node, out_i: 0, in_i: 0 })
+          pushed = true
+          break
+        }
+        continue
       }
-    }
-  }
-  for edge_idx in graph.nodes[v].in_edges {
-    if is_tree_edge(graph, edge_idx) {
       let tail = graph.edges[edge_idx].tail
-      if tail != from {
-        current = inter_tree_edge_search(
-          graph, node_subtree, subtrees, root, tail, v, current,
-        )
+      let tail_sub = node_subtree[tail]
+      if tail_sub != NONE_EDGE && subtree_find(subtrees, tail_sub) != root {
+        let slack = edge_slack(graph, edge_idx)
         match current {
-          Some(found) => if edge_slack(graph, found) == 0 { return current }
-          None => ()
+          Some(best_edge) =>
+            if slack < edge_slack(graph, best_edge) {
+              current = Some(edge_idx)
+            }
+          None => current = Some(edge_idx)
         }
       }
+    }
+    match current {
+      Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
+      None => ()
+    }
+    if pushed {
       continue
     }
-    let tail = graph.edges[edge_idx].tail
-    let tail_sub = node_subtree[tail]
-    if tail_sub != NONE_EDGE && subtree_find(subtrees, tail_sub) != root {
-      let slack = edge_slack(graph, edge_idx)
-      match current {
-        Some(best_edge) =>
-          if slack < edge_slack(graph, best_edge) {
-            current = Some(edge_idx)
-          }
-        None => current = Some(edge_idx)
-      }
-    }
+    let _ = stack.pop()
   }
   current
 }
@@ -842,20 +878,57 @@ fn x_cutval(graph : NsGraph, edge_idx : Int) -> Unit {
 
 ///|
 fn dfs_cutval(graph : NsGraph, node_idx : Int, parent_edge : Int) -> Unit {
-  for edge_idx in graph.nodes[node_idx].tree_out {
-    if edge_idx == parent_edge {
+  let stack : Array[CutState] = [
+    { node: node_idx, parent_edge, tree_out_i: 0, tree_in_i: 0 },
+  ]
+  while stack.length() > 0 {
+    let last = stack.length() - 1
+    let state = stack[last]
+    let mut pushed = false
+    while state.tree_out_i < graph.nodes[state.node].tree_out.length() {
+      let edge_idx = graph.nodes[state.node].tree_out[state.tree_out_i]
+      state.tree_out_i = state.tree_out_i + 1
+      if edge_idx == state.parent_edge {
+        continue
+      }
+      let head = graph.edges[edge_idx].head
+      stack[last] = state
+      stack.push({
+        node: head,
+        parent_edge: edge_idx,
+        tree_out_i: 0,
+        tree_in_i: 0,
+      })
+      pushed = true
+      break
+    }
+    if pushed {
       continue
     }
-    dfs_cutval(graph, graph.edges[edge_idx].head, edge_idx)
-  }
-  for edge_idx in graph.nodes[node_idx].tree_in {
-    if edge_idx == parent_edge {
+    while state.tree_in_i < graph.nodes[state.node].tree_in.length() {
+      let edge_idx = graph.nodes[state.node].tree_in[state.tree_in_i]
+      state.tree_in_i = state.tree_in_i + 1
+      if edge_idx == state.parent_edge {
+        continue
+      }
+      let tail = graph.edges[edge_idx].tail
+      stack[last] = state
+      stack.push({
+        node: tail,
+        parent_edge: edge_idx,
+        tree_out_i: 0,
+        tree_in_i: 0,
+      })
+      pushed = true
+      break
+    }
+    if pushed {
       continue
     }
-    dfs_cutval(graph, graph.edges[edge_idx].tail, edge_idx)
-  }
-  if parent_edge != NONE_EDGE {
-    x_cutval(graph, parent_edge)
+    if state.parent_edge != NONE_EDGE {
+      x_cutval(graph, state.parent_edge)
+    }
+    let _ = stack.pop()
   }
 }
 
@@ -1077,19 +1150,24 @@ fn enter_edge(graph : NsGraph, leaving : Int) -> Int? {
 
 ///|
 fn rerank(graph : NsGraph, node_idx : Int, delta : Int) -> Unit {
-  graph.nodes[node_idx].rank = graph.nodes[node_idx].rank - delta
-  let parent_edge = graph.nodes[node_idx].par_edge
-  for edge_idx in graph.nodes[node_idx].tree_out {
-    if edge_idx == parent_edge {
-      continue
+  let stack : Array[Int] = [node_idx]
+  while stack.length() > 0 {
+    let v = stack[stack.length() - 1]
+    let _ = stack.pop()
+    graph.nodes[v].rank = graph.nodes[v].rank - delta
+    let parent_edge = graph.nodes[v].par_edge
+    for edge_idx in graph.nodes[v].tree_out {
+      if edge_idx == parent_edge {
+        continue
+      }
+      stack.push(graph.edges[edge_idx].head)
     }
-    rerank(graph, graph.edges[edge_idx].head, delta)
-  }
-  for edge_idx in graph.nodes[node_idx].tree_in {
-    if edge_idx == parent_edge {
-      continue
+    for edge_idx in graph.nodes[v].tree_in {
+      if edge_idx == parent_edge {
+        continue
+      }
+      stack.push(graph.edges[edge_idx].tail)
     }
-    rerank(graph, graph.edges[edge_idx].tail, delta)
   }
 }
 
@@ -1284,6 +1362,9 @@ fn network_simplex(
     init_rank(graph)
   }
   if !feasible_tree(graph) {
+    if @sys.get_env_var("DOT_TRACE") is Some(_) {
+      println("xpos: feasible_tree failed")
+    }
     return ()
   }
   init_cutvalues(graph)
@@ -1335,7 +1416,6 @@ fn nodesep_minlen(
   head_name : String,
   sizes : Map[String, NodeSize],
   nodesep_pt : Double,
-  cluster_keys : Map[String, String],
 ) -> Int {
   let tail_size = sizes.get(tail_name)
   let head_size = sizes.get(head_name)
@@ -1347,23 +1427,7 @@ fn nodesep_minlen(
     Some(value) => value.left_pt
     None => default_node_width_in() * 72.0 / 2.0
   }
-  let tail_is_vnode = match tail_size {
-    Some(value) => value.height_pt == 0.0
-    None => false
-  }
-  let head_is_vnode = match head_size {
-    Some(value) => value.height_pt == 0.0
-    None => false
-  }
-  let same_cluster = match (cluster_keys.get(tail_name), cluster_keys.get(head_name)) {
-    (Some(left), Some(right)) => left != "" && left == right
-    _ => false
-  }
-  let sep = if tail_is_vnode || head_is_vnode {
-    if same_cluster { 0.0 } else { nodesep_pt }
-  } else {
-    nodesep_pt
-  }
+  let sep = nodesep_pt
   let minlen = tail_right + head_left + sep
   if minlen <= 0.0 {
     0
@@ -1959,6 +2023,7 @@ fn build_cluster_constraints(
 ///|
 fn port_offsets_for_nodes(
   nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, NodeSize],
 ) -> Map[String, Map[String, RecordPort]] {
   let offsets : Map[String, Map[String, RecordPort]] = Map::new()
   let rankdir = if nodes.length() > 0 {
@@ -1970,12 +2035,20 @@ fn port_offsets_for_nodes(
   let origin = @geom.Point::{ x: 0.0, y: 0.0 }
   for node in nodes {
     let name = node.name()
-    let base_size = node_size(node, record_orientation)
-    let ports = if is_record_shape(node) {
-      record_ports(node, origin, base_size, record_orientation)
-    } else {
-      html_ports(node, origin, base_size)
+    let base_size = match output_sizes.get(name) {
+      Some(value) => value
+      None => node_size(node, record_orientation)
     }
+    let label = label_text(node)
+    let has_html = @html_label.is_html_label_text(label)
+    let ports =
+      if has_html {
+        html_ports(node, origin, base_size)
+      } else if is_record_shape(node) {
+        record_ports(node, origin, base_size, record_orientation)
+      } else {
+        Map::new()
+      }
     if ports.length() > 0 {
       let node_offsets : Map[String, RecordPort] = Map::new()
       for port_name, port_info in ports {
@@ -2089,10 +2162,13 @@ fn edge_port_offset_by_name(
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  output_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -2103,63 +2179,81 @@ fn build_constraint_graph(
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
   let ordered_nodes = nodes
-  let outgoing_edges : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let mut has_port_edges = false
   for edge in edges {
-    let tail = edge.tail().name()
-    match outgoing_edges.get(tail) {
-      Some(list) => list.push(edge)
-      None => outgoing_edges[tail] = [edge]
+    if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+      has_port_edges = true
+      break
     }
   }
-  let port_offsets = port_offsets_for_nodes(ordered_nodes)
+  let port_offsets =
+    if has_port_edges {
+      port_offsets_for_nodes(ordered_nodes, output_sizes)
+    } else {
+      Map::new()
+    }
   let actual_names : Map[String, Bool] = Map::new()
   for node in ordered_nodes {
     actual_names[node.name()] = true
   }
-  let slack_edges : Array[@cgraph.Edge] = []
+  let slack_edges : Array[Int] = []
   let intercluster_seen : Map[String, Bool] = Map::new()
-  for node in ordered_nodes {
-    let tail_name = node.name()
-    let list = match outgoing_edges.get(tail_name) {
-      Some(value) => value
+  let skip_intercluster =
+    @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
+  let slack_edge_indices : Array[Int] = []
+  let mut idx = 0
+  while idx < edges.length() {
+    slack_edge_indices.push(idx)
+    idx = idx + 1
+  }
+  for edge_idx in slack_edge_indices {
+    let edge = edges[edge_idx]
+    let vnodes = match edge_vnodes.get(edge_key(edge)) {
+      Some(list) => list
       None => []
     }
-    for edge in list {
-      match edge_vnodes.get(edge_key(edge)) {
-        Some(_) => continue
-        None => ()
-      }
-      let head_name = edge.head().name()
-      let tail_cluster = match cluster_keys.get(tail_name) {
-        Some(value) => value
-        None => ""
-      }
-      let head_cluster = match cluster_keys.get(head_name) {
-        Some(value) => value
-        None => ""
-      }
-      if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
-        let tail_rank = match ranks.get(tail_name) {
-          Some(value) => value
-          None => 0
-        }
-        let head_rank = match ranks.get(head_name) {
-          Some(value) => value
-          None => 0
-        }
-        let key = intercluster_edge_key(
-          tail_cluster,
-          head_cluster,
-          tail_rank,
-          head_rank,
-        )
-        if intercluster_seen.get(key) is Some(_) {
-          continue
-        }
-        intercluster_seen[key] = true
-      }
-      slack_edges.push(edge)
+    if vnodes.length() > 0 {
+      continue
     }
+    let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+    let head_name = if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+    let tail_cluster = match cluster_keys.get(tail_name) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head_name) {
+      Some(value) => value
+      None => ""
+    }
+    if skip_intercluster && tail_cluster != head_cluster &&
+      (tail_cluster != "" || head_cluster != "") {
+      continue
+    }
+    if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
+      let tail_rank = match ranks.get(tail_name) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head_name) {
+        Some(value) => value
+        None => 0
+      }
+      let key = intercluster_edge_key(
+        tail_cluster,
+        head_cluster,
+        tail_rank,
+        head_rank,
+      )
+      if intercluster_seen.get(key) is Some(_) {
+        continue
+      }
+      intercluster_seen[key] = true
+    }
+    slack_edges.push(edge_idx)
   }
   let slack_indices : Array[Int] = []
   for _ in 0..<slack_edges.length() {
@@ -2218,88 +2312,12 @@ fn build_constraint_graph(
         head,
         sizes,
         rank_nodesep,
-        cluster_keys,
       )
       let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
       i = i + 1
     }
   }
-  for edge in extra_edges {
-    match index.get(edge.tail) {
-      Some(tail_idx) =>
-        match index.get(edge.head) {
-          Some(head_idx) => {
-            let _ = add_edge(
-              graph,
-              tail_idx,
-              head_idx,
-              edge.minlen,
-              edge.weight,
-            )
-
-          }
-          None => ()
-        }
-      None => ()
-    }
-  }
   ignore(ranks)
-  for i in 0..<slack_edges.length() {
-    let edge = slack_edges[i]
-    let tail_name = edge.tail().name()
-    let head_name = edge.head().name()
-    let (tail_node, use_tail_port) =
-      (tail_name, actual_names.get(tail_name) is Some(_))
-    let (head_node, use_head_port) =
-      (head_name, actual_names.get(head_name) is Some(_))
-    let tail_idx = match index.get(tail_node) {
-      Some(value) => value
-      None => 0
-    }
-    let head_idx = match index.get(head_node) {
-      Some(value) => value
-      None => 0
-    }
-    let slack_idx = slack_indices[i]
-    let tail_offset =
-      if use_tail_port {
-        edge_port_offset(
-          tail_name,
-          edge.tail_port(),
-          port_offsets,
-          sizes,
-        )
-      } else {
-        0.0
-      }
-    let head_offset =
-      if use_head_port {
-        edge_port_offset(
-          head_name,
-          edge.head_port(),
-          port_offsets,
-          sizes,
-        )
-      } else {
-        0.0
-      }
-    let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-    let tail_rank = graph.nodes[tail_idx].rank
-    let head_rank = graph.nodes[head_idx].rank
-    let base_tail = tail_rank - m0 - 1
-    let base_head = head_rank - m1 - 1
-    graph.nodes[slack_idx].rank = if base_tail < base_head {
-      base_tail
-    } else {
-      base_head
-    }
-    let weight = edge_weight(edge)
-    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
-    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
-
-  }
   for extra in extra_slack_edges {
     let (tail_node, use_tail_port) =
       (extra.tail, actual_names.get(extra.tail) is Some(_))
@@ -2341,7 +2359,98 @@ fn build_constraint_graph(
     }
     let _ = add_edge(graph, slack_idx, tail_idx, m0 + minlen, extra.weight)
     let _ = add_edge(graph, slack_idx, head_idx, m1 + minlen, extra.weight)
+  }
+  for i in 0..<slack_edges.length() {
+    let edge_idx = slack_edges[i]
+    let edge = edges[edge_idx]
+    let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+    let head_name = if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+    let (tail_node, use_tail_port) =
+      (tail_name, actual_names.get(tail_name) is Some(_))
+    let (head_node, use_head_port) =
+      (head_name, actual_names.get(head_name) is Some(_))
+    let tail_idx = match index.get(tail_node) {
+      Some(value) => value
+      None => 0
+    }
+    let head_idx = match index.get(head_node) {
+      Some(value) => value
+      None => 0
+    }
+    let slack_idx = slack_indices[i]
+    let orig_tail = edge.tail().name()
+    let orig_head = edge.head().name()
+    let tail_port = if tail_name == orig_tail {
+      edge.tail_port()
+    } else {
+      edge.head_port()
+    }
+    let head_port = if head_name == orig_head {
+      edge.head_port()
+    } else {
+      edge.tail_port()
+    }
+    let tail_offset =
+      if use_tail_port {
+        edge_port_offset(
+          tail_name,
+          tail_port,
+          port_offsets,
+          sizes,
+        )
+      } else {
+        0.0
+      }
+    let head_offset =
+      if use_head_port {
+        edge_port_offset(
+          head_name,
+          head_port,
+          port_offsets,
+          sizes,
+        )
+      } else {
+        0.0
+      }
+    let delta = head_offset - tail_offset
+    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+    let tail_rank = graph.nodes[tail_idx].rank
+    let head_rank = graph.nodes[head_idx].rank
+    let base_tail = tail_rank - m0 - 1
+    let base_head = head_rank - m1 - 1
+    graph.nodes[slack_idx].rank = if base_tail < base_head {
+      base_tail
+    } else {
+      base_head
+    }
+    let weight = edge_weight(edge)
+    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
+    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
 
+  }
+  for edge in extra_edges {
+    match index.get(edge.tail) {
+      Some(tail_idx) =>
+        match index.get(edge.head) {
+          Some(head_idx) => {
+            let _ = add_edge(
+              graph,
+              tail_idx,
+              head_idx,
+              edge.minlen,
+              edge.weight,
+            )
+
+          }
+          None => ()
+        }
+      None => ()
+    }
   }
   (graph, index)
 }
@@ -2350,10 +2459,13 @@ fn build_constraint_graph(
 fn x_positions_from_simplex(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  output_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -2362,13 +2474,17 @@ fn x_positions_from_simplex(
   extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Double] {
+  dot_trace("xpos: build constraint graph")
   let (graph, index) = build_constraint_graph(
     nodes,
     edges,
+    edge_tail,
+    edge_head,
     ranks,
     rank_keys,
     groups,
     sizes,
+    output_sizes,
     cluster_keys,
     nodesep_pt,
     has_edge_labels,
@@ -2377,7 +2493,10 @@ fn x_positions_from_simplex(
     extra_slack_edges,
     edge_vnodes,
   )
+  dot_trace("xpos: constraint graph built")
+  dot_trace("xpos: network simplex")
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
     let name = node.name()
@@ -2403,10 +2522,13 @@ fn compute_x_positions(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  output_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -2414,10 +2536,12 @@ fn compute_x_positions(
   edge_vnodes : Map[String, Array[String]],
   extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
+  dot_trace("xpos: build cluster constraints")
   let (cluster_nodes, extra_edges) = build_cluster_constraints(
     graph, nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
     edge_vnodes,
   )
+  dot_trace("xpos: cluster constraints done")
   let all_extra_nodes = extra_nodes.copy()
   for pair in cluster_nodes {
     all_extra_nodes.push(pair)
@@ -2425,10 +2549,13 @@ fn compute_x_positions(
   x_positions_from_simplex(
     nodes,
     edges,
+    edge_tail,
+    edge_head,
     ranks,
     rank_keys,
     groups,
     sizes,
+    output_sizes,
     cluster_keys,
     nodesep_pt,
     has_edge_labels,

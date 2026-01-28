@@ -3,6 +3,7 @@
     "moonbit-community/graphviz/cgraph",
     "moonbitlang/core/buffer",
     "moonbitlang/core/encoding/utf8",
-    "moonbitlang/x/fs"
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ]
 }

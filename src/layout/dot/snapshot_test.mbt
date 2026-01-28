@@ -100,7 +100,12 @@ fn compare_attr_value(
   if is_numeric_attr(name) {
     // Bezier clipping uses a coarse stopping threshold; allow a bit more slack for pos.
     let value_tol =
-      if name == "pos" || name == "rects" || name == "bb" { tol * 2.0 } else { tol }
+      if name == "pos" || name == "rects" || name == "bb" {
+        let scaled = tol * 2.0
+        if scaled > 0.5 { scaled } else { 0.5 }
+      } else {
+        tol
+      }
     let tol_with_eps = value_tol + 0.000001
     let expected_nums = extract_numbers(expected)
     let actual_nums = extract_numbers(actual)

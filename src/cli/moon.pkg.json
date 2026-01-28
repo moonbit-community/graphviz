@@ -9,7 +9,8 @@
     "moonbit-community/graphviz/render/xdot",
     "moonbit-community/graphviz/render/svg",
     "moonbitlang/core/strconv",
-    "moonbitlang/x/fs"
+    "moonbitlang/x/fs",
+    "moonbitlang/x/sys"
   ],
   "test-import": [
     "moonbitlang/x/fs"

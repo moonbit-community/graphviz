@@ -19,6 +19,7 @@ const ARROW_CLIP_EPS : Double = 0.5
 ///|
 const ARROW_CLIP_EPS_CLUSTER : Double = 0.005
 
+
 ///|
 priv struct Triangle {
   p0 : @geom.Point
@@ -849,6 +850,7 @@ fn clip_spline_arrows(
 
 ///|
 ///|
+///|
 fn arrow_end_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
@@ -960,6 +962,21 @@ fn compact_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
+fn dedup_consecutive(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  if points.length() == 0 {
+    return points
+  }
+  let out : Array[@geom.Point] = []
+  out.push(points[0])
+  for i in 1..<points.length() {
+    if points[i] != points[i - 1] {
+      out.push(points[i])
+    }
+  }
+  out
+}
+
+///|
 fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
   let dx = b.x - a.x
   let dy = b.y - a.y
@@ -979,81 +996,6 @@ fn polyline_length(points : Array[@geom.Point]) -> Double {
 }
 
 ///|
-fn trim_polyline_start(
-  points : Array[@geom.Point],
-  trim_len : Double,
-) -> Array[@geom.Point] {
-  if trim_len <= 0.0 || points.length() < 2 {
-    return points
-  }
-  let total_len = polyline_length(points)
-  if trim_len >= total_len {
-    return points
-  }
-  let out : Array[@geom.Point] = []
-  let mut remaining = trim_len
-  let mut index = 0
-  while index + 1 < points.length() {
-    let a = points[index]
-    let b = points[index + 1]
-    let seg_len = segment_length(a, b)
-    if seg_len <= 0.0 {
-      index = index + 1
-      continue
-    }
-    if remaining < seg_len {
-      let t = remaining / seg_len
-      let start = point_lerp(a, b, t)
-      out.push(start)
-      for j in (index + 1)..<points.length() {
-        out.push(points[j])
-      }
-      return out
-    }
-    remaining = remaining - seg_len
-    index = index + 1
-  }
-  points
-}
-
-///|
-fn trim_polyline_end(
-  points : Array[@geom.Point],
-  trim_len : Double,
-) -> Array[@geom.Point] {
-  if trim_len <= 0.0 || points.length() < 2 {
-    return points
-  }
-  let total_len = polyline_length(points)
-  if trim_len >= total_len {
-    return points
-  }
-  let mut remaining = trim_len
-  let mut index = points.length() - 1
-  while index > 0 {
-    let a = points[index - 1]
-    let b = points[index]
-    let seg_len = segment_length(a, b)
-    if seg_len <= 0.0 {
-      index = index - 1
-      continue
-    }
-    if remaining < seg_len {
-      let t = remaining / seg_len
-      let end_point = point_lerp(b, a, t)
-      let out : Array[@geom.Point] = []
-      for j in 0..<index {
-        out.push(points[j])
-      }
-      out.push(end_point)
-      return out
-    }
-    remaining = remaining - seg_len
-    index = index - 1
-  }
-  points
-}
-
 ///|
 ///|
 fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
@@ -1099,6 +1041,87 @@ fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
   @math.hypot(a.x - b.x, a.y - b.y)
 }
 
+///|
+fn point_segment_distance(
+  pt : @geom.Point,
+  a : @geom.Point,
+  b : @geom.Point,
+) -> Double {
+  let dx = b.x - a.x
+  let dy = b.y - a.y
+  if dx == 0.0 && dy == 0.0 {
+    return point_dist(pt, a)
+  }
+  let t = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / (dx * dx + dy * dy)
+  let clamped =
+    if t < 0.0 {
+    0.0
+  } else if t > 1.0 {
+    1.0
+  } else {
+    t
+  }
+  let proj = point(a.x + dx * clamped, a.y + dy * clamped)
+  point_dist(pt, proj)
+}
+
+///|
+fn point_distance_to_polyline(
+  pt : @geom.Point,
+  points : Array[@geom.Point],
+  start : Int,
+  end : Int,
+) -> Double {
+  if end - start <= 1 {
+    return point_dist(pt, points[start])
+  }
+  let mut min_dist = 1.0e30
+  let mut idx = start
+  while idx + 1 < end {
+    let d = point_segment_distance(pt, points[idx], points[idx + 1])
+    if d < min_dist {
+      min_dist = d
+    }
+    idx = idx + 1
+  }
+  min_dist
+}
+
+///|
+fn bezier_within_polyline(
+  p0 : @geom.Point,
+  c1 : @geom.Point,
+  c2 : @geom.Point,
+  p3 : @geom.Point,
+  points : Array[@geom.Point],
+  start : Int,
+  end : Int,
+  bound_eps : Double,
+) -> Bool {
+  if bound_eps <= 0.0 {
+    return true
+  }
+  let inpn = end - start
+  let samples =
+    if inpn <= 2 {
+    [0.25, 0.5, 0.75]
+  } else if inpn <= 4 {
+    [0.2, 0.4, 0.6, 0.8]
+  } else {
+    [0.125, 0.25, 0.5, 0.75, 0.875]
+  }
+  for t in samples {
+    let p = route_bezier_point(p0, c1, c2, p3, t)
+    if point_distance_to_polyline(p, points, start, end) > bound_eps {
+      return false
+    }
+  }
+  true
+}
+
+///|
+///|
+///|
 ///|
 fn bezier_b0(t : Double) -> Double {
   let tmp = 1.0 - t
@@ -1153,45 +1176,300 @@ fn route_bezier_point(
 }
 
 ///|
-fn slice_points_range(
-  points : Array[@geom.Point],
-  start : Int,
-  end : Int,
-) -> Array[@geom.Point] {
-  let out : Array[@geom.Point] = []
-  for i in start..<end {
-    out.push(points[i])
-  }
-  out
+const ROUTE_SPLINE_EPS1 : Double = 0.001
+
+///|
+const ROUTE_SPLINE_EPS2 : Double = 0.000001
+
+///|
+const ROUTE_SOLVER_EPS : Double = 0.0000001
+
+///|
+fn approx_zero(value : Double) -> Bool {
+  Double::abs(value) < ROUTE_SOLVER_EPS
 }
 
 ///|
+fn solve1(coeff : Array[Double], roots : Array[Double]) -> Int {
+  let a = coeff[1]
+  let b = coeff[0]
+  if approx_zero(a) {
+    if approx_zero(b) {
+      return 4
+    }
+    return 0
+  }
+  roots[0] = -b / a
+  1
+}
 
 ///|
-fn route_spline_recursive(
+fn solve2(coeff : Array[Double], roots : Array[Double]) -> Int {
+  let a = coeff[2]
+  let b = coeff[1]
+  let c = coeff[0]
+  if approx_zero(a) {
+    return solve1(coeff, roots)
+  }
+  let b_over_2a = b / (2.0 * a)
+  let c_over_a = c / a
+  let disc = b_over_2a * b_over_2a - c_over_a
+  if disc < 0.0 {
+    return 0
+  } else if disc > 0.0 {
+    let root0 = -b_over_2a + Double::sqrt(disc)
+    roots[0] = root0
+    roots[1] = -2.0 * b_over_2a - root0
+    return 2
+  }
+  roots[0] = -b_over_2a
+  1
+}
+
+///|
+fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
+  let a = coeff[3]
+  let b = coeff[2]
+  let c = coeff[1]
+  let d = coeff[0]
+  if approx_zero(a) {
+    return solve2(coeff, roots)
+  }
+  let b_over_3a = b / (3.0 * a)
+  let c_over_a = c / a
+  let d_over_a = d / a
+  let p0 = b_over_3a * b_over_3a
+  let q = 2.0 * b_over_3a * p0 - b_over_3a * c_over_a + d_over_a
+  let p = c_over_a / 3.0 - p0
+  let disc = q * q + 4.0 * p * p * p
+  let mut rootn = 0
+  if disc < 0.0 {
+    let r = 0.5 * Double::sqrt(-disc + q * q)
+    let theta = @math.atan2(Double::sqrt(-disc), -q)
+    let temp = 2.0 * @math.cbrt(r)
+    roots[0] = temp * @math.cos(theta / 3.0)
+    roots[1] = temp * @math.cos((theta + @math.PI * 2.0) / 3.0)
+    roots[2] = temp * @math.cos((theta - @math.PI * 2.0) / 3.0)
+    rootn = 3
+  } else {
+    let alpha = 0.5 * (Double::sqrt(disc) - q)
+    let beta = -q - alpha
+    roots[0] = @math.cbrt(alpha) + @math.cbrt(beta)
+    if disc > 0.0 {
+      rootn = 1
+    } else {
+      roots[1] = -0.5 * roots[0]
+      roots[2] = roots[1]
+      rootn = 3
+    }
+  }
+  let mut idx = 0
+  while idx < rootn {
+    roots[idx] = roots[idx] - b_over_3a
+    idx = idx + 1
+  }
+  rootn
+}
+
+///|
+fn points_to_coeff(
+  v0 : Double,
+  v1 : Double,
+  v2 : Double,
+  v3 : Double,
+  coeff : Array[Double],
+) -> Unit {
+  coeff[3] = v3 + 3.0 * v1 - (v0 + 3.0 * v2)
+  coeff[2] = 3.0 * v0 + 3.0 * v2 - 6.0 * v1
+  coeff[1] = 3.0 * (v1 - v0)
+  coeff[0] = v0
+}
+
+///|
+fn add_root(root : Double, roots : Array[Double], rootn : Int) -> Int {
+  if root >= 0.0 && root <= 1.0 {
+    roots[rootn] = root
+    return rootn + 1
+  }
+  rootn
+}
+
+///|
+fn spline_intersects_line(
+  p0 : @geom.Point,
+  c1 : @geom.Point,
+  c2 : @geom.Point,
+  p3 : @geom.Point,
+  l0 : @geom.Point,
+  l1 : @geom.Point,
+  roots : Array[Double],
+) -> Int {
+  let xcoeff0 = l0.x
+  let xcoeff1 = l1.x - l0.x
+  let ycoeff0 = l0.y
+  let ycoeff1 = l1.y - l0.y
+  let scoeff : Array[Double] = Array::make(4, 0.0)
+  let xroots : Array[Double] = Array::make(3, 0.0)
+  let yroots : Array[Double] = Array::make(3, 0.0)
+  let mut rootn = 0
+  if xcoeff1 == 0.0 {
+    if ycoeff1 == 0.0 {
+      points_to_coeff(p0.x, c1.x, c2.x, p3.x, scoeff)
+      scoeff[0] = scoeff[0] - xcoeff0
+      let xrootn = solve3(scoeff, xroots)
+      points_to_coeff(p0.y, c1.y, c2.y, p3.y, scoeff)
+      scoeff[0] = scoeff[0] - ycoeff0
+      let yrootn = solve3(scoeff, yroots)
+      if xrootn == 4 {
+        if yrootn == 4 {
+          return 4
+        }
+        let mut j = 0
+        while j < yrootn {
+          rootn = add_root(yroots[j], roots, rootn)
+          j = j + 1
+        }
+      } else if yrootn == 4 {
+        let mut i = 0
+        while i < xrootn {
+          rootn = add_root(xroots[i], roots, rootn)
+          i = i + 1
+        }
+      } else {
+        let mut i = 0
+        while i < xrootn {
+          let mut j = 0
+          while j < yrootn {
+            if xroots[i] == yroots[j] {
+              rootn = add_root(xroots[i], roots, rootn)
+            }
+            j = j + 1
+          }
+          i = i + 1
+        }
+      }
+      return rootn
+    }
+    points_to_coeff(p0.x, c1.x, c2.x, p3.x, scoeff)
+    scoeff[0] = scoeff[0] - xcoeff0
+    let xrootn = solve3(scoeff, xroots)
+    if xrootn == 4 {
+      return 4
+    }
+    let mut i = 0
+    while i < xrootn {
+      let tv = xroots[i]
+      if tv >= 0.0 && tv <= 1.0 {
+        points_to_coeff(p0.y, c1.y, c2.y, p3.y, scoeff)
+        let mut sv =
+          scoeff[0] + tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
+        sv = (sv - ycoeff0) / ycoeff1
+        if sv >= 0.0 && sv <= 1.0 {
+          rootn = add_root(tv, roots, rootn)
+        }
+      }
+      i = i + 1
+    }
+    return rootn
+  }
+  let rat = ycoeff1 / xcoeff1
+  points_to_coeff(
+    p0.y - rat * p0.x,
+    c1.y - rat * c1.x,
+    c2.y - rat * c2.x,
+    p3.y - rat * p3.x,
+    scoeff,
+  )
+  scoeff[0] = scoeff[0] + rat * xcoeff0 - ycoeff0
+  let xrootn = solve3(scoeff, xroots)
+  if xrootn == 4 {
+    return 4
+  }
+  let mut i = 0
+  while i < xrootn {
+    let tv = xroots[i]
+    if tv >= 0.0 && tv <= 1.0 {
+      points_to_coeff(p0.x, c1.x, c2.x, p3.x, scoeff)
+      let mut sv =
+        scoeff[0] + tv * (scoeff[1] + tv * (scoeff[2] + tv * scoeff[3]))
+      sv = (sv - xcoeff0) / xcoeff1
+      if sv >= 0.0 && sv <= 1.0 {
+        rootn = add_root(tv, roots, rootn)
+      }
+    }
+    i = i + 1
+  }
+  rootn
+}
+
+///|
+fn spline_is_inside(
+  barriers : Array[(@geom.Point, @geom.Point)],
+  p0 : @geom.Point,
+  c1 : @geom.Point,
+  c2 : @geom.Point,
+  p3 : @geom.Point,
+) -> Bool {
+  let roots : Array[Double] = Array::make(4, 0.0)
+  let trace_spline = @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
+  for edge in barriers {
+    let (l0, l1) = edge
+    let rootn = spline_intersects_line(p0, c1, c2, p3, l0, l1, roots)
+    if rootn == 4 {
+      continue
+    }
+    let mut i = 0
+    while i < rootn {
+      let t = roots[i]
+      if t < ROUTE_SPLINE_EPS2 || t > 1.0 - ROUTE_SPLINE_EPS2 {
+        i = i + 1
+        continue
+      }
+      let ip = route_bezier_point(p0, c1, c2, p3, t)
+      if point_dist2(ip, l0) < ROUTE_SPLINE_EPS1 ||
+        point_dist2(ip, l1) < ROUTE_SPLINE_EPS1 {
+        i = i + 1
+        continue
+      }
+      if trace_spline {
+        println(
+          "splinefit reject t=\{t} line=\{l0.x},\{l0.y} -> \{l1.x},\{l1.y} ip=\{ip.x},\{ip.y}",
+        )
+      }
+      return false
+    }
+  }
+  true
+}
+
+///|
+fn route_spline_recursive_range(
   points : Array[@geom.Point],
+  start : Int,
+  end : Int,
   ev0 : @geom.Point,
   ev1 : @geom.Point,
   out : Array[@geom.Point],
   allow_spline_fit : Bool,
   min_len_ratio : Double,
   bound_eps : Double,
-  prev_len : Double?,
-  next_len : Double?,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
 ) -> Bool {
-  let inpn = points.length()
+  let inpn = end - start
   if inpn < 2 {
     return true
   }
   let ts : Array[Double] = []
   ts.push(0.0)
   for i in 1..<inpn {
-    ts.push(ts[i - 1] + point_dist(points[i], points[i - 1]))
+    let prev = points[start + i - 1]
+    let next = points[start + i]
+    ts.push(ts[i - 1] + point_dist(next, prev))
   }
   let total = ts[inpn - 1]
+  let p0 = points[start]
+  let p3 = points[end - 1]
   if total <= 0.0 {
-    let p0 = points[0]
-    let p3 = points[inpn - 1]
     out.push(point_lerp(p0, p3, 1.0 / 3.0))
     out.push(point_lerp(p0, p3, 2.0 / 3.0))
     out.push(p3)
@@ -1205,8 +1483,6 @@ fn route_spline_recursive(
   let mut c11 = 0.0
   let mut x0 = 0.0
   let mut x1 = 0.0
-  let p0 = points[0]
-  let p3 = points[inpn - 1]
   for i in 0..<inpn {
     let t = ts[i]
     let a0 = point_scale(ev0, bezier_b1(t))
@@ -1215,7 +1491,7 @@ fn route_spline_recursive(
     c01 = c01 + point_dot(a0, a1)
     c11 = c11 + point_dot(a1, a1)
     let tmp = point_sub(
-      points[i],
+      points[start + i],
       point_add(point_scale(p0, bezier_b01(t)), point_scale(p3, bezier_b23(t))),
     )
     x0 = x0 + point_dot(a0, tmp)
@@ -1237,14 +1513,14 @@ fn route_spline_recursive(
   }
   let v0 = point_scale(ev0, scale0)
   let v1 = point_scale(ev1, scale3)
-  let fit_scale = 4.0
   let forceflag = inpn == 2
   if allow_spline_fit || forceflag {
-    let mut min_x = points[0].x
-    let mut max_x = points[0].x
-    let mut min_y = points[0].y
-    let mut max_y = points[0].y
-    for point in points {
+    let mut min_x = p0.x
+    let mut max_x = p0.x
+    let mut min_y = p0.y
+    let mut max_y = p0.y
+    for i in 0..<inpn {
+      let point = points[start + i]
       if point.x < min_x {
         min_x = point.x
       }
@@ -1259,34 +1535,102 @@ fn route_spline_recursive(
       }
     }
     let shortcut_eps = 0.001
-    let mut scale = fit_scale
+    let min_len = total * min_len_ratio
+    let mut a = 4.0
     let mut first = true
+    let has_barriers = route_barriers.length() > 0
+    let trace_spline = @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
+    if trace_spline && has_barriers && inpn == 4 {
+      let parts : Array[String] = []
+      for i in 0..<inpn {
+        let p = points[start + i]
+        parts.push("\{p.x},\{p.y}")
+      }
+      let joined = parts.join(" ")
+      println("splinefit points inpn=4 \{joined}")
+    }
     while true {
-      let c1_try = point_add(p0, point_scale(v0, scale / 3.0))
-      let c2_try = point_sub(p3, point_scale(v1, scale / 3.0))
-      if first {
-        let control_len = polyline_length([p0, c1_try, c2_try, p3])
-        let min_len = total * min_len_ratio
-        if control_len + shortcut_eps < min_len {
-          break
+      let c1_try = point_add(p0, point_scale(v0, a / 3.0))
+      let c2_try = point_sub(p3, point_scale(v1, a / 3.0))
+      if trace_spline && has_barriers && first {
+        println("splinefit inpn=\{inpn} a=\{a}")
+        if inpn == 3 {
+          println(
+            "splinefit pts p0=\{p0.x},\{p0.y} c1=\{c1_try.x},\{c1_try.y} c2=\{c2_try.x},\{c2_try.y} p3=\{p3.x},\{p3.y}",
+          )
+        }
+        if inpn == 4 {
+          println(
+            "splinefit pts4 p0=\{p0.x},\{p0.y} c1=\{c1_try.x},\{c1_try.y} c2=\{c2_try.x},\{c2_try.y} p3=\{p3.x},\{p3.y}",
+          )
         }
       }
-      let bounds_ok =
-        c1_try.x >= min_x - bound_eps &&
-        c1_try.x <= max_x + bound_eps &&
-        c1_try.y >= min_y - bound_eps &&
-        c1_try.y <= max_y + bound_eps &&
-        c2_try.x >= min_x - bound_eps &&
-        c2_try.x <= max_x + bound_eps &&
-        c2_try.y >= min_y - bound_eps &&
-        c2_try.y <= max_y + bound_eps
-      if bounds_ok {
+      let control_len = polyline_length([p0, c1_try, c2_try, p3])
+      if first && control_len + shortcut_eps < min_len {
+        break
+      }
+      first = false
+      if allow_spline_fit {
+        if has_barriers {
+          if spline_is_inside(route_barriers, p0, c1_try, c2_try, p3) {
+            if trace_spline {
+              println("splinefit ok a=\{a} inpn=\{inpn}")
+            }
+            out.push(c1_try)
+            out.push(c2_try)
+            out.push(p3)
+            return true
+          }
+        } else if bound_eps <= 0.0 {
+          out.push(c1_try)
+          out.push(c2_try)
+          out.push(p3)
+          return true
+        }
+        if !has_barriers {
+          let mut bounds_ok =
+            c1_try.x >= min_x - bound_eps &&
+            c1_try.x <= max_x + bound_eps &&
+            c1_try.y >= min_y - bound_eps &&
+            c1_try.y <= max_y + bound_eps &&
+            c2_try.x >= min_x - bound_eps &&
+            c2_try.x <= max_x + bound_eps &&
+            c2_try.y >= min_y - bound_eps &&
+            c2_try.y <= max_y + bound_eps
+          if bounds_ok && bound_eps > 0.0 {
+            let dist_c1 = point_distance_to_polyline(c1_try, points, start, end)
+            let dist_c2 = point_distance_to_polyline(c2_try, points, start, end)
+            if dist_c1 > bound_eps || dist_c2 > bound_eps {
+              bounds_ok = false
+            }
+            if bounds_ok &&
+              !bezier_within_polyline(
+                p0,
+                c1_try,
+                c2_try,
+                p3,
+                points,
+                start,
+                end,
+                bound_eps,
+              ) {
+              bounds_ok = false
+            }
+          }
+          if bounds_ok {
+            out.push(c1_try)
+            out.push(c2_try)
+            out.push(p3)
+            return true
+          }
+        }
+      } else if forceflag {
         out.push(c1_try)
         out.push(c2_try)
         out.push(p3)
         return true
       }
-      if scale < 0.005 {
+      if a < 0.005 {
         if forceflag {
           out.push(c1_try)
           out.push(c2_try)
@@ -1295,12 +1639,11 @@ fn route_spline_recursive(
         }
         break
       }
-      if scale > 0.01 {
-        scale = scale / 2.0
+      if a > 0.01 {
+        a = a / 2.0
       } else {
-        scale = 0.0
+        a = 0.0
       }
-      first = false
     }
   }
   let c1 = point_add(p0, point_scale(v0, 1.0 / 3.0))
@@ -1310,7 +1653,7 @@ fn route_spline_recursive(
   for i in 1..<(inpn - 1) {
     let t = ts[i]
     let p = route_bezier_point(p0, c1, c2, p3, t)
-    let d = point_dist(p, points[i])
+    let d = point_dist(p, points[start + i])
     if d > maxd {
       maxd = d
       maxi = i
@@ -1318,7 +1661,7 @@ fn route_spline_recursive(
   }
   if maxi <= 0 || maxi >= inpn - 1 {
     if inpn <= 2 {
-      let fallback = polyline_to_bezier(points)
+      let fallback = polyline_to_bezier([p0, p3])
       for i in 1..<fallback.length() {
         out.push(fallback[i])
       }
@@ -1326,58 +1669,64 @@ fn route_spline_recursive(
     }
     maxi = inpn / 2
   }
-  let splitv1 = point_norm(point_sub(points[maxi], points[maxi - 1]))
-  let splitv2 = point_norm(point_sub(points[maxi + 1], points[maxi]))
+  let split_idx = start + maxi
+  let splitv1 = point_norm(point_sub(points[split_idx], points[split_idx - 1]))
+  let splitv2 = point_norm(point_sub(points[split_idx + 1], points[split_idx]))
   let splitv = point_norm(point_add(splitv1, splitv2))
-  let left = slice_points_range(points, 0, maxi + 1)
-  let right = slice_points_range(points, maxi, inpn)
-  let left_len = point_dist(points[maxi], points[maxi - 1])
-  let right_len = point_dist(points[maxi + 1], points[maxi])
-  let left_path_len = polyline_length(slice_points_range(points, 0, maxi + 1))
-  let left_next = if right_len > 0.0 {
-    match next_len {
-      Some(next) =>
-        if left_path_len < ARROW_LENGTH && next > right_len {
-          Some(next)
-        } else {
-          Some(right_len)
-        }
-      None => Some(right_len)
-    }
-  } else {
-    next_len
-  }
-  let right_prev = match prev_len {
-    Some(_) => if left_len > 0.0 { Some(left_len) } else { prev_len }
-    None => if left_len > 0.0 { Some(left_len) } else { None }
-  }
-  if !route_spline_recursive(
-    left,
+  if !route_spline_recursive_range(
+    points,
+    start,
+    split_idx + 1,
     ev0,
     splitv,
     out,
     allow_spline_fit,
     min_len_ratio,
     bound_eps,
-    prev_len,
-    left_next,
+    route_barriers,
   ) {
     return false
   }
-  if !route_spline_recursive(
-    right,
+  if !route_spline_recursive_range(
+    points,
+    split_idx,
+    end,
     splitv,
     ev1,
     out,
     allow_spline_fit,
     min_len_ratio,
     bound_eps,
-    right_prev,
-    next_len,
+    route_barriers,
   ) {
     return false
   }
   true
+}
+
+///|
+fn route_spline_recursive(
+  points : Array[@geom.Point],
+  ev0 : @geom.Point,
+  ev1 : @geom.Point,
+  out : Array[@geom.Point],
+  allow_spline_fit : Bool,
+  min_len_ratio : Double,
+  bound_eps : Double,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+) -> Bool {
+  route_spline_recursive_range(
+    points,
+    0,
+    points.length(),
+    ev0,
+    ev1,
+    out,
+    allow_spline_fit,
+    min_len_ratio,
+    bound_eps,
+    route_barriers,
+  )
 }
 ///|
 fn route_polyline_to_bezier(
@@ -1387,6 +1736,7 @@ fn route_polyline_to_bezier(
   allow_spline_fit : Bool,
   min_len_ratio : Double,
   bound_eps : Double,
+  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
 ) -> Array[@geom.Point] {
   let out : Array[@geom.Point] = []
   if points.length() < 2 {
@@ -1404,8 +1754,7 @@ fn route_polyline_to_bezier(
       allow_spline_fit,
       min_len_ratio,
       bound_eps,
-      None,
-      None,
+      route_barriers,
     )
   out
 }
@@ -1741,6 +2090,7 @@ fn edge_spline_for_points(
   force_segmented : Bool,
   include_tail : Bool,
   include_head : Bool,
+  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
@@ -1763,27 +2113,33 @@ fn edge_spline_for_points(
     } else {
       0.0
     }
-  let mut polyline = compact_polyline(points)
-  if include_tail {
-    polyline = trim_polyline_start(polyline, arrow_len)
-  }
-  if include_head {
-    polyline = trim_polyline_end(polyline, arrow_len)
-  }
+  let polyline = compact_polyline(points)
   let compacted = compact_polyline(polyline)
   let allow_spline_fit = !force_segmented
-  let has_explicit_port =
-    port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port())
+  let route_points = compacted
+  let tail_dir =
+    if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
+    point(0.0, 0.0)
+  } else {
+    tail_slope
+  }
+  let head_dir =
+    if head_slope.x == 0.0 && head_slope.y == 0.0 {
+    point(0.0, 0.0)
+  } else {
+    head_slope
+  }
   let min_len_ratio = 1.0
-  let bound_eps = if has_explicit_port { 0.5 } else { 4.0 }
+  let bound_eps = 0.0
   let bezier =
     route_polyline_to_bezier(
-      compacted,
-      tail_slope,
-      head_slope,
+      route_points,
+      tail_dir,
+      head_dir,
       allow_spline_fit,
       min_len_ratio,
       bound_eps,
+      route_barriers=route_barriers,
     )
   let spline_points =
     clip_spline_to_nodes(
@@ -1796,13 +2152,25 @@ fn edge_spline_for_points(
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
     )
-  let start_point = if include_tail { Some(points[0]) } else { None }
-  let end_point = if include_head {
-    Some(points[points.length() - 1])
+  let arrow_clip_eps =
+    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
+    ARROW_CLIP_EPS_CLUSTER
   } else {
-    None
+    ARROW_CLIP_EPS
   }
-  { start: start_point, end: end_point, points: spline_points }
+  let (clipped, start_point, end_point) =
+    if include_tail || include_head {
+    clip_spline_arrows(
+      spline_points,
+      arrow_len,
+      include_tail,
+      include_head,
+      arrow_clip_eps,
+    )
+  } else {
+    (spline_points, None, None)
+  }
+  { start: start_point, end: end_point, points: dedup_consecutive(clipped) }
 }
 
 ///|
@@ -1897,17 +2265,10 @@ fn edge_spline_for_line(
           } else {
             perp
           }
-        let c1_weight = 0.6
-        let c2_weight = 1.2
-        let c1 = point(
-          tail_seed.x + dx / 3.0 + perp.x * curve_offset * c1_weight,
-          tail_seed.y + dy / 3.0 + perp.y * curve_offset * c1_weight,
-        )
-        let c2 = point(
-          tail_seed.x + dx * 2.0 / 3.0 + perp.x * curve_offset * c2_weight,
-          tail_seed.y + dy * 2.0 / 3.0 + perp.y * curve_offset * c2_weight,
-        )
-        [tail_seed, c1, c2, head_seed]
+        let offset = point(perp.x * curve_offset, perp.y * curve_offset)
+        let tail_shift = point_add(tail_seed, offset)
+        let head_shift = point_add(head_seed, offset)
+        linear_bezier(tail_shift, head_shift)
       }
     } else {
       let use_linear =

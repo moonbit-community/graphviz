@@ -18,10 +18,19 @@ priv enum Endpoint {
 }
 
 ///|
+fn dot_parse_trace(message : String) -> Unit {
+  if @sys.get_env_var("DOT_TRACE") is Some(_) {
+    println(message)
+  }
+}
+
+///|
 fn Parser::new(src : String) -> Parser raise DotParseError {
-  let lexer = Lexer::new(src)
+  let bytes = @utf8.encode(src, bom=false)
+  let lexer = Lexer::new(bytes)
   let current = lexer.next_token()
   let next = lexer.next_token()
+  dot_parse_trace("dot: first token=\{token_label(current.token)}")
   { lexer, current, next }
 }
 

@@ -245,6 +245,8 @@ fn write_graph(
   sb : StringBuilder,
   indent : Int,
   is_root : Bool,
+  all_edges : Array[@cgraph.Edge],
+  written_edges : Map[Int, Bool],
 ) -> Unit {
   write_indent(sb, indent)
   if is_root {
@@ -326,11 +328,13 @@ fn write_graph(
     sb.write_string(";\n")
   }
   for subgraph in graph.subgraphs() {
-    write_graph(subgraph, sb, inner, false)
+    write_graph(subgraph, sb, inner, false, all_edges, written_edges)
   }
   let nodes = graph.nodes()
   nodes.sort_by_key(node => node.name())
+  let node_names : Map[String, Bool] = Map::new()
   for node in nodes {
+    node_names[node.name()] = true
     write_indent(sb, inner)
     sb.write_string(write_id(node.name()))
     let attrs = if is_layout_output {
@@ -344,33 +348,41 @@ fn write_graph(
     }
     sb.write_string(";\n")
   }
-  if graph.is_root() {
-    let edge_op = match graph.kind() {
-      @cgraph.GraphKind::Directed => "->"
-      @cgraph.GraphKind::Undirected => "--"
+  let edge_op = match graph.kind() {
+    @cgraph.GraphKind::Directed => "->"
+    @cgraph.GraphKind::Undirected => "--"
+  }
+  for edge in all_edges {
+    let edge_id = edge.id()
+    if written_edges.contains(edge_id) {
+      continue
     }
-    for edge in graph.edges() {
-      let tail = edge.tail()
-      let head = edge.head()
-      write_indent(sb, inner)
-      sb.write_string(write_id(tail.name()))
-      sb.write_string(write_port(edge.tail_port()))
-      sb.write_char(' ')
-      sb.write_string(edge_op)
-      sb.write_char(' ')
-      sb.write_string(write_id(head.name()))
-      sb.write_string(write_port(edge.head_port()))
-      let attrs = if is_layout_output {
-        filter_attrs(edge.attrs(), edge_effective_defaults)
-      } else {
-        edge.attrs()
-      }
-      if attrs.length() > 0 {
-        sb.write_char(' ')
-        write_attr_list(sb, attrs)
-      }
-      sb.write_string(";\n")
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    if !node_names.contains(tail_name) || !node_names.contains(head_name) {
+      continue
     }
+    let tail = edge.tail()
+    let head = edge.head()
+    write_indent(sb, inner)
+    sb.write_string(write_id(tail.name()))
+    sb.write_string(write_port(edge.tail_port()))
+    sb.write_char(' ')
+    sb.write_string(edge_op)
+    sb.write_char(' ')
+    sb.write_string(write_id(head.name()))
+    sb.write_string(write_port(edge.head_port()))
+    let attrs = if is_layout_output {
+      filter_attrs(edge.attrs(), edge_effective_defaults)
+    } else {
+      edge.attrs()
+    }
+    if attrs.length() > 0 {
+      sb.write_char(' ')
+      write_attr_list(sb, attrs)
+    }
+    sb.write_string(";\n")
+    written_edges[edge_id] = true
   }
   write_indent(sb, indent)
   sb.write_string("}\n")
@@ -379,6 +391,8 @@ fn write_graph(
 ///|
 pub fn write_dot(graph : @cgraph.Graph) -> String {
   let sb = StringBuilder::new()
-  write_graph(graph, sb, 0, true)
+  let all_edges = graph.edges()
+  let written_edges : Map[Int, Bool] = Map::new()
+  write_graph(graph, sb, 0, true, all_edges, written_edges)
   sb.to_string()
 }

@@ -12,6 +12,13 @@ fn program_basename(program : String) -> String {
 }
 
 ///|
+fn cli_trace(message : String) -> Unit {
+  if @sys.get_env_var("DOT_TRACE") is Some(_) {
+    println(message)
+  }
+}
+
+///|
 fn parse_engine_name(name : String) -> LayoutEngine {
   match name.to_lower() {
     "dot" => LayoutEngine::Dot
@@ -384,9 +391,13 @@ fn layout_for_job(
 
 ///|
 pub fn render_job(job : CliJob) -> String raise {
+  cli_trace("cli: parse start")
   let graph = read_dot_input(job.input)
+  cli_trace("cli: parse done")
   apply_attrs(graph, job)
+  cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
+  cli_trace("cli: layout done")
   match job.format.format {
     OutputFormat::Dot => {
       layout.apply()

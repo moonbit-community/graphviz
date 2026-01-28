@@ -91,3 +91,50 @@ test "html_ports include td port names" {
     None => fail("missing html port")
   }
 }
+
+///|
+test "record_ports honor rankdir LR field order" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { rankdir=LR; node [shape=record]; b [label=\"<left>   |<mid> b |   \"]; }",
+  )
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(graph))
+  let node = graph.node("b")
+  let size = node_size(node, record_orientation)
+  let ports = record_ports(
+    node,
+    @geom.Point::{ x: 0.0, y: 0.0 },
+    size,
+    record_orientation,
+  )
+  match ports.get("left") {
+    Some(port) => {
+      assert_true(port.center.y > 0.0)
+    }
+    None => fail("missing left port")
+  }
+}
+
+///|
+test "record_ports rotate into layout coords for rankdir LR" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { rankdir=LR; node [shape=record]; b [label=\"<left>   |<mid> b |   \"]; }",
+  )
+  let record_orientation =
+    record_layout_orientation(graph_rankdir(graph))
+  let node = graph.node("b")
+  let size = node_size(node, record_orientation)
+  let ports = record_ports(
+    node,
+    @geom.Point::{ x: 0.0, y: 0.0 },
+    size,
+    record_orientation,
+  )
+  let rotated = layout_ports_from_final(ports, @geom.Point::{ x: 0.0, y: 0.0 }, RankDir::LR)
+  match rotated.get("left") {
+    Some(port) => {
+      assert_true(port.center.x > 0.0)
+    }
+    None => fail("missing left port")
+  }
+}

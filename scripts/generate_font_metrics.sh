@@ -99,9 +99,15 @@ pair_labels = [
 ]
 pair_widths_pt = collect_text_widths(pair_labels)
 
+space_ctx_labels = [
+    (f"s{code}", "o " + chr(code) + "o")
+    for code in printable_codes
+]
+space_ctx_widths_pt = collect_text_widths(space_ctx_labels)
+
 kerning = []
 for left in range(128):
-    for right in range(128):
+  for right in range(128):
         if left < 32 or left == 127 or right < 32 or right == 127:
             kerning.append(0.0)
             continue
@@ -121,11 +127,37 @@ for left in range(128):
         pair_width_units = pair_width_pt / fontsize * 1000.0
         kerning.append(pair_width_units - left_width - right_width)
 
+space_kerning = []
+space_units = widths[ord(" ")]
+o_units = widths[ord("o")]
+for right in range(128):
+    if right < 32 or right == 127:
+        space_kerning.append(0.0)
+        continue
+    right_width = widths[right]
+    if right_width <= 0.0:
+        space_kerning.append(0.0)
+        continue
+    pair_key = f"s{right}"
+    pair_width_pt = space_ctx_widths_pt.get(pair_key)
+    if pair_width_pt is None:
+        space_kerning.append(0.0)
+        print(f"warning: failed to measure space kerning for {right} ({repr(chr(right))})")
+        continue
+    pair_width_units = pair_width_pt / fontsize * 1000.0
+    k_right_o = kerning[right * 128 + ord("o")]
+    space_kerning.append(
+        pair_width_units - o_units - space_units - right_width - o_units - k_right_o
+    )
+
 with open(output_path, "w", encoding="ascii") as f:
     f.write("///|\n")
     f.write("const HAS_FONT_METRICS : Bool = true\n\n")
     f.write("///|\n")
     f.write("const HAS_FONT_KERNING : Bool = true\n\n")
+
+    f.write("///|\n")
+    f.write("const HAS_SPACE_KERNING : Bool = true\n\n")
     f.write("///|\n")
     f.write("let font_metrics : Array[Double] = [\n")
     for i, value in enumerate(widths):
@@ -156,6 +188,21 @@ with open(output_path, "w", encoding="ascii") as f:
         if i % 8 == 7:
             f.write("\n")
     if len(kerning) % 8 != 0:
+        f.write("\n")
+    f.write("]\n")
+
+    f.write("\n///|\n")
+    f.write("let font_space_kerning : Array[Double] = [\n")
+    for i, value in enumerate(space_kerning):
+        if i % 8 == 0:
+            f.write("  ")
+        text = f"{value:.4f}"
+        f.write(text)
+        if i != len(space_kerning) - 1:
+            f.write(", ")
+        if i % 8 == 7:
+            f.write("\n")
+    if len(space_kerning) % 8 != 0:
         f.write("\n")
     f.write("]\n")
 PY
