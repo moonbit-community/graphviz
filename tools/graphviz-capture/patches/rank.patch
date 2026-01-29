@@ -1,0 +1,349 @@
+--- a/lib/dotgen/acyclic.c
++++ b/lib/dotgen/acyclic.c
+@@ -18,11 +18,100 @@
+ #include <dotgen/dot.h>
+ #include <stdbool.h>
+ #include <stddef.h>
++#include <stdio.h>
++#include <stdlib.h>
+ 
++static FILE *mbt_rank_log = NULL;
++static int mbt_rank_graph_id = 0;
++static int mbt_rank_current_graph_id = 0;
++
++static FILE *mbt_rank_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_RANK");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_rank_log)
++        mbt_rank_log = fopen(path, "a");
++    return mbt_rank_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_rank_log_graph_start(void)
++{
++    FILE *out = mbt_rank_log_open();
++    if (!out)
++        return;
++    mbt_rank_current_graph_id = ++mbt_rank_graph_id;
++    fprintf(out, "{\"event\":\"acyclic_start\",\"graph\":%d}\n",
++            mbt_rank_current_graph_id);
++    fflush(out);
++}
++
++static void mbt_rank_log_reverse_edge(edge_t *e)
++{
++    FILE *out = mbt_rank_log_open();
++    if (!out || !e)
++        return;
++    if (mbt_rank_current_graph_id == 0)
++        mbt_rank_current_graph_id = ++mbt_rank_graph_id;
++    node_t *tail = agtail(e);
++    node_t *head = aghead(e);
++    if (!tail || !head)
++        return;
++    if (ND_node_type(tail) != NORMAL || ND_node_type(head) != NORMAL)
++        return;
++    const char *tail_name = agnameof(tail);
++    const char *head_name = agnameof(head);
++    if (!tail_name || !head_name)
++        return;
++    fprintf(out, "{\"event\":\"acyclic_reverse\",\"graph\":%d,\"tail\":",
++            mbt_rank_current_graph_id);
++    mbt_write_json_string(out, tail_name);
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, head_name);
++    fputs("}\n", out);
++    fflush(out);
++}
++
+ void reverse_edge(edge_t * e)
+ {
+     edge_t *f;
+ 
++    mbt_rank_log_reverse_edge(e);
+     delete_fast_edge(e);
+     if ((f = find_fast_edge(aghead(e), agtail(e))))
+ 	merge_oneway(e, f);
+@@ -59,6 +148,8 @@
+ {
+     node_t *n;
+ 
++    mbt_rank_log_graph_start();
++
+     for (size_t c = 0; c < GD_comp(g).size; c++) {
+ 	GD_nlist(g) = GD_comp(g).list[c];
+ 	for (n = GD_nlist(g); n; n = ND_next(n))
+@@ -67,4 +158,3 @@
+ 	    dfs(n);
+     }
+ }
+-
+--- a/lib/common/ns.c
++++ b/lib/common/ns.c
+@@ -23,6 +23,7 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <util/alloc.h>
+ #include <util/exit.h>
+ #include <util/gv_math.h>
+@@ -39,6 +40,182 @@
+ static void check_cycles(graph_t * g);
+ #endif
+ 
++typedef struct {
++    int case_id;
++    size_t node_count;
++    node_t **nodes;
++} mbt_rank_capture_t;
++
++static FILE *mbt_rank_log = NULL;
++static int mbt_rank_case_id = 0;
++
++static FILE *mbt_rank_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_RANK");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_rank_log)
++        mbt_rank_log = fopen(path, "a");
++    return mbt_rank_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_write_json_string_or_null(FILE *out, const char *s)
++{
++    if (s)
++        mbt_write_json_string(out, s);
++    else
++        fputs("null", out);
++}
++
++static const char *mbt_rank_node_kind(node_t *n)
++{
++    switch (ND_node_type(n)) {
++    case NORMAL:
++        return "normal";
++    case VIRTUAL:
++        return "virtual";
++    case SLACKNODE:
++        return "slack";
++    case REVERSED:
++        return "reversed";
++    case FLATORDER:
++        return "flatorder";
++    case CLUSTER_EDGE:
++        return "cluster";
++    case IGNORED:
++        return "ignored";
++    default:
++        return "unknown";
++    }
++}
++
++static int mbt_rank_node_id(node_t *n, node_t **nodes, size_t count)
++{
++    for (size_t i = 0; i < count; i++) {
++        if (nodes[i] == n)
++            return (int)i;
++    }
++    return -1;
++}
++
++static mbt_rank_capture_t mbt_rank_capture_input(graph_t *g)
++{
++    mbt_rank_capture_t cap = {0};
++    FILE *out = mbt_rank_log_open();
++    if (!out)
++        return cap;
++
++    cap.case_id = ++mbt_rank_case_id;
++
++    size_t count = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        count++;
++    cap.node_count = count;
++    cap.nodes = gv_calloc(count, sizeof(node_t *));
++
++    size_t idx = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        cap.nodes[idx++] = n;
++
++    fprintf(out, "{\"event\":\"simplex_input\",\"case\":%d,\"nodes\":[",
++            cap.case_id);
++    for (size_t i = 0; i < cap.node_count; i++) {
++        if (i > 0)
++            fputc(',', out);
++        node_t *n = cap.nodes[i];
++        const char *name = (ND_node_type(n) == NORMAL) ? agnameof(n) : NULL;
++        fprintf(out, "{\"id\":%d,\"name\":", (int)i);
++        mbt_write_json_string_or_null(out, name);
++        fputs(",\"kind\":", out);
++        mbt_write_json_string(out, mbt_rank_node_kind(n));
++        fprintf(out, ",\"rank\":%d}", ND_rank(n));
++    }
++    fputs("],\"edges\":[", out);
++    bool first_edge = true;
++    for (size_t i = 0; i < cap.node_count; i++) {
++        node_t *tail = cap.nodes[i];
++        edge_t *e;
++        for (int j = 0; (e = ND_out(tail).list[j]); j++) {
++            int head_id = mbt_rank_node_id(aghead(e), cap.nodes, cap.node_count);
++            if (head_id < 0)
++                continue;
++            if (!first_edge)
++                fputc(',', out);
++            first_edge = false;
++            fprintf(out,
++                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,\"weight\":%d}",
++                    (int)i, head_id, ED_minlen(e), ED_weight(e));
++        }
++    }
++    fputs("]}\n", out);
++    fflush(out);
++
++    return cap;
++}
++
++static void mbt_rank_capture_output(const mbt_rank_capture_t *cap)
++{
++    if (!cap || cap->case_id == 0)
++        return;
++    FILE *out = mbt_rank_log_open();
++    if (!out)
++        return;
++    fprintf(out, "{\"event\":\"simplex_output\",\"case\":%d,\"ranks\":[",
++            cap->case_id);
++    for (size_t i = 0; i < cap->node_count; i++) {
++        if (i > 0)
++            fputc(',', out);
++        fprintf(out, "%d", ND_rank(cap->nodes[i]));
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_rank_capture_free(mbt_rank_capture_t *cap)
++{
++    if (!cap)
++        return;
++    free(cap->nodes);
++    cap->nodes = NULL;
++    cap->node_count = 0;
++    cap->case_id = 0;
++}
++
+ #define LENGTH(e)		(ND_rank(aghead(e)) - ND_rank(agtail(e)))
+ #define SLACK(e)		(LENGTH(e) - ED_minlen(e))
+ #define SEQ(a,b,c)		((a) <= (b) && (b) <= (c))
+@@ -911,6 +1088,7 @@
+     char ns[] = "network simplex: ";
+     edge_t *e;
+     network_simplex_ctx_t ctx = {0};
++    mbt_rank_capture_t mbt_capture = mbt_rank_capture_input(g);
+ 
+ #ifdef DEBUG
+     check_cycles(g);
+@@ -935,11 +1113,13 @@
+ 	const int err = feasible_tree(&ctx);
+ 	if (err != 0) {
+ 	    freeTreeList(&ctx, g);
++            mbt_rank_capture_free(&mbt_capture);
+ 	    return err;
+ 	}
+     }
+     if (maxiter <= 0) {
+ 	freeTreeList(&ctx, g);
++        mbt_rank_capture_free(&mbt_capture);
+ 	return 0;
+     }
+ 
+@@ -948,6 +1128,7 @@
+ 	const int err = update(&ctx, e, f);
+ 	if (err != 0) {
+ 	    freeTreeList(&ctx, g);
++            mbt_rank_capture_free(&mbt_capture);
+ 	    return err;
+ 	}
+ 	iter++;
+@@ -974,6 +1155,8 @@
+ 	freeTreeList (&ctx, ctx.G);
+ 	break;
+     }
++    mbt_rank_capture_output(&mbt_capture);
++    mbt_rank_capture_free(&mbt_capture);
+     if (Verbose) {
+ 	if (iter >= 100)
+ 	    fputc('\n', stderr);
