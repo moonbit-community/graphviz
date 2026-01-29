@@ -12,7 +12,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-output_path="${repo_root}/src/layout/dot/font_metrics.generated.mbt"
+output_path="${repo_root}/src/layout/dot/font_metrics/font_metrics.generated.mbt"
 export OUTPUT_PATH="${output_path}"
 
 python3 - <<'PY'
@@ -152,14 +152,14 @@ for right in range(128):
 
 with open(output_path, "w", encoding="ascii") as f:
     f.write("///|\n")
-    f.write("const HAS_FONT_METRICS : Bool = true\n\n")
+    f.write("pub const HAS_FONT_METRICS : Bool = true\n\n")
     f.write("///|\n")
-    f.write("const HAS_FONT_KERNING : Bool = true\n\n")
+    f.write("pub const HAS_FONT_KERNING : Bool = true\n\n")
 
     f.write("///|\n")
-    f.write("const HAS_SPACE_KERNING : Bool = true\n\n")
+    f.write("pub const HAS_SPACE_KERNING : Bool = true\n\n")
     f.write("///|\n")
-    f.write("let font_metrics : Array[Double] = [\n")
+    f.write("pub let font_metrics : Array[Double] = [\n")
     for i, value in enumerate(widths):
         if i % 8 == 0:
             f.write("  ")
@@ -177,7 +177,7 @@ with open(output_path, "w", encoding="ascii") as f:
     f.write("]\n")
 
     f.write("\n///|\n")
-    f.write("let font_kerning : Array[Double] = [\n")
+    f.write("pub let font_kerning : Array[Double] = [\n")
     for i, value in enumerate(kerning):
         if i % 8 == 0:
             f.write("  ")
@@ -192,7 +192,7 @@ with open(output_path, "w", encoding="ascii") as f:
     f.write("]\n")
 
     f.write("\n///|\n")
-    f.write("let font_space_kerning : Array[Double] = [\n")
+    f.write("pub let font_space_kerning : Array[Double] = [\n")
     for i, value in enumerate(space_kerning):
         if i % 8 == 0:
             f.write("  ")

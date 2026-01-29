@@ -1,14 +1,14 @@
 ///|
-const HAS_FONT_METRICS : Bool = true
+pub const HAS_FONT_METRICS : Bool = true
 
 ///|
-const HAS_FONT_KERNING : Bool = true
+pub const HAS_FONT_KERNING : Bool = true
 
 ///|
-const HAS_SPACE_KERNING : Bool = true
+pub const HAS_SPACE_KERNING : Bool = true
 
 ///|
-let font_metrics : Array[Double] = [
+pub let font_metrics : Array[Double] = [
   -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 
   -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 
   -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 
@@ -28,7 +28,7 @@ let font_metrics : Array[Double] = [
 ]
 
 ///|
-let font_kerning : Array[Double] = [
+pub let font_kerning : Array[Double] = [
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
@@ -2080,7 +2080,7 @@ let font_kerning : Array[Double] = [
 ]
 
 ///|
-let font_space_kerning : Array[Double] = [
+pub let font_space_kerning : Array[Double] = [
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 
   0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 

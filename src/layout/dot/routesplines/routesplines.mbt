@@ -1,4 +1,45 @@
 ///|
+type NodeSize = @dot_shared.NodeSize
+
+///|
+type RankDir = @dot_shared.RankDir
+
+///|
+fn default_node_width_in() -> Double {
+  @dot_shared.default_node_width_in()
+}
+
+///|
+fn default_node_height_in() -> Double {
+  @dot_shared.default_node_height_in()
+}
+
+///|
+fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
+  @dot_shared.node_size_from_points(width_pt, height_pt)
+}
+
+///|
+fn port_is_explicit(port : @cgraph.Port?) -> Bool {
+  @dot_shared.port_is_explicit(port)
+}
+
+///|
+fn edge_key(edge : @cgraph.Edge) -> String {
+  @dot_shared.edge_key(edge)
+}
+
+///|
+fn min_double(a : Double, b : Double) -> Double {
+  if a < b { a } else { b }
+}
+
+///|
+fn max_double(a : Double, b : Double) -> Double {
+  if a > b { a } else { b }
+}
+
+///|
 const ROUTE_FUDGE : Double = 4.0
 
 ///|
@@ -510,7 +551,7 @@ fn route_pathplan_from_boxes(
   }
   let (start_in, end_in) =
     nudge_route_endpoints(start, end, rankdir, tail_explicit, head_explicit)
-  let path = shortest_path_in_poly(polygon, start_in, end_in)
+  let path = @pathplan.shortest_path_in_poly(polygon, start_in, end_in)
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
     let parts : Array[String] = []
     for point in path {
@@ -617,7 +658,7 @@ fn adjust_regular_path(
 }
 
 ///|
-fn edge_pathplan_polyline(
+pub fn edge_pathplan_polyline(
   edge : @cgraph.Edge,
   tail_name : String,
   head_name : String,

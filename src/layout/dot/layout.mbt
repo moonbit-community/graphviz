@@ -1,14 +1,4 @@
 ///|
-priv struct NodeSize {
-  width_in : Double
-  height_in : Double
-  width_pt : Double
-  height_pt : Double
-  left_pt : Double
-  right_pt : Double
-}
-
-///|
 priv struct EdgeVnodeInfo {
   vnode_ranks : Map[String, Int]
   vnode_sizes : Map[String, NodeSize]
@@ -31,16 +21,6 @@ fn default_ranksep_in() -> Double {
 const BACKWARD_PENALTY : Int = 1
 const VNODE_ENDPOINT_WEIGHT : Int = 1
 const DEFAULT_VNODE_WEIGHT : Double = 1.0
-
-///|
-fn default_node_width_in() -> Double {
-  0.75
-}
-
-///|
-fn default_node_height_in() -> Double {
-  0.5
-}
 
 ///|
 fn default_point_size_in() -> Double {
@@ -438,10 +418,10 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
 
 ///|
 fn char_width_units_base(ch : Char) -> Double {
-  if HAS_FONT_METRICS {
+  if @font_metrics.HAS_FONT_METRICS {
     let code = ch.to_int()
-    if code >= 0 && code < font_metrics.length() {
-      let width = font_metrics[code]
+    if code >= 0 && code < @font_metrics.font_metrics.length() {
+      let width = @font_metrics.font_metrics[code]
       if width > 0.0 {
         return width
       }
@@ -533,7 +513,7 @@ fn char_width_units_base(ch : Char) -> Double {
 ///|
 fn char_width_units(ch : Char, uppercase_boost : Bool) -> Double {
   let base = char_width_units_base(ch)
-  if HAS_FONT_METRICS {
+  if @font_metrics.HAS_FONT_METRICS {
     base
   } else if uppercase_boost && ch.is_ascii_uppercase() {
     base + 22.0
@@ -546,7 +526,7 @@ fn char_width_units(ch : Char, uppercase_boost : Bool) -> Double {
 
 ///|
 fn record_char_width_units(ch : Char) -> Double {
-  if HAS_FONT_METRICS {
+  if @font_metrics.HAS_FONT_METRICS {
     return char_width_units_base(ch)
   }
   let base =
@@ -566,21 +546,21 @@ fn record_char_width_units(ch : Char) -> Double {
 
 ///|
 fn char_kerning_units(prev : Char, curr : Char) -> Double {
-  if !HAS_FONT_KERNING {
+  if !@font_metrics.HAS_FONT_KERNING {
     return 0.0
   }
-  if prev == ' ' && HAS_SPACE_KERNING {
+  if prev == ' ' && @font_metrics.HAS_SPACE_KERNING {
     let right = curr.to_int()
-    if right >= 0 && right < font_space_kerning.length() {
-      return font_space_kerning[right]
+    if right >= 0 && right < @font_metrics.font_space_kerning.length() {
+      return @font_metrics.font_space_kerning[right]
     }
   }
   let left = prev.to_int()
   let right = curr.to_int()
   if left >= 0 && left < 128 && right >= 0 && right < 128 {
     let idx = left * 128 + right
-    if idx >= 0 && idx < font_kerning.length() {
-      return font_kerning[idx]
+    if idx >= 0 && idx < @font_metrics.font_kerning.length() {
+      return @font_metrics.font_kerning[idx]
     }
   }
   0.0
@@ -637,7 +617,8 @@ fn label_text_dimensions(
     }
     let width_units = char_width_units_base('0')
     let width_scale = font_width_scale(font_name)
-    let text_scale = if HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
+    let text_scale =
+      if @font_metrics.HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
     let width_pt = max_cols.to_double() *
       width_units *
       font_size_pt *
@@ -726,7 +707,7 @@ fn label_text_dimensions(
     max_units = current_units
   }
   let width_scale = font_width_scale(font_name)
-  let text_scale = if HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
+  let text_scale = if @font_metrics.HAS_FONT_METRICS { 1.0 } else { TEXT_SCALE }
   let width_pt = max_units *
     font_size_pt *
     text_scale *
@@ -796,7 +777,8 @@ fn record_label_text_dimensions(
     }
     let width_units = record_char_width_units('0')
     let width_scale = font_width_scale(font_name)
-    let text_scale = if HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
+    let text_scale =
+      if @font_metrics.HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
     let width_pt = max_cols.to_double() *
       width_units *
       font_size_pt *
@@ -877,7 +859,8 @@ fn record_label_text_dimensions(
     lines = lines - 1
   }
   let width_scale = font_width_scale(font_name)
-  let text_scale = if HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
+  let text_scale =
+    if @font_metrics.HAS_FONT_METRICS { 1.0 } else { RECORD_TEXT_SCALE }
   let width_pt = max_units *
     font_size_pt *
     text_scale *
@@ -1254,14 +1237,6 @@ fn record_group_size(
       }
   }
   { width_pt: width, height_pt: height }
-}
-
-///|
-fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
-  let width_in = width_pt / 72.0
-  let height_in = height_pt / 72.0
-  let half = width_pt / 2.0
-  { width_in, height_in, width_pt, height_pt, left_pt: half, right_pt: half }
 }
 
 ///|
@@ -2649,14 +2624,6 @@ fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
       lower != "false" && lower != "0" && lower != "no"
     }
     None => true
-  }
-}
-
-///|
-fn port_is_explicit(port : @cgraph.Port?) -> Bool {
-  match port {
-    Some(value) => value.name is Some(_) || value.compass is Some(_)
-    None => false
   }
 }
 
@@ -5755,55 +5722,6 @@ fn format_rects(rects : Array[@geom.Rect]) -> String {
 }
 
 ///|
-fn port_key(port : @cgraph.Port?) -> String {
-  match port {
-    None => ""
-    Some(value) => {
-      let mut out = ""
-      match value.name {
-        Some(name) => out = name
-        None => ()
-      }
-      match value.compass {
-        Some(compass) => {
-          let label = match compass {
-            @cgraph.Compass::N => "n"
-            @cgraph.Compass::NE => "ne"
-            @cgraph.Compass::E => "e"
-            @cgraph.Compass::SE => "se"
-            @cgraph.Compass::S => "s"
-            @cgraph.Compass::SW => "sw"
-            @cgraph.Compass::W => "w"
-            @cgraph.Compass::NW => "nw"
-            @cgraph.Compass::C => "c"
-          }
-          if out == "" {
-            out = label
-          } else {
-            out = "\{out}:\{label}"
-          }
-        }
-        None => ()
-      }
-      out
-    }
-  }
-}
-
-///|
-fn edge_key(edge : @cgraph.Edge) -> String {
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  let name = match edge.name() {
-    Some(value) => value
-    None => ""
-  }
-  let tail_port = port_key(edge.tail_port())
-  let head_port = port_key(edge.head_port())
-  "\{tail}|\{head}|\{name}|\{tail_port}|\{head_port}"
-}
-
-///|
 fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
   if points.length() == 0 {
     return None
@@ -8468,7 +8386,7 @@ pub fn layout_dot(
         let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
         let (points, using_pathplan) =
           if use_pathplan && has_vnodes && !is_flat_edge {
-          match edge_pathplan_polyline(
+          match @routesplines.edge_pathplan_polyline(
             edge,
             tail_name,
             head_name,

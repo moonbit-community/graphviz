@@ -377,7 +377,7 @@ fn path_nodes_to_points(
 }
 
 ///|
-fn shortest_path_in_poly(
+pub fn shortest_path_in_poly(
   poly_points : Array[@geom.Point],
   start : @geom.Point,
   end : @geom.Point,

@@ -4,6 +4,18 @@
       "path": "moonbit-community/graphviz/layout/html",
       "alias": "html_label"
     },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/font_metrics",
+      "alias": "font_metrics"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/shared",
+      "alias": "dot_shared"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/routesplines",
+      "alias": "routesplines"
+    },
     "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",

@@ -1,11 +1,6 @@
 ///|
 /// Rank direction for dot layout.
-pub(all) enum RankDir {
-  TB
-  BT
-  LR
-  RL
-} derive(Show, Eq)
+pub type RankDir = @dot_shared.RankDir
 
 ///|
 /// Edge routing mode for dot layouts.

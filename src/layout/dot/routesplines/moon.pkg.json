@@ -1,0 +1,15 @@
+{
+  "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/dot/pathplan",
+      "alias": "pathplan"
+    },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/shared",
+      "alias": "dot_shared"
+    },
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/x/sys"
+  ]
+}
