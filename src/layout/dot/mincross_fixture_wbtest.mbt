@@ -1,0 +1,305 @@
+///|
+struct MincrossNode {
+  id : Int
+  rank : Int
+}
+
+///|
+struct MincrossEdge {
+  tail : Int
+  head : Int
+  xpenalty : Int
+}
+
+///|
+struct MincrossInput {
+  case_id : Int
+  graph : String
+  minrank : Int
+  maxrank : Int
+  nodes : Array[MincrossNode]
+  edges : Array[MincrossEdge]
+  ranks : Array[Array[Int]]
+}
+
+///|
+struct MincrossOutput {
+  case_id : Int
+  ranks : Array[Array[Int]]
+}
+
+///|
+fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    graph: @json.from_json(obj["graph"]),
+    minrank: @json.from_json(obj["minrank"]),
+    maxrank: @json.from_json(obj["maxrank"]),
+    nodes: parse_mincross_nodes(obj["nodes"]),
+    edges: parse_mincross_edges(obj["edges"]),
+    ranks: @json.from_json(obj["ranks"]),
+  }
+}
+
+///|
+fn parse_mincross_output(obj : Map[String, Json]) -> MincrossOutput raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    ranks: @json.from_json(obj["ranks"]),
+  }
+}
+
+///|
+fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
+  let items : Array[Json] = @json.from_json(value)
+  let nodes : Array[MincrossNode] = []
+  for item in items {
+    let obj = require_object(item)
+    let id : Int = @json.from_json(obj["id"])
+    let rank : Int = @json.from_json(obj["rank"])
+    nodes.push({ id, rank })
+  }
+  nodes
+}
+
+///|
+fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
+  let items : Array[Json] = @json.from_json(value)
+  let edges : Array[MincrossEdge] = []
+  for item in items {
+    let obj = require_object(item)
+    let tail : Int = @json.from_json(obj["tail"])
+    let head : Int = @json.from_json(obj["head"])
+    let xpenalty : Int = @json.from_json(obj["xpenalty"])
+    edges.push({ tail, head, xpenalty })
+  }
+  edges
+}
+
+///|
+fn load_mincross_fixtures() -> Array[(MincrossInput, MincrossOutput)] raise {
+  let data = @fs.read_file_to_string("tests/fixtures/graphviz/mincross.jsonl")
+  let cases : Array[(MincrossInput, MincrossOutput)] = []
+  let mut pending : MincrossInput? = None
+  for line in data.split("\n") {
+    if line.length() == 0 {
+      continue
+    }
+    let json = @json.parse(line)
+    let obj = require_object(json)
+    let event : String = @json.from_json(obj["event"])
+    match event {
+      "mincross_input" => {
+        if pending is Some(_) {
+          fail("unexpected mincross_input while pending")
+        }
+        pending = Some(parse_mincross_input(obj))
+      }
+      "mincross_output" => {
+        let output = parse_mincross_output(obj)
+        match pending {
+          Some(input) => {
+            if input.case_id != output.case_id {
+              fail(
+                "mincross case mismatch input=\{input.case_id} output=\{output.case_id}",
+              )
+            }
+            cases.push((input, output))
+            pending = None
+          }
+          None => fail("mincross_output without mincross_input")
+        }
+      }
+      _ => fail("unknown mincross fixture event: \{event}")
+    }
+  }
+  match pending {
+    Some(_) => fail("missing mincross_output for last case")
+    None => ()
+  }
+  cases
+}
+
+///|
+fn node_key(id : Int) -> String {
+  "n\{id}"
+}
+
+///|
+fn assert_rank_groups(
+  case_id : Int,
+  graph : String,
+  actual : Array[Array[Int]],
+  expected : Array[Array[Int]],
+) -> Unit raise {
+  if actual.length() != expected.length() {
+    fail(
+      "case \{case_id} graph=\{graph} rank count mismatch actual=\{actual.length()} expected=\{expected.length()}",
+    )
+  }
+  for i in 0..<expected.length() {
+    let actual_rank = actual[i]
+    let expected_rank = expected[i]
+    if actual_rank.length() != expected_rank.length() {
+      fail(
+        "case \{case_id} graph=\{graph} rank[\{i}] length mismatch actual=\{actual_rank.length()} expected=\{expected_rank.length()}",
+      )
+    }
+    for j in 0..<expected_rank.length() {
+      let actual_id = actual_rank[j]
+      let expected_id = expected_rank[j]
+      if actual_id != expected_id {
+        fail(
+          "case \{case_id} graph=\{graph} rank[\{i}] index=\{j} expected=\{expected_id} actual=\{actual_id}",
+        )
+      }
+    }
+  }
+}
+
+///|
+fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit raise {
+  let graph =
+    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name=input.graph, strict=false)
+  let id_to_name : Map[Int, String] = Map::new()
+  let name_to_id : Map[String, Int] = Map::new()
+  let name_to_rank : Map[String, Int] = Map::new()
+  let name_to_node : Map[String, @cgraph.Node] = Map::new()
+  let name_to_order : Map[String, Int] = Map::new()
+  let sizes : Map[String, NodeSize] = Map::new()
+  let nodes : Array[@cgraph.Node] = []
+  let default_size = node_size_from_points(
+    default_node_width_in() * 72.0,
+    default_node_height_in() * 72.0,
+  )
+  for node in input.nodes {
+    let name = node_key(node.id)
+    id_to_name[node.id] = name
+    name_to_id[name] = node.id
+    name_to_rank[name] = node.rank
+    let cnode = graph.node(name)
+    name_to_node[name] = cnode
+    nodes.push(cnode)
+    sizes[name] = default_size
+  }
+  let edges : Array[@cgraph.Edge] = []
+  let edge_tail : Array[String] = []
+  let edge_head : Array[String] = []
+  for edge in input.edges {
+    let tail_name = match id_to_name.get(edge.tail) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing tail id \{edge.tail}")
+    }
+    let head_name = match id_to_name.get(edge.head) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing head id \{edge.head}")
+    }
+    if edge.xpenalty < 0 {
+      fail(
+        "case \{input.case_id} graph=\{input.graph} negative xpenalty \{edge.xpenalty}",
+      )
+    }
+    let tail_node = match name_to_node.get(tail_name) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing tail node \{tail_name}")
+    }
+    let head_node = match name_to_node.get(head_name) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing head node \{head_name}")
+    }
+    let edge_obj = graph.edge(tail_node, head_node)
+    edges.push(edge_obj)
+    edge_tail.push(tail_name)
+    edge_head.push(head_name)
+  }
+  let rank_keys : Array[Int] = []
+  for rank in input.minrank..=input.maxrank {
+    rank_keys.push(rank)
+  }
+  if input.ranks.length() != rank_keys.length() {
+    fail(
+      "case \{input.case_id} graph=\{input.graph} rank list length mismatch expected=\{rank_keys.length()} actual=\{input.ranks.length()}",
+    )
+  }
+  let groups : Map[Int, Array[String]] = Map::new()
+  let mut rank = input.minrank
+  for rank_nodes in input.ranks {
+    let names : Array[String] = []
+    for node_id in rank_nodes {
+      let name = match id_to_name.get(node_id) {
+        Some(value) => value
+        None => fail("case \{input.case_id} missing node id \{node_id}")
+      }
+      let node_rank = match name_to_rank.get(name) {
+        Some(value) => value
+        None => rank
+      }
+      if node_rank != rank {
+        fail(
+          "case \{input.case_id} graph=\{input.graph} node \{node_id} rank mismatch expected=\{rank} actual=\{node_rank}",
+        )
+      }
+      name_to_order[name] = names.length()
+      names.push(name)
+    }
+    groups[rank] = names
+    rank = rank + 1
+  }
+  let (parents, children) =
+    build_edge_index_for_order(nodes, edges, edge_tail, edge_head, name_to_rank)
+  let edge_order = collect_edge_order(edges)
+  let nodesep_pt = default_nodesep_in() * 72.0
+  let ordered = reorder_rank_groups(
+    rank_keys,
+    groups,
+    edges,
+    edge_tail,
+    edge_head,
+    parents,
+    children,
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    edge_order,
+    name_to_order,
+    sizes,
+    nodesep_pt,
+    false,
+    Map::new(),
+    Map::new(),
+    Map::new(),
+  )
+  let actual : Array[Array[Int]] = []
+  for rank_key in rank_keys {
+    let names = match ordered.get(rank_key) {
+      Some(list) => list
+      None => []
+    }
+    let ids : Array[Int] = []
+    for name in names {
+      let id = match name_to_id.get(name) {
+        Some(value) => value
+        None => fail("case \{input.case_id} missing name \{name}")
+      }
+      ids.push(id)
+    }
+    actual.push(ids)
+  }
+  assert_rank_groups(input.case_id, input.graph, actual, output.ranks)
+}
+
+///|
+test "mincross fixtures load" {
+  let cases = load_mincross_fixtures()
+  assert_true(cases.length() > 0)
+}
+
+///|
+#skip
+test "mincross fixtures match reorder_rank_groups" {
+  let cases = load_mincross_fixtures()
+  for pair in cases {
+    let (input, output) = pair
+    run_mincross_case(input, output)
+  }
+}
