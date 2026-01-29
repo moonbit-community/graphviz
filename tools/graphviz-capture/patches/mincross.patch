@@ -1,0 +1,303 @@
+--- a/lib/dotgen/mincross.c
++++ b/lib/dotgen/mincross.c
+@@ -23,6 +23,7 @@
+ #include <dotgen/dot.h>
+ #include <inttypes.h>
+ #include <limits.h>
++#include <stdio.h>
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+@@ -40,7 +41,255 @@
+   size_t ncols;  ///< how many columns have been allocated?
+   uint8_t *data; ///< bit-packed backing memory
+ };
++
++typedef struct {
++    int case_id;
++    size_t node_count;
++    node_t **nodes;
++} mbt_mincross_capture_t;
++
++static FILE *mbt_mincross_log = NULL;
++static int mbt_mincross_case_id = 0;
++
++static FILE *mbt_mincross_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_MINCROSS");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_mincross_log)
++        mbt_mincross_log = fopen(path, "a");
++    return mbt_mincross_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_write_json_string_or_null(FILE *out, const char *s)
++{
++    if (s)
++        mbt_write_json_string(out, s);
++    else
++        fputs("null", out);
++}
++
++static const char *mbt_mincross_node_kind(node_t *n)
++{
++    switch (ND_node_type(n)) {
++    case NORMAL:
++        return "normal";
++    case VIRTUAL:
++        return "virtual";
++    case SLACKNODE:
++        return "slack";
++    case REVERSED:
++        return "reversed";
++    case FLATORDER:
++        return "flatorder";
++    case CLUSTER_EDGE:
++        return "cluster";
++    case IGNORED:
++        return "ignored";
++    default:
++        return "unknown";
++    }
++}
++
++static const char *mbt_mincross_edge_kind(edge_t *e)
++{
++    switch (ED_edge_type(e)) {
++    case NORMAL:
++        return "normal";
++    case VIRTUAL:
++        return "virtual";
++    case SLACKNODE:
++        return "slack";
++    case REVERSED:
++        return "reversed";
++    case FLATORDER:
++        return "flatorder";
++    case CLUSTER_EDGE:
++        return "cluster";
++    case IGNORED:
++        return "ignored";
++    default:
++        return "unknown";
++    }
++}
++
++static int mbt_mincross_node_id(node_t *n, node_t **nodes, size_t count)
++{
++    for (size_t i = 0; i < count; i++) {
++        if (nodes[i] == n)
++            return (int)i;
++    }
++    return -1;
++}
++
++static void mbt_mincross_capture_input(
++    graph_t *g,
++    int startpass,
++    mbt_mincross_capture_t *cap)
++{
++    if (!cap || cap->case_id != 0)
++        return;
++    FILE *out = mbt_mincross_log_open();
++    if (!out)
++        return;
++
++    cap->case_id = ++mbt_mincross_case_id;
+ 
++    size_t count = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        count++;
++    cap->node_count = count;
++    cap->nodes = gv_calloc(count, sizeof(node_t *));
++
++    size_t idx = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        cap->nodes[idx++] = n;
++
++    fprintf(out,
++            "{\"event\":\"mincross_input\",\"case\":%d,\"graph\":",
++            cap->case_id);
++    mbt_write_json_string(out, agnameof(g));
++    fprintf(out, ",\"startpass\":%d,\"minrank\":%d,\"maxrank\":%d",
++            startpass, GD_minrank(g), GD_maxrank(g));
++    fprintf(out, ",\"flip\":%s", GD_flip(g) ? "true" : "false");
++    fprintf(out, ",\"nodes\":[");
++    for (size_t i = 0; i < cap->node_count; i++) {
++        if (i > 0)
++            fputc(',', out);
++        node_t *n = cap->nodes[i];
++        const char *name = (ND_node_type(n) == NORMAL) ? agnameof(n) : NULL;
++        fprintf(out, "{\"id\":%d,\"name\":", (int)i);
++        mbt_write_json_string_or_null(out, name);
++        fputs(",\"kind\":", out);
++        mbt_write_json_string(out, mbt_mincross_node_kind(n));
++        fprintf(out, ",\"rank\":%d,\"order\":%d}",
++                ND_rank(n), ND_order(n));
++    }
++    fputs("],\"edges\":[", out);
++    bool first_edge = true;
++    for (size_t i = 0; i < cap->node_count; i++) {
++        node_t *tail = cap->nodes[i];
++        edge_t *e;
++        for (int j = 0; (e = ND_out(tail).list[j]); j++) {
++            int head_id = mbt_mincross_node_id(aghead(e), cap->nodes, cap->node_count);
++            if (head_id < 0)
++                continue;
++            if (!first_edge)
++                fputc(',', out);
++            first_edge = false;
++            fprintf(out,
++                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,"
++                    "\"weight\":%d,\"xpenalty\":%d,"
++                    "\"tail_port_x\":%.17g,\"head_port_x\":%.17g,"
++                    "\"type\":",
++                    (int)i, head_id, ED_minlen(e),
++                    ED_weight(e), ED_xpenalty(e),
++                    ED_tail_port(e).p.x, ED_head_port(e).p.x);
++            mbt_write_json_string(out, mbt_mincross_edge_kind(e));
++            fputc('}', out);
++        }
++    }
++    fputs("],\"ranks\":[", out);
++    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
++        if (r > GD_minrank(g))
++            fputc(',', out);
++        fputc('[', out);
++        int out_idx = 0;
++        for (int i = 0; i < GD_rank(g)[r].n; i++) {
++            node_t *n = GD_rank(g)[r].v[i];
++            if (!n)
++                continue;
++            int id = mbt_mincross_node_id(n, cap->nodes, cap->node_count);
++            if (id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", id);
++        }
++        fputc(']', out);
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_mincross_capture_output(
++    graph_t *g,
++    const mbt_mincross_capture_t *cap)
++{
++    if (!cap || cap->case_id == 0)
++        return;
++    FILE *out = mbt_mincross_log_open();
++    if (!out)
++        return;
++    fprintf(out, "{\"event\":\"mincross_output\",\"case\":%d,\"ranks\":[",
++            cap->case_id);
++    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
++        if (r > GD_minrank(g))
++            fputc(',', out);
++        fputc('[', out);
++        int out_idx = 0;
++        for (int i = 0; i < GD_rank(g)[r].n; i++) {
++            node_t *n = GD_rank(g)[r].v[i];
++            if (!n)
++                continue;
++            int id = mbt_mincross_node_id(n, cap->nodes, cap->node_count);
++            if (id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", id);
++        }
++        fputc(']', out);
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_mincross_capture_free(mbt_mincross_capture_t *cap)
++{
++    if (!cap)
++        return;
++    free(cap->nodes);
++    cap->nodes = NULL;
++    cap->node_count = 0;
++    cap->case_id = 0;
++}
++
+ /// get the value of a matrix cell
+ ///
+ /// @param me Matrix to inspect
+@@ -774,10 +1023,12 @@
+     const int endpass = 2;
+     int maxthispass = 0, iter, trying, pass;
+     int64_t cur_cross, best_cross;
++    mbt_mincross_capture_t mbt_capture = {0};
+ 
+     if (startpass > 1) {
+ 	cur_cross = best_cross = ncross();
+ 	save_best(g);
++        mbt_mincross_capture_input(g, startpass, &mbt_capture);
+     } else
+ 	cur_cross = best_cross = INT64_MAX;
+     for (pass = startpass; pass <= endpass; pass++) {
+@@ -785,11 +1036,14 @@
+ 	    maxthispass = MIN(4, MaxIter);
+ 	    if (g == dot_root(g))
+ 		if (build_ranks(g, pass) != 0) {
++		    mbt_mincross_capture_free(&mbt_capture);
+ 		    return -1;
+ 		}
+ 	    if (pass == 0)
+ 		flat_breakcycles(g);
+ 	    flat_reorder(g);
++            if (pass == 0)
++                mbt_mincross_capture_input(g, startpass, &mbt_capture);
+ 
+ 	    if ((cur_cross = ncross()) <= best_cross) {
+ 		save_best(g);
+@@ -830,6 +1084,8 @@
+ 	best_cross = ncross();
+     }
+ 
++    mbt_mincross_capture_output(g, &mbt_capture);
++    mbt_mincross_capture_free(&mbt_capture);
+     return best_cross;
+ }
+ 
