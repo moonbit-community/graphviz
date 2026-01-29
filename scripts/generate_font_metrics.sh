@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v dot >/dev/null 2>&1; then
-  echo "dot CLI not found; install Graphviz to generate font metrics" >&2
+DOT_BIN="${DOT_BIN:-dot}"
+if [ -x "$DOT_BIN" ]; then
+  :
+elif command -v "$DOT_BIN" >/dev/null 2>&1; then
+  :
+else
+  echo "dot CLI not found; set DOT_BIN or install Graphviz to generate font metrics" >&2
   exit 1
 fi
 
@@ -16,9 +21,10 @@ output_path="${repo_root}/src/layout/dot/font_metrics/font_metrics.generated.mbt
 export OUTPUT_PATH="${output_path}"
 
 python3 - <<'PY'
+import json
 import os
-import re
 import subprocess
+import tempfile
 
 fontname = "Times-Roman"
 fontsize = 14.0
@@ -28,17 +34,36 @@ output_path = os.environ["OUTPUT_PATH"]
 def escape_label(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
-def dot_xdot(dot_source: str) -> str:
+dot_bin = os.environ.get("DOT_BIN", "dot")
+
+def dot_textspan(dot_source: str) -> list[dict]:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        log_path = tmp.name
+    env = os.environ.copy()
+    env["MBT_CAPTURE_TEXTSPAN"] = log_path
     result = subprocess.run(
-        ["dot", "-Txdot"],
+        [dot_bin, "-Tdot"],
         input=dot_source.encode("utf-8"),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
+        env=env,
     )
     if result.returncode != 0:
         raise RuntimeError(result.stderr.decode("utf-8", errors="ignore"))
-    return result.stdout.decode("utf-8", errors="ignore")
+    entries = []
+    with open(log_path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            entries.append(json.loads(line))
+    os.remove(log_path)
+    if not entries:
+        raise RuntimeError(
+            "MBT_CAPTURE_TEXTSPAN produced no entries; ensure DOT_BIN includes the textspan patch"
+        )
+    return entries
 
 def collect_text_widths(labels: list[tuple[str, str]]) -> dict[str, float]:
     lines = [
@@ -48,32 +73,26 @@ def collect_text_widths(labels: list[tuple[str, str]]) -> dict[str, float]:
     for name, label in labels:
         lines.append(f'  {name} [label="{escape_label(label)}"];')
     lines.append("}")
-    output = dot_xdot("\n".join(lines))
+    entries = dot_textspan("\n".join(lines))
+    wanted = {label for _, label in labels}
+    by_text: dict[str, float] = {}
+    for entry in entries:
+        if entry.get("font") != fontname:
+            continue
+        if entry.get("size") != fontsize:
+            continue
+        if entry.get("flags") != 0:
+            continue
+        text = entry.get("text") or ""
+        if text in wanted and text not in by_text:
+            by_text[text] = float(entry.get("width", 0.0))
     widths: dict[str, float] = {}
-    node_start = re.compile(r"^\s*([A-Za-z0-9_]+)\s*\[")
-    width_re = re.compile(r"\bT\s+\S+\s+\S+\s+\S+\s+(\S+)")
-    parts = output.splitlines()
-    i = 0
-    while i < len(parts):
-        line = parts[i]
-        match = node_start.match(line)
-        if not match:
-            i += 1
+    for name, label in labels:
+        width = by_text.get(label)
+        if width is None:
+            print(f"warning: failed to measure {label!r}")
             continue
-        name = match.group(1)
-        if name in ("graph", "node", "edge"):
-            i += 1
-            continue
-        block = line
-        while "];" not in parts[i]:
-            i += 1
-            if i >= len(parts):
-                break
-            block += parts[i]
-        width_match = width_re.search(block)
-        if width_match:
-            widths[name] = float(width_match.group(1))
-        i += 1
+        widths[name] = width
     return widths
 
 printable_codes = [code for code in range(128) if 32 <= code <= 126]
@@ -166,7 +185,7 @@ with open(output_path, "w", encoding="ascii") as f:
         if value < 0:
             text = "-1.0"
         else:
-            text = f"{value:.4f}"
+            text = repr(value)
         f.write(text)
         if i != len(widths) - 1:
             f.write(", ")
@@ -181,7 +200,7 @@ with open(output_path, "w", encoding="ascii") as f:
     for i, value in enumerate(kerning):
         if i % 8 == 0:
             f.write("  ")
-        text = f"{value:.4f}"
+        text = repr(value)
         f.write(text)
         if i != len(kerning) - 1:
             f.write(", ")
@@ -196,7 +215,7 @@ with open(output_path, "w", encoding="ascii") as f:
     for i, value in enumerate(space_kerning):
         if i % 8 == 0:
             f.write("  ")
-        text = f"{value:.4f}"
+        text = repr(value)
         f.write(text)
         if i != len(space_kerning) - 1:
             f.write(", ")

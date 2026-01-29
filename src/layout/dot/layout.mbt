@@ -414,6 +414,15 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
 }
 
 ///|
+fn text_line_height(font_name : String, font_size_pt : Double) -> Double {
+  if @font_metrics.HAS_FONT_METRICS {
+    font_size_pt
+  } else {
+    font_size_pt * line_height_scale(font_name, font_size_pt)
+  }
+}
+
+///|
 fn char_width_units_base(ch : Char) -> Double {
   if @font_metrics.HAS_FONT_METRICS {
     let code = ch.to_int()
@@ -572,7 +581,7 @@ fn label_text_dimensions(
   if label == "" {
     return (0.0, 0.0)
   }
-  let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
+  let line_height = text_line_height(font_name, font_size_pt)
   if is_monospace_font(font_name) {
     let mut max_cols = 0
     let mut cols = 0
@@ -723,7 +732,7 @@ fn record_label_text_dimensions(
   if label == "" {
     return (0.0, 0.0)
   }
-  let line_height = font_size_pt * line_height_scale(font_name, font_size_pt)
+  let line_height = text_line_height(font_name, font_size_pt)
   if is_monospace_font(font_name) {
     let mut max_cols = 0
     let mut cols = 0
