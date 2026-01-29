@@ -157,8 +157,8 @@ fn endpoint_slope(endpoint : FixtureEndpoint, invert : Bool) -> @geom.Point {
   if !endpoint.constrained {
     return point(0.0, 0.0)
   }
-  let x = @math.cos(endpoint.theta)
-  let y = @math.sin(endpoint.theta)
+  let x = libm_cos(endpoint.theta)
+  let y = libm_sin(endpoint.theta)
   if invert {
     point(-x, -y)
   } else {
@@ -240,9 +240,11 @@ test "spline fixtures load" {
 }
 
 ///|
-// TODO(graphviz.mbt-ko0.6.1): spline_output fixture mismatch persists (~1e-13).
-#skip
 test "spline fixtures match route spline output" {
+  // Graphviz fixtures come from native libm; non-native math drifts slightly.
+  if !LIBM_IS_NATIVE {
+    return
+  }
   let cases = load_spline_fixtures()
   for entry in cases {
     let (input, shortest, output) = entry

@@ -1061,7 +1061,7 @@ fn point_dot(a : @geom.Point, b : @geom.Point) -> Double {
 fn point_norm(a : @geom.Point) -> @geom.Point {
   let d = a.x * a.x + a.y * a.y
   if d > 0.000001 {
-    let len = Double::sqrt(d)
+    let len = libm_sqrt(d)
     point(a.x / len, a.y / len)
   } else {
     a
@@ -1249,7 +1249,7 @@ fn solve2(coeff : Array[Double], roots : Array[Double]) -> Int {
   if disc < 0.0 {
     return 0
   } else if disc > 0.0 {
-    let root0 = -b_over_2a + Double::sqrt(disc)
+    let root0 = -b_over_2a + libm_sqrt(disc)
     roots[0] = root0
     roots[1] = -2.0 * b_over_2a - root0
     return 2
@@ -1276,15 +1276,15 @@ fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
   let disc = q * q + 4.0 * p * p * p
   let mut rootn = 0
   if disc < 0.0 {
-    let r = 0.5 * Double::sqrt(-disc + q * q)
-    let theta = libm_atan2(Double::sqrt(-disc), -q)
+    let r = 0.5 * libm_sqrt(-disc + q * q)
+    let theta = libm_atan2(libm_sqrt(-disc), -q)
     let temp = 2.0 * libm_cbrt(r)
-    roots[0] = temp * @math.cos(theta / 3.0)
-    roots[1] = temp * @math.cos((theta + @math.PI + @math.PI) / 3.0)
-    roots[2] = temp * @math.cos((theta - @math.PI - @math.PI) / 3.0)
+    roots[0] = temp * libm_cos(theta / 3.0)
+    roots[1] = temp * libm_cos((theta + @math.PI + @math.PI) / 3.0)
+    roots[2] = temp * libm_cos((theta - @math.PI - @math.PI) / 3.0)
     rootn = 3
   } else {
-    let alpha = 0.5 * (Double::sqrt(disc) - q)
+    let alpha = 0.5 * (libm_sqrt(disc) - q)
     let beta = -q - alpha
     roots[0] = libm_cbrt(alpha) + libm_cbrt(beta)
     if disc > 0.0 {
@@ -1443,7 +1443,8 @@ fn spline_is_inside(
   p3 : @geom.Point,
 ) -> Bool {
   let roots : Array[Double] = Array::make(4, 0.0)
-  let trace_spline = @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
+  let trace_spline =
+    LIBM_IS_NATIVE && @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
   for edge in barriers {
     let (l0, l1) = edge
     let rootn = spline_intersects_line(p0, c1, c2, p3, l0, l1, roots)
@@ -1571,7 +1572,8 @@ fn route_spline_recursive_range(
     let mut a = 4.0
     let mut first = true
     let has_barriers = route_barriers.length() > 0
-    let trace_spline = @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
+    let trace_spline =
+      LIBM_IS_NATIVE && @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
     if trace_spline && has_barriers && inpn == 4 {
       let parts : Array[String] = []
       for i in 0..<inpn {
@@ -1843,7 +1845,7 @@ fn compass_vector(compass : @cgraph.Compass, rankdir : RankDir) -> @geom.Point? 
   match compass_angle(compass) {
     Some(angle) => {
       let theta = invflip_angle(angle, rankdir)
-      Some(point(@math.cos(theta), @math.sin(theta)))
+      Some(point(libm_cos(theta), libm_sin(theta)))
     }
     None => None
   }
