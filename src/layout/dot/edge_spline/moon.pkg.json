@@ -1,0 +1,13 @@
+{
+  "import": [
+    {
+      "path": "moonbit-community/graphviz/layout/dot/shared",
+      "alias": "dot_shared"
+    },
+    "moonbit-community/graphviz/cgraph",
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math",
+    "moonbitlang/core/strconv",
+    "moonbitlang/x/sys"
+  ]
+}

@@ -351,9 +351,6 @@ const PAD_X_PT : Double = 16.0
 ///|
 const PAD_Y_PT : Double = 8.0
 
-///|
-const RECORD_BORDER_PT : Double = 0.5
-
 const PERIPHERY_GAP_PT : Double = 4.0
 
 ///|

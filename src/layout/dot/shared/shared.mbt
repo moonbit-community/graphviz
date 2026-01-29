@@ -19,6 +19,9 @@ pub(all) struct NodeSize {
 }
 
 ///|
+pub const RECORD_BORDER_PT : Double = 0.5
+
+///|
 pub fn default_node_width_in() -> Double {
   0.75
 }

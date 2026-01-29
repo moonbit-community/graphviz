@@ -1,4 +1,39 @@
 ///|
+type NodeSize = @dot_shared.NodeSize
+
+///|
+type RankDir = @dot_shared.RankDir
+
+///|
+const RECORD_BORDER_PT : Double = @dot_shared.RECORD_BORDER_PT
+
+///|
+fn port_is_explicit(port : @cgraph.Port?) -> Bool {
+  @dot_shared.port_is_explicit(port)
+}
+
+///|
+fn parse_double(value : String, fallback : Double) -> Double {
+  try @strconv.parse_double(value) catch {
+    _ => fallback
+  } noraise {
+    parsed => parsed
+  }
+}
+
+///|
+fn is_record_shape(node : @cgraph.Node) -> Bool {
+  match node.get_attr("shape") {
+    Some(value) =>
+      match value.to_lower() {
+        "record" | "mrecord" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
 const ARROW_LENGTH : Double = 10.0
 
 ///|
@@ -28,27 +63,27 @@ priv struct Triangle {
 }
 
 ///|
-fn point(x : Double, y : Double) -> @geom.Point {
+pub fn point(x : Double, y : Double) -> @geom.Point {
   @geom.Point::{ x, y }
 }
 
 ///|
-fn point_add(a : @geom.Point, b : @geom.Point) -> @geom.Point {
+pub fn point_add(a : @geom.Point, b : @geom.Point) -> @geom.Point {
   point(a.x + b.x, a.y + b.y)
 }
 
 ///|
-fn point_sub(a : @geom.Point, b : @geom.Point) -> @geom.Point {
+pub fn point_sub(a : @geom.Point, b : @geom.Point) -> @geom.Point {
   point(a.x - b.x, a.y - b.y)
 }
 
 ///|
-fn point_scale(a : @geom.Point, s : Double) -> @geom.Point {
+pub fn point_scale(a : @geom.Point, s : Double) -> @geom.Point {
   point(a.x * s, a.y * s)
 }
 
 ///|
-fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
+pub fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
   let dx = a.x - b.x
   let dy = a.y - b.y
   dx * dx + dy * dy
@@ -56,7 +91,7 @@ fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
 
 ///|
 ///|
-fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
+pub fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   point_add(a, point_scale(point_sub(b, a), t))
 }
 
@@ -328,7 +363,7 @@ fn arrow_length_normal(
 }
 
 ///|
-fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
+pub fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
   let arrowsize = match edge.get_attr("arrowsize") {
     Some(value) => parse_double(value, 1.0)
     None => 1.0
@@ -977,14 +1012,14 @@ fn dedup_consecutive(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
-fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
+pub fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
   let dx = b.x - a.x
   let dy = b.y - a.y
   @math.hypot(dx, dy)
 }
 
 ///|
-fn polyline_length(points : Array[@geom.Point]) -> Double {
+pub fn polyline_length(points : Array[@geom.Point]) -> Double {
   let mut total = 0.0
   if points.length() < 2 {
     return total
@@ -1037,7 +1072,7 @@ fn point_norm(a : @geom.Point) -> @geom.Point {
 }
 
 ///|
-fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
+pub fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
   @math.hypot(a.x - b.x, a.y - b.y)
 }
 
@@ -1892,7 +1927,7 @@ fn port_side_direction(
 }
 
 ///|
-fn port_side_rect(
+pub fn port_side_rect(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> @geom.Rect {
@@ -1907,7 +1942,7 @@ fn port_side_rect(
 }
 
 ///|
-fn port_side_count(
+pub fn port_side_count(
   port_rect : @geom.Rect,
   node_pos : @geom.Point,
   node_size : NodeSize,
@@ -1936,7 +1971,7 @@ fn port_side_count(
 
 ///|
 ///|
-fn endpoint_slope_for_anchor(
+pub fn endpoint_slope_for_anchor(
   port : @cgraph.Port?,
   anchor : @geom.Point,
   node_pos : @geom.Point,
@@ -2002,7 +2037,7 @@ fn endpoint_slope_for_anchor(
 
 
 ///|
-fn edge_spline_for_polyline(
+pub fn edge_spline_for_polyline(
   edge : @cgraph.Edge,
   tail_clip_center : @geom.Point,
   head_clip_center : @geom.Point,
@@ -2078,7 +2113,7 @@ fn edge_spline_for_polyline(
 }
 
 ///|
-fn edge_spline_for_points(
+pub fn edge_spline_for_points(
   edge : @cgraph.Edge,
   points : Array[@geom.Point],
   tail_clip_center : @geom.Point,
@@ -2174,7 +2209,7 @@ fn edge_spline_for_points(
 }
 
 ///|
-fn edge_spline_for_line(
+pub fn edge_spline_for_line(
   edge : @cgraph.Edge,
   tail_center : @geom.Point,
   head_center : @geom.Point,

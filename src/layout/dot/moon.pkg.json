@@ -16,6 +16,10 @@
       "path": "moonbit-community/graphviz/layout/dot/routesplines",
       "alias": "routesplines"
     },
+    {
+      "path": "moonbit-community/graphviz/layout/dot/edge_spline",
+      "alias": "edge_spline"
+    },
     "moonbit-community/graphviz/attrs",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",

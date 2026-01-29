@@ -2,6 +2,9 @@
 type NodeSize = @dot_shared.NodeSize
 
 ///|
+const RECORD_BORDER_PT : Double = @dot_shared.RECORD_BORDER_PT
+
+///|
 fn default_node_width_in() -> Double {
   @dot_shared.default_node_width_in()
 }
