@@ -1015,7 +1015,7 @@ fn dedup_consecutive(points : Array[@geom.Point]) -> Array[@geom.Point] {
 pub fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
   let dx = b.x - a.x
   let dy = b.y - a.y
-  @math.hypot(dx, dy)
+  libm_hypot(dx, dy)
 }
 
 ///|
@@ -1070,7 +1070,7 @@ fn point_norm(a : @geom.Point) -> @geom.Point {
 
 ///|
 pub fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
-  @math.hypot(a.x - b.x, a.y - b.y)
+  libm_hypot(a.x - b.x, a.y - b.y)
 }
 
 ///|
@@ -1277,8 +1277,8 @@ fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
   let mut rootn = 0
   if disc < 0.0 {
     let r = 0.5 * Double::sqrt(-disc + q * q)
-    let theta = @math.atan2(Double::sqrt(-disc), -q)
-    let temp = 2.0 * @math.cbrt(r)
+    let theta = libm_atan2(Double::sqrt(-disc), -q)
+    let temp = 2.0 * libm_cbrt(r)
     roots[0] = temp * @math.cos(theta / 3.0)
     roots[1] = temp * @math.cos((theta + @math.PI * 2.0) / 3.0)
     roots[2] = temp * @math.cos((theta - @math.PI * 2.0) / 3.0)
@@ -1286,7 +1286,7 @@ fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
   } else {
     let alpha = 0.5 * (Double::sqrt(disc) - q)
     let beta = -q - alpha
-    roots[0] = @math.cbrt(alpha) + @math.cbrt(beta)
+    roots[0] = libm_cbrt(alpha) + libm_cbrt(beta)
     if disc > 0.0 {
       rootn = 1
     } else {

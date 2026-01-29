@@ -240,7 +240,7 @@ test "spline fixtures load" {
 }
 
 ///|
-// TODO(graphviz.mbt-ko0.6.1): align libm math to Graphviz so spline_output matches exactly.
+// TODO(graphviz.mbt-ko0.6.1): spline_output fixture mismatch persists (~1e-13).
 #skip
 test "spline fixtures match route spline output" {
   let cases = load_spline_fixtures()

@@ -13,5 +13,9 @@
   "wbtest-import": [
     "moonbitlang/core/json",
     "moonbitlang/x/fs"
-  ]
+  ],
+  "targets": {
+    "libm_native.mbt": ["native"],
+    "libm_non_native.mbt": ["not", "native"]
+  }
 }
