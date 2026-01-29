@@ -1,0 +1,213 @@
+///|
+struct RankFixtureNode {
+  id : Int
+  name : Json
+  kind : String
+  rank : Int
+} derive(FromJson)
+
+///|
+struct RankFixtureEdge {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+} derive(FromJson)
+
+///|
+struct SimplexInput {
+  case_id : Int
+  nodes : Array[RankFixtureNode]
+  edges : Array[RankFixtureEdge]
+}
+
+///|
+struct SimplexOutput {
+  case_id : Int
+  ranks : Array[Int]
+}
+
+///|
+fn require_object(json : Json) -> Map[String, Json] raise {
+  match json {
+    Json::Object(obj) => obj
+    _ => fail("expected JSON object")
+  }
+}
+
+///|
+fn parse_simplex_input(obj : Map[String, Json]) -> SimplexInput raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    nodes: @json.from_json(obj["nodes"]),
+    edges: @json.from_json(obj["edges"]),
+  }
+}
+
+///|
+fn parse_simplex_output(obj : Map[String, Json]) -> SimplexOutput raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    ranks: @json.from_json(obj["ranks"]),
+  }
+}
+
+///|
+fn fixture_node_kind(kind : String) -> NodeKind raise {
+  match kind {
+    "normal" => NodeKind::Normal
+    "virtual" => NodeKind::Virtual
+    "slack" => NodeKind::Slack
+    _ => fail("unknown fixture node kind: \{kind}")
+  }
+}
+
+///|
+fn parse_acyclic_reverse(obj : Map[String, Json]) -> String raise {
+  let graph : Int = @json.from_json(obj["graph"])
+  let tail : String = @json.from_json(obj["tail"])
+  let head : String = @json.from_json(obj["head"])
+  "\{graph}:\{tail}->\{head}"
+}
+
+///|
+fn load_rank_fixtures(
+) -> (Array[(SimplexInput, SimplexOutput)], Array[String]) raise {
+  let data = @fs.read_file_to_string("tests/fixtures/graphviz/rank.jsonl")
+  let cases : Array[(SimplexInput, SimplexOutput)] = []
+  let reversals : Array[String] = []
+  let mut pending : SimplexInput? = None
+  for line in data.split("\n") {
+    if line.length() == 0 {
+      continue
+    }
+    let json = @json.parse(line)
+    let obj = require_object(json)
+    let event : String = @json.from_json(obj["event"])
+    match event {
+      "acyclic_start" => ()
+      "acyclic_reverse" => {
+        reversals.push(parse_acyclic_reverse(obj))
+      }
+      "simplex_input" => {
+        if pending is Some(_) {
+          fail("unexpected simplex_input while pending")
+        }
+        pending = Some(parse_simplex_input(obj))
+      }
+      "simplex_output" => {
+        let output = parse_simplex_output(obj)
+        match pending {
+          Some(input) => {
+            if input.case_id != output.case_id {
+              fail(
+                "simplex case mismatch input=\{input.case_id} output=\{output.case_id}",
+              )
+            }
+            cases.push((input, output))
+            pending = None
+          }
+          None => fail("simplex_output without simplex_input")
+        }
+      }
+      _ => fail("unknown rank fixture event: \{event}")
+    }
+  }
+  match pending {
+    Some(_) => fail("missing simplex_output for last case")
+    None => ()
+  }
+  (cases, reversals)
+}
+
+///|
+fn assert_ranks(
+  case_id : Int,
+  actual : Array[Int],
+  expected : Array[Int],
+) -> Unit raise {
+  if actual.length() != expected.length() {
+    fail(
+      "case \{case_id} rank length mismatch actual=\{actual.length()} expected=\{expected.length()}",
+    )
+  }
+  let base_diff = actual[0] - expected[0]
+  let mut uniform_diff = true
+  let mut min_diff = base_diff
+  let mut max_diff = base_diff
+  let mut mismatch_count = 0
+  for i in 0..<expected.length() {
+    let diff = actual[i] - expected[i]
+    if diff != base_diff {
+      uniform_diff = false
+    }
+    if diff != 0 {
+      mismatch_count = mismatch_count + 1
+    }
+    if diff < min_diff {
+      min_diff = diff
+    }
+    if diff > max_diff {
+      max_diff = diff
+    }
+  }
+  for i in 0..<expected.length() {
+    let actual_rank = actual[i]
+    let expected_rank = expected[i]
+    if actual_rank != expected_rank {
+      fail(
+        "case \{case_id} rank[\{i}] expected=\{expected_rank} actual=\{actual_rank} base_diff=\{base_diff} uniform_diff=\{uniform_diff} diff_range=[\{min_diff},\{max_diff}] mismatch_count=\{mismatch_count}",
+      )
+    }
+  }
+}
+
+///|
+fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise {
+  let graph = new_graph()
+  for node in input.nodes {
+    let name = match node.name {
+      Json::Null => ""
+      Json::String(value) => value
+      _ => fail("unexpected node name payload")
+    }
+    let kind = fixture_node_kind(node.kind)
+    let idx = add_node(graph, name, kind=kind)
+    if idx != node.id {
+      fail(
+        "case \{input.case_id} node id mismatch expected=\{node.id} actual=\{idx}",
+      )
+    }
+    set_node_rank(graph, idx, node.rank)
+    let _ = node.kind
+  }
+  for edge in input.edges {
+    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+  }
+  network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+  let actual_ranks : Array[Int] = []
+  for i in 0..<input.nodes.length() {
+    actual_ranks.push(node_rank(graph, i))
+  }
+  assert_ranks(input.case_id, actual_ranks, output.ranks)
+}
+
+///|
+fn assert_no_acyclic_reversals(reversals : Array[String]) -> Unit raise {
+  if reversals.length() != 0 {
+    fail(
+      "expected no acyclic reversals, got \{reversals.length()} (first=\{reversals[0]})",
+    )
+  }
+}
+
+///|
+#skip
+test "rank fixtures match network_simplex" {
+  let (cases, reversals) = load_rank_fixtures()
+  assert_no_acyclic_reversals(reversals)
+  for pair in cases {
+    let (input, output) = pair
+    run_simplex_case(input, output)
+  }
+}

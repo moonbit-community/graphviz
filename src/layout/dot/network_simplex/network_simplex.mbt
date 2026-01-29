@@ -11,6 +11,13 @@ pub(all) enum BalanceMode {
 }
 
 ///|
+pub(all) enum NodeKind {
+  Normal
+  Virtual
+  Slack
+} derive(Eq)
+
+///|
 pub(all) struct NsEdge {
   tail : Int
   head : Int
@@ -22,6 +29,7 @@ pub(all) struct NsEdge {
 
 ///|
 pub(all) struct NsNode {
+  kind : NodeKind
   mut rank : Int
   in_edges : Array[Int]
   out_edges : Array[Int]
@@ -46,9 +54,14 @@ pub fn new_graph() -> NsGraph {
 }
 
 ///|
-pub fn add_node(graph : NsGraph, _name : String) -> Int {
+pub fn add_node(
+  graph : NsGraph,
+  _name : String,
+  kind? : NodeKind = NodeKind::Normal,
+) -> Int {
   let idx = graph.nodes.length()
   graph.nodes.push({
+    kind: kind,
     rank: 0,
     in_edges: [],
     out_edges: [],
@@ -468,13 +481,21 @@ fn inter_tree_edge_search(
   while stack.length() > 0 {
     let last = stack.length() - 1
     let state = stack[last]
+    let mut allow_descend = true
+    match current {
+      Some(edge_idx) =>
+        if edge_slack(graph, edge_idx) == 0 {
+          allow_descend = false
+        }
+      None => ()
+    }
     let mut pushed = false
     while state.out_i < graph.nodes[state.node].out_edges.length() {
       let edge_idx = graph.nodes[state.node].out_edges[state.out_i]
       state.out_i = state.out_i + 1
       if is_tree_edge(graph, edge_idx) {
         let head = graph.edges[edge_idx].head
-        if head != state.parent {
+        if allow_descend && head != state.parent {
           stack[last] = state
           stack.push({ node: head, parent: state.node, out_i: 0, in_i: 0 })
           pushed = true
@@ -495,10 +516,6 @@ fn inter_tree_edge_search(
         }
       }
     }
-    match current {
-      Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
-      None => ()
-    }
     if pushed {
       continue
     }
@@ -507,7 +524,7 @@ fn inter_tree_edge_search(
       state.in_i = state.in_i + 1
       if is_tree_edge(graph, edge_idx) {
         let tail = graph.edges[edge_idx].tail
-        if tail != state.parent {
+        if allow_descend && tail != state.parent {
           stack[last] = state
           stack.push({ node: tail, parent: state.node, out_i: 0, in_i: 0 })
           pushed = true
@@ -527,10 +544,6 @@ fn inter_tree_edge_search(
           None => current = Some(edge_idx)
         }
       }
-    }
-    match current {
-      Some(edge_idx) => if edge_slack(graph, edge_idx) == 0 { return current }
-      None => ()
     }
     if pushed {
       continue
@@ -1221,6 +1234,9 @@ fn normalize_ranks(graph : NsGraph) -> Int {
   let mut max_rank = 0
   let mut seen = false
   for node in graph.nodes {
+    if node.kind != NodeKind::Normal {
+      continue
+    }
     let rank = node.rank
     if !seen {
       min_rank = rank
@@ -1248,6 +1264,51 @@ fn normalize_ranks(graph : NsGraph) -> Int {
 }
 
 ///|
+fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
+  if nodes.length() <= 1 {
+    return ()
+  }
+  sort_nodes_by_rank_range(graph, nodes, 0, nodes.length() - 1)
+}
+
+///|
+fn sort_nodes_by_rank_range(
+  graph : NsGraph,
+  nodes : Array[Int],
+  lo : Int,
+  hi : Int,
+) -> Unit {
+  if lo >= hi {
+    return ()
+  }
+  let pivot = nodes[(lo + hi) / 2]
+  let pivot_rank = graph.nodes[pivot].rank
+  let mut i = lo
+  let mut j = hi
+  while i <= j {
+    while graph.nodes[nodes[i]].rank < pivot_rank {
+      i = i + 1
+    }
+    while graph.nodes[nodes[j]].rank > pivot_rank {
+      j = j - 1
+    }
+    if i <= j {
+      let tmp = nodes[i]
+      nodes[i] = nodes[j]
+      nodes[j] = tmp
+      i = i + 1
+      j = j - 1
+    }
+  }
+  if lo < j {
+    sort_nodes_by_rank_range(graph, nodes, lo, j)
+  }
+  if i < hi {
+    sort_nodes_by_rank_range(graph, nodes, i, hi)
+  }
+}
+
+///|
 fn tb_balance(graph : NsGraph) -> Unit {
   let max_rank = normalize_ranks(graph)
   if max_rank <= 0 {
@@ -1258,31 +1319,23 @@ fn tb_balance(graph : NsGraph) -> Unit {
     nrank.push(0)
   }
   for node in graph.nodes {
-    let rank = node.rank
-    if rank >= 0 && rank <= max_rank {
-      nrank[rank] = nrank[rank] + 1
-    }
-  }
-  let nodes_by_rank : Map[Int, Array[Int]] = Map::new()
-  for i in 0..<graph.nodes.length() {
-    let rank = graph.nodes[i].rank
-    match nodes_by_rank.get(rank) {
-      Some(list) => list.push(i)
-      None => nodes_by_rank[rank] = [i]
+    if node.kind == NodeKind::Normal {
+      let rank = node.rank
+      if rank >= 0 && rank <= max_rank {
+        nrank[rank] = nrank[rank] + 1
+      }
     }
   }
   let ordered : Array[Int] = []
-  for rank in 0..=max_rank {
-    match nodes_by_rank.get(rank) {
-      Some(list) =>
-        for idx in list {
-          ordered.push(idx)
-        }
-      None => ()
-    }
+  for i in 0..<graph.nodes.length() {
+    ordered.push(i)
   }
+  sort_nodes_by_rank(graph, ordered)
   for idx in ordered {
     let node = graph.nodes[idx]
+    if node.kind != NodeKind::Normal {
+      continue
+    }
     let mut inweight = 0
     let mut outweight = 0
     let mut low = 0

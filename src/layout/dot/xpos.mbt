@@ -893,7 +893,7 @@ fn build_constraint_graph(
   let mut slack_rev = slack_edges.length()
   while slack_rev > 0 {
     slack_rev = slack_rev - 1
-    let slack_idx = add_node(graph, "")
+    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
     slack_indices[slack_rev] = slack_idx
   }
   let base_positions = compute_rank_positions(
@@ -964,7 +964,7 @@ fn build_constraint_graph(
       Some(value) => value
       None => 0
     }
-    let slack_idx = add_node(graph, "")
+    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
     let tail_offset = edge_port_offset_by_name(
       tail_node,
       tail_port,

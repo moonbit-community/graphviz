@@ -5,13 +5,20 @@ type NsGraph = @network_simplex.NsGraph
 type BalanceMode = @network_simplex.BalanceMode
 
 ///|
+type NodeKind = @network_simplex.NodeKind
+
+///|
 fn new_graph() -> NsGraph {
   @network_simplex.new_graph()
 }
 
 ///|
-fn add_node(graph : NsGraph, name : String) -> Int {
-  @network_simplex.add_node(graph, name)
+fn add_node(
+  graph : NsGraph,
+  name : String,
+  kind? : NodeKind = NodeKind::Normal,
+) -> Int {
+  @network_simplex.add_node(graph, name, kind=kind)
 }
 
 ///|
