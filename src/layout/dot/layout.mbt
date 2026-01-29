@@ -812,11 +812,9 @@ fn record_label_text_dimensions(
         ended_with_break = true
         prev_char = None
       } else {
-        if ch != ' ' {
-          match prev_char {
-            Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
-            None => ()
-          }
+        match prev_char {
+          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+          None => ()
         }
         current_units = current_units + record_char_width_units(ch)
         ended_with_break = false
@@ -837,11 +835,9 @@ fn record_label_text_dimensions(
       ended_with_break = true
       prev_char = None
     } else {
-      if ch != ' ' {
-        match prev_char {
-          Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
-          None => ()
-        }
+      match prev_char {
+        Some(prev) => current_units = current_units + char_kerning_units(prev, ch)
+        None => ()
       }
       current_units = current_units + record_char_width_units(ch)
       ended_with_break = false
