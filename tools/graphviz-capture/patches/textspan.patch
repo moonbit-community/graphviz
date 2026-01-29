@@ -1,0 +1,81 @@
+diff --git a/lib/common/textspan.c b/lib/common/textspan.c
+--- a/lib/common/textspan.c
++++ b/lib/common/textspan.c
+@@ -22,6 +22,54 @@
+ #include <common/render.h>
+ #include <common/textspan_lut.h>
+ #include <util/alloc.h>
+ #include <util/strcasecmp.h>
++
++static FILE *mbt_textspan_log = NULL;
++
++static FILE *mbt_textspan_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_TEXTSPAN");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_textspan_log)
++        mbt_textspan_log = fopen(path, "a");
++    return mbt_textspan_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc(', out);
++    if (!s) {
++        fputc(', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case \:
++            fputs("\\\\", out);
++            break;
++        case ':
++            fputs(\", out);
++            break;
++        case '\n':
++            fputs(\n, out);
++            break;
++        case '\r':
++            fputs(\r, out);
++            break;
++        case '\t':
++            fputs(\t, out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, \u%04x, ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc(', out);
++}
++
++static void mbt_log_textspan(textspan_t *span)
++{
++    FILE *out = mbt_textspan_log_open();
++    if (!out || !span || !span->font)
++        return;
++    fprintf(out, "{\"font\":");
++    mbt_write_json_string(out, span->font->name ? span->font->name : "");
++    fprintf(out, ",\"size\":%.17g,\"flags\":%u,\"text\":",
++            span->font->size, span->font->flags);
++    mbt_write_json_string(out, span->str ? span->str : "");
++    fprintf(out,
++            ",\"width\":%.17g,\"height\":%.17g,"
++            "\"yoffset_layout\":%.17g,\"yoffset_centerline\":%.17g}\n",
++            span->size.x, span->size.y,
++            span->yoffset_layout, span->yoffset_centerline);
++    fflush(out);
++}
+@@ -89,6 +137,7 @@
+ 	else
+ 	    fprintf(stderr, "fontname: unable to resolve \"%s\"\n", font->name);
+     }
+ 
++    mbt_log_textspan(span);
+     return span->size;
+ }

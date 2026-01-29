@@ -1,0 +1,108 @@
+{"font":"Times-Roman","size":14,"flags":0,"text":"Complex Architecture","width":124.0244140625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"xvm_a Application ..","width":117.4345703125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"xvm_a Application 1","width":117.4345703125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Application ..","width":87.8828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Application 1","width":87.8828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Shapeshifter Appearances","width":157.0556640625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Machsrv Core","width":79.7001953125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"PROT_A-to-XPROT Converter","width":178.240234375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"NOXd Appearance","width":106.9072265625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Ingress Shapeshifter","width":113.9140625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"NOX Shapeshifter","width":103.810546875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Egress Shapeshifter","width":110.8037109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Other Chunks","width":78.162109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"XPROT \"crystalizer\"","width":118.876953125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"JZ Chunk","width":54.837890625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Arbiter Chunks","width":86.7138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Shapeshift X","width":72.7138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Shapeshift 1","width":69.603515625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"ZZZ","width":25.6552734375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"YYY","width":30.3310546875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"ZZZ Worker","width":70.546875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"YYY Worker","width":74.7099609375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Foo Agent","width":58.734375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Foo SCADA","width":72.7412109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Raw PROT_G","width":82.05859375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"XPROT over PROT_G","width":130.4228515625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"XPROT over PROT_G","width":130.4228515625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"SCADA_A()","width":73.8896484375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"SCADA_A()","width":73.8896484375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"MechCmd","width":59.103515625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"MechCmd","width":59.103515625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"xvm_a Clients","width":81.2724609375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Clients","width":51.720703125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Shapeshifters","width":87.4794921875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"(Configurable","width":77.765625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Z Shapeshifter)","width":86.693359375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Machsrv Shapeshifter","width":122.4658203125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"NOXd Shapeshifter","width":110.810546875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"YoursTruly","width":63.4443359375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Foo Reactor","width":68.8173828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"YoursTruly Front-End","width":124.49609375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Other Shapeshifters","width":110.8037109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"ShipX","width":35.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"ReactorX","width":53.6416015625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Tungsten","width":51.6181640625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"ReactorY","width":53.6416015625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"C1N1","width":33.4482421875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"C2N1","width":33.4482421875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"cluster_1","width":51.3173828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"cluster_2","width":51.3173828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"a","width":6.2138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"b","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"c","width":6.2138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"d","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Edge Label A","width":76.9794921875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Edge Label B Longer","width":120.900390625,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"a","width":6.2138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"b","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"c","width":6.2138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"d","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"e","width":6.2138671875,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"f","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"g","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"h","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"Very Long Edge Label","width":127.12109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"+","width":7.8955078125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"+","width":7.8955078125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"*","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"(","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"E","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":")","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"*","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"(","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"E","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":")","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"+","width":7.8955078125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"*","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"(","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"E","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":")","width":4.662109375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"*","width":7,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"E","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : a ","width":62.34375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : b ","width":63.1298828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : c ","width":62.34375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : d ","width":63.1298828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : e ","width":62.34375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"T","width":8.5517578125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : a ","width":62.34375,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : b ","width":63.1298828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"F","width":7.7861328125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
+{"font":"Times-Roman","size":14,"flags":0,"text":"IDENT : q ","width":63.1298828125,"height":14,"yoffset_layout":10.5,"yoffset_centerline":2.8000000000000003}
