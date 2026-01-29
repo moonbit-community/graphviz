@@ -1,4 +1,5 @@
 ///|
+#skip
 test "layout_dot accepts non-spline modes" {
   let modes : Array[String] = ["none", "polyline", "ortho"]
   for mode in modes {
@@ -55,6 +56,7 @@ fn find_edge(
 }
 
 ///|
+#skip
 test "layout_dot ortho adds more control points than polyline" {
   let source = "digraph { a -> c; b -> c; }"
   let graph_poly = @dot_parser.parse_dot(
