@@ -68,7 +68,7 @@ fi
 mkdir -p "$OUT_DIR"
 : > "$TMP_FILE"
 
-# Use only source .dot inputs; .gv.dot snapshots include bare attrs that Graphviz won"t parse.
+# Use only source .dot inputs; .gv.dot snapshots include bare attrs that Graphviz won't parse.
 for input in "$ROOT"/tests/layout/dot/*.dot; do
   if [[ "$input" == *.gv.dot ]]; then
     continue
