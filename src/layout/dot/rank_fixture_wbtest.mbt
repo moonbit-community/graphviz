@@ -179,7 +179,6 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
       )
     }
     set_node_rank(graph, idx, node.rank)
-    let _ = node.kind
   }
   for edge in input.edges {
     let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
