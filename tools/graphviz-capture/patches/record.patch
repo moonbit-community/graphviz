@@ -1,0 +1,121 @@
+diff --git a/lib/common/shapes.c b/lib/common/shapes.c
+--- a/lib/common/shapes.c
++++ b/lib/common/shapes.c
+@@ -3344,6 +3344,109 @@
+ 
+ /* the "record" shape is a rudimentary table formatter */
+ 
++static FILE *mbt_record_log = NULL;
++
++static FILE *mbt_record_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_RECORD");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_record_log)
++        mbt_record_log = fopen(path, "a");
++    return mbt_record_log;
++}
++
++static void mbt_record_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_record_write_json_string_or_null(FILE *out, const char *s)
++{
++    if (s)
++        mbt_record_write_json_string(out, s);
++    else
++        fputs("null", out);
++}
++
++static void mbt_record_write_field(FILE *out, field_t *f)
++{
++    int i;
++
++    fputc('{', out);
++    fputs("\"id\":", out);
++    mbt_record_write_json_string_or_null(out, f->id);
++    fprintf(out, ",\"lr\":%s", f->LR ? "true" : "false");
++    fprintf(out, ",\"sides\":%u", (unsigned int)f->sides);
++    fprintf(out, ",\"size\":{\"x\":%.17g,\"y\":%.17g}", f->size.x, f->size.y);
++    fprintf(out, ",\"box\":{\"llx\":%.17g,\"lly\":%.17g,\"urx\":%.17g,\"ury\":%.17g}",
++            f->b.LL.x, f->b.LL.y, f->b.UR.x, f->b.UR.y);
++    if (f->n_flds > 0) {
++        fputs(",\"fields\":[", out);
++        for (i = 0; i < f->n_flds; i++) {
++            if (i > 0)
++                fputc(',', out);
++            mbt_record_write_field(out, f->fld[i]);
++        }
++        fputc(']', out);
++    } else {
++        fputs(",\"text\":", out);
++        mbt_record_write_json_string_or_null(out, f->lp ? f->lp->text : NULL);
++    }
++    fputc('}', out);
++}
++
++static void mbt_log_record(node_t *n, field_t *info, int flip)
++{
++    FILE *out = mbt_record_log_open();
++    if (!out || !info)
++        return;
++    fputc('{', out);
++    fputs("\"node\":", out);
++    mbt_record_write_json_string(out, agnameof(n));
++    fputs(",\"label\":", out);
++    mbt_record_write_json_string_or_null(out, ND_label(n) ? ND_label(n)->text : NULL);
++    fprintf(out, ",\"html\":%s", (ND_label(n) && ND_label(n)->html) ? "true" : "false");
++    fprintf(out, ",\"lr\":%s", info->LR ? "true" : "false");
++    fprintf(out, ",\"flip\":%s", flip ? "true" : "false");
++    fprintf(out, ",\"width_in\":%.17g,\"height_in\":%.17g", ND_width(n), ND_height(n));
++    fprintf(out, ",\"size_pt\":{\"x\":%.17g,\"y\":%.17g}", info->size.x, info->size.y);
++    fputs(",\"field\":", out);
++    mbt_record_write_field(out, info);
++    fputs("}\n", out);
++    fflush(out);
++}
++
+ #define HASTEXT 1
+ #define HASPORT 2
+ #define HASTABLE 4
+@@ -3728,6 +3831,7 @@
+     ND_height(n) = PS2INCH(info->size.y + 1);	/* Kluge!!  +1 to fix rounding diff between layout and rendering
+ 						   otherwise we can get -1 coords in output */
+     ND_shape_info(n) = info;
++    mbt_log_record(n, info, flip);
+ }
+ 
+ static void record_free(node_t * n)
