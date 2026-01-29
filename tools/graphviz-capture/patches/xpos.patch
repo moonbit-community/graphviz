@@ -1,0 +1,290 @@
+--- a/lib/dotgen/position.c
++++ b/lib/dotgen/position.c
+@@ -23,6 +23,7 @@
+ #include <dotgen/dot.h>
+ #include <dotgen/aspect.h>
+ #include <math.h>
++#include <stdio.h>
+ #include <stdbool.h>
+ #include <stdlib.h>
+ #include <util/alloc.h>
+@@ -38,7 +39,255 @@
+ static void make_lrvn(graph_t * g);
+ static void contain_nodes(graph_t * g);
+ static bool idealsize(graph_t * g, double);
++
++typedef struct {
++    int case_id;
++    size_t node_count;
++    node_t **nodes;
++} mbt_xpos_capture_t;
++
++static FILE *mbt_xpos_log = NULL;
++static int mbt_xpos_case_id = 0;
++
++static FILE *mbt_xpos_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_XPOS");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_xpos_log)
++        mbt_xpos_log = fopen(path, "a");
++    return mbt_xpos_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_write_json_string_or_null(FILE *out, const char *s)
++{
++    if (s)
++        mbt_write_json_string(out, s);
++    else
++        fputs("null", out);
++}
++
++static void mbt_write_json_int_or_null(FILE *out, int value)
++{
++    if (value < 0)
++        fputs("null", out);
++    else
++        fprintf(out, "%d", value);
++}
++
++static const char *mbt_xpos_node_kind(node_t *n)
++{
++    switch (ND_node_type(n)) {
++    case NORMAL:
++        return "normal";
++    case VIRTUAL:
++        return "virtual";
++    case SLACKNODE:
++        return "slack";
++    case REVERSED:
++        return "reversed";
++    case FLATORDER:
++        return "flatorder";
++    case CLUSTER_EDGE:
++        return "cluster";
++    case IGNORED:
++        return "ignored";
++    default:
++        return "unknown";
++    }
++}
++
++static int mbt_xpos_node_id(node_t *n, node_t **nodes, size_t count)
++{
++    if (!n)
++        return -1;
++    for (size_t i = 0; i < count; i++) {
++        if (nodes[i] == n)
++            return (int)i;
++    }
++    return -1;
++}
++
++static void mbt_xpos_write_clusters(
++    FILE *out,
++    graph_t *g,
++    node_t **nodes,
++    size_t count,
++    bool *first)
++{
++    for (int c = 1; c <= GD_n_cluster(g); c++) {
++        graph_t *subg = GD_clust(g)[c];
++        if (!subg)
++            continue;
++        if (!*first)
++            fputc(',', out);
++        *first = false;
++        fputs("{\"name\":", out);
++        mbt_write_json_string(out, agnameof(subg));
++        fprintf(out, ",\"minrank\":%d,\"maxrank\":%d", GD_minrank(subg), GD_maxrank(subg));
++        fputs(",\"ln\":", out);
++        mbt_write_json_int_or_null(out, mbt_xpos_node_id(GD_ln(subg), nodes, count));
++        fputs(",\"rn\":", out);
++        mbt_write_json_int_or_null(out, mbt_xpos_node_id(GD_rn(subg), nodes, count));
++        fputc('}', out);
++        mbt_xpos_write_clusters(out, subg, nodes, count, first);
++    }
++}
++
++static void mbt_xpos_capture_input(
++    graph_t *g,
++    const char *phase,
++    mbt_xpos_capture_t *cap)
++{
++    if (!cap || cap->case_id != 0)
++        return;
++    FILE *out = mbt_xpos_log_open();
++    if (!out)
++        return;
+ 
++    cap->case_id = ++mbt_xpos_case_id;
++
++    size_t count = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        count++;
++    cap->node_count = count;
++    cap->nodes = gv_calloc(count, sizeof(node_t *));
++
++    size_t idx = 0;
++    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
++        cap->nodes[idx++] = n;
++
++    fprintf(out, "{\"event\":\"xpos_input\",\"case\":%d,\"graph\":",
++            cap->case_id);
++    mbt_write_json_string(out, agnameof(g));
++    fputs(",\"phase\":", out);
++    mbt_write_json_string(out, phase ? phase : "");
++    fprintf(out, ",\"minrank\":%d,\"maxrank\":%d", GD_minrank(g), GD_maxrank(g));
++    fprintf(out, ",\"flip\":%s", GD_flip(g) ? "true" : "false");
++    fputs(",\"nodes\":[", out);
++    for (size_t i = 0; i < cap->node_count; i++) {
++        if (i > 0)
++            fputc(',', out);
++        node_t *n = cap->nodes[i];
++        const char *name = (ND_node_type(n) == NORMAL) ? agnameof(n) : NULL;
++        fprintf(out, "{\"id\":%d,\"name\":", (int)i);
++        mbt_write_json_string_or_null(out, name);
++        fputs(",\"kind\":", out);
++        mbt_write_json_string(out, mbt_xpos_node_kind(n));
++        fprintf(out, ",\"rank\":%d,\"order\":%d",
++                ND_rank(n), ND_order(n));
++        fprintf(out, ",\"lw\":%.17g,\"rw\":%.17g,\"ht\":%.17g}",
++                ND_lw(n), ND_rw(n), ND_ht(n));
++    }
++    fputs("],\"edges\":[", out);
++    bool first_edge = true;
++    for (size_t i = 0; i < cap->node_count; i++) {
++        node_t *tail = cap->nodes[i];
++        edge_t *e;
++        for (int j = 0; (e = ND_out(tail).list[j]); j++) {
++            int head_id = mbt_xpos_node_id(aghead(e), cap->nodes, cap->node_count);
++            if (head_id < 0)
++                continue;
++            if (!first_edge)
++                fputc(',', out);
++            first_edge = false;
++            fprintf(out,
++                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,\"weight\":%d}",
++                    (int)i, head_id, ED_minlen(e), ED_weight(e));
++        }
++    }
++    fputs("],\"ranks\":[", out);
++    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
++        if (r > GD_minrank(g))
++            fputc(',', out);
++        fputc('[', out);
++        int out_idx = 0;
++        for (int i = 0; i < GD_rank(g)[r].n; i++) {
++            node_t *n = GD_rank(g)[r].v[i];
++            if (!n)
++                continue;
++            int id = mbt_xpos_node_id(n, cap->nodes, cap->node_count);
++            if (id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", id);
++        }
++        fputc(']', out);
++    }
++    fputs("],\"clusters\":[", out);
++    bool first = true;
++    mbt_xpos_write_clusters(out, g, cap->nodes, cap->node_count, &first);
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_xpos_capture_output(
++    graph_t *g,
++    const mbt_xpos_capture_t *cap)
++{
++    (void)g;
++    if (!cap || cap->case_id == 0)
++        return;
++    FILE *out = mbt_xpos_log_open();
++    if (!out)
++        return;
++    fprintf(out, "{\"event\":\"xpos_output\",\"case\":%d,\"positions\":[",
++            cap->case_id);
++    for (size_t i = 0; i < cap->node_count; i++) {
++        if (i > 0)
++            fputc(',', out);
++        fprintf(out, "%d", ND_rank(cap->nodes[i]));
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_xpos_capture_free(mbt_xpos_capture_t *cap)
++{
++    if (!cap)
++        return;
++    free(cap->nodes);
++    cap->nodes = NULL;
++    cap->node_count = 0;
++    cap->case_id = 0;
++}
++
+ #if defined(DEBUG) && DEBUG > 1
+ static void
+ dumpNS (graph_t * g)
+@@ -135,12 +384,19 @@
+     if (flat_edges(g))
+ 	set_ycoords(g);
+     create_aux_edges(g);
+-    if (rank(g, 2, nsiter2(g))) { /* LR balance == 2 */
++    mbt_xpos_capture_t mbt_capture = {0};
++    mbt_xpos_capture_input(g, "initial", &mbt_capture);
++    int rank_result = rank(g, 2, nsiter2(g)); /* LR balance == 2 */
++    if (rank_result) {
+ 	connectGraph (g);
+-	const int rank_result = rank(g, 2, nsiter2(g));
+-	assert(rank_result == 0);
+-	(void)rank_result;
++        mbt_xpos_capture_free(&mbt_capture);
++        mbt_xpos_capture_input(g, "connected", &mbt_capture);
++	rank_result = rank(g, 2, nsiter2(g));
++	assert(rank_result == 0);
+     }
++    (void)rank_result;
++    mbt_xpos_capture_output(g, &mbt_capture);
++    mbt_xpos_capture_free(&mbt_capture);
+     set_xcoords(g);
+     set_aspect(g);
+     remove_aux_edges(g);	/* must come after set_aspect since we now
