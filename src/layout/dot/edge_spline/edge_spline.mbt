@@ -1280,8 +1280,8 @@ fn solve3(coeff : Array[Double], roots : Array[Double]) -> Int {
     let theta = libm_atan2(Double::sqrt(-disc), -q)
     let temp = 2.0 * libm_cbrt(r)
     roots[0] = temp * @math.cos(theta / 3.0)
-    roots[1] = temp * @math.cos((theta + @math.PI * 2.0) / 3.0)
-    roots[2] = temp * @math.cos((theta - @math.PI * 2.0) / 3.0)
+    roots[1] = temp * @math.cos((theta + @math.PI + @math.PI) / 3.0)
+    roots[2] = temp * @math.cos((theta - @math.PI - @math.PI) / 3.0)
     rootn = 3
   } else {
     let alpha = 0.5 * (Double::sqrt(disc) - q)
@@ -1566,8 +1566,8 @@ fn route_spline_recursive_range(
         max_y = point.y
       }
     }
-    let shortcut_eps = 0.001
-    let min_len = total * min_len_ratio
+    let shortcut_eps = ROUTE_SPLINE_EPS1
+    let input_len = total * min_len_ratio
     let mut a = 4.0
     let mut first = true
     let has_barriers = route_barriers.length() > 0
@@ -1582,8 +1582,14 @@ fn route_spline_recursive_range(
       println("splinefit points inpn=4 \{joined}")
     }
     while true {
-      let c1_try = point_add(p0, point_scale(v0, a / 3.0))
-      let c2_try = point_sub(p3, point_scale(v1, a / 3.0))
+      let c1_try = point(
+        p0.x + (a * v0.x) / 3.0,
+        p0.y + (a * v0.y) / 3.0,
+      )
+      let c2_try = point(
+        p3.x - (a * v1.x) / 3.0,
+        p3.y - (a * v1.y) / 3.0,
+      )
       if trace_spline && has_barriers && first {
         println("splinefit inpn=\{inpn} a=\{a}")
         if inpn == 3 {
@@ -1598,7 +1604,7 @@ fn route_spline_recursive_range(
         }
       }
       let control_len = polyline_length([p0, c1_try, c2_try, p3])
-      if first && control_len + shortcut_eps < min_len {
+      if first && control_len < input_len - shortcut_eps {
         break
       }
       first = false
