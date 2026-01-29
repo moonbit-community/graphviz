@@ -9,5 +9,9 @@
     "moonbitlang/core/math",
     "moonbitlang/core/strconv",
     "moonbitlang/x/sys"
+  ],
+  "wbtest-import": [
+    "moonbitlang/core/json",
+    "moonbitlang/x/fs"
   ]
 }

@@ -1057,17 +1057,14 @@ fn point_dot(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
-fn point_len(a : @geom.Point) -> Double {
-  @math.hypot(a.x, a.y)
-}
-
 ///|
 fn point_norm(a : @geom.Point) -> @geom.Point {
-  let len = point_len(a)
-  if len <= 0.000001 {
-    point(0.0, 0.0)
-  } else {
+  let d = a.x * a.x + a.y * a.y
+  if d > 0.000001 {
+    let len = Double::sqrt(d)
     point(a.x / len, a.y / len)
+  } else {
+    a
   }
 }
 

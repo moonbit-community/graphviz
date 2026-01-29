@@ -11,5 +11,10 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/x/sys"
+  ],
+  "wbtest-import": [
+    "moonbitlang/core/json",
+    "moonbitlang/core/math",
+    "moonbitlang/x/fs"
   ]
 }
