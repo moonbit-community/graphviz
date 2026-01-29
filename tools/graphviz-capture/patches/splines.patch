@@ -1,0 +1,183 @@
+--- a/lib/common/routespl.c
++++ b/lib/common/routespl.c
+@@ -18,6 +18,7 @@
+ #include <limits.h>
+ #include <math.h>
+ #include <pathplan/pathplan.h>
++#include <stdio.h>
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+@@ -36,6 +37,138 @@
+ 
+ static int checkpath(size_t, boxf *, path *);
+ static void printpath(path * pp);
++
++static FILE *mbt_spline_log = NULL;
++static int mbt_spline_case_id = 0;
++
++static FILE *mbt_spline_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_SPLINES");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_spline_log)
++        mbt_spline_log = fopen(path, "a");
++    return mbt_spline_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_write_json_point(FILE *out, double x, double y)
++{
++    fprintf(out, "{\"x\":%.17g,\"y\":%.17g}", x, y);
++}
++
++static void mbt_write_json_box(FILE *out, boxf box)
++{
++    fputs("{\"ll\":", out);
++    mbt_write_json_point(out, box.LL.x, box.LL.y);
++    fputs(",\"ur\":", out);
++    mbt_write_json_point(out, box.UR.x, box.UR.y);
++    fputc('}', out);
++}
++
++static int mbt_spline_capture_input(
++    edge_t *realedge,
++    path *pp,
++    boxf *boxes,
++    size_t boxn,
++    Ppoint_t *polypoints,
++    size_t pi,
++    int polyline,
++    bool flip)
++{
++    FILE *out = mbt_spline_log_open();
++    if (!out)
++        return 0;
++    int case_id = ++mbt_spline_case_id;
++    fputs("{\"event\":\"spline_input\",\"case\":", out);
++    fprintf(out, "%d", case_id);
++    fputs(",\"polyline\":", out);
++    fputs(polyline ? "true" : "false", out);
++    fputs(",\"flip\":", out);
++    fputs(flip ? "true" : "false", out);
++    fputs(",\"tail\":", out);
++    mbt_write_json_string(out, agnameof(agtail(realedge)));
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, agnameof(aghead(realedge)));
++    fprintf(out,
++            ",\"start\":{\"x\":%.17g,\"y\":%.17g,\"theta\":%.17g,\"constrained\":%s}"
++            ",\"end\":{\"x\":%.17g,\"y\":%.17g,\"theta\":%.17g,\"constrained\":%s}",
++            pp->start.p.x, pp->start.p.y, pp->start.theta,
++            pp->start.constrained ? "true" : "false",
++            pp->end.p.x, pp->end.p.y, pp->end.theta,
++            pp->end.constrained ? "true" : "false");
++    fputs(",\"boxes\":[", out);
++    for (size_t i = 0; i < boxn; i++) {
++        if (i > 0)
++            fputc(',', out);
++        mbt_write_json_box(out, boxes[i]);
++    }
++    fputs("],\"polygon\":[", out);
++    for (size_t i = 0; i < pi; i++) {
++        if (i > 0)
++            fputc(',', out);
++        mbt_write_json_point(out, polypoints[i].x, polypoints[i].y);
++    }
++    fputs("]}\n", out);
++    fflush(out);
++    return case_id;
++}
++
++static void mbt_spline_log_polyline(
++    const char *event,
++    int case_id,
++    Ppolyline_t line)
++{
++    if (case_id == 0)
++        return;
++    FILE *out = mbt_spline_log_open();
++    if (!out)
++        return;
++    fputs("{\"event\":", out);
++    mbt_write_json_string(out, event);
++    fprintf(out, ",\"case\":%d,\"points\":[", case_id);
++    for (size_t i = 0; i < line.pn; i++) {
++        if (i > 0)
++            fputc(',', out);
++        mbt_write_json_point(out, line.ps[i].x, line.ps[i].y);
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
+ #ifdef DEBUG
+ static void printboxes(size_t boxn, boxf *boxes) {
+     pointf ll, ur;
+@@ -301,6 +434,7 @@
+     bool flip;
+     int loopcnt;
+     bool unbounded;
++    int mbt_case = 0;
+ 
+     *npoints = 0;
+     nedges++;
+@@ -439,6 +573,9 @@
+ 	    polypoints[i].y *= -1;
+     }
+ 
++    mbt_case = mbt_spline_capture_input(
++        realedge, pp, boxes, boxn, polypoints, pi, polyline, flip);
++
+     static const double INITIAL_LLX = DBL_MAX;
+     static const double INITIAL_URX = -DBL_MAX;
+     for (size_t bi = 0; bi < boxn; bi++) {
+@@ -453,6 +590,7 @@
+ 	agerrorf("in routesplines, Pshortestpath failed\n");
+ 	return NULL;
+     }
++    mbt_spline_log_polyline("spline_shortest", mbt_case, pl);
+ #ifdef DEBUG
+     if (debugleveln(realedge, 3)) {
+ 	psprintpoly(poly);
+@@ -493,6 +631,7 @@
+ 	}
+ #endif
+     }
++    mbt_spline_log_polyline("spline_output", mbt_case, spl);
+     pointf *ps = calloc(spl.pn, sizeof(ps[0]));
+     if (ps == NULL) {
+ 	free(polypoints);
