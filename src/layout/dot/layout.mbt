@@ -3302,7 +3302,7 @@ fn compute_ranks_directed(
       Some(value) => value
       None => 0
     }
-    let rank = graph.nodes[idx].rank
+    let rank = node_rank(graph, idx)
     if !seen {
       min_rank = rank
       seen = true
@@ -3316,7 +3316,7 @@ fn compute_ranks_directed(
       Some(value) => value
       None => 0
     }
-    let rank = graph.nodes[idx].rank - min_rank
+    let rank = node_rank(graph, idx) - min_rank
     ranks[name] = rank
   }
   let min_nodes : Map[String, Bool] = Map::new()

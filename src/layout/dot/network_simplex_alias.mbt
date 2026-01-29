@@ -1,0 +1,41 @@
+///|
+type NsGraph = @network_simplex.NsGraph
+
+///|
+type BalanceMode = @network_simplex.BalanceMode
+
+///|
+fn new_graph() -> NsGraph {
+  @network_simplex.new_graph()
+}
+
+///|
+fn add_node(graph : NsGraph, name : String) -> Int {
+  @network_simplex.add_node(graph, name)
+}
+
+///|
+fn add_edge(
+  graph : NsGraph,
+  tail : Int,
+  head : Int,
+  minlen : Int,
+  weight : Int,
+) -> Int {
+  @network_simplex.add_edge(graph, tail, head, minlen, weight)
+}
+
+///|
+fn node_rank(graph : NsGraph, idx : Int) -> Int {
+  @network_simplex.node_rank(graph, idx)
+}
+
+///|
+fn set_node_rank(graph : NsGraph, idx : Int, rank : Int) -> Unit {
+  @network_simplex.set_node_rank(graph, idx, rank)
+}
+
+///|
+fn network_simplex(graph : NsGraph, max_iter : Int, balance : BalanceMode) -> Unit {
+  @network_simplex.network_simplex(graph, max_iter, balance)
+}
