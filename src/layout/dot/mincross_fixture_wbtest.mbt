@@ -222,11 +222,12 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     default_node_width_in() * 72.0,
     default_node_height_in() * 72.0,
   )
-  for node in input.nodes {
+  for i, node in input.nodes {
     let name = node_key(node.id)
     id_to_name[node.id] = name
     name_to_id[name] = node.id
     name_to_rank[name] = node.rank
+    name_to_order[name] = i
     let cnode = graph.node(name)
     name_to_node[name] = cnode
     nodes.push(cnode)
@@ -290,7 +291,6 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
           "case \{input.case_id} graph=\{input.graph} node \{node_id} rank mismatch expected=\{rank} actual=\{node_rank}",
         )
       }
-      name_to_order[name] = names.length()
       names.push(name)
     }
     groups[rank] = names

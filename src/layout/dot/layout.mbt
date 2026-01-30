@@ -6001,6 +6001,263 @@ fn transpose_rank_groups_graphviz(
 }
 
 ///|
+fn build_rank_groups_graphviz(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  node_ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  cluster_keys : Map[String, String],
+  cluster_skeleton : Map[String, Bool],
+  pass : Int,
+) -> Map[Int, Array[String]] {
+  let ordered : Map[Int, Array[String]] = Map::new()
+  for rank in rank_keys {
+    ordered[rank] = []
+  }
+  let nodes : Array[String] = []
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      nodes.push(name)
+    }
+  }
+  let fallback_order : Map[String, Int] = Map::new()
+  for i, name in nodes {
+    fallback_order[name] = i
+  }
+  let nlist = nodes.copy()
+  if nlist.length() > 1 {
+    nlist.sort_by((a, b) => {
+      let a_idx = match node_order.get(a) {
+        Some(value) => value
+        None =>
+          match fallback_order.get(a) {
+            Some(value) => value
+            None => 0
+          }
+      }
+      let b_idx = match node_order.get(b) {
+        Some(value) => value
+        None =>
+          match fallback_order.get(b) {
+            Some(value) => value
+            None => 0
+          }
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map::new()
+  for name in nlist {
+    out_neighbors[name] = []
+    in_neighbors[name] = []
+  }
+  for edge_idx in 0..<edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    match out_neighbors.get(tail) {
+      Some(list) => list.push(head)
+      None => out_neighbors[tail] = [head]
+    }
+    match in_neighbors.get(head) {
+      Some(list) => list.push(tail)
+      None => in_neighbors[head] = [tail]
+    }
+  }
+  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  for name in nlist {
+    if cluster_skeleton.get(name) == Some(true) {
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster != "" {
+        match cluster_nodes.get(cluster) {
+          Some(list) => list.push(name)
+          None => cluster_nodes[cluster] = [name]
+        }
+      }
+    }
+  }
+  for _key, list in cluster_nodes {
+    if list.length() > 1 {
+      list.sort_by((a, b) => {
+        let a_rank = match node_ranks.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_rank = match node_ranks.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_rank < b_rank {
+          -1
+        } else if a_rank > b_rank {
+          1
+        } else {
+          let a_idx = match node_order.get(a) {
+            Some(value) => value
+            None =>
+              match fallback_order.get(a) {
+                Some(value) => value
+                None => 0
+              }
+          }
+          let b_idx = match node_order.get(b) {
+            Some(value) => value
+            None =>
+              match fallback_order.get(b) {
+                Some(value) => value
+                None => 0
+              }
+          }
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else {
+            0
+          }
+        }
+      })
+    }
+  }
+  let installed : Map[String, Bool] = Map::new()
+  let marks : Map[String, Bool] = Map::new()
+  let installed_clusters : Map[String, Bool] = Map::new()
+  for node in nlist {
+    let other =
+      if pass == 0 {
+        match in_neighbors.get(node) {
+          Some(list) => list
+          None => []
+        }
+      } else {
+        match out_neighbors.get(node) {
+          Some(list) => list
+          None => []
+        }
+      }
+    if other.length() > 0 {
+      continue
+    }
+    if marks.get(node) == Some(true) {
+      continue
+    }
+    marks[node] = true
+    let queue : Array[String] = [node]
+    let mut q_idx = 0
+    while q_idx < queue.length() {
+      let current = queue[q_idx]
+      q_idx = q_idx + 1
+      if cluster_skeleton.get(current) == Some(true) {
+        let cluster = match cluster_keys.get(current) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster != "" && installed_clusters.get(cluster) != Some(true) {
+          installed_clusters[cluster] = true
+          let cluster_list = match cluster_nodes.get(cluster) {
+            Some(list) => list
+            None => []
+          }
+          for cluster_node in cluster_list {
+            if installed.get(cluster_node) != Some(true) {
+              let rank = match node_ranks.get(cluster_node) {
+                Some(value) => value
+                None => 0
+              }
+              match ordered.get(rank) {
+                Some(list) => list.push(cluster_node)
+                None => ordered[rank] = [cluster_node]
+              }
+              installed[cluster_node] = true
+            }
+            marks[cluster_node] = true
+          }
+          for cluster_node in cluster_list {
+            let neighbors =
+              if pass == 0 {
+                match out_neighbors.get(cluster_node) {
+                  Some(list) => list
+                  None => []
+                }
+              } else {
+                match in_neighbors.get(cluster_node) {
+                  Some(list) => list
+                  None => []
+                }
+              }
+            for neighbor in neighbors {
+              if marks.get(neighbor) != Some(true) {
+                marks[neighbor] = true
+                queue.push(neighbor)
+              }
+            }
+          }
+        }
+        continue
+      }
+      if installed.get(current) != Some(true) {
+        let rank = match node_ranks.get(current) {
+          Some(value) => value
+          None => 0
+        }
+        match ordered.get(rank) {
+          Some(list) => list.push(current)
+          None => ordered[rank] = [current]
+        }
+        installed[current] = true
+      }
+      let neighbors =
+        if pass == 0 {
+          match out_neighbors.get(current) {
+            Some(list) => list
+            None => []
+          }
+        } else {
+          match in_neighbors.get(current) {
+            Some(list) => list
+            None => []
+          }
+        }
+      for neighbor in neighbors {
+        if marks.get(neighbor) != Some(true) {
+          marks[neighbor] = true
+          queue.push(neighbor)
+        }
+      }
+    }
+  }
+  for name in nlist {
+    if installed.get(name) != Some(true) {
+      let rank = match node_ranks.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      match ordered.get(rank) {
+        Some(list) => list.push(name)
+        None => ordered[rank] = [name]
+      }
+      installed[name] = true
+    }
+  }
+  ordered
+}
+
+///|
 fn reorder_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -6023,7 +6280,7 @@ fn reorder_rank_groups(
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let ordered : Map[Int, Array[String]] = Map::new()
+  let mut ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list.copy()
@@ -6182,7 +6439,48 @@ fn reorder_rank_groups(
       } else {
         max_iter
       }
-      if pass > 1 {
+      if pass <= 1 {
+        ordered = build_rank_groups_graphviz(
+          rank_keys,
+          groups,
+          edge_tail,
+          edge_head,
+          node_ranks,
+          node_order,
+          cluster_keys,
+          cluster_skeleton,
+          pass,
+        )
+        order_positions = order_positions_from_groups(ordered)
+        if !has_port_order {
+          let cross =
+            count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+          if cross > 0 {
+            let _ = transpose_rank_groups_graphviz(
+              rank_keys,
+              ordered,
+              node_ranks,
+              edge_in,
+              edge_out,
+              edge_tail,
+              edge_head,
+              edge_penalty,
+              cluster_keys,
+              cluster_skeleton,
+              flat_constraints,
+              false,
+              0,
+            )
+            order_positions = order_positions_from_groups(ordered)
+          }
+        }
+        cur_cross =
+          count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+        if cur_cross <= best_cross {
+          best_cross = cur_cross
+          best_ordered = clone_rank_groups(ordered)
+        }
+      } else {
         if cur_cross > best_cross {
           for rank in rank_keys {
             let names = match best_ordered.get(rank) {
