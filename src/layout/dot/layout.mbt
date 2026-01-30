@@ -4230,11 +4230,7 @@ fn sort_by_positions_large(
             match b.rank_same_group {
               Some(other_group) =>
                 if group == other_group && a.rank_same_order != b.rank_same_order {
-                  if reverse_ties {
-                    if a.rank_same_order < b.rank_same_order { 1 } else { -1 }
-                  } else {
-                    if a.rank_same_order < b.rank_same_order { -1 } else { 1 }
-                  }
+                  if a.rank_same_order < b.rank_same_order { -1 } else { 1 }
                 } else if a.node_order != b.node_order {
                   if reverse_ties {
                     if a.node_order < b.node_order { 1 } else { -1 }
@@ -4477,12 +4473,7 @@ fn sort_by_positions(
                             None => 0
                           }
                           decided = true
-                          let keep_order =
-                            if reverse_ties {
-                              prev_idx >= current_idx
-                            } else {
-                              prev_idx <= current_idx
-                            }
+                          let keep_order = prev_idx <= current_idx
                           if keep_order {
                             break
                           }
@@ -6931,39 +6922,41 @@ fn reorder_rank_groups(
   let edge_penalty : Array[Int] = []
   let edge_in : Map[String, Array[Int]] = Map::new()
   let edge_out : Map[String, Array[Int]] = Map::new()
-  if graphviz_style {
-    for rank in rank_keys {
-      let names = match ordered.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      if graphviz_style {
         median_parents[name] = []
         median_children[name] = []
-        edge_in[name] = []
-        edge_out[name] = []
       }
+      edge_in[name] = []
+      edge_out[name] = []
     }
-    for edge_idx in 0..<edges.length() {
-      let edge = edges[edge_idx]
-      let penalty = edge_xpenalty(edge)
-      edge_penalty.push(penalty)
-      if penalty <= 0 || !edge_is_constraint(edge) {
-        continue
-      }
-      let tail = edge_tail[edge_idx]
-      let head = edge_head[edge_idx]
-      let tail_rank = match node_ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match node_ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
-      if tail_rank == head_rank {
-        continue
-      }
+  }
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let penalty = edge_xpenalty(edge)
+    edge_penalty.push(penalty)
+    if penalty <= 0 || !edge_is_constraint(edge) {
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    let tail_rank = match node_ranks.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match node_ranks.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    if tail_rank == head_rank {
+      continue
+    }
+    if graphviz_style {
       match median_parents.get(head) {
         Some(list) => list.push(tail)
         None => median_parents[head] = [tail]
@@ -6972,14 +6965,14 @@ fn reorder_rank_groups(
         Some(list) => list.push(head)
         None => median_children[tail] = [head]
       }
-      match edge_out.get(tail) {
-        Some(list) => list.push(edge_idx)
-        None => edge_out[tail] = [edge_idx]
-      }
-      match edge_in.get(head) {
-        Some(list) => list.push(edge_idx)
-        None => edge_in[head] = [edge_idx]
-      }
+    }
+    match edge_out.get(tail) {
+      Some(list) => list.push(edge_idx)
+      None => edge_out[tail] = [edge_idx]
+    }
+    match edge_in.get(head) {
+      Some(list) => list.push(edge_idx)
+      None => edge_in[head] = [edge_idx]
     }
   }
   let mut best_cross =
@@ -6987,6 +6980,42 @@ fn reorder_rank_groups(
     count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+  }
+  if !graphviz_style && rank_keys.length() > 1 {
+    ordered = build_rank_groups_graphviz(
+      rank_keys,
+      groups,
+      edge_tail,
+      edge_head,
+      node_ranks,
+      node_order,
+      cluster_keys,
+      cluster_skeleton,
+      0,
+    )
+    order_positions = order_positions_from_groups(ordered)
+    let seed_cross =
+      count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+    if seed_cross > 0 {
+      let _ = transpose_rank_groups_graphviz(
+        rank_keys,
+        ordered,
+        node_ranks,
+        edge_in,
+        edge_out,
+        edge_tail,
+        edge_head,
+        edge_penalty,
+        cluster_keys,
+        cluster_skeleton,
+        flat_constraints,
+        false,
+        0,
+      )
+      order_positions = order_positions_from_groups(ordered)
+    }
+    best_ordered = clone_rank_groups(ordered)
+    best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
   if graphviz_style && rank_keys.length() > 1 {
     let max_iter = 24
@@ -7190,7 +7219,7 @@ fn reorder_rank_groups(
     let iterations = if rank_keys.length() > 2 { 2 } else { 1 }
     let mut iter = 0
     while iter < iterations {
-      let reverse_ties = iter % 4 < 2
+      let reverse_ties = iter % 2 == 1
       if graphviz_style {
         if iter % 2 == 0 {
           let mut idx = 1
@@ -7328,7 +7357,7 @@ fn reorder_rank_groups(
           }
         }
         let down_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
-        if down_cross <= best_cross {
+        if down_cross < best_cross {
           best_cross = down_cross
           best_ordered = clone_rank_groups(ordered)
         }
@@ -9589,13 +9618,13 @@ pub fn layout_dot(
     cluster_order_list.sort_by((a, b) => {
       let (_name_a, rank_a, order_a) = a
       let (_name_b, rank_b, order_b) = b
-      if rank_a < rank_b {
-        -1
-      } else if rank_a > rank_b {
-        1
-      } else if order_a < order_b {
+      if order_a < order_b {
         -1
       } else if order_a > order_b {
+        1
+      } else if rank_a < rank_b {
+        -1
+      } else if rank_a > rank_b {
         1
       } else {
         0
@@ -9671,9 +9700,6 @@ pub fn layout_dot(
       cluster_skeleton,
       Map::new(),
     )
-  }
-  if !ordering {
-    reorder_groups_by_cluster_order(ordered_groups, cluster_keys, cluster_order_base)
   }
   dot_trace("layout_dot: rank order computed")
   let existing_names : Map[String, Bool] = Map::new()
@@ -9762,7 +9788,7 @@ pub fn layout_dot(
       x_cluster_keys[name] = key
     }
   }
-  if allow_xpos_reorder && !ordering && !has_vnode_order {
+  if allow_xpos_reorder && !ordering && !has_vnode_order && !has_clusters {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       order_edges,
@@ -9830,7 +9856,6 @@ pub fn layout_dot(
     )
   }
   if allow_xpos_reorder && !ordering {
-    reorder_groups_by_cluster_order(x_groups, cluster_keys, cluster_order_base)
   }
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
