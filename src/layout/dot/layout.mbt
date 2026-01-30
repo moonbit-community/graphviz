@@ -8292,15 +8292,14 @@ fn graph_label_pos(
   loc : LabelLoc,
   just : LabelJust,
 ) -> @geom.Point {
-  let margin = 4.0
   let x = match just {
-    LabelJust::Left => bbox.llx + margin + label_width_pt / 2.0
-    LabelJust::Right => bbox.urx - margin - label_width_pt / 2.0
+    LabelJust::Left => bbox.llx + label_width_pt / 2.0
+    LabelJust::Right => bbox.urx - label_width_pt / 2.0
     LabelJust::Center => (bbox.llx + bbox.urx) / 2.0
   }
   let y = match loc {
-    LabelLoc::Top => bbox.ury - margin - label_height_pt / 2.0
-    LabelLoc::Bottom => bbox.lly + margin + label_height_pt / 2.0
+    LabelLoc::Top => bbox.ury - label_height_pt / 2.0
+    LabelLoc::Bottom => bbox.lly + label_height_pt / 2.0
   }
   { x, y }
 }
