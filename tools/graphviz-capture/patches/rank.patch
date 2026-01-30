@@ -222,6 +222,20 @@
 +    return -1;
 +}
 +
++static int mbt_rank_edge_id(edge_t *edge, node_t **nodes, size_t count)
++{
++    int idx = 0;
++    for (size_t i = 0; i < count; i++) {
++        edge_t *e;
++        for (int j = 0; (e = ND_out(nodes[i]).list[j]); j++) {
++            if (e == edge)
++                return idx;
++            idx++;
++        }
++    }
++    return -1;
++}
++
 +static mbt_rank_capture_t mbt_rank_capture_input(graph_t *g)
 +{
 +    mbt_rank_capture_t cap = {0};
@@ -266,9 +280,18 @@
 +            if (!first_edge)
 +                fputc(',', out);
 +            first_edge = false;
++            int in_pos = -1;
++            edge_t *in_edge;
++            for (int k = 0; (in_edge = ND_in(aghead(e)).list[k]); k++) {
++                if (in_edge == e) {
++                    in_pos = k;
++                    break;
++                }
++            }
 +            fprintf(out,
-+                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,\"weight\":%d}",
-+                    (int)i, head_id, ED_minlen(e), ED_weight(e));
++                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,\"weight\":%d,\"seq\":%llu,\"in_pos\":%d}",
++                    (int)i, head_id, ED_minlen(e), ED_weight(e),
++                    (unsigned long long)AGSEQ(e), in_pos);
 +        }
 +    }
 +    fputs("]}\n", out);
@@ -294,6 +317,7 @@
 +    fputs("]}\n", out);
 +    fflush(out);
 +}
++
 +
 +static void mbt_rank_capture_free(mbt_rank_capture_t *cap)
 +{
@@ -324,7 +348,8 @@
  	    return err;
  	}
      }
-     if (maxiter <= 0) {
+    mbt_rank_capture_tree(&mbt_capture, &ctx);
+    if (maxiter <= 0) {
  	freeTreeList(&ctx, g);
 +        mbt_rank_capture_free(&mbt_capture);
  	return 0;

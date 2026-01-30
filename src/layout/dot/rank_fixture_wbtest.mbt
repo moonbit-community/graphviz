@@ -12,6 +12,8 @@ struct RankFixtureEdge {
   head : Int
   minlen : Int
   weight : Int
+  seq : Int
+  in_pos : Int
 } derive(FromJson)
 
 ///|
@@ -181,6 +183,8 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
     set_node_rank(graph, idx, node.rank)
   }
   for edge in input.edges {
+    let _ = edge.seq
+    let _ = edge.in_pos
     let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
   }
   network_simplex(graph, 0x7fffffff, BalanceMode::TB)
