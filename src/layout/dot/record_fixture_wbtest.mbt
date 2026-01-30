@@ -307,6 +307,75 @@ fn assert_box_eq(
 }
 
 ///|
+fn record_point_json(point : RecordFixturePoint) -> Json {
+  let data : Map[String, Json] = {}
+  data["x"] = Json::number(point.x)
+  data["y"] = Json::number(point.y)
+  Json::object(data)
+}
+
+///|
+fn record_box_json(box : RecordFixtureBox) -> Json {
+  let data : Map[String, Json] = {}
+  data["llx"] = Json::number(box.llx)
+  data["lly"] = Json::number(box.lly)
+  data["urx"] = Json::number(box.urx)
+  data["ury"] = Json::number(box.ury)
+  Json::object(data)
+}
+
+///|
+fn record_field_json(field : RecordComputedField) -> Json {
+  let data : Map[String, Json] = {}
+  data["id"] = match field.id {
+    Some(value) => Json::string(value)
+    None => Json::null()
+  }
+  data["lr"] = Json::boolean(field.lr)
+  data["sides"] = Json::number(field.sides.to_double())
+  data["size"] = record_point_json(field.size)
+  data["box"] = record_box_json(field.box)
+  if field.fields.length() > 0 {
+    let children : Array[Json] = []
+    for child in field.fields {
+      children.push(record_field_json(child))
+    }
+    data["fields"] = Json::array(children)
+  } else {
+    data["text"] = match field.text {
+      Some(value) => Json::string(value)
+      None => Json::null()
+    }
+  }
+  Json::object(data)
+}
+
+///|
+fn record_fixture_json(
+  node : String,
+  label : String,
+  html : Bool,
+  lr : Bool,
+  flip : Bool,
+  width_in : Double,
+  height_in : Double,
+  size_pt : RecordFixturePoint,
+  field : RecordComputedField,
+) -> Json {
+  let data : Map[String, Json] = {}
+  data["node"] = Json::string(node)
+  data["label"] = Json::string(label)
+  data["html"] = Json::boolean(html)
+  data["lr"] = Json::boolean(lr)
+  data["flip"] = Json::boolean(flip)
+  data["width_in"] = Json::number(width_in)
+  data["height_in"] = Json::number(height_in)
+  data["size_pt"] = record_point_json(size_pt)
+  data["field"] = record_field_json(field)
+  Json::object(data)
+}
+
+///|
 fn json_string_option(value : Json) -> String? raise {
   if value == Json::null() {
     None
@@ -412,10 +481,57 @@ fn assert_field_eq(
 
 ///|
 test "record fixtures match Graphviz layout" {
+  let dump_path = @sys.get_env_var("MBT_RECORD_FIXTURE_OUT")
   let fixtures = load_record_fixtures()
   let source = @fs.read_file_to_string("tests/layout/dot/complex.dot")
   let graph = @dot_parser.parse_dot(source)
   let record_orientation = record_layout_orientation(graph_rankdir(graph))
+  if dump_path is Some(out_path) {
+    let output = StringBuilder::new()
+    for fixture in fixtures {
+      let node = graph.node(fixture.node)
+      let label = unescape_quotes(label_text(node))
+      let expected_flip = orientation_is_horizontal(record_orientation)
+      let size = node_size(node, record_orientation)
+      let record_size : RecordFixturePoint = {
+        x: size.width_pt,
+        y: size.height_pt - RECORD_BORDER_PT * 2.0,
+      }
+      let rect : @geom.Rect = {
+        llx: -record_size.x / 2.0,
+        lly: -record_size.y / 2.0,
+        urx: record_size.x / 2.0,
+        ury: record_size.y / 2.0,
+      }
+      let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
+      let font = @attrs.font_name(node.get_attr("fontname"))
+      let (pad_x_pt, pad_y_pt) = node_padding(node)
+      let computed = compute_record_tree(
+        record_nodes_unflattened(label),
+        rect,
+        record_orientation,
+        font,
+        font_size_pt,
+        pad_x_pt,
+        pad_y_pt,
+      )
+      let json = record_fixture_json(
+        fixture.node,
+        label,
+        false,
+        expected_flip,
+        expected_flip,
+        size.width_in,
+        size.height_in,
+        record_size,
+        computed,
+      )
+      output.write_string(Json::stringify(json))
+      output.write_char('\n')
+    }
+    @fs.write_string_to_file(out_path, output.to_string())
+    return
+  }
   for fixture in fixtures {
     let node = graph.node(fixture.node)
     let label = unescape_quotes(label_text(node))

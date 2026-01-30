@@ -44,14 +44,21 @@ def parse_string(text: str, index: int):
     if index >= len(text):
         return None, index
     index += 1
-    start = index
     out = []
     accounted = 0
     while index < len(text) and accounted < count:
         ch = text[index]
-        out.append(ch)
-        if ch != "\\" or (index > start and text[index - 1] == "\\"):
+        if ch == "\\":
+            if index + 1 < len(text):
+                index += 1
+                out.append(text[index])
+            else:
+                out.append(ch)
             accounted += 1
+            index += 1
+            continue
+        out.append(ch)
+        accounted += 1
         index += 1
     return "".join(out), index
 
@@ -151,6 +158,22 @@ def extract_draw_strings(content: str):
     return strings
 
 
+def line_height_scale(font_name: str, font_size: float) -> float:
+    lower = font_name.lower()
+    if "palatino" in lower:
+        return 1.125
+    if "times" in lower:
+        min_size = 10.0
+        max_size = 14.0
+        if font_size <= min_size:
+            return 1.125
+        if font_size >= max_size:
+            return 1.1786
+        t = (font_size - min_size) / (max_size - min_size)
+        return 1.125 + t * (1.1786 - 1.125)
+    return 1.2
+
+
 entries = {}
 if output_path.exists():
     for line in output_path.read_text(encoding="utf-8").splitlines():
@@ -175,7 +198,7 @@ for path in sorted(xdot_dir.glob("*.xdot")):
     for draw in extract_draw_strings(content):
         for font, size, text, width in parse_draw_ops(draw):
             key = (font, float(size), text)
-            height = float(size)
+            height = float(size) * line_height_scale(font, float(size))
             prev = entries.get(key)
             if prev is None:
                 entries[key] = {
@@ -185,34 +208,22 @@ for path in sorted(xdot_dir.glob("*.xdot")):
                     "yoffset_layout": 0.0,
                     "yoffset_centerline": 0.0,
                     "has_capture": False,
+                    "xdot_width": width,
+                    "xdot_height": height,
                 }
             else:
+                prev["xdot_width"] = max(prev.get("xdot_width", width), width)
+                prev["xdot_height"] = max(prev.get("xdot_height", height), height)
                 if not prev.get("has_capture", False):
                     prev["width"] = max(prev["width"], width)
                     prev["height"] = max(prev["height"], height)
 
 
-def line_height_scale(font_name: str, font_size: float) -> float:
-    lower = font_name.lower()
-    if "palatino" in lower:
-        return 1.125
-    if "times" in lower:
-        min_size = 10.0
-        max_size = 14.0
-        if font_size <= min_size:
-            return 1.125
-        if font_size >= max_size:
-            return 1.1786
-        t = (font_size - min_size) / (max_size - min_size)
-        return 1.125 + t * (1.1786 - 1.125)
-    return 1.2
-
-
 output_path.parent.mkdir(parents=True, exist_ok=True)
 with output_path.open("w", encoding="ascii") as handle:
     for (font, size, text), entry in sorted(entries.items()):
-        width = entry["width"]
-        height = entry["height"]
+        width = entry.get("xdot_width", entry["width"])
+        height = entry.get("xdot_height", entry["height"])
         data = {
             "font": font,
             "size": size,
