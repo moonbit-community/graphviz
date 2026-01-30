@@ -13,6 +13,8 @@
    uint8_t *data; ///< bit-packed backing memory
  };
 +
++static bool matrix_get(adjmatrix_t *me, size_t row, size_t col);
++
 +typedef struct {
 +    int case_id;
 +    size_t node_count;
@@ -21,6 +23,9 @@
 +
 +static FILE *mbt_mincross_log = NULL;
 +static int mbt_mincross_case_id = 0;
++static mbt_mincross_capture_t *mbt_mincross_active = NULL;
++static int mbt_mincross_active_pass = 0;
++static int mbt_mincross_active_iter = 0;
 +
 +static FILE *mbt_mincross_log_open(void)
 +{
@@ -140,7 +145,7 @@
 +        return;
 +
 +    cap->case_id = ++mbt_mincross_case_id;
- 
+
 +    size_t count = 0;
 +    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
 +        count++;
@@ -168,6 +173,14 @@
 +        mbt_write_json_string_or_null(out, name);
 +        fputs(",\"kind\":", out);
 +        mbt_write_json_string(out, mbt_mincross_node_kind(n));
++        fputs(",\"cluster\":", out);
++        if (ND_clust(n))
++            mbt_write_json_string(out, agnameof(ND_clust(n)));
++        else
++            fputs("null", out);
++        fprintf(out, ",\"cluster_skeleton\":%s",
++                (ND_ranktype(n) == CLUSTER && ND_node_type(n) == VIRTUAL) ?
++                "true" : "false");
 +        fprintf(out, ",\"rank\":%d,\"order\":%d}",
 +                ND_rank(n), ND_order(n));
 +    }
@@ -187,15 +200,131 @@
 +                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,"
 +                    "\"weight\":%d,\"xpenalty\":%d,"
 +                    "\"tail_port_x\":%.17g,\"head_port_x\":%.17g,"
++                    "\"tail_port_order\":%u,\"head_port_order\":%u,"
 +                    "\"type\":",
 +                    (int)i, head_id, ED_minlen(e),
 +                    ED_weight(e), ED_xpenalty(e),
-+                    ED_tail_port(e).p.x, ED_head_port(e).p.x);
++                    ED_tail_port(e).p.x, ED_head_port(e).p.x,
++                    (unsigned int)ED_tail_port(e).order,
++                    (unsigned int)ED_head_port(e).order);
 +            mbt_write_json_string(out, mbt_mincross_edge_kind(e));
 +            fputc('}', out);
 +        }
 +    }
++    fputs("],\"flat_edges\":[", out);
++    bool first_flat = true;
++    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
++        adjmatrix_t *M = GD_rank(g)[r].flat;
++        if (!M)
++            continue;
++        for (int i = 0; i < GD_rank(g)[r].n; i++) {
++            node_t *tail = GD_rank(g)[r].v[i];
++            if (!tail)
++                continue;
++            int tail_id = mbt_mincross_node_id(tail, cap->nodes, cap->node_count);
++            if (tail_id < 0)
++                continue;
++            for (int j = 0; j < GD_rank(g)[r].n; j++) {
++                if (i == j)
++                    continue;
++                if (!matrix_get(M, (size_t)i, (size_t)j))
++                    continue;
++                node_t *head = GD_rank(g)[r].v[j];
++                if (!head)
++                    continue;
++                int head_id = mbt_mincross_node_id(head, cap->nodes, cap->node_count);
++                if (head_id < 0)
++                    continue;
++                if (!first_flat)
++                    fputc(',', out);
++                first_flat = false;
++                fprintf(out, "{\"tail\":%d,\"head\":%d}", tail_id, head_id);
++            }
++        }
++    }
 +    fputs("],\"ranks\":[", out);
++    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
++        if (r > GD_minrank(g))
++            fputc(',', out);
++        fputc('[', out);
++        int out_idx = 0;
++        for (int i = 0; i < GD_rank(g)[r].n; i++) {
++            node_t *n = GD_rank(g)[r].v[i];
++            if (!n)
++                continue;
++            int id = mbt_mincross_node_id(n, cap->nodes, cap->node_count);
++            if (id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", id);
++        }
++        fputc(']', out);
++    }
++    fputs("]}\n", out);
++    mbt_mincross_active = cap;
++    fflush(out);
++}
++
++static void mbt_mincross_capture_rank_state(
++    graph_t *g,
++    int rank,
++    const char *phase)
++{
++    mbt_mincross_capture_t *cap = mbt_mincross_active;
++    if (!cap || cap->case_id == 0)
++        return;
++    FILE *out = mbt_mincross_log_open();
++    if (!out)
++        return;
++    fprintf(out,
++            "{\"event\":\"mincross_rank\",\"case\":%d,\"pass\":%d,\"iter\":%d,"
++            "\"phase\":",
++            cap->case_id, mbt_mincross_active_pass, mbt_mincross_active_iter);
++    mbt_write_json_string(out, phase);
++    fprintf(out, ",\"rank\":%d,\"order\":[", rank);
++    int out_idx = 0;
++    for (int i = 0; i < GD_rank(g)[rank].n; i++) {
++        node_t *n = GD_rank(g)[rank].v[i];
++        if (!n)
++            continue;
++        int id = mbt_mincross_node_id(n, cap->nodes, cap->node_count);
++        if (id < 0)
++            continue;
++        if (out_idx++ > 0)
++            fputc(',', out);
++        fprintf(out, "%d", id);
++    }
++    fputs("],\"mval\":[", out);
++    out_idx = 0;
++    for (int i = 0; i < GD_rank(g)[rank].n; i++) {
++        node_t *n = GD_rank(g)[rank].v[i];
++        if (!n)
++            continue;
++        if (out_idx++ > 0)
++            fputc(',', out);
++        fprintf(out, "%.17g", ND_mval(n));
++    }
++    fputs("]}\n", out);
++    fflush(out);
++}
++
++static void mbt_mincross_capture_iter_state(
++    graph_t *g,
++    const char *phase)
++{
++    mbt_mincross_capture_t *cap = mbt_mincross_active;
++    if (!cap || cap->case_id == 0)
++        return;
++    FILE *out = mbt_mincross_log_open();
++    if (!out)
++        return;
++    fprintf(out,
++            "{\"event\":\"mincross_iter\",\"case\":%d,\"pass\":%d,\"iter\":%d,"
++            "\"phase\":",
++            cap->case_id, mbt_mincross_active_pass, mbt_mincross_active_iter);
++    mbt_write_json_string(out, phase);
++    fputs(",\"ranks\":[", out);
 +    for (int r = GD_minrank(g); r <= GD_maxrank(g); r++) {
 +        if (r > GD_minrank(g))
 +            fputc(',', out);
@@ -255,6 +384,8 @@
 +{
 +    if (!cap)
 +        return;
++    if (mbt_mincross_active == cap)
++        mbt_mincross_active = NULL;
 +    free(cap->nodes);
 +    cap->nodes = NULL;
 +    cap->node_count = 0;
@@ -298,6 +429,22 @@
  
 +    mbt_mincross_capture_output(g, &mbt_capture);
 +    mbt_mincross_capture_free(&mbt_capture);
-     return best_cross;
+    return best_cross;
+}
+
+@@ -1109,6 +1111,8 @@
+	    if (cur_cross == 0)
+		break;
++	    mbt_mincross_active_pass = pass;
++	    mbt_mincross_active_iter = iter;
+	    mincross_step(g, iter);
+@@ -1862,6 +1864,8 @@
+     for (r = first; r != last + dir; r += dir) {
+ 	other = r - dir;
+ 	bool hasfixed = medians(g, r, other);
+ 	reorder(g, r, reverse, hasfixed);
++	mbt_mincross_capture_rank_state(g, r, "after_reorder");
+     }
+     transpose(g, !reverse);
++    mbt_mincross_capture_iter_state(g, "after_transpose");
  }
- 

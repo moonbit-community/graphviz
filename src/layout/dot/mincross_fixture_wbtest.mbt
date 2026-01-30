@@ -2,6 +2,8 @@
 struct MincrossNode {
   id : Int
   rank : Int
+  cluster : String?
+  cluster_skeleton : Bool
 }
 
 ///|
@@ -12,6 +14,12 @@ struct MincrossEdge {
 }
 
 ///|
+struct MincrossFlatEdge {
+  tail : Int
+  head : Int
+}
+
+///|
 struct MincrossInput {
   case_id : Int
   graph : String
@@ -19,6 +27,7 @@ struct MincrossInput {
   maxrank : Int
   nodes : Array[MincrossNode]
   edges : Array[MincrossEdge]
+  flat_edges : Array[MincrossFlatEdge]
   ranks : Array[Array[Int]]
 }
 
@@ -37,6 +46,7 @@ fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
     maxrank: @json.from_json(obj["maxrank"]),
     nodes: parse_mincross_nodes(obj["nodes"]),
     edges: parse_mincross_edges(obj["edges"]),
+    flat_edges: parse_optional_flat_edges(obj),
     ranks: @json.from_json(obj["ranks"]),
   }
 }
@@ -57,7 +67,22 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
     let obj = require_object(item)
     let id : Int = @json.from_json(obj["id"])
     let rank : Int = @json.from_json(obj["rank"])
-    nodes.push({ id, rank })
+    let cluster =
+      match obj.get("cluster") {
+        Some(value) =>
+          match value {
+            Json::Null => (None : String?)
+            Json::String(text) => Some(text)
+            _ => fail("unexpected node cluster payload")
+          }
+        None => (None : String?)
+      }
+    let cluster_skeleton =
+      match obj.get("cluster_skeleton") {
+        Some(value) => @json.from_json(value)
+        None => false
+      }
+    nodes.push({ id, rank, cluster, cluster_skeleton })
   }
   nodes
 }
@@ -74,6 +99,29 @@ fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
     edges.push({ tail, head, xpenalty })
   }
   edges
+}
+
+///|
+fn parse_mincross_flat_edges(value : Json) -> Array[MincrossFlatEdge] raise {
+  let items : Array[Json] = @json.from_json(value)
+  let edges : Array[MincrossFlatEdge] = []
+  for item in items {
+    let obj = require_object(item)
+    let tail : Int = @json.from_json(obj["tail"])
+    let head : Int = @json.from_json(obj["head"])
+    edges.push({ tail, head })
+  }
+  edges
+}
+
+///|
+fn parse_optional_flat_edges(
+  obj : Map[String, Json],
+) -> Array[MincrossFlatEdge] raise {
+  match obj.get("flat_edges") {
+    Some(value) => parse_mincross_flat_edges(value)
+    None => []
+  }
 }
 
 ///|
@@ -110,6 +158,8 @@ fn load_mincross_fixtures() -> Array[(MincrossInput, MincrossOutput)] raise {
           None => fail("mincross_output without mincross_input")
         }
       }
+      "mincross_rank" => ()
+      "mincross_iter" => ()
       _ => fail("unknown mincross fixture event: \{event}")
     }
   }
@@ -150,7 +200,7 @@ fn assert_rank_groups(
       let expected_id = expected_rank[j]
       if actual_id != expected_id {
         fail(
-          "case \{case_id} graph=\{graph} rank[\{i}] index=\{j} expected=\{expected_id} actual=\{actual_id}",
+          "case \{case_id} graph=\{graph} rank[\{i}] index=\{j} expected=\{expected_id} actual=\{actual_id} expected_rank=\{expected_rank} actual_rank=\{actual_rank}",
         )
       }
     }
@@ -208,6 +258,7 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
       None => fail("case \{input.case_id} missing head node \{head_name}")
     }
     let edge_obj = graph.edge(tail_node, head_node)
+    edge_obj.set_attr("xpenalty", "\{edge.xpenalty}")
     edges.push(edge_obj)
     edge_tail.push(tail_name)
     edge_head.push(head_name)
@@ -249,6 +300,33 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     build_edge_index_for_order(nodes, edges, edge_tail, edge_head, name_to_rank)
   let edge_order = collect_edge_order(edges)
   let nodesep_pt = default_nodesep_in() * 72.0
+  let cluster_keys : Map[String, String] = Map::new()
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  for node in input.nodes {
+    let name = node_key(node.id)
+    match node.cluster {
+      Some(value) =>
+        if value != "" {
+          cluster_keys[name] = value
+        }
+      None => ()
+    }
+    if node.cluster_skeleton {
+      cluster_skeleton[name] = true
+    }
+  }
+  let flat_constraints : Map[String, Bool] = Map::new()
+  for edge in input.flat_edges {
+    let tail_name = match id_to_name.get(edge.tail) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing flat tail id \{edge.tail}")
+    }
+    let head_name = match id_to_name.get(edge.head) {
+      Some(value) => value
+      None => fail("case \{input.case_id} missing flat head id \{edge.head}")
+    }
+    flat_constraints["\{tail_name}|\{head_name}"] = true
+  }
   let ordered = reorder_rank_groups(
     rank_keys,
     groups,
@@ -257,7 +335,7 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     edge_head,
     parents,
     children,
-    Map::new(),
+    cluster_keys,
     Map::new(),
     Map::new(),
     edge_order,
@@ -268,6 +346,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     Map::new(),
     Map::new(),
     Map::new(),
+    cluster_skeleton,
+    flat_constraints,
   )
   let actual : Array[Array[Int]] = []
   for rank_key in rank_keys {
@@ -295,7 +375,6 @@ test "mincross fixtures load" {
 }
 
 ///|
-#skip
 test "mincross fixtures match reorder_rank_groups" {
   let cases = load_mincross_fixtures()
   for pair in cases {
