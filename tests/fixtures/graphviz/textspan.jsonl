@@ -1,336 +1,340 @@
-{"font": "Palatino-Italic", "size": 24.0, "flags": 0, "text": "hello", "width": 45.0, "height": 27.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Palatino-Italic", "size": 24.0, "flags": 0, "text": "world", "width": 55.5, "height": 27.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st0", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st1", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st10", "width": 12.75, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st2", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st3", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st4", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st5", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st6", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st7", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st8", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st9", "width": 9.0, "height": 9.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "box", "width": 15.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "boxbox", "width": 31.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "crow", "width": 20.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "crowcrow", "width": 40.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "curve", "width": 22.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "curvecurve", "width": 45.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "diamond", "width": 36.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "diamonddiamond", "width": 72.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "dot", "width": 13.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "dotdot", "width": 27.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "icurve", "width": 25.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "icurveicurve", "width": 51.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "inv", "width": 13.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "invinv", "width": 27.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lbox", "width": 18.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lboxlbox", "width": 37.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcrow", "width": 23.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcrowlcrow", "width": 46.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcurve", "width": 25.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcurvelcurve", "width": 51.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ldiamond", "width": 39.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ldiamondldiamond", "width": 78.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "licurve", "width": 28.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "licurvelicurve", "width": 57.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "linv", "width": 16.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "linvlinv", "width": 33.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lnormal", "width": 31.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lnormallnormal", "width": 63.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ltee", "width": 15.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lteeltee", "width": 30.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lvee", "width": 17.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lveelvee", "width": 34.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "none", "width": 20.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "nonenone", "width": 40.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "normal", "width": 28.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "normalnormal", "width": 57.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "obox", "width": 21.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oboxobox", "width": 42.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odiamond", "width": 41.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odiamondodiamond", "width": 82.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odot", "width": 18.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odotodot", "width": 37.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oinv", "width": 18.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oinvoinv", "width": 37.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olbox", "width": 24.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olboxolbox", "width": 48.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oldiamond", "width": 44.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oldiamondoldiamond", "width": 88.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olinv", "width": 21.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olinvolinv", "width": 43.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olnormal", "width": 36.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olnormalolnormal", "width": 73.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "onormal", "width": 33.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "onormalonormal", "width": 67.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orbox", "width": 24.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orboxorbox", "width": 48.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ordiamond", "width": 44.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ordiamondordiamond", "width": 88.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orinv", "width": 21.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orinvorinv", "width": 43.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ornormal", "width": 36.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ornormalornormal", "width": 73.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rbox", "width": 18.75, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rboxrbox", "width": 37.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcrow", "width": 23.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcrowrcrow", "width": 46.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcurve", "width": 25.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcurvercurve", "width": 51.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rdiamond", "width": 39.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rdiamondrdiamond", "width": 78.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ricurve", "width": 28.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ricurvericurve", "width": 57.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rinv", "width": 16.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rinvrinv", "width": 33.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rnormal", "width": 31.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rnormalrnormal", "width": 63.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rtee", "width": 15.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rteertee", "width": 30.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rvee", "width": 17.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rveervee", "width": 34.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "tee", "width": 12.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "teetee", "width": 24.0, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "vee", "width": 14.25, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "veevee", "width": 28.5, "height": 11.25, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": " ", "width": 3.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "(", "width": 4.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "(Configurable", "width": 75.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": ")", "width": 4.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "*", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "+", "width": 8.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "-MWGC", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/-", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/0", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/1", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "01/-", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "01/1", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10/-", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10/1", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "11", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "11/1", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "12", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "13", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "14", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "15", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "16", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "17", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "18", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "19", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "2", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "20", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "21", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "22", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "23", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "25", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "26", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "27", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "28", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "29", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "3", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "31", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "32", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "33", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "34", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "36", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "37", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "38", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "39", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "4", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "40", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "41", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "42", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "43", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "5", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "6", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "7", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "9", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "A", "width": 9.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Arbiter Chunks", "width": 84.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "B", "width": 9.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C", "width": 9.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C-MWG", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C1N1", "width": 32.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C2N1", "width": 32.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Complex Architecture", "width": 120.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "E", "width": 8.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Egress Shapeshifter", "width": 107.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Empty", "width": 36.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "F", "width": 7.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo Agent", "width": 57.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo Reactor", "width": 66.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo SCADA", "width": 70.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Full", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "G", "width": 9.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "G-MWC", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Graphs can", "width": 61.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "H", "width": 9.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Hello", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : a ", "width": 60.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : b ", "width": 61.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : c ", "width": 60.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : d ", "width": 61.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : e ", "width": 60.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : q ", "width": 61.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Ingress Shapeshifter", "width": 110.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "JZ Chunk", "width": 53.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_0", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_1", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_2", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_3", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_4", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_5", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_6", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_7", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_8", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MG-WC", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MGC-W", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MSDOT", "width": 48.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWC-G", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWG-C", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWGC-", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Machsrv Core", "width": 78.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Machsrv Shapeshifter", "width": 119.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MechCmd", "width": 58.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOX Shapeshifter", "width": 100.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOXd Appearance", "width": 103.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOXd Shapeshifter", "width": 107.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Other Chunks", "width": 75.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Other Shapeshifters", "width": 107.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "PROT_A-to-XPROT Converter", "width": 171.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "R", "width": 9.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Raw PROT_G", "width": 79.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ReactorX", "width": 51.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ReactorY", "width": 51.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S($end)", "width": 42.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(A)", "width": 26.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(a)", "width": 22.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(b)", "width": 23.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S1", "width": 14.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S24", "width": 21.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S30", "width": 21.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S35", "width": 21.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S8", "width": 14.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SCADA_A()", "width": 71.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(B)", "width": 33.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(S)", "width": 31.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(a)", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(b)", "width": 30.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Shapeshift 1", "width": 67.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Shapeshift X", "width": 70.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ShipX", "width": 34.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Stolen", "width": 34.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T", "width": 8.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T1", "width": 15.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T24", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T30", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T35", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T8", "width": 15.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Tungsten", "width": 50.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Up", "width": 16.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "W-MGC", "width": 48.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "WC-MG", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Waiting", "width": 43.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "XPROT \\\"crystalizer\\\"", "width": 115.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "XPROT over PROT_G", "width": 126.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Y", "width": 9.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YYY", "width": 29.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YYY Worker", "width": 73.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YoursTruly", "width": 62.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YoursTruly Front-End", "width": 121.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Application ..", "width": 86.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Application 1", "width": 85.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Clients", "width": 50.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifter Appearances", "width": 152.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifter)", "width": 84.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifters", "width": 84.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ZZZ", "width": 24.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ZZZ Worker", "width": 69.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a", "width": 6.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a0", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a1", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a2", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a3", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b0", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b1", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b2", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b3", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "bar", "width": 17.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "be fun", "width": 34.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "big", "width": 17.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "blue", "width": 23.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "buca", "width": 25.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "c", "width": 6.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cleanup", "width": 42.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "climb", "width": 31.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cluster_1", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cluster_2", "width": 49.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "compare", "width": 47.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cyan", "width": 25.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "d", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "dino", "width": 24.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "dispatch", "width": 45.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "e", "width": 6.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "elefantel", "width": 46.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "end", "width": 19.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "execute", "width": 41.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "f", "width": 4.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "foo", "width": 18.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "g", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "green", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "h", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "hello", "width": 27.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "hello world", "width": 62.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "init", "width": 18.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "left", "width": 18.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "long long long", "width": 79.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "low", "width": 20.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "m", "width": 11.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "magenta", "width": 46.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "main", "width": 27.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "make_string", "width": 67.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "mid", "width": 21.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "middle", "width": 38.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "one", "width": 19.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "orange", "width": 36.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "p", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "parse", "width": 28.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "patratos", "width": 42.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "printf", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "process #1", "width": 57.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "process #2", "width": 57.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "q", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "r", "width": 4.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "red", "width": 17.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "return", "width": 32.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "rhino", "width": 28.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "right", "width": 25.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "s", "width": 5.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "small", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "start", "width": 23.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "t", "width": 3.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "top", "width": 17.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "touch", "width": 30.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "two", "width": 20.25, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "w", "width": 9.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "world", "width": 31.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x0", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x1", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x2", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Application ..", "width": 115.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Application 1", "width": 114.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Clients", "width": 79.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y", "width": 6.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y0", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y1", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y2", "width": 13.5, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "yellow", "width": 36.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z", "width": 6.0, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z0", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z1", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
-{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z2", "width": 12.75, "height": 16.500400000000003, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Palatino-Italic", "size": 24.0, "flags": 0, "text": "hello", "width": 45.0, "height": 24.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Palatino-Italic", "size": 24.0, "flags": 0, "text": "world", "width": 55.5, "height": 24.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st0", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st1", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st10", "width": 12.75, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st2", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st3", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st4", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st5", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st6", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st7", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st8", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 8.0, "flags": 0, "text": "st9", "width": 9.0, "height": 8.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "box", "width": 15.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "boxbox", "width": 31.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "crow", "width": 20.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "crowcrow", "width": 40.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "curve", "width": 22.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "curvecurve", "width": 45.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "diamond", "width": 36.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "diamonddiamond", "width": 72.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "dot", "width": 13.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "dotdot", "width": 27.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "icurve", "width": 25.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "icurveicurve", "width": 51.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "inv", "width": 13.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "invinv", "width": 27.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lbox", "width": 18.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lboxlbox", "width": 37.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcrow", "width": 23.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcrowlcrow", "width": 46.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcurve", "width": 25.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lcurvelcurve", "width": 51.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ldiamond", "width": 39.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ldiamondldiamond", "width": 78.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "licurve", "width": 28.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "licurvelicurve", "width": 57.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "linv", "width": 16.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "linvlinv", "width": 33.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lnormal", "width": 31.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lnormallnormal", "width": 63.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ltee", "width": 15.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lteeltee", "width": 30.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lvee", "width": 17.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "lveelvee", "width": 34.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "none", "width": 20.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "nonenone", "width": 40.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "normal", "width": 28.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "normalnormal", "width": 57.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "obox", "width": 21.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oboxobox", "width": 42.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odiamond", "width": 41.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odiamondodiamond", "width": 82.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odot", "width": 18.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "odotodot", "width": 37.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oinv", "width": 18.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oinvoinv", "width": 37.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olbox", "width": 24.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olboxolbox", "width": 48.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oldiamond", "width": 44.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "oldiamondoldiamond", "width": 88.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olinv", "width": 21.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olinvolinv", "width": 43.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olnormal", "width": 36.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "olnormalolnormal", "width": 73.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "onormal", "width": 33.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "onormalonormal", "width": 67.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orbox", "width": 24.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orboxorbox", "width": 48.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ordiamond", "width": 44.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ordiamondordiamond", "width": 88.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orinv", "width": 21.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "orinvorinv", "width": 43.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ornormal", "width": 36.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ornormalornormal", "width": 73.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rbox", "width": 18.75, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rboxrbox", "width": 37.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcrow", "width": 23.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcrowrcrow", "width": 46.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcurve", "width": 25.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rcurvercurve", "width": 51.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rdiamond", "width": 39.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rdiamondrdiamond", "width": 78.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ricurve", "width": 28.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "ricurvericurve", "width": 57.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rinv", "width": 16.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rinvrinv", "width": 33.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rnormal", "width": 31.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rnormalrnormal", "width": 63.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rtee", "width": 15.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rteertee", "width": 30.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rvee", "width": 17.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "rveervee", "width": 34.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "tee", "width": 12.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "teetee", "width": 24.0, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "vee", "width": 14.25, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 10.0, "flags": 0, "text": "veevee", "width": 28.5, "height": 10.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": " ", "width": 3.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "(", "width": 4.662109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "(Configurable", "width": 77.765625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": ")", "width": 4.662109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "*", "width": 7.0, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "+", "width": 7.8955078125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "-MWGC", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/-", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/0", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "00/1", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "01/-", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "01/1", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10/-", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "10/1", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "11", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "11/1", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "12", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "13", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "14", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "15", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "16", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "17", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "18", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "19", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "2", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "20", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "21", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "22", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "23", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "25", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "26", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "27", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "28", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "29", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "3", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "31", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "32", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "33", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "34", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "36", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "37", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "38", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "39", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "4", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "40", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "41", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "42", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "43", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "5", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "6", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "7", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "9", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "A", "width": 9.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Arbiter Chunks", "width": 86.7138671875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "B", "width": 9.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C", "width": 9.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C-MWG", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C1N1", "width": 33.4482421875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "C2N1", "width": 33.4482421875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Complex Architecture", "width": 124.0244140625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "E", "width": 8.5517578125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Edge Label A", "width": 76.9794921875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Edge Label B Longer", "width": 120.900390625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Egress Shapeshifter", "width": 110.8037109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Empty", "width": 36.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "F", "width": 7.7861328125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo Agent", "width": 58.734375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo Reactor", "width": 68.8173828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Foo SCADA", "width": 72.7412109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Full", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "G", "width": 9.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "G-MWC", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Graphs can", "width": 61.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "H", "width": 9.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Hello", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : a ", "width": 62.34375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : b ", "width": 63.1298828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : c ", "width": 62.34375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : d ", "width": 63.1298828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : e ", "width": 62.34375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "IDENT : q ", "width": 63.1298828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Ingress Shapeshifter", "width": 113.9140625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "JZ Chunk", "width": 54.837890625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_0", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_1", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_2", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_3", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_4", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_5", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_6", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_7", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "LR_8", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MG-WC", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MGC-W", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MSDOT", "width": 48.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWC-G", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWG-C", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MWGC-", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Machsrv Core", "width": 79.7001953125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Machsrv Shapeshifter", "width": 122.4658203125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "MechCmd", "width": 59.103515625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOX Shapeshifter", "width": 103.810546875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOXd Appearance", "width": 106.9072265625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "NOXd Shapeshifter", "width": 110.810546875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Other Chunks", "width": 78.162109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Other Shapeshifters", "width": 110.8037109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "PROT_A-to-XPROT Converter", "width": 178.240234375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "R", "width": 9.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Raw PROT_G", "width": 82.05859375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ReactorX", "width": 53.6416015625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ReactorY", "width": 53.6416015625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S($end)", "width": 42.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(A)", "width": 26.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(a)", "width": 22.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S(b)", "width": 23.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S1", "width": 14.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S24", "width": 21.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S30", "width": 21.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S35", "width": 21.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "S8", "width": 14.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SCADA_A()", "width": 73.8896484375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(B)", "width": 33.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(S)", "width": 31.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(a)", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "SS(b)", "width": 30.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Shapeshift 1", "width": 69.603515625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Shapeshift X", "width": 72.7138671875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ShipX", "width": 35.7861328125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Stolen", "width": 34.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T", "width": 8.5517578125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T1", "width": 15.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T24", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T30", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T35", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "T8", "width": 15.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Tungsten", "width": 51.6181640625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Up", "width": 16.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Very Long Edge Label", "width": 127.12109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "W-MGC", "width": 48.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "WC-MG", "width": 49.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Waiting", "width": 43.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "XPROT \"crystalizer\"", "width": 118.876953125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "XPROT \\\"crystalizer\\\"", "width": 115.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "XPROT over PROT_G", "width": 130.4228515625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Y", "width": 9.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YYY", "width": 30.3310546875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YYY Worker", "width": 74.7099609375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YoursTruly", "width": 63.4443359375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "YoursTruly Front-End", "width": 124.49609375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Application ..", "width": 87.8828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Application 1", "width": 87.8828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Clients", "width": 51.720703125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifter Appearances", "width": 157.0556640625, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifter)", "width": 86.693359375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "Z Shapeshifters", "width": 87.4794921875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ZZZ", "width": 25.6552734375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "ZZZ Worker", "width": 70.546875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a", "width": 6.2138671875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a0", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a1", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a2", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "a3", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b", "width": 7.0, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b0", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b1", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b2", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "b3", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "bar", "width": 17.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "be fun", "width": 34.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "big", "width": 17.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "blue", "width": 23.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "buca", "width": 25.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "c", "width": 6.2138671875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cleanup", "width": 42.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "climb", "width": 31.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cluster_1", "width": 51.3173828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cluster_2", "width": 51.3173828125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "compare", "width": 47.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "cyan", "width": 25.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "d", "width": 7.0, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "dino", "width": 24.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "dispatch", "width": 45.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "e", "width": 6.2138671875, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "elefantel", "width": 46.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "end", "width": 19.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "execute", "width": 41.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "f", "width": 4.662109375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "foo", "width": 18.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "g", "width": 7.0, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "green", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "h", "width": 7.0, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "hello", "width": 27.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "hello world", "width": 62.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "init", "width": 18.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "left", "width": 18.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "long long long", "width": 79.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "low", "width": 20.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "m", "width": 11.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "magenta", "width": 46.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "main", "width": 27.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "make_string", "width": 67.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "mid", "width": 21.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "middle", "width": 38.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "one", "width": 19.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "orange", "width": 36.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "p", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "parse", "width": 28.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "patratos", "width": 42.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "printf", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "process #1", "width": 57.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "process #2", "width": 57.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "q", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "r", "width": 4.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "red", "width": 17.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "return", "width": 32.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "rhino", "width": 28.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "right", "width": 25.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "s", "width": 5.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "small", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "start", "width": 23.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "t", "width": 3.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "top", "width": 17.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "touch", "width": 30.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "two", "width": 20.25, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "w", "width": 9.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "world", "width": 31.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x0", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x1", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "x2", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Application ..", "width": 117.4345703125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Application 1", "width": 117.4345703125, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "xvm_a Clients", "width": 81.2724609375, "height": 14.0, "yoffset_layout": 10.5, "yoffset_centerline": 2.8000000000000003}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y", "width": 6.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y0", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y1", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "y2", "width": 13.5, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "yellow", "width": 36.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z", "width": 6.0, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z0", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z1", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "z2", "width": 12.75, "height": 14.0, "yoffset_layout": 0.0, "yoffset_centerline": 0.0}

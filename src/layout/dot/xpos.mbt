@@ -5,7 +5,7 @@ const CLUSTER_MARGIN_PT : Double = 8.0
 const CLUSTER_LABEL_PAD_PT : Double = 8.0
 
 ///|
-const CLUSTER_COMPACT_WEIGHT : Int = 1
+const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 ///|
 const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
@@ -204,6 +204,23 @@ fn build_cluster_constraints(
       }
     }
     cluster_edges[name] = edges_set
+  }
+  for name, members in cluster_members {
+    let edges_set = match cluster_edges.get(name) {
+      Some(value) => value
+      None => {
+        let set : Map[String, Bool] = Map::new()
+        cluster_edges[name] = set
+        set
+      }
+    }
+    for edge in edges {
+      let tail = edge.tail().name()
+      let head = edge.head().name()
+      if members.get(tail) is Some(_) && members.get(head) is Some(_) {
+        edges_set[edge_key(edge)] = true
+      }
+    }
   }
   if edge_vnodes.length() > 0 {
     for edge in edges {

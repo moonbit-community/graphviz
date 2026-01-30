@@ -19,6 +19,7 @@ fn default_ranksep_in() -> Double {
 
 ///|
 const BACKWARD_PENALTY : Int = 1
+const CL_BACK : Int = 10
 const VNODE_ENDPOINT_WEIGHT : Int = 1
 const DEFAULT_VNODE_WEIGHT : Double = 1.0
 
@@ -1228,9 +1229,36 @@ fn record_field_from_text(field : String) -> RecordField {
   } else {
     (None, trimmed)
   }
-  let normalized = raw_text.trim(chars=" \n\r\t").to_string()
+  let normalized = normalize_record_text(raw_text).trim(chars=" \n\r\t").to_string()
   let text = if normalized == "" { " " } else { normalized }
   { name: port_name, text }
+}
+
+///|
+fn normalize_record_text(text : String) -> String {
+  let sb = StringBuilder::new()
+  let mut escaping = false
+  for ch in text {
+    if escaping {
+      escaping = false
+      if ch == 'n' || ch == 'l' || ch == 'r' {
+        sb.write_char('\\')
+        sb.write_char(ch)
+      } else {
+        sb.write_char(ch)
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    sb.write_char(ch)
+  }
+  if escaping {
+    sb.write_char('\\')
+  }
+  sb.to_string()
 }
 
 ///|
@@ -3360,6 +3388,57 @@ fn acyclic_edge_directions(
 }
 
 ///|
+fn acyclic_edge_directions_for_names(
+  node_names : Array[String],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_is_active : Array[Bool],
+) -> (Array[String], Array[String], Array[Bool]) {
+  let node_index : Map[String, Int] = Map::new()
+  for i in 0..<node_names.length() {
+    node_index[node_names[i]] = i
+  }
+  let tail = edge_tail.copy()
+  let head = edge_head.copy()
+  let edge_reversed : Array[Bool] = []
+  let out_edges : Array[Array[Int]] = []
+  for _ in 0..<node_names.length() {
+    out_edges.push([])
+  }
+  for i in 0..<tail.length() {
+    edge_reversed.push(false)
+    if i < edge_is_active.length() && edge_is_active[i] {
+      match node_index.get(tail[i]) {
+        Some(idx) => out_edges[idx].push(i)
+        None => ()
+      }
+    }
+  }
+  let marked : Array[Bool] = []
+  let onstack : Array[Bool] = []
+  for _ in 0..<node_names.length() {
+    marked.push(false)
+    onstack.push(false)
+  }
+  for i in 0..<node_names.length() {
+    if !marked[i] {
+      acyclic_dfs(
+        i,
+        node_index,
+        out_edges,
+        edge_is_active,
+        tail,
+        head,
+        edge_reversed,
+        marked,
+        onstack,
+      )
+    }
+  }
+  (tail, head, edge_reversed)
+}
+
+///|
 fn edge_endpoints_from_edges(
   edges : Array[@cgraph.Edge],
 ) -> (Array[String], Array[String], Array[Bool]) {
@@ -3375,13 +3454,14 @@ fn edge_endpoints_from_edges(
 }
 
 ///|
-fn compute_ranks_directed(
+fn compute_ranks_directed_base(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
+  _edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
   let graph = new_graph()
   let index : Map[String, Int] = Map::new()
@@ -3389,6 +3469,7 @@ fn compute_ranks_directed(
     let name = node.name()
     index[name] = add_node(graph, name)
   }
+  let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
     if !edge_is_constraint(edge) {
@@ -3407,8 +3488,20 @@ fn compute_ranks_directed(
     let minlen_value = edge_minlen(edge)
     let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
     let weight = edge_weight(edge)
-    let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+    let key = "\{tail_idx}:\{head_idx}"
+    match merged_edges.get(key) {
+      Some(entry) => {
+        let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
+        let next_minlen = if minlen > current_minlen { minlen } else { current_minlen }
+        merged_edges[key] = (tail_idx, head_idx, next_minlen, current_weight + weight)
+      }
+      None => merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+    }
 
+  }
+  for _key, entry in merged_edges {
+    let (tail_idx, head_idx, minlen, weight) = entry
+    let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
   }
   add_rank_same_constraints(graph, index, source)
   network_simplex(graph, 0x7fffffff, BalanceMode::TB)
@@ -3446,6 +3539,367 @@ fn compute_ranks_directed(
 }
 
 ///|
+fn compute_ranks_directed_with_clusters(
+  source : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+) -> Map[String, Int] {
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(source, None, cluster_graphs, cluster_parents)
+  let root_cluster_name =
+    if is_cluster_graph(source) {
+    match source.name() {
+      Some(value) => value
+      None => ""
+    }
+  } else {
+    ""
+  }
+  let top_clusters : Array[String] = []
+  for name, parent in cluster_parents {
+    match parent {
+      None =>
+        if name != root_cluster_name {
+          top_clusters.push(name)
+        }
+      Some(_) => ()
+    }
+  }
+  if top_clusters.length() == 0 {
+    let (base_tail, base_head, base_reversed) =
+      acyclic_edge_directions(nodes, edges)
+    return compute_ranks_directed_base(
+      source,
+      nodes,
+      edges,
+      has_edge_labels,
+      base_tail,
+      base_head,
+      base_reversed,
+    )
+  }
+  let cluster_members = collect_cluster_members(cluster_graphs)
+  let node_cluster : Map[String, String] = Map::new()
+  for cluster_name in top_clusters {
+    match cluster_members.get(cluster_name) {
+      Some(members) =>
+        for name, _ in members {
+          node_cluster[name] = cluster_name
+        }
+      None => ()
+    }
+  }
+  let local_ranks : Map[String, Int] = Map::new()
+  let cluster_leaders : Map[String, String] = Map::new()
+  for cluster_name in top_clusters {
+    let members = match cluster_members.get(cluster_name) {
+      Some(value) => value
+      None => continue
+    }
+    let cluster_nodes : Array[@cgraph.Node] = []
+    for node in nodes {
+      if members.get(node.name()) is Some(_) {
+        cluster_nodes.push(node)
+      }
+    }
+    if cluster_nodes.length() == 0 {
+      continue
+    }
+    let cluster_edges : Array[@cgraph.Edge] = []
+    for edge in edges {
+      let tail = edge.tail().name()
+      let head = edge.head().name()
+      if members.get(tail) is Some(_) && members.get(head) is Some(_) {
+        cluster_edges.push(edge)
+      }
+    }
+    let (cluster_tail, cluster_head, cluster_reversed) =
+      acyclic_edge_directions(cluster_nodes, cluster_edges)
+    let cluster_graph = match cluster_graphs.get(cluster_name) {
+      Some(value) => value
+      None => source
+    }
+    let cluster_ranks = compute_ranks_directed(
+      cluster_graph,
+      cluster_nodes,
+      cluster_edges,
+      has_edge_labels,
+      cluster_tail,
+      cluster_head,
+      cluster_reversed,
+    )
+    for name, rank in cluster_ranks {
+      local_ranks[name] = rank
+    }
+    let mut leader_name : String? = None
+    for node in cluster_nodes {
+      let name = node.name()
+      match cluster_ranks.get(name) {
+        Some(rank) =>
+          if rank == 0 && leader_name is None {
+            leader_name = Some(name)
+          }
+        None => ()
+      }
+    }
+    let leader =
+      match leader_name {
+        Some(name) => name
+        None => cluster_nodes[0].name()
+      }
+    cluster_leaders[cluster_name] = leader
+  }
+  let rank_graph = new_graph()
+  let rank_index : Map[String, Int] = Map::new()
+  let rank_names : Array[String] = []
+  for node in nodes {
+    let name = node.name()
+    let cluster = match node_cluster.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    let key =
+      if cluster == "" {
+        name
+      } else {
+        match cluster_leaders.get(cluster) {
+          Some(value) => value
+          None => name
+        }
+      }
+    if rank_index.get(key) is None {
+      rank_index[key] = add_node(rank_graph, key)
+      rank_names.push(key)
+    }
+  }
+  let direct_tail : Array[String] = []
+  let direct_head : Array[String] = []
+  let direct_minlen : Array[Int] = []
+  let direct_weight : Array[Int] = []
+  let direct_active : Array[Bool] = []
+  let mut slack_id = 0
+  for edge in edges {
+    if !edge_is_constraint(edge) {
+      continue
+    }
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    let tail_cluster = match node_cluster.get(tail_name) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match node_cluster.get(head_name) {
+      Some(value) => value
+      None => ""
+    }
+    let minlen_value = edge_minlen(edge)
+    let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
+    let weight = edge_weight(edge)
+    if tail_cluster == head_cluster {
+      if tail_cluster == "" && tail_name != head_name {
+        direct_tail.push(tail_name)
+        direct_head.push(head_name)
+        direct_minlen.push(minlen)
+        direct_weight.push(weight)
+        direct_active.push(true)
+      }
+      continue
+    }
+    let tail_leader =
+      if tail_cluster == "" {
+        tail_name
+      } else {
+        match cluster_leaders.get(tail_cluster) {
+          Some(value) => value
+          None => tail_name
+        }
+      }
+    let head_leader =
+      if head_cluster == "" {
+        head_name
+      } else {
+        match cluster_leaders.get(head_cluster) {
+          Some(value) => value
+          None => head_name
+        }
+      }
+    let tail_local = match local_ranks.get(tail_name) {
+      Some(value) => value
+      None => 0
+    }
+    let head_local = match local_ranks.get(head_name) {
+      Some(value) => value
+      None => 0
+    }
+    let offset = minlen + tail_local - head_local
+    let (t_len, h_len) =
+      if offset > 0 { (0, offset) } else { (-offset, 0) }
+    let slack_name = "_mbt_rank_slack_\{slack_id}"
+    slack_id = slack_id + 1
+    let slack_idx = add_node(rank_graph, slack_name, kind=NodeKind::Slack)
+    let tail_idx = match rank_index.get(tail_leader) {
+      Some(value) => value
+      None => continue
+    }
+    let head_idx = match rank_index.get(head_leader) {
+      Some(value) => value
+      None => continue
+    }
+    let _ = add_edge(rank_graph, slack_idx, tail_idx, t_len, weight * CL_BACK)
+    let _ = add_edge(rank_graph, slack_idx, head_idx, h_len, weight)
+  }
+  let (direct_tail_final, direct_head_final, _direct_rev) =
+    acyclic_edge_directions_for_names(
+      rank_names,
+      direct_tail,
+      direct_head,
+      direct_active,
+    )
+  let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
+  for i in 0..<direct_tail_final.length() {
+    let tail_name = direct_tail_final[i]
+    let head_name = direct_head_final[i]
+    if tail_name == head_name {
+      continue
+    }
+    let tail_idx = match rank_index.get(tail_name) {
+      Some(value) => value
+      None => continue
+    }
+    let head_idx = match rank_index.get(head_name) {
+      Some(value) => value
+      None => continue
+    }
+    let minlen = direct_minlen[i]
+    let weight = direct_weight[i]
+    let key = "\{tail_idx}:\{head_idx}"
+    match merged_edges.get(key) {
+      Some(entry) => {
+        let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
+        let next_minlen =
+          if minlen > current_minlen { minlen } else { current_minlen }
+        merged_edges[key] =
+          (tail_idx, head_idx, next_minlen, current_weight + weight)
+      }
+      None => merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+    }
+  }
+  for _key, entry in merged_edges {
+    let (tail_idx, head_idx, minlen, weight) = entry
+    let _ = add_edge(rank_graph, tail_idx, head_idx, minlen, weight)
+  }
+  let _ = network_simplex_pre_balance(rank_graph, 0x7fffffff)
+  let leader_ranks : Map[String, Int] = Map::new()
+  for name, idx in rank_index {
+    leader_ranks[name] = node_rank(rank_graph, idx)
+  }
+  let ranks : Map[String, Int] = Map::new()
+  let mut min_rank = 0
+  let mut seen = false
+  for node in nodes {
+    let name = node.name()
+    let cluster = match node_cluster.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    let base_rank =
+      if cluster == "" {
+        match leader_ranks.get(name) {
+          Some(value) => value
+          None => 0
+        }
+      } else {
+        let leader = match cluster_leaders.get(cluster) {
+          Some(value) => value
+          None => name
+        }
+        let leader_rank = match leader_ranks.get(leader) {
+          Some(value) => value
+          None => 0
+        }
+        let local_rank = match local_ranks.get(name) {
+          Some(value) => value
+          None => 0
+        }
+        leader_rank + local_rank
+      }
+    if !seen {
+      min_rank = base_rank
+      seen = true
+    } else if base_rank < min_rank {
+      min_rank = base_rank
+    }
+    ranks[name] = base_rank
+  }
+  for name, rank in ranks {
+    ranks[name] = rank - min_rank
+  }
+  let min_nodes : Map[String, Bool] = Map::new()
+  let max_nodes : Map[String, Bool] = Map::new()
+  collect_rank_extremes(source, min_nodes, max_nodes)
+  apply_rank_extremes(ranks, min_nodes, max_nodes)
+  ranks
+}
+
+///|
+fn compute_ranks_directed(
+  source : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+) -> Map[String, Int] {
+  if graph_has_cluster(source) {
+    return compute_ranks_directed_with_clusters(
+      source,
+      nodes,
+      edges,
+      has_edge_labels,
+    )
+  }
+  compute_ranks_directed_base(
+    source,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+  )
+}
+
+///|
+fn dedup_ordering_edges(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (Array[@cgraph.Edge], Array[String], Array[String]) {
+  let seen : Map[String, Bool] = Map::new()
+  let out_edges : Array[@cgraph.Edge] = []
+  let out_tail : Array[String] = []
+  let out_head : Array[String] = []
+  for i in 0..<edges.length() {
+    let tail =
+      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
+    let head =
+      if i < edge_head.length() { edge_head[i] } else { edges[i].head().name() }
+    let key = "\{tail}|\{head}"
+    if seen.get(key) is Some(_) {
+      continue
+    }
+    seen[key] = true
+    out_edges.push(edges[i])
+    out_tail.push(tail)
+    out_head.push(head)
+  }
+  (out_edges, out_tail, out_head)
+}
+
+///| 
 ///|
 fn build_edge_index_for_order(
   nodes : Array[@cgraph.Node],
@@ -6175,6 +6629,7 @@ fn build_rank_groups_graphviz(
     }
   }
   let cluster_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_has_skeleton : Map[String, Bool] = Map::new()
   for name in nlist {
     if cluster_skeleton.get(name) == Some(true) {
       let cluster = match cluster_keys.get(name) {
@@ -6182,10 +6637,19 @@ fn build_rank_groups_graphviz(
         None => ""
       }
       if cluster != "" {
-        match cluster_nodes.get(cluster) {
-          Some(list) => list.push(name)
-          None => cluster_nodes[cluster] = [name]
-        }
+        cluster_has_skeleton[cluster] = true
+      }
+    }
+  }
+  for name in nlist {
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) {
+      match cluster_nodes.get(cluster) {
+        Some(list) => list.push(name)
+        None => cluster_nodes[cluster] = [name]
       }
     }
   }
@@ -6930,6 +7394,84 @@ fn reorder_rank_groups(
     }
   }
   clone_rank_groups(best_ordered)
+}
+
+///|
+fn reorder_groups_by_cluster_order(
+  groups : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
+  cluster_order_base : Map[String, Int],
+) -> Unit {
+  let mut has_order = false
+  for _name, _ in cluster_order_base {
+    has_order = true
+    break
+  }
+  if !has_order {
+    return ()
+  }
+  for _rank, names in groups {
+    if names.length() <= 1 {
+      continue
+    }
+    let mut all_cluster = true
+    for name in names {
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" || cluster_order_base.get(cluster) is None {
+        all_cluster = false
+        break
+      }
+    }
+    if !all_cluster {
+      continue
+    }
+    let original_index : Map[String, Int] = Map::new()
+    for i in 0..<names.length() {
+      original_index[names[i]] = i
+    }
+    names.sort_by((a, b) => {
+      let a_cluster = match cluster_keys.get(a) {
+        Some(value) => value
+        None => ""
+      }
+      let b_cluster = match cluster_keys.get(b) {
+        Some(value) => value
+        None => ""
+      }
+      let a_order = match cluster_order_base.get(a_cluster) {
+        Some(value) => value
+        None => 0
+      }
+      let b_order = match cluster_order_base.get(b_cluster) {
+        Some(value) => value
+        None => 0
+      }
+      if a_order < b_order {
+        -1
+      } else if a_order > b_order {
+        1
+      } else {
+        let a_idx = match original_index.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_idx = match original_index.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      }
+    })
+  }
 }
 
 ///|
@@ -8821,6 +9363,7 @@ pub fn layout_dot(
       has_edge_labels,
       edge_tail,
       edge_head,
+      edge_reversed,
     )
   } else {
     let base : Map[String, Int] = Map::new()
@@ -8975,6 +9518,116 @@ pub fn layout_dot(
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
   }
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_rep_rank : Map[String, Int] = Map::new()
+  let cluster_rep : Map[String, String] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster == "" {
+      continue
+    }
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    match cluster_rep_rank.get(cluster) {
+      Some(current) =>
+        if rank < current {
+          cluster_rep_rank[cluster] = rank
+          cluster_rep[cluster] = name
+        }
+      None => {
+        cluster_rep_rank[cluster] = rank
+        cluster_rep[cluster] = name
+      }
+    }
+  }
+  for _cluster, name in cluster_rep {
+    cluster_skeleton[name] = true
+  }
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster == "" {
+      continue
+    }
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    match cluster_min_rank.get(cluster) {
+      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
+      None => cluster_min_rank[cluster] = rank
+    }
+    if cluster_first_order.get(cluster) is None {
+      let order_value = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      cluster_first_order[cluster] = order_value
+    }
+  }
+  let cluster_order_list : Array[(String, Int, Int)] = []
+  for cluster, rank in cluster_min_rank {
+    let order = match cluster_first_order.get(cluster) {
+      Some(value) => value
+      None => 0
+    }
+    cluster_order_list.push((cluster, rank, order))
+  }
+  let cluster_order_base : Map[String, Int] = Map::new()
+  if cluster_order_list.length() > 1 {
+    cluster_order_list.sort_by((a, b) => {
+      let (_name_a, rank_a, order_a) = a
+      let (_name_b, rank_b, order_b) = b
+      if rank_a < rank_b {
+        -1
+      } else if rank_a > rank_b {
+        1
+      } else if order_a < order_b {
+        -1
+      } else if order_a > order_b {
+        1
+      } else {
+        0
+      }
+    })
+    let step = nodes.length() + 1
+    let mut base = 0
+    for entry in cluster_order_list {
+      let (cluster, _rank, _order) = entry
+      cluster_order_base[cluster] = base
+      base = base + step
+    }
+    for node in nodes {
+      let name = node.name()
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        continue
+      }
+      let base_order = match cluster_order_base.get(cluster) {
+        Some(value) => value
+        None => 0
+      }
+      let inner = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      node_order[name] = base_order + inner
+    }
+  }
   let intercluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     intercluster_keys[node.name()] = node_local_cluster_key(node)
@@ -8983,17 +9636,25 @@ pub fn layout_dot(
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   let edge_order = collect_edge_order(edges)
+  let (order_edges, order_edge_tail, order_edge_head) =
+    dedup_ordering_edges(edges, edge_tail, edge_head)
   let ordered_groups = if ordering {
     groups
   } else {
     let (parents, children) =
-      build_edge_index_for_order(nodes, edges, edge_tail, edge_head, ranks)
+      build_edge_index_for_order(
+        nodes,
+        order_edges,
+        order_edge_tail,
+        order_edge_head,
+        ranks,
+      )
     reorder_rank_groups(
       rank_keys,
       groups,
-      edges,
-      edge_tail,
-      edge_head,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
       parents,
       children,
       cluster_keys,
@@ -9007,9 +9668,12 @@ pub fn layout_dot(
       port_order_positions,
       port_order_contrib,
       Map::new(),
-      Map::new(),
+      cluster_skeleton,
       Map::new(),
     )
+  }
+  if !ordering {
+    reorder_groups_by_cluster_order(ordered_groups, cluster_keys, cluster_order_base)
   }
   dot_trace("layout_dot: rank order computed")
   let existing_names : Map[String, Bool] = Map::new()
@@ -9067,6 +9731,11 @@ pub fn layout_dot(
     } else {
       Map::new()
     }
+  let mut has_vnode_order = false
+  for _name, _ in vnode_order_keys {
+    has_vnode_order = true
+    break
+  }
   let x_sizes =
     if use_vnodes_for_xpos {
       merge_sizes_with_vnodes(order_sizes, vnode_info.vnode_sizes)
@@ -9093,12 +9762,12 @@ pub fn layout_dot(
       x_cluster_keys[name] = key
     }
   }
-  if allow_xpos_reorder && !ordering {
+  if allow_xpos_reorder && !ordering && !has_vnode_order {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
-      edges,
-      edge_tail,
-      edge_head,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
       ranks,
       vnode_info.edge_vnodes,
       vnode_info.vnode_ranks,
@@ -9107,9 +9776,9 @@ pub fn layout_dot(
     x_groups = reorder_rank_groups(
       tmp_rank_keys,
       x_groups,
-      edges,
-      edge_tail,
-      edge_head,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
       parents,
       children,
       x_cluster_keys,
@@ -9123,23 +9792,18 @@ pub fn layout_dot(
       port_order_positions,
       port_order_contrib,
       Map::new(),
-      Map::new(),
+      cluster_skeleton,
       Map::new(),
     )
   }
   dot_trace_groups("x-groups", x_groups)
-  let mut has_vnode_order = false
-  for _name, _ in vnode_order_keys {
-    has_vnode_order = true
-    break
-  }
   if !has_edge_labels && use_vnodes_for_xpos && !has_vnode_order &&
     allow_xpos_reorder {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
-      edges,
-      edge_tail,
-      edge_head,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
       ranks,
       vnode_info.edge_vnodes,
       vnode_info.vnode_ranks,
@@ -9164,6 +9828,9 @@ pub fn layout_dot(
       true,
       4,
     )
+  }
+  if allow_xpos_reorder && !ordering {
+    reorder_groups_by_cluster_order(x_groups, cluster_keys, cluster_order_base)
   }
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
@@ -9512,7 +10179,13 @@ pub fn layout_dot(
       None => []
     }
     let has_vnodes = vnodes.length() > 0
-    let use_pathplan = @sys.get_env_var("DOT_USE_PATHPLAN") is Some(_)
+    let use_pathplan = match @sys.get_env_var("DOT_USE_PATHPLAN") {
+      Some(value) => {
+        let lower = value.to_lower()
+        lower != "0" && lower != "false" && lower != "no"
+      }
+      None => true
+    }
     let allow_offset =
       !is_flat_edge &&
       !has_cluster &&

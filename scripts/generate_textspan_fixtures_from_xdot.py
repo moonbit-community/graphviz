@@ -152,6 +152,24 @@ def extract_draw_strings(content: str):
 
 
 entries = {}
+if output_path.exists():
+    for line in output_path.read_text(encoding="utf-8").splitlines():
+        if not line:
+            continue
+        data = json.loads(line)
+        key = (data["font"], float(data["size"]), data["text"])
+        has_capture = (
+            float(data.get("yoffset_layout", 0.0)) != 0.0
+            or float(data.get("yoffset_centerline", 0.0)) != 0.0
+        )
+        entries[key] = {
+            "width": float(data["width"]),
+            "height": float(data["height"]),
+            "flags": int(data.get("flags", 0)),
+            "yoffset_layout": float(data.get("yoffset_layout", 0.0)),
+            "yoffset_centerline": float(data.get("yoffset_centerline", 0.0)),
+            "has_capture": has_capture,
+        }
 for path in sorted(xdot_dir.glob("*.xdot")):
     content = path.read_text(encoding="utf-8")
     for draw in extract_draw_strings(content):
@@ -159,11 +177,19 @@ for path in sorted(xdot_dir.glob("*.xdot")):
             key = (font, float(size), text)
             height = float(size)
             prev = entries.get(key)
-            if prev is not None:
-                if abs(prev[0] - width) > 0.0001:
-                    entries[key] = (max(prev[0], width), height)
+            if prev is None:
+                entries[key] = {
+                    "width": width,
+                    "height": height,
+                    "flags": 0,
+                    "yoffset_layout": 0.0,
+                    "yoffset_centerline": 0.0,
+                    "has_capture": False,
+                }
             else:
-                entries[key] = (width, height)
+                if not prev.get("has_capture", False):
+                    prev["width"] = max(prev["width"], width)
+                    prev["height"] = max(prev["height"], height)
 
 
 def line_height_scale(font_name: str, font_size: float) -> float:
@@ -184,17 +210,18 @@ def line_height_scale(font_name: str, font_size: float) -> float:
 
 output_path.parent.mkdir(parents=True, exist_ok=True)
 with output_path.open("w", encoding="ascii") as handle:
-    for (font, size, text), (width, height) in sorted(entries.items()):
-        height = size * line_height_scale(font, size)
+    for (font, size, text), entry in sorted(entries.items()):
+        width = entry["width"]
+        height = entry["height"]
         data = {
             "font": font,
             "size": size,
-            "flags": 0,
+            "flags": entry.get("flags", 0),
             "text": text,
             "width": width,
             "height": height,
-            "yoffset_layout": 0.0,
-            "yoffset_centerline": 0.0,
+            "yoffset_layout": entry.get("yoffset_layout", 0.0),
+            "yoffset_centerline": entry.get("yoffset_centerline", 0.0),
         }
         handle.write(json.dumps(data, ensure_ascii=True))
         handle.write("\n")
