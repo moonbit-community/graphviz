@@ -2460,7 +2460,7 @@ fn edge_polyline_points(
   split_label : Bool,
 ) -> Array[@geom.Point] {
   let points : Array[@geom.Point] = [tail_anchor]
-  let vnodes = match edge_vnodes.get(edge_key(edge)) {
+  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }
@@ -3977,7 +3977,7 @@ fn build_edge_index_for_order_with_vnodes(
       continue
     }
     let (low, high) = if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
-    let vnodes = match edge_vnodes.get(edge_key(edges[edge_idx])) {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edges[edge_idx])) {
       Some(list) => list
       None => []
     }
@@ -5251,7 +5251,7 @@ fn build_vnode_order_keys(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(edge_key(edge)) {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -5326,7 +5326,7 @@ fn vnode_positions_from_endpoints(
 ) -> Map[String, @geom.Point] {
   let positions : Map[String, @geom.Point] = Map::new()
   for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_key(edge)) {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -5394,6 +5394,25 @@ fn build_edge_vnodes(
   let mut edge_index = 0
   let plain_width = 1.0 + nodesep_pt / 2.0
   for edge in edges {
+    let key = edge_vnode_key(edge)
+    match edge_vnodes.get(key) {
+      Some(list) => {
+        let delta = nodesep_pt / 2.0
+        for name in list {
+          match vnode_sizes.get(name) {
+            Some(size) =>
+              vnode_sizes[name] = vnode_size_from_widths(
+                size.left_pt + delta,
+                size.right_pt + delta,
+              )
+            None => ()
+          }
+        }
+        edge_index = edge_index + 1
+        continue
+      }
+      None => ()
+    }
     let tail = edge.tail().name()
     let head = edge.head().name()
     let tail_cluster = node_cluster_key(edge.tail())
@@ -5464,7 +5483,6 @@ fn build_edge_vnodes(
       rank = rank + 1
     }
     if names.length() > 0 {
-      let key = edge_key(edge)
       match edge_vnodes.get(key) {
         Some(list) =>
           for name in names {
@@ -8467,7 +8485,7 @@ fn edge_label_rank_x(
   edge_vnodes : Map[String, Array[String]],
   vnode_positions : Map[String, @geom.Point],
 ) -> Double? {
-  match edge_vnodes.get(edge_key(edge)) {
+  match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(vnodes) =>
       for name in vnodes {
         match vnode_ranks.get(name) {
@@ -10166,7 +10184,7 @@ pub fn layout_dot(
     }
     let is_flat_edge = tail_rank == head_rank
     let has_cluster = tail_cluster_name != "" || head_cluster_name != ""
-    let vnodes = match vnode_info.edge_vnodes.get(edge_key(edge)) {
+    let vnodes = match vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }

@@ -316,7 +316,7 @@ fn build_cluster_constraints(
   }
   if edge_vnodes.length() > 0 {
     for edge in edges {
-      let vnodes = match edge_vnodes.get(edge_key(edge)) {
+      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }

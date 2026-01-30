@@ -25,8 +25,8 @@ fn port_is_explicit(port : @cgraph.Port?) -> Bool {
 }
 
 ///|
-fn edge_key(edge : @cgraph.Edge) -> String {
-  @dot_shared.edge_key(edge)
+fn edge_vnode_key(edge : @cgraph.Edge) -> String {
+  @dot_shared.edge_vnode_key(edge)
 }
 
 ///|
@@ -681,7 +681,7 @@ pub fn edge_pathplan_polyline(
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
 ) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)])? {
-  let vnodes = match edge_vnodes.get(edge_key(edge)) {
+  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(list) => list.copy()
     None => []
   }

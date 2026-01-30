@@ -98,3 +98,21 @@ pub fn edge_key(edge : @cgraph.Edge) -> String {
   let head_port = port_key(edge.head_port())
   "\{tail}|\{head}|\{name}|\{tail_port}|\{head_port}"
 }
+
+///|
+pub fn edge_vnode_key(edge : @cgraph.Edge) -> String {
+  let tail = edge.tail().name()
+  let head = edge.head().name()
+  let tail_port = port_key(edge.tail_port())
+  let head_port = port_key(edge.head_port())
+  let base = "\{tail}|\{head}|\{tail_port}|\{head_port}"
+  let label = match edge.get_attr("label") {
+    Some(value) => value
+    None => ""
+  }
+  if label == "" {
+    base
+  } else {
+    "\{base}|\{edge.id()}"
+  }
+}

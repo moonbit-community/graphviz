@@ -33,3 +33,8 @@ fn port_key(port : @cgraph.Port?) -> String {
 fn edge_key(edge : @cgraph.Edge) -> String {
   @dot_shared.edge_key(edge)
 }
+
+///|
+fn edge_vnode_key(edge : @cgraph.Edge) -> String {
+  @dot_shared.edge_vnode_key(edge)
+}
