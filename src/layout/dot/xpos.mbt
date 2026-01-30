@@ -1012,6 +1012,133 @@ fn build_constraint_graph(
     }
     set_node_rank(graph, idx, trunc_int(pos))
   }
+  let rank_has_forward : Map[Int, Bool] = Map::new()
+  let mut edge_scan_idx = 0
+  for edge in edges {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    let tail_name =
+      if edge_scan_idx < edge_tail.length() { edge_tail[edge_scan_idx] } else {
+        edge.tail().name()
+      }
+    let head_name =
+      if edge_scan_idx < edge_head.length() { edge_head[edge_scan_idx] } else {
+        edge.head().name()
+      }
+    edge_scan_idx = edge_scan_idx + 1
+    let tail_cluster = match cluster_keys.get(tail_name) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head_name) {
+      Some(value) => value
+      None => ""
+    }
+    if skip_intercluster && tail_cluster != head_cluster &&
+      (tail_cluster != "" || head_cluster != "") {
+      continue
+    }
+    if vnodes.length() > 0 {
+      let tail_rank = match ranks.get(tail_name) {
+        Some(value) => value
+        None => continue
+      }
+      let head_rank = match ranks.get(head_name) {
+        Some(value) => value
+        None => continue
+      }
+      let low = if tail_rank <= head_rank { tail_name } else { head_name }
+      let high = if tail_rank <= head_rank { head_name } else { tail_name }
+      let mut prev = low
+      for vnode in vnodes {
+        let prev_rank = match ranks.get(prev) {
+          Some(value) => value
+          None => {
+            prev = vnode
+            continue
+          }
+        }
+        let vnode_rank = match ranks.get(vnode) {
+          Some(value) => value
+          None => {
+            prev = vnode
+            continue
+          }
+        }
+        if prev_rank != vnode_rank {
+          let low_rank = if prev_rank < vnode_rank { prev_rank } else { vnode_rank }
+          rank_has_forward[low_rank] = true
+        }
+        prev = vnode
+      }
+      let prev_rank = match ranks.get(prev) {
+        Some(value) => value
+        None => continue
+      }
+      let high_rank = match ranks.get(high) {
+        Some(value) => value
+        None => continue
+      }
+      if prev_rank != high_rank {
+        let low_rank = if prev_rank < high_rank { prev_rank } else { high_rank }
+        rank_has_forward[low_rank] = true
+      }
+    } else {
+      let tail_rank = match ranks.get(tail_name) {
+        Some(value) => value
+        None => continue
+      }
+      let head_rank = match ranks.get(head_name) {
+        Some(value) => value
+        None => continue
+      }
+      if tail_rank != head_rank {
+        let low_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+        rank_has_forward[low_rank] = true
+      }
+    }
+  }
+  if rank_keys.length() > 0 {
+    let min_rank = rank_keys[0]
+    let max_rank = rank_keys[rank_keys.length() - 1]
+    let mut rank = min_rank
+    while rank <= max_rank {
+      let names = match groups.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      if names.length() > 0 && rank_has_forward.get(rank) is None {
+        let neighbor_rank = if rank < max_rank { rank + 1 } else { rank - 1 }
+        let neighbor_names = match groups.get(neighbor_rank) {
+          Some(list) => list
+          None => []
+        }
+        if neighbor_names.length() > 0 {
+          let tail_idx = match index.get(names[0]) {
+            Some(value) => value
+            None => 0
+          }
+          let head_idx = match index.get(neighbor_names[0]) {
+            Some(value) => value
+            None => 0
+          }
+          let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
+          let tail_rank = node_rank(graph, tail_idx)
+          let head_rank = node_rank(graph, head_idx)
+          set_node_rank(
+            graph,
+            slack_idx,
+            if tail_rank < head_rank { tail_rank } else { head_rank },
+          )
+          let _ = add_edge(graph, slack_idx, tail_idx, 0, 0)
+          let _ = add_edge(graph, slack_idx, head_idx, 0, 0)
+        }
+      }
+      rank = rank + 1
+    }
+  }
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
