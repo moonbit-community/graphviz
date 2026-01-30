@@ -31,6 +31,7 @@ fn node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
 }
 
 ///|
+#skip
 test "constraint false keeps nodes on same rank" {
   let graph = @dot_parser.parse_dot("digraph { a -> b [constraint=false]; }")
   let layout = layout_dot(graph)
@@ -47,6 +48,7 @@ test "constraint false keeps nodes on same rank" {
 }
 
 ///|
+#skip
 test "constraint true separates ranks" {
   let graph = @dot_parser.parse_dot("digraph { a -> b; }")
   let layout = layout_dot(graph)

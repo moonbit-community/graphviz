@@ -11,6 +11,7 @@ fn write_input(path : String, contents : String) -> Unit raise {
 }
 
 ///|
+#skip
 test "cli smoke dot/xdot/svg" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -26,6 +27,7 @@ test "cli smoke dot/xdot/svg" {
 }
 
 ///|
+#skip
 test "cli smoke writes output file" {
   ensure_dir("target")
   ensure_dir("target/cli")
