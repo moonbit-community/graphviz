@@ -5251,9 +5251,6 @@ fn build_vnode_order_keys(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    if !edge_is_constraint(edge) {
-      continue
-    }
     let vnodes = match edge_vnodes.get(edge_key(edge)) {
       Some(list) => list
       None => []
@@ -5395,11 +5392,8 @@ fn build_edge_vnodes(
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
   let mut edge_index = 0
+  let plain_width = 1.0 + nodesep_pt / 2.0
   for edge in edges {
-    if !edge_is_constraint(edge) {
-      edge_index = edge_index + 1
-      continue
-    }
     let tail = edge.tail().name()
     let head = edge.head().name()
     let tail_cluster = node_cluster_key(edge.tail())
@@ -5451,7 +5445,7 @@ fn build_edge_vnodes(
         if rank == label_rank && label_width > 0.0 {
           (nodesep_pt, label_width)
         } else {
-          (1.0, 1.0)
+          (plain_width, plain_width)
         }
       let name = unique_virtual_node_name(
         EDGE_VNODE_PREFIX,
@@ -5594,14 +5588,10 @@ fn build_virtual_slack_edges(
   cluster_keys : Map[String, String],
 ) -> Array[ConstraintEdge] {
   let extra : Array[ConstraintEdge] = []
-  let intercluster_seen : Map[String, Bool] = Map::new()
   let mut edge_idx = 0
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    if !edge_is_constraint(edge) {
-      continue
-    }
     let key = edge_key(edge)
     let vnodes = match edge_vnodes.get(key) {
       Some(list) => list
@@ -5645,18 +5635,6 @@ fn build_virtual_slack_edges(
     let head_rank = match ranks.get(head) {
       Some(value) => value
       None => continue
-    }
-    if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
-      let cluster_key = intercluster_edge_key(
-        tail_cluster,
-        head_cluster,
-        tail_rank,
-        head_rank,
-      )
-      if intercluster_seen.get(cluster_key) is Some(_) {
-        continue
-      }
-      intercluster_seen[cluster_key] = true
     }
     let low = if tail_rank <= head_rank { tail } else { head }
     let high = if tail_rank <= head_rank { head } else { tail }

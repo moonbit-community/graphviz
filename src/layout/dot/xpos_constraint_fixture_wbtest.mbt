@@ -275,13 +275,14 @@ fn assert_multiset_eq(
   actual : Map[String, Int],
   expected : Map[String, Int],
 ) -> Unit raise {
+  let mismatches : Array[String] = []
   for key, expected_count in expected {
     let actual_count = match actual.get(key) {
       Some(value) => value
       None => 0
     }
     if actual_count != expected_count {
-      fail(
+      mismatches.push(
         "\{label} count mismatch key=\{key} expected=\{expected_count} actual=\{actual_count}",
       )
     }
@@ -290,12 +291,19 @@ fn assert_multiset_eq(
     match expected.get(key) {
       Some(value) =>
         if value != actual_count {
-          fail(
+          mismatches.push(
             "\{label} count mismatch key=\{key} expected=\{value} actual=\{actual_count}",
           )
         }
-      None => fail("\{label} unexpected key=\{key}")
+      None => mismatches.push("\{label} unexpected key=\{key}")
     }
+  }
+  if mismatches.length() > 0 {
+    println("\{label} mismatches (\{mismatches.length()}):")
+    for item in mismatches {
+      println(item)
+    }
+    fail("\{label} mismatches found")
   }
 }
 
@@ -310,7 +318,7 @@ fn real_node_names(graph : @cgraph.Graph) -> Map[String, Bool] {
 
 ///|
 ///|
-/// TODO: Unskip after constraint graph alignment with Graphviz (graphviz.mbt-1kx).
+/// TODO: Unskip after constraint graph alignment with Graphviz (graphviz.mbt-ccz.1/2/3).
 #skip
 test "xpos constraint graph matches Graphviz for complex" {
   let fixture = load_xpos_constraint_fixture("yours_truly", "initial")

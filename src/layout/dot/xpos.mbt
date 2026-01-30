@@ -933,24 +933,10 @@ fn build_constraint_graph(
     actual_names[node.name()] = true
   }
   let slack_edges : Array[Int] = []
-  let intercluster_seen : Map[String, Bool] = Map::new()
   let skip_intercluster =
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
-  let slack_edge_indices : Array[Int] = []
-  let mut idx = 0
-  while idx < edges.length() {
-    slack_edge_indices.push(idx)
-    idx = idx + 1
-  }
-  for edge_idx in slack_edge_indices {
-    let edge = edges[edge_idx]
-    let vnodes = match edge_vnodes.get(edge_key(edge)) {
-      Some(list) => list
-      None => []
-    }
-    if vnodes.length() > 0 {
-      continue
-    }
+  let mut edge_idx = 0
+  for edge in edges {
     let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
       edge.tail().name()
     }
@@ -967,29 +953,11 @@ fn build_constraint_graph(
     }
     if skip_intercluster && tail_cluster != head_cluster &&
       (tail_cluster != "" || head_cluster != "") {
+      edge_idx = edge_idx + 1
       continue
     }
-    if tail_cluster != head_cluster && (tail_cluster != "" || head_cluster != "") {
-      let tail_rank = match ranks.get(tail_name) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match ranks.get(head_name) {
-        Some(value) => value
-        None => 0
-      }
-      let key = intercluster_edge_key(
-        tail_cluster,
-        head_cluster,
-        tail_rank,
-        head_rank,
-      )
-      if intercluster_seen.get(key) is Some(_) {
-        continue
-      }
-      intercluster_seen[key] = true
-    }
     slack_edges.push(edge_idx)
+    edge_idx = edge_idx + 1
   }
   let slack_indices : Array[Int] = []
   for _ in 0..<slack_edges.length() {
