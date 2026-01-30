@@ -296,10 +296,17 @@ fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
-fn ordering_is_set(value : String) -> Bool {
+priv enum OrderingMode {
+  Out
+  In
+}
+
+///|
+fn parse_ordering_mode(value : String) -> OrderingMode? {
   match value.to_lower() {
-    "out" | "in" => true
-    _ => false
+    "out" => Some(OrderingMode::Out)
+    "in" => Some(OrderingMode::In)
+    _ => None
   }
 }
 
@@ -3900,6 +3907,149 @@ fn dedup_ordering_edges(
 }
 
 ///| 
+///|
+fn build_ordering_flat_constraints(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+) -> (Map[String, Bool], Bool) {
+  let flat_constraints : Map[String, Bool] = Map::new()
+  let out_edges : Map[String, Array[(Int, Int)]] = Map::new()
+  let in_edges : Map[String, Array[(Int, Int)]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    out_edges[name] = []
+    in_edges[name] = []
+  }
+  for i in 0..<edges.length() {
+    let tail =
+      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
+    let head =
+      if i < edge_head.length() { edge_head[i] } else { edges[i].head().name() }
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
+    if tail_cluster != head_cluster {
+      continue
+    }
+    let edge_id = edges[i].id()
+    match out_edges.get(tail) {
+      Some(list) => list.push((edge_id, i))
+      None => out_edges[tail] = [(edge_id, i)]
+    }
+    match in_edges.get(head) {
+      Some(list) => list.push((edge_id, i))
+      None => in_edges[head] = [(edge_id, i)]
+    }
+  }
+  let apply_ordering = (name : String, mode : OrderingMode) => {
+    let list = match mode {
+      OrderingMode::Out => {
+        match out_edges.get(name) {
+          Some(items) => items
+          None => []
+        }
+      }
+      OrderingMode::In => {
+        match in_edges.get(name) {
+          Some(items) => items
+          None => []
+        }
+      }
+    }
+    if list.length() <= 1 {
+      return ()
+    }
+    let sorted = list.copy()
+    sorted.sort_by((a, b) => {
+      let (a_id, _a_idx) = a
+      let (b_id, _b_idx) = b
+      if a_id < b_id {
+        -1
+      } else if a_id > b_id {
+        1
+      } else {
+        0
+      }
+    })
+    let mut idx = 1
+    while idx < sorted.length() {
+      let (_prev_id, prev_idx) = sorted[idx - 1]
+      let (_curr_id, curr_idx) = sorted[idx]
+      let left = match mode {
+        OrderingMode::Out =>
+          if prev_idx < edge_head.length() {
+          edge_head[prev_idx]
+        } else {
+          edges[prev_idx].head().name()
+        }
+        OrderingMode::In =>
+          if prev_idx < edge_tail.length() {
+          edge_tail[prev_idx]
+        } else {
+          edges[prev_idx].tail().name()
+        }
+      }
+      let right = match mode {
+        OrderingMode::Out =>
+          if curr_idx < edge_head.length() {
+          edge_head[curr_idx]
+        } else {
+          edges[curr_idx].head().name()
+        }
+        OrderingMode::In =>
+          if curr_idx < edge_tail.length() {
+          edge_tail[curr_idx]
+        } else {
+          edges[curr_idx].tail().name()
+        }
+      }
+      if left != right {
+        flat_constraints["\{left}|\{right}"] = true
+      }
+      idx = idx + 1
+    }
+  }
+  let graph_ordering = match graph.get_attr("ordering") {
+    Some(value) => parse_ordering_mode(value)
+    None => None
+  }
+  let mut ordering_set = false
+  match graph_ordering {
+    Some(mode) => {
+      ordering_set = true
+      for node in nodes {
+        apply_ordering(node.name(), mode)
+      }
+    }
+    None => {
+      for node in nodes {
+        match node.get_attr("ordering") {
+          Some(value) =>
+            match parse_ordering_mode(value) {
+              Some(mode) => {
+                ordering_set = true
+                apply_ordering(node.name(), mode)
+              }
+              None => ()
+            }
+          None => ()
+        }
+      }
+    }
+  }
+  (flat_constraints, ordering_set)
+}
+
+///|
 ///|
 fn build_edge_index_for_order(
   nodes : Array[@cgraph.Node],
@@ -9537,10 +9687,6 @@ pub fn layout_dot(
       }
     }
   }
-  let ordering = match graph.get_attr("ordering") {
-    Some(value) => ordering_is_set(value)
-    None => false
-  }
   let cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
@@ -9665,40 +9811,44 @@ pub fn layout_dot(
   let edge_order = collect_edge_order(edges)
   let (order_edges, order_edge_tail, order_edge_head) =
     dedup_ordering_edges(edges, edge_tail, edge_head)
-  let ordered_groups = if ordering {
-    groups
-  } else {
-    let (parents, children) =
-      build_edge_index_for_order(
-        nodes,
-        order_edges,
-        order_edge_tail,
-        order_edge_head,
-        ranks,
-      )
-    reorder_rank_groups(
-      rank_keys,
-      groups,
+  let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_keys,
+  )
+  let (parents, children) =
+    build_edge_index_for_order(
+      nodes,
       order_edges,
       order_edge_tail,
       order_edge_head,
-      parents,
-      children,
-      cluster_keys,
-      rank_same_groups,
-      rank_same_order,
-      edge_order,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      Map::new(),
-      cluster_skeleton,
-      Map::new(),
+      ranks,
     )
-  }
+  let ordered_groups = reorder_rank_groups(
+    rank_keys,
+    groups,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    parents,
+    children,
+    cluster_keys,
+    rank_same_groups,
+    rank_same_order,
+    edge_order,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    Map::new(),
+    cluster_skeleton,
+    flat_constraints,
+  )
   dot_trace("layout_dot: rank order computed")
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -9786,7 +9936,7 @@ pub fn layout_dot(
       x_cluster_keys[name] = key
     }
   }
-  if allow_xpos_reorder && !ordering && !has_vnode_order && !has_clusters {
+  if allow_xpos_reorder && !ordering_set && !has_vnode_order && !has_clusters {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       order_edges,
@@ -9817,12 +9967,12 @@ pub fn layout_dot(
       port_order_contrib,
       Map::new(),
       cluster_skeleton,
-      Map::new(),
+      flat_constraints,
     )
   }
   dot_trace_groups("x-groups", x_groups)
   if !has_edge_labels && use_vnodes_for_xpos && !has_vnode_order &&
-    allow_xpos_reorder {
+    allow_xpos_reorder && !ordering_set {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       order_edges,
@@ -9852,8 +10002,6 @@ pub fn layout_dot(
       true,
       4,
     )
-  }
-  if allow_xpos_reorder && !ordering {
   }
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
