@@ -112,7 +112,6 @@ fn spacing_find_subgraph(
 }
 
 ///|
-#skip
 test "cluster bbox includes margin and label padding" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_a { label=\"Cluster\"; a; } }",
@@ -155,7 +154,6 @@ test "cluster bbox includes margin and label padding" {
 }
 
 ///|
-#skip
 test "nested clusters include parent margin" {
   let graph = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; subgraph cluster_outer { label=\"Outer\"; subgraph cluster_inner { label=\"Inner\"; a; } } }",
@@ -190,7 +188,6 @@ test "nested clusters include parent margin" {
 }
 
 ///|
-#skip
 test "edge labels expand rank spacing" {
   let with_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",

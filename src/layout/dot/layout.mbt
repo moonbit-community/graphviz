@@ -415,11 +415,7 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
 
 ///|
 fn text_line_height(font_name : String, font_size_pt : Double) -> Double {
-  if @font_metrics.HAS_FONT_METRICS {
-    font_size_pt
-  } else {
-    font_size_pt * line_height_scale(font_name, font_size_pt)
-  }
+  font_size_pt * line_height_scale(font_name, font_size_pt)
 }
 
 ///|
@@ -573,6 +569,74 @@ fn char_kerning_units(prev : Char, curr : Char) -> Double {
 }
 
 ///|
+fn split_label_lines(
+  label : String,
+  trim_trailing_break~ : Bool,
+) -> Array[String] {
+  let lines : Array[String] = []
+  let mut sb = StringBuilder::new()
+  let mut escaping = false
+  let mut ended_with_break = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      if ch == 'n' || ch == 'l' || ch == 'r' {
+        lines.push(sb.to_string())
+        sb = StringBuilder::new()
+        ended_with_break = true
+      } else {
+        sb.write_char(ch)
+        ended_with_break = false
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == '\n' || ch == '\r' {
+      lines.push(sb.to_string())
+      sb = StringBuilder::new()
+      ended_with_break = true
+    } else {
+      sb.write_char(ch)
+      ended_with_break = false
+    }
+  }
+  if escaping {
+    sb.write_char('\\')
+    ended_with_break = false
+  }
+  lines.push(sb.to_string())
+  if trim_trailing_break && ended_with_break && lines.length() > 1 {
+    ignore(lines.pop())
+  }
+  lines
+}
+
+///|
+fn try_multiline_textspan_override(
+  label : String,
+  font_name : String,
+  font_size_pt : Double,
+  trim_trailing_break~ : Bool,
+) -> (Double, Double)? {
+  let lines = split_label_lines(label, trim_trailing_break~)
+  if lines.length() <= 1 {
+    return None
+  }
+  let mut max_width = 0.0
+  for line in lines {
+    match @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
+      Some((width, _height)) => if width > max_width { max_width = width }
+      None => return None
+    }
+  }
+  let line_height = text_line_height(font_name, font_size_pt)
+  Some((max_width, line_height * lines.length().to_double()))
+}
+
+///|
 fn label_text_dimensions(
   label : String,
   font_name : String,
@@ -585,6 +649,15 @@ fn label_text_dimensions(
     label,
     font_name,
     font_size_pt,
+  ) {
+    Some((width, height)) => return (width, height)
+    None => ()
+  }
+  match try_multiline_textspan_override(
+    label,
+    font_name,
+    font_size_pt,
+    trim_trailing_break=false,
   ) {
     Some((width, height)) => return (width, height)
     None => ()
@@ -744,6 +817,15 @@ fn record_label_text_dimensions(
     label,
     font_name,
     font_size_pt,
+  ) {
+    Some((width, height)) => return (width, height)
+    None => ()
+  }
+  match try_multiline_textspan_override(
+    label,
+    font_name,
+    font_size_pt,
+    trim_trailing_break=true,
   ) {
     Some((width, height)) => return (width, height)
     None => ()

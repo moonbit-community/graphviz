@@ -299,7 +299,6 @@ fn assert_cluster_label_parity(
 }
 
 ///|
-#skip
 test "render_svg matches graphviz label positions in complex" {
   let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
   let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
@@ -310,7 +309,6 @@ test "render_svg matches graphviz label positions in complex" {
 }
 
 ///|
-#skip
 test "render_svg matches graphviz node label positions in complex" {
   let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
   let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
@@ -327,7 +325,6 @@ test "render_svg matches graphviz node label positions in complex" {
 }
 
 ///|
-#skip
 test "render_svg matches graphviz edge label spacing" {
   let (svg, padded_bbox) =
     svg_with_bbox("tests/layout/dot/edge_label_spacing.dot")
@@ -345,7 +342,6 @@ test "render_svg matches graphviz edge label spacing" {
 }
 
 ///|
-#skip
 test "render_svg matches graphviz vnode edge label spacing" {
   let (svg, padded_bbox) =
     svg_with_bbox("tests/layout/dot/edge_vnode_spacing.dot")

@@ -39,7 +39,6 @@ fn rank_node_pos(graph : @cgraph.Graph, name : String) -> @geom.Point? {
 }
 
 ///|
-#skip
 test "rank=min places nodes at top" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=min; a; b; } c; a -> c; b -> c; }",
@@ -63,7 +62,6 @@ test "rank=min places nodes at top" {
 }
 
 ///|
-#skip
 test "rank=max places nodes at bottom" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=max; a; b; } c; c -> a; c -> b; }",
@@ -87,7 +85,6 @@ test "rank=max places nodes at bottom" {
 }
 
 ///|
-#skip
 test "rank=source and rank=sink keep extremes" {
   let graph = @dot_parser.parse_dot(
     "digraph { subgraph { rank=source; s1; s2; } subgraph { rank=sink; t1; t2; } s1 -> t1; s2 -> t2; }",

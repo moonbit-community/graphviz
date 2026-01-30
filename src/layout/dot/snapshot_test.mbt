@@ -318,7 +318,6 @@ fn assert_snapshot_nodes_only(
 }
 
 ///|
-#skip
 test "dot layout tier2 snapshots" {
   assert_snapshot(
     "refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot", 0.01,

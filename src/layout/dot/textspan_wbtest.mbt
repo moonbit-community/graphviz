@@ -38,3 +38,11 @@ test "textspan fixtures match label_text_dimensions" {
     assert_eq(height, fixture.height)
   }
 }
+
+///|
+test "textspan combines multiline overrides" {
+  let (width, height) =
+    label_text_dimensions("hello\\nworld", "Palatino-Italic", 24.0)
+  assert_eq(width, 55.5)
+  assert_eq(height, 54.0)
+}
