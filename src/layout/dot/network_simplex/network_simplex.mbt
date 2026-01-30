@@ -1330,7 +1330,21 @@ fn tb_balance(graph : NsGraph) -> Unit {
   for i in 0..<graph.nodes.length() {
     ordered.push(i)
   }
-  sort_nodes_by_rank(graph, ordered)
+  ordered.sort_by((a, b) => {
+    let a_rank = graph.nodes[a].rank
+    let b_rank = graph.nodes[b].rank
+    if a_rank < b_rank {
+      -1
+    } else if a_rank > b_rank {
+      1
+    } else if a < b {
+      -1
+    } else if a > b {
+      1
+    } else {
+      0
+    }
+  })
   for idx in ordered {
     let node = graph.nodes[idx]
     if node.kind != NodeKind::Normal {
@@ -1426,6 +1440,15 @@ pub fn network_simplex(
     BalanceMode::LR => lr_balance(graph)
     BalanceMode::TB => tb_balance(graph)
   }
+}
+
+///|
+pub fn build_feasible_tree(graph : NsGraph) -> Bool {
+  let feasible = init_graph(graph)
+  if !feasible {
+    init_rank(graph)
+  }
+  feasible_tree(graph)
 }
 
 ///|

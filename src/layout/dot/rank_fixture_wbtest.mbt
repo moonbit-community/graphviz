@@ -30,6 +30,19 @@ struct SimplexOutput {
 }
 
 ///|
+struct SimplexTree {
+  case_id : Int
+  edges : Array[Int]
+}
+
+///|
+struct SimplexCase {
+  input : SimplexInput
+  tree_edges : Array[Int]
+  output : SimplexOutput
+}
+
+///|
 fn require_object(json : Json) -> Map[String, Json] raise {
   match json {
     Json::Object(obj) => obj
@@ -55,6 +68,14 @@ fn parse_simplex_output(obj : Map[String, Json]) -> SimplexOutput raise {
 }
 
 ///|
+fn parse_simplex_tree(obj : Map[String, Json]) -> SimplexTree raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    edges: @json.from_json(obj["edges"]),
+  }
+}
+
+///|
 fn fixture_node_kind(kind : String) -> NodeKind raise {
   match kind {
     "normal" => NodeKind::Normal
@@ -74,11 +95,12 @@ fn parse_acyclic_reverse(obj : Map[String, Json]) -> String raise {
 
 ///|
 fn load_rank_fixtures(
-) -> (Array[(SimplexInput, SimplexOutput)], Array[String]) raise {
+) -> (Array[SimplexCase], Array[String]) raise {
   let data = @fs.read_file_to_string("tests/fixtures/graphviz/rank.jsonl")
-  let cases : Array[(SimplexInput, SimplexOutput)] = []
+  let cases : Array[SimplexCase] = []
   let reversals : Array[String] = []
   let mut pending : SimplexInput? = None
+  let mut pending_tree : SimplexTree? = None
   for line in data.split("\n") {
     if line.length() == 0 {
       continue
@@ -96,6 +118,20 @@ fn load_rank_fixtures(
           fail("unexpected simplex_input while pending")
         }
         pending = Some(parse_simplex_input(obj))
+        pending_tree = None
+      }
+      "simplex_tree" => {
+        let tree = parse_simplex_tree(obj)
+        match pending {
+          Some(input) =>
+            if input.case_id != tree.case_id {
+              fail(
+                "simplex tree mismatch input=\{input.case_id} tree=\{tree.case_id}",
+              )
+            }
+          None => fail("simplex_tree without simplex_input")
+        }
+        pending_tree = Some(tree)
       }
       "simplex_output" => {
         let output = parse_simplex_output(obj)
@@ -106,8 +142,17 @@ fn load_rank_fixtures(
                 "simplex case mismatch input=\{input.case_id} output=\{output.case_id}",
               )
             }
-            cases.push((input, output))
+            let tree = match pending_tree {
+              Some(value) => value
+              None => fail("missing simplex_tree for case \{input.case_id}")
+            }
+            cases.push({
+              input,
+              tree_edges: tree.edges,
+              output,
+            })
             pending = None
+            pending_tree = None
           }
           None => fail("simplex_output without simplex_input")
         }
@@ -196,6 +241,52 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
 }
 
 ///|
+fn assert_tree_edges(
+  case_id : Int,
+  actual : Array[Int],
+  expected : Array[Int],
+) -> Unit raise {
+  assert_eq(expected.length(), actual.length())
+  for i in 0..<expected.length() {
+    if actual[i] != expected[i] {
+      fail(
+        "case \{case_id} tree_edges[\{i}] expected=\{expected[i]} actual=\{actual[i]}",
+      )
+    }
+  }
+}
+
+///|
+fn run_feasible_tree_case(case_info : SimplexCase) -> Unit raise {
+  let input = case_info.input
+  let graph = new_graph()
+  for node in input.nodes {
+    let name = match node.name {
+      Json::Null => ""
+      Json::String(value) => value
+      _ => fail("unexpected node name payload")
+    }
+    let kind = fixture_node_kind(node.kind)
+    let idx = add_node(graph, name, kind=kind)
+    if idx != node.id {
+      fail(
+        "case \{input.case_id} node id mismatch expected=\{node.id} actual=\{idx}",
+      )
+    }
+    set_node_rank(graph, idx, node.rank)
+  }
+  for edge in input.edges {
+    let _ = edge.seq
+    let _ = edge.in_pos
+    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+  }
+  if !build_feasible_tree(graph) {
+    fail("case \{input.case_id} feasible_tree failed")
+  }
+  assert_tree_edges(input.case_id, graph.tree_edges, case_info.tree_edges)
+}
+
+///|
 fn assert_no_acyclic_reversals(reversals : Array[String]) -> Unit raise {
   if reversals.length() != 0 {
     fail(
@@ -209,8 +300,17 @@ fn assert_no_acyclic_reversals(reversals : Array[String]) -> Unit raise {
 test "rank fixtures match network_simplex" {
   let (cases, reversals) = load_rank_fixtures()
   assert_no_acyclic_reversals(reversals)
-  for pair in cases {
-    let (input, output) = pair
-    run_simplex_case(input, output)
+  for case_info in cases {
+    run_simplex_case(case_info.input, case_info.output)
+  }
+}
+
+///|
+#skip
+test "rank fixtures match feasible_tree" {
+  let (cases, reversals) = load_rank_fixtures()
+  assert_no_acyclic_reversals(reversals)
+  for case_info in cases {
+    run_feasible_tree_case(case_info)
   }
 }
