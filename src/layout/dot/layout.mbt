@@ -10089,18 +10089,7 @@ pub fn layout_dot(
   }
   let edges_out : Array[DotLayoutEdge] = []
   dot_trace("layout_dot: routing edges")
-  if splines == SplinesMode::None {
-    for edge in edges {
-      edges_out.push({
-        edge,
-        splines: [],
-        label_pos: None,
-        head_label_pos: None,
-        tail_label_pos: None,
-      })
-    }
-  } else {
-    for edge in edges {
+  for edge in edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
     let tail_pos = match positions.get(tail_name) {
@@ -11018,14 +11007,13 @@ pub fn layout_dot(
       Some(value) => if value == "" { None } else { Some(tail_clip) }
       None => None
     }
-    edges_out.push({
+  edges_out.push({
       edge,
       splines: [spline],
       label_pos,
       head_label_pos,
       tail_label_pos,
     })
-  }
   }
   dot_trace("layout_dot: edges routed")
   let base_bbox = compute_bbox(nodes_out, edges_out)
