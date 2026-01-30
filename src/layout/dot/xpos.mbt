@@ -895,6 +895,17 @@ fn edge_port_offset_by_name(
 }
 
 ///|
+fn extra_node_kind(name : String) -> NodeKind {
+  if name.has_prefix(EDGE_VNODE_PREFIX) {
+    NodeKind::Virtual
+  } else if name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX) {
+    NodeKind::Slack
+  } else {
+    NodeKind::Normal
+  }
+}
+
+///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -937,6 +948,10 @@ fn build_constraint_graph(
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
   let mut edge_idx = 0
   for edge in edges {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
     let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
       edge.tail().name()
     }
@@ -953,6 +968,10 @@ fn build_constraint_graph(
     }
     if skip_intercluster && tail_cluster != head_cluster &&
       (tail_cluster != "" || head_cluster != "") {
+      edge_idx = edge_idx + 1
+      continue
+    }
+    if vnodes.length() > 0 {
       edge_idx = edge_idx + 1
       continue
     }
@@ -985,7 +1004,7 @@ fn build_constraint_graph(
   }
   for pair in extra_nodes {
     let (name, rank) = pair
-    let idx = add_node(graph, name)
+    let idx = add_node(graph, name, kind=extra_node_kind(name))
     index[name] = idx
     let pos = match base_positions.get(name) {
       Some(value) => value

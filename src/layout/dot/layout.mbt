@@ -5421,6 +5421,9 @@ fn build_edge_vnodes(
       Some(value) => value
       None => ""
     }
+    let use_cluster_plain =
+      edge_cluster != "" && tail_cluster == edge_cluster && head_cluster == edge_cluster
+    let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster =
       if tail_cluster != "" && tail_cluster == head_cluster {
         tail_cluster
@@ -5464,7 +5467,7 @@ fn build_edge_vnodes(
         if rank == label_rank && label_width > 0.0 {
           (nodesep_pt, label_width)
         } else {
-          (plain_width, plain_width)
+          (plain_width_for_edge, plain_width_for_edge)
         }
       let name = unique_virtual_node_name(
         EDGE_VNODE_PREFIX,
@@ -5610,8 +5613,7 @@ fn build_virtual_slack_edges(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let key = edge_key(edge)
-    let vnodes = match edge_vnodes.get(key) {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
