@@ -1,5 +1,5 @@
 diff --git a/lib/common/ns.c b/lib/common/ns.c
-index 1b85f7437..9778b134c 100644
+index 1b85f7437..60bcfc617 100644
 --- a/lib/common/ns.c
 +++ b/lib/common/ns.c
 @@ -23,6 +23,7 @@
@@ -10,7 +10,7 @@ index 1b85f7437..9778b134c 100644
  #include <util/alloc.h>
  #include <util/exit.h>
  #include <util/gv_math.h>
-@@ -39,6 +40,205 @@ static int x_val(edge_t * e, node_t * v, int dir);
+@@ -39,6 +40,217 @@ static int x_val(edge_t * e, node_t * v, int dir);
  static void check_cycles(graph_t * g);
  #endif
  
@@ -121,7 +121,7 @@ index 1b85f7437..9778b134c 100644
 +    return -1;
 +}
 +
-+static mbt_rank_capture_t mbt_rank_capture_input(graph_t *g)
++static mbt_rank_capture_t mbt_rank_capture_input(graph_t *g, int balance)
 +{
 +    mbt_rank_capture_t cap = {0};
 +    FILE *out = mbt_rank_log_open();
@@ -140,8 +140,9 @@ index 1b85f7437..9778b134c 100644
 +    for (node_t *n = GD_nlist(g); n; n = ND_next(n))
 +        cap.nodes[idx++] = n;
 +
-+    fprintf(out, "{\"event\":\"simplex_input\",\"case\":%d,\"nodes\":[",
-+            cap.case_id);
++    fprintf(out,
++            "{\"event\":\"simplex_input\",\"case\":%d,\"balance\":%d,\"nodes\":[",
++            cap.case_id, balance);
 +    for (size_t i = 0; i < cap.node_count; i++) {
 +        if (i > 0)
 +            fputc(',', out);
@@ -185,15 +186,17 @@ index 1b85f7437..9778b134c 100644
 +    return cap;
 +}
 +
-+static void mbt_rank_capture_output(const mbt_rank_capture_t *cap)
-+{
++static void mbt_rank_capture_ranks(
++    const mbt_rank_capture_t *cap,
++    const char *event
++) {
 +    if (!cap || cap->case_id == 0)
 +        return;
 +    FILE *out = mbt_rank_log_open();
 +    if (!out)
 +        return;
-+    fprintf(out, "{\"event\":\"simplex_output\",\"case\":%d,\"ranks\":[",
-+            cap->case_id);
++    fprintf(out, "{\"event\":\"%s\",\"case\":%d,\"ranks\":[",
++            event, cap->case_id);
 +    for (size_t i = 0; i < cap->node_count; i++) {
 +        if (i > 0)
 +            fputc(',', out);
@@ -201,6 +204,16 @@ index 1b85f7437..9778b134c 100644
 +    }
 +    fputs("]}\n", out);
 +    fflush(out);
++}
++
++static void mbt_rank_capture_pre_balance(const mbt_rank_capture_t *cap)
++{
++    mbt_rank_capture_ranks(cap, "simplex_pre_balance");
++}
++
++static void mbt_rank_capture_output(const mbt_rank_capture_t *cap)
++{
++    mbt_rank_capture_ranks(cap, "simplex_output");
 +}
 +
 +static void mbt_rank_capture_free(mbt_rank_capture_t *cap)
@@ -216,7 +229,7 @@ index 1b85f7437..9778b134c 100644
  #define LENGTH(e)		(ND_rank(aghead(e)) - ND_rank(agtail(e)))
  #define SLACK(e)		(LENGTH(e) - ED_minlen(e))
  #define SEQ(a,b,c)		((a) <= (b) && (b) <= (c))
-@@ -54,6 +254,28 @@ typedef struct {
+@@ -54,6 +266,28 @@ typedef struct {
  
  enum { SEARCHSIZE = 30 };
  
@@ -245,15 +258,15 @@ index 1b85f7437..9778b134c 100644
  static int add_tree_edge(network_simplex_ctx_t *ctx, edge_t * e)
  {
      if (TREE_EDGE(e)) {
-@@ -911,6 +1133,7 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
+@@ -911,6 +1145,7 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
      char ns[] = "network simplex: ";
      edge_t *e;
      network_simplex_ctx_t ctx = {0};
-+    mbt_rank_capture_t mbt_capture = mbt_rank_capture_input(g);
++    mbt_rank_capture_t mbt_capture = mbt_rank_capture_input(g, balance);
  
  #ifdef DEBUG
      check_cycles(g);
-@@ -935,11 +1158,14 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
+@@ -935,11 +1170,14 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
  	const int err = feasible_tree(&ctx);
  	if (err != 0) {
  	    freeTreeList(&ctx, g);
@@ -268,7 +281,7 @@ index 1b85f7437..9778b134c 100644
  	return 0;
      }
  
-@@ -948,6 +1174,7 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
+@@ -948,6 +1186,7 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
  	const int err = update(&ctx, e, f);
  	if (err != 0) {
  	    freeTreeList(&ctx, g);
@@ -276,7 +289,15 @@ index 1b85f7437..9778b134c 100644
  	    return err;
  	}
  	iter++;
-@@ -974,6 +1201,8 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
+@@ -961,6 +1200,7 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
+ 	if (iter >= maxiter)
+ 	    break;
+     }
++    mbt_rank_capture_pre_balance(&mbt_capture);
+     switch (balance) {
+     case 1:
+ 	TB_balance(&ctx);
+@@ -974,6 +1214,8 @@ int rank2(graph_t * g, int balance, int maxiter, int search_size)
  	freeTreeList (&ctx, ctx.G);
  	break;
      }

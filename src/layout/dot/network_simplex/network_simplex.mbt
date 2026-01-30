@@ -1268,43 +1268,58 @@ fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
   if nodes.length() <= 1 {
     return ()
   }
-  sort_nodes_by_rank_range(graph, nodes, 0, nodes.length() - 1)
+  let tmp : Array[Int] = []
+  for _ in 0..<nodes.length() {
+    tmp.push(0)
+  }
+  merge_sort_nodes_by_rank(graph, nodes, tmp, 0, nodes.length())
 }
 
 ///|
-fn sort_nodes_by_rank_range(
+fn merge_sort_nodes_by_rank(
   graph : NsGraph,
   nodes : Array[Int],
+  tmp : Array[Int],
   lo : Int,
   hi : Int,
 ) -> Unit {
-  if lo >= hi {
+  if hi - lo <= 1 {
     return ()
   }
-  let pivot = nodes[(lo + hi) / 2]
-  let pivot_rank = graph.nodes[pivot].rank
+  let mid = (lo + hi) / 2
+  merge_sort_nodes_by_rank(graph, nodes, tmp, lo, mid)
+  merge_sort_nodes_by_rank(graph, nodes, tmp, mid, hi)
   let mut i = lo
-  let mut j = hi
-  while i <= j {
-    while graph.nodes[nodes[i]].rank < pivot_rank {
+  let mut j = mid
+  let mut k = lo
+  while i < mid && j < hi {
+    let left = nodes[i]
+    let right = nodes[j]
+    let left_rank = graph.nodes[left].rank
+    let right_rank = graph.nodes[right].rank
+    if left_rank <= right_rank {
+      tmp[k] = left
       i = i + 1
+    } else {
+      tmp[k] = right
+      j = j + 1
     }
-    while graph.nodes[nodes[j]].rank > pivot_rank {
-      j = j - 1
-    }
-    if i <= j {
-      let tmp = nodes[i]
-      nodes[i] = nodes[j]
-      nodes[j] = tmp
-      i = i + 1
-      j = j - 1
-    }
+    k = k + 1
   }
-  if lo < j {
-    sort_nodes_by_rank_range(graph, nodes, lo, j)
+  while i < mid {
+    tmp[k] = nodes[i]
+    i = i + 1
+    k = k + 1
   }
-  if i < hi {
-    sort_nodes_by_rank_range(graph, nodes, i, hi)
+  while j < hi {
+    tmp[k] = nodes[j]
+    j = j + 1
+    k = k + 1
+  }
+  let mut idx = lo
+  while idx < hi {
+    nodes[idx] = tmp[idx]
+    idx = idx + 1
   }
 }
 
@@ -1330,21 +1345,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
   for i in 0..<graph.nodes.length() {
     ordered.push(i)
   }
-  ordered.sort_by((a, b) => {
-    let a_rank = graph.nodes[a].rank
-    let b_rank = graph.nodes[b].rank
-    if a_rank < b_rank {
-      -1
-    } else if a_rank > b_rank {
-      1
-    } else if a < b {
-      -1
-    } else if a > b {
-      1
-    } else {
-      0
-    }
-  })
+  sort_nodes_by_rank(graph, ordered)
   for idx in ordered {
     let node = graph.nodes[idx]
     if node.kind != NodeKind::Normal {
@@ -1376,12 +1377,6 @@ fn tb_balance(graph : NsGraph) -> Unit {
     if low < 0 {
       low = 0
     }
-    if high > max_rank {
-      high = max_rank
-    }
-    if low > high {
-      continue
-    }
     let mut choice = low
     let mut r = low + 1
     while r <= high {
@@ -1402,11 +1397,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
 }
 
 ///|
-pub fn network_simplex(
-  graph : NsGraph,
-  max_iter : Int,
-  balance : BalanceMode,
-) -> Unit {
+fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
   let feasible = init_graph(graph)
   if !feasible {
     init_rank(graph)
@@ -1415,7 +1406,7 @@ pub fn network_simplex(
     if @sys.get_env_var("DOT_TRACE") is Some(_) {
       println("xpos: feasible_tree failed")
     }
-    return ()
+    return false
   }
   init_cutvalues(graph)
   let mut iter = 0
@@ -1436,10 +1427,32 @@ pub fn network_simplex(
     }
     iter = iter + 1
   }
+  true
+}
+
+///|
+pub fn network_simplex(
+  graph : NsGraph,
+  max_iter : Int,
+  balance : BalanceMode,
+) -> Unit {
+  if !network_simplex_core(graph, max_iter) {
+    return ()
+  }
   match balance {
     BalanceMode::LR => lr_balance(graph)
     BalanceMode::TB => tb_balance(graph)
   }
+}
+
+///|
+pub fn network_simplex_pre_balance(graph : NsGraph, max_iter : Int) -> Bool {
+  network_simplex_core(graph, max_iter)
+}
+
+///|
+pub fn normalize_ranks_for_test(graph : NsGraph) -> Int {
+  normalize_ranks(graph)
 }
 
 ///|
