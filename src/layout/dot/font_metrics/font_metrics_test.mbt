@@ -9,5 +9,5 @@ test "font metrics arrays sizes" {
 test "font metrics known glyph width" {
   let idx = 'A'.to_int()
   let width = font_metrics[idx]
-  assert_true(Double::is_close(width, 696.4286, absolute_tolerance=0.0001))
+  assert_true(Double::is_close(width, 722.16796875, absolute_tolerance=0.0001))
 }

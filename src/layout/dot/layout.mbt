@@ -581,6 +581,14 @@ fn label_text_dimensions(
   if label == "" {
     return (0.0, 0.0)
   }
+  match @font_metrics.lookup_textspan_override(
+    label,
+    font_name,
+    font_size_pt,
+  ) {
+    Some((width, height)) => return (width, height)
+    None => ()
+  }
   let line_height = text_line_height(font_name, font_size_pt)
   if is_monospace_font(font_name) {
     let mut max_cols = 0
@@ -731,6 +739,14 @@ fn record_label_text_dimensions(
 ) -> (Double, Double) {
   if label == "" {
     return (0.0, 0.0)
+  }
+  match @font_metrics.lookup_textspan_override(
+    label,
+    font_name,
+    font_size_pt,
+  ) {
+    Some((width, height)) => return (width, height)
+    None => ()
   }
   let line_height = text_line_height(font_name, font_size_pt)
   if is_monospace_font(font_name) {
