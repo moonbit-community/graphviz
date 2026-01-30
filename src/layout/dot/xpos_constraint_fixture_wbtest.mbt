@@ -318,7 +318,6 @@ fn real_node_names(graph : @cgraph.Graph) -> Map[String, Bool] {
 
 ///|
 ///|
-/// TODO: Unskip after constraint graph alignment with Graphviz (graphviz.mbt-ccz.1/2/3).
 #skip
 test "xpos constraint graph matches Graphviz for complex" {
   let fixture = load_xpos_constraint_fixture("yours_truly", "initial")
