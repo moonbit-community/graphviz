@@ -24,6 +24,98 @@ priv struct ConstraintEdge {
 }
 
 ///|
+priv struct XposConstraintNodeSnapshot {
+  name : String?
+  kind : NodeKind
+  rank : Int
+  left_pt : Double
+  right_pt : Double
+}
+
+///|
+priv struct XposConstraintEdgeSnapshot {
+  tail : Int
+  head : Int
+  minlen : Int
+  weight : Int
+}
+
+///|
+priv struct XposConstraintSnapshot {
+  nodes : Array[XposConstraintNodeSnapshot]
+  edges : Array[XposConstraintEdgeSnapshot]
+}
+
+///|
+let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
+
+///|
+fn should_capture_xpos_constraints(graph : @cgraph.Graph) -> Bool {
+  match @sys.get_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS") {
+    None => false
+    Some(value) => {
+      if value == "" || value == "1" {
+        return true
+      }
+      match graph.name() {
+        Some(name) => name == value
+        None => false
+      }
+    }
+  }
+}
+
+///|
+fn build_xpos_constraint_snapshot(
+  graph : NsGraph,
+  index : Map[String, Int],
+  sizes : Map[String, NodeSize],
+) -> XposConstraintSnapshot {
+  let names : Array[String?] = []
+  for _ in 0..<graph.nodes.length() {
+    names.push(None)
+  }
+  for name, idx in index {
+    names[idx] = Some(name)
+  }
+  let nodes : Array[XposConstraintNodeSnapshot] = []
+  for i in 0..<graph.nodes.length() {
+    let node = graph.nodes[i]
+    let name = names[i]
+    let mut left_pt = 1.0
+    let mut right_pt = 1.0
+    match name {
+      Some(value) =>
+        match sizes.get(value) {
+          Some(size) => {
+            left_pt = size.left_pt
+            right_pt = size.right_pt
+          }
+          None => ()
+        }
+      None => ()
+    }
+    nodes.push({
+      name,
+      kind: node.kind,
+      rank: node.rank,
+      left_pt,
+      right_pt,
+    })
+  }
+  let edges : Array[XposConstraintEdgeSnapshot] = []
+  for edge in graph.edges {
+    edges.push({
+      tail: edge.tail,
+      head: edge.head,
+      minlen: edge.minlen,
+      weight: edge.weight,
+    })
+  }
+  { nodes, edges }
+}
+
+///|
 fn round_int(value : Double) -> Int {
   if value >= 0.0 {
     (value + 0.5).floor().to_int()
@@ -317,7 +409,7 @@ fn build_cluster_constraints(
       }
     }
     match (min_left, max_right) {
-      (Some(left), Some(right)) => {
+      (Some(_), Some(_)) => {
         let ln_name = unique_cluster_node_name(
           CLUSTER_LN_PREFIX,
           name,
@@ -329,12 +421,8 @@ fn build_cluster_constraints(
           existing_names,
         )
         cluster_nodes[name] = (ln_name, rn_name)
-        let margin = match cluster_margins.get(name) {
-          Some(value) => value
-          None => CLUSTER_MARGIN_PT
-        }
-        extra_nodes.push((ln_name, trunc_int(left - margin)))
-        extra_nodes.push((rn_name, trunc_int(right + margin)))
+        extra_nodes.push((ln_name, 0))
+        extra_nodes.push((rn_name, 0))
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
           None => ()
@@ -1105,6 +1193,7 @@ fn build_constraint_graph(
 
 ///|
 fn x_positions_from_simplex(
+  graph_root : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -1141,6 +1230,11 @@ fn x_positions_from_simplex(
     extra_slack_edges,
     edge_vnodes,
   )
+  if should_capture_xpos_constraints(graph_root) {
+    xpos_constraint_snapshot.val = Some(
+      build_xpos_constraint_snapshot(graph, index, sizes),
+    )
+  }
   dot_trace("xpos: constraint graph built")
   dot_trace("xpos: network simplex")
   network_simplex(graph, 0x7fffffff, BalanceMode::LR)
@@ -1195,6 +1289,7 @@ fn compute_x_positions(
     all_extra_nodes.push(pair)
   }
   x_positions_from_simplex(
+    graph,
     nodes,
     edges,
     edge_tail,
