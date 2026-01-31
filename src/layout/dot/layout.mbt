@@ -1122,6 +1122,7 @@ priv struct RecordField {
 priv struct RecordPort {
   center : @geom.Point
   size : NodeSize
+  sides : Int
 }
 
 ///|
@@ -1467,6 +1468,7 @@ fn record_layout_nodes(
   font_size_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
+  sides : Int,
   rects : Array[@geom.Rect],
   ports : Map[String, RecordPort],
 ) -> Unit {
@@ -1507,6 +1509,7 @@ fn record_layout_nodes(
     RecordOrientation::Vertical => rect.ury
     RecordOrientation::Horizontal => rect.llx
   }
+  let last = nodes.length() - 1
   for i in 0..<nodes.length() {
     let axis = axis_sizes[i]
     let child_rect = match orientation {
@@ -1533,6 +1536,47 @@ fn record_layout_nodes(
         child
       }
     }
+    let child_sides =
+      if sides == 0 {
+      0
+    } else {
+      let mut mask = 0
+      match orientation {
+        RecordOrientation::Horizontal =>
+          if i == 0 {
+            if i == last {
+              mask =
+                PORT_SIDE_TOP |
+                PORT_SIDE_BOTTOM |
+                PORT_SIDE_LEFT |
+                PORT_SIDE_RIGHT
+            } else {
+              mask = PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_LEFT
+            }
+          } else if i == last {
+            mask = PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT
+          } else {
+            mask = PORT_SIDE_TOP | PORT_SIDE_BOTTOM
+          }
+        RecordOrientation::Vertical =>
+          if i == 0 {
+            if i == last {
+              mask =
+                PORT_SIDE_TOP |
+                PORT_SIDE_BOTTOM |
+                PORT_SIDE_LEFT |
+                PORT_SIDE_RIGHT
+            } else {
+              mask = PORT_SIDE_TOP | PORT_SIDE_LEFT | PORT_SIDE_RIGHT
+            }
+          } else if i == last {
+            mask = PORT_SIDE_LEFT | PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT
+          } else {
+            mask = PORT_SIDE_LEFT | PORT_SIDE_RIGHT
+          }
+      }
+      sides & mask
+    }
     match nodes[i] {
       RecordNode::Field(field) => {
         rects.push(child_rect)
@@ -1546,7 +1590,11 @@ fn record_layout_nodes(
               child_rect.urx - child_rect.llx,
               child_rect.ury - child_rect.lly,
             )
-            ports[name] = { center, size: field_size }
+            ports[name] = {
+              center,
+              size: field_size,
+              sides: child_sides,
+            }
           }
           None => ()
         }
@@ -1560,6 +1608,7 @@ fn record_layout_nodes(
           font_size_pt,
           pad_x_pt,
           pad_y_pt,
+          child_sides,
           rects,
           ports,
         )
@@ -1601,6 +1650,7 @@ fn record_rects(
     font_size_pt,
     pad_x_pt,
     pad_y_pt,
+    PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_LEFT | PORT_SIDE_RIGHT,
     rects,
     ports,
   )
@@ -1649,6 +1699,7 @@ fn record_ports(
     font_size_pt,
     pad_x_pt,
     pad_y_pt,
+    PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_LEFT | PORT_SIDE_RIGHT,
     rects,
     ports,
   )
@@ -1814,6 +1865,7 @@ fn html_label_size(
 fn collect_html_ports(
   table : @html_label.HtmlTable,
   rect : @geom.Rect,
+  node_rect : @geom.Rect,
   font_name : String,
   font_size_pt : Double,
   ports : Map[String, RecordPort],
@@ -1830,7 +1882,8 @@ fn collect_html_ports(
           cell_layout.rect.urx - cell_layout.rect.llx,
           cell_layout.rect.ury - cell_layout.rect.lly,
         )
-        ports[name] = { center, size }
+        let sides = port_side_mask_from_rects(cell_layout.rect, node_rect)
+        ports[name] = { center, size, sides }
       }
       None => ()
     }
@@ -1839,6 +1892,7 @@ fn collect_html_ports(
         collect_html_ports(
           nested,
           cell_layout.rect,
+          node_rect,
           font_name,
           font_size_pt,
           ports,
@@ -1874,7 +1928,7 @@ fn html_ports(
         urx: pos.x + size.width_pt / 2.0,
         ury: pos.y + size.height_pt / 2.0,
       }
-      collect_html_ports(table, rect, font, font_size_pt, ports)
+      collect_html_ports(table, rect, rect, font, font_size_pt, ports)
     }
     _ => ()
   }
@@ -1911,78 +1965,9 @@ fn layout_ports_from_final(
       RankDir::LR | RankDir::RL => swap_node_size(port.size)
       _ => port.size
     }
-    rotated[name] = { center, size }
+    rotated[name] = { center, size, sides: port.sides }
   }
   rotated
-}
-
-///|
-fn port_side_anchor_from_raw(
-  raw_port : RecordPort,
-  node_size : NodeSize,
-  node_pos : @geom.Point,
-  target_pos : @geom.Point,
-  rankdir : RankDir,
-) -> @geom.Point? {
-  let half_w = raw_port.size.width_pt / 2.0
-  let half_h = raw_port.size.height_pt / 2.0
-  let port_rect : @geom.Rect = {
-    llx: raw_port.center.x - half_w,
-    lly: raw_port.center.y - half_h,
-    urx: raw_port.center.x + half_w,
-    ury: raw_port.center.y + half_h,
-  }
-  let node_rect : @geom.Rect = {
-    llx: -node_size.width_pt / 2.0,
-    lly: -node_size.height_pt / 2.0,
-    urx: node_size.width_pt / 2.0,
-    ury: node_size.height_pt / 2.0,
-  }
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
-  } else {
-    0.01
-  }
-  let candidates : Array[(@geom.Point, @geom.Point)] = []
-  let mid_x = (port_rect.llx + port_rect.urx) / 2.0
-  let mid_y = (port_rect.lly + port_rect.ury) / 2.0
-  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
-    candidates.push((point(port_rect.llx, mid_y), point(-1.0, 0.0)))
-  }
-  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
-    candidates.push((point(port_rect.urx, mid_y), point(1.0, 0.0)))
-  }
-  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
-    candidates.push((point(mid_x, port_rect.lly), point(0.0, -1.0)))
-  }
-  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
-    candidates.push((point(mid_x, port_rect.ury), point(0.0, 1.0)))
-  }
-  if candidates.length() == 0 || candidates.length() == 4 {
-    return None
-  }
-  let convert = (p : @geom.Point) =>
-    match rankdir {
-      RankDir::TB => p
-      RankDir::BT => point(p.x, -p.y)
-      RankDir::LR => point(-p.y, p.x)
-      RankDir::RL => point(p.y, p.x)
-    }
-  let target_conv = convert(target_pos)
-  let mut best_pos = candidates[0].0
-  let mut best_dist = 0.0
-  let mut seen = false
-  for pair in candidates {
-    let (pos_final, _) = pair
-    let pos_layout = point_add(node_pos, pos_final)
-    let dist = point_dist2(convert(pos_layout), target_conv)
-    if !seen || dist < best_dist {
-      best_dist = dist
-      best_pos = pos_final
-      seen = true
-    }
-  }
-  Some(point_add(node_pos, best_pos))
 }
 
 ///|
@@ -1993,6 +1978,181 @@ const PORT_SIDE_RIGHT : Int = 2
 const PORT_SIDE_TOP : Int = 4
 ///|
 const PORT_SIDE_LEFT : Int = 8
+///|
+const PORT_SIDE_ALL : Int =
+  PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
+
+///|
+fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => p
+    RankDir::BT => point(p.x, -p.y)
+    RankDir::LR => point(-p.y, p.x)
+    RankDir::RL => point(p.y, p.x)
+  }
+}
+
+///|
+fn invflip_side(side : Int, rankdir : RankDir) -> Int {
+  let mut out = 0
+  let add = (from : Int, to : Int) => {
+    if (side & from) != 0 {
+      out = out | to
+    }
+  }
+  match rankdir {
+    RankDir::TB => side
+    RankDir::BT => {
+      add(PORT_SIDE_TOP, PORT_SIDE_BOTTOM)
+      add(PORT_SIDE_BOTTOM, PORT_SIDE_TOP)
+      add(PORT_SIDE_LEFT, PORT_SIDE_LEFT)
+      add(PORT_SIDE_RIGHT, PORT_SIDE_RIGHT)
+      out
+    }
+    RankDir::LR => {
+      add(PORT_SIDE_TOP, PORT_SIDE_RIGHT)
+      add(PORT_SIDE_BOTTOM, PORT_SIDE_LEFT)
+      add(PORT_SIDE_LEFT, PORT_SIDE_TOP)
+      add(PORT_SIDE_RIGHT, PORT_SIDE_BOTTOM)
+      out
+    }
+    RankDir::RL => {
+      add(PORT_SIDE_TOP, PORT_SIDE_RIGHT)
+      add(PORT_SIDE_BOTTOM, PORT_SIDE_LEFT)
+      add(PORT_SIDE_LEFT, PORT_SIDE_BOTTOM)
+      add(PORT_SIDE_RIGHT, PORT_SIDE_TOP)
+      out
+    }
+  }
+}
+
+///|
+fn port_side_mask_from_rects(
+  port_rect : @geom.Rect,
+  node_rect : @geom.Rect,
+) -> Int {
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let mut mask = 0
+  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
+    mask = mask | PORT_SIDE_LEFT
+  }
+  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
+    mask = mask | PORT_SIDE_RIGHT
+  }
+  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
+    mask = mask | PORT_SIDE_BOTTOM
+  }
+  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
+    mask = mask | PORT_SIDE_TOP
+  }
+  mask
+}
+
+///|
+fn resolve_dynamic_port_anchor(
+  raw_port : RecordPort,
+  node_pos : @geom.Point,
+  other_pos : @geom.Point,
+  rankdir : RankDir,
+) -> (@geom.Point?, Int) {
+  let sides = raw_port.sides
+  if sides == 0 || sides == PORT_SIDE_ALL {
+    return (None, 0)
+  }
+  let half_w = raw_port.size.width_pt / 2.0
+  let half_h = raw_port.size.height_pt / 2.0
+  let port_rect : @geom.Rect = {
+    llx: raw_port.center.x - half_w,
+    lly: raw_port.center.y - half_h,
+    urx: raw_port.center.x + half_w,
+    ury: raw_port.center.y + half_h,
+  }
+  let mid_x = (port_rect.llx + port_rect.urx) / 2.0
+  let mid_y = (port_rect.lly + port_rect.ury) / 2.0
+  let pt = cvt_pt(node_pos, rankdir)
+  let opt = cvt_pt(other_pos, rankdir)
+  let mut best_side = 0
+  let mut best_dist = 0.0
+  let mut best_point = point(0.0, 0.0)
+  let mut seen = false
+  let consider = (side : Int, pos : @geom.Point) => {
+    if (sides & side) == 0 {
+      return ()
+    }
+    let cand = point_add(pt, pos)
+    let dist = point_dist2(cand, opt)
+    if !seen || dist < best_dist {
+      best_dist = dist
+      best_side = side
+      best_point = pos
+      seen = true
+    }
+  }
+  consider(PORT_SIDE_BOTTOM, point(mid_x, port_rect.lly))
+  consider(PORT_SIDE_RIGHT, point(port_rect.urx, mid_y))
+  consider(PORT_SIDE_TOP, point(mid_x, port_rect.ury))
+  consider(PORT_SIDE_LEFT, point(port_rect.llx, mid_y))
+  if !seen {
+    return (None, 0)
+  }
+  let offset = layout_port_offset(best_point, rankdir)
+  let anchor = point_add(node_pos, offset)
+  (Some(anchor), invflip_side(best_side, rankdir))
+}
+
+///|
+fn dynamic_port_anchor_for_edge(
+  port : @cgraph.Port?,
+  node_name : String,
+  raw_ports_map : Map[String, Map[String, RecordPort]],
+  node_pos : @geom.Point,
+  other_pos : @geom.Point,
+  rankdir : RankDir,
+  role : String,
+) -> (@geom.Point?, Int, Bool) {
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(_) => (None, 0, false)
+        None =>
+          match value.name {
+            Some(port_name) =>
+              match raw_ports_map.get(node_name) {
+                Some(raw_ports) =>
+                  match raw_ports.get(port_name) {
+                    Some(raw_port) => {
+                      let (anchor, side) =
+                        resolve_dynamic_port_anchor(
+                          raw_port,
+                          node_pos,
+                          other_pos,
+                          rankdir,
+                        )
+                      if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
+                        let anchor_text = match anchor {
+                          Some(point) => "\{point.x},\{point.y}"
+                          None => "None"
+                        }
+                        println(
+                          "port_anchor \{role}=\{node_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} sides=\{raw_port.sides} anchor=\{anchor_text} side=\{side}",
+                        )
+                      }
+                      (anchor, side, true)
+                    }
+                    None => (None, 0, false)
+                  }
+                None => (None, 0, false)
+              }
+            None => (None, 0, false)
+          }
+      }
+    None => (None, 0, false)
+  }
+}
 
 ///|
 fn compass_side_mask(compass : @cgraph.Compass) -> Int {
@@ -2015,26 +2175,8 @@ fn port_side_mask_from_rect(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> Int {
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
-  } else {
-    0.01
-  }
   let node_rect = port_side_rect(node_pos, node_size)
-  let mut mask = 0
-  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
-    mask = mask | PORT_SIDE_LEFT
-  }
-  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
-    mask = mask | PORT_SIDE_RIGHT
-  }
-  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
-    mask = mask | PORT_SIDE_BOTTOM
-  }
-  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
-    mask = mask | PORT_SIDE_TOP
-  }
-  mask
+  port_side_mask_from_rects(port_rect, node_rect)
 }
 
 ///|
@@ -10755,82 +10897,26 @@ pub fn layout_dot(
     } else {
       cluster_bboxes.get(head_cluster_name)
     }
-    let tail_side_anchor =
-      match (edge.tail_port(), label_ports_raw.get(tail_name)) {
-        (Some(port), Some(raw_ports)) =>
-          match port.compass {
-            Some(_) => (None : @geom.Point?)
-            None =>
-              match port.name {
-                Some(port_name) =>
-                  match raw_ports.get(port_name) {
-                    Some(raw_port) => {
-                      let anchor = port_side_anchor_from_raw(
-                        raw_port,
-                        match output_sizes.get(tail_name) {
-                          Some(value) => value
-                          None => tail_size
-                        },
-                        tail_pos,
-                        head_pos,
-                        layout_rankdir,
-                      )
-                      if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
-                        let anchor_text = match anchor {
-                          Some(point) => "\{point.x},\{point.y}"
-                          None => "None"
-                        }
-                        println(
-                          "port_anchor tail=\{tail_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} anchor=\{anchor_text}",
-                        )
-                      }
-                      anchor
-                    }
-                    None => (None : @geom.Point?)
-                  }
-                None => (None : @geom.Point?)
-              }
-          }
-        _ => (None : @geom.Point?)
-      }
-    let head_side_anchor =
-      match (edge.head_port(), label_ports_raw.get(head_name)) {
-        (Some(port), Some(raw_ports)) =>
-          match port.compass {
-            Some(_) => (None : @geom.Point?)
-            None =>
-              match port.name {
-                Some(port_name) =>
-                  match raw_ports.get(port_name) {
-                    Some(raw_port) => {
-                      let anchor = port_side_anchor_from_raw(
-                        raw_port,
-                        match output_sizes.get(head_name) {
-                          Some(value) => value
-                          None => head_size
-                        },
-                        head_pos,
-                        tail_pos,
-                        layout_rankdir,
-                      )
-                      if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
-                        let anchor_text = match anchor {
-                          Some(point) => "\{point.x},\{point.y}"
-                          None => "None"
-                        }
-                        println(
-                          "port_anchor head=\{head_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} anchor=\{anchor_text}",
-                        )
-                      }
-                      anchor
-                    }
-                    None => (None : @geom.Point?)
-                  }
-                None => (None : @geom.Point?)
-              }
-          }
-        _ => (None : @geom.Point?)
-      }
+    let (tail_side_anchor, tail_dynamic_side, tail_dynamic) =
+      dynamic_port_anchor_for_edge(
+        edge.tail_port(),
+        tail_name,
+        label_ports_raw,
+        tail_pos,
+        head_pos,
+        layout_rankdir,
+        "tail",
+      )
+    let (head_side_anchor, head_dynamic_side, head_dynamic) =
+      dynamic_port_anchor_for_edge(
+        edge.head_port(),
+        head_name,
+        label_ports_raw,
+        head_pos,
+        tail_pos,
+        layout_rankdir,
+        "head",
+      )
     let tail_anchor_base = match tail_side_anchor {
       Some(pos) => pos
       None => raw_tail_anchor
@@ -10839,20 +10925,30 @@ pub fn layout_dot(
       Some(pos) => pos
       None => raw_head_anchor
     }
-    let tail_port_side = port_side_for_edge(
-      edge.tail_port(),
-      tail_port_rect,
-      tail_pos,
-      tail_size,
-      tail_side_anchor,
-    )
-    let head_port_side = port_side_for_edge(
-      edge.head_port(),
-      head_port_rect,
-      head_pos,
-      head_size,
-      head_side_anchor,
-    )
+    let tail_port_side =
+      if tail_dynamic {
+      tail_dynamic_side
+    } else {
+      port_side_for_edge(
+        edge.tail_port(),
+        tail_port_rect,
+        tail_pos,
+        tail_size,
+        None,
+      )
+    }
+    let head_port_side =
+      if head_dynamic {
+      head_dynamic_side
+    } else {
+      port_side_for_edge(
+        edge.head_port(),
+        head_port_rect,
+        head_pos,
+        head_size,
+        None,
+      )
+    }
     let tail_anchor = point_add(tail_anchor_base, tail_offset)
     let head_anchor = point_add(head_anchor_base, head_offset)
     let tail_clip_center = raw_tail_anchor

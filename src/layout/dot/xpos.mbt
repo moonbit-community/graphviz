@@ -845,7 +845,7 @@ fn port_offsets_for_nodes(
           RankDir::LR | RankDir::RL => swap_node_size(port_info.size)
           _ => port_info.size
         }
-        node_offsets[port_name] = { center: offset, size }
+        node_offsets[port_name] = { center: offset, size, sides: port_info.sides }
       }
       offsets[name] = node_offsets
     }
