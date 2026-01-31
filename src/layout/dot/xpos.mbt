@@ -958,6 +958,11 @@ fn extra_node_kind(name : String) -> NodeKind {
 }
 
 ///|
+fn is_cluster_extra_node(name : String) -> Bool {
+  name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX)
+}
+
+///|
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -979,7 +984,17 @@ fn build_constraint_graph(
   root_rn_targets : Array[String],
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
-  let ordered_nodes = nodes
+  let ordered_nodes : Array[@cgraph.Node] = []
+  let mut idx = nodes.length() - 1
+  if nodes.length() > 0 {
+    while true {
+      ordered_nodes.push(nodes[idx])
+      if idx == 0 {
+        break
+      }
+      idx = idx - 1
+    }
+  }
   let mut has_port_edges = false
   for edge in edges {
     if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
@@ -1013,6 +1028,16 @@ fn build_constraint_graph(
   let base_positions = compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
+  let early_extra_nodes : Array[(String, Int)] = []
+  let late_extra_nodes : Array[(String, Int)] = []
+  for pair in extra_nodes {
+    let (name, _rank) = pair
+    if is_cluster_extra_node(name) {
+      late_extra_nodes.push(pair)
+    } else {
+      early_extra_nodes.push(pair)
+    }
+  }
   let index : Map[String, Int] = Map::new()
   for node in ordered_nodes {
     let name = node.name()
@@ -1024,7 +1049,7 @@ fn build_constraint_graph(
     }
     set_node_rank(graph, idx, trunc_int(pos))
   }
-  for pair in extra_nodes {
+  for pair in early_extra_nodes {
     let (name, rank) = pair
     let idx = add_node(graph, name, kind=extra_node_kind(name))
     index[name] = idx
@@ -1033,34 +1058,6 @@ fn build_constraint_graph(
       None => rank.to_double()
     }
     set_node_rank(graph, idx, trunc_int(pos))
-  }
-  if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
-    let root_ln = add_node(graph, "", kind=NodeKind::Slack)
-    let root_rn = add_node(graph, "", kind=NodeKind::Slack)
-    set_node_rank(graph, root_ln, 0)
-    set_node_rank(graph, root_rn, 0)
-    let root_margin = if nodes.length() > 0 {
-      cluster_margin_pt(nodes[0].graph())
-    } else {
-      CLUSTER_MARGIN_PT
-    }
-    let minlen = round_int(root_margin)
-    for name in root_ln_targets {
-      match index.get(name) {
-        Some(idx) => {
-          let _ = add_edge(graph, root_ln, idx, minlen, 0)
-        }
-        None => ()
-      }
-    }
-    for name in root_rn_targets {
-      match index.get(name) {
-        Some(idx) => {
-          let _ = add_edge(graph, idx, root_rn, minlen, 0)
-        }
-        None => ()
-      }
-    }
   }
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -1200,6 +1197,44 @@ fn build_constraint_graph(
     }
   }
   ignore(extra_slack_edges)
+  for pair in late_extra_nodes {
+    let (name, rank) = pair
+    let idx = add_node(graph, name, kind=extra_node_kind(name))
+    index[name] = idx
+    let pos = match base_positions.get(name) {
+      Some(value) => value
+      None => rank.to_double()
+    }
+    set_node_rank(graph, idx, trunc_int(pos))
+  }
+  if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
+    let root_ln = add_node(graph, "", kind=NodeKind::Slack)
+    let root_rn = add_node(graph, "", kind=NodeKind::Slack)
+    set_node_rank(graph, root_ln, 0)
+    set_node_rank(graph, root_rn, 0)
+    let root_margin = if nodes.length() > 0 {
+      cluster_margin_pt(nodes[0].graph())
+    } else {
+      CLUSTER_MARGIN_PT
+    }
+    let minlen = round_int(root_margin)
+    for name in root_ln_targets {
+      match index.get(name) {
+        Some(idx) => {
+          let _ = add_edge(graph, root_ln, idx, minlen, 0)
+        }
+        None => ()
+      }
+    }
+    for name in root_rn_targets {
+      match index.get(name) {
+        Some(idx) => {
+          let _ = add_edge(graph, idx, root_rn, minlen, 0)
+        }
+        None => ()
+      }
+    }
+  }
   for edge in extra_edges {
     match index.get(edge.tail) {
       Some(tail_idx) =>
@@ -1272,7 +1307,12 @@ fn x_positions_from_simplex(
   }
   dot_trace("xpos: constraint graph built")
   dot_trace("xpos: network simplex")
-  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  let root_idx = if graph.nodes.length() > 0 {
+    graph.nodes.length() - 1
+  } else {
+    0
+  }
+  network_simplex_with_root(graph, 0x7fffffff, BalanceMode::LR, root_idx)
   dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {

@@ -18,6 +18,9 @@ pub(all) enum NodeKind {
 } derive(Eq)
 
 ///|
+let root_override : Ref[Int?] = Ref::new(None)
+
+///|
 pub(all) struct NsEdge {
   tail : Int
   head : Int
@@ -933,7 +936,10 @@ fn init_cutvalues(graph : NsGraph) -> Unit {
   if graph.nodes.length() == 0 {
     return ()
   }
-  let root = 0
+  let root = match root_override.val {
+    Some(value) => value
+    None => 0
+  }
   let _ = dfs_range_init(graph, root)
   dfs_cutval(graph, root, NONE_EDGE)
 }
@@ -1443,6 +1449,19 @@ pub fn network_simplex(
     BalanceMode::LR => lr_balance(graph)
     BalanceMode::TB => tb_balance(graph)
   }
+}
+
+///|
+pub fn network_simplex_with_root(
+  graph : NsGraph,
+  max_iter : Int,
+  balance : BalanceMode,
+  root_idx : Int,
+) -> Unit {
+  let prev = root_override.val
+  root_override.val = Some(root_idx)
+  network_simplex(graph, max_iter, balance)
+  root_override.val = prev
 }
 
 ///|

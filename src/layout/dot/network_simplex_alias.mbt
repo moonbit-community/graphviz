@@ -48,6 +48,21 @@ fn network_simplex(graph : NsGraph, max_iter : Int, balance : BalanceMode) -> Un
 }
 
 ///|
+fn network_simplex_with_root(
+  graph : NsGraph,
+  max_iter : Int,
+  balance : BalanceMode,
+  root_idx : Int,
+) -> Unit {
+  @network_simplex.network_simplex_with_root(
+    graph,
+    max_iter,
+    balance,
+    root_idx,
+  )
+}
+
+///|
 fn build_feasible_tree(graph : NsGraph) -> Bool {
   @network_simplex.build_feasible_tree(graph)
 }
