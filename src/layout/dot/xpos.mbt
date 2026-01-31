@@ -1350,6 +1350,7 @@ fn compute_x_positions(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   extra_nodes : Array[(String, Int)],
+  flat_label_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
@@ -1363,6 +1364,10 @@ fn compute_x_positions(
   let all_extra_nodes = extra_nodes.copy()
   for pair in cluster_nodes {
     all_extra_nodes.push(pair)
+  }
+  let all_extra_edges = extra_edges.copy()
+  for edge in flat_label_edges {
+    all_extra_edges.push(edge)
   }
   x_positions_from_simplex(
     graph,
@@ -1379,7 +1384,7 @@ fn compute_x_positions(
     nodesep_pt,
     has_edge_labels,
     all_extra_nodes,
-    extra_edges,
+    all_extra_edges,
     extra_slack_edges,
     edge_vnodes,
     root_ln_targets,

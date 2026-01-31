@@ -8,6 +8,15 @@ priv struct EdgeVnodeInfo {
 }
 
 ///|
+priv struct FlatLabelNodeInfo {
+  tail : String
+  head : String
+  rank : Int
+  order : Int
+  place : Int
+}
+
+///|
 fn default_nodesep_in() -> Double {
   0.25
 }
@@ -395,6 +404,9 @@ const PERIPHERY_GAP_PT : Double = 4.0
 ///|
 // Graphviz keeps edge-label ranks tight; use a fraction of nodesep on label ranks.
 const EDGE_LABEL_NODESEP_PT : Double = 5.0
+
+///|
+const SELF_EDGE_SIZE_PT : Double = 18.0
 
 ///|
 const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
@@ -1457,6 +1469,19 @@ fn vnode_size_from_widths_with_height(
   let width_in = width_pt / 72.0
   let height_in = height_pt / 72.0
   { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
+}
+
+///|
+fn size_with_extra_right(size : NodeSize, extra_right_pt : Double) -> NodeSize {
+  if extra_right_pt <= 0.0 {
+    size
+  } else {
+    vnode_size_from_widths_with_height(
+      size.left_pt,
+      size.right_pt + extra_right_pt,
+      size.height_pt,
+    )
+  }
 }
 
 ///|
@@ -3203,6 +3228,156 @@ fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
     }
   }
   false
+}
+
+///|
+fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
+  match edge_mid_label_metrics(edge) {
+    Some((width, height)) =>
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        height
+      } else {
+        width
+      }
+    None => 0.0
+  }
+}
+
+///|
+fn build_port_maps_for_nodes(
+  nodes : Array[@cgraph.Node],
+  sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+) -> Map[String, Map[String, RecordPort]] {
+  let origin = @geom.Point::{ x: 0.0, y: 0.0 }
+  let port_maps : Map[String, Map[String, RecordPort]] = Map::new()
+  for node in nodes {
+    let label = label_text(node)
+    let has_html = @html_label.is_html_label_text(label)
+    let has_record = is_record_shape(node)
+    if !has_html && !has_record {
+      continue
+    }
+    let name = node.name()
+    let size = match sizes.get(name) {
+      Some(value) => value
+      None => node_size(node, record_orientation)
+    }
+    let ports =
+      if has_html {
+      html_ports(node, origin, size)
+    } else {
+      record_ports(node, origin, size, record_orientation)
+    }
+    if ports.length() > 0 {
+      port_maps[name] = ports
+    }
+  }
+  port_maps
+}
+
+///|
+fn port_side_mask_for_self_edge(
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  port_maps : Map[String, Map[String, RecordPort]],
+) -> Int {
+  match port {
+    None => 0
+    Some(value) =>
+      match value.compass {
+        Some(compass) => compass_side_mask(compass)
+        None =>
+          match value.name {
+            Some(port_name) =>
+              match port_maps.get(node.name()) {
+                Some(ports) =>
+                  match ports.get(port_name) {
+                    Some(info) => info.sides
+                    None => 0
+                  }
+                None => 0
+              }
+            None => 0
+          }
+      }
+  }
+}
+
+///|
+fn self_edge_right_space_for_edge(
+  edge : @cgraph.Edge,
+  rankdir : RankDir,
+  port_maps : Map[String, Map[String, RecordPort]],
+) -> Double {
+  let tail_port = edge.tail_port()
+  let head_port = edge.head_port()
+  let tail_explicit = port_is_explicit(tail_port)
+  let head_explicit = port_is_explicit(head_port)
+  let label_width = self_edge_label_width_pt(edge, rankdir)
+  if !tail_explicit && !head_explicit {
+    return SELF_EDGE_SIZE_PT + label_width
+  }
+  let tail_sides = port_side_mask_for_self_edge(edge.tail(), tail_port, port_maps)
+  let head_sides = port_side_mask_for_self_edge(edge.head(), head_port, port_maps)
+  let tail_left = (tail_sides & PORT_SIDE_LEFT) != 0
+  let head_left = (head_sides & PORT_SIDE_LEFT) != 0
+  if !tail_left && !head_left {
+    let same_side = tail_sides == head_sides
+    let top_bottom = (tail_sides & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
+    if !same_side || !top_bottom {
+      return SELF_EDGE_SIZE_PT + label_width
+    }
+  }
+  0.0
+}
+
+///|
+fn apply_self_edge_right_space(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  record_orientation : RecordOrientation,
+) -> Map[String, NodeSize] {
+  let mut has_self_edges = false
+  for edge in edges {
+    if edge.tail().name() == edge.head().name() {
+      has_self_edges = true
+      break
+    }
+  }
+  if !has_self_edges {
+    return sizes
+  }
+  let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
+  let extra_right : Map[String, Double] = Map::new()
+  for edge in edges {
+    let tail = edge.tail().name()
+    if tail != edge.head().name() {
+      continue
+    }
+    let extra = self_edge_right_space_for_edge(edge, rankdir, port_maps)
+    if extra <= 0.0 {
+      continue
+    }
+    let current = match extra_right.get(tail) {
+      Some(value) => value
+      None => 0.0
+    }
+    extra_right[tail] = current + extra
+  }
+  if extra_right.length() == 0 {
+    return sizes
+  }
+  let adjusted : Map[String, NodeSize] = Map::new()
+  for name, size in sizes {
+    match extra_right.get(name) {
+      Some(extra) => adjusted[name] = size_with_extra_right(size, extra)
+      None => adjusted[name] = size
+    }
+  }
+  adjusted
 }
 
 ///|
@@ -5775,6 +5950,212 @@ fn build_vnode_order_keys(
 }
 
 ///|
+fn flat_label_adjacent(
+  rank : Int,
+  tail : String,
+  head : String,
+  ordered_groups : Map[Int, Array[String]],
+) -> Bool {
+  let names = match ordered_groups.get(rank) {
+    Some(list) => list
+    None => []
+  }
+  if names.length() == 0 {
+    return false
+  }
+  let mut tail_idx = -1
+  let mut head_idx = -1
+  for i in 0..<names.length() {
+    if names[i] == tail {
+      tail_idx = i
+    }
+    if names[i] == head {
+      head_idx = i
+    }
+  }
+  if tail_idx < 0 || head_idx < 0 {
+    return false
+  }
+  let diff = if tail_idx > head_idx {
+    tail_idx - head_idx
+  } else {
+    head_idx - tail_idx
+  }
+  diff <= 1
+}
+
+///|
+fn collect_vnode_out_heads(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+) -> Map[String, Array[String]] {
+  let out_heads : Map[String, Array[String]] = Map::new()
+  let mut edge_idx = 0
+  for edge in edges {
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else { edge.tail().name() }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else { edge.head().name() }
+    edge_idx = edge_idx + 1
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let path : Array[String] = []
+    path.push(tail)
+    if tail_rank <= head_rank {
+      for vnode in vnodes {
+        path.push(vnode)
+      }
+    } else {
+      let mut idx = vnodes.length()
+      while idx > 0 {
+        idx = idx - 1
+        path.push(vnodes[idx])
+      }
+    }
+    path.push(head)
+    let mut i = 0
+    while i + 1 < path.length() {
+      let from = path[i]
+      let to = path[i + 1]
+      if is_edge_vnode_name(from) {
+        match out_heads.get(from) {
+          Some(list) => list.push(to)
+          None => out_heads[from] = [to]
+        }
+      }
+      i = i + 1
+    }
+  }
+  out_heads
+}
+
+///|
+fn flat_limits(
+  rank_nodes : Array[String],
+  order_index : Map[String, Int],
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+  vnode_out_heads : Map[String, Array[String]],
+  tail : String,
+  head : String,
+) -> Int {
+  let tail_pos = match order_index.get(tail) {
+    Some(value) => value
+    None => 0
+  }
+  let head_pos = match order_index.get(head) {
+    Some(value) => value
+    None => 0
+  }
+  let lpos = if tail_pos <= head_pos { tail_pos } else { head_pos }
+  let rpos = if tail_pos <= head_pos { head_pos } else { tail_pos }
+  let n = rank_nodes.length()
+  if n == 0 {
+    return 0
+  }
+  let mut lnode = 0
+  let mut rnode = n - 1
+  let bounds : Array[Int] = [lnode - 1, rnode + 1, lnode - 1, rnode + 1]
+  let setbounds = (name : String) => {
+    let is_flat = flat_label_nodes.get(name) is Some(_)
+    if !is_flat && !is_edge_vnode_name(name) {
+      return ()
+    }
+    let ord = match order_index.get(name) {
+      Some(value) => value
+      None => return ()
+    }
+    match flat_label_nodes.get(name) {
+      Some(info) => {
+        let tail_ord = match order_index.get(info.tail) {
+          Some(value) => value
+          None => return ()
+        }
+        let head_ord = match order_index.get(info.head) {
+          Some(value) => value
+          None => return ()
+        }
+        let left = if tail_ord <= head_ord { tail_ord } else { head_ord }
+        let right = if tail_ord <= head_ord { head_ord } else { tail_ord }
+        if right <= lpos {
+          bounds[2] = ord
+          bounds[0] = ord
+        } else if left >= rpos {
+          bounds[3] = ord
+          bounds[1] = ord
+        } else if left < lpos && right > rpos {
+          ()
+        } else {
+          if left < lpos || (left == lpos && right < rpos) {
+            bounds[2] = ord
+          }
+          if right > rpos || (right == rpos && left > lpos) {
+            bounds[3] = ord
+          }
+        }
+      }
+      None => {
+        let heads = match vnode_out_heads.get(name) {
+          Some(list) => list
+          None => []
+        }
+        let mut onleft = false
+        let mut onright = false
+        for head_name in heads {
+          let head_ord = match order_index.get(head_name) {
+            Some(value) => value
+            None => continue
+          }
+          if head_ord <= lpos {
+            onleft = true
+          }
+          if head_ord >= rpos {
+            onright = true
+          }
+        }
+        if onleft && !onright {
+          bounds[0] = ord + 1
+        }
+        if onright && !onleft {
+          bounds[1] = ord - 1
+        }
+      }
+    }
+  }
+  while lnode <= rnode {
+    setbounds(rank_nodes[lnode])
+    if lnode != rnode {
+      setbounds(rank_nodes[rnode])
+    }
+    lnode = lnode + 1
+    rnode = rnode - 1
+    if bounds[1] - bounds[0] <= 1 {
+      break
+    }
+  }
+  if bounds[0] <= bounds[1] {
+    (bounds[0] + bounds[1] + 1) / 2
+  } else {
+    (bounds[2] + bounds[3] + 1) / 2
+  }
+}
+
+///|
 fn vnode_positions_from_endpoints(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
@@ -5967,6 +6348,192 @@ fn build_edge_vnodes(
     edge_index = edge_index + 1
   }
   { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
+}
+
+///|
+fn add_flat_label_vnodes(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  ordered_groups : Map[Int, Array[String]],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+  sizes : Map[String, NodeSize],
+  edge_cluster_keys : Map[String, String],
+  existing_names : Map[String, Bool],
+  vnode_info : EdgeVnodeInfo,
+  x_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[String, FlatLabelNodeInfo], Array[ConstraintEdge]) {
+  let order_index = build_order_index(x_groups)
+  let vnode_out_heads =
+    collect_vnode_out_heads(edges, edge_tail, edge_head, ranks, vnode_info.edge_vnodes)
+  let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let extra_edges : Array[ConstraintEdge] = []
+  let mut edge_idx = 0
+  let insert_at = (names : Array[String], pos : Int, value : String) => {
+    let result : Array[String] = []
+    let mut idx = 0
+    let insert_pos =
+      if pos < 0 {
+      0
+    } else if pos > names.length() {
+      names.length()
+    } else {
+      pos
+    }
+    while idx < insert_pos {
+      result.push(names[idx])
+      idx = idx + 1
+    }
+    result.push(value)
+    while idx < names.length() {
+      result.push(names[idx])
+      idx = idx + 1
+    }
+    result
+  }
+  let rebuild_order = (names : Array[String]) => {
+    for i in 0..<names.length() {
+      order_index[names[i]] = i
+    }
+  }
+  for edge in edges {
+    let current_idx = edge_idx
+    edge_idx = edge_idx + 1
+    let tail =
+      if current_idx < edge_tail.length() { edge_tail[current_idx] } else {
+        edge.tail().name()
+      }
+    let head =
+      if current_idx < edge_head.length() { edge_head[current_idx] } else {
+        edge.head().name()
+      }
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    if tail_rank != head_rank {
+      continue
+    }
+    let metrics = match edge_mid_label_metrics(edge) {
+      Some(value) => value
+      None => continue
+    }
+    let (metric_width, metric_height) = metrics
+    let (label_width, label_height) =
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      (metric_height, metric_width)
+    } else {
+      (metric_width, metric_height)
+    }
+    if label_width <= 0.0 {
+      continue
+    }
+    let is_adjacent = flat_label_adjacent(tail_rank, tail, head, ordered_groups)
+    let left =
+      match (order_index.get(tail), order_index.get(head)) {
+        (Some(tail_pos), Some(head_pos)) =>
+          if tail_pos <= head_pos { tail } else { head }
+        _ => tail
+      }
+    let right = if left == tail { head } else { tail }
+    let left_right = node_right_pt(left, sizes)
+    let right_left = node_left_pt(right, sizes)
+    let width = left_right + right_left
+    let base_minlen =
+      Double::from_int(edge_minlen(edge)) * nodesep_pt + width
+    if is_adjacent {
+      let label_minlen = width + nodesep_pt + label_width
+      let minlen =
+        round_int(if base_minlen > label_minlen { base_minlen } else { label_minlen })
+      extra_edges.push({
+        tail: left,
+        head: right,
+        minlen,
+        weight: edge_weight(edge),
+        tail_port: None,
+        head_port: None,
+      })
+      continue
+    }
+    let label_rank = tail_rank - 1
+    let names = match x_groups.get(label_rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    let place =
+      flat_limits(names, order_index, flat_label_nodes, vnode_out_heads, tail, head)
+    let name = unique_virtual_node_name(
+      EDGE_VNODE_PREFIX,
+      current_idx,
+      label_rank,
+      existing_names,
+    )
+    let half_width = label_width / 2.0
+    vnode_info.vnode_ranks[name] = label_rank
+    vnode_info.vnode_sizes[name] =
+      vnode_size_from_widths_with_height(half_width, half_width, label_height)
+    let tail_cluster = node_cluster_key(edge.tail())
+    let head_cluster = node_cluster_key(edge.head())
+    let edge_cluster = match edge_cluster_keys.get(edge_key(edge)) {
+      Some(value) => value
+      None => ""
+    }
+    let vnode_cluster =
+      if tail_cluster != "" && tail_cluster == head_cluster {
+        tail_cluster
+      } else if edge_cluster != "" &&
+        tail_cluster == edge_cluster &&
+        head_cluster == edge_cluster {
+        edge_cluster
+      } else {
+        ""
+      }
+    vnode_info.vnode_clusters[name] = vnode_cluster
+    match vnode_info.vnodes_by_rank.get(label_rank) {
+      Some(list) => list.push(name)
+      None => vnode_info.vnodes_by_rank[label_rank] = [name]
+    }
+    let updated_rank = insert_at(names, place, name)
+    x_groups[label_rank] = updated_rank
+    rebuild_order(updated_rank)
+    let order = match order_index.get(name) {
+      Some(value) => value
+      None => place
+    }
+    flat_label_nodes[name] = {
+      tail,
+      head,
+      rank: label_rank,
+      order,
+      place,
+    }
+    let m0 = Double::from_int(edge_minlen(edge)) * nodesep_pt / 2.0
+    let minlen_left = round_int(m0 + left_right + half_width)
+    let minlen_right = round_int(m0 + half_width + right_left)
+    extra_edges.push({
+      tail: left,
+      head: name,
+      minlen: minlen_left,
+      weight: edge_weight(edge),
+      tail_port: None,
+      head_port: None,
+    })
+    extra_edges.push({
+      tail: name,
+      head: right,
+      minlen: minlen_right,
+      weight: edge_weight(edge),
+      tail_port: None,
+      head_port: None,
+    })
+  }
+  (x_groups, flat_label_nodes, extra_edges)
 }
 
 ///|
@@ -9018,6 +9585,84 @@ fn edge_label_pos_from_vnode(
 }
 
 ///|
+fn vnode_is_merged(
+  name : String,
+  adjacency : @routesplines.PathAdjacency,
+) -> Bool {
+  let out_count = match adjacency.out_edges.get(name) {
+    Some(list) => list.length()
+    None => 0
+  }
+  let in_count = match adjacency.in_edges.get(name) {
+    Some(list) => list.length()
+    None => 0
+  }
+  out_count > 1 || in_count > 1
+}
+
+///|
+fn recover_slack_vnodes(
+  edge : @cgraph.Edge,
+  ordered_vnodes : Array[String],
+  boxes : Array[@geom.Rect],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_sizes : Map[String, NodeSize],
+  adjacency : @routesplines.PathAdjacency,
+) -> Unit {
+  if ordered_vnodes.length() == 0 || boxes.length() == 0 {
+    return ()
+  }
+  let label_rank = match edge_label_rank_info(edge, ranks) {
+    Some((rank, _span)) => rank
+    None => -1
+  }
+  let mut box_idx = 0
+  for vnode in ordered_vnodes {
+    if vnode_is_merged(vnode, adjacency) {
+      break
+    }
+    let vnode_rank = match vnode_ranks.get(vnode) {
+      Some(value) => value
+      None => continue
+    }
+    let vnode_y = match rank_y.get(vnode_rank) {
+      Some(value) => value
+      None => continue
+    }
+    while box_idx < boxes.length() && boxes[box_idx].lly > vnode_y {
+      box_idx = box_idx + 1
+    }
+    if box_idx >= boxes.length() {
+      break
+    }
+    let box = boxes[box_idx]
+    if box.ury < vnode_y {
+      continue
+    }
+    let size = match vnode_sizes.get(vnode) {
+      Some(value) => value
+      None => continue
+    }
+    if vnode_rank == label_rank {
+      let new_x = box.urx
+      let left = new_x - box.llx
+      vnode_positions[vnode] = { x: new_x, y: vnode_y }
+      vnode_sizes[vnode] =
+        vnode_size_from_widths_with_height(left, size.right_pt, size.height_pt)
+    } else {
+      let new_x = (box.llx + box.urx) / 2.0
+      let half = (box.urx - box.llx) / 2.0
+      vnode_positions[vnode] = { x: new_x, y: vnode_y }
+      vnode_sizes[vnode] =
+        vnode_size_from_widths_with_height(half, half, size.height_pt)
+    }
+  }
+}
+
+///|
 fn flat_edge_label_pos_simple(
   tail_port : @geom.Point,
   head_port : @geom.Point,
@@ -10425,11 +11070,18 @@ pub fn layout_dot(
     has_vnode_order = true
     break
   }
-  let x_sizes =
+  let x_base_sizes = apply_self_edge_right_space(
+    nodes,
+    edges,
+    order_sizes,
+    rankdir,
+    record_orientation,
+  )
+  let x_order_sizes =
     if use_vnodes_for_xpos {
-      merge_sizes_with_vnodes(order_sizes, vnode_info.vnode_sizes)
+      merge_sizes_with_vnodes(x_base_sizes, vnode_info.vnode_sizes)
     } else {
-      order_sizes
+      x_base_sizes
     }
   let mut x_groups =
     if use_vnodes_for_xpos {
@@ -10475,7 +11127,7 @@ pub fn layout_dot(
       rank_same_order,
       edge_order,
       node_order,
-      x_sizes,
+      x_order_sizes,
       nodesep_pt,
       has_edge_labels,
       port_order_positions,
@@ -10518,6 +11170,34 @@ pub fn layout_dot(
       4,
     )
   }
+  let mut flat_label_edges : Array[ConstraintEdge] = []
+  if use_vnodes_for_xpos {
+    let (updated_groups, _flat_label_nodes, extra_edges) = add_flat_label_vnodes(
+      edges,
+      edge_tail,
+      edge_head,
+      ranks,
+      ordered_groups,
+      nodesep_pt,
+      rankdir,
+      x_base_sizes,
+      edge_cluster_keys,
+      existing_names,
+      vnode_info,
+      x_groups,
+    )
+    x_groups = updated_groups
+    flat_label_edges = extra_edges
+    for name, key in vnode_info.vnode_clusters {
+      x_cluster_keys[name] = key
+    }
+  }
+  let x_sizes =
+    if use_vnodes_for_xpos {
+      merge_sizes_with_vnodes(x_base_sizes, vnode_info.vnode_sizes)
+    } else {
+      x_base_sizes
+    }
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
   let vnode_extra_nodes =
@@ -10553,6 +11233,7 @@ pub fn layout_dot(
     nodesep_pt,
     has_edge_labels,
     vnode_extra_nodes,
+    flat_label_edges,
     x_edge_vnodes,
     x_slack_edges,
   )
@@ -11040,6 +11721,10 @@ pub fn layout_dot(
       None
     }
     let mut label_pad_boost = 0.0
+    let mut using_pathplan = false
+    let mut pathplan_boxes : Array[@geom.Rect] = []
+    let mut pathplan_points : Array[@geom.Point] = []
+    let mut raw_bezier : Array[@geom.Point] = []
     let spline = match splines {
       SplinesMode::None | SplinesMode::Polyline =>
         edge_spline_for_polyline(
@@ -11111,7 +11796,7 @@ pub fn layout_dot(
         )
         let use_pathplan = use_pathplan
         let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
-        let (points, using_pathplan) =
+        let (points, pathplan_used) =
           if use_pathplan && has_vnodes && !is_flat_edge {
           match @routesplines.edge_pathplan_polyline(
             edge,
@@ -11142,8 +11827,10 @@ pub fn layout_dot(
             rank_ht2,
             nodesep_pt,
           ) {
-            Some((path_points, barriers)) => {
+            Some((path_points, barriers, path_boxes)) => {
               route_barriers = barriers
+              pathplan_boxes = path_boxes
+              pathplan_points = path_points.copy()
               (path_points, true)
             }
             None => (guide_points, false)
@@ -11154,6 +11841,7 @@ pub fn layout_dot(
             false,
           )
         }
+        using_pathplan = pathplan_used
         let mut points = points
         let touch_eps = max_double(RECORD_BORDER_PT + 0.01, 1.5)
         let head_lr_touch =
@@ -11288,7 +11976,7 @@ pub fn layout_dot(
           (curve_offset, curve_skew)
         }
         let (curve_offset, curve_skew) = curve_offset_for()
-        if points.length() > 2 {
+        let routed_spline = if points.length() > 2 {
           let clipped = points
           let simplify_tol = nodesep_pt * 0.8
           let tail_label_edges = match label_edge_counts.get(tail_name) {
@@ -11388,11 +12076,21 @@ pub fn layout_dot(
                     [
                       tail_clip,
                       point(tail_clip.x, detour_y),
-                      point(head_clip.x, detour_y),
-                      head_clip,
-                    ]
-                  }
+                    point(head_clip.x, detour_y),
+                    head_clip,
+                  ]
                 }
+              }
+              if using_pathplan {
+                raw_bezier =
+                  edge_spline_raw_for_points(
+                    detour_points,
+                    tail_slope_line,
+                    head_slope_line,
+                    true,
+                    route_barriers=route_barriers,
+                  )
+              }
               edge_spline_for_points(
                 edge,
                 detour_points,
@@ -11410,6 +12108,20 @@ pub fn layout_dot(
                 head_cluster_bbox=head_cluster_bbox,
               )
             } else {
+              if using_pathplan {
+                raw_bezier =
+                  edge_spline_raw_for_line(
+                    adjusted[0],
+                    adjusted[adjusted.length() - 1],
+                    tail_slope_line,
+                    head_slope_line,
+                    layout_rankdir,
+                    curve_offset,
+                    curve_skew,
+                    tail_cluster_bbox=tail_cluster_bbox,
+                    head_cluster_bbox=head_cluster_bbox,
+                  )
+              }
               edge_spline_for_line(
                 edge,
                 adjusted[0],
@@ -11437,18 +12149,28 @@ pub fn layout_dot(
               } else {
                 point(0.0, 0.0)
               }
-            let head_slope_for =
-              if port_is_explicit(edge.head_port()) {
-                head_slope
-              } else {
-                point(0.0, 0.0)
-              }
-            let edge_force_segmented = force_segmented
-            let spline =
-              edge_spline_for_points(
-                edge,
+          let head_slope_for =
+            if port_is_explicit(edge.head_port()) {
+              head_slope
+            } else {
+              point(0.0, 0.0)
+            }
+          let edge_force_segmented = force_segmented
+          if using_pathplan {
+            raw_bezier =
+              edge_spline_raw_for_points(
                 adjusted,
-                tail_clip_center,
+                tail_slope_for,
+                head_slope_for,
+                edge_force_segmented,
+                route_barriers=route_barriers,
+              )
+          }
+          let spline =
+            edge_spline_for_points(
+              edge,
+              adjusted,
+              tail_clip_center,
                 head_clip_center,
                 tail_clip_size,
                 head_clip_size,
@@ -11551,11 +12273,21 @@ pub fn layout_dot(
                   [
                     tail_clip,
                     point(tail_clip.x, detour_y),
-                    point(head_clip.x, detour_y),
-                    head_clip,
-                  ]
-                }
+                  point(head_clip.x, detour_y),
+                  head_clip,
+                ]
               }
+            }
+            if using_pathplan {
+              raw_bezier =
+                edge_spline_raw_for_points(
+                  detour_points,
+                  tail_slope_line,
+                  head_slope_line,
+                  true,
+                  route_barriers=route_barriers,
+                )
+            }
             edge_spline_for_points(
               edge,
               detour_points,
@@ -11586,6 +12318,20 @@ pub fn layout_dot(
               } else {
                 head_anchor
               }
+            if using_pathplan {
+              raw_bezier =
+                edge_spline_raw_for_line(
+                  line_start,
+                  line_end,
+                  tail_slope_line,
+                  head_slope_line,
+                  layout_rankdir,
+                  curve_offset,
+                  curve_skew,
+                  tail_cluster_bbox=tail_cluster_bbox,
+                  head_cluster_bbox=head_cluster_bbox,
+                )
+            }
             edge_spline_for_line(
               edge,
               line_start,
@@ -11607,7 +12353,73 @@ pub fn layout_dot(
             )
           }
         }
+        routed_spline
       }
+    }
+    if using_pathplan &&
+      pathplan_boxes.length() > 0 &&
+      raw_bezier.length() >= 4 {
+      let limited_boxes =
+        @routesplines.limit_boxes_for_spline(
+          pathplan_boxes,
+          raw_bezier,
+          fallback_polyline=pathplan_points,
+        )
+      let ordered_vnodes =
+        if tail_rank <= head_rank {
+        vnodes.copy()
+      } else {
+        let reversed : Array[String] = []
+        let mut idx = vnodes.length()
+        while idx > 0 {
+          idx = idx - 1
+          reversed.push(vnodes[idx])
+        }
+        reversed
+      }
+      if @sys.get_env_var("DOT_TRACE_SLACK") is Some(_) &&
+        edge.tail().name() == "foo_agent" &&
+        edge.head().name() == "zzz_worker" {
+        println(
+          "slack edge front_end_jz -> tunnel_ingress raw_bezier=\{raw_bezier.length()} boxes=\{limited_boxes.length()}",
+        )
+        let mut bi = 0
+        for box in limited_boxes {
+          println(
+            "  box[\{bi}] llx=\{box.llx} lly=\{box.lly} urx=\{box.urx} ury=\{box.ury}",
+          )
+          bi = bi + 1
+        }
+        for vnode in ordered_vnodes {
+          let vnode_rank = match vnode_info.vnode_ranks.get(vnode) {
+            Some(value) => value
+            None => continue
+          }
+          let vnode_y = match rank_y.get(vnode_rank) {
+            Some(value) => value
+            None => continue
+          }
+          let size = match vnode_info.vnode_sizes.get(vnode) {
+            Some(value) => value
+            None => continue
+          }
+          let is_label = size.height_pt > 0.0
+          println(
+            "  vnode=\{vnode} rank=\{vnode_rank} y=\{vnode_y} label=\{is_label}",
+          )
+        }
+      }
+      recover_slack_vnodes(
+        edge,
+        ordered_vnodes,
+        limited_boxes,
+        ranks,
+        vnode_info.vnode_ranks,
+        rank_y,
+        vnode_positions,
+        vnode_info.vnode_sizes,
+        path_adjacency,
+      )
     }
     let label_rank_info = edge_label_rank_info(edge, ranks)
     let label_rank_y = edge_label_rank_y(edge, ranks, rank_y)
@@ -11625,6 +12437,25 @@ pub fn layout_dot(
           None
         }
       None => None
+    }
+    if @sys.get_env_var("DOT_TRACE_SLACK") is Some(_) &&
+      edge.tail().name() == "foo_agent" &&
+      edge.head().name() == "zzz_worker" {
+      let (rank_label, span) = match label_rank_info {
+        Some(value) => value
+        None => (-1, 0)
+      }
+      let rank_x_text = match label_rank_x {
+        Some(value) => "\{value}"
+        None => "None"
+      }
+      let rank_y_text = match label_rank_y {
+        Some(value) => "\{value}"
+        None => "None"
+      }
+      println(
+        "label_rank=\{rank_label} span=\{span} label_rank_x=\{rank_x_text} label_rank_y=\{rank_y_text}",
+      )
     }
     let apply_label_pad = has_clusters
     let label_pos : @geom.Point? = match edge.get_attr("label") {
