@@ -6,6 +6,7 @@ Manual regeneration:
 - `bash scripts/generate_textspan_overrides.sh` (updates `src/layout/dot/font_metrics/textspan_overrides.generated.mbt` from `tests/fixtures/graphviz/textspan.jsonl`).
 - `bash scripts/generate_dot_snapshots.sh` (refreshes `tests/layout/dot/*.gv.dot`; requires `dot`).
 - `bash scripts/capture_graphviz_label_vnodes.sh` (updates `tests/fixtures/graphviz/label_vnode.jsonl`; requires Graphviz build).
+- `bash scripts/capture_graphviz_edge_label_pos.sh` (updates `tests/fixtures/graphviz/edge_label_pos.jsonl`; requires Graphviz build).
 
 Integration tests are currently skipped (via `#skip`) while unit-level Graphviz
 fixtures are built and parity is restored. Re-enable once fixture tasks land:

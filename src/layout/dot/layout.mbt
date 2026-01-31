@@ -369,6 +369,9 @@ const EDGE_LABEL_NODESEP_PT : Double = 5.0
 const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
 
 ///|
+const EDGE_LABEL_FLAT_SPACE_PT : Double = 6.0
+
+///|
 const ELLIPSE_LABEL_SCALE : Double = 1.0
 
 
@@ -8681,6 +8684,37 @@ fn edge_label_rank_x(
 }
 
 ///|
+fn edge_label_pos_from_vnode(
+  vnode_pos : @geom.Point,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  rankdir : RankDir,
+) -> @geom.Point {
+  let width =
+    if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      label_height_pt
+    } else {
+      label_width_pt
+    }
+  point(vnode_pos.x + width / 2.0, vnode_pos.y)
+}
+
+///|
+fn flat_edge_label_pos_simple(
+  tail_port : @geom.Point,
+  head_port : @geom.Point,
+  tail_right_pt : Double,
+  head_left_pt : Double,
+  label_height_pt : Double,
+) -> @geom.Point {
+  let left_end = tail_port.x + tail_right_pt
+  let right_end = head_port.x - head_left_pt
+  let ctrx = (left_end + right_end) / 2.0
+  let ctry = tail_port.y + (label_height_pt + EDGE_LABEL_FLAT_SPACE_PT) / 2.0
+  point(ctrx, ctry)
+}
+
+///|
 fn edge_label_pos(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
@@ -11177,22 +11211,28 @@ pub fn layout_dot(
         } else {
           match (label_rank_x, label_rank_y, edge_mid_label_metrics(edge)) {
             (Some(rank_x), Some(rank_y), Some((width, height))) => {
-              let offset = match layout_rankdir {
-                RankDir::LR | RankDir::RL => height / 2.0
-                _ => width / 2.0
-              }
-              Some(point(rank_x + offset, rank_y))
+              Some(
+                edge_label_pos_from_vnode(
+                  point(rank_x, rank_y),
+                  width,
+                  height,
+                  layout_rankdir,
+                ),
+              )
             }
             _ =>
               if is_flat_edge {
                 match edge_mid_label_metrics(edge) {
                   Some((_width, height)) => {
-                    let lbl_space = 6.0
-                    let left_end = tail_pos.x + tail_size.right_pt
-                    let right_end = head_pos.x - head_size.left_pt
-                    let ctrx = (left_end + right_end) / 2.0
-                    let ctry = tail_pos.y + (height + lbl_space) / 2.0
-                    Some(point(ctrx, ctry))
+                    Some(
+                      flat_edge_label_pos_simple(
+                        tail_pos,
+                        head_pos,
+                        tail_size.right_pt,
+                        head_size.left_pt,
+                        height,
+                      ),
+                    )
                   }
                   None =>
                     edge_label_pos(

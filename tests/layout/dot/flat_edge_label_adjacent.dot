@@ -1,0 +1,8 @@
+digraph flat_label_adjacent {
+  nodesep="0.25";
+  ranksep="0.5";
+  margin=0;
+  node [shape=box];
+  {rank=same; a; b;}
+  a -> b [label="Flat Label"];
+}

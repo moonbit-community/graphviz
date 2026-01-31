@@ -1,0 +1,140 @@
+diff --git a/lib/dotgen/dotsplines.c b/lib/dotgen/dotsplines.c
+index ce1ce9194..71fde9d80 100644
+--- a/lib/dotgen/dotsplines.c
++++ b/lib/dotgen/dotsplines.c
+@@ -22,6 +22,7 @@
+ #include <stdbool.h>
+ #include <stddef.h>
+ #include <stdint.h>
++#include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <util/agxbuf.h>
+@@ -45,6 +46,103 @@
+ #define AUXGRAPH 128
+ #define GRAPHTYPEMASK 192 /* the OR of the above */
+ 
++static FILE *mbt_edge_label_pos_log = NULL;
++
++static FILE *mbt_edge_label_pos_log_open(void) {
++  const char *path = getenv("MBT_CAPTURE_EDGE_LABEL_POS");
++  if (!path || !*path)
++    return NULL;
++  if (!mbt_edge_label_pos_log)
++    mbt_edge_label_pos_log = fopen(path, "a");
++  return mbt_edge_label_pos_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s) {
++  fputc('"', out);
++  if (!s) {
++    fputc('"', out);
++    return;
++  }
++  for (; *s; s++) {
++    unsigned char ch = (unsigned char)*s;
++    switch (ch) {
++    case '\\':
++      fputs("\\\\", out);
++      break;
++    case '"':
++      fputs("\\\"", out);
++      break;
++    case '\n':
++      fputs("\\n", out);
++      break;
++    case '\r':
++      fputs("\\r", out);
++      break;
++    case '\t':
++      fputs("\\t", out);
++      break;
++    default:
++      if (ch < 0x20)
++        fprintf(out, "\\u%04x", ch);
++      else
++        fputc(ch, out);
++    }
++  }
++  fputc('"', out);
++}
++
++static void mbt_log_edge_label_vnode(graph_t *g, edge_t *e, node_t *n) {
++  FILE *out = mbt_edge_label_pos_log_open();
++  if (!out || !e || !n || !ED_label(e))
++    return;
++  textlabel_t *label = ED_label(e);
++  fprintf(out, "{\"event\":\"edge_label_vnode\",\"graph\":");
++  mbt_write_json_string(out, agnameof(agroot(g)));
++  fputs(",\"tail\":", out);
++  mbt_write_json_string(out, agnameof(agtail(e)));
++  fputs(",\"head\":", out);
++  mbt_write_json_string(out, agnameof(aghead(e)));
++  fputs(",\"label\":", out);
++  mbt_write_json_string(out, label->text ? label->text : "");
++  fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++  fprintf(out, ",\"flip\":%s", GD_flip(agroot(g)) ? "true" : "false");
++  fprintf(out, ",\"vnode_x\":%.17g,\"vnode_y\":%.17g",
++          ND_coord(n).x, ND_coord(n).y);
++  fprintf(out, ",\"dimen_x\":%.17g,\"dimen_y\":%.17g",
++          label->dimen.x, label->dimen.y);
++  fprintf(out, ",\"pos_x\":%.17g,\"pos_y\":%.17g}\n",
++          label->pos.x, label->pos.y);
++  fflush(out);
++}
++
++static void mbt_log_edge_label_flat(graph_t *g, edge_t *e, pointf tp,
++                                    pointf hp, double tail_rw,
++                                    double head_lw, unsigned place) {
++  FILE *out = mbt_edge_label_pos_log_open();
++  if (!out || !e || !ED_label(e))
++    return;
++  textlabel_t *label = ED_label(e);
++  fprintf(out, "{\"event\":\"edge_label_flat\",\"graph\":");
++  mbt_write_json_string(out, agnameof(agroot(g)));
++  fputs(",\"tail\":", out);
++  mbt_write_json_string(out, agnameof(agtail(e)));
++  fputs(",\"head\":", out);
++  mbt_write_json_string(out, agnameof(aghead(e)));
++  fputs(",\"label\":", out);
++  mbt_write_json_string(out, label->text ? label->text : "");
++  fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++  fprintf(out, ",\"flip\":%s", GD_flip(agroot(g)) ? "true" : "false");
++  fprintf(out, ",\"tp_x\":%.17g,\"tp_y\":%.17g", tp.x, tp.y);
++  fprintf(out, ",\"hp_x\":%.17g,\"hp_y\":%.17g", hp.x, hp.y);
++  fprintf(out, ",\"tail_rw\":%.17g,\"head_lw\":%.17g", tail_rw, head_lw);
++  fprintf(out, ",\"place\":%u", place);
++  fprintf(out, ",\"dimen_x\":%.17g,\"dimen_y\":%.17g",
++          label->dimen.x, label->dimen.y);
++  fprintf(out, ",\"pos_x\":%.17g,\"pos_y\":%.17g}\n",
++          label->pos.x, label->pos.y);
++  fflush(out);
++}
++
+ static void makefwdedge(edge_t *new, edge_t *old) {
+   Agedgeinfo_t *const info =
+       (Agedgeinfo_t *)((uintptr_t)new->base.data - offsetof(Agedgeinfo_t, hdr));
+@@ -492,6 +590,7 @@ static void place_vnlabel(node_t *n) {
+   ED_label(e)->pos.x = ND_coord(n).x + width / 2.0;
+   ED_label(e)->pos.y = ND_coord(n).y;
+   ED_label(e)->set = true;
++  mbt_log_edge_label_vnode(agraphof(n), e, n);
+ }
+ 
+ static void setflags(edge_t *e, int hint1, int hint2, int f3) {
+@@ -986,6 +1085,7 @@ static void makeSimpleFlatLabels(node_t *tn, node_t *hn, edge_t **edges,
+   ED_label(e)->pos.x = ctrx;
+   ED_label(e)->pos.y = tp.y + (ED_label(e)->dimen.y + LBL_SPACE) / 2.0;
+   ED_label(e)->set = true;
++  mbt_log_edge_label_flat(agraphof(e), e, tp, hp, ND_rw(tn), ND_lw(hn), 0);
+ 
+   miny = tp.y + LBL_SPACE / 2.0;
+   maxy = miny + ED_label(e)->dimen.y;
+@@ -1034,6 +1134,7 @@ static void makeSimpleFlatLabels(node_t *tn, node_t *hn, edge_t **edges,
+     ED_label(e)->pos.x = ctrx;
+     ED_label(e)->pos.y = ctry;
+     ED_label(e)->set = true;
++    mbt_log_edge_label_flat(agraphof(e), e, tp, hp, ND_rw(tn), ND_lw(hn), i);
+     clip_and_install(e, aghead(e), ps, pn, &sinfo);
+     free(ps);
+   }
