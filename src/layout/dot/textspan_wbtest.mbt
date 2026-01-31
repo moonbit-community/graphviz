@@ -42,7 +42,7 @@ test "textspan fixtures match label_text_dimensions" {
 ///|
 test "textspan combines multiline overrides" {
   let (width, height) =
-    label_text_dimensions("hello\\nworld", "Palatino-Italic", 24.0)
-  assert_eq(width, 55.5)
-  assert_eq(height, 54.0)
+    label_text_dimensions("Edge Label A\\nEdge Label B Longer", "Times-Roman", 14.0)
+  assert_eq(width, 117.75)
+  assert_eq(height, 33.0)
 }

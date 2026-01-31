@@ -408,13 +408,15 @@ fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
   } else if lower.contains("times") {
     let min_size = 10.0
     let max_size = 14.0
+    let min_scale = 1.125
+    let max_scale = 16.5 / 14.0
     if font_size_pt <= min_size {
-      1.125
+      min_scale
     } else if font_size_pt >= max_size {
-      1.1786
+      max_scale
     } else {
       let t = (font_size_pt - min_size) / (max_size - min_size)
-      1.125 + t * (1.1786 - 1.125)
+      min_scale + t * (max_scale - min_scale)
     }
   } else {
     LINE_SPACING
@@ -1396,6 +1398,18 @@ fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
     left_pt,
     right_pt,
   }
+}
+
+///|
+fn vnode_size_from_widths_with_height(
+  left_pt : Double,
+  right_pt : Double,
+  height_pt : Double,
+) -> NodeSize {
+  let width_pt = left_pt + right_pt
+  let width_in = width_pt / 72.0
+  let height_in = height_pt / 72.0
+  { width_in, height_in, width_pt, height_pt, left_pt, right_pt }
 }
 
 ///|
@@ -5533,6 +5547,7 @@ fn build_edge_vnodes(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   nodesep_pt : Double,
+  rankdir : RankDir,
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
 ) -> EdgeVnodeInfo {
@@ -5550,11 +5565,12 @@ fn build_edge_vnodes(
         let delta = nodesep_pt / 2.0
         for name in list {
           match vnode_sizes.get(name) {
-            Some(size) =>
-              vnode_sizes[name] = vnode_size_from_widths(
-                size.left_pt + delta,
-                size.right_pt + delta,
-              )
+            Some(size) => {
+              let left = size.left_pt + delta
+              let right = size.right_pt + delta
+              vnode_sizes[name] =
+                vnode_size_from_widths_with_height(left, right, size.height_pt)
+            }
             None => ()
           }
         }
@@ -5604,21 +5620,21 @@ fn build_edge_vnodes(
       edge_index = edge_index + 1
       continue
     }
-    let label_width = edge_mid_label_width_pt(edge)
-    let label_rank = if label_width > 0.0 {
-      (min_rank + max_rank) / 2
-    } else {
-      -1
+    let label_metrics = edge_mid_label_metrics(edge)
+    let (label_width, label_height) = match label_metrics {
+      Some((width, height)) =>
+        if rankdir == RankDir::LR || rankdir == RankDir::RL {
+          (height, width)
+        } else {
+          (width, height)
+        }
+      None => (0.0, 0.0)
     }
+    let label_rank = if label_width > 0.0 { (min_rank + max_rank) / 2 } else { -1 }
     let names : Array[String] = []
     let mut rank = min_rank + 1
     while rank < max_rank {
-      let (left_pt, right_pt) =
-        if rank == label_rank && label_width > 0.0 {
-          (nodesep_pt, label_width)
-        } else {
-          (plain_width_for_edge, plain_width_for_edge)
-        }
+      let is_label_rank = rank == label_rank && label_width > 0.0
       let name = unique_virtual_node_name(
         EDGE_VNODE_PREFIX,
         edge_index,
@@ -5626,7 +5642,16 @@ fn build_edge_vnodes(
         existing_names,
       )
       vnode_ranks[name] = rank
-      vnode_sizes[name] = vnode_size_from_widths(left_pt, right_pt)
+      vnode_sizes[name] =
+        if is_label_rank {
+        vnode_size_from_widths_with_height(
+          nodesep_pt,
+          label_width,
+          label_height,
+        )
+      } else {
+        vnode_size_from_widths(plain_width_for_edge, plain_width_for_edge)
+      }
       vnode_clusters[name] = vnode_cluster
       match vnodes_by_rank.get(rank) {
         Some(list) => list.push(name)
@@ -9890,6 +9915,7 @@ pub fn layout_dot(
     edges,
     ranks,
     nodesep_pt,
+    rankdir,
     existing_names,
     edge_cluster_keys,
   )

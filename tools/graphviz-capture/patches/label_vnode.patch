@@ -1,0 +1,199 @@
+--- a/lib/dotgen/class2.c
++++ b/lib/dotgen/class2.c
+@@ -14,6 +14,7 @@
+ #include <dotgen/dot.h>
+ #include <stdbool.h>
+ #include <stdlib.h>
++#include <stdio.h>
+ #include <util/alloc.h>
+ #include <util/gv_math.h>
+ 
++static FILE *mbt_label_vnode_log = NULL;
++
++static FILE *mbt_label_vnode_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_LABEL_VNODES");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_label_vnode_log)
++        mbt_label_vnode_log = fopen(path, "a");
++    return mbt_label_vnode_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_log_label_vnode(
++    graph_t *g, edge_t *orig, node_t *v,
++    int rank, int label_rank, int tail_rank, int head_rank)
++{
++    FILE *out = mbt_label_vnode_log_open();
++    if (!out || !orig || !v || !ED_label(orig))
++        return;
++    textlabel_t *label = ED_label(orig);
++    fprintf(out, "{\"event\":\"label_vnode\",\"graph\":");
++    mbt_write_json_string(out, agnameof(agroot(g)));
++    fputs(",\"tail\":", out);
++    mbt_write_json_string(out, agnameof(agtail(orig)));
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, agnameof(aghead(orig)));
++    fputs(",\"label\":", out);
++    mbt_write_json_string(out, label->text ? label->text : "");
++    fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++    fprintf(out, ",\"label_ontop\":%s", ED_label_ontop(orig) ? "true" : "false");
++    fprintf(out, ",\"flip\":%s", GD_flip(agroot(g)) ? "true" : "false");
++    fprintf(out, ",\"nodesep\":%.17g", (double)GD_nodesep(agroot(g)));
++    fprintf(out, ",\"tail_rank\":%d,\"head_rank\":%d", tail_rank, head_rank);
++    fprintf(out, ",\"label_rank\":%d,\"rank\":%d", label_rank, rank);
++    fprintf(out, ",\"dimen_x\":%.17g,\"dimen_y\":%.17g",
++            label->dimen.x, label->dimen.y);
++    fprintf(out, ",\"lw\":%.17g,\"rw\":%.17g,\"ht\":%.17g}\n",
++            ND_lw(v), ND_rw(v), ND_ht(v));
++    fflush(out);
++}
++
+ static node_t*
+ label_vnode(graph_t * g, edge_t * orig)
+ {
+@@ -70,13 +135,18 @@ make_chain(graph_t * g, node_t * from, node_t * to, edge_t * orig)
+     assert(ED_to_virt(orig) == NULL);
+     for (r = ND_rank(from) + 1; r <= ND_rank(to); r++) {
+ 	if (r < ND_rank(to)) {
+-	    if (r == label_rank)
++	    if (r == label_rank) {
+ 		v = label_vnode(g, orig);
+-	    else
++		ND_rank(v) = r;
++		mbt_log_label_vnode(g, orig, v, r, label_rank,
++		                    ND_rank(from), ND_rank(to));
++	    } else {
+ 		v = plain_vnode(g);
++		ND_rank(v) = r;
++	    }
+ 	} else
+ 	    v = to;
+--- a/lib/dotgen/flat.c
++++ b/lib/dotgen/flat.c
+@@ -14,6 +14,7 @@
+ #include	<dotgen/dot.h>
+ #include	<stdbool.h>
+ #include	<stddef.h>
++#include        <stdio.h>
+ #include	<util/alloc.h>
+ #include	<util/gv_math.h>
+ 
++static FILE *mbt_label_vnode_log = NULL;
++
++static FILE *mbt_label_vnode_log_open(void)
++{
++    const char *path = getenv("MBT_CAPTURE_LABEL_VNODES");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_label_vnode_log)
++        mbt_label_vnode_log = fopen(path, "a");
++    return mbt_label_vnode_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s)
++{
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_log_flat_label_node(edge_t *e, node_t *vn, int place)
++{
++    FILE *out = mbt_label_vnode_log_open();
++    if (!out || !e || !vn || !ED_label(e))
++        return;
++    graph_t *g = dot_root(agtail(e));
++    textlabel_t *label = ED_label(e);
++    fprintf(out, "{\"event\":\"flat_label_node\",\"graph\":");
++    mbt_write_json_string(out, agnameof(g));
++    fputs(",\"tail\":", out);
++    mbt_write_json_string(out, agnameof(agtail(e)));
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, agnameof(aghead(e)));
++    fputs(",\"label\":", out);
++    mbt_write_json_string(out, label->text ? label->text : "");
++    fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++    fprintf(out, ",\"adjacent\":false");
++    fprintf(out, ",\"flip\":%s", GD_flip(g) ? "true" : "false");
++    fprintf(out, ",\"rank\":%d,\"order\":%d,\"place\":%d",
++            ND_rank(vn), ND_order(vn), place);
++    fprintf(out, ",\"dimen_x\":%.17g,\"dimen_y\":%.17g",
++            label->dimen.x, label->dimen.y);
++    fprintf(out, ",\"lw\":%.17g,\"rw\":%.17g,\"ht\":%.17g",
++            ND_lw(vn), ND_rw(vn), ND_ht(vn));
++    fprintf(out, ",\"coord_y\":%.17g}\n", ND_coord(vn).y);
++    fflush(out);
++}
++
+ static node_t *make_vn_slot(graph_t * g, int r, int pos)
+ {
+@@ -187,6 +257,7 @@ flat_node(edge_t * e)
+     if (GD_rank(g)[r - 1].ht2 < h2)
+ 	GD_rank(g)[r - 1].ht2 = h2;
+     ND_alg(vn) = e;
++    mbt_log_flat_label_node(e, vn, place);
+ }

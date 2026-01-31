@@ -1,0 +1,11 @@
+digraph flat_label {
+  nodesep="0.25";
+  ranksep="0.5";
+  margin=0;
+  ordering=out;
+  node [shape=box];
+  {rank=same; a; b; c;}
+  a -> b [style=invis, weight=100];
+  b -> c [style=invis, weight=100];
+  a -> c [label="Flat Label"];
+}
