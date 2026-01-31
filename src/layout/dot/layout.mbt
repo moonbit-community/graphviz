@@ -1986,6 +1986,113 @@ fn port_side_anchor_from_raw(
 }
 
 ///|
+const PORT_SIDE_BOTTOM : Int = 1
+///|
+const PORT_SIDE_RIGHT : Int = 2
+///|
+const PORT_SIDE_TOP : Int = 4
+///|
+const PORT_SIDE_LEFT : Int = 8
+
+///|
+fn compass_side_mask(compass : @cgraph.Compass) -> Int {
+  match compass {
+    @cgraph.Compass::N => PORT_SIDE_TOP
+    @cgraph.Compass::NE => PORT_SIDE_TOP | PORT_SIDE_RIGHT
+    @cgraph.Compass::E => PORT_SIDE_RIGHT
+    @cgraph.Compass::SE => PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT
+    @cgraph.Compass::S => PORT_SIDE_BOTTOM
+    @cgraph.Compass::SW => PORT_SIDE_BOTTOM | PORT_SIDE_LEFT
+    @cgraph.Compass::W => PORT_SIDE_LEFT
+    @cgraph.Compass::NW => PORT_SIDE_TOP | PORT_SIDE_LEFT
+    @cgraph.Compass::C => 0
+  }
+}
+
+///|
+fn port_side_mask_from_rect(
+  port_rect : @geom.Rect,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> Int {
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let node_rect = port_side_rect(node_pos, node_size)
+  let mut mask = 0
+  if Double::abs(port_rect.llx - node_rect.llx) <= eps {
+    mask = mask | PORT_SIDE_LEFT
+  }
+  if Double::abs(port_rect.urx - node_rect.urx) <= eps {
+    mask = mask | PORT_SIDE_RIGHT
+  }
+  if Double::abs(port_rect.lly - node_rect.lly) <= eps {
+    mask = mask | PORT_SIDE_BOTTOM
+  }
+  if Double::abs(port_rect.ury - node_rect.ury) <= eps {
+    mask = mask | PORT_SIDE_TOP
+  }
+  mask
+}
+
+///|
+fn port_side_mask_from_anchor(
+  anchor : @geom.Point,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+) -> Int {
+  let eps = if RECORD_BORDER_PT > 0.01 {
+    RECORD_BORDER_PT + 0.01
+  } else {
+    0.01
+  }
+  let node_rect = port_side_rect(node_pos, node_size)
+  if Double::abs(anchor.x - node_rect.llx) <= eps {
+    return PORT_SIDE_LEFT
+  }
+  if Double::abs(anchor.x - node_rect.urx) <= eps {
+    return PORT_SIDE_RIGHT
+  }
+  if Double::abs(anchor.y - node_rect.lly) <= eps {
+    return PORT_SIDE_BOTTOM
+  }
+  if Double::abs(anchor.y - node_rect.ury) <= eps {
+    return PORT_SIDE_TOP
+  }
+  0
+}
+
+///|
+fn port_side_for_edge(
+  port : @cgraph.Port?,
+  port_rect : @geom.Rect?,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+  side_anchor : @geom.Point?,
+) -> Int {
+  let all_sides =
+    PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
+  let base_sides = match port_rect {
+    Some(rect) => port_side_mask_from_rect(rect, node_pos, node_size)
+    None => all_sides
+  }
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(compass) => base_sides & compass_side_mask(compass)
+        None =>
+          match side_anchor {
+            Some(anchor) => port_side_mask_from_anchor(anchor, node_pos, node_size)
+            None => 0
+          }
+      }
+    None => 0
+  }
+}
+
+///|
 fn port_rect_from_geometry(
   port : @cgraph.Port?,
   center : @geom.Point,
@@ -10444,7 +10551,14 @@ pub fn layout_dot(
       label_edge_counts[tail] = current + 1
     }
   }
-  let enable_complex_tuning = has_clusters && has_dotted_edges
+  let enable_complex_tuning =
+    match @sys.get_env_var("DOT_COMPLEX_TUNING") {
+      Some(value) => {
+        let lower = value.to_lower()
+        lower != "0" && lower != "false" && lower != "no"
+      }
+      None => false
+    }
   let (port_pad_below, port_pad_above) =
     if has_clusters || !has_port_edges {
     (0.0, 0.0)
@@ -10524,6 +10638,9 @@ pub fn layout_dot(
       head_port_max_dist[key] = max_dist
     }
   }
+  let path_order_index = build_order_index(x_groups)
+  let path_adjacency =
+    @routesplines.build_path_adjacency(edges, vnode_info.edge_vnodes)
   let edges_out : Array[DotLayoutEdge] = []
   dot_trace("layout_dot: routing edges")
   for edge in edges {
@@ -10639,9 +10756,6 @@ pub fn layout_dot(
       cluster_bboxes.get(head_cluster_name)
     }
     let tail_side_anchor =
-      if is_record_shape(edge.tail()) {
-      (None : @geom.Point?)
-    } else {
       match (edge.tail_port(), label_ports_raw.get(tail_name)) {
         (Some(port), Some(raw_ports)) =>
           match port.compass {
@@ -10650,8 +10764,8 @@ pub fn layout_dot(
               match port.name {
                 Some(port_name) =>
                   match raw_ports.get(port_name) {
-                    Some(raw_port) =>
-                      port_side_anchor_from_raw(
+                    Some(raw_port) => {
+                      let anchor = port_side_anchor_from_raw(
                         raw_port,
                         match output_sizes.get(tail_name) {
                           Some(value) => value
@@ -10661,6 +10775,17 @@ pub fn layout_dot(
                         head_pos,
                         layout_rankdir,
                       )
+                      if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
+                        let anchor_text = match anchor {
+                          Some(point) => "\{point.x},\{point.y}"
+                          None => "None"
+                        }
+                        println(
+                          "port_anchor tail=\{tail_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} anchor=\{anchor_text}",
+                        )
+                      }
+                      anchor
+                    }
                     None => (None : @geom.Point?)
                   }
                 None => (None : @geom.Point?)
@@ -10668,11 +10793,7 @@ pub fn layout_dot(
           }
         _ => (None : @geom.Point?)
       }
-    }
     let head_side_anchor =
-      if is_record_shape(edge.head()) {
-      (None : @geom.Point?)
-    } else {
       match (edge.head_port(), label_ports_raw.get(head_name)) {
         (Some(port), Some(raw_ports)) =>
           match port.compass {
@@ -10681,8 +10802,8 @@ pub fn layout_dot(
               match port.name {
                 Some(port_name) =>
                   match raw_ports.get(port_name) {
-                    Some(raw_port) =>
-                      port_side_anchor_from_raw(
+                    Some(raw_port) => {
+                      let anchor = port_side_anchor_from_raw(
                         raw_port,
                         match output_sizes.get(head_name) {
                           Some(value) => value
@@ -10692,6 +10813,17 @@ pub fn layout_dot(
                         tail_pos,
                         layout_rankdir,
                       )
+                      if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
+                        let anchor_text = match anchor {
+                          Some(point) => "\{point.x},\{point.y}"
+                          None => "None"
+                        }
+                        println(
+                          "port_anchor head=\{head_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} anchor=\{anchor_text}",
+                        )
+                      }
+                      anchor
+                    }
                     None => (None : @geom.Point?)
                   }
                 None => (None : @geom.Point?)
@@ -10699,7 +10831,6 @@ pub fn layout_dot(
           }
         _ => (None : @geom.Point?)
       }
-    }
     let tail_anchor_base = match tail_side_anchor {
       Some(pos) => pos
       None => raw_tail_anchor
@@ -10708,6 +10839,20 @@ pub fn layout_dot(
       Some(pos) => pos
       None => raw_head_anchor
     }
+    let tail_port_side = port_side_for_edge(
+      edge.tail_port(),
+      tail_port_rect,
+      tail_pos,
+      tail_size,
+      tail_side_anchor,
+    )
+    let head_port_side = port_side_for_edge(
+      edge.head_port(),
+      head_port_rect,
+      head_pos,
+      head_size,
+      head_side_anchor,
+    )
     let tail_anchor = point_add(tail_anchor_base, tail_offset)
     let head_anchor = point_add(head_anchor_base, head_offset)
     let tail_clip_center = raw_tail_anchor
@@ -10879,6 +11024,9 @@ pub fn layout_dot(
             tail_anchor,
             head_anchor,
             layout_rankdir,
+            tail_port_side,
+            head_port_side,
+            ranksep_pt,
             ranks,
             vnode_info.vnode_ranks,
             vnode_info.edge_vnodes,
@@ -10890,6 +11038,9 @@ pub fn layout_dot(
             vnode_info.vnode_clusters,
             cluster_bboxes,
             x_groups,
+            path_order_index,
+            path_adjacency.out_edges,
+            path_adjacency.in_edges,
             rank_y,
             rank_ht1,
             rank_ht2,

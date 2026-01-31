@@ -15,34 +15,52 @@ test "dedupe_polyline_points removes consecutive duplicates" {
 }
 
 ///|
-test "nudge_route_endpoints respects rankdir and explicit ports" {
-  let (tb_start, tb_end) = nudge_route_endpoints(
-    { x: 0.0, y: 0.0 },
-    { x: 0.0, y: 10.0 },
-    RankDir::TB,
-    false,
-    false,
-  )
-  assert_eq(tb_start, { x: 0.0, y: 1.0 })
-  assert_eq(tb_end, { x: 0.0, y: 9.0 })
+test "beginpath/endpath nudges follow side masks" {
+  let base_box : @geom.Rect = { llx: -5.0, lly: -5.0, urx: 5.0, ury: 5.0 }
+  let node_pos : @geom.Point = { x: 0.0, y: 0.0 }
+  let node_size = node_size_from_points(10.0, 10.0)
 
-  let (lr_start, lr_end) = nudge_route_endpoints(
+  let (tail_boxes, tail_start) = beginpath_boxes_regular(
+    base_box,
+    node_pos,
+    node_size,
     { x: 0.0, y: 0.0 },
-    { x: 10.0, y: 0.0 },
-    RankDir::LR,
-    false,
-    false,
+    SIDE_BOTTOM,
+    10.0,
   )
-  assert_eq(lr_start, { x: 1.0, y: 0.0 })
-  assert_eq(lr_end, { x: 9.0, y: 0.0 })
+  assert_eq(tail_boxes.length(), 1)
+  assert_eq(tail_start, { x: 0.0, y: -1.0 })
 
-  let (explicit_start, explicit_end) = nudge_route_endpoints(
-    { x: 0.0, y: 0.0 },
-    { x: 0.0, y: 10.0 },
-    RankDir::TB,
-    true,
-    true,
+  let (tail_top_boxes, tail_top_start) = beginpath_boxes_regular(
+    base_box,
+    node_pos,
+    node_size,
+    { x: -1.0, y: 5.0 },
+    SIDE_TOP,
+    10.0,
   )
-  assert_eq(explicit_start, { x: 0.0, y: 0.0 })
-  assert_eq(explicit_end, { x: 0.0, y: 10.0 })
+  assert_eq(tail_top_boxes.length(), 2)
+  assert_eq(tail_top_start, { x: -1.0, y: 6.0 })
+
+  let (head_boxes, head_end) = endpath_boxes_regular(
+    base_box,
+    node_pos,
+    node_size,
+    { x: 0.0, y: 0.0 },
+    SIDE_TOP,
+    10.0,
+  )
+  assert_eq(head_boxes.length(), 1)
+  assert_eq(head_end, { x: 0.0, y: 1.0 })
+
+  let (head_bottom_boxes, head_bottom_end) = endpath_boxes_regular(
+    base_box,
+    node_pos,
+    node_size,
+    { x: -1.0, y: -5.0 },
+    SIDE_BOTTOM,
+    10.0,
+  )
+  assert_eq(head_bottom_boxes.length(), 2)
+  assert_eq(head_bottom_end, { x: -1.0, y: -6.0 })
 }

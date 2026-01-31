@@ -20,10 +20,6 @@ fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
 }
 
 ///|
-fn port_is_explicit(port : @cgraph.Port?) -> Bool {
-  @dot_shared.port_is_explicit(port)
-}
-
 ///|
 fn edge_vnode_key(edge : @cgraph.Edge) -> String {
   @dot_shared.edge_vnode_key(edge)
@@ -40,10 +36,70 @@ fn max_double(a : Double, b : Double) -> Double {
 }
 
 ///|
+fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
+  { llx, lly, urx, ury }
+}
+
+///|
 const ROUTE_FUDGE : Double = 4.0
 
 ///|
 const ROUTE_MIN_WIDTH : Double = 16.0
+
+///|
+const SIDE_BOTTOM : Int = 1
+///|
+const SIDE_RIGHT : Int = 2
+///|
+const SIDE_TOP : Int = 4
+///|
+const SIDE_LEFT : Int = 8
+
+///|
+pub struct PathAdjacency {
+  out_edges : Map[String, Array[String]]
+  in_edges : Map[String, Array[String]]
+}
+
+///|
+pub fn build_path_adjacency(
+  edges : Array[@cgraph.Edge],
+  edge_vnodes : Map[String, Array[String]],
+) -> PathAdjacency {
+  let out_edges : Map[String, Array[String]] = Map::new()
+  let in_edges : Map[String, Array[String]] = Map::new()
+  for edge in edges {
+    let key = edge_vnode_key(edge)
+    let vnodes = match edge_vnodes.get(key) {
+      Some(list) => list
+      None => []
+    }
+    let path_nodes : Array[String] = []
+    path_nodes.push(edge.tail().name())
+    for name in vnodes {
+      path_nodes.push(name)
+    }
+    path_nodes.push(edge.head().name())
+    if path_nodes.length() < 2 {
+      continue
+    }
+    let mut idx = 0
+    while idx + 1 < path_nodes.length() {
+      let tail = path_nodes[idx]
+      let head = path_nodes[idx + 1]
+      match out_edges.get(tail) {
+        Some(list) => list.push(head)
+        None => out_edges[tail] = [head]
+      }
+      match in_edges.get(head) {
+        Some(list) => list.push(tail)
+        None => in_edges[head] = [tail]
+      }
+      idx = idx + 1
+    }
+  }
+  { out_edges, in_edges }
+}
 
 ///|
 ///|
@@ -97,36 +153,189 @@ fn pathplan_sizes(
 fn compute_horizontal_bounds(
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  _nodesep_pt : Double,
+  x_groups : Map[Int, Array[String]],
 ) -> (Double, Double) {
-  let mut min_x = 0.0
-  let mut max_x = 0.0
+  let mut min_rank : Int? = None
+  let mut max_rank : Int? = None
+  for rank, _ in x_groups {
+    match min_rank {
+      Some(value) => if rank < value { min_rank = Some(rank) }
+      None => min_rank = Some(rank)
+    }
+    match max_rank {
+      Some(value) => if rank > value { max_rank = Some(rank) }
+      None => max_rank = Some(rank)
+    }
+  }
+  let (start_rank, end_rank) = match (min_rank, max_rank) {
+    (Some(start), Some(end)) => (start, end)
+    _ => return (0.0, 0.0)
+  }
+  let mut left_bound = 0.0
+  let mut right_bound = 0.0
   let mut seen = false
-  for name, pos in positions {
-    let size = match sizes.get(name) {
-      Some(value) => value
-      None => continue
-    }
-    let left = pos.x - size.left_pt
-    let right = pos.x + size.right_pt
-    if !seen {
-      min_x = left
-      max_x = right
-      seen = true
-    } else {
-      if left < min_x {
-        min_x = left
+  let mut rank = start_rank
+  while rank <= end_rank {
+    match x_groups.get(rank) {
+      Some(names) =>
+        if names.length() > 0 {
+        let left_name = names[0]
+        let right_name = names[names.length() - 1]
+        let left_pos = match positions.get(left_name) {
+          Some(value) => value
+          None => { rank = rank + 1; continue }
+        }
+        let right_pos = match positions.get(right_name) {
+          Some(value) => value
+          None => { rank = rank + 1; continue }
+        }
+        let left_size = size_for_name(left_name, sizes)
+        let right_size = size_for_name(right_name, sizes)
+        let left = left_pos.x - left_size.left_pt
+        let right = right_pos.x + right_size.right_pt
+        if !seen {
+          left_bound = left
+          right_bound = right
+          seen = true
+        } else {
+          if left < left_bound {
+            left_bound = left
+          }
+          if right > right_bound {
+            right_bound = right
+          }
+        }
       }
-      if right > max_x {
-        max_x = right
+      None => ()
+    }
+    left_bound = left_bound - ROUTE_MIN_WIDTH
+    right_bound = right_bound + ROUTE_MIN_WIDTH
+    rank = rank + 1
+  }
+  if !seen { (0.0, 0.0) } else { (left_bound, right_bound) }
+}
+
+///|
+fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
+  vnode_sizes.get(name) is Some(_)
+}
+
+///|
+fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
+  match vnode_sizes.get(name) {
+    Some(size) => size.height_pt > 0.0
+    None => false
+  }
+}
+
+///|
+fn order_for(name : String, order_index : Map[String, Int]) -> Int {
+  match order_index.get(name) {
+    Some(value) => value
+    None => 0
+  }
+}
+
+///|
+fn pathscross(
+  candidate : String,
+  current : String,
+  path_prev : String?,
+  path_next : String?,
+  out_edges : Map[String, Array[String]],
+  in_edges : Map[String, Array[String]],
+  order_index : Map[String, Int],
+  vnode_sizes : Map[String, NodeSize],
+) -> Bool {
+  let out0 = match out_edges.get(candidate) {
+    Some(list) => list
+    None => []
+  }
+  let out1 = match out_edges.get(current) {
+    Some(list) => list
+    None => []
+  }
+  if out0.length() != 1 && out1.length() != 1 {
+    return false
+  }
+  let order = order_for(candidate, order_index) > order_for(current, order_index)
+  match path_next {
+    Some(next) =>
+      if out0.length() == 1 {
+      let mut e0_head = out0[0]
+      let mut e1_head = next
+      let mut cnt = 0
+      while cnt < 2 {
+        if e0_head == e1_head {
+          break
+        }
+        let order_head =
+          order_for(e0_head, order_index) > order_for(e1_head, order_index)
+        if order != order_head {
+          return true
+        }
+        let e0_out = match out_edges.get(e0_head) {
+          Some(list) => list
+          None => []
+        }
+        if e0_out.length() != 1 || !is_virtual_node(e0_head, vnode_sizes) {
+          break
+        }
+        let e1_out = match out_edges.get(e1_head) {
+          Some(list) => list
+          None => []
+        }
+        if e1_out.length() != 1 || !is_virtual_node(e1_head, vnode_sizes) {
+          break
+        }
+        e0_head = e0_out[0]
+        e1_head = e1_out[0]
+        cnt = cnt + 1
       }
     }
+    None => ()
   }
-  if !seen {
-    (0.0, 0.0)
-  } else {
-    (min_x - ROUTE_MIN_WIDTH, max_x + ROUTE_MIN_WIDTH)
+  let in0 = match in_edges.get(candidate) {
+    Some(list) => list
+    None => []
   }
+  match path_prev {
+    Some(prev) =>
+      if in0.length() == 1 {
+      let mut e0_tail = in0[0]
+      let mut e1_tail = prev
+      let mut cnt = 0
+      while cnt < 2 {
+        if e0_tail == e1_tail {
+          break
+        }
+        let order_tail =
+          order_for(e0_tail, order_index) > order_for(e1_tail, order_index)
+        if order != order_tail {
+          return true
+        }
+        let e0_in = match in_edges.get(e0_tail) {
+          Some(list) => list
+          None => []
+        }
+        if e0_in.length() != 1 || !is_virtual_node(e0_tail, vnode_sizes) {
+          break
+        }
+        let e1_in = match in_edges.get(e1_tail) {
+          Some(list) => list
+          None => []
+        }
+        if e1_in.length() != 1 || !is_virtual_node(e1_tail, vnode_sizes) {
+          break
+        }
+        e0_tail = e0_in[0]
+        e1_tail = e1_in[0]
+        cnt = cnt + 1
+      }
+    }
+    None => ()
+  }
+  false
 }
 
 ///|
@@ -135,7 +344,11 @@ fn neighbor_names_for_rank(
   rank : Int,
   x_groups : Map[Int, Array[String]],
   vnode_sizes : Map[String, NodeSize],
-  skip_virtual_neighbors : Bool,
+  out_edges : Map[String, Array[String]],
+  in_edges : Map[String, Array[String]],
+  order_index : Map[String, Int],
+  path_prev : String?,
+  path_next : String?,
 ) -> (String?, String?) {
   match x_groups.get(rank) {
     Some(list) => {
@@ -146,7 +359,24 @@ fn neighbor_names_for_rank(
           let mut left_idx = idx - 1
           while left_idx >= 0 {
             let candidate = list[left_idx]
-            if !(skip_virtual_neighbors && vnode_sizes.get(candidate) is Some(_)) {
+            if is_label_virtual(candidate, vnode_sizes) {
+              left = Some(candidate)
+              break
+            }
+            if !is_virtual_node(candidate, vnode_sizes) {
+              left = Some(candidate)
+              break
+            }
+            if !pathscross(
+              candidate,
+              name,
+              path_prev,
+              path_next,
+              out_edges,
+              in_edges,
+              order_index,
+              vnode_sizes,
+            ) {
               left = Some(candidate)
               break
             }
@@ -156,7 +386,24 @@ fn neighbor_names_for_rank(
           let mut right_idx = idx + 1
           while right_idx < list.length() {
             let candidate = list[right_idx]
-            if !(skip_virtual_neighbors && vnode_sizes.get(candidate) is Some(_)) {
+            if is_label_virtual(candidate, vnode_sizes) {
+              right = Some(candidate)
+              break
+            }
+            if !is_virtual_node(candidate, vnode_sizes) {
+              right = Some(candidate)
+              break
+            }
+            if !pathscross(
+              candidate,
+              name,
+              path_prev,
+              path_next,
+              out_edges,
+              in_edges,
+              order_index,
+              vnode_sizes,
+            ) {
               right = Some(candidate)
               break
             }
@@ -220,15 +467,29 @@ fn maximal_bbox_for_name(
   rank_ht2 : Map[Int, Double],
   tail_cluster : String,
   head_cluster : String,
+  out_edges : Map[String, Array[String]],
+  in_edges : Map[String, Array[String]],
+  order_index : Map[String, Int],
+  path_prev : String?,
+  path_next : String?,
 ) -> @geom.Rect? {
   let pos = match positions.get(name) {
     Some(value) => value
     None => return None
   }
   let size = size_for_name(name, sizes)
-  let is_virtual = vnode_sizes.get(name) is Some(_)
   let (left_neighbor, right_neighbor) =
-    neighbor_names_for_rank(name, rank, x_groups, vnode_sizes, is_virtual)
+    neighbor_names_for_rank(
+      name,
+      rank,
+      x_groups,
+      vnode_sizes,
+      out_edges,
+      in_edges,
+      order_index,
+      path_prev,
+      path_next,
+    )
   let neighbor_sep = (neighbor : String) => {
     let neighbor_size = size_for_name(neighbor, sizes)
     let is_virtual = vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
@@ -490,39 +751,171 @@ fn dedupe_polyline_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
 }
 
 ///|
-fn nudge_route_endpoints(
+fn beginpath_boxes_regular(
+  base_box : @geom.Rect,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
   start : @geom.Point,
-  end : @geom.Point,
-  rankdir : RankDir,
-  tail_explicit : Bool,
-  head_explicit : Bool,
-) -> (@geom.Point, @geom.Point) {
-  let mut nudged_start = start
-  let mut nudged_end = end
-  let step = 1.0
-  match rankdir {
-    RankDir::TB | RankDir::BT => {
-      if !tail_explicit {
-        let dir = if end.y >= start.y { 1.0 } else { -1.0 }
-        nudged_start = { x: start.x, y: start.y + dir * step }
+  side : Int,
+  ranksep_pt : Double,
+) -> (Array[@geom.Rect], @geom.Point) {
+  let boxes : Array[@geom.Rect] = []
+  let mut start = start
+  let node_top = node_pos.y + node_size.height_pt / 2.0
+  let node_bottom = node_pos.y - node_size.height_pt / 2.0
+  let node_left = node_pos.x - node_size.left_pt
+  let node_right = node_pos.x + node_size.right_pt
+  let fudge = 0.0
+  if side != 0 {
+    if (side & SIDE_TOP) != 0 {
+      if start.x < node_pos.x {
+        let b0 =
+          rect(
+            base_box.llx - 1.0,
+            start.y,
+            base_box.urx,
+            node_top + ranksep_pt / 2.0,
+          )
+        let b =
+          rect(
+            base_box.llx - 1.0,
+            node_bottom,
+            node_left - fudge,
+            start.y,
+          )
+        boxes.push(b0)
+        boxes.push(b)
+      } else {
+        let b0 =
+          rect(
+            base_box.llx,
+            start.y,
+            base_box.urx + 1.0,
+            node_top + ranksep_pt / 2.0,
+          )
+        let b =
+          rect(
+            node_right + fudge,
+            node_bottom,
+            base_box.urx + 1.0,
+            start.y,
+          )
+        boxes.push(b0)
+        boxes.push(b)
       }
-      if !head_explicit {
-        let dir = if start.y >= end.y { 1.0 } else { -1.0 }
-        nudged_end = { x: end.x, y: end.y + dir * step }
-      }
-    }
-    RankDir::LR | RankDir::RL => {
-      if !tail_explicit {
-        let dir = if end.x >= start.x { 1.0 } else { -1.0 }
-        nudged_start = { x: start.x + dir * step, y: start.y }
-      }
-      if !head_explicit {
-        let dir = if start.x >= end.x { 1.0 } else { -1.0 }
-        nudged_end = { x: end.x + dir * step, y: end.y }
-      }
+      start = { x: start.x, y: start.y + 1.0 }
+      return (boxes, start)
+    } else if (side & SIDE_BOTTOM) != 0 {
+      let b =
+        rect(
+          base_box.llx,
+          base_box.lly,
+          base_box.urx,
+          max_double(base_box.ury, start.y),
+        )
+      boxes.push(b)
+      start = { x: start.x, y: start.y - 1.0 }
+      return (boxes, start)
+    } else if (side & SIDE_LEFT) != 0 {
+      let b = rect(base_box.llx, node_bottom, start.x, start.y)
+      boxes.push(b)
+      start = { x: start.x - 1.0, y: start.y }
+      return (boxes, start)
+    } else if (side & SIDE_RIGHT) != 0 {
+      let b = rect(start.x, node_bottom, base_box.urx, start.y)
+      boxes.push(b)
+      start = { x: start.x + 1.0, y: start.y }
+      return (boxes, start)
     }
   }
-  (nudged_start, nudged_end)
+  let b = rect(base_box.llx, base_box.lly, base_box.urx, start.y)
+  boxes.push(b)
+  start = { x: start.x, y: start.y - 1.0 }
+  (boxes, start)
+}
+
+///|
+fn endpath_boxes_regular(
+  base_box : @geom.Rect,
+  node_pos : @geom.Point,
+  node_size : NodeSize,
+  end : @geom.Point,
+  side : Int,
+  ranksep_pt : Double,
+) -> (Array[@geom.Rect], @geom.Point) {
+  let boxes : Array[@geom.Rect] = []
+  let mut end = end
+  let node_top = node_pos.y + node_size.height_pt / 2.0
+  let node_bottom = node_pos.y - node_size.height_pt / 2.0
+  let node_left = node_pos.x - node_size.left_pt
+  let node_right = node_pos.x + node_size.right_pt
+  let fudge = 0.0
+  if side != 0 {
+    if (side & SIDE_TOP) != 0 {
+      let b =
+        rect(
+          base_box.llx,
+          min_double(base_box.lly, end.y),
+          base_box.urx,
+          base_box.ury,
+        )
+      boxes.push(b)
+      end = { x: end.x, y: end.y + 1.0 }
+      return (boxes, end)
+    } else if (side & SIDE_BOTTOM) != 0 {
+      if end.x < node_pos.x {
+        let b0 =
+          rect(
+            base_box.llx - 1.0,
+            node_bottom - ranksep_pt / 2.0,
+            base_box.urx,
+            end.y,
+          )
+        let b =
+          rect(
+            base_box.llx - 1.0,
+            end.y,
+            node_left - fudge,
+            node_top,
+          )
+        boxes.push(b0)
+        boxes.push(b)
+      } else {
+        let b0 =
+          rect(
+            base_box.llx,
+            node_bottom - ranksep_pt / 2.0,
+            base_box.urx + 1.0,
+            end.y,
+          )
+        let b =
+          rect(
+            node_right + fudge,
+            end.y,
+            base_box.urx + 1.0,
+            node_top,
+          )
+        boxes.push(b0)
+        boxes.push(b)
+      }
+      end = { x: end.x, y: end.y - 1.0 }
+      return (boxes, end)
+    } else if (side & SIDE_LEFT) != 0 {
+      let b = rect(base_box.llx, end.y, end.x, node_top)
+      boxes.push(b)
+      end = { x: end.x - 1.0, y: end.y }
+      return (boxes, end)
+    } else if (side & SIDE_RIGHT) != 0 {
+      let b = rect(end.x, end.y, base_box.urx, node_top)
+      boxes.push(b)
+      end = { x: end.x + 1.0, y: end.y }
+      return (boxes, end)
+    }
+  }
+  let b = rect(base_box.llx, end.y, base_box.urx, base_box.ury)
+  boxes.push(b)
+  end = { x: end.x, y: end.y + 1.0 }
+  (boxes, end)
 }
 
 ///|
@@ -530,9 +923,6 @@ fn route_pathplan_from_boxes(
   boxes : Array[@geom.Rect],
   start : @geom.Point,
   end : @geom.Point,
-  rankdir : RankDir,
-  tail_explicit : Bool,
-  head_explicit : Bool,
 ) -> (Array[@geom.Point], Array[@geom.Point])? {
   if boxes.length() < 2 {
     return None
@@ -549,9 +939,7 @@ fn route_pathplan_from_boxes(
     let joined = poly_parts.join(" ")
     println("  pathplan polygon: \{joined}")
   }
-  let (start_in, end_in) =
-    nudge_route_endpoints(start, end, rankdir, tail_explicit, head_explicit)
-  let path = @pathplan.shortest_path_in_poly(polygon, start_in, end_in)
+  let path = @pathplan.shortest_path_in_poly(polygon, start, end)
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
     let parts : Array[String] = []
     for point in path {
@@ -665,6 +1053,9 @@ pub fn edge_pathplan_polyline(
   tail_anchor : @geom.Point,
   head_anchor : @geom.Point,
   rankdir : RankDir,
+  tail_port_side : Int,
+  head_port_side : Int,
+  ranksep_pt : Double,
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
   edge_vnodes : Map[String, Array[String]],
@@ -676,6 +1067,9 @@ pub fn edge_pathplan_polyline(
   vnode_clusters : Map[String, String],
   cluster_bboxes : Map[String, @geom.Rect],
   x_groups : Map[Int, Array[String]],
+  order_index : Map[String, Int],
+  path_out_edges : Map[String, Array[String]],
+  path_in_edges : Map[String, Array[String]],
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
@@ -707,21 +1101,50 @@ pub fn edge_pathplan_polyline(
   let path_head_rank = if swap_path { tail_rank } else { head_rank }
   let path_tail_anchor = if swap_path { head_anchor } else { tail_anchor }
   let path_head_anchor = if swap_path { tail_anchor } else { head_anchor }
-  let path_tail_port = if swap_path { edge.head_port() } else { edge.tail_port() }
-  let path_head_port = if swap_path { edge.tail_port() } else { edge.head_port() }
+  let path_tail_side = if swap_path { head_port_side } else { tail_port_side }
+  let path_head_side = if swap_path { tail_port_side } else { head_port_side }
+  let path_tail_pos = match positions.get(path_tail_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_head_pos = match positions.get(path_head_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_tail_size = size_for_name(path_tail_name, sizes)
+  let path_head_size = size_for_name(path_head_name, sizes)
+  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+    println(
+      "pathplan edge \{path_tail_name} -> \{path_head_name} tail_pos=\{path_tail_pos.x},\{path_tail_pos.y} head_pos=\{path_head_pos.x},\{path_head_pos.y} tail_anchor=\{path_tail_anchor.x},\{path_tail_anchor.y} head_anchor=\{path_head_anchor.x},\{path_head_anchor.y}",
+    )
+  }
   let tail_cluster =
     cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
   let head_cluster =
     cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
-  let ordered = vnodes
+  let ordered =
+    if swap_path {
+    let reversed : Array[String] = []
+    let mut idx = vnodes.length()
+    while idx > 0 {
+      idx = idx - 1
+      reversed.push(vnodes[idx])
+    }
+    reversed
+  } else {
+    vnodes
+  }
   let merged_positions = merge_positions(positions, vnode_positions)
   let merged_sizes = merge_sizes(sizes, vnode_sizes)
   let route_sizes = pathplan_sizes(merged_sizes, vnode_sizes, nodesep_pt)
   let splinesep_pt = nodesep_pt / 4.0
   let (left_bound, right_bound) =
-    compute_horizontal_bounds(merged_positions, route_sizes, nodesep_pt)
-  let tail_boxes : Array[@geom.Rect] = []
-  let head_boxes : Array[@geom.Rect] = []
+    compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
+  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+    println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
+  }
+  let tail_next =
+    if ordered.length() > 0 { Some(ordered[0]) } else { Some(path_head_name) }
   let path_boxes : Array[@geom.Rect] = []
   let tail_rank_y = match rank_y.get(path_tail_rank) {
     Some(value) => value
@@ -739,7 +1162,7 @@ pub fn edge_pathplan_polyline(
     Some(value) => value
     None => 0.0
   }
-  let mut tail_box = match maximal_bbox_for_name(
+  let tail_box = match maximal_bbox_for_name(
     path_tail_name,
     path_tail_rank,
     merged_positions,
@@ -757,21 +1180,27 @@ pub fn edge_pathplan_polyline(
     rank_ht2,
     tail_cluster,
     head_cluster,
+    path_out_edges,
+    path_in_edges,
+    order_index,
+    None,
+    tail_next,
   ) {
     Some(box) => box
     None => return None
   }
-  if !port_is_explicit(path_tail_port) {
-    match rankdir {
-      RankDir::TB | RankDir::BT =>
-        tail_box = { llx: tail_box.llx, lly: tail_box.lly, urx: tail_box.urx, ury: path_tail_anchor.y }
-      _ => ()
-    }
-  }
-  tail_boxes.push(tail_box)
+  let (tail_boxes, route_start) = beginpath_boxes_regular(
+    tail_box,
+    path_tail_pos,
+    path_tail_size,
+    path_tail_anchor,
+    path_tail_side,
+    ranksep_pt,
+  )
   match rankdir {
     RankDir::TB | RankDir::BT => {
-      let end_box = regular_end_box_bottom(tail_box, tail_rank_y - tail_ht1)
+      let last_tail_box = tail_boxes[tail_boxes.length() - 1]
+      let end_box = regular_end_box_bottom(last_tail_box, tail_rank_y - tail_ht1)
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         tail_boxes.push(end_box)
       }
@@ -779,7 +1208,11 @@ pub fn edge_pathplan_polyline(
     _ => ()
   }
   let mut current_rank = path_tail_rank
-  for vnode in ordered {
+  for i in 0..<ordered.length() {
+    let vnode = ordered[i]
+    let prev_node = if i == 0 { path_tail_name } else { ordered[i - 1] }
+    let next_node =
+      if i + 1 < ordered.length() { ordered[i + 1] } else { path_head_name }
     let vnode_rank = match vnode_ranks.get(vnode) {
       Some(value) => value
       None => continue
@@ -814,6 +1247,11 @@ pub fn edge_pathplan_polyline(
       rank_ht2,
       tail_cluster,
       head_cluster,
+      path_out_edges,
+      path_in_edges,
+      order_index,
+      Some(prev_node),
+      Some(next_node),
     ) {
       Some(box) => path_boxes.push(box)
       None => ()
@@ -832,7 +1270,13 @@ pub fn edge_pathplan_polyline(
     Some(box) => path_boxes.push(box)
     None => ()
   }
-  let mut head_box = match maximal_bbox_for_name(
+  let head_prev =
+    if ordered.length() > 0 {
+    Some(ordered[ordered.length() - 1])
+  } else {
+    Some(path_tail_name)
+  }
+  let head_box = match maximal_bbox_for_name(
     path_head_name,
     path_head_rank,
     merged_positions,
@@ -850,21 +1294,27 @@ pub fn edge_pathplan_polyline(
     rank_ht2,
     tail_cluster,
     head_cluster,
+    path_out_edges,
+    path_in_edges,
+    order_index,
+    head_prev,
+    None,
   ) {
     Some(box) => box
     None => return None
   }
-  if !port_is_explicit(path_head_port) {
-    match rankdir {
-      RankDir::TB | RankDir::BT =>
-        head_box = { llx: head_box.llx, lly: path_head_anchor.y, urx: head_box.urx, ury: head_box.ury }
-      _ => ()
-    }
-  }
-  head_boxes.push(head_box)
+  let (head_boxes, route_end) = endpath_boxes_regular(
+    head_box,
+    path_head_pos,
+    path_head_size,
+    path_head_anchor,
+    path_head_side,
+    ranksep_pt,
+  )
   match rankdir {
     RankDir::TB | RankDir::BT => {
-      let end_box = regular_end_box_top(head_box, head_rank_y + head_ht2)
+      let last_head_box = head_boxes[head_boxes.length() - 1]
+      let end_box = regular_end_box_top(last_head_box, head_rank_y + head_ht2)
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         head_boxes.push(end_box)
       }
@@ -896,17 +1346,10 @@ pub fn edge_pathplan_polyline(
   }
   let adjusted_boxes = adjust_regular_path(boxes, fb, lb)
   let normalized_boxes = adjusted_boxes
-  let route_start = path_tail_anchor
-  let route_end = path_head_anchor
-  let tail_explicit = port_is_explicit(path_tail_port)
-  let head_explicit = port_is_explicit(path_head_port)
   match route_pathplan_from_boxes(
     normalized_boxes,
     route_start,
     route_end,
-    rankdir,
-    tail_explicit,
-    head_explicit,
   ) {
     Some((points, polygon)) => {
       let out_points =
