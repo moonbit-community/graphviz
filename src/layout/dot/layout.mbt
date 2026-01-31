@@ -8696,13 +8696,18 @@ fn edge_label_pos(
     None => fallback
   }
   let base_pos =
-    match label_rank_x {
-      Some(value) =>
+    match (label_rank_x, label_rank_y) {
+      (Some(x_axis), Some(y_axis)) =>
+        match rankdir {
+          RankDir::LR | RankDir::RL => point(y_axis, x_axis)
+          _ => point(x_axis, y_axis)
+        }
+      (Some(value), None) =>
         match rankdir {
           RankDir::LR | RankDir::RL => point(raw_pos.x, value)
           _ => point(value, raw_pos.y)
         }
-      None => raw_pos
+      _ => raw_pos
     }
   if edge.tail().name() == edge.head().name() {
     return Some(base_pos)
@@ -8711,12 +8716,6 @@ fn edge_label_pos(
     Some(_) =>
       match edge_mid_label_metrics(edge) {
         Some((width, height)) => {
-          let mut pad = label_pad_boost
-          if apply_label_pad {
-            pad = pad + nodesep_pt * 0.22
-          } else if label_rank_x is None && width >= EDGE_LABEL_PAD_WIDTH_PT {
-            pad = pad + nodesep_pt * 0.22
-          }
           let half_extent = match rankdir {
             RankDir::LR | RankDir::RL => height / 2.0
             _ => width / 2.0
@@ -8724,6 +8723,16 @@ fn edge_label_pos(
           let sign = match rankdir {
             RankDir::RL => -1.0
             _ => 1.0
+          }
+          let mut pad = label_pad_boost
+          if label_rank_x is None {
+            if apply_label_pad {
+              pad = pad + nodesep_pt * 0.22
+            } else if width >= EDGE_LABEL_PAD_WIDTH_PT {
+              pad = pad + nodesep_pt * 0.22
+            }
+          } else {
+            pad = 0.0
           }
           Some(point(base_pos.x + sign * (half_extent + pad), base_pos.y))
         }
@@ -9047,6 +9056,28 @@ fn adjust_edge_labels_for_label_overlaps(
       edges,
       subgraphs,
     }
+  }
+}
+
+///|
+fn edge_label_adjust_enabled() -> Bool {
+  match @sys.get_env_var("DOT_ADJUST_EDGE_LABELS") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "" && lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
+  }
+}
+
+///|
+fn cluster_rounding_enabled() -> Bool {
+  match @sys.get_env_var("DOT_ADJUST_CLUSTER_ROUNDING") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "" && lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
   }
 }
 
@@ -10098,7 +10129,7 @@ pub fn layout_dot(
     }
     positions[name] = { x: pos_x, y: pos_y }
   }
-  if has_clusters {
+  if has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions_for_rounding(
       graph,
       positions,
@@ -11279,13 +11310,18 @@ pub fn layout_dot(
     edges: final_edges,
     subgraphs,
   }
-  let adjusted_for_clusters =
-    adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
-  let adjusted = adjust_edge_labels_for_label_overlaps(
-    adjusted_for_clusters,
-    nodesep_pt,
-    rankdir,
-  )
+  let adjusted =
+    if edge_label_adjust_enabled() {
+      let adjusted_for_clusters =
+        adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
+      adjust_edge_labels_for_label_overlaps(
+        adjusted_for_clusters,
+        nodesep_pt,
+        rankdir,
+      )
+    } else {
+      layout
+    }
   if graph.is_root() {
     let dx = -adjusted.bbox.llx
     let dy = -adjusted.bbox.lly

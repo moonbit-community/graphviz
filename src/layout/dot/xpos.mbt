@@ -47,6 +47,65 @@ priv struct XposConstraintSnapshot {
 }
 
 ///|
+priv enum EndpointClass {
+  Ordinary
+  Singleton
+  Virtual
+}
+
+///|
+fn endpoint_class(
+  name : String,
+  node_degrees : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> EndpointClass {
+  if is_edge_vnode_name(name) {
+    EndpointClass::Virtual
+  } else {
+    let degree = match node_degrees.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    let in_cluster = match cluster_keys.get(name) {
+      Some(value) => value != ""
+      None => false
+    }
+    if degree <= 1 && !in_cluster {
+      EndpointClass::Singleton
+    } else {
+      EndpointClass::Ordinary
+    }
+  }
+}
+
+///|
+fn constraint_weight_scale(
+  tail_class : EndpointClass,
+  head_class : EndpointClass,
+) -> Int {
+  match (tail_class, head_class) {
+    (EndpointClass::Virtual, EndpointClass::Virtual) => 4
+    (EndpointClass::Singleton, EndpointClass::Singleton)
+    | (EndpointClass::Singleton, EndpointClass::Virtual)
+    | (EndpointClass::Virtual, EndpointClass::Singleton) => 2
+    _ => 1
+  }
+}
+
+///|
+fn scaled_edge_weight(
+  base_weight : Int,
+  tail_class : EndpointClass,
+  head_class : EndpointClass,
+) -> Int {
+  if base_weight == 0 {
+    0
+  } else {
+    base_weight * constraint_weight_scale(tail_class, head_class)
+  }
+}
+
+///|
 let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
 
 ///|
@@ -261,16 +320,16 @@ fn build_cluster_constraints(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
-) -> (Array[(String, Int)], Array[ConstraintEdge]) {
+) -> (Array[(String, Int)], Array[ConstraintEdge], Array[String], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   if cluster_graphs.length() == 0 {
-    return ([], [])
+    return ([], [], [], [])
   }
   let cluster_members = collect_cluster_members(cluster_graphs)
   if cluster_members.length() == 0 {
-    return ([], [])
+    return ([], [], [], [])
   }
   let cluster_related : Map[String, Map[String, Bool]] = Map::new()
   let cluster_edges : Map[String, Map[String, Bool]] = Map::new()
@@ -282,37 +341,11 @@ fn build_cluster_constraints(
     cluster_related[name] = related
   }
   for name, cluster_graph in cluster_graphs {
-    let child_edges : Map[String, Bool] = Map::new()
-    for child in cluster_graph.subgraphs() {
-      for edge in child.edges() {
-        child_edges[edge_key(edge)] = true
-      }
-    }
     let edges_set : Map[String, Bool] = Map::new()
     for edge in cluster_graph.edges() {
-      let key = edge_key(edge)
-      if child_edges.get(key) is None {
-        edges_set[key] = true
-      }
+      edges_set[edge_key(edge)] = true
     }
     cluster_edges[name] = edges_set
-  }
-  for name, members in cluster_members {
-    let edges_set = match cluster_edges.get(name) {
-      Some(value) => value
-      None => {
-        let set : Map[String, Bool] = Map::new()
-        cluster_edges[name] = set
-        set
-      }
-    }
-    for edge in edges {
-      let tail = edge.tail().name()
-      let head = edge.head().name()
-      if members.get(tail) is Some(_) && members.get(head) is Some(_) {
-        edges_set[edge_key(edge)] = true
-      }
-    }
   }
   if edge_vnodes.length() > 0 {
     for edge in edges {
@@ -332,7 +365,7 @@ fn build_cluster_constraints(
           Some(edges_set) => edges_set.get(edge_key(edge)) is Some(_)
           None => false
         }
-        if edge_in_cluster || tail_in || head_in {
+        if tail_in || head_in {
           match cluster_related.get(name) {
             Some(related) =>
               for vnode in vnodes {
@@ -341,7 +374,7 @@ fn build_cluster_constraints(
             None => ()
           }
         }
-        if edge_in_cluster {
+        if edge_in_cluster && tail_in && head_in {
           for vnode in vnodes {
             members[vnode] = true
           }
@@ -436,10 +469,11 @@ fn build_cluster_constraints(
     }
   }
   if cluster_nodes.length() == 0 {
-    return ([], [])
+    return ([], [], [], [])
   }
   for name, pair in cluster_nodes {
     let (ln_name, rn_name) = pair
+    let mut label_minlen : Int? = None
     match cluster_graphs.get(name) {
       Some(cluster_graph) =>
         match graph_label_metrics(cluster_graph) {
@@ -447,28 +481,33 @@ fn build_cluster_constraints(
             let label_width = width_pt + CLUSTER_LABEL_PAD_PT * 2.0
             let minlen = round_int(label_width)
             if minlen > 0 {
-              extra_edges.push({
-                tail: ln_name,
-                head: rn_name,
-                minlen,
-                weight: 0,
-                tail_port: None,
-                head_port: None,
-              })
+              label_minlen = Some(minlen)
             }
           }
           None => ()
         }
       None => ()
     }
-    extra_edges.push({
-      tail: ln_name,
-      head: rn_name,
-      minlen: 1,
-      weight: CLUSTER_COMPACT_WEIGHT,
-      tail_port: None,
-      head_port: None,
-    })
+    match label_minlen {
+      Some(minlen) =>
+        extra_edges.push({
+          tail: ln_name,
+          head: rn_name,
+          minlen,
+          weight: CLUSTER_COMPACT_WEIGHT,
+          tail_port: None,
+          head_port: None,
+        })
+      None =>
+        extra_edges.push({
+          tail: ln_name,
+          head: rn_name,
+          minlen: 1,
+          weight: CLUSTER_COMPACT_WEIGHT,
+          tail_port: None,
+          head_port: None,
+        })
+    }
     let margin = match cluster_margins.get(name) {
       Some(value) => value
       None => CLUSTER_MARGIN_PT
@@ -753,7 +792,20 @@ fn build_cluster_constraints(
       i = i + 1
     }
   }
-  (extra_nodes, extra_edges)
+  let root_ln_targets : Array[String] = []
+  let root_rn_targets : Array[String] = []
+  for name, parent in cluster_parents {
+    if parent is None {
+      match cluster_nodes.get(name) {
+        Some((ln_name, rn_name)) => {
+          root_ln_targets.push(ln_name)
+          root_rn_targets.push(rn_name)
+        }
+        None => ()
+      }
+    }
+  }
+  (extra_nodes, extra_edges, root_ln_targets, root_rn_targets)
 }
 
 ///|
@@ -923,6 +975,8 @@ fn build_constraint_graph(
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
+  root_ln_targets : Array[String],
+  root_rn_targets : Array[String],
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
   let ordered_nodes = nodes
@@ -939,55 +993,23 @@ fn build_constraint_graph(
     } else {
       Map::new()
     }
-  let actual_names : Map[String, Bool] = Map::new()
-  for node in ordered_nodes {
-    actual_names[node.name()] = true
+  let node_degrees : Map[String, Int] = Map::new()
+  for edge in edges {
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    let tail_degree = match node_degrees.get(tail_name) {
+      Some(value) => value
+      None => 0
+    }
+    node_degrees[tail_name] = tail_degree + 1
+    let head_degree = match node_degrees.get(head_name) {
+      Some(value) => value
+      None => 0
+    }
+    node_degrees[head_name] = head_degree + 1
   }
-  let slack_edges : Array[Int] = []
   let skip_intercluster =
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
-  let mut edge_idx = 0
-  for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-      Some(list) => list
-      None => []
-    }
-    let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
-    }
-    let head_name = if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
-    let tail_cluster = match cluster_keys.get(tail_name) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head_name) {
-      Some(value) => value
-      None => ""
-    }
-    if skip_intercluster && tail_cluster != head_cluster &&
-      (tail_cluster != "" || head_cluster != "") {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    if vnodes.length() > 0 {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    slack_edges.push(edge_idx)
-    edge_idx = edge_idx + 1
-  }
-  let slack_indices : Array[Int] = []
-  for _ in 0..<slack_edges.length() {
-    slack_indices.push(0)
-  }
-  let mut slack_rev = slack_edges.length()
-  while slack_rev > 0 {
-    slack_rev = slack_rev - 1
-    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-    slack_indices[slack_rev] = slack_idx
-  }
   let base_positions = compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
@@ -1012,131 +1034,32 @@ fn build_constraint_graph(
     }
     set_node_rank(graph, idx, trunc_int(pos))
   }
-  let rank_has_forward : Map[Int, Bool] = Map::new()
-  let mut edge_scan_idx = 0
-  for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-      Some(list) => list
-      None => []
-    }
-    let tail_name =
-      if edge_scan_idx < edge_tail.length() { edge_tail[edge_scan_idx] } else {
-        edge.tail().name()
-      }
-    let head_name =
-      if edge_scan_idx < edge_head.length() { edge_head[edge_scan_idx] } else {
-        edge.head().name()
-      }
-    edge_scan_idx = edge_scan_idx + 1
-    let tail_cluster = match cluster_keys.get(tail_name) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head_name) {
-      Some(value) => value
-      None => ""
-    }
-    if skip_intercluster && tail_cluster != head_cluster &&
-      (tail_cluster != "" || head_cluster != "") {
-      continue
-    }
-    if vnodes.length() > 0 {
-      let tail_rank = match ranks.get(tail_name) {
-        Some(value) => value
-        None => continue
-      }
-      let head_rank = match ranks.get(head_name) {
-        Some(value) => value
-        None => continue
-      }
-      let low = if tail_rank <= head_rank { tail_name } else { head_name }
-      let high = if tail_rank <= head_rank { head_name } else { tail_name }
-      let mut prev = low
-      for vnode in vnodes {
-        let prev_rank = match ranks.get(prev) {
-          Some(value) => value
-          None => {
-            prev = vnode
-            continue
-          }
-        }
-        let vnode_rank = match ranks.get(vnode) {
-          Some(value) => value
-          None => {
-            prev = vnode
-            continue
-          }
-        }
-        if prev_rank != vnode_rank {
-          let low_rank = if prev_rank < vnode_rank { prev_rank } else { vnode_rank }
-          rank_has_forward[low_rank] = true
-        }
-        prev = vnode
-      }
-      let prev_rank = match ranks.get(prev) {
-        Some(value) => value
-        None => continue
-      }
-      let high_rank = match ranks.get(high) {
-        Some(value) => value
-        None => continue
-      }
-      if prev_rank != high_rank {
-        let low_rank = if prev_rank < high_rank { prev_rank } else { high_rank }
-        rank_has_forward[low_rank] = true
-      }
+  if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
+    let root_ln = add_node(graph, "", kind=NodeKind::Slack)
+    let root_rn = add_node(graph, "", kind=NodeKind::Slack)
+    set_node_rank(graph, root_ln, 0)
+    set_node_rank(graph, root_rn, 0)
+    let root_margin = if nodes.length() > 0 {
+      cluster_margin_pt(nodes[0].graph())
     } else {
-      let tail_rank = match ranks.get(tail_name) {
-        Some(value) => value
-        None => continue
-      }
-      let head_rank = match ranks.get(head_name) {
-        Some(value) => value
-        None => continue
-      }
-      if tail_rank != head_rank {
-        let low_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-        rank_has_forward[low_rank] = true
+      CLUSTER_MARGIN_PT
+    }
+    let minlen = round_int(root_margin)
+    for name in root_ln_targets {
+      match index.get(name) {
+        Some(idx) => {
+          let _ = add_edge(graph, root_ln, idx, minlen, 0)
+        }
+        None => ()
       }
     }
-  }
-  if rank_keys.length() > 0 {
-    let min_rank = rank_keys[0]
-    let max_rank = rank_keys[rank_keys.length() - 1]
-    let mut rank = min_rank
-    while rank <= max_rank {
-      let names = match groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      if names.length() > 0 && rank_has_forward.get(rank) is None {
-        let neighbor_rank = if rank < max_rank { rank + 1 } else { rank - 1 }
-        let neighbor_names = match groups.get(neighbor_rank) {
-          Some(list) => list
-          None => []
+    for name in root_rn_targets {
+      match index.get(name) {
+        Some(idx) => {
+          let _ = add_edge(graph, idx, root_rn, minlen, 0)
         }
-        if neighbor_names.length() > 0 {
-          let tail_idx = match index.get(names[0]) {
-            Some(value) => value
-            None => 0
-          }
-          let head_idx = match index.get(neighbor_names[0]) {
-            Some(value) => value
-            None => 0
-          }
-          let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-          let tail_rank = node_rank(graph, tail_idx)
-          let head_rank = node_rank(graph, head_idx)
-          set_node_rank(
-            graph,
-            slack_idx,
-            if tail_rank < head_rank { tail_rank } else { head_rank },
-          )
-          let _ = add_edge(graph, slack_idx, tail_idx, 0, 0)
-          let _ = add_edge(graph, slack_idx, head_idx, 0, 0)
-        }
+        None => ()
       }
-      rank = rank + 1
     }
   }
   for rank in rank_keys {
@@ -1167,122 +1090,116 @@ fn build_constraint_graph(
       i = i + 1
     }
   }
-  ignore(ranks)
-  for extra in extra_slack_edges {
-    let (tail_node, use_tail_port) =
-      (extra.tail, actual_names.get(extra.tail) is Some(_))
-    let (head_node, use_head_port) =
-      (extra.head, actual_names.get(extra.head) is Some(_))
-    let tail_port = if use_tail_port { extra.tail_port } else { None }
-    let head_port = if use_head_port { extra.head_port } else { None }
-    let tail_idx = match index.get(tail_node) {
+  let mut edge_pair_idx = 0
+  for edge in edges {
+    let tail_name =
+      if edge_pair_idx < edge_tail.length() { edge_tail[edge_pair_idx] } else {
+        edge.tail().name()
+      }
+    let head_name =
+      if edge_pair_idx < edge_head.length() { edge_head[edge_pair_idx] } else {
+        edge.head().name()
+      }
+    edge_pair_idx = edge_pair_idx + 1
+    let tail_cluster = match cluster_keys.get(tail_name) {
       Some(value) => value
-      None => 0
+      None => ""
     }
-    let head_idx = match index.get(head_node) {
+    let head_cluster = match cluster_keys.get(head_name) {
       Some(value) => value
-      None => 0
+      None => ""
     }
-    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-    let tail_offset = edge_port_offset_by_name(
-      tail_node,
-      tail_port,
-      port_offsets,
-    )
-    let head_offset = edge_port_offset_by_name(
-      head_node,
-      head_port,
-      port_offsets,
-    )
-    let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-    let tail_rank = node_rank(graph, tail_idx)
-    let head_rank = node_rank(graph, head_idx)
-    let minlen = if extra.minlen > 0 { extra.minlen } else { 1 }
-    let base_tail = tail_rank - m0 - minlen
-    let base_head = head_rank - m1 - minlen
-    set_node_rank(
-      graph,
-      slack_idx,
-      if base_tail < base_head { base_tail } else { base_head },
-    )
-    let _ = add_edge(graph, slack_idx, tail_idx, m0 + minlen, extra.weight)
-    let _ = add_edge(graph, slack_idx, head_idx, m1 + minlen, extra.weight)
-  }
-  for i in 0..<slack_edges.length() {
-    let edge_idx = slack_edges[i]
-    let edge = edges[edge_idx]
-    let tail_name = if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
+    if skip_intercluster && tail_cluster != head_cluster &&
+      (tail_cluster != "" || head_cluster != "") {
+      continue
     }
-    let head_name = if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
-    let (tail_node, use_tail_port) =
-      (tail_name, actual_names.get(tail_name) is Some(_))
-    let (head_node, use_head_port) =
-      (head_name, actual_names.get(head_name) is Some(_))
-    let tail_idx = match index.get(tail_node) {
+    let tail_rank = match ranks.get(tail_name) {
       Some(value) => value
-      None => 0
+      None => continue
     }
-    let head_idx = match index.get(head_node) {
+    let head_rank = match ranks.get(head_name) {
       Some(value) => value
-      None => 0
+      None => continue
     }
-    let slack_idx = slack_indices[i]
+    let low = if tail_rank <= head_rank { tail_name } else { head_name }
+    let high = if tail_rank <= head_rank { head_name } else { tail_name }
     let orig_tail = edge.tail().name()
     let orig_head = edge.head().name()
-    let tail_port = if tail_name == orig_tail {
-      edge.tail_port()
-    } else {
-      edge.head_port()
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
     }
-    let head_port = if head_name == orig_head {
-      edge.head_port()
-    } else {
-      edge.tail_port()
+    let chain : Array[String] = []
+    chain.push(low)
+    for vnode in vnodes {
+      chain.push(vnode)
     }
-    let tail_offset =
-      if use_tail_port {
-        edge_port_offset(
-          tail_name,
-          tail_port,
-          port_offsets,
-          sizes,
-        )
-      } else {
-        0.0
+    if low != high || vnodes.length() == 0 {
+      chain.push(high)
+    }
+    let base_weight = edge_weight(edge)
+    let mut idx = 0
+    while idx + 1 < chain.length() {
+      let seg_tail = chain[idx]
+      let seg_head = chain[idx + 1]
+      idx = idx + 1
+      let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
+      let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
+      let weight = scaled_edge_weight(base_weight, tail_class, head_class)
+      let tail_idx = match index.get(seg_tail) {
+        Some(value) => value
+        None => continue
       }
-    let head_offset =
-      if use_head_port {
-        edge_port_offset(
-          head_name,
-          head_port,
-          port_offsets,
-          sizes,
-        )
-      } else {
-        0.0
+      let head_idx = match index.get(seg_head) {
+        Some(value) => value
+        None => continue
       }
-    let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-    let tail_rank = node_rank(graph, tail_idx)
-    let head_rank = node_rank(graph, head_idx)
-    let base_tail = tail_rank - m0 - 1
-    let base_head = head_rank - m1 - 1
-    set_node_rank(
-      graph,
-      slack_idx,
-      if base_tail < base_head { base_tail } else { base_head },
-    )
-    let weight = edge_weight(edge)
-    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
-    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
-
+      let tail_port =
+        if seg_tail == orig_tail {
+        edge.tail_port()
+      } else if seg_tail == orig_head {
+        edge.head_port()
+      } else {
+        None
+      }
+      let head_port =
+        if seg_head == orig_head {
+        edge.head_port()
+      } else if seg_head == orig_tail {
+        edge.tail_port()
+      } else {
+        None
+      }
+      let tail_offset = edge_port_offset(
+        seg_tail,
+        tail_port,
+        port_offsets,
+        sizes,
+      )
+      let head_offset = edge_port_offset(
+        seg_head,
+        head_port,
+        port_offsets,
+        sizes,
+      )
+      let delta = head_offset - tail_offset
+      let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+      let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+      let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
+      let tail_rank = node_rank(graph, tail_idx)
+      let head_rank = node_rank(graph, head_idx)
+      let base_tail = tail_rank - m0 - 1
+      let base_head = head_rank - m1 - 1
+      set_node_rank(
+        graph,
+        slack_idx,
+        if base_tail < base_head { base_tail } else { base_head },
+      )
+      let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
+      let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
+    }
   }
+  ignore(extra_slack_edges)
   for edge in extra_edges {
     match index.get(edge.tail) {
       Some(tail_idx) =>
@@ -1324,6 +1241,8 @@ fn x_positions_from_simplex(
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
+  root_ln_targets : Array[String],
+  root_rn_targets : Array[String],
 ) -> Map[String, Double] {
   dot_trace("xpos: build constraint graph")
   let (graph, index) = build_constraint_graph(
@@ -1343,6 +1262,8 @@ fn x_positions_from_simplex(
     extra_edges,
     extra_slack_edges,
     edge_vnodes,
+    root_ln_targets,
+    root_rn_targets,
   )
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(
@@ -1393,7 +1314,8 @@ fn compute_x_positions(
   extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
   dot_trace("xpos: build cluster constraints")
-  let (cluster_nodes, extra_edges) = build_cluster_constraints(
+  let (cluster_nodes, extra_edges, root_ln_targets, root_rn_targets) =
+    build_cluster_constraints(
     graph, nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
     edge_vnodes,
   )
@@ -1420,5 +1342,7 @@ fn compute_x_positions(
     extra_edges,
     extra_slack_edges,
     edge_vnodes,
+    root_ln_targets,
+    root_rn_targets,
   )
 }
