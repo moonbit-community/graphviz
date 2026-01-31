@@ -1,0 +1,9 @@
+digraph port_label {
+  nodesep="0.25";
+  ranksep="0.5";
+  margin=0;
+  node [shape=box];
+  a -> b [headlabel="H1", taillabel="T1", labelangle=30, labeldistance=1.4];
+  c -> d [headlabel="H2", taillabel="T2", labelangle=-45];
+  e -> f [headlabel="H3", taillabel="T3", labeldistance=0.8];
+}

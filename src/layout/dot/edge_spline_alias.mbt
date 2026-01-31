@@ -34,6 +34,26 @@ fn point_dist(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
+fn libm_atan2(y : Double, x : Double) -> Double {
+  @edge_spline.libm_atan2(y, x)
+}
+
+///|
+fn libm_cos(x : Double) -> Double {
+  @edge_spline.libm_cos(x)
+}
+
+///|
+fn libm_sin(x : Double) -> Double {
+  @edge_spline.libm_sin(x)
+}
+
+///|
+fn libm_fma(x : Double, y : Double, z : Double) -> Double {
+  @edge_spline.libm_fma(x, y, z)
+}
+
+///|
 fn segment_length(a : @geom.Point, b : @geom.Point) -> Double {
   @edge_spline.segment_length(a, b)
 }

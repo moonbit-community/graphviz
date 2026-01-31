@@ -1,0 +1,119 @@
+diff --git a/lib/common/splines.c b/lib/common/splines.c
+index 8ed8a36ce..a5852ac88 100644
+--- a/lib/common/splines.c
++++ b/lib/common/splines.c
+@@ -21,6 +21,7 @@
+ #include <math.h>
+ #include <common/geomprocs.h>
+ #include <common/render.h>
++#include <stdio.h>
+ #include <stdbool.h>
+ #include <stddef.h>
+ #include <stdint.h>
+@@ -30,6 +31,80 @@
+ #include <util/streq.h>
+ #include <util/unreachable.h>
+ 
++static FILE *mbt_port_label_log = NULL;
++
++static FILE *mbt_port_label_log_open(void) {
++    const char *path = getenv("MBT_CAPTURE_PORT_LABEL_POS");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_port_label_log)
++        mbt_port_label_log = fopen(path, "a");
++    return mbt_port_label_log;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s) {
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_log_port_label(edge_t *e, bool head_p, pointf pe, pointf pf,
++                               double labelangle, double labeldistance,
++                               double dist) {
++    FILE *out = mbt_port_label_log_open();
++    if (!out || !e)
++        return;
++    textlabel_t *label = head_p ? ED_head_label(e) : ED_tail_label(e);
++    if (!label)
++        return;
++    fprintf(out, "{\"event\":\"port_label_pos\",\"graph\":");
++    mbt_write_json_string(out, agnameof(agroot(agraphof(agtail(e)))));
++    fputs(",\"tail\":", out);
++    mbt_write_json_string(out, agnameof(agtail(e)));
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, agnameof(aghead(e)));
++    fprintf(out, ",\"head_label\":%s", head_p ? "true" : "false");
++    fputs(",\"label\":", out);
++    mbt_write_json_string(out, label->text ? label->text : "");
++    fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++    fprintf(out, ",\"labelangle\":%.17g", labelangle);
++    fprintf(out, ",\"labeldistance\":%.17g", labeldistance);
++    fprintf(out, ",\"dist\":%.17g", dist);
++    fprintf(out, ",\"pe_x\":%.17g,\"pe_y\":%.17g", pe.x, pe.y);
++    fprintf(out, ",\"pf_x\":%.17g,\"pf_y\":%.17g", pf.x, pf.y);
++    fprintf(out, ",\"pos_x\":%.17g,\"pos_y\":%.17g}\n",
++            label->pos.x, label->pos.y);
++    fflush(out);
++}
++
+ #ifdef DEBUG
+ static int debugleveln(edge_t* e, int i)
+ {
+@@ -1350,13 +1425,17 @@ int place_portlabel(edge_t * e, bool head_p)
+ 	    pf = Bezier(c, 0.9, NULL, NULL);
+ 	}
+     }
++    const double labelangle =
++        late_double(e, E_labelangle, PORT_LABEL_ANGLE, -180.0);
++    const double labeldistance =
++        late_double(e, E_labeldistance, 1.0, 0.0);
+     const double angle = atan2(pf.y - pe.y, pf.x - pe.x) +
+-	RADIANS(late_double(e, E_labelangle, PORT_LABEL_ANGLE, -180.0));
+-    const double dist =
+-      PORT_LABEL_DISTANCE * late_double(e, E_labeldistance, 1.0, 0.0);
++        RADIANS(labelangle);
++    const double dist = PORT_LABEL_DISTANCE * labeldistance;
+     l->pos.x = pe.x + dist * cos(angle);
+     l->pos.y = pe.y + dist * sin(angle);
+     l->set = true;
++    mbt_log_port_label(e, head_p, pe, pf, labelangle, labeldistance, dist);
+     return 1;
+ }
+ 
+@@ -1372,4 +1451,3 @@ splines *getsplinepoints(edge_t * e)
+ 	    agnameof(agtail(e)), agnameof(aghead(e)));
+     return sp;
+ }
+-

@@ -152,6 +152,37 @@ fn parse_first_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+fn parse_first_double_optional(value : String) -> Double? {
+  let sb = StringBuilder::new()
+  let mut seen = false
+  for ch in value {
+    if ch.is_ascii_digit() || ch == '-' || ch == '+' || ch == '.' {
+      sb.write_char(ch)
+      seen = true
+    } else if seen {
+      break
+    }
+  }
+  if !seen {
+    None
+  } else {
+    try @strconv.parse_double(sb.to_string()) catch {
+      _ => None
+    } noraise {
+      parsed => Some(parsed)
+    }
+  }
+}
+
+///|
+fn parse_attr_double(value : String, fallback : Double, min : Double) -> Double {
+  match parse_first_double_optional(value) {
+    Some(parsed) => if parsed < min { min } else { parsed }
+    None => fallback
+  }
+}
+
+///|
 fn validate_nonnegative_attr(
   owner : String,
   attr_name : String,
@@ -370,6 +401,18 @@ const EDGE_LABEL_PAD_WIDTH_PT : Double = 100.0
 
 ///|
 const EDGE_LABEL_FLAT_SPACE_PT : Double = 6.0
+
+///|
+const PORT_LABEL_DISTANCE_PT : Double = 10.0
+
+///|
+const GRAPHVIZ_PI : Double = 3.14159265358979323846
+
+///|
+const PORT_LABEL_ANGLE_DEG : Double = -25.0
+
+///|
+const PORT_LABEL_ANGLE_MIN_DEG : Double = -180.0
 
 ///|
 const ELLIPSE_LABEL_SCALE : Double = 1.0
@@ -8450,6 +8493,32 @@ fn bezier_point(
 }
 
 ///|
+fn point_lerp_graphviz(
+  a : @geom.Point,
+  b : @geom.Point,
+  t : Double,
+) -> @geom.Point {
+  let mt = 1.0 - t
+  point(mt * a.x + t * b.x, mt * a.y + t * b.y)
+}
+
+///|
+fn bezier_point_graphviz(
+  p0 : @geom.Point,
+  p1 : @geom.Point,
+  p2 : @geom.Point,
+  p3 : @geom.Point,
+  t : Double,
+) -> @geom.Point {
+  let p01 = point_lerp_graphviz(p0, p1, t)
+  let p12 = point_lerp_graphviz(p1, p2, t)
+  let p23 = point_lerp_graphviz(p2, p3, t)
+  let p012 = point_lerp_graphviz(p01, p12, t)
+  let p123 = point_lerp_graphviz(p12, p23, t)
+  point_lerp_graphviz(p012, p123, t)
+}
+
+///|
 ///|
 fn sample_spline_points(
   points : Array[@geom.Point],
@@ -8712,6 +8781,113 @@ fn flat_edge_label_pos_simple(
   let ctrx = (left_end + right_end) / 2.0
   let ctry = tail_port.y + (label_height_pt + EDGE_LABEL_FLAT_SPACE_PT) / 2.0
   point(ctrx, ctry)
+}
+
+///|
+fn port_label_params(edge : @cgraph.Edge) -> (Double, Double)? {
+  let angle_attr = edge.get_attr("labelangle")
+  let distance_attr = edge.get_attr("labeldistance")
+  let has_angle = match angle_attr {
+    Some(value) => value != ""
+    None => false
+  }
+  let has_distance = match distance_attr {
+    Some(value) => value != ""
+    None => false
+  }
+  if !has_angle && !has_distance {
+    return None
+  }
+  let angle_deg = match angle_attr {
+    Some(value) =>
+      if value == "" {
+        PORT_LABEL_ANGLE_DEG
+      } else {
+        parse_attr_double(value, PORT_LABEL_ANGLE_DEG, PORT_LABEL_ANGLE_MIN_DEG)
+      }
+    None => PORT_LABEL_ANGLE_DEG
+  }
+  let distance_scale = match distance_attr {
+    Some(value) =>
+      if value == "" {
+        1.0
+      } else {
+        parse_attr_double(value, 1.0, 0.0)
+      }
+    None => 1.0
+  }
+  Some((angle_deg, distance_scale))
+}
+
+fn port_label_points(
+  spline : @geom.Spline,
+  head_p : Bool,
+) -> (@geom.Point, @geom.Point)? {
+  let points = spline.points
+  if points.length() < 4 {
+    return None
+  }
+  if head_p {
+    match spline.end {
+      Some(end_point) => Some((end_point, points[points.length() - 1]))
+      None => {
+        let start = points.length() - 4
+        let p0 = points[start]
+        let p1 = points[start + 1]
+        let p2 = points[start + 2]
+        let p3 = points[start + 3]
+        Some((p3, bezier_point_graphviz(p0, p1, p2, p3, 0.9)))
+      }
+    }
+  } else {
+    match spline.start {
+      Some(start_point) => Some((start_point, points[0]))
+      None => {
+        let p0 = points[0]
+        let p1 = points[1]
+        let p2 = points[2]
+        let p3 = points[3]
+        Some((p0, bezier_point_graphviz(p0, p1, p2, p3, 0.1)))
+      }
+    }
+  }
+}
+
+///|
+fn port_label_pos_from_points(
+  pe : @geom.Point,
+  pf : @geom.Point,
+  angle_deg : Double,
+  distance_scale : Double,
+) -> @geom.Point {
+  let angle =
+    libm_fma(
+      angle_deg / 180.0,
+      GRAPHVIZ_PI,
+      libm_atan2(pf.y - pe.y, pf.x - pe.x),
+    )
+  let dist = PORT_LABEL_DISTANCE_PT * distance_scale
+  point(
+    libm_fma(dist, libm_cos(angle), pe.x),
+    libm_fma(dist, libm_sin(angle), pe.y),
+  )
+}
+
+///|
+fn edge_port_label_pos(
+  edge : @cgraph.Edge,
+  spline : @geom.Spline,
+  head_p : Bool,
+) -> @geom.Point? {
+  match port_label_params(edge) {
+    Some((angle_deg, distance_scale)) =>
+      match port_label_points(spline, head_p) {
+        Some((pe, pf)) =>
+          Some(port_label_pos_from_points(pe, pf, angle_deg, distance_scale))
+        None => None
+      }
+    None => None
+  }
 }
 
 ///|
@@ -11267,11 +11443,21 @@ pub fn layout_dot(
       None => None
     }
     let head_label_pos : @geom.Point? = match edge.get_attr("headlabel") {
-      Some(value) => if value == "" { None } else { Some(head_clip) }
+      Some(value) =>
+        if value == "" {
+          None
+        } else {
+          edge_port_label_pos(edge, spline, true)
+        }
       None => None
     }
     let tail_label_pos : @geom.Point? = match edge.get_attr("taillabel") {
-      Some(value) => if value == "" { None } else { Some(tail_clip) }
+      Some(value) =>
+        if value == "" {
+          None
+        } else {
+          edge_port_label_pos(edge, spline, false)
+        }
       None => None
     }
   edges_out.push({
