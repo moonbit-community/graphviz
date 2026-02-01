@@ -94,6 +94,7 @@ MoonBit:
   `collect_cluster_rank_heights`, `apply_cluster_rank_heights`,
   `adjust_intercluster_alignment`)
 - `src/layout/dot/cluster_helpers.mbt` (cluster keys, edge cluster ownership)
+- `src/layout/dot/self_edge_helpers.mbt` (self-edge port maps + spacing helpers)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/position.c`
