@@ -91,6 +91,7 @@ MoonBit:
   `build_cluster_constraints`, `build_constraint_graph`,
   `x_positions_from_simplex`, `compute_x_positions`,
   `edge_port_offset`/`edge_port_offset_by_name`)
+- `src/layout/dot/rank_position_helpers.mbt` (rank spacing + base positions)
 - `src/layout/dot/cluster_layout_helpers.mbt` (cluster spacing + label padding:
   `collect_cluster_rank_heights`, `apply_cluster_rank_heights`)
 - `src/layout/dot/layout.mbt` (cluster alignment: `adjust_intercluster_alignment`)
