@@ -52,8 +52,9 @@ Notes:
 ### Cycle removal + rank assignment
 
 MoonBit:
-- `src/layout/dot/layout.mbt` (acyclic pass + rank constraints: `acyclic_dfs`,
-  `acyclic_edge_directions`, `compute_ranks_directed`)
+- `src/layout/dot/acyclic_helpers.mbt` (acyclic pass:
+  `acyclic_dfs`, `acyclic_edge_directions`)
+- `src/layout/dot/layout.mbt` (rank constraints: `compute_ranks_directed`)
 - `src/layout/dot/rank_helpers.mbt` (rank extremes + same-rank constraints)
 - `src/layout/dot/network_simplex/network_simplex.mbt` (network simplex core:
   `NsGraph`, `network_simplex`, tree/cutvalue updates)

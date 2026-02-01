@@ -21,6 +21,11 @@ fn unique_virtual_node_name(
   }
   ""
 }
+
+///|
+fn is_edge_vnode_name(name : String) -> Bool {
+  name.has_prefix(EDGE_VNODE_PREFIX)
+}
 ///|
 fn build_vnode_order_keys(
   edges : Array[@cgraph.Edge],
