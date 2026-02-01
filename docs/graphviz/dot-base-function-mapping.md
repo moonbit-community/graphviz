@@ -92,6 +92,7 @@ MoonBit:
 - `src/layout/dot/layout.mbt` (cluster spacing + alignment:
   `collect_cluster_rank_heights`, `apply_cluster_rank_heights`,
   `adjust_intercluster_alignment`)
+- `src/layout/dot/cluster_helpers.mbt` (cluster keys, edge cluster ownership)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/position.c`
