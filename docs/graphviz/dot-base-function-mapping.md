@@ -74,6 +74,7 @@ MoonBit:
   `order_rank_by_cluster`, `reorder_rank_groups`,
   `transpose_rank_groups_limited`)
 - `src/layout/dot/ordering_helpers.mbt` (rank group utilities + crossing counts)
+- `src/layout/dot/vnode_helpers.mbt` (flat/vnode ordering helpers)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/mincross.c`
