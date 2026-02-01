@@ -71,11 +71,18 @@ Notes:
 
 MoonBit:
 - `src/layout/dot/layout.mbt` (rank ordering + transpose:
-  `build_edge_index_for_order`, `order_rank_by_cluster`, `reorder_rank_groups`,
-  `transpose_rank_groups_limited`)
+  `order_rank_by_cluster`, `reorder_rank_groups`, `transpose_rank_groups_limited`)
+- `src/layout/dot/ordering_edge_helpers.mbt` (ordering edge utilities:
+  `dedup_ordering_edges`, `build_ordering_flat_constraints`,
+  `build_edge_index_for_order`, `build_edge_index_for_order_names`,
+  `build_edge_index_for_order_with_vnodes`, `add_order_edge`)
 - `src/layout/dot/ordering_helpers.mbt` (rank group utilities + crossing counts:
   `collect_rank_same_order`)
+- `src/layout/dot/rank_group_helpers.mbt` (Graphviz rank-group seeding:
+  `build_rank_groups_graphviz`, `build_rank_groups`)
 - `src/layout/dot/vnode_helpers.mbt` (flat/vnode ordering helpers)
+- `src/layout/dot/vnode_layout_helpers.mbt` (edge vnodes + flat label vnodes:
+  `build_edge_vnodes`, `add_flat_label_vnodes`, `build_virtual_slack_edges`)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/mincross.c`
