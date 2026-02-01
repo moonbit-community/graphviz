@@ -23,6 +23,7 @@ MoonBit:
 - `src/layout/dot/font_metrics/font_metrics.generated.mbt` (font widths, kerning)
 - `src/layout/dot/textspan.mbt` (label size helpers: `record_label_text_dimensions`,
   label size calculations used by node/edge/cluster sizing)
+- `src/layout/dot/label_layout.mbt` (graph/edge/port label placement + overlap nudges)
 
 Graphviz:
 - `refs/graphviz/lib/common/textspan.c`
