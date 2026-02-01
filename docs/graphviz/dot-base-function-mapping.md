@@ -94,7 +94,9 @@ MoonBit:
 - `src/layout/dot/rank_position_helpers.mbt` (rank spacing + base positions)
 - `src/layout/dot/cluster_layout_helpers.mbt` (cluster spacing + label padding:
   `collect_cluster_rank_heights`, `apply_cluster_rank_heights`)
-- `src/layout/dot/layout.mbt` (cluster alignment: `adjust_intercluster_alignment`)
+- `src/layout/dot/cluster_alignment_helpers.mbt` (cluster alignment + bbox helpers:
+  `adjust_intercluster_alignment`, `reorder_groups_by_cluster_order`,
+  `adjust_cluster_positions_for_rounding`, `collect_cluster_bboxes`)
 - `src/layout/dot/cluster_helpers.mbt` (cluster keys, edge cluster ownership)
 - `src/layout/dot/self_edge_helpers.mbt` (self-edge port maps + spacing helpers)
 
