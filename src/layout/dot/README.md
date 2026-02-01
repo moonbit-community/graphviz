@@ -25,8 +25,8 @@ Graphviz source map (layout/dot parity)
   - MoonBit: `src/layout/dot/pathplan/pathplan.mbt`, `src/layout/dot/routesplines/routesplines.mbt`, `src/layout/dot/edge_spline/edge_spline.mbt`
   - Graphviz: `refs/graphviz/lib/pathplan/route.c`, `refs/graphviz/lib/pathplan/shortest.c`, `refs/graphviz/lib/pathplan/visibility.c`, `refs/graphviz/lib/common/routespl.c`, `refs/graphviz/lib/common/splines.c`, `refs/graphviz/lib/dotgen/dotsplines.c`
 - Label placement + text metrics
-  - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/layout.mbt` (label positions)
+  - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/textspan.mbt` (text metrics), `src/layout/dot/layout.mbt` (label positions)
   - Graphviz: `refs/graphviz/lib/common/textspan.c`, `refs/graphviz/lib/common/labels.c`, `refs/graphviz/lib/label/xlabels.c`
 - Record shape layout / ports
-  - MoonBit: `src/layout/dot/layout.mbt` (record sizing, port centers)
+  - MoonBit: `src/layout/dot/record_layout.mbt` (record sizing, port centers)
   - Graphviz: `refs/graphviz/lib/common/shapes.c` (record_*), `refs/graphviz/lib/common/output.c` (record rects)

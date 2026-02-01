@@ -21,7 +21,7 @@ prioritizing alignment work.
 
 MoonBit:
 - `src/layout/dot/font_metrics/font_metrics.generated.mbt` (font widths, kerning)
-- `src/layout/dot/layout.mbt` (label size helpers: `record_label_text_dimensions`,
+- `src/layout/dot/textspan.mbt` (label size helpers: `record_label_text_dimensions`,
   label size calculations used by node/edge/cluster sizing)
 
 Graphviz:
@@ -37,7 +37,7 @@ Notes:
 ### Record / port layout
 
 MoonBit:
-- `src/layout/dot/layout.mbt` (record parser + layout: `record_nodes`,
+- `src/layout/dot/record_layout.mbt` (record parser + layout: `record_nodes`,
   `record_layout_nodes`, `record_rects`, `record_ports`)
 - `src/layout/dot/edge_spline/edge_spline.mbt` (record port clipping helpers)
 
@@ -131,6 +131,7 @@ Notes:
 
 MoonBit:
 - `src/layout/dot/shared/shared.mbt` (node sizes, port keys)
+- `src/layout/dot/geom_utils.mbt` (clip/rect math, polyline helpers)
 - `src/layout/dot/edge_spline/edge_spline.mbt` (point math, bezier helpers)
 
 Graphviz:
@@ -149,4 +150,3 @@ When adding Graphviz logging hooks, start from these C entry points:
 - `lib/dotgen/position.c` -> x constraints and positions
 - `lib/dotgen/dotsplines.c` -> edge routing
 - `lib/common/shapes.c` + `lib/common/textspan.c` -> node size + record layout
-
