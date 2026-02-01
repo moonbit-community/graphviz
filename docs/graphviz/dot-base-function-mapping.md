@@ -133,6 +133,7 @@ Notes:
 MoonBit:
 - `src/layout/dot/shared/shared.mbt` (node sizes, port keys)
 - `src/layout/dot/geom_utils.mbt` (clip/rect math, polyline helpers)
+- `src/layout/dot/layout_bbox.mbt` (bbox + rankdir transform helpers)
 - `src/layout/dot/edge_spline/edge_spline.mbt` (point math, bezier helpers)
 
 Graphviz:
