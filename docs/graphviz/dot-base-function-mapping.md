@@ -70,10 +70,10 @@ Notes:
 
 MoonBit:
 - `src/layout/dot/layout.mbt` (rank ordering + transpose:
-  `build_edge_index_for_order`, `collect_rank_same_order`,
-  `order_rank_by_cluster`, `reorder_rank_groups`,
+  `build_edge_index_for_order`, `order_rank_by_cluster`, `reorder_rank_groups`,
   `transpose_rank_groups_limited`)
-- `src/layout/dot/ordering_helpers.mbt` (rank group utilities + crossing counts)
+- `src/layout/dot/ordering_helpers.mbt` (rank group utilities + crossing counts:
+  `collect_rank_same_order`)
 - `src/layout/dot/vnode_helpers.mbt` (flat/vnode ordering helpers)
 
 Graphviz:

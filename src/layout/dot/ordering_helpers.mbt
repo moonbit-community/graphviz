@@ -14,6 +14,38 @@ fn merge_sizes_with_vnodes(
 }
 
 ///|
+fn collect_rank_same_order(
+  graph : @cgraph.Graph,
+  group_ids : Map[String, Int],
+  order_ids : Map[String, Int],
+  next_group : Int,
+) -> Int {
+  let mut current_group = next_group
+  match graph.get_attr("rank") {
+    Some(value) =>
+      if value.to_lower() == "same" {
+        let group_id = current_group
+        current_group = current_group + 1
+        let mut idx = 0
+        for node in graph.nodes() {
+          if group_ids.get(node.name()) is None {
+            group_ids[node.name()] = group_id
+            order_ids[node.name()] = idx
+          }
+          idx = idx + 1
+        }
+      }
+    None => ()
+  }
+  for child in graph.subgraphs() {
+    current_group = collect_rank_same_order(
+      child, group_ids, order_ids, current_group,
+    )
+  }
+  current_group
+}
+
+///|
 fn sort_rank_items(items : Array[(Double, Int, String)]) -> Array[String] {
   let sorted = items.copy()
   if sorted.length() > 1 {
@@ -475,4 +507,3 @@ fn crossing_for_pair(
   count_pairs_greater(left_parents, right_parents) +
     count_pairs_greater(left_children, right_children)
 }
-
