@@ -90,9 +90,9 @@ MoonBit:
   `build_cluster_constraints`, `build_constraint_graph`,
   `x_positions_from_simplex`, `compute_x_positions`,
   `edge_port_offset`/`edge_port_offset_by_name`)
-- `src/layout/dot/layout.mbt` (cluster spacing + alignment:
-  `collect_cluster_rank_heights`, `apply_cluster_rank_heights`,
-  `adjust_intercluster_alignment`)
+- `src/layout/dot/cluster_layout_helpers.mbt` (cluster spacing + label padding:
+  `collect_cluster_rank_heights`, `apply_cluster_rank_heights`)
+- `src/layout/dot/layout.mbt` (cluster alignment: `adjust_intercluster_alignment`)
 - `src/layout/dot/cluster_helpers.mbt` (cluster keys, edge cluster ownership)
 - `src/layout/dot/self_edge_helpers.mbt` (self-edge port maps + spacing helpers)
 
