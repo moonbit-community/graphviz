@@ -114,6 +114,7 @@ MoonBit:
   `shortest_path_in_poly`, triangulation helpers)
 - `src/layout/dot/edge_spline/edge_spline.mbt` (bezier, clipping, arrowheads,
   miter joins)
+- `src/layout/dot/edge_routing_helpers.mbt` (dot-specific polyline/dotted tweaks)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/dotsplines.c`
