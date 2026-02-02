@@ -725,25 +725,53 @@ fn edge_midpoint_for_layout(
   }
 }
 
+fn parse_int_prefix(value : String) -> Int? {
+  let mut acc = 0
+  let mut seen = false
+  for c in value {
+    if c.is_ascii_digit() {
+      seen = true
+      acc = acc * 10 + (c.to_int() - '0'.to_int())
+    } else {
+      break
+    }
+  }
+  if seen {
+    Some(acc)
+  } else {
+    None
+  }
+}
+
+fn map_bool_graphviz(value : String, default_value : Bool) -> Bool {
+  if value == "" {
+    return default_value
+  }
+  let lower = value.to_lower()
+  if lower == "false" || lower == "no" {
+    return false
+  }
+  if lower == "true" || lower == "yes" {
+    return true
+  }
+  match lower.get_char(0) {
+    Some(c) =>
+      if c.is_ascii_digit() {
+        match parse_int_prefix(lower) {
+          Some(number) => number != 0
+          None => default_value
+        }
+      } else {
+        default_value
+      }
+    None => default_value
+  }
+}
+
 fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
   match graph.get_attr("forcelabels") {
     None => true
-    Some(text) => {
-      let lower = text.to_lower()
-      if lower == "" {
-        false
-      } else if lower == "false" || lower == "no" {
-        false
-      } else if lower == "true" || lower == "yes" {
-        true
-      } else {
-        try @strconv.parse_int(lower) catch {
-          _ => false
-        } noraise {
-          value => value != 0
-        }
-      }
-    }
+    Some(text) => map_bool_graphviz(text, false)
   }
 }
 
