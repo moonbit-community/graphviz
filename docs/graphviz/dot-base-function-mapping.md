@@ -54,7 +54,7 @@ Notes:
 MoonBit:
 - `src/layout/dot/acyclic_helpers.mbt` (acyclic pass:
   `acyclic_dfs`, `acyclic_edge_directions`)
-- `src/layout/dot/layout.mbt` (rank constraints: `compute_ranks_directed`)
+- `src/layout/dot/rank_assignment.mbt` (rank constraints: `compute_ranks_directed`)
 - `src/layout/dot/rank_helpers.mbt` (rank extremes + same-rank constraints)
 - `src/layout/dot/network_simplex/network_simplex.mbt` (network simplex core:
   `NsGraph`, `network_simplex`, tree/cutvalue updates)
@@ -70,7 +70,7 @@ Notes:
 ### Ordering / mincross
 
 MoonBit:
-- `src/layout/dot/layout.mbt` (rank ordering + transpose:
+- `src/layout/dot/mincross.mbt` (rank ordering + transpose:
   `order_rank_by_cluster`, `reorder_rank_groups`, `transpose_rank_groups_limited`)
 - `src/layout/dot/ordering_edge_helpers.mbt` (ordering edge utilities:
   `dedup_ordering_edges`, `build_ordering_flat_constraints`,
