@@ -1,0 +1,243 @@
+diff --git a/lib/common/postproc.c b/lib/common/postproc.c
+index de0d3231f..debdd4d62 100644
+--- a/lib/common/postproc.c
++++ b/lib/common/postproc.c
+@@ -14,6 +14,7 @@
+ 
+ #include <common/render.h>
+ #include <float.h>
++#include <stdio.h>
+ #include <label/xlabels.h>
+ #include <stdbool.h>
+ #include <stddef.h>
+@@ -27,6 +28,112 @@ static int Rankdir;
+ static bool Flip;
+ static pointf Offset;
+ 
++typedef struct {
++    const char *kind;
++    const char *node;
++    const char *tail;
++    const char *head;
++} mbt_xlabel_meta;
++
++static FILE *mbt_xlabel_log = NULL;
++static textlabel_t **mbt_xlabel_labels = NULL;
++static mbt_xlabel_meta *mbt_xlabel_meta_data = NULL;
++static size_t mbt_xlabel_count = 0;
++
++static FILE *mbt_xlabel_log_open(void) {
++    const char *path = getenv("MBT_CAPTURE_XLABELS");
++    if (!path || !*path)
++        return NULL;
++    if (!mbt_xlabel_log)
++        mbt_xlabel_log = fopen(path, "a");
++    return mbt_xlabel_log;
++}
++
++static void mbt_clear_xlabel_capture(void) {
++    if (mbt_xlabel_labels) {
++        free(mbt_xlabel_labels);
++        mbt_xlabel_labels = NULL;
++    }
++    if (mbt_xlabel_meta_data) {
++        free(mbt_xlabel_meta_data);
++        mbt_xlabel_meta_data = NULL;
++    }
++    mbt_xlabel_count = 0;
++}
++
++static void mbt_write_json_string(FILE *out, const char *s) {
++    fputc('"', out);
++    if (!s) {
++        fputc('"', out);
++        return;
++    }
++    for (; *s; s++) {
++        unsigned char ch = (unsigned char)*s;
++        switch (ch) {
++        case '\\':
++            fputs("\\\\", out);
++            break;
++        case '"':
++            fputs("\\\"", out);
++            break;
++        case '\n':
++            fputs("\\n", out);
++            break;
++        case '\r':
++            fputs("\\r", out);
++            break;
++        case '\t':
++            fputs("\\t", out);
++            break;
++        default:
++            if (ch < 0x20)
++                fprintf(out, "\\u%04x", ch);
++            else
++                fputc(ch, out);
++        }
++    }
++    fputc('"', out);
++}
++
++static void mbt_log_xlabel(graph_t *g, const textlabel_t *label,
++                           const mbt_xlabel_meta *meta) {
++    FILE *out = mbt_xlabel_log_open();
++    if (!out || !label || !meta || !meta->kind)
++        return;
++    fprintf(out, "{\"event\":\"xlabel\",\"graph\":");
++    mbt_write_json_string(out, agnameof(agroot(g)));
++    fputs(",\"kind\":", out);
++    mbt_write_json_string(out, meta->kind);
++    fputs(",\"node\":", out);
++    mbt_write_json_string(out, meta->node ? meta->node : "");
++    fputs(",\"tail\":", out);
++    mbt_write_json_string(out, meta->tail ? meta->tail : "");
++    fputs(",\"head\":", out);
++    mbt_write_json_string(out, meta->head ? meta->head : "");
++    fputs(",\"label\":", out);
++    mbt_write_json_string(out, label->text ? label->text : "");
++    fprintf(out, ",\"label_html\":%s", label->html ? "true" : "false");
++    fprintf(out, ",\"flip\":%s", GD_flip(agroot(g)) ? "true" : "false");
++    fprintf(out, ",\"width\":%.17g,\"height\":%.17g",
++            label->dimen.x, label->dimen.y);
++    fprintf(out, ",\"pos_x\":%.17g,\"pos_y\":%.17g}\n",
++            label->pos.x, label->pos.y);
++    fflush(out);
++}
++
++static void mbt_log_xlabels_after_translate(graph_t *g) {
++    if (!mbt_xlabel_labels || !mbt_xlabel_meta_data || mbt_xlabel_count == 0)
++        return;
++    for (size_t i = 0; i < mbt_xlabel_count; i++) {
++        textlabel_t *label = mbt_xlabel_labels[i];
++        const mbt_xlabel_meta *meta = &mbt_xlabel_meta_data[i];
++        if (!label || !label->set || !meta->kind)
++            continue;
++        mbt_log_xlabel(g, label, meta);
++    }
++    mbt_clear_xlabel_capture();
++}
++
+ static void place_flip_graph_label(graph_t * g);
+ 
+ #define M1 \
+@@ -413,9 +520,14 @@ static void addXLabels(Agraph_t * gp)
+     boxf bb;
+     textlabel_t* lp;
+     object_t* objs;
++    mbt_xlabel_meta* mbt_meta = NULL;
++    textlabel_t** mbt_labels = NULL;
+     xlabel_t* lbls;
+     Agsym_t* force;
+     int et = EDGE_TYPE(gp);
++    bool capture = mbt_xlabel_log_open() != NULL;
++
++    mbt_clear_xlabel_capture();
+ 
+     if (!(GD_has_labels(gp) & NODE_XLABEL) &&
+ 	!(GD_has_labels(gp) & EDGE_XLABEL) &&
+@@ -471,6 +583,10 @@ static void addXLabels(Agraph_t * gp)
+     size_t n_objs = (size_t)agnnodes(gp) + n_set_lbls + n_clbls + n_elbls;
+     object_t* objp = objs = gv_calloc(n_objs, sizeof(object_t));
+     xlabel_t* xlp = lbls = gv_calloc(n_lbls, sizeof(xlabel_t));
++    if (capture) {
++	mbt_meta = gv_calloc(n_lbls, sizeof(mbt_xlabel_meta));
++	mbt_labels = gv_calloc(n_lbls, sizeof(textlabel_t *));
++    }
+     bb.LL = (pointf){DBL_MAX, DBL_MAX};
+     bb.UR = (pointf){-DBL_MAX, -DBL_MAX};
+ 
+@@ -484,6 +600,12 @@ static void addXLabels(Agraph_t * gp)
+ 	    }
+ 	    else {
+ 		pointf ignored = { 0.0, 0.0 };
++		if (capture) {
++		    size_t mbt_idx = (size_t)(xlp - lbls);
++		    mbt_meta[mbt_idx].kind = "node_xlabel";
++		    mbt_meta[mbt_idx].node = agnameof(np);
++		    mbt_labels[mbt_idx] = lp;
++		}
+ 		addXLabel (lp, objp, xlp, 0, ignored);
+ 		xlp++;
+ 	    }
+@@ -495,6 +617,13 @@ static void addXLabels(Agraph_t * gp)
+ 		    bb = addLabelObj (lp, objp, bb);
+ 		}
+ 		else if (HAVE_EDGE(ep)) {
++		    if (capture) {
++			size_t mbt_idx = (size_t)(xlp - lbls);
++			mbt_meta[mbt_idx].kind = "edge_label";
++			mbt_meta[mbt_idx].tail = agnameof(agtail(ep));
++			mbt_meta[mbt_idx].head = agnameof(aghead(ep));
++			mbt_labels[mbt_idx] = lp;
++		    }
+ 		    addXLabel (lp, objp, xlp, 1, edgeMidpoint(gp, ep)); 
+ 		    xlp++;
+ 		}
+@@ -510,6 +639,13 @@ static void addXLabels(Agraph_t * gp)
+ 		    bb = addLabelObj (lp, objp, bb);
+ 		}
+ 		else if (HAVE_EDGE(ep)) {
++		    if (capture) {
++			size_t mbt_idx = (size_t)(xlp - lbls);
++			mbt_meta[mbt_idx].kind = "taillabel";
++			mbt_meta[mbt_idx].tail = agnameof(agtail(ep));
++			mbt_meta[mbt_idx].head = agnameof(aghead(ep));
++			mbt_labels[mbt_idx] = lp;
++		    }
+ 		    addXLabel (lp, objp, xlp, 1, edgeTailpoint(ep)); 
+ 		    xlp++;
+ 		}
+@@ -525,6 +661,13 @@ static void addXLabels(Agraph_t * gp)
+ 		    bb = addLabelObj (lp, objp, bb);
+ 		}
+ 		else if (HAVE_EDGE(ep)) {
++		    if (capture) {
++			size_t mbt_idx = (size_t)(xlp - lbls);
++			mbt_meta[mbt_idx].kind = "headlabel";
++			mbt_meta[mbt_idx].tail = agnameof(agtail(ep));
++			mbt_meta[mbt_idx].head = agnameof(aghead(ep));
++			mbt_labels[mbt_idx] = lp;
++		    }
+ 		    addXLabel (lp, objp, xlp, 1, edgeHeadpoint(ep)); 
+ 		    xlp++;
+ 		}
+@@ -540,6 +683,13 @@ static void addXLabels(Agraph_t * gp)
+ 		    bb = addLabelObj (lp, objp, bb);
+ 		}
+ 		else if (HAVE_EDGE(ep)) {
++		    if (capture) {
++			size_t mbt_idx = (size_t)(xlp - lbls);
++			mbt_meta[mbt_idx].kind = "edge_xlabel";
++			mbt_meta[mbt_idx].tail = agnameof(agtail(ep));
++			mbt_meta[mbt_idx].head = agnameof(aghead(ep));
++			mbt_labels[mbt_idx] = lp;
++		    }
+ 		    addXLabel (lp, objp, xlp, 1, edgeMidpoint(gp, ep)); 
+ 		    xlp++;
+ 		}
+@@ -587,6 +737,14 @@ static void addXLabels(Agraph_t * gp)
+ 	      cnt, n_lbls);
+     free(objs);
+     free(lbls);
++    if (capture && n_lbls > 0) {
++	mbt_xlabel_labels = mbt_labels;
++	mbt_xlabel_meta_data = mbt_meta;
++	mbt_xlabel_count = n_lbls;
++    } else {
++	free(mbt_labels);
++	free(mbt_meta);
++    }
+ }
+ 
+ /* gv_postprocess:
+@@ -672,6 +830,7 @@ void gv_postprocess(Agraph_t * g, int allowTranslation)
+ 	}
+ 	translate_drawing(g);
+     }
++    mbt_log_xlabels_after_translate(g);
+     if (GD_label(g) && !GD_label(g)->set)
+ 	place_root_label(g, dimen);
+ 

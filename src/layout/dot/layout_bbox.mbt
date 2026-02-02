@@ -377,3 +377,120 @@ fn transform_layout(
     (shifted_nodes, shifted_edges, shifted_bbox)
   }
 }
+
+///|
+/// Graphviz parity: bbox rotation aligned to refs/graphviz/lib/common/postproc.c
+/// (translate_bb/map_point).
+/// Do not change behavior without updating fixtures/tests.
+fn transform_bbox_with_root(
+  bbox : @geom.Rect,
+  root_bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> @geom.Rect {
+  if rankdir == RankDir::TB {
+    return bbox
+  }
+  let points : Array[@geom.Point] = [
+    { x: bbox.llx, y: bbox.lly },
+    { x: bbox.llx, y: bbox.ury },
+    { x: bbox.urx, y: bbox.lly },
+    { x: bbox.urx, y: bbox.ury },
+  ]
+  let mut min_x = 0.0
+  let mut max_x = 0.0
+  let mut min_y = 0.0
+  let mut max_y = 0.0
+  let mut first = true
+  for point in points {
+    let mapped = transform_point(point, root_bbox, rankdir)
+    if first {
+      min_x = mapped.x
+      max_x = mapped.x
+      min_y = mapped.y
+      max_y = mapped.y
+      first = false
+    } else {
+      if mapped.x < min_x { min_x = mapped.x }
+      if mapped.x > max_x { max_x = mapped.x }
+      if mapped.y < min_y { min_y = mapped.y }
+      if mapped.y > max_y { max_y = mapped.y }
+    }
+  }
+  { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+}
+
+///|
+/// Graphviz parity: rankdir rotation aligned to refs/graphviz/lib/common/postproc.c
+/// (translate_drawing/map_point).
+/// Do not change behavior without updating fixtures/tests.
+fn rotate_layout_graph(
+  layout : DotLayoutGraph,
+  root_bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> DotLayoutGraph {
+  if rankdir == RankDir::TB {
+    return layout
+  }
+  let nodes : Array[DotLayoutNode] = []
+  for node_layout in layout.nodes {
+    nodes.push({
+      node: node_layout.node,
+      pos: transform_point(node_layout.pos, root_bbox, rankdir),
+      width_in: node_layout.width_in,
+      height_in: node_layout.height_in,
+      label_pos: transform_optional_point(
+        node_layout.label_pos,
+        root_bbox,
+        rankdir,
+      ),
+      xlabel_pos: transform_optional_point(
+        node_layout.xlabel_pos,
+        root_bbox,
+        rankdir,
+      ),
+    })
+  }
+  let edges : Array[DotLayoutEdge] = []
+  for edge_layout in layout.edges {
+    let splines : Array[@geom.Spline] = []
+    for spline in edge_layout.splines {
+      splines.push(transform_spline(spline, root_bbox, rankdir))
+    }
+    edges.push({
+      edge: edge_layout.edge,
+      splines,
+      label_pos: transform_optional_point(
+        edge_layout.label_pos,
+        root_bbox,
+        rankdir,
+      ),
+      head_label_pos: transform_optional_point(
+        edge_layout.head_label_pos,
+        root_bbox,
+        rankdir,
+      ),
+      tail_label_pos: transform_optional_point(
+        edge_layout.tail_label_pos,
+        root_bbox,
+        rankdir,
+      ),
+      xlabel_pos: transform_optional_point(
+        edge_layout.xlabel_pos,
+        root_bbox,
+        rankdir,
+      ),
+    })
+  }
+  let subgraphs : Array[DotLayoutGraph] = []
+  for subgraph in layout.subgraphs {
+    subgraphs.push(rotate_layout_graph(subgraph, root_bbox, rankdir))
+  }
+  {
+    graph: layout.graph,
+    bbox: transform_bbox_with_root(layout.bbox, root_bbox, rankdir),
+    label_pos: transform_optional_point(layout.label_pos, root_bbox, rankdir),
+    nodes,
+    edges,
+    subgraphs,
+  }
+}

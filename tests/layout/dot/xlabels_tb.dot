@@ -1,0 +1,12 @@
+digraph xlabels_tb {
+  graph [label="RootLabel", labelloc=t, labeljust=l];
+  node [shape=box];
+  subgraph cluster_0 {
+    label="ClusterZero";
+    a [xlabel="XA"];
+    b [xlabel="XB"];
+  }
+  c [xlabel="XC"];
+  a -> c [xlabel="XAC", headlabel="HAC", taillabel="TAC"];
+  b -> c [xlabel="XBC", headlabel="HBC", taillabel="TBC"];
+}

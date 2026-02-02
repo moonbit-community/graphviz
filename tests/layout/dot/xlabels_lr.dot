@@ -1,0 +1,7 @@
+digraph xlabels_lr {
+  rankdir=LR;
+  node [shape=box];
+  a [xlabel="XLA"];
+  b [xlabel="XLB"];
+  a -> b [xlabel="XAB", headlabel="HAB", taillabel="TAB"];
+}

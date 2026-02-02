@@ -141,15 +141,14 @@ fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+/// Graphviz parity: edge label presence aligned to refs/graphviz/lib/dotgen/position.c
+/// (hasedge).
+/// Do not change behavior without updating fixtures/tests.
 fn edge_has_label(edge : @cgraph.Edge) -> Bool {
-  let labels = ["label", "headlabel", "taillabel"]
-  for name in labels {
-    match edge.get_attr(name) {
-      Some(value) => if value != "" { return true }
-      None => ()
-    }
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
   }
-  false
 }
 
 ///|

@@ -216,16 +216,24 @@ fn bezier_point(
 }
 
 ///|
+/// Graphviz parity: linear interpolation aligned to refs/graphviz/lib/common/utils.c
+/// (Bezier helper).
+/// Do not change behavior without updating fixtures/tests.
 fn point_lerp_graphviz(
   a : @geom.Point,
   b : @geom.Point,
   t : Double,
 ) -> @geom.Point {
   let mt = 1.0 - t
-  point(mt * a.x + t * b.x, mt * a.y + t * b.y)
+  let x = (mt * a.x) + (t * b.x)
+  let y = (mt * a.y) + (t * b.y)
+  point(x, y)
 }
 
 ///|
+/// Graphviz parity: Bézier evaluation aligned to refs/graphviz/lib/common/utils.c
+/// (Bezier).
+/// Do not change behavior without updating fixtures/tests.
 fn bezier_point_graphviz(
   p0 : @geom.Point,
   p1 : @geom.Point,
@@ -233,12 +241,34 @@ fn bezier_point_graphviz(
   p3 : @geom.Point,
   t : Double,
 ) -> @geom.Point {
-  let p01 = point_lerp_graphviz(p0, p1, t)
-  let p12 = point_lerp_graphviz(p1, p2, t)
-  let p23 = point_lerp_graphviz(p2, p3, t)
-  let p012 = point_lerp_graphviz(p01, p12, t)
-  let p123 = point_lerp_graphviz(p12, p23, t)
-  point_lerp_graphviz(p012, p123, t)
+  let vtemp : Array[Array[@geom.Point]] = []
+  let mut row = 0
+  while row < 4 {
+    let line : Array[@geom.Point] = []
+    let mut col = 0
+    while col < 4 {
+      line.push(point(0.0, 0.0))
+      col = col + 1
+    }
+    vtemp.push(line)
+    row = row + 1
+  }
+  vtemp[0][0] = p0
+  vtemp[0][1] = p1
+  vtemp[0][2] = p2
+  vtemp[0][3] = p3
+  let mut i = 1
+  while i <= 3 {
+    let mut j = 0
+    while j <= 3 - i {
+      let a = vtemp[i - 1][j]
+      let b = vtemp[i - 1][j + 1]
+      vtemp[i][j] = point_lerp_graphviz(a, b, t)
+      j = j + 1
+    }
+    i = i + 1
+  }
+  vtemp[3][0]
 }
 
 ///|

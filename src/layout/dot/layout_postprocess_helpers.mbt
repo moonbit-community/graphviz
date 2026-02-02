@@ -400,20 +400,91 @@ fn collect_head_port_metrics(
 }
 
 ///|
-/// Graphviz parity: rankdir transform aligned to refs/graphviz/lib/common/postproc.c
-/// (translate_drawing/translate_bb).
+/// Graphviz parity: base layout bbox aligned to refs/graphviz/lib/dotgen/position.c
+/// (dot_compute_bb).
+/// Do not change behavior without updating fixtures/tests.
+///|
+/// Graphviz parity: rank-based bbox aligned to refs/graphviz/lib/dotgen/position.c
+/// (dot_compute_bb).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_dot_bbox(
+  nodes_out : Array[DotLayoutNode],
+  all_ranks : Array[Int],
+  sizes : Map[String, NodeSize],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> @geom.Rect {
+  if nodes_out.length() == 0 {
+    return { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
+  }
+  let mut min_x = 0.0
+  let mut max_x = 0.0
+  let mut first = true
+  for node_layout in nodes_out {
+    let name = node_layout.node.name()
+    let left = node_left_pt(name, sizes)
+    let right = node_right_pt(name, sizes)
+    let llx = node_layout.pos.x - left
+    let urx = node_layout.pos.x + right
+    if first {
+      min_x = llx
+      max_x = urx
+      first = false
+    } else {
+      if llx < min_x { min_x = llx }
+      if urx > max_x { max_x = urx }
+    }
+  }
+  let mut min_y = 0.0
+  let mut max_y = 0.0
+  if all_ranks.length() > 0 {
+    let min_rank = all_ranks[0]
+    let max_rank = all_ranks[all_ranks.length() - 1]
+    let max_rank_y = match rank_y.get(max_rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    let min_rank_y = match rank_y.get(min_rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    let ht1 = match rank_ht1.get(max_rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    let ht2 = match rank_ht2.get(min_rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    min_y = max_rank_y - ht1
+    max_y = min_rank_y + ht2
+  }
+  { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+}
+
+///|
+/// Graphviz parity: base layout bbox aligned to refs/graphviz/lib/dotgen/position.c
+/// (dot_compute_bb).
 /// Do not change behavior without updating fixtures/tests.
 fn build_final_layout_geometry(
   nodes_out : Array[DotLayoutNode],
   edges_out : Array[DotLayoutEdge],
-  rankdir : RankDir,
+  all_ranks : Array[Int],
+  sizes : Map[String, NodeSize],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
 ) -> (Array[DotLayoutNode], Array[DotLayoutEdge], @geom.Rect) {
-  let base_bbox = compute_bbox(nodes_out, edges_out)
-  if rankdir == RankDir::TB {
-    (nodes_out, edges_out, base_bbox)
-  } else {
-    transform_layout(nodes_out, edges_out, base_bbox, rankdir)
-  }
+  let base_bbox = compute_dot_bbox(
+    nodes_out,
+    all_ranks,
+    sizes,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+  )
+  (nodes_out, edges_out, base_bbox)
 }
 
 ///|
@@ -681,12 +752,24 @@ fn finalize_layout_graph(
   splines : SplinesMode,
   all_ranks : Array[Int],
   ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
   port_pad_below : Double,
   port_pad_above : Double,
 ) -> DotLayoutGraph {
   let (final_nodes, final_edges, bbox) =
-    build_final_layout_geometry(nodes_out, edges_out, rankdir)
+    build_final_layout_geometry(
+      nodes_out,
+      edges_out,
+      all_ranks,
+      sizes,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+    )
   let (subgraphs, base_bbox) =
     build_subgraphs_and_bbox(graph, final_nodes, final_edges, bbox)
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
@@ -699,6 +782,7 @@ fn finalize_layout_graph(
       port_pad_below,
       port_pad_above,
     )
+  let bbox = apply_root_margin_x(graph, bbox)
   let layout = {
     graph,
     bbox,
@@ -712,16 +796,20 @@ fn finalize_layout_graph(
   let labeled = expand_bbox_for_edge_labels(graph, adjusted)
   let with_xlabels = place_xlabels(graph, labeled, splines)
   let (bbox, label_pos) = apply_root_label_bbox(graph, with_xlabels.bbox)
-  let final_bbox = apply_root_margin_x(graph, bbox)
   let labeled_with_root = {
     graph: with_xlabels.graph,
-    bbox: final_bbox,
+    bbox,
     label_pos,
     nodes: with_xlabels.nodes,
     edges: with_xlabels.edges,
     subgraphs: with_xlabels.subgraphs,
   }
-  let shifted = shift_layout_to_origin_if_root(graph, labeled_with_root)
+  let rotated = if rankdir == RankDir::TB {
+    labeled_with_root
+  } else {
+    rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
+  }
+  let shifted = shift_layout_to_origin_if_root(graph, rotated)
   apply_root_cluster_padding_if_needed(
     graph,
     shifted,
