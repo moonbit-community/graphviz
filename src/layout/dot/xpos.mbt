@@ -28,8 +28,10 @@ priv struct XposConstraintNodeSnapshot {
   name : String?
   kind : NodeKind
   rank : Int
+  order : Int
   left_pt : Double
   right_pt : Double
+  height_pt : Double
 }
 
 ///|
@@ -57,7 +59,7 @@ priv enum EndpointClass {
 fn endpoint_class(
   name : String,
   node_degrees : Map[String, Int],
-  cluster_keys : Map[String, String],
+  _cluster_keys : Map[String, String],
 ) -> EndpointClass {
   if is_edge_vnode_name(name) {
     EndpointClass::Virtual
@@ -66,11 +68,7 @@ fn endpoint_class(
       Some(value) => value
       None => 0
     }
-    let in_cluster = match cluster_keys.get(name) {
-      Some(value) => value != ""
-      None => false
-    }
-    if degree <= 1 && !in_cluster {
+    if degree <= 1 {
       EndpointClass::Singleton
     } else {
       EndpointClass::Ordinary
@@ -129,6 +127,7 @@ fn build_xpos_constraint_snapshot(
   graph : NsGraph,
   index : Map[String, Int],
   sizes : Map[String, NodeSize],
+  order_index : Map[String, Int],
 ) -> XposConstraintSnapshot {
   let names : Array[String?] = []
   for _ in 0..<graph.nodes.length() {
@@ -143,13 +142,24 @@ fn build_xpos_constraint_snapshot(
     let name = names[i]
     let mut left_pt = 1.0
     let mut right_pt = 1.0
+    let mut height_pt = 1.0
+    let mut order = 0
     match name {
       Some(value) =>
         match sizes.get(value) {
           Some(size) => {
             left_pt = size.left_pt
             right_pt = size.right_pt
+            height_pt = size.height_pt
           }
+          None => ()
+        }
+      None => ()
+    }
+    match name {
+      Some(value) =>
+        match order_index.get(value) {
+          Some(value) => order = value
           None => ()
         }
       None => ()
@@ -158,8 +168,10 @@ fn build_xpos_constraint_snapshot(
       name,
       kind: node.kind,
       rank: node.rank,
+      order,
       left_pt,
       right_pt,
+      height_pt,
     })
   }
   let edges : Array[XposConstraintEdgeSnapshot] = []
@@ -172,6 +184,40 @@ fn build_xpos_constraint_snapshot(
     })
   }
   { nodes, edges }
+}
+
+///|
+fn reorder_constraint_graph(
+  graph : NsGraph,
+  index : Map[String, Int],
+  order : Array[Int],
+) -> (NsGraph, Map[String, Int]) {
+  let total = graph.nodes.length()
+  if total == 0 || order.length() != total {
+    return (graph, index)
+  }
+  let new_graph = new_graph()
+  let old_to_new : Array[Int] = []
+  for _ in 0..<total {
+    old_to_new.push(-1)
+  }
+  for old_idx in order {
+    let node = graph.nodes[old_idx]
+    let new_idx = add_node(new_graph, "", kind=node.kind)
+    set_node_rank(new_graph, new_idx, node.rank)
+    old_to_new[old_idx] = new_idx
+  }
+  for edge in graph.edges {
+    let tail = old_to_new[edge.tail]
+    let head = old_to_new[edge.head]
+    let _ = add_edge(new_graph, tail, head, edge.minlen, edge.weight)
+  }
+  let new_index : Map[String, Int] = Map::new()
+  for name, old_idx in index {
+    let new_idx = old_to_new[old_idx]
+    new_index[name] = new_idx
+  }
+  (new_graph, new_index)
 }
 
 ///|
@@ -374,7 +420,7 @@ fn build_cluster_constraints(
             None => ()
           }
         }
-        if edge_in_cluster && tail_in && head_in {
+        if tail_in && head_in {
           for vnode in vnodes {
             members[vnode] = true
           }
@@ -1012,16 +1058,18 @@ fn build_constraint_graph(
   for edge in edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
+    let dir = edge_dir_for(edge, edge.tail().graph().kind())
+    let inc = if dir is EdgeDir::Both { 2 } else { 1 }
     let tail_degree = match node_degrees.get(tail_name) {
       Some(value) => value
       None => 0
     }
-    node_degrees[tail_name] = tail_degree + 1
+    node_degrees[tail_name] = tail_degree + inc
     let head_degree = match node_degrees.get(head_name) {
       Some(value) => value
       None => 0
     }
-    node_degrees[head_name] = head_degree + 1
+    node_degrees[head_name] = head_degree + inc
   }
   let skip_intercluster =
     @sys.get_env_var("DOT_SKIP_INTERCLUSTER_XPOS") is Some(_)
@@ -1126,6 +1174,9 @@ fn build_constraint_graph(
       Some(list) => list
       None => []
     }
+    if vnodes.length() > 0 && extra_slack_edges.length() > 0 {
+      continue
+    }
     let chain : Array[String] = []
     chain.push(low)
     for vnode in vnodes {
@@ -1196,7 +1247,41 @@ fn build_constraint_graph(
       let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
     }
   }
-  ignore(extra_slack_edges)
+  for edge in extra_slack_edges {
+    let tail_idx = match index.get(edge.tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_idx = match index.get(edge.head) {
+      Some(value) => value
+      None => continue
+    }
+    let tail_offset = edge_port_offset_by_name(
+      edge.tail,
+      edge.tail_port,
+      port_offsets,
+    )
+    let head_offset = edge_port_offset_by_name(
+      edge.head,
+      edge.head_port,
+      port_offsets,
+    )
+    let delta = head_offset - tail_offset
+    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
+    let tail_rank = node_rank(graph, tail_idx)
+    let head_rank = node_rank(graph, head_idx)
+    let base_tail = tail_rank - m0 - 1
+    let base_head = head_rank - m1 - 1
+    set_node_rank(
+      graph,
+      slack_idx,
+      if base_tail < base_head { base_tail } else { base_head },
+    )
+    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, edge.weight)
+    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, edge.weight)
+  }
   for pair in late_extra_nodes {
     let (name, rank) = pair
     let idx = add_node(graph, name, kind=extra_node_kind(name))
@@ -1280,6 +1365,7 @@ fn x_positions_from_simplex(
   root_rn_targets : Array[String],
 ) -> Map[String, Double] {
   dot_trace("xpos: build constraint graph")
+  let order_index = build_order_index(groups)
   let (graph, index) = build_constraint_graph(
     nodes,
     edges,
@@ -1300,19 +1386,26 @@ fn x_positions_from_simplex(
     root_ln_targets,
     root_rn_targets,
   )
+  let order : Array[Int] = []
+  if graph.nodes.length() > 0 {
+    let mut idx = graph.nodes.length() - 1
+    while true {
+      order.push(idx)
+      if idx == 0 {
+        break
+      }
+      idx = idx - 1
+    }
+  }
+  let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(
-      build_xpos_constraint_snapshot(graph, index, sizes),
+      build_xpos_constraint_snapshot(graph, index, sizes, order_index),
     )
   }
   dot_trace("xpos: constraint graph built")
   dot_trace("xpos: network simplex")
-  let root_idx = if graph.nodes.length() > 0 {
-    graph.nodes.length() - 1
-  } else {
-    0
-  }
-  network_simplex_with_root(graph, 0x7fffffff, BalanceMode::LR, root_idx)
+  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {

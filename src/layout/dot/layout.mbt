@@ -2317,266 +2317,7 @@ pub fn layout_dot(
     cluster_skeleton,
     flat_constraints,
   )
-  let ordered_groups =
-    if has_clusters {
-    let ordering_groups : Map[Int, Array[String]] = Map::new()
-    let ordering_sizes : Map[String, NodeSize] = Map::new()
-    let ordering_node_order : Map[String, Int] = Map::new()
-    let ordering_cluster_keys : Map[String, String] = Map::new()
-    let ordering_cluster_skeleton : Map[String, Bool] = Map::new()
-    let skeleton_lookup : Map[String, String] = Map::new()
-    let skeleton_cluster : Map[String, String] = Map::new()
-    let skeleton_size = vnode_size_from_widths(0.0, 0.0)
-    for rank in rank_keys {
-      let names = match groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      let list : Array[String] = []
-      for name in names {
-        let cluster = match cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        if cluster != "" {
-          continue
-        }
-        list.push(name)
-        let size = match order_sizes.get(name) {
-          Some(value) => value
-          None => vnode_size_from_widths(0.0, 0.0)
-        }
-        ordering_sizes[name] = size
-        let order_value = match node_order.get(name) {
-          Some(value) => value
-          None => 0
-        }
-        ordering_node_order[name] = order_value
-        ordering_cluster_keys[name] = ""
-      }
-      ordering_groups[rank] = list
-    }
-    let mut has_cluster_skeleton = false
-    for cluster, min_rank in cluster_min_rank {
-      let max_rank = match cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      for rank in min_rank..=max_rank {
-        let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-        let key = "\{cluster}@\{rank}"
-        skeleton_lookup[key] = name
-        skeleton_cluster[name] = cluster
-        ordering_sizes[name] = skeleton_size
-        ordering_node_order[name] = rank
-        ordering_cluster_keys[name] = cluster
-        ordering_cluster_skeleton[name] = true
-        match ordering_groups.get(rank) {
-          Some(list) => list.push(name)
-          None => ordering_groups[rank] = [name]
-        }
-        has_cluster_skeleton = true
-      }
-    }
-    if !has_cluster_skeleton {
-      ordered_groups_internal
-    } else {
-      let ordering_rank_keys = collect_rank_keys(ordering_groups)
-      let ordering_ranks = build_node_ranks(ordering_groups)
-      let ordering_nodes : Array[String] = []
-      for rank in ordering_rank_keys {
-        let names = match ordering_groups.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        for name in names {
-          ordering_nodes.push(name)
-        }
-      }
-      let ordering_graph =
-        @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_cluster_order", strict=false)
-      let ordering_node_map : Map[String, @cgraph.Node] = Map::new()
-      for name in ordering_nodes {
-        ordering_node_map[name] = ordering_graph.node(name)
-      }
-      let ordering_edges : Array[@cgraph.Edge] = []
-      let ordering_edge_tail : Array[String] = []
-      let ordering_edge_head : Array[String] = []
-      let mut edge_idx = 0
-      for edge in order_edges {
-        let tail = order_edge_tail[edge_idx]
-        let head = order_edge_head[edge_idx]
-        let tail_cluster = match cluster_keys.get(tail) {
-          Some(value) => value
-          None => ""
-        }
-        let head_cluster = match cluster_keys.get(head) {
-          Some(value) => value
-          None => ""
-        }
-        if tail_cluster != "" && tail_cluster == head_cluster {
-          edge_idx = edge_idx + 1
-          continue
-        }
-        let mapped_tail =
-          if tail_cluster != "" {
-            let rank = match ranks.get(tail) {
-              Some(value) => value
-              None => 0
-            }
-            let key = "\{tail_cluster}@\{rank}"
-            match skeleton_lookup.get(key) {
-              Some(value) => value
-              None => tail
-            }
-          } else {
-            tail
-          }
-        let mapped_head =
-          if head_cluster != "" {
-            let rank = match ranks.get(head) {
-              Some(value) => value
-              None => 0
-            }
-            let key = "\{head_cluster}@\{rank}"
-            match skeleton_lookup.get(key) {
-              Some(value) => value
-              None => head
-            }
-          } else {
-            head
-          }
-        let penalty = edge_xpenalty(edge)
-        let constraint = edge_is_constraint(edge)
-        add_order_edge(
-          ordering_graph,
-          ordering_node_map,
-          ordering_edges,
-          ordering_edge_tail,
-          ordering_edge_head,
-          mapped_tail,
-          mapped_head,
-          penalty,
-          constraint,
-        )
-        edge_idx = edge_idx + 1
-      }
-      for cluster, min_rank in cluster_min_rank {
-        let max_rank = match cluster_max_rank.get(cluster) {
-          Some(value) => value
-          None => min_rank
-        }
-        let mut rank = min_rank
-        while rank < max_rank {
-          let tail_key = "\{cluster}@\{rank}"
-          let head_key = "\{cluster}@\{rank + 1}"
-          match (skeleton_lookup.get(tail_key), skeleton_lookup.get(head_key)) {
-            (Some(tail_name), Some(head_name)) =>
-              add_order_edge(
-                ordering_graph,
-                ordering_node_map,
-                ordering_edges,
-                ordering_edge_tail,
-                ordering_edge_head,
-                tail_name,
-                head_name,
-                CL_CROSS,
-                true,
-              )
-            _ => ()
-          }
-          rank = rank + 1
-        }
-      }
-      let (ordering_parents, ordering_children) =
-        build_edge_index_for_order_names(
-          ordering_nodes,
-          ordering_edge_tail,
-          ordering_edge_head,
-          ordering_ranks,
-        )
-      let ordering_edge_order = collect_edge_order(ordering_edges)
-      let ordered_cluster_groups = reorder_rank_groups(
-        ordering_rank_keys,
-        ordering_groups,
-        ordering_edges,
-        ordering_edge_tail,
-        ordering_edge_head,
-        ordering_parents,
-        ordering_children,
-        ordering_cluster_keys,
-        Map::new(),
-        Map::new(),
-        ordering_edge_order,
-        ordering_node_order,
-        ordering_sizes,
-        nodesep_pt,
-        has_edge_labels,
-        Map::new(),
-        Map::new(),
-        Map::new(),
-        ordering_cluster_skeleton,
-        Map::new(),
-      )
-      let cluster_nodes_by_rank : Map[String, Map[Int, Array[String]]] = Map::new()
-      for rank in rank_keys {
-        let names = match ordered_groups_internal.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        for name in names {
-          let cluster = match cluster_keys.get(name) {
-            Some(value) => value
-            None => ""
-          }
-          if cluster == "" {
-            continue
-          }
-          let rank_map = match cluster_nodes_by_rank.get(cluster) {
-            Some(map) => map
-            None => {
-              let map : Map[Int, Array[String]] = Map::new()
-              cluster_nodes_by_rank[cluster] = map
-              map
-            }
-          }
-          match rank_map.get(rank) {
-            Some(list) => list.push(name)
-            None => rank_map[rank] = [name]
-          }
-        }
-      }
-      let expanded_groups : Map[Int, Array[String]] = Map::new()
-      for rank in rank_keys {
-        let names = match ordered_cluster_groups.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        let expanded : Array[String] = []
-        for name in names {
-          match skeleton_cluster.get(name) {
-            Some(cluster) =>
-              match cluster_nodes_by_rank.get(cluster) {
-                Some(rank_map) =>
-                  match rank_map.get(rank) {
-                    Some(list) =>
-                      for node in list {
-                        expanded.push(node)
-                      }
-                    None => ()
-                  }
-                None => ()
-              }
-            None => expanded.push(name)
-          }
-        }
-        expanded_groups[rank] = expanded
-      }
-      expanded_groups
-    }
-  } else {
-    ordered_groups_internal
-  }
+  let ordered_groups = ordered_groups_internal
   dot_trace("layout_dot: rank order computed")
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -2597,6 +2338,8 @@ pub fn layout_dot(
     has_edge_labels || has_port_edges || vnode_count <= MAX_XPOS_VNODES
   let allow_xpos_reorder =
     !use_vnodes_for_xpos || vnode_count <= MAX_XPOS_REORDER_VNODES
+  // Graphviz uses mincross ordering as-is for xpos constraints.
+  let xpos_reorder_enabled = false
   dot_trace("layout_dot: vnodes built count=\{vnode_count}")
   let virtual_slack_edges =
     if use_vnodes_for_xpos {
@@ -2672,7 +2415,7 @@ pub fn layout_dot(
       x_cluster_keys[name] = key
     }
   }
-  if use_vnodes_for_xpos && allow_xpos_reorder && !ordering_set {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder && !ordering_set {
     let order_groups : Map[Int, Array[String]] = Map::new()
     for rank, names in x_groups {
       order_groups[rank] = names.copy()
@@ -2870,7 +2613,8 @@ pub fn layout_dot(
       cleaned_groups[rank] = cleaned
     }
     x_groups = cleaned_groups
-  } else if allow_xpos_reorder && !ordering_set && !has_vnode_order && !has_clusters {
+  } else if xpos_reorder_enabled &&
+    allow_xpos_reorder && !ordering_set && !has_vnode_order && !has_clusters {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       order_edges,
@@ -2905,7 +2649,7 @@ pub fn layout_dot(
     )
   }
   dot_trace_groups("x-groups", x_groups)
-  if use_vnodes_for_xpos && allow_xpos_reorder && !ordering_set {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder && !ordering_set {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       order_edges,

@@ -353,16 +353,18 @@ fn build_node_singletons(
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
+    let dir = edge_dir_for(edge, edge.tail().graph().kind())
+    let inc = if dir is EdgeDir::Both { 2 } else { 1 }
     let tail_count = match counts.get(tail) {
       Some(value) => value
       None => 0
     }
-    counts[tail] = tail_count + 1
+    counts[tail] = tail_count + inc
     let head_count = match counts.get(head) {
       Some(value) => value
       None => 0
     }
-    counts[head] = head_count + 1
+    counts[head] = head_count + inc
   }
   let singletons : Map[String, Bool] = Map::new()
   for name, count in counts {
