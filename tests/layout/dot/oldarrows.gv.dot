@@ -1,115 +1,236 @@
 digraph G {
-  graph [ranksep=1.5, splines=true, overlap=false, bb="0,0,900,359"];
-  node [label, shape=circle, width=0.5];
-  edge [labeldistance=3];
-  subgraph {
-    edge [dir=back, samehead=ahead, samearrowhead=1];
-    Z [pos="450,179.50", height=0.5];
-    a [pos="18,341", height=0.5];
-    b [pos="72,341", height=0.5];
-    c [pos="126,341", height=0.5];
-    d [pos="180,341", height=0.5];
-    e [pos="234,341", height=0.5];
-    f [pos="288,341", height=0.5];
-    g [pos="342,341", height=0.5];
-    h [pos="396,341", height=0.5];
-    i [pos="450,341", height=0.5];
-    j [pos="504,341", height=0.5];
-    k [pos="558,341", height=0.5];
-    l [pos="612,341", height=0.5];
-    m [pos="666,341", height=0.5];
-    n [pos="720,341", height=0.5];
-    o [pos="774,341", height=0.5];
-    p [pos="828,341", height=0.5];
-    q [pos="882,341", height=0.5];
-  }
-  subgraph {
-    edge [sametail=atail, samearrowtail=1];
-    A [pos="18,18", height=0.5];
-    B [pos="72,18", height=0.5];
-    C [pos="126,18", height=0.5];
-    D [pos="180,18", height=0.5];
-    E [pos="234,18", height=0.5];
-    F [pos="288,18", height=0.5];
-    G [pos="342,18", height=0.5];
-    H [pos="396,18", height=0.5];
-    I [pos="450,18", height=0.5];
-    J [pos="504,18", height=0.5];
-    K [pos="558,18", height=0.5];
-    L [pos="612,18", height=0.5];
-    M [pos="666,18", height=0.5];
-    N [pos="720,18", height=0.5];
-    O [pos="774,18", height=0.5];
-    P [pos="828,18", height=0.5];
-    Q [pos="882,18", height=0.5];
-  }
-  A [pos="18,18", height=0.5];
-  B [pos="72,18", height=0.5];
-  C [pos="126,18", height=0.5];
-  D [pos="180,18", height=0.5];
-  E [pos="234,18", height=0.5];
-  F [pos="288,18", height=0.5];
-  G [pos="342,18", height=0.5];
-  H [pos="396,18", height=0.5];
-  I [pos="450,18", height=0.5];
-  J [pos="504,18", height=0.5];
-  K [pos="558,18", height=0.5];
-  L [pos="612,18", height=0.5];
-  M [pos="666,18", height=0.5];
-  N [pos="720,18", height=0.5];
-  O [pos="774,18", height=0.5];
-  P [pos="828,18", height=0.5];
-  Q [pos="882,18", height=0.5];
-  Z [pos="450,179.50", height=0.5];
-  a [pos="18,341", height=0.5];
-  b [pos="72,341", height=0.5];
-  c [pos="126,341", height=0.5];
-  d [pos="180,341", height=0.5];
-  e [pos="234,341", height=0.5];
-  f [pos="288,341", height=0.5];
-  g [pos="342,341", height=0.5];
-  h [pos="396,341", height=0.5];
-  i [pos="450,341", height=0.5];
-  j [pos="504,341", height=0.5];
-  k [pos="558,341", height=0.5];
-  l [pos="612,341", height=0.5];
-  m [pos="666,341", height=0.5];
-  n [pos="720,341", height=0.5];
-  o [pos="774,341", height=0.5];
-  p [pos="828,341", height=0.5];
-  q [pos="882,341", height=0.5];
-  a -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=none, taillabel=none, pos="s,18,323 18,311.49 18,294.41 7.09,273.39 18,260.25 107.69,152.24 294,208.66 432,182.86", tail_lp="18,323"];
-  b -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=normal, taillabel=normal, pos="s,72,323 72,311.49 72,294.41 61.26,273.53 72,260.25 149.17,164.85 312,208.98 432,183.35", tail_lp="72,323"];
-  c -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=inv, taillabel=inv, pos="s,126,323 126,311.49 126,294.41 115.48,273.71 126,260.25 190.72,177.42 330,209.41 432,183.99", tail_lp="126,323"];
-  d -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=dot, taillabel=dot, pos="s,180,323 180,311.49 180,294.41 169.80,273.95 180,260.25 232.37,189.93 348,210.01 432,184.88", tail_lp="180,323"];
-  e -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=odot, taillabel=odot, pos="s,234,323 234,311.49 234,294.41 224.26,274.28 234,260.25 274.16,202.36 366,210.90 432,186.23", tail_lp="234,323"];
-  f -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=invdot, taillabel=invdot, pos="s,288,323 288,311.49 288,294.41 279.01,274.77 288,260.25 316.22,214.65 384,212.40 432,188.47", tail_lp="288,323"];
-  g -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=invodot, taillabel=invodot, pos="s,342,323 342,311.49 342,294.41 334.35,275.52 342,260.25 358.78,226.76 402,215.39 432,192.96", tail_lp="342,323"];
-  h -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=open, taillabel=open, pos="s,396,323 396,311.49 396,294.41 391.04,276.59 396,260.25 403.31,236.17 423.98,218.42 437.96,197.50", tail_lp="396,323"];
-  i -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=halfopen, taillabel=halfopen, arrowhead=inv, headlabel=samehead, pos="s,450,323 450,311.49 450,294.41 450,277.33 450,260.25 450,239.33 450,218.42 450,197.50", head_lp="450,197.50", tail_lp="450,323"];
-  j -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=empty, taillabel=empty, pos="s,504,323 504,311.49 504,294.41 508.96,276.59 504,260.25 496.69,236.17 476.02,218.42 462.04,197.50", tail_lp="504,323"];
-  k -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=invempty, taillabel=invempty, pos="s,558,323 558,311.49 558,294.41 565.65,275.52 558,260.25 541.22,226.76 498,215.39 468,192.96", tail_lp="558,323"];
-  l -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=diamond, taillabel=diamond, pos="s,612,323 612,311.49 612,294.41 620.99,274.77 612,260.25 583.78,214.65 516,212.40 468,188.47", tail_lp="612,323"];
-  m -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=odiamond, taillabel=odiamond, pos="s,666,323 666,311.49 666,294.41 675.74,274.28 666,260.25 625.84,202.36 534,210.90 468,186.23", tail_lp="666,323"];
-  n -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=box, taillabel=box, pos="s,720,323 720,311.49 720,294.41 730.20,273.95 720,260.25 667.63,189.93 552,210.01 468,184.88", tail_lp="720,323"];
-  o -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=obox, taillabel=obox, pos="s,774,323 774,311.49 774,294.41 784.52,273.71 774,260.25 709.28,177.42 570,209.41 468,183.99", tail_lp="774,323"];
-  p -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=tee, taillabel=tee, pos="s,828,323 828,311.49 828,294.41 838.74,273.53 828,260.25 750.83,164.85 588,208.98 468,183.35", tail_lp="828,323"];
-  q -> Z [dir=back, samehead=ahead, samearrowhead=1, arrowtail=crow, taillabel=crow, pos="s,882,323 882,311.49 882,294.41 892.91,273.39 882,260.25 792.31,152.24 606,208.66 468,182.86", tail_lp="882,323"];
-  Z -> A [sametail=atail, samearrowtail=1, arrowhead=none, headlabel=none, pos="e,18,36 432,176.14 312.18,153.74 68.30,159.32 18,98.75 7.09,85.61 18,62.34 18,47.51", head_lp="18,36"];
-  Z -> B [sametail=atail, samearrowtail=1, arrowhead=normal, headlabel=normal, pos="e,72,36 432,175.66 327.49,153.33 115.96,153.09 72,98.75 61.26,85.47 72,62.39 72,47.51", head_lp="72,36"];
-  Z -> C [sametail=atail, samearrowtail=1, arrowhead=inv, headlabel=inv, pos="e,126,36 432,175.01 342.81,152.79 163.62,146.90 126,98.75 115.48,85.29 126,62.45 126,47.51", head_lp="126,36"];
-  Z -> D [sametail=atail, samearrowtail=1, arrowhead=dot, headlabel=dot, pos="e,180,36 432,174.12 358.15,152.03 211.28,140.76 180,98.75 169.80,85.05 180,62.53 180,47.51", head_lp="180,36"];
-  Z -> E [sametail=atail, samearrowtail=1, arrowhead=odot, headlabel=odot, pos="e,234,36 432,172.77 373.50,150.90 258.95,134.71 234,98.75 224.26,84.72 234,62.65 234,47.51", head_lp="234,36"];
-  Z -> F [sametail=atail, samearrowtail=1, arrowhead=invdot, headlabel=invdot, pos="e,288,36 432,170.53 388.91,149.05 306.61,128.81 288,98.75 279.01,84.23 288,62.85 288,47.51", head_lp="288,36"];
-  Z -> G [sametail=atail, samearrowtail=1, arrowhead=invodot, headlabel=invodot, pos="e,342,36 432,166.04 404.45,145.44 354.21,123.13 342,98.75 334.35,83.48 342,63.20 342,47.51", head_lp="342,36"];
-  Z -> H [sametail=atail, samearrowtail=1, arrowhead=open, headlabel=open, pos="e,396,36 437.96,161.50 424.65,141.59 402.13,118.96 396,98.75 391.04,82.41 396,63.77 396,47.51", head_lp="396,36"];
-  Z -> I [sametail=atail, samearrowtail=1, arrowhead=halfopen, headlabel=halfopen, arrowtail=inv, taillabel=sametail, pos="e,450,36 450,161.50 450,141.16 450,117.75 450,98.75 450,81.67 450,64.12 450,47.51", head_lp="450,36", tail_lp="450,161.50"];
-  Z -> J [sametail=atail, samearrowtail=1, arrowhead=empty, headlabel=empty, pos="e,504,36 462.04,161.50 475.35,141.59 497.87,118.96 504,98.75 508.96,82.41 504,63.77 504,47.51", head_lp="504,36"];
-  Z -> K [sametail=atail, samearrowtail=1, arrowhead=invempty, headlabel=invempty, pos="e,558,36 468,166.04 495.55,145.44 545.79,123.13 558,98.75 565.65,83.48 558,63.20 558,47.51", head_lp="558,36"];
-  Z -> L [sametail=atail, samearrowtail=1, arrowhead=diamond, headlabel=diamond, pos="e,612,36 468,170.53 511.09,149.05 593.39,128.81 612,98.75 620.99,84.23 612,62.85 612,47.51", head_lp="612,36"];
-  Z -> M [sametail=atail, samearrowtail=1, arrowhead=odiamond, headlabel=odiamond, pos="e,666,36 468,172.77 526.50,150.90 641.05,134.71 666,98.75 675.74,84.72 666,62.65 666,47.51", head_lp="666,36"];
-  Z -> N [sametail=atail, samearrowtail=1, arrowhead=box, headlabel=box, pos="e,720,36 468,174.12 541.85,152.03 688.72,140.76 720,98.75 730.20,85.05 720,62.53 720,47.51", head_lp="720,36"];
-  Z -> O [sametail=atail, samearrowtail=1, arrowhead=obox, headlabel=obox, pos="e,774,36 468,175.01 557.19,152.79 736.38,146.90 774,98.75 784.52,85.29 774,62.45 774,47.51", head_lp="774,36"];
-  Z -> P [sametail=atail, samearrowtail=1, arrowhead=tee, headlabel=tee, pos="e,828,36 468,175.66 572.51,153.33 784.04,153.09 828,98.75 838.74,85.47 828,62.39 828,47.51", head_lp="828,36"];
-  Z -> Q [sametail=atail, samearrowtail=1, arrowhead=crow, headlabel=crow, pos="e,882,36 468,176.14 587.82,153.74 831.70,159.32 882,98.75 892.91,85.61 882,62.34 882,47.51", head_lp="882,36"];
+	graph [bb="0,0,900,324",
+		overlap=false,
+		ranksep=1.5,
+		splines=true
+	];
+	node [label="",
+		shape=circle,
+		width=0.5
+	];
+	edge [labeldistance=3];
+	{
+		edge [dir=back,
+			samearrowhead=1,
+			samehead=ahead
+		];
+		a	[height=0.5,
+			pos="18,306"];
+		Z	[height=0.5,
+			pos="450,162"];
+		a -> Z	[arrowtail=none,
+			pos="32.408,294.8 36.359,292.32 40.733,289.86 45,288 215.74,213.77 450,181 450,181",
+			tail_lp="48.83,269.7",
+			taillabel=none];
+		b	[height=0.5,
+			pos="72,306"];
+		b -> Z	[arrowtail=normal,
+			pos="s,86.456,294.91 96.21,289.34 97.142,288.87 98.074,288.42 99,288 247.32,220.18 450,181 450,181",
+			tail_lp="103.79,270.42",
+			taillabel=normal];
+		c	[height=0.5,
+			pos="126,306"];
+		c -> Z	[arrowtail=inv,
+			pos="s,140.52,295.05 149.45,289.83 150.63,289.19 151.82,288.57 153,288 279.1,226.49 450,181 450,181",
+			tail_lp="157.57,270.37",
+			taillabel=inv];
+		d	[height=0.5,
+			pos="180,306"];
+		d -> Z	[arrowtail=dot,
+			pos="s,194.9,295.07 202.43,290.53 203.96,289.65 205.5,288.8 207,288 311.21,232.63 450,181 450,181",
+			tail_lp="211.65,270.18",
+			taillabel=dot];
+		e	[height=0.5,
+			pos="234,306"];
+		e -> Z	[arrowtail=odot,
+			pos="s,249.06,295.34 256.53,290.71 258.04,289.78 259.54,288.87 261,288 343.86,238.49 450,181 450,181",
+			tail_lp="265.47,270.23",
+			taillabel=odot];
+		f	[height=0.5,
+			pos="288,306"];
+		f -> Z	[arrowtail=invdot,
+			pos="s,302.09,294.21 317.58,282.36 364.32,246.58 450,181 450,181",
+			tail_lp="315.98,267.62",
+			taillabel=invdot];
+		g	[height=0.5,
+			pos="342,306"];
+		g -> Z	[arrowtail=invodot,
+			pos="s,353.56,291.73 366.13,277.3 397.96,240.75 450,181 450,181",
+			tail_lp="361.85,262.9",
+			taillabel=invodot];
+		h	[height=0.5,
+			pos="396,306"];
+		h -> Z	[arrowtail=open,
+			pos="s,402.95,289.04 407.28,279.11 423.11,242.76 450,181 450,181",
+			tail_lp="402.18,259.05",
+			taillabel=open];
+		i	[height=0.5,
+			pos="450,306"];
+		i -> Z	[arrowhead=inv,
+			arrowtail=halfopen,
+			head_lp="462.68,208.19",
+			headlabel=samehead,
+			pos="s,450,287.76 450,277.72 450,241.21 450,181 450,181",
+			tail_lp="437.32,260.57",
+			taillabel=halfopen];
+		j	[height=0.5,
+			pos="504,306"];
+		j -> Z	[arrowtail=empty,
+			pos="s,497.05,289.04 492.52,278.64 476.66,242.23 450,181 450,181",
+			tail_lp="474.57,269.18",
+			taillabel=empty];
+		k	[height=0.5,
+			pos="558,306"];
+		k -> Z	[arrowtail=invempty,
+			pos="s,546.44,291.73 539.61,283.89 508.78,248.49 450,181 450,181",
+			tail_lp="519.02,279.55",
+			taillabel=invempty];
+		l	[height=0.5,
+			pos="612,306"];
+		l -> Z	[arrowtail=diamond,
+			pos="s,597.91,294.21 587.78,286.46 542.59,251.87 450,181 450,181",
+			tail_lp="568.61,287.75",
+			taillabel=diamond];
+		m	[height=0.5,
+			pos="666,306"];
+		m -> Z	[arrowtail=odiamond,
+			pos="s,650.94,295.34 640.1,288.66 639.73,288.44 639.37,288.22 639,288 556.14,238.49 450,181 450,181",
+			tail_lp="621.14,291.86",
+			taillabel=odiamond];
+		n	[height=0.5,
+			pos="720,306"];
+		n -> Z	[arrowtail=box,
+			pos="s,705.1,295.07 696.42,289.88 695.27,289.23 694.13,288.6 693,288 588.79,232.63 450,181 450,181",
+			tail_lp="675.25,291.99",
+			taillabel=box];
+		o	[height=0.5,
+			pos="774,306"];
+		o -> Z	[arrowtail=obox,
+			pos="s,759.48,295.05 750.55,289.83 749.37,289.19 748.18,288.57 747,288 620.9,226.49 450,181 450,181",
+			tail_lp="729.61,292.25",
+			taillabel=obox];
+		p	[height=0.5,
+			pos="828,306"];
+		p -> Z	[arrowtail=tee,
+			pos="s,813.54,294.91 809.35,292.37 806.61,290.78 803.78,289.27 801,288 652.68,220.18 450,181 450,181",
+			tail_lp="783.72,291.69",
+			taillabel=tee];
+		q	[height=0.5,
+			pos="882,306"];
+		q -> Z	[arrowtail=crow,
+			pos="s,867.59,294.8 858.61,289.7 857.41,289.09 856.2,288.52 855,288 684.26,213.77 450,181 450,181",
+			tail_lp="837.69,292.38",
+			taillabel=crow];
+	}
+	{
+		edge [samearrowtail=1,
+			sametail=atail
+		];
+		Z;
+		A	[height=0.5,
+			pos="18,18"];
+		Z -> A	[arrowhead=none,
+			head_lp="62.196,32.755",
+			headlabel=none,
+			pos="450,143 450,143 215.74,110.23 45,36 40.733,34.145 36.359,31.677 32.408,29.198"];
+		B	[height=0.5,
+			pos="72,18"];
+		Z -> B	[arrowhead=normal,
+			head_lp="116.35,31.554",
+			headlabel=normal,
+			pos="e,86.456,29.09 450,143 450,143 247.32,103.82 99,36 98.074,35.577 97.142,35.127 96.21,34.656"];
+		C	[height=0.5,
+			pos="126,18"];
+		Z -> C	[arrowhead=inv,
+			head_lp="170.39,31.751",
+			headlabel=inv,
+			pos="e,140.52,28.947 450,143 450,143 279.1,97.515 153,36 151.82,35.426 150.63,34.814 149.45,34.174"];
+		D	[height=0.5,
+			pos="180,18"];
+		Z -> D	[arrowhead=dot,
+			head_lp="224.74,32.106",
+			headlabel=dot,
+			pos="e,194.9,28.931 450,143 450,143 311.21,91.365 207,36 205.5,35.201 203.96,34.348 202.43,33.467"];
+		E	[height=0.5,
+			pos="234,18"];
+		Z -> E	[arrowhead=odot,
+			head_lp="278.85,32.229",
+			headlabel=odot,
+			pos="e,249.06,28.656 450,143 450,143 343.86,85.507 261,36 259.54,35.126 258.04,34.217 256.53,33.294"];
+		F	[height=0.5,
+			pos="288,18"];
+		Z -> F	[arrowhead=invdot,
+			head_lp="331.39,36.245",
+			headlabel=invdot,
+			pos="e,302.09,29.787 450,143 450,143 364.32,77.417 317.58,41.642"];
+		G	[height=0.5,
+			pos="342,18"];
+		Z -> G	[arrowhead=invodot,
+			head_lp="380.98,44.446",
+			headlabel=invodot,
+			pos="e,353.56,32.27 450,143 450,143 397.96,83.251 366.13,46.703"];
+		H	[height=0.5,
+			pos="396,18"];
+		Z -> H	[arrowhead=open,
+			head_lp="425.43,54.823",
+			headlabel=open,
+			pos="e,402.95,34.957 450,143 450,143 423.11,81.242 407.28,44.894"];
+		I	[height=0.5,
+			pos="450,18"];
+		Z -> I	[arrowhead=halfopen,
+			arrowtail=inv,
+			head_lp="462.68,63.431",
+			headlabel=halfopen,
+			pos="e,450,36.242 450,143 450,143 450,82.788 450,46.279",
+			tail_lp="437.32,115.81",
+			taillabel=sametail];
+		J	[height=0.5,
+			pos="504,18"];
+		Z -> J	[arrowhead=empty,
+			head_lp="497.82,64.947",
+			headlabel=empty,
+			pos="e,497.05,34.957 450,143 450,143 476.66,81.771 492.52,45.364"];
+		K	[height=0.5,
+			pos="558,18"];
+		Z -> K	[arrowhead=invempty,
+			head_lp="538.15,61.1",
+			headlabel=invempty,
+			pos="e,546.44,32.27 450,143 450,143 508.78,75.513 539.61,40.114"];
+		L	[height=0.5,
+			pos="612,18"];
+		Z -> L	[arrowhead=diamond,
+			head_lp="584.02,56.381",
+			headlabel=diamond,
+			pos="e,597.91,29.787 450,143 450,143 542.59,72.125 587.78,37.542"];
+		M	[height=0.5,
+			pos="666,18"];
+		Z -> M	[arrowhead=odiamond,
+			head_lp="634.45,53.719",
+			headlabel=odiamond,
+			pos="e,650.94,28.656 450,143 450,143 556.14,85.507 639,36 639.37,35.782 639.73,35.561 640.1,35.338"];
+		N	[height=0.5,
+			pos="720,18"];
+		Z -> N	[arrowhead=box,
+			head_lp="688.27,53.772",
+			headlabel=box,
+			pos="e,705.1,28.931 450,143 450,143 588.79,91.365 693,36 694.13,35.401 695.27,34.771 696.42,34.122"];
+		O	[height=0.5,
+			pos="774,18"];
+		Z -> O	[arrowhead=obox,
+			head_lp="742.43,53.63",
+			headlabel=obox,
+			pos="e,759.48,28.947 450,143 450,143 620.9,97.515 747,36 748.18,35.426 749.37,34.814 750.55,34.174"];
+		P	[height=0.5,
+			pos="828,18"];
+		Z -> P	[arrowhead=tee,
+			head_lp="796.84,54.011",
+			headlabel=tee,
+			pos="e,813.54,29.09 450,143 450,143 652.68,103.82 801,36 803.78,34.73 806.61,33.219 809.35,31.629"];
+		Q	[height=0.5,
+			pos="882,18"];
+		Z -> Q	[arrowhead=crow,
+			head_lp="850.22,53.658",
+			headlabel=crow,
+			pos="e,867.59,29.198 450,143 450,143 684.26,110.23 855,36 856.2,35.478 857.41,34.908 858.61,34.303"];
+	}
 }

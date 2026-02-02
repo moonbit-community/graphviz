@@ -14,12 +14,6 @@ priv struct ArrowFlags {
 }
 
 ///|
-const LINE_SPACING : Double = 1.2
-
-///|
-const TEXT_SCALE : Double = 0.9706
-
-///|
 const PAD_X_PT : Double = 16.0
 
 ///|
@@ -43,16 +37,6 @@ const MCIRCLE_X : Double = 0.6614
 const MCIRCLE_Y : Double = 0.75
 
 ///|
-fn font_width_scale(font_name : String) -> Double {
-  let lower = font_name.to_lower()
-  if lower.contains("palatino") {
-    1.02
-  } else {
-    1.0
-  }
-}
-
-///|
 fn svg_font_family(font_name : String) -> String {
   let lower = font_name.to_lower()
   if lower == "times-roman" || lower == "times" {
@@ -67,170 +51,29 @@ priv struct LabelLine {
   text : String
   align : @render.TextAlign
   width_pt : Double
+  height_pt : Double
+  yoffset_centerline : Double
 }
 
 ///|
-fn char_width_units_base(ch : Char) -> Int {
-  let base = match ch {
-    ' ' => 250
-    '\t' => 250
-    '!' => 333
-    '"' => 408
-    '#' => 500
-    '$' => 500
-    '%' => 833
-    '&' => 778
-    '\'' => 180
-    '(' | ')' | '[' | ']' => 333
-    '*' => 500
-    '+' | '<' | '=' | '>' => 564
-    ',' | '.' => 250
-    '-' => 333
-    '/' | '\\' => 278
-    '0'..='9' => 500
-    ':' | ';' => 278
-    '?' => 444
-    '@' => 921
-    'A' => 722
-    'B' => 667
-    'C' => 667
-    'D' => 722
-    'E' => 611
-    'F' => 556
-    'G' => 722
-    'H' => 722
-    'I' => 333
-    'J' => 389
-    'K' => 722
-    'L' => 611
-    'M' => 889
-    'N' => 722
-    'O' => 722
-    'P' => 556
-    'Q' => 722
-    'R' => 667
-    'S' => 556
-    'T' => 611
-    'U' => 722
-    'V' => 722
-    'W' => 944
-    'X' => 722
-    'Y' => 722
-    'Z' => 611
-    '^' => 469
-    '_' => 500
-    '`' => 333
-    'a' => 444
-    'b' => 500
-    'c' => 444
-    'd' => 500
-    'e' => 444
-    'f' => 333
-    'g' => 500
-    'h' => 500
-    'i' => 278
-    'j' => 278
-    'k' => 500
-    'l' => 278
-    'm' => 820
-    'n' => 500
-    'o' => 500
-    'p' => 500
-    'q' => 500
-    'r' => 333
-    's' => 389
-    't' => 278
-    'u' => 500
-    'v' => 500
-    'w' => 722
-    'x' => 500
-    'y' => 500
-    'z' => 444
-    '{' => 480
-    '|' => 200
-    '}' => 480
-    '~' => 541
-    _ => 500
-  }
-  if ch.is_ascii_lowercase() {
-    base - 2
-  } else {
-    base
-  }
-}
-
-///|
-fn char_width_units(ch : Char) -> Int {
-  let base = char_width_units_base(ch)
-  if ch.is_ascii_uppercase() {
-    base + 22
-  } else if ch.is_ascii_lowercase() {
-    base - 2
-  } else {
-    base
-  }
-}
-
-///|
-fn record_char_width_units(ch : Char) -> Int {
-  let base = char_width_units_base(ch)
-  if ch.is_ascii_lowercase() {
-    base - 2
-  } else {
-    base
-  }
+priv struct RawLabelLine {
+  text : String
+  align : @render.TextAlign
 }
 
 ///|
 fn push_label_line(
-  lines : Array[LabelLine],
+  lines : Array[RawLabelLine],
   text : String,
   align : @render.TextAlign,
-  width_units : Int,
-  font_size_pt : Double,
 ) -> Unit {
-  let width_pt = width_units.to_double() * font_size_pt * TEXT_SCALE / 1000.0
-  lines.push({ text, align, width_pt })
-}
-
-// Heuristic line heights tuned to Graphviz xdot baselines for common fonts.
-
-///|
-fn line_height_scale(font_name : String, font_size_pt : Double) -> Double {
-  let lower = font_name.to_lower()
-  if lower.contains("palatino") {
-    1.125
-  } else if lower.contains("times") {
-    let min_size = 10.0
-    let max_size = 14.0
-    if font_size_pt <= min_size {
-      1.125
-    } else if font_size_pt >= max_size {
-      1.1786
-    } else {
-      let t = (font_size_pt - min_size) / (max_size - min_size)
-      1.125 + t * (1.1786 - 1.125)
-    }
-  } else {
-    LINE_SPACING
-  }
+  lines.push({ text, align })
 }
 
 ///|
-fn line_height(font_name : String, font_size_pt : Double) -> Double {
-  font_size_pt * line_height_scale(font_name, font_size_pt)
-}
-
-///|
-fn centerline_offset(font_size_pt : Double) -> Double {
-  font_size_pt * 0.05
-}
-
-///|
-fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
-  let lines : Array[LabelLine] = []
+fn label_lines(label : String) -> Array[RawLabelLine] {
+  let lines : Array[RawLabelLine] = []
   let mut sb = StringBuilder::new()
-  let mut current_units = 0
   let mut has_chars = false
   let mut escaping = false
   for ch in label {
@@ -242,11 +85,8 @@ fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
             lines,
             sb.to_string(),
             @render.TextAlign::Center,
-            current_units,
-            font_size_pt,
           )
           sb = StringBuilder::new()
-          current_units = 0
           has_chars = false
         }
         'l' => {
@@ -254,11 +94,8 @@ fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
             lines,
             sb.to_string(),
             @render.TextAlign::Left,
-            current_units,
-            font_size_pt,
           )
           sb = StringBuilder::new()
-          current_units = 0
           has_chars = false
         }
         'r' => {
@@ -266,16 +103,12 @@ fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
             lines,
             sb.to_string(),
             @render.TextAlign::Right,
-            current_units,
-            font_size_pt,
           )
           sb = StringBuilder::new()
-          current_units = 0
           has_chars = false
         }
         _ => {
           sb.write_char(ch)
-          current_units = current_units + char_width_units(ch)
           has_chars = true
         }
       }
@@ -290,21 +123,16 @@ fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
         lines,
         sb.to_string(),
         @render.TextAlign::Center,
-        current_units,
-        font_size_pt,
       )
       sb = StringBuilder::new()
-      current_units = 0
       has_chars = false
       continue
     }
     sb.write_char(ch)
-    current_units = current_units + char_width_units(ch)
     has_chars = true
   }
   if escaping {
     sb.write_char('\\')
-    current_units = current_units + char_width_units('\\')
     has_chars = true
   }
   if has_chars || lines.length() == 0 {
@@ -312,8 +140,6 @@ fn label_lines(label : String, font_size_pt : Double) -> Array[LabelLine] {
       lines,
       sb.to_string(),
       @render.TextAlign::Center,
-      current_units,
-      font_size_pt,
     )
   }
   lines
@@ -325,116 +151,37 @@ fn label_metrics(
   font_name : String,
   font_size_pt : Double,
 ) -> (Array[LabelLine], Double, Double) {
-  let raw_lines = label_lines(label, font_size_pt)
-  let width_scale = font_width_scale(font_name)
+  let raw_lines = label_lines(label)
   let lines : Array[LabelLine] = []
   let mut max_width = 0.0
+  let mut total_height = 0.0
   for line in raw_lines {
-    let width_pt = line.width_pt * width_scale
+    let metrics_text = if line.text == "" { " " } else { line.text }
+    let (width_pt, height_pt, _yoffset_layout, yoffset_centerline) =
+      @layout_dot.label_text_metrics(
+        metrics_text,
+        font_name,
+        font_size_pt,
+      )
+    let width_pt = if line.text == "" { 0.0 } else { width_pt }
     if width_pt > max_width {
       max_width = width_pt
     }
-    lines.push({ text: line.text, align: line.align, width_pt })
+    total_height = total_height + height_pt
+    lines.push({
+      text: line.text,
+      align: line.align,
+      width_pt,
+      height_pt,
+      yoffset_centerline,
+    })
   }
-  let height_pt = line_height(font_name, font_size_pt) *
-    lines.length().to_double()
-  (lines, max_width, height_pt)
+  (lines, max_width, total_height)
 }
 
 ///|
-fn record_label_lines(
-  label : String,
-  font_size_pt : Double,
-) -> Array[LabelLine] {
-  let lines : Array[LabelLine] = []
-  let mut sb = StringBuilder::new()
-  let mut current_units = 0
-  let mut has_chars = false
-  let mut escaping = false
-  for ch in label {
-    if escaping {
-      escaping = false
-      match ch {
-        'n' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Center,
-            current_units,
-            font_size_pt,
-          )
-          sb = StringBuilder::new()
-          current_units = 0
-          has_chars = false
-        }
-        'l' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Left,
-            current_units,
-            font_size_pt,
-          )
-          sb = StringBuilder::new()
-          current_units = 0
-          has_chars = false
-        }
-        'r' => {
-          push_label_line(
-            lines,
-            sb.to_string(),
-            @render.TextAlign::Right,
-            current_units,
-            font_size_pt,
-          )
-          sb = StringBuilder::new()
-          current_units = 0
-          has_chars = false
-        }
-        _ => {
-          sb.write_char(ch)
-          current_units = current_units + record_char_width_units(ch)
-          has_chars = true
-        }
-      }
-      continue
-    }
-    if ch == '\\' {
-      escaping = true
-      continue
-    }
-    if ch == '\n' || ch == '\r' {
-      push_label_line(
-        lines,
-        sb.to_string(),
-        @render.TextAlign::Center,
-        current_units,
-        font_size_pt,
-      )
-      sb = StringBuilder::new()
-      current_units = 0
-      has_chars = false
-      continue
-    }
-    sb.write_char(ch)
-    current_units = current_units + record_char_width_units(ch)
-    has_chars = true
-  }
-  if escaping {
-    sb.write_char('\\')
-    current_units = current_units + record_char_width_units('\\')
-    has_chars = true
-  }
-  if has_chars || lines.length() == 0 {
-    push_label_line(
-      lines,
-      sb.to_string(),
-      @render.TextAlign::Center,
-      current_units,
-      font_size_pt,
-    )
-  }
-  lines
+fn record_label_lines(label : String) -> Array[RawLabelLine] {
+  label_lines(label)
 }
 
 ///|
@@ -443,20 +190,38 @@ fn record_label_metrics(
   font_name : String,
   font_size_pt : Double,
 ) -> (Array[LabelLine], Double, Double) {
-  let raw_lines = record_label_lines(label, font_size_pt)
-  let width_scale = font_width_scale(font_name)
+  let raw_lines = record_label_lines(label)
   let lines : Array[LabelLine] = []
   let mut max_width = 0.0
+  let mut total_height = 0.0
   for line in raw_lines {
-    let width_pt = line.width_pt * width_scale
+    let metrics_text = if line.text == "" { " " } else { line.text }
+    let (width_pt, height_pt) =
+      @layout_dot.record_label_text_dimensions(
+        metrics_text,
+        font_name,
+        font_size_pt,
+      )
+    let (_w, _h, _yoffset_layout, yoffset_centerline) =
+      @layout_dot.label_text_metrics(
+        metrics_text,
+        font_name,
+        font_size_pt,
+      )
+    let width_pt = if line.text == "" { 0.0 } else { width_pt }
     if width_pt > max_width {
       max_width = width_pt
     }
-    lines.push({ text: line.text, align: line.align, width_pt })
+    total_height = total_height + height_pt
+    lines.push({
+      text: line.text,
+      align: line.align,
+      width_pt,
+      height_pt,
+      yoffset_centerline,
+    })
   }
-  let height_pt = line_height(font_name, font_size_pt) *
-    lines.length().to_double()
-  (lines, max_width, height_pt)
+  (lines, max_width, total_height)
 }
 
 ///|
@@ -1392,7 +1157,7 @@ fn write_record_labels(
             x: (layout.rect.llx + layout.rect.urx) / 2.0,
             y: (layout.rect.lly + layout.rect.ury) / 2.0,
           }
-          write_label_lines(
+          write_record_label_lines(
             sb, text, font, size, color, center, bbox, indent, pretty,
           )
         }
@@ -1596,13 +1361,12 @@ fn write_html_text_lines(
   if lines.length() == 0 {
     return ()
   }
-  let line_step = line_height(font, size)
   let center_y = match valign {
     @html_label.HtmlVAlign::Top => rect.ury - total_height / 2.0
     @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
     @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
   }
-  let start_y = center_y + total_height / 2.0 - size + centerline_offset(size)
+  let mut baseline = center_y + total_height / 2.0 - size
   let line_x = match align {
     @html_label.HtmlAlign::Left => rect.llx
     @html_label.HtmlAlign::Right => rect.urx
@@ -1613,21 +1377,20 @@ fn write_html_text_lines(
     @html_label.HtmlAlign::Right => "end"
     @html_label.HtmlAlign::Center => "middle"
   }
-  for i in 0..<lines.length() {
-    let line = lines[i]
-    if line.text == "" {
-      continue
+  for line in lines {
+    let line_y = baseline + line.yoffset_centerline
+    if line.text != "" {
+      let x = svg_x(line_x, bbox.llx)
+      let y = svg_y(line_y, bbox.lly)
+      let escaped = escape_xml(line.text)
+      write_line(
+        sb,
+        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        indent,
+        pretty,
+      )
     }
-    let line_y = start_y - line_step * i.to_double()
-    let x = svg_x(line_x, bbox.llx)
-    let y = svg_y(line_y, bbox.lly)
-    let escaped = escape_xml(line.text)
-    write_line(
-      sb,
-      "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
-      indent,
-      pretty,
-    )
+    baseline = baseline - line.height_pt
   }
 }
 
@@ -2025,33 +1788,76 @@ fn write_label_lines(
   }
   let font_family = svg_font_family(font)
   let (lines, max_width, total_height) = label_metrics(text, font, size)
-  let line_step = line_height(font, size)
-  let start_y = pos.y + total_height / 2.0 - size + centerline_offset(size)
-  for i in 0..<lines.length() {
-    let line = lines[i]
-    if line.text == "" {
-      continue
-    }
+  let mut baseline = pos.y + total_height / 2.0 - size
+  for line in lines {
     let line_x = match line.align {
       @render.TextAlign::Left => pos.x - max_width / 2.0
       @render.TextAlign::Right => pos.x + max_width / 2.0
       @render.TextAlign::Center => pos.x
     }
-    let line_y = start_y - line_step * i.to_double()
-    let anchor = match line.align {
-      @render.TextAlign::Left => "start"
-      @render.TextAlign::Right => "end"
-      @render.TextAlign::Center => "middle"
+    let line_y = baseline + line.yoffset_centerline
+    if line.text != "" {
+      let anchor = match line.align {
+        @render.TextAlign::Left => "start"
+        @render.TextAlign::Right => "end"
+        @render.TextAlign::Center => "middle"
+      }
+      let x = svg_x(line_x, bbox.llx)
+      let y = svg_y(line_y, bbox.lly)
+      let escaped = escape_xml(line.text)
+      write_line(
+        sb,
+        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        indent,
+        pretty,
+      )
     }
-    let x = svg_x(line_x, bbox.llx)
-    let y = svg_y(line_y, bbox.lly)
-    let escaped = escape_xml(line.text)
-    write_line(
-      sb,
-      "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
-      indent,
-      pretty,
-    )
+    baseline = baseline - line.height_pt
+  }
+}
+
+///|
+fn write_record_label_lines(
+  sb : StringBuilder,
+  text : String,
+  font : String,
+  size : Double,
+  color : String,
+  pos : @geom.Point,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  if text == "" {
+    return ()
+  }
+  let font_family = svg_font_family(font)
+  let (lines, max_width, total_height) = record_label_metrics(text, font, size)
+  let mut baseline = pos.y + total_height / 2.0 - size
+  for line in lines {
+    let line_x = match line.align {
+      @render.TextAlign::Left => pos.x - max_width / 2.0
+      @render.TextAlign::Right => pos.x + max_width / 2.0
+      @render.TextAlign::Center => pos.x
+    }
+    let line_y = baseline + line.yoffset_centerline
+    if line.text != "" {
+      let anchor = match line.align {
+        @render.TextAlign::Left => "start"
+        @render.TextAlign::Right => "end"
+        @render.TextAlign::Center => "middle"
+      }
+      let x = svg_x(line_x, bbox.llx)
+      let y = svg_y(line_y, bbox.lly)
+      let escaped = escape_xml(line.text)
+      write_line(
+        sb,
+        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        indent,
+        pretty,
+      )
+    }
+    baseline = baseline - line.height_pt
   }
 }
 

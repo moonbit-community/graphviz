@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+shopt -s nullglob
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 GRAPHVIZ_DIR="$ROOT/refs/graphviz"
@@ -68,8 +69,14 @@ fi
 mkdir -p "$OUT_DIR"
 : > "$TMP_FILE"
 
-# Use only source .dot inputs; .gv.dot snapshots include bare attrs that Graphviz won't parse.
-for input in "$ROOT"/tests/layout/dot/*.dot; do
+# Use only source .dot/.gv inputs; .gv.dot snapshots include bare attrs that Graphviz won't parse.
+inputs=(
+  "$ROOT"/tests/layout/dot/*.dot
+  "$ROOT"/refs/graphviz/doc/dotguide/*.dot
+  "$ROOT"/refs/graphviz/graphs/directed/*.gv
+  "$ROOT"/refs/graphviz/graphs/directed/*.dot
+)
+for input in "${inputs[@]}"; do
   if [[ "$input" == *.gv.dot ]]; then
     continue
   fi

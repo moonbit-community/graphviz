@@ -4,6 +4,8 @@ const CCW_ISCW : Int = 2
 const CCW_ISON : Int = 3
 
 ///|
+/// Graphviz parity: pathplan aligned to refs/graphviz/lib/pathplan/route.c + shortest.c + visibility.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 priv struct PathNode {
   point : @geom.Point
   mut link : Int?

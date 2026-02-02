@@ -1,3 +1,6 @@
+///|
+/// Graphviz parity: aligned to refs/graphviz/lib/dotgen/rank.c + common/ns.c + dotgen/acyclic.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn compute_ranks_directed_base(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],

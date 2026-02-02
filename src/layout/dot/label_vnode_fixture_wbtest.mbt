@@ -160,6 +160,7 @@ fn label_vnode_key(
 }
 
 ///|
+///|
 fn collect_label_vnode_actuals(
   graph : @cgraph.Graph,
 ) -> Array[LabelVnodeActual] raise {
@@ -352,9 +353,56 @@ test "label vnodes match Graphviz fixtures" {
       fail("missing fixtures for \{graph_name}")
     }
     let graph = @dot_parser.parse_dot_file(path)
+    let nodes = graph.nodes()
+    let edges = graph.edges()
+    let has_edge_labels = graph_has_edge_labels(edges)
+    let ranks = compute_ranks_directed_with_clusters(
+      graph,
+      nodes,
+      edges,
+      has_edge_labels,
+    )
+    let rankdir = graph_rankdir(graph)
+    let expected_flip =
+      rankdir == RankDir::LR || rankdir == RankDir::RL
+    let expected_nodesep = graph_nodesep_pt(graph)
     let actuals = collect_label_vnode_actuals(graph)
     let fixture_map : Map[String, Array[LabelVnodeFixture]] = Map::new()
     for entry in fixture_entries {
+      assert_eq(entry.graph, graph_name)
+      assert_eq(entry.label_html, false)
+      assert_eq(entry.label_ontop, false)
+      assert_eq(entry.flip, expected_flip)
+      assert_eq(entry.nodesep, expected_nodesep)
+      let tail_rank = match ranks.get(entry.tail) {
+        Some(value) => value
+        None => fail("missing tail rank for \{entry.tail}")
+      }
+      let head_rank = match ranks.get(entry.head) {
+        Some(value) => value
+        None => fail("missing head rank for \{entry.head}")
+      }
+      assert_eq(tail_rank, entry.tail_rank)
+      assert_eq(head_rank, entry.head_rank)
+      let edge = match find_edge_by_nodes(graph, entry.tail, entry.head) {
+        Some(value) => value
+        None =>
+          fail(
+            "missing edge \{entry.tail} -> \{entry.head} for label vnode fixtures",
+          )
+      }
+      let label_rank_info = match edge_label_rank_info(edge, ranks) {
+        Some(value) => value
+        None => fail("missing label rank info for \{entry.tail} -> \{entry.head}")
+      }
+      let (label_rank, _span) = label_rank_info
+      assert_eq(label_rank, entry.label_rank)
+      let (width, height) = match edge_mid_label_metrics(edge) {
+        Some(value) => value
+        None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
+      }
+      assert_eq(width, entry.dimen_x)
+      assert_eq(height, entry.dimen_y)
       let key = label_vnode_key(entry.tail, entry.head, entry.label, entry.label_rank)
       match fixture_map.get(key) {
         Some(list) => list.push(entry)
@@ -399,14 +447,220 @@ test "flat label node sizes match Graphviz fixtures" {
     fail("missing fixtures for \{graph_name}")
   }
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/flat_edge_label.dot")
+  let nodes = graph.nodes()
+  let edges = graph.edges()
+  let has_edge_labels = graph_has_edge_labels(edges)
+  let ranks = compute_ranks_directed_with_clusters(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+  )
+  let rankdir = graph_rankdir(graph)
+  let expected_flip =
+    rankdir == RankDir::LR || rankdir == RankDir::RL
+  let record_orientation = record_layout_orientation(rankdir)
+  let sizes : Map[String, NodeSize] = Map::new()
+  for node in nodes {
+    let size = node_size(node, record_orientation)
+    sizes[node.name()] =
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      swap_node_size(size)
+    } else {
+      size
+    }
+  }
+  let groups = build_rank_groups(nodes, ranks)
+  let ordered_groups = groups
+  let rank_keys : Array[Int] = []
+  for key, _ in groups {
+    rank_keys.push(key)
+  }
+  rank_keys.sort()
+  let all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let min_rank = rank_keys[0]
+    let max_rank = rank_keys[rank_keys.length() - 1]
+    for rank in min_rank..=max_rank {
+      all_ranks.push(rank)
+    }
+  }
+  let self_edge_labels = self_edge_label_half_heights(edges)
+  let rank_pht : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    rank_pht[rank] = 0.0
+  }
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let mut max_half = 0.0
+    for name in names {
+      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      if half_height > max_half {
+        max_half = half_height
+      }
+    }
+    rank_pht[rank] = max_half
+  }
+  if has_edge_labels {
+    for edge in edges {
+      if !edge_has_label(edge) {
+        continue
+      }
+      let tail = edge.tail().name()
+      let head = edge.head().name()
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => continue
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => continue
+      }
+      let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+      let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+      if max_rank - min_rank <= 1 {
+        continue
+      }
+      let label_rank = (min_rank + max_rank) / 2
+      let half_height = edge_label_height_pt(edge) / 2.0
+      let current = match rank_pht.get(label_rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      if half_height > current {
+        rank_pht[label_rank] = half_height
+      }
+    }
+  }
+  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht2 : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    let half_height = match rank_pht.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    rank_ht1[rank] = half_height
+    rank_ht2[rank] = half_height
+  }
+  let _ = apply_cluster_rank_heights(
+    graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
+  )
+  let ranksep_in = match graph.get_attr("ranksep") {
+    Some(value) => parse_first_double(value, default_ranksep_in())
+    None => default_ranksep_in()
+  }
+  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
+  if has_edge_labels {
+    ranksep_pt_int = (ranksep_pt_int + 1) / 2
+  }
+  let ranksep_pt = ranksep_pt_int.to_double()
   let actuals = collect_flat_label_node_actuals(graph)
   let fixture_map : Map[String, Array[FlatLabelNodeFixture]] = Map::new()
   for entry in fixtures {
+    assert_eq(entry.graph, graph_name)
+    assert_eq(entry.label_html, false)
+    assert_eq(entry.flip, expected_flip)
+    assert_eq(entry.order, 0)
+    assert_eq(entry.place, 0)
+    let edge = match find_edge_by_nodes(graph, entry.tail, entry.head) {
+      Some(value) => value
+      None =>
+        fail(
+          "missing edge \{entry.tail} -> \{entry.head} for flat label fixtures",
+        )
+    }
+    let tail_rank = match ranks.get(entry.tail) {
+      Some(value) => value
+      None => fail("missing tail rank for \{entry.tail}")
+    }
+    let head_rank = match ranks.get(entry.head) {
+      Some(value) => value
+      None => fail("missing head rank for \{entry.head}")
+    }
+    assert_eq(tail_rank, head_rank)
+    assert_eq(entry.rank, tail_rank - 1)
+    let (width, height) = match edge_mid_label_metrics(edge) {
+      Some(value) => value
+      None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
+    }
+    assert_eq(width, entry.dimen_x)
+    assert_eq(height, entry.dimen_y)
+    assert_eq(
+      flat_label_adjacent(tail_rank, entry.tail, entry.head, ordered_groups),
+      false,
+    )
+    let half_height = entry.dimen_y / 2.0
+    let current = match rank_pht.get(entry.rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    if half_height > current {
+      rank_pht[entry.rank] = half_height
+    }
+    let current_ht1 = match rank_ht1.get(entry.rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    if half_height > current_ht1 {
+      rank_ht1[entry.rank] = half_height
+    }
+    let current_ht2 = match rank_ht2.get(entry.rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    if half_height > current_ht2 {
+      rank_ht2[entry.rank] = half_height
+    }
     let key = "\{entry.tail}|\{entry.head}|\{entry.label}|\{entry.rank}"
     match fixture_map.get(key) {
       Some(list) => list.push(entry)
       None => fixture_map[key] = [entry]
     }
+  }
+  let y_all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let mut min_rank = rank_keys[0]
+    let mut max_rank = rank_keys[rank_keys.length() - 1]
+    for entry in fixtures {
+      if entry.rank < min_rank {
+        min_rank = entry.rank
+      }
+      if entry.rank > max_rank {
+        max_rank = entry.rank
+      }
+    }
+    for rank in min_rank..=max_rank {
+      y_all_ranks.push(rank)
+    }
+  }
+  let y_positions : Map[String, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map::new()
+  fill_rank_positions(
+    rank_keys,
+    groups,
+    y_all_ranks,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+    ranksep_pt,
+    y_positions,
+    rank_y,
+  )
+  for entry in fixtures {
+    let rank_y_value = match rank_y.get(entry.rank) {
+      Some(value) => value
+      None => fail("missing rank y for \{entry.rank}")
+    }
+    let ht1_value = match rank_ht1.get(entry.rank) {
+      Some(value) => value
+      None => fail("missing rank ht1 for \{entry.rank}")
+    }
+    let half_height = entry.dimen_y / 2.0
+    let coord_y = rank_y_value - ht1_value + half_height
+    assert_eq(coord_y, entry.coord_y)
   }
   let actual_map : Map[String, Array[FlatLabelNodeActual]] = Map::new()
   for entry in actuals {

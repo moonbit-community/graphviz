@@ -103,10 +103,73 @@ fn load_edge_label_flat_fixtures() -> Array[EdgeLabelFlatFixture] raise {
 }
 
 ///|
+fn find_edge_by_nodes_with_label(
+  graph : @cgraph.Graph,
+  tail : String,
+  head : String,
+  label : String,
+) -> @cgraph.Edge? {
+  for edge in graph.edges() {
+    if edge.tail().name() != tail || edge.head().name() != head {
+      continue
+    }
+    let edge_label = match edge.get_attr("label") {
+      Some(value) => value
+      None => ""
+    }
+    if edge_label == label {
+      return Some(edge)
+    }
+  }
+  None
+}
+
+///|
+fn load_edge_label_graph(
+  graphs : Map[String, @cgraph.Graph],
+  name : String,
+) -> @cgraph.Graph raise {
+  match graphs.get(name) {
+    Some(value) => value
+    None => {
+      let path = match name {
+        "yours_truly" => "tests/layout/dot/complex.dot"
+        "edge_labels" => "tests/layout/dot/edge_label_spacing.dot"
+        "edge_vnode_spacing" => "tests/layout/dot/edge_vnode_spacing.dot"
+        _ => fail("unknown edge label fixture graph \{name}")
+      }
+      let graph = @dot_parser.parse_dot_file(path)
+      graphs[name] = graph
+      graph
+    }
+  }
+}
+
+///|
 test "edge label vnode positions match Graphviz" {
   let fixtures = load_edge_label_vnode_fixtures()
   guard fixtures.length() > 0 else { fail("missing edge label vnode fixtures") }
+  let graphs : Map[String, @cgraph.Graph] = Map::new()
   for fixture in fixtures {
+    assert_eq(fixture.label_html, false)
+    assert_eq(fixture.flip, false)
+    if fixture.graph == "" || fixture.tail == "" || fixture.head == "" ||
+      fixture.label == "" {
+      fail("missing edge label vnode fixture fields")
+    }
+    let graph = load_edge_label_graph(graphs, fixture.graph)
+    match find_edge_by_nodes_with_label(
+      graph,
+      fixture.tail,
+      fixture.head,
+      fixture.label,
+    ) {
+      Some(_) => ()
+      None =>
+        fail(
+          "missing labeled edge \{fixture.tail} -> \{fixture.head} '\{fixture.label}' for edge label vnode fixtures",
+        )
+    }
     let rankdir = if fixture.flip { RankDir::LR } else { RankDir::TB }
     let actual = edge_label_pos_from_vnode(
       point(fixture.vnode_x, fixture.vnode_y),
@@ -126,7 +189,30 @@ test "edge label vnode positions match Graphviz" {
 test "flat edge label positions match Graphviz" {
   let fixtures = load_edge_label_flat_fixtures()
   guard fixtures.length() > 0 else { fail("missing flat edge label fixtures") }
+  let graph = @dot_parser.parse_dot_file(
+    "tests/layout/dot/flat_edge_label_adjacent.dot",
+  )
   for fixture in fixtures {
+    assert_eq(fixture.label_html, false)
+    assert_eq(fixture.flip, false)
+    assert_eq(fixture.graph, "flat_label_adjacent")
+    assert_eq(fixture.place, 0)
+    if fixture.label == "" {
+      fail("empty flat edge label for \{fixture.tail} -> \{fixture.head}")
+    }
+    let edge = match find_edge_by_nodes(graph, fixture.tail, fixture.head) {
+      Some(value) => value
+      None =>
+        fail(
+          "missing edge \{fixture.tail} -> \{fixture.head} for flat label fixtures",
+        )
+    }
+    let (width, height) = match edge_mid_label_metrics(edge) {
+      Some(value) => value
+      None => fail("missing label metrics for \{fixture.tail} -> \{fixture.head}")
+    }
+    assert_eq(width, fixture.dimen_x)
+    assert_eq(height, fixture.dimen_y)
     let actual = flat_edge_label_pos_simple(
       point(fixture.tp_x, fixture.tp_y),
       point(fixture.hp_x, fixture.hp_y),

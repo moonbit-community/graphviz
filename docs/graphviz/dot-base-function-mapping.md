@@ -17,6 +17,20 @@ prioritizing alignment work.
 
 ## Mapping by subsystem
 
+### Layout pipeline (layout_dot orchestration)
+
+MoonBit:
+- `src/layout/dot/layout.mbt` (layout entry point)
+- `src/layout/dot/layout_pipeline_helpers.mbt` (layout input prep + rank/order/xpos orchestration)
+- `src/layout/dot/layout_postprocess_helpers.mbt` (final layout assembly + bbox/label postprocess)
+
+Graphviz:
+- `refs/graphviz/lib/dotgen/dotinit.c` (dot_layout entry + dispatch)
+- `refs/graphviz/lib/dotgen/dotprocs.h` / `dotgen/dotinit.c` (engine glue)
+
+Notes:
+- The pipeline delegates to the subsystem mappings below.
+
 ### Text metrics + label sizing
 
 MoonBit:
@@ -34,6 +48,8 @@ Graphviz:
 Notes:
 - Capture font name/size + raw string -> width/height points.
 - Keep integer/float outputs exact; no tolerance expected in unit tests.
+- Xlabel placement (`label/xlabels.c`) is not yet implemented in MoonBit; do not
+  claim parity for exterior label placement until it is ported.
 
 ### Record / port layout
 
@@ -128,6 +144,8 @@ MoonBit:
 - `src/layout/dot/edge_spline/edge_spline.mbt` (bezier, clipping, arrowheads,
   miter joins)
 - `src/layout/dot/edge_routing_helpers.mbt` (dot-specific polyline/dotted tweaks)
+- `src/layout/dot/layout_routing_helpers.mbt` (dot routing orchestration:
+  `build_edge_route_base`, `build_edge_spline`, `build_edge_layout`, `route_edges`)
 
 Graphviz:
 - `refs/graphviz/lib/dotgen/dotsplines.c`
@@ -143,6 +161,22 @@ Graphviz:
 
 Notes:
 - Capture obstacle polygons + start/end points -> polyline -> final bezier.
+
+### Postprocess (rankdir transform + graph/cluster labels)
+
+MoonBit:
+- `src/layout/dot/layout_postprocess_helpers.mbt` (final layout assembly, label positioning,
+  translation to origin, root padding)
+- `src/layout/dot/layout_bbox.mbt` (rankdir transforms + shift helpers)
+- `src/layout/dot/label_layout.mbt` (graph/cluster label positioning + bbox expansion)
+
+Graphviz:
+- `refs/graphviz/lib/common/postproc.c` (gv_postprocess, translate_drawing, place_graph_label)
+- `refs/graphviz/lib/common/input.c` (label border padding)
+- `refs/graphviz/lib/dotgen/position.c` (cluster padding/ht adjustments)
+
+Notes:
+- Root label placement happens after translation (see `gv_postprocess`).
 
 ### Geometry helpers
 

@@ -5,6 +5,8 @@ type NodeSize = @dot_shared.NodeSize
 type RankDir = @dot_shared.RankDir
 
 ///|
+/// Graphviz parity: route/splines aligned to refs/graphviz/lib/pathplan/*.c + common/routespl.c + common/splines.c + dotgen/dotsplines.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn default_node_width_in() -> Double {
   @dot_shared.default_node_width_in()
 }
@@ -42,6 +44,9 @@ fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
 
 ///|
 const ROUTE_FUDGE : Double = 4.0
+
+///|
+const ROUTE_LABEL_PAD : Double = 10.0
 
 ///|
 const ROUTE_MIN_WIDTH : Double = 16.0
@@ -173,7 +178,6 @@ fn compute_horizontal_bounds(
   }
   let mut left_bound = 0.0
   let mut right_bound = 0.0
-  let mut seen = false
   let mut rank = start_rank
   while rank <= end_rank {
     match x_groups.get(rank) {
@@ -193,17 +197,11 @@ fn compute_horizontal_bounds(
         let right_size = size_for_name(right_name, sizes)
         let left = left_pos.x - left_size.left_pt
         let right = right_pos.x + right_size.right_pt
-        if !seen {
+        if left < left_bound {
           left_bound = left
+        }
+        if right > right_bound {
           right_bound = right
-          seen = true
-        } else {
-          if left < left_bound {
-            left_bound = left
-          }
-          if right > right_bound {
-            right_bound = right
-          }
         }
       }
       None => ()
@@ -212,7 +210,7 @@ fn compute_horizontal_bounds(
     right_bound = right_bound + ROUTE_MIN_WIDTH
     rank = rank + 1
   }
-  if !seen { (0.0, 0.0) } else { (left_bound, right_bound) }
+  (left_bound, right_bound)
 }
 
 ///|
@@ -448,12 +446,28 @@ fn cluster_key_for_name(
 }
 
 ///|
+fn vnode_inside_cluster(
+  name : String,
+  cluster_key : String,
+  positions : Map[String, @geom.Point],
+  cluster_bboxes : Map[String, @geom.Rect],
+) -> Bool {
+  match (positions.get(name), cluster_bboxes.get(cluster_key)) {
+    (Some(pos), Some(rect)) =>
+      pos.x >= rect.llx && pos.x <= rect.urx && pos.y >= rect.lly &&
+      pos.y <= rect.ury
+    _ => false
+  }
+}
+
+///|
 ///|
 fn maximal_bbox_for_name(
   name : String,
   rank : Int,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
+  mval_sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
@@ -478,6 +492,10 @@ fn maximal_bbox_for_name(
     None => return None
   }
   let size = size_for_name(name, sizes)
+  let vn_cluster = cluster_key_for_name(name, cluster_keys, vnode_clusters)
+  let is_virtual = is_virtual_node(name, vnode_sizes)
+  let block_cluster_a = if is_virtual { tail_cluster } else { vn_cluster }
+  let block_cluster_b = if is_virtual { head_cluster } else { vn_cluster }
   let (left_neighbor, right_neighbor) =
     neighbor_names_for_rank(
       name,
@@ -490,22 +508,37 @@ fn maximal_bbox_for_name(
       path_prev,
       path_next,
     )
-  let neighbor_sep = (neighbor : String) => {
-    let neighbor_size = size_for_name(neighbor, sizes)
-    let is_virtual = vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
+  let neighbor_sep = (neighbor : String, neighbor_size : NodeSize) => {
+    let is_virtual =
+      vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
     if is_virtual { splinesep_pt } else { nodesep_pt / 2.0 }
   }
+  let is_label_vnode = is_label_virtual(name, vnode_sizes)
   let mut b = pos.x - size.left_pt - ROUTE_FUDGE
   match left_neighbor {
     Some(neighbor) => {
       let neighbor_cluster =
         cluster_key_for_name(neighbor, cluster_keys, vnode_clusters)
-      if neighbor_cluster != "" &&
-        neighbor_cluster != tail_cluster &&
-        neighbor_cluster != head_cluster {
+      let use_cluster =
+        neighbor_cluster != "" &&
+          neighbor_cluster != block_cluster_a &&
+          neighbor_cluster != block_cluster_b &&
+          (!is_virtual_node(neighbor, vnode_sizes) ||
+            vnode_inside_cluster(
+              neighbor,
+              neighbor_cluster,
+              positions,
+              cluster_bboxes,
+            ))
+      if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
             let nb = rect.urx + splinesep_pt
+            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+              println(
+                "  left_cluster \{name} -> \{neighbor} cluster=\{neighbor_cluster} rect=\{rect.llx},\{rect.lly},\{rect.urx},\{rect.ury} nb=\{nb}",
+              )
+            }
             if nb < b {
               b = nb
             }
@@ -516,7 +549,17 @@ fn maximal_bbox_for_name(
         match positions.get(neighbor) {
           Some(neighbor_pos) => {
             let neighbor_size = size_for_name(neighbor, sizes)
-            let nb = neighbor_pos.x + neighbor_size.right_pt + neighbor_sep(neighbor)
+            let is_virtual =
+              vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
+            let neighbor_right =
+              if is_virtual {
+              neighbor_size.right_pt
+            } else {
+              size_for_name(neighbor, mval_sizes).right_pt
+            }
+            let nb =
+              neighbor_pos.x + neighbor_right +
+              neighbor_sep(neighbor, neighbor_size)
             if nb < b {
               b = nb
             }
@@ -531,17 +574,35 @@ fn maximal_bbox_for_name(
     }
   }
   let mut llx = b.round()
-  let mut br = pos.x + size.right_pt + ROUTE_FUDGE
+  if left_neighbor is None {
+    llx = min_double(llx, left_bound)
+  }
+  let mut br =
+    if is_label_vnode { pos.x + ROUTE_LABEL_PAD } else { pos.x + size.right_pt + ROUTE_FUDGE }
   match right_neighbor {
     Some(neighbor) => {
       let neighbor_cluster =
         cluster_key_for_name(neighbor, cluster_keys, vnode_clusters)
-      if neighbor_cluster != "" &&
-        neighbor_cluster != tail_cluster &&
-        neighbor_cluster != head_cluster {
+      let use_cluster =
+        neighbor_cluster != "" &&
+          neighbor_cluster != block_cluster_a &&
+          neighbor_cluster != block_cluster_b &&
+          (!is_virtual_node(neighbor, vnode_sizes) ||
+            vnode_inside_cluster(
+              neighbor,
+              neighbor_cluster,
+              positions,
+              cluster_bboxes,
+            ))
+      if use_cluster {
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
             let nb = rect.llx - splinesep_pt
+            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+              println(
+                "  right_cluster \{name} -> \{neighbor} cluster=\{neighbor_cluster} rect=\{rect.llx},\{rect.lly},\{rect.urx},\{rect.ury} nb=\{nb}",
+              )
+            }
             if nb > br {
               br = nb
             }
@@ -552,7 +613,14 @@ fn maximal_bbox_for_name(
         match positions.get(neighbor) {
           Some(neighbor_pos) => {
             let neighbor_size = size_for_name(neighbor, sizes)
-            let nb = neighbor_pos.x - neighbor_size.left_pt - neighbor_sep(neighbor)
+            let nb =
+              neighbor_pos.x - neighbor_size.left_pt -
+              neighbor_sep(neighbor, neighbor_size)
+            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+              println(
+                "  right_neighbor \{name} -> \{neighbor} pos=\{neighbor_pos.x},\{neighbor_pos.y} left_pt=\{neighbor_size.left_pt} nb=\{nb}",
+              )
+            }
             if nb > br {
               br = nb
             }
@@ -567,10 +635,14 @@ fn maximal_bbox_for_name(
     }
   }
   let mut urx = br.round()
-  if llx >= urx {
-    let mid = (llx + urx) / 2.0
-    llx = mid - ROUTE_MIN_WIDTH / 2.0
-    urx = mid + ROUTE_MIN_WIDTH / 2.0
+  if right_neighbor is None {
+    urx = max_double(urx, right_bound)
+  }
+  if is_label_vnode {
+    urx = urx - size.right_pt
+    if urx < llx {
+      urx = pos.x
+    }
   }
   let ht1 = match rank_ht1.get(rank) {
     Some(value) => value
@@ -586,6 +658,19 @@ fn maximal_bbox_for_name(
     let tmp = lly
     lly = ury
     ury = tmp
+  }
+  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+    let left_name = match left_neighbor {
+      Some(value) => value
+      None => "None"
+    }
+    let right_name = match right_neighbor {
+      Some(value) => value
+      None => "None"
+    }
+    println(
+      "  node \{name} rank=\{rank} pos=\{pos.x},\{pos.y} size=\{size.left_pt},\{size.right_pt} left=\{left_name} right=\{right_name} box=\{llx},\{lly},\{urx},\{ury}",
+    )
   }
   Some({ llx, lly, urx, ury })
 }
@@ -636,11 +721,6 @@ fn rank_gap_box(
     let tmp = llx
     llx = urx
     urx = tmp
-  }
-  if urx - llx < ROUTE_MIN_WIDTH {
-    let mid = (llx + urx) / 2.0
-    llx = mid - ROUTE_MIN_WIDTH / 2.0
-    urx = mid + ROUTE_MIN_WIDTH / 2.0
   }
   Some({ llx, lly, urx, ury })
 }
@@ -1046,6 +1126,159 @@ fn adjust_regular_path(
 }
 
 ///|
+fn polyline_to_spline_points(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
+  if points.length() < 2 {
+    return []
+  }
+  let out : Array[@geom.Point] = []
+  out.push(points[0])
+  out.push(points[0])
+  let mut i = 1
+  while i + 1 < points.length() {
+    let p = points[i]
+    out.push(p)
+    out.push(p)
+    out.push(p)
+    i = i + 1
+  }
+  let last = points[points.length() - 1]
+  out.push(last)
+  out.push(last)
+  out
+}
+
+///|
+fn limit_boxes_sample(
+  boxes : Array[@geom.Rect],
+  spline_points : Array[@geom.Point],
+  delta : Double,
+  fudge : Double,
+) -> Unit {
+  if boxes.length() == 0 || spline_points.length() < 4 {
+    return ()
+  }
+  let num_div = delta * boxes.length().to_double()
+  if num_div <= 0.0 {
+    return ()
+  }
+  let mut spline_idx = 0
+  while spline_idx + 3 < spline_points.length() {
+    let p0 = spline_points[spline_idx]
+    let p1 = spline_points[spline_idx + 1]
+    let p2 = spline_points[spline_idx + 2]
+    let p3 = spline_points[spline_idx + 3]
+    let mut si = 0.0
+    while si <= num_div {
+      let t = si / num_div
+      let mut x0 = p0.x
+      let mut y0 = p0.y
+      let mut x1 = p1.x
+      let mut y1 = p1.y
+      let mut x2 = p2.x
+      let mut y2 = p2.y
+      let x3 = p3.x
+      let y3 = p3.y
+      x0 = x0 + t * (x1 - x0)
+      y0 = y0 + t * (y1 - y0)
+      x1 = x1 + t * (x2 - x1)
+      y1 = y1 + t * (y2 - y1)
+      x2 = x2 + t * (x3 - x2)
+      y2 = y2 + t * (y3 - y2)
+      x0 = x0 + t * (x1 - x0)
+      y0 = y0 + t * (y1 - y0)
+      x1 = x1 + t * (x2 - x1)
+      y1 = y1 + t * (y2 - y1)
+      x0 = x0 + t * (x1 - x0)
+      y0 = y0 + t * (y1 - y0)
+      let mut bi = 0
+      while bi < boxes.length() {
+        let box = boxes[bi]
+        if y0 <= box.ury + fudge && y0 >= box.lly - fudge {
+          let llx = if x0 < box.llx { x0 } else { box.llx }
+          let urx = if x0 > box.urx { x0 } else { box.urx }
+          boxes[bi] = { llx, lly: box.lly, urx, ury: box.ury }
+        }
+        bi = bi + 1
+      }
+      si = si + 1.0
+    }
+    spline_idx = spline_idx + 3
+  }
+}
+
+///|
+pub fn limit_boxes_for_spline(
+  boxes : Array[@geom.Rect],
+  spline_points : Array[@geom.Point],
+  fallback_polyline? : Array[@geom.Point] = [],
+) -> Array[@geom.Rect] {
+  if boxes.length() == 0 {
+    return boxes
+  }
+  let limited = boxes.copy()
+  let initial_llx = 1.0e308
+  let initial_urx = -1.0e308
+  let mut i = 0
+  while i < limited.length() {
+    let box = limited[i]
+    limited[i] = { llx: initial_llx, lly: box.lly, urx: initial_urx, ury: box.ury }
+    i = i + 1
+  }
+  if spline_points.length() == 0 {
+    return limited
+  }
+  let mut is_horizontal = true
+  let mut is_vertical = true
+  let base = spline_points[0]
+  let fudge = 0.0001
+  for point in spline_points {
+    if Double::abs(base.y - point.y) > fudge {
+      is_horizontal = false
+    }
+    if Double::abs(base.x - point.x) > fudge {
+      is_vertical = false
+    }
+    if !is_horizontal && !is_vertical {
+      break
+    }
+  }
+  if is_horizontal || is_vertical {
+    let x = base.x
+    let mut idx = 0
+    while idx < limited.length() {
+      let box = limited[idx]
+      limited[idx] = { llx: x, lly: box.lly, urx: x, ury: box.ury }
+      idx = idx + 1
+    }
+    return limited
+  }
+  let mut delta = 10.0
+  let mut unbounded = true
+  let mut loopcnt = 0
+  while unbounded && loopcnt < 15 {
+    limit_boxes_sample(limited, spline_points, delta, fudge)
+    unbounded = false
+    for box in limited {
+      if box.llx == initial_llx || box.urx == initial_urx {
+        unbounded = true
+        break
+      }
+    }
+    if unbounded {
+      delta = delta * 2.0
+    }
+    loopcnt = loopcnt + 1
+  }
+  if unbounded && fallback_polyline.length() >= 2 {
+    let fallback_points = polyline_to_spline_points(fallback_polyline)
+    limit_boxes_sample(limited, fallback_points, 10.0, fudge)
+  }
+  limited
+}
+
+///|
 pub fn edge_pathplan_polyline(
   edge : @cgraph.Edge,
   tail_name : String,
@@ -1062,6 +1295,7 @@ pub fn edge_pathplan_polyline(
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
+  mval_sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   cluster_keys : Map[String, String],
   vnode_clusters : Map[String, String],
@@ -1074,13 +1308,10 @@ pub fn edge_pathplan_polyline(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
-) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)])? {
+) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
   let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(list) => list.copy()
     None => []
-  }
-  if vnodes.length() == 0 {
-    return None
   }
   let tail_rank = match ranks.get(tail_name) {
     Some(value) => value
@@ -1122,21 +1353,10 @@ pub fn edge_pathplan_polyline(
     cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
   let head_cluster =
     cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
-  let ordered =
-    if swap_path {
-    let reversed : Array[String] = []
-    let mut idx = vnodes.length()
-    while idx > 0 {
-      idx = idx - 1
-      reversed.push(vnodes[idx])
-    }
-    reversed
-  } else {
-    vnodes
-  }
+  let ordered = vnodes
   let merged_positions = merge_positions(positions, vnode_positions)
-  let merged_sizes = merge_sizes(sizes, vnode_sizes)
-  let route_sizes = pathplan_sizes(merged_sizes, vnode_sizes, nodesep_pt)
+  let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
+  let mval_route_sizes = merge_sizes(mval_sizes, vnode_sizes)
   let splinesep_pt = nodesep_pt / 4.0
   let (left_bound, right_bound) =
     compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
@@ -1167,6 +1387,7 @@ pub fn edge_pathplan_polyline(
     path_tail_rank,
     merged_positions,
     route_sizes,
+    mval_route_sizes,
     vnode_sizes,
     cluster_keys,
     vnode_clusters,
@@ -1200,7 +1421,14 @@ pub fn edge_pathplan_polyline(
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_tail_box = tail_boxes[tail_boxes.length() - 1]
-      let end_box = regular_end_box_bottom(last_tail_box, tail_rank_y - tail_ht1)
+      let tail_gap_box : @geom.Rect = {
+        llx: tail_box.llx,
+        lly: last_tail_box.lly,
+        urx: tail_box.urx,
+        ury: last_tail_box.ury,
+      }
+      let end_box =
+        regular_end_box_bottom(tail_gap_box, tail_rank_y - tail_ht1)
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         tail_boxes.push(end_box)
       }
@@ -1234,6 +1462,7 @@ pub fn edge_pathplan_polyline(
       vnode_rank,
       merged_positions,
       route_sizes,
+      mval_route_sizes,
       vnode_sizes,
       cluster_keys,
       vnode_clusters,
@@ -1281,6 +1510,7 @@ pub fn edge_pathplan_polyline(
     path_head_rank,
     merged_positions,
     route_sizes,
+    mval_route_sizes,
     vnode_sizes,
     cluster_keys,
     vnode_clusters,
@@ -1314,7 +1544,14 @@ pub fn edge_pathplan_polyline(
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_head_box = head_boxes[head_boxes.length() - 1]
-      let end_box = regular_end_box_top(last_head_box, head_rank_y + head_ht2)
+      let head_gap_box : @geom.Rect = {
+        llx: head_box.llx,
+        lly: last_head_box.lly,
+        urx: head_box.urx,
+        ury: last_head_box.ury,
+      }
+      let end_box =
+        regular_end_box_top(head_gap_box, head_rank_y + head_ht2)
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         head_boxes.push(end_box)
       }
@@ -1364,7 +1601,7 @@ pub fn edge_pathplan_polyline(
         } else {
           points
         }
-      Some((out_points, polygon_edges(polygon)))
+      Some((out_points, polygon_edges(polygon), normalized_boxes))
     }
     None => None
   }

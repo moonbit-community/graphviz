@@ -1,4 +1,7 @@
 ///|
+/// Graphviz parity: text metrics aligned to refs/graphviz/lib/common/textspan.c + labels.c (fixtures).
+/// Xlabel placement parity is pending; text metrics remain shared with xlabels in Graphviz.
+/// Do not change behavior without updating fixtures/tests.
 const LINE_SPACING : Double = 1.2
 
 ///|

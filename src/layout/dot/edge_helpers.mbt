@@ -76,47 +76,66 @@ fn edge_mid_label_text(edge : @cgraph.Edge) -> String? {
 
 ///|
 fn edge_mid_label_width_pt(edge : @cgraph.Edge) -> Double {
-  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
-  let font = @attrs.font_name(edge.get_attr("fontname"))
-  match edge_mid_label_text(edge) {
-    Some(text) => {
-      let (width, _height) = label_text_dimensions(text, font, font_size_pt)
-      width
-    }
+  match edge_label_metrics_for_attr(edge, "label", false) {
+    Some((width, _height)) => width
     None => 0.0
   }
 }
 
 ///|
 fn edge_mid_label_metrics(edge : @cgraph.Edge) -> (Double, Double)? {
-  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
-  let font = @attrs.font_name(edge.get_attr("fontname"))
-  match edge_mid_label_text(edge) {
-    Some(text) => {
-      let (width, height) = label_text_dimensions(text, font, font_size_pt)
-      Some((width, height))
-    }
+  edge_label_metrics_for_attr(edge, "label", false)
+}
+
+///|
+/// Graphviz parity: edge label font selection aligned to refs/graphviz/lib/common/utils.c
+/// (initFontEdgeAttr/initFontLabelEdgeAttr).
+/// Do not change behavior without updating fixtures/tests.
+fn edge_label_metrics_for_attr(
+  edge : @cgraph.Edge,
+  attr_name : String,
+  use_label_font : Bool,
+) -> (Double, Double)? {
+  match edge.get_attr(attr_name) {
+    Some(text) =>
+      if text == "" {
+        None
+      } else {
+        let base_size = @attrs.font_size(edge.get_attr("fontsize"))
+        let base_font = @attrs.font_name(edge.get_attr("fontname"))
+        let font_size_pt =
+          if use_label_font {
+          @attrs.font_size(edge.get_attr("labelfontsize"), default=base_size)
+        } else {
+          base_size
+        }
+        let font =
+          if use_label_font {
+          @attrs.font_name(edge.get_attr("labelfontname"), default=base_font)
+        } else {
+          base_font
+        }
+        let (width, height) = label_text_dimensions(text, font, font_size_pt)
+        Some((width, height))
+      }
     None => None
   }
 }
 
 ///|
 fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
-  let font_size_pt = @attrs.font_size(edge.get_attr("fontsize"))
-  let font = @attrs.font_name(edge.get_attr("fontname"))
   let mut max_height = 0.0
-  let labels = ["label", "headlabel", "taillabel"]
-  for name in labels {
-    match edge.get_attr(name) {
-      Some(text) =>
-        if text != "" {
-          let (_width, height) = label_text_dimensions(text, font, font_size_pt)
-          if height > max_height {
-            max_height = height
-          }
-        }
-      None => ()
-    }
+  match edge_label_metrics_for_attr(edge, "label", false) {
+    Some((_width, height)) => if height > max_height { max_height = height }
+    None => ()
+  }
+  match edge_label_metrics_for_attr(edge, "headlabel", true) {
+    Some((_width, height)) => if height > max_height { max_height = height }
+    None => ()
+  }
+  match edge_label_metrics_for_attr(edge, "taillabel", true) {
+    Some((_width, height)) => if height > max_height { max_height = height }
+    None => ()
   }
   max_height
 }

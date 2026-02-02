@@ -1,42 +1,125 @@
 digraph g {
-  graph [rankdir=LR, bb="0,0,1020.36,263"];
-  node [label="\N", shape=oval, colorscheme=rdbu5, color=4, style=filled, fontcolor=5];
-  subgraph cluster_0 {
-    graph [colorscheme=rdbu5, color=3, bb="7.92,8,23.92,24"];
-    node [colorscheme=rdbu5, fontcolor=3];
-  }
-  TRE [shape=rpromoter, color=1, fontcolor=3, pos="841.44,93", width=0.80687, height=0.5];
-  UAS [shape=rpromoter, color=1, fontcolor=3, pos="265.44,93", width=0.83547, height=0.5];
-  IPTG [pos="409.44,200", width=0.89832, height=0.5];
-  LacI [shape=rarrow, color=5, fontcolor=3, pos="337.44,93", width=0.77416, height=0.5];
-  Hef1a [shape=rpromoter, color=1, fontcolor=3, pos="49.44,93", width=0.93103, height=0.5];
-  rtTA3 [shape=rarrow, color=5, fontcolor=3, pos="625.44,93", width=0.9318, height=0.5];
-  product [color=2, fontcolor=3, label, pos="985.44,93", width=0.75, height=0.5];
-  Gal4VP16 [shape=rarrow, color=5, fontcolor=3, label="Gal4-VP16", pos="121.44,93", width=1.47556, height=0.5];
-  repression [color=5, style=dotted, fontcolor=black, label="LacI repression", pos="481.44,46", width=1.89207, height=0.5];
-  Doxycycline [pos="697.44,237", width=1.6144, height=0.5];
-  Hef1aLacOid [shape=rpromoter, color=1, fontcolor=3, label="Hef1a-LacOid", pos="553.44,93", width=1.78724, height=0.5];
-  LacIprotein [label=LacI, pos="409.44,66", width=0.77416, height=0.5];
-  combination [label="rtTA3 + Doxycycline", pos="769.44,34", width=2.51697, height=0.5];
-  DeltamCherry [shape=rarrow, color=5, fontcolor=3, pos="913.44,93", width=1.77178, height=0.5];
-  rtTA3protein [label=rtTA3, pos="697.44,63", width=0.9318, height=0.5];
-  Gal4VP16protein [label="Gal4-VP16", pos="193.44,53", width=1.47556, height=0.5];
-  Hef1a -> Gal4VP16 [arrowhead=none, pos="e,103.44,93 67.44,93 72.86,93 81.36,93 85.44,93 87.60,93 89.97,93 91.92,93"];
-  Gal4VP16 -> UAS [arrowhead=none, pos="e,247.44,103 139.44,103 156.93,112.72 174.76,133 193.44,133 210.19,133 223.14,116.50 237.37,108.59"];
-  UAS -> LacI [arrowhead=none, pos="e,319.44,93 283.44,93 288.86,93 297.36,93 301.44,93 303.60,93 305.97,93 307.92,93"];
-  LacI -> Hef1aLacOid [arrowhead=none, pos="e,535.44,105 355.44,105 373.44,117 388.73,134.73 409.44,141 432.41,147.95 461.44,147.06 481.44,141 498.47,135.84 511.62,120.87 525.86,111.39"];
-  Hef1aLacOid -> rtTA3 [arrowhead=none, pos="e,607.44,93 571.44,93 576.86,93 585.36,93 589.44,93 591.60,93 593.97,93 595.92,93"];
-  rtTA3 -> TRE [arrowhead=none, pos="e,823.44,107.75 643.44,107.75 661.44,122.50 675.52,144.17 697.44,152 720.04,160.08 748.99,159.31 769.44,152 787.74,145.46 799.93,127.01 814.53,115.05"];
-  TRE -> DeltamCherry [arrowhead=none, pos="e,895.44,93 859.44,93 864.86,93 873.36,93 877.44,93 879.60,93 881.97,93 883.92,93"];
-  Gal4VP16 -> Gal4VP16protein [pos="e,175.44,53 139.44,93 145.44,93 153.19,97.24 157.44,93 166.87,83.57 151.96,58.48 157.44,53 158.97,51.47 162.03,53 163.92,53"];
-  Gal4VP16protein -> UAS [pos="e,247.44,93 211.44,53 217.44,53 225.19,48.76 229.44,53 238.87,62.43 223.96,87.52 229.44,93 230.97,94.53 234.03,93 235.92,93"];
-  LacI -> LacIprotein [pos="e,391.44,66 355.44,93 361.44,93 369.19,97.24 373.44,93 379.80,86.64 369.49,69.95 373.44,66 374.97,64.47 378.01,66 379.92,66"];
-  LacIprotein -> repression [pos="e,463.44,46 427.44,66 433.44,66 441.19,70.24 445.44,66 450.15,61.29 442.32,49.12 445.44,46 446.97,44.47 449.98,46 451.92,46"];
-  repression -> Hef1aLacOid [arrowhead=tee, pos="e,535.44,93 499.44,46 505.44,46 513.19,41.76 517.44,46 528.52,57.08 511.13,86.70 517.44,93 518.97,94.53 522.04,93 523.92,93"];
-  IPTG -> repression [arrowhead=tee, pos="e,481.44,114.11 409.44,167.66 409.44,152.77 398.91,133.53 409.44,123 425.79,106.65 455.68,123 478.81,123"];
-  rtTA3 -> rtTA3protein [pos="e,679.44,63 643.44,93 649.44,93 657.19,97.24 661.44,93 668.51,85.93 657.14,67.30 661.44,63 662.97,61.47 666.02,63 667.92,63"];
-  rtTA3protein -> combination [pos="e,751.44,34 715.44,63 721.44,63 729.19,67.24 733.44,63 740.27,56.16 729.25,38.18 733.44,34 734.97,32.47 738.01,34 739.92,34"];
-  combination -> TRE [pos="e,823.44,93 787.44,34 793.44,34 801.19,29.76 805.44,34 819.34,47.91 797.72,85.28 805.44,93 806.97,94.53 810.05,93 811.92,93"];
-  Doxycycline -> combination [pos="e,769.44,124.61 697.44,178.88 697.44,164.42 687.21,145.73 697.44,135.50 714.26,118.68 745.02,135.50 768.81,135.50"];
-  DeltamCherry -> product [pos="e,967.44,93 931.44,93 936.86,93 945.36,93 949.44,93 951.60,93 953.97,93 955.92,93"];
+	graph [bb="0,0,1178.3,160",
+		rankdir=LR
+	];
+	node [color=4,
+		colorscheme=rdbu5,
+		fontcolor=5,
+		label="\N",
+		shape=oval,
+		style=filled
+	];
+	subgraph cluster_0 {
+		graph [bb="8,100,1052,152",
+			color=3,
+			colorscheme=rdbu5
+		];
+		node [colorscheme=rdbu5,
+			fontcolor=3
+		];
+		Hef1a	[color=1,
+			height=0.5,
+			pos="43,126",
+			shape=rpromoter,
+			width=0.75];
+		Gal4VP16	[color=5,
+			height=0.5,
+			label="Gal4-VP16",
+			pos="144.75,126",
+			shape=rarrow,
+			width=1.0764];
+		Hef1a -> Gal4VP16	[arrowhead=none,
+			pos="70.469,126 81.205,126 93.811,126 105.51,126"];
+		TRE	[color=1,
+			height=0.5,
+			pos="811.76,126",
+			shape=rpromoter,
+			width=0.75];
+		DeltamCherry	[color=5,
+			height=0.5,
+			pos="997.04,126",
+			shape=rarrow,
+			width=1.3056];
+		TRE -> DeltamCherry	[arrowhead=none,
+			pos="839.02,126 867.82,126 914.61,126 949.63,126"];
+		UAS	[color=1,
+			height=0.5,
+			pos="272.39,126",
+			shape=rpromoter,
+			width=0.75];
+		LacI	[color=5,
+			height=0.5,
+			pos="388.27,126",
+			shape=rarrow,
+			width=0.75];
+		UAS -> LacI	[arrowhead=none,
+			pos="299.8,126 318.2,126 342.64,126 361,126"];
+		Hef1aLacOid	[color=1,
+			height=0.5,
+			label="Hef1a-LacOid",
+			pos="498.27,126",
+			shape=rpromoter,
+			width=1.3056];
+		rtTA3	[color=5,
+			height=0.5,
+			pos="649.51,126",
+			shape=rarrow,
+			width=0.75];
+		Hef1aLacOid -> rtTA3	[arrowhead=none,
+			pos="545.68,126 570.83,126 601.01,126 622.14,126"];
+		Gal4VP16 -> UAS	[arrowhead=none,
+			pos="183.79,126 203.58,126 227.27,126 245.03,126"];
+		LacI -> Hef1aLacOid	[arrowhead=none,
+			pos="415.69,126 426.31,126 438.87,126 450.91,126"];
+		rtTA3 -> TRE	[arrowhead=none,
+			pos="676.98,126 706.76,126 754.84,126 784.53,126"];
+	}
+	Gal4VP16protein	[height=0.5,
+		label="Gal4-VP16",
+		pos="272.39,72",
+		width=1.4691];
+	Gal4VP16 -> Gal4VP16protein	[pos="e,238.58,86.101 183.79,109.65 197.85,103.61 213.89,96.713 228.36,90.491"];
+	LacIprotein	[height=0.5,
+		label=LacI,
+		pos="498.27,72",
+		width=0.77245];
+	LacI -> LacIprotein	[pos="e,475.48,82.895 415.69,112.79 430.75,105.26 449.73,95.773 465.59,87.844"];
+	rtTA3protein	[height=0.5,
+		label=rtTA3,
+		pos="811.76,72",
+		width=0.92884];
+	rtTA3 -> rtTA3protein	[pos="e,782.64,81.476 676.98,117.08 702.83,108.37 742.48,95.009 771.91,85.091"];
+	product	[color=2,
+		fontcolor=3,
+		height=0.5,
+		label="",
+		pos="1151.3,126",
+		width=0.75];
+	DeltamCherry -> product	[pos="e,1123.8,126 1044.1,126 1066,126 1091.9,126 1112.6,126"];
+	repression	[color=5,
+		fontcolor=black,
+		height=0.5,
+		label="LacI repression",
+		pos="649.51,72",
+		style=dotted,
+		width=1.8956];
+	repression -> Hef1aLacOid	[arrowhead=tee,
+		pos="e,545.65,108.96 607.6,86.544 598.91,89.652 589.78,92.925 581.27,96 571.26,99.619 560.57,103.51 550.32,107.25"];
+	combination	[height=0.5,
+		label="rtTA3 + Doxycycline",
+		pos="997.04,72",
+		width=2.5353];
+	combination -> TRE	[pos="e,839.11,117.1 940.05,86.398 928.67,89.46 916.81,92.752 905.77,96 887.21,101.46 866.73,108 849.72,113.59"];
+	LacIprotein -> repression	[pos="e,581.02,72 526.3,72 538.67,72 554.03,72 569.65,72"];
+	rtTA3protein -> combination	[pos="e,905.36,72 845.53,72 859.51,72 876.67,72 894.33,72"];
+	Gal4VP16protein -> UAS	[pos="e,272.39,107.51 272.39,90.141 272.39,92.131 272.39,94.121 272.39,96.111"];
+	IPTG	[height=0.5,
+		pos="498.27,18",
+		width=0.87197];
+	IPTG -> repression	[arrowhead=tee,
+		pos="e,607.92,57.313 525.27,27.406 546.73,35.172 577.7,46.378 603.23,55.613"];
+	Doxycycline	[height=0.5,
+		pos="811.76,18",
+		width=1.6112];
+	Doxycycline -> combination	[pos="e,944.71,56.876 854.81,30.389 878.2,37.282 907.77,45.993 933.8,53.662"];
 }

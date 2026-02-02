@@ -1,66 +1,177 @@
 digraph G {
-  graph [rankdir=LR, nodesep=0, bb="0,0,377.37,1145"];
-  node [label="\N", shape=none, margin=0];
-  edge [color=white];
-  Symbol [fontname=Symbol, pos="75.25,1127", width=0.75, height=0.5];
-  Courier [fontname=Courier, pos="75.25,263", width=0.75, height=0.5];
-  Helvetica [fontname=Helvetica, pos="75.25,384", width=0.75, height=0.5];
-  "Times-Bold" [fontname="Times-Bold", pos="147.25,1057", width=0.8991, height=0.5];
-  "Times-Roman" [fontname="Times-Roman", pos="75.25,1057", width=1.07688, height=0.5];
-  "Bookman-Demi" [fontname="Bookman-Demi", pos="147.25,148", width=1.21276, height=0.5];
-  "Courier-Bold" [fontname="Courier-Bold", pos="147.25,263", width=1.00309, height=0.5];
-  "Times-Italic" [fontname="Times-Italic", pos="219.25,1061", width=0.9191, height=0.5];
-  ZapfDingbats [fontname=ZapfDingbats, pos="147.25,1127", width=1.03404, height=0.5];
-  "Bookman-Light" [fontname="Bookman-Light", pos="75.25,148", width=1.20201, height=0.5];
-  "Palatino-Bold" [fontname="Palatino-Bold", pos="147.25,966", width=1.06569, height=0.5];
-  "Helvetica-Bold" [fontname="Helvetica-Bold", pos="147.25,384", width=1.14897, height=0.5];
-  "Palatino-Roman" [fontname="Palatino-Roman", pos="75.25,966", width=1.24703, height=0.5];
-  "AvantGarde-Book" [fontname="AvantGarde-Book", pos="75.25,18", width=1.38998, height=0.5];
-  "AvantGarde-Demi" [fontname="AvantGarde-Demi", pos="147.25,18", width=1.40036, height=0.5];
-  "Courier-Oblique" [fontname="Courier-Oblique", pos="219.25,263", width=1.24296, height=0.5];
-  "Palatino-Italic" [fontname="Palatino-Italic", pos="219.25,966", width=1.0861, height=0.5];
-  "Helvetica-Narrow" [fontname="Helvetica-Narrow", pos="75.25,533", width=1.35752, height=0.5];
-  "Times-BoldItalic" [fontname="Times-BoldItalic", pos="291.25,1063", width=1.28505, height=0.5];
-  "Helvetica-Oblique" [fontname="Helvetica-Oblique", pos="219.25,384", width=1.38885, height=0.5];
-  "Bookman-DemiItalic" [fontname="Bookman-DemiItalic", pos="291.25,148", width=1.59871, height=0.5];
-  "Bookman-LightItalic" [fontname="Bookman-LightItalic", pos="219.25,148", width=1.58796, height=0.5];
-  "Courier-BoldOblique" [fontname="Courier-BoldOblique", pos="291.25,263", width=1.6089, height=0.5];
-  "Palatino-BoldItalic" [fontname="Palatino-BoldItalic", pos="291.25,964", width=1.45936, height=0.5];
-  "Helvetica-BoldOblique" [fontname="Helvetica-BoldOblique", pos="291.25,384", width=1.75479, height=0.5];
-  "Helvetica-Narrow-Bold" [fontname="Helvetica-Narrow-Bold", pos="147.25,533", width=1.78631, height=0.5];
-  "NewCenturySchlbk-Bold" [fontname="NewCenturySchlbk-Bold", pos="147.25,702", width=1.91257, height=0.5];
-  "AvantGarde-BookOblique" [fontname="AvantGarde-BookOblique", pos="219.25,18", width=1.9958, height=0.5];
-  "AvantGarde-DemiOblique" [fontname="AvantGarde-DemiOblique", pos="291.25,18", width=2.00618, height=0.5];
-  "NewCenturySchlbk-Roman" [fontname="NewCenturySchlbk-Roman", pos="75.25,702", width=2.09035, height=0.5];
-  "NewCenturySchlbk-Italic" [fontname="NewCenturySchlbk-Italic", pos="219.25,702", width=1.93257, height=0.5];
-  "Helvetica-Narrow-Oblique" [fontname="Helvetica-Narrow-Oblique", pos="219.25,533", width=2.02618, height=0.5];
-  "ZapfChancery-MediumItalic" [fontname="ZapfChancery-MediumItalic", pos="219.25,849", width=2.16225, height=0.5];
-  "NewCenturySchlbk-BoldItalic" [fontname="NewCenturySchlbk-BoldItalic", pos="291.25,702", width=2.29852, height=0.5];
-  "Helvetica-Narrow-BoldOblique" [fontname="Helvetica-Narrow-BoldOblique", pos="291.25,533", width=2.39212, height=0.5];
-  "AvantGarde-Book" -> "AvantGarde-Demi" [pos="e,129.25,18 93.25,18 98.68,18 107.17,18 111.25,18 113.41,18 115.78,18 117.74,18"];
-  "AvantGarde-Demi" -> "AvantGarde-BookOblique" [pos="e,201.25,18 165.25,18 170.68,18 179.17,18 183.25,18 185.41,18 187.78,18 189.74,18"];
-  "AvantGarde-BookOblique" -> "AvantGarde-DemiOblique" [pos="e,273.25,18 237.25,18 242.68,18 251.17,18 255.25,18 257.41,18 259.78,18 261.74,18"];
-  "Bookman-Light" -> "Bookman-Demi" [pos="e,129.25,148 93.25,148 98.68,148 107.17,148 111.25,148 113.41,148 115.78,148 117.74,148"];
-  "Bookman-Demi" -> "Bookman-LightItalic" [pos="e,201.25,148 165.25,148 170.68,148 179.17,148 183.25,148 185.41,148 187.78,148 189.74,148"];
-  "Bookman-LightItalic" -> "Bookman-DemiItalic" [pos="e,273.25,148 237.25,148 242.68,148 251.17,148 255.25,148 257.41,148 259.78,148 261.74,148"];
-  Courier -> "Courier-Bold" [pos="e,129.25,263 93.25,263 98.68,263 107.17,263 111.25,263 113.41,263 115.78,263 117.74,263"];
-  "Courier-Bold" -> "Courier-Oblique" [pos="e,201.25,263 165.25,263 170.68,263 179.17,263 183.25,263 185.41,263 187.78,263 189.74,263"];
-  "Courier-Oblique" -> "Courier-BoldOblique" [pos="e,273.25,263 237.25,263 242.68,263 251.17,263 255.25,263 257.41,263 259.78,263 261.74,263"];
-  Helvetica -> "Helvetica-Bold" [pos="e,129.25,384 93.25,384 98.68,384 107.17,384 111.25,384 113.41,384 115.78,384 117.74,384"];
-  "Helvetica-Bold" -> "Helvetica-Oblique" [pos="e,201.25,384 165.25,384 170.68,384 179.17,384 183.25,384 185.41,384 187.78,384 189.74,384"];
-  "Helvetica-Oblique" -> "Helvetica-BoldOblique" [pos="e,273.25,384 237.25,384 242.68,384 251.17,384 255.25,384 257.41,384 259.78,384 261.74,384"];
-  "Helvetica-Narrow" -> "Helvetica-Narrow-Bold" [pos="e,129.25,533 93.25,533 98.68,533 107.17,533 111.25,533 113.41,533 115.78,533 117.74,533"];
-  "Helvetica-Narrow-Bold" -> "Helvetica-Narrow-Oblique" [pos="e,201.25,533 165.25,533 170.68,533 179.17,533 183.25,533 185.41,533 187.78,533 189.74,533"];
-  "Helvetica-Narrow-Oblique" -> "Helvetica-Narrow-BoldOblique" [pos="e,273.25,533 237.25,533 242.68,533 251.17,533 255.25,533 257.41,533 259.78,533 261.74,533"];
-  "NewCenturySchlbk-Roman" -> "NewCenturySchlbk-Bold" [pos="e,129.25,702 93.25,702 98.68,702 107.17,702 111.25,702 113.41,702 115.78,702 117.74,702"];
-  "NewCenturySchlbk-Bold" -> "NewCenturySchlbk-Italic" [pos="e,201.25,702 165.25,702 170.68,702 179.17,702 183.25,702 185.41,702 187.78,702 189.74,702"];
-  "NewCenturySchlbk-Italic" -> "NewCenturySchlbk-BoldItalic" [pos="e,273.25,702 237.25,702 242.68,702 251.17,702 255.25,702 257.41,702 259.78,702 261.74,702"];
-  "Palatino-Roman" -> "Palatino-Bold" [pos="e,129.25,966 93.25,966 98.68,966 107.17,966 111.25,966 113.41,966 115.78,966 117.74,966"];
-  "Palatino-Bold" -> "Palatino-Italic" [pos="e,201.25,966 165.25,966 170.68,966 179.17,966 183.25,966 185.41,966 187.78,966 189.74,966"];
-  "Palatino-Italic" -> "Palatino-BoldItalic" [pos="e,273.25,964 237.25,966 242.45,966 252.90,968.36 255.25,966 255.72,965.53 254.78,964.47 255.25,964 256.78,962.47 259.58,964 261.74,964"];
-  "Times-Roman" -> "Times-Bold" [pos="e,129.25,1057 93.25,1057 98.68,1057 107.17,1057 111.25,1057 113.41,1057 115.78,1057 117.74,1057"];
-  "Times-Bold" -> "Times-Italic" [pos="e,201.25,1061 165.25,1057 170.55,1057 180.66,1054.41 183.25,1057 184.20,1057.94 182.31,1060.06 183.25,1061 184.78,1062.53 187.58,1061 189.74,1061"];
-  "Times-Italic" -> "Times-BoldItalic" [pos="e,273.25,1063 237.25,1061 242.45,1061 252.90,1058.64 255.25,1061 255.72,1061.47 254.78,1062.53 255.25,1063 256.78,1064.53 259.58,1063 261.74,1063"];
-  Symbol -> ZapfDingbats [pos="e,129.25,1127 93.25,1127 98.68,1127 107.17,1127 111.25,1127 113.41,1127 115.78,1127 117.74,1127"];
-  ZapfDingbats -> "ZapfChancery-MediumItalic" [pos="e,219.25,926.84 147.25,1089.77 147.25,1057.34 126.77,1008.48 147.25,988 164.22,971.03 204.92,1002.34 219.25,988 230.95,976.30 219.25,954.13 219.25,938.35"];
+	graph [bb="0,0,777.75,332",
+		nodesep=0,
+		rankdir=LR
+	];
+	node [label="\N",
+		margin=0,
+		shape=none
+	];
+	edge [color=white];
+	"AvantGarde-Book"	[fontname="AvantGarde-Book",
+		height=0.5,
+		pos="75.375,18",
+		width=1.7083];
+	"AvantGarde-Demi"	[fontname="AvantGarde-Demi",
+		height=0.5,
+		pos="259.5,18",
+		width=1.7292];
+	"AvantGarde-Book" -> "AvantGarde-Demi"	[pos="e,197.34,18 136.77,18 152.58,18 169.8,18 186.17,18"];
+	"AvantGarde-BookOblique"	[fontname="AvantGarde-BookOblique",
+		height=0.5,
+		pos="456.75,18",
+		width=2.4583];
+	"AvantGarde-Demi" -> "AvantGarde-BookOblique"	[pos="e,368.27,18 321.74,18 332.93,18 344.86,18 356.82,18"];
+	"AvantGarde-DemiOblique"	[fontname="AvantGarde-DemiOblique",
+		height=0.5,
+		pos="679.5,18",
+		width=2.4792];
+	"AvantGarde-BookOblique" -> "AvantGarde-DemiOblique"	[pos="e,590.44,18 545,18 556.2,18 567.75,18 579.13,18"];
+	"Bookman-Light"	[fontname="Bookman-Light",
+		height=0.5,
+		pos="75.375,55",
+		width=1.2083];
+	"Bookman-Demi"	[fontname="Bookman-Demi",
+		height=0.5,
+		pos="259.5,55",
+		width=1.2292];
+	"Bookman-Light" -> "Bookman-Demi"	[pos="e,215.54,55 118.62,55 144.08,55 176.79,55 204.17,55"];
+	"Bookman-LightItalic"	[fontname="Bookman-LightItalic",
+		height=0.5,
+		pos="456.75,55",
+		width=1.5625];
+	"Bookman-Demi" -> "Bookman-LightItalic"	[pos="e,400.74,55 303.35,55 328.51,55 360.84,55 389.25,55"];
+	"Bookman-DemiItalic"	[fontname="Bookman-DemiItalic",
+		height=0.5,
+		pos="679.5,55",
+		width=1.5729];
+	"Bookman-LightItalic" -> "Bookman-DemiItalic"	[pos="e,622.92,55 512.89,55 542.8,55 580,55 611.57,55"];
+	Courier	[fontname=Courier,
+		height=0.5,
+		pos="75.375,92",
+		width=0.80208];
+	"Courier-Bold"	[fontname="Courier-Bold",
+		height=0.5,
+		pos="259.5,92",
+		width=1.375];
+	Courier -> "Courier-Bold"	[pos="e,210.34,92 104.04,92 129.12,92 166.94,92 198.88,92"];
+	"Courier-Oblique"	[fontname="Courier-Oblique",
+		height=0.5,
+		pos="456.75,92",
+		width=1.7188];
+	"Courier-Bold" -> "Courier-Oblique"	[pos="e,395.1,92 308.76,92 331.39,92 358.81,92 383.81,92"];
+	"Courier-BoldOblique"	[fontname="Courier-BoldOblique",
+		height=0.5,
+		pos="679.5,92",
+		width=2.1771];
+	"Courier-Oblique" -> "Courier-BoldOblique"	[pos="e,601.42,92 518.36,92 540.51,92 566.04,92 590.11,92"];
+	Helvetica	[fontname=Helvetica,
+		height=0.5,
+		pos="75.375,129",
+		width=0.77083];
+	"Helvetica-Bold"	[fontname="Helvetica-Bold",
+		height=0.5,
+		pos="259.5,129",
+		width=1.3021];
+	Helvetica -> "Helvetica-Bold"	[pos="e,212.94,129 102.86,129 128.63,129 168.61,129 201.6,129"];
+	"Helvetica-Oblique"	[fontname="Helvetica-Oblique",
+		height=0.5,
+		pos="456.75,129",
+		width=1.4896];
+	"Helvetica-Bold" -> "Helvetica-Oblique"	[pos="e,403.36,129 306.28,129 331.84,129 364.07,129 392.06,129"];
+	"Helvetica-BoldOblique"	[fontname="Helvetica-BoldOblique",
+		height=0.5,
+		pos="679.5,129",
+		width=2.0104];
+	"Helvetica-Oblique" -> "Helvetica-BoldOblique"	[pos="e,607.52,129 510.34,129 536.01,129 567.49,129 596.24,129"];
+	"Helvetica-Narrow"	[fontname="Helvetica-Narrow",
+		height=0.5,
+		pos="75.375,166",
+		width=1.4375];
+	"Helvetica-Narrow-Bold"	[fontname="Helvetica-Narrow-Bold",
+		height=0.5,
+		pos="259.5,166",
+		width=2.0208];
+	"Helvetica-Narrow" -> "Helvetica-Narrow-Bold"	[pos="e,186.94,166 127.11,166 142.16,166 159.05,166 175.58,166"];
+	"Helvetica-Narrow-Oblique"	[fontname="Helvetica-Narrow-Oblique",
+		height=0.5,
+		pos="456.75,166",
+		width=2.1562];
+	"Helvetica-Narrow-Bold" -> "Helvetica-Narrow-Oblique"	[pos="e,379.24,166 332.1,166 343.72,166 355.89,166 367.85,166"];
+	"Helvetica-Narrow-BoldOblique"	[fontname="Helvetica-Narrow-BoldOblique",
+		height=0.5,
+		pos="679.5,166",
+		width=2.7292];
+	"Helvetica-Narrow-Oblique" -> "Helvetica-Narrow-BoldOblique"	[pos="e,581.44,166 534.34,166 545.85,166 557.91,166 569.93,166"];
+	"NewCenturySchlbk-Roman"	[fontname="NewCenturySchlbk-Roman",
+		height=0.5,
+		pos="75.375,203",
+		width=2.0938];
+	"NewCenturySchlbk-Bold"	[fontname="NewCenturySchlbk-Bold",
+		height=0.5,
+		pos="259.5,203",
+		width=2.0104];
+	"NewCenturySchlbk-Roman" -> "NewCenturySchlbk-Bold"	[pos="e,187.34,203 150.71,203 159.03,203 167.54,203 175.95,203"];
+	"NewCenturySchlbk-Italic"	[fontname="NewCenturySchlbk-Italic",
+		height=0.5,
+		pos="456.75,203",
+		width=1.8958];
+	"NewCenturySchlbk-Bold" -> "NewCenturySchlbk-Italic"	[pos="e,388.52,203 331.82,203 346.58,203 362.2,203 377.2,203"];
+	"NewCenturySchlbk-BoldItalic"	[fontname="NewCenturySchlbk-BoldItalic",
+		height=0.5,
+		pos="679.5,203",
+		width=2.3333];
+	"NewCenturySchlbk-Italic" -> "NewCenturySchlbk-BoldItalic"	[pos="e,595.7,203 524.88,203 543.63,203 564.36,203 584.36,203"];
+	"Palatino-Roman"	[fontname="Palatino-Roman",
+		height=0.5,
+		pos="75.375,240",
+		width=1.3542];
+	"Palatino-Bold"	[fontname="Palatino-Bold",
+		height=0.5,
+		pos="259.5,240",
+		width=1.1771];
+	"Palatino-Roman" -> "Palatino-Bold"	[pos="e,217.24,240 123.75,240 148.89,240 179.84,240 205.74,240"];
+	"Palatino-Italic"	[fontname="Palatino-Italic",
+		height=0.5,
+		pos="456.75,240",
+		width=1.0938];
+	"Palatino-Bold" -> "Palatino-Italic"	[pos="e,417.53,240 301.43,240 331.91,240 373.66,240 406.05,240"];
+	"Palatino-BoldItalic"	[fontname="Palatino-BoldItalic",
+		height=0.5,
+		pos="679.5,240",
+		width=1.6667];
+	"Palatino-Italic" -> "Palatino-BoldItalic"	[pos="e,619.61,240 495.95,240 526.82,240 571.09,240 608.31,240"];
+	"Times-Roman"	[fontname="Times-Roman",
+		height=0.5,
+		pos="75.375,277",
+		width=1.0938];
+	"Times-Bold"	[fontname="Times-Bold",
+		height=0.5,
+		pos="259.5,277",
+		width=0.9375];
+	"Times-Roman" -> "Times-Bold"	[pos="e,225.86,277 114.55,277 143.78,277 184.13,277 214.67,277"];
+	"Times-Italic"	[fontname="Times-Italic",
+		height=0.5,
+		pos="456.75,277",
+		width=0.89583];
+	"Times-Bold" -> "Times-Italic"	[pos="e,424.58,277 293.18,277 326.19,277 377.34,277 413.43,277"];
+	"Times-BoldItalic"	[fontname="Times-BoldItalic",
+		height=0.5,
+		pos="679.5,277",
+		width=1.3125];
+	"Times-Italic" -> "Times-BoldItalic"	[pos="e,632.52,277 488.91,277 523.13,277 578.82,277 621.01,277"];
+	"ZapfChancery-MediumItalic"	[fontname="ZapfChancery-MediumItalic",
+		height=0.5,
+		pos="456.75,314",
+		width=2.1562];
+	ZapfDingbats	[fontname=ZapfDingbats,
+		height=0.5,
+		pos="259.5,314",
+		width=1.1146];
+	ZapfDingbats -> "ZapfChancery-MediumItalic"	[pos="e,379.22,314 299.54,314 319.24,314 343.98,314 367.93,314"];
+	Symbol	[fontname=Symbol,
+		height=0.5,
+		pos="75.375,314",
+		width=0.75];
+	Symbol -> ZapfDingbats	[pos="e,219.55,314 102.08,314 129.57,314 173.84,314 208.28,314"];
 }

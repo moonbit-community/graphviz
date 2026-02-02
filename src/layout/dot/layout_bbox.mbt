@@ -1,4 +1,6 @@
 ///|
+/// Graphviz parity: spline bbox uses midpoints like refs/graphviz/lib/common/emit.c (bezier_bb).
+/// Do not change behavior without updating fixtures/tests.
 fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
   if points.length() == 0 {
     return None
@@ -32,6 +34,9 @@ fn spline_bbox(points : Array[@geom.Point]) -> @geom.Rect? {
 }
 
 ///|
+/// Graphviz parity: bbox aggregation aligned to refs/graphviz/lib/common/utils.c (compute_bb),
+/// with label/cluster expansion handled in layout_postprocess_helpers.
+/// Do not change behavior without updating fixtures/tests.
 fn compute_bbox(
   nodes : Array[DotLayoutNode],
   edges : Array[DotLayoutEdge],
@@ -238,6 +243,9 @@ fn shift_spline(
 }
 
 ///|
+/// Graphviz parity: layout translation aligned to refs/graphviz/lib/common/postproc.c
+/// (translate_drawing/translate_bb).
+/// Do not change behavior without updating fixtures/tests.
 fn shift_layout_graph(
   layout : DotLayoutGraph,
   dx : Double,
@@ -288,6 +296,9 @@ fn shift_layout_graph(
 }
 
 ///|
+/// Graphviz parity: rankdir transform aligned to refs/graphviz/lib/common/postproc.c
+/// (translate_drawing/translate_bb).
+/// Do not change behavior without updating fixtures/tests.
 fn transform_layout(
   nodes : Array[DotLayoutNode],
   edges : Array[DotLayoutEdge],
@@ -360,4 +371,3 @@ fn transform_layout(
     (shifted_nodes, shifted_edges, shifted_bbox)
   }
 }
-

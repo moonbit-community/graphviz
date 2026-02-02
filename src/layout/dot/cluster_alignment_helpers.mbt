@@ -114,6 +114,7 @@ fn reorder_groups_by_cluster_order(
   groups : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
   cluster_order_base : Map[String, Int],
+  node_order : Map[String, Int],
 ) -> Unit {
   let mut has_order = false
   for _name, _ in cluster_order_base {

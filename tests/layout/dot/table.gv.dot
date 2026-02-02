@@ -1,15 +1,44 @@
 digraph structs {
-  graph [bb="0,0,362.48,224"];
-  node [label="\N", shape=plaintext];
-  struct1 [label=<<TABLE CELLPADDING="10" BORDER="0">
+	graph [bb="0,0,405.62,242.5"];
+	node [label="\N",
+		shape=plaintext
+	];
+	struct1	[height=0.67361,
+		label=<<TABLE CELLPADDING="10" BORDER="0">
 	<TR>
 	    <TD HEIGHT="30" WIDTH="90">a</TD>
 	    <TD>b</TD>
 	    <TD>c</TD>
 	</TR>
-    </TABLE>>, pos="160.33,197", width=2.37185, height=0.75];
-  struct2 [label="<<TABLE>\n\t<TR>\n\t    <TD COLSPAN=\"3\">elefantel</TD>\n\t    <TD ROWSPAN=\"2\" VALIGN=\"bottom\" ALIGN=\"right\">two</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ROWSPAN=\"2\"><TABLE BGCOLOR=\"grey\">\n\t\t<TR>\n\t\t    <TD>buca</TD>\n\t\t</TR><TR>\n\t\t    <TD BGCOLOR=\"yellow\">c</TD>\n\t\t</TR><TR>\n\t\t    <TD>f</TD>\n\t\t</TR>\n\t    </TABLE></TD>\n\t    <TD>patratos</TD>\n\t</TR><TR>\n\t    <TD COLSPAN=\"2\" ALIGN=\"right\">4</TD>\n\t</TR>\n\t</TABLE>\n    >", pos="65.33,67", width=1.81459, height=1.61113];
-  struct3 [label=<<TABLE CELLPADDING="5">
+    </TABLE>>,
+		pos="178.25,218.25",
+		width=2.316];
+	struct2	[height=1.6944,
+		label=<<TABLE>
+	<TR>
+	    <TD COLSPAN="3">elefantel</TD>
+	    <TD ROWSPAN="2" VALIGN="bottom" ALIGN="right">two</TD>
+	</TR><TR>
+	    <TD COLSPAN="2" ROWSPAN="2"><TABLE BGCOLOR="grey">
+		<TR>
+		    <TD>buca</TD>
+		</TR><TR>
+		    <TD BGCOLOR="yellow">c</TD>
+		</TR><TR>
+		    <TD>f</TD>
+		</TR>
+	    </TABLE></TD>
+	    <TD>patratos</TD>
+	</TR><TR>
+	    <TD COLSPAN="2" ALIGN="right">4</TD>
+	</TR>
+	</TABLE>
+    >,
+		pos="72.25,79",
+		width=2.0069];
+	struct1 -> struct2	[pos="e,118.41,139.77 160.51,194.28 150.76,181.66 138.1,165.27 125.43,148.86"];
+	struct3	[height=2.1944,
+		label=<<TABLE CELLPADDING="5">
 	<TR>
 	    <TD ROWSPAN="3">Hello</TD>
 	    <TD ROWSPAN="2" COLSPAN="3"><TABLE BORDER="4">
@@ -29,7 +58,8 @@ digraph structs {
 	</TR><TR>
 	    <TD COLSPAN="3">low</TD>
 	</TR>
-    </TABLE>>, pos="255.33,67", width=2.97647, height=1.86113];
-  struct1 -> struct3 [pos="e,255.33,134 160.33,170 160.33,157.33 151.37,140.96 160.33,132 180.47,111.85 217.32,132 245.81,132"];
-  struct1 -> struct2 [pos="e,65.33,125 160.33,170 160.33,157.33 169.28,140.96 160.33,132 139,110.67 100,132 69.84,132"];
+    </TABLE>>,
+		pos="284.25,79",
+		width=3.3715];
+	struct1 -> struct3	[pos="e,224.11,157.88 195.99,194.28 202.15,186.31 209.46,176.84 217.21,166.81"];
 }

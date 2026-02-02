@@ -1,8 +1,13 @@
 ///|
 struct XposNode {
   id : Int
+  name : String?
   kind : String
   rank : Int
+  order : Int
+  lw : Double
+  rw : Double
+  ht : Double
 }
 
 ///|
@@ -17,6 +22,11 @@ struct XposEdge {
 struct XposInput {
   case_id : Int
   graph : String
+  phase : String
+  minrank : Int
+  maxrank : Int
+  flip : Bool
+  ranks : Array[Array[Int]]
   nodes : Array[XposNode]
   edges : Array[XposEdge]
 }
@@ -29,12 +39,19 @@ struct XposOutput {
 
 ///|
 fn parse_xpos_input(obj : Map[String, Json]) -> XposInput raise {
-  let _ : Int = @json.from_json(obj["minrank"])
-  let _ : Int = @json.from_json(obj["maxrank"])
-  let _ : String = @json.from_json(obj["phase"])
+  let minrank : Int = @json.from_json(obj["minrank"])
+  let maxrank : Int = @json.from_json(obj["maxrank"])
+  let phase : String = @json.from_json(obj["phase"])
+  let flip : Bool = @json.from_json(obj["flip"])
+  let ranks : Array[Array[Int]] = @json.from_json(obj["ranks"])
   {
     case_id: @json.from_json(obj["case"]),
     graph: @json.from_json(obj["graph"]),
+    phase,
+    minrank,
+    maxrank,
+    flip,
+    ranks,
     nodes: parse_xpos_nodes(obj["nodes"]),
     edges: parse_xpos_edges(obj["edges"]),
   }
@@ -49,20 +66,29 @@ fn parse_xpos_output(obj : Map[String, Json]) -> XposOutput raise {
 }
 
 ///|
+fn xpos_string_option(value : Json) -> String? raise {
+  if value == Json::null() {
+    None
+  } else {
+    Some(@json.from_json(value))
+  }
+}
+
+///|
 fn parse_xpos_nodes(value : Json) -> Array[XposNode] raise {
   let items : Array[Json] = @json.from_json(value)
   let nodes : Array[XposNode] = []
   for item in items {
     let obj = require_object(item)
     let id : Int = @json.from_json(obj["id"])
+    let name : String? = xpos_string_option(obj["name"])
     let kind : String = @json.from_json(obj["kind"])
     let rank : Int = @json.from_json(obj["rank"])
-    let _ : Int = @json.from_json(obj["order"])
-    let _ : Json = @json.from_json(obj["name"])
-    let _ : Double = @json.from_json(obj["lw"])
-    let _ : Double = @json.from_json(obj["rw"])
-    let _ : Double = @json.from_json(obj["ht"])
-    nodes.push({ id, kind, rank })
+    let order : Int = @json.from_json(obj["order"])
+    let lw : Double = @json.from_json(obj["lw"])
+    let rw : Double = @json.from_json(obj["rw"])
+    let ht : Double = @json.from_json(obj["ht"])
+    nodes.push({ id, name, kind, rank, order, lw, rw, ht })
   }
   nodes
 }
@@ -127,6 +153,97 @@ fn load_xpos_fixtures() -> Array[(XposInput, XposOutput)] raise {
 }
 
 ///|
+fn build_rank_order_map_input(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
+  let map : Map[Int, Int] = Map::new()
+  let mut rank_idx = 0
+  for rank_nodes in ranks {
+    let mut order = 0
+    for id in rank_nodes {
+      if map.get(id) is Some(_) {
+        fail("duplicate node id \{id} in rank list \{rank_idx}")
+      }
+      map[id] = order
+      order = order + 1
+    }
+    rank_idx = rank_idx + 1
+  }
+  map
+}
+
+///|
+fn assert_xpos_input(input : XposInput) -> Map[Int, Int] raise {
+  if input.graph == "" {
+    fail("missing xpos graph name")
+  }
+  if input.phase == "" {
+    fail("missing xpos phase")
+  }
+  if input.minrank > input.maxrank {
+    fail("minrank \{input.minrank} > maxrank \{input.maxrank}")
+  }
+  let expected_rank_count = input.maxrank - input.minrank + 1
+  if input.ranks.length() != expected_rank_count {
+    fail(
+      "rank list count mismatch expected=\{expected_rank_count} actual=\{input.ranks.length()}",
+    )
+  }
+  if input.flip {
+    fail("unexpected flip=true for graph \{input.graph}")
+  }
+  let order_map = build_rank_order_map_input(input.ranks)
+  let mut non_slack = 0
+  for node in input.nodes {
+    if node.kind == "slack" {
+      if node.order != 0 {
+        fail(
+          "slack node order mismatch id=\{node.id} expected=0 actual=\{node.order}",
+        )
+      }
+    } else {
+      non_slack = non_slack + 1
+      let expected_order = match order_map.get(node.id) {
+        Some(value) => value
+        None => fail("missing node id \{node.id} in rank list")
+      }
+      if expected_order != node.order {
+        fail(
+          "node order mismatch id=\{node.id} expected=\{expected_order} actual=\{node.order}",
+        )
+      }
+    }
+    match (node.kind, node.name) {
+      ("normal", None) =>
+        fail("missing name for normal node id=\{node.id}")
+      ("normal", Some(value)) =>
+        if value == "" {
+          fail("empty name for normal node id=\{node.id}")
+        }
+      (_, Some(_)) => fail("unexpected name for non-normal node id=\{node.id}")
+      _ => ()
+    }
+    if node.kind == "slack" {
+      if node.lw != 1.0 || node.rw != 1.0 || node.ht != 1.0 {
+        fail(
+          "slack node size mismatch id=\{node.id} lw=\{node.lw} rw=\{node.rw} ht=\{node.ht}",
+        )
+      }
+    } else {
+      if node.lw <= 0.0 || node.rw <= 0.0 || node.ht <= 0.0 {
+        fail(
+          "node size not positive id=\{node.id} lw=\{node.lw} rw=\{node.rw} ht=\{node.ht}",
+        )
+      }
+    }
+  }
+  if order_map.length() != non_slack {
+    fail(
+      "rank list size mismatch expected=\{non_slack} actual=\{order_map.length()}",
+    )
+  }
+  order_map
+}
+
+///|
 fn assert_positions(
   case_id : Int,
   graph : String,
@@ -151,6 +268,7 @@ fn assert_positions(
 
 ///|
 fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
+  let _ = assert_xpos_input(input)
   let graph = new_graph()
   for node in input.nodes {
     let idx = add_node(graph, "", kind=fixture_node_kind(node.kind))

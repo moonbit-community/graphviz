@@ -1428,6 +1428,8 @@ fn x_positions_from_simplex(
 }
 
 ///|
+/// Graphviz parity: aligned to refs/graphviz/lib/dotgen/position.c + cluster.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn compute_x_positions(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],

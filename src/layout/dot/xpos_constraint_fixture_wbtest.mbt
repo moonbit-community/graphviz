@@ -4,8 +4,10 @@ struct XposConstraintFixtureNode {
   name : String?
   kind : String
   rank : Int
+  order : Int
   lw : Double
   rw : Double
+  ht : Double
 }
 
 ///|
@@ -19,6 +21,8 @@ struct XposConstraintFixtureEdge {
 ///|
 struct XposConstraintFixtureCluster {
   name : String
+  minrank : Int
+  maxrank : Int
   ln : Int?
   rn : Int?
 }
@@ -27,6 +31,9 @@ struct XposConstraintFixtureCluster {
 struct XposConstraintFixture {
   graph : String
   phase : String
+  minrank : Int
+  maxrank : Int
+  ranks : Array[Array[Int]]
   nodes : Array[XposConstraintFixtureNode]
   edges : Array[XposConstraintFixtureEdge]
   clusters : Array[XposConstraintFixtureCluster]
@@ -68,10 +75,11 @@ fn parse_constraint_nodes(value : Json) -> Array[XposConstraintFixtureNode] rais
     let name : String? = xpos_constraint_string_option(obj["name"])
     let kind : String = @json.from_json(obj["kind"])
     let rank : Int = @json.from_json(obj["rank"])
+    let order : Int = @json.from_json(obj["order"])
     let lw : Double = @json.from_json(obj["lw"])
     let rw : Double = @json.from_json(obj["rw"])
-    let _ : Double = @json.from_json(obj["ht"])
-    nodes.push({ id, name, kind, rank, lw, rw })
+    let ht : Double = @json.from_json(obj["ht"])
+    nodes.push({ id, name, kind, rank, order, lw, rw, ht })
   }
   nodes
 }
@@ -100,11 +108,16 @@ fn parse_constraint_clusters(value : Json) -> Array[XposConstraintFixtureCluster
     let name : String = @json.from_json(obj["name"])
     let ln : Int? = xpos_constraint_int_option(obj["ln"])
     let rn : Int? = xpos_constraint_int_option(obj["rn"])
-    let _ : Int = @json.from_json(obj["minrank"])
-    let _ : Int = @json.from_json(obj["maxrank"])
-    clusters.push({ name, ln, rn })
+    let minrank : Int = @json.from_json(obj["minrank"])
+    let maxrank : Int = @json.from_json(obj["maxrank"])
+    clusters.push({ name, minrank, maxrank, ln, rn })
   }
   clusters
+}
+
+///|
+fn parse_constraint_ranks(value : Json) -> Array[Array[Int]] raise {
+  @json.from_json(value)
 }
 
 ///|
@@ -128,10 +141,22 @@ fn load_xpos_constraint_fixture(
     if graph != graph_name || phase_value != phase {
       continue
     }
+    let minrank : Int = @json.from_json(obj["minrank"])
+    let maxrank : Int = @json.from_json(obj["maxrank"])
+    let ranks = parse_constraint_ranks(obj["ranks"])
     let nodes = parse_constraint_nodes(obj["nodes"])
     let edges = parse_constraint_edges(obj["edges"])
     let clusters = parse_constraint_clusters(obj["clusters"])
-    return { graph, phase: phase_value, nodes, edges, clusters }
+    return {
+      graph,
+      phase: phase_value,
+      minrank,
+      maxrank,
+      ranks,
+      nodes,
+      edges,
+      clusters,
+    }
   }
   fail("xpos fixture not found for graph=\{graph_name} phase=\{phase}")
 }
@@ -171,9 +196,9 @@ fn fixture_node_key(
     Some(value) => "N:\{value}"
     None =>
       if node.kind == "slack" {
-        "S:\{node.rank}"
+        "S:\{node.rank}:\{node.order}:\{node.lw}:\{node.rw}:\{node.ht}"
       } else {
-        "V:\{node.rank}:\{node.lw}:\{node.rw}"
+        "V:\{node.rank}:\{node.lw}:\{node.rw}:\{node.ht}:\{node.order}"
       }
   }
 }
@@ -192,14 +217,66 @@ fn snapshot_node_key(
       if real_nodes.get(value) is Some(_) {
         return "N:\{value}"
       }
-      "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}"
+      "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}:\{node.order}"
     }
     None =>
       match node.kind {
-        NodeKind::Slack => "S:\{node.rank}"
-        _ => "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}"
+        NodeKind::Slack =>
+          "S:\{node.rank}:\{node.order}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}"
+        _ =>
+          "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}:\{node.order}"
       }
   }
+}
+
+///|
+fn build_rank_order_map(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
+  let map : Map[Int, Int] = Map::new()
+  let mut rank_idx = 0
+  for rank_nodes in ranks {
+    let mut order = 0
+    for id in rank_nodes {
+      if map.get(id) is Some(_) {
+        fail("duplicate node id \{id} in rank list \{rank_idx}")
+      }
+      map[id] = order
+      order = order + 1
+    }
+    rank_idx = rank_idx + 1
+  }
+  map
+}
+
+///|
+fn fixture_named_nodes(
+  fixture : XposConstraintFixture,
+) -> Map[String, XposConstraintFixtureNode] {
+  let map : Map[String, XposConstraintFixtureNode] = Map::new()
+  for node in fixture.nodes {
+    match node.name {
+      Some(value) => map[value] = node
+      None => ()
+    }
+  }
+  map
+}
+
+///|
+fn snapshot_named_nodes(
+  snapshot : XposConstraintSnapshot,
+  real_nodes : Map[String, Bool],
+) -> Map[String, XposConstraintNodeSnapshot] {
+  let map : Map[String, XposConstraintNodeSnapshot] = Map::new()
+  for node in snapshot.nodes {
+    match node.name {
+      Some(value) =>
+        if real_nodes.get(value) is Some(_) {
+          map[value] = node
+        }
+      None => ()
+    }
+  }
+  map
 }
 
 ///|
@@ -323,6 +400,76 @@ test "xpos constraint graph matches Graphviz for complex" {
   if fixture.phase != "initial" {
     fail("unexpected fixture phase \{fixture.phase}")
   }
+  if fixture.minrank > fixture.maxrank {
+    fail("minrank \{fixture.minrank} > maxrank \{fixture.maxrank}")
+  }
+  let expected_rank_count = fixture.maxrank - fixture.minrank + 1
+  if fixture.ranks.length() != expected_rank_count {
+    fail(
+      "rank list count mismatch expected=\{expected_rank_count} actual=\{fixture.ranks.length()}",
+    )
+  }
+  let order_map = build_rank_order_map(fixture.ranks)
+  let mut non_slack = 0
+  let fixture_ids : Map[Int, Bool] = Map::new()
+  for node in fixture.nodes {
+    fixture_ids[node.id] = true
+    if node.kind == "slack" {
+      if node.order != 0 {
+        fail(
+          "slack node order mismatch id=\{node.id} expected=0 actual=\{node.order}",
+        )
+      }
+    } else {
+      non_slack = non_slack + 1
+      let expected_order = match order_map.get(node.id) {
+        Some(value) => value
+        None => fail("missing node id \{node.id} in rank list")
+      }
+      if expected_order != node.order {
+        fail(
+          "node order mismatch id=\{node.id} expected=\{expected_order} actual=\{node.order}",
+        )
+      }
+    }
+    match (node.kind, node.name) {
+      ("normal", None) =>
+        fail("missing name for normal node id=\{node.id}")
+      ("normal", Some(value)) =>
+        if value == "" {
+          fail("empty name for normal node id=\{node.id}")
+        }
+      (_, Some(_)) => fail("unexpected name for non-normal node id=\{node.id}")
+      _ => ()
+    }
+  }
+  if order_map.length() != non_slack {
+    fail(
+      "rank list size mismatch expected=\{non_slack} actual=\{order_map.length()}",
+    )
+  }
+  for cluster in fixture.clusters {
+    if cluster.minrank > cluster.maxrank {
+      fail("cluster \{cluster.name} minrank > maxrank")
+    }
+    if cluster.minrank < fixture.minrank || cluster.maxrank > fixture.maxrank {
+      fail("cluster \{cluster.name} rank range out of bounds")
+    }
+    match cluster.ln {
+      Some(id) =>
+        if fixture_ids.get(id) is None {
+          fail("cluster \{cluster.name} missing ln node id=\{id}")
+        }
+      None => ()
+    }
+    match cluster.rn {
+      Some(id) =>
+        if fixture_ids.get(id) is None {
+          fail("cluster \{cluster.name} missing rn node id=\{id}")
+        }
+      None => ()
+    }
+  }
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let names = real_node_names(graph)
   xpos_constraint_snapshot.val = None
@@ -340,4 +487,17 @@ test "xpos constraint graph matches Graphviz for complex" {
   let expected_edges = fixture_edge_counts(fixture)
   let actual_edges = snapshot_edge_counts(snapshot, names)
   assert_multiset_eq("edges", actual_edges, expected_edges)
+  let fixture_named = fixture_named_nodes(fixture)
+  let snapshot_named = snapshot_named_nodes(snapshot, names)
+  for name, expected in fixture_named {
+    let actual = match snapshot_named.get(name) {
+      Some(value) => value
+      None => fail("missing snapshot node for \{name}")
+    }
+    assert_eq(actual.rank, expected.rank)
+    assert_eq(actual.order, expected.order)
+    assert_eq(actual.left_pt, expected.lw)
+    assert_eq(actual.right_pt, expected.rw)
+    assert_eq(actual.height_pt, expected.ht)
+  }
 }

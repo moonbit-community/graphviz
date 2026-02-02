@@ -28,7 +28,12 @@ with open(input_path, "r", encoding="utf-8") as handle:
             continue
         data = json.loads(line)
         key = (data["font"], float(data["size"]), data["text"])
-        value = (float(data["width"]), float(data["height"]))
+        value = (
+            float(data["width"]),
+            float(data["height"]),
+            float(data["yoffset_layout"]),
+            float(data["yoffset_centerline"]),
+        )
         entries[key] = value
 
 def sort_key(item):
@@ -45,8 +50,8 @@ with open(output_path, "w", encoding="ascii") as out:
     out.write("///|\n")
     out.write("/// Overrides captured from Graphviz textspan fixtures.\n")
     out.write("/// Regenerate with: bash scripts/generate_textspan_overrides.sh\n")
-    out.write("pub let textspan_overrides_data : Array[(String, Double, String, Double, Double)] = [\n")
-    for (font, size, text), (width, height) in sorted(entries.items(), key=sort_key):
+    out.write("pub let textspan_overrides_data : Array[(String, Double, String, Double, Double, Double, Double)] = [\n")
+    for (font, size, text), (width, height, yoffset_layout, yoffset_centerline) in sorted(entries.items(), key=sort_key):
         out.write("  (")
         out.write(json.dumps(font))
         out.write(", ")
@@ -57,6 +62,10 @@ with open(output_path, "w", encoding="ascii") as out:
         out.write(fmt_float(width))
         out.write(", ")
         out.write(fmt_float(height))
+        out.write(", ")
+        out.write(fmt_float(yoffset_layout))
+        out.write(", ")
+        out.write(fmt_float(yoffset_centerline))
         out.write("),\n")
     out.write("]\n")
 PY

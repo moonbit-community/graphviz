@@ -1,4 +1,7 @@
 ///|
+/// Graphviz parity: label placement aligned to refs/graphviz/lib/common/labels.c (fixtures).
+/// Xlabel placement parity (refs/graphviz/lib/label/xlabels.c) is pending.
+/// Do not change behavior without updating fixtures/tests.
 priv enum LabelLoc {
   Top
   Bottom

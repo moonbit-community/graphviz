@@ -1,4 +1,6 @@
 ///|
+/// Graphviz parity: record layout aligned to refs/graphviz/lib/common/shapes.c + output.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn extract_numbers(value : String) -> Array[Double] {
   let sb = StringBuilder::new()
   for ch in value {

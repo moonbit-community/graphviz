@@ -29,13 +29,13 @@ fn load_textspan_fixtures() -> Array[TextspanFixture] raise {
 test "textspan fixtures match label_text_dimensions" {
   let fixtures = load_textspan_fixtures()
   for fixture in fixtures {
-    let (width, height) =
-      label_text_dimensions(fixture.text, fixture.font, fixture.size)
-    let _ = fixture.flags
-    let _ = fixture.yoffset_layout
-    let _ = fixture.yoffset_centerline
+    let (width, height, yoffset_layout, yoffset_centerline) =
+      label_text_metrics(fixture.text, fixture.font, fixture.size)
+    assert_eq(fixture.flags, 0)
     assert_eq(width, fixture.width)
     assert_eq(height, fixture.height)
+    assert_eq(yoffset_layout, fixture.yoffset_layout)
+    assert_eq(yoffset_centerline, fixture.yoffset_centerline)
   }
 }
 

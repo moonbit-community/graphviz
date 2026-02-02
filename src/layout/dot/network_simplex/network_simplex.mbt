@@ -1403,6 +1403,8 @@ fn tb_balance(graph : NsGraph) -> Unit {
 }
 
 ///|
+/// Graphviz parity: aligned to refs/graphviz/lib/common/ns.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
   let feasible = init_graph(graph)
   if !feasible {

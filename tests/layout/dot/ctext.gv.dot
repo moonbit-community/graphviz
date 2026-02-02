@@ -1,18 +1,49 @@
 digraph G {
-  graph [bb="0,0,339.39,231.68"];
-  node [label="\N", style=filled];
-  red [color=red, pos="165.35,187.84", width=0.75, height=0.5];
-  xyz [label="hello\nworld", color=slateblue, fontsize=24, fontname="Palatino-Italic", fontcolor=hotpink, pos="70.35,187.84", width=1.3984, height=1.2178];
-  blue [color=blue, fontcolor=black, pos="117.35,90", width=0.75, height=0.5];
-  cyan [color=cyan, pos="28.35,18", width=0.78755, height=0.5];
-  green [color=green, pos="213.35,90", width=0.87281, height=0.5];
-  orange [color=orange, pos="303.35,18", width=1.00109, height=0.5];
-  yellow [color=yellow, pos="213.35,18", width=1.00135, height=0.5];
-  magenta [color=magenta, pos="117.35,18", width=1.17238, height=0.5];
-  red -> green [pos="e,213.35,108 165.35,169.84 165.35,159.53 158.06,146.21 165.35,138.92 176.67,127.61 205.41,146.86 213.35,138.92 217.93,134.35 213.35,125.40 213.35,119.51"];
-  red -> blue [pos="e,117.35,108 165.35,169.84 165.35,159.53 172.64,146.21 165.35,138.92 154.04,127.61 125.30,146.86 117.35,138.92 112.78,134.35 117.35,125.40 117.35,119.51"];
-  blue -> cyan [pos="e,56.70,18 90.35,90 84.52,90 76.98,94.12 72.85,90 55.88,73.03 81.88,27.03 72.85,18 71.76,16.91 69.55,18 68.22,18"];
-  blue -> magenta [pos="e,117.35,36 117.35,72 117.35,66.58 117.35,58.08 117.35,54 117.35,51.84 117.35,49.47 117.35,47.51"];
-  green -> yellow [pos="e,213.35,36 213.35,72 213.35,66.58 213.35,58.08 213.35,54 213.35,51.84 213.35,49.47 213.35,47.51"];
-  green -> orange [pos="e,267.31,18 244.77,90 249.30,90 255.15,93.20 258.35,90 274.72,73.63 258.35,43.70 258.35,20.55"];
+	graph [bb="0,0,339.65,231.68"];
+	node [label="\N",
+		style=filled
+	];
+	xyz	[color=slateblue,
+		fontcolor=hotpink,
+		fontname="Palatino-Italic",
+		fontsize=24,
+		height=1.2178,
+		label="hello\nworld",
+		pos="70.997,187.84",
+		width=1.4044];
+	red	[color=red,
+		height=0.5,
+		pos="167,187.84",
+		width=0.75];
+	green	[color=green,
+		height=0.5,
+		pos="126,90",
+		width=0.87197];
+	red -> green	[pos="e,133.19,107.82 159.86,170.15 153.72,155.8 144.76,134.85 137.59,118.11"];
+	blue	[color=blue,
+		fontcolor=black,
+		height=0.5,
+		pos="208,90",
+		width=0.75];
+	red -> blue	[pos="e,200.8,107.82 174.14,170.15 180.27,155.8 189.24,134.85 196.4,118.11"];
+	yellow	[color=yellow,
+		height=0.5,
+		pos="35.997,18",
+		width=0.99992];
+	green -> yellow	[pos="e,54.802,33.626 107.78,74.834 95.144,65.003 78.07,51.723 63.745,40.582"];
+	orange	[color=orange,
+		height=0.5,
+		pos="126,18",
+		width=0.99992];
+	green -> orange	[pos="e,126,36.104 126,71.697 126,64.407 126,55.726 126,47.536"];
+	cyan	[color=cyan,
+		height=0.5,
+		pos="208,18",
+		width=0.78667];
+	blue -> cyan	[pos="e,208,36.104 208,71.697 208,64.407 208,55.726 208,47.536"];
+	magenta	[color=magenta,
+		height=0.5,
+		pos="297,18",
+		width=1.1847];
+	blue -> magenta	[pos="e,277.54,34.301 224.74,75.834 237.05,66.152 254.07,52.76 268.51,41.407"];
 }

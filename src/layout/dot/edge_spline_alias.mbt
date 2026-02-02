@@ -121,6 +121,7 @@ fn edge_spline_for_polyline(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_polyline(
     edge,
@@ -137,6 +138,7 @@ fn edge_spline_for_polyline(
     arrow_len_override=arrow_len_override,
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
+    parallel_offset=parallel_offset,
   )
 }
 
@@ -157,6 +159,7 @@ fn edge_spline_for_points(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_points(
     edge,
@@ -174,6 +177,24 @@ fn edge_spline_for_points(
     arrow_len_override=arrow_len_override,
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
+    parallel_offset=parallel_offset,
+  )
+}
+
+///|
+fn edge_spline_raw_for_points(
+  points : Array[@geom.Point],
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  force_segmented : Bool,
+  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
+) -> Array[@geom.Point] {
+  @edge_spline.edge_spline_raw_for_points(
+    points,
+    tail_slope,
+    head_slope,
+    force_segmented,
+    route_barriers=route_barriers,
   )
 }
 
@@ -196,6 +217,7 @@ fn edge_spline_for_line(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_line(
     edge,
@@ -213,6 +235,32 @@ fn edge_spline_for_line(
     curve_offset,
     curve_skew,
     arrow_len_override=arrow_len_override,
+    tail_cluster_bbox=tail_cluster_bbox,
+    head_cluster_bbox=head_cluster_bbox,
+    parallel_offset=parallel_offset,
+  )
+}
+
+///|
+fn edge_spline_raw_for_line(
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  rankdir : RankDir,
+  curve_offset : Double,
+  curve_skew : Double,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
+) -> Array[@geom.Point] {
+  @edge_spline.edge_spline_raw_for_line(
+    tail_center,
+    head_center,
+    tail_slope,
+    head_slope,
+    rankdir,
+    curve_offset,
+    curve_skew,
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
   )

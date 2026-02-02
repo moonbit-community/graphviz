@@ -46,7 +46,6 @@ fn neato_distance(a : @geom.Point, b : @geom.Point) -> Double {
 }
 
 ///|
-#skip
 test "layout_neato preserves pinned positions" {
   let graph = @dot_parser.parse_dot(
     "graph { node [shape=box,width=1,height=1,label=\"\"]; a [pos=\"10,20!\"]; b [pos=\"30,40\", pin=true]; c; a -- c; b -- c; }",
@@ -68,7 +67,6 @@ test "layout_neato preserves pinned positions" {
 }
 
 ///|
-#skip
 test "layout_neato scales spacing with nodesep" {
   let graph_small = @dot_parser.parse_dot(
     "graph { nodesep=0.1; node [shape=box,width=1,height=1,label=\"\"]; a; b; }",
@@ -102,7 +100,6 @@ test "layout_neato scales spacing with nodesep" {
 }
 
 ///|
-#skip
 test "layout_neato respects edge length" {
   let short_graph = @dot_parser.parse_dot(
     "graph { nodesep=0; node [shape=box,width=1,height=1,label=\"\"]; a -- b [len=1]; }",

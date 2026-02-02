@@ -266,13 +266,12 @@ fn build_fixture_graph(input : SimplexInput) -> NsGraph raise {
     }
     set_node_rank(graph, idx, node.rank)
   }
-  for edge in input.edges {
-    let _ = edge.seq
-    let _ = edge.in_pos
-    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
-  }
   let in_positions : Array[Int] = []
   for edge in input.edges {
+    if edge.seq < 0 {
+      fail("case \{input.case_id} negative edge seq \{edge.seq}")
+    }
+    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
     in_positions.push(edge.in_pos)
   }
   for i in 0..<graph.nodes.length() {

@@ -60,11 +60,11 @@ fn extract_label_entries(
               (Some(x), Some(y), Some(font), Some(size)) => {
                 let line_x = x + bbox.llx
                 let line_y = bbox.lly - y
-                let (_lines, width, height) = label_metrics(
-                  label,
-                  font,
-                  size,
-                )
+                let (lines, width, height) = label_metrics(label, font, size)
+                let yoffset = match lines.get(0) {
+                  Some(line) => line.yoffset_centerline
+                  None => 0.0
+                }
                 let anchor = match parse_attr_string(tag, "text-anchor") {
                   Some(value) => value
                   None => "middle"
@@ -74,8 +74,7 @@ fn extract_label_entries(
                   "end" => line_x - width / 2.0
                   _ => line_x
                 }
-                let center_y = line_y - height / 2.0 + size -
-                  centerline_offset(size)
+                let center_y = line_y - height / 2.0 + size - yoffset
                 entries.push({
                   center: { x: center_x, y: center_y },
                 })

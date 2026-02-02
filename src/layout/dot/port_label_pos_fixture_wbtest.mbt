@@ -66,6 +66,30 @@ fn find_edge_by_nodes(
 }
 
 ///|
+fn assert_port_label_edge(
+  edge : @cgraph.Edge,
+  fixture : PortLabelFixture,
+) -> Unit raise {
+  if fixture.label == "" {
+    fail("empty port label for \{fixture.tail} -> \{fixture.head}")
+  }
+  let attr_name = if fixture.head_label { "headlabel" } else { "taillabel" }
+  let attr_value = edge.get_attr(attr_name)
+  match attr_value {
+    Some(value) =>
+      if value != fixture.label {
+        fail(
+          "port label attr mismatch (\{fixture.tail} -> \{fixture.head}) attr=\{attr_name} expected=\{fixture.label} actual=\{value}",
+        )
+      }
+    None =>
+      fail(
+        "missing port label attr (\{fixture.tail} -> \{fixture.head}) attr=\{attr_name}",
+      )
+  }
+}
+
+///|
 test "port label positions match Graphviz" {
   if !@edge_spline.LIBM_IS_NATIVE {
     return
@@ -73,6 +97,8 @@ test "port label positions match Graphviz" {
   let fixtures = load_port_label_fixtures()
   guard fixtures.length() > 0 else { fail("missing port label fixtures") }
   for fixture in fixtures {
+    assert_eq(fixture.label_html, false)
+    assert_eq(fixture.dist, PORT_LABEL_DISTANCE_PT * fixture.labeldistance)
     let actual = port_label_pos_from_points(
       point(fixture.pe_x, fixture.pe_y),
       point(fixture.pf_x, fixture.pf_y),
@@ -100,6 +126,7 @@ test "port label params match Graphviz defaults" {
           "missing edge \{fixture.tail} -> \{fixture.head} for port label fixtures",
         )
     }
+    assert_port_label_edge(edge, fixture)
     let (angle_deg, distance_scale) = match port_label_params(edge) {
       Some(value) => value
       None =>

@@ -728,6 +728,8 @@ fn transpose_rank_groups_graphviz(
 }
 
 ///|
+/// Graphviz parity: aligned to refs/graphviz/lib/dotgen/mincross.c and flat.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn reorder_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],

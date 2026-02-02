@@ -282,6 +282,197 @@ fn add_order_edge(
 }
 
 ///|
+fn collect_edge_indices_by_tail(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+) -> Map[String, Array[Int]] {
+  let out : Map[String, Array[Int]] = Map::new()
+  for i in 0..<edges.length() {
+    let tail =
+      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
+    match out.get(tail) {
+      Some(list) => list.push(i)
+      None => out[tail] = [i]
+    }
+  }
+  out
+}
+
+///|
+/// Graphviz parity: GD_nlist order is reverse creation order in class2.
+fn build_graphviz_nlist_order(
+  tail_order : Array[String],
+  cluster_keys : Map[String, String],
+  cluster_skeleton_creation : Array[String],
+  vnode_creation_by_tail : Map[String, Array[String]],
+) -> Array[String] {
+  let creation : Array[String] = []
+  let seen : Map[String, Bool] = Map::new()
+  for name in cluster_skeleton_creation {
+    if seen.get(name) is None {
+      seen[name] = true
+      creation.push(name)
+    }
+  }
+  for tail_name in tail_order {
+    let cluster = match cluster_keys.get(tail_name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster == "" && seen.get(tail_name) is None {
+      seen[tail_name] = true
+      creation.push(tail_name)
+    }
+    let vnodes = match vnode_creation_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for vnode in vnodes {
+      if seen.get(vnode) is None {
+        seen[vnode] = true
+        creation.push(vnode)
+      }
+    }
+  }
+  let order : Array[String] = []
+  let mut i = creation.length()
+  while i > 0 {
+    i = i - 1
+    order.push(creation[i])
+  }
+  order
+}
+
+///|
+/// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
+fn build_order_edges_by_tail_graphviz(
+  tail_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  order_with_clusters : Bool,
+  edges_by_tail : Map[String, Array[Int]],
+) -> (
+  Map[String, Array[(String, String, Int, Bool)]],
+  Map[String, Array[String]],
+) {
+  let out : Map[String, Array[(String, String, Int, Bool)]] = Map::new()
+  let vnode_seen : Map[String, Bool] = Map::new()
+  let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
+  for tail_name in tail_order {
+    let created_for_tail : Array[String] = []
+    let indices = match edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for idx in indices {
+      let edge = edges[idx]
+      let tail =
+        if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
+      let head =
+        if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+      let tail_cluster =
+        if order_with_clusters {
+        match cluster_keys.get(tail) {
+          Some(value) => value
+          None => ""
+        }
+      } else {
+        ""
+      }
+      let head_cluster =
+        if order_with_clusters {
+        match cluster_keys.get(head) {
+          Some(value) => value
+          None => ""
+        }
+      } else {
+        ""
+      }
+      if order_with_clusters && tail_cluster != "" &&
+        tail_cluster == head_cluster {
+        continue
+      }
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      let mapped_tail =
+        if order_with_clusters && tail_cluster != "" {
+        "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
+      } else {
+        tail
+      }
+      let mapped_head =
+        if order_with_clusters && head_cluster != "" {
+        "\{CLUSTER_SKELETON_PREFIX}\{head_cluster}@\{head_rank}"
+      } else {
+        head
+      }
+      let penalty = edge_xpenalty(edge)
+      let constraint = edge_is_constraint(edge)
+      let vnodes =
+        if order_with_vnodes {
+        match edge_vnodes.get(edge_vnode_key(edge)) {
+          Some(list) => list
+          None => []
+        }
+      } else {
+        []
+      }
+      if order_with_vnodes && vnodes.length() > 0 {
+        for vnode in vnodes {
+          if vnode_seen.get(vnode) is None {
+            vnode_seen[vnode] = true
+            created_for_tail.push(vnode)
+          }
+        }
+      }
+      let chain : Array[String] = []
+      chain.push(mapped_tail)
+      if order_with_vnodes && vnodes.length() > 0 {
+        if tail_rank <= head_rank {
+          for vnode in vnodes {
+            chain.push(vnode)
+          }
+        } else {
+          let mut i = vnodes.length()
+          while i > 0 {
+            i = i - 1
+            chain.push(vnodes[i])
+          }
+        }
+      }
+      chain.push(mapped_head)
+      let mut i = 0
+      while i + 1 < chain.length() {
+        let t = chain[i]
+        let h = chain[i + 1]
+        if t != h {
+          match out.get(t) {
+            Some(list) => list.push((t, h, penalty, constraint))
+            None => out[t] = [(t, h, penalty, constraint)]
+          }
+        }
+        i = i + 1
+      }
+    }
+    if created_for_tail.length() > 0 {
+      vnode_creation_by_tail[tail_name] = created_for_tail
+    }
+  }
+  (out, vnode_creation_by_tail)
+}
+
+///|
 fn build_edge_index_for_order_with_vnodes(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],

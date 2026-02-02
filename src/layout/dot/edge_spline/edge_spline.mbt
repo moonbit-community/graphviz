@@ -170,6 +170,25 @@ fn bezier_clip_eps(
 }
 
 ///|
+fn apply_parallel_offset(
+  points : Array[@geom.Point],
+  offset : Double,
+) -> Array[@geom.Point] {
+  if offset == 0.0 || points.length() <= 2 {
+    return points
+  }
+  let out = points.copy()
+  let mut idx = 1
+  let last = out.length() - 1
+  while idx < last {
+    let p = out[idx]
+    out[idx] = { x: p.x + offset, y: p.y }
+    idx = idx + 1
+  }
+  out
+}
+
+///|
 fn miter_shape(
   base_left : @geom.Point,
   p : @geom.Point,
@@ -1547,6 +1566,7 @@ fn route_spline_recursive_range(
   let v0 = point_scale(ev0, scale0)
   let v1 = point_scale(ev1, scale3)
   let forceflag = inpn == 2
+  let has_barriers = route_barriers.length() > 0
   if allow_spline_fit || forceflag {
     let mut min_x = p0.x
     let mut max_x = p0.x
@@ -1571,7 +1591,6 @@ fn route_spline_recursive_range(
     let input_len = total * min_len_ratio
     let mut a = 4.0
     let mut first = true
-    let has_barriers = route_barriers.length() > 0
     let trace_spline =
       LIBM_IS_NATIVE && @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
     if trace_spline && has_barriers && inpn == 4 {
@@ -1797,6 +1816,41 @@ fn route_polyline_to_bezier(
       route_barriers,
     )
   out
+}
+
+///|
+fn route_bezier_points(
+  points : Array[@geom.Point],
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  force_segmented : Bool,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+) -> Array[@geom.Point] {
+  let polyline = compact_polyline(points)
+  let compacted = compact_polyline(polyline)
+  let allow_spline_fit = !force_segmented
+  let route_points = compacted
+  let tail_dir =
+    if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
+    point(0.0, 0.0)
+  } else {
+    tail_slope
+  }
+  let head_dir =
+    if head_slope.x == 0.0 && head_slope.y == 0.0 {
+    point(0.0, 0.0)
+  } else {
+    head_slope
+  }
+  route_polyline_to_bezier(
+    route_points,
+    tail_dir,
+    head_dir,
+    allow_spline_fit,
+    1.0,
+    0.0,
+    route_barriers=route_barriers,
+  )
 }
 
 ///|
@@ -2057,6 +2111,7 @@ pub fn edge_spline_for_polyline(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   let (tail, head) = if tail_clip == head_clip {
     (tail_clip, point(head_clip.x + 1.0, head_clip.y))
@@ -2084,7 +2139,11 @@ pub fn edge_spline_for_polyline(
       0.0
     }
   let polyline = compact_polyline(raw_points)
-  let bezier = polyline_to_bezier(compact_polyline(polyline))
+  let bezier =
+    apply_parallel_offset(
+      polyline_to_bezier(compact_polyline(polyline)),
+      parallel_offset,
+    )
   let clipped =
     clip_spline_to_nodes(
       edge,
@@ -2118,6 +2177,8 @@ pub fn edge_spline_for_polyline(
 }
 
 ///|
+/// Graphviz parity: edge spline generation aligned to refs/graphviz/lib/common/splines.c + dotgen/dotsplines.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 pub fn edge_spline_for_points(
   edge : @cgraph.Edge,
   points : Array[@geom.Point],
@@ -2134,6 +2195,7 @@ pub fn edge_spline_for_points(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
@@ -2153,33 +2215,16 @@ pub fn edge_spline_for_points(
     } else {
       0.0
     }
-  let polyline = compact_polyline(points)
-  let compacted = compact_polyline(polyline)
-  let allow_spline_fit = !force_segmented
-  let route_points = compacted
-  let tail_dir =
-    if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
-    point(0.0, 0.0)
-  } else {
-    tail_slope
-  }
-  let head_dir =
-    if head_slope.x == 0.0 && head_slope.y == 0.0 {
-    point(0.0, 0.0)
-  } else {
-    head_slope
-  }
-  let min_len_ratio = 1.0
-  let bound_eps = 0.0
   let bezier =
-    route_polyline_to_bezier(
-      route_points,
-      tail_dir,
-      head_dir,
-      allow_spline_fit,
-      min_len_ratio,
-      bound_eps,
-      route_barriers=route_barriers,
+    apply_parallel_offset(
+      route_bezier_points(
+        points,
+        tail_slope,
+        head_slope,
+        force_segmented,
+        route_barriers,
+      ),
+      parallel_offset,
     )
   let spline_points =
     clip_spline_to_nodes(
@@ -2214,6 +2259,153 @@ pub fn edge_spline_for_points(
 }
 
 ///|
+pub fn edge_spline_raw_for_points(
+  points : Array[@geom.Point],
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  force_segmented : Bool,
+  route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
+) -> Array[@geom.Point] {
+  route_bezier_points(
+    points,
+    tail_slope,
+    head_slope,
+    force_segmented,
+    route_barriers,
+  )
+}
+
+///|
+fn line_bezier_points(
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  rankdir : RankDir,
+  curve_offset : Double,
+  curve_skew : Double,
+  tail_cluster_bbox : @geom.Rect?,
+  head_cluster_bbox : @geom.Rect?,
+) -> Array[@geom.Point] {
+  let (tail_base, head_base) =
+    if point_dist(tail_center, head_center) <= 0.000001 {
+    nudge_endpoints(tail_center, head_center)
+  } else {
+    (tail_center, head_center)
+  }
+  let tail_seed = tail_base
+  let head_seed = head_base
+  if curve_offset > 0.0 {
+    let dx = head_seed.x - tail_seed.x
+    let dy = head_seed.y - tail_seed.y
+    let dist = Double::sqrt(dx * dx + dy * dy)
+    if dist <= 0.0 {
+      straight_bezier(tail_seed, head_seed)
+    } else {
+      let inv = 1.0 / dist
+      let perp_a = point(-dy * inv, dx * inv)
+      let perp_b = point(dy * inv, -dx * inv)
+      let perp =
+        match rankdir {
+          RankDir::TB | RankDir::BT => {
+            if dx < 0.0 {
+              if perp_a.y >= perp_b.y { perp_a } else { perp_b }
+            } else {
+              if perp_a.y <= perp_b.y { perp_a } else { perp_b }
+            }
+          }
+          RankDir::LR | RankDir::RL => {
+            if dy < 0.0 {
+              if perp_a.x >= perp_b.x { perp_a } else { perp_b }
+            } else {
+              if perp_a.x <= perp_b.x { perp_a } else { perp_b }
+            }
+          }
+        }
+      let perp =
+        if curve_skew != 1.0 {
+          match rankdir {
+            RankDir::TB | RankDir::BT => {
+              let adjusted = point(perp.x, perp.y * curve_skew)
+              let len = Double::sqrt(
+                adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+              )
+              if len <= 0.0 {
+                perp
+              } else {
+                point(adjusted.x / len, adjusted.y / len)
+              }
+            }
+            RankDir::LR | RankDir::RL => {
+              let adjusted = point(perp.x * curve_skew, perp.y)
+              let len = Double::sqrt(
+                adjusted.x * adjusted.x + adjusted.y * adjusted.y,
+              )
+              if len <= 0.0 {
+                perp
+              } else {
+                point(adjusted.x / len, adjusted.y / len)
+              }
+            }
+          }
+        } else {
+          perp
+        }
+      let offset = point(perp.x * curve_offset, perp.y * curve_offset)
+      let tail_shift = point_add(tail_seed, offset)
+      let head_shift = point_add(head_seed, offset)
+      linear_bezier(tail_shift, head_shift)
+    }
+  } else {
+    let use_linear =
+      tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_)
+    if use_linear {
+      linear_bezier(tail_seed, head_seed)
+    } else {
+      let spline =
+        route_polyline_to_bezier(
+          [tail_seed, head_seed],
+          tail_slope,
+          head_slope,
+          false,
+          1.0,
+          4.0,
+        )
+      if spline.length() > 0 {
+        spline
+      } else {
+        straight_bezier(tail_seed, head_seed)
+      }
+    }
+  }
+}
+
+///|
+pub fn edge_spline_raw_for_line(
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  rankdir : RankDir,
+  curve_offset : Double,
+  curve_skew : Double,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
+) -> Array[@geom.Point] {
+  line_bezier_points(
+    tail_center,
+    head_center,
+    tail_slope,
+    head_slope,
+    rankdir,
+    curve_offset,
+    curve_skew,
+    tail_cluster_bbox,
+    head_cluster_bbox,
+  )
+}
+
+///|
 pub fn edge_spline_for_line(
   edge : @cgraph.Edge,
   tail_center : @geom.Point,
@@ -2232,6 +2424,7 @@ pub fn edge_spline_for_line(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
   let arrow_len =
     if include_tail || include_head {
@@ -2248,90 +2441,19 @@ pub fn edge_spline_for_line(
     } else {
       0.0
     }
-  let (tail_base, head_base) =
-    if point_dist(tail_center, head_center) <= 0.000001 {
-    nudge_endpoints(tail_center, head_center)
-  } else {
-    (tail_center, head_center)
-  }
-  let tail_seed = tail_base
-  let head_seed = head_base
   let mut points =
-    if curve_offset > 0.0 {
-      let dx = head_seed.x - tail_seed.x
-      let dy = head_seed.y - tail_seed.y
-      let dist = Double::sqrt(dx * dx + dy * dy)
-      if dist <= 0.0 {
-        straight_bezier(tail_seed, head_seed)
-      } else {
-        let inv = 1.0 / dist
-        let perp_a = point(-dy * inv, dx * inv)
-        let perp_b = point(dy * inv, -dx * inv)
-        let perp =
-          match rankdir {
-            RankDir::TB | RankDir::BT => {
-              if dx < 0.0 {
-                if perp_a.y >= perp_b.y { perp_a } else { perp_b }
-              } else {
-                if perp_a.y <= perp_b.y { perp_a } else { perp_b }
-              }
-            }
-            RankDir::LR | RankDir::RL => {
-              if dy < 0.0 {
-                if perp_a.x >= perp_b.x { perp_a } else { perp_b }
-              } else {
-                if perp_a.x <= perp_b.x { perp_a } else { perp_b }
-              }
-            }
-          }
-        let perp =
-          if curve_skew != 1.0 {
-            match rankdir {
-              RankDir::TB | RankDir::BT => {
-                let adjusted = point(perp.x, perp.y * curve_skew)
-                let len = Double::sqrt(
-                  adjusted.x * adjusted.x + adjusted.y * adjusted.y,
-                )
-                if len <= 0.0 { perp } else { point(adjusted.x / len, adjusted.y / len) }
-              }
-              RankDir::LR | RankDir::RL => {
-                let adjusted = point(perp.x * curve_skew, perp.y)
-                let len = Double::sqrt(
-                  adjusted.x * adjusted.x + adjusted.y * adjusted.y,
-                )
-                if len <= 0.0 { perp } else { point(adjusted.x / len, adjusted.y / len) }
-              }
-            }
-          } else {
-            perp
-          }
-        let offset = point(perp.x * curve_offset, perp.y * curve_offset)
-        let tail_shift = point_add(tail_seed, offset)
-        let head_shift = point_add(head_seed, offset)
-        linear_bezier(tail_shift, head_shift)
-      }
-    } else {
-      let use_linear =
-        tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_)
-      if use_linear {
-        linear_bezier(tail_seed, head_seed)
-      } else {
-        let spline =
-          route_polyline_to_bezier(
-            [tail_seed, head_seed],
-            tail_slope,
-            head_slope,
-            false,
-            1.0,
-            4.0,
-          )
-        if spline.length() > 0 {
-          spline
-        } else {
-          straight_bezier(tail_seed, head_seed)
-        }
-      }
-    }
+    line_bezier_points(
+      tail_center,
+      head_center,
+      tail_slope,
+      head_slope,
+      rankdir,
+      curve_offset,
+      curve_skew,
+      tail_cluster_bbox,
+      head_cluster_bbox,
+    )
+  points = apply_parallel_offset(points, parallel_offset)
   points =
     clip_spline_to_nodes(
       edge,

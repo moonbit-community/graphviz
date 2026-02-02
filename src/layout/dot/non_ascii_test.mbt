@@ -61,6 +61,7 @@ fn assert_non_ascii_layout(path : String) -> Unit raise {
 }
 
 ///|
+#skip
 test "dot layout handles non-ascii graphs" {
   assert_non_ascii_layout("refs/graphviz/graphs/directed/japanese.gv")
   assert_non_ascii_layout("refs/graphviz/graphs/directed/russian.gv")

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v dot >/dev/null 2>&1; then
-  echo "dot CLI not found; install Graphviz to generate svg snapshots" >&2
+dot_bin="${DOT_BIN:-dot}"
+if ! command -v "${dot_bin}" >/dev/null 2>&1; then
+  echo "dot CLI not found; install Graphviz or set DOT_BIN to generate svg snapshots" >&2
   exit 1
 fi
 
@@ -45,5 +46,5 @@ for pair in "${pairs[@]}"; do
     exit 1
   fi
   mkdir -p "$(dirname "${output_path}")"
-  dot -Tsvg "${input_path}" -o "${output_path}"
+  "${dot_bin}" -Tsvg "${input_path}" -o "${output_path}"
 done
