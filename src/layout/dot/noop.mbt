@@ -388,6 +388,7 @@ pub fn layout_neato_noop(
       width_in: size.width_in,
       height_in: size.height_in,
       label_pos: None,
+      xlabel_pos: None,
     })
   }
   let use_edge_pos = no_op_level > 1
@@ -428,6 +429,7 @@ pub fn layout_neato_noop(
       label_pos: None,
       head_label_pos: None,
       tail_label_pos: None,
+      xlabel_pos: None,
     })
   }
   let base_bbox = compute_bbox(nodes_out, edges_out)

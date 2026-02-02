@@ -43,6 +43,7 @@ pub(all) struct DotLayoutNode {
   width_in : Double
   height_in : Double
   label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
 }
 
 ///|
@@ -54,6 +55,7 @@ pub(all) struct DotLayoutEdge {
   label_pos : @geom.Point?
   head_label_pos : @geom.Point?
   tail_label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
 }
 
 ///|

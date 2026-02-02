@@ -1573,6 +1573,7 @@ fn build_edge_layout(
     label_pos,
     head_label_pos,
     tail_label_pos,
+    xlabel_pos: None,
   }
 }
 

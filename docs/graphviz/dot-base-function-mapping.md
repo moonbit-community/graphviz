@@ -38,6 +38,7 @@ MoonBit:
 - `src/layout/dot/textspan.mbt` (label size helpers: `record_label_text_dimensions`,
   label size calculations used by node/edge/cluster sizing)
 - `src/layout/dot/label_layout.mbt` (graph/edge/port label placement + overlap nudges)
+- `src/layout/dot/xlabel_layout.mbt` (exterior/xlabel placement via addXLabels)
 
 Graphviz:
 - `refs/graphviz/lib/common/textspan.c`
@@ -48,8 +49,6 @@ Graphviz:
 Notes:
 - Capture font name/size + raw string -> width/height points.
 - Keep integer/float outputs exact; no tolerance expected in unit tests.
-- Xlabel placement (`label/xlabels.c`) is not yet implemented in MoonBit; do not
-  claim parity for exterior label placement until it is ported.
 
 ### Record / port layout
 

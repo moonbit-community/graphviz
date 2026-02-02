@@ -259,6 +259,7 @@ fn shift_layout_graph(
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
       label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(node_layout.xlabel_pos, dx, dy),
     })
   }
   let shifted_edges : Array[DotLayoutEdge] = []
@@ -273,6 +274,7 @@ fn shift_layout_graph(
       label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
       head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
       tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+      xlabel_pos: shift_optional_point(edge_layout.xlabel_pos, dx, dy),
     })
   }
   let shifted_subgraphs : Array[DotLayoutGraph] = []
@@ -313,6 +315,7 @@ fn transform_layout(
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
       label_pos: transform_optional_point(node_layout.label_pos, bbox, rankdir),
+      xlabel_pos: transform_optional_point(node_layout.xlabel_pos, bbox, rankdir),
     })
   }
   let transformed_edges : Array[DotLayoutEdge] = []
@@ -335,6 +338,7 @@ fn transform_layout(
         bbox,
         rankdir,
       ),
+      xlabel_pos: transform_optional_point(edge_layout.xlabel_pos, bbox, rankdir),
     })
   }
   let transformed_bbox = compute_bbox(transformed_nodes, transformed_edges)
@@ -345,13 +349,14 @@ fn transform_layout(
     let dy = -transformed_bbox.lly
     let shifted_nodes : Array[DotLayoutNode] = []
     for node_layout in transformed_nodes {
-      shifted_nodes.push({
-        node: node_layout.node,
-        pos: shift_point(node_layout.pos, dx, dy),
-        width_in: node_layout.width_in,
-        height_in: node_layout.height_in,
-        label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
-      })
+        shifted_nodes.push({
+          node: node_layout.node,
+          pos: shift_point(node_layout.pos, dx, dy),
+          width_in: node_layout.width_in,
+          height_in: node_layout.height_in,
+          label_pos: shift_optional_point(node_layout.label_pos, dx, dy),
+          xlabel_pos: shift_optional_point(node_layout.xlabel_pos, dx, dy),
+        })
     }
     let shifted_edges : Array[DotLayoutEdge] = []
     for edge_layout in transformed_edges {
@@ -359,13 +364,14 @@ fn transform_layout(
       for spline in edge_layout.splines {
         splines.push(shift_spline(spline, dx, dy))
       }
-      shifted_edges.push({
-        edge: edge_layout.edge,
-        splines,
-        label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
-        head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
-        tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
-      })
+        shifted_edges.push({
+          edge: edge_layout.edge,
+          splines,
+          label_pos: shift_optional_point(edge_layout.label_pos, dx, dy),
+          head_label_pos: shift_optional_point(edge_layout.head_label_pos, dx, dy),
+          tail_label_pos: shift_optional_point(edge_layout.tail_label_pos, dx, dy),
+          xlabel_pos: shift_optional_point(edge_layout.xlabel_pos, dx, dy),
+        })
     }
     let shifted_bbox = compute_bbox(shifted_nodes, shifted_edges)
     (shifted_nodes, shifted_edges, shifted_bbox)

@@ -297,6 +297,7 @@ pub fn layout_neato(
       width_in: size.width_in,
       height_in: size.height_in,
       label_pos: None,
+      xlabel_pos: None,
     })
   }
   let edges_out : Array[DotLayoutEdge] = []
@@ -325,6 +326,7 @@ pub fn layout_neato(
       label_pos: None,
       head_label_pos: None,
       tail_label_pos: None,
+      xlabel_pos: None,
     })
   }
   let base_bbox = compute_bbox(nodes_out, edges_out)

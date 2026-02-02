@@ -1,6 +1,6 @@
 ///|
 /// Graphviz parity: label placement aligned to refs/graphviz/lib/common/labels.c (fixtures).
-/// Xlabel placement parity (refs/graphviz/lib/label/xlabels.c) is pending.
+/// Xlabel placement lives in xlabel_layout.mbt (refs/graphviz/lib/label/xlabels.c).
 /// Do not change behavior without updating fixtures/tests.
 priv enum LabelLoc {
   Top
@@ -872,6 +872,7 @@ fn adjust_edge_label_positions(
       label_pos,
       head_label_pos: edge_layout.head_label_pos,
       tail_label_pos: edge_layout.tail_label_pos,
+      xlabel_pos: edge_layout.xlabel_pos,
     })
   }
   (adjusted, updates)
@@ -896,6 +897,7 @@ fn apply_edge_label_updates(
         label_pos,
         head_label_pos: edge_layout.head_label_pos,
         tail_label_pos: edge_layout.tail_label_pos,
+        xlabel_pos: edge_layout.xlabel_pos,
       })
     }
     let subgraphs = apply_edge_label_updates(graph.subgraphs, updates)
@@ -1074,6 +1076,7 @@ fn adjust_edge_labels_for_label_overlaps(
         label_pos,
         head_label_pos: edge_layout.head_label_pos,
         tail_label_pos: edge_layout.tail_label_pos,
+        xlabel_pos: edge_layout.xlabel_pos,
       })
     }
     let updated_subgraphs = apply_edge_label_updates(layout.subgraphs, updates)

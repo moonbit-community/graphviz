@@ -193,6 +193,7 @@ fn build_layout_nodes(
       width_in: size.width_in,
       height_in: size.height_in,
       label_pos: None,
+      xlabel_pos: None,
     })
   }
   nodes_out
@@ -591,7 +592,6 @@ fn apply_root_margin_x(
 
 ///|
 /// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
-/// Graphviz xlabels placement (placeLabels/addXLabels) parity is pending.
 fn adjust_edge_labels_if_enabled(
   layout : DotLayoutGraph,
   nodesep_pt : Double,
@@ -678,6 +678,7 @@ fn finalize_layout_graph(
   nodes_out : Array[DotLayoutNode],
   edges_out : Array[DotLayoutEdge],
   rankdir : RankDir,
+  splines : SplinesMode,
   all_ranks : Array[Int],
   ranks : Map[String, Int],
   nodesep_pt : Double,
@@ -709,15 +710,16 @@ fn finalize_layout_graph(
   let adjusted =
     adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
   let labeled = expand_bbox_for_edge_labels(graph, adjusted)
-  let (bbox, label_pos) = apply_root_label_bbox(graph, labeled.bbox)
+  let with_xlabels = place_xlabels(graph, labeled, splines)
+  let (bbox, label_pos) = apply_root_label_bbox(graph, with_xlabels.bbox)
   let final_bbox = apply_root_margin_x(graph, bbox)
   let labeled_with_root = {
-    graph: labeled.graph,
+    graph: with_xlabels.graph,
     bbox: final_bbox,
     label_pos,
-    nodes: labeled.nodes,
-    edges: labeled.edges,
-    subgraphs: labeled.subgraphs,
+    nodes: with_xlabels.nodes,
+    edges: with_xlabels.edges,
+    subgraphs: with_xlabels.subgraphs,
   }
   let shifted = shift_layout_to_origin_if_root(graph, labeled_with_root)
   apply_root_cluster_padding_if_needed(

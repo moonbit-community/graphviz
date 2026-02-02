@@ -172,6 +172,7 @@ pub fn layout_dot(
     nodes_out,
     edges_out,
     rankdir,
+    splines,
     all_ranks,
     ranks,
     nodesep_pt,
@@ -222,6 +223,10 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
       Some(pos) => node.set_attr("lp", format_point(pos))
       None => ()
     }
+    match node_layout.xlabel_pos {
+      Some(pos) => node.set_attr("xlp", format_point(pos))
+      None => ()
+    }
   }
   for edge_layout in self.edges {
     let edge = edge_layout.edge
@@ -266,6 +271,10 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     }
     match edge_layout.tail_label_pos {
       Some(pos) => edge.set_attr("tail_lp", format_point(pos))
+      None => ()
+    }
+    match edge_layout.xlabel_pos {
+      Some(pos) => edge.set_attr("xlp", format_point(pos))
       None => ()
     }
   }

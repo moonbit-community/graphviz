@@ -27,7 +27,6 @@ Graphviz source map (layout/dot parity)
 - Label placement + text metrics
   - MoonBit: `src/layout/dot/font_metrics/*`, `src/layout/dot/textspan.mbt` (text metrics), `src/layout/dot/label_layout.mbt` (label positions)
   - Graphviz: `refs/graphviz/lib/common/textspan.c`, `refs/graphviz/lib/common/labels.c`, `refs/graphviz/lib/label/xlabels.c`
-  - Note: xlabel placement parity is pending; Graphviz xlabels are not yet ported.
 - Record shape layout / ports
   - MoonBit: `src/layout/dot/record_layout.mbt` (record sizing, port centers)
   - Graphviz: `refs/graphviz/lib/common/shapes.c` (record_*), `refs/graphviz/lib/common/output.c` (record rects)
