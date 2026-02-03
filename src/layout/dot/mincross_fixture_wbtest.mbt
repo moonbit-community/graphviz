@@ -23,6 +23,7 @@ struct MincrossFlatEdge {
 struct MincrossInput {
   case_id : Int
   graph : String
+  startpass : Int
   minrank : Int
   maxrank : Int
   nodes : Array[MincrossNode]
@@ -39,9 +40,15 @@ struct MincrossOutput {
 
 ///|
 fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
+  let startpass =
+    match obj.get("startpass") {
+      Some(value) => @json.from_json(value)
+      None => 0
+    }
   {
     case_id: @json.from_json(obj["case"]),
     graph: @json.from_json(obj["graph"]),
+    startpass,
     minrank: @json.from_json(obj["minrank"]),
     maxrank: @json.from_json(obj["maxrank"]),
     nodes: parse_mincross_nodes(obj["nodes"]),
@@ -348,6 +355,7 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     Map::new(),
     cluster_skeleton,
     flat_constraints,
+    startpass=input.startpass,
   )
   let actual : Array[Array[Int]] = []
   for rank_key in rank_keys {

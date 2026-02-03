@@ -334,13 +334,7 @@ fn build_graphviz_nlist_order(
       }
     }
   }
-  let order : Array[String] = []
-  let mut i = creation.length()
-  while i > 0 {
-    i = i - 1
-    order.push(creation[i])
-  }
-  order
+  creation
 }
 
 ///|
@@ -355,6 +349,7 @@ fn build_order_edges_by_tail_graphviz(
   order_with_vnodes : Bool,
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
+  map_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
 ) -> (
   Map[String, Array[(String, String, Int, Bool)]],
@@ -363,6 +358,7 @@ fn build_order_edges_by_tail_graphviz(
   let out : Map[String, Array[(String, String, Int, Bool)]] = Map::new()
   let vnode_seen : Map[String, Bool] = Map::new()
   let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
+  let use_mapping = order_with_clusters && map_clusters
   for tail_name in tail_order {
     let created_for_tail : Array[String] = []
     let indices = match edges_by_tail.get(tail_name) {
@@ -376,7 +372,7 @@ fn build_order_edges_by_tail_graphviz(
       let head =
         if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
       let tail_cluster =
-        if order_with_clusters {
+        if use_mapping {
         match cluster_keys.get(tail) {
           Some(value) => value
           None => ""
@@ -385,7 +381,7 @@ fn build_order_edges_by_tail_graphviz(
         ""
       }
       let head_cluster =
-        if order_with_clusters {
+        if use_mapping {
         match cluster_keys.get(head) {
           Some(value) => value
           None => ""
@@ -393,8 +389,7 @@ fn build_order_edges_by_tail_graphviz(
       } else {
         ""
       }
-      if order_with_clusters && tail_cluster != "" &&
-        tail_cluster == head_cluster {
+      if use_mapping && tail_cluster != "" && tail_cluster == head_cluster {
         continue
       }
       let tail_rank = match ranks.get(tail) {
@@ -406,13 +401,13 @@ fn build_order_edges_by_tail_graphviz(
         None => 0
       }
       let mapped_tail =
-        if order_with_clusters && tail_cluster != "" {
+        if use_mapping && tail_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
       } else {
         tail
       }
       let mapped_head =
-        if order_with_clusters && head_cluster != "" {
+        if use_mapping && head_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{head_cluster}@\{head_rank}"
       } else {
         head

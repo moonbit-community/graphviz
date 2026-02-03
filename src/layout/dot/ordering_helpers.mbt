@@ -797,6 +797,152 @@ fn clone_rank_groups(
 }
 
 ///|
+/// Graphviz parity: seed rank groups with rank=same subgraph order (class2/build_ranks).
+/// Do not change behavior without updating fixtures/tests.
+fn apply_rank_same_order(
+  groups : Map[Int, Array[String]],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+) -> Map[Int, Array[String]] {
+  if rank_same_groups.length() == 0 {
+    return clone_rank_groups(groups)
+  }
+  let adjusted : Map[Int, Array[String]] = Map::new()
+  for rank, names in groups {
+    let positions_by_group : Map[Int, Array[Int]] = Map::new()
+    let nodes_by_group : Map[Int, Array[String]] = Map::new()
+    for i in 0..<names.length() {
+      let name = names[i]
+      match rank_same_groups.get(name) {
+        Some(group) => {
+          match positions_by_group.get(group) {
+            Some(list) => list.push(i)
+            None => positions_by_group[group] = [i]
+          }
+          match nodes_by_group.get(group) {
+            Some(list) => list.push(name)
+            None => nodes_by_group[group] = [name]
+          }
+        }
+        None => ()
+      }
+    }
+    let out = names.copy()
+    for group, list in nodes_by_group {
+      let positions = match positions_by_group.get(group) {
+        Some(value) => value
+        None => []
+      }
+      let sorted = list.copy()
+      sorted.sort_by((a, b) => {
+        let a_idx = match rank_same_order.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_idx = match rank_same_order.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      })
+      let mut idx = 0
+      while idx < positions.length() && idx < sorted.length() {
+        out[positions[idx]] = sorted[idx]
+        idx = idx + 1
+      }
+    }
+    adjusted[rank] = out
+  }
+  adjusted
+}
+
+///|
+/// Graphviz parity: rank=same order with ported-node override for explicit ports.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_rank_same_order_with_port_override(
+  groups : Map[Int, Array[String]],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let adjusted = apply_rank_same_order(groups, rank_same_groups, rank_same_order)
+  if rank_same_groups.length() == 0 {
+    return adjusted
+  }
+  for rank, names in adjusted {
+    if names.length() <= 1 {
+      continue
+    }
+    let group_positions : Map[Int, Array[Int]] = Map::new()
+    let group_nodes : Map[Int, Array[String]] = Map::new()
+    let group_has_unported : Map[Int, Bool] = Map::new()
+    for i in 0..<names.length() {
+      let name = names[i]
+      match rank_same_groups.get(name) {
+        Some(group) => {
+          if port_edge_nodes.get(name) == Some(true) {
+            match group_positions.get(group) {
+              Some(list) => list.push(i)
+              None => group_positions[group] = [i]
+            }
+            match group_nodes.get(group) {
+              Some(list) => list.push(name)
+              None => group_nodes[group] = [name]
+            }
+          } else {
+            group_has_unported[group] = true
+          }
+        }
+        None => ()
+      }
+    }
+    for group, positions in group_positions {
+      if group_has_unported.get(group) == Some(true) {
+        continue
+      }
+      let nodes = match group_nodes.get(group) {
+        Some(list) => list
+        None => []
+      }
+      if nodes.length() <= 1 {
+        continue
+      }
+      let sorted = nodes.copy()
+      sorted.sort_by((a, b) => {
+        let a_idx = match node_order.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_idx = match node_order.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      })
+      let mut idx = 0
+      while idx < positions.length() && idx < sorted.length() {
+        names[positions[idx]] = sorted[idx]
+        idx = idx + 1
+      }
+    }
+  }
+  adjusted
+}
+
+///|
 fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let ranks : Map[String, Int] = Map::new()
   for rank, names in groups {
@@ -999,6 +1145,7 @@ fn count_crossings_graphviz(
   while idx + 1 < rank_keys.length() {
     let rank = rank_keys[idx]
     let next_rank = rank_keys[idx + 1]
+    let mut rank_cross = 0
     let top_nodes = match groups.get(rank) {
       Some(list) => list
       None => []
@@ -1030,7 +1177,7 @@ fn count_crossings_graphviz(
           }
           let mut k = inv + 1
           while k <= max_order {
-            crossings = crossings + count[k] * penalty
+            rank_cross = rank_cross + count[k] * penalty
             k = k + 1
           }
         }
@@ -1054,6 +1201,10 @@ fn count_crossings_graphviz(
         count[inv] = count[inv] + penalty
       }
     }
+    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && rank_cross > 0 {
+      println("crossings rank \{rank}->\{next_rank}: \{rank_cross}")
+    }
+    crossings = crossings + rank_cross
     idx = idx + 1
   }
   crossings

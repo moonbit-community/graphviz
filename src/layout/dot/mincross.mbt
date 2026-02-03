@@ -194,7 +194,27 @@ fn reorder_by_medians(
           Some(value) => value
           None => -1.0
         }
+        if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+          let left = sorted[lp]
+          let right = sorted[rp]
+          if (left == "handle_x" && right == "handle_1") ||
+            (left == "handle_1" && right == "handle_x") {
+            println(
+              "reorder handle pair \{left}<->\{right} p1=\{p1} p2=\{p2} reverse=\{reverse}",
+            )
+          }
+        }
         if p1 > p2 || (p1 >= p2 && reverse) {
+          if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+            let left = sorted[lp]
+            let right = sorted[rp]
+            if (left == "_mbt_edge_vn_0_3" && right == "_mbt_edge_vn_1_3") ||
+              (left == "_mbt_edge_vn_1_3" && right == "_mbt_edge_vn_0_3") {
+              println(
+                "reorder rank pair \{left}<->\{right} p1=\{p1} p2=\{p2} reverse=\{reverse}",
+              )
+            }
+          }
           let tmp = sorted[lp]
           sorted[lp] = sorted[rp]
           sorted[rp] = tmp
@@ -635,6 +655,14 @@ fn transpose_rank_graphviz(
     c1 = c1 + out_cross_graphviz(
       right, left, rank, ranks, order, edge_out, edge_head, edge_penalty,
     )
+    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+      if (left == "_mbt_edge_vn_0_3" && right == "_mbt_edge_vn_1_3") ||
+        (left == "_mbt_edge_vn_1_3" && right == "_mbt_edge_vn_0_3") {
+        println(
+          "transpose rank \{rank} pair \{left}<->\{right} c0=\{c0} c1=\{c1} reverse=\{reverse}",
+        )
+      }
+    }
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
@@ -751,7 +779,10 @@ fn reorder_rank_groups(
   preferred_positions : Map[String, Double],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
+  startpass? : Int = 0,
 ) -> Map[Int, Array[String]] {
+  let startpass =
+    if startpass < 0 { 0 } else if startpass > 2 { 2 } else { startpass }
   let mut ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -777,11 +808,6 @@ fn reorder_rank_groups(
       port_edge_nodes[edge_tail[edge_idx]] = true
       port_edge_nodes[edge_head[edge_idx]] = true
     }
-  }
-  let mut has_ported_nodes = false
-  for _name, _ in port_edge_nodes {
-    has_ported_nodes = true
-    break
   }
   let edge_pair_order : Map[String, Int] = Map::new()
   let mut edge_idx = 0
@@ -819,11 +845,6 @@ fn reorder_rank_groups(
     has_port_order = true
     break
   }
-  let mut has_rank_same = false
-  for _name, _ in rank_same_groups {
-    has_rank_same = true
-    break
-  }
   let mut has_preferred = false
   for _name, _ in preferred_positions {
     has_preferred = true
@@ -834,8 +855,7 @@ fn reorder_rank_groups(
     has_port_contrib = true
     break
   }
-  let graphviz_style = !has_rank_same && !has_port_order && !has_ported_nodes &&
-    !has_preferred && !has_port_contrib
+  let graphviz_style = !has_port_order && !has_preferred && !has_port_contrib
   let median_parents : Map[String, Array[String]] = Map::new()
   let median_children : Map[String, Array[String]] = Map::new()
   let edge_penalty : Array[Int] = []
@@ -900,6 +920,9 @@ fn reorder_rank_groups(
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
+  if graphviz_style && startpass > 1 && @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    println("remincross start crossings=\{best_cross}")
+  }
   if !graphviz_style && rank_keys.length() > 1 {
     ordered = build_rank_groups_graphviz(
       rank_keys,
@@ -941,7 +964,7 @@ fn reorder_rank_groups(
     let min_quit = 8
     let convergence = 0.995
     let mut cur_cross = best_cross
-    let mut pass = 0
+    let mut pass = startpass
     while pass <= 2 {
       let max_this_pass =
         if pass <= 1 {
@@ -1132,7 +1155,7 @@ fn reorder_rank_groups(
         0,
       )
     }
-    return clone_rank_groups(ordered)
+    return ordered
   }
   if !graphviz_style && rank_keys.length() > 1 {
     let iterations = if rank_keys.length() > 2 { 2 } else { 1 }
@@ -1341,5 +1364,5 @@ fn reorder_rank_groups(
       iter = iter + 1
     }
   }
-  clone_rank_groups(best_ordered)
+  best_ordered
 }

@@ -134,6 +134,12 @@ fn build_edge_vnodes(
       names.push(name)
       rank = rank + 1
     }
+    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && names.length() > 0 {
+      if edge_index == 8 {
+        let joined = names.join(",")
+        println("edge_vnodes edge=\{edge_index} tail=\{tail} head=\{head} vnodes=\{joined}")
+      }
+    }
     if names.length() > 0 {
       match edge_vnodes.get(key) {
         Some(list) =>

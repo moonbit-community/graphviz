@@ -23,6 +23,7 @@ fn default_point_size_in() -> Double {
 }
 
 ///|
+///|
 fn ordered_nodes(graph : @cgraph.Graph) -> Array[@cgraph.Node] {
   graph.nodes()
 }
