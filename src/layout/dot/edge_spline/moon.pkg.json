@@ -7,6 +7,7 @@
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
+    "moonbitlang/core/bigint",
     "moonbitlang/core/strconv",
     "moonbitlang/x/sys"
   ],

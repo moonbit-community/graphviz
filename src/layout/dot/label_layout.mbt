@@ -217,7 +217,7 @@ fn bezier_point(
 
 ///|
 /// Graphviz parity: linear interpolation aligned to refs/graphviz/lib/common/utils.c
-/// (Bezier helper).
+/// (Bezier helper, uses fused multiply-add to match Graphviz compiler output).
 /// Do not change behavior without updating fixtures/tests.
 fn point_lerp_graphviz(
   a : @geom.Point,
@@ -225,8 +225,8 @@ fn point_lerp_graphviz(
   t : Double,
 ) -> @geom.Point {
   let mt = 1.0 - t
-  let x = (mt * a.x) + (t * b.x)
-  let y = (mt * a.y) + (t * b.y)
+  let x = libm_fma(mt, a.x, t * b.x)
+  let y = libm_fma(mt, a.y, t * b.y)
   point(x, y)
 }
 

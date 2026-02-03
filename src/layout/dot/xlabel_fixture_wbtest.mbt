@@ -100,35 +100,9 @@ fn edge_attr_text(edge : @cgraph.Edge, attr_name : String) -> String {
 }
 
 ///|
-/// Graphviz parity: wasm-vs-native math can differ by 1 ULP; compare within a tight ULP window.
-fn float_eq_ulp(a : Double, b : Double, max_ulp : UInt64) -> Bool {
-  if a == b {
-    return true
-  }
-  if a.is_nan() || b.is_nan() {
-    return false
-  }
-  let to_ordered = (value : Double) => {
-    let bits = Double::reinterpret_as_uint64(value)
-    if bits >> 63 == 1 {
-      UInt64::lnot(bits)
-    } else {
-      bits | 0x8000000000000000
-    }
-  }
-  let oa = to_ordered(a)
-  let ob = to_ordered(b)
-  let diff = if oa > ob { oa - ob } else { ob - oa }
-  diff <= max_ulp
-}
-
-fn assert_float_eq_ulp(
-  actual : Double,
-  expected : Double,
-  max_ulp : UInt64,
-  message : String,
-) -> Unit raise {
-  if !float_eq_ulp(actual, expected, max_ulp) {
+/// Graphviz parity: xlabel fixture positions must match exactly.
+fn assert_float_eq(actual : Double, expected : Double, message : String) -> Unit raise {
+  if actual != expected {
     fail(message)
   }
 }
@@ -155,7 +129,6 @@ fn find_edge_layout_by_label(
 
 ///|
 test "xlabel positions match Graphviz" {
-  let max_ulp : UInt64 = 1
   let fixtures = load_xlabel_fixtures()
   guard fixtures.length() > 0 else { fail("missing xlabel fixtures") }
   let graphs : Map[String, @cgraph.Graph] = Map::new()
@@ -185,16 +158,14 @@ test "xlabel positions match Graphviz" {
           Some(value) => value
           None => fail("missing node xlabel position for \{fixture.node}")
         }
-        assert_float_eq_ulp(
+        assert_float_eq(
           pos.x,
           fixture.pos_x,
-          max_ulp,
           "node xlabel pos x mismatch \{fixture.graph} \{fixture.node} got (\{pos.x}) expected (\{fixture.pos_x})",
         )
-        assert_float_eq_ulp(
+        assert_float_eq(
           pos.y,
           fixture.pos_y,
-          max_ulp,
           "node xlabel pos y mismatch \{fixture.graph} \{fixture.node} got (\{pos.y}) expected (\{fixture.pos_y})",
         )
       }
@@ -229,16 +200,14 @@ test "xlabel positions match Graphviz" {
         }
         match pos {
           Some(value) => {
-            assert_float_eq_ulp(
+            assert_float_eq(
               value.x,
               fixture.pos_x,
-              max_ulp,
               "edge xlabel pos x mismatch \{fixture.graph} \{fixture.kind} \{fixture.tail}->\{fixture.head} got (\{value.x}) expected (\{fixture.pos_x})",
             )
-            assert_float_eq_ulp(
+            assert_float_eq(
               value.y,
               fixture.pos_y,
-              max_ulp,
               "edge xlabel pos y mismatch \{fixture.graph} \{fixture.kind} \{fixture.tail}->\{fixture.head} got (\{value.y}) expected (\{fixture.pos_y})",
             )
           }
