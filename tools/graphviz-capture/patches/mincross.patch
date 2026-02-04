@@ -168,6 +168,7 @@
 +        if (i > 0)
 +            fputc(',', out);
 +        node_t *n = cap->nodes[i];
++        edge_t *e;
 +        const char *name = (ND_node_type(n) == NORMAL) ? agnameof(n) : NULL;
 +        fprintf(out, "{\"id\":%d,\"name\":", (int)i);
 +        mbt_write_json_string_or_null(out, name);
@@ -181,8 +182,29 @@
 +        fprintf(out, ",\"cluster_skeleton\":%s",
 +                (ND_ranktype(n) == CLUSTER && ND_node_type(n) == VIRTUAL) ?
 +                "true" : "false");
-+        fprintf(out, ",\"rank\":%d,\"order\":%d}",
++        fprintf(out, ",\"rank\":%d,\"order\":%d",
 +                ND_rank(n), ND_order(n));
++        fputs(",\"out\":[", out);
++        int out_idx = 0;
++        for (int j = 0; (e = ND_out(n).list[j]); j++) {
++            int head_id = mbt_mincross_node_id(aghead(e), cap->nodes, cap->node_count);
++            if (head_id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", head_id);
++        }
++        fputs("],\"in\":[", out);
++        out_idx = 0;
++        for (int j = 0; (e = ND_in(n).list[j]); j++) {
++            int tail_id = mbt_mincross_node_id(agtail(e), cap->nodes, cap->node_count);
++            if (tail_id < 0)
++                continue;
++            if (out_idx++ > 0)
++                fputc(',', out);
++            fprintf(out, "%d", tail_id);
++        }
++        fputs("]}", out);
 +    }
 +    fputs("],\"edges\":[", out);
 +    bool first_edge = true;
@@ -197,12 +219,12 @@
 +                fputc(',', out);
 +            first_edge = false;
 +            fprintf(out,
-+                    "{\"tail\":%d,\"head\":%d,\"minlen\":%d,"
++                    "{\"tail\":%d,\"head\":%d,\"seq\":%u,\"minlen\":%d,"
 +                    "\"weight\":%d,\"xpenalty\":%d,"
 +                    "\"tail_port_x\":%.17g,\"head_port_x\":%.17g,"
 +                    "\"tail_port_order\":%u,\"head_port_order\":%u,"
 +                    "\"type\":",
-+                    (int)i, head_id, ED_minlen(e),
++                    (int)i, head_id, (unsigned)AGSEQ(e), ED_minlen(e),
 +                    ED_weight(e), ED_xpenalty(e),
 +                    ED_tail_port(e).p.x, ED_head_port(e).p.x,
 +                    (unsigned int)ED_tail_port(e).order,

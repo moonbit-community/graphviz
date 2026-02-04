@@ -1,4 +1,6 @@
 ///|
+/// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
+/// Do not change behavior without updating fixtures/tests.
 fn build_rank_groups_graphviz(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -9,6 +11,8 @@ fn build_rank_groups_graphviz(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   pass : Int,
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Map[Int, Array[String]] {
   let ordered : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
@@ -58,20 +62,44 @@ fn build_rank_groups_graphviz(
   }
   let out_neighbors : Map[String, Array[String]] = Map::new()
   let in_neighbors : Map[String, Array[String]] = Map::new()
-  for name in nlist {
-    out_neighbors[name] = []
-    in_neighbors[name] = []
+  let mut use_graphviz_neighbors = false
+  for _key, _ in graphviz_out_neighbors {
+    use_graphviz_neighbors = true
+    break
   }
-  for edge_idx in 0..<edge_tail.length() {
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    match out_neighbors.get(tail) {
-      Some(list) => list.push(head)
-      None => out_neighbors[tail] = [head]
+  if !use_graphviz_neighbors {
+    for _key, _ in graphviz_in_neighbors {
+      use_graphviz_neighbors = true
+      break
     }
-    match in_neighbors.get(head) {
-      Some(list) => list.push(tail)
-      None => in_neighbors[head] = [tail]
+  }
+  if use_graphviz_neighbors {
+    for name in nlist {
+      match graphviz_out_neighbors.get(name) {
+        Some(list) => out_neighbors[name] = list.copy()
+        None => out_neighbors[name] = []
+      }
+      match graphviz_in_neighbors.get(name) {
+        Some(list) => in_neighbors[name] = list.copy()
+        None => in_neighbors[name] = []
+      }
+    }
+  } else {
+    for name in nlist {
+      out_neighbors[name] = []
+      in_neighbors[name] = []
+    }
+    for edge_idx in 0..<edge_tail.length() {
+      let tail = edge_tail[edge_idx]
+      let head = edge_head[edge_idx]
+      match out_neighbors.get(tail) {
+        Some(list) => list.push(head)
+        None => out_neighbors[tail] = [head]
+      }
+      match in_neighbors.get(head) {
+        Some(list) => list.push(tail)
+        None => in_neighbors[head] = [tail]
+      }
     }
   }
   let cluster_nodes : Map[String, Array[String]] = Map::new()

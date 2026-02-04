@@ -61,6 +61,7 @@ fn build_edge_vnodes(
       Some(value) => value
       None => ""
     }
+    // Graphviz parity: cluster-local vnodes use the virtual_node default width.
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }

@@ -302,7 +302,7 @@ fn collect_edge_indices_by_tail(
 /// Graphviz parity: GD_nlist order is reverse creation order in class2.
 fn build_graphviz_nlist_order(
   tail_order : Array[String],
-  cluster_keys : Map[String, String],
+  _cluster_keys : Map[String, String],
   cluster_skeleton_creation : Array[String],
   vnode_creation_by_tail : Map[String, Array[String]],
 ) -> Array[String] {
@@ -315,11 +315,7 @@ fn build_graphviz_nlist_order(
     }
   }
   for tail_name in tail_order {
-    let cluster = match cluster_keys.get(tail_name) {
-      Some(value) => value
-      None => ""
-    }
-    if cluster == "" && seen.get(tail_name) is None {
+    if seen.get(tail_name) is None {
       seen[tail_name] = true
       creation.push(tail_name)
     }
@@ -334,7 +330,126 @@ fn build_graphviz_nlist_order(
       }
     }
   }
-  creation
+  // GD_nlist is reverse of creation order (fast_node inserts at head).
+  let out : Array[String] = []
+  let mut idx = creation.length()
+  while idx > 0 {
+    idx = idx - 1
+    out.push(creation[idx])
+  }
+  out
+}
+
+///|
+/// Graphviz parity: approximate decompose DFS order over fast graph edges.
+fn build_graphviz_nlist_order_from_edges(
+  tail_order : Array[String],
+  order_nodes : Array[String],
+  edge_creation : Array[(String, String)],
+  flat_constraints : Map[String, Bool],
+) -> Array[String] {
+  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    out_neighbors[name] = []
+    in_neighbors[name] = []
+    flat_out[name] = []
+    flat_in[name] = []
+  }
+  for edge in edge_creation {
+    let (tail, head) = edge
+    match out_neighbors.get(tail) {
+      Some(list) => list.push(head)
+      None => out_neighbors[tail] = [head]
+    }
+    match in_neighbors.get(head) {
+      Some(list) => list.push(tail)
+      None => in_neighbors[head] = [tail]
+    }
+  }
+  for key, _ in flat_constraints {
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        match flat_out.get(tail) {
+          Some(list) => list.push(head)
+          None => flat_out[tail] = [head]
+        }
+        match flat_in.get(head) {
+          Some(list) => list.push(tail)
+          None => flat_in[head] = [tail]
+        }
+      }
+      None => ()
+    }
+  }
+  let visited : Map[String, Bool] = Map::new()
+  for name in order_nodes {
+    visited[name] = false
+  }
+  let nlist : Array[String] = []
+  let stack : Array[String] = []
+  let push_neighbors = (list : Array[String]) => {
+    let mut idx = list.length()
+    while idx > 0 {
+      idx = idx - 1
+      let other = list[idx]
+      if visited.get(other) != Some(true) {
+        stack.push(other)
+      }
+    }
+  }
+  for start in tail_order {
+    if visited.get(start) == Some(true) {
+      continue
+    }
+    stack.push(start)
+    while stack.length() > 0 {
+      let current = stack[stack.length() - 1]
+      let _ = stack.pop()
+      if visited.get(current) == Some(true) {
+        continue
+      }
+      visited[current] = true
+      nlist.push(current)
+      let fin = match flat_in.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let fout = match flat_out.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let inn = match in_neighbors.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let out = match out_neighbors.get(current) {
+        Some(list) => list
+        None => []
+      }
+      push_neighbors(fin)
+      push_neighbors(fout)
+      push_neighbors(inn)
+      push_neighbors(out)
+    }
+  }
+  if nlist.length() < order_nodes.length() {
+    for name in order_nodes {
+      if visited.get(name) != Some(true) {
+        nlist.push(name)
+        visited[name] = true
+      }
+    }
+  }
+  nlist
 }
 
 ///|
@@ -354,10 +469,12 @@ fn build_order_edges_by_tail_graphviz(
 ) -> (
   Map[String, Array[(String, String, Int, Bool)]],
   Map[String, Array[String]],
+  Array[(String, String)],
 ) {
   let out : Map[String, Array[(String, String, Int, Bool)]] = Map::new()
   let vnode_seen : Map[String, Bool] = Map::new()
   let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
+  let edge_creation : Array[(String, String)] = []
   let use_mapping = order_with_clusters && map_clusters
   for tail_name in tail_order {
     let created_for_tail : Array[String] = []
@@ -400,6 +517,9 @@ fn build_order_edges_by_tail_graphviz(
         Some(value) => value
         None => 0
       }
+      if tail_rank == head_rank {
+        continue
+      }
       let mapped_tail =
         if use_mapping && tail_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
@@ -432,21 +552,17 @@ fn build_order_edges_by_tail_graphviz(
         }
       }
       let chain : Array[String] = []
-      chain.push(mapped_tail)
+      let (chain_tail, chain_head) =
+        if tail_rank <= head_rank { (mapped_tail, mapped_head) } else {
+          (mapped_head, mapped_tail)
+        }
+      chain.push(chain_tail)
       if order_with_vnodes && vnodes.length() > 0 {
-        if tail_rank <= head_rank {
-          for vnode in vnodes {
-            chain.push(vnode)
-          }
-        } else {
-          let mut i = vnodes.length()
-          while i > 0 {
-            i = i - 1
-            chain.push(vnodes[i])
-          }
+        for vnode in vnodes {
+          chain.push(vnode)
         }
       }
-      chain.push(mapped_head)
+      chain.push(chain_head)
       let mut i = 0
       while i + 1 < chain.length() {
         let t = chain[i]
@@ -456,6 +572,7 @@ fn build_order_edges_by_tail_graphviz(
             Some(list) => list.push((t, h, penalty, constraint))
             None => out[t] = [(t, h, penalty, constraint)]
           }
+          edge_creation.push((t, h))
         }
         i = i + 1
       }
@@ -464,7 +581,7 @@ fn build_order_edges_by_tail_graphviz(
       vnode_creation_by_tail[tail_name] = created_for_tail
     }
   }
-  (out, vnode_creation_by_tail)
+  (out, vnode_creation_by_tail, edge_creation)
 }
 
 ///|

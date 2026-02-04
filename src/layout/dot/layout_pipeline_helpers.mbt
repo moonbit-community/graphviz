@@ -23,6 +23,8 @@ priv struct RankData {
   edge_tail : Array[String]
   edge_head : Array[String]
   edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  edge_in_order : Map[String, Array[Int]]
   ranks : Map[String, Int]
   groups : Map[Int, Array[String]]
   rank_keys : Array[Int]
@@ -47,6 +49,7 @@ priv struct ClusterMetadata {
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
   cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
   intercluster_keys : Map[String, String]
   rank_same_groups : Map[String, Int]
   rank_same_order : Map[String, Int]
@@ -73,6 +76,8 @@ priv struct PositionResult {
   rank_y : Map[Int, Double]
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
   flat_label_edge_vnodes : Map[String, String]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
@@ -153,9 +158,15 @@ fn prepare_layout_inputs(
     }
   }
   let has_edge_labels = graph_has_edge_labels(edges)
+  // Graphviz parity: GD_nlist iteration is reverse creation order.
   let node_order : Map[String, Int] = Map::new()
-  for i in 0..<nodes.length() {
-    node_order[nodes[i].name()] = i
+  let nlist_nodes = nodes
+  let mut rev_idx = nlist_nodes.length()
+  let mut order_idx = 0
+  while rev_idx > 0 {
+    rev_idx = rev_idx - 1
+    node_order[nlist_nodes[rev_idx].name()] = order_idx
+    order_idx = order_idx + 1
   }
   if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
     let debug_names : Array[String] = [
@@ -301,11 +312,38 @@ fn compute_rank_data(
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
 ) -> RankData {
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_in_order : Map[String, Array[Int]] = Map::new()
   let (edge_tail, edge_head, edge_reversed) =
     if graph.kind() == @cgraph.GraphKind::Directed {
-      acyclic_edge_directions(nodes, edges)
+      let (tail, head, reversed, out_edges, in_edges) =
+        acyclic_edge_directions_with_order(nodes, edges)
+      for i in 0..<nodes.length() {
+        let name = nodes[i].name()
+        edge_out_order[name] = out_edges[i].copy()
+        edge_in_order[name] = in_edges[i].copy()
+      }
+      (tail, head, reversed)
     } else {
-      edge_endpoints_from_edges(edges)
+      let (tail, head, reversed) = edge_endpoints_from_edges(edges)
+      for node in nodes {
+        let name = node.name()
+        edge_out_order[name] = []
+        edge_in_order[name] = []
+      }
+      for i in 0..<tail.length() {
+        let t = tail[i]
+        let h = head[i]
+        match edge_out_order.get(t) {
+          Some(list) => list.push(i)
+          None => edge_out_order[t] = [i]
+        }
+        match edge_in_order.get(h) {
+          Some(list) => list.push(i)
+          None => edge_in_order[h] = [i]
+        }
+      }
+      (tail, head, reversed)
     }
   let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
     compute_ranks_directed(
@@ -343,6 +381,8 @@ fn compute_rank_data(
     edge_tail,
     edge_head,
     edge_reversed,
+    edge_out_order,
+    edge_in_order,
     ranks,
     groups,
     rank_keys,
@@ -456,11 +496,12 @@ fn compute_rank_heights(
   let _ = apply_cluster_rank_heights(
     graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2,
   )
-  let nodesep_pt = nodesep_in * 72.0
-  let mut ranksep_pt = ranksep_in * 72.0
+  let nodesep_pt = round_int(nodesep_in * 72.0).to_double()
+  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
   if has_edge_labels {
-    ranksep_pt = (ranksep_pt + 1.0) / 2.0
+    ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }
+  let ranksep_pt = ranksep_pt_int.to_double()
   { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
 }
 
@@ -534,6 +575,13 @@ fn compute_cluster_metadata(
   }
   let cluster_order : Array[String] = []
   collect_cluster_names_graphviz_order(graph, cluster_order)
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
+    let joined = cluster_order.join(" ")
+    println("cluster_order \{joined}")
+  }
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   let cluster_order_list : Array[(String, Int, Int)] = []
   for cluster, rank in cluster_min_rank {
     let order = match cluster_first_order.get(cluster) {
@@ -602,6 +650,26 @@ fn compute_cluster_metadata(
     edge_head,
     cluster_keys,
   )
+  // Graphviz parity: flat edges (same-rank) act as ordering constraints.
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      if tail_rank == head_rank {
+        flat_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
   {
     has_clusters,
     cluster_keys,
@@ -609,6 +677,7 @@ fn compute_cluster_metadata(
     cluster_min_rank,
     cluster_max_rank,
     cluster_order,
+    cluster_parents,
     intercluster_keys,
     rank_same_groups,
     rank_same_order,
@@ -693,7 +762,7 @@ fn build_local_cluster_order(
 }
 
 ///|
-/// Graphviz parity: rank=same ordering constraints (port override uses node order).
+/// Graphviz parity: rank=same does not impose ordering constraints.
 /// Do not change behavior without updating fixtures/tests.
 fn build_rank_same_constraints(
   rank_same_groups : Map[String, Int],
@@ -702,75 +771,7 @@ fn build_rank_same_constraints(
   port_edge_nodes : Map[String, Bool],
   ranks : Map[String, Int],
 ) -> Map[String, Bool] {
-  let groups_by_rank : Map[String, Array[String]] = Map::new()
-  for name, group in rank_same_groups {
-    let rank = match ranks.get(name) {
-      Some(value) => value
-      None => continue
-    }
-    let key = "\{group}@\{rank}"
-    match groups_by_rank.get(key) {
-      Some(list) => list.push(name)
-      None => groups_by_rank[key] = [name]
-    }
-  }
-  let constraints : Map[String, Bool] = Map::new()
-  for _key, names in groups_by_rank {
-    if names.length() <= 1 {
-      continue
-    }
-    let mut all_ported = true
-    for name in names {
-      if port_edge_nodes.get(name) != Some(true) {
-        all_ported = false
-        break
-      }
-    }
-    let ordered = names.copy()
-    ordered.sort_by((a, b) => {
-      let a_idx =
-        if all_ported {
-        match node_order.get(a) {
-          Some(value) => value
-          None => 0
-        }
-      } else {
-        match rank_same_order.get(a) {
-          Some(value) => value
-          None => 0
-        }
-      }
-      let b_idx =
-        if all_ported {
-        match node_order.get(b) {
-          Some(value) => value
-          None => 0
-        }
-      } else {
-        match rank_same_order.get(b) {
-          Some(value) => value
-          None => 0
-        }
-      }
-      if a_idx < b_idx {
-        -1
-      } else if a_idx > b_idx {
-        1
-      } else {
-        0
-      }
-    })
-    let mut idx = 1
-    while idx < ordered.length() {
-      let left = ordered[idx - 1]
-      let right = ordered[idx]
-      if left != right {
-        constraints["\{left}|\{right}"] = true
-      }
-      idx = idx + 1
-    }
-  }
-  constraints
+  Map::new()
 }
 
 ///|
@@ -783,6 +784,7 @@ fn compute_ordering_and_vnodes(
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
   groups : Map[Int, Array[String]],
   rank_keys : Array[Int],
@@ -862,6 +864,8 @@ fn compute_ordering_and_vnodes(
         edge_reversed,
         ranks,
         base_order_index,
+        cluster_meta.intercluster_keys,
+        cluster_meta.cluster_parents,
         vnode_info.edge_vnodes,
         vnode_info.vnode_ranks,
       )
@@ -871,6 +875,26 @@ fn compute_ordering_and_vnodes(
   let order_with_vnodes = vnode_count > 0
   let order_with_clusters =
     cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
+  let flat_rank_constraints : Map[String, Bool] = Map::new()
+  let mut flat_idx = 0
+  while flat_idx < edge_tail.length() {
+    let tail = edge_tail[flat_idx]
+    let head = edge_head[flat_idx]
+    if tail != head {
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      if tail_rank == head_rank {
+        flat_rank_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    flat_idx = flat_idx + 1
+  }
   let mut ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
   let ordered_groups_internal =
     if order_with_vnodes || order_with_clusters {
@@ -908,9 +932,9 @@ fn compute_ordering_and_vnodes(
         }
       }
       let order_cluster_skeleton : Map[String, Bool] = Map::new()
-      let cluster_skeleton_creation : Array[String] = []
       if order_with_clusters {
-        let skeleton_size = vnode_size_from_widths(0.0, 0.0)
+        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+        let skeleton_size = vnode_size_from_widths(1.0, 1.0)
         let cluster_seen : Map[String, Bool] = Map::new()
         for cluster in cluster_meta.cluster_order {
           match cluster_meta.cluster_min_rank.get(cluster) {
@@ -924,7 +948,6 @@ fn compute_ordering_and_vnodes(
                 order_cluster_keys[name] = cluster
                 order_cluster_skeleton[name] = true
                 order_sizes_out[name] = skeleton_size
-                cluster_skeleton_creation.push(name)
                 match order_groups.get(rank) {
                   Some(list) => list.push(name)
                   None => order_groups[rank] = [name]
@@ -948,7 +971,6 @@ fn compute_ordering_and_vnodes(
             order_cluster_keys[name] = cluster
             order_cluster_skeleton[name] = true
             order_sizes_out[name] = skeleton_size
-            cluster_skeleton_creation.push(name)
             match order_groups.get(rank) {
               Some(list) => list.push(name)
               None => order_groups[rank] = [name]
@@ -974,17 +996,38 @@ fn compute_ordering_and_vnodes(
       for name in order_nodes {
         order_node_map[name] = order_graph.node(name)
       }
+      // Graphviz parity: class2 iterates agfstnode order (creation order) for tail order.
       let tail_order : Array[String] = []
       for node in nodes {
         tail_order.push(node.name())
       }
-      let edges_by_tail =
-        if order_with_clusters {
-          collect_edge_indices_by_tail(edges, edge_tail)
-        } else {
-          collect_edge_indices_by_tail(edges, edge_tail)
+      if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+        let debug_tail : Array[String] = ["z_shapeshifter", "mobvm_a_req", "mobvm_a_req1"]
+        for name in debug_tail {
+          let mut idx = 0
+          let mut found = -1
+          while idx < tail_order.length() {
+            if tail_order[idx] == name {
+              found = idx
+              break
+            }
+            idx = idx + 1
+          }
+          if found >= 0 {
+            println("tail_order \{name}=\{found}")
+          }
         }
-      let (order_edges_by_tail, vnode_creation_by_tail) =
+      }
+      // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
+      let edges_by_tail : Map[String, Array[Int]] = Map::new()
+      for node in nodes {
+        let name = node.name()
+        match edge_out_order.get(name) {
+          Some(list) => edges_by_tail[name] = list.copy()
+          None => edges_by_tail[name] = []
+        }
+      }
+      let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
         build_order_edges_by_tail_graphviz(
           tail_order,
           edges,
@@ -998,26 +1041,60 @@ fn compute_ordering_and_vnodes(
           false,
           edges_by_tail,
         )
-      let order_edges_by_tail_root =
+      let (order_edges_by_tail_root, root_vnode_creation_by_tail, _root_edge_creation) =
         if order_with_clusters {
-          let (mapped, _created) =
-            build_order_edges_by_tail_graphviz(
-              tail_order,
-              edges,
-              edge_tail,
-              edge_head,
-              ranks,
-              vnode_info.edge_vnodes,
-              order_with_vnodes,
-              cluster_meta.cluster_keys,
-              order_with_clusters,
-              true,
-              edges_by_tail,
-            )
-          mapped
+          build_order_edges_by_tail_graphviz(
+            tail_order,
+            edges,
+            edge_tail,
+            edge_head,
+            ranks,
+            vnode_info.edge_vnodes,
+            order_with_vnodes,
+            cluster_meta.cluster_keys,
+            order_with_clusters,
+            true,
+            edges_by_tail,
+          )
         } else {
-          order_edges_by_tail
+          (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation)
         }
+      let cluster_skeleton_creation : Array[String] = []
+      if order_with_clusters {
+        let cluster_seen : Map[String, Bool] = Map::new()
+        for cluster in cluster_meta.cluster_order {
+          match cluster_meta.cluster_min_rank.get(cluster) {
+            Some(min_rank) => {
+              let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+                Some(value) => value
+                None => min_rank
+              }
+              for rank in min_rank..=max_rank {
+                cluster_skeleton_creation.push(
+                  "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+                )
+              }
+              cluster_seen[cluster] = true
+            }
+            None => ()
+          }
+        }
+        for cluster, min_rank in cluster_meta.cluster_min_rank {
+          if cluster_seen.get(cluster) is Some(_) {
+            continue
+          }
+          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+            Some(value) => value
+            None => min_rank
+          }
+          for rank in min_rank..=max_rank {
+            cluster_skeleton_creation.push(
+              "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+            )
+          }
+        }
+      }
+      let skeleton_edge_creation : Array[(String, String)] = []
       if order_with_clusters {
         let cluster_seen : Map[String, Bool] = Map::new()
         for cluster in cluster_meta.cluster_order {
@@ -1032,12 +1109,25 @@ fn compute_ordering_and_vnodes(
                 let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
                 let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
                 let entry = (tail_name, head_name, CL_CROSS, true)
+                skeleton_edge_creation.push((tail_name, head_name))
                 match order_edges_by_tail.get(tail_name) {
-                  Some(list) => list.push(entry)
+                  Some(list) => {
+                    let updated : Array[(String, String, Int, Bool)] = [entry]
+                    for item in list {
+                      updated.push(item)
+                    }
+                    order_edges_by_tail[tail_name] = updated
+                  }
                   None => order_edges_by_tail[tail_name] = [entry]
                 }
                 match order_edges_by_tail_root.get(tail_name) {
-                  Some(list) => list.push(entry)
+                  Some(list) => {
+                    let updated : Array[(String, String, Int, Bool)] = [entry]
+                    for item in list {
+                      updated.push(item)
+                    }
+                    order_edges_by_tail_root[tail_name] = updated
+                  }
                   None => order_edges_by_tail_root[tail_name] = [entry]
                 }
                 rank = rank + 1
@@ -1060,17 +1150,37 @@ fn compute_ordering_and_vnodes(
             let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
             let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
             let entry = (tail_name, head_name, CL_CROSS, true)
+            skeleton_edge_creation.push((tail_name, head_name))
             match order_edges_by_tail.get(tail_name) {
-              Some(list) => list.push(entry)
+              Some(list) => {
+                let updated : Array[(String, String, Int, Bool)] = [entry]
+                for item in list {
+                  updated.push(item)
+                }
+                order_edges_by_tail[tail_name] = updated
+              }
               None => order_edges_by_tail[tail_name] = [entry]
             }
             match order_edges_by_tail_root.get(tail_name) {
-              Some(list) => list.push(entry)
+              Some(list) => {
+                let updated : Array[(String, String, Int, Bool)] = [entry]
+                for item in list {
+                  updated.push(item)
+                }
+                order_edges_by_tail_root[tail_name] = updated
+              }
               None => order_edges_by_tail_root[tail_name] = [entry]
             }
             rank = rank + 1
           }
         }
+      }
+      let edge_creation_order : Array[(String, String)] = []
+      for edge in skeleton_edge_creation {
+        edge_creation_order.push(edge)
+      }
+      for edge in order_edge_creation {
+        edge_creation_order.push(edge)
       }
       let nlist_order =
         build_graphviz_nlist_order(
@@ -1079,6 +1189,23 @@ fn compute_ordering_and_vnodes(
           cluster_skeleton_creation,
           vnode_creation_by_tail,
         )
+      if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+        let order_joined = nlist_order.join(" ")
+        if order_joined.length() > 0 {
+          println("nlist_order \{order_joined}")
+        }
+        let skeleton_names = nlist_order.filter(name => name.has_prefix(CLUSTER_SKELETON_PREFIX))
+        let joined = skeleton_names.join(" ")
+        if joined.length() > 0 {
+          println("nlist_skeleton \{joined}")
+        }
+      }
+      let creation_order : Array[String] = []
+      let mut creation_idx = nlist_order.length()
+      while creation_idx > 0 {
+        creation_idx = creation_idx - 1
+        creation_order.push(nlist_order[creation_idx])
+      }
       let order_node_order : Map[String, Int] = Map::new()
       let mut order_idx = 0
       for name in nlist_order {
@@ -1099,6 +1226,9 @@ fn compute_ordering_and_vnodes(
           "handle_1",
           "mobvm_a_req",
           "mobvm_a_req1",
+          "front_end_jz",
+          "other_xprot",
+          "z_shapeshifter",
         ]
         for name in debug_names {
           match order_node_order.get(name) {
@@ -1128,6 +1258,58 @@ fn compute_ordering_and_vnodes(
             penalty,
             constraint,
           )
+        }
+      }
+      let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+      let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+      for name in order_nodes {
+        graphviz_out_neighbors[name] = []
+        graphviz_in_neighbors[name] = []
+      }
+      for tail, entries in order_edges_by_tail {
+        let heads : Array[String] = []
+        for entry in entries {
+          let (_t, h, _pen, _constraint) = entry
+          heads.push(h)
+        }
+        graphviz_out_neighbors[tail] = heads
+      }
+      for edge in edge_creation_order {
+        let (tail, head) = edge
+        match graphviz_in_neighbors.get(head) {
+          Some(list) => list.push(tail)
+          None => graphviz_in_neighbors[head] = [tail]
+        }
+      }
+      let seeded_groups = build_rank_groups_graphviz(
+        order_rank_keys,
+        order_groups,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_ranks,
+        node_order,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        0,
+        graphviz_out_neighbors=graphviz_out_neighbors,
+        graphviz_in_neighbors=graphviz_in_neighbors,
+      )
+      let seeded_order = build_order_index(seeded_groups)
+      for name, idx in seeded_order {
+        order_node_order[name] = idx
+      }
+      if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+        let debug_nodes : Array[String] = ["front_end_jz", "z_req1", "z_req"]
+        for name in debug_nodes {
+          let inn = match graphviz_in_neighbors.get(name) {
+            Some(list) => list
+            None => []
+          }
+          let out = match graphviz_out_neighbors.get(name) {
+            Some(list) => list
+            None => []
+          }
+          println("order_neighbors \{name} in=\{inn} out=\{out}")
         }
       }
       let (parents, children) = build_edge_index_for_order_names(
@@ -1167,24 +1349,7 @@ fn compute_ordering_and_vnodes(
         order_flat_constraints,
       )
       if order_with_vnodes {
-        let ordered_without_skeleton : Map[Int, Array[String]] = Map::new()
-        for rank in order_rank_keys {
-          let names = match ordered.get(rank) {
-            Some(list) => list
-            None => []
-          }
-          let filtered : Array[String] = []
-          for name in names {
-            if order_cluster_skeleton.get(name) == Some(true) {
-              continue
-            }
-            filtered.push(name)
-          }
-          if filtered.length() > 0 {
-            ordered_without_skeleton[rank] = filtered
-          }
-        }
-        ordered_with_vnodes = ordered_without_skeleton
+        ordered_with_vnodes = ordered
       }
       let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
       if order_with_clusters {
@@ -1293,9 +1458,45 @@ fn compute_ordering_and_vnodes(
         for name in root_nodes {
           root_node_map[name] = root_graph.node(name)
         }
+        let tail_order_root : Array[String] = []
+        let tail_root_seen : Map[String, Bool] = Map::new()
+        for name in tail_order {
+          let cluster = match cluster_meta.cluster_keys.get(name) {
+            Some(value) => value
+            None => ""
+          }
+          if cluster != "" {
+            let rank = match ranks.get(name) {
+              Some(value) => value
+              None => 0
+            }
+            let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+            if tail_root_seen.get(skel) is None {
+              tail_root_seen[skel] = true
+              tail_order_root.push(skel)
+            }
+          } else if tail_root_seen.get(name) is None {
+            tail_root_seen[name] = true
+            tail_order_root.push(name)
+          }
+        }
+        let root_edge_creation_order : Array[(String, String)] = []
+        for edge in skeleton_edge_creation {
+          root_edge_creation_order.push(edge)
+        }
+        for edge in _root_edge_creation {
+          root_edge_creation_order.push(edge)
+        }
+        let root_nlist_full =
+          build_graphviz_nlist_order_from_edges(
+            tail_order_root,
+            root_nodes,
+            root_edge_creation_order,
+            flat_rank_constraints,
+          )
         let root_nlist_order : Array[String] = []
         let root_seen : Map[String, Bool] = Map::new()
-        for name in nlist_order {
+        for name in root_nlist_full {
           if root_node_map.get(name) is Some(_) {
             root_seen[name] = true
             root_nlist_order.push(name)
@@ -1307,6 +1508,24 @@ fn compute_ordering_and_vnodes(
               root_nlist_order.push(name)
             }
           }
+        }
+        let root_node_order : Map[String, Int] = Map::new()
+        let mut root_order_idx = 0
+        for name in root_nlist_order {
+          root_node_order[name] = root_order_idx
+          root_order_idx = root_order_idx + 1
+        }
+        let root_order_index = build_order_index(root_groups)
+        for name, idx in root_order_index {
+          if root_node_order.get(name) is None {
+            root_node_order[name] = idx
+          }
+        }
+        let root_creation_order : Array[String] = []
+        let mut root_idx = root_nlist_order.length()
+        while root_idx > 0 {
+          root_idx = root_idx - 1
+          root_creation_order.push(root_nlist_order[root_idx])
         }
         let root_edges_out : Array[@cgraph.Edge] = []
         let root_edge_tail_out : Array[String] = []
@@ -1331,6 +1550,16 @@ fn compute_ordering_and_vnodes(
             )
           }
         }
+        if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+          let mut edge_idx = 0
+          while edge_idx < root_edges_out.length() {
+            let tail = root_edge_tail_out[edge_idx]
+            let head = root_edge_head_out[edge_idx]
+            let pen = edge_xpenalty(root_edges_out[edge_idx])
+            println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
+            edge_idx = edge_idx + 1
+          }
+        }
         let (root_parents, root_children) = build_edge_index_for_order_names(
           root_nodes,
           root_edge_tail_out,
@@ -1350,7 +1579,7 @@ fn compute_ordering_and_vnodes(
           cluster_meta.rank_same_groups,
           cluster_meta.rank_same_order,
           root_edge_order,
-          order_node_order,
+          root_node_order,
           order_sizes_out,
           nodesep_pt,
           has_edge_labels,
@@ -1404,17 +1633,70 @@ fn compute_ordering_and_vnodes(
       dot_trace_groups("cleaned_groups_pre", cleaned_groups)
       let mut final_groups = cleaned_groups
       if order_with_clusters {
-        reorder_groups_by_cluster_rank_order(
-          final_groups,
-          cluster_meta.cluster_keys,
-          cluster_rank_order,
-        )
-        reorder_groups_by_local_cluster_order(
-          final_groups,
-          cluster_meta.cluster_keys,
-          cluster_meta.intercluster_keys,
-          local_cluster_order,
-        )
+        let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
+        for rank, names in final_groups {
+          let order_map = match cluster_rank_order.get(rank) {
+            Some(value) => value
+            None => {
+              ordered_by_cluster[rank] = names
+              continue
+            }
+          }
+          let cluster_nodes : Map[String, Array[String]] = Map::new()
+          let cluster_seq : Array[String] = []
+          for name in names {
+            let cluster = match cluster_meta.cluster_keys.get(name) {
+              Some(value) => value
+              None => ""
+            }
+            match cluster_nodes.get(cluster) {
+              Some(list) => list.push(name)
+              None => {
+                cluster_nodes[cluster] = [name]
+                cluster_seq.push(cluster)
+              }
+            }
+          }
+          let cluster_ordered : Array[(Int, Int, String)] = []
+          for idx, cluster in cluster_seq {
+            let base =
+              match order_map.get(cluster) {
+                Some(value) => value
+                None => order_map.length() + idx
+              }
+            cluster_ordered.push((base, idx, cluster))
+          }
+          if cluster_ordered.length() > 1 {
+            cluster_ordered.sort_by((a, b) => {
+              let (a_order, a_idx, _a_name) = a
+              let (b_order, b_idx, _b_name) = b
+              if a_order < b_order {
+                -1
+              } else if a_order > b_order {
+                1
+              } else if a_idx < b_idx {
+                -1
+              } else if a_idx > b_idx {
+                1
+              } else {
+                0
+              }
+            })
+          }
+          let ordered_names : Array[String] = []
+          for entry in cluster_ordered {
+            let (_order, _idx, cluster) = entry
+            let nodes_in_cluster = match cluster_nodes.get(cluster) {
+              Some(list) => list
+              None => []
+            }
+            for name in nodes_in_cluster {
+              ordered_names.push(name)
+            }
+          }
+          ordered_by_cluster[rank] = ordered_names
+        }
+        final_groups = ordered_by_cluster
         dot_trace_groups("cleaned_groups_post", final_groups)
         let rem_base_order_index = build_order_index(final_groups)
         let rem_vnode_order_keys =
@@ -1426,6 +1708,8 @@ fn compute_ordering_and_vnodes(
               edge_reversed,
               ranks,
               rem_base_order_index,
+              cluster_meta.intercluster_keys,
+              cluster_meta.cluster_parents,
               vnode_info.edge_vnodes,
               vnode_info.vnode_ranks,
             )
@@ -1463,8 +1747,8 @@ fn compute_ordering_and_vnodes(
           for name in rem_nodes {
             rem_node_map[name] = rem_graph.node(name)
           }
-          let rem_edges_by_tail = collect_edge_indices_by_tail(edges, edge_tail)
-          let (rem_order_edges_by_tail, rem_vnode_creation_by_tail) =
+          let rem_edges_by_tail = edges_by_tail
+          let (rem_order_edges_by_tail, rem_vnode_creation, _rem_edge_creation) =
             build_order_edges_by_tail_graphviz(
               tail_order,
               edges,
@@ -1478,23 +1762,70 @@ fn compute_ordering_and_vnodes(
               false,
               rem_edges_by_tail,
             )
+          if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+            match rem_order_edges_by_tail.get("arbiter_vadam") {
+              Some(list) => {
+                let mut idx = 0
+                while idx < list.length() {
+                  let (t, h, _pen, _c) = list[idx]
+                  println("remincross arbiter edge \{idx}: \{t} -> \{h}")
+                  idx = idx + 1
+                }
+              }
+              None => ()
+            }
+            let debug_tails : Array[String] = ["front_end_jz", "others"]
+            for name in debug_tails {
+              match rem_order_edges_by_tail.get(name) {
+                Some(list) => {
+                  let mut idx = 0
+                  while idx < list.length() {
+                    let (t, h, _pen, _c) = list[idx]
+                    println("remincross out \{name} \{idx}: \{t} -> \{h}")
+                    idx = idx + 1
+                  }
+                }
+                None => ()
+              }
+            }
+          }
+          let rem_flat_constraints : Map[String, Bool] = Map::new()
+          for key, _ in flat_rank_constraints {
+            match key.find("|") {
+              Some(pos) => {
+                let len = key.length()
+                let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else {
+                  ""
+                }
+                let head =
+                  if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+                    ""
+                  }
+                if rem_node_map.get(tail) is Some(_) &&
+                  rem_node_map.get(head) is Some(_) {
+                  rem_flat_constraints[key] = true
+                }
+              }
+              None => ()
+            }
+          }
           let rem_nlist_order =
             build_graphviz_nlist_order(
               tail_order,
               Map::new(),
               [],
-              rem_vnode_creation_by_tail,
+              rem_vnode_creation,
             )
-          let rem_tail_order : Array[String] = []
-          let mut rev_idx = rem_nlist_order.length()
-          while rev_idx > 0 {
-            rev_idx = rev_idx - 1
-            rem_tail_order.push(rem_nlist_order[rev_idx])
+          let rem_creation_order : Array[String] = []
+          let mut rem_idx = rem_nlist_order.length()
+          while rem_idx > 0 {
+            rem_idx = rem_idx - 1
+            rem_creation_order.push(rem_nlist_order[rem_idx])
           }
           let rem_edges_out : Array[@cgraph.Edge] = []
           let rem_edge_tail_out : Array[String] = []
           let rem_edge_head_out : Array[String] = []
-          for tail_name in rem_tail_order {
+          for tail_name in rem_nlist_order {
             let list = match rem_order_edges_by_tail.get(tail_name) {
               Some(value) => value
               None => []
@@ -1649,6 +1980,9 @@ fn compute_ordering_and_vnodes(
             rem_flat_constraints,
             startpass=2,
           )
+          if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+            dot_trace_groups("remincross_ordered", rem_ordered)
+          }
           ordered_with_vnodes = rem_ordered
           let rem_cleaned : Map[Int, Array[String]] = Map::new()
           for rank in rem_rank_keys {
@@ -1764,6 +2098,8 @@ fn compute_positions(
       rank_data.edge_reversed,
       rank_data.ranks,
       order_index,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
       ordering.vnode_info.edge_vnodes,
       ordering.vnode_info.vnode_ranks,
     )
@@ -1812,6 +2148,25 @@ fn compute_positions(
       x_cluster_keys[name] = key
     }
   }
+  let skeleton_nodes : Array[String] = []
+  if cluster_meta.has_clusters {
+    // Graphviz parity: cluster skeleton vnodes participate in xpos constraints.
+    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+    for _rank, names in x_groups {
+      for name in names {
+        match cluster_key_from_skeleton_name(name) {
+          Some(cluster_key) => {
+            skeleton_nodes.push(name)
+            x_order_sizes[name] = skeleton_size
+            if x_cluster_keys.get(name) is None {
+              x_cluster_keys[name] = cluster_key
+            }
+          }
+          None => ()
+        }
+      }
+    }
+  }
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
     let order_groups : Map[Int, Array[String]] = Map::new()
@@ -1827,7 +2182,8 @@ fn compute_positions(
       order_cluster_keys[name] = key
     }
     let order_cluster_skeleton : Map[String, Bool] = Map::new()
-    let skeleton_size = vnode_size_from_widths(0.0, 0.0)
+    // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
     for cluster, min_rank in cluster_meta.cluster_min_rank {
       let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
         Some(value) => value
@@ -2189,6 +2545,12 @@ fn compute_positions(
     } else {
       x_base_sizes
     }
+  if skeleton_nodes.length() > 0 {
+    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+    for name in skeleton_nodes {
+      x_sizes[name] = skeleton_size
+    }
+  }
   let x_rank_keys = collect_rank_keys(x_groups)
   let x_ranks = build_node_ranks(x_groups)
   let vnode_extra_nodes =
@@ -2249,6 +2611,29 @@ fn compute_positions(
       prep.has_edge_labels,
     )
   }
+  // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
+  let cluster_ln_x : Map[String, Double] = Map::new()
+  let cluster_rn_x : Map[String, Double] = Map::new()
+  if cluster_meta.has_clusters {
+    let cluster_names : Map[String, Bool] = Map::new()
+    collect_cluster_names(graph, cluster_names)
+    if cluster_names.length() > 0 {
+      for name, pos_x in x_positions {
+        if name.has_prefix(CLUSTER_LN_PREFIX) ||
+          name.has_prefix(CLUSTER_RN_PREFIX) {
+          match cluster_key_from_boundary_name(name, cluster_names) {
+            Some(cluster_key) =>
+              if name.has_prefix(CLUSTER_LN_PREFIX) {
+                cluster_ln_x[cluster_key] = pos_x
+              } else {
+                cluster_rn_x[cluster_key] = pos_x
+              }
+            None => ()
+          }
+        }
+      }
+    }
+  }
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
     if use_vnodes_for_xpos {
@@ -2297,11 +2682,31 @@ fn compute_positions(
       prep.sizes,
     )
   }
+  let x_groups_out =
+    if skeleton_nodes.length() > 0 {
+      let cleaned : Map[Int, Array[String]] = Map::new()
+      for rank, names in x_groups {
+        let filtered : Array[String] = []
+        for name in names {
+          if cluster_key_from_skeleton_name(name) is None {
+            filtered.push(name)
+          }
+        }
+        if filtered.length() > 0 {
+          cleaned[rank] = filtered
+        }
+      }
+      cleaned
+    } else {
+      x_groups
+    }
   {
-    x_groups,
+    x_groups: x_groups_out,
     rank_y,
     positions,
     vnode_positions,
+    cluster_ln_x,
+    cluster_rn_x,
     flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,

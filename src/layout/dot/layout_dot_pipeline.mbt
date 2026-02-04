@@ -58,6 +58,7 @@ fn compute_dot_rank_stage(
     rank_data.edge_tail,
     rank_data.edge_head,
     rank_data.edge_reversed,
+    rank_data.edge_out_order,
     rank_data.ranks,
     rank_data.groups,
     rank_data.rank_keys,
@@ -127,7 +128,13 @@ fn compute_dot_routing_stage(
     )
   let label_ports_map = port_maps.label_ports_map
   let label_ports_raw = port_maps.label_ports_raw
-  let cluster_bboxes = compute_cluster_bboxes_for_routing(graph, nodes_out)
+  let cluster_bboxes =
+    compute_cluster_bboxes_for_routing(
+      graph,
+      nodes_out,
+      positions_state.cluster_ln_x,
+      positions_state.cluster_rn_x,
+    )
   let label_edge_counts = build_label_edge_counts(prep.edges)
   let enable_complex_tuning = complex_tuning_enabled()
   let (port_pad_below, port_pad_above) =

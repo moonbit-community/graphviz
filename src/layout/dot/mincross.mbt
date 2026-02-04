@@ -230,7 +230,6 @@ fn reorder_by_medians(
   sorted
 }
 
-///|
 fn compute_desired_positions(
   names : Array[String],
   neighbors : Map[String, Array[String]],
@@ -779,6 +778,8 @@ fn reorder_rank_groups(
   preferred_positions : Map[String, Double],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
   startpass? : Int = 0,
 ) -> Map[Int, Array[String]] {
   let startpass =
@@ -934,6 +935,8 @@ fn reorder_rank_groups(
       cluster_keys,
       cluster_skeleton,
       0,
+      graphviz_out_neighbors=graphviz_out_neighbors,
+      graphviz_in_neighbors=graphviz_in_neighbors,
     )
     order_positions = order_positions_from_groups(ordered)
     let seed_cross =
@@ -983,6 +986,8 @@ fn reorder_rank_groups(
           cluster_keys,
           cluster_skeleton,
           pass,
+          graphviz_out_neighbors=graphviz_out_neighbors,
+          graphviz_in_neighbors=graphviz_in_neighbors,
         )
         order_positions = order_positions_from_groups(ordered)
         if !has_port_order {

@@ -29,6 +29,8 @@ pub fn layout_dot(
     rank_stage.rank_data.all_ranks,
     rank_stage.rank_data.ranks,
     prep.sizes,
+    positions_state.cluster_ln_x,
+    positions_state.cluster_rn_x,
     positions_state.rank_y,
     positions_state.rank_ht1,
     positions_state.rank_ht2,

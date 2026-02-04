@@ -94,6 +94,8 @@ fn layout_subgraphs(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
   edges_out : Array[DotLayoutEdge],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
 ) -> Array[DotLayoutGraph] {
   let result : Array[DotLayoutGraph] = []
   for subgraph in graph.subgraphs() {
@@ -125,15 +127,44 @@ fn layout_subgraphs(
     let mut bbox = compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
     let mut label_info : (Double, Double, LabelLoc, LabelJust)? = None
-    let sub_subgraphs = layout_subgraphs(subgraph, nodes_out, edges_out)
+    let sub_subgraphs =
+      layout_subgraphs(
+        subgraph,
+        nodes_out,
+        edges_out,
+        cluster_ln_x,
+        cluster_rn_x,
+      )
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
     if is_cluster_graph(subgraph) {
       let pad = cluster_margin_pt(subgraph)
-      let llx = bbox.llx - pad
+      let mut pad_left = pad
+      let mut pad_right = pad
+      // Graphviz parity: cluster x bounds come from ln/rn positions (dot_compute_bb).
+      match subgraph.name() {
+        Some(cluster_name) => {
+          match cluster_ln_x.get(cluster_name) {
+            Some(value) => {
+              bbox = { llx: value, lly: bbox.lly, urx: bbox.urx, ury: bbox.ury }
+              pad_left = 0.0
+            }
+            None => ()
+          }
+          match cluster_rn_x.get(cluster_name) {
+            Some(value) => {
+              bbox = { llx: bbox.llx, lly: bbox.lly, urx: value, ury: bbox.ury }
+              pad_right = 0.0
+            }
+            None => ()
+          }
+        }
+        None => ()
+      }
+      let llx = bbox.llx - pad_left
       let lly = bbox.lly - pad
-      let urx = bbox.urx + pad
+      let urx = bbox.urx + pad_right
       let ury = bbox.ury + pad
       bbox = { llx, lly, urx, ury }
       match graph_label_metrics(subgraph) {
@@ -253,10 +284,19 @@ fn build_port_layout_maps(
 fn compute_cluster_bboxes_for_routing(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
   if graph_has_cluster(graph) {
-    let cluster_layouts = layout_subgraphs(graph, nodes_out, [])
+    let cluster_layouts =
+      layout_subgraphs(
+        graph,
+        nodes_out,
+        [],
+        cluster_ln_x,
+        cluster_rn_x,
+      )
     collect_cluster_bboxes(cluster_layouts, cluster_bboxes)
   }
   cluster_bboxes
@@ -496,8 +536,17 @@ fn build_subgraphs_and_bbox(
   nodes : Array[DotLayoutNode],
   edges : Array[DotLayoutEdge],
   bbox : @geom.Rect,
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
 ) -> (Array[DotLayoutGraph], @geom.Rect) {
-  let subgraphs = layout_subgraphs(graph, nodes, edges)
+  let subgraphs =
+    layout_subgraphs(
+      graph,
+      nodes,
+      edges,
+      cluster_ln_x,
+      cluster_rn_x,
+    )
   let expanded = if subgraphs.length() > 0 {
     expand_bbox_with_subgraphs(bbox, subgraphs)
   } else {
@@ -753,6 +802,8 @@ fn finalize_layout_graph(
   all_ranks : Array[Int],
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
@@ -771,7 +822,14 @@ fn finalize_layout_graph(
       rank_ht2,
     )
   let (subgraphs, base_bbox) =
-    build_subgraphs_and_bbox(graph, final_nodes, final_edges, bbox)
+    build_subgraphs_and_bbox(
+      graph,
+      final_nodes,
+      final_edges,
+      bbox,
+      cluster_ln_x,
+      cluster_rn_x,
+    )
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
   let bbox =

@@ -37,6 +37,50 @@ fn edge_vnode_edge_index(name : String) -> Int? {
 }
 
 ///|
+fn cluster_contains(
+  ancestor : String,
+  target : String,
+  cluster_parents : Map[String, String?],
+) -> Bool {
+  if ancestor == "" {
+    return true
+  }
+  if target == "" {
+    return false
+  }
+  let mut current : String? = Some(target)
+  while current is Some(name) {
+    if name == ancestor {
+      return true
+    }
+    let parent = match cluster_parents.get(name) {
+      Some(value) => value
+      None => None
+    }
+    current = parent
+  }
+  false
+}
+
+///|
+fn edge_internal_to_cluster(
+  tail_cluster : String,
+  head_cluster : String,
+  cluster_parents : Map[String, String?],
+) -> Bool {
+  if tail_cluster == head_cluster {
+    return true
+  }
+  if cluster_contains(tail_cluster, head_cluster, cluster_parents) {
+    return true
+  }
+  if cluster_contains(head_cluster, tail_cluster, cluster_parents) {
+    return true
+  }
+  false
+}
+
+///|
 /// Graphviz parity: keep vnode order stable for edges sharing a tail.
 /// Do not change behavior without updating fixtures/tests.
 fn build_vnode_tail_constraints(
@@ -104,10 +148,26 @@ fn build_vnode_order_keys(
   edge_reversed : Array[Bool],
   ranks : Map[String, Int],
   order_index : Map[String, Int],
+  cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
 ) -> Map[String, Double] {
   let keys : Map[String, Double] = Map::new()
+  let max_order_by_rank : Map[Int, Int] = Map::new()
+  for name, order in order_index {
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    match max_order_by_rank.get(rank) {
+      Some(current) =>
+        if order > current {
+          max_order_by_rank[rank] = order
+        }
+      None => max_order_by_rank[rank] = order
+    }
+  }
   let mut edge_idx = 0
   for edge in edges {
     let current_idx = edge_idx
@@ -133,6 +193,14 @@ fn build_vnode_order_keys(
       Some(value) => value
       None => continue
     }
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
     let tail_order = match order_index.get(tail) {
       Some(value) => value
       None => 0
@@ -155,22 +223,39 @@ fn build_vnode_order_keys(
     let high_order_f = Double::from_int(high_order)
     let same_order = low_order == high_order
     let offset = if same_order { 0.01 } else { 0.0 }
-    let reversed =
-      if current_idx < edge_reversed.length() { edge_reversed[current_idx] } else { false }
+    let is_intercluster =
+      !edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+    let edge_offset = Double::from_int(current_idx) * 0.001
+    let mut vnode_seq = 0
     for vnode in vnodes {
       let vnode_rank = match vnode_ranks.get(vnode) {
         Some(value) => value
         None => continue
       }
       let t = Double::from_int(vnode_rank - low_rank) / span_f
-      let base_key =
+      let mut base_key =
         if same_order {
           low_order_f - offset + t * offset * 2.0
         } else {
           low_order_f + (high_order_f - low_order_f) * t
         }
-      let key = if reversed { base_key + 0.5 } else { base_key }
-      keys[vnode] = key
+      if is_intercluster {
+        // Graphviz parity: intercluster edge vnodes trail real nodes when present.
+        let max_order = match max_order_by_rank.get(vnode_rank) {
+          Some(value) => value
+          None => -1
+        }
+        let min_key = Double::from_int(max_order + 1)
+        let vnode_offset = Double::from_int(vnode_seq) * 0.000001
+        if base_key < min_key {
+          base_key = min_key + edge_offset + vnode_offset
+        } else {
+          base_key = base_key + vnode_offset
+        }
+      }
+      // Graphviz parity: do not offset reversed edges when ordering vnodes.
+      keys[vnode] = base_key
+      vnode_seq = vnode_seq + 1
     }
   }
   keys

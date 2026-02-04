@@ -48,6 +48,9 @@ const ROUTE_FUDGE : Double = 4.0
 ///|
 const ROUTE_LABEL_PAD : Double = 10.0
 
+///| Keep in sync with layout_base.VNODE_HEIGHT_PT.
+const VNODE_HEIGHT_PT : Double = 1.0
+
 ///|
 const ROUTE_MIN_WIDTH : Double = 16.0
 
@@ -219,9 +222,10 @@ fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
 }
 
 ///|
+///| Graphviz parity: label vnodes are virtual nodes with label height (> VNODE_HEIGHT_PT).
 fn is_label_virtual(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   match vnode_sizes.get(name) {
-    Some(size) => size.height_pt > 0.0
+    Some(size) => size.height_pt > VNODE_HEIGHT_PT
     None => false
   }
 }
@@ -1279,6 +1283,8 @@ pub fn limit_boxes_for_spline(
 }
 
 ///|
+/// Graphviz parity: pathplan polyline construction aligned to refs/graphviz/lib/dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
 pub fn edge_pathplan_polyline(
   edge : @cgraph.Edge,
   tail_name : String,
@@ -1357,7 +1363,8 @@ pub fn edge_pathplan_polyline(
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
   let mval_route_sizes = merge_sizes(mval_sizes, vnode_sizes)
-  let splinesep_pt = nodesep_pt / 4.0
+  // Graphviz parity: Splinesep uses integer division (GD_nodesep / 4).
+  let splinesep_pt = (nodesep_pt / 4.0).floor()
   let (left_bound, right_bound) =
     compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {

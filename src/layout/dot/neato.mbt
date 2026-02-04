@@ -330,7 +330,16 @@ pub fn layout_neato(
     })
   }
   let base_bbox = compute_bbox(nodes_out, edges_out)
-  let subgraphs = layout_subgraphs(active_graph, nodes_out, edges_out)
+  let empty_cluster_ln_x : Map[String, Double] = Map::new()
+  let empty_cluster_rn_x : Map[String, Double] = Map::new()
+  let subgraphs =
+    layout_subgraphs(
+      active_graph,
+      nodes_out,
+      edges_out,
+      empty_cluster_ln_x,
+      empty_cluster_rn_x,
+    )
   let mut final_bbox = if subgraphs.length() > 0 {
     expand_bbox_with_subgraphs(base_bbox, subgraphs)
   } else {

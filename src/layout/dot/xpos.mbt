@@ -355,6 +355,9 @@ fn collect_cluster_members(
 
 ///|
 ///|
+/// Graphviz parity: cluster constraints aligned to refs/graphviz/lib/dotgen/position.c
+/// (contain_nodes, keepout_othernodes, contain_subclust, separate_subclust).
+/// Do not change behavior without updating fixtures/tests.
 fn build_cluster_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -363,6 +366,7 @@ fn build_cluster_constraints(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   sizes : Map[String, NodeSize],
+  cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
@@ -377,21 +381,36 @@ fn build_cluster_constraints(
   if cluster_members.length() == 0 {
     return ([], [], [], [])
   }
+  for node_name, cluster_key in cluster_keys {
+    if cluster_key == "" {
+      continue
+    }
+    match cluster_members.get(cluster_key) {
+      Some(members) => members[node_name] = true
+      None => ()
+    }
+  }
+  if cluster_members.length() > 0 {
+    for _rank, names in groups {
+      for name in names {
+        match cluster_key_from_skeleton_name(name) {
+          Some(cluster_key) =>
+            match cluster_members.get(cluster_key) {
+              Some(members) => members[name] = true
+              None => ()
+            }
+          None => ()
+        }
+      }
+    }
+  }
   let cluster_related : Map[String, Map[String, Bool]] = Map::new()
-  let cluster_edges : Map[String, Map[String, Bool]] = Map::new()
   for name, members in cluster_members {
     let related : Map[String, Bool] = Map::new()
     for node_name, _ in members {
       related[node_name] = true
     }
     cluster_related[name] = related
-  }
-  for name, cluster_graph in cluster_graphs {
-    let edges_set : Map[String, Bool] = Map::new()
-    for edge in cluster_graph.edges() {
-      edges_set[edge_key(edge)] = true
-    }
-    cluster_edges[name] = edges_set
   }
   if edge_vnodes.length() > 0 {
     for edge in edges {
@@ -407,10 +426,6 @@ fn build_cluster_constraints(
       for name, members in cluster_members {
         let tail_in = members.get(tail) is Some(_)
         let head_in = members.get(head) is Some(_)
-        let edge_in_cluster = match cluster_edges.get(name) {
-          Some(edges_set) => edges_set.get(edge_key(edge)) is Some(_)
-          None => false
-        }
         if tail_in || head_in {
           match cluster_related.get(name) {
             Some(related) =>
@@ -420,6 +435,8 @@ fn build_cluster_constraints(
             None => ()
           }
         }
+        // Graphviz parity: vnodes for edges with both endpoints in a cluster
+        // participate in cluster containment (see keepout/contain logic).
         if tail_in && head_in {
           for vnode in vnodes {
             members[vnode] = true
@@ -1452,7 +1469,16 @@ fn compute_x_positions(
   dot_trace("xpos: build cluster constraints")
   let (cluster_nodes, extra_edges, root_ln_targets, root_rn_targets) =
     build_cluster_constraints(
-    graph, nodes, edges, ranks, rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
+    graph,
+    nodes,
+    edges,
+    ranks,
+    rank_keys,
+    groups,
+    sizes,
+    cluster_keys,
+    nodesep_pt,
+    has_edge_labels,
     edge_vnodes,
   )
   dot_trace("xpos: cluster constraints done")

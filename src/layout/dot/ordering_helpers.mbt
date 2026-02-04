@@ -863,7 +863,7 @@ fn apply_rank_same_order(
 }
 
 ///|
-/// Graphviz parity: rank=same order with ported-node override for explicit ports.
+/// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_rank_same_order_with_port_override(
   groups : Map[Int, Array[String]],
@@ -872,7 +872,10 @@ fn apply_rank_same_order_with_port_override(
   node_order : Map[String, Int],
   port_edge_nodes : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
-  let adjusted = apply_rank_same_order(groups, rank_same_groups, rank_same_order)
+  let adjusted : Map[Int, Array[String]] = Map::new()
+  for rank, names in groups {
+    adjusted[rank] = names.copy()
+  }
   if rank_same_groups.length() == 0 {
     return adjusted
   }
@@ -882,29 +885,28 @@ fn apply_rank_same_order_with_port_override(
     }
     let group_positions : Map[Int, Array[Int]] = Map::new()
     let group_nodes : Map[Int, Array[String]] = Map::new()
-    let group_has_unported : Map[Int, Bool] = Map::new()
+    let group_has_ported : Map[Int, Bool] = Map::new()
     for i in 0..<names.length() {
       let name = names[i]
       match rank_same_groups.get(name) {
         Some(group) => {
+          match group_positions.get(group) {
+            Some(list) => list.push(i)
+            None => group_positions[group] = [i]
+          }
+          match group_nodes.get(group) {
+            Some(list) => list.push(name)
+            None => group_nodes[group] = [name]
+          }
           if port_edge_nodes.get(name) == Some(true) {
-            match group_positions.get(group) {
-              Some(list) => list.push(i)
-              None => group_positions[group] = [i]
-            }
-            match group_nodes.get(group) {
-              Some(list) => list.push(name)
-              None => group_nodes[group] = [name]
-            }
-          } else {
-            group_has_unported[group] = true
+            group_has_ported[group] = true
           }
         }
         None => ()
       }
     }
     for group, positions in group_positions {
-      if group_has_unported.get(group) == Some(true) {
+      if group_has_ported.get(group) == Some(true) {
         continue
       }
       let nodes = match group_nodes.get(group) {
@@ -916,11 +918,11 @@ fn apply_rank_same_order_with_port_override(
       }
       let sorted = nodes.copy()
       sorted.sort_by((a, b) => {
-        let a_idx = match node_order.get(a) {
+        let a_idx = match rank_same_order.get(a) {
           Some(value) => value
           None => 0
         }
-        let b_idx = match node_order.get(b) {
+        let b_idx = match rank_same_order.get(b) {
           Some(value) => value
           None => 0
         }

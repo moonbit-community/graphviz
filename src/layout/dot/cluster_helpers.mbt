@@ -120,6 +120,94 @@ fn cluster_rank_key(cluster : String, rank : Int) -> String {
 }
 
 ///|
+/// Graphviz parity: cluster skeleton node names encode the cluster key.
+fn cluster_key_from_skeleton_name(name : String) -> String? {
+  if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+    return None
+  }
+  let rest = name.unsafe_substring(
+    start=CLUSTER_SKELETON_PREFIX.length(),
+    end=name.length(),
+  )
+  for part in rest.split("@") {
+    let value = part.to_string()
+    if value != "" {
+      return Some(value)
+    }
+  }
+  None
+}
+
+///|
+/// Graphviz parity: cluster boundary node names preserve the cluster key.
+fn cluster_key_from_boundary_name(
+  name : String,
+  cluster_names : Map[String, Bool],
+) -> String? {
+  let mut rest : String? = None
+  if name.has_prefix(CLUSTER_LN_PREFIX) {
+    rest = Some(
+      name.unsafe_substring(
+        start=CLUSTER_LN_PREFIX.length(),
+        end=name.length(),
+      ),
+    )
+  } else if name.has_prefix(CLUSTER_RN_PREFIX) {
+    rest = Some(
+      name.unsafe_substring(
+        start=CLUSTER_RN_PREFIX.length(),
+        end=name.length(),
+      ),
+    )
+  }
+  let rest = match rest {
+    Some(value) => value
+    None => return None
+  }
+  match cluster_names.get(rest) {
+    Some(_) => return Some(rest)
+    None => ()
+  }
+  let mut best : String? = None
+  let mut best_len = -1
+  for cluster, _ in cluster_names {
+    if !rest.has_prefix(cluster) {
+      continue
+    }
+    let suffix = rest.unsafe_substring(
+      start=cluster.length(),
+      end=rest.length(),
+    )
+    if suffix == "" {
+      if cluster.length() > best_len {
+        best = Some(cluster)
+        best_len = cluster.length()
+      }
+      continue
+    }
+    if !suffix.has_prefix("_") {
+      continue
+    }
+    let digits = suffix.unsafe_substring(start=1, end=suffix.length())
+    if digits == "" {
+      continue
+    }
+    let mut all_digits = true
+    for ch in digits {
+      if ch < '0' || ch > '9' {
+        all_digits = false
+        break
+      }
+    }
+    if all_digits && cluster.length() > best_len {
+      best = Some(cluster)
+      best_len = cluster.length()
+    }
+  }
+  best
+}
+
+///|
 fn collect_cluster_names(
   graph : @cgraph.Graph,
   out : Map[String, Bool],

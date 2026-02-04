@@ -4,6 +4,8 @@ struct MincrossNode {
   rank : Int
   cluster : String?
   cluster_skeleton : Bool
+  out_neighbors : Array[Int]
+  in_neighbors : Array[Int]
 }
 
 ///|
@@ -11,6 +13,8 @@ struct MincrossEdge {
   tail : Int
   head : Int
   xpenalty : Int
+  seq : Int
+  order : Int
 }
 
 ///|
@@ -89,7 +93,17 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
         Some(value) => @json.from_json(value)
         None => false
       }
-    nodes.push({ id, rank, cluster, cluster_skeleton })
+    let out_neighbors =
+      match obj.get("out") {
+        Some(value) => @json.from_json(value)
+        None => []
+      }
+    let in_neighbors =
+      match obj.get("in") {
+        Some(value) => @json.from_json(value)
+        None => []
+      }
+    nodes.push({ id, rank, cluster, cluster_skeleton, out_neighbors, in_neighbors })
   }
   nodes
 }
@@ -98,12 +112,18 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
 fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
   let items : Array[Json] = @json.from_json(value)
   let edges : Array[MincrossEdge] = []
-  for item in items {
+  for idx, item in items {
     let obj = require_object(item)
     let tail : Int = @json.from_json(obj["tail"])
     let head : Int = @json.from_json(obj["head"])
     let xpenalty : Int = @json.from_json(obj["xpenalty"])
-    edges.push({ tail, head, xpenalty })
+    let order = idx
+    let seq =
+      match obj.get("seq") {
+        Some(value) => @json.from_json(value)
+        None => order
+      }
+    edges.push({ tail, head, xpenalty, seq, order })
   }
   edges
 }
@@ -243,7 +263,31 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
   let edges : Array[@cgraph.Edge] = []
   let edge_tail : Array[String] = []
   let edge_head : Array[String] = []
-  for edge in input.edges {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for node in input.nodes {
+    let name = node_key(node.id)
+    let out_names : Array[String] = []
+    for neighbor_id in node.out_neighbors {
+      let neighbor = match id_to_name.get(neighbor_id) {
+        Some(value) => value
+        None => fail("case \{input.case_id} missing out neighbor id \{neighbor_id}")
+      }
+      out_names.push(neighbor)
+    }
+    let in_names : Array[String] = []
+    for neighbor_id in node.in_neighbors {
+      let neighbor = match id_to_name.get(neighbor_id) {
+        Some(value) => value
+        None => fail("case \{input.case_id} missing in neighbor id \{neighbor_id}")
+      }
+      in_names.push(neighbor)
+    }
+    graphviz_out_neighbors[name] = out_names
+    graphviz_in_neighbors[name] = in_names
+  }
+  let edges_input = input.edges.copy()
+  for edge in edges_input {
     let tail_name = match id_to_name.get(edge.tail) {
       Some(value) => value
       None => fail("case \{input.case_id} missing tail id \{edge.tail}")
@@ -334,6 +378,37 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     }
     flat_constraints["\{tail_name}|\{head_name}"] = true
   }
+  if @sys.get_env_var("TRACE_MINCROSS_SEED") == Some(input.graph) {
+    let seeded = build_rank_groups_graphviz(
+      rank_keys,
+      groups,
+      edge_tail,
+      edge_head,
+      name_to_rank,
+      name_to_order,
+      cluster_keys,
+      cluster_skeleton,
+      0,
+      graphviz_out_neighbors=graphviz_out_neighbors,
+      graphviz_in_neighbors=graphviz_in_neighbors,
+    )
+    let mut idx = 0
+    while idx < rank_keys.length() {
+      let key = rank_keys[idx]
+      let expected_names = match groups.get(key) {
+        Some(list) => list
+        None => []
+      }
+      let seeded_names = match seeded.get(key) {
+        Some(list) => list
+        None => []
+      }
+      println(
+        "trace mincross seed \{input.graph} rank[\{idx}] expected=\{expected_names} seeded=\{seeded_names}",
+      )
+      idx = idx + 1
+    }
+  }
   let ordered = reorder_rank_groups(
     rank_keys,
     groups,
@@ -355,6 +430,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     Map::new(),
     cluster_skeleton,
     flat_constraints,
+    graphviz_out_neighbors=graphviz_out_neighbors,
+    graphviz_in_neighbors=graphviz_in_neighbors,
     startpass=input.startpass,
   )
   let actual : Array[Array[Int]] = []
@@ -372,6 +449,15 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
       ids.push(id)
     }
     actual.push(ids)
+  }
+  if @sys.get_env_var("TRACE_MINCROSS") == Some(input.graph) {
+    let mut idx = 0
+    while idx < actual.length() {
+      println(
+        "trace mincross \{input.graph} rank[\{idx}] actual=\{actual[idx]} expected=\{output.ranks[idx]}",
+      )
+      idx = idx + 1
+    }
   }
   assert_rank_groups(input.case_id, input.graph, actual, output.ranks)
 }

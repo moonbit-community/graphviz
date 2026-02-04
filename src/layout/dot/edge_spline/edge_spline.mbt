@@ -51,9 +51,6 @@ const BEZIER_CLIP_EPS : Double = 0.5
 ///|
 const ARROW_CLIP_EPS : Double = 0.5
 
-///|
-const ARROW_CLIP_EPS_CLUSTER : Double = 0.005
-
 
 ///|
 priv struct Triangle {
@@ -402,6 +399,7 @@ priv enum ClipShape {
   None
   Rect
   Ellipse
+  Diamond
 }
 
 ///|
@@ -433,6 +431,8 @@ fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
 ///|
 ///|
 ///|
+///|
+/// Graphviz parity: clip_shape_kind mirrors shape clipping in refs/graphviz/lib/common/shapes.c.
 fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
   if port_is_explicit(port) && is_record_shape(node) {
     return ClipShape::Rect
@@ -443,8 +443,16 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
   }
   match shape {
     "" => ClipShape::Ellipse
-    "box" | "rect" | "rectangle" | "record" | "mrecord" | "plaintext" | "plain" =>
+    "box"
+    | "rect"
+    | "rectangle"
+    | "record"
+    | "mrecord"
+    | "msquare"
+    | "plaintext"
+    | "plain" =>
       ClipShape::Rect
+    "diamond" | "mdiamond" => ClipShape::Diamond
     "none" => ClipShape::None
     "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
       ClipShape::Ellipse
@@ -478,7 +486,24 @@ fn point_inside_ellipse(
   }
   let dx = (point.x - center.x) / rx
   let dy = (point.y - center.y) / ry
-  dx * dx + dy * dy <= 1.0
+  // Graphviz parity: poly_inside uses strict < for ellipses (shapes.c).
+  dx * dx + dy * dy < 1.0
+}
+
+///|
+fn point_inside_diamond(
+  point : @geom.Point,
+  center : @geom.Point,
+  size : NodeSize,
+) -> Bool {
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return false
+  }
+  let dx = Double::abs(point.x - center.x)
+  let dy = Double::abs(point.y - center.y)
+  dx / half_w + dy / half_h <= 1.0
 }
 
 ///|
@@ -491,6 +516,7 @@ fn point_inside_shape(
   match shape {
     ClipShape::Rect => point_inside_rect(point, center, size)
     ClipShape::Ellipse => point_inside_ellipse(point, center, size)
+    ClipShape::Diamond => point_inside_diamond(point, center, size)
     ClipShape::None => false
   }
 }
@@ -783,7 +809,7 @@ fn clip_spline_to_nodes(
   let tail_penwidth = node_penwidth_pt(edge.tail())
   let head_penwidth = node_penwidth_pt(edge.head())
   let tail_clip_size = match tail_shape {
-    ClipShape::Rect | ClipShape::Ellipse =>
+    ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if tail_penwidth > 0.0 {
       inflate_node_size(tail_base_size, tail_penwidth / 2.0)
     } else {
@@ -792,7 +818,7 @@ fn clip_spline_to_nodes(
     _ => tail_base_size
   }
   let head_clip_size = match head_shape {
-    ClipShape::Rect | ClipShape::Ellipse =>
+    ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if head_penwidth > 0.0 {
       inflate_node_size(head_base_size, head_penwidth / 2.0)
     } else {
@@ -2155,12 +2181,8 @@ pub fn edge_spline_for_polyline(
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
     )
-  let arrow_clip_eps =
-    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-    ARROW_CLIP_EPS_CLUSTER
-  } else {
-    ARROW_CLIP_EPS
-  }
+  // Graphviz parity: arrow clip epsilon is constant across cluster routing.
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (points, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -2237,12 +2259,8 @@ pub fn edge_spline_for_points(
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
     )
-  let arrow_clip_eps =
-    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-    ARROW_CLIP_EPS_CLUSTER
-  } else {
-    ARROW_CLIP_EPS
-  }
+  // Graphviz parity: arrow clip epsilon is constant across cluster routing.
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -2465,12 +2483,8 @@ pub fn edge_spline_for_line(
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
     )
-  let arrow_clip_eps =
-    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-    ARROW_CLIP_EPS_CLUSTER
-  } else {
-    ARROW_CLIP_EPS
-  }
+  // Graphviz parity: arrow clip epsilon is constant across cluster routing.
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
       clip_spline_arrows(
