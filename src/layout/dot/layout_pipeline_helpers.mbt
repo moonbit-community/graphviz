@@ -796,6 +796,56 @@ fn build_rank_same_constraints(
 }
 
 ///|
+/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_edge_port_positions(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  if edges.length() == 0 {
+    return ([], [])
+  }
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  let tail_ports : Array[Double] = []
+  let head_ports : Array[Double] = []
+  let mut idx = 0
+  while idx < edges.length() {
+    let edge = edges[idx]
+    let tail_name =
+      if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
+    let head_name =
+      if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+    let orig_tail = edge.tail().name()
+    let orig_head = edge.head().name()
+    let tail_port =
+      if tail_name == orig_tail {
+        edge.tail_port()
+      } else if tail_name == orig_head {
+        edge.head_port()
+      } else {
+        edge.tail_port()
+      }
+    let head_port =
+      if head_name == orig_head {
+        edge.head_port()
+      } else if head_name == orig_tail {
+        edge.tail_port()
+      } else {
+        edge.head_port()
+      }
+    let tail_x = edge_port_offset(tail_name, tail_port, port_offsets, sizes)
+    let head_x = edge_port_offset(head_name, head_port, port_offsets, sizes)
+    tail_ports.push(tail_x)
+    head_ports.push(head_x)
+    idx = idx + 1
+  }
+  (tail_ports, head_ports)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -866,8 +916,18 @@ fn compute_ordering_and_vnodes(
       Map::new()
     }
   let edge_order = collect_edge_order(edges)
+  let (edge_tail_port_x, edge_head_port_x) =
+    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
   let (order_edges, order_edge_tail, order_edge_head) =
     dedup_ordering_edges(edges, edge_tail, edge_head)
+  let (order_edge_tail_port_x, order_edge_head_port_x) =
+    compute_edge_port_positions(
+      nodes,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_sizes,
+    )
   let ordering_groups_base = apply_rank_same_order_with_port_override(
     groups,
     cluster_meta.rank_same_groups,
@@ -1054,6 +1114,8 @@ fn compute_ordering_and_vnodes(
           edges,
           edge_tail,
           edge_head,
+          edge_tail_port_x,
+          edge_head_port_x,
           ranks,
           vnode_info.edge_vnodes,
           order_with_vnodes,
@@ -1069,6 +1131,8 @@ fn compute_ordering_and_vnodes(
             edges,
             edge_tail,
             edge_head,
+            edge_tail_port_x,
+            edge_head_port_x,
             ranks,
             vnode_info.edge_vnodes,
             order_with_vnodes,
@@ -1129,11 +1193,12 @@ fn compute_ordering_and_vnodes(
               while rank < max_rank {
                 let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
                 let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-                let entry = (tail_name, head_name, CL_CROSS, true)
+                let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0)
                 skeleton_edge_creation.push((tail_name, head_name))
                 match order_edges_by_tail.get(tail_name) {
                   Some(list) => {
-                    let updated : Array[(String, String, Int, Bool)] = [entry]
+                    let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                      [entry]
                     for item in list {
                       updated.push(item)
                     }
@@ -1143,7 +1208,8 @@ fn compute_ordering_and_vnodes(
                 }
                 match order_edges_by_tail_root.get(tail_name) {
                   Some(list) => {
-                    let updated : Array[(String, String, Int, Bool)] = [entry]
+                    let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                      [entry]
                     for item in list {
                       updated.push(item)
                     }
@@ -1170,11 +1236,12 @@ fn compute_ordering_and_vnodes(
           while rank < max_rank {
             let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
             let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-            let entry = (tail_name, head_name, CL_CROSS, true)
+            let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0)
             skeleton_edge_creation.push((tail_name, head_name))
             match order_edges_by_tail.get(tail_name) {
               Some(list) => {
-                let updated : Array[(String, String, Int, Bool)] = [entry]
+                let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                  [entry]
                 for item in list {
                   updated.push(item)
                 }
@@ -1184,7 +1251,8 @@ fn compute_ordering_and_vnodes(
             }
             match order_edges_by_tail_root.get(tail_name) {
               Some(list) => {
-                let updated : Array[(String, String, Int, Bool)] = [entry]
+                let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                  [entry]
                 for item in list {
                   updated.push(item)
                 }
@@ -1267,23 +1335,30 @@ fn compute_ordering_and_vnodes(
       let order_edges_out : Array[@cgraph.Edge] = []
       let order_edge_tail_out : Array[String] = []
       let order_edge_head_out : Array[String] = []
+      let order_edge_tail_port_x : Array[Double] = []
+      let order_edge_head_port_x : Array[Double] = []
       for tail_name in nlist_order {
         let list = match order_edges_by_tail.get(tail_name) {
           Some(value) => value
           None => []
         }
         for entry in list {
-          let (edge_tail_name, edge_head_name, penalty, constraint) = entry
+          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+            entry
           add_order_edge(
             order_graph,
             order_node_map,
             order_edges_out,
             order_edge_tail_out,
             order_edge_head_out,
+            order_edge_tail_port_x,
+            order_edge_head_port_x,
             edge_tail_name,
             edge_head_name,
             penalty,
             constraint,
+            tail_port_x,
+            head_port_x,
           )
         }
       }
@@ -1296,7 +1371,7 @@ fn compute_ordering_and_vnodes(
       for tail, entries in order_edges_by_tail {
         let heads : Array[String] = []
         for entry in entries {
-          let (_t, h, _pen, _constraint) = entry
+          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x) = entry
           heads.push(h)
         }
         graphviz_out_neighbors[tail] = heads
@@ -1359,6 +1434,8 @@ fn compute_ordering_and_vnodes(
         order_edges_out,
         order_edge_tail_out,
         order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
         parents,
         children,
         order_cluster_keys,
@@ -1557,23 +1634,30 @@ fn compute_ordering_and_vnodes(
         let root_edges_out : Array[@cgraph.Edge] = []
         let root_edge_tail_out : Array[String] = []
         let root_edge_head_out : Array[String] = []
+        let root_edge_tail_port_x : Array[Double] = []
+        let root_edge_head_port_x : Array[Double] = []
         for tail_name in root_nlist_order {
           let list = match order_edges_by_tail_root.get(tail_name) {
             Some(value) => value
             None => []
           }
           for entry in list {
-            let (edge_tail_name, edge_head_name, penalty, constraint) = entry
+            let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+              entry
             add_order_edge(
               root_graph,
               root_node_map,
               root_edges_out,
               root_edge_tail_out,
               root_edge_head_out,
+              root_edge_tail_port_x,
+              root_edge_head_port_x,
               edge_tail_name,
               edge_head_name,
               penalty,
               constraint,
+              tail_port_x,
+              head_port_x,
             )
           }
         }
@@ -1600,6 +1684,8 @@ fn compute_ordering_and_vnodes(
           root_edges_out,
           root_edge_tail_out,
           root_edge_head_out,
+          root_edge_tail_port_x,
+          root_edge_head_port_x,
           root_parents,
           root_children,
           order_cluster_keys,
@@ -1632,6 +1718,15 @@ fn compute_ordering_and_vnodes(
               }
               if cluster != "" && order_map.get(cluster) is None {
                 order_map[cluster] = idx
+                idx = idx + 1
+              }
+            } else if real_nodes.get(name) is Some(_) {
+              let cluster = match order_cluster_keys.get(name) {
+                Some(value) => value
+                None => ""
+              }
+              if cluster == "" && order_map.get("") is None {
+                order_map[""] = idx
                 idx = idx + 1
               }
             }
@@ -1781,6 +1876,8 @@ fn compute_ordering_and_vnodes(
               edges,
               edge_tail,
               edge_head,
+              edge_tail_port_x,
+              edge_head_port_x,
               ranks,
               vnode_info.edge_vnodes,
               order_with_vnodes,
@@ -1794,7 +1891,7 @@ fn compute_ordering_and_vnodes(
               Some(list) => {
                 let mut idx = 0
                 while idx < list.length() {
-                  let (t, h, _pen, _c) = list[idx]
+                  let (t, h, _pen, _c, _tail_port_x, _head_port_x) = list[idx]
                   println("remincross arbiter edge \{idx}: \{t} -> \{h}")
                   idx = idx + 1
                 }
@@ -1807,7 +1904,7 @@ fn compute_ordering_and_vnodes(
                 Some(list) => {
                   let mut idx = 0
                   while idx < list.length() {
-                    let (t, h, _pen, _c) = list[idx]
+                    let (t, h, _pen, _c, _tail_port_x, _head_port_x) = list[idx]
                     println("remincross out \{name} \{idx}: \{t} -> \{h}")
                     idx = idx + 1
                   }
@@ -1852,23 +1949,30 @@ fn compute_ordering_and_vnodes(
           let rem_edges_out : Array[@cgraph.Edge] = []
           let rem_edge_tail_out : Array[String] = []
           let rem_edge_head_out : Array[String] = []
+          let rem_edge_tail_port_x : Array[Double] = []
+          let rem_edge_head_port_x : Array[Double] = []
           for tail_name in rem_nlist_order {
             let list = match rem_order_edges_by_tail.get(tail_name) {
               Some(value) => value
               None => []
             }
             for entry in list {
-              let (edge_tail_name, edge_head_name, penalty, constraint) = entry
+              let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+                entry
               add_order_edge(
                 rem_graph,
                 rem_node_map,
                 rem_edges_out,
                 rem_edge_tail_out,
                 rem_edge_head_out,
+                rem_edge_tail_port_x,
+                rem_edge_head_port_x,
                 edge_tail_name,
                 edge_head_name,
                 penalty,
                 constraint,
+                tail_port_x,
+                head_port_x,
               )
             }
           }
@@ -1990,6 +2094,8 @@ fn compute_ordering_and_vnodes(
             rem_edges_out,
             rem_edge_tail_out,
             rem_edge_head_out,
+            rem_edge_tail_port_x,
+            rem_edge_head_port_x,
             rem_parents,
             rem_children,
             rem_cluster_keys,
@@ -2046,6 +2152,8 @@ fn compute_ordering_and_vnodes(
         order_edges,
         order_edge_tail,
         order_edge_head,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
         parents,
         children,
         cluster_meta.cluster_keys,
@@ -2151,6 +2259,14 @@ fn compute_positions(
     } else {
       x_base_sizes
     }
+  let (x_edge_tail_port_x, x_edge_head_port_x) =
+    compute_edge_port_positions(
+      prep.nodes,
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      x_order_sizes,
+    )
   let mut x_groups =
     if use_vnodes_for_xpos {
       if ordering.ordered_groups_with_vnodes.length() > 0 {
@@ -2258,6 +2374,8 @@ fn compute_positions(
     let order_edges_out : Array[@cgraph.Edge] = []
     let order_edge_tail_out : Array[String] = []
     let order_edge_head_out : Array[String] = []
+    let order_edge_tail_port_x : Array[Double] = []
+    let order_edge_head_port_x : Array[Double] = []
     let mut edge_idx = 0
     for edge in prep.edges {
       let tail =
@@ -2270,6 +2388,14 @@ fn compute_positions(
         }
       let penalty = edge_xpenalty(edge)
       let constraint = edge_is_constraint(edge)
+      let tail_port_x =
+        if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
+          0.0
+        }
+      let head_port_x =
+        if edge_idx < x_edge_head_port_x.length() { x_edge_head_port_x[edge_idx] } else {
+          0.0
+        }
       let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
         Some(list) => list
         None => []
@@ -2281,10 +2407,14 @@ fn compute_positions(
           order_edges_out,
           order_edge_tail_out,
           order_edge_head_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
           tail,
           head,
           penalty,
           constraint,
+          tail_port_x,
+          head_port_x,
         )
       } else {
         let tail_rank = match rank_data.ranks.get(tail) {
@@ -2311,16 +2441,24 @@ fn compute_positions(
         chain.push(head)
         let mut idx = 0
         while idx + 1 < chain.length() {
+          let seg_tail_port =
+            if chain[idx] == tail { tail_port_x } else { 0.0 }
+          let seg_head_port =
+            if chain[idx + 1] == head { head_port_x } else { 0.0 }
           add_order_edge(
             order_graph,
             order_node_map,
             order_edges_out,
             order_edge_tail_out,
             order_edge_head_out,
+            order_edge_tail_port_x,
+            order_edge_head_port_x,
             chain[idx],
             chain[idx + 1],
             penalty,
             constraint,
+            seg_tail_port,
+            seg_head_port,
           )
           idx = idx + 1
         }
@@ -2342,10 +2480,14 @@ fn compute_positions(
           order_edges_out,
           order_edge_tail_out,
           order_edge_head_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
           tail_name,
           head_name,
           CL_CROSS,
           true,
+          0.0,
+          0.0,
         )
         rank = rank + 1
       }
@@ -2363,6 +2505,8 @@ fn compute_positions(
       order_edges_out,
       order_edge_tail_out,
       order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
       parents,
       children,
       order_cluster_keys,
@@ -2406,6 +2550,14 @@ fn compute_positions(
       ordering.vnode_info.edge_vnodes,
       ordering.vnode_info.vnode_ranks,
     )
+    let (order_edge_tail_port_x, order_edge_head_port_x) =
+      compute_edge_port_positions(
+        prep.nodes,
+        ordering.order_edges,
+        ordering.order_edge_tail,
+        ordering.order_edge_head,
+        x_order_sizes,
+      )
     let tmp_rank_keys = collect_rank_keys(x_groups)
     x_groups = reorder_rank_groups(
       tmp_rank_keys,
@@ -2413,6 +2565,8 @@ fn compute_positions(
       ordering.order_edges,
       ordering.order_edge_tail,
       ordering.order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
       parents,
       children,
       x_cluster_keys,

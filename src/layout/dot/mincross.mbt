@@ -487,6 +487,7 @@ fn transpose_rank_groups_limited(
 }
 
 ///|
+/// Graphviz parity: port x tie-break matches mincross.c in_cross.
 fn in_cross_graphviz(
   left : String,
   right : String,
@@ -495,6 +496,7 @@ fn in_cross_graphviz(
   order : Map[String, Int],
   edge_in : Map[String, Array[Int]],
   edge_tail : Array[String],
+  edge_tail_port_x : Array[Double],
   edge_penalty : Array[Int],
 ) -> Int {
   let right_in = match edge_in.get(right) {
@@ -522,6 +524,10 @@ fn in_cross_graphviz(
       Some(value) => value
       None => 0
     }
+    let inv_port =
+      if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
+        0.0
+      }
     for edge_idx2 in left_in {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
@@ -539,7 +545,11 @@ fn in_cross_graphviz(
         None => 0
       }
       let t = tail_order - inv
-      if t > 0 {
+      let tail_port =
+        if edge_idx2 < edge_tail_port_x.length() { edge_tail_port_x[edge_idx2] } else {
+          0.0
+        }
+      if t > 0 || (t == 0 && tail_port > inv_port) {
         cross = cross + weight * cnt
       }
     }
@@ -548,6 +558,7 @@ fn in_cross_graphviz(
 }
 
 ///|
+/// Graphviz parity: port x tie-break matches mincross.c out_cross.
 fn out_cross_graphviz(
   left : String,
   right : String,
@@ -556,6 +567,7 @@ fn out_cross_graphviz(
   order : Map[String, Int],
   edge_out : Map[String, Array[Int]],
   edge_head : Array[String],
+  edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
 ) -> Int {
   let right_out = match edge_out.get(right) {
@@ -583,6 +595,10 @@ fn out_cross_graphviz(
       Some(value) => value
       None => 0
     }
+    let inv_port =
+      if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
+        0.0
+      }
     for edge_idx2 in left_out {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
@@ -600,7 +616,11 @@ fn out_cross_graphviz(
         None => 0
       }
       let t = head_order - inv
-      if t > 0 {
+      let head_port =
+        if edge_idx2 < edge_head_port_x.length() { edge_head_port_x[edge_idx2] } else {
+          0.0
+        }
+      if t > 0 || (t == 0 && head_port > inv_port) {
         cross = cross + weight * cnt
       }
     }
@@ -618,6 +638,8 @@ fn transpose_rank_graphviz(
   edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
@@ -643,16 +665,48 @@ fn transpose_rank_graphviz(
     let mut c0 = 0
     let mut c1 = 0
     c0 = c0 + in_cross_graphviz(
-      left, right, rank, ranks, order, edge_in, edge_tail, edge_penalty,
+      left,
+      right,
+      rank,
+      ranks,
+      order,
+      edge_in,
+      edge_tail,
+      edge_tail_port_x,
+      edge_penalty,
     )
     c1 = c1 + in_cross_graphviz(
-      right, left, rank, ranks, order, edge_in, edge_tail, edge_penalty,
+      right,
+      left,
+      rank,
+      ranks,
+      order,
+      edge_in,
+      edge_tail,
+      edge_tail_port_x,
+      edge_penalty,
     )
     c0 = c0 + out_cross_graphviz(
-      left, right, rank, ranks, order, edge_out, edge_head, edge_penalty,
+      left,
+      right,
+      rank,
+      ranks,
+      order,
+      edge_out,
+      edge_head,
+      edge_head_port_x,
+      edge_penalty,
     )
     c1 = c1 + out_cross_graphviz(
-      right, left, rank, ranks, order, edge_out, edge_head, edge_penalty,
+      right,
+      left,
+      rank,
+      ranks,
+      order,
+      edge_out,
+      edge_head,
+      edge_head_port_x,
+      edge_penalty,
     )
     if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
       if (left == "_mbt_edge_vn_0_3" && right == "_mbt_edge_vn_1_3") ||
@@ -684,6 +738,8 @@ fn transpose_rank_groups_graphviz(
   edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
@@ -727,6 +783,8 @@ fn transpose_rank_groups_graphviz(
         edge_out,
         edge_tail,
         edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
         edge_penalty,
         cluster_keys,
         cluster_skeleton,
@@ -763,6 +821,8 @@ fn reorder_rank_groups(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   cluster_keys : Map[String, String],
@@ -950,6 +1010,8 @@ fn reorder_rank_groups(
         edge_out,
         edge_tail,
         edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
         edge_penalty,
         cluster_keys,
         cluster_skeleton,
@@ -1002,6 +1064,8 @@ fn reorder_rank_groups(
               edge_out,
               edge_tail,
               edge_head,
+              edge_tail_port_x,
+              edge_head_port_x,
               edge_penalty,
               cluster_keys,
               cluster_skeleton,
@@ -1106,6 +1170,8 @@ fn reorder_rank_groups(
             edge_out,
             edge_tail,
             edge_head,
+            edge_tail_port_x,
+            edge_head_port_x,
             edge_penalty,
             cluster_keys,
             cluster_skeleton,
@@ -1152,6 +1218,8 @@ fn reorder_rank_groups(
         edge_out,
         edge_tail,
         edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
         edge_penalty,
         cluster_keys,
         cluster_skeleton,
@@ -1235,6 +1303,8 @@ fn reorder_rank_groups(
             edge_out,
             edge_tail,
             edge_head,
+            edge_tail_port_x,
+            edge_head_port_x,
             edge_penalty,
             cluster_keys,
             cluster_skeleton,

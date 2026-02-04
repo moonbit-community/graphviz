@@ -223,8 +223,13 @@ fn build_vnode_order_keys(
     let high_order_f = Double::from_int(high_order)
     let same_order = low_order == high_order
     let offset = if same_order { 0.01 } else { 0.0 }
-    let is_intercluster =
-      !edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+    let internal =
+      tail_cluster != "" && head_cluster != "" &&
+      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+    let trail_external =
+      !internal &&
+      ((tail_cluster == "" && head_cluster != "") ||
+        (tail_cluster != "" && head_cluster == ""))
     let edge_offset = Double::from_int(current_idx) * 0.001
     let mut vnode_seq = 0
     for vnode in vnodes {
@@ -239,8 +244,9 @@ fn build_vnode_order_keys(
         } else {
           low_order_f + (high_order_f - low_order_f) * t
         }
-      if is_intercluster {
-        // Graphviz parity: intercluster edge vnodes trail real nodes when present.
+      if trail_external {
+        // Graphviz parity: edges crossing cluster boundaries from/to root
+        // place vnodes after real nodes on the rank.
         let max_order = match max_order_by_rank.get(vnode_rank) {
           Some(value) => value
           None => -1
@@ -250,10 +256,9 @@ fn build_vnode_order_keys(
         if base_key < min_key {
           base_key = min_key + edge_offset + vnode_offset
         } else {
-          base_key = base_key + vnode_offset
+          base_key = base_key + edge_offset + vnode_offset
         }
       }
-      // Graphviz parity: do not offset reversed edges when ordering vnodes.
       keys[vnode] = base_key
       vnode_seq = vnode_seq + 1
     }

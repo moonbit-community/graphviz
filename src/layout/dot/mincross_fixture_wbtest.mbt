@@ -409,12 +409,16 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
       idx = idx + 1
     }
   }
+  let edge_tail_port_x = Array::make(edges.length(), 0.0)
+  let edge_head_port_x = Array::make(edges.length(), 0.0)
   let ordered = reorder_rank_groups(
     rank_keys,
     groups,
     edges,
     edge_tail,
     edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
     parents,
     children,
     cluster_keys,

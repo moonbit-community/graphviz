@@ -254,10 +254,14 @@ fn add_order_edge(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   tail_name : String,
   head_name : String,
   xpenalty : Int,
   constraint : Bool,
+  tail_port_x : Double,
+  head_port_x : Double,
 ) -> Unit {
   if tail_name == head_name {
     return ()
@@ -274,6 +278,8 @@ fn add_order_edge(
           edges.push(edge)
           edge_tail.push(tail_name)
           edge_head.push(head_name)
+          edge_tail_port_x.push(tail_port_x)
+          edge_head_port_x.push(head_port_x)
         }
         None => ()
       }
@@ -459,6 +465,8 @@ fn build_order_edges_by_tail_graphviz(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
   ranks : Map[String, Int],
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
@@ -467,11 +475,12 @@ fn build_order_edges_by_tail_graphviz(
   map_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
 ) -> (
-  Map[String, Array[(String, String, Int, Bool)]],
+  Map[String, Array[(String, String, Int, Bool, Double, Double)]],
   Map[String, Array[String]],
   Array[(String, String)],
 ) {
-  let out : Map[String, Array[(String, String, Int, Bool)]] = Map::new()
+  let out : Map[String, Array[(String, String, Int, Bool, Double, Double)]] =
+    Map::new()
   let vnode_seen : Map[String, Bool] = Map::new()
   let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
   let edge_creation : Array[(String, String)] = []
@@ -534,6 +543,14 @@ fn build_order_edges_by_tail_graphviz(
       }
       let penalty = edge_xpenalty(edge)
       let constraint = edge_is_constraint(edge)
+      let tail_port_x =
+        if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else {
+          0.0
+        }
+      let head_port_x =
+        if idx < edge_head_port_x.length() { edge_head_port_x[idx] } else {
+          0.0
+        }
       let vnodes =
         if order_with_vnodes {
         match edge_vnodes.get(edge_vnode_key(edge)) {
@@ -568,9 +585,27 @@ fn build_order_edges_by_tail_graphviz(
         let t = chain[i]
         let h = chain[i + 1]
         if t != h {
+          let seg_tail_port =
+            if t == tail && mapped_tail == tail {
+              tail_port_x
+            } else if t == head && mapped_head == head {
+              head_port_x
+            } else {
+              0.0
+            }
+          let seg_head_port =
+            if h == head && mapped_head == head {
+              head_port_x
+            } else if h == tail && mapped_tail == tail {
+              tail_port_x
+            } else {
+              0.0
+            }
           match out.get(t) {
-            Some(list) => list.push((t, h, penalty, constraint))
-            None => out[t] = [(t, h, penalty, constraint)]
+            Some(list) =>
+              list.push((t, h, penalty, constraint, seg_tail_port, seg_head_port))
+            None =>
+              out[t] = [(t, h, penalty, constraint, seg_tail_port, seg_head_port)]
           }
           edge_creation.push((t, h))
         }
