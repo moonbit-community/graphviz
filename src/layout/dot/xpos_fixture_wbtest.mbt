@@ -188,7 +188,10 @@ fn assert_xpos_input(input : XposInput) -> Map[Int, Int] raise {
     )
   }
   if input.flip {
-    fail("unexpected flip=true for graph \{input.graph}")
+    let name = input.graph.to_lower()
+    if !name.has_suffix("_lr") && !name.has_suffix("_rl") {
+      fail("unexpected flip=true for graph \{input.graph}")
+    }
   }
   let order_map = build_rank_order_map_input(input.ranks)
   let mut non_slack = 0

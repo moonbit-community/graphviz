@@ -523,6 +523,27 @@ fn compute_cluster_metadata(
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
   }
+  let creation_order : Map[String, Int] = Map::new()
+  for i, node in nodes {
+    creation_order[node.name()] = i
+  }
+  // Graphviz parity: cluster subgraphs walk GD_nlist backward to preserve input
+  // order; mirror that by using creation order for cluster nodes.
+  for node in nodes {
+    let name = node.name()
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster == "" {
+      continue
+    }
+    let order_value = match creation_order.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    node_order[name] = order_value
+  }
   let cluster_skeleton : Map[String, Bool] = Map::new()
   let cluster_rank_seen : Map[String, Bool] = Map::new()
   for rank, names in groups {
@@ -1215,6 +1236,12 @@ fn compute_ordering_and_vnodes(
       let order_index = build_order_index(order_groups)
       for name, idx in order_index {
         if order_node_order.get(name) is None {
+          order_node_order[name] = idx
+        }
+      }
+      // Graphviz parity: prefer initial rank order (ND_order) for real nodes.
+      for name, idx in base_order_index {
+        if real_nodes.get(name) is Some(_) {
           order_node_order[name] = idx
         }
       }

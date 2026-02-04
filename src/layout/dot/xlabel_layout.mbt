@@ -181,7 +181,8 @@ fn record_obj_intersection(
   let cp = objs[cp_idx]
   let mut idx = get_intrsx_index(op, cp, labels)
   if idx < 0 {
-    idx = XLCXCY
+    // Graphviz parity: default to XLNXCY when get_intrsx_index returns -1.
+    idx = XLNXCY
   }
   match intrsx[idx] {
     Some(existing_idx) => {
@@ -228,7 +229,8 @@ fn record_label_intersection(
   let cp = objs[cp_idx]
   let mut idx = get_intrsx_index(op, cp, labels)
   if idx < 0 {
-    idx = XLCXCY
+    // Graphviz parity: default to XLNXCY when get_intrsx_index returns -1.
+    idx = XLNXCY
   }
   match intrsx[idx] {
     Some(existing_idx) => {
