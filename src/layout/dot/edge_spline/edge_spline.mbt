@@ -1845,6 +1845,9 @@ fn route_polyline_to_bezier(
 }
 
 ///|
+///|
+/// Graphviz parity: segmented route spline matches refs/graphviz/lib/pathplan/route.c + lib/dotgen/dotsplines.c straight_path joins.
+/// Do not change behavior without updating fixtures/tests.
 fn route_bezier_points(
   points : Array[@geom.Point],
   tail_slope : @geom.Point,
@@ -1852,10 +1855,7 @@ fn route_bezier_points(
   force_segmented : Bool,
   route_barriers : Array[(@geom.Point, @geom.Point)],
 ) -> Array[@geom.Point] {
-  let polyline = compact_polyline(points)
-  let compacted = compact_polyline(polyline)
   let allow_spline_fit = !force_segmented
-  let route_points = compacted
   let tail_dir =
     if tail_slope.x == 0.0 && tail_slope.y == 0.0 {
     point(0.0, 0.0)
@@ -1868,6 +1868,115 @@ fn route_bezier_points(
   } else {
     head_slope
   }
+  let mut has_dupes = false
+  for i in 1..<points.length() {
+    if points[i] == points[i - 1] {
+      has_dupes = true
+      break
+    }
+  }
+  if has_dupes {
+    let segments : Array[Array[@geom.Point]] = []
+    let segment_start_dirs : Array[@geom.Point?] = []
+    let segment_end_dirs : Array[@geom.Point?] = []
+    let mut pending_start_dir : @geom.Point? = None
+    let mut start = 0
+    let mut i = 1
+    while i < points.length() {
+      if points[i] == points[i - 1] {
+        if i - start >= 2 {
+          let seg : Array[@geom.Point] = []
+          let mut idx = start
+          while idx < i {
+            seg.push(points[idx])
+            idx = idx + 1
+          }
+          segments.push(seg)
+          segment_start_dirs.push(pending_start_dir)
+          segment_end_dirs.push(None)
+          pending_start_dir = None
+        }
+        let dup = points[i]
+        let mut j = i + 1
+        while j < points.length() && points[j] == dup {
+          j = j + 1
+        }
+        if j < points.length() && segments.length() > 0 {
+          let join_raw = point_sub(points[j], dup)
+          let join_dir = point_norm(join_raw)
+          if join_dir.x != 0.0 || join_dir.y != 0.0 {
+            let last_idx = segments.length() - 1
+            segment_end_dirs[last_idx] = Some(join_dir)
+            pending_start_dir = Some(join_dir)
+          }
+        }
+        start = j
+        i = j
+      } else {
+        i = i + 1
+      }
+    }
+    if points.length() - start >= 2 {
+      let seg : Array[@geom.Point] = []
+      let mut idx = start
+      while idx < points.length() {
+        seg.push(points[idx])
+        idx = idx + 1
+      }
+      segments.push(seg)
+      segment_start_dirs.push(pending_start_dir)
+      segment_end_dirs.push(None)
+    }
+    let out : Array[@geom.Point] = []
+    let mut first = true
+    for si in 0..<segments.length() {
+      let seg = segments[si]
+      let seg_tail_dir = match segment_start_dirs[si] {
+        Some(dir) => dir
+        None => tail_dir
+      }
+      let seg_head_dir = match segment_end_dirs[si] {
+        Some(dir) => dir
+        None => head_dir
+      }
+      let seg_bezier =
+        route_polyline_to_bezier(
+          seg,
+          seg_tail_dir,
+          seg_head_dir,
+          allow_spline_fit,
+          1.0,
+          0.0,
+          route_barriers=route_barriers,
+        )
+      if seg_bezier.length() == 0 {
+        continue
+      }
+      if first {
+        for p in seg_bezier {
+          out.push(p)
+        }
+        first = false
+      } else {
+        if out.length() > 0 {
+          let last = out[out.length() - 1]
+          out.push(last)
+          out.push(last)
+        }
+        let mut start_idx = 0
+        if out.length() > 0 && seg_bezier[0] == out[out.length() - 1] {
+          start_idx = 1
+        }
+        let mut idx = start_idx
+        while idx < seg_bezier.length() {
+          out.push(seg_bezier[idx])
+          idx = idx + 1
+        }
+      }
+    }
+    return out
+  }
+  let route_points = compact_polyline(points)
   route_polyline_to_bezier(
     route_points,
     tail_dir,
@@ -2273,7 +2382,15 @@ pub fn edge_spline_for_points(
   } else {
     (spline_points, None, None)
   }
-  { start: start_point, end: end_point, points: dedup_consecutive(clipped) }
+  let mut has_dupes = false
+  for i in 1..<clipped.length() {
+    if clipped[i] == clipped[i - 1] {
+      has_dupes = true
+      break
+    }
+  }
+  let points_out = if has_dupes { clipped } else { dedup_consecutive(clipped) }
+  { start: start_point, end: end_point, points: points_out }
 }
 
 ///|

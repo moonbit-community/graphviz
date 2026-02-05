@@ -306,6 +306,7 @@ fn collect_edge_indices_by_tail(
 
 ///|
 /// Graphviz parity: GD_nlist order is reverse creation order in class2.
+/// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_nlist_order(
   tail_order : Array[String],
   _cluster_keys : Map[String, String],
@@ -348,6 +349,7 @@ fn build_graphviz_nlist_order(
 
 ///|
 /// Graphviz parity: approximate decompose DFS order over fast graph edges.
+/// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_nlist_order_from_edges(
   tail_order : Array[String],
   order_nodes : Array[String],
@@ -460,6 +462,7 @@ fn build_graphviz_nlist_order_from_edges(
 
 ///|
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
+/// Do not change behavior without updating fixtures/tests.
 fn build_order_edges_by_tail_graphviz(
   tail_order : Array[String],
   edges : Array[@cgraph.Edge],
@@ -498,7 +501,7 @@ fn build_order_edges_by_tail_graphviz(
       let head =
         if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
       let tail_cluster =
-        if use_mapping {
+        if order_with_clusters {
         match cluster_keys.get(tail) {
           Some(value) => value
           None => ""
@@ -507,7 +510,7 @@ fn build_order_edges_by_tail_graphviz(
         ""
       }
       let head_cluster =
-        if use_mapping {
+        if order_with_clusters {
         match cluster_keys.get(head) {
           Some(value) => value
           None => ""
@@ -529,14 +532,19 @@ fn build_order_edges_by_tail_graphviz(
       if tail_rank == head_rank {
         continue
       }
+      let intercluster =
+        order_with_clusters && tail_cluster != head_cluster &&
+        (tail_cluster != "" || head_cluster != "")
+      let map_edge = use_mapping || intercluster
+      // Graphviz parity: intercluster edges use cluster rankleaders in ordering.
       let mapped_tail =
-        if use_mapping && tail_cluster != "" {
+        if map_edge && tail_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"
       } else {
         tail
       }
       let mapped_head =
-        if use_mapping && head_cluster != "" {
+        if map_edge && head_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{head_cluster}@\{head_rank}"
       } else {
         head

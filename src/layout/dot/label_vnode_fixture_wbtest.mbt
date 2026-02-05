@@ -179,8 +179,19 @@ fn collect_label_vnode_actuals(
   for node in nodes {
     existing_names[node.name()] = true
   }
+  let (edge_tail, edge_head, _edge_reversed, out_edges, _in_edges) =
+    acyclic_edge_directions_with_order(nodes, edges)
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  for i in 0..<nodes.length() {
+    let name = nodes[i].name()
+    edge_out_order[name] = out_edges[i].copy()
+  }
   let vnode_info = build_edge_vnodes(
+    nodes,
     edges,
+    edge_tail,
+    edge_head,
+    edge_out_order,
     ranks,
     graph_nodesep_pt(graph),
     graph_rankdir(graph),

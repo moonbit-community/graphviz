@@ -115,6 +115,60 @@ fn compute_bbox(
 }
 
 ///|
+/// Graphviz parity: edge splines expand bbox like refs/graphviz/lib/dotgen/dotsplines.c
+/// (update_bb_bz) after dot_compute_bb.
+/// Do not change behavior without updating fixtures/tests.
+fn expand_bbox_with_edges(
+  bbox : @geom.Rect,
+  edges : Array[DotLayoutEdge],
+) -> @geom.Rect {
+  let mut min_x = bbox.llx
+  let mut max_x = bbox.urx
+  let mut min_y = bbox.lly
+  let mut max_y = bbox.ury
+  let mut bbox_set =
+    !(bbox.llx == 0.0 && bbox.lly == 0.0 && bbox.urx == 0.0 && bbox.ury == 0.0)
+  let update = (p : @geom.Point) => {
+    if !bbox_set {
+      min_x = p.x
+      max_x = p.x
+      min_y = p.y
+      max_y = p.y
+      bbox_set = true
+    } else {
+      if p.x < min_x { min_x = p.x }
+      if p.x > max_x { max_x = p.x }
+      if p.y < min_y { min_y = p.y }
+      if p.y > max_y { max_y = p.y }
+    }
+  }
+  for edge in edges {
+    for spline in edge.splines {
+      match spline.start {
+        Some(point) => update(point)
+        None => ()
+      }
+      match spline.end {
+        Some(point) => update(point)
+        None => ()
+      }
+      match spline_bbox(spline.points) {
+        Some(rect) => {
+          update({ x: rect.llx, y: rect.lly })
+          update({ x: rect.urx, y: rect.ury })
+        }
+        None => ()
+      }
+    }
+  }
+  if bbox_set {
+    { llx: min_x, lly: min_y, urx: max_x, ury: max_y }
+  } else {
+    { llx: 0.0, lly: 0.0, urx: 0.0, ury: 0.0 }
+  }
+}
+
+///|
 fn merge_bbox(base : @geom.Rect, other : @geom.Rect) -> @geom.Rect {
   {
     llx: if base.llx < other.llx {

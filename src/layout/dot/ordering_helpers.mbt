@@ -945,6 +945,77 @@ fn apply_rank_same_order_with_port_override(
 }
 
 ///|
+/// Graphviz parity: unported rank=same groups keep subgraph order for ND_order.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_rank_same_order_to_node_order(
+  node_order : Map[String, Int],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+) -> Unit {
+  if rank_same_groups.length() == 0 {
+    return ()
+  }
+  let group_nodes : Map[Int, Array[String]] = Map::new()
+  let group_has_ported : Map[Int, Bool] = Map::new()
+  for name, group in rank_same_groups {
+    if node_order.get(name) is None {
+      continue
+    }
+    match group_nodes.get(group) {
+      Some(list) => list.push(name)
+      None => group_nodes[group] = [name]
+    }
+    if port_edge_nodes.get(name) == Some(true) {
+      group_has_ported[group] = true
+    }
+  }
+  for group, names in group_nodes {
+    if group_has_ported.get(group) == Some(true) {
+      continue
+    }
+    if names.length() <= 1 {
+      continue
+    }
+    let sorted_names = names.copy()
+    sorted_names.sort_by((a, b) => {
+      let a_idx = match rank_same_order.get(a) {
+        Some(value) => value
+        None => 0
+      }
+      let b_idx = match rank_same_order.get(b) {
+        Some(value) => value
+        None => 0
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+    let orders : Array[Int] = []
+    for name in names {
+      let order_value = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      orders.push(order_value)
+    }
+    if orders.length() <= 1 {
+      continue
+    }
+    orders.sort()
+    let mut idx = 0
+    while idx < sorted_names.length() && idx < orders.length() {
+      node_order[sorted_names[idx]] = orders[idx]
+      idx = idx + 1
+    }
+  }
+}
+
+///|
 fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let ranks : Map[String, Int] = Map::new()
   for rank, names in groups {

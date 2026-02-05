@@ -17,8 +17,14 @@ priv struct FlatLabelNodeInfo {
 }
 
 ///|
+/// Graphviz parity: class2 virtual node creation order + sizing.
+/// Do not change behavior without updating fixtures/tests.
 fn build_edge_vnodes(
+  nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
   nodesep_pt : Double,
   rankdir : RankDir,
@@ -31,8 +37,34 @@ fn build_edge_vnodes(
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
   let mut edge_index = 0
+  let tail_order : Array[String] = []
+  for node in nodes {
+    tail_order.push(node.name())
+  }
+  let edge_indices : Array[Int] = []
+  let mut use_out_order = false
+  for _key, _ in edge_out_order {
+    use_out_order = true
+    break
+  }
+  if use_out_order {
+    for tail in tail_order {
+      let list = match edge_out_order.get(tail) {
+        Some(value) => value
+        None => []
+      }
+      for idx in list {
+        edge_indices.push(idx)
+      }
+    }
+  } else {
+    for idx in 0..<edges.length() {
+      edge_indices.push(idx)
+    }
+  }
   let plain_width = 1.0 + nodesep_pt / 2.0
-  for edge in edges {
+  for idx in edge_indices {
+    let edge = edges[idx]
     let key = edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
@@ -53,8 +85,12 @@ fn build_edge_vnodes(
       }
       None => ()
     }
-    let tail = edge.tail().name()
-    let head = edge.head().name()
+    let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
+      edge.tail().name()
+    }
+    let head = if idx < edge_head.length() { edge_head[idx] } else {
+      edge.head().name()
+    }
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
     let edge_cluster = match edge_cluster_keys.get(edge_key(edge)) {

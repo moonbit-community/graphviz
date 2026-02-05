@@ -11,40 +11,127 @@ fn compute_ranks_directed_base(
   _edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
   let graph = new_graph()
-  let index : Map[String, Int] = Map::new()
+  let node_by_name : Map[String, @cgraph.Node] = Map::new()
+  let tail_order : Array[String] = []
   for node in nodes {
+    let name = node.name()
+    node_by_name[name] = node
+    tail_order.push(name)
+  }
+  let node_index : Map[String, Int] = Map::new()
+  for idx, name in tail_order {
+    node_index[name] = idx
+  }
+  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let tail = edge_tail[edge_idx]
+    match edges_by_tail.get(tail) {
+      Some(list) => list.push(edge_idx)
+      None => edges_by_tail[tail] = [edge_idx]
+    }
+  }
+  let edge_creation : Array[(String, String)] = []
+  for tail in tail_order {
+    let indices = match edges_by_tail.get(tail) {
+      Some(list) => list
+      None => []
+    }
+    if indices.length() > 1 {
+      indices.sort_by((a, b) => {
+        let ha = edge_head[a]
+        let hb = edge_head[b]
+        let ha_idx = match node_index.get(ha) {
+          Some(value) => value
+          None => 0
+        }
+        let hb_idx = match node_index.get(hb) {
+          Some(value) => value
+          None => 0
+        }
+        if ha_idx < hb_idx {
+          -1
+        } else if ha_idx > hb_idx {
+          1
+        } else if a < b {
+          -1
+        } else if a > b {
+          1
+        } else {
+          0
+        }
+      })
+    }
+    for edge_idx in indices {
+      edge_creation.push((tail, edge_head[edge_idx]))
+    }
+  }
+  // Graphviz parity: decompose ordering uses DFS over flat/in/out neighbors
+  // driven by agfstnode/agfstout ordering.
+  let rank_node_names = build_graphviz_nlist_order_from_edges(
+    tail_order,
+    tail_order,
+    edge_creation,
+    Map::new(),
+  )
+  let rank_nodes : Array[@cgraph.Node] = []
+  let seen : Map[String, Bool] = Map::new()
+  for name in rank_node_names {
+    match node_by_name.get(name) {
+      Some(node) => {
+        rank_nodes.push(node)
+        seen[name] = true
+      }
+      None => ()
+    }
+  }
+  if rank_nodes.length() < nodes.length() {
+    for node in nodes {
+      let name = node.name()
+      if seen.get(name) is None {
+        rank_nodes.push(node)
+        seen[name] = true
+      }
+    }
+  }
+  let index : Map[String, Int] = Map::new()
+  for node in rank_nodes {
     let name = node.name()
     index[name] = add_node(graph, name)
   }
   let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    if !edge_is_constraint(edge) {
-      continue
+  for tail_name in rank_node_names {
+    let indices = match edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
     }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    let tail_idx = match index.get(tail) {
-      Some(value) => value
-      None => 0
-    }
-    let head_idx = match index.get(head) {
-      Some(value) => value
-      None => 0
-    }
-    let minlen_value = edge_minlen(edge)
-    let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
-    let weight = edge_weight(edge)
-    let key = "\{tail_idx}:\{head_idx}"
-    match merged_edges.get(key) {
-      Some(entry) => {
-        let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
-        let next_minlen = if minlen > current_minlen { minlen } else { current_minlen }
-        merged_edges[key] = (tail_idx, head_idx, next_minlen, current_weight + weight)
+    for edge_idx in indices {
+      let edge = edges[edge_idx]
+      if !edge_is_constraint(edge) {
+        continue
       }
-      None => merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+      let tail = edge_tail[edge_idx]
+      let head = edge_head[edge_idx]
+      let tail_idx = match index.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_idx = match index.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      let minlen_value = edge_minlen(edge)
+      let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
+      let weight = edge_weight(edge)
+      let key = "\{tail_idx}:\{head_idx}"
+      match merged_edges.get(key) {
+        Some(entry) => {
+          let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
+          let next_minlen = if minlen > current_minlen { minlen } else { current_minlen }
+          merged_edges[key] = (tail_idx, head_idx, next_minlen, current_weight + weight)
+        }
+        None => merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+      }
     }
-
   }
   for _key, entry in merged_edges {
     let (tail_idx, head_idx, minlen, weight) = entry

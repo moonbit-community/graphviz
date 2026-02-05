@@ -4,6 +4,11 @@ type NodeSize = @dot_shared.NodeSize
 ///|
 type RankDir = @dot_shared.RankDir
 
+const PORT_SIDE_BOTTOM : Int = 1
+const PORT_SIDE_RIGHT : Int = 2
+const PORT_SIDE_TOP : Int = 4
+const PORT_SIDE_LEFT : Int = 8
+
 ///|
 /// Graphviz parity: route/splines aligned to refs/graphviz/lib/pathplan/*.c + common/routespl.c + common/splines.c + dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -1283,22 +1288,20 @@ pub fn limit_boxes_for_spline(
 }
 
 ///|
-/// Graphviz parity: pathplan polyline construction aligned to refs/graphviz/lib/dotgen/dotsplines.c.
+/// Graphviz parity: pathplan segment routing aligned to refs/graphviz/lib/dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
-pub fn edge_pathplan_polyline(
-  edge : @cgraph.Edge,
-  tail_name : String,
-  head_name : String,
-  tail_anchor : @geom.Point,
-  head_anchor : @geom.Point,
-  rankdir : RankDir,
-  tail_port_side : Int,
-  head_port_side : Int,
-  ranksep_pt : Double,
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
+fn edge_pathplan_polyline_core(
+  path_tail_name : String,
+  path_head_name : String,
+  path_tail_anchor : @geom.Point,
+  path_head_anchor : @geom.Point,
+  path_tail_side : Int,
+  path_head_side : Int,
+  path_tail_rank : Int,
+  path_head_rank : Int,
+  ordered : Array[String],
   positions : Map[String, @geom.Point],
+  vnode_ranks : Map[String, Int],
   vnode_positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   mval_sizes : Map[String, NodeSize],
@@ -1314,62 +1317,19 @@ pub fn edge_pathplan_polyline(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
+  ranksep_pt : Double,
+  rankdir : RankDir,
+  merged_positions : Map[String, @geom.Point],
+  route_sizes : Map[String, NodeSize],
+  mval_route_sizes : Map[String, NodeSize],
+  splinesep_pt : Double,
+  left_bound : Double,
+  right_bound : Double,
 ) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
-  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-    Some(list) => list.copy()
-    None => []
-  }
-  let tail_rank = match ranks.get(tail_name) {
-    Some(value) => value
-    None => return None
-  }
-  let head_rank = match ranks.get(head_name) {
-    Some(value) => value
-    None => return None
-  }
-  if tail_rank == head_rank {
-    return None
-  }
-  let forward = tail_rank <= head_rank
-  let swap_path = !forward
-  let path_tail_name = if swap_path { head_name } else { tail_name }
-  let path_head_name = if swap_path { tail_name } else { head_name }
-  let path_tail_rank = if swap_path { head_rank } else { tail_rank }
-  let path_head_rank = if swap_path { tail_rank } else { head_rank }
-  let path_tail_anchor = if swap_path { head_anchor } else { tail_anchor }
-  let path_head_anchor = if swap_path { tail_anchor } else { head_anchor }
-  let path_tail_side = if swap_path { head_port_side } else { tail_port_side }
-  let path_head_side = if swap_path { tail_port_side } else { head_port_side }
-  let path_tail_pos = match positions.get(path_tail_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let path_head_pos = match positions.get(path_head_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let path_tail_size = size_for_name(path_tail_name, sizes)
-  let path_head_size = size_for_name(path_head_name, sizes)
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    println(
-      "pathplan edge \{path_tail_name} -> \{path_head_name} tail_pos=\{path_tail_pos.x},\{path_tail_pos.y} head_pos=\{path_head_pos.x},\{path_head_pos.y} tail_anchor=\{path_tail_anchor.x},\{path_tail_anchor.y} head_anchor=\{path_head_anchor.x},\{path_head_anchor.y}",
-    )
-  }
   let tail_cluster =
     cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
   let head_cluster =
     cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
-  let ordered = vnodes
-  let merged_positions = merge_positions(positions, vnode_positions)
-  let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
-  let mval_route_sizes = merge_sizes(mval_sizes, vnode_sizes)
-  // Graphviz parity: Splinesep uses integer division (GD_nodesep / 4).
-  let splinesep_pt = (nodesep_pt / 4.0).floor()
-  let (left_bound, right_bound) =
-    compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
-  }
   let tail_next =
     if ordered.length() > 0 { Some(ordered[0]) } else { Some(path_head_name) }
   let path_boxes : Array[@geom.Rect] = []
@@ -1417,6 +1377,16 @@ pub fn edge_pathplan_polyline(
     Some(box) => box
     None => return None
   }
+  let path_tail_pos = match merged_positions.get(path_tail_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_head_pos = match merged_positions.get(path_head_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_tail_size = size_for_name(path_tail_name, mval_route_sizes)
+  let path_head_size = size_for_name(path_head_name, mval_route_sizes)
   let (tail_boxes, route_start) = beginpath_boxes_regular(
     tail_box,
     path_tail_pos,
@@ -1595,7 +1565,337 @@ pub fn edge_pathplan_polyline(
     route_start,
     route_end,
   ) {
-    Some((points, polygon)) => {
+    Some((points, polygon)) =>
+      Some((dedupe_polyline_points(points), polygon_edges(polygon), normalized_boxes))
+    None => None
+  }
+}
+
+///|
+/// Graphviz parity: pathplan polyline construction aligned to refs/graphviz/lib/dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
+pub fn edge_pathplan_polyline(
+  edge : @cgraph.Edge,
+  tail_name : String,
+  head_name : String,
+  tail_anchor : @geom.Point,
+  head_anchor : @geom.Point,
+  rankdir : RankDir,
+  tail_port_side : Int,
+  head_port_side : Int,
+  ranksep_pt : Double,
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  mval_sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+  cluster_keys : Map[String, String],
+  vnode_clusters : Map[String, String],
+  cluster_bboxes : Map[String, @geom.Rect],
+  x_groups : Map[Int, Array[String]],
+  order_index : Map[String, Int],
+  path_out_edges : Map[String, Array[String]],
+  path_in_edges : Map[String, Array[String]],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  nodesep_pt : Double,
+  has_edge_label : Bool,
+) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
+  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    Some(list) => list.copy()
+    None => []
+  }
+  let tail_rank = match ranks.get(tail_name) {
+    Some(value) => value
+    None => return None
+  }
+  let head_rank = match ranks.get(head_name) {
+    Some(value) => value
+    None => return None
+  }
+  if tail_rank == head_rank {
+    return None
+  }
+  let forward = tail_rank <= head_rank
+  let swap_path = !forward
+  let path_tail_name = if swap_path { head_name } else { tail_name }
+  let path_head_name = if swap_path { tail_name } else { head_name }
+  let path_tail_rank = if swap_path { head_rank } else { tail_rank }
+  let path_head_rank = if swap_path { tail_rank } else { head_rank }
+  let path_tail_anchor = if swap_path { head_anchor } else { tail_anchor }
+  let path_head_anchor = if swap_path { tail_anchor } else { head_anchor }
+  let path_tail_side = if swap_path { head_port_side } else { tail_port_side }
+  let path_head_side = if swap_path { tail_port_side } else { head_port_side }
+  let path_tail_pos = match positions.get(path_tail_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_head_pos = match positions.get(path_head_name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+  let path_tail_size = size_for_name(path_tail_name, sizes)
+  let path_head_size = size_for_name(path_head_name, sizes)
+  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+    println(
+      "pathplan edge \{path_tail_name} -> \{path_head_name} tail_pos=\{path_tail_pos.x},\{path_tail_pos.y} head_pos=\{path_head_pos.x},\{path_head_pos.y} tail_anchor=\{path_tail_anchor.x},\{path_tail_anchor.y} head_anchor=\{path_head_anchor.x},\{path_head_anchor.y}",
+    )
+  }
+  let tail_cluster =
+    cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
+  let head_cluster =
+    cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
+  let ordered = vnodes
+  let merged_positions = merge_positions(positions, vnode_positions)
+  let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
+  let mval_route_sizes = merge_sizes(mval_sizes, vnode_sizes)
+  // Graphviz parity: Splinesep uses integer division (GD_nodesep / 4).
+  let splinesep_pt = (nodesep_pt / 4.0).floor()
+  let (left_bound, right_bound) =
+    compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
+  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
+    println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
+  }
+  let straight_eps = 0.01
+  let straight_len =
+    if ordered.length() > 1 {
+    let base = match vnode_positions.get(ordered[0]) {
+      Some(value) => value
+      None => path_tail_anchor
+    }
+    let mut count = 0
+    let mut idx = 1
+    while idx < ordered.length() {
+      let pos = match vnode_positions.get(ordered[idx]) {
+        Some(value) => value
+        None => break
+      }
+      let aligned = match rankdir {
+        RankDir::TB | RankDir::BT => Double::abs(pos.x - base.x) <= straight_eps
+        RankDir::LR | RankDir::RL => Double::abs(pos.y - base.y) <= straight_eps
+      }
+      if !aligned {
+        break
+      }
+      count = count + 1
+      idx = idx + 1
+    }
+    count
+  } else {
+    0
+  }
+  let label_threshold = if has_edge_label { 5 } else { 3 }
+  if straight_len >= label_threshold && ordered.length() >= 2 {
+    let sl = straight_len - 2
+    if sl >= 1 {
+      let split_end = 1
+      let straight_end = split_end + sl
+      if straight_end < ordered.length() {
+        let seg1_head = ordered[split_end]
+        let seg2_tail = ordered[straight_end]
+        let seg1_vnodes : Array[String] = []
+        let mut idx = 0
+        while idx < split_end {
+          seg1_vnodes.push(ordered[idx])
+          idx = idx + 1
+        }
+        let seg2_vnodes : Array[String] = []
+        idx = straight_end + 1
+        while idx < ordered.length() {
+          seg2_vnodes.push(ordered[idx])
+          idx = idx + 1
+        }
+        let seg1_head_pos = match merged_positions.get(seg1_head) {
+          Some(value) => value
+          None => path_head_pos
+        }
+        let seg2_tail_pos = match merged_positions.get(seg2_tail) {
+          Some(value) => value
+          None => path_tail_pos
+        }
+        let seg1_head_rank = match vnode_ranks.get(seg1_head) {
+          Some(value) => value
+          None => path_head_rank
+        }
+        let seg2_tail_rank = match vnode_ranks.get(seg2_tail) {
+          Some(value) => value
+          None => path_tail_rank
+        }
+        let seg1_head_anchor = seg1_head_pos
+        let seg2_tail_anchor = seg2_tail_pos
+        // Graphviz parity: straight-chain split constrains segment end/start
+        // directions to the incoming/outgoing sides (dotsplines.c).
+        let (seg1_head_side, seg2_tail_side) = match rankdir {
+          RankDir::TB => (PORT_SIDE_TOP, PORT_SIDE_BOTTOM)
+          RankDir::BT => (PORT_SIDE_BOTTOM, PORT_SIDE_TOP)
+          RankDir::LR => (PORT_SIDE_LEFT, PORT_SIDE_RIGHT)
+          RankDir::RL => (PORT_SIDE_RIGHT, PORT_SIDE_LEFT)
+        }
+        let seg1 = edge_pathplan_polyline_core(
+          path_tail_name,
+          seg1_head,
+          path_tail_anchor,
+          seg1_head_anchor,
+          path_tail_side,
+          seg1_head_side,
+          path_tail_rank,
+          seg1_head_rank,
+          seg1_vnodes,
+          positions,
+          vnode_ranks,
+          vnode_positions,
+          sizes,
+          mval_sizes,
+          vnode_sizes,
+          cluster_keys,
+          vnode_clusters,
+          cluster_bboxes,
+          x_groups,
+          order_index,
+          path_out_edges,
+          path_in_edges,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+          nodesep_pt,
+          ranksep_pt,
+          rankdir,
+          merged_positions,
+          route_sizes,
+          mval_route_sizes,
+          splinesep_pt,
+          left_bound,
+          right_bound,
+        )
+        let seg2 = edge_pathplan_polyline_core(
+          seg2_tail,
+          path_head_name,
+          seg2_tail_anchor,
+          path_head_anchor,
+          seg2_tail_side,
+          path_head_side,
+          seg2_tail_rank,
+          path_head_rank,
+          seg2_vnodes,
+          positions,
+          vnode_ranks,
+          vnode_positions,
+          sizes,
+          mval_sizes,
+          vnode_sizes,
+          cluster_keys,
+          vnode_clusters,
+          cluster_bboxes,
+          x_groups,
+          order_index,
+          path_out_edges,
+          path_in_edges,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+          nodesep_pt,
+          ranksep_pt,
+          rankdir,
+          merged_positions,
+          route_sizes,
+          mval_route_sizes,
+          splinesep_pt,
+          left_bound,
+          right_bound,
+        )
+        match (seg1, seg2) {
+          (Some((points1, barriers1, boxes1)), Some((points2, barriers2, boxes2))) => {
+            let combined : Array[@geom.Point] = []
+            for p in points1 {
+              combined.push(p)
+            }
+            if points2.length() > 0 {
+              if combined.length() > 0 {
+                // Graphviz parity: straight_path duplicates the last point twice.
+                let last = combined[combined.length() - 1]
+                combined.push(last)
+                combined.push(last)
+              }
+              let mut pi = 0
+              while pi < points2.length() {
+                combined.push(points2[pi])
+                pi = pi + 1
+              }
+            }
+            let all_barriers : Array[(@geom.Point, @geom.Point)] = []
+            for entry in barriers1 {
+              all_barriers.push(entry)
+            }
+            for entry in barriers2 {
+              all_barriers.push(entry)
+            }
+            let all_boxes : Array[@geom.Rect] = []
+            for box in boxes1 {
+              all_boxes.push(box)
+            }
+            for box in boxes2 {
+              all_boxes.push(box)
+            }
+            let out_points =
+              if swap_path {
+                let reversed : Array[@geom.Point] = []
+                let mut idx = combined.length()
+                while idx > 0 {
+                  idx = idx - 1
+                  reversed.push(combined[idx])
+                }
+                reversed
+              } else {
+                combined
+              }
+            return Some((out_points, all_barriers, all_boxes))
+          }
+          _ => ()
+        }
+      }
+    }
+  }
+  match edge_pathplan_polyline_core(
+    path_tail_name,
+    path_head_name,
+    path_tail_anchor,
+    path_head_anchor,
+    path_tail_side,
+    path_head_side,
+    path_tail_rank,
+    path_head_rank,
+    ordered,
+    positions,
+    vnode_ranks,
+    vnode_positions,
+    sizes,
+    mval_sizes,
+    vnode_sizes,
+    cluster_keys,
+    vnode_clusters,
+    cluster_bboxes,
+    x_groups,
+    order_index,
+    path_out_edges,
+    path_in_edges,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+    nodesep_pt,
+    ranksep_pt,
+    rankdir,
+    merged_positions,
+    route_sizes,
+    mval_route_sizes,
+    splinesep_pt,
+    left_bound,
+    right_bound,
+  ) {
+    Some((points, barriers, boxes)) => {
       let out_points =
         if swap_path {
           let reversed : Array[@geom.Point] = []
@@ -1608,7 +1908,7 @@ pub fn edge_pathplan_polyline(
         } else {
           points
         }
-      Some((out_points, polygon_edges(polygon), normalized_boxes))
+      Some((out_points, barriers, boxes))
     }
     None => None
   }

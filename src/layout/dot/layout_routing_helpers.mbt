@@ -581,6 +581,7 @@ fn compute_route_points_with_pathplan(
   let mut pathplan_points : Array[@geom.Point] = []
   let (points, pathplan_used) =
     if base.use_pathplan && !base.is_flat_edge {
+    let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
     match @routesplines.edge_pathplan_polyline(
       base.edge,
       base.tail_name,
@@ -610,6 +611,7 @@ fn compute_route_points_with_pathplan(
       rank_ht1,
       rank_ht2,
       nodesep_pt,
+      has_edge_label,
     ) {
       Some((path_points, barriers, path_boxes)) => {
         route_barriers = barriers

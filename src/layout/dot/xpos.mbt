@@ -587,7 +587,8 @@ fn build_cluster_constraints(
           let mut i = 0
           while i < names.length() {
             let node_name = names[i]
-            if members.get(node_name) is Some(_) {
+            if members.get(node_name) is Some(_) &&
+              cluster_key_from_skeleton_name(node_name) is None {
               if left_idx < 0 {
                 left_idx = i
               }
@@ -790,6 +791,11 @@ fn build_cluster_constraints(
                                     while idx < names.length() &&
                                           (first_i < 0 || first_j < 0) {
                                       let node_name = names[idx]
+                                      if cluster_key_from_skeleton_name(node_name)
+                                        is Some(_) {
+                                        idx = idx + 1
+                                        continue
+                                      }
                                       if first_i < 0 &&
                                         members_i.get(node_name) is Some(_) {
                                         first_i = idx

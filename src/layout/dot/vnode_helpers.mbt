@@ -222,7 +222,6 @@ fn build_vnode_order_keys(
     let low_order_f = Double::from_int(low_order)
     let high_order_f = Double::from_int(high_order)
     let same_order = low_order == high_order
-    let offset = if same_order { 0.01 } else { 0.0 }
     let internal =
       tail_cluster != "" && head_cluster != "" &&
       edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
@@ -240,7 +239,9 @@ fn build_vnode_order_keys(
       let t = Double::from_int(vnode_rank - low_rank) / span_f
       let mut base_key =
         if same_order {
-          low_order_f - offset + t * offset * 2.0
+          // Graphviz parity: when tail/head orders match, vnodes precede
+          // nodes with that order in the intermediate ranks.
+          low_order_f - (1.0 - t)
         } else {
           low_order_f + (high_order_f - low_order_f) * t
         }
@@ -261,6 +262,155 @@ fn build_vnode_order_keys(
       }
       keys[vnode] = base_key
       vnode_seq = vnode_seq + 1
+    }
+  }
+  keys
+}
+
+///|
+/// Graphviz parity: seed vnode order from GD_nlist order within each rank.
+/// Do not change behavior without updating fixtures/tests.
+fn build_vnode_order_keys_from_nlist(
+  ordered_groups : Map[Int, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  order_index : Map[String, Int],
+  nlist_order_index : Map[String, Int],
+  _intercluster_vnodes : Map[String, Bool],
+  _has_clusters : Bool,
+) -> Map[String, Double] {
+  let keys : Map[String, Double] = Map::new()
+  let rank_set : Map[Int, Bool] = Map::new()
+  for rank, _ in ordered_groups {
+    rank_set[rank] = true
+  }
+  for rank, _ in vnodes_by_rank {
+    rank_set[rank] = true
+  }
+  let ranks : Array[Int] = []
+  for rank, _ in rank_set {
+    ranks.push(rank)
+  }
+  ranks.sort()
+  let get_order = (name : String) => {
+    match order_index.get(name) {
+      Some(value) => value
+      None => -1
+    }
+  }
+  let get_nlist = (name : String) => {
+    match nlist_order_index.get(name) {
+      Some(value) => value
+      None => 1_000_000_000
+    }
+  }
+  let is_intercluster = (name : String) => {
+    _has_clusters && _intercluster_vnodes.get(name) == Some(true)
+  }
+  // Graphviz parity: ignore cluster skeleton nodes when seeding vnode order keys.
+  let is_skeleton = (name : String) => {
+    name.has_prefix(CLUSTER_SKELETON_PREFIX)
+  }
+  let assign_interval = (
+    vnodes : Array[String],
+    left_key : Double,
+    right_key : Double,
+  ) => {
+    let count = vnodes.length()
+    if count == 0 {
+      return ()
+    }
+    let span = right_key - left_key
+    let denom = (count + 1).to_double()
+    for i in 0..<count {
+      let t = (i + 1).to_double() / denom
+      keys[vnodes[i]] = left_key + span * t
+    }
+  }
+  for rank in ranks {
+    let real_names = match ordered_groups.get(rank) {
+      Some(list) => list.filter(name => !is_skeleton(name))
+      None => []
+    }
+    let vnodes = match vnodes_by_rank.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
+    let real_set : Map[String, Bool] = Map::new()
+    for name in real_names {
+      real_set[name] = true
+    }
+    let combined : Array[String] = []
+    for name in real_names {
+      combined.push(name)
+    }
+    for name in vnodes {
+      combined.push(name)
+    }
+    combined.sort_by((a, b) => {
+      let a_inter = is_intercluster(a)
+      let b_inter = is_intercluster(b)
+      if a_inter != b_inter {
+        if a_inter {
+          1
+        } else {
+          -1
+        }
+      } else {
+        let a_idx = get_nlist(a)
+        let b_idx = get_nlist(b)
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      }
+    })
+    if real_names.length() == 0 {
+      let mut idx = 0
+      for name in combined {
+        if real_set.get(name) is None {
+          keys[name] = idx.to_double()
+          idx = idx + 1
+        }
+      }
+      continue
+    }
+    let interval : Array[String] = []
+    let mut prev_order = -1
+    let mut first_real_order : Int? = None
+    for name in combined {
+      if real_set.get(name) == Some(true) {
+        let ord = get_order(name)
+        if ord >= 0 && first_real_order is None {
+          first_real_order = Some(ord)
+        }
+        let left_key =
+          if prev_order >= 0 {
+          prev_order.to_double()
+        } else {
+          let base = match first_real_order {
+            Some(value) => value
+            None => ord
+          }
+          (base - 1).to_double()
+        }
+        let right_key = ord.to_double()
+        assign_interval(interval, left_key, right_key)
+        interval.clear()
+        prev_order = ord
+      } else {
+        interval.push(name)
+      }
+    }
+    if interval.length() > 0 {
+      let left_key = prev_order.to_double()
+      let right_key = (prev_order + 1).to_double()
+      assign_interval(interval, left_key, right_key)
     }
   }
   keys

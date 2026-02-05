@@ -841,6 +841,8 @@ fn finalize_layout_graph(
       port_pad_above,
     )
   let bbox = apply_root_margin_x(graph, bbox)
+  // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
+  let bbox = expand_bbox_with_edges(bbox, final_edges)
   let layout = {
     graph,
     bbox,
