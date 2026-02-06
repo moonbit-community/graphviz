@@ -72,30 +72,36 @@ fn add_rank_same_constraints(
       if value.to_lower() == "same" {
         let nodes = subgraph.nodes()
         if nodes.length() > 1 {
-          let mut i = 0
-          while i < nodes.length() {
-            let name_i = nodes[i].name()
-            let idx_i = match index.get(name_i) {
-              Some(value) => value
-              None => -1
-            }
-            if idx_i >= 0 {
-              let mut j = i + 1
-              while j < nodes.length() {
-                let name_j = nodes[j].name()
-                let idx_j = match index.get(name_j) {
-                  Some(value) => value
-                  None => -1
-                }
-                if idx_j >= 0 {
-                  let _ = add_edge(rank_graph, idx_i, idx_j, 0, 1000)
-                  let _ = add_edge(rank_graph, idx_j, idx_i, 0, 1000)
-
-                }
-                j = j + 1
+          // Graphviz parity: rank=same collapses nodes into a single set;
+          // a star of zero-length constraints preserves equality without
+          // quadratic edge blowup.
+          let mut leader_idx = -1
+          let mut leader_pos = 0
+          while leader_pos < nodes.length() {
+            let name = nodes[leader_pos].name()
+            match index.get(name) {
+              Some(value) => {
+                leader_idx = value
+                break
               }
+              None => ()
             }
-            i = i + 1
+            leader_pos = leader_pos + 1
+          }
+          if leader_idx >= 0 {
+            let mut i = 0
+            while i < nodes.length() {
+              let name_i = nodes[i].name()
+              let idx_i = match index.get(name_i) {
+                Some(value) => value
+                None => -1
+              }
+              if idx_i >= 0 && idx_i != leader_idx {
+                let _ = add_edge(rank_graph, leader_idx, idx_i, 0, 1000)
+                let _ = add_edge(rank_graph, idx_i, leader_idx, 0, 1000)
+              }
+              i = i + 1
+            }
           }
         }
       }
@@ -104,4 +110,85 @@ fn add_rank_same_constraints(
   for child in subgraph.subgraphs() {
     add_rank_same_constraints(rank_graph, index, child)
   }
+}
+
+///|
+/// Graphviz parity: rank=same merges nodes into a single union set (rank.c).
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_same_reps(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+) -> Map[String, String] {
+  let parent : Map[String, String] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    parent[name] = name
+  }
+  let find = (name : String) => {
+    let mut current = name
+    let mut next = match parent.get(current) {
+      Some(value) => value
+      None => current
+    }
+    while next != current {
+      current = next
+      next = match parent.get(current) {
+        Some(value) => value
+        None => current
+      }
+    }
+    // Path compression
+    let mut cursor = name
+    let mut parent_name = match parent.get(cursor) {
+      Some(value) => value
+      None => cursor
+    }
+    while parent_name != current {
+      parent[cursor] = current
+      cursor = parent_name
+      parent_name = match parent.get(cursor) {
+        Some(value) => value
+        None => current
+      }
+    }
+    current
+  }
+  let union = (a : String, b : String) => {
+    let ra = find(a)
+    let rb = find(b)
+    if ra != rb {
+      parent[rb] = ra
+    }
+  }
+  let stack : Array[@cgraph.Graph] = [graph]
+  while stack.length() > 0 {
+    let current = stack[stack.length() - 1]
+    let _ = stack.pop()
+    match current.get_attr("rank") {
+      Some(value) =>
+        if value.to_lower() == "same" {
+          let members = current.nodes()
+          let mut leader : String? = None
+          for node in members {
+            let name = node.name()
+            if parent.get(name) is None {
+              continue
+            }
+            match leader {
+              Some(lead) => union(lead, name)
+              None => leader = Some(name)
+            }
+          }
+        }
+      None => ()
+    }
+    for child in current.subgraphs() {
+      stack.push(child)
+    }
+  }
+  let reps : Map[String, String] = Map::new()
+  for name, _ in parent {
+    reps[name] = find(name)
+  }
+  reps
 }

@@ -11,6 +11,7 @@ fn build_rank_groups_graphviz(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   pass : Int,
+  flip? : Bool = false,
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Map[Int, Array[String]] {
@@ -288,6 +289,22 @@ fn build_rank_groups_graphviz(
         None => ordered[rank] = [name]
       }
       installed[name] = true
+    }
+  }
+  // Graphviz parity: GD_flip reverses rank order for horizontal rankdir.
+  if flip {
+    for _rank, names in ordered {
+      if names.length() > 1 {
+        let mut left = 0
+        let mut right = names.length() - 1
+        while left < right {
+          let tmp = names[left]
+          names[left] = names[right]
+          names[right] = tmp
+          left = left + 1
+          right = right - 1
+        }
+      }
     }
   }
   ordered

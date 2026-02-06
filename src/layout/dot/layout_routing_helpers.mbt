@@ -169,6 +169,419 @@ priv struct EdgeSplineResult {
 }
 
 ///|
+priv struct SelfEdgeRoute {
+  points : Array[@geom.Point]
+  label_pos : @geom.Point?
+}
+
+///|
+fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
+  match edge_mid_label_metrics(edge) {
+    Some((width, height)) =>
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        width
+      } else {
+        height
+      }
+    None => 0.0
+  }
+}
+
+///|
+fn rank_bounds(rank_y : Map[Int, Double]) -> (Int, Int) {
+  let mut min_rank = 0
+  let mut max_rank = 0
+  let mut seen = false
+  for rank, _ in rank_y {
+    if !seen {
+      min_rank = rank
+      max_rank = rank
+      seen = true
+    } else {
+      if rank < min_rank { min_rank = rank }
+      if rank > max_rank { max_rank = rank }
+    }
+  }
+  (min_rank, max_rank)
+}
+
+///|
+fn self_edge_rank_spacing(
+  rank : Int,
+  rank_y : Map[Int, Double],
+  node_y : Double,
+  node_height : Double,
+  min_rank : Int,
+  max_rank : Int,
+) -> Double {
+  if min_rank == max_rank {
+    return node_height
+  }
+  if rank == max_rank {
+    if rank > min_rank {
+      match rank_y.get(rank - 1) {
+        Some(prev) => Double::abs(prev - node_y)
+        None => node_height
+      }
+    } else {
+      node_height
+    }
+  } else if rank == min_rank {
+    match rank_y.get(rank + 1) {
+      Some(next) => Double::abs(node_y - next)
+      None => node_height
+    }
+  } else {
+    let up = match rank_y.get(rank - 1) {
+      Some(prev) => Double::abs(prev - node_y)
+      None => node_height
+    }
+    let down = match rank_y.get(rank + 1) {
+      Some(next) => Double::abs(node_y - next)
+      None => node_height
+    }
+    min_double(up, down)
+  }
+}
+
+///|
+fn convert_sides_to_points(tail_side : Int, head_side : Int) -> Int {
+  let vertices : Array[Int] = [12, 4, 6, 2, 3, 1, 9, 8]
+  let pair_a : Array[Array[Int]] = [
+    [11, 12, 13, 14, 15, 16, 17, 18],
+    [21, 22, 23, 24, 25, 26, 27, 28],
+    [31, 32, 33, 34, 35, 36, 37, 38],
+    [41, 42, 43, 44, 45, 46, 47, 48],
+    [51, 52, 53, 54, 55, 56, 57, 58],
+    [61, 62, 63, 64, 65, 66, 67, 68],
+    [71, 72, 73, 74, 75, 76, 77, 78],
+    [81, 82, 83, 84, 85, 86, 87, 88],
+  ]
+  let mut tail_i = -1
+  let mut head_i = -1
+  for i in 0..<vertices.length() {
+    if tail_side == vertices[i] {
+      tail_i = i
+      break
+    }
+  }
+  for i in 0..<vertices.length() {
+    if head_side == vertices[i] {
+      head_i = i
+      break
+    }
+  }
+  if tail_i < 0 || head_i < 0 {
+    0
+  } else {
+    pair_a[tail_i][head_i]
+  }
+}
+
+///|
+fn self_edge_routes_top(
+  edges : Array[@cgraph.Edge],
+  base0 : EdgeRouteBase,
+  nodesep_pt : Double,
+  sizey_param : Double,
+  point_pair : Int,
+) -> Array[SelfEdgeRoute] {
+  let cnt = edges.length()
+  let cnt_f = Double::from_int(cnt)
+  let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
+  let stepy = sizey_param
+  let np = base0.tail_pos
+  let tp = base0.tail_anchor
+  let hp = base0.head_anchor
+  let sgn = if tp.x >= hp.x { 1.0 } else { -1.0 }
+  let lw = base0.tail_size.left_pt
+  let rw = base0.tail_size.right_pt
+  let mut dx = 0.0
+  match point_pair {
+    15 => {
+      dx = sgn * (rw - (hp.x - np.x) + stepx)
+    }
+    38 => {
+      dx = sgn * (lw - (np.x - hp.x) + stepx)
+    }
+    41 | 48 => {
+      dx = sgn * (rw - (tp.x - np.x) + stepx)
+    }
+    14 | 37 | 47 | 51 | 57 | 58 => {
+      dx =
+        sgn *
+          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 3.0)
+    }
+    73 => {
+      dx = sgn * (lw - (np.x - tp.x) + stepx)
+    }
+    83 => {
+      dx = sgn * (lw - (np.x - tp.x))
+    }
+    84 => {
+      dx =
+        sgn *
+          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + stepx)
+    }
+    74 | 75 | 85 => {
+      dx =
+        sgn *
+          ((lw - (np.x - tp.x) + (rw - (hp.x - np.x))) / 2.0 + 2.0 * stepx)
+    }
+    _ => ()
+  }
+  let mut dy = base0.tail_size.height_pt / 2.0
+  let mut ty = min_double(dy, 3.0 * (np.y + dy - tp.y))
+  let mut hy = min_double(dy, 3.0 * (np.y + dy - hp.y))
+  let routes : Array[SelfEdgeRoute] = []
+  for i in 0..<cnt {
+    let edge = edges[i]
+    dy = dy + stepy
+    ty = ty + stepy
+    hy = hy + stepy
+    dx = dx + sgn * stepx
+    let points = [
+      tp,
+      point(tp.x + dx, tp.y + ty / 3.0),
+      point(tp.x + dx, np.y + dy),
+      point((tp.x + hp.x) / 2.0, np.y + dy),
+      point(hp.x - dx, np.y + dy),
+      point(hp.x - dx, hp.y + hy / 3.0),
+      hp,
+    ]
+    let mut label_pos : @geom.Point? = None
+    let label_height = self_edge_label_height_pt(edge, base0.rankdir)
+    if label_height > 0.0 {
+      label_pos = Some(point(np.x, np.y + dy + label_height / 2.0))
+      if label_height > stepy {
+        dy = dy + (label_height - stepy)
+      }
+    }
+    routes.push({ points, label_pos })
+  }
+  routes
+}
+
+///|
+fn self_edge_routes_bottom(
+  edges : Array[@cgraph.Edge],
+  base0 : EdgeRouteBase,
+  nodesep_pt : Double,
+  sizey_param : Double,
+  point_pair : Int,
+) -> Array[SelfEdgeRoute] {
+  let cnt = edges.length()
+  let cnt_f = Double::from_int(cnt)
+  let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
+  let stepy = sizey_param
+  let np = base0.tail_pos
+  let tp = base0.tail_anchor
+  let hp = base0.head_anchor
+  let mut sgn = if tp.x >= hp.x { 1.0 } else { -1.0 }
+  if point_pair == 67 {
+    sgn = -sgn
+  }
+  let mut dx = 0.0
+  let mut dy = base0.tail_size.height_pt / 2.0
+  let mut ty = min_double(dy, 3.0 * (tp.y + dy - np.y))
+  let mut hy = min_double(dy, 3.0 * (hp.y + dy - np.y))
+  let routes : Array[SelfEdgeRoute] = []
+  for i in 0..<cnt {
+    let edge = edges[i]
+    dy = dy + stepy
+    ty = ty + stepy
+    hy = hy + stepy
+    dx = dx + sgn * stepx
+    let points = [
+      tp,
+      point(tp.x + dx, tp.y - ty / 3.0),
+      point(tp.x + dx, np.y - dy),
+      point((tp.x + hp.x) / 2.0, np.y - dy),
+      point(hp.x - dx, np.y - dy),
+      point(hp.x - dx, hp.y - hy / 3.0),
+      hp,
+    ]
+    let mut label_pos : @geom.Point? = None
+    let label_height = self_edge_label_height_pt(edge, base0.rankdir)
+    if label_height > 0.0 {
+      label_pos = Some(point(np.x, np.y - dy - label_height / 2.0))
+      if label_height > stepy {
+        dy = dy + (label_height - stepy)
+      }
+    }
+    routes.push({ points, label_pos })
+  }
+  routes
+}
+
+///|
+/// Graphviz parity: self-edge routing aligned to refs/graphviz/lib/common/splines.c.
+/// Do not change behavior without updating fixtures/tests.
+fn build_self_edge_routes(
+  edges : Array[@cgraph.Edge],
+  bases : Array[EdgeRouteBase],
+  nodesep_pt : Double,
+  rank_y : Map[Int, Double],
+) -> Array[SelfEdgeRoute] {
+  if edges.length() == 0 {
+    return []
+  }
+  let base0 = bases[0]
+  let np = base0.tail_pos
+  let tp = base0.tail_anchor
+  let hp = base0.head_anchor
+  let tail_side = base0.tail_port_side
+  let head_side = base0.head_port_side
+  let tail_defined = port_is_explicit(base0.tail_port)
+  let head_defined = port_is_explicit(base0.head_port)
+  let (min_rank, max_rank) = rank_bounds(rank_y)
+  let sizey =
+    self_edge_rank_spacing(
+      base0.tail_rank,
+      rank_y,
+      np.y,
+      base0.tail_size.height_pt,
+      min_rank,
+      max_rank,
+    )
+  let sizey_param = sizey / 2.0
+  let cnt = edges.length()
+  let cnt_f = Double::from_int(cnt)
+  let go_right =
+    (!tail_defined && !head_defined) ||
+      (
+        (tail_side & PORT_SIDE_LEFT) == 0 &&
+          (head_side & PORT_SIDE_LEFT) == 0 &&
+          (tail_side != head_side ||
+            (tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) == 0)
+      )
+  let uses_left =
+    (tail_side & PORT_SIDE_LEFT) != 0 || (head_side & PORT_SIDE_LEFT) != 0
+  let uses_right =
+    (tail_side & PORT_SIDE_RIGHT) != 0 || (head_side & PORT_SIDE_RIGHT) != 0
+  if go_right {
+    let stepx = nodesep_pt
+    let stepy = max_double(sizey_param / 2.0 / cnt_f, 2.0)
+    let mut sgn = if tp.y >= hp.y { 1.0 } else { -1.0 }
+    let point_pair = convert_sides_to_points(tail_side, head_side)
+    if (point_pair == 32 || point_pair == 65) && tp.y == hp.y {
+      sgn = -sgn
+    }
+    let mut dx = base0.tail_size.right_pt
+    let mut dy = 0.0
+    let mut tx = min_double(dx, 3.0 * (np.x + dx - tp.x))
+    let mut hx = min_double(dx, 3.0 * (np.x + dx - hp.x))
+    let routes : Array[SelfEdgeRoute] = []
+    for i in 0..<cnt {
+      let edge = edges[i]
+      dx = dx + stepx
+      tx = tx + stepx
+      hx = hx + stepx
+      dy = dy + sgn * stepy
+      let points = [
+        tp,
+        point(tp.x + tx / 3.0, tp.y + dy),
+        point(np.x + dx, tp.y + dy),
+        point(np.x + dx, (tp.y + hp.y) / 2.0),
+        point(np.x + dx, hp.y - dy),
+        point(hp.x + hx / 3.0, hp.y - dy),
+        hp,
+      ]
+      let mut label_pos : @geom.Point? = None
+      let label_width = self_edge_label_width_pt(edge, base0.rankdir)
+      if label_width > 0.0 {
+        label_pos = Some(point(np.x + dx + label_width / 2.0, np.y))
+        if label_width > stepx {
+          dx = dx + (label_width - stepx)
+        }
+      }
+      routes.push({ points, label_pos })
+    }
+    return routes
+  }
+  if uses_left {
+    if uses_right {
+      return self_edge_routes_top(
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        convert_sides_to_points(tail_side, head_side),
+      )
+    } else {
+      let stepx = nodesep_pt
+      let stepy = max_double(sizey_param / 2.0 / cnt_f, 2.0)
+      let mut sgn = if tp.y >= hp.y { 1.0 } else { -1.0 }
+      let point_pair = convert_sides_to_points(tail_side, head_side)
+      if (point_pair == 12 || point_pair == 67) && tp.y == hp.y {
+        sgn = -sgn
+      }
+      let mut dx = base0.tail_size.left_pt
+      let mut dy = 0.0
+      let mut tx = min_double(dx, 3.0 * (tp.x + dx - np.x))
+      let mut hx = min_double(dx, 3.0 * (hp.x + dx - np.x))
+      let routes : Array[SelfEdgeRoute] = []
+      for i in 0..<cnt {
+        let edge = edges[i]
+        dx = dx + stepx
+        tx = tx + stepx
+        hx = hx + stepx
+        dy = dy + sgn * stepy
+        let points = [
+          tp,
+          point(tp.x - tx / 3.0, tp.y + dy),
+          point(np.x - dx, tp.y + dy),
+          point(np.x - dx, (tp.y + hp.y) / 2.0),
+          point(np.x - dx, hp.y - dy),
+          point(hp.x - hx / 3.0, hp.y - dy),
+          hp,
+        ]
+        let mut label_pos : @geom.Point? = None
+        let label_width = self_edge_label_width_pt(edge, base0.rankdir)
+        if label_width > 0.0 {
+          label_pos = Some(point(np.x - dx - label_width / 2.0, np.y))
+          if label_width > stepx {
+            dx = dx + (label_width - stepx)
+          }
+        }
+        routes.push({ points, label_pos })
+      }
+      return routes
+    }
+  }
+  let point_pair = convert_sides_to_points(tail_side, head_side)
+  if (tail_side & PORT_SIDE_TOP) != 0 {
+    return self_edge_routes_top(
+      edges,
+      base0,
+      nodesep_pt,
+      sizey_param,
+      point_pair,
+    )
+  }
+  if (tail_side & PORT_SIDE_BOTTOM) != 0 {
+    return self_edge_routes_bottom(
+      edges,
+      base0,
+      nodesep_pt,
+      sizey_param,
+      point_pair,
+    )
+  }
+  self_edge_routes_top(edges, base0, nodesep_pt, sizey_param, point_pair)
+}
+
+///|
+fn self_edge_group_key(edge : @cgraph.Edge) -> String {
+  edge_parallel_key(
+    edge.tail().name(),
+    edge.head().name(),
+    edge.tail_port(),
+    edge.head_port(),
+  )
+}
+
+///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_route_base(
@@ -1467,7 +1880,7 @@ fn build_edge_layout(
                 point(rank_x, rank_y),
                 width,
                 height,
-                base.layout_rankdir,
+                base.rankdir,
               ),
             )
           }
@@ -1491,18 +1904,18 @@ fn build_edge_layout(
                           )
                         }
                         None =>
-                          edge_label_pos(
-                            edge,
-                            spline,
-                            base.out_tail_clip,
-                            base.out_head_clip,
-                            base.layout_rankdir,
-                            label_rank_y,
-                            label_rank_x,
-                            apply_label_pad,
-                            nodesep_pt,
-                            spline_result.label_pad_boost,
-                          )
+                            edge_label_pos(
+                              edge,
+                              spline,
+                              base.out_tail_clip,
+                              base.out_head_clip,
+                              base.rankdir,
+                              label_rank_y,
+                              label_rank_x,
+                              apply_label_pad,
+                              nodesep_pt,
+                              spline_result.label_pad_boost,
+                            )
                       }
                   }
                 None =>
@@ -1524,7 +1937,7 @@ fn build_edge_layout(
                         spline,
                         base.out_tail_clip,
                         base.out_head_clip,
-                        base.layout_rankdir,
+                        base.rankdir,
                         label_rank_y,
                         label_rank_x,
                         apply_label_pad,
@@ -1539,7 +1952,7 @@ fn build_edge_layout(
                 spline,
                 base.out_tail_clip,
                 base.out_head_clip,
-                base.layout_rankdir,
+                base.rankdir,
                 label_rank_y,
                 label_rank_x,
                 apply_label_pad,
@@ -1610,24 +2023,149 @@ fn route_edges(
   enable_complex_tuning : Bool,
 ) -> Array[DotLayoutEdge] {
   let path_adjacency = routing_context.path_adjacency
+  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in edges {
+    if edge.tail().name() != edge.head().name() {
+      continue
+    }
+    let key = self_edge_group_key(edge)
+    match self_edge_groups.get(key) {
+      Some(list) => list.push(edge)
+      None => self_edge_groups[key] = [edge]
+    }
+  }
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out : Array[DotLayoutEdge] = []
   dot_trace("layout_dot: routing edges")
   for edge in edges {
-    let base = build_edge_route_base(
-      graph.kind(),
-      edge,
-      ranks,
-      sizes,
-      positions,
-      record_orientation,
-      label_ports_map,
-      label_ports_raw,
-      routing_context,
-      rankdir,
-      layout_rankdir,
-      enable_complex_tuning,
-      vnode_info.edge_vnodes,
-    )
+    let edge_id = edge.id()
+    let base = match base_cache.get(edge_id) {
+      Some(value) => value
+      None => {
+        let value = build_edge_route_base(
+          graph.kind(),
+          edge,
+          ranks,
+          sizes,
+          positions,
+          record_orientation,
+          label_ports_map,
+          label_ports_raw,
+          routing_context,
+          rankdir,
+          layout_rankdir,
+          enable_complex_tuning,
+          vnode_info.edge_vnodes,
+        )
+        base_cache[edge_id] = value
+        value
+      }
+    }
+    if edge.tail().name() == edge.head().name() {
+      if self_edge_routes.get(edge_id) is None {
+        let key = self_edge_group_key(edge)
+        match self_edge_groups.get(key) {
+          Some(group_edges) => {
+            let group_bases : Array[EdgeRouteBase] = []
+            for grouped in group_edges {
+              let gid = grouped.id()
+              let gbase = match base_cache.get(gid) {
+                Some(value) => value
+                None => {
+                  let value = build_edge_route_base(
+                    graph.kind(),
+                    grouped,
+                    ranks,
+                    sizes,
+                    positions,
+                    record_orientation,
+                    label_ports_map,
+                    label_ports_raw,
+                    routing_context,
+                    rankdir,
+                    layout_rankdir,
+                    enable_complex_tuning,
+                    vnode_info.edge_vnodes,
+                  )
+                  base_cache[gid] = value
+                  value
+                }
+              }
+              group_bases.push(gbase)
+            }
+            let group_routes =
+              build_self_edge_routes(
+                group_edges,
+                group_bases,
+                nodesep_pt,
+                rank_y,
+              )
+            for i in 0..<group_edges.length() {
+              self_edge_routes[group_edges[i].id()] = group_routes[i]
+            }
+          }
+          None => ()
+        }
+      }
+      match self_edge_routes.get(edge_id) {
+        Some(route) => {
+          let spline =
+            edge_spline_for_bezier_points(
+              edge,
+              route.points,
+              base.tail_clip_center,
+              base.head_clip_center,
+              base.tail_clip_size,
+              base.head_clip_size,
+              base.route_include_tail,
+              base.route_include_head,
+              arrow_len_override=base.arrow_len_override,
+              tail_cluster_bbox=base.tail_cluster_bbox,
+              head_cluster_bbox=base.head_cluster_bbox,
+              parallel_offset=base.parallel_offset,
+            )
+          let spline_result : EdgeSplineResult = {
+            spline,
+            label_pad_boost: 0.0,
+            using_pathplan: false,
+            pathplan_boxes: [],
+            pathplan_points: [],
+            raw_bezier: route.points,
+            apply_dotted_adjustment: false,
+          }
+          let final_spline = finalize_edge_spline(base, spline_result)
+          let mut edge_layout =
+            build_edge_layout(
+              base,
+              final_spline,
+              spline_result,
+              ranks,
+              rank_y,
+              vnode_info,
+              vnode_positions,
+              nodesep_pt,
+              has_clusters,
+              flat_label_edge_vnodes,
+            )
+          match route.label_pos {
+            Some(pos) =>
+              edge_layout = {
+                edge: edge_layout.edge,
+                splines: edge_layout.splines,
+                label_pos: Some(pos),
+                head_label_pos: edge_layout.head_label_pos,
+                tail_label_pos: edge_layout.tail_label_pos,
+                xlabel_pos: edge_layout.xlabel_pos,
+              }
+            None => ()
+          }
+          edges_out.push(edge_layout)
+          continue
+        }
+        None => ()
+      }
+    }
     let spline_result = build_edge_spline(
       base,
       splines,

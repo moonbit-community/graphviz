@@ -291,6 +291,9 @@ fn assert_snapshot(
   expected_path : String,
   tol : Double,
 ) -> Unit raise {
+  if @sys.get_env_var("DOT_SNAPSHOT_TRACE") is Some(_) {
+    println("snapshot \{input_path}")
+  }
   let graph = @dot_parser.parse_dot_file(input_path)
   let layout = layout_dot(graph)
   layout.apply()
@@ -307,6 +310,9 @@ fn assert_snapshot_nodes_only(
   expected_path : String,
   tol : Double,
 ) -> Unit raise {
+  if @sys.get_env_var("DOT_SNAPSHOT_TRACE") is Some(_) {
+    println("snapshot \{input_path}")
+  }
   let graph = @dot_parser.parse_dot_file(input_path)
   let layout = layout_dot(graph)
   layout.apply()

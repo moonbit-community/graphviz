@@ -36,6 +36,7 @@ fn compute_ranks_directed_base(
       Some(list) => list
       None => []
     }
+    // Graphviz parity: agfstout/agnxtout order edges by head node sequence (AGSEQ).
     if indices.length() > 1 {
       indices.sort_by((a, b) => {
         let ha = edge_head[a]
@@ -93,10 +94,24 @@ fn compute_ranks_directed_base(
       }
     }
   }
+  let rank_same_reps = build_rank_same_reps(source, nodes)
+  let rep_index : Map[String, Int] = Map::new()
   let index : Map[String, Int] = Map::new()
   for node in rank_nodes {
     let name = node.name()
-    index[name] = add_node(graph, name)
+    let rep = match rank_same_reps.get(name) {
+      Some(value) => value
+      None => name
+    }
+    let idx = match rep_index.get(rep) {
+      Some(value) => value
+      None => {
+        let value = add_node(graph, rep)
+        rep_index[rep] = value
+        value
+      }
+    }
+    index[name] = idx
   }
   let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
   for tail_name in rank_node_names {
@@ -111,6 +126,10 @@ fn compute_ranks_directed_base(
       }
       let tail = edge_tail[edge_idx]
       let head = edge_head[edge_idx]
+      // Graphviz parity: ignore self edges in rank constraints (compile_edges Xt==Xh).
+      if tail == head {
+        continue
+      }
       let tail_idx = match index.get(tail) {
         Some(value) => value
         None => 0
@@ -118,6 +137,9 @@ fn compute_ranks_directed_base(
       let head_idx = match index.get(head) {
         Some(value) => value
         None => 0
+      }
+      if tail_idx == head_idx {
+        continue
       }
       let minlen_value = edge_minlen(edge)
       let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
@@ -137,7 +159,6 @@ fn compute_ranks_directed_base(
     let (tail_idx, head_idx, minlen, weight) = entry
     let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
   }
-  add_rank_same_constraints(graph, index, source)
   network_simplex(graph, 0x7fffffff, BalanceMode::TB)
   let ranks : Map[String, Int] = Map::new()
   let mut min_rank = 0

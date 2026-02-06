@@ -2394,6 +2394,84 @@ pub fn edge_spline_for_points(
 }
 
 ///|
+/// Graphviz parity: spline clipping for precomputed Bézier control points
+/// (self-edge paths) aligned to refs/graphviz/lib/common/splines.c.
+/// Do not change behavior without updating fixtures/tests.
+pub fn edge_spline_for_bezier_points(
+  edge : @cgraph.Edge,
+  bezier : Array[@geom.Point],
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_anchor_size : NodeSize,
+  head_anchor_size : NodeSize,
+  include_tail : Bool,
+  include_head : Bool,
+  arrow_len_override~ : Double?,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
+) -> @geom.Spline {
+  if bezier.length() == 0 {
+    return { start: None, end: None, points: [] }
+  }
+  let arrow_len =
+    if include_tail || include_head {
+      let base = arrow_length_for_edge(edge)
+      match arrow_len_override {
+        Some(value) =>
+          if value > 0.0 && value < base {
+          value
+        } else {
+          base
+        }
+        None => base
+      }
+    } else {
+      0.0
+    }
+  let bezier_points =
+    if parallel_offset != 0.0 {
+    apply_parallel_offset(bezier, parallel_offset)
+  } else {
+    bezier
+  }
+  let spline_points =
+    clip_spline_to_nodes(
+      edge,
+      bezier_points,
+      tail_clip_center,
+      tail_anchor_size,
+      head_clip_center,
+      head_anchor_size,
+      tail_cluster_bbox=tail_cluster_bbox,
+      head_cluster_bbox=head_cluster_bbox,
+    )
+  // Graphviz parity: arrow clip epsilon is constant across cluster routing.
+  let arrow_clip_eps = ARROW_CLIP_EPS
+  let (clipped, start_point, end_point) =
+    if include_tail || include_head {
+    clip_spline_arrows(
+      spline_points,
+      arrow_len,
+      include_tail,
+      include_head,
+      arrow_clip_eps,
+    )
+  } else {
+    (spline_points, None, None)
+  }
+  let mut has_dupes = false
+  for i in 1..<clipped.length() {
+    if clipped[i] == clipped[i - 1] {
+      has_dupes = true
+      break
+    }
+  }
+  let points_out = if has_dupes { clipped } else { dedup_consecutive(clipped) }
+  { start: start_point, end: end_point, points: points_out }
+}
+
+///|
 pub fn edge_spline_raw_for_points(
   points : Array[@geom.Point],
   tail_slope : @geom.Point,

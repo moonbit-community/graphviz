@@ -151,12 +151,15 @@ fn acyclic_edge_directions_with_order(
       None => ()
     }
     match node_index.get(head) {
-      Some(idx) => in_edges_all[idx].push(edge_idx)
+      Some(idx) => {
+        in_edges_all[idx].push(edge_idx)
+      }
       None => ()
     }
   }
   // Graphviz parity: agfstout/agnxtout order edges by head node sequence (AGSEQ),
   // and agfstin/agnxtin order by tail node sequence. Use node creation order.
+  // Do not change behavior without updating fixtures/tests.
   for i in 0..<nodes.length() {
     let out_list = out_edges_all[i]
     if out_list.length() > 1 {
@@ -237,6 +240,12 @@ fn acyclic_edge_directions_with_order(
       })
     }
   }
+  let out_edges_all_orig : Array[Array[Int]] = []
+  let in_edges_all_orig : Array[Array[Int]] = []
+  for i in 0..<nodes.length() {
+    out_edges_all_orig.push(out_edges_all[i].copy())
+    in_edges_all_orig.push(in_edges_all[i].copy())
+  }
   let marked : Array[Bool] = []
   let onstack : Array[Bool] = []
   for _ in 0..<nodes.length() {
@@ -260,7 +269,9 @@ fn acyclic_edge_directions_with_order(
       )
     }
   }
-  (edge_tail, edge_head, edge_reversed, out_edges_all, in_edges_all)
+  // Graphviz parity: class2 processes edges in original tail order
+  // (agfstout on cgraph), independent of acyclic reversals.
+  (edge_tail, edge_head, edge_reversed, out_edges_all_orig, in_edges_all_orig)
 }
 
 ///|

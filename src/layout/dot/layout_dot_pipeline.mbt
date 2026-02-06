@@ -36,6 +36,7 @@ fn compute_dot_rank_stage(
     rank_data.all_ranks,
     prep.sizes,
     rank_data.self_edge_labels,
+    prep.rankdir,
     prep.nodesep_in,
     prep.ranksep_in,
     prep.has_edge_labels,

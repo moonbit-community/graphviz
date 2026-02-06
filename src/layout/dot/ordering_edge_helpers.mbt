@@ -476,6 +476,7 @@ fn build_order_edges_by_tail_graphviz(
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
   map_clusters : Bool,
+  map_intercluster : Bool,
   edges_by_tail : Map[String, Array[Int]],
 ) -> (
   Map[String, Array[(String, String, Int, Bool, Double, Double)]],
@@ -532,11 +533,12 @@ fn build_order_edges_by_tail_graphviz(
       if tail_rank == head_rank {
         continue
       }
+      // Graphviz parity: intercluster edges map to cluster rankleaders
+      // in ordering (class2/interclrep).
       let intercluster =
         order_with_clusters && tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
-      let map_edge = use_mapping || intercluster
-      // Graphviz parity: intercluster edges use cluster rankleaders in ordering.
+      let map_edge = use_mapping || (map_intercluster && intercluster)
       let mapped_tail =
         if map_edge && tail_cluster != "" {
         "\{CLUSTER_SKELETON_PREFIX}\{tail_cluster}@\{tail_rank}"

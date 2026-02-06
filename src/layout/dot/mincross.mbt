@@ -840,6 +840,7 @@ fn reorder_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  graphviz_flip? : Bool = false,
   startpass? : Int = 0,
 ) -> Map[Int, Array[String]] {
   let startpass =
@@ -995,6 +996,7 @@ fn reorder_rank_groups(
       cluster_keys,
       cluster_skeleton,
       0,
+      flip=graphviz_flip,
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
@@ -1048,6 +1050,7 @@ fn reorder_rank_groups(
           cluster_keys,
           cluster_skeleton,
           pass,
+          flip=graphviz_flip,
           graphviz_out_neighbors=graphviz_out_neighbors,
           graphviz_in_neighbors=graphviz_in_neighbors,
         )

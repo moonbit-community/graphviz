@@ -49,6 +49,15 @@ priv struct XposConstraintSnapshot {
 }
 
 ///|
+priv struct SlackSegment {
+  tail : String
+  head : String
+  weight : Int
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+}
+
+///|
 priv enum EndpointClass {
   Ordinary
   Singleton
@@ -1037,6 +1046,8 @@ fn build_constraint_graph(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  nlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1158,17 +1169,29 @@ fn build_constraint_graph(
       i = i + 1
     }
   }
-  let mut edge_pair_idx = 0
-  for edge in edges {
+  let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
+  let add_segment = (
+    seg_tail : String,
+    seg_head : String,
+    weight : Int,
+    tail_port : @cgraph.Port?,
+    head_port : @cgraph.Port?,
+  ) => {
+    let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port }
+    match segments_by_tail.get(seg_tail) {
+      Some(list) => list.push(entry)
+      None => segments_by_tail[seg_tail] = [entry]
+    }
+  }
+  let record_edge_segments = (edge_idx : Int, edge : @cgraph.Edge) => {
     let tail_name =
-      if edge_pair_idx < edge_tail.length() { edge_tail[edge_pair_idx] } else {
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
         edge.tail().name()
       }
     let head_name =
-      if edge_pair_idx < edge_head.length() { edge_head[edge_pair_idx] } else {
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
         edge.head().name()
       }
-    edge_pair_idx = edge_pair_idx + 1
     let tail_cluster = match cluster_keys.get(tail_name) {
       Some(value) => value
       None => ""
@@ -1179,83 +1202,129 @@ fn build_constraint_graph(
     }
     if skip_intercluster && tail_cluster != head_cluster &&
       (tail_cluster != "" || head_cluster != "") {
-      continue
+      ()
+    } else {
+      match (ranks.get(tail_name), ranks.get(head_name)) {
+        (Some(tail_rank), Some(head_rank)) =>
+          if tail_name == head_name {
+            // Graphviz parity: make_edge_pairs skips self-edges (handled via ND_other).
+            ()
+          } else {
+            let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+              Some(list) => list
+              None => []
+            }
+            let ordered_vnodes =
+              if tail_rank <= head_rank {
+              vnodes
+            } else {
+              let reversed : Array[String] = []
+              let mut idx = vnodes.length()
+              while idx > 0 {
+                idx = idx - 1
+                reversed.push(vnodes[idx])
+              }
+              reversed
+            }
+            let chain : Array[String] = []
+            chain.push(tail_name)
+            for vnode in ordered_vnodes {
+              chain.push(vnode)
+            }
+            if tail_name != head_name || ordered_vnodes.length() == 0 {
+              chain.push(head_name)
+            }
+            let base_weight = edge_weight(edge)
+            let orig_tail = edge.tail().name()
+            let orig_head = edge.head().name()
+            let mut idx = 0
+            while idx + 1 < chain.length() {
+              let seg_tail = chain[idx]
+              let seg_head = chain[idx + 1]
+              idx = idx + 1
+              let weight =
+                if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
+                let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
+                let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
+                scaled_edge_weight(base_weight, tail_class, head_class)
+              } else {
+                base_weight
+              }
+              let tail_port =
+                if seg_tail == orig_tail {
+                edge.tail_port()
+              } else if seg_tail == orig_head {
+                edge.head_port()
+              } else {
+                None
+              }
+              let head_port =
+                if seg_head == orig_head {
+                edge.head_port()
+              } else if seg_head == orig_tail {
+                edge.tail_port()
+              } else {
+                None
+              }
+              add_segment(seg_tail, seg_head, weight, tail_port, head_port)
+            }
+          }
+        _ => ()
+      }
     }
-    let tail_rank = match ranks.get(tail_name) {
-      Some(value) => value
-      None => continue
-    }
-    let head_rank = match ranks.get(head_name) {
-      Some(value) => value
-      None => continue
-    }
-    let low = if tail_rank <= head_rank { tail_name } else { head_name }
-    let high = if tail_rank <= head_rank { head_name } else { tail_name }
-    let orig_tail = edge.tail().name()
-    let orig_head = edge.head().name()
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+  }
+  let seen_edges : Map[Int, Bool] = Map::new()
+  for tail_name in nlist_order {
+    let indices = match edge_out_order.get(tail_name) {
       Some(list) => list
       None => []
     }
-    if vnodes.length() > 0 && extra_slack_edges.length() > 0 {
-      continue
+    for edge_idx in indices {
+      if edge_idx < 0 || edge_idx >= edges.length() {
+        continue
+      }
+      seen_edges[edge_idx] = true
+      record_edge_segments(edge_idx, edges[edge_idx])
     }
-    let chain : Array[String] = []
-    chain.push(low)
-    for vnode in vnodes {
-      chain.push(vnode)
+  }
+  if seen_edges.length() < edges.length() {
+    for edge_idx in 0..<edges.length() {
+      if seen_edges.get(edge_idx) is None {
+        record_edge_segments(edge_idx, edges[edge_idx])
+      }
     }
-    if low != high || vnodes.length() == 0 {
-      chain.push(high)
+  }
+  let tail_seen : Map[String, Bool] = Map::new()
+  for tail_name in nlist_order {
+    let segments = match segments_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
     }
-    let base_weight = edge_weight(edge)
-    let mut idx = 0
-    while idx + 1 < chain.length() {
-      let seg_tail = chain[idx]
-      let seg_head = chain[idx + 1]
-      idx = idx + 1
-      let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
-      let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
-      let weight = scaled_edge_weight(base_weight, tail_class, head_class)
-      let tail_idx = match index.get(seg_tail) {
+    for seg in segments {
+      let tail_idx = match index.get(seg.tail) {
         Some(value) => value
         None => continue
       }
-      let head_idx = match index.get(seg_head) {
+      let head_idx = match index.get(seg.head) {
         Some(value) => value
         None => continue
-      }
-      let tail_port =
-        if seg_tail == orig_tail {
-        edge.tail_port()
-      } else if seg_tail == orig_head {
-        edge.head_port()
-      } else {
-        None
-      }
-      let head_port =
-        if seg_head == orig_head {
-        edge.head_port()
-      } else if seg_head == orig_tail {
-        edge.tail_port()
-      } else {
-        None
       }
       let tail_offset = edge_port_offset(
-        seg_tail,
-        tail_port,
+        seg.tail,
+        seg.tail_port,
         port_offsets,
         sizes,
       )
       let head_offset = edge_port_offset(
-        seg_head,
-        head_port,
+        seg.head,
+        seg.head_port,
         port_offsets,
         sizes,
       )
       let delta = head_offset - tail_offset
       let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
       let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+      // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
       let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
       let tail_rank = node_rank(graph, tail_idx)
       let head_rank = node_rank(graph, head_idx)
@@ -1266,44 +1335,51 @@ fn build_constraint_graph(
         slack_idx,
         if base_tail < base_head { base_tail } else { base_head },
       )
-      let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, weight)
-      let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, weight)
+      let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
+      let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
     }
+    tail_seen[tail_name] = true
   }
-  for edge in extra_slack_edges {
-    let tail_idx = match index.get(edge.tail) {
-      Some(value) => value
-      None => continue
+  for tail_name, segments in segments_by_tail {
+    if tail_seen.get(tail_name) is None {
+      for seg in segments {
+        let tail_idx = match index.get(seg.tail) {
+          Some(value) => value
+          None => continue
+        }
+        let head_idx = match index.get(seg.head) {
+          Some(value) => value
+          None => continue
+        }
+        let tail_offset = edge_port_offset(
+          seg.tail,
+          seg.tail_port,
+          port_offsets,
+          sizes,
+        )
+        let head_offset = edge_port_offset(
+          seg.head,
+          seg.head_port,
+          port_offsets,
+          sizes,
+        )
+        let delta = head_offset - tail_offset
+        let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+        let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+        let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
+        let tail_rank = node_rank(graph, tail_idx)
+        let head_rank = node_rank(graph, head_idx)
+        let base_tail = tail_rank - m0 - 1
+        let base_head = head_rank - m1 - 1
+        set_node_rank(
+          graph,
+          slack_idx,
+          if base_tail < base_head { base_tail } else { base_head },
+        )
+        let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
+        let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
+      }
     }
-    let head_idx = match index.get(edge.head) {
-      Some(value) => value
-      None => continue
-    }
-    let tail_offset = edge_port_offset_by_name(
-      edge.tail,
-      edge.tail_port,
-      port_offsets,
-    )
-    let head_offset = edge_port_offset_by_name(
-      edge.head,
-      edge.head_port,
-      port_offsets,
-    )
-    let delta = head_offset - tail_offset
-    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-    let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-    let tail_rank = node_rank(graph, tail_idx)
-    let head_rank = node_rank(graph, head_idx)
-    let base_tail = tail_rank - m0 - 1
-    let base_head = head_rank - m1 - 1
-    set_node_rank(
-      graph,
-      slack_idx,
-      if base_tail < base_head { base_tail } else { base_head },
-    )
-    let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, edge.weight)
-    let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, edge.weight)
   }
   for pair in late_extra_nodes {
     let (name, rank) = pair
@@ -1372,6 +1448,8 @@ fn x_positions_from_simplex(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  nlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1394,6 +1472,8 @@ fn x_positions_from_simplex(
     edges,
     edge_tail,
     edge_head,
+    edge_out_order,
+    nlist_order,
     ranks,
     rank_keys,
     groups,
@@ -1459,6 +1539,8 @@ fn compute_x_positions(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  nlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1502,6 +1584,8 @@ fn compute_x_positions(
     edges,
     edge_tail,
     edge_head,
+    edge_out_order,
+    nlist_order,
     ranks,
     rank_keys,
     groups,

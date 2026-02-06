@@ -182,6 +182,37 @@ fn edge_spline_for_points(
 }
 
 ///|
+fn edge_spline_for_bezier_points(
+  edge : @cgraph.Edge,
+  bezier : Array[@geom.Point],
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_anchor_size : NodeSize,
+  head_anchor_size : NodeSize,
+  include_tail : Bool,
+  include_head : Bool,
+  arrow_len_override~ : Double?,
+  tail_cluster_bbox~ : @geom.Rect?,
+  head_cluster_bbox~ : @geom.Rect?,
+  parallel_offset? : Double = 0.0,
+) -> @geom.Spline {
+  @edge_spline.edge_spline_for_bezier_points(
+    edge,
+    bezier,
+    tail_clip_center,
+    head_clip_center,
+    tail_anchor_size,
+    head_anchor_size,
+    include_tail,
+    include_head,
+    arrow_len_override=arrow_len_override,
+    tail_cluster_bbox=tail_cluster_bbox,
+    head_cluster_bbox=head_cluster_bbox,
+    parallel_offset=parallel_offset,
+  )
+}
+
+///|
 fn edge_spline_raw_for_points(
   points : Array[@geom.Point],
   tail_slope : @geom.Point,

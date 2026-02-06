@@ -256,6 +256,10 @@ fn add_flat_label_vnodes(
       if current_idx < edge_head.length() { edge_head[current_idx] } else {
         edge.head().name()
       }
+    if tail == head {
+      // Graphviz parity: self-edge labels are handled via node spacing, not flat labels.
+      continue
+    }
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
