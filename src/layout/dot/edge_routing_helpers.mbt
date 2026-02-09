@@ -179,6 +179,8 @@ fn reverse_spline(spline : @geom.Spline) -> @geom.Spline {
 }
 
 ///|
+/// Graphviz parity: parallel edge keys are unordered tail/head + port pairs.
+/// Do not change behavior without updating fixtures/tests.
 fn edge_parallel_key(
   tail : String,
   head : String,
@@ -187,18 +189,30 @@ fn edge_parallel_key(
 ) -> String {
   let tail_port_key = port_key(tail_port)
   let head_port_key = port_key(head_port)
-  "\{tail}|\{tail_port_key}|\{head}|\{head_port_key}"
+  let a = "\{tail}|\{tail_port_key}"
+  let b = "\{head}|\{head_port_key}"
+  if a <= b {
+    "\{a}|\{b}"
+  } else {
+    "\{b}|\{a}"
+  }
 }
 
 ///|
+/// Graphviz parity: parallel offsets group by unordered endpoints/ports (set of
+/// tail/head), and only for unlabeled edges (class2 merge_chain).
+/// Do not change behavior without updating fixtures/tests.
 fn edge_parallel_offsets(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
-  order_index : Map[String, Int],
+  _order_index : Map[String, Int],
   nodesep_pt : Double,
 ) -> Map[Int, Double] {
   let groups : Map[String, Array[Int]] = Map::new()
   for edge in edges {
+    if edge_has_label(edge) {
+      continue
+    }
     let orig_tail = edge.tail().name()
     let orig_head = edge.head().name()
     if orig_tail == orig_head {
@@ -215,14 +229,13 @@ fn edge_parallel_offsets(
     if tail_rank == head_rank {
       continue
     }
-    let swap = edge_swap_ends(orig_tail, orig_head, ranks, order_index)
-    let (tail, head, tail_port, head_port) =
-      if swap {
-        (orig_head, orig_tail, edge.head_port(), edge.tail_port())
-      } else {
-        (orig_tail, orig_head, edge.tail_port(), edge.head_port())
-      }
-    let key = edge_parallel_key(tail, head, tail_port, head_port)
+    let key =
+      edge_parallel_key(
+        orig_tail,
+        orig_head,
+        edge.tail_port(),
+        edge.head_port(),
+      )
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
