@@ -3534,22 +3534,12 @@ fn compute_positions(
             if chain[idx] == tail { tail_port_x } else { 0.0 }
           let seg_head_port =
             if chain[idx + 1] == head { head_port_x } else { 0.0 }
+          // Graphviz parity: split edge segments keep neutral midpoint
+          // port-order (0.5) unless endpoint matches real tail/head.
           let seg_tail_order =
-            if chain[idx] == tail {
-              tail_port_order
-            } else if chain[idx] == head {
-              head_port_order
-            } else {
-              0.0
-            }
+            if chain[idx] == tail { tail_port_order } else { 0.5 }
           let seg_head_order =
-            if chain[idx + 1] == head {
-              head_port_order
-            } else if chain[idx + 1] == tail {
-              tail_port_order
-            } else {
-              0.0
-            }
+            if chain[idx + 1] == head { head_port_order } else { 0.5 }
           add_order_edge(
             order_graph,
             order_node_map,
