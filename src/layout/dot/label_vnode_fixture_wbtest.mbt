@@ -356,6 +356,8 @@ test "label vnodes match Graphviz fixtures" {
     ("edge_labels", "tests/layout/dot/edge_label_spacing.dot"),
     ("edge_vnode_spacing", "tests/layout/dot/edge_vnode_spacing.dot"),
     ("yours_truly", "tests/layout/dot/complex.dot"),
+    ("finite_state_machine", "refs/graphviz/graphs/directed/fsm.gv"),
+    ("states", "refs/graphviz/graphs/directed/states.gv"),
   ]
   for pair in graphs {
     let (graph_name, path) = pair
@@ -373,6 +375,17 @@ test "label vnodes match Graphviz fixtures" {
       edges,
       has_edge_labels,
     )
+    let (
+      _edge_tail,
+      _edge_head,
+      edge_reversed,
+      _edge_out_order,
+      _edge_in_order,
+    ) = acyclic_edge_directions_with_order(nodes, edges)
+    let edge_reversed_by_key : Map[String, Bool] = Map::new()
+    for i in 0..<edges.length() {
+      edge_reversed_by_key[edge_key(edges[i])] = edge_reversed[i]
+    }
     let rankdir = graph_rankdir(graph)
     let expected_flip =
       rankdir == RankDir::LR || rankdir == RankDir::RL
@@ -393,14 +406,28 @@ test "label vnodes match Graphviz fixtures" {
         Some(value) => value
         None => fail("missing head rank for \{entry.head}")
       }
-      assert_eq(tail_rank, entry.tail_rank)
-      assert_eq(head_rank, entry.head_rank)
       let edge = match find_edge_by_nodes(graph, entry.tail, entry.head) {
         Some(value) => value
         None =>
           fail(
             "missing edge \{entry.tail} -> \{entry.head} for label vnode fixtures",
           )
+      }
+      let reversed = match edge_reversed_by_key.get(edge_key(edge)) {
+        Some(value) => value
+        None => false
+      }
+      let actual_tail_rank = if reversed { head_rank } else { tail_rank }
+      let actual_head_rank = if reversed { tail_rank } else { head_rank }
+      if actual_tail_rank != entry.tail_rank {
+        fail(
+          "tail rank mismatch for \{graph_name} \{entry.tail} -> \{entry.head} \{entry.label}: got \{actual_tail_rank} expected \{entry.tail_rank}",
+        )
+      }
+      if actual_head_rank != entry.head_rank {
+        fail(
+          "head rank mismatch for \{graph_name} \{entry.tail} -> \{entry.head} \{entry.label}: got \{actual_head_rank} expected \{entry.head_rank}",
+        )
       }
       let label_rank_info = match edge_label_rank_info(edge, ranks) {
         Some(value) => value
