@@ -89,6 +89,22 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
 }
 
 ///|
+/// Graphviz parity: apply PAD to label dimensions for non-plain shapes
+/// (macros.h PAD + shapes.c poly_init).
+fn apply_label_padding_for_shape(
+  shape : String,
+  width_pt : Double,
+  height_pt : Double,
+  pad_x_pt : Double,
+  pad_y_pt : Double,
+) -> (Double, Double) {
+  if shape == "plain" || (width_pt <= 0.0 && height_pt <= 0.0) {
+    (width_pt, height_pt)
+  } else {
+    (width_pt + pad_x_pt, height_pt + pad_y_pt)
+  }
+}
+
 priv struct RecordField {
   name : String?
   text : String
@@ -1309,6 +1325,7 @@ fn node_size(
     shape == "mcircle" ||
     shape == "circle" ||
     shape == "doublecircle"
+  // Graphviz parity: polygon promoter/arrow shapes use box-style label scaling.
   let scale_ellipse = match shape {
     "box"
     | "rect"
@@ -1317,6 +1334,10 @@ fn node_size(
     | "mrecord"
     | "msquare"
     | "mdiamond"
+    | "rpromoter"
+    | "lpromoter"
+    | "rarrow"
+    | "larrow"
     | "point"
     | "dot"
     | "plaintext"
@@ -1355,13 +1376,21 @@ fn node_size(
         let (html_width_pt, html_height_pt) = html_label_size(
           html_label, font, font_size_pt,
         )
-        let width_pt = if html_width_pt > base_width_pt {
-          html_width_pt
+        let (padded_width_pt, padded_height_pt) =
+          apply_label_padding_for_shape(
+            shape,
+            html_width_pt,
+            html_height_pt,
+            pad_x_pt,
+            pad_y_pt,
+          )
+        let width_pt = if padded_width_pt > base_width_pt {
+          padded_width_pt
         } else {
           base_width_pt
         }
-        let height_pt = if html_height_pt > base_height_pt {
-          html_height_pt
+        let height_pt = if padded_height_pt > base_height_pt {
+          padded_height_pt
         } else {
           base_height_pt
         }
@@ -1397,8 +1426,18 @@ fn node_size(
     label, font, font_size_pt,
   )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
-  let label_width_pt = if has_label { text_width_pt + pad_x_pt } else { 0.0 }
-  let label_height_pt = if has_label { text_height_pt + pad_y_pt } else { 0.0 }
+  let (label_width_pt, label_height_pt) =
+    if has_label {
+      apply_label_padding_for_shape(
+        shape,
+        text_width_pt,
+        text_height_pt,
+        pad_x_pt,
+        pad_y_pt,
+      )
+    } else {
+      (0.0, 0.0)
+    }
   let mut scaled_label_width_pt = label_width_pt
   let mut scaled_label_height_pt = label_height_pt
   if shape == "mdiamond" && has_label {
