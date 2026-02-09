@@ -3067,14 +3067,18 @@ fn compute_ordering_and_vnodes(
                 Some(value) => value
                 None => ""
               }
+              // Graphviz parity: mark_lowclusters assigns virtual nodes to the
+              // lowest common ancestor cluster for intercluster edges.
               let vnode_cluster =
-                if tail_cluster != "" && tail_cluster == head_cluster {
-                  tail_cluster
-                } else {
-                  root_cluster
-                }
+                cluster_lowest_common_ancestor(
+                  tail_cluster,
+                  head_cluster,
+                  cluster_meta.cluster_parents,
+                )
+              let rem_cluster =
+                if vnode_cluster == "" { root_cluster } else { vnode_cluster }
               for vnode in vnodes {
-                rem_cluster_keys[vnode] = vnode_cluster
+                rem_cluster_keys[vnode] = rem_cluster
               }
               edge_idx = edge_idx + 1
             }
