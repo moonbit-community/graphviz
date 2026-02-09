@@ -785,6 +785,182 @@ fn transpose_rank_groups_graphviz(
 }
 
 ///|
+/// Graphviz parity: flat edge reorder aligned to refs/graphviz/lib/dotgen/flat.c.
+/// Do not change behavior without updating fixtures/tests.
+fn flat_reorder_rank_groups_graphviz(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  node_ranks : Map[String, Int],
+  flat_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  let ordered = clone_rank_groups(groups)
+  if flat_constraints.length() == 0 {
+    return ordered
+  }
+  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map::new()
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      flat_out[name] = []
+      flat_in[name] = []
+    }
+  }
+  for key, value in flat_constraints {
+    if !value {
+      continue
+    }
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if tail == "" || head == "" {
+          continue
+        }
+        let tail_rank = match node_ranks.get(tail) {
+          Some(value) => value
+          None => continue
+        }
+        let head_rank = match node_ranks.get(head) {
+          Some(value) => value
+          None => continue
+        }
+        if tail_rank != head_rank {
+          continue
+        }
+        match flat_out.get(tail) {
+          Some(list) => list.push(head)
+          None => flat_out[tail] = [head]
+        }
+        match flat_in.get(head) {
+          Some(list) => list.push(tail)
+          None => flat_in[head] = [tail]
+        }
+      }
+      None => ()
+    }
+  }
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    if names.length() <= 1 {
+      continue
+    }
+    let mut has_flat = false
+    for name in names {
+      let out = match flat_out.get(name) {
+        Some(list) => list
+        None => []
+      }
+      let inn = match flat_in.get(name) {
+        Some(list) => list
+        None => []
+      }
+      if out.length() > 0 || inn.length() > 0 {
+        has_flat = true
+        break
+      }
+    }
+    if !has_flat {
+      continue
+    }
+    let marked : Map[String, Bool] = Map::new()
+    for name in names {
+      marked[name] = false
+    }
+    let temprank : Array[String] = []
+    let postorder = (start : String) => {
+      let stack : Array[(String, Int)] = [(start, 0)]
+      while stack.length() > 0 {
+        let top_idx = stack.length() - 1
+        let (current, idx) = stack[top_idx]
+        if marked.get(current) != Some(true) {
+          marked[current] = true
+        }
+        let out = match flat_out.get(current) {
+          Some(list) => list
+          None => []
+        }
+        if idx >= out.length() {
+          let _ = stack.pop()
+          temprank.push(current)
+          continue
+        }
+        let next = out[idx]
+        stack[top_idx] = (current, idx + 1)
+        if marked.get(next) != Some(true) {
+          stack.push((next, 0))
+        }
+      }
+    }
+    let mut i = 0
+    while i < names.length() {
+      let v =
+        if graphviz_flip {
+          names[i]
+        } else {
+          names[names.length() - i - 1]
+        }
+      let local_in = match flat_in.get(v) {
+        Some(list) => list
+        None => []
+      }
+      let local_out = match flat_out.get(v) {
+        Some(list) => list
+        None => []
+      }
+      if local_in.length() == 0 && local_out.length() == 0 {
+        temprank.push(v)
+      } else if marked.get(v) != Some(true) && local_in.length() == 0 {
+        postorder(v)
+      }
+      i = i + 1
+    }
+    if temprank.length() == 0 {
+      continue
+    }
+    let reordered : Array[String] =
+      if graphviz_flip {
+        temprank
+      } else {
+        let reversed : Array[String] = []
+        let mut idx = temprank.length()
+        while idx > 0 {
+          idx = idx - 1
+          reversed.push(temprank[idx])
+        }
+        reversed
+      }
+    if reordered.length() < names.length() {
+      let seen : Map[String, Bool] = Map::new()
+      for name in reordered {
+        seen[name] = true
+      }
+      let updated = reordered.copy()
+      for name in names {
+        if seen.get(name) is None {
+          updated.push(name)
+        }
+      }
+      ordered[rank] = updated
+    } else {
+      ordered[rank] = reordered
+    }
+  }
+  ordered
+}
+
+///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/mincross.c and flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_rank_groups(
@@ -1011,6 +1187,14 @@ fn reorder_rank_groups(
       )
       order_positions = order_positions_from_groups(ordered)
     }
+    ordered = flat_reorder_rank_groups_graphviz(
+      rank_keys,
+      ordered,
+      node_ranks,
+      flat_constraints,
+      graphviz_flip,
+    )
+    order_positions = order_positions_from_groups(ordered)
     best_ordered = clone_rank_groups(ordered)
     best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
@@ -1075,6 +1259,14 @@ fn reorder_rank_groups(
             order_positions = order_positions_from_groups(ordered)
           }
         }
+        ordered = flat_reorder_rank_groups_graphviz(
+          rank_keys,
+          ordered,
+          node_ranks,
+          flat_constraints,
+          graphviz_flip,
+        )
+        order_positions = order_positions_from_groups(ordered)
         cur_cross =
           count_crossings_graphviz(
             ordered,
