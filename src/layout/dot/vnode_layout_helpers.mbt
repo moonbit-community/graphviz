@@ -37,7 +37,6 @@ fn build_edge_vnodes(
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let edge_vnodes : Map[String, Array[String]] = Map::new()
   let vnode_clusters : Map[String, String] = Map::new()
-  let mut edge_index = 0
   let tail_order : Array[String] = []
   for node in nodes {
     tail_order.push(node.name())
@@ -81,7 +80,6 @@ fn build_edge_vnodes(
             None => ()
           }
         }
-        edge_index = edge_index + 1
         continue
       }
       None => ()
@@ -110,21 +108,18 @@ fn build_edge_vnodes(
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => {
-        edge_index = edge_index + 1
         continue
       }
     }
     let head_rank = match ranks.get(head) {
       Some(value) => value
       None => {
-        edge_index = edge_index + 1
         continue
       }
     }
     let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
     let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
     if max_rank - min_rank <= 1 {
-      edge_index = edge_index + 1
       continue
     }
     let label_metrics = edge_mid_label_metrics(edge)
@@ -144,7 +139,7 @@ fn build_edge_vnodes(
       let is_label_rank = rank == label_rank && label_width > 0.0
       let name = unique_virtual_node_name(
         EDGE_VNODE_PREFIX,
-        edge_index,
+        idx,
         rank,
         existing_names,
       )
@@ -167,12 +162,6 @@ fn build_edge_vnodes(
       names.push(name)
       rank = rank + 1
     }
-    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && names.length() > 0 {
-      if edge_index == 8 {
-        let joined = names.join(",")
-        println("edge_vnodes edge=\{edge_index} tail=\{tail} head=\{head} vnodes=\{joined}")
-      }
-    }
     if names.length() > 0 {
       match edge_vnodes.get(key) {
         Some(list) =>
@@ -182,9 +171,14 @@ fn build_edge_vnodes(
         None => edge_vnodes[key] = names
       }
     }
-    edge_index = edge_index + 1
   }
-  { vnode_ranks, vnode_sizes, vnodes_by_rank, edge_vnodes, vnode_clusters }
+  {
+    vnode_ranks,
+    vnode_sizes,
+    vnodes_by_rank,
+    edge_vnodes,
+    vnode_clusters,
+  }
 }
 
 ///|
