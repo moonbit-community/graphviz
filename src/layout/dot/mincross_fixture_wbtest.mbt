@@ -419,6 +419,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     edge_head,
     edge_tail_port_x,
     edge_head_port_x,
+    [],
+    [],
     parents,
     children,
     cluster_keys,

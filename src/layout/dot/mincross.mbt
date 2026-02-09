@@ -269,7 +269,7 @@ fn compute_desired_positions(
 ///|
 fn compute_desired_positions_graphviz(
   names : Array[String],
-  neighbors : Map[String, Array[String]],
+  neighbors : Map[String, Array[(String, Double)]],
   x_positions : Map[String, Double],
 ) -> Map[String, Double] {
   let desired : Map[String, Double] = Map::new()
@@ -279,9 +279,10 @@ fn compute_desired_positions_graphviz(
       None => []
     }
     let values : Array[Double] = []
-    for neighbor in list {
+    for entry in list {
+      let (neighbor, port_order) = entry
       match x_positions.get(neighbor) {
-        Some(value) => values.push(value)
+        Some(value) => values.push(value + port_order)
         None => ()
       }
     }
@@ -971,6 +972,8 @@ fn reorder_rank_groups(
   edge_head : Array[String],
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
   cluster_keys : Map[String, String],
@@ -1086,8 +1089,8 @@ fn reorder_rank_groups(
     break
   }
   let graphviz_style = !has_port_order && !has_preferred && !has_port_contrib
-  let median_parents : Map[String, Array[String]] = Map::new()
-  let median_children : Map[String, Array[String]] = Map::new()
+  let median_parents : Map[String, Array[(String, Double)]] = Map::new()
+  let median_children : Map[String, Array[(String, Double)]] = Map::new()
   let edge_penalty : Array[Int] = []
   let edge_in : Map[String, Array[Int]] = Map::new()
   let edge_out : Map[String, Array[Int]] = Map::new()
@@ -1126,13 +1129,23 @@ fn reorder_rank_groups(
       continue
     }
     if graphviz_style {
+      // Graphviz parity: median neighbor positions include compass-port order
+      // fractions (VAL/MC_SCALE tie-breaking in mincross.c).
+      let tail_port_order =
+        if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
+          0.5
+        }
+      let head_port_order =
+        if edge_idx < edge_head_port_order.length() { edge_head_port_order[edge_idx] } else {
+          0.5
+        }
       match median_parents.get(head) {
-        Some(list) => list.push(tail)
-        None => median_parents[head] = [tail]
+        Some(list) => list.push((tail, tail_port_order))
+        None => median_parents[head] = [(tail, tail_port_order)]
       }
       match median_children.get(tail) {
-        Some(list) => list.push(head)
-        None => median_children[tail] = [head]
+        Some(list) => list.push((head, head_port_order))
+        None => median_children[tail] = [(head, head_port_order)]
       }
     }
     match edge_out.get(tail) {
