@@ -82,6 +82,7 @@ priv struct PositionResult {
   flat_label_edge_vnodes : Map[String, String]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
+  cluster_bbox_heights : Map[String, (Double, Double)]
 }
 
 ///|
@@ -3496,6 +3497,18 @@ fn compute_positions(
   let rank_pht = rank_heights.rank_pht
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
+  let cluster_bbox_heights =
+    if cluster_meta.has_clusters {
+      compute_cluster_bbox_heights(
+        graph,
+        rank_data.ranks,
+        prep.sizes,
+        rank_data.self_edge_labels,
+        prep.rankdir,
+      )
+    } else {
+      Map::new()
+    }
   if flat_label_nodes.length() > 0 {
     for name, info in flat_label_nodes {
       let size = match ordering.vnode_info.vnode_sizes.get(name) {
@@ -3545,7 +3558,7 @@ fn compute_positions(
       y_all_ranks.push(rank)
     }
   }
-  let y_positions : Map[String, Double] = Map::new()
+  let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
     rank_data.rank_keys,
@@ -3558,6 +3571,37 @@ fn compute_positions(
     y_positions,
     rank_y,
   )
+  if (prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL) &&
+    graph_has_cluster(graph) {
+    let min_root_rank = if y_all_ranks.length() > 0 { y_all_ranks[0] } else { 0 }
+    let adjusted =
+      adjust_flip_cluster_rank_heights(
+      graph,
+      rank_data.ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      cluster_bbox_heights,
+      min_root_rank,
+      0.0,
+    )
+    if adjusted {
+      y_positions = Map::new()
+      for rank in rank_data.rank_keys {
+        let pos_y = match rank_y.get(rank) {
+          Some(value) => value
+          None => 0.0
+        }
+        let names = match rank_data.groups.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        for name in names {
+          y_positions[name] = pos_y
+        }
+      }
+    }
+  }
   let x_sizes =
     if use_vnodes_for_xpos {
       merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
@@ -3708,5 +3752,6 @@ fn compute_positions(
     flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
+    cluster_bbox_heights,
   }
 }
