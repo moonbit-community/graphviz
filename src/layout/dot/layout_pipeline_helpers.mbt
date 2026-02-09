@@ -1397,6 +1397,38 @@ fn build_cluster_skeleton_creation(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton edges form a rank-by-rank CL_CROSS chain
+/// and must be prepended to both local and root order-edge maps.
+/// Do not change behavior without updating fixtures/tests.
+fn append_cluster_skeleton_edges(
+  cluster : String,
+  min_rank : Int,
+  max_rank : Int,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  skeleton_edge_creation : Array[(String, String)],
+) -> Unit {
+  let mut rank = min_rank
+  while rank < max_rank {
+    let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+    let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
+    let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
+    skeleton_edge_creation.push((tail_name, head_name))
+    prepend_order_edge_entry(
+      order_edges_by_tail,
+      tail_name,
+      entry,
+    )
+    prepend_order_edge_entry(
+      order_edges_by_tail_root,
+      tail_name,
+      entry,
+    )
+    rank = rank + 1
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1627,24 +1659,14 @@ fn compute_ordering_and_vnodes(
             Some(value) => value
             None => min_rank
           }
-          let mut rank = min_rank
-          while rank < max_rank {
-            let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-            let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-            let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
-            skeleton_edge_creation.push((tail_name, head_name))
-            prepend_order_edge_entry(
-              order_edges_by_tail,
-              tail_name,
-              entry,
-            )
-            prepend_order_edge_entry(
-              order_edges_by_tail_root,
-              tail_name,
-              entry,
-            )
-            rank = rank + 1
-          }
+          append_cluster_skeleton_edges(
+            cluster,
+            min_rank,
+            max_rank,
+            order_edges_by_tail,
+            order_edges_by_tail_root,
+            skeleton_edge_creation,
+          )
           cluster_seen[cluster] = true
         }
         None => ()
@@ -1658,24 +1680,14 @@ fn compute_ordering_and_vnodes(
         Some(value) => value
         None => min_rank
       }
-      let mut rank = min_rank
-      while rank < max_rank {
-        let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-        let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-        let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
-        skeleton_edge_creation.push((tail_name, head_name))
-        prepend_order_edge_entry(
-          order_edges_by_tail,
-          tail_name,
-          entry,
-        )
-        prepend_order_edge_entry(
-          order_edges_by_tail_root,
-          tail_name,
-          entry,
-        )
-        rank = rank + 1
-      }
+      append_cluster_skeleton_edges(
+        cluster,
+        min_rank,
+        max_rank,
+        order_edges_by_tail,
+        order_edges_by_tail_root,
+        skeleton_edge_creation,
+      )
     }
   }
   let edge_creation_order : Array[(String, String)] = []
