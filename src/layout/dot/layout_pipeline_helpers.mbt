@@ -2237,6 +2237,31 @@ fn compute_ordering_and_vnodes(
         )
       }
       dot_trace_groups("seeded_groups", seeded_groups)
+      // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
+      // cluster-internal nodes are handled by cluster-local build_ranks passes.
+      let order_groups_for_mincross =
+        if order_with_clusters {
+        let filtered : Map[Int, Array[String]] = Map::new()
+        for rank, names in seeded_groups {
+          let list : Array[String] = []
+          for name in names {
+            let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+            let cluster = match order_cluster_keys.get(name) {
+              Some(value) => value
+              None => ""
+            }
+            if is_skeleton || cluster == "" {
+              list.push(name)
+            }
+          }
+          if list.length() > 0 {
+            filtered[rank] = list
+          }
+        }
+        filtered
+      } else {
+        seeded_groups
+      }
       if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
         let debug_nodes : Array[String] = ["front_end_jz", "z_req1", "z_req"]
         for name in debug_nodes {
@@ -2251,13 +2276,50 @@ fn compute_ordering_and_vnodes(
           println("order_neighbors \{name} in=\{inn} out=\{out}")
         }
       }
+      let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
+      let order_nodes_for_mincross : Array[String] = []
+      for rank in order_rank_keys_for_mincross {
+        let names = match order_groups_for_mincross.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        for name in names {
+          order_nodes_for_mincross.push(name)
+        }
+      }
+      let mincross_nodes : Map[String, Bool] = Map::new()
+      for name in order_nodes_for_mincross {
+        mincross_nodes[name] = true
+      }
+      let order_edges_out_mincross : Array[@cgraph.Edge] = []
+      let order_edge_tail_out_mincross : Array[String] = []
+      let order_edge_head_out_mincross : Array[String] = []
+      let order_edge_tail_port_x_mincross : Array[Double] = []
+      let order_edge_head_port_x_mincross : Array[Double] = []
+      let order_edge_tail_port_order_mincross : Array[Double] = []
+      let order_edge_head_port_order_mincross : Array[Double] = []
+      let mut edge_idx = 0
+      while edge_idx < order_edges_out.length() {
+        let tail = order_edge_tail_out[edge_idx]
+        let head = order_edge_head_out[edge_idx]
+        if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
+          order_edges_out_mincross.push(order_edges_out[edge_idx])
+          order_edge_tail_out_mincross.push(tail)
+          order_edge_head_out_mincross.push(head)
+          order_edge_tail_port_x_mincross.push(order_edge_tail_port_x[edge_idx])
+          order_edge_head_port_x_mincross.push(order_edge_head_port_x[edge_idx])
+          order_edge_tail_port_order_mincross.push(order_edge_tail_port_order[edge_idx])
+          order_edge_head_port_order_mincross.push(order_edge_head_port_order[edge_idx])
+        }
+        edge_idx = edge_idx + 1
+      }
       let (parents, children) = build_edge_index_for_order_names(
-        order_nodes,
-        order_edge_tail_out,
-        order_edge_head_out,
+        order_nodes_for_mincross,
+        order_edge_tail_out_mincross,
+        order_edge_head_out_mincross,
         order_ranks,
       )
-      let edge_order = collect_edge_order(order_edges_out)
+      let edge_order = collect_edge_order(order_edges_out_mincross)
       let order_flat_constraints : Map[String, Bool] = Map::new()
       for key, value in cluster_meta.flat_constraints {
         order_flat_constraints[key] = value
@@ -2268,16 +2330,16 @@ fn compute_ordering_and_vnodes(
       } else {
         Map::new()
       }
-      let ordered = reorder_rank_groups(
-        order_rank_keys,
-        order_groups,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
+      let ordered_mincross = reorder_rank_groups(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        order_edges_out_mincross,
+        order_edge_tail_out_mincross,
+        order_edge_head_out_mincross,
+        order_edge_tail_port_x_mincross,
+        order_edge_head_port_x_mincross,
+        order_edge_tail_port_order_mincross,
+        order_edge_head_port_order_mincross,
         parents,
         children,
         order_cluster_keys,
@@ -2297,6 +2359,37 @@ fn compute_ordering_and_vnodes(
         graphviz_in_neighbors=graphviz_in_neighbors,
         graphviz_flip=graphviz_flip,
       )
+      let ordered =
+        if order_with_clusters {
+        let merged : Map[Int, Array[String]] = Map::new()
+        for rank in order_rank_keys {
+          let names = match seeded_groups.get(rank) {
+            Some(list) => list.copy()
+            None => []
+          }
+          let replacements = match ordered_mincross.get(rank) {
+            Some(list) => list
+            None => []
+          }
+          if replacements.length() == 0 {
+            merged[rank] = names
+            continue
+          }
+          let mut replace_idx = 0
+          for i in 0..<names.length() {
+            if mincross_nodes.get(names[i]) is Some(_) {
+              if replace_idx < replacements.length() {
+                names[i] = replacements[replace_idx]
+                replace_idx = replace_idx + 1
+              }
+            }
+          }
+          merged[rank] = names
+        }
+        merged
+      } else {
+        ordered_mincross
+      }
       if order_with_clusters {
         reorder_groups_by_cluster_build_ranks(
           graph,
@@ -2360,7 +2453,7 @@ fn compute_ordering_and_vnodes(
         }
         let root_groups_base : Map[Int, Array[String]] = Map::new()
         for rank in order_rank_keys {
-          let names = match order_groups.get(rank) {
+          let names = match order_groups_for_mincross.get(rank) {
             Some(list) => list
             None => []
           }
