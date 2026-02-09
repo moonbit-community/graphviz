@@ -1035,16 +1035,20 @@ fn reorder_groups_by_cluster_build_ranks(
     for i in 0..<order_edges.length() {
       let tail = order_edge_tail[i]
       let head = order_edge_head[i]
-      if cluster_node_set.get(tail) is Some(_) &&
-        cluster_node_set.get(head) is Some(_) {
-        cluster_edges.push(order_edges[i])
-        cluster_edge_tail.push(tail)
-        cluster_edge_head.push(head)
-        cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
-        cluster_edge_head_port_x.push(order_edge_head_port_x[i])
-        cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
-        cluster_edge_head_port_order.push(order_edge_head_port_order[i])
+      let tail_in = cluster_node_set.get(tail) is Some(_)
+      let head_in = cluster_node_set.get(head) is Some(_)
+      // Graphviz parity: cluster-local mincross only sees edges whose endpoints
+      // are inside the expanded cluster graph (expand_cluster/interclexp).
+      if !(tail_in && head_in) {
+        continue
       }
+      cluster_edges.push(order_edges[i])
+      cluster_edge_tail.push(tail)
+      cluster_edge_head.push(head)
+      cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
+      cluster_edge_head_port_x.push(order_edge_head_port_x[i])
+      cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
+      cluster_edge_head_port_order.push(order_edge_head_port_order[i])
     }
     let (parents, children) = build_edge_index_for_order_names(
       cluster_nodes,
