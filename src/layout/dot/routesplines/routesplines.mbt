@@ -4,11 +4,6 @@ type NodeSize = @dot_shared.NodeSize
 ///|
 type RankDir = @dot_shared.RankDir
 
-const PORT_SIDE_BOTTOM : Int = 1
-const PORT_SIDE_RIGHT : Int = 2
-const PORT_SIDE_TOP : Int = 4
-const PORT_SIDE_LEFT : Int = 8
-
 ///|
 /// Graphviz parity: route/splines aligned to refs/graphviz/lib/pathplan/*.c + common/routespl.c + common/splines.c + dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -1727,10 +1722,8 @@ pub fn edge_pathplan_polyline(
         Some(value) => value
         None => break
       }
-      let aligned = match rankdir {
-        RankDir::TB | RankDir::BT => Double::abs(pos.x - base.x) <= straight_eps
-        RankDir::LR | RankDir::RL => Double::abs(pos.y - base.y) <= straight_eps
-      }
+      // Graphviz parity: straight_len checks x alignment in unflipped coords.
+      let aligned = Double::abs(pos.x - base.x) <= straight_eps
       if !aligned {
         break
       }
@@ -1780,14 +1773,10 @@ pub fn edge_pathplan_polyline(
         }
         let seg1_head_anchor = seg1_head_pos
         let seg2_tail_anchor = seg2_tail_pos
-        // Graphviz parity: straight-chain split constrains segment end/start
-        // directions to the incoming/outgoing sides (dotsplines.c).
-        let (seg1_head_side, seg2_tail_side) = match rankdir {
-          RankDir::TB => (PORT_SIDE_TOP, PORT_SIDE_BOTTOM)
-          RankDir::BT => (PORT_SIDE_BOTTOM, PORT_SIDE_TOP)
-          RankDir::LR => (PORT_SIDE_LEFT, PORT_SIDE_RIGHT)
-          RankDir::RL => (PORT_SIDE_RIGHT, PORT_SIDE_LEFT)
-        }
+        // Graphviz parity: straight-chain split leaves virtual endpoints
+        // unconstrained (beginpath/endpath ignore sides for virtual nodes).
+        let seg1_head_side = 0
+        let seg2_tail_side = 0
         let seg1 = edge_pathplan_polyline_core(
           path_tail_name,
           seg1_head,
