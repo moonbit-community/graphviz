@@ -1041,6 +1041,10 @@ fn reorder_groups_by_cluster_build_ranks(
         None => ()
       }
     }
+    // Graphviz parity: no internal edges/ordering constraints -> keep input order.
+    if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
+      continue
+    }
     let ordered_cluster = reorder_rank_groups(
       cluster_rank_keys,
       cluster_groups,
@@ -1064,7 +1068,8 @@ fn reorder_groups_by_cluster_build_ranks(
       Map::new(),
       empty_cluster_skeleton,
       cluster_flat_constraints,
-      graphviz_flip=graphviz_flip,
+      // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
+      graphviz_flip=false,
       startpass=2,
     )
     for rank in cluster_rank_keys {
