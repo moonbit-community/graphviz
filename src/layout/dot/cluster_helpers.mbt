@@ -20,40 +20,71 @@ fn graph_has_cluster(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn node_cluster_key(node : @cgraph.Node) -> String {
+fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
-  let mut key = ""
   while !graph.is_root() {
-    if is_cluster_graph(graph) {
-      match graph.name() {
-        Some(name) => key = name
-        None => key = ""
-      }
-    }
     match graph.parent() {
       Some(parent) => graph = parent
       None => break
     }
   }
-  key
+  graph
+}
+
+fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
+  let target = node.name()
+  for entry in graph.nodes() {
+    if entry.name() == target {
+      return true
+    }
+  }
+  false
+}
+
+fn node_cluster_keys(node : @cgraph.Node) -> (String, String) {
+  let root = root_graph_for_node(node)
+  let mut outer = ""
+  let mut inner = ""
+  let stack : Array[@cgraph.Graph] = [root]
+  while stack.length() > 0 {
+    let current = stack[stack.length() - 1]
+    let _ = stack.pop()
+    if !graph_contains_node(current, node) {
+      continue
+    }
+    if is_cluster_graph(current) {
+      let name = match current.name() {
+        Some(value) => value
+        None => ""
+      }
+      if outer == "" {
+        outer = name
+      }
+      inner = name
+    }
+    for child in current.subgraphs() {
+      stack.push(child)
+    }
+  }
+  (outer, inner)
 }
 
 ///|
+/// Graphviz parity: cluster membership is derived from subgraph node membership
+/// (nodes referenced in a cluster belong to it), not node home graphs.
+/// Do not change behavior without updating fixtures/tests.
+fn node_cluster_key(node : @cgraph.Node) -> String {
+  let (outer, _inner) = node_cluster_keys(node)
+  outer
+}
+
+///|
+/// Graphviz parity: local cluster key resolves to the deepest (innermost)
+/// cluster containing the node.
+/// Do not change behavior without updating fixtures/tests.
 fn node_local_cluster_key(node : @cgraph.Node) -> String {
-  let mut graph = node.graph()
-  while !graph.is_root() {
-    if is_cluster_graph(graph) {
-      match graph.name() {
-        Some(name) => return name
-        None => return ""
-      }
-    }
-    match graph.parent() {
-      Some(parent) => graph = parent
-      None => break
-    }
-  }
-  ""
+  let (_outer, inner) = node_cluster_keys(node)
+  inner
 }
 
 ///|
@@ -117,6 +148,51 @@ fn intercluster_edge_key(
 ///|
 fn cluster_rank_key(cluster : String, rank : Int) -> String {
   "\{cluster}@\{rank}"
+}
+
+///|
+/// Graphviz parity: assign intercluster virtual nodes to the lowest common
+/// ancestor cluster (mark_lowclusters + class2).
+/// Do not change behavior without updating fixtures/tests.
+fn cluster_lowest_common_ancestor(
+  left : String,
+  right : String,
+  cluster_parents : Map[String, String?],
+) -> String {
+  if left == "" || right == "" {
+    return ""
+  }
+  if left == right {
+    return left
+  }
+  let seen : Map[String, Bool] = Map::new()
+  let mut current = left
+  while current != "" {
+    seen[current] = true
+    let parent = match cluster_parents.get(current) {
+      Some(value) => value
+      None => (None : String?)
+    }
+    match parent {
+      Some(value) => current = value
+      None => current = ""
+    }
+  }
+  let mut probe = right
+  while probe != "" {
+    if seen.get(probe) is Some(_) {
+      return probe
+    }
+    let parent = match cluster_parents.get(probe) {
+      Some(value) => value
+      None => (None : String?)
+    }
+    match parent {
+      Some(value) => probe = value
+      None => probe = ""
+    }
+  }
+  ""
 }
 
 ///|
