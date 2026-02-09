@@ -30,6 +30,7 @@ fn build_edge_vnodes(
   rankdir : RankDir,
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
 ) -> EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, NodeSize] = Map::new()
@@ -93,23 +94,18 @@ fn build_edge_vnodes(
     }
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
-    let edge_cluster = match edge_cluster_keys.get(edge_key(edge)) {
-      Some(value) => value
-      None => ""
-    }
     // Graphviz parity: cluster-local vnodes use the virtual_node default width.
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster =
-      if tail_cluster != "" && tail_cluster == head_cluster {
-        tail_cluster
-      } else if edge_cluster != "" &&
-        tail_cluster == edge_cluster &&
-        head_cluster == edge_cluster {
-        edge_cluster
+      if tail_cluster != "" || head_cluster != "" {
+        cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
       } else {
-        ""
+        match edge_cluster_keys.get(edge_key(edge)) {
+          Some(value) => value
+          None => ""
+        }
       }
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
@@ -202,6 +198,7 @@ fn add_flat_label_vnodes(
   rankdir : RankDir,
   sizes : Map[String, NodeSize],
   edge_cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
   vnode_info : EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
@@ -331,19 +328,14 @@ fn add_flat_label_vnodes(
       vnode_size_from_widths_with_height(half_width, half_width, label_height)
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
-    let edge_cluster = match edge_cluster_keys.get(edge_key(edge)) {
-      Some(value) => value
-      None => ""
-    }
     let vnode_cluster =
-      if tail_cluster != "" && tail_cluster == head_cluster {
-        tail_cluster
-      } else if edge_cluster != "" &&
-        tail_cluster == edge_cluster &&
-        head_cluster == edge_cluster {
-        edge_cluster
+      if tail_cluster != "" || head_cluster != "" {
+        cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
       } else {
-        ""
+        match edge_cluster_keys.get(edge_key(edge)) {
+          Some(value) => value
+          None => ""
+        }
       }
     vnode_info.vnode_clusters[name] = vnode_cluster
     match vnode_info.vnodes_by_rank.get(label_rank) {

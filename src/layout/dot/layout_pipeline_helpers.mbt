@@ -1212,6 +1212,7 @@ fn compute_ordering_and_vnodes(
     rankdir,
     existing_names,
     edge_cluster_keys,
+    cluster_meta.cluster_parents,
   )
   let port_edge_nodes : Map[String, Bool] = Map::new()
   for edge_idx in 0..<edges.length() {
@@ -3479,6 +3480,7 @@ fn compute_positions(
       prep.rankdir,
       x_base_sizes,
       ordering.edge_cluster_keys,
+      cluster_meta.cluster_parents,
       existing_names,
       ordering.vnode_info,
       x_groups,
