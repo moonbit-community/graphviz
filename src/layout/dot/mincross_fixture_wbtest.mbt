@@ -411,6 +411,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
   }
   let edge_tail_port_x = Array::make(edges.length(), 0.0)
   let edge_head_port_x = Array::make(edges.length(), 0.0)
+  let edge_tail_port_order = Array::make(edges.length(), 0.5)
+  let edge_head_port_order = Array::make(edges.length(), 0.5)
   let ordered = reorder_rank_groups(
     rank_keys,
     groups,
@@ -419,8 +421,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     edge_head,
     edge_tail_port_x,
     edge_head_port_x,
-    [],
-    [],
+    edge_tail_port_order,
+    edge_head_port_order,
     parents,
     children,
     cluster_keys,
