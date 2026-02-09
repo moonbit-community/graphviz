@@ -515,6 +515,9 @@ fn edge_label_rank_x(
 }
 
 ///|
+/// Graphviz parity: label vnode offset aligned to refs/graphviz/lib/dotgen/dotsplines.c
+/// (place_vnlabel, GD_flip).
+/// Do not change behavior without updating fixtures/tests.
 fn edge_label_pos_from_vnode(
   vnode_pos : @geom.Point,
   label_width_pt : Double,
@@ -547,6 +550,8 @@ fn vnode_is_merged(
 }
 
 ///|
+/// Graphviz parity: recover_slack aligned to refs/graphviz/lib/dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
 fn recover_slack_vnodes(
   edge : @cgraph.Edge,
   ordered_vnodes : Array[String],
@@ -561,6 +566,9 @@ fn recover_slack_vnodes(
   if ordered_vnodes.length() == 0 || boxes.length() == 0 {
     return ()
   }
+  let trace_recover = @sys.get_env_var("DOT_TRACE_RECOVER") is Some(_)
+  let tail_name = edge.tail().name()
+  let head_name = edge.head().name()
   let label_rank = match edge_label_rank_info(edge, ranks) {
     Some((rank, _span)) => rank
     None => -1
@@ -592,6 +600,12 @@ fn recover_slack_vnodes(
       Some(value) => value
       None => continue
     }
+    let old_pos = match vnode_positions.get(vnode) {
+      Some(value) => value
+      None => { x: 0.0, y: vnode_y }
+    }
+    let old_left = size.left_pt
+    let old_right = size.right_pt
     if vnode_rank == label_rank {
       let new_x = box.urx
       let left = new_x - box.llx
@@ -604,6 +618,20 @@ fn recover_slack_vnodes(
       vnode_positions[vnode] = { x: new_x, y: vnode_y }
       vnode_sizes[vnode] =
         vnode_size_from_widths_with_height(half, half, size.height_pt)
+    }
+    if trace_recover {
+      let new_pos = match vnode_positions.get(vnode) {
+        Some(value) => value
+        None => { x: 0.0, y: vnode_y }
+      }
+      let new_size = match vnode_sizes.get(vnode) {
+        Some(value) => value
+        None => size
+      }
+      let is_label = vnode_rank == label_rank
+      println(
+        "{\"event\":\"recover_slack\",\"tail\":\"\{tail_name}\",\"head\":\"\{head_name}\",\"rank\":\{vnode_rank},\"label\":\{is_label},\"vnode\":\"\{vnode}\",\"box\":{\"llx\":\{box.llx},\"lly\":\{box.lly},\"urx\":\{box.urx},\"ury\":\{box.ury}},\"old\":{\"x\":\{old_pos.x},\"lw\":\{old_left},\"rw\":\{old_right}},\"new\":{\"x\":\{new_pos.x},\"lw\":\{new_size.left_pt},\"rw\":\{new_size.right_pt}}}",
+      )
     }
   }
 }
