@@ -1971,7 +1971,7 @@ fn compute_ordering_and_vnodes(
       // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
       let gdnlist_order_index : Map[String, Int] = Map::new()
       let mut gdnlist_idx = 0
-      for name in nlist_order {
+      for name in gdnlist_order {
         if real_nodes.get(name) is Some(_) {
           gdnlist_order_index[name] = gdnlist_idx
           gdnlist_idx = gdnlist_idx + 1
