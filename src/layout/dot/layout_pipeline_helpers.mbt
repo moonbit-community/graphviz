@@ -2035,17 +2035,28 @@ fn compute_ordering_and_vnodes(
       for tail, entries in order_edges_by_tail {
         let heads : Array[String] = []
         for entry in entries {
-          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = entry
+          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
+            entry
           heads.push(h)
         }
         graphviz_out_neighbors[tail] = heads
       }
+      // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
+      // fixed head, so preserve edge_creation insertion order.
+      let in_entries : Map[String, Array[String]] = Map::new()
       for edge in edge_creation_order {
         let (tail, head) = edge
-        match graphviz_in_neighbors.get(head) {
+        match in_entries.get(head) {
           Some(list) => list.push(tail)
-          None => graphviz_in_neighbors[head] = [tail]
+          None => in_entries[head] = [tail]
         }
+      }
+      for head, entries in in_entries {
+        graphviz_in_neighbors[head] = entries
+      }
+      let order_flat_constraints : Map[String, Bool] = Map::new()
+      for key, value in cluster_meta.flat_constraints {
+        order_flat_constraints[key] = value
       }
       // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
       let gdnlist_order_index : Map[String, Int] = Map::new()
@@ -2159,7 +2170,7 @@ fn compute_ordering_and_vnodes(
         order_cluster_keys,
         order_cluster_skeleton,
         0,
-        cluster_meta.flat_constraints,
+        order_flat_constraints,
         flip=graphviz_flip,
         graphviz_out_neighbors=graphviz_out_neighbors,
         graphviz_in_neighbors=graphviz_in_neighbors,
@@ -2320,10 +2331,6 @@ fn compute_ordering_and_vnodes(
         order_ranks,
       )
       let edge_order = collect_edge_order(order_edges_out_mincross)
-      let order_flat_constraints : Map[String, Bool] = Map::new()
-      for key, value in cluster_meta.flat_constraints {
-        order_flat_constraints[key] = value
-      }
       let preferred_positions =
         if order_with_vnodes {
         vnode_order_keys_for_ordering
