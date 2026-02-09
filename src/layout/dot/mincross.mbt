@@ -194,27 +194,7 @@ fn reorder_by_medians(
           Some(value) => value
           None => -1.0
         }
-        if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-          let left = sorted[lp]
-          let right = sorted[rp]
-          if (left == "handle_x" && right == "handle_1") ||
-            (left == "handle_1" && right == "handle_x") {
-            println(
-              "reorder handle pair \{left}<->\{right} p1=\{p1} p2=\{p2} reverse=\{reverse}",
-            )
-          }
-        }
         if p1 > p2 || (p1 >= p2 && reverse) {
-          if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-            let left = sorted[lp]
-            let right = sorted[rp]
-            if (left == "_mbt_edge_vn_0_3" && right == "_mbt_edge_vn_1_3") ||
-              (left == "_mbt_edge_vn_1_3" && right == "_mbt_edge_vn_0_3") {
-              println(
-                "reorder rank pair \{left}<->\{right} p1=\{p1} p2=\{p2} reverse=\{reverse}",
-              )
-            }
-          }
           let tmp = sorted[lp]
           sorted[lp] = sorted[rp]
           sorted[rp] = tmp
@@ -708,14 +688,6 @@ fn transpose_rank_graphviz(
       edge_head_port_x,
       edge_penalty,
     )
-    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-      if (left == "_mbt_edge_vn_0_3" && right == "_mbt_edge_vn_1_3") ||
-        (left == "_mbt_edge_vn_1_3" && right == "_mbt_edge_vn_0_3") {
-        println(
-          "transpose rank \{rank} pair \{left}<->\{right} c0=\{c0} c1=\{c1} reverse=\{reverse}",
-        )
-      }
-    }
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
       names[i] = right
       names[i + 1] = left
