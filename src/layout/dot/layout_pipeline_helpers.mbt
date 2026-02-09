@@ -1457,6 +1457,33 @@ fn compute_ordering_and_vnodes(
     } else {
       (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation)
     }
+  // Graphviz parity: cluster-local build_ranks uses edge chains before
+  // root/cluster remapping so local passes see original cluster endpoints.
+  let order_edges_by_tail_unmapped =
+    if order_with_clusters {
+    let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
+      build_order_edges_by_tail_graphviz(
+        creation_order,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
+        ranks,
+        vnode_info.edge_vnodes,
+        order_with_vnodes,
+        cluster_meta.cluster_keys,
+        order_with_clusters,
+        false,
+        false,
+        edges_by_tail,
+      )
+    unmapped_edges_by_tail
+  } else {
+    order_edges_by_tail
+  }
   let cluster_skeleton_creation : Array[String] = []
   if order_with_clusters {
     let cluster_seen : Map[String, Bool] = Map::new()
@@ -1834,6 +1861,16 @@ fn compute_ordering_and_vnodes(
       for name in order_nodes {
         order_node_map[name] = order_graph.node(name)
       }
+      let order_graph_unmapped =
+        @cgraph.Graph::new(
+          @cgraph.GraphKind::Directed,
+          name="order_graph_unmapped",
+          strict=false,
+        )
+      let order_node_map_unmapped : Map[String, @cgraph.Node] = Map::new()
+      for name in order_nodes {
+        order_node_map_unmapped[name] = order_graph_unmapped.node(name)
+      }
       let creation_order : Array[String] = []
       let mut creation_idx = nlist_order.length()
       while creation_idx > 0 {
@@ -1897,6 +1934,13 @@ fn compute_ordering_and_vnodes(
       let order_edge_head_port_x : Array[Double] = []
       let order_edge_tail_port_order : Array[Double] = []
       let order_edge_head_port_order : Array[Double] = []
+      let order_edges_out_unmapped : Array[@cgraph.Edge] = []
+      let order_edge_tail_out_unmapped : Array[String] = []
+      let order_edge_head_out_unmapped : Array[String] = []
+      let order_edge_tail_port_x_unmapped : Array[Double] = []
+      let order_edge_head_port_x_unmapped : Array[Double] = []
+      let order_edge_tail_port_order_unmapped : Array[Double] = []
+      let order_edge_head_port_order_unmapped : Array[Double] = []
       for tail_name in nlist_order {
         let list = match order_edges_by_tail.get(tail_name) {
           Some(value) => value
@@ -1915,6 +1959,33 @@ fn compute_ordering_and_vnodes(
             order_edge_head_port_x,
             order_edge_tail_port_order,
             order_edge_head_port_order,
+            edge_tail_name,
+            edge_head_name,
+            penalty,
+            constraint,
+            tail_port_x,
+            head_port_x,
+            tail_port_order,
+            head_port_order,
+          )
+        }
+        let unmapped_list = match order_edges_by_tail_unmapped.get(tail_name) {
+          Some(value) => value
+          None => []
+        }
+        for entry in unmapped_list {
+          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+            entry
+          add_order_edge(
+            order_graph_unmapped,
+            order_node_map_unmapped,
+            order_edges_out_unmapped,
+            order_edge_tail_out_unmapped,
+            order_edge_head_out_unmapped,
+            order_edge_tail_port_x_unmapped,
+            order_edge_head_port_x_unmapped,
+            order_edge_tail_port_order_unmapped,
+            order_edge_head_port_order_unmapped,
             edge_tail_name,
             edge_head_name,
             penalty,
@@ -2224,13 +2295,13 @@ fn compute_ordering_and_vnodes(
           ordered,
           cluster_meta,
           order_node_order,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
+          order_edges_out_unmapped,
+          order_edge_tail_out_unmapped,
+          order_edge_head_out_unmapped,
+          order_edge_tail_port_x_unmapped,
+          order_edge_head_port_x_unmapped,
+          order_edge_tail_port_order_unmapped,
+          order_edge_head_port_order_unmapped,
           ranks,
           order_sizes_out,
           nodesep_pt,
