@@ -471,6 +471,12 @@ fn build_cluster_constraints(
     }
     cluster_related[name] = related
   }
+  // Graphviz parity: in LR/RL, cluster label height becomes horizontal border
+  // slack in x-constraints (post-flip label geometry).
+  let flip = {
+    let rankdir = graph_rankdir(graph)
+    rankdir == RankDir::LR || rankdir == RankDir::RL
+  }
   if edge_vnodes.length() > 0 {
     for edge in edges {
       let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
@@ -519,12 +525,30 @@ fn build_cluster_constraints(
   }
   let cluster_nodes : Map[String, (String, String)] = Map::new()
   let cluster_margins : Map[String, Double] = Map::new()
+  let cluster_border_left : Map[String, Double] = Map::new()
+  let cluster_border_right : Map[String, Double] = Map::new()
   let cluster_min_rank : Map[String, Int] = Map::new()
   let cluster_max_rank : Map[String, Int] = Map::new()
   let extra_nodes : Array[(String, Int)] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = cluster_margin_pt(cluster_graph)
+    let mut left_border = 0.0
+    let mut right_border = 0.0
+    if flip {
+      match graph_label_metrics(cluster_graph) {
+        Some((_width_pt, height_pt)) => {
+          let border = height_pt + CLUSTER_LABEL_PAD_PT
+          match graph_label_loc(cluster_graph) {
+            LabelLoc::Top => right_border = border
+            LabelLoc::Bottom => left_border = border
+          }
+        }
+        None => ()
+      }
+    }
+    cluster_border_left[name] = left_border
+    cluster_border_right[name] = right_border
   }
   for name, members in cluster_members {
     let mut min_rank : Int? = None
@@ -596,19 +620,23 @@ fn build_cluster_constraints(
   for name, pair in cluster_nodes {
     let (ln_name, rn_name) = pair
     let mut label_minlen : Int? = None
-    match cluster_graphs.get(name) {
-      Some(cluster_graph) =>
-        match graph_label_metrics(cluster_graph) {
-          Some((width_pt, _height_pt)) => {
-            let label_width = width_pt + CLUSTER_LABEL_PAD_PT * 2.0
-            let minlen = round_int(label_width)
-            if minlen > 0 {
-              label_minlen = Some(minlen)
+    // Graphviz parity: LR/RL handles cluster label extents via left/right
+    // border slack, so do not add standalone label minlen here.
+    if !flip {
+      match cluster_graphs.get(name) {
+        Some(cluster_graph) =>
+          match graph_label_metrics(cluster_graph) {
+            Some((width_pt, _height_pt)) => {
+              let label_width = width_pt + CLUSTER_LABEL_PAD_PT * 2.0
+              let minlen = round_int(label_width)
+              if minlen > 0 {
+                label_minlen = Some(minlen)
+              }
             }
+            None => ()
           }
-          None => ()
-        }
-      None => ()
+        None => ()
+      }
     }
     match label_minlen {
       Some(minlen) =>
@@ -633,6 +661,14 @@ fn build_cluster_constraints(
     let margin = match cluster_margins.get(name) {
       Some(value) => value
       None => CLUSTER_MARGIN_PT
+    }
+    let left_border = match cluster_border_left.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    let right_border = match cluster_border_right.get(name) {
+      Some(value) => value
+      None => 0.0
     }
     match (cluster_members.get(name), cluster_related.get(name)) {
       (Some(members), Some(related)) =>
@@ -661,7 +697,7 @@ fn build_cluster_constraints(
           let left_name = names[left_idx]
           let right_name = names[right_idx]
           let left_minlen = round_int(
-            node_left_pt(left_name, sizes) + margin,
+            node_left_pt(left_name, sizes) + margin + left_border,
           )
           extra_edges.push({
             tail: ln_name,
@@ -672,7 +708,7 @@ fn build_cluster_constraints(
             head_port: None,
           })
           let right_minlen = round_int(
-            node_right_pt(right_name, sizes) + margin,
+            node_right_pt(right_name, sizes) + margin + right_border,
           )
           extra_edges.push({
             tail: right_name,
@@ -687,7 +723,7 @@ fn build_cluster_constraints(
             let outside = names[j]
             if related.get(outside) is None {
               let minlen = round_int(
-                node_right_pt(outside, sizes) + margin,
+                node_right_pt(outside, sizes) + margin + left_border,
               )
               extra_edges.push({
                 tail: outside,
@@ -706,7 +742,7 @@ fn build_cluster_constraints(
             let outside = names[j]
             if related.get(outside) is None {
               let minlen = round_int(
-                node_left_pt(outside, sizes) + margin,
+                node_left_pt(outside, sizes) + margin + right_border,
               )
               extra_edges.push({
                 tail: rn_name,
@@ -737,11 +773,20 @@ fn build_cluster_constraints(
                   Some(value) => value
                   None => CLUSTER_MARGIN_PT
                 }
-                let minlen = round_int(margin)
+                let parent_left_border = match cluster_border_left.get(parent_name) {
+                  Some(value) => value
+                  None => 0.0
+                }
+                let parent_right_border = match cluster_border_right.get(parent_name) {
+                  Some(value) => value
+                  None => 0.0
+                }
+                let left_minlen = round_int(margin + parent_left_border)
+                let right_minlen = round_int(margin + parent_right_border)
                 extra_edges.push({
                   tail: parent_ln,
                   head: child_ln,
-                  minlen,
+                  minlen: left_minlen,
                   weight: 0,
                   tail_port: None,
                   head_port: None,
@@ -749,7 +794,7 @@ fn build_cluster_constraints(
                 extra_edges.push({
                   tail: child_rn,
                   head: parent_rn,
-                  minlen,
+                  minlen: right_minlen,
                   weight: 0,
                   tail_port: None,
                   head_port: None,
