@@ -135,9 +135,10 @@ test "xlabel positions match Graphviz" {
   let layouts : Map[String, DotLayoutGraph] = Map::new()
   for fixture in fixtures {
     assert_eq(fixture.label_html, false)
-    let expected_flip = fixture.graph == "xlabels_lr"
-    assert_eq(fixture.flip, expected_flip)
     let layout = load_xlabel_layout(layouts, graphs, fixture.graph)
+    let rankdir = graph_rankdir(layout.graph)
+    let expected_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+    assert_eq(fixture.flip, expected_flip)
     match fixture.kind {
       "node_xlabel" => {
         guard fixture.node != "" else {
