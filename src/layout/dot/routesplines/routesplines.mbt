@@ -48,6 +48,16 @@ fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
 }
 
 ///|
+/// Graphviz parity: ROUND macro semantics (round half away from zero).
+fn round_int(value : Double) -> Int {
+  if value >= 0.0 {
+    (value + 0.5).floor().to_int()
+  } else {
+    (value - 0.5).ceil().to_int()
+  }
+}
+
+///|
 const ROUTE_FUDGE : Double = 4.0
 
 ///|
@@ -574,14 +584,9 @@ fn maximal_bbox_for_name(
         match positions.get(neighbor) {
           Some(neighbor_pos) => {
             let neighbor_size = size_for_name(neighbor, sizes)
-            let is_virtual =
-              vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
-            let neighbor_right =
-              if is_virtual {
-              neighbor_size.right_pt
-            } else {
-              size_for_name(neighbor, mval_sizes).right_pt
-            }
+            // Graphviz parity: left neighbor uses ND_mval (original right width),
+            // even after recover_slack updates ND_rw.
+            let neighbor_right = size_for_name(neighbor, mval_sizes).right_pt
             let nb =
               neighbor_pos.x + neighbor_right +
               neighbor_sep(neighbor, neighbor_size)
@@ -593,12 +598,9 @@ fn maximal_bbox_for_name(
         }
       }
     }
-    None =>
-      if left_bound < b {
-      b = left_bound
-    }
+    None => ()
   }
-  let mut llx = b.round()
+  let mut llx = round_int(b).to_double()
   if left_neighbor is None {
     llx = min_double(llx, left_bound)
   }
@@ -654,12 +656,9 @@ fn maximal_bbox_for_name(
         }
       }
     }
-    None =>
-      if right_bound > br {
-      br = right_bound
-    }
+    None => ()
   }
-  let mut urx = br.round()
+  let mut urx = round_int(br).to_double()
   if right_neighbor is None {
     urx = max_double(urx, right_bound)
   }
