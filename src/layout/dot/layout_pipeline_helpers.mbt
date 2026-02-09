@@ -1287,6 +1287,8 @@ fn compute_ordering_and_vnodes(
   let edge_order = collect_edge_order(edges)
   let (edge_tail_port_x, edge_head_port_x) =
     compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
+  let edge_tail_port_order = Array::make(edges.length(), 0.5)
+  let edge_head_port_order = Array::make(edges.length(), 0.5)
   let (order_edges, order_edge_tail, order_edge_head) =
     dedup_ordering_edges(edges, edge_tail, edge_head)
   let (order_edge_tail_port_x, order_edge_head_port_x) =
@@ -1297,6 +1299,8 @@ fn compute_ordering_and_vnodes(
       order_edge_head,
       order_sizes,
     )
+  let order_edge_tail_port_order = Array::make(order_edges.length(), 0.5)
+  let order_edge_head_port_order = Array::make(order_edges.length(), 0.5)
   let ordering_groups_base = apply_rank_same_order_with_port_override(
     groups,
     cluster_meta.rank_same_groups,
@@ -1352,6 +1356,8 @@ fn compute_ordering_and_vnodes(
       edge_head,
       edge_tail_port_x,
       edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
       ranks,
       vnode_info.edge_vnodes,
       order_with_vnodes,
@@ -1370,6 +1376,8 @@ fn compute_ordering_and_vnodes(
         edge_head,
         edge_tail_port_x,
         edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
         ranks,
         vnode_info.edge_vnodes,
         order_with_vnodes,
@@ -1431,11 +1439,11 @@ fn compute_ordering_and_vnodes(
           while rank < max_rank {
             let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
             let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-            let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0)
+            let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
             skeleton_edge_creation.push((tail_name, head_name))
             match order_edges_by_tail.get(tail_name) {
               Some(list) => {
-                let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
                   [entry]
                 for item in list {
                   updated.push(item)
@@ -1446,7 +1454,7 @@ fn compute_ordering_and_vnodes(
             }
             match order_edges_by_tail_root.get(tail_name) {
               Some(list) => {
-                let updated : Array[(String, String, Int, Bool, Double, Double)] =
+                let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
                   [entry]
                 for item in list {
                   updated.push(item)
@@ -1474,11 +1482,11 @@ fn compute_ordering_and_vnodes(
       while rank < max_rank {
         let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
         let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-        let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0)
+        let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
         skeleton_edge_creation.push((tail_name, head_name))
         match order_edges_by_tail.get(tail_name) {
           Some(list) => {
-            let updated : Array[(String, String, Int, Bool, Double, Double)] =
+            let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
               [entry]
             for item in list {
               updated.push(item)
@@ -1489,7 +1497,7 @@ fn compute_ordering_and_vnodes(
         }
         match order_edges_by_tail_root.get(tail_name) {
           Some(list) => {
-            let updated : Array[(String, String, Int, Bool, Double, Double)] =
+            let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
               [entry]
             for item in list {
               updated.push(item)
@@ -1754,13 +1762,15 @@ fn compute_ordering_and_vnodes(
       let order_edge_head_out : Array[String] = []
       let order_edge_tail_port_x : Array[Double] = []
       let order_edge_head_port_x : Array[Double] = []
+      let order_edge_tail_port_order : Array[Double] = []
+      let order_edge_head_port_order : Array[Double] = []
       for tail_name in nlist_order {
         let list = match order_edges_by_tail.get(tail_name) {
           Some(value) => value
           None => []
         }
         for entry in list {
-          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
             entry
           add_order_edge(
             order_graph,
@@ -1770,12 +1780,16 @@ fn compute_ordering_and_vnodes(
             order_edge_head_out,
             order_edge_tail_port_x,
             order_edge_head_port_x,
+            order_edge_tail_port_order,
+            order_edge_head_port_order,
             edge_tail_name,
             edge_head_name,
             penalty,
             constraint,
             tail_port_x,
             head_port_x,
+            tail_port_order,
+            head_port_order,
           )
         }
       }
@@ -1809,7 +1823,7 @@ fn compute_ordering_and_vnodes(
       for tail, entries in order_edges_by_tail {
         let heads : Array[String] = []
         for entry in entries {
-          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x) = entry
+          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = entry
           heads.push(h)
         }
         graphviz_out_neighbors[tail] = heads
@@ -2299,13 +2313,15 @@ fn compute_ordering_and_vnodes(
         let root_edge_head_out : Array[String] = []
         let root_edge_tail_port_x : Array[Double] = []
         let root_edge_head_port_x : Array[Double] = []
+        let root_edge_tail_port_order : Array[Double] = []
+        let root_edge_head_port_order : Array[Double] = []
         for tail_name in root_nlist_order {
           let list = match order_edges_by_tail_root.get(tail_name) {
             Some(value) => value
             None => []
           }
           for entry in list {
-            let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+            let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
               entry
             add_order_edge(
               root_graph,
@@ -2315,12 +2331,16 @@ fn compute_ordering_and_vnodes(
               root_edge_head_out,
               root_edge_tail_port_x,
               root_edge_head_port_x,
+              root_edge_tail_port_order,
+              root_edge_head_port_order,
               edge_tail_name,
               edge_head_name,
               penalty,
               constraint,
               tail_port_x,
               head_port_x,
+              tail_port_order,
+              head_port_order,
             )
           }
         }
@@ -2656,6 +2676,8 @@ fn compute_ordering_and_vnodes(
               edge_head,
               edge_tail_port_x,
               edge_head_port_x,
+              edge_tail_port_order,
+              edge_head_port_order,
               ranks,
               vnode_info.edge_vnodes,
               order_with_vnodes,
@@ -2670,7 +2692,7 @@ fn compute_ordering_and_vnodes(
               Some(list) => {
                 let mut idx = 0
                 while idx < list.length() {
-                  let (t, h, _pen, _c, _tail_port_x, _head_port_x) = list[idx]
+                  let (t, h, _pen, _c, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = list[idx]
                   println("remincross arbiter edge \{idx}: \{t} -> \{h}")
                   idx = idx + 1
                 }
@@ -2683,7 +2705,7 @@ fn compute_ordering_and_vnodes(
                 Some(list) => {
                   let mut idx = 0
                   while idx < list.length() {
-                    let (t, h, _pen, _c, _tail_port_x, _head_port_x) = list[idx]
+                    let (t, h, _pen, _c, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = list[idx]
                     println("remincross out \{name} \{idx}: \{t} -> \{h}")
                     idx = idx + 1
                   }
@@ -2762,13 +2784,15 @@ fn compute_ordering_and_vnodes(
           let rem_edge_head_out : Array[String] = []
           let rem_edge_tail_port_x : Array[Double] = []
           let rem_edge_head_port_x : Array[Double] = []
+          let rem_edge_tail_port_order : Array[Double] = []
+          let rem_edge_head_port_order : Array[Double] = []
           for tail_name in rem_nlist_order {
             let list = match rem_order_edges_by_tail.get(tail_name) {
               Some(value) => value
               None => []
             }
             for entry in list {
-              let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x) =
+              let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
                 entry
               add_order_edge(
                 rem_graph,
@@ -2778,12 +2802,16 @@ fn compute_ordering_and_vnodes(
                 rem_edge_head_out,
                 rem_edge_tail_port_x,
                 rem_edge_head_port_x,
+                rem_edge_tail_port_order,
+                rem_edge_head_port_order,
                 edge_tail_name,
                 edge_head_name,
                 penalty,
                 constraint,
                 tail_port_x,
                 head_port_x,
+                tail_port_order,
+                head_port_order,
               )
             }
           }
@@ -3273,6 +3301,8 @@ fn compute_positions(
     let order_edge_head_out : Array[String] = []
     let order_edge_tail_port_x : Array[Double] = []
     let order_edge_head_port_x : Array[Double] = []
+    let order_edge_tail_port_order : Array[Double] = []
+    let order_edge_head_port_order : Array[Double] = []
     let mut edge_idx = 0
     for edge in prep.edges {
       let tail =
@@ -3306,12 +3336,16 @@ fn compute_positions(
           order_edge_head_out,
           order_edge_tail_port_x,
           order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
           tail,
           head,
           penalty,
           constraint,
           tail_port_x,
           head_port_x,
+          0.5,
+          0.5,
         )
       } else {
         let tail_rank = match rank_data.ranks.get(tail) {
@@ -3350,12 +3384,16 @@ fn compute_positions(
             order_edge_head_out,
             order_edge_tail_port_x,
             order_edge_head_port_x,
+            order_edge_tail_port_order,
+            order_edge_head_port_order,
             chain[idx],
             chain[idx + 1],
             penalty,
             constraint,
             seg_tail_port,
             seg_head_port,
+            0.5,
+            0.5,
           )
           idx = idx + 1
         }
@@ -3379,12 +3417,16 @@ fn compute_positions(
           order_edge_head_out,
           order_edge_tail_port_x,
           order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
           tail_name,
           head_name,
           CL_CROSS,
           true,
           0.0,
           0.0,
+          0.5,
+          0.5,
         )
         rank = rank + 1
       }
