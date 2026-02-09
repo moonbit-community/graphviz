@@ -195,14 +195,29 @@ fn Parser::parse_endpoint(
 }
 
 ///|
+fn root_graph_for_graph(graph : @cgraph.Graph) -> @cgraph.Graph {
+  let mut current = graph
+  while !current.is_root() {
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  current
+}
+
+///|
 fn Parser::endpoint_nodes(
   graph : @cgraph.Graph,
   endpoint : Endpoint,
 ) -> (Array[@cgraph.Node], @cgraph.Port?) {
   match endpoint {
     Node(node_id) => {
-      let node = match graph.find_node(node_id.name) {
-        Some(value) => value
+      // Graphviz parity: edges inside subgraphs should not add existing nodes
+      // to the subgraph; only create new nodes in the current graph.
+      let root = root_graph_for_graph(graph)
+      let node = match root.find_node(node_id.name) {
+        Some(existing) => existing
         None => graph.node(node_id.name)
       }
       ([node], node_id.port)
