@@ -37,6 +37,7 @@ pub fn layout_dot(
     rank_stage.rank_heights.nodesep_pt,
     routing_stage.port_pad_below,
     routing_stage.port_pad_above,
+    positions_state.flat_label_edge_vnodes,
   )
 }
 

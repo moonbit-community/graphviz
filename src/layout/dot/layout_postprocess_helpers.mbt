@@ -42,33 +42,75 @@ fn expand_bbox_for_label_pos(
 fn expand_bbox_for_edge_labels(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
+  ranks : Map[String, Int],
+  flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutGraph {
   if !graph.is_root() {
     return layout
   }
+  // Graphviz parity: addLabelBB applies GD_flip for LR/RL, so swap label
+  // dimensions in pre-rotation space to match compute_bb.
+  let rankdir = graph_rankdir(graph)
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  let adjust_metrics = (metrics : (Double, Double)?) => {
+    match metrics {
+      Some((width, height)) =>
+        if flip {
+          Some((height, width))
+        } else {
+          Some((width, height))
+        }
+      None => None
+    }
+  }
   let mut bbox = layout.bbox
   for edge_layout in layout.edges {
+    let edge = edge_layout.edge
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let is_flat =
+      match (ranks.get(tail), ranks.get(head)) {
+        (Some(tail_rank), Some(head_rank)) => tail_rank == head_rank
+        _ => false
+      }
+    let has_flat_label_vnode =
+      match flat_label_edge_vnodes.get(edge_key(edge)) {
+        Some(_) => true
+        None => false
+      }
+    // Graphviz parity: adjacent flat-edge labels do not update BB
+    // (dotsplines.c makeSimpleFlatLabels has no updateBB call).
+    // Graphviz parity: self-edge labels still update BB via dotsplines.
+    let skip_mid_label = is_flat && !has_flat_label_vnode && tail != head
     bbox = expand_bbox_for_label_pos(
       bbox,
-      edge_layout.label_pos,
-      edge_mid_label_metrics(edge_layout.edge),
+      if skip_mid_label { None } else { edge_layout.label_pos },
+      if skip_mid_label {
+        None
+      } else {
+        adjust_metrics(edge_mid_label_metrics(edge))
+      },
     )
     bbox = expand_bbox_for_label_pos(
       bbox,
       edge_layout.head_label_pos,
-      edge_label_metrics_for_attr(
-        edge_layout.edge,
-        "headlabel",
-        true,
+      adjust_metrics(
+        edge_label_metrics_for_attr(
+          edge_layout.edge,
+          "headlabel",
+          true,
+        ),
       ),
     )
     bbox = expand_bbox_for_label_pos(
       bbox,
       edge_layout.tail_label_pos,
-      edge_label_metrics_for_attr(
-        edge_layout.edge,
-        "taillabel",
-        true,
+      adjust_metrics(
+        edge_label_metrics_for_attr(
+          edge_layout.edge,
+          "taillabel",
+          true,
+        ),
       ),
     )
   }
@@ -810,6 +852,7 @@ fn finalize_layout_graph(
   nodesep_pt : Double,
   port_pad_below : Double,
   port_pad_above : Double,
+  flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutGraph {
   let (final_nodes, final_edges, bbox) =
     build_final_layout_geometry(
@@ -853,7 +896,13 @@ fn finalize_layout_graph(
   }
   let adjusted =
     adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
-  let labeled = expand_bbox_for_edge_labels(graph, adjusted)
+  let labeled =
+    expand_bbox_for_edge_labels(
+      graph,
+      adjusted,
+      ranks,
+      flat_label_edge_vnodes,
+    )
   let with_xlabels = place_xlabels(graph, labeled, splines)
   let (bbox, label_pos) = apply_root_label_bbox(graph, with_xlabels.bbox)
   let labeled_with_root = {
