@@ -4,6 +4,16 @@ fn default_nodesep_in() -> Double {
 }
 
 ///|
+/// Graphviz parity: minimum nodesep/ranksep (MIN_NODESEP/MIN_RANKSEP).
+/// Do not change behavior without updating fixtures/tests.
+const MIN_NODESEP_IN : Double = 0.02
+
+///|
+/// Graphviz parity: minimum nodesep/ranksep (MIN_NODESEP/MIN_RANKSEP).
+/// Do not change behavior without updating fixtures/tests.
+const MIN_RANKSEP_IN : Double = 0.02
+
+///|
 fn default_ranksep_in() -> Double {
   0.5
 }

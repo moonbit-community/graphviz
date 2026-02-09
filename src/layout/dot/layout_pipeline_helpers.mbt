@@ -87,6 +87,9 @@ priv struct PositionResult {
 ///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
 fn prepare_layout_inputs(
   graph : @cgraph.Graph,
   opts : DotLayoutOptions,
@@ -103,7 +106,7 @@ fn prepare_layout_inputs(
         None => RankDir::TB
       }
   }
-  let nodesep_in = match opts.nodesep {
+  let nodesep_raw = match opts.nodesep {
     Some(value) => value
     None =>
       match graph.get_attr("nodesep") {
@@ -111,7 +114,10 @@ fn prepare_layout_inputs(
         None => default_nodesep_in()
       }
   }
-  let ranksep_in = match opts.ranksep {
+  // Graphviz parity: late_double clamps nodesep to MIN_NODESEP.
+  let nodesep_in =
+    if nodesep_raw < MIN_NODESEP_IN { MIN_NODESEP_IN } else { nodesep_raw }
+  let ranksep_raw = match opts.ranksep {
     Some(value) => value
     None =>
       match graph.get_attr("ranksep") {
@@ -119,6 +125,9 @@ fn prepare_layout_inputs(
         None => default_ranksep_in()
       }
   }
+  // Graphviz parity: ranksep clamps to MIN_RANKSEP.
+  let ranksep_in =
+    if ranksep_raw < MIN_RANKSEP_IN { MIN_RANKSEP_IN } else { ranksep_raw }
   if nodesep_in < 0.0 {
     raise DotLayoutError::InvalidGraph(message="nodesep must be non-negative")
   }
