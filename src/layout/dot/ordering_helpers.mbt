@@ -1181,12 +1181,141 @@ fn count_crossings(
 }
 
 ///|
+///|
+/// Graphviz parity: include local port-order crossings
+/// (mincross.c rcross/local_cross).
+/// Do not change behavior without updating fixtures/tests.
+fn local_cross_out_graphviz(
+  node : String,
+  next_rank : Int,
+  ranks : Map[String, Int],
+  order : Map[String, Int],
+  edge_out : Map[String, Array[Int]],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_penalty : Array[Int],
+) -> Int {
+  let outs = match edge_out.get(node) {
+    Some(list) => list
+    None => []
+  }
+  if outs.length() < 2 {
+    return 0
+  }
+  let items : Array[(Int, Double, Int)] = []
+  for edge_idx in outs {
+    let head = edge_head[edge_idx]
+    if ranks.get(head) != Some(next_rank) {
+      continue
+    }
+    let head_order = match order.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let penalty =
+      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    if penalty <= 0 {
+      continue
+    }
+    let port_x =
+      if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
+        0.0
+      }
+    items.push((head_order, port_x, penalty))
+  }
+  if items.length() < 2 {
+    return 0
+  }
+  let mut cross = 0
+  let mut i = 0
+  while i + 1 < items.length() {
+    let (order_i, port_i, pen_i) = items[i]
+    let mut j = i + 1
+    while j < items.length() {
+      let (order_j, port_j, pen_j) = items[j]
+      if (order_j - order_i).to_double() * (port_j - port_i) < 0.0 {
+        cross = cross + pen_i * pen_j
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  cross
+}
+
+///|
+/// Graphviz parity: include local port-order crossings
+/// (mincross.c rcross/local_cross).
+/// Do not change behavior without updating fixtures/tests.
+fn local_cross_in_graphviz(
+  node : String,
+  prev_rank : Int,
+  ranks : Map[String, Int],
+  order : Map[String, Int],
+  edge_in : Map[String, Array[Int]],
+  edge_tail : Array[String],
+  edge_head_port_x : Array[Double],
+  edge_penalty : Array[Int],
+) -> Int {
+  let ins = match edge_in.get(node) {
+    Some(list) => list
+    None => []
+  }
+  if ins.length() < 2 {
+    return 0
+  }
+  let items : Array[(Int, Double, Int)] = []
+  for edge_idx in ins {
+    let tail = edge_tail[edge_idx]
+    if ranks.get(tail) != Some(prev_rank) {
+      continue
+    }
+    let tail_order = match order.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let penalty =
+      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    if penalty <= 0 {
+      continue
+    }
+    let port_x =
+      if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
+        0.0
+      }
+    items.push((tail_order, port_x, penalty))
+  }
+  if items.length() < 2 {
+    return 0
+  }
+  let mut cross = 0
+  let mut i = 0
+  while i + 1 < items.length() {
+    let (order_i, port_i, pen_i) = items[i]
+    let mut j = i + 1
+    while j < items.length() {
+      let (order_j, port_j, pen_j) = items[j]
+      if (order_j - order_i).to_double() * (port_j - port_i) < 0.0 {
+        cross = cross + pen_i * pen_j
+      }
+      j = j + 1
+    }
+    i = i + 1
+  }
+  cross
+}
+
+///|
+/// Graphviz parity: rcross-style crossing count with local port-order ties.
+/// Do not change behavior without updating fixtures/tests.
 fn count_crossings_graphviz(
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  edge_tail_port_x? : Array[Double] = [],
+  edge_head_port_x? : Array[Double] = [],
 ) -> Int {
   let order = build_order_index(groups)
   let rank_keys : Array[Int] = []
@@ -1198,6 +1327,7 @@ fn count_crossings_graphviz(
   }
   rank_keys.sort()
   let edge_out : Map[String, Array[Int]] = Map::new()
+  let edge_in : Map[String, Array[Int]] = Map::new()
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -1205,14 +1335,18 @@ fn count_crossings_graphviz(
     }
     for name in names {
       edge_out[name] = []
+      edge_in[name] = []
     }
   }
+  let edge_penalty : Array[Int] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
+    let penalty = edge_xpenalty(edge)
+    edge_penalty.push(penalty)
     if !edge_is_constraint(edge) {
       continue
     }
-    if edge_xpenalty(edge) <= 0 {
+    if penalty <= 0 {
       continue
     }
     let tail = edge_tail[edge_idx]
@@ -1220,7 +1354,14 @@ fn count_crossings_graphviz(
       Some(list) => list.push(edge_idx)
       None => edge_out[tail] = [edge_idx]
     }
+    let head = edge_head[edge_idx]
+    match edge_in.get(head) {
+      Some(list) => list.push(edge_idx)
+      None => edge_in[head] = [edge_idx]
+    }
   }
+  let include_ports =
+    edge_tail_port_x.length() > 0 || edge_head_port_x.length() > 0
   let mut crossings = 0
   let mut idx = 0
   while idx + 1 < rank_keys.length() {
@@ -1252,7 +1393,7 @@ fn count_crossings_graphviz(
             Some(value) => value
             None => continue
           }
-          let penalty = edge_xpenalty(edges[edge_idx])
+          let penalty = edge_penalty[edge_idx]
           if penalty <= 0 {
             continue
           }
@@ -1272,7 +1413,7 @@ fn count_crossings_graphviz(
           Some(value) => value
           None => continue
         }
-        let penalty = edge_xpenalty(edges[edge_idx])
+        let penalty = edge_penalty[edge_idx]
         if penalty <= 0 {
           continue
         }
@@ -1280,6 +1421,36 @@ fn count_crossings_graphviz(
           max_order = inv
         }
         count[inv] = count[inv] + penalty
+      }
+    }
+    if include_ports {
+      for top in top_nodes {
+        rank_cross =
+          rank_cross +
+          local_cross_out_graphviz(
+            top,
+            next_rank,
+            ranks,
+            order,
+            edge_out,
+            edge_head,
+            edge_tail_port_x,
+            edge_penalty,
+          )
+      }
+      for bottom in next_nodes {
+        rank_cross =
+          rank_cross +
+          local_cross_in_graphviz(
+            bottom,
+            rank,
+            ranks,
+            order,
+            edge_in,
+            edge_tail,
+            edge_head_port_x,
+            edge_penalty,
+          )
       }
     }
     if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && rank_cross > 0 {
