@@ -159,14 +159,12 @@ fn prepare_layout_inputs(
     }
   }
   let has_edge_labels = graph_has_edge_labels(edges)
-  // Graphviz parity: GD_nlist iteration is reverse creation order.
+  // Graphviz parity: GD_nlist iteration follows creation order (AGSEQ).
   let node_order : Map[String, Int] = Map::new()
   let nlist_nodes = nodes
-  let mut rev_idx = nlist_nodes.length()
   let mut order_idx = 0
-  while rev_idx > 0 {
-    rev_idx = rev_idx - 1
-    node_order[nlist_nodes[rev_idx].name()] = order_idx
+  while order_idx < nlist_nodes.length() {
+    node_order[nlist_nodes[order_idx].name()] = order_idx
     order_idx = order_idx + 1
   }
   if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
