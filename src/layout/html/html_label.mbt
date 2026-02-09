@@ -20,6 +20,22 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+const DEFAULT_BORDER_PT : Double = 1.0
+
+///|
+const DEFAULT_CELLPADDING_PT : Double = 2.0
+
+///|
+const DEFAULT_CELLSPACING_PT : Double = 2.0
+
+///|
+/// Graphviz parity: HTML table border defaults follow refs/graphviz/lib/common/htmltable.c.
+/// Do not change behavior without updating fixtures/tests.
+fn table_border_pt(table : HtmlTable) -> Double {
+  if table.border_pt < 0.0 { DEFAULT_BORDER_PT } else { table.border_pt }
+}
+
+///|
 pub fn is_html_label_text(label : String) -> Bool {
   let trimmed = label.trim(chars=" \n\r\t").to_string()
   trimmed.length() >= 3 && trimmed.has_prefix("<<") && trimmed.has_suffix(">")
@@ -423,13 +439,18 @@ fn parse_html_table_from_attrs(
   parser : HtmlParser,
   attrs : Map[String, String],
 ) -> HtmlTable {
-  let border_pt = html_parse_double(attrs.get("border"), 1.0)
+  let border_pt = match attrs.get("border") {
+    Some(value) => parse_double(value, DEFAULT_BORDER_PT)
+    None => -1.0
+  }
   let cell_border_pt = match attrs.get("cellborder") {
     Some(value) => parse_double(value, 0.0)
-    None => if border_pt <= 0.0 { 0.0 } else { 1.0 }
+    None => -1.0
   }
-  let cell_spacing_pt = html_parse_double(attrs.get("cellspacing"), 2.0)
-  let cell_padding_pt = html_parse_double(attrs.get("cellpadding"), 2.0)
+  let cell_spacing_pt =
+    html_parse_double(attrs.get("cellspacing"), DEFAULT_CELLSPACING_PT)
+  let cell_padding_pt =
+    html_parse_double(attrs.get("cellpadding"), DEFAULT_CELLPADDING_PT)
   let bg_color = attrs.get("bgcolor")
   let rows : Array[HtmlRow] = []
   while parser.index < parser.chars.length() {
@@ -584,8 +605,13 @@ pub fn html_table_metrics(
           current = current + col_widths[i]
         }
       }
-      if cell_width > current && cell.col_span > 0 {
-        let extra = (cell_width - current) / cell.col_span.to_double()
+      // Graphviz parity: colspan sizing accounts for inter-cell spacing when
+      // comparing against span width, but distributes only the remaining width.
+      let spacing =
+        table.cell_spacing_pt * (cell.col_span - 1).to_double()
+      if cell_width > current + spacing && cell.col_span > 0 {
+        let extra =
+          (cell_width - spacing - current) / cell.col_span.to_double()
         for i in start..<end {
           if i < col_widths.length() {
             col_widths[i] = col_widths[i] + extra
@@ -607,8 +633,13 @@ pub fn html_table_metrics(
           current = current + row_heights[i]
         }
       }
-      if cell_height > current && cell.row_span > 0 {
-        let extra = (cell_height - current) / cell.row_span.to_double()
+      // Graphviz parity: rowspan sizing accounts for inter-cell spacing when
+      // comparing against span height, but distributes only the remaining height.
+      let spacing =
+        table.cell_spacing_pt * (cell.row_span - 1).to_double()
+      if cell_height > current + spacing && cell.row_span > 0 {
+        let extra =
+          (cell_height - spacing - current) / cell.row_span.to_double()
         for i in start..<end {
           if i < row_heights.length() {
             row_heights[i] = row_heights[i] + extra
@@ -617,8 +648,9 @@ pub fn html_table_metrics(
       }
     }
   }
-  let mut total_width = table.border_pt * 2.0
-  let mut total_height = table.border_pt * 2.0
+  let border_pt = table_border_pt(table)
+  let mut total_width = border_pt * 2.0
+  let mut total_height = border_pt * 2.0
   if col_widths.length() > 0 {
     total_width = total_width +
       table.cell_spacing_pt * (col_widths.length() + 1).to_double()
@@ -657,8 +689,9 @@ pub fn html_table_layout(
   }
   let scale_x = (rect.urx - rect.llx) / metrics.total_width
   let scale_y = (rect.ury - rect.lly) / metrics.total_height
-  let border_x = table.border_pt * scale_x
-  let border_y = table.border_pt * scale_y
+  let border_pt = table_border_pt(table)
+  let border_x = border_pt * scale_x
+  let border_y = border_pt * scale_y
   let spacing_x = table.cell_spacing_pt * scale_x
   let spacing_y = table.cell_spacing_pt * scale_y
   let col_positions : Array[(Double, Double)] = []

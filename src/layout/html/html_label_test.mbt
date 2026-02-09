@@ -276,7 +276,7 @@ test "html table size respects colspan" {
   }
   let cell_size = (_cell : HtmlCell) => (30.0, 20.0)
   let (width, height) = html_table_size(table, cell_size)
-  assert_true(Double::is_close(width, 38.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(width, 36.0, absolute_tolerance=0.01))
   assert_true(Double::is_close(height, 26.0, absolute_tolerance=0.01))
 }
 
