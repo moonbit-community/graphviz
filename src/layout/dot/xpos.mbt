@@ -228,6 +228,56 @@ fn reorder_constraint_graph(
   }
   (new_graph, new_index)
 }
+///|
+/// Graphviz parity: GD_nlist after create_aux_edges prepends slack nodes in
+/// reverse creation order, then preserves GD_nlist order for existing nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_constraint_reorder(
+  graph : NsGraph,
+  index : Map[String, Int],
+  nlist_order : Array[String],
+) -> Array[Int] {
+  let total = graph.nodes.length()
+  let order : Array[Int] = []
+  if total == 0 {
+    return order
+  }
+  let seen : Array[Bool] = []
+  for _ in 0..<total {
+    seen.push(false)
+  }
+  let slack_indices : Array[Int] = []
+  for i in 0..<total {
+    if graph.nodes[i].kind == NodeKind::Slack {
+      slack_indices.push(i)
+    }
+  }
+  let mut slack_idx = slack_indices.length()
+  while slack_idx > 0 {
+    slack_idx = slack_idx - 1
+    let node_idx = slack_indices[slack_idx]
+    order.push(node_idx)
+    seen[node_idx] = true
+  }
+  for name in nlist_order {
+    match index.get(name) {
+      Some(node_idx) =>
+        if !seen[node_idx] {
+        order.push(node_idx)
+        seen[node_idx] = true
+      }
+      None => ()
+    }
+  }
+  for i in 0..<total {
+    if !seen[i] {
+      order.push(i)
+      seen[i] = true
+    }
+  }
+  order
+}
+
 
 ///|
 fn round_int(value : Double) -> Int {
@@ -1611,17 +1661,7 @@ fn x_positions_from_simplex(
     root_ln_targets,
     root_rn_targets,
   )
-  let order : Array[Int] = []
-  if graph.nodes.length() > 0 {
-    let mut idx = graph.nodes.length() - 1
-    while true {
-      order.push(idx)
-      if idx == 0 {
-        break
-      }
-      idx = idx - 1
-    }
-  }
+  let order = build_constraint_reorder(graph, index, nlist_order)
   let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(
