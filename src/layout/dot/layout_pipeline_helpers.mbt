@@ -2898,9 +2898,17 @@ fn compute_ordering_and_vnodes(
               }
             }
           }
+          // Graphviz parity: GD_nlist seeding uses agfstnode order for the
+          // fast graph (reverse creation insertion).
+          let rem_order_creation_rev : Array[String] = []
+          let mut rem_rev_idx = rem_order_creation.length()
+          while rem_rev_idx > 0 {
+            rem_rev_idx = rem_rev_idx - 1
+            rem_order_creation_rev.push(rem_order_creation[rem_rev_idx])
+          }
           let rem_nlist_order =
             build_graphviz_nlist_order_from_edges(
-              rem_order_creation,
+              rem_order_creation_rev,
               rem_order_creation,
               rem_edge_creation_order,
               rem_flat_constraints,
