@@ -1348,6 +1348,55 @@ fn prepend_order_edge_entry(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton creation follows cluster_order first,
+/// then remaining cluster_min_rank iteration order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_skeleton_creation(
+  order_with_clusters : Bool,
+  cluster_order : Array[String],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Array[String] {
+  let cluster_skeleton_creation : Array[String] = []
+  if !order_with_clusters {
+    return cluster_skeleton_creation
+  }
+  let cluster_seen : Map[String, Bool] = Map::new()
+  for cluster in cluster_order {
+    match cluster_min_rank.get(cluster) {
+      Some(min_rank) => {
+        let max_rank = match cluster_max_rank.get(cluster) {
+          Some(value) => value
+          None => min_rank
+        }
+        for rank in min_rank..=max_rank {
+          cluster_skeleton_creation.push(
+            "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+          )
+        }
+        cluster_seen[cluster] = true
+      }
+      None => ()
+    }
+  }
+  for cluster, min_rank in cluster_min_rank {
+    if cluster_seen.get(cluster) is Some(_) {
+      continue
+    }
+    let max_rank = match cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    for rank in min_rank..=max_rank {
+      cluster_skeleton_creation.push(
+        "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+      )
+    }
+  }
+  cluster_skeleton_creation
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1561,41 +1610,13 @@ fn compute_ordering_and_vnodes(
   } else {
     order_edges_by_tail
   }
-  let cluster_skeleton_creation : Array[String] = []
-  if order_with_clusters {
-    let cluster_seen : Map[String, Bool] = Map::new()
-    for cluster in cluster_meta.cluster_order {
-      match cluster_meta.cluster_min_rank.get(cluster) {
-        Some(min_rank) => {
-          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-            Some(value) => value
-            None => min_rank
-          }
-          for rank in min_rank..=max_rank {
-            cluster_skeleton_creation.push(
-              "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
-            )
-          }
-          cluster_seen[cluster] = true
-        }
-        None => ()
-      }
-    }
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
-      if cluster_seen.get(cluster) is Some(_) {
-        continue
-      }
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      for rank in min_rank..=max_rank {
-        cluster_skeleton_creation.push(
-          "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
-        )
-      }
-    }
-  }
+  let cluster_skeleton_creation =
+    build_cluster_skeleton_creation(
+      order_with_clusters,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+    )
   let skeleton_edge_creation : Array[(String, String)] = []
   if order_with_clusters {
     let cluster_seen : Map[String, Bool] = Map::new()
