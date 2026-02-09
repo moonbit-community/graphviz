@@ -672,9 +672,62 @@ fn apply_root_port_padding(
 /// Graphviz parity: root label bbox expansion aligned to refs/graphviz/lib/common/postproc.c
 /// (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
+fn expand_root_bbox_for_label(
+  bbox : @geom.Rect,
+  padded_width : Double,
+  padded_height : Double,
+  loc : LabelLoc,
+  rankdir : RankDir,
+) -> @geom.Rect {
+  let mut llx = bbox.llx
+  let mut lly = bbox.lly
+  let mut urx = bbox.urx
+  let mut ury = bbox.ury
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  if flip {
+    match loc {
+      LabelLoc::Top => urx = urx + padded_height
+      LabelLoc::Bottom => llx = llx - padded_height
+    }
+    let span = ury - lly
+    if padded_width > span {
+      let diff = (padded_width - span) / 2.0
+      lly = lly - diff
+      ury = ury + diff
+    }
+  } else {
+    match loc {
+      LabelLoc::Top =>
+        if rankdir == RankDir::TB {
+          ury = ury + padded_height
+        } else {
+          lly = lly - padded_height
+        }
+      LabelLoc::Bottom =>
+        if rankdir == RankDir::TB {
+          lly = lly - padded_height
+        } else {
+          ury = ury + padded_height
+        }
+    }
+    let span = urx - llx
+    if padded_width > span {
+      let diff = (padded_width - span) / 2.0
+      llx = llx - diff
+      urx = urx + diff
+    }
+  }
+  { llx, lly, urx, ury }
+}
+
+///|
+/// Graphviz parity: root label bbox expansion aligned to refs/graphviz/lib/common/postproc.c
+/// (gv_postprocess).
+/// Do not change behavior without updating fixtures/tests.
 fn apply_root_label_bbox(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
+  rankdir : RankDir,
 ) -> (@geom.Rect, @geom.Point?) {
   let mut bbox = bbox
   let mut label_pos : @geom.Point? = None
@@ -686,7 +739,14 @@ fn apply_root_label_bbox(
         let pad = CLUSTER_LABEL_PAD_PT
         let padded_width = width_pt + pad * 2.0
         let padded_height = height_pt + pad
-        bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+        bbox =
+          expand_root_bbox_for_label(
+            bbox,
+            padded_width,
+            padded_height,
+            loc,
+            rankdir,
+          )
         label_pos = Some(
           graph_label_pos(bbox, padded_width, padded_height, loc, just),
         )
@@ -904,7 +964,8 @@ fn finalize_layout_graph(
       flat_label_edge_vnodes,
     )
   let with_xlabels = place_xlabels(graph, labeled, splines)
-  let (bbox, label_pos) = apply_root_label_bbox(graph, with_xlabels.bbox)
+  let (bbox, label_pos) =
+    apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   let labeled_with_root = {
     graph: with_xlabels.graph,
     bbox,
