@@ -1726,8 +1726,8 @@ pub fn edge_pathplan_polyline(
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
   let mval_route_sizes = merge_sizes(mval_sizes, vnode_sizes)
-  // Graphviz parity: Splinesep uses integer division (GD_nodesep / 4).
-  let splinesep_pt = (nodesep_pt / 4.0).floor()
+  // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
+  let splinesep_pt = (round_int(nodesep_pt) / 4).to_double()
   let (left_bound, right_bound) =
     compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
