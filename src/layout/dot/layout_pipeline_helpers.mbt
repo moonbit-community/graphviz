@@ -934,36 +934,20 @@ fn reorder_groups_by_cluster_build_ranks(
         }
       }
     }
-    let cluster_groups : Map[Int, Array[String]] = Map::new()
     let cluster_node_set : Map[String, Bool] = Map::new()
-    for rank, names in groups {
-      let list : Array[String] = []
+    for _rank, names in groups {
       for name in names {
         if cluster_nodes_set.get(name) is Some(_) {
-          list.push(name)
           cluster_node_set[name] = true
         }
-      }
-      if list.length() > 0 {
-        cluster_groups[rank] = list
       }
     }
     if cluster_node_set.length() <= 1 {
       continue
     }
-    let cluster_rank_keys = collect_rank_keys(cluster_groups)
-    if cluster_rank_keys.length() == 0 {
-      continue
-    }
     let cluster_nodes : Array[String] = []
-    for rank in cluster_rank_keys {
-      let names = match cluster_groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
-        cluster_nodes.push(name)
-      }
+    for name, _ in cluster_node_set {
+      cluster_nodes.push(name)
     }
     let cluster_node_order : Map[String, Int] = Map::new()
     let cluster_ordered_nodes = cluster_nodes.copy()
@@ -994,6 +978,45 @@ fn reorder_groups_by_cluster_build_ranks(
     for name in cluster_ordered_nodes {
       cluster_node_order[name] = order_idx
       order_idx = order_idx + 1
+    }
+    let cluster_groups : Map[Int, Array[String]] = Map::new()
+    for rank, names in groups {
+      let list : Array[String] = []
+      for name in names {
+        if cluster_nodes_set.get(name) is Some(_) {
+          list.push(name)
+        }
+      }
+      if list.length() > 1 {
+        list.sort_by((a, b) => {
+          let a_idx = match cluster_node_order.get(a) {
+            Some(value) => value
+            None => 0
+          }
+          let b_idx = match cluster_node_order.get(b) {
+            Some(value) => value
+            None => 0
+          }
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else if a < b {
+            -1
+          } else if a > b {
+            1
+          } else {
+            0
+          }
+        })
+      }
+      if list.length() > 0 {
+        cluster_groups[rank] = list
+      }
+    }
+    let cluster_rank_keys = collect_rank_keys(cluster_groups)
+    if cluster_rank_keys.length() == 0 {
+      continue
     }
     let cluster_edges : Array[@cgraph.Edge] = []
     let cluster_edge_tail : Array[String] = []
