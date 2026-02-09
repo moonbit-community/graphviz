@@ -449,6 +449,10 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "record"
     | "mrecord"
     | "msquare"
+    | "rpromoter"
+    | "lpromoter"
+    | "rarrow"
+    | "larrow"
     | "plaintext"
     | "plain" =>
       ClipShape::Rect
