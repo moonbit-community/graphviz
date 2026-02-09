@@ -909,6 +909,15 @@ fn reorder_groups_by_cluster_build_ranks(
     })
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
+  // Graphviz parity: cluster-local ordering must include vnode rank metadata.
+  // Do not change behavior without updating fixtures/tests.
+  let fixed_ranks : Map[String, Int] = Map::new()
+  for name, rank in ranks {
+    fixed_ranks[name] = rank
+  }
+  for name, rank in vnode_info.vnode_ranks {
+    fixed_ranks[name] = rank
+  }
   for cluster in cluster_names {
     let cluster_graph = match cluster_graphs.get(cluster) {
       Some(value) => value
@@ -1007,7 +1016,7 @@ fn reorder_groups_by_cluster_build_ranks(
       cluster_nodes,
       cluster_edge_tail,
       cluster_edge_head,
-      ranks,
+      fixed_ranks,
     )
     let edge_order = collect_edge_order(cluster_edges)
     let cluster_sizes : Map[String, NodeSize] = Map::new()
