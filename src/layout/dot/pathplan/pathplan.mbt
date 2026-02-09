@@ -322,37 +322,37 @@ fn normalize_polygon_order(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let p3 = points[(min_idx + 1) % points.length()]
   let needs_reverse =
     (p1.x == p2.x && p2.x == p3.x && p3.y > p2.y) || ccw(p1, p2, p3) != CCW_ISCCW
-  if !needs_reverse {
-    let deduped : Array[@geom.Point] = []
-    let mut idx = 0
-    while idx < points.length() {
-      if idx > 0 {
-        let prev = points[idx - 1]
-        let cur = points[idx]
-        if cur.x == prev.x && cur.y == prev.y {
-          idx = idx + 1
-          continue
-        }
+  let ordered : Array[@geom.Point] =
+    if needs_reverse {
+      let reversed : Array[@geom.Point] = []
+      let mut idx = points.length()
+      while idx > 0 {
+        idx = idx - 1
+        reversed.push(points[idx])
       }
-      deduped.push(points[idx])
-      idx = idx + 1
+      reversed
+    } else {
+      points
     }
-    return deduped
+  // Graphviz parity: drop consecutive duplicate polygon vertices (shortest.c).
+  if ordered.length() == 0 {
+    return ordered
   }
-  let reversed : Array[@geom.Point] = []
-  let mut idx = points.length()
-  while idx > 0 {
-    idx = idx - 1
-    if idx + 1 < points.length() {
-      let prev = points[idx + 1]
-      let cur = points[idx]
-      if cur.x == prev.x && cur.y == prev.y {
-        continue
+  let deduped : Array[@geom.Point] = []
+  let mut idx = 0
+  while idx < ordered.length() {
+    let p = ordered[idx]
+    if idx == 0 {
+      deduped.push(p)
+    } else {
+      let prev = ordered[idx - 1]
+      if p.x != prev.x || p.y != prev.y {
+        deduped.push(p)
       }
     }
-    reversed.push(points[idx])
+    idx = idx + 1
   }
-  reversed
+  deduped
 }
 
 ///|
