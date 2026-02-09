@@ -248,9 +248,8 @@ fn build_rank_groups_graphviz(
           }
         }
       }
-      if cluster_skeleton.get(current) == Some(true) {
-        continue
-      }
+      // Graphviz parity: rankleader/skeleton nodes are installed like other
+      // nodes once discovered in the component walk.
       if installed.get(current) != Some(true) {
         let rank = match node_ranks.get(current) {
           Some(value) => value
