@@ -2541,6 +2541,23 @@ fn ensure_self_edge_routes(
 }
 
 ///|
+/// Graphviz parity: routed edge output remains in original edge iteration order.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_edges_in_input_order(
+  edges : Array[@cgraph.Edge],
+  edges_out_by_id : Map[Int, DotLayoutEdge],
+) -> Array[DotLayoutEdge] {
+  let edges_out : Array[DotLayoutEdge] = []
+  for edge in edges {
+    match edges_out_by_id.get(edge.id()) {
+      Some(value) => edges_out.push(value)
+      None => ()
+    }
+  }
+  edges_out
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2693,12 +2710,5 @@ fn route_edges(
       )
     edges_out_by_id[edge_id] = edge_layout
   }
-  let edges_out : Array[DotLayoutEdge] = []
-  for edge in edges {
-    match edges_out_by_id.get(edge.id()) {
-      Some(value) => edges_out.push(value)
-      None => ()
-    }
-  }
-  edges_out
+  collect_edges_in_input_order(edges, edges_out_by_id)
 }
