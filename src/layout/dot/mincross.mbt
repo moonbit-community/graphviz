@@ -988,6 +988,7 @@ fn reorder_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  fixed_positions? : Map[String, Double] = Map::new(),
   fixed_ranks? : Map[String, Int] = Map::new(),
   graphviz_flip? : Bool = false,
   startpass? : Int = 0,
@@ -1058,6 +1059,17 @@ fn reorder_rank_groups(
   }
   let mut best_ordered = clone_rank_groups(ordered)
   let mut order_positions = order_positions_from_groups(ordered)
+  let merge_fixed_positions = () => {
+    if fixed_positions.length() == 0 {
+      return ()
+    }
+    for name, pos in fixed_positions {
+      if order_positions.get(name) is None {
+        order_positions[name] = pos
+      }
+    }
+  }
+  merge_fixed_positions()
   let mut has_port_order = false
   for _name, _ in port_order_positions {
     has_port_order = true
@@ -1169,6 +1181,7 @@ fn reorder_rank_groups(
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
     order_positions = order_positions_from_groups(ordered)
+    merge_fixed_positions()
     let seed_cross =
       count_crossings_graphviz(
         ordered,
@@ -1198,6 +1211,7 @@ fn reorder_rank_groups(
         0,
       )
       order_positions = order_positions_from_groups(ordered)
+      merge_fixed_positions()
     }
     ordered = flat_reorder_rank_groups_graphviz(
       rank_keys,
@@ -1207,6 +1221,7 @@ fn reorder_rank_groups(
       graphviz_flip,
     )
     order_positions = order_positions_from_groups(ordered)
+    merge_fixed_positions()
     best_ordered = clone_rank_groups(ordered)
     best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
@@ -1239,6 +1254,7 @@ fn reorder_rank_groups(
           graphviz_in_neighbors=graphviz_in_neighbors,
         )
         order_positions = order_positions_from_groups(ordered)
+        merge_fixed_positions()
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
         let seed_cross =
@@ -1278,6 +1294,7 @@ fn reorder_rank_groups(
           graphviz_flip,
         )
         order_positions = order_positions_from_groups(ordered)
+        merge_fixed_positions()
         cur_cross =
           count_crossings_graphviz(
             ordered,
@@ -1302,6 +1319,7 @@ fn reorder_rank_groups(
             ordered[rank] = names
           }
           order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
         }
         cur_cross = best_cross
       }
@@ -1337,6 +1355,7 @@ fn reorder_rank_groups(
                 flat_constraints,
               )
               order_positions = order_positions_from_groups(ordered)
+              merge_fixed_positions()
             }
             idx = idx + 1
           }
@@ -1364,6 +1383,7 @@ fn reorder_rank_groups(
                 flat_constraints,
               )
               order_positions = order_positions_from_groups(ordered)
+              merge_fixed_positions()
             }
             if idx == 0 {
               break
@@ -1390,6 +1410,7 @@ fn reorder_rank_groups(
             0,
           )
           order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
         }
         cur_cross =
           count_crossings_graphviz(
@@ -1426,6 +1447,7 @@ fn reorder_rank_groups(
         ordered[rank] = names
       }
       order_positions = order_positions_from_groups(ordered)
+      merge_fixed_positions()
     }
     if best_cross > 0 && !has_port_order {
       let _ = transpose_rank_groups_graphviz(
@@ -1478,6 +1500,7 @@ fn reorder_rank_groups(
                 flat_constraints,
               )
               order_positions = order_positions_from_groups(ordered)
+              merge_fixed_positions()
             }
             idx = idx + 1
           }
@@ -1505,6 +1528,7 @@ fn reorder_rank_groups(
                 flat_constraints,
               )
               order_positions = order_positions_from_groups(ordered)
+              merge_fixed_positions()
             }
             if idx == 0 {
               break
@@ -1531,6 +1555,7 @@ fn reorder_rank_groups(
             0,
           )
           order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
         }
         let cross =
           count_crossings_graphviz(
@@ -1569,6 +1594,7 @@ fn reorder_rank_groups(
               edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
+            merge_fixed_positions()
           }
           idx = idx - 1
         }
@@ -1597,6 +1623,7 @@ fn reorder_rank_groups(
               edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
+            merge_fixed_positions()
           }
         }
         let down_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
@@ -1626,6 +1653,7 @@ fn reorder_rank_groups(
               edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
+            merge_fixed_positions()
           }
           j = j + 1
         }
@@ -1654,6 +1682,7 @@ fn reorder_rank_groups(
               edge_pair_order, port_order_positions, reverse_ties,
             )
             order_positions = order_positions_from_groups(ordered)
+            merge_fixed_positions()
           }
         }
         let up_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)

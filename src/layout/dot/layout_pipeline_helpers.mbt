@@ -909,6 +909,9 @@ fn reorder_groups_by_cluster_build_ranks(
     })
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
+  // Graphviz parity: cluster-local ordering keeps global node order hints so
+  // local passes can consult external positions when needed.
+  let fixed_positions = order_positions_from_groups(groups)
   // Graphviz parity: cluster-local ordering must include vnode rank metadata.
   // Do not change behavior without updating fixtures/tests.
   let fixed_ranks : Map[String, Int] = Map::new()
@@ -1111,6 +1114,7 @@ fn reorder_groups_by_cluster_build_ranks(
       empty_cluster_skeleton,
       cluster_flat_constraints,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
+      fixed_positions=fixed_positions,
       fixed_ranks=fixed_ranks,
       graphviz_flip=false,
       startpass=2,
