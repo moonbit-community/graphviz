@@ -26,6 +26,7 @@ test "port side helpers and endpoint slope" {
   assert_eq(port_side_count(port_rect, pos, size), 1)
   let slope = endpoint_slope_for_anchor(
     None,
+    0,
     point(0.0, 0.0),
     pos,
     size,

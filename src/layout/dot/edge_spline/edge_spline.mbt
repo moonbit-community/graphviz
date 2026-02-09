@@ -8,6 +8,18 @@ type RankDir = @dot_shared.RankDir
 const RECORD_BORDER_PT : Double = @dot_shared.RECORD_BORDER_PT
 
 ///|
+const PORT_SIDE_BOTTOM : Int = 1
+
+///|
+const PORT_SIDE_RIGHT : Int = 2
+
+///|
+const PORT_SIDE_TOP : Int = 4
+
+///|
+const PORT_SIDE_LEFT : Int = 8
+
+///|
 fn port_is_explicit(port : @cgraph.Port?) -> Bool {
   @dot_shared.port_is_explicit(port)
 }
@@ -2194,6 +2206,7 @@ pub fn port_side_count(
 ///|
 pub fn endpoint_slope_for_anchor(
   port : @cgraph.Port?,
+  port_side : Int,
   anchor : @geom.Point,
   node_pos : @geom.Point,
   node_size : NodeSize,
@@ -2214,6 +2227,20 @@ pub fn endpoint_slope_for_anchor(
             None => point(0.0, 0.0)
           }
         None => {
+          if port_side != 0 {
+            let dir = if (port_side & PORT_SIDE_TOP) != 0 {
+              point(0.0, 1.0)
+            } else if (port_side & PORT_SIDE_BOTTOM) != 0 {
+              point(0.0, -1.0)
+            } else if (port_side & PORT_SIDE_LEFT) != 0 {
+              point(-1.0, 0.0)
+            } else if (port_side & PORT_SIDE_RIGHT) != 0 {
+              point(1.0, 0.0)
+            } else {
+              point(0.0, 0.0)
+            }
+            return if tail { dir } else { point(-dir.x, -dir.y) }
+          }
           match port_rect {
             Some(rect) =>
               match port_side_direction(
@@ -2226,7 +2253,14 @@ pub fn endpoint_slope_for_anchor(
               ) {
                 Some(dir) =>
                   return if tail { dir } else { point(-dir.x, -dir.y) }
-                None => ()
+                None => {
+                  let side_count = port_side_count(rect, node_pos, node_size)
+                  if side_count == 0 {
+                    // Graphviz parity: dynamic ports with no exposed sides keep
+                    // endpoint slopes unconstrained (routespl.c + shapes.c).
+                    return point(0.0, 0.0)
+                  }
+                }
               }
             None => ()
           }

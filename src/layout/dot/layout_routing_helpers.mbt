@@ -840,6 +840,7 @@ fn build_edge_route_base(
   }
   let tail_slope = endpoint_slope_for_anchor(
     tail_port,
+    tail_port_side,
     tail_anchor,
     tail_pos,
     tail_size,
@@ -850,6 +851,7 @@ fn build_edge_route_base(
   )
   let head_slope = endpoint_slope_for_anchor(
     head_port,
+    head_port_side,
     head_anchor,
     head_pos,
     head_size,

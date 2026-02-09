@@ -85,6 +85,7 @@ fn port_side_count(
 ///|
 fn endpoint_slope_for_anchor(
   port : @cgraph.Port?,
+  port_side : Int,
   anchor : @geom.Point,
   node_pos : @geom.Point,
   node_size : NodeSize,
@@ -95,6 +96,7 @@ fn endpoint_slope_for_anchor(
 ) -> @geom.Point {
   @edge_spline.endpoint_slope_for_anchor(
     port,
+    port_side,
     anchor,
     node_pos,
     node_size,
