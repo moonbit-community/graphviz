@@ -2084,13 +2084,16 @@ fn compute_ordering_and_vnodes(
         graphviz_out_neighbors=graphviz_out_neighbors,
         graphviz_in_neighbors=graphviz_in_neighbors,
       )
-      // Graphviz parity: build_ranks applies transpose if crossings remain.
+      // Graphviz parity: build_ranks applies transpose if crossings remain;
+      // crossing count uses endpoint port x offsets for tie-correct ordering.
       let seed_cross = count_crossings_graphviz(
         seeded_groups,
         order_ranks,
         order_edges_out,
         order_edge_tail_out,
         order_edge_head_out,
+        edge_tail_port_x=order_edge_tail_port_x,
+        edge_head_port_x=order_edge_head_port_x,
       )
       if seed_cross > 0 {
         let edge_penalty : Array[Int] = []
