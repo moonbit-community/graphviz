@@ -114,6 +114,9 @@ fn prepare_layout_inputs(
         None => default_nodesep_in()
       }
   }
+  if nodesep_raw < 0.0 {
+    raise DotLayoutError::InvalidGraph(message="nodesep must be non-negative")
+  }
   // Graphviz parity: late_double clamps nodesep to MIN_NODESEP.
   let nodesep_in =
     if nodesep_raw < MIN_NODESEP_IN { MIN_NODESEP_IN } else { nodesep_raw }
@@ -125,15 +128,12 @@ fn prepare_layout_inputs(
         None => default_ranksep_in()
       }
   }
+  if ranksep_raw < 0.0 {
+    raise DotLayoutError::InvalidGraph(message="ranksep must be non-negative")
+  }
   // Graphviz parity: ranksep clamps to MIN_RANKSEP.
   let ranksep_in =
     if ranksep_raw < MIN_RANKSEP_IN { MIN_RANKSEP_IN } else { ranksep_raw }
-  if nodesep_in < 0.0 {
-    raise DotLayoutError::InvalidGraph(message="nodesep must be non-negative")
-  }
-  if ranksep_in < 0.0 {
-    raise DotLayoutError::InvalidGraph(message="ranksep must be non-negative")
-  }
   let splines = match opts.splines {
     Some(value) => value
     None =>
