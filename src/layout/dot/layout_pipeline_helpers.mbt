@@ -1327,6 +1327,27 @@ fn clone_flat_constraints(
 }
 
 ///|
+/// Graphviz parity: prepended cluster skeleton edges must stay ahead of
+/// previously collected tail edges during class2 ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn prepend_order_edge_entry(
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  tail_name : String,
+  entry : (String, String, Int, Bool, Double, Double, Double, Double),
+) -> Unit {
+  match order_edges_by_tail.get(tail_name) {
+    Some(list) => {
+      let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = [entry]
+      for item in list {
+        updated.push(item)
+      }
+      order_edges_by_tail[tail_name] = updated
+    }
+    None => order_edges_by_tail[tail_name] = [entry]
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1591,28 +1612,16 @@ fn compute_ordering_and_vnodes(
             let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
             let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
             skeleton_edge_creation.push((tail_name, head_name))
-            match order_edges_by_tail.get(tail_name) {
-              Some(list) => {
-                let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
-                  [entry]
-                for item in list {
-                  updated.push(item)
-                }
-                order_edges_by_tail[tail_name] = updated
-              }
-              None => order_edges_by_tail[tail_name] = [entry]
-            }
-            match order_edges_by_tail_root.get(tail_name) {
-              Some(list) => {
-                let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
-                  [entry]
-                for item in list {
-                  updated.push(item)
-                }
-                order_edges_by_tail_root[tail_name] = updated
-              }
-              None => order_edges_by_tail_root[tail_name] = [entry]
-            }
+            prepend_order_edge_entry(
+              order_edges_by_tail,
+              tail_name,
+              entry,
+            )
+            prepend_order_edge_entry(
+              order_edges_by_tail_root,
+              tail_name,
+              entry,
+            )
             rank = rank + 1
           }
           cluster_seen[cluster] = true
@@ -1634,28 +1643,16 @@ fn compute_ordering_and_vnodes(
         let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
         let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
         skeleton_edge_creation.push((tail_name, head_name))
-        match order_edges_by_tail.get(tail_name) {
-          Some(list) => {
-            let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
-              [entry]
-            for item in list {
-              updated.push(item)
-            }
-            order_edges_by_tail[tail_name] = updated
-          }
-          None => order_edges_by_tail[tail_name] = [entry]
-        }
-        match order_edges_by_tail_root.get(tail_name) {
-          Some(list) => {
-            let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] =
-              [entry]
-            for item in list {
-              updated.push(item)
-            }
-            order_edges_by_tail_root[tail_name] = updated
-          }
-          None => order_edges_by_tail_root[tail_name] = [entry]
-        }
+        prepend_order_edge_entry(
+          order_edges_by_tail,
+          tail_name,
+          entry,
+        )
+        prepend_order_edge_entry(
+          order_edges_by_tail_root,
+          tail_name,
+          entry,
+        )
         rank = rank + 1
       }
     }
