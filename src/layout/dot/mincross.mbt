@@ -1132,8 +1132,12 @@ fn reorder_rank_groups(
       None => edge_in[head] = [edge_idx]
     }
   }
+  // Graphviz parity: initial passes should always allow acceptance of
+  // improved orderings before final crossing baseline is established.
   let mut best_cross =
-    if graphviz_style {
+    if graphviz_style && startpass <= 1 {
+    2147483647
+  } else if graphviz_style {
     count_crossings_graphviz(
       ordered,
       node_ranks,
