@@ -1239,37 +1239,36 @@ fn reorder_rank_groups(
           graphviz_in_neighbors=graphviz_in_neighbors,
         )
         order_positions = order_positions_from_groups(ordered)
-        if !has_port_order {
-          let cross =
-            count_crossings_graphviz(
-              ordered,
-              node_ranks,
-              edges,
-              edge_tail,
-              edge_head,
-              edge_tail_port_x=edge_tail_port_x,
-              edge_head_port_x=edge_head_port_x,
-            )
-          if cross > 0 {
-            let _ = transpose_rank_groups_graphviz(
-              rank_keys,
-              ordered,
-              node_ranks,
-              edge_in,
-              edge_out,
-              edge_tail,
-              edge_head,
-              edge_tail_port_x,
-              edge_head_port_x,
-              edge_penalty,
-              cluster_keys,
-              cluster_skeleton,
-              flat_constraints,
-              false,
-              0,
-            )
-            order_positions = order_positions_from_groups(ordered)
-          }
+        // Graphviz parity: seed transpose probe runs before flat reorder in
+        // each graphviz-style pass, independent of port-order hints.
+        let seed_cross =
+          count_crossings_graphviz(
+            ordered,
+            node_ranks,
+            edges,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x=edge_tail_port_x,
+            edge_head_port_x=edge_head_port_x,
+          )
+        if seed_cross > 0 {
+          let _ = transpose_rank_groups_graphviz(
+            rank_keys,
+            ordered,
+            node_ranks,
+            edge_in,
+            edge_out,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x,
+            edge_head_port_x,
+            edge_penalty,
+            cluster_keys,
+            cluster_skeleton,
+            flat_constraints,
+            false,
+            0,
+          )
         }
         ordered = flat_reorder_rank_groups_graphviz(
           rank_keys,
