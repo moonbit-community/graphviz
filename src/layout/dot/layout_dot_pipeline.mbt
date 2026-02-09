@@ -168,6 +168,8 @@ fn compute_dot_routing_stage(
     prepare_routing_context(
       prep.nodes,
       prep.edges,
+      rank_stage.rank_data.edge_tail,
+      rank_stage.rank_data.edge_head,
       prep.sizes,
       prep.rankdir,
       prep.record_orientation,

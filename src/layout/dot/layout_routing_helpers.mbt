@@ -17,6 +17,8 @@ priv struct RoutingContext {
 fn prepare_routing_context(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
@@ -31,7 +33,12 @@ fn prepare_routing_context(
   let order_index = build_order_index(ordered_groups)
   let path_order_index = build_order_index(x_groups)
   let path_adjacency =
-    @routesplines.build_path_adjacency(edges, vnode_info.edge_vnodes)
+    @routesplines.build_path_adjacency(
+      edges,
+      vnode_info.edge_vnodes,
+      edge_tail,
+      edge_head,
+    )
   let pathplan_sizes =
     apply_self_edge_right_space(
       nodes,

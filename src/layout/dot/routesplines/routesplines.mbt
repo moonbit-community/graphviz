@@ -75,25 +75,40 @@ pub struct PathAdjacency {
 }
 
 ///|
+/// Graphviz parity: adjacency follows effective edge direction after acyclic
+/// reversal (dotgen/acyclic.c + dotsplines.c path ordering).
+/// Do not change behavior without updating fixtures/tests.
 pub fn build_path_adjacency(
   edges : Array[@cgraph.Edge],
   edge_vnodes : Map[String, Array[String]],
+  edge_tail : Array[String],
+  edge_head : Array[String],
 ) -> PathAdjacency {
   let out_edges : Map[String, Array[String]] = Map::new()
   let in_edges : Map[String, Array[String]] = Map::new()
+  let mut edge_idx = 0
   for edge in edges {
     let key = edge_vnode_key(edge)
     let vnodes = match edge_vnodes.get(key) {
       Some(list) => list
       None => []
     }
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edge.head().name()
+      }
     let path_nodes : Array[String] = []
-    path_nodes.push(edge.tail().name())
+    path_nodes.push(tail)
     for name in vnodes {
       path_nodes.push(name)
     }
-    path_nodes.push(edge.head().name())
+    path_nodes.push(head)
     if path_nodes.length() < 2 {
+      edge_idx = edge_idx + 1
       continue
     }
     let mut idx = 0
@@ -110,6 +125,7 @@ pub fn build_path_adjacency(
       }
       idx = idx + 1
     }
+    edge_idx = edge_idx + 1
   }
   { out_edges, in_edges }
 }
