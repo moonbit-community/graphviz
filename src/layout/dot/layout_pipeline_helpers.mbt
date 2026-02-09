@@ -325,7 +325,7 @@ fn compute_rank_data(
   let (edge_tail, edge_head, edge_reversed) =
     if graph.kind() == @cgraph.GraphKind::Directed {
       let (tail, head, reversed, out_edges, in_edges) =
-        acyclic_edge_directions_with_order(nodes, edges)
+        acyclic_edge_directions_with_order(graph, nodes, edges)
       for i in 0..<nodes.length() {
         let name = nodes[i].name()
         edge_out_order[name] = out_edges[i].copy()

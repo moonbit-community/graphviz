@@ -97,16 +97,18 @@ fn acyclic_dfs(
 
 ///|
 fn acyclic_edge_directions(
+  graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
 ) -> (Array[String], Array[String], Array[Bool]) {
   let (edge_tail, edge_head, edge_reversed, _out_edges, _in_edges) =
-    acyclic_edge_directions_with_order(nodes, edges)
+    acyclic_edge_directions_with_order(graph, nodes, edges)
   (edge_tail, edge_head, edge_reversed)
 }
 
 ///|
 fn acyclic_edge_directions_with_order(
+  graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
 ) -> (
@@ -116,6 +118,7 @@ fn acyclic_edge_directions_with_order(
   Array[Array[Int]],
   Array[Array[Int]],
 ) {
+  let _ = graph
   let node_index : Map[String, Int] = Map::new()
   for i in 0..<nodes.length() {
     node_index[nodes[i].name()] = i

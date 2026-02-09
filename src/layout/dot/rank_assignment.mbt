@@ -196,7 +196,7 @@ fn compute_ranks_directed_with_clusters(
   }
   if top_clusters.length() == 0 {
     let (base_tail, base_head, base_reversed) =
-      acyclic_edge_directions(nodes, edges)
+      acyclic_edge_directions(source, nodes, edges)
     return compute_ranks_directed_base(
       source,
       nodes,
@@ -242,12 +242,12 @@ fn compute_ranks_directed_with_clusters(
         cluster_edges.push(edge)
       }
     }
-    let (cluster_tail, cluster_head, cluster_reversed) =
-      acyclic_edge_directions(cluster_nodes, cluster_edges)
     let cluster_graph = match cluster_graphs.get(cluster_name) {
       Some(value) => value
       None => source
     }
+    let (cluster_tail, cluster_head, cluster_reversed) =
+      acyclic_edge_directions(cluster_graph, cluster_nodes, cluster_edges)
     let cluster_ranks = compute_ranks_directed(
       cluster_graph,
       cluster_nodes,
