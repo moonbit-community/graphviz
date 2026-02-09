@@ -2251,38 +2251,6 @@ fn route_edges(
         }
         reversed
       }
-      if @sys.get_env_var("DOT_TRACE_SLACK") is Some(_) &&
-        edge.tail().name() == "foo_agent" &&
-        edge.head().name() == "zzz_worker" {
-        println(
-          "slack edge front_end_jz -> tunnel_ingress raw_bezier=\{spline_result.raw_bezier.length()} boxes=\{limited_boxes.length()}",
-        )
-        let mut bi = 0
-        for box in limited_boxes {
-          println(
-            "  box[\{bi}] llx=\{box.llx} lly=\{box.lly} urx=\{box.urx} ury=\{box.ury}",
-          )
-          bi = bi + 1
-        }
-        for vnode in ordered_vnodes {
-          let vnode_rank = match vnode_info.vnode_ranks.get(vnode) {
-            Some(value) => value
-            None => continue
-          }
-          let vnode_y = match rank_y.get(vnode_rank) {
-            Some(value) => value
-            None => continue
-          }
-          let size = match vnode_info.vnode_sizes.get(vnode) {
-            Some(value) => value
-            None => continue
-          }
-          let is_label = size.height_pt > 0.0
-          println(
-            "  vnode=\{vnode} rank=\{vnode_rank} y=\{vnode_y} label=\{is_label}",
-          )
-        }
-      }
       recover_slack_vnodes(
         edge,
         ordered_vnodes,
