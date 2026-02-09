@@ -1259,6 +1259,9 @@ fn is_cluster_extra_node(name : String) -> Bool {
 }
 
 ///|
+/// Graphviz parity: constraint graph uses GD_nlist order for existing
+/// nodes and appends aux slack/cluster nodes per create_aux_edges.
+/// Do not change behavior without updating fixtures/tests.
 fn build_constraint_graph(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -1266,6 +1269,7 @@ fn build_constraint_graph(
   edge_head : Array[String],
   edge_out_order : Map[String, Array[Int]],
   nlist_order : Array[String],
+  gdnlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1282,17 +1286,7 @@ fn build_constraint_graph(
   root_rn_targets : Array[String],
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
-  let ordered_nodes : Array[@cgraph.Node] = []
-  let mut idx = nodes.length() - 1
-  if nodes.length() > 0 {
-    while true {
-      ordered_nodes.push(nodes[idx])
-      if idx == 0 {
-        break
-      }
-      idx = idx - 1
-    }
-  }
+  let ordered_nodes = nodes
   let mut has_port_edges = false
   for edge in edges {
     if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
@@ -1338,26 +1332,64 @@ fn build_constraint_graph(
       early_extra_nodes.push(pair)
     }
   }
-  let index : Map[String, Int] = Map::new()
-  for node in ordered_nodes {
-    let name = node.name()
-    let idx = add_node(graph, name)
-    index[name] = idx
-    let pos = match base_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    set_node_rank(graph, idx, trunc_int(pos))
+  let real_by_name : Map[String, @cgraph.Node] = Map::new()
+  for node in nodes {
+    real_by_name[node.name()] = node
   }
+  let extra_rank : Map[String, Int] = Map::new()
   for pair in early_extra_nodes {
     let (name, rank) = pair
-    let idx = add_node(graph, name, kind=extra_node_kind(name))
-    index[name] = idx
-    let pos = match base_positions.get(name) {
-      Some(value) => value
-      None => rank.to_double()
+    extra_rank[name] = rank
+  }
+  let ordered_names : Array[String] = []
+  let seen : Map[String, Bool] = Map::new()
+  let base_order =
+    if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
+  for name in base_order {
+    if real_by_name.get(name) is Some(_) || extra_rank.get(name) is Some(_) {
+      ordered_names.push(name)
+      seen[name] = true
     }
-    set_node_rank(graph, idx, trunc_int(pos))
+  }
+  for node in nodes {
+    let name = node.name()
+    if seen.get(name) is None {
+      ordered_names.push(name)
+      seen[name] = true
+    }
+  }
+  for name, _rank in extra_rank {
+    if seen.get(name) is None {
+      ordered_names.push(name)
+      seen[name] = true
+    }
+  }
+  let index : Map[String, Int] = Map::new()
+  for name in ordered_names {
+    match real_by_name.get(name) {
+      Some(node) => {
+        let idx = add_node(graph, node.name())
+        index[name] = idx
+        let pos = match base_positions.get(name) {
+          Some(value) => value
+          None => 0.0
+        }
+        set_node_rank(graph, idx, trunc_int(pos))
+      }
+      None =>
+        match extra_rank.get(name) {
+          Some(rank) => {
+            let idx = add_node(graph, name, kind=extra_node_kind(name))
+            index[name] = idx
+            let pos = match base_positions.get(name) {
+              Some(value) => value
+              None => rank.to_double()
+            }
+            set_node_rank(graph, idx, trunc_int(pos))
+          }
+          None => ()
+        }
+    }
   }
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -1693,6 +1725,7 @@ fn x_positions_from_simplex(
     edge_head,
     edge_out_order,
     nlist_order,
+    gdnlist_order,
     ranks,
     rank_keys,
     groups,
