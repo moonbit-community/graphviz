@@ -88,6 +88,9 @@ fn self_edge_right_space_for_edge(
 }
 
 ///|
+/// Graphviz parity: self-edge right-side spacing aligned to
+/// refs/graphviz/lib/dotgen/position.c (self-edge width padding).
+/// Do not change behavior without updating fixtures/tests.
 fn apply_self_edge_right_space(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
