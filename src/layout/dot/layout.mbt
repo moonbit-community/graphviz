@@ -42,6 +42,12 @@ pub fn layout_dot(
 
 ///|
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
+  let arrow_is_none = (value : String?) => {
+    match value {
+      Some(v) => v.trim().to_lower() == "none"
+      None => false
+    }
+  }
   let mut write_bb = self.graph.is_root()
   if !write_bb {
     match self.graph.name() {
@@ -90,12 +96,13 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   for edge_layout in self.edges {
     let edge = edge_layout.edge
     let dir = edge_dir_for(edge, self.graph.kind())
+    // Graphviz parity: omit e/s markers when arrowhead/arrowtail is none.
     let include_tail = match dir {
-      EdgeDir::Back | EdgeDir::Both => true
+      EdgeDir::Back | EdgeDir::Both => !arrow_is_none(edge.get_attr("arrowtail"))
       _ => false
     }
     let include_head = match dir {
-      EdgeDir::Forward | EdgeDir::Both => true
+      EdgeDir::Forward | EdgeDir::Both => !arrow_is_none(edge.get_attr("arrowhead"))
       _ => false
     }
     let segments : Array[String] = []
