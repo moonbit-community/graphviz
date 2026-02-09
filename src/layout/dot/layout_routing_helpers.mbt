@@ -2347,6 +2347,61 @@ fn build_route_base_cache(
 }
 
 ///|
+/// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
+/// Do not change behavior without updating fixtures/tests.
+fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
+  if base.tail_rank <= base.head_rank {
+    base.vnodes.copy()
+  } else {
+    let reversed : Array[String] = []
+    let mut idx = base.vnodes.length()
+    while idx > 0 {
+      idx = idx - 1
+      reversed.push(base.vnodes[idx])
+    }
+    reversed
+  }
+}
+
+///|
+/// Graphviz parity: pathplan recover_slack runs with limitBoxes before vnode updates.
+/// Do not change behavior without updating fixtures/tests.
+fn recover_pathplan_slack_for_edge(
+  edge : @cgraph.Edge,
+  base : EdgeRouteBase,
+  spline_result : EdgeSplineResult,
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  rank_y : Map[Int, Double],
+  vnode_positions : Map[String, @geom.Point],
+  path_adjacency : @routesplines.PathAdjacency,
+) -> Unit {
+  if !spline_result.using_pathplan ||
+    spline_result.pathplan_boxes.length() == 0 ||
+    spline_result.raw_bezier.length() < 4 {
+    return ()
+  }
+  let limited_boxes =
+    @routesplines.limit_boxes_for_spline(
+      spline_result.pathplan_boxes,
+      spline_result.raw_bezier,
+      fallback_polyline=spline_result.pathplan_points,
+    )
+  let ordered_vnodes = ordered_vnodes_for_edge(base)
+  recover_slack_vnodes(
+    edge,
+    ordered_vnodes,
+    limited_boxes,
+    ranks,
+    vnode_info.vnode_ranks,
+    rank_y,
+    vnode_positions,
+    vnode_info.vnode_sizes,
+    path_adjacency,
+  )
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2537,39 +2592,16 @@ fn route_edges(
       enable_complex_tuning,
     )
     let spline = finalize_edge_spline(base, spline_result)
-    if spline_result.using_pathplan &&
-      spline_result.pathplan_boxes.length() > 0 &&
-      spline_result.raw_bezier.length() >= 4 {
-      let limited_boxes =
-        @routesplines.limit_boxes_for_spline(
-          spline_result.pathplan_boxes,
-          spline_result.raw_bezier,
-          fallback_polyline=spline_result.pathplan_points,
-        )
-      let ordered_vnodes =
-        if base.tail_rank <= base.head_rank {
-        base.vnodes.copy()
-      } else {
-        let reversed : Array[String] = []
-        let mut idx = base.vnodes.length()
-        while idx > 0 {
-          idx = idx - 1
-          reversed.push(base.vnodes[idx])
-        }
-        reversed
-      }
-      recover_slack_vnodes(
-        edge,
-        ordered_vnodes,
-        limited_boxes,
-        ranks,
-        vnode_info.vnode_ranks,
-        rank_y,
-        vnode_positions,
-        vnode_info.vnode_sizes,
-        path_adjacency,
-      )
-    }
+    recover_pathplan_slack_for_edge(
+      edge,
+      base,
+      spline_result,
+      ranks,
+      vnode_info,
+      rank_y,
+      vnode_positions,
+      path_adjacency,
+    )
     let edge_layout =
       build_edge_layout(
         base,
