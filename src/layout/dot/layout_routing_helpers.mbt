@@ -2558,6 +2558,23 @@ fn collect_edges_in_input_order(
 }
 
 ///|
+/// Graphviz parity: edge routing pass order follows dot edgecmp.
+/// Do not change behavior without updating fixtures/tests.
+fn sorted_edges_for_routing(
+  edges : Array[@cgraph.Edge],
+  base_cache : Map[Int, EdgeRouteBase],
+  order_index : Map[String, Int],
+) -> Array[@cgraph.Edge] {
+  let ordered_edges = edges.copy()
+  if ordered_edges.length() > 1 {
+    ordered_edges.sort_by((a, b) => {
+      graphviz_route_edge_cmp(a, b, base_cache, order_index)
+    })
+  }
+  ordered_edges
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2609,12 +2626,8 @@ fn route_edges(
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   dot_trace("layout_dot: routing edges")
-  let ordered_edges = edges.copy()
-  if ordered_edges.length() > 1 {
-    ordered_edges.sort_by((a, b) => {
-      graphviz_route_edge_cmp(a, b, base_cache, order_index)
-    })
-  }
+  let ordered_edges =
+    sorted_edges_for_routing(edges, base_cache, order_index)
   for edge in ordered_edges {
     let edge_id = edge.id()
     if edges_out_by_id.get(edge_id) is Some(_) {
