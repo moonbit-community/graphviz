@@ -80,8 +80,7 @@ pub struct PathAdjacency {
 }
 
 ///|
-/// Graphviz parity: adjacency follows effective edge direction after acyclic
-/// reversal (dotgen/acyclic.c + dotsplines.c path ordering).
+/// Graphviz parity: path adjacency follows layout edge direction (after acyclic reversal).
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_path_adjacency(
   edges : Array[@cgraph.Edge],
@@ -491,7 +490,8 @@ fn vnode_inside_cluster(
 }
 
 ///|
-///|
+/// Graphviz parity: maximal bbox bounds aligned to refs/graphviz/lib/dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
 fn maximal_bbox_for_name(
   name : String,
   rank : Int,
@@ -695,7 +695,8 @@ fn maximal_bbox_for_name(
 }
 
 ///|
-///|
+/// Graphviz parity: rank gap boxes mirror rank_box in refs/graphviz/lib/dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
 fn rank_gap_box(
   rank_a : Int,
   rank_b : Int,
@@ -1205,6 +1206,8 @@ fn polyline_to_spline_points(
 }
 
 ///|
+/// Graphviz parity: limitBoxes sampling aligned to refs/graphviz/lib/common/routespl.c.
+/// Do not change behavior without updating fixtures/tests.
 fn limit_boxes_sample(
   boxes : Array[@geom.Rect],
   spline_points : Array[@geom.Point],
@@ -1264,6 +1267,8 @@ fn limit_boxes_sample(
 }
 
 ///|
+/// Graphviz parity: box limiting loop aligned to refs/graphviz/lib/common/routespl.c.
+/// Do not change behavior without updating fixtures/tests.
 pub fn limit_boxes_for_spline(
   boxes : Array[@geom.Rect],
   spline_points : Array[@geom.Point],
