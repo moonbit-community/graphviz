@@ -3600,6 +3600,16 @@ fn compute_positions(
         ordering.order_edge_head,
         x_order_sizes,
       )
+    // Graphviz parity: even non-cluster xpos reorder uses compass/record
+    // port-order fractions when mincross scoring ties are evaluated.
+    let (order_edge_tail_port_order, order_edge_head_port_order) =
+      compute_edge_port_orders(
+        prep.nodes,
+        ordering.order_edges,
+        ordering.order_edge_tail,
+        ordering.order_edge_head,
+        x_order_sizes,
+      )
     let tmp_rank_keys = collect_rank_keys(x_groups)
     x_groups = reorder_rank_groups(
       tmp_rank_keys,
@@ -3609,8 +3619,8 @@ fn compute_positions(
       ordering.order_edge_head,
       order_edge_tail_port_x,
       order_edge_head_port_x,
-      [],
-      [],
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
       parents,
       children,
       x_cluster_keys,
