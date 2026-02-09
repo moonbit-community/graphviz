@@ -603,27 +603,35 @@ fn median_value_graphviz(values : Array[Double]) -> Double? {
   if values.length() == 0 {
     return None
   }
-  let sorted = values.copy()
-  sorted.sort()
-  if sorted.length() == 1 {
-    return Some(sorted[0])
+  // Graphviz parity: medians are computed on MC_SCALE=256 integer values,
+  // which affects tie behavior via integer division.
+  let scale = 256.0
+  let scaled : Array[Int] = []
+  for value in values {
+    scaled.push((value * scale).trunc().to_int())
   }
-  if sorted.length() == 2 {
-    return Some((sorted[0] + sorted[1]) / 2.0)
+  scaled.sort()
+  if scaled.length() == 1 {
+    return Some(scaled[0].to_double() / scale)
   }
-  let mid = sorted.length() / 2
-  if sorted.length() % 2 == 1 {
-    return Some(sorted[mid])
+  if scaled.length() == 2 {
+    return Some(((scaled[0] + scaled[1]) / 2).to_double() / scale)
+  }
+  let mid = scaled.length() / 2
+  if scaled.length() % 2 == 1 {
+    return Some(scaled[mid].to_double() / scale)
   }
   let rm = mid
   let lm = rm - 1
-  let rspan = sorted[sorted.length() - 1] - sorted[rm]
-  let lspan = sorted[lm] - sorted[0]
+  let rspan = scaled[scaled.length() - 1] - scaled[rm]
+  let lspan = scaled[lm] - scaled[0]
   if lspan == rspan {
-    Some((sorted[lm] + sorted[rm]) / 2.0)
+    Some(((scaled[lm] + scaled[rm]) / 2).to_double() / scale)
   } else {
-    let weighted = sorted[lm] * rspan + sorted[rm] * lspan
-    Some(weighted / (lspan + rspan))
+    let weighted =
+      scaled[lm].to_double() * rspan.to_double() +
+      scaled[rm].to_double() * lspan.to_double()
+    Some(weighted / (lspan + rspan).to_double() / scale)
   }
 }
 
