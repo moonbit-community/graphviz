@@ -377,6 +377,9 @@ fn build_graphviz_nlist_order_from_edges(
       None => in_neighbors[head] = [tail]
     }
   }
+  // Graphviz parity: ND_out/ND_in lists follow edge sequence (AGSEQ) order
+  // within a fixed tail/head, so preserve edge_creation insertion order.
+  // Do not change behavior without updating fixtures/tests.
   for key, _ in flat_constraints {
     match key.find("|") {
       Some(pos) => {
@@ -414,9 +417,9 @@ fn build_graphviz_nlist_order_from_edges(
       }
     }
   }
-  for start in tail_order {
+  let visit_from = (start : String) => {
     if visited.get(start) == Some(true) {
-      continue
+      return ()
     }
     stack.push(start)
     while stack.length() > 0 {
@@ -448,6 +451,10 @@ fn build_graphviz_nlist_order_from_edges(
       push_neighbors(inn)
       push_neighbors(out)
     }
+  }
+  // Graphviz parity: agfstnode iteration follows creation order.
+  for start in tail_order {
+    visit_from(start)
   }
   if nlist.length() < order_nodes.length() {
     for name in order_nodes {
