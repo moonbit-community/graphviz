@@ -1741,10 +1741,8 @@ fn x_positions_from_simplex(
     root_ln_targets,
     root_rn_targets,
   )
-  let reorder_seed =
-    if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
-  let order = build_constraint_reorder(graph, index, reorder_seed)
+  let order = build_constraint_reorder(graph, index, gdnlist_order)
   let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(
