@@ -883,6 +883,7 @@ fn beginpath_boxes_regular(
   node_size : NodeSize,
   start : @geom.Point,
   side : Int,
+  use_port_box : Bool,
   ranksep_pt : Double,
 ) -> (Array[@geom.Rect], @geom.Point) {
   let boxes : Array[@geom.Rect] = []
@@ -954,6 +955,12 @@ fn beginpath_boxes_regular(
       return (boxes, start)
     }
   }
+  if use_port_box {
+    // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
+    boxes.push(base_box)
+    return (boxes, start)
+  }
+  // Graphviz parity: default to bottom side, clamp box to start.y, then offset by -1pt.
   let b = rect(base_box.llx, base_box.lly, base_box.urx, start.y)
   boxes.push(b)
   start = { x: start.x, y: start.y - 1.0 }
@@ -967,6 +974,7 @@ fn endpath_boxes_regular(
   node_size : NodeSize,
   end : @geom.Point,
   side : Int,
+  use_port_box : Bool,
   ranksep_pt : Double,
 ) -> (Array[@geom.Rect], @geom.Point) {
   let boxes : Array[@geom.Rect] = []
@@ -1038,6 +1046,12 @@ fn endpath_boxes_regular(
       return (boxes, end)
     }
   }
+  if use_port_box {
+    // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
+    boxes.push(base_box)
+    return (boxes, end)
+  }
+  // Graphviz parity: default to top side, clamp box to end.y, then offset by +1pt.
   let b = rect(base_box.llx, end.y, base_box.urx, base_box.ury)
   boxes.push(b)
   end = { x: end.x, y: end.y + 1.0 }
@@ -1430,6 +1444,7 @@ fn edge_pathplan_polyline_core(
     path_tail_size,
     path_tail_anchor,
     path_tail_side,
+    false,
     ranksep_pt,
   )
   match rankdir {
@@ -1553,6 +1568,7 @@ fn edge_pathplan_polyline_core(
     path_head_size,
     path_head_anchor,
     path_head_side,
+    false,
     ranksep_pt,
   )
   match rankdir {

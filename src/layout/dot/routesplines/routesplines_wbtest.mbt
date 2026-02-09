@@ -26,6 +26,7 @@ test "beginpath/endpath nudges follow side masks" {
     node_size,
     { x: 0.0, y: 0.0 },
     SIDE_BOTTOM,
+    false,
     10.0,
   )
   assert_eq(tail_boxes.length(), 1)
@@ -37,6 +38,7 @@ test "beginpath/endpath nudges follow side masks" {
     node_size,
     { x: -1.0, y: 5.0 },
     SIDE_TOP,
+    false,
     10.0,
   )
   assert_eq(tail_top_boxes.length(), 2)
@@ -48,6 +50,7 @@ test "beginpath/endpath nudges follow side masks" {
     node_size,
     { x: 0.0, y: 0.0 },
     SIDE_TOP,
+    false,
     10.0,
   )
   assert_eq(head_boxes.length(), 1)
@@ -59,6 +62,7 @@ test "beginpath/endpath nudges follow side masks" {
     node_size,
     { x: -1.0, y: -5.0 },
     SIDE_BOTTOM,
+    false,
     10.0,
   )
   assert_eq(head_bottom_boxes.length(), 2)
