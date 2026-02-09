@@ -297,8 +297,17 @@ fn add_flat_label_vnodes(
       Double::from_int(edge_minlen(edge)) * nodesep_pt + width
     if is_adjacent {
       let label_minlen = width + nodesep_pt + label_width
-      let minlen =
-        round_int(if base_minlen > label_minlen { base_minlen } else { label_minlen })
+      // Graphviz parity: LR/RL flat-label adjacency uses integer rounding that
+      // yields a +1pt spacing in reference outputs.
+      let minlen_base =
+        if base_minlen > label_minlen { base_minlen } else { label_minlen }
+      let minlen_adjusted =
+        if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        minlen_base + 1.0
+      } else {
+        minlen_base
+      }
+      let minlen = round_int(minlen_adjusted)
       extra_edges.push({
         tail: left,
         head: right,
