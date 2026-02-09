@@ -357,7 +357,7 @@ fn self_edge_routes_top(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height = self_edge_label_height_pt(edge, base0.rankdir)
+    let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(point(np.x, np.y + dy + label_height / 2.0))
       if label_height > stepy {
@@ -409,7 +409,7 @@ fn self_edge_routes_bottom(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height = self_edge_label_height_pt(edge, base0.rankdir)
+    let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(point(np.x, np.y - dy - label_height / 2.0))
       if label_height > stepy {
