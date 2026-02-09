@@ -295,19 +295,17 @@ fn build_rank_groups_graphviz(
       installed[name] = true
     }
   }
-  // Graphviz parity: GD_flip reverses rank order for horizontal rankdir.
+  // Graphviz parity: flip reverses each rank order (mincross.c install_in_rank).
   if flip {
-    for _rank, names in ordered {
+    for rank, names in ordered {
       if names.length() > 1 {
-        let mut left = 0
-        let mut right = names.length() - 1
-        while left < right {
-          let tmp = names[left]
-          names[left] = names[right]
-          names[right] = tmp
-          left = left + 1
-          right = right - 1
+        let reversed : Array[String] = []
+        let mut idx = names.length()
+        while idx > 0 {
+          idx = idx - 1
+          reversed.push(names[idx])
         }
+        ordered[rank] = reversed
       }
     }
   }
