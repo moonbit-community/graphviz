@@ -1079,16 +1079,17 @@ fn reorder_rank_groups(
     break
   }
   let mut has_preferred = false
-  for _name, _ in preferred_positions {
-    has_preferred = true
-    break
+  for name, _ in preferred_positions {
+    // Graphviz parity: vnode ordering hints should not disable
+    // mincross graphviz-style passes.
+    if !name.has_prefix(EDGE_VNODE_PREFIX) {
+      has_preferred = true
+      break
+    }
   }
-  let mut has_port_contrib = false
-  for _name, _ in port_order_contrib {
-    has_port_contrib = true
-    break
-  }
-  let graphviz_style = !has_port_order && !has_preferred && !has_port_contrib
+  // Graphviz parity: port order hints do not switch mincross out of
+  // graphviz-style passes (mincross.c still uses in/out port x ties).
+  let graphviz_style = !has_preferred
   let median_parents : Map[String, Array[(String, Double)]] = Map::new()
   let median_children : Map[String, Array[(String, Double)]] = Map::new()
   let edge_penalty : Array[Int] = []
