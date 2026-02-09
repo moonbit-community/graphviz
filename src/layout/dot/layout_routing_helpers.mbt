@@ -2645,6 +2645,80 @@ fn build_regular_edge_layout(
 }
 
 ///|
+/// Graphviz parity: self-edge route cache reuse + self-edge layout finalize path.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_build_self_edge_layout(
+  graph : @cgraph.Graph,
+  edge : @cgraph.Edge,
+  base : EdgeRouteBase,
+  self_edge_groups : Map[String, Array[@cgraph.Edge]],
+  base_cache : Map[Int, EdgeRouteBase],
+  ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  positions : Map[String, @geom.Point],
+  record_orientation : RecordOrientation,
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+  routing_context : RoutingContext,
+  rankdir : RankDir,
+  layout_rankdir : RankDir,
+  enable_complex_tuning : Bool,
+  edge_vnodes : Map[String, Array[String]],
+  nodesep_pt : Double,
+  rank_y : Map[Int, Double],
+  vnode_info : EdgeVnodeInfo,
+  vnode_positions : Map[String, @geom.Point],
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+  self_edge_routes : Map[Int, SelfEdgeRoute],
+  edges_out_by_id : Map[Int, DotLayoutEdge],
+) -> Bool {
+  if edge.tail().name() != edge.head().name() {
+    return false
+  }
+  let edge_id = edge.id()
+  ensure_self_edge_routes(
+    graph,
+    edge,
+    self_edge_groups,
+    base_cache,
+    ranks,
+    sizes,
+    positions,
+    record_orientation,
+    label_ports_map,
+    label_ports_raw,
+    routing_context,
+    rankdir,
+    layout_rankdir,
+    enable_complex_tuning,
+    edge_vnodes,
+    nodesep_pt,
+    rank_y,
+    self_edge_routes,
+  )
+  match self_edge_routes.get(edge_id) {
+    Some(route) => {
+      let edge_layout =
+        build_self_edge_layout(
+          base,
+          route,
+          ranks,
+          rank_y,
+          vnode_info,
+          vnode_positions,
+          nodesep_pt,
+          has_clusters,
+          flat_label_edge_vnodes,
+        )
+      edges_out_by_id[edge_id] = edge_layout
+      true
+    }
+    None => false
+  }
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2707,46 +2781,33 @@ fn route_edges(
       Some(value) => value
       None => continue
     }
-    if edge.tail().name() == edge.head().name() {
-      ensure_self_edge_routes(
-        graph,
-        edge,
-        self_edge_groups,
-        base_cache,
-        ranks,
-        sizes,
-        positions,
-        record_orientation,
-        label_ports_map,
-        label_ports_raw,
-        routing_context,
-        rankdir,
-        layout_rankdir,
-        enable_complex_tuning,
-        vnode_info.edge_vnodes,
-        nodesep_pt,
-        rank_y,
-        self_edge_routes,
-      )
-      match self_edge_routes.get(edge_id) {
-        Some(route) => {
-          let edge_layout =
-            build_self_edge_layout(
-              base,
-              route,
-              ranks,
-              rank_y,
-              vnode_info,
-              vnode_positions,
-              nodesep_pt,
-              has_clusters,
-              flat_label_edge_vnodes,
-            )
-          edges_out_by_id[edge_id] = edge_layout
-          continue
-        }
-        None => ()
-      }
+    if maybe_build_self_edge_layout(
+      graph,
+      edge,
+      base,
+      self_edge_groups,
+      base_cache,
+      ranks,
+      sizes,
+      positions,
+      record_orientation,
+      label_ports_map,
+      label_ports_raw,
+      routing_context,
+      rankdir,
+      layout_rankdir,
+      enable_complex_tuning,
+      vnode_info.edge_vnodes,
+      nodesep_pt,
+      rank_y,
+      vnode_info,
+      vnode_positions,
+      has_clusters,
+      flat_label_edge_vnodes,
+      self_edge_routes,
+      edges_out_by_id,
+    ) {
+      continue
     }
     let edge_layout =
       build_regular_edge_layout(
