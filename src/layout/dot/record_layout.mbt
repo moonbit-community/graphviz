@@ -1132,6 +1132,7 @@ fn dynamic_port_anchor_for_edge(
   node_pos : @geom.Point,
   other_pos : @geom.Point,
   rankdir : RankDir,
+  record_border_adjust : Double,
   role : String,
 ) -> (@geom.Point?, Int, Bool) {
   match port {
@@ -1152,8 +1153,30 @@ fn dynamic_port_anchor_for_edge(
                           other_pos,
                           rankdir,
                         )
+                      // Graphviz parity: beginpath nudges the route start by 1pt.
+                      // For record fields spanning top+bottom, shift dynamic anchors
+                      // toward the center by RECORD_BORDER_PT so the beginpath
+                      // offset lands on the outer border.
+                      let adjusted_anchor =
+                        match anchor {
+                          Some(point) =>
+                            if record_border_adjust > 0.0 &&
+                              (raw_port.sides & PORT_SIDE_TOP) != 0 &&
+                              (raw_port.sides & PORT_SIDE_BOTTOM) != 0 {
+                              let mut y = point.y
+                              if side == PORT_SIDE_BOTTOM {
+                                y = y + record_border_adjust
+                              } else if side == PORT_SIDE_TOP {
+                                y = y - record_border_adjust
+                              }
+                              Some(@geom.Point::{ x: point.x, y })
+                            } else {
+                              Some(point)
+                            }
+                          None => None
+                        }
                       if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
-                        let anchor_text = match anchor {
+                        let anchor_text = match adjusted_anchor {
                           Some(point) => "\{point.x},\{point.y}"
                           None => "None"
                         }
@@ -1161,7 +1184,7 @@ fn dynamic_port_anchor_for_edge(
                           "port_anchor \{role}=\{node_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} sides=\{raw_port.sides} anchor=\{anchor_text} side=\{side}",
                         )
                       }
-                      (anchor, side, true)
+                      (adjusted_anchor, side, true)
                     }
                     None => (None, 0, false)
                   }

@@ -706,6 +706,20 @@ fn build_edge_route_base(
     Some(value) => value
     None => ""
   }
+  let tail_record_border_adjust =
+    if is_record_shape(tail_node) &&
+      !@html_label.is_html_label_text(label_text(tail_node)) {
+      RECORD_BORDER_PT
+    } else {
+      0.0
+    }
+  let head_record_border_adjust =
+    if is_record_shape(head_node) &&
+      !@html_label.is_html_label_text(label_text(head_node)) {
+      RECORD_BORDER_PT
+    } else {
+      0.0
+    }
   let tail_rank = match ranks.get(tail_name) {
     Some(value) => value
     None => 0
@@ -762,6 +776,7 @@ fn build_edge_route_base(
       tail_pos,
       head_pos,
       layout_rankdir,
+      tail_record_border_adjust,
       "tail",
     )
   let (head_side_anchor, head_dynamic_side, head_dynamic) =
@@ -772,6 +787,7 @@ fn build_edge_route_base(
       head_pos,
       tail_pos,
       layout_rankdir,
+      head_record_border_adjust,
       "head",
     )
   let has_side_anchor =
