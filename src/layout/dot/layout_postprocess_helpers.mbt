@@ -935,6 +935,13 @@ fn finalize_layout_graph(
     )
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
+  // Graphviz parity: rankdir=BT flips top/bottom cluster padding (ranks are inverted).
+  let (root_cluster_pad_top, root_cluster_pad_bottom) =
+    if rankdir == RankDir::BT {
+      (root_cluster_pad_bottom, root_cluster_pad_top)
+    } else {
+      (root_cluster_pad_top, root_cluster_pad_bottom)
+    }
   let bbox =
     apply_root_port_padding(
       graph,
@@ -943,16 +950,30 @@ fn finalize_layout_graph(
       port_pad_below,
       port_pad_above,
     )
-  let bbox = apply_root_margin_x(graph, bbox)
+  let layout_with_root_pad =
+    apply_root_cluster_padding_if_needed(
+      graph,
+      {
+        graph,
+        bbox,
+        label_pos: None,
+        nodes: final_nodes,
+        edges: final_edges,
+        subgraphs,
+      },
+      root_cluster_pad_top,
+      root_cluster_pad_bottom,
+    )
   // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
-  let bbox = expand_bbox_with_edges(bbox, final_edges)
+  let bbox =
+    expand_bbox_with_edges(layout_with_root_pad.bbox, layout_with_root_pad.edges)
   let layout = {
-    graph,
+    graph: layout_with_root_pad.graph,
     bbox,
-    label_pos: None,
-    nodes: final_nodes,
-    edges: final_edges,
-    subgraphs,
+    label_pos: layout_with_root_pad.label_pos,
+    nodes: layout_with_root_pad.nodes,
+    edges: layout_with_root_pad.edges,
+    subgraphs: layout_with_root_pad.subgraphs,
   }
   let adjusted =
     adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
@@ -979,11 +1000,13 @@ fn finalize_layout_graph(
   } else {
     rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
   }
-  let shifted = shift_layout_to_origin_if_root(graph, rotated)
-  apply_root_cluster_padding_if_needed(
-    graph,
-    shifted,
-    root_cluster_pad_top,
-    root_cluster_pad_bottom,
-  )
+  let rotated_with_margin = {
+    graph: rotated.graph,
+    bbox: apply_root_margin_x(graph, rotated.bbox),
+    label_pos: rotated.label_pos,
+    nodes: rotated.nodes,
+    edges: rotated.edges,
+    subgraphs: rotated.subgraphs,
+  }
+  shift_layout_to_origin_if_root(graph, rotated_with_margin)
 }
