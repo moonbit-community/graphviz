@@ -1194,6 +1194,13 @@ fn reorder_rank_groups(
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
+    ordered = flat_reorder_rank_groups_graphviz(
+      rank_keys,
+      ordered,
+      node_ranks,
+      flat_constraints,
+      graphviz_flip,
+    )
     order_positions = order_positions_from_groups(ordered)
     merge_fixed_positions()
     let seed_cross =
@@ -1227,15 +1234,6 @@ fn reorder_rank_groups(
       order_positions = order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
-    ordered = flat_reorder_rank_groups_graphviz(
-      rank_keys,
-      ordered,
-      node_ranks,
-      flat_constraints,
-      graphviz_flip,
-    )
-    order_positions = order_positions_from_groups(ordered)
-    merge_fixed_positions()
     best_ordered = clone_rank_groups(ordered)
     best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
