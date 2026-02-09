@@ -590,7 +590,7 @@ fn build_subgraphs_and_bbox(
       cluster_rn_x,
     )
   let expanded = if subgraphs.length() > 0 {
-    expand_bbox_with_subgraphs(bbox, subgraphs)
+    expand_bbox_with_cluster_subgraphs(bbox, subgraphs)
   } else {
     bbox
   }
