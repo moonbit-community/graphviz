@@ -37,6 +37,11 @@ fn is_numeric_id(id : String) -> Bool {
   has_digit
 }
 
+fn is_html_label_value(value : String) -> Bool {
+  let trimmed = value.trim(chars=" \n\r\t").to_string()
+  trimmed.length() >= 3 && trimmed.has_prefix("<<") && trimmed.has_suffix(">")
+}
+
 ///|
 fn write_quoted(raw : String) -> String {
   let sb = StringBuilder::new()
@@ -70,7 +75,8 @@ fn write_quoted(raw : String) -> String {
 
 ///|
 fn write_id(id : String) -> String {
-  if id.has_prefix("<<") && id.has_suffix(">>") {
+  // Graphviz parity: keep HTML labels raw even with whitespace before the closing '>'.
+  if is_html_label_value(id) {
     return id
   }
   if is_plain_id(id) || is_numeric_id(id) {
@@ -352,37 +358,48 @@ fn write_graph(
     @cgraph.GraphKind::Directed => "->"
     @cgraph.GraphKind::Undirected => "--"
   }
-  for edge in all_edges {
-    let edge_id = edge.id()
-    if written_edges.contains(edge_id) {
-      continue
+  let allow_edges =
+    if indent == 0 {
+    true
+  } else {
+    match graph.name() {
+      Some(name) => name.has_prefix("cluster")
+      None => false
     }
-    let tail_name = edge.tail().name()
-    let head_name = edge.head().name()
-    if !node_names.contains(tail_name) || !node_names.contains(head_name) {
-      continue
-    }
-    let tail = edge.tail()
-    let head = edge.head()
-    write_indent(sb, inner)
-    sb.write_string(write_id(tail.name()))
-    sb.write_string(write_port(edge.tail_port()))
-    sb.write_char(' ')
-    sb.write_string(edge_op)
-    sb.write_char(' ')
-    sb.write_string(write_id(head.name()))
-    sb.write_string(write_port(edge.head_port()))
-    let attrs = if is_layout_output {
-      filter_attrs(edge.attrs(), edge_effective_defaults)
-    } else {
-      edge.attrs()
-    }
-    if attrs.length() > 0 {
+  }
+  if allow_edges {
+    for edge in all_edges {
+      let edge_id = edge.id()
+      if written_edges.contains(edge_id) {
+        continue
+      }
+      let tail_name = edge.tail().name()
+      let head_name = edge.head().name()
+      if !node_names.contains(tail_name) || !node_names.contains(head_name) {
+        continue
+      }
+      let tail = edge.tail()
+      let head = edge.head()
+      write_indent(sb, inner)
+      sb.write_string(write_id(tail.name()))
+      sb.write_string(write_port(edge.tail_port()))
       sb.write_char(' ')
-      write_attr_list(sb, attrs)
+      sb.write_string(edge_op)
+      sb.write_char(' ')
+      sb.write_string(write_id(head.name()))
+      sb.write_string(write_port(edge.head_port()))
+      let attrs = if is_layout_output {
+        filter_attrs(edge.attrs(), edge_effective_defaults)
+      } else {
+        edge.attrs()
+      }
+      if attrs.length() > 0 {
+        sb.write_char(' ')
+        write_attr_list(sb, attrs)
+      }
+      sb.write_string(";\n")
+      written_edges[edge_id] = true
     }
-    sb.write_string(";\n")
-    written_edges[edge_id] = true
   }
   write_indent(sb, indent)
   sb.write_string("}\n")
