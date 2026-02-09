@@ -121,7 +121,10 @@ fn build_rank_groups_graphviz(
       Some(value) => value
       None => ""
     }
-    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) {
+    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) &&
+      cluster_skeleton.get(name) == Some(true) {
+      // Graphviz parity: install_cluster only enqueues rankleader (skeleton) nodes,
+      // not all nodes in the cluster.
       match cluster_nodes.get(cluster) {
         Some(list) => list.push(name)
         None => cluster_nodes[cluster] = [name]
