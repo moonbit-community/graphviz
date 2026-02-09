@@ -1879,9 +1879,17 @@ fn compute_ordering_and_vnodes(
       }
       let order_node_order : Map[String, Int] = Map::new()
       let mut order_idx = 0
-      for name in nlist_order {
+      let gdnlist_seed = gdnlist_order
+      // Graphviz parity: build_ranks walks GD_nlist order first.
+      for name in gdnlist_seed {
         order_node_order[name] = order_idx
         order_idx = order_idx + 1
+      }
+      for name in nlist_order {
+        if order_node_order.get(name) is None {
+          order_node_order[name] = order_idx
+          order_idx = order_idx + 1
+        }
       }
       // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
       for name, idx in node_order {
