@@ -199,52 +199,54 @@ fn build_rank_groups_graphviz(
     while q_idx < queue.length() {
       let current = queue[q_idx]
       q_idx = q_idx + 1
+      let cluster = match cluster_keys.get(current) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster != "" && installed_clusters.get(cluster) != Some(true) {
+        // Graphviz parity: install_cluster triggers when visiting a cluster node
+        // and enqueues only rankleader (skeleton) nodes.
+        installed_clusters[cluster] = true
+        let cluster_list = match cluster_nodes.get(cluster) {
+          Some(list) => list
+          None => []
+        }
+        for cluster_node in cluster_list {
+          if installed.get(cluster_node) != Some(true) {
+            let rank = match node_ranks.get(cluster_node) {
+              Some(value) => value
+              None => 0
+            }
+            match ordered.get(rank) {
+              Some(list) => list.push(cluster_node)
+              None => ordered[rank] = [cluster_node]
+            }
+            installed[cluster_node] = true
+          }
+          marks[cluster_node] = true
+        }
+        for cluster_node in cluster_list {
+          let neighbors =
+            if pass == 0 {
+              match out_neighbors.get(cluster_node) {
+                Some(list) => list
+                None => []
+              }
+            } else {
+              match in_neighbors.get(cluster_node) {
+                Some(list) => list
+                None => []
+              }
+            }
+          for neighbor in neighbors {
+            if marks.get(neighbor) != Some(true) {
+              marks[neighbor] = true
+              queue.push(neighbor)
+            }
+          }
+        }
+      }
       if cluster_skeleton.get(current) == Some(true) {
-        let cluster = match cluster_keys.get(current) {
-          Some(value) => value
-          None => ""
-        }
-        if cluster != "" && installed_clusters.get(cluster) != Some(true) {
-          installed_clusters[cluster] = true
-          let cluster_list = match cluster_nodes.get(cluster) {
-            Some(list) => list
-            None => []
-          }
-          for cluster_node in cluster_list {
-            if installed.get(cluster_node) != Some(true) {
-              let rank = match node_ranks.get(cluster_node) {
-                Some(value) => value
-                None => 0
-              }
-              match ordered.get(rank) {
-                Some(list) => list.push(cluster_node)
-                None => ordered[rank] = [cluster_node]
-              }
-              installed[cluster_node] = true
-            }
-            marks[cluster_node] = true
-          }
-          for cluster_node in cluster_list {
-            let neighbors =
-              if pass == 0 {
-                match out_neighbors.get(cluster_node) {
-                  Some(list) => list
-                  None => []
-                }
-              } else {
-                match in_neighbors.get(cluster_node) {
-                  Some(list) => list
-                  None => []
-                }
-              }
-            for neighbor in neighbors {
-              if marks.get(neighbor) != Some(true) {
-                marks[neighbor] = true
-                queue.push(neighbor)
-              }
-            }
-          }
-        }
         continue
       }
       if installed.get(current) != Some(true) {
