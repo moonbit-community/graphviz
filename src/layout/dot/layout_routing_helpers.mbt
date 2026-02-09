@@ -2288,6 +2288,65 @@ fn graphviz_route_edge_cmp(
 }
 
 ///|
+fn collect_self_edge_groups(
+  edges : Array[@cgraph.Edge],
+) -> Map[String, Array[@cgraph.Edge]] {
+  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in edges {
+    if edge.tail().name() != edge.head().name() {
+      continue
+    }
+    let key = self_edge_group_key(edge)
+    match self_edge_groups.get(key) {
+      Some(list) => list.push(edge)
+      None => self_edge_groups[key] = [edge]
+    }
+  }
+  self_edge_groups
+}
+
+///|
+fn build_route_base_cache(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  positions : Map[String, @geom.Point],
+  record_orientation : RecordOrientation,
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+  routing_context : RoutingContext,
+  rankdir : RankDir,
+  layout_rankdir : RankDir,
+  enable_complex_tuning : Bool,
+  edge_vnodes : Map[String, Array[String]],
+) -> Map[Int, EdgeRouteBase] {
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  for edge in edges {
+    let edge_id = edge.id()
+    if base_cache.get(edge_id) is None {
+      let value = build_edge_route_base(
+        graph.kind(),
+        edge,
+        ranks,
+        sizes,
+        positions,
+        record_orientation,
+        label_ports_map,
+        label_ports_raw,
+        routing_context,
+        rankdir,
+        layout_rankdir,
+        enable_complex_tuning,
+        edge_vnodes,
+      )
+      base_cache[edge_id] = value
+    }
+  }
+  base_cache
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2319,39 +2378,23 @@ fn route_edges(
 ) -> Array[DotLayoutEdge] {
   let path_adjacency = routing_context.path_adjacency
   let order_index = routing_context.path_order_index
-  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
-  for edge in edges {
-    if edge.tail().name() != edge.head().name() {
-      continue
-    }
-    let key = self_edge_group_key(edge)
-    match self_edge_groups.get(key) {
-      Some(list) => list.push(edge)
-      None => self_edge_groups[key] = [edge]
-    }
-  }
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
-  for edge in edges {
-    let edge_id = edge.id()
-    if base_cache.get(edge_id) is None {
-      let value = build_edge_route_base(
-        graph.kind(),
-        edge,
-        ranks,
-        sizes,
-        positions,
-        record_orientation,
-        label_ports_map,
-        label_ports_raw,
-        routing_context,
-        rankdir,
-        layout_rankdir,
-        enable_complex_tuning,
-        vnode_info.edge_vnodes,
-      )
-      base_cache[edge_id] = value
-    }
-  }
+  let self_edge_groups = collect_self_edge_groups(edges)
+  let base_cache =
+    build_route_base_cache(
+      graph,
+      edges,
+      ranks,
+      sizes,
+      positions,
+      record_orientation,
+      label_ports_map,
+      label_ports_raw,
+      routing_context,
+      rankdir,
+      layout_rankdir,
+      enable_complex_tuning,
+      vnode_info.edge_vnodes,
+    )
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   dot_trace("layout_dot: routing edges")
