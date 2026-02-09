@@ -298,19 +298,6 @@ fn sample_spline_points(
 }
 
 ///|
-fn downsample_every_other(
-  points : Array[@geom.Point],
-) -> Array[@geom.Point] {
-  let sampled : Array[@geom.Point] = []
-  let mut idx = 0
-  while idx < points.length() {
-    sampled.push(points[idx])
-    idx = idx + 2
-  }
-  sampled
-}
-
-///|
 fn polyline_point_with_dir(
   points : Array[@geom.Point],
   target_len : Double,
@@ -721,6 +708,8 @@ fn edge_port_label_pos(
 }
 
 ///|
+/// Graphviz parity: edge label midpoint placement aligned to refs/graphviz/lib/common/labels.c.
+/// Do not change behavior without updating fixtures/tests.
 fn edge_label_pos(
   edge : @cgraph.Edge,
   spline : @geom.Spline,
@@ -751,7 +740,7 @@ fn edge_label_pos(
   let (raw_pos, dir) = match label_rank_y {
     Some(axis) =>
       match spline_label_pos_at_axis_samples(
-        downsample_every_other(samples),
+        samples,
         axis,
         false,
       ) {
