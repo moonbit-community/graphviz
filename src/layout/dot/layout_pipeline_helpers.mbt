@@ -69,6 +69,8 @@ priv struct OrderingResult {
   edge_order : Map[String, Int]
   edge_cluster_keys : Map[String, String]
   nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  vnode_creation_order : Array[String]
 }
 
 ///|
@@ -1610,6 +1612,12 @@ fn compute_ordering_and_vnodes(
       }
     }
   }
+  let vnode_creation_order : Array[String] = []
+  for name in order_creation {
+    if name.has_prefix(EDGE_VNODE_PREFIX) {
+      vnode_creation_order.push(name)
+    }
+  }
   // Graphviz parity: GD_nlist follows decompose DFS over flat/in/out neighbors
   // (dotgen/decomp.c). Do not change behavior without updating fixtures/tests.
   let nlist_order =
@@ -1619,6 +1627,9 @@ fn compute_ordering_and_vnodes(
       edge_creation_order,
       flat_rank_constraints,
     )
+  // Graphviz parity: keep GD_nlist as an explicit pipeline output so xpos can
+  // follow Graphviz node ordering without re-deriving from nlist callers.
+  let gdnlist_order = nlist_order
   if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
     let order_joined = nlist_order.join(" ")
     if order_joined.length() > 0 {
@@ -1901,11 +1912,11 @@ fn compute_ordering_and_vnodes(
         }
       }
       // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-      let gdnlist_order : Map[String, Int] = Map::new()
+      let gdnlist_order_index : Map[String, Int] = Map::new()
       let mut gdnlist_idx = 0
       for name in nlist_order {
         if real_nodes.get(name) is Some(_) {
-          gdnlist_order[name] = gdnlist_idx
+          gdnlist_order_index[name] = gdnlist_idx
           gdnlist_idx = gdnlist_idx + 1
         }
       }
@@ -1923,7 +1934,7 @@ fn compute_ordering_and_vnodes(
           unconstrained_nodes[name] = true
         }
       }
-      for name, idx in gdnlist_order {
+      for name, idx in gdnlist_order_index {
         if real_nodes.get(name) is Some(_) &&
           unconstrained_nodes.get(name) is Some(_) &&
           cluster_meta.rank_same_groups.get(name) is None {
@@ -3176,6 +3187,8 @@ fn compute_ordering_and_vnodes(
     edge_order,
     edge_cluster_keys,
     nlist_order,
+    gdnlist_order,
+    vnode_creation_order,
   }
 }
 
@@ -3805,7 +3818,7 @@ fn compute_positions(
   let vnode_extra_nodes =
     if use_vnodes_for_xpos {
       build_vnode_extra_nodes(
-        ordering.nlist_order,
+        ordering.vnode_creation_order,
         ordering.vnode_info.vnode_ranks,
       )
     } else {
@@ -3832,6 +3845,7 @@ fn compute_positions(
     rank_data.edge_head,
     rank_data.edge_out_order,
     ordering.nlist_order,
+    ordering.gdnlist_order,
     x_ranks,
     x_rank_keys,
     x_groups,

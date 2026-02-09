@@ -1667,6 +1667,7 @@ fn x_positions_from_simplex(
   edge_head : Array[String],
   edge_out_order : Map[String, Array[Int]],
   nlist_order : Array[String],
+  gdnlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1706,7 +1707,10 @@ fn x_positions_from_simplex(
     root_ln_targets,
     root_rn_targets,
   )
-  let order = build_constraint_reorder(graph, index, nlist_order)
+  let reorder_seed =
+    if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
+  // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
+  let order = build_constraint_reorder(graph, index, reorder_seed)
   let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(
@@ -1748,6 +1752,7 @@ fn compute_x_positions(
   edge_head : Array[String],
   edge_out_order : Map[String, Array[Int]],
   nlist_order : Array[String],
+  gdnlist_order : Array[String],
   ranks : Map[String, Int],
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -1793,6 +1798,7 @@ fn compute_x_positions(
     edge_head,
     edge_out_order,
     nlist_order,
+    gdnlist_order,
     ranks,
     rank_keys,
     groups,
