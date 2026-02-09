@@ -37,14 +37,16 @@ fn parse_margin(value : String) -> (Double, Double)? {
 }
 
 ///|
+/// Graphviz parity: root graph margin defaults to 0 unless explicitly set.
+/// Do not change behavior without updating fixtures/tests.
 fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
   match graph.get_attr("margin") {
     Some(value) =>
       match parse_margin(value) {
         Some((margin_x, _margin_y)) => margin_x * 72.0
-        None => CLUSTER_MARGIN_PT
+        None => 0.0
       }
-    None => CLUSTER_MARGIN_PT
+    None => 0.0
   }
 }
 
