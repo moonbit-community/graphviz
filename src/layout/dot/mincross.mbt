@@ -1179,7 +1179,7 @@ fn reorder_rank_groups(
     println("remincross start crossings=\{best_cross}")
   }
   if !graphviz_style && rank_keys.length() > 1 {
-    ordered = build_rank_groups_graphviz(
+    ordered = build_rank_groups_graphviz_components(
       rank_keys,
       groups,
       edge_tail,
@@ -1189,6 +1189,7 @@ fn reorder_rank_groups(
       cluster_keys,
       cluster_skeleton,
       0,
+      flat_constraints,
       flip=graphviz_flip,
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
@@ -1252,7 +1253,7 @@ fn reorder_rank_groups(
         max_iter
       }
       if pass <= 1 {
-        ordered = build_rank_groups_graphviz(
+        ordered = build_rank_groups_graphviz_components(
           rank_keys,
           groups,
           edge_tail,
@@ -1262,6 +1263,7 @@ fn reorder_rank_groups(
           cluster_keys,
           cluster_skeleton,
           pass,
+          flat_constraints,
           flip=graphviz_flip,
           graphviz_out_neighbors=graphviz_out_neighbors,
           graphviz_in_neighbors=graphviz_in_neighbors,
