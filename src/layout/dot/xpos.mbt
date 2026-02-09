@@ -1005,6 +1005,128 @@ fn edge_port_offset(
 }
 
 ///|
+/// Graphviz parity: port order uses compassPort angle quantization
+/// (MC_SCALE=256) for mincross medians (shapes.c + mincross.c).
+/// Do not change behavior without updating fixtures/tests.
+fn port_order_fraction(point : @geom.Point) -> Double {
+  if point.x == 0.0 && point.y == 0.0 {
+    return 0.5
+  }
+  let two_pi = 2.0 * @math.PI
+  let mut angle = libm_atan2(point.y, point.x) + 1.5 * @math.PI
+  if angle >= two_pi {
+    angle = angle - two_pi
+  }
+  let scaled = (256.0 * angle / two_pi).trunc()
+  scaled / 256.0
+}
+
+///|
+fn record_port_point(
+  port_info : RecordPort,
+  compass : @cgraph.Compass?,
+) -> @geom.Point {
+  let center = port_info.center
+  let half_w = port_info.size.width_pt / 2.0
+  let half_h = port_info.size.height_pt / 2.0
+  match compass {
+    Some(value) =>
+      match value {
+        @cgraph.Compass::N => { x: center.x, y: center.y + half_h }
+        @cgraph.Compass::NE => { x: center.x + half_w, y: center.y + half_h }
+        @cgraph.Compass::E => { x: center.x + half_w, y: center.y }
+        @cgraph.Compass::SE => { x: center.x + half_w, y: center.y - half_h }
+        @cgraph.Compass::S => { x: center.x, y: center.y - half_h }
+        @cgraph.Compass::SW => { x: center.x - half_w, y: center.y - half_h }
+        @cgraph.Compass::W => { x: center.x - half_w, y: center.y }
+        @cgraph.Compass::NW => { x: center.x - half_w, y: center.y + half_h }
+        @cgraph.Compass::C => center
+      }
+    None => center
+  }
+}
+
+///|
+fn compass_port_point(
+  node_name : String,
+  compass : @cgraph.Compass,
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+) -> @geom.Point {
+  let half_height = match sizes.get(node_name) {
+    Some(value) => value.height_pt / 2.0
+    None => default_node_height_in() * 72.0 / 2.0
+  }
+  let left = -node_left_pt(node_name, sizes)
+  let right = node_right_pt(node_name, sizes)
+  let top = half_height
+  let bottom = -half_height
+  let base = match compass {
+    @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
+    @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
+    @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
+    @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
+    @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
+    @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
+    @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
+    @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
+    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+  }
+  layout_port_offset(base, rankdir)
+}
+
+///|
+fn edge_port_order(
+  node_name : String,
+  port : @cgraph.Port?,
+  offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+) -> Double {
+  if !port_is_explicit(port) {
+    return 0.5
+  }
+  match port {
+    Some(value) =>
+      match value.name {
+        Some(name) =>
+          match offsets.get(node_name) {
+            Some(node_offsets) =>
+              match node_offsets.get(name) {
+                Some(port_info) =>
+                  port_order_fraction(record_port_point(port_info, value.compass))
+                None =>
+                  match value.compass {
+                    Some(compass) =>
+                      port_order_fraction(
+                        compass_port_point(node_name, compass, sizes, rankdir),
+                      )
+                    None => 0.5
+                  }
+              }
+            None =>
+              match value.compass {
+                Some(compass) =>
+                  port_order_fraction(
+                    compass_port_point(node_name, compass, sizes, rankdir),
+                  )
+                None => 0.5
+              }
+          }
+        None =>
+          match value.compass {
+            Some(compass) =>
+              port_order_fraction(
+                compass_port_point(node_name, compass, sizes, rankdir),
+              )
+            None => 0.5
+          }
+      }
+    None => 0.5
+  }
+}
+
+///|
 fn edge_port_offset_by_name(
   node_name : String,
   port_name : String?,

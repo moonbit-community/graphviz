@@ -624,7 +624,7 @@ fn build_order_edges_by_tail_graphviz(
             } else if t == head && mapped_head == head {
               head_port_x
             } else {
-              0.0
+              0.5
             }
           let seg_head_port =
             if h == head && mapped_head == head {
@@ -632,7 +632,7 @@ fn build_order_edges_by_tail_graphviz(
             } else if h == tail && mapped_tail == tail {
               tail_port_x
             } else {
-              0.0
+              0.5
             }
           let seg_tail_order =
             if t == tail && mapped_tail == tail {
