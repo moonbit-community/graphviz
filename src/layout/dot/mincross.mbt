@@ -950,7 +950,15 @@ fn reorder_rank_groups(
   }
   let mut best_cross =
     if graphviz_style {
-    count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+    count_crossings_graphviz(
+      ordered,
+      node_ranks,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x=edge_tail_port_x,
+      edge_head_port_x=edge_head_port_x,
+    )
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
@@ -974,7 +982,15 @@ fn reorder_rank_groups(
     )
     order_positions = order_positions_from_groups(ordered)
     let seed_cross =
-      count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+      count_crossings_graphviz(
+        ordered,
+        node_ranks,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x=edge_tail_port_x,
+        edge_head_port_x=edge_head_port_x,
+      )
     if seed_cross > 0 {
       let _ = transpose_rank_groups_graphviz(
         rank_keys,
@@ -1029,7 +1045,15 @@ fn reorder_rank_groups(
         order_positions = order_positions_from_groups(ordered)
         if !has_port_order {
           let cross =
-            count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+            count_crossings_graphviz(
+              ordered,
+              node_ranks,
+              edges,
+              edge_tail,
+              edge_head,
+              edge_tail_port_x=edge_tail_port_x,
+              edge_head_port_x=edge_head_port_x,
+            )
           if cross > 0 {
             let _ = transpose_rank_groups_graphviz(
               rank_keys,
@@ -1052,7 +1076,15 @@ fn reorder_rank_groups(
           }
         }
         cur_cross =
-          count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+          count_crossings_graphviz(
+            ordered,
+            node_ranks,
+            edges,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x=edge_tail_port_x,
+            edge_head_port_x=edge_head_port_x,
+          )
         if cur_cross <= best_cross {
           best_cross = cur_cross
           best_ordered = clone_rank_groups(ordered)
@@ -1157,7 +1189,15 @@ fn reorder_rank_groups(
           order_positions = order_positions_from_groups(ordered)
         }
         cur_cross =
-          count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+          count_crossings_graphviz(
+            ordered,
+            node_ranks,
+            edges,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x=edge_tail_port_x,
+            edge_head_port_x=edge_head_port_x,
+          )
         if cur_cross <= best_cross {
           let prev_best = best_cross
           best_cross = cur_cross
@@ -1290,7 +1330,15 @@ fn reorder_rank_groups(
           order_positions = order_positions_from_groups(ordered)
         }
         let cross =
-          count_crossings_graphviz(ordered, node_ranks, edges, edge_tail, edge_head)
+          count_crossings_graphviz(
+            ordered,
+            node_ranks,
+            edges,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x=edge_tail_port_x,
+            edge_head_port_x=edge_head_port_x,
+          )
         if cross <= best_cross {
           best_cross = cross
           best_ordered = clone_rank_groups(ordered)
