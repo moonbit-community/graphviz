@@ -692,7 +692,12 @@ fn build_edge_route_base(
     Some(rect) => port_side_count(rect, head_pos, head_size)
     None => 0
   }
-  let force_segmented = tail_port_sides >= 3 || head_port_sides >= 3
+  let tail_label_port = port_is_label_port(tail_name, tail_port, label_ports_raw)
+  let head_label_port = port_is_label_port(head_name, head_port, label_ports_raw)
+  // Graphviz parity: label ports should not force segmented edge splines.
+  let force_segmented =
+    (!tail_label_port && tail_port_sides >= 3) ||
+    (!head_label_port && head_port_sides >= 3)
   let tail_cluster_name = match edge.get_attr("ltail") {
     Some(value) => value
     None => ""

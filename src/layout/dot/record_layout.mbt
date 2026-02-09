@@ -1312,6 +1312,28 @@ fn port_geometry(
 }
 
 ///|
+/// Graphviz parity: detect label ports using raw record/html port maps.
+/// Do not change behavior without updating fixtures/tests.
+fn port_is_label_port(
+  node_name : String,
+  port : @cgraph.Port?,
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+) -> Bool {
+  match port {
+    Some(value) =>
+      match value.name {
+        Some(name) =>
+          match label_ports_raw.get(node_name) {
+            Some(ports) => ports.get(name) is Some(_)
+            None => false
+          }
+        None => false
+      }
+    None => false
+  }
+}
+
+///|
 fn node_size(
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
