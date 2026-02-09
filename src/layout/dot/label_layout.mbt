@@ -99,6 +99,29 @@ fn graph_label_pos(
 }
 
 ///|
+/// Graphviz parity: flipped cluster label placement aligned to
+/// refs/graphviz/lib/common/postproc.c (place_flip_graph_label).
+/// Do not change behavior without updating fixtures/tests.
+fn graph_label_pos_flip(
+  bbox : @geom.Rect,
+  label_width_pt : Double,
+  label_height_pt : Double,
+  loc : LabelLoc,
+  just : LabelJust,
+) -> @geom.Point {
+  let x = match loc {
+    LabelLoc::Top => bbox.urx - label_width_pt / 2.0
+    LabelLoc::Bottom => bbox.llx + label_width_pt / 2.0
+  }
+  let y = match just {
+    LabelJust::Left => bbox.ury - label_height_pt / 2.0
+    LabelJust::Right => bbox.lly + label_height_pt / 2.0
+    LabelJust::Center => (bbox.lly + bbox.ury) / 2.0
+  }
+  { x, y }
+}
+
+///|
 fn min_double(a : Double, b : Double) -> Double {
   if a < b { a } else { b }
 }

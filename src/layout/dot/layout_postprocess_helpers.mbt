@@ -139,6 +139,8 @@ fn layout_subgraphs(
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
 ) -> Array[DotLayoutGraph] {
+  let rankdir = graph_rankdir(graph)
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let result : Array[DotLayoutGraph] = []
   for subgraph in graph.subgraphs() {
     let node_set : Map[String, Bool] = Map::new()
@@ -168,7 +170,7 @@ fn layout_subgraphs(
     }
     let mut bbox = compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
-    let mut label_info : (Double, Double, LabelLoc, LabelJust)? = None
+    let mut label_info : (Double, Double, LabelLoc, LabelJust, Bool)? = None
     let sub_subgraphs =
       layout_subgraphs(
         subgraph,
@@ -213,19 +215,47 @@ fn layout_subgraphs(
         Some((width_pt, height_pt)) => {
           let loc = graph_label_loc(subgraph)
           let just = graph_label_just(subgraph)
-          bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
           let pad = CLUSTER_LABEL_PAD_PT
           let padded_width = width_pt + pad * 2.0
           let padded_height = height_pt + pad
-          label_info = Some((padded_width, padded_height, loc, just))
+          if flip {
+            let border_x = padded_height
+            let border_y = padded_width
+            let mut llx = bbox.llx
+            let mut urx = bbox.urx
+            let mut lly = bbox.lly
+            let mut ury = bbox.ury
+            match loc {
+              LabelLoc::Top => urx = urx + border_x
+              LabelLoc::Bottom => llx = llx - border_x
+            }
+            let span = ury - lly
+            if border_y > span {
+              let diff = (border_y - span) / 2.0
+              lly = lly - diff
+              ury = ury + diff
+            }
+            bbox = { llx, lly, urx, ury }
+            label_info = Some((border_x, border_y, loc, just, true))
+          } else {
+            bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+            label_info = Some((padded_width, padded_height, loc, just, false))
+          }
         }
         None => ()
       }
       bbox = round_bbox(bbox)
     }
     match label_info {
-      Some((width_pt, height_pt, loc, just)) =>
-        label_pos = Some(graph_label_pos(bbox, width_pt, height_pt, loc, just))
+      Some((width_pt, height_pt, loc, just, flipped)) =>
+        label_pos =
+          Some(
+            if flipped {
+              graph_label_pos_flip(bbox, width_pt, height_pt, loc, just)
+            } else {
+              graph_label_pos(bbox, width_pt, height_pt, loc, just)
+            },
+          )
       None => ()
     }
     result.push({
