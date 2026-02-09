@@ -3224,6 +3224,46 @@ fn compute_ordering_and_vnodes(
           order_edge_head,
           ranks,
         )
+      let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+      let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+      for i in 0..<nodes.length() {
+        let name = nodes[i].name()
+        graphviz_out_neighbors[name] = []
+        graphviz_in_neighbors[name] = []
+      }
+      for name, list in edge_out_order {
+        let heads : Array[String] = []
+        for edge_idx in list {
+          let head =
+            if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+              edges[edge_idx].head().name()
+            }
+          heads.push(head)
+        }
+        graphviz_out_neighbors[name] = heads
+      }
+      // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
+      // fixed head, so preserve edge index order.
+      let in_entries : Map[String, Array[String]] = Map::new()
+      let mut edge_idx = 0
+      while edge_idx < edges.length() {
+        let tail =
+          if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+            edges[edge_idx].tail().name()
+          }
+        let head =
+          if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+            edges[edge_idx].head().name()
+          }
+        match in_entries.get(head) {
+          Some(list) => list.push(tail)
+          None => in_entries[head] = [tail]
+        }
+        edge_idx = edge_idx + 1
+      }
+      for head, entries in in_entries {
+        graphviz_in_neighbors[head] = entries
+      }
       reorder_rank_groups(
         rank_keys,
         groups,
@@ -3249,6 +3289,8 @@ fn compute_ordering_and_vnodes(
         Map::new(),
         cluster_meta.cluster_skeleton,
         cluster_meta.flat_constraints,
+        graphviz_out_neighbors=graphviz_out_neighbors,
+        graphviz_in_neighbors=graphviz_in_neighbors,
         graphviz_flip=graphviz_flip,
       )
     }
