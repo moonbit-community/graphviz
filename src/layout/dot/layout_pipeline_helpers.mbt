@@ -1620,15 +1620,72 @@ fn compute_ordering_and_vnodes(
   // regardless of rankdir flip.
   // Do not change behavior without updating fixtures/tests.
   let nlist_tail_order : Array[String] = creation_order
-  let nlist_order =
+  let nlist_order_raw =
     build_graphviz_nlist_order_from_edges(
       nlist_tail_order,
       order_creation,
       edge_creation_order,
       flat_rank_constraints,
     )
-  // Graphviz parity: keep GD_nlist as an explicit pipeline output so xpos can
-  // follow Graphviz node ordering without re-deriving from nlist callers.
+  let nlist_order =
+    if graphviz_flip && cluster_meta.has_clusters {
+    let cluster_nodes : Map[String, Array[String]] = Map::new()
+    for name in nlist_order_raw {
+      let cluster = match cluster_meta.cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        continue
+      }
+      match cluster_nodes.get(cluster) {
+        Some(list) => list.push(name)
+        None => cluster_nodes[cluster] = [name]
+      }
+    }
+    let cluster_reversed : Map[String, Array[String]] = Map::new()
+    let cluster_index : Map[String, Int] = Map::new()
+    for cluster, list in cluster_nodes {
+      let reversed : Array[String] = []
+      let mut idx = list.length()
+      while idx > 0 {
+        idx = idx - 1
+        reversed.push(list[idx])
+      }
+      cluster_reversed[cluster] = reversed
+      cluster_index[cluster] = 0
+    }
+    let adjusted : Array[String] = []
+    for name in nlist_order_raw {
+      let cluster = match cluster_meta.cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        adjusted.push(name)
+      } else {
+        let idx = match cluster_index.get(cluster) {
+          Some(value) => value
+          None => 0
+        }
+        let list = match cluster_reversed.get(cluster) {
+          Some(value) => value
+          None => []
+        }
+        if idx < list.length() {
+          adjusted.push(list[idx])
+        } else {
+          adjusted.push(name)
+        }
+        cluster_index[cluster] = idx + 1
+      }
+    }
+    adjusted
+  } else {
+    nlist_order_raw
+  }
+  // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
+  // Do not change behavior without updating fixtures/tests.
   let gdnlist_order = nlist_order
   if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
     let order_joined = nlist_order.join(" ")
