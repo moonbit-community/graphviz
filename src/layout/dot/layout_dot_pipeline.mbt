@@ -136,6 +136,12 @@ fn compute_dot_routing_stage(
       nodes_out,
       positions_state.cluster_ln_x,
       positions_state.cluster_rn_x,
+      positions_state.cluster_bbox_heights,
+      prep.rankdir,
+      rank_stage.rank_data.ranks,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
     )
   let label_edge_counts = build_label_edge_counts(prep.edges)
   let enable_complex_tuning = complex_tuning_enabled()

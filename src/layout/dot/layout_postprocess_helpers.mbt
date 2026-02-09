@@ -138,8 +138,13 @@ fn layout_subgraphs(
   edges_out : Array[DotLayoutEdge],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, (Double, Double)],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
 ) -> Array[DotLayoutGraph] {
-  let rankdir = graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let result : Array[DotLayoutGraph] = []
   for subgraph in graph.subgraphs() {
@@ -178,6 +183,12 @@ fn layout_subgraphs(
         edges_out,
         cluster_ln_x,
         cluster_rn_x,
+        cluster_bbox_heights,
+        rankdir,
+        ranks,
+        rank_y,
+        rank_ht1,
+        rank_ht2,
       )
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
@@ -186,6 +197,64 @@ fn layout_subgraphs(
       let pad = cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
+      let mut pad_y = pad
+      let mut use_rank_bbox = false
+      // Graphviz parity: cluster y bounds come from rank positions (dot_compute_bb).
+      let mut min_rank : Int? = None
+      let mut max_rank : Int? = None
+      let cluster_nodes : Map[String, Bool] = Map::new()
+      collect_graph_nodes(subgraph, cluster_nodes)
+      for name, _ in cluster_nodes {
+        match ranks.get(name) {
+          Some(rank) => {
+            match min_rank {
+              Some(value) => if rank < value { min_rank = Some(rank) }
+              None => min_rank = Some(rank)
+            }
+            match max_rank {
+              Some(value) => if rank > value { max_rank = Some(rank) }
+              None => max_rank = Some(rank)
+            }
+          }
+          None => ()
+        }
+      }
+      match (min_rank, max_rank) {
+        (Some(min_rank_value), Some(max_rank_value)) => {
+          let max_rank_y = match rank_y.get(max_rank_value) {
+            Some(value) => value
+            None => bbox.lly
+          }
+          let min_rank_y = match rank_y.get(min_rank_value) {
+            Some(value) => value
+            None => bbox.ury
+          }
+          let mut ht1 = match rank_ht1.get(max_rank_value) {
+            Some(value) => value
+            None => 0.0
+          }
+          let mut ht2 = match rank_ht2.get(min_rank_value) {
+            Some(value) => value
+            None => 0.0
+          }
+          match subgraph.name() {
+            Some(cluster_name) =>
+              match cluster_bbox_heights.get(cluster_name) {
+                Some((cluster_ht1, cluster_ht2)) => {
+                  ht1 = cluster_ht1
+                  ht2 = cluster_ht2
+                }
+                None => ()
+              }
+            None => ()
+          }
+          bbox =
+            { llx: bbox.llx, lly: max_rank_y - ht1, urx: bbox.urx, ury: min_rank_y + ht2 }
+          pad_y = 0.0
+          use_rank_bbox = true
+        }
+        _ => ()
+      }
       // Graphviz parity: cluster x bounds come from ln/rn positions (dot_compute_bb).
       match subgraph.name() {
         Some(cluster_name) => {
@@ -207,9 +276,9 @@ fn layout_subgraphs(
         None => ()
       }
       let llx = bbox.llx - pad_left
-      let lly = bbox.lly - pad
+      let lly = bbox.lly - pad_y
       let urx = bbox.urx + pad_right
-      let ury = bbox.ury + pad
+      let ury = bbox.ury + pad_y
       bbox = { llx, lly, urx, ury }
       match graph_label_metrics(subgraph) {
         Some((width_pt, height_pt)) => {
@@ -225,9 +294,11 @@ fn layout_subgraphs(
             let mut urx = bbox.urx
             let mut lly = bbox.lly
             let mut ury = bbox.ury
-            match loc {
-              LabelLoc::Top => urx = urx + border_x
-              LabelLoc::Bottom => llx = llx - border_x
+            if !use_rank_bbox {
+              match loc {
+                LabelLoc::Top => urx = urx + border_x
+                LabelLoc::Bottom => llx = llx - border_x
+              }
             }
             let span = ury - lly
             if border_y > span {
@@ -238,7 +309,9 @@ fn layout_subgraphs(
             bbox = { llx, lly, urx, ury }
             label_info = Some((border_x, border_y, loc, just, true))
           } else {
-            bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+            if !use_rank_bbox {
+              bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+            }
             label_info = Some((padded_width, padded_height, loc, just, false))
           }
         }
@@ -358,6 +431,12 @@ fn compute_cluster_bboxes_for_routing(
   nodes_out : Array[DotLayoutNode],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, (Double, Double)],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
   if graph_has_cluster(graph) {
@@ -368,6 +447,12 @@ fn compute_cluster_bboxes_for_routing(
         [],
         cluster_ln_x,
         cluster_rn_x,
+        cluster_bbox_heights,
+        rankdir,
+        ranks,
+        rank_y,
+        rank_ht1,
+        rank_ht2,
       )
     collect_cluster_bboxes(cluster_layouts, cluster_bboxes)
   }
@@ -610,6 +695,12 @@ fn build_subgraphs_and_bbox(
   bbox : @geom.Rect,
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, (Double, Double)],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
 ) -> (Array[DotLayoutGraph], @geom.Rect) {
   let subgraphs =
     layout_subgraphs(
@@ -618,6 +709,12 @@ fn build_subgraphs_and_bbox(
       edges,
       cluster_ln_x,
       cluster_rn_x,
+      cluster_bbox_heights,
+      rankdir,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
     )
   let expanded = if subgraphs.length() > 0 {
     expand_bbox_with_cluster_subgraphs(bbox, subgraphs)
@@ -936,6 +1033,7 @@ fn finalize_layout_graph(
   sizes : Map[String, NodeSize],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, (Double, Double)],
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
@@ -962,6 +1060,12 @@ fn finalize_layout_graph(
       bbox,
       cluster_ln_x,
       cluster_rn_x,
+      cluster_bbox_heights,
+      rankdir,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
     )
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
@@ -1005,8 +1109,7 @@ fn finalize_layout_graph(
     edges: layout_with_root_pad.edges,
     subgraphs: layout_with_root_pad.subgraphs,
   }
-  let adjusted =
-    adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
+  let adjusted = adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
   let labeled =
     expand_bbox_for_edge_labels(
       graph,

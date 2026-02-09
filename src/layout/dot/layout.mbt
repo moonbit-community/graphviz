@@ -31,6 +31,7 @@ pub fn layout_dot(
     prep.sizes,
     positions_state.cluster_ln_x,
     positions_state.cluster_rn_x,
+    positions_state.cluster_bbox_heights,
     positions_state.rank_y,
     positions_state.rank_ht1,
     positions_state.rank_ht2,

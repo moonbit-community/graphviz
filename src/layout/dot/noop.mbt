@@ -360,8 +360,8 @@ pub fn layout_neato_noop(
   reset_label_caches()
   let scale_value = if scale <= 0.0 { 72.0 } else { scale }
   let scale_factor = 72.0 / scale_value
-  let record_orientation =
-    record_layout_orientation(graph_rankdir(active_graph))
+  let rankdir = graph_rankdir(active_graph)
+  let record_orientation = record_layout_orientation(rankdir)
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
   for node in ordered_nodes(active_graph) {
@@ -435,6 +435,11 @@ pub fn layout_neato_noop(
   let base_bbox = compute_bbox(nodes_out, edges_out)
   let empty_cluster_ln_x : Map[String, Double] = Map::new()
   let empty_cluster_rn_x : Map[String, Double] = Map::new()
+  let empty_cluster_bbox_heights : Map[String, (Double, Double)] = Map::new()
+  let empty_ranks : Map[String, Int] = Map::new()
+  let empty_rank_y : Map[Int, Double] = Map::new()
+  let empty_rank_ht1 : Map[Int, Double] = Map::new()
+  let empty_rank_ht2 : Map[Int, Double] = Map::new()
   let subgraphs =
     layout_subgraphs(
       active_graph,
@@ -442,6 +447,12 @@ pub fn layout_neato_noop(
       edges_out,
       empty_cluster_ln_x,
       empty_cluster_rn_x,
+      empty_cluster_bbox_heights,
+      rankdir,
+      empty_ranks,
+      empty_rank_y,
+      empty_rank_ht1,
+      empty_rank_ht2,
     )
   let mut final_bbox = if subgraphs.length() > 0 {
     expand_bbox_with_subgraphs(base_bbox, subgraphs)
