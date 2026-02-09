@@ -40,7 +40,7 @@ fn distance(a : (Double, Double), b : (Double, Double)) -> Double {
 }
 
 ///|
-#skip
+#skip("integration test: re-enable after base-function parity")
 test "cli neato -n preserves node positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -65,7 +65,7 @@ test "cli neato -n preserves node positions" {
 }
 
 ///|
-#skip
+#skip("integration test: re-enable after base-function parity")
 test "cli neato -x prunes isolated nodes" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -94,7 +94,7 @@ test "cli neato -x prunes isolated nodes" {
 }
 
 ///|
-#skip
+#skip("integration test: re-enable after base-function parity")
 test "cli neato assigns positions without -n" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -123,7 +123,7 @@ test "cli neato assigns positions without -n" {
 }
 
 ///|
-#skip
+#skip("integration test: re-enable after base-function parity")
 test "cli neato honors pinned positions" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -140,7 +140,7 @@ test "cli neato honors pinned positions" {
 }
 
 ///|
-#skip
+#skip("integration test: re-enable after base-function parity")
 test "cli neato respects edge length" {
   ensure_dir("target")
   ensure_dir("target/cli")
