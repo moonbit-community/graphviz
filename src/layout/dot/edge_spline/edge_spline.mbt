@@ -411,6 +411,19 @@ fn node_penwidth_pt(node : @cgraph.Node) -> Double {
 }
 
 ///|
+/// Graphviz parity: plain/plaintext/none have no stroked border, so clipping must not inflate by penwidth.
+fn shape_has_outline(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "none" | "plaintext" | "plain" => false
+    _ => true
+  }
+}
+
+///|
 fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
   if pad_pt <= 0.0 {
     return size
@@ -812,8 +825,16 @@ fn clip_spline_to_nodes(
   let head_center = head_clip_center
   let tail_base_size = tail_size
   let head_base_size = head_size
-  let tail_penwidth = node_penwidth_pt(edge.tail())
-  let head_penwidth = node_penwidth_pt(edge.head())
+  let tail_penwidth = if shape_has_outline(edge.tail()) {
+    node_penwidth_pt(edge.tail())
+  } else {
+    0.0
+  }
+  let head_penwidth = if shape_has_outline(edge.head()) {
+    node_penwidth_pt(edge.head())
+  } else {
+    0.0
+  }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if tail_penwidth > 0.0 {
