@@ -66,6 +66,28 @@ fn find_edge_by_nodes(
 }
 
 ///|
+fn load_port_label_graph(
+  graphs : Map[String, @cgraph.Graph],
+  name : String,
+) -> @cgraph.Graph raise {
+  match graphs.get(name) {
+    Some(value) => value
+    None => {
+      let path = match name {
+        "port_label" => "tests/layout/dot/port_label.dot"
+        "port_label_lr" => "tests/layout/dot/port_label_lr.dot"
+        "port_label_rl" => "tests/layout/dot/port_label_rl.dot"
+        "port_label_bt" => "tests/layout/dot/port_label_bt.dot"
+        _ => fail("unknown port label fixture graph \{name}")
+      }
+      let graph = @dot_parser.parse_dot_file(path)
+      graphs[name] = graph
+      graph
+    }
+  }
+}
+
+///|
 fn assert_port_label_edge(
   edge : @cgraph.Edge,
   fixture : PortLabelFixture,
@@ -117,8 +139,9 @@ test "port label positions match Graphviz" {
 test "port label params match Graphviz defaults" {
   let fixtures = load_port_label_fixtures()
   guard fixtures.length() > 0 else { fail("missing port label fixtures") }
-  let graph = @dot_parser.parse_dot_file("tests/layout/dot/port_label.dot")
+  let graphs : Map[String, @cgraph.Graph] = Map::new()
   for fixture in fixtures {
+    let graph = load_port_label_graph(graphs, fixture.graph)
     let edge = match find_edge_by_nodes(graph, fixture.tail, fixture.head) {
       Some(value) => value
       None =>
