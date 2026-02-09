@@ -3550,6 +3550,8 @@ fn compute_positions(
       order_ranks,
     )
     let edge_order = collect_edge_order(order_edges_out)
+    // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
+    // computed for the order graph (mincross median tie-breaking path).
     let ordered_groups = reorder_rank_groups(
       order_rank_keys,
       order_groups,
@@ -3558,8 +3560,8 @@ fn compute_positions(
       order_edge_head_out,
       order_edge_tail_port_x,
       order_edge_head_port_x,
-      [],
-      [],
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
       parents,
       children,
       order_cluster_keys,
