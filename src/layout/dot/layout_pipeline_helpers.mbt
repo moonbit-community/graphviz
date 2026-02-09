@@ -3612,7 +3612,10 @@ fn compute_positions(
   let x_ranks = build_node_ranks(x_groups)
   let vnode_extra_nodes =
     if use_vnodes_for_xpos {
-      build_vnode_extra_nodes(ordering.vnode_info.vnode_ranks)
+      build_vnode_extra_nodes(
+        ordering.nlist_order,
+        ordering.vnode_info.vnode_ranks,
+      )
     } else {
       []
     }
