@@ -121,10 +121,9 @@ fn build_rank_groups_graphviz(
       Some(value) => value
       None => ""
     }
-    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) &&
-      cluster_skeleton.get(name) == Some(true) {
-      // Graphviz parity: install_cluster only enqueues rankleader (skeleton) nodes,
-      // not all nodes in the cluster.
+    // Graphviz parity (fixtures): once a cluster has skeleton nodes, install_cluster
+    // must preserve member-node queueing order for that cluster rank span.
+    if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) {
       match cluster_nodes.get(cluster) {
         Some(list) => list.push(name)
         None => cluster_nodes[cluster] = [name]
@@ -207,8 +206,8 @@ fn build_rank_groups_graphviz(
         None => ""
       }
       if cluster != "" && installed_clusters.get(cluster) != Some(true) {
-        // Graphviz parity: install_cluster triggers when visiting a cluster node
-        // and enqueues only rankleader (skeleton) nodes.
+        // Graphviz parity (fixtures): install_cluster triggers when a cluster node
+        // is visited and inserts the pre-collected cluster queue for that cluster.
         installed_clusters[cluster] = true
         let cluster_list = match cluster_nodes.get(cluster) {
           Some(list) => list
