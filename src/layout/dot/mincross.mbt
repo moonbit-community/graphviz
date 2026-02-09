@@ -988,6 +988,7 @@ fn reorder_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
+  fixed_ranks? : Map[String, Int] = Map::new(),
   graphviz_flip? : Bool = false,
   startpass? : Int = 0,
 ) -> Map[Int, Array[String]] {
@@ -1048,6 +1049,13 @@ fn reorder_rank_groups(
     node_penalty[head] = head_sum + penalty
   }
   let node_ranks = build_node_ranks(ordered)
+  // Graphviz parity: cluster-local mincross uses merged rank map including
+  // virtual nodes that may not be in the local rank groups.
+  for name, rank in fixed_ranks {
+    if node_ranks.get(name) is None {
+      node_ranks[name] = rank
+    }
+  }
   let mut best_ordered = clone_rank_groups(ordered)
   let mut order_positions = order_positions_from_groups(ordered)
   let mut has_port_order = false

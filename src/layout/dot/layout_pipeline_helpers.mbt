@@ -1111,6 +1111,7 @@ fn reorder_groups_by_cluster_build_ranks(
       empty_cluster_skeleton,
       cluster_flat_constraints,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
+      fixed_ranks=fixed_ranks,
       graphviz_flip=false,
       startpass=2,
     )
