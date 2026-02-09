@@ -334,6 +334,9 @@ fn expand_bbox_with_cluster_subgraphs(
 }
 
 ///|
+/// Graphviz parity: rankdir coordinate transform aligned to
+/// refs/graphviz/lib/common/postproc.c (translate_drawing/translate_bb).
+/// Do not change behavior without updating fixtures/tests.
 fn transform_point(
   point : @geom.Point,
   bbox : @geom.Rect,
@@ -341,9 +344,9 @@ fn transform_point(
 ) -> @geom.Point {
   match rankdir {
     RankDir::TB => point
-    RankDir::BT => { x: point.x, y: bbox.lly + bbox.ury - point.y }
+    RankDir::BT => { x: point.x, y: bbox.ury - point.y }
     RankDir::LR => { x: bbox.lly + bbox.ury - point.y, y: point.x }
-    RankDir::RL => { x: point.y, y: bbox.llx + bbox.urx - point.x }
+    RankDir::RL => { x: point.y, y: point.x }
   }
 }
 
