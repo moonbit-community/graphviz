@@ -1125,7 +1125,7 @@ fn adjust_route_points(
       RankDir::TB | RankDir::BT => head_tb_touch && !head_lr_touch
       RankDir::LR | RankDir::RL => head_lr_touch && !head_tb_touch
     }
-  if points.length() <= 2 && has_explicit_port && detour_ok {
+  if points.length() <= 2 && has_explicit_port && detour_ok && !using_pathplan {
     let tail_rect = port_side_rect(base.tail_pos, base.tail_size)
     let head_rect = port_side_rect(base.head_pos, base.head_size)
     let anchor_eps = 0.02
@@ -1158,7 +1158,8 @@ fn adjust_route_points(
     )
   }
   dot_trace_route_points(edge, points)
-  if has_explicit_port && base.has_side_anchor && points.length() <= 2 {
+  if has_explicit_port && base.has_side_anchor && points.length() <= 2 &&
+    !using_pathplan {
     let offset = max_double(4.0, nodesep_pt * 0.5)
     let kinked : Array[@geom.Point] = [base.tail_anchor]
     if base.tail_slope.x != 0.0 || base.tail_slope.y != 0.0 {
@@ -1218,7 +1219,7 @@ fn compute_curve_offset(
           let port_scale = if head_port_key == "" { 0.6 } else { 0.6 }
           curve_offset = nodesep_pt * t * t * label_factor * port_scale
           if head_port_key != "" {
-            match base.rankdir {
+            match base.layout_rankdir {
               RankDir::TB | RankDir::BT =>
                 if dx < 0.0 {
                   curve_skew = 0.5
@@ -1455,6 +1456,7 @@ fn build_edge_spline(
             (is_record_shape(tail_node) && port_is_explicit(tail_port)) ||
               (is_record_shape(head_node) && port_is_explicit(head_port))
           let needs_record_detour =
+            !using_pathplan &&
             !is_flat_edge &&
             record_port_edge &&
             (match layout_rankdir {
@@ -1657,6 +1659,7 @@ fn build_edge_spline(
           (is_record_shape(tail_node) && port_is_explicit(tail_port)) ||
             (is_record_shape(head_node) && port_is_explicit(head_port))
         let needs_record_detour =
+          !using_pathplan &&
           !is_flat_edge &&
           record_port_edge &&
           (match layout_rankdir {
