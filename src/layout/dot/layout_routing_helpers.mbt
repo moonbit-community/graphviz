@@ -1890,25 +1890,6 @@ fn build_edge_layout(
       }
     None => None
   }
-  if @sys.get_env_var("DOT_TRACE_SLACK") is Some(_) &&
-    edge.tail().name() == "foo_agent" &&
-    edge.head().name() == "zzz_worker" {
-    let (rank_label, span) = match label_rank_info {
-      Some(value) => value
-      None => (-1, 0)
-    }
-    let rank_x_text = match label_rank_x {
-      Some(value) => "\{value}"
-      None => "None"
-    }
-    let rank_y_text = match label_rank_y {
-      Some(value) => "\{value}"
-      None => "None"
-    }
-    println(
-      "label_rank=\{rank_label} span=\{span} label_rank_x=\{rank_x_text} label_rank_y=\{rank_y_text}",
-    )
-  }
   let apply_label_pad = has_clusters
   let label_pos : @geom.Point? = match edge.get_attr("label") {
     Some(value) =>
@@ -1951,7 +1932,7 @@ fn build_edge_layout(
                               spline,
                               base.out_tail_clip,
                               base.out_head_clip,
-                              base.rankdir,
+                              base.layout_rankdir,
                               label_rank_y,
                               label_rank_x,
                               apply_label_pad,
@@ -1979,7 +1960,7 @@ fn build_edge_layout(
                         spline,
                         base.out_tail_clip,
                         base.out_head_clip,
-                        base.rankdir,
+                        base.layout_rankdir,
                         label_rank_y,
                         label_rank_x,
                         apply_label_pad,
@@ -1994,7 +1975,7 @@ fn build_edge_layout(
                 spline,
                 base.out_tail_clip,
                 base.out_head_clip,
-                base.rankdir,
+                base.layout_rankdir,
                 label_rank_y,
                 label_rank_x,
                 apply_label_pad,
