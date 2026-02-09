@@ -3255,10 +3255,12 @@ fn compute_positions(
   if use_vnodes_for_xpos && ordering.ordered_groups_with_vnodes.length() > 0 {
     has_vnode_order = true
   }
+  // Graphviz parity: x-positioning uses layout-coordinate node sizes,
+  // so rankdir flip is handled via prep.sizes (not ordering-space widths).
   let x_base_sizes = apply_self_edge_right_space(
     prep.nodes,
     prep.edges,
-    prep.order_sizes,
+    prep.sizes,
     prep.rankdir,
     prep.record_orientation,
   )
