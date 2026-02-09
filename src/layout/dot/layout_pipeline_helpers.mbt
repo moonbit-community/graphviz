@@ -2068,7 +2068,8 @@ fn compute_ordering_and_vnodes(
         }
       }
       // Graphviz parity: seed build_ranks from component-scoped walk,
-      // matching decompose/install traversal used by remincross.
+      // matching decompose/install traversal used by remincross with
+      // cluster-expanded flat constraints.
       let seeded_groups = build_rank_groups_graphviz_components(
         order_rank_keys,
         order_groups,
@@ -2079,7 +2080,7 @@ fn compute_ordering_and_vnodes(
         order_cluster_keys,
         order_cluster_skeleton,
         0,
-        flat_rank_constraints,
+        cluster_meta.flat_constraints,
         flip=graphviz_flip,
         graphviz_out_neighbors=graphviz_out_neighbors,
         graphviz_in_neighbors=graphviz_in_neighbors,
