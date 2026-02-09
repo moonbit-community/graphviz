@@ -1586,14 +1586,8 @@ fn compute_ordering_and_vnodes(
   }
   let order_creation : Array[String] = []
   let order_seen : Map[String, Bool] = Map::new()
-  // Graphviz parity: agfstnode order lists real nodes first (creation order),
-  // then virtual nodes created by class2 (cluster skeletons, then edge vnodes).
-  for tail_name in creation_order {
-    if order_seen.get(tail_name) is None {
-      order_seen[tail_name] = true
-      order_creation.push(tail_name)
-    }
-  }
+  // Graphviz parity: class2 creates cluster skeletons first, then interleaves
+  // real nodes with their edge vnodes in agfstnode order.
   for name in cluster_skeleton_creation {
     if order_seen.get(name) is None {
       order_seen[name] = true
@@ -1601,6 +1595,10 @@ fn compute_ordering_and_vnodes(
     }
   }
   for tail_name in creation_order {
+    if order_seen.get(tail_name) is None {
+      order_seen[tail_name] = true
+      order_creation.push(tail_name)
+    }
     let vnodes = match vnode_creation_by_tail.get(tail_name) {
       Some(list) => list
       None => []
@@ -1618,11 +1616,13 @@ fn compute_ordering_and_vnodes(
       vnode_creation_order.push(name)
     }
   }
-  // Graphviz parity: GD_nlist follows decompose DFS over flat/in/out neighbors
-  // (dotgen/decomp.c). Do not change behavior without updating fixtures/tests.
+  // Graphviz parity: decompose DFS starts from agfstnode (creation) order
+  // regardless of rankdir flip.
+  // Do not change behavior without updating fixtures/tests.
+  let nlist_tail_order : Array[String] = creation_order
   let nlist_order =
     build_graphviz_nlist_order_from_edges(
-      order_creation,
+      nlist_tail_order,
       order_creation,
       edge_creation_order,
       flat_rank_constraints,
