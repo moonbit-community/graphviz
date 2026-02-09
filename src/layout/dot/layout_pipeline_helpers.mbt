@@ -1275,6 +1275,45 @@ fn compute_edge_port_orders(
 }
 
 ///|
+/// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
+/// Do not change behavior without updating fixtures/tests.
+fn build_graphviz_neighbor_maps(
+  order_nodes : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    graphviz_out_neighbors[name] = []
+    graphviz_in_neighbors[name] = []
+  }
+  for tail, entries in order_edges_by_tail {
+    let heads : Array[String] = []
+    for entry in entries {
+      let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
+        entry
+      heads.push(h)
+    }
+    graphviz_out_neighbors[tail] = heads
+  }
+  // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
+  // fixed head, so preserve edge_creation insertion order.
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for edge in edge_creation_order {
+    let (tail, head) = edge
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+  }
+  for head, entries in in_entries {
+    graphviz_in_neighbors[head] = entries
+  }
+  (graphviz_out_neighbors, graphviz_in_neighbors)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2030,34 +2069,12 @@ fn compute_ordering_and_vnodes(
           edge_idx = edge_idx + 1
         }
       }
-      let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-      let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-      for name in order_nodes {
-        graphviz_out_neighbors[name] = []
-        graphviz_in_neighbors[name] = []
-      }
-      for tail, entries in order_edges_by_tail {
-        let heads : Array[String] = []
-        for entry in entries {
-          let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
-            entry
-          heads.push(h)
-        }
-        graphviz_out_neighbors[tail] = heads
-      }
-      // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
-      // fixed head, so preserve edge_creation insertion order.
-      let in_entries : Map[String, Array[String]] = Map::new()
-      for edge in edge_creation_order {
-        let (tail, head) = edge
-        match in_entries.get(head) {
-          Some(list) => list.push(tail)
-          None => in_entries[head] = [tail]
-        }
-      }
-      for head, entries in in_entries {
-        graphviz_in_neighbors[head] = entries
-      }
+      let (graphviz_out_neighbors, graphviz_in_neighbors) =
+        build_graphviz_neighbor_maps(
+          order_nodes,
+          order_edges_by_tail,
+          edge_creation_order,
+        )
       let order_flat_constraints : Map[String, Bool] = Map::new()
       for key, value in cluster_meta.flat_constraints {
         order_flat_constraints[key] = value
