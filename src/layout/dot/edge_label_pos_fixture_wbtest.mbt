@@ -152,12 +152,14 @@ test "edge label vnode positions match Graphviz" {
   let graphs : Map[String, @cgraph.Graph] = Map::new()
   for fixture in fixtures {
     assert_eq(fixture.label_html, false)
-    assert_eq(fixture.flip, false)
     if fixture.graph == "" || fixture.tail == "" || fixture.head == "" ||
       fixture.label == "" {
       fail("missing edge label vnode fixture fields")
     }
     let graph = load_edge_label_graph(graphs, fixture.graph)
+    let rankdir = graph_rankdir(graph)
+    let expected_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+    assert_eq(fixture.flip, expected_flip)
     match find_edge_by_nodes_with_label(
       graph,
       fixture.tail,
@@ -170,7 +172,6 @@ test "edge label vnode positions match Graphviz" {
           "missing labeled edge \{fixture.tail} -> \{fixture.head} '\{fixture.label}' for edge label vnode fixtures",
         )
     }
-    let rankdir = if fixture.flip { RankDir::LR } else { RankDir::TB }
     let actual = edge_label_pos_from_vnode(
       point(fixture.vnode_x, fixture.vnode_y),
       fixture.dimen_x,
