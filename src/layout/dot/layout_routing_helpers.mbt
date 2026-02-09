@@ -4,6 +4,7 @@ priv struct RoutingContext {
   path_order_index : Map[String, Int]
   path_adjacency : @routesplines.PathAdjacency
   pathplan_sizes : Map[String, NodeSize]
+  pathplan_vnode_mval_sizes : Map[String, NodeSize]
   path_cluster_keys : Map[String, String]
   path_vnode_clusters : Map[String, String]
   parallel_offsets : Map[Int, Double]
@@ -39,6 +40,7 @@ fn prepare_routing_context(
       edge_tail,
       edge_head,
     )
+  // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
   let pathplan_sizes =
     apply_self_edge_right_space(
       nodes,
@@ -47,6 +49,11 @@ fn prepare_routing_context(
       rankdir,
       record_orientation,
     )
+  // Graphviz parity: preserve original vnode widths for ND_mval usage.
+  let pathplan_vnode_mval_sizes : Map[String, NodeSize] = Map::new()
+  for name, size in vnode_info.vnode_sizes {
+    pathplan_vnode_mval_sizes[name] = size
+  }
   let path_cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     path_cluster_keys[node.name()] = node_local_cluster_key(node)
@@ -99,6 +106,7 @@ fn prepare_routing_context(
     path_order_index,
     path_adjacency,
     pathplan_sizes,
+    pathplan_vnode_mval_sizes,
     path_cluster_keys,
     path_vnode_clusters,
     parallel_offsets,
@@ -1101,6 +1109,7 @@ fn compute_route_points_with_pathplan(
       vnode_positions,
       routing_context.pathplan_sizes,
       sizes,
+      routing_context.pathplan_vnode_mval_sizes,
       vnode_info.vnode_sizes,
       routing_context.path_cluster_keys,
       routing_context.path_vnode_clusters,
