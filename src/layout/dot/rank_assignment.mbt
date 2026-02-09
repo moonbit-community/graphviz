@@ -18,10 +18,6 @@ fn compute_ranks_directed_base(
     node_by_name[name] = node
     tail_order.push(name)
   }
-  let node_index : Map[String, Int] = Map::new()
-  for idx, name in tail_order {
-    node_index[name] = idx
-  }
   let edges_by_tail : Map[String, Array[Int]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let tail = edge_tail[edge_idx]
@@ -36,32 +32,8 @@ fn compute_ranks_directed_base(
       Some(list) => list
       None => []
     }
-    // Graphviz parity: agfstout/agnxtout order edges by head node sequence (AGSEQ).
-    if indices.length() > 1 {
-      indices.sort_by((a, b) => {
-        let ha = edge_head[a]
-        let hb = edge_head[b]
-        let ha_idx = match node_index.get(ha) {
-          Some(value) => value
-          None => 0
-        }
-        let hb_idx = match node_index.get(hb) {
-          Some(value) => value
-          None => 0
-        }
-        if ha_idx < hb_idx {
-          -1
-        } else if ha_idx > hb_idx {
-          1
-        } else if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        }
-      })
-    }
+    // Graphviz parity: agfstout/agnxtout use edge sequence (AGSEQ) order
+    // within a fixed tail. Do not change behavior without updating fixtures/tests.
     for edge_idx in indices {
       edge_creation.push((tail, edge_head[edge_idx]))
     }
