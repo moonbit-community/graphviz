@@ -774,6 +774,18 @@ fn html_cell_content_size(
 }
 
 ///|
+/// Graphviz parity: html cell border defaults to table border when cellborder is unset.
+fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
+  if table.cell_border_pt >= 0.0 {
+    table.cell_border_pt
+  } else if table.border_pt >= 0.0 {
+    table.border_pt
+  } else {
+    1.0
+  }
+}
+
+///|
 fn html_cell_size(
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
@@ -785,8 +797,11 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let mut width = content_width
-  let mut height = content_height
+  let cell_border_pt = html_table_cell_border_pt(table)
+  let mut width =
+    content_width + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
+  let mut height =
+    content_height + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
     None => ()
@@ -795,8 +810,6 @@ fn html_cell_size(
     Some(value) => if value > height { height = value }
     None => ()
   }
-  width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
-  height = height + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
   (width, height)
 }
 
