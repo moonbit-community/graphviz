@@ -2402,6 +2402,73 @@ fn recover_pathplan_slack_for_edge(
 }
 
 ///|
+/// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
+/// Do not change behavior without updating fixtures/tests.
+fn build_self_edge_layout(
+  base : EdgeRouteBase,
+  route : SelfEdgeRoute,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_info : EdgeVnodeInfo,
+  vnode_positions : Map[String, @geom.Point],
+  nodesep_pt : Double,
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+) -> DotLayoutEdge {
+  let spline =
+    edge_spline_for_bezier_points(
+      base.edge,
+      route.points,
+      base.tail_clip_center,
+      base.head_clip_center,
+      base.tail_clip_size,
+      base.head_clip_size,
+      base.route_include_tail,
+      base.route_include_head,
+      arrow_len_override=base.arrow_len_override,
+      tail_cluster_bbox=base.tail_cluster_bbox,
+      head_cluster_bbox=base.head_cluster_bbox,
+      parallel_offset=base.parallel_offset,
+    )
+  let spline_result : EdgeSplineResult = {
+    spline,
+    label_pad_boost: 0.0,
+    using_pathplan: false,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier: route.points,
+    apply_dotted_adjustment: false,
+  }
+  let final_spline = finalize_edge_spline(base, spline_result)
+  let mut edge_layout =
+    build_edge_layout(
+      base,
+      final_spline,
+      spline_result,
+      ranks,
+      rank_y,
+      vnode_info,
+      vnode_positions,
+      nodesep_pt,
+      has_clusters,
+      flat_label_edge_vnodes,
+    )
+  match route.label_pos {
+    Some(pos) =>
+      edge_layout = {
+        edge: edge_layout.edge,
+        splines: edge_layout.splines,
+        label_pos: Some(pos),
+        head_label_pos: edge_layout.head_label_pos,
+        tail_label_pos: edge_layout.tail_label_pos,
+        xlabel_pos: edge_layout.xlabel_pos,
+      }
+    None => ()
+  }
+  edge_layout
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2516,36 +2583,10 @@ fn route_edges(
       }
       match self_edge_routes.get(edge_id) {
         Some(route) => {
-          let spline =
-            edge_spline_for_bezier_points(
-              edge,
-              route.points,
-              base.tail_clip_center,
-              base.head_clip_center,
-              base.tail_clip_size,
-              base.head_clip_size,
-              base.route_include_tail,
-              base.route_include_head,
-              arrow_len_override=base.arrow_len_override,
-              tail_cluster_bbox=base.tail_cluster_bbox,
-              head_cluster_bbox=base.head_cluster_bbox,
-              parallel_offset=base.parallel_offset,
-            )
-          let spline_result : EdgeSplineResult = {
-            spline,
-            label_pad_boost: 0.0,
-            using_pathplan: false,
-            pathplan_boxes: [],
-            pathplan_points: [],
-            raw_bezier: route.points,
-            apply_dotted_adjustment: false,
-          }
-          let final_spline = finalize_edge_spline(base, spline_result)
-          let mut edge_layout =
-            build_edge_layout(
+          let edge_layout =
+            build_self_edge_layout(
               base,
-              final_spline,
-              spline_result,
+              route,
               ranks,
               rank_y,
               vnode_info,
@@ -2554,18 +2595,6 @@ fn route_edges(
               has_clusters,
               flat_label_edge_vnodes,
             )
-          match route.label_pos {
-            Some(pos) =>
-              edge_layout = {
-                edge: edge_layout.edge,
-                splines: edge_layout.splines,
-                label_pos: Some(pos),
-                head_label_pos: edge_layout.head_label_pos,
-                tail_label_pos: edge_layout.tail_label_pos,
-                xlabel_pos: edge_layout.xlabel_pos,
-              }
-            None => ()
-          }
           edges_out_by_id[edge_id] = edge_layout
           continue
         }
