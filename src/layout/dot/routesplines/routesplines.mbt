@@ -751,9 +751,30 @@ fn rank_gap_box(
 
 ///|
 ///|
+///|
+/// Graphviz parity: polygon construction aligned to refs/graphviz/lib/common/routespl.c.
+/// Do not change behavior without updating fixtures/tests.
 fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
   if boxes.length() == 0 {
     return []
+  }
+  let mut boxes = boxes
+  // Graphviz parity: checkpath removes degenerate boxes before polygon build.
+  if boxes.length() > 0 {
+    let filtered : Array[@geom.Rect] = []
+    for box in boxes {
+      if Double::abs(box.lly - box.ury) < 0.01 {
+        continue
+      }
+      if Double::abs(box.llx - box.urx) < 0.01 {
+        continue
+      }
+      filtered.push(box)
+    }
+    boxes = filtered
+    if boxes.length() == 0 {
+      return []
+    }
   }
   let mut flip = false
   let mut boxes_copy = boxes
@@ -819,6 +840,7 @@ fn boxes_to_polygon_points(boxes : Array[@geom.Rect]) -> Array[@geom.Point] {
       if !(prev == -1 && next == -1) {
         return []
       }
+      // Graphviz parity: add full box loop when prev==next==-1 in reverse pass.
       polypoints.push({ x: box.urx, y: box.lly })
       polypoints.push({ x: box.urx, y: box.ury })
       polypoints.push({ x: box.llx, y: box.ury })
