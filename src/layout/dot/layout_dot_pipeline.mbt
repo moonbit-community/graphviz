@@ -51,6 +51,7 @@ fn compute_dot_rank_stage(
       prep.node_order,
       rank_data.edge_tail,
       rank_data.edge_head,
+      prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
     )
   let ordering = compute_ordering_and_vnodes(
     graph,

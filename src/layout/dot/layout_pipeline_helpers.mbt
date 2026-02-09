@@ -534,6 +534,7 @@ fn compute_cluster_metadata(
   node_order : Map[String, Int],
   edge_tail : Array[String],
   edge_head : Array[String],
+  graphviz_flip : Bool,
 ) -> ClusterMetadata {
   let has_clusters = graph_has_cluster(graph)
   let cluster_keys : Map[String, String] = Map::new()
@@ -545,7 +546,9 @@ fn compute_cluster_metadata(
     creation_order[node.name()] = i
   }
   // Graphviz parity: cluster subgraphs walk GD_nlist backward to preserve input
-  // order; mirror that by using creation order for cluster nodes.
+  // order. For TB/BT, use creation order (input). For LR/RL, use reverse
+  // creation order so the later rank flip restores input order.
+  let total_nodes = nodes.length()
   for node in nodes {
     let name = node.name()
     let cluster = match cluster_keys.get(name) {
@@ -555,9 +558,15 @@ fn compute_cluster_metadata(
     if cluster == "" {
       continue
     }
-    let order_value = match creation_order.get(name) {
+    let base_order = match creation_order.get(name) {
       Some(value) => value
       None => 0
+    }
+    let order_value =
+      if graphviz_flip {
+      total_nodes - 1 - base_order
+    } else {
+      base_order
     }
     node_order[name] = order_value
   }
