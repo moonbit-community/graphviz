@@ -1314,6 +1314,19 @@ fn build_graphviz_neighbor_maps(
 }
 
 ///|
+/// Graphviz parity: flat constraints are copied before local augmentation.
+/// Do not change behavior without updating fixtures/tests.
+fn clone_flat_constraints(
+  flat_constraints : Map[String, Bool],
+) -> Map[String, Bool] {
+  let cloned : Map[String, Bool] = Map::new()
+  for key, value in flat_constraints {
+    cloned[key] = value
+  }
+  cloned
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2075,10 +2088,8 @@ fn compute_ordering_and_vnodes(
           order_edges_by_tail,
           edge_creation_order,
         )
-      let order_flat_constraints : Map[String, Bool] = Map::new()
-      for key, value in cluster_meta.flat_constraints {
-        order_flat_constraints[key] = value
-      }
+      let order_flat_constraints =
+        clone_flat_constraints(cluster_meta.flat_constraints)
       // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
       let gdnlist_order_index : Map[String, Int] = Map::new()
       let mut gdnlist_idx = 0
@@ -3314,10 +3325,8 @@ fn compute_ordering_and_vnodes(
               rem_sizes[name] = size
             }
           }
-          let rem_flat_constraints : Map[String, Bool] = Map::new()
-          for key, value in cluster_meta.flat_constraints {
-            rem_flat_constraints[key] = value
-          }
+          let rem_flat_constraints =
+            clone_flat_constraints(cluster_meta.flat_constraints)
           for key, _ in rank_same_constraints {
             rem_flat_constraints[key] = true
           }
