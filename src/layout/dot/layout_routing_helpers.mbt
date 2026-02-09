@@ -589,6 +589,26 @@ fn self_edge_group_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
+/// Graphviz parity: route anchor clipping uses node shape bounds.
+fn clip_to_node_shape(
+  node : @cgraph.Node,
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "" | "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
+      clip_to_ellipse(center, size, target)
+    "diamond" | "mdiamond" => clip_to_diamond(center, size, target)
+    _ => clip_to_rect(center, size, target)
+  }
+}
+
+///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_route_base(
@@ -836,7 +856,13 @@ fn build_edge_route_base(
     None =>
       match tail_side_anchor {
         Some(pos) => pos
-        None => clip_to_rect(tail_clip_center, tail_clip_size, tail_clip_target)
+        None =>
+          clip_to_node_shape(
+            tail_node,
+            tail_clip_center,
+            tail_clip_size,
+            tail_clip_target,
+          )
       }
   }
   let head_clip = match head_cluster_bbox {
@@ -844,7 +870,13 @@ fn build_edge_route_base(
     None =>
       match head_side_anchor {
         Some(pos) => pos
-        None => clip_to_rect(head_clip_center, head_clip_size, head_clip_target)
+        None =>
+          clip_to_node_shape(
+            head_node,
+            head_clip_center,
+            head_clip_size,
+            head_clip_target,
+          )
       }
   }
   let out_tail_anchor = if swap_ends { head_anchor } else { tail_anchor }

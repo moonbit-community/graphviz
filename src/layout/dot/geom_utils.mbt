@@ -18,6 +18,54 @@ fn clip_to_rect(
 }
 
 ///|
+fn clip_to_ellipse(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let rx = size.width_pt / 2.0
+  let ry = size.height_pt / 2.0
+  if rx <= 0.0 || ry <= 0.0 {
+    return center
+  }
+  let denom = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+  if denom <= 0.0 {
+    return center
+  }
+  let t = 1.0 / Double::sqrt(denom)
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
+fn clip_to_diamond(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return center
+  }
+  let denom = Double::abs(dx) / half_w + Double::abs(dy) / half_h
+  if denom <= 0.0 {
+    return center
+  }
+  let t = 1.0 / denom
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
 fn point_inside_bbox(point : @geom.Point, rect : @geom.Rect) -> Bool {
   point.x >= rect.llx &&
   point.x <= rect.urx &&
