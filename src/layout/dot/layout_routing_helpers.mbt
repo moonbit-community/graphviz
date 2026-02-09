@@ -2575,6 +2575,76 @@ fn sorted_edges_for_routing(
 }
 
 ///|
+/// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
+/// Do not change behavior without updating fixtures/tests.
+fn build_regular_edge_layout(
+  edge : @cgraph.Edge,
+  base : EdgeRouteBase,
+  splines : SplinesMode,
+  ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_info : EdgeVnodeInfo,
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  x_groups : Map[Int, Array[String]],
+  nodesep_pt : Double,
+  ranksep_pt : Double,
+  label_edge_counts : Map[String, Int],
+  head_port_metrics : HeadPortMetrics,
+  routing_context : RoutingContext,
+  enable_complex_tuning : Bool,
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+  path_adjacency : @routesplines.PathAdjacency,
+) -> DotLayoutEdge {
+  let spline_result = build_edge_spline(
+    base,
+    splines,
+    ranks,
+    sizes,
+    positions,
+    vnode_positions,
+    vnode_info,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+    x_groups,
+    nodesep_pt,
+    ranksep_pt,
+    label_edge_counts,
+    head_port_metrics,
+    routing_context,
+    enable_complex_tuning,
+  )
+  let spline = finalize_edge_spline(base, spline_result)
+  recover_pathplan_slack_for_edge(
+    edge,
+    base,
+    spline_result,
+    ranks,
+    vnode_info,
+    rank_y,
+    vnode_positions,
+    path_adjacency,
+  )
+  build_edge_layout(
+    base,
+    spline,
+    spline_result,
+    ranks,
+    rank_y,
+    vnode_info,
+    vnode_positions,
+    nodesep_pt,
+    has_clusters,
+    flat_label_edge_vnodes,
+  )
+}
+
+///|
 /// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn route_edges(
@@ -2678,48 +2748,29 @@ fn route_edges(
         None => ()
       }
     }
-    let spline_result = build_edge_spline(
-      base,
-      splines,
-      ranks,
-      sizes,
-      positions,
-      vnode_positions,
-      vnode_info,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      x_groups,
-      nodesep_pt,
-      ranksep_pt,
-      label_edge_counts,
-      head_port_metrics,
-      routing_context,
-      enable_complex_tuning,
-    )
-    let spline = finalize_edge_spline(base, spline_result)
-    recover_pathplan_slack_for_edge(
-      edge,
-      base,
-      spline_result,
-      ranks,
-      vnode_info,
-      rank_y,
-      vnode_positions,
-      path_adjacency,
-    )
     let edge_layout =
-      build_edge_layout(
+      build_regular_edge_layout(
+        edge,
         base,
-        spline,
-        spline_result,
+        splines,
         ranks,
-        rank_y,
-        vnode_info,
+        sizes,
+        positions,
         vnode_positions,
+        vnode_info,
+        rank_y,
+        rank_ht1,
+        rank_ht2,
+        x_groups,
         nodesep_pt,
+        ranksep_pt,
+        label_edge_counts,
+        head_port_metrics,
+        routing_context,
+        enable_complex_tuning,
         has_clusters,
         flat_label_edge_vnodes,
+        path_adjacency,
       )
     edges_out_by_id[edge_id] = edge_layout
   }
