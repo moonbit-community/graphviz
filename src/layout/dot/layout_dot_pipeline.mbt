@@ -155,6 +155,15 @@ fn compute_dot_routing_stage(
       prep.record_orientation,
       enable_complex_tuning,
     )
+  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
+  let path_groups =
+    if positions_state.x_groups.length() > 0 {
+      positions_state.x_groups
+    } else if rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
+      rank_stage.ordering.ordered_groups_with_vnodes
+    } else {
+      rank_stage.ordering.ordered_groups
+    }
   let routing_context =
     prepare_routing_context(
       prep.nodes,
@@ -164,7 +173,7 @@ fn compute_dot_routing_stage(
       prep.record_orientation,
       rank_stage.rank_data.ranks,
       rank_stage.ordering.ordered_groups,
-      positions_state.x_groups,
+      path_groups,
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.ordering.vnode_info,
       positions_state.vnode_positions,
@@ -187,7 +196,7 @@ fn compute_dot_routing_stage(
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
-      positions_state.x_groups,
+      path_groups,
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.rank_heights.ranksep_pt,
       rank_stage.cluster_meta.has_clusters,
