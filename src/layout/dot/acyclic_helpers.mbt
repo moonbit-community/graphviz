@@ -25,6 +25,34 @@ fn remove_edge_value(list : Array[Int], value : Int) -> Unit {
 }
 
 ///|
+fn edge_pair_key(tail : String, head : String) -> String {
+  "\{tail}|\{head}"
+}
+
+///|
+fn edge_pair_lookup(
+  edge_by_pair : Map[String, Int],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_active : Array[Bool],
+  key : String,
+) -> Int? {
+  match edge_by_pair.get(key) {
+    Some(idx) =>
+      if idx >= 0 && idx < edge_tail.length() &&
+        idx < edge_head.length() &&
+        idx < edge_active.length() &&
+        edge_active[idx] &&
+        edge_pair_key(edge_tail[idx], edge_head[idx]) == key {
+        Some(idx)
+      } else {
+        None
+      }
+    None => None
+  }
+}
+
+///|
 fn acyclic_dfs(
   idx : Int,
   node_index : Map[String, Int],
@@ -96,6 +124,104 @@ fn acyclic_dfs(
 }
 
 ///|
+/// Graphviz parity: acyclic DFS operates on fast-graph edges (class1/fastgr),
+/// merging parallel edges and reverse-edge merge_oneway behavior.
+/// Do not change behavior without updating fixtures/tests.
+fn acyclic_dfs_fast(
+  idx : Int,
+  rep_index : Map[String, Int],
+  out_edges : Array[Array[Int]],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_members : Array[Array[Int]],
+  edge_active : Array[Bool],
+  edge_by_pair : Map[String, Int],
+  edge_reversed : Array[Bool],
+  marked : Array[Bool],
+  onstack : Array[Bool],
+) -> Unit {
+  if marked[idx] {
+    return ()
+  }
+  let stack : Array[(Int, Int)] = []
+  marked[idx] = true
+  onstack[idx] = true
+  stack.push((idx, 0))
+  while stack.length() > 0 {
+    let top_idx = stack.length() - 1
+    let (node_idx, edge_pos) = stack[top_idx]
+    if edge_pos >= out_edges[node_idx].length() {
+      onstack[node_idx] = false
+      let _ = stack.pop()
+      continue
+    }
+    let edge_idx = out_edges[node_idx][edge_pos]
+    if edge_idx < 0 || edge_idx >= edge_active.length() || !edge_active[edge_idx] {
+      stack[top_idx] = (node_idx, edge_pos + 1)
+      continue
+    }
+    let head_name = edge_head[edge_idx]
+    let head_idx = match rep_index.get(head_name) {
+      Some(value) => value
+      None => {
+        stack[top_idx] = (node_idx, edge_pos + 1)
+        continue
+      }
+    }
+    if onstack[head_idx] {
+      if head_idx == node_idx {
+        stack[top_idx] = (node_idx, edge_pos + 1)
+        continue
+      }
+      let old_tail = edge_tail[edge_idx]
+      let old_head = edge_head[edge_idx]
+      // Reverse and apply to all merged members.
+      let member_indices = edge_members[edge_idx]
+      for edge_member_idx in member_indices {
+        if edge_member_idx >= 0 && edge_member_idx < edge_reversed.length() {
+          edge_reversed[edge_member_idx] = !edge_reversed[edge_member_idx]
+        }
+      }
+      remove_edge_at(out_edges[node_idx], edge_pos)
+      let reverse_key = edge_pair_key(old_head, old_tail)
+      match edge_pair_lookup(
+        edge_by_pair,
+        edge_tail,
+        edge_head,
+        edge_active,
+        reverse_key,
+      ) {
+        Some(existing_idx) => {
+          // Merge into existing opposite edge (merge_oneway).
+          edge_active[edge_idx] = false
+          let existing_members = edge_members[existing_idx]
+          for edge_member_idx in member_indices {
+            existing_members.push(edge_member_idx)
+          }
+          edge_members[edge_idx] = []
+          continue
+        }
+        None => {
+          edge_tail[edge_idx] = old_head
+          edge_head[edge_idx] = old_tail
+          edge_by_pair[reverse_key] = edge_idx
+          out_edges[head_idx].push(edge_idx)
+          continue
+        }
+      }
+    }
+    if !marked[head_idx] {
+      stack[top_idx] = (node_idx, edge_pos + 1)
+      marked[head_idx] = true
+      onstack[head_idx] = true
+      stack.push((head_idx, 0))
+      continue
+    }
+    stack[top_idx] = (node_idx, edge_pos + 1)
+  }
+}
+
+///|
 fn acyclic_edge_directions(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -120,118 +246,77 @@ fn acyclic_edge_directions_with_order(
 ) {
   let _ = graph
   let node_index : Map[String, Int] = Map::new()
+  let node_names : Array[String] = []
   for i in 0..<nodes.length() {
-    node_index[nodes[i].name()] = i
+    let name = nodes[i].name()
+    node_index[name] = i
+    node_names.push(name)
   }
-  let edge_tail : Array[String] = []
-  let edge_head : Array[String] = []
+  let rank_same_reps = build_rank_same_reps(graph, nodes)
+  let rep_names : Array[String] = []
+  let rep_seen : Map[String, Bool] = Map::new()
+  for name in node_names {
+    let rep = match rank_same_reps.get(name) {
+      Some(value) => value
+      None => name
+    }
+    if rep_seen.get(rep) is None {
+      rep_seen[rep] = true
+      rep_names.push(rep)
+    }
+  }
+  let edge_tail_orig : Array[String] = []
+  let edge_head_orig : Array[String] = []
   let edge_reversed : Array[Bool] = []
   let edge_is_active : Array[Bool] = []
-  let out_edges : Array[Array[Int]] = []
-  let out_edges_all : Array[Array[Int]] = []
-  let in_edges_all : Array[Array[Int]] = []
+  let out_edges_all_orig : Array[Array[Int]] = []
+  let in_edges_all_orig : Array[Array[Int]] = []
   for _ in 0..<nodes.length() {
-    out_edges.push([])
-    out_edges_all.push([])
-    in_edges_all.push([])
+    out_edges_all_orig.push([])
+    in_edges_all_orig.push([])
   }
   for edge in edges {
     let tail = edge.tail().name()
     let head = edge.head().name()
-    edge_tail.push(tail)
-    edge_head.push(head)
+    edge_tail_orig.push(tail)
+    edge_head_orig.push(head)
     edge_reversed.push(false)
     let active = edge_is_constraint(edge)
     edge_is_active.push(active)
-    let edge_idx = edge_tail.length() - 1
+    let edge_idx = edge_tail_orig.length() - 1
     match node_index.get(tail) {
       Some(idx) => {
-        out_edges_all[idx].push(edge_idx)
-        if active {
-          out_edges[idx].push(edge_idx)
-        }
+        out_edges_all_orig[idx].push(edge_idx)
       }
       None => ()
     }
     match node_index.get(head) {
       Some(idx) => {
-        in_edges_all[idx].push(edge_idx)
+        in_edges_all_orig[idx].push(edge_idx)
       }
       None => ()
     }
   }
-  // Graphviz parity: agfstout/agnxtout order edges by head node sequence (AGSEQ),
-  // and agfstin/agnxtin order by tail node sequence. Use node creation order.
+  // Graphviz parity: agfstout/agnxtout order edges by head node AGSEQ
+  // (creation order), then edge AGSEQ; agfstin/agnxtin orders by tail
+  // node AGSEQ, then edge AGSEQ (cgraph agedgeseqcmpf).
   // Do not change behavior without updating fixtures/tests.
-  for i in 0..<nodes.length() {
-    let out_list = out_edges_all[i]
-    if out_list.length() > 1 {
-      out_list.sort_by((a, b) => {
-        let ha = edge_head[a]
-        let hb = edge_head[b]
-        let ha_idx = match node_index.get(ha) {
+  let sort_out_list = (list : Array[Int]) => {
+    if list.length() > 1 {
+      list.sort_by((a, b) => {
+        let head_a = edge_head_orig[a]
+        let head_b = edge_head_orig[b]
+        let idx_a = match node_index.get(head_a) {
           Some(value) => value
           None => 0
         }
-        let hb_idx = match node_index.get(hb) {
+        let idx_b = match node_index.get(head_b) {
           Some(value) => value
           None => 0
         }
-        if ha_idx < hb_idx {
+        if idx_a < idx_b {
           -1
-        } else if ha_idx > hb_idx {
-          1
-        } else if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    let in_list = in_edges_all[i]
-    if in_list.length() > 1 {
-      in_list.sort_by((a, b) => {
-        let ta = edge_tail[a]
-        let tb = edge_tail[b]
-        let ta_idx = match node_index.get(ta) {
-          Some(value) => value
-          None => 0
-        }
-        let tb_idx = match node_index.get(tb) {
-          Some(value) => value
-          None => 0
-        }
-        if ta_idx < tb_idx {
-          -1
-        } else if ta_idx > tb_idx {
-          1
-        } else if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    let active_list = out_edges[i]
-    if active_list.length() > 1 {
-      active_list.sort_by((a, b) => {
-        let ha = edge_head[a]
-        let hb = edge_head[b]
-        let ha_idx = match node_index.get(ha) {
-          Some(value) => value
-          None => 0
-        }
-        let hb_idx = match node_index.get(hb) {
-          Some(value) => value
-          None => 0
-        }
-        if ha_idx < hb_idx {
-          -1
-        } else if ha_idx > hb_idx {
+        } else if idx_a > idx_b {
           1
         } else if a < b {
           -1
@@ -243,38 +328,146 @@ fn acyclic_edge_directions_with_order(
       })
     }
   }
-  let out_edges_all_orig : Array[Array[Int]] = []
-  let in_edges_all_orig : Array[Array[Int]] = []
-  for i in 0..<nodes.length() {
-    out_edges_all_orig.push(out_edges_all[i].copy())
-    in_edges_all_orig.push(in_edges_all[i].copy())
+  let sort_in_list = (list : Array[Int]) => {
+    if list.length() > 1 {
+      list.sort_by((a, b) => {
+        let tail_a = edge_tail_orig[a]
+        let tail_b = edge_tail_orig[b]
+        let idx_a = match node_index.get(tail_a) {
+          Some(value) => value
+          None => 0
+        }
+        let idx_b = match node_index.get(tail_b) {
+          Some(value) => value
+          None => 0
+        }
+        if idx_a < idx_b {
+          -1
+        } else if idx_a > idx_b {
+          1
+        } else if a < b {
+          -1
+        } else if a > b {
+          1
+        } else {
+          0
+        }
+      })
+    }
   }
+  for i in 0..<out_edges_all_orig.length() {
+    sort_out_list(out_edges_all_orig[i])
+    sort_in_list(in_edges_all_orig[i])
+  }
+  // Build fast-graph edges (unique directed pairs) in agfstout order.
+  let rep_index : Map[String, Int] = Map::new()
+  for i in 0..<rep_names.length() {
+    rep_index[rep_names[i]] = i
+  }
+  let fast_edge_tail : Array[String] = []
+  let fast_edge_head : Array[String] = []
+  let fast_edge_members : Array[Array[Int]] = []
+  let fast_edge_active : Array[Bool] = []
+  let fast_edge_by_pair : Map[String, Int] = Map::new()
+  let fast_out_edges : Array[Array[Int]] = []
+  for _ in 0..<rep_names.length() {
+    fast_out_edges.push([])
+  }
+  for tail_idx in 0..<node_names.length() {
+    let edge_list = out_edges_all_orig[tail_idx]
+    for edge_idx in edge_list {
+      if edge_idx < 0 || edge_idx >= edge_is_active.length() {
+        continue
+      }
+      if !edge_is_active[edge_idx] {
+        continue
+      }
+      let tail = edge_tail_orig[edge_idx]
+      let head = edge_head_orig[edge_idx]
+      let tail_rep = match rank_same_reps.get(tail) {
+        Some(value) => value
+        None => tail
+      }
+      let head_rep = match rank_same_reps.get(head) {
+        Some(value) => value
+        None => head
+      }
+      if tail_rep == head_rep {
+        continue
+      }
+      let key = edge_pair_key(tail_rep, head_rep)
+      match fast_edge_by_pair.get(key) {
+        Some(existing) => {
+          fast_edge_members[existing].push(edge_idx)
+        }
+        None => {
+          let id = fast_edge_tail.length()
+          fast_edge_tail.push(tail_rep)
+          fast_edge_head.push(head_rep)
+          fast_edge_members.push([edge_idx])
+          fast_edge_active.push(true)
+          fast_edge_by_pair[key] = id
+          match rep_index.get(tail_rep) {
+            Some(rep_idx) => fast_out_edges[rep_idx].push(id)
+            None => ()
+          }
+        }
+      }
+    }
+  }
+  // Graphviz parity: acyclic traverses nodes in GD_nlist order from decompose,
+  // which is based on rank-same representatives and fast-graph edges.
+  let edge_creation : Array[(String, String)] = []
+  for edge_idx in 0..<fast_edge_tail.length() {
+    let tail_rep = fast_edge_tail[edge_idx]
+    let head_rep = fast_edge_head[edge_idx]
+    edge_creation.push((tail_rep, head_rep))
+  }
+  let acyclic_order = build_graphviz_nlist_order_from_edges(
+    rep_names,
+    rep_names,
+    edge_creation,
+    Map::new(),
+  )
   let marked : Array[Bool] = []
   let onstack : Array[Bool] = []
-  for _ in 0..<nodes.length() {
+  for _ in 0..<rep_names.length() {
     marked.push(false)
     onstack.push(false)
   }
-  for i in 0..<nodes.length() {
-    if !marked[i] {
-      acyclic_dfs(
-        i,
-        node_index,
-        out_edges,
-        out_edges_all,
-        in_edges_all,
-        edge_is_active,
-        edge_tail,
-        edge_head,
-        edge_reversed,
-        marked,
-        onstack,
-      )
+  for name in acyclic_order {
+    match rep_index.get(name) {
+      Some(i) =>
+        if !marked[i] {
+        acyclic_dfs_fast(
+          i,
+          rep_index,
+          fast_out_edges,
+          fast_edge_tail,
+          fast_edge_head,
+          fast_edge_members,
+          fast_edge_active,
+          fast_edge_by_pair,
+          edge_reversed,
+          marked,
+          onstack,
+        )
+      }
+      None => ()
+    }
+  }
+  let edge_tail_out = edge_tail_orig.copy()
+  let edge_head_out = edge_head_orig.copy()
+  for i in 0..<edge_reversed.length() {
+    if edge_reversed[i] {
+      let tmp = edge_tail_out[i]
+      edge_tail_out[i] = edge_head_out[i]
+      edge_head_out[i] = tmp
     }
   }
   // Graphviz parity: class2 processes edges in original tail order
   // (agfstout on cgraph), independent of acyclic reversals.
-  (edge_tail, edge_head, edge_reversed, out_edges_all_orig, in_edges_all_orig)
+  (edge_tail_out, edge_head_out, edge_reversed, out_edges_all_orig, in_edges_all_orig)
 }
 
 ///|
