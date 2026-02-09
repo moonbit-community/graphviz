@@ -1057,6 +1057,31 @@ fn compute_route_points_with_pathplan(
   let (points, pathplan_used) =
     if base.use_pathplan && !base.is_flat_edge {
     let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
+    // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
+    let tail_port_box =
+      if base.tail_port_side == 0 {
+        record_port_path_box(
+          base.tail_node,
+          base.tail_port,
+          base.tail_pos,
+          base.tail_size,
+          base.layout_rankdir,
+        )
+      } else {
+        None
+      }
+    let head_port_box =
+      if base.head_port_side == 0 {
+        record_port_path_box(
+          base.head_node,
+          base.head_port,
+          base.head_pos,
+          base.head_size,
+          base.layout_rankdir,
+        )
+      } else {
+        None
+      }
     match @routesplines.edge_pathplan_polyline(
       base.edge,
       base.tail_name,
@@ -1066,6 +1091,8 @@ fn compute_route_points_with_pathplan(
       base.layout_rankdir,
       base.tail_port_side,
       base.head_port_side,
+      tail_port_box,
+      head_port_box,
       ranksep_pt,
       ranks,
       vnode_info.vnode_ranks,

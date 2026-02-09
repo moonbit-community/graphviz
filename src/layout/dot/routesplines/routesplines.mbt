@@ -1348,6 +1348,8 @@ fn edge_pathplan_polyline_core(
   path_head_anchor : @geom.Point,
   path_tail_side : Int,
   path_head_side : Int,
+  path_tail_port_box : @geom.Rect?,
+  path_head_port_box : @geom.Rect?,
   path_tail_rank : Int,
   path_head_rank : Int,
   ordered : Array[String],
@@ -1400,7 +1402,7 @@ fn edge_pathplan_polyline_core(
     Some(value) => value
     None => 0.0
   }
-  let tail_box = match maximal_bbox_for_name(
+  let tail_max_box = match maximal_bbox_for_name(
     path_tail_name,
     path_tail_rank,
     merged_positions,
@@ -1428,6 +1430,11 @@ fn edge_pathplan_polyline_core(
     Some(box) => box
     None => return None
   }
+  let tail_box =
+    match path_tail_port_box {
+      Some(box) => if path_tail_side == 0 { box } else { tail_max_box }
+      None => tail_max_box
+    }
   let path_tail_pos = match merged_positions.get(path_tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
@@ -1438,22 +1445,24 @@ fn edge_pathplan_polyline_core(
   }
   let path_tail_size = size_for_name(path_tail_name, mval_route_sizes)
   let path_head_size = size_for_name(path_head_name, mval_route_sizes)
+  let use_tail_port_box = path_tail_port_box is Some(_) && path_tail_side == 0
+  let use_head_port_box = path_head_port_box is Some(_) && path_head_side == 0
   let (tail_boxes, route_start) = beginpath_boxes_regular(
     tail_box,
     path_tail_pos,
     path_tail_size,
     path_tail_anchor,
     path_tail_side,
-    false,
+    use_tail_port_box,
     ranksep_pt,
   )
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_tail_box = tail_boxes[tail_boxes.length() - 1]
       let tail_gap_box : @geom.Rect = {
-        llx: tail_box.llx,
+        llx: tail_max_box.llx,
         lly: last_tail_box.lly,
-        urx: tail_box.urx,
+        urx: tail_max_box.urx,
         ury: last_tail_box.ury,
       }
       let end_box =
@@ -1516,6 +1525,7 @@ fn edge_pathplan_polyline_core(
     }
     current_rank = vnode_rank
   }
+  // Graphviz parity: insert rank gap box before the head (rank_box).
   match rank_gap_box(
     current_rank,
     path_head_rank,
@@ -1534,7 +1544,7 @@ fn edge_pathplan_polyline_core(
   } else {
     Some(path_tail_name)
   }
-  let head_box = match maximal_bbox_for_name(
+  let head_max_box = match maximal_bbox_for_name(
     path_head_name,
     path_head_rank,
     merged_positions,
@@ -1562,22 +1572,27 @@ fn edge_pathplan_polyline_core(
     Some(box) => box
     None => return None
   }
+  let head_box =
+    match path_head_port_box {
+      Some(box) => if path_head_side == 0 { box } else { head_max_box }
+      None => head_max_box
+    }
   let (head_boxes, route_end) = endpath_boxes_regular(
     head_box,
     path_head_pos,
     path_head_size,
     path_head_anchor,
     path_head_side,
-    false,
+    use_head_port_box,
     ranksep_pt,
   )
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_head_box = head_boxes[head_boxes.length() - 1]
       let head_gap_box : @geom.Rect = {
-        llx: head_box.llx,
+        llx: head_max_box.llx,
         lly: last_head_box.lly,
-        urx: head_box.urx,
+        urx: head_max_box.urx,
         ury: last_head_box.ury,
       }
       let end_box =
@@ -1601,6 +1616,7 @@ fn edge_pathplan_polyline_core(
     boxes.push(head_boxes[idx])
   }
   let fb = tail_boxes.length() + 1
+  // Graphviz parity: adjustregularpath uses vnode box list length (rank + node).
   let lb = fb + path_boxes.length() - 3
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
     let mut bi = 0
@@ -1636,6 +1652,8 @@ pub fn edge_pathplan_polyline(
   rankdir : RankDir,
   tail_port_side : Int,
   head_port_side : Int,
+  tail_port_box : @geom.Rect?,
+  head_port_box : @geom.Rect?,
   ranksep_pt : Double,
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
@@ -1683,6 +1701,8 @@ pub fn edge_pathplan_polyline(
   let path_head_anchor = if swap_path { tail_anchor } else { head_anchor }
   let path_tail_side = if swap_path { head_port_side } else { tail_port_side }
   let path_head_side = if swap_path { tail_port_side } else { head_port_side }
+  let path_tail_port_box = if swap_path { head_port_box } else { tail_port_box }
+  let path_head_port_box = if swap_path { tail_port_box } else { head_port_box }
   let path_tail_pos = match positions.get(path_tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
@@ -1789,6 +1809,8 @@ pub fn edge_pathplan_polyline(
           seg1_head_anchor,
           path_tail_side,
           seg1_head_side,
+          path_tail_port_box,
+          None,
           path_tail_rank,
           seg1_head_rank,
           seg1_vnodes,
@@ -1825,6 +1847,8 @@ pub fn edge_pathplan_polyline(
           path_head_anchor,
           seg2_tail_side,
           path_head_side,
+          None,
+          path_head_port_box,
           seg2_tail_rank,
           path_head_rank,
           seg2_vnodes,
@@ -1913,6 +1937,8 @@ pub fn edge_pathplan_polyline(
     path_head_anchor,
     path_tail_side,
     path_head_side,
+    path_tail_port_box,
+    path_head_port_box,
     path_tail_rank,
     path_head_rank,
     ordered,
