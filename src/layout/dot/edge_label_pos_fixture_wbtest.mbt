@@ -136,6 +136,10 @@ fn load_edge_label_graph(
         "yours_truly" => "tests/layout/dot/complex.dot"
         "edge_labels" => "tests/layout/dot/edge_label_spacing.dot"
         "edge_vnode_spacing" => "tests/layout/dot/edge_vnode_spacing.dot"
+        "edge_label_rl" => "tests/layout/dot/edge_label_rl.dot"
+        "edge_label_bt" => "tests/layout/dot/edge_label_bt.dot"
+        "edge_label_lr" => "tests/layout/dot/edge_label_lr.dot"
+        "states" => "refs/graphviz/graphs/directed/states.gv"
         _ => fail("unknown edge label fixture graph \{name}")
       }
       let graph = @dot_parser.parse_dot_file(path)

@@ -1,0 +1,9 @@
+digraph edge_label_rl {
+  rankdir=RL;
+  nodesep="0.25";
+  ranksep="0.5";
+  margin=0;
+  a -> b [label="L1"];
+  b -> c [label="L2"];
+  c -> a [label="L3"];
+}
