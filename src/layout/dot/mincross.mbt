@@ -1266,8 +1266,6 @@ fn reorder_rank_groups(
           graphviz_out_neighbors=graphviz_out_neighbors,
           graphviz_in_neighbors=graphviz_in_neighbors,
         )
-        order_positions = order_positions_from_groups(ordered)
-        merge_fixed_positions()
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
         let seed_cross =
