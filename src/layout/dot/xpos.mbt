@@ -1179,7 +1179,8 @@ fn edge_port_order(
   rankdir : RankDir,
 ) -> Double {
   if !port_is_explicit(port) {
-    return 0.5
+    // Graphviz parity: absent ports contribute neutral 0.0 offset/order.
+    return 0.0
   }
   match port {
     Some(value) =>
