@@ -544,7 +544,8 @@ fn clip_spline_start(
   while start + 3 < points.length() && inside(points[start + 3]) {
     start += 3
   }
-  if start + 3 >= points.length() || !inside(points[start]) {
+  // Graphviz parity: clip even if the endpoint is on the boundary.
+  if start + 3 >= points.length() {
     return points
   }
   let segment : Array[@geom.Point] = [
@@ -581,7 +582,8 @@ fn clip_spline_end(
   while end > 0 && inside(points[end]) {
     end -= 3
   }
-  if end + 3 >= points.length() || !inside(points[end + 3]) {
+  // Graphviz parity: clip even if the endpoint is on the boundary.
+  if end + 3 >= points.length() {
     return points
   }
   let segment : Array[@geom.Point] = [
