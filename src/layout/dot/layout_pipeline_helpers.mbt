@@ -1815,6 +1815,27 @@ fn append_order_cluster_skeleton_range(
 }
 
 ///|
+/// Graphviz parity: order-graph node creation follows collected rank key order
+/// and per-rank node sequence (including appended virtual skeleton/vnodes).
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_nodes_from_groups(
+  order_groups : Map[Int, Array[String]],
+  order_rank_keys : Array[Int],
+) -> Array[String] {
+  let order_nodes : Array[String] = []
+  for rank in order_rank_keys {
+    let names = match order_groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      order_nodes.push(name)
+    }
+  }
+  order_nodes
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2196,16 +2217,8 @@ fn compute_ordering_and_vnodes(
       dot_trace_groups("order_groups_pre", order_groups)
       let order_rank_keys = collect_rank_keys(order_groups)
       let order_ranks = build_node_ranks(order_groups)
-      let order_nodes : Array[String] = []
-      for rank in order_rank_keys {
-        let names = match order_groups.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        for name in names {
-          order_nodes.push(name)
-        }
-      }
+      let order_nodes =
+        build_order_nodes_from_groups(order_groups, order_rank_keys)
       let order_graph =
         @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="order_graph", strict=false)
       let order_node_map : Map[String, @cgraph.Node] = Map::new()
