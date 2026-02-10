@@ -302,6 +302,12 @@ priv struct XStageModeAndSlackData {
 }
 
 ///|
+priv struct XStageSeedAndFlatLabelData {
+  x_base_sizes : Map[String, NodeSize]
+  flat_label_augmentation : XposFlatLabelAugmentation
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -8409,29 +8415,21 @@ fn build_x_stage_mode_and_virtual_slack_data_for_positions(
 
 
 ///|
-/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
-/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
-/// Graphviz-aligned order and wiring.
+/// Graphviz parity: x-stage seed build and flat-label augmentation preserve the
+/// same mode-gated reorder/transpose inputs and call order as Graphviz fixtures.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_labels_for_positions(
+fn build_x_stage_seed_and_flat_label_data_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageWithFlatLabelData {
-  let mode_slack_data =
-    build_x_stage_mode_and_virtual_slack_data_for_positions(
-      prep,
-      rank_data,
-      cluster_meta,
-      ordering,
-    )
+  mode_slack_data : XStageModeAndSlackData,
+) -> XStageSeedAndFlatLabelData {
   let use_vnodes_for_xpos = mode_slack_data.use_vnodes_for_xpos
   let allow_xpos_reorder = mode_slack_data.allow_xpos_reorder
   let graphviz_flip = mode_slack_data.graphviz_flip
   let xpos_reorder_enabled = mode_slack_data.xpos_reorder_enabled
-  let virtual_slack_edges = mode_slack_data.virtual_slack_edges
   let x_stage_seed =
     build_x_position_stage_seed_data_for_positions(
       use_vnodes_for_xpos,
@@ -8454,6 +8452,41 @@ fn build_x_stage_with_flat_labels_for_positions(
       ordering,
       x_stage_seed,
     )
+  { x_base_sizes, flat_label_augmentation }
+}
+
+///|
+/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
+/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
+/// Graphviz-aligned order and wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_with_flat_labels_for_positions(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XStageWithFlatLabelData {
+  let mode_slack_data =
+    build_x_stage_mode_and_virtual_slack_data_for_positions(
+      prep,
+      rank_data,
+      cluster_meta,
+      ordering,
+    )
+  let use_vnodes_for_xpos = mode_slack_data.use_vnodes_for_xpos
+  let virtual_slack_edges = mode_slack_data.virtual_slack_edges
+  let seed_flat_label_data =
+    build_x_stage_seed_and_flat_label_data_for_positions(
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      mode_slack_data,
+    )
+  let x_base_sizes = seed_flat_label_data.x_base_sizes
+  let flat_label_augmentation = seed_flat_label_data.flat_label_augmentation
   let x_groups = flat_label_augmentation.x_groups
   let x_cluster_keys = flat_label_augmentation.x_cluster_keys
   let flat_label_edges = flat_label_augmentation.flat_label_edges
