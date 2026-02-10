@@ -211,6 +211,16 @@ priv struct PositionResult {
 }
 
 ///|
+priv struct XposComputationInput {
+  x_sizes : Map[String, NodeSize]
+  x_rank_keys : Array[Int]
+  x_ranks : Map[String, Int]
+  x_extra_nodes : Array[(String, Int)]
+  x_edge_vnodes : Map[String, Array[String]]
+  x_slack_edges : Array[ConstraintEdge]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -6788,6 +6798,50 @@ fn build_x_cluster_keys_for_positions(
 }
 
 ///|
+/// Graphviz parity: xpos solver inputs must preserve vnode-size merge,
+/// rank-map/key derivation, and vnode-edge/slack toggles.
+/// Do not change behavior without updating fixtures/tests.
+fn build_xpos_computation_input(
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  ordering : OrderingResult,
+  virtual_slack_edges : Array[ConstraintEdge],
+) -> XposComputationInput {
+  let x_sizes =
+    if use_vnodes_for_xpos {
+      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
+    } else {
+      x_base_sizes
+    }
+  let x_rank_keys = collect_rank_keys(x_groups)
+  let x_ranks = build_node_ranks(x_groups)
+  let vnode_extra_nodes =
+    if use_vnodes_for_xpos {
+      build_vnode_extra_nodes(
+        ordering.vnode_creation_order,
+        ordering.vnode_info.vnode_ranks,
+      )
+    } else {
+      []
+    }
+  let x_extra_nodes = vnode_extra_nodes.copy()
+  let x_edge_vnodes =
+    if use_vnodes_for_xpos {
+      ordering.vnode_info.edge_vnodes
+    } else {
+      Map::new()
+    }
+  let x_slack_edges =
+    if use_vnodes_for_xpos {
+      virtual_slack_edges
+    } else {
+      []
+    }
+  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes, x_slack_edges }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7383,36 +7437,14 @@ fn compute_positions(
       }
     }
   }
-  let x_sizes =
-    if use_vnodes_for_xpos {
-      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
-    } else {
-      x_base_sizes
-    }
-  let x_rank_keys = collect_rank_keys(x_groups)
-  let x_ranks = build_node_ranks(x_groups)
-  let vnode_extra_nodes =
-    if use_vnodes_for_xpos {
-      build_vnode_extra_nodes(
-        ordering.vnode_creation_order,
-        ordering.vnode_info.vnode_ranks,
-      )
-    } else {
-      []
-    }
-  let x_extra_nodes = vnode_extra_nodes.copy()
-  let x_edge_vnodes =
-    if use_vnodes_for_xpos {
-      ordering.vnode_info.edge_vnodes
-    } else {
-      Map::new()
-    }
-  let x_slack_edges =
-    if use_vnodes_for_xpos {
-      virtual_slack_edges
-    } else {
-      []
-    }
+  let xpos_input =
+    build_xpos_computation_input(
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      ordering,
+      virtual_slack_edges,
+    )
   let x_positions = compute_x_positions(
     graph,
     prep.nodes,
@@ -7422,18 +7454,18 @@ fn compute_positions(
     rank_data.edge_out_order,
     ordering.nlist_order,
     ordering.gdnlist_order,
-    x_ranks,
-    x_rank_keys,
+    xpos_input.x_ranks,
+    xpos_input.x_rank_keys,
     x_groups,
-    x_sizes,
+    xpos_input.x_sizes,
     prep.output_sizes,
     x_cluster_keys,
     rank_heights.nodesep_pt,
     prep.has_edge_labels,
-    x_extra_nodes,
+    xpos_input.x_extra_nodes,
     flat_label_edges,
-    x_edge_vnodes,
-    x_slack_edges,
+    xpos_input.x_edge_vnodes,
+    xpos_input.x_slack_edges,
   )
   dot_trace("layout_dot: x positions computed")
   dot_trace_positions("xpos", x_positions)
