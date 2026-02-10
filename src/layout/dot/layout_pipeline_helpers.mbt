@@ -4535,6 +4535,29 @@ fn materialize_mapped_and_unmapped_order_edges(
 }
 
 ///|
+/// Graphviz parity: order-stage group/sizes output preserves order groups,
+/// order sizes, cluster keys, and skeleton flags without reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_groups_sizes_and_cluster_skeleton_output(
+  order_groups : Map[Int, Array[String]],
+  order_sizes_out : Map[String, NodeSize],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> (
+  Map[Int, Array[String]],
+  Map[String, NodeSize],
+  Map[String, String],
+  Map[String, Bool],
+) {
+  (
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+}
+
+///|
 /// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
 /// vnodes, and install cluster skeleton nodes with virtual-node defaults.
 /// Do not change behavior without updating fixtures/tests.
@@ -4627,7 +4650,7 @@ fn build_order_groups_sizes_and_cluster_skeleton(
       )
     }
   }
-  (
+  build_order_groups_sizes_and_cluster_skeleton_output(
     order_groups,
     order_sizes_out,
     order_cluster_keys,
