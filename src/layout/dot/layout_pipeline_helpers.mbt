@@ -4508,6 +4508,63 @@ fn apply_cluster_build_ranks_and_track_vnodes(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton edge chains are emitted in Graphviz
+/// cluster-order sequence first, then for any remaining cluster-min-rank keys.
+/// Do not change behavior without updating fixtures/tests.
+fn build_skeleton_edge_creation_for_order_graph(
+  order_with_clusters : Bool,
+  cluster_order : Array[String],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Array[(String, String)] {
+  let skeleton_edge_creation : Array[(String, String)] = []
+  if !order_with_clusters {
+    return skeleton_edge_creation
+  }
+  let cluster_seen : Map[String, Bool] = Map::new()
+  for cluster in cluster_order {
+    match cluster_min_rank.get(cluster) {
+      Some(min_rank) => {
+        let max_rank = match cluster_max_rank.get(cluster) {
+          Some(value) => value
+          None => min_rank
+        }
+        append_cluster_skeleton_edges(
+          cluster,
+          min_rank,
+          max_rank,
+          order_edges_by_tail,
+          order_edges_by_tail_root,
+          skeleton_edge_creation,
+        )
+        cluster_seen[cluster] = true
+      }
+      None => ()
+    }
+  }
+  for cluster, min_rank in cluster_min_rank {
+    if cluster_seen.get(cluster) is Some(_) {
+      continue
+    }
+    let max_rank = match cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    append_cluster_skeleton_edges(
+      cluster,
+      min_rank,
+      max_rank,
+      order_edges_by_tail,
+      order_edges_by_tail_root,
+      skeleton_edge_creation,
+    )
+  }
+  skeleton_edge_creation
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -4925,47 +4982,15 @@ fn compute_ordering_and_vnodes(
       cluster_meta.cluster_min_rank,
       cluster_meta.cluster_max_rank,
     )
-  let skeleton_edge_creation : Array[(String, String)] = []
-  if order_with_clusters {
-    let cluster_seen : Map[String, Bool] = Map::new()
-    for cluster in cluster_meta.cluster_order {
-      match cluster_meta.cluster_min_rank.get(cluster) {
-        Some(min_rank) => {
-          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-            Some(value) => value
-            None => min_rank
-          }
-          append_cluster_skeleton_edges(
-            cluster,
-            min_rank,
-            max_rank,
-            order_edges_by_tail,
-            order_edges_by_tail_root,
-            skeleton_edge_creation,
-          )
-          cluster_seen[cluster] = true
-        }
-        None => ()
-      }
-    }
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
-      if cluster_seen.get(cluster) is Some(_) {
-        continue
-      }
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      append_cluster_skeleton_edges(
-        cluster,
-        min_rank,
-        max_rank,
-        order_edges_by_tail,
-        order_edges_by_tail_root,
-        skeleton_edge_creation,
-      )
-    }
-  }
+  let skeleton_edge_creation =
+    build_skeleton_edge_creation_for_order_graph(
+      order_with_clusters,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      order_edges_by_tail,
+      order_edges_by_tail_root,
+    )
   let edge_creation_order =
     build_edge_creation_order(
       skeleton_edge_creation,
