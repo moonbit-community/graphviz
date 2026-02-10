@@ -221,6 +221,12 @@ priv struct XposComputationInput {
 }
 
 ///|
+priv struct XposVNodeOrderState {
+  vnode_order_keys : Map[String, Double]
+  has_vnode_order : Bool
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7089,6 +7095,46 @@ fn build_virtual_slack_edges_for_positions(
 }
 
 ///|
+/// Graphviz parity: vnode order-key derivation follows Graphviz: explicit
+/// ordered_groups_with_vnodes means vnode order is present; otherwise build
+/// keys from edge-vnode chains and mark presence by non-empty key map.
+/// Do not change behavior without updating fixtures/tests.
+fn build_vnode_order_state_for_positions(
+  use_vnodes_for_xpos : Bool,
+  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  prep : LayoutPrep,
+  rank_data : RankData,
+  order_index : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XposVNodeOrderState {
+  let mut vnode_order_keys : Map[String, Double] = Map::new()
+  let mut has_vnode_order = false
+  if use_vnodes_for_xpos && ordered_groups_with_vnodes.length() == 0 {
+    vnode_order_keys = build_vnode_order_keys(
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      rank_data.edge_reversed,
+      rank_data.ranks,
+      order_index,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
+      ordering.vnode_info.edge_vnodes,
+      ordering.vnode_info.vnode_ranks,
+    )
+    for _name, _ in vnode_order_keys {
+      has_vnode_order = true
+      break
+    }
+  }
+  if use_vnodes_for_xpos && ordered_groups_with_vnodes.length() > 0 {
+    has_vnode_order = true
+  }
+  { vnode_order_keys, has_vnode_order }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7116,29 +7162,18 @@ fn compute_positions(
       cluster_meta,
     )
   let order_index = build_order_index(ordering.ordered_groups)
-  let mut vnode_order_keys : Map[String, Double] = Map::new()
-  let mut has_vnode_order = false
-  if use_vnodes_for_xpos && ordering.ordered_groups_with_vnodes.length() == 0 {
-    vnode_order_keys = build_vnode_order_keys(
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      rank_data.edge_reversed,
-      rank_data.ranks,
+  let vnode_order_state =
+    build_vnode_order_state_for_positions(
+      use_vnodes_for_xpos,
+      ordering.ordered_groups_with_vnodes,
+      prep,
+      rank_data,
       order_index,
-      cluster_meta.intercluster_keys,
-      cluster_meta.cluster_parents,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
+      cluster_meta,
+      ordering,
     )
-    for _name, _ in vnode_order_keys {
-      has_vnode_order = true
-      break
-    }
-  }
-  if use_vnodes_for_xpos && ordering.ordered_groups_with_vnodes.length() > 0 {
-    has_vnode_order = true
-  }
+  let vnode_order_keys = vnode_order_state.vnode_order_keys
+  let has_vnode_order = vnode_order_state.has_vnode_order
   // Graphviz parity: x-positioning uses layout-coordinate node sizes,
   // so rankdir flip is handled via prep.sizes (not ordering-space widths).
   let x_base_sizes = apply_self_edge_right_space(
