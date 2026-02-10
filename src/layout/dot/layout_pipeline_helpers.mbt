@@ -5240,6 +5240,40 @@ fn build_root_mincross_rank_keys_and_nodes(
 }
 
 ///|
+/// Graphviz parity: root ReMincross filters order edges to root/skeleton
+/// membership before mincross reorder, preserving sampled port metadata.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_order_edges(
+  mincross_nodes : Map[String, Bool],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  collect_mincross_order_edges(
+    mincross_nodes,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: root ReMincross debug trace prints selected ND_in/ND_out
 /// neighbor lists only when DOT_TRACE_GROUPS is enabled.
 /// Do not change behavior without updating fixtures/tests.
@@ -5320,7 +5354,7 @@ fn run_root_mincross_reorder(
     order_edge_tail_port_order_mincross,
     order_edge_head_port_order_mincross,
   ) =
-    collect_mincross_order_edges(
+    build_root_mincross_order_edges(
       mincross_nodes,
       order_edges_out,
       order_edge_tail_out,
