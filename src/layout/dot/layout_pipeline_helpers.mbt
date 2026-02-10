@@ -5734,6 +5734,32 @@ fn run_root_mincross_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: root ReMincross seeds root/skeleton rank groups and keeps
+/// DOT_TRACE_GROUPS neighbor tracing aligned to Graphviz debug flow.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_groups_with_trace(
+  order_with_clusters : Bool,
+  seeded_groups : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  graphviz_out_neighbors : Map[String, Array[String]],
+) -> Map[Int, Array[String]] {
+  let order_groups_for_mincross =
+    build_order_groups_for_root_mincross(
+      order_with_clusters,
+      seeded_groups,
+      order_cluster_keys,
+      order_cluster_skeleton,
+    )
+  trace_root_mincross_graphviz_neighbors(
+    graphviz_in_neighbors,
+    graphviz_out_neighbors,
+  )
+  order_groups_for_mincross
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -5768,16 +5794,14 @@ fn run_root_mincross_reorder(
   // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
   // cluster-internal nodes are handled by cluster-local build_ranks passes.
   let order_groups_for_mincross =
-    build_order_groups_for_root_mincross(
+    build_root_mincross_groups_with_trace(
       order_with_clusters,
       seeded_groups,
       order_cluster_keys,
       order_cluster_skeleton,
+      graphviz_in_neighbors,
+      graphviz_out_neighbors,
     )
-  trace_root_mincross_graphviz_neighbors(
-    graphviz_in_neighbors,
-    graphviz_out_neighbors,
-  )
   let (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes) =
     build_root_mincross_node_membership_inputs(order_groups_for_mincross)
   let (
