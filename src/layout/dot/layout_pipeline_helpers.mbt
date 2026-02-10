@@ -8675,6 +8675,28 @@ fn build_position_result_for_positions(
   }
 }
 
+///|
+/// Graphviz parity: vnode xpos mode gate follows Graphviz edge-label/port-edge
+/// requirements with vnode-count fallback threshold.
+/// Do not change behavior without updating fixtures/tests.
+fn should_use_vnodes_for_xpos_in_positions(
+  prep : LayoutPrep,
+  ordering : OrderingResult,
+) -> Bool {
+  prep.has_edge_labels || prep.has_port_edges || ordering.vnode_count <= MAX_XPOS_VNODES
+}
+
+///|
+/// Graphviz parity: xpos reorder allowance follows Graphviz vnode-count gating
+/// once vnode usage mode is decided.
+/// Do not change behavior without updating fixtures/tests.
+fn should_allow_xpos_reorder_in_positions(
+  use_vnodes_for_xpos : Bool,
+  ordering : OrderingResult,
+) -> Bool {
+  !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
+}
+
 
 ///|
 /// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
@@ -8684,10 +8706,9 @@ fn build_position_mode_flags(
   prep : LayoutPrep,
   ordering : OrderingResult,
 ) -> PositionModeFlags {
-  let use_vnodes_for_xpos =
-    prep.has_edge_labels || prep.has_port_edges || ordering.vnode_count <= MAX_XPOS_VNODES
+  let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
   let allow_xpos_reorder =
-    !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
+    should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
   let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
   // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
   let xpos_reorder_enabled = false
