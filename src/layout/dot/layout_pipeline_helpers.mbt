@@ -2421,6 +2421,53 @@ fn collect_root_vnode_rank_groups_and_order_keys(
 }
 
 ///|
+/// Graphviz parity: root mincross rank map records first-seen cluster skeleton
+/// (or root real-node bucket) order per rank for cluster-phase reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order_from_root_ordered(
+  root_rank_keys : Array[Int],
+  ordered_root : Map[Int, Array[String]],
+  order_cluster_skeleton : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  real_nodes : Map[String, Bool],
+) -> Map[Int, Map[String, Int]] {
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  for rank in root_rank_keys {
+    let names = match ordered_root.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let order_map : Map[String, Int] = Map::new()
+    let mut idx = 0
+    for name in names {
+      if order_cluster_skeleton.get(name) == Some(true) {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster != "" && order_map.get(cluster) is None {
+          order_map[cluster] = idx
+          idx = idx + 1
+        }
+      } else if real_nodes.get(name) is Some(_) {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster == "" && order_map.get("") is None {
+          order_map[""] = idx
+          idx = idx + 1
+        }
+      }
+    }
+    if order_map.length() > 0 {
+      cluster_rank_order[rank] = order_map
+    }
+  }
+  cluster_rank_order
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -3333,37 +3380,16 @@ fn compute_ordering_and_vnodes(
           graphviz_flip=graphviz_flip,
         )
         dot_trace_groups("order_root", ordered_root)
-        for rank in root_rank_keys {
-          let names = match ordered_root.get(rank) {
-            Some(list) => list
-            None => []
-          }
-          let order_map : Map[String, Int] = Map::new()
-          let mut idx = 0
-          for name in names {
-            if order_cluster_skeleton.get(name) == Some(true) {
-              let cluster = match order_cluster_keys.get(name) {
-                Some(value) => value
-                None => ""
-              }
-              if cluster != "" && order_map.get(cluster) is None {
-                order_map[cluster] = idx
-                idx = idx + 1
-              }
-            } else if real_nodes.get(name) is Some(_) {
-              let cluster = match order_cluster_keys.get(name) {
-                Some(value) => value
-                None => ""
-              }
-              if cluster == "" && order_map.get("") is None {
-                order_map[""] = idx
-                idx = idx + 1
-              }
-            }
-          }
-          if order_map.length() > 0 {
-            cluster_rank_order[rank] = order_map
-          }
+        let root_cluster_rank_order =
+          build_cluster_rank_order_from_root_ordered(
+            root_rank_keys,
+            ordered_root,
+            order_cluster_skeleton,
+            order_cluster_keys,
+            real_nodes,
+          )
+        for rank, order_map in root_cluster_rank_order {
+          cluster_rank_order[rank] = order_map
         }
       }
       let cleaned_groups : Map[Int, Array[String]] = Map::new()
