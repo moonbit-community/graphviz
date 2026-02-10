@@ -184,6 +184,12 @@ priv struct DotRoutingPathContextData {
 }
 
 ///|
+priv struct DotRoutingLabelAndTuningData {
+  label_edge_counts : Map[String, Int]
+  enable_complex_tuning : Bool
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -320,6 +326,18 @@ fn build_routing_node_and_port_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: label-edge counts and complex-tuning gate are read before
+/// routing metric derivation and spline routing, without remapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_label_and_tuning_data_for_stage(
+  prep : LayoutPrep,
+) -> DotRoutingLabelAndTuningData {
+  let label_edge_counts = build_label_edge_counts(prep.edges)
+  let enable_complex_tuning = complex_tuning_enabled()
+  { label_edge_counts, enable_complex_tuning }
+}
+
+///|
 /// Graphviz parity: port padding and head-port metrics are computed from the
 /// same inputs and in the same order before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -420,8 +438,11 @@ fn compute_dot_routing_stage(
       nodes_out,
       prep.rankdir,
     )
-  let label_edge_counts = build_label_edge_counts(prep.edges)
-  let enable_complex_tuning = complex_tuning_enabled()
+  let routing_label_and_tuning_data =
+    build_routing_label_and_tuning_data_for_stage(prep)
+  let label_edge_counts = routing_label_and_tuning_data.label_edge_counts
+  let enable_complex_tuning =
+    routing_label_and_tuning_data.enable_complex_tuning
   let routing_padding_and_head_port_metrics =
     build_routing_padding_and_head_port_metrics_for_stage(
       prep,
