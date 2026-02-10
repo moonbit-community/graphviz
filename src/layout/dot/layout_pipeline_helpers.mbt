@@ -254,6 +254,18 @@ priv struct PositionModeFlags {
 }
 
 ///|
+priv struct XposClusteredReorderSeedData {
+  order_groups : Map[Int, Array[String]]
+  order_sizes : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_node_order : Map[String, Int]
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_nodes : Array[String]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7279,6 +7291,82 @@ fn build_flat_label_vnode_augmentation_for_positions(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder seed setup clones x-order groups,
+/// injects cluster skeleton nodes, and materializes rank/order maps.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_xpos_reorder_seed_data(
+  x_groups : Map[Int, Array[String]],
+  x_order_sizes : Map[String, NodeSize],
+  x_cluster_keys : Map[String, String],
+  cluster_meta : ClusterMetadata,
+  node_order : Map[String, Int],
+) -> XposClusteredReorderSeedData {
+  let order_groups : Map[Int, Array[String]] = Map::new()
+  for rank, names in x_groups {
+    order_groups[rank] = names.copy()
+  }
+  let order_sizes : Map[String, NodeSize] = Map::new()
+  for name, size in x_order_sizes {
+    order_sizes[name] = size
+  }
+  let order_cluster_keys : Map[String, String] = Map::new()
+  for name, key in x_cluster_keys {
+    order_cluster_keys[name] = key
+  }
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+  let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+  for cluster, min_rank in cluster_meta.cluster_min_rank {
+    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    for rank in min_rank..=max_rank {
+      let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      order_cluster_keys[name] = cluster
+      order_cluster_skeleton[name] = true
+      order_sizes[name] = skeleton_size
+      match order_groups.get(rank) {
+        Some(list) => list.push(name)
+        None => order_groups[rank] = [name]
+      }
+    }
+  }
+  let order_node_order : Map[String, Int] = Map::new()
+  for name, value in node_order {
+    order_node_order[name] = value
+  }
+  let order_index = build_order_index(order_groups)
+  for name, idx in order_index {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  let order_rank_keys = collect_rank_keys(order_groups)
+  let order_ranks = build_node_ranks(order_groups)
+  let order_nodes : Array[String] = []
+  for rank in order_rank_keys {
+    let names = match order_groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      order_nodes.push(name)
+    }
+  }
+  {
+    order_groups,
+    order_sizes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    order_node_order,
+    order_rank_keys,
+    order_ranks,
+    order_nodes,
+  }
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -7500,59 +7588,22 @@ fn compute_positions(
     )
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
-    let order_groups : Map[Int, Array[String]] = Map::new()
-    for rank, names in x_groups {
-      order_groups[rank] = names.copy()
-    }
-    let order_sizes : Map[String, NodeSize] = Map::new()
-    for name, size in x_order_sizes {
-      order_sizes[name] = size
-    }
-    let order_cluster_keys : Map[String, String] = Map::new()
-    for name, key in x_cluster_keys {
-      order_cluster_keys[name] = key
-    }
-    let order_cluster_skeleton : Map[String, Bool] = Map::new()
-    // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      for rank in min_rank..=max_rank {
-        let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-        order_cluster_keys[name] = cluster
-        order_cluster_skeleton[name] = true
-        order_sizes[name] = skeleton_size
-        match order_groups.get(rank) {
-          Some(list) => list.push(name)
-          None => order_groups[rank] = [name]
-        }
-      }
-    }
-    let order_node_order : Map[String, Int] = Map::new()
-    for name, value in prep.node_order {
-      order_node_order[name] = value
-    }
-    let order_index = build_order_index(order_groups)
-    for name, idx in order_index {
-      if order_node_order.get(name) is None {
-        order_node_order[name] = idx
-      }
-    }
-    let order_rank_keys = collect_rank_keys(order_groups)
-    let order_ranks = build_node_ranks(order_groups)
-    let order_nodes : Array[String] = []
-    for rank in order_rank_keys {
-      let names = match order_groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
-        order_nodes.push(name)
-      }
-    }
+    let reorder_seed_data =
+      build_clustered_xpos_reorder_seed_data(
+        x_groups,
+        x_order_sizes,
+        x_cluster_keys,
+        cluster_meta,
+        prep.node_order,
+      )
+    let order_groups = reorder_seed_data.order_groups
+    let order_sizes = reorder_seed_data.order_sizes
+    let order_cluster_keys = reorder_seed_data.order_cluster_keys
+    let order_cluster_skeleton = reorder_seed_data.order_cluster_skeleton
+    let order_node_order = reorder_seed_data.order_node_order
+    let order_rank_keys = reorder_seed_data.order_rank_keys
+    let order_ranks = reorder_seed_data.order_ranks
+    let order_nodes = reorder_seed_data.order_nodes
     let order_graph =
       @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
     let order_node_map : Map[String, @cgraph.Node] = Map::new()
