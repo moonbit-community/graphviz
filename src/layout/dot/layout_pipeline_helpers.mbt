@@ -4254,6 +4254,16 @@ fn run_clustered_remincross_pass(
 }
 
 ///|
+/// Graphviz parity: non-cluster reorder output keeps reordered rank groups from
+/// the Graphviz-style single-pass mincross call unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_reorder_pass_output(
+  ordered_groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  ordered_groups
+}
+
+///|
 /// Graphviz parity: non-cluster reorder path seeds node order from GD_nlist,
 /// builds Graphviz-style ND_out/ND_in neighbor order, and runs rank reorder
 /// without cluster remapping.
@@ -4345,35 +4355,37 @@ fn run_noncluster_reorder_pass(
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
-  reorder_rank_groups(
-    rank_keys,
-    groups,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    parents,
-    children,
-    cluster_meta.cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    edge_order,
-    order_node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    Map::new(),
-    cluster_meta.cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
-    graphviz_flip=graphviz_flip,
-  )
+  let ordered_groups =
+    reorder_rank_groups(
+      rank_keys,
+      groups,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      parents,
+      children,
+      cluster_meta.cluster_keys,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      edge_order,
+      order_node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      Map::new(),
+      cluster_meta.cluster_skeleton,
+      cluster_meta.flat_constraints,
+      graphviz_out_neighbors=graphviz_out_neighbors,
+      graphviz_in_neighbors=graphviz_in_neighbors,
+      graphviz_flip=graphviz_flip,
+    )
+  build_noncluster_reorder_pass_output(ordered_groups)
 }
 
 ///|
