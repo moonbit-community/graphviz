@@ -5414,6 +5414,34 @@ fn build_vnode_order_keys_for_ordering_stage(
 }
 
 ///|
+/// Graphviz parity: order-reorder context output keeps order-graph handles,
+/// creation ordering, and build_ranks node order mapping unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_reorder_context_output(
+  order_rank_keys : Array[Int],
+  order_ranks : Map[String, Int],
+  order_nodes : Array[String],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_graph_unmapped : @cgraph.Graph,
+  order_node_map_unmapped : Map[String, @cgraph.Node],
+  creation_order : Array[String],
+  order_node_order : Map[String, Int],
+) -> OrderReorderContext {
+  {
+    order_rank_keys,
+    order_ranks,
+    order_nodes,
+    order_graph,
+    order_node_map,
+    order_graph_unmapped,
+    order_node_map_unmapped,
+    creation_order,
+    order_node_order,
+  }
+}
+
+///|
 /// Graphviz parity: order-graph rebuild uses GD_nlist-derived creation order
 /// and build_ranks seed order before mapped/unmapped edge materialization.
 /// Do not change behavior without updating fixtures/tests.
@@ -5450,7 +5478,7 @@ fn build_order_reorder_context(
       rank_same_order,
       port_edge_nodes,
     )
-  {
+  build_order_reorder_context_output(
     order_rank_keys,
     order_ranks,
     order_nodes,
@@ -5460,7 +5488,7 @@ fn build_order_reorder_context(
     order_node_map_unmapped,
     creation_order,
     order_node_order,
-  }
+  )
 }
 
 ///|
