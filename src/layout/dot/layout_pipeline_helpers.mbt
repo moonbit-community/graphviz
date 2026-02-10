@@ -5022,6 +5022,17 @@ fn build_nlist_order_and_vnode_creation_order(
 }
 
 ///|
+/// Graphviz parity: root ReMincross output preserves root ordering groups and
+/// merged ordered groups for downstream cluster build_ranks stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_reorder_output(
+  order_groups_for_mincross : Map[Int, Array[String]],
+  ordered : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  (order_groups_for_mincross, ordered)
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -5156,7 +5167,7 @@ fn run_root_mincross_reorder(
     } else {
       ordered_mincross
     }
-  (order_groups_for_mincross, ordered)
+  build_root_mincross_reorder_output(order_groups_for_mincross, ordered)
 }
 
 ///|
