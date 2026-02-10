@@ -150,6 +150,31 @@ fn build_routing_context_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing cluster bboxes are derived from positioned nodes,
+/// rank heights, and cluster x-bound maps before spline routing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_bboxes_for_routing_stage(
+  graph : @cgraph.Graph,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  nodes_out : Array[DotLayoutNode],
+  rankdir : RankDir,
+) -> Map[String, @geom.Rect] {
+  compute_cluster_bboxes_for_routing(
+    graph,
+    nodes_out,
+    positions_state.cluster_ln_x,
+    positions_state.cluster_rn_x,
+    positions_state.cluster_bbox_heights,
+    rankdir,
+    rank_stage.rank_data.ranks,
+    positions_state.rank_y,
+    positions_state.rank_ht1,
+    positions_state.rank_ht2,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -177,17 +202,12 @@ fn compute_dot_routing_stage(
   let label_ports_map = port_maps.label_ports_map
   let label_ports_raw = port_maps.label_ports_raw
   let cluster_bboxes =
-    compute_cluster_bboxes_for_routing(
+    build_cluster_bboxes_for_routing_stage(
       graph,
+      rank_stage,
+      positions_state,
       nodes_out,
-      positions_state.cluster_ln_x,
-      positions_state.cluster_rn_x,
-      positions_state.cluster_bbox_heights,
       prep.rankdir,
-      rank_stage.rank_data.ranks,
-      positions_state.rank_y,
-      positions_state.rank_ht1,
-      positions_state.rank_ht2,
     )
   let label_edge_counts = build_label_edge_counts(prep.edges)
   let enable_complex_tuning = complex_tuning_enabled()
