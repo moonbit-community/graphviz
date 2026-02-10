@@ -6095,6 +6095,128 @@ fn run_noncluster_ordering_stage(
 }
 
 ///|
+/// Graphviz parity: clustered dispatch path reads ordering inputs from context
+/// structs and forwards them to clustered ordering stages without reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage_from_context(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+  dispatch_setup : OrderingDispatchSetup,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let class2_data = reorder_setup.class2_data
+  run_clustered_ordering_stage(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    ranks,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context.real_nodes,
+    runtime_context.port_edge_nodes,
+    runtime_context.local_cluster_order,
+    runtime_context.rank_same_constraints,
+    edge_port_data.edge_tail_port_x,
+    edge_port_data.edge_head_port_x,
+    edge_port_data.edge_tail_port_order,
+    edge_port_data.edge_head_port_order,
+    reorder_setup.flat_rank_constraints,
+    reorder_setup.graphviz_flip,
+    reorder_setup.order_with_vnodes,
+    reorder_setup.order_with_clusters,
+    reorder_setup.ordering_groups_base,
+    reorder_setup.base_order_index,
+    runtime_context.vnode_info,
+    reorder_setup.vnode_order_keys_for_ordering,
+    class2_data.nlist_order,
+    reorder_setup.gdnlist_order,
+    class2_data.edges_by_tail,
+    class2_data.order_edges_by_tail,
+    class2_data.order_edges_by_tail_root,
+    class2_data.order_edges_by_tail_unmapped,
+    class2_data.root_edge_creation,
+    class2_data.skeleton_edge_creation,
+    class2_data.edge_creation_order,
+  )
+}
+
+///|
+/// Graphviz parity: non-clustered dispatch path continues to run a single
+/// mincross pass with context-provided order arrays.
+/// Do not change behavior without updating fixtures/tests.
+fn run_noncluster_ordering_stage_from_context(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  dispatch_setup : OrderingDispatchSetup,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let class2_data = reorder_setup.class2_data
+  run_noncluster_ordering_stage(
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_out_order,
+    ranks,
+    rank_keys,
+    groups,
+    class2_data.nlist_order,
+    node_order,
+    edge_port_data.order_edges,
+    edge_port_data.order_edge_tail,
+    edge_port_data.order_edge_head,
+    edge_port_data.order_edge_tail_port_x,
+    edge_port_data.order_edge_head_port_x,
+    edge_port_data.order_edge_tail_port_order,
+    edge_port_data.order_edge_head_port_order,
+    cluster_meta,
+    edge_port_data.edge_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    reorder_setup.graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: choose clustered/non-clustered ordering flow using the same
 /// flag gates as Graphviz (vnode/cluster mode).
 /// Do not change behavior without updating fixtures/tests.
@@ -6119,14 +6241,9 @@ fn run_ordering_stage_dispatch(
   runtime_context : OrderingRuntimeContext,
   dispatch_setup : OrderingDispatchSetup,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let edge_port_data = dispatch_setup.edge_port_data
   let reorder_setup = dispatch_setup.reorder_setup
-  let class2_data = reorder_setup.class2_data
-  let vnode_info = runtime_context.vnode_info
-  let order_with_vnodes = reorder_setup.order_with_vnodes
-  let order_with_clusters = reorder_setup.order_with_clusters
-  if order_with_vnodes || order_with_clusters {
-    run_clustered_ordering_stage(
+  if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
+    run_clustered_ordering_stage_from_context(
       graph,
       nodes,
       edges,
@@ -6141,34 +6258,11 @@ fn run_ordering_stage_dispatch(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
-      runtime_context.real_nodes,
-      runtime_context.port_edge_nodes,
-      runtime_context.local_cluster_order,
-      runtime_context.rank_same_constraints,
-      edge_port_data.edge_tail_port_x,
-      edge_port_data.edge_head_port_x,
-      edge_port_data.edge_tail_port_order,
-      edge_port_data.edge_head_port_order,
-      reorder_setup.flat_rank_constraints,
-      reorder_setup.graphviz_flip,
-      order_with_vnodes,
-      order_with_clusters,
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      class2_data.edges_by_tail,
-      class2_data.order_edges_by_tail,
-      class2_data.order_edges_by_tail_root,
-      class2_data.order_edges_by_tail_unmapped,
-      class2_data.root_edge_creation,
-      class2_data.skeleton_edge_creation,
-      class2_data.edge_creation_order,
+      runtime_context,
+      dispatch_setup,
     )
   } else {
-    run_noncluster_ordering_stage(
+    run_noncluster_ordering_stage_from_context(
       nodes,
       edges,
       edge_tail,
@@ -6177,23 +6271,14 @@ fn run_ordering_stage_dispatch(
       ranks,
       rank_keys,
       groups,
-      class2_data.nlist_order,
       node_order,
-      edge_port_data.order_edges,
-      edge_port_data.order_edge_tail,
-      edge_port_data.order_edge_head,
-      edge_port_data.order_edge_tail_port_x,
-      edge_port_data.order_edge_head_port_x,
-      edge_port_data.order_edge_tail_port_order,
-      edge_port_data.order_edge_head_port_order,
-      cluster_meta,
-      edge_port_data.edge_order,
       order_sizes,
       nodesep_pt,
       has_edge_labels,
+      cluster_meta,
       port_order_positions,
       port_order_contrib,
-      reorder_setup.graphviz_flip,
+      dispatch_setup,
     )
   }
 }
