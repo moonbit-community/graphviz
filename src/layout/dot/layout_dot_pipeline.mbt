@@ -625,6 +625,32 @@ fn build_routing_spatial_and_tuning_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing-stage edge/padding + result assembly consumes
+/// spatial+tuning precompute bundle without altering argument wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_routing_stage_from_spatial_tuning_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
+) -> DotRoutingStage {
+  let routing_edges_and_padding_data =
+    build_routing_edges_and_padding_data_for_stage(
+      graph,
+      prep,
+      rank_stage,
+      positions_state,
+      routing_spatial_and_tuning_data.routing_spatial_data,
+      routing_spatial_and_tuning_data.routing_label_and_tuning_data,
+    )
+  build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
+    routing_spatial_and_tuning_data.routing_spatial_data,
+    routing_edges_and_padding_data,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -641,17 +667,11 @@ fn compute_dot_routing_stage(
       rank_stage,
       positions_state,
     )
-  let routing_edges_and_padding_data =
-    build_routing_edges_and_padding_data_for_stage(
-      graph,
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_and_tuning_data.routing_spatial_data,
-      routing_spatial_and_tuning_data.routing_label_and_tuning_data,
-    )
-  build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
-    routing_spatial_and_tuning_data.routing_spatial_data,
-    routing_edges_and_padding_data,
+  build_dot_routing_stage_from_spatial_tuning_data_for_stage(
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+    routing_spatial_and_tuning_data,
   )
 }
