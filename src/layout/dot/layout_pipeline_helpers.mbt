@@ -6003,6 +6003,68 @@ fn build_root_and_cluster_seeded_groups(
 }
 
 ///|
+/// Graphviz parity: root+cluster build_ranks stage runs root ReMincross on
+/// seeded groups before any cluster-local build_ranks vnode remapping.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_mincross_reorder_in_root_cluster_stage(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  seeded_groups : Map[Int, Array[String]],
+  order_rank_keys : Array[Int],
+  order_ranks : Map[String, Int],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_node_order : Map[String, Int],
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  graphviz_flip : Bool,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_root_mincross_reorder(
+    order_with_clusters,
+    order_with_vnodes,
+    seeded_groups,
+    order_rank_keys,
+    order_ranks,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    cluster_meta,
+    vnode_order_keys_for_ordering,
+    order_node_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    order_flat_constraints,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -6066,7 +6128,7 @@ fn run_root_and_cluster_build_ranks_stage(
       flat_rank_constraints,
     )
   let (order_groups_for_mincross, ordered) =
-    run_root_mincross_reorder(
+    run_root_mincross_reorder_in_root_cluster_stage(
       order_with_clusters,
       order_with_vnodes,
       seeded_groups,
