@@ -5186,6 +5186,21 @@ fn build_root_mincross_reorder_output(
 }
 
 ///|
+/// Graphviz parity: root ReMincross preferred positions use vnode ordering
+/// keys only when vnode ordering is enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_preferred_positions(
+  order_with_vnodes : Bool,
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> Map[String, Double] {
+  if order_with_vnodes {
+    vnode_order_keys_for_ordering
+  } else {
+    Map::new()
+  }
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -5275,11 +5290,10 @@ fn run_root_mincross_reorder(
       order_edges_out_mincross,
     )
   let preferred_positions =
-    if order_with_vnodes {
-      vnode_order_keys_for_ordering
-    } else {
-      Map::new()
-    }
+    build_root_mincross_preferred_positions(
+      order_with_vnodes,
+      vnode_order_keys_for_ordering,
+    )
   let ordered_mincross = reorder_rank_groups(
     order_rank_keys_for_mincross,
     order_groups_for_mincross,
