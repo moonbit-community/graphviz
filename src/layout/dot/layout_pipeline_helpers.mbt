@@ -246,6 +246,13 @@ priv struct XposFlatLabelAugmentation {
 }
 
 ///|
+priv struct YPositionComputationData {
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+  cluster_bbox_heights : Map[String, (Double, Double)]
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -7101,6 +7108,61 @@ fn build_y_positions_with_cluster_flip_adjustment(
 }
 
 ///|
+/// Graphviz parity: y-position pre-solve in compute_positions keeps cluster bbox
+/// derivation, flat-label rank-height updates, and y-sweep wiring unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_y_position_data_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+) -> YPositionComputationData {
+  let rank_pht = rank_heights.rank_pht
+  let rank_ht1 = rank_heights.rank_ht1
+  let rank_ht2 = rank_heights.rank_ht2
+  let cluster_bbox_heights =
+    if cluster_meta.has_clusters {
+      compute_cluster_bbox_heights(
+        graph,
+        rank_data.ranks,
+        prep.sizes,
+        rank_data.self_edge_labels,
+        prep.rankdir,
+      )
+    } else {
+      Map::new()
+    }
+  apply_flat_label_rank_height_updates(
+    flat_label_nodes,
+    ordering.vnode_info.vnode_sizes,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+  )
+  let y_all_ranks =
+    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
+  let (y_positions, rank_y) =
+    build_y_positions_with_cluster_flip_adjustment(
+      graph,
+      prep.rankdir,
+      rank_data.rank_keys,
+      rank_data.groups,
+      rank_data.ranks,
+      rank_pht,
+      rank_ht1,
+      rank_ht2,
+      rank_heights.ranksep_pt,
+      cluster_bbox_heights,
+      y_all_ranks,
+    )
+  { y_positions, rank_y, cluster_bbox_heights }
+}
+
+
+///|
 /// Graphviz parity: intercluster alignment is gated by DOT_INTERCLUSTER_ALIGN
 /// and only applied for clustered dotted-edge graphs.
 /// Do not change behavior without updating fixtures/tests.
@@ -8029,44 +8091,21 @@ fn compute_positions(
   let flat_label_edges = flat_label_augmentation.flat_label_edges
   let flat_label_nodes = flat_label_augmentation.flat_label_nodes
   let flat_label_edge_vnodes = flat_label_augmentation.flat_label_edge_vnodes
-  let rank_pht = rank_heights.rank_pht
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
-  let cluster_bbox_heights =
-    if cluster_meta.has_clusters {
-      compute_cluster_bbox_heights(
-        graph,
-        rank_data.ranks,
-        prep.sizes,
-        rank_data.self_edge_labels,
-        prep.rankdir,
-      )
-    } else {
-      Map::new()
-    }
-  apply_flat_label_rank_height_updates(
-    flat_label_nodes,
-    ordering.vnode_info.vnode_sizes,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-  )
-  let y_all_ranks =
-    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
-  let (y_positions, rank_y) =
-    build_y_positions_with_cluster_flip_adjustment(
+  let y_position_data =
+    build_y_position_data_for_positions(
       graph,
-      prep.rankdir,
-      rank_data.rank_keys,
-      rank_data.groups,
-      rank_data.ranks,
-      rank_pht,
-      rank_ht1,
-      rank_ht2,
-      rank_heights.ranksep_pt,
-      cluster_bbox_heights,
-      y_all_ranks,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      flat_label_nodes,
     )
+  let y_positions = y_position_data.y_positions
+  let rank_y = y_position_data.rank_y
+  let cluster_bbox_heights = y_position_data.cluster_bbox_heights
   let x_positions =
     compute_x_positions_for_positions(
       graph,
