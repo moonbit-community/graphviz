@@ -450,6 +450,20 @@ fn build_edges_out_for_routing_stage(
 }
 
 ///|
+/// Graphviz parity: routing stage result object is built directly from routed
+/// edges and computed padding, with trace emission preserved.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_routing_stage_result_from_edges_for_stage(
+  nodes_out : Array[DotLayoutNode],
+  edges_out : Array[DotLayoutEdge],
+  port_pad_below : Double,
+  port_pad_above : Double,
+) -> DotRoutingStage {
+  dot_trace("layout_dot: edges routed")
+  { nodes_out, edges_out, port_pad_below, port_pad_above }
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -512,6 +526,10 @@ fn compute_dot_routing_stage(
       routing_context,
       enable_complex_tuning,
     )
-  dot_trace("layout_dot: edges routed")
-  { nodes_out, edges_out, port_pad_below, port_pad_above }
+  build_dot_routing_stage_result_from_edges_for_stage(
+    nodes_out,
+    edges_out,
+    port_pad_below,
+    port_pad_above,
+  )
 }
