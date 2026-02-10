@@ -160,6 +160,15 @@ priv struct OrderingReorderSetup {
 }
 
 ///|
+priv struct OrderingDispatchSetup {
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
+  nlist_order : Array[String]
+  vnode_creation_order : Array[String]
+  gdnlist_order : Array[String]
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -5701,6 +5710,66 @@ fn build_ordering_reorder_setup(
 }
 
 ///|
+/// Graphviz parity: dispatch setup keeps edge-port extraction and reorder setup
+/// sequence identical to Graphviz class2/mincross preparation.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_setup(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+) -> OrderingDispatchSetup {
+  let edge_port_data =
+    build_ordering_edge_port_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
+    )
+  let reorder_setup =
+    build_ordering_reorder_setup(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      port_edge_nodes,
+      vnode_count,
+      rankdir,
+      cluster_meta,
+      vnode_info,
+      edge_port_data.edge_tail_port_x,
+      edge_port_data.edge_head_port_x,
+      edge_port_data.edge_tail_port_order,
+      edge_port_data.edge_head_port_order,
+    )
+  let class2_data = reorder_setup.class2_data
+  {
+    edge_port_data,
+    reorder_setup,
+    nlist_order: class2_data.nlist_order,
+    vnode_creation_order: class2_data.vnode_creation_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
+  }
+}
+
+///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -6128,16 +6197,8 @@ fn compute_ordering_and_vnodes(
     } else {
       Map::new()
     }
-  let edge_port_data =
-    build_ordering_edge_port_data(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      order_sizes,
-    )
-  let reorder_setup =
-    build_ordering_reorder_setup(
+  let dispatch_setup =
+    build_ordering_dispatch_setup(
       nodes,
       edges,
       edge_tail,
@@ -6147,20 +6208,18 @@ fn compute_ordering_and_vnodes(
       ranks,
       groups,
       node_order,
+      order_sizes,
       port_edge_nodes,
       vnode_count,
       rankdir,
       cluster_meta,
       vnode_info,
-      edge_port_data.edge_tail_port_x,
-      edge_port_data.edge_head_port_x,
-      edge_port_data.edge_tail_port_order,
-      edge_port_data.edge_head_port_order,
     )
-  let class2_data = reorder_setup.class2_data
-  let nlist_order = class2_data.nlist_order
-  let vnode_creation_order = class2_data.vnode_creation_order
-  let gdnlist_order = reorder_setup.gdnlist_order
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let nlist_order = dispatch_setup.nlist_order
+  let vnode_creation_order = dispatch_setup.vnode_creation_order
+  let gdnlist_order = dispatch_setup.gdnlist_order
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_stage_dispatch(
       graph,
