@@ -341,6 +341,13 @@ priv struct PositionModeFlags {
 }
 
 ///|
+priv struct PositionModeGateValues {
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+}
+
+///|
 priv struct XposClusteredReorderSeedData {
   order_groups : Map[Int, Array[String]]
   order_sizes : Map[String, NodeSize]
@@ -9176,6 +9183,21 @@ fn is_graphviz_rankdir_flip_for_positions(prep : LayoutPrep) -> Bool {
 
 
 ///|
+/// Graphviz parity: position-mode gate values are derived once from prep and
+/// ordering before final mode-flag output assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_mode_gate_values_for_positions(
+  prep : LayoutPrep,
+  ordering : OrderingResult,
+) -> PositionModeGateValues {
+  let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
+  let allow_xpos_reorder =
+    should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
+  let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
+  { use_vnodes_for_xpos, allow_xpos_reorder, graphviz_flip }
+}
+
+///|
 /// Graphviz parity: position-mode output object maps computed gate values and
 /// preserves fixed xpos_reorder_enabled=false behavior.
 /// Do not change behavior without updating fixtures/tests.
@@ -9202,14 +9224,12 @@ fn build_position_mode_flags(
   prep : LayoutPrep,
   ordering : OrderingResult,
 ) -> PositionModeFlags {
-  let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
-  let allow_xpos_reorder =
-    should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
-  let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
+  let mode_gate_values =
+    build_position_mode_gate_values_for_positions(prep, ordering)
   build_position_mode_flags_output_for_positions(
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    graphviz_flip,
+    mode_gate_values.use_vnodes_for_xpos,
+    mode_gate_values.allow_xpos_reorder,
+    mode_gate_values.graphviz_flip,
   )
 }
 
