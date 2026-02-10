@@ -5224,6 +5224,22 @@ fn build_root_mincross_final_ordered_groups(
 }
 
 ///|
+/// Graphviz parity: root ReMincross traverses seeded groups by collected
+/// rank keys to build the exact order-node sequence used for edge filtering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_rank_keys_and_nodes(
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> (Array[Int], Array[String]) {
+  let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
+  let order_nodes_for_mincross =
+    build_order_nodes_from_groups(
+      order_groups_for_mincross,
+      order_rank_keys_for_mincross,
+    )
+  (order_rank_keys_for_mincross, order_nodes_for_mincross)
+}
+
+///|
 /// Graphviz parity: root ReMincross debug trace prints selected ND_in/ND_out
 /// neighbor lists only when DOT_TRACE_GROUPS is enabled.
 /// Do not change behavior without updating fixtures/tests.
@@ -5292,12 +5308,8 @@ fn run_root_mincross_reorder(
     graphviz_in_neighbors,
     graphviz_out_neighbors,
   )
-  let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
-  let order_nodes_for_mincross =
-    build_order_nodes_from_groups(
-      order_groups_for_mincross,
-      order_rank_keys_for_mincross,
-    )
+  let (order_rank_keys_for_mincross, order_nodes_for_mincross) =
+    build_root_mincross_rank_keys_and_nodes(order_groups_for_mincross)
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
   let (
     order_edges_out_mincross,
