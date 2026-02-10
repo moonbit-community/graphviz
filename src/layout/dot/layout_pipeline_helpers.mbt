@@ -1538,6 +1538,24 @@ fn adjust_nlist_order_for_cluster_flip(
 }
 
 ///|
+/// Graphviz parity: edge creation order feeds ND_in AGSEQ capture with cluster
+/// skeleton links preceding regular order_edge_creation links.
+/// Do not change behavior without updating fixtures/tests.
+fn build_edge_creation_order(
+  skeleton_edge_creation : Array[(String, String)],
+  order_edge_creation : Array[(String, String)],
+) -> Array[(String, String)] {
+  let edge_creation_order : Array[(String, String)] = []
+  for edge in skeleton_edge_creation {
+    edge_creation_order.push(edge)
+  }
+  for edge in order_edge_creation {
+    edge_creation_order.push(edge)
+  }
+  edge_creation_order
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1799,13 +1817,11 @@ fn compute_ordering_and_vnodes(
       )
     }
   }
-  let edge_creation_order : Array[(String, String)] = []
-  for edge in skeleton_edge_creation {
-    edge_creation_order.push(edge)
-  }
-  for edge in order_edge_creation {
-    edge_creation_order.push(edge)
-  }
+  let edge_creation_order =
+    build_edge_creation_order(
+      skeleton_edge_creation,
+      order_edge_creation,
+    )
   // Graphviz parity: class2 creates cluster skeletons first, then interleaves
   // real nodes with their edge vnodes in agfstnode order.
   let (order_creation, vnode_creation_order) =
