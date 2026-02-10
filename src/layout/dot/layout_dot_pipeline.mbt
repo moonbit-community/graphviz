@@ -175,6 +175,23 @@ fn build_cluster_bboxes_for_routing_stage(
 }
 
 ///|
+/// Graphviz parity: routing port maps are built from final node geometry and
+/// rankdir/port-edge flags before padding and edge routing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_port_layout_maps_for_routing_stage(
+  prep : LayoutPrep,
+  nodes_out : Array[DotLayoutNode],
+) -> PortLayoutMaps {
+  build_port_layout_maps(
+    nodes_out,
+    prep.output_sizes,
+    prep.record_orientation,
+    prep.rankdir,
+    prep.has_port_edges,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -192,13 +209,7 @@ fn compute_dot_routing_stage(
       prep.record_orientation,
     )
   let port_maps =
-    build_port_layout_maps(
-      nodes_out,
-      prep.output_sizes,
-      prep.record_orientation,
-      prep.rankdir,
-      prep.has_port_edges,
-    )
+    build_port_layout_maps_for_routing_stage(prep, nodes_out)
   let label_ports_map = port_maps.label_ports_map
   let label_ports_raw = port_maps.label_ports_raw
   let cluster_bboxes =
