@@ -178,6 +178,12 @@ priv struct DotRoutingNodeAndPortData {
 }
 
 ///|
+priv struct DotRoutingPathContextData {
+  path_groups : Map[Int, Array[String]]
+  routing_context : RoutingContext
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -221,6 +227,30 @@ fn build_routing_context_for_stage(
     positions_state.vnode_positions,
     cluster_bboxes,
   )
+}
+
+///|
+/// Graphviz parity: routing path groups are selected first, then the routing
+/// context is derived from those groups and cluster bboxes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_path_context_data_for_stage(
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  cluster_bboxes : Map[String, @geom.Rect],
+) -> DotRoutingPathContextData {
+  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
+  let path_groups =
+    build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
+  let routing_context =
+    build_routing_context_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
+      path_groups,
+      cluster_bboxes,
+    )
+  { path_groups, routing_context }
 }
 
 ///|
@@ -406,17 +436,15 @@ fn compute_dot_routing_stage(
     routing_padding_and_head_port_metrics.port_pad_above
   let head_port_metrics =
     routing_padding_and_head_port_metrics.head_port_metrics
-  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
-  let path_groups =
-    build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
-  let routing_context =
-    build_routing_context_for_stage(
+  let routing_path_context_data =
+    build_routing_path_context_data_for_stage(
       prep,
       rank_stage,
       positions_state,
-      path_groups,
       cluster_bboxes,
     )
+  let path_groups = routing_path_context_data.path_groups
+  let routing_context = routing_path_context_data.routing_context
   let edges_out =
     build_edges_out_for_routing_stage(
       graph,
