@@ -1054,6 +1054,20 @@ fn apply_cluster_order_base_for_metadata(
 }
 
 ///|
+/// Graphviz parity: intercluster keys mirror local cluster membership
+/// used by Graphviz compound edge ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_intercluster_keys_for_metadata(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, String] {
+  let intercluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    intercluster_keys[node.name()] = node_local_cluster_key(node)
+  }
+  intercluster_keys
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -1107,10 +1121,7 @@ fn compute_cluster_metadata(
     cluster_first_order,
     node_order,
   )
-  let intercluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    intercluster_keys[node.name()] = node_local_cluster_key(node)
-  }
+  let intercluster_keys = build_intercluster_keys_for_metadata(nodes)
   let rank_same_groups : Map[String, Int] = Map::new()
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
