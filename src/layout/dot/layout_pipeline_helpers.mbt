@@ -147,6 +147,19 @@ priv struct OrderingBaseContext {
 }
 
 ///|
+priv struct OrderingReorderSetup {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  graphviz_flip : Bool
+  flat_rank_constraints : Map[String, Bool]
+  class2_data : OrderingClass2Data
+  gdnlist_order : Array[String]
+  vnode_order_keys_for_ordering : Map[String, Double]
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -5595,6 +5608,99 @@ fn build_ordering_base_context(
 }
 
 ///|
+/// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
+/// clustered/nonclustered mincross paths diverge.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_reorder_setup(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+) -> OrderingReorderSetup {
+  let ordering_groups_base = apply_rank_same_order_with_port_override(
+    groups,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    node_order,
+    port_edge_nodes,
+  )
+  let base_order_index = build_order_index(ordering_groups_base)
+  let order_with_vnodes = vnode_count > 0
+  let order_with_clusters =
+    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
+  // Graphviz parity: GD_flip is true for horizontal rankdir (LR/RL).
+  let graphviz_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  let flat_rank_constraints =
+    build_flat_rank_constraints(
+      edge_tail,
+      edge_head,
+      ranks,
+    )
+  let class2_data =
+    build_ordering_class2_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      vnode_info.edge_vnodes,
+      order_with_vnodes,
+      order_with_clusters,
+      cluster_meta,
+      flat_rank_constraints,
+      graphviz_flip,
+    )
+  // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
+  // Do not change behavior without updating fixtures/tests.
+  let gdnlist_order = class2_data.nlist_order
+  let nlist_order_index = build_nlist_order_index(class2_data.nlist_order)
+  let vnode_order_keys_for_ordering =
+    build_vnode_order_keys_for_ordering_stage(
+      vnode_count,
+      cluster_meta,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      base_order_index,
+      vnode_info,
+      ordering_groups_base,
+      nlist_order_index,
+    )
+  {
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    graphviz_flip,
+    flat_rank_constraints,
+    class2_data,
+    gdnlist_order,
+    vnode_order_keys_for_ordering,
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -5664,44 +5770,34 @@ fn compute_ordering_and_vnodes(
   let order_edge_head_port_x = edge_port_data.order_edge_head_port_x
   let order_edge_tail_port_order = edge_port_data.order_edge_tail_port_order
   let order_edge_head_port_order = edge_port_data.order_edge_head_port_order
-  let ordering_groups_base = apply_rank_same_order_with_port_override(
-    groups,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    node_order,
-    port_edge_nodes,
-  )
-  let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = vnode_count > 0
-  let order_with_clusters =
-    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  // Graphviz parity: GD_flip is true for horizontal rankdir (LR/RL).
-  let graphviz_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let flat_rank_constraints =
-    build_flat_rank_constraints(
-      edge_tail,
-      edge_head,
-      ranks,
-    )
-  let class2_data =
-    build_ordering_class2_data(
+  let reorder_setup =
+    build_ordering_reorder_setup(
       nodes,
       edges,
       edge_tail,
       edge_head,
+      edge_reversed,
       edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      port_edge_nodes,
+      vnode_count,
+      rankdir,
+      cluster_meta,
+      vnode_info,
       edge_tail_port_x,
       edge_head_port_x,
       edge_tail_port_order,
       edge_head_port_order,
-      ranks,
-      vnode_info.edge_vnodes,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      flat_rank_constraints,
-      graphviz_flip,
     )
+  let ordering_groups_base = reorder_setup.ordering_groups_base
+  let base_order_index = reorder_setup.base_order_index
+  let order_with_vnodes = reorder_setup.order_with_vnodes
+  let order_with_clusters = reorder_setup.order_with_clusters
+  let graphviz_flip = reorder_setup.graphviz_flip
+  let flat_rank_constraints = reorder_setup.flat_rank_constraints
+  let class2_data = reorder_setup.class2_data
   let edges_by_tail = class2_data.edges_by_tail
   let order_edges_by_tail = class2_data.order_edges_by_tail
   let order_edges_by_tail_root = class2_data.order_edges_by_tail_root
@@ -5711,24 +5807,9 @@ fn compute_ordering_and_vnodes(
   let edge_creation_order = class2_data.edge_creation_order
   let nlist_order = class2_data.nlist_order
   let vnode_creation_order = class2_data.vnode_creation_order
-  // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
-  // Do not change behavior without updating fixtures/tests.
-  let gdnlist_order = nlist_order
-  let nlist_order_index = build_nlist_order_index(nlist_order)
+  let gdnlist_order = reorder_setup.gdnlist_order
   let vnode_order_keys_for_ordering =
-    build_vnode_order_keys_for_ordering_stage(
-      vnode_count,
-      cluster_meta,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      vnode_info,
-      ordering_groups_base,
-      nlist_order_index,
-    )
+    reorder_setup.vnode_order_keys_for_ordering
   let mut ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
   let ordered_groups_internal =
     if order_with_vnodes || order_with_clusters {
