@@ -4046,6 +4046,144 @@ fn run_noncluster_reorder_pass(
 }
 
 ///|
+/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
+/// then merges reordered root positions back into seeded build_ranks groups.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_mincross_reorder(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  seeded_groups : Map[Int, Array[String]],
+  order_rank_keys : Array[Int],
+  order_ranks : Map[String, Int],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_node_order : Map[String, Int],
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  graphviz_flip : Bool,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
+  // cluster-internal nodes are handled by cluster-local build_ranks passes.
+  let order_groups_for_mincross =
+    build_order_groups_for_root_mincross(
+      order_with_clusters,
+      seeded_groups,
+      order_cluster_keys,
+      order_cluster_skeleton,
+    )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let debug_nodes : Array[String] = ["front_end_jz", "z_req1", "z_req"]
+    for name in debug_nodes {
+      let inn = match graphviz_in_neighbors.get(name) {
+        Some(list) => list
+        None => []
+      }
+      let out = match graphviz_out_neighbors.get(name) {
+        Some(list) => list
+        None => []
+      }
+      println("order_neighbors \{name} in=\{inn} out=\{out}")
+    }
+  }
+  let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
+  let order_nodes_for_mincross =
+    build_order_nodes_from_groups(
+      order_groups_for_mincross,
+      order_rank_keys_for_mincross,
+    )
+  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  let (
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+  ) =
+    collect_mincross_order_edges(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    )
+  let (parents, children, edge_order) =
+    build_order_edge_indices_and_order(
+      order_nodes_for_mincross,
+      order_edge_tail_out_mincross,
+      order_edge_head_out_mincross,
+      order_ranks,
+      order_edges_out_mincross,
+    )
+  let preferred_positions =
+    if order_with_vnodes {
+      vnode_order_keys_for_ordering
+    } else {
+      Map::new()
+    }
+  let ordered_mincross = reorder_rank_groups(
+    order_rank_keys_for_mincross,
+    order_groups_for_mincross,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    order_cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    edge_order,
+    order_node_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    preferred_positions,
+    order_cluster_skeleton,
+    order_flat_constraints,
+    graphviz_out_neighbors=graphviz_out_neighbors,
+    graphviz_in_neighbors=graphviz_in_neighbors,
+    graphviz_flip=graphviz_flip,
+  )
+  let ordered =
+    if order_with_clusters {
+      merge_root_mincross_order_into_seeded_groups(
+        order_rank_keys,
+        seeded_groups,
+        ordered_mincross,
+        mincross_nodes,
+      )
+    } else {
+      ordered_mincross
+    }
+  (order_groups_for_mincross, ordered)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -4623,47 +4761,13 @@ fn compute_ordering_and_vnodes(
         )
       }
       dot_trace_groups("seeded_groups", seeded_groups)
-      // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
-      // cluster-internal nodes are handled by cluster-local build_ranks passes.
-      let order_groups_for_mincross =
-        build_order_groups_for_root_mincross(
+      let (order_groups_for_mincross, ordered) =
+        run_root_mincross_reorder(
           order_with_clusters,
+          order_with_vnodes,
           seeded_groups,
-          order_cluster_keys,
-          order_cluster_skeleton,
-        )
-      if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-        let debug_nodes : Array[String] = ["front_end_jz", "z_req1", "z_req"]
-        for name in debug_nodes {
-          let inn = match graphviz_in_neighbors.get(name) {
-            Some(list) => list
-            None => []
-          }
-          let out = match graphviz_out_neighbors.get(name) {
-            Some(list) => list
-            None => []
-          }
-          println("order_neighbors \{name} in=\{inn} out=\{out}")
-        }
-      }
-      let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
-      let order_nodes_for_mincross =
-        build_order_nodes_from_groups(
-          order_groups_for_mincross,
-          order_rank_keys_for_mincross,
-        )
-      let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
-      let (
-        order_edges_out_mincross,
-        order_edge_tail_out_mincross,
-        order_edge_head_out_mincross,
-        order_edge_tail_port_x_mincross,
-        order_edge_head_port_x_mincross,
-        order_edge_tail_port_order_mincross,
-        order_edge_head_port_order_mincross,
-      ) =
-        collect_mincross_order_edges(
-          mincross_nodes,
+          order_rank_keys,
+          order_ranks,
           order_edges_out,
           order_edge_tail_out,
           order_edge_head_out,
@@ -4671,61 +4775,21 @@ fn compute_ordering_and_vnodes(
           order_edge_head_port_x,
           order_edge_tail_port_order,
           order_edge_head_port_order,
+          order_cluster_keys,
+          order_cluster_skeleton,
+          cluster_meta,
+          vnode_order_keys_for_ordering,
+          order_node_order,
+          order_sizes_out,
+          nodesep_pt,
+          has_edge_labels,
+          port_order_positions,
+          port_order_contrib,
+          order_flat_constraints,
+          graphviz_out_neighbors,
+          graphviz_in_neighbors,
+          graphviz_flip,
         )
-      let (parents, children, edge_order) =
-        build_order_edge_indices_and_order(
-          order_nodes_for_mincross,
-          order_edge_tail_out_mincross,
-          order_edge_head_out_mincross,
-          order_ranks,
-          order_edges_out_mincross,
-        )
-      let preferred_positions =
-        if order_with_vnodes {
-        vnode_order_keys_for_ordering
-      } else {
-        Map::new()
-      }
-      let ordered_mincross = reorder_rank_groups(
-        order_rank_keys_for_mincross,
-        order_groups_for_mincross,
-        order_edges_out_mincross,
-        order_edge_tail_out_mincross,
-        order_edge_head_out_mincross,
-        order_edge_tail_port_x_mincross,
-        order_edge_head_port_x_mincross,
-        order_edge_tail_port_order_mincross,
-        order_edge_head_port_order_mincross,
-        parents,
-        children,
-        order_cluster_keys,
-        cluster_meta.rank_same_groups,
-        cluster_meta.rank_same_order,
-        edge_order,
-        order_node_order,
-        order_sizes_out,
-        nodesep_pt,
-        has_edge_labels,
-        port_order_positions,
-        port_order_contrib,
-        preferred_positions,
-        order_cluster_skeleton,
-        order_flat_constraints,
-        graphviz_out_neighbors=graphviz_out_neighbors,
-        graphviz_in_neighbors=graphviz_in_neighbors,
-        graphviz_flip=graphviz_flip,
-      )
-      let ordered =
-        if order_with_clusters {
-        merge_root_mincross_order_into_seeded_groups(
-          order_rank_keys,
-          seeded_groups,
-          ordered_mincross,
-          mincross_nodes,
-        )
-      } else {
-        ordered_mincross
-      }
       if order_with_clusters {
         reorder_groups_by_cluster_build_ranks(
           graph,
