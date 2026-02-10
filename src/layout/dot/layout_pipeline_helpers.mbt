@@ -7044,10 +7044,10 @@ fn build_x_position_stage_seed_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
-/// fixed order before flat-label augmentation consumes updated x_groups.
+/// Graphviz parity: optional x-stage reorder preserves vnode-order gating,
+/// port-order inputs, and trace emission before transpose cleanup.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
+fn build_x_stage_groups_after_optional_reorder_for_positions(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -7059,8 +7059,7 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
   ordering : OrderingResult,
   x_stage_seed : XPositionStageSeedData,
 ) -> Map[Int, Array[String]] {
-  let mut x_groups = x_stage_seed.x_groups
-  x_groups =
+  let x_groups =
     maybe_apply_xpos_reorder_for_positions(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
@@ -7078,9 +7077,41 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
       x_stage_seed.x_edge_tail_port_order,
       x_stage_seed.x_edge_head_port_order,
       graphviz_flip,
-      x_groups,
+      x_stage_seed.x_groups,
     )
   dot_trace_groups("x-groups", x_groups)
+  x_groups
+}
+
+///|
+/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
+/// fixed order before flat-label augmentation consumes updated x_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
+  xpos_reorder_enabled : Bool,
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  graphviz_flip : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  x_stage_seed : XPositionStageSeedData,
+) -> Map[Int, Array[String]] {
+  let x_groups =
+    build_x_stage_groups_after_optional_reorder_for_positions(
+      xpos_reorder_enabled,
+      use_vnodes_for_xpos,
+      allow_xpos_reorder,
+      graphviz_flip,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      x_stage_seed,
+    )
   maybe_apply_xpos_transpose_cleanup(
     xpos_reorder_enabled,
     use_vnodes_for_xpos,
