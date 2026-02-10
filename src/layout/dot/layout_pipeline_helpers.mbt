@@ -103,6 +103,19 @@ priv struct OrderingClass2Data {
 }
 
 ///|
+priv struct OrderReorderContext {
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_nodes : Array[String]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  creation_order : Array[String]
+  order_node_order : Map[String, Int]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -5095,6 +5108,56 @@ fn build_vnode_order_keys_for_ordering_stage(
 }
 
 ///|
+/// Graphviz parity: order-graph rebuild uses GD_nlist-derived creation order
+/// and build_ranks seed order before mapped/unmapped edge materialization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_reorder_context(
+  order_groups : Map[Int, Array[String]],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  node_order : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  base_order_index : Map[String, Int],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+) -> OrderReorderContext {
+  let order_rank_keys = collect_rank_keys(order_groups)
+  let order_ranks = build_node_ranks(order_groups)
+  let order_nodes =
+    build_order_nodes_from_groups(order_groups, order_rank_keys)
+  let (order_graph, order_node_map) =
+    build_order_graph_and_nodes("order_graph", order_nodes)
+  let (order_graph_unmapped, order_node_map_unmapped) =
+    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  let creation_order =
+    build_reverse_creation_order_from_nlist(nlist_order)
+  let order_node_order =
+    build_order_node_order_for_build_ranks(
+      gdnlist_order,
+      nlist_order,
+      node_order,
+      real_nodes,
+      order_groups,
+      base_order_index,
+      rank_same_groups,
+      rank_same_order,
+      port_edge_nodes,
+    )
+  {
+    order_rank_keys,
+    order_ranks,
+    order_nodes,
+    order_graph,
+    order_node_map,
+    order_graph_unmapped,
+    order_node_map_unmapped,
+    creation_order,
+    order_node_order,
+  }
+}
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5329,28 +5392,27 @@ fn compute_ordering_and_vnodes(
           order_sizes,
         )
       dot_trace_groups("order_groups_pre", order_groups)
-      let order_rank_keys = collect_rank_keys(order_groups)
-      let order_ranks = build_node_ranks(order_groups)
-      let order_nodes =
-        build_order_nodes_from_groups(order_groups, order_rank_keys)
-      let (order_graph, order_node_map) =
-        build_order_graph_and_nodes("order_graph", order_nodes)
-      let (order_graph_unmapped, order_node_map_unmapped) =
-        build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
-      let creation_order =
-        build_reverse_creation_order_from_nlist(nlist_order)
-      let order_node_order =
-        build_order_node_order_for_build_ranks(
-          gdnlist_order,
+      let reorder_context =
+        build_order_reorder_context(
+          order_groups,
           nlist_order,
+          gdnlist_order,
           node_order,
           real_nodes,
-          order_groups,
           base_order_index,
           cluster_meta.rank_same_groups,
           cluster_meta.rank_same_order,
           port_edge_nodes,
         )
+      let order_rank_keys = reorder_context.order_rank_keys
+      let order_ranks = reorder_context.order_ranks
+      let order_nodes = reorder_context.order_nodes
+      let order_graph = reorder_context.order_graph
+      let order_node_map = reorder_context.order_node_map
+      let order_graph_unmapped = reorder_context.order_graph_unmapped
+      let order_node_map_unmapped = reorder_context.order_node_map_unmapped
+      let creation_order = reorder_context.creation_order
+      let order_node_order = reorder_context.order_node_order
       trace_order_node_order_debug(order_node_order)
       let (
         order_edges_out,
