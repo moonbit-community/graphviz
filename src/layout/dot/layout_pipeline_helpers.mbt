@@ -3274,6 +3274,75 @@ fn build_remincross_nlist_order(
 }
 
 ///|
+/// Graphviz parity: ReMincross order-graph materialization filters local flat
+/// constraints by fast-graph membership, rebuilds GD_nlist, seeds node order,
+/// then materializes edge arrays in nlist tail order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_materialized_order_graph(
+  flat_rank_constraints : Map[String, Bool],
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+  rem_edge_creation : Array[(String, String)],
+  rem_order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  rem_groups : Map[Int, Array[String]],
+) -> (
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  let rem_flat_constraints =
+    filter_flat_constraints_for_node_map(
+      flat_rank_constraints,
+      rem_node_map,
+    )
+  let rem_nlist_order =
+    build_remincross_nlist_order(
+      creation_order,
+      rem_vnode_creation,
+      rem_edge_creation,
+      rem_flat_constraints,
+    )
+  let rem_node_order =
+    build_order_node_order_from_nlist_and_groups(
+      rem_nlist_order,
+      rem_node_map,
+      rem_groups,
+    )
+  let (
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+  ) =
+    collect_order_edges_for_tail_sequence(
+      rem_nlist_order,
+      rem_order_edges_by_tail,
+      rem_graph,
+      rem_node_map,
+    )
+  (
+    rem_node_order,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: ReMincross cluster keys start from intercluster keys,
 /// map empty keys to the root graph key, and assign edge vnodes to the LCA
 /// cluster (mark_lowclusters) for cluster-boundary swap guards.
@@ -4308,21 +4377,8 @@ fn compute_ordering_and_vnodes(
               }
             }
           }
-          let rem_flat_constraints =
-            filter_flat_constraints_for_node_map(
-              flat_rank_constraints,
-              rem_node_map,
-            )
-          let rem_nlist_order =
-            build_remincross_nlist_order(
-              creation_order,
-              rem_vnode_creation,
-              rem_edge_creation,
-              rem_flat_constraints,
-            )
-          let rem_node_order =
-            build_order_node_order_from_nlist_and_groups(rem_nlist_order, rem_node_map, rem_groups)
           let (
+            rem_node_order,
             rem_edges_out,
             rem_edge_tail_out,
             rem_edge_head_out,
@@ -4331,11 +4387,15 @@ fn compute_ordering_and_vnodes(
             rem_edge_tail_port_order,
             rem_edge_head_port_order,
           ) =
-            collect_order_edges_for_tail_sequence(
-              rem_nlist_order,
+            build_remincross_materialized_order_graph(
+              flat_rank_constraints,
+              creation_order,
+              rem_vnode_creation,
+              rem_edge_creation,
               rem_order_edges_by_tail,
               rem_graph,
               rem_node_map,
+              rem_groups,
             )
           if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
             let mut idx = 0
