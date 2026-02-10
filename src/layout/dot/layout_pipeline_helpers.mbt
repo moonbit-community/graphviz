@@ -4449,6 +4449,59 @@ fn trace_order_edges_with_ranks(
 }
 
 ///|
+/// Graphviz parity: mapped/unmapped order-edge materialization output keeps
+/// both edge-array bundles and sampled port arrays unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn materialize_mapped_and_unmapped_order_edges_output(
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_edges_out_unmapped : Array[@cgraph.Edge],
+  order_edge_tail_out_unmapped : Array[String],
+  order_edge_head_out_unmapped : Array[String],
+  order_edge_tail_port_x_unmapped : Array[Double],
+  order_edge_head_port_x_unmapped : Array[Double],
+  order_edge_tail_port_order_unmapped : Array[Double],
+  order_edge_head_port_order_unmapped : Array[Double],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  (
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+  )
+}
+
+///|
 /// Graphviz parity: order-graph edge arrays are materialized from GD_nlist
 /// tail order for both mapped (cluster-remapped) and unmapped variants.
 /// Do not change behavior without updating fixtures/tests.
@@ -4516,7 +4569,7 @@ fn materialize_mapped_and_unmapped_order_edges(
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
   )
-  (
+  materialize_mapped_and_unmapped_order_edges_output(
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
