@@ -3292,6 +3292,87 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
 }
 
 ///|
+/// Graphviz parity: root cluster-reorder context is assembled from root
+/// groups, root graph, and root nlist ordering before edge materialization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_context(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Map[String, Int],
+  Array[String],
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+  Array[String],
+  Map[String, Int],
+) {
+  let root_groups =
+    build_root_groups_for_cluster_reorder(
+      order_with_vnodes,
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+      edge_vnodes,
+      vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+    )
+  let root_rank_keys = collect_rank_keys(root_groups)
+  let root_ranks = build_node_ranks(root_groups)
+  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let (root_graph, root_node_map) =
+    build_order_graph_and_nodes("order_root", root_nodes)
+  let root_nlist_order =
+    build_root_nlist_order_for_cluster_reorder(
+      nlist_order,
+      cluster_keys,
+      ranks,
+      root_nodes,
+      root_node_map,
+      skeleton_edge_creation,
+      root_edge_creation,
+      flat_rank_constraints,
+    )
+  let root_node_order =
+    build_order_node_order_from_nlist_and_groups(
+      root_nlist_order,
+      root_node_map,
+      root_groups,
+    )
+  (
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
+    root_node_order,
+  )
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -3327,8 +3408,17 @@ fn build_cluster_rank_order_for_cluster_reorder(
   if !order_with_clusters {
     return cluster_rank_order
   }
-  let root_groups =
-    build_root_groups_for_cluster_reorder(
+  let (
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
+    root_node_order,
+  ) =
+    build_root_cluster_reorder_context(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -3341,28 +3431,11 @@ fn build_cluster_rank_order_for_cluster_reorder(
       vnode_info.edge_vnodes,
       vnode_info.vnodes_by_rank,
       vnode_order_keys_for_ordering,
-    )
-  let root_rank_keys = collect_rank_keys(root_groups)
-  let root_ranks = build_node_ranks(root_groups)
-  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let (root_graph, root_node_map) =
-    build_order_graph_and_nodes("order_root", root_nodes)
-  let root_nlist_order =
-    build_root_nlist_order_for_cluster_reorder(
       nlist_order,
-      cluster_meta.cluster_keys,
       ranks,
-      root_nodes,
-      root_node_map,
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
-    )
-  let root_node_order =
-    build_order_node_order_from_nlist_and_groups(
-      root_nlist_order,
-      root_node_map,
-      root_groups,
     )
   let (
     root_edges_out,
