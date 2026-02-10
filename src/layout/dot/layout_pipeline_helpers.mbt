@@ -6948,6 +6948,29 @@ fn build_ordering_result(
 }
 
 ///|
+/// Graphviz parity: ordering dispatch result mapping keeps runtime-context and
+/// dispatch-setup arrays wired into OrderingResult without reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_pipeline_result(
+  ordered_groups_internal : Map[Int, Array[String]],
+  ordered_with_vnodes : Map[Int, Array[String]],
+  runtime_context : OrderingRuntimeContext,
+  dispatch_setup : OrderingDispatchSetup,
+) -> OrderingResult {
+  build_ordering_result(
+    ordered_groups_internal,
+    ordered_with_vnodes,
+    runtime_context.vnode_info,
+    runtime_context.vnode_count,
+    dispatch_setup.edge_port_data,
+    runtime_context.edge_cluster_keys,
+    dispatch_setup.nlist_order,
+    dispatch_setup.gdnlist_order,
+    dispatch_setup.vnode_creation_order,
+  )
+}
+
+///|
 /// Graphviz parity: ordering dispatch pipeline keeps setup/dispatch/result stages
 /// in Graphviz-equivalent sequence while using structured runtime context.
 /// Do not change behavior without updating fixtures/tests.
@@ -7014,16 +7037,11 @@ fn run_ordering_dispatch_pipeline(
       runtime_context,
       dispatch_setup,
     )
-  build_ordering_result(
+  build_ordering_dispatch_pipeline_result(
     ordered_groups_internal,
     ordered_with_vnodes,
-    vnode_info,
-    vnode_count,
-    dispatch_setup.edge_port_data,
-    runtime_context.edge_cluster_keys,
-    dispatch_setup.nlist_order,
-    dispatch_setup.gdnlist_order,
-    dispatch_setup.vnode_creation_order,
+    runtime_context,
+    dispatch_setup,
   )
 }
 
