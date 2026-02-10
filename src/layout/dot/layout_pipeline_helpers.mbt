@@ -1752,6 +1752,22 @@ fn build_order_sizes_for_order_graph(
 }
 
 ///|
+/// Graphviz parity: class2 build_ranks reverses current nlist when creating
+/// node visit seed order for edge materialization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_reverse_creation_order_from_nlist(
+  nlist_order : Array[String],
+) -> Array[String] {
+  let creation_order : Array[String] = []
+  let mut creation_idx = nlist_order.length()
+  while creation_idx > 0 {
+    creation_idx = creation_idx - 1
+    creation_order.push(nlist_order[creation_idx])
+  }
+  creation_order
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2162,12 +2178,8 @@ fn compute_ordering_and_vnodes(
       for name in order_nodes {
         order_node_map_unmapped[name] = order_graph_unmapped.node(name)
       }
-      let creation_order : Array[String] = []
-      let mut creation_idx = nlist_order.length()
-      while creation_idx > 0 {
-        creation_idx = creation_idx - 1
-        creation_order.push(nlist_order[creation_idx])
-      }
+      let creation_order =
+        build_reverse_creation_order_from_nlist(nlist_order)
       let order_node_order : Map[String, Int] = Map::new()
       let mut order_idx = 0
       let gdnlist_seed = gdnlist_order
