@@ -8286,6 +8286,20 @@ fn build_noncluster_xpos_reordered_groups_for_positions(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder gate matches Graphviz branch
+/// predicate (non-cluster path only, no vnode-order fallback path).
+/// Do not change behavior without updating fixtures/tests.
+fn should_apply_noncluster_xpos_reorder_for_positions(
+  xpos_reorder_enabled : Bool,
+  allow_xpos_reorder : Bool,
+  has_vnode_order : Bool,
+  cluster_meta : ClusterMetadata,
+) -> Bool {
+  xpos_reorder_enabled && allow_xpos_reorder && !cluster_meta.ordering_set &&
+  !has_vnode_order && !cluster_meta.has_clusters
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -8303,9 +8317,12 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if xpos_reorder_enabled &&
-    allow_xpos_reorder && !cluster_meta.ordering_set && !has_vnode_order &&
-    !cluster_meta.has_clusters {
+  if should_apply_noncluster_xpos_reorder_for_positions(
+    xpos_reorder_enabled,
+    allow_xpos_reorder,
+    has_vnode_order,
+    cluster_meta,
+  ) {
     build_noncluster_xpos_reordered_groups_for_positions(
       prep,
       rank_data,
