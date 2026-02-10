@@ -4316,6 +4316,56 @@ fn build_order_groups_sizes_and_cluster_skeleton(
 }
 
 ///|
+/// Graphviz parity: unconstrained real nodes keep GD_nlist seed order, with
+/// incoming-only local-cluster nodes reversed to match fast_node head-insert
+/// behavior before build_ranks seeding.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_unconstrained_order_node_overrides(
+  gdnlist_order : Array[String],
+  real_nodes : Map[String, Bool],
+  order_nodes : Array[String],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  rank_same_groups : Map[String, Int],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nodes : Array[@cgraph.Node],
+  intercluster_keys : Map[String, String],
+  order_node_order : Map[String, Int],
+) -> Unit {
+  // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
+  let gdnlist_order_index =
+    build_gdnlist_order_index_for_real_nodes(gdnlist_order, real_nodes)
+  let unconstrained_nodes =
+    collect_unconstrained_order_nodes(
+      order_nodes,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+    )
+  for name, idx in gdnlist_order_index {
+    if real_nodes.get(name) is Some(_) &&
+      unconstrained_nodes.get(name) is Some(_) &&
+      rank_same_groups.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  // Graphviz parity: incoming-only unconstrained nodes inside local
+  // clusters follow reverse input order (fast_node inserts at head).
+  let (node_has_out, node_has_in) =
+    build_node_in_out_presence_maps(edge_tail, edge_head)
+  let local_creation =
+    build_local_cluster_creation_order(nodes, intercluster_keys)
+  reorder_incoming_only_unconstrained_local_nodes(
+    local_creation,
+    unconstrained_nodes,
+    rank_same_groups,
+    node_has_out,
+    node_has_in,
+    order_node_order,
+  )
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -4828,34 +4878,17 @@ fn compute_ordering_and_vnodes(
         )
       let order_flat_constraints =
         clone_flat_constraints(cluster_meta.flat_constraints)
-      // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-      let gdnlist_order_index =
-        build_gdnlist_order_index_for_real_nodes(gdnlist_order, real_nodes)
-      let unconstrained_nodes =
-        collect_unconstrained_order_nodes(
-          order_nodes,
-          graphviz_out_neighbors,
-          graphviz_in_neighbors,
-        )
-      for name, idx in gdnlist_order_index {
-        if real_nodes.get(name) is Some(_) &&
-          unconstrained_nodes.get(name) is Some(_) &&
-          cluster_meta.rank_same_groups.get(name) is None {
-          order_node_order[name] = idx
-        }
-      }
-      // Graphviz parity: incoming-only unconstrained nodes inside local
-      // clusters follow reverse input order (fast_node inserts at head).
-      let (node_has_out, node_has_in) =
-        build_node_in_out_presence_maps(edge_tail, edge_head)
-      let local_creation =
-        build_local_cluster_creation_order(nodes, cluster_meta.intercluster_keys)
-      reorder_incoming_only_unconstrained_local_nodes(
-        local_creation,
-        unconstrained_nodes,
+      apply_unconstrained_order_node_overrides(
+        gdnlist_order,
+        real_nodes,
+        order_nodes,
+        graphviz_out_neighbors,
+        graphviz_in_neighbors,
         cluster_meta.rank_same_groups,
-        node_has_out,
-        node_has_in,
+        edge_tail,
+        edge_head,
+        nodes,
+        cluster_meta.intercluster_keys,
         order_node_order,
       )
       // Graphviz parity: seed build_ranks from component-scoped walk,
