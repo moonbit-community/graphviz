@@ -541,6 +541,22 @@ fn build_routing_edges_and_padding_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing-stage output assembly maps spatial node geometry
+/// and routed-edge padding data directly into final stage result.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_edges_and_padding_data : DotRoutingEdgesAndPaddingData,
+) -> DotRoutingStage {
+  build_dot_routing_stage_result_from_edges_for_stage(
+    routing_spatial_data.nodes_out,
+    routing_edges_and_padding_data.edges_out,
+    routing_edges_and_padding_data.port_pad_below,
+    routing_edges_and_padding_data.port_pad_above,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -568,10 +584,8 @@ fn compute_dot_routing_stage(
       routing_spatial_data,
       routing_label_and_tuning_data,
     )
-  build_dot_routing_stage_result_from_edges_for_stage(
-    routing_spatial_data.nodes_out,
-    routing_edges_and_padding_data.edges_out,
-    routing_edges_and_padding_data.port_pad_below,
-    routing_edges_and_padding_data.port_pad_above,
+  build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
+    routing_spatial_data,
+    routing_edges_and_padding_data,
   )
 }
