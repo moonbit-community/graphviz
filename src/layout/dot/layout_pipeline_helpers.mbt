@@ -2700,6 +2700,65 @@ fn apply_intercluster_vnode_order_key_floor(
 }
 
 ///|
+/// Graphviz parity: ReMincross local flat constraints keep only endpoints that
+/// exist in the current fast graph node map.
+/// Do not change behavior without updating fixtures/tests.
+fn filter_flat_constraints_for_node_map(
+  flat_rank_constraints : Map[String, Bool],
+  node_map : Map[String, @cgraph.Node],
+) -> Map[String, Bool] {
+  let rem_flat_constraints : Map[String, Bool] = Map::new()
+  for key, _ in flat_rank_constraints {
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else {
+          ""
+        }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if node_map.get(tail) is Some(_) && node_map.get(head) is Some(_) {
+          rem_flat_constraints[key] = true
+        }
+      }
+      None => ()
+    }
+  }
+  rem_flat_constraints
+}
+
+///|
+/// Graphviz parity: ReMincross creation order starts from tail creation order
+/// then appends each tail vnode sequence once (stable dedupe).
+/// Do not change behavior without updating fixtures/tests.
+fn build_rem_order_creation_sequence(
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+) -> Array[String] {
+  let rem_order_creation : Array[String] = []
+  let rem_seen : Map[String, Bool] = Map::new()
+  for tail_name in creation_order {
+    if rem_seen.get(tail_name) is None {
+      rem_seen[tail_name] = true
+      rem_order_creation.push(tail_name)
+    }
+    let vnodes = match rem_vnode_creation.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for vnode in vnodes {
+      if rem_seen.get(vnode) is None {
+        rem_seen[vnode] = true
+        rem_order_creation.push(vnode)
+      }
+    }
+  }
+  rem_order_creation
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -3750,48 +3809,17 @@ fn compute_ordering_and_vnodes(
               }
             }
           }
-          let rem_flat_constraints : Map[String, Bool] = Map::new()
-          for key, _ in flat_rank_constraints {
-            match key.find("|") {
-              Some(pos) => {
-                let len = key.length()
-                let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else {
-                  ""
-                }
-                let head =
-                  if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-                    ""
-                  }
-                if rem_node_map.get(tail) is Some(_) &&
-                  rem_node_map.get(head) is Some(_) {
-                  rem_flat_constraints[key] = true
-                }
-              }
-              None => ()
-            }
-          }
+          let rem_flat_constraints =
+            filter_flat_constraints_for_node_map(
+              flat_rank_constraints,
+              rem_node_map,
+            )
           let rem_edge_creation_order : Array[(String, String)] = []
           for edge in rem_edge_creation {
             rem_edge_creation_order.push(edge)
           }
-          let rem_order_creation : Array[String] = []
-          let rem_seen : Map[String, Bool] = Map::new()
-          for tail_name in creation_order {
-            if rem_seen.get(tail_name) is None {
-              rem_seen[tail_name] = true
-              rem_order_creation.push(tail_name)
-            }
-            let vnodes = match rem_vnode_creation.get(tail_name) {
-              Some(list) => list
-              None => []
-            }
-            for vnode in vnodes {
-              if rem_seen.get(vnode) is None {
-                rem_seen[vnode] = true
-                rem_order_creation.push(vnode)
-              }
-            }
-          }
+          let rem_order_creation =
+            build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
           // Graphviz parity: GD_nlist seeding uses agfstnode order for the
           // fast graph (reverse creation insertion).
           let rem_order_creation_rev : Array[String] = []
