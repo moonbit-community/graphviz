@@ -615,6 +615,17 @@ fn build_routing_edges_from_precomputed_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing edge-solve precompute output object maps metric
+/// and path-context bundles without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edge_solve_precompute_output_for_stage(
+  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
+  routing_path_context_data : DotRoutingPathContextData,
+) -> DotRoutingEdgeSolvePrecomputeData {
+  { routing_padding_and_head_port_metrics, routing_path_context_data }
+}
+
+///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order before routed-edge solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -640,7 +651,10 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       positions_state,
       routing_spatial_data.cluster_bboxes,
     )
-  { routing_padding_and_head_port_metrics, routing_path_context_data }
+  build_routing_edge_solve_precompute_output_for_stage(
+    routing_padding_and_head_port_metrics,
+    routing_path_context_data,
+  )
 }
 
 ///|
