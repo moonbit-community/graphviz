@@ -137,6 +137,16 @@ priv struct OrderMaterializationData {
 }
 
 ///|
+priv struct OrderClusteredPreRootStageData {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+}
+
+///|
 priv struct OrderingBaseContext {
   real_nodes : Map[String, Bool]
   edge_cluster_keys : Map[String, String]
@@ -5887,14 +5897,7 @@ fn build_clustered_ordering_pre_root_stage(
   edge_tail : Array[String],
   edge_head : Array[String],
   nodes : Array[@cgraph.Node],
-) -> (
-  Map[Int, Array[String]],
-  Map[String, NodeSize],
-  Map[String, String],
-  Map[String, Bool],
-  OrderReorderContext,
-  OrderMaterializationData,
-) {
+) -> OrderClusteredPreRootStageData {
   let (
     order_groups,
     order_sizes_out,
@@ -5945,14 +5948,14 @@ fn build_clustered_ordering_pre_root_stage(
       nodes,
       reorder_context.order_node_order,
     )
-  (
+  {
     order_groups,
     order_sizes_out,
     order_cluster_keys,
     order_cluster_skeleton,
     reorder_context,
     materialized,
-  )
+  }
 }
 
 ///|
@@ -6000,14 +6003,7 @@ fn run_clustered_ordering_stage(
   skeleton_edge_creation : Array[(String, String)],
   edge_creation_order : Array[(String, String)],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (
-    order_groups,
-    order_sizes_out,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    reorder_context,
-    materialized,
-  ) =
+  let pre_root_stage =
     build_clustered_ordering_pre_root_stage(
       ordering_groups_base,
       base_order_index,
@@ -6029,6 +6025,12 @@ fn run_clustered_ordering_stage(
       edge_head,
       nodes,
     )
+  let order_groups = pre_root_stage.order_groups
+  let order_sizes_out = pre_root_stage.order_sizes_out
+  let order_cluster_keys = pre_root_stage.order_cluster_keys
+  let order_cluster_skeleton = pre_root_stage.order_cluster_skeleton
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
   let order_rank_keys = reorder_context.order_rank_keys
   let order_ranks = reorder_context.order_ranks
   let creation_order = reorder_context.creation_order
