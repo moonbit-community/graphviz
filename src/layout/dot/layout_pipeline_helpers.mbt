@@ -2985,6 +2985,59 @@ fn build_remincross_vnode_order_keys(
 }
 
 ///|
+/// Graphviz parity: ReMincross rank groups start from real-node groups and
+/// optionally inject edge-vnodes using vnode order keys from cluster-aware
+/// trailing-vnode adjustments.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_groups_with_optional_vnodes(
+  final_groups : Map[Int, Array[String]],
+  order_with_vnodes : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+  vnodes_by_rank : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let rem_base_groups = clone_rank_groups(final_groups)
+  let rem_base_order_index = build_order_index(rem_base_groups)
+  let rem_vnode_order_keys =
+    build_remincross_vnode_order_keys(
+      order_with_vnodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      rem_base_order_index,
+      cluster_keys,
+      intercluster_keys,
+      cluster_parents,
+      cluster_min_rank,
+      cluster_max_rank,
+      edge_vnodes,
+      vnode_ranks,
+    )
+  if order_with_vnodes {
+    build_x_groups_with_vnodes(
+      rem_base_groups,
+      rem_base_order_index,
+      vnodes_by_rank,
+      rem_vnode_order_keys,
+    )
+  } else {
+    rem_base_groups
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
@@ -4082,17 +4135,15 @@ fn compute_ordering_and_vnodes(
         )
         dot_trace_groups("cleaned_groups_post", final_groups)
         // Graphviz parity: ReMincross runs on real nodes + edge vnodes (no cluster skeletons).
-        let rem_base_groups = clone_rank_groups(final_groups)
-        let rem_base_order_index = build_order_index(rem_base_groups)
-        let rem_vnode_order_keys =
-          build_remincross_vnode_order_keys(
+        let rem_groups =
+          build_remincross_groups_with_optional_vnodes(
+            final_groups,
             order_with_vnodes,
             edges,
             edge_tail,
             edge_head,
             edge_reversed,
             ranks,
-            rem_base_order_index,
             cluster_meta.cluster_keys,
             cluster_meta.intercluster_keys,
             cluster_meta.cluster_parents,
@@ -4100,18 +4151,8 @@ fn compute_ordering_and_vnodes(
             cluster_meta.cluster_max_rank,
             vnode_info.edge_vnodes,
             vnode_info.vnode_ranks,
+            vnode_info.vnodes_by_rank,
           )
-        let rem_groups =
-          if order_with_vnodes {
-            build_x_groups_with_vnodes(
-              rem_base_groups,
-              rem_base_order_index,
-              vnode_info.vnodes_by_rank,
-              rem_vnode_order_keys,
-            )
-          } else {
-            rem_base_groups
-          }
         dot_trace_groups("remincross_groups", rem_groups)
         let rem_rank_keys = collect_rank_keys(rem_groups)
         if rem_rank_keys.length() > 1 {
