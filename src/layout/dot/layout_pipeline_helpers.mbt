@@ -9284,6 +9284,18 @@ fn build_flat_label_augmentation_from_x_stage_seed_for_positions(
 
 
 ///|
+/// Graphviz parity: x-stage seed+flat-label output object maps seed base sizes
+/// with flat-label augmentation data without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_seed_and_flat_label_output_for_positions(
+  x_stage_seed : XPositionStageSeedData,
+  flat_label_augmentation : XposFlatLabelAugmentation,
+) -> XStageSeedAndFlatLabelData {
+  let x_base_sizes = x_stage_seed.x_base_sizes
+  { x_base_sizes, flat_label_augmentation }
+}
+
+///|
 /// Graphviz parity: x-stage seed build and flat-label augmentation preserve the
 /// same mode-gated reorder/transpose inputs and call order as Graphviz fixtures.
 /// Do not change behavior without updating fixtures/tests.
@@ -9303,7 +9315,6 @@ fn build_x_stage_seed_and_flat_label_data_for_positions(
       ordering,
       mode_slack_data,
     )
-  let x_base_sizes = x_stage_seed.x_base_sizes
   let flat_label_augmentation =
     build_flat_label_augmentation_from_x_stage_seed_for_positions(
       prep,
@@ -9314,7 +9325,10 @@ fn build_x_stage_seed_and_flat_label_data_for_positions(
       mode_slack_data,
       x_stage_seed,
     )
-  { x_base_sizes, flat_label_augmentation }
+  build_x_stage_seed_and_flat_label_output_for_positions(
+    x_stage_seed,
+    flat_label_augmentation,
+  )
 }
 
 ///|
