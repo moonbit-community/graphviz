@@ -6971,6 +6971,44 @@ fn build_ordering_dispatch_pipeline_result(
 }
 
 ///|
+/// Graphviz parity: dispatch setup uses runtime-context vnode/port fields in the
+/// same order as Graphviz pre-microstep staging.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_setup_from_runtime_context(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  runtime_context : OrderingRuntimeContext,
+) -> OrderingDispatchSetup {
+  build_ordering_dispatch_setup(
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    groups,
+    node_order,
+    order_sizes,
+    runtime_context.port_edge_nodes,
+    runtime_context.vnode_count,
+    rankdir,
+    cluster_meta,
+    runtime_context.vnode_info,
+  )
+}
+
+///|
 /// Graphviz parity: ordering dispatch pipeline keeps setup/dispatch/result stages
 /// in Graphviz-equivalent sequence while using structured runtime context.
 /// Do not change behavior without updating fixtures/tests.
@@ -6995,10 +7033,8 @@ fn run_ordering_dispatch_pipeline(
   port_order_contrib : Map[String, Array[(String, Double)]],
   runtime_context : OrderingRuntimeContext,
 ) -> OrderingResult {
-  let vnode_info = runtime_context.vnode_info
-  let vnode_count = runtime_context.vnode_count
   let dispatch_setup =
-    build_ordering_dispatch_setup(
+    build_ordering_dispatch_setup_from_runtime_context(
       nodes,
       edges,
       edge_tail,
@@ -7009,11 +7045,9 @@ fn run_ordering_dispatch_pipeline(
       groups,
       node_order,
       order_sizes,
-      runtime_context.port_edge_nodes,
-      vnode_count,
       rankdir,
       cluster_meta,
-      vnode_info,
+      runtime_context,
     )
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_stage_dispatch(
