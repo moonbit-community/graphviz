@@ -3066,29 +3066,29 @@ fn collect_intercluster_nodes_with_short_span(
 }
 
 ///|
-/// Graphviz parity: ReMincross node-order seeding follows GD_nlist order and
-/// fills missing nodes from current rank-group index.
+/// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
+/// and fills missing nodes from current rank-group index.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_node_order(
-  rem_nlist_order : Array[String],
-  rem_node_map : Map[String, @cgraph.Node],
-  rem_groups : Map[Int, Array[String]],
+fn build_order_node_order_from_nlist_and_groups(
+  nlist_order : Array[String],
+  node_map : Map[String, @cgraph.Node],
+  groups : Map[Int, Array[String]],
 ) -> Map[String, Int] {
-  let rem_node_order : Map[String, Int] = Map::new()
-  let mut rem_node_idx = 0
-  for name in rem_nlist_order {
-    if rem_node_map.get(name) is Some(_) {
-      rem_node_order[name] = rem_node_idx
-      rem_node_idx = rem_node_idx + 1
+  let node_order_out : Map[String, Int] = Map::new()
+  let mut node_idx = 0
+  for name in nlist_order {
+    if node_map.get(name) is Some(_) {
+      node_order_out[name] = node_idx
+      node_idx = node_idx + 1
     }
   }
-  let rem_order_index = build_order_index(rem_groups)
-  for name, idx in rem_order_index {
-    if rem_node_order.get(name) is None {
-      rem_node_order[name] = idx
+  let order_index = build_order_index(groups)
+  for name, idx in order_index {
+    if node_order_out.get(name) is None {
+      node_order_out[name] = idx
     }
   }
-  rem_node_order
+  node_order_out
 }
 
 ///|
@@ -3903,24 +3903,12 @@ fn compute_ordering_and_vnodes(
             root_edge_creation,
             flat_rank_constraints,
           )
-        let root_node_order : Map[String, Int] = Map::new()
-        let mut root_order_idx = 0
-        for name in root_nlist_order {
-          root_node_order[name] = root_order_idx
-          root_order_idx = root_order_idx + 1
-        }
-        let root_order_index = build_order_index(root_groups)
-        for name, idx in root_order_index {
-          if root_node_order.get(name) is None {
-            root_node_order[name] = idx
-          }
-        }
-        let root_creation_order : Array[String] = []
-        let mut root_idx = root_nlist_order.length()
-        while root_idx > 0 {
-          root_idx = root_idx - 1
-          root_creation_order.push(root_nlist_order[root_idx])
-        }
+        let root_node_order =
+          build_order_node_order_from_nlist_and_groups(
+            root_nlist_order,
+            root_node_map,
+            root_groups,
+          )
         let (
           root_edges_out,
           root_edge_tail_out,
@@ -4132,7 +4120,7 @@ fn compute_ordering_and_vnodes(
               rem_flat_constraints,
             )
           let rem_node_order =
-            build_remincross_node_order(rem_nlist_order, rem_node_map, rem_groups)
+            build_order_node_order_from_nlist_and_groups(rem_nlist_order, rem_node_map, rem_groups)
           let (
             rem_edges_out,
             rem_edge_tail_out,
