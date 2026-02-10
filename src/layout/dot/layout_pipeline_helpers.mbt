@@ -8697,6 +8697,13 @@ fn should_allow_xpos_reorder_in_positions(
   !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
 }
 
+///|
+/// Graphviz parity: rankdir flip gate for xpos follows Graphviz LR/RL handling.
+/// Do not change behavior without updating fixtures/tests.
+fn is_graphviz_rankdir_flip_for_positions(prep : LayoutPrep) -> Bool {
+  prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
+}
+
 
 ///|
 /// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
@@ -8709,7 +8716,7 @@ fn build_position_mode_flags(
   let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
   let allow_xpos_reorder =
     should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
-  let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
+  let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
   // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
   let xpos_reorder_enabled = false
   {
