@@ -4076,6 +4076,17 @@ fn trace_remincross_materialized_edges(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross output keeps vnode-augmented and
+/// cleaned real-node groups in Graphviz tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_pass_output(
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+  next_final_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  (next_ordered_with_vnodes, next_final_groups)
+}
+
+///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
 /// edge vnodes, then materializes/remaps edges and executes final startpass=2
 /// reorder before dropping non-real nodes.
@@ -4239,7 +4250,7 @@ fn run_clustered_remincross_pass(
     next_ordered_with_vnodes = rem_ordered
     next_final_groups = rem_cleaned
   }
-  (next_ordered_with_vnodes, next_final_groups)
+  build_clustered_remincross_pass_output(next_ordered_with_vnodes, next_final_groups)
 }
 
 ///|
