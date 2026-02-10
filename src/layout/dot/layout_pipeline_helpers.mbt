@@ -147,6 +147,13 @@ priv struct OrderingBaseContext {
 }
 
 ///|
+priv struct OrderRootClusterStageData {
+  order_groups_for_mincross : Map[Int, Array[String]]
+  ordered : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -5286,6 +5293,130 @@ fn build_materialized_order_edges_and_neighbors(
 }
 
 ///|
+/// Graphviz parity: root mincross reordering is followed by clustered
+/// build_ranks application on the unmapped order graph before final cleanup.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_and_cluster_build_ranks_stage(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  graph : @cgraph.Graph,
+  cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_node_order : Map[String, Int],
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  graphviz_flip : Bool,
+  order_rank_keys : Array[Int],
+  order_groups : Map[Int, Array[String]],
+  order_ranks : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  flat_rank_constraints : Map[String, Bool],
+  order_edges_out_unmapped : Array[@cgraph.Edge],
+  order_edge_tail_out_unmapped : Array[String],
+  order_edge_head_out_unmapped : Array[String],
+  order_edge_tail_port_x_unmapped : Array[Double],
+  order_edge_head_port_x_unmapped : Array[Double],
+  order_edge_tail_port_order_unmapped : Array[Double],
+  order_edge_head_port_order_unmapped : Array[Double],
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  ordered_with_vnodes : Map[Int, Array[String]],
+) -> OrderRootClusterStageData {
+  let seeded_groups =
+    build_seeded_groups_for_order_reorder(
+      order_rank_keys,
+      order_groups,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_ranks,
+      order_node_order,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      order_flat_constraints,
+      graphviz_flip,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      order_edges_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      flat_rank_constraints,
+    )
+  let (order_groups_for_mincross, ordered) =
+    run_root_mincross_reorder(
+      order_with_clusters,
+      order_with_vnodes,
+      seeded_groups,
+      order_rank_keys,
+      order_ranks,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      cluster_meta,
+      vnode_order_keys_for_ordering,
+      order_node_order,
+      order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      order_flat_constraints,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      graphviz_flip,
+    )
+  let next_ordered_with_vnodes =
+    apply_cluster_build_ranks_and_track_vnodes(
+      order_with_clusters,
+      order_with_vnodes,
+      graph,
+      ordered,
+      cluster_meta,
+      order_node_order,
+      order_edges_out_unmapped,
+      order_edge_tail_out_unmapped,
+      order_edge_head_out_unmapped,
+      order_edge_tail_port_x_unmapped,
+      order_edge_head_port_x_unmapped,
+      order_edge_tail_port_order_unmapped,
+      order_edge_head_port_order_unmapped,
+      ranks,
+      order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      vnode_info,
+      graphviz_flip,
+      ordered_with_vnodes,
+    )
+  {
+    order_groups_for_mincross,
+    ordered,
+    ordered_with_vnodes: next_ordered_with_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5571,41 +5702,11 @@ fn compute_ordering_and_vnodes(
       let graphviz_out_neighbors = materialized.graphviz_out_neighbors
       let graphviz_in_neighbors = materialized.graphviz_in_neighbors
       let order_flat_constraints = materialized.order_flat_constraints
-      let seeded_groups =
-        build_seeded_groups_for_order_reorder(
-          order_rank_keys,
-          order_groups,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_ranks,
-          order_node_order,
-          order_cluster_keys,
-          order_cluster_skeleton,
-          order_flat_constraints,
-          graphviz_flip,
-          graphviz_out_neighbors,
-          graphviz_in_neighbors,
-          order_edges_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          flat_rank_constraints,
-        )
-      let (order_groups_for_mincross, ordered) =
-        run_root_mincross_reorder(
+      let root_cluster_stage =
+        run_root_and_cluster_build_ranks_stage(
           order_with_clusters,
           order_with_vnodes,
-          seeded_groups,
-          order_rank_keys,
-          order_ranks,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          order_cluster_keys,
-          order_cluster_skeleton,
+          graph,
           cluster_meta,
           vnode_order_keys_for_ordering,
           order_node_order,
@@ -5614,19 +5715,23 @@ fn compute_ordering_and_vnodes(
           has_edge_labels,
           port_order_positions,
           port_order_contrib,
+          graphviz_flip,
+          order_rank_keys,
+          order_groups,
+          order_ranks,
+          order_cluster_keys,
+          order_cluster_skeleton,
           order_flat_constraints,
           graphviz_out_neighbors,
           graphviz_in_neighbors,
-          graphviz_flip,
-        )
-      ordered_with_vnodes =
-        apply_cluster_build_ranks_and_track_vnodes(
-          order_with_clusters,
-          order_with_vnodes,
-          graph,
-          ordered,
-          cluster_meta,
-          order_node_order,
+          order_edges_out,
+          order_edge_tail_out,
+          order_edge_head_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
+          flat_rank_constraints,
           order_edges_out_unmapped,
           order_edge_tail_out_unmapped,
           order_edge_head_out_unmapped,
@@ -5635,15 +5740,12 @@ fn compute_ordering_and_vnodes(
           order_edge_tail_port_order_unmapped,
           order_edge_head_port_order_unmapped,
           ranks,
-          order_sizes_out,
-          nodesep_pt,
-          has_edge_labels,
-          port_order_positions,
-          port_order_contrib,
           vnode_info,
-          graphviz_flip,
           ordered_with_vnodes,
         )
+      let order_groups_for_mincross = root_cluster_stage.order_groups_for_mincross
+      let ordered = root_cluster_stage.ordered
+      ordered_with_vnodes = root_cluster_stage.ordered_with_vnodes
       let cluster_rank_order =
         build_cluster_rank_order_for_cluster_reorder(
           order_with_clusters,
