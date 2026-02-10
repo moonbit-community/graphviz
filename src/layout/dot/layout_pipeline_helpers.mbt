@@ -4658,6 +4658,50 @@ fn finalize_order_groups_with_cluster_remincross(
 }
 
 ///|
+/// Graphviz parity: class2 creation and decompose build GD_nlist from cluster
+/// skeletons + real-node/vnode creation order, with cluster-flip adjustment.
+/// Do not change behavior without updating fixtures/tests.
+fn build_nlist_order_and_vnode_creation_order(
+  cluster_skeleton_creation : Array[String],
+  creation_order : Array[String],
+  vnode_creation_by_tail : Map[String, Array[String]],
+  edge_creation_order : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  has_clusters : Bool,
+  cluster_keys : Map[String, String],
+) -> (Array[String], Array[String]) {
+  // Graphviz parity: class2 creates cluster skeletons first, then interleaves
+  // real nodes with their edge vnodes in agfstnode order.
+  let (order_creation, vnode_creation_order) =
+    build_order_creation_with_vnodes(
+      cluster_skeleton_creation,
+      creation_order,
+      vnode_creation_by_tail,
+    )
+  // Graphviz parity: decompose DFS starts from agfstnode (creation) order
+  // regardless of rankdir flip.
+  // Do not change behavior without updating fixtures/tests.
+  let nlist_tail_order : Array[String] = creation_order
+  let nlist_order_raw =
+    build_graphviz_nlist_order_from_edges(
+      nlist_tail_order,
+      order_creation,
+      edge_creation_order,
+      flat_rank_constraints,
+    )
+  let nlist_order =
+    adjust_nlist_order_for_cluster_flip(
+      nlist_order_raw,
+      graphviz_flip,
+      has_clusters,
+      cluster_keys,
+    )
+  trace_nlist_order_debug(nlist_order)
+  (nlist_order, vnode_creation_order)
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -4996,28 +5040,13 @@ fn compute_ordering_and_vnodes(
       skeleton_edge_creation,
       order_edge_creation,
     )
-  // Graphviz parity: class2 creates cluster skeletons first, then interleaves
-  // real nodes with their edge vnodes in agfstnode order.
-  let (order_creation, vnode_creation_order) =
-    build_order_creation_with_vnodes(
+  let (nlist_order, vnode_creation_order) =
+    build_nlist_order_and_vnode_creation_order(
       cluster_skeleton_creation,
       creation_order,
       vnode_creation_by_tail,
-    )
-  // Graphviz parity: decompose DFS starts from agfstnode (creation) order
-  // regardless of rankdir flip.
-  // Do not change behavior without updating fixtures/tests.
-  let nlist_tail_order : Array[String] = creation_order
-  let nlist_order_raw =
-    build_graphviz_nlist_order_from_edges(
-      nlist_tail_order,
-      order_creation,
       edge_creation_order,
       flat_rank_constraints,
-    )
-  let nlist_order =
-    adjust_nlist_order_for_cluster_flip(
-      nlist_order_raw,
       graphviz_flip,
       cluster_meta.has_clusters,
       cluster_meta.cluster_keys,
@@ -5025,7 +5054,6 @@ fn compute_ordering_and_vnodes(
   // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
   // Do not change behavior without updating fixtures/tests.
   let gdnlist_order = nlist_order
-  trace_nlist_order_debug(nlist_order)
   let nlist_order_index = build_nlist_order_index(nlist_order)
   let vnode_order_keys_for_ordering =
     if vnode_count > 0 {
