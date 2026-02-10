@@ -8248,6 +8248,20 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
 }
 
 ///|
+/// Graphviz parity: vnode xpos-reorder gate is shared across reorder branch
+/// selection and transpose cleanup eligibility.
+/// Do not change behavior without updating fixtures/tests.
+fn should_apply_vnode_xpos_reorder_for_positions(
+  xpos_reorder_enabled : Bool,
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  cluster_meta : ClusterMetadata,
+) -> Bool {
+  xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
+  !cluster_meta.ordering_set
+}
+
+///|
 /// Graphviz parity: xpos reorder control-flow must match Graphviz clustered/non-cluster
 /// branch selection before transpose cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -8270,8 +8284,12 @@ fn maybe_apply_xpos_reorder_for_positions(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
+  if should_apply_vnode_xpos_reorder_for_positions(
+    xpos_reorder_enabled,
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    cluster_meta,
+  ) {
     build_clustered_xpos_reordered_groups(
       prep,
       rank_data,
@@ -8379,8 +8397,12 @@ fn maybe_apply_xpos_transpose_cleanup(
   ranks : Map[String, Int],
   x_groups : Map[Int, Array[String]],
 ) -> Unit {
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
+  if should_apply_vnode_xpos_reorder_for_positions(
+    xpos_reorder_enabled,
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    cluster_meta,
+  ) {
     let (parents, children, tmp_rank_keys, tmp_ranks) =
       build_xpos_transpose_cleanup_inputs_for_positions(
         nodes,
