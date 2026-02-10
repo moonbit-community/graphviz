@@ -8240,6 +8240,59 @@ fn maybe_apply_xpos_transpose_cleanup(
 }
 
 ///|
+/// Graphviz parity: final projection stage in compute_positions keeps y/x solve
+/// projection and result assembly sequencing identical to Graphviz-aligned flow.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_result_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+  flat_label_edge_vnodes : Map[String, String],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> PositionResult {
+  let position_projection_data =
+    build_position_projection_data_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      x_cluster_keys,
+      virtual_slack_edges,
+      flat_label_edges,
+      flat_label_nodes,
+    )
+  let rank_y = position_projection_data.rank_y
+  let cluster_bbox_heights = position_projection_data.cluster_bbox_heights
+  let position_output_maps = position_projection_data.position_output_maps
+  build_position_result_for_positions(
+    x_groups,
+    rank_y,
+    position_output_maps,
+    flat_label_edge_vnodes,
+    rank_ht1,
+    rank_ht2,
+    cluster_bbox_heights,
+  )
+}
+
+
+///|
 /// Graphviz parity: final position result object is assembled from already-
 /// computed maps without extra transforms or normalization.
 /// Do not change behavior without updating fixtures/tests.
@@ -8390,32 +8443,22 @@ fn compute_positions(
   let flat_label_edge_vnodes = x_stage_data.flat_label_edge_vnodes
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
-  let position_projection_data =
-    build_position_projection_data_for_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      x_cluster_keys,
-      virtual_slack_edges,
-      flat_label_edges,
-      flat_label_nodes,
-    )
-  let rank_y = position_projection_data.rank_y
-  let cluster_bbox_heights = position_projection_data.cluster_bbox_heights
-  let position_output_maps = position_projection_data.position_output_maps
-  build_position_result_for_positions(
+  build_projection_result_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    use_vnodes_for_xpos,
+    x_base_sizes,
     x_groups,
-    rank_y,
-    position_output_maps,
+    x_cluster_keys,
+    virtual_slack_edges,
+    flat_label_edges,
+    flat_label_nodes,
     flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
-    cluster_bbox_heights,
   )
 }
