@@ -458,6 +458,18 @@ fn build_routing_label_and_tuning_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing padding/head-port metrics output maps computed
+/// padding tuple and collected head metrics without extra transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_padding_and_head_port_metrics_output_for_stage(
+  port_pad_below : Double,
+  port_pad_above : Double,
+  head_port_metrics : HeadPortMetrics,
+) -> DotRoutingPaddingAndHeadPortMetrics {
+  { port_pad_below, port_pad_above, head_port_metrics }
+}
+
+///|
 /// Graphviz parity: port padding and head-port metrics are computed from the
 /// same inputs and in the same order before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -485,7 +497,11 @@ fn build_routing_padding_and_head_port_metrics_for_stage(
       prep.record_orientation,
       enable_complex_tuning,
     )
-  { port_pad_below, port_pad_above, head_port_metrics }
+  build_routing_padding_and_head_port_metrics_output_for_stage(
+    port_pad_below,
+    port_pad_above,
+    head_port_metrics,
+  )
 }
 
 ///|
