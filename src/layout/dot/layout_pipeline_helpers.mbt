@@ -2759,6 +2759,57 @@ fn build_rem_order_creation_sequence(
 }
 
 ///|
+/// Graphviz parity: intercluster node guard marks real endpoints of
+/// intercluster edges with rank span <= 1 for local-order relaxation.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_intercluster_nodes_with_short_span(
+  order_with_clusters : Bool,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  intercluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+) -> Map[String, Bool] {
+  let intercluster_nodes : Map[String, Bool] = Map::new()
+  if !order_with_clusters {
+    return intercluster_nodes
+  }
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    let tail_cluster = match intercluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match intercluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
+    if tail_cluster != head_cluster {
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      let span = if tail_rank <= head_rank {
+        head_rank - tail_rank
+      } else {
+        tail_rank - head_rank
+      }
+      if span <= 1 {
+        intercluster_nodes[tail] = true
+        intercluster_nodes[head] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+  intercluster_nodes
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -3907,42 +3958,14 @@ fn compute_ordering_and_vnodes(
           for name, key in cluster_meta.intercluster_keys {
             rem_cluster_keys[name] = key
           }
-          let intercluster_nodes : Map[String, Bool] = Map::new()
-          if order_with_clusters {
-            let mut edge_idx = 0
-            while edge_idx < edge_tail.length() {
-              let tail = edge_tail[edge_idx]
-              let head = edge_head[edge_idx]
-              let tail_cluster = match cluster_meta.intercluster_keys.get(tail) {
-                Some(value) => value
-                None => ""
-              }
-              let head_cluster = match cluster_meta.intercluster_keys.get(head) {
-                Some(value) => value
-                None => ""
-              }
-              if tail_cluster != head_cluster {
-                let tail_rank = match ranks.get(tail) {
-                  Some(value) => value
-                  None => 0
-                }
-                let head_rank = match ranks.get(head) {
-                  Some(value) => value
-                  None => 0
-                }
-                let span = if tail_rank <= head_rank {
-                  head_rank - tail_rank
-                } else {
-                  tail_rank - head_rank
-                }
-                if span <= 1 {
-                  intercluster_nodes[tail] = true
-                  intercluster_nodes[head] = true
-                }
-              }
-              edge_idx = edge_idx + 1
-            }
-          }
+          let intercluster_nodes =
+            collect_intercluster_nodes_with_short_span(
+              order_with_clusters,
+              edge_tail,
+              edge_head,
+              cluster_meta.intercluster_keys,
+              ranks,
+            )
           // Graphviz parity: ND_clust is the root graph for nodes outside
           // any cluster (mark_lowclusters). Use a non-empty root key so
           // ReMincross can block swaps across cluster boundaries.
