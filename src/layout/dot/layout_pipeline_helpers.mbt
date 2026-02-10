@@ -237,6 +237,15 @@ priv struct XposOrderEdgePortData {
 }
 
 ///|
+priv struct XposFlatLabelAugmentation {
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+  flat_label_edges : Array[ConstraintEdge]
+  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_edge_vnodes : Map[String, String]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7197,6 +7206,71 @@ fn build_x_order_edge_port_data_for_positions(
 
 
 ///|
+/// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
+/// label edges, and vnode cluster-key overlay only on vnode-xpos path.
+/// Do not change behavior without updating fixtures/tests.
+fn build_flat_label_vnode_augmentation_for_positions(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+) -> XposFlatLabelAugmentation {
+  let mut next_x_groups = x_groups
+  let mut flat_label_edges : Array[ConstraintEdge] = []
+  let mut flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
+  let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
+  let next_x_cluster_keys = x_cluster_keys
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in prep.nodes {
+    existing_names[node.name()] = true
+  }
+  for vnode, _ in ordering.vnode_info.vnode_ranks {
+    existing_names[vnode] = true
+  }
+  if use_vnodes_for_xpos {
+    let (
+      updated_groups,
+      label_nodes,
+      label_edge_vnodes,
+      extra_edges,
+    ) = add_flat_label_vnodes(
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      rank_data.ranks,
+      ordering.ordered_groups,
+      rank_heights.nodesep_pt,
+      prep.rankdir,
+      x_base_sizes,
+      ordering.edge_cluster_keys,
+      cluster_meta.cluster_parents,
+      existing_names,
+      ordering.vnode_info,
+      next_x_groups,
+    )
+    next_x_groups = updated_groups
+    flat_label_edges = extra_edges
+    flat_label_nodes = label_nodes
+    flat_label_edge_vnodes = label_edge_vnodes
+    for name, key in ordering.vnode_info.vnode_clusters {
+      next_x_cluster_keys[name] = key
+    }
+  }
+  {
+    x_groups: next_x_groups,
+    x_cluster_keys: next_x_cluster_keys,
+    flat_label_edges,
+    flat_label_nodes,
+    flat_label_edge_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7604,45 +7678,23 @@ fn compute_positions(
       4,
     )
   }
-  let mut flat_label_edges : Array[ConstraintEdge] = []
-  let mut flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
-  let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in prep.nodes {
-    existing_names[node.name()] = true
-  }
-  for vnode, _ in ordering.vnode_info.vnode_ranks {
-    existing_names[vnode] = true
-  }
-  if use_vnodes_for_xpos {
-    let (
-      updated_groups,
-      label_nodes,
-      label_edge_vnodes,
-      extra_edges,
-    ) = add_flat_label_vnodes(
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      rank_data.ranks,
-      ordering.ordered_groups,
-      rank_heights.nodesep_pt,
-      prep.rankdir,
+  let flat_label_augmentation =
+    build_flat_label_vnode_augmentation_for_positions(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      ordering,
+      rank_heights,
+      cluster_meta,
       x_base_sizes,
-      ordering.edge_cluster_keys,
-      cluster_meta.cluster_parents,
-      existing_names,
-      ordering.vnode_info,
       x_groups,
+      x_cluster_keys,
     )
-    x_groups = updated_groups
-    flat_label_edges = extra_edges
-    flat_label_nodes = label_nodes
-    flat_label_edge_vnodes = label_edge_vnodes
-    for name, key in ordering.vnode_info.vnode_clusters {
-      x_cluster_keys[name] = key
-    }
-  }
+  x_groups = flat_label_augmentation.x_groups
+  let x_cluster_keys = flat_label_augmentation.x_cluster_keys
+  let flat_label_edges = flat_label_augmentation.flat_label_edges
+  let flat_label_nodes = flat_label_augmentation.flat_label_nodes
+  let flat_label_edge_vnodes = flat_label_augmentation.flat_label_edge_vnodes
   let rank_pht = rank_heights.rank_pht
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
