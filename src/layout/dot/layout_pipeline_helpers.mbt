@@ -3166,6 +3166,71 @@ fn trace_root_edges_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root reorder edge bundle keeps tail-sequence edge
+/// materialization, optional trace output, and index maps in one stage.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_edge_bundle(
+  root_nlist_order : Array[String],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  root_graph : @cgraph.Graph,
+  root_node_map : Map[String, @cgraph.Node],
+  root_nodes : Array[String],
+  root_ranks : Map[String, Int],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+) {
+  let (
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+  ) =
+    collect_order_edges_for_tail_sequence(
+      root_nlist_order,
+      order_edges_by_tail_root,
+      root_graph,
+      root_node_map,
+    )
+  trace_root_edges_for_cluster_reorder(
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+  )
+  let (root_parents, root_children, root_edge_order) =
+    build_order_edge_indices_and_order(
+      root_nodes,
+      root_edge_tail_out,
+      root_edge_head_out,
+      root_ranks,
+      root_edges_out,
+    )
+  (
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+  )
+}
+
+///|
 /// Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
 /// path and tracing as cluster-phase root bucket ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -3307,25 +3372,17 @@ fn build_cluster_rank_order_for_cluster_reorder(
     root_edge_head_port_x,
     root_edge_tail_port_order,
     root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
   ) =
-    collect_order_edges_for_tail_sequence(
+    build_root_cluster_reorder_edge_bundle(
       root_nlist_order,
       order_edges_by_tail_root,
       root_graph,
       root_node_map,
-    )
-  trace_root_edges_for_cluster_reorder(
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-  )
-  let (root_parents, root_children, root_edge_order) =
-    build_order_edge_indices_and_order(
       root_nodes,
-      root_edge_tail_out,
-      root_edge_head_out,
       root_ranks,
-      root_edges_out,
     )
   let ordered_root = run_root_cluster_reorder_for_cluster_rank_order(
     root_rank_keys,
