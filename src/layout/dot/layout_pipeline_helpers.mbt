@@ -8068,6 +8068,39 @@ fn build_clustered_xpos_reordered_groups(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder uses both geometric port x and
+/// compass/record port-order hints for mincross tie-breaking, same as Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_xpos_reorder_port_hints_for_positions(
+  nodes : Array[@cgraph.Node],
+  ordering : OrderingResult,
+  x_order_sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double], Array[Double], Array[Double]) {
+  let (order_edge_tail_port_x, order_edge_head_port_x) =
+    compute_edge_port_positions(
+      nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      x_order_sizes,
+    )
+  let (order_edge_tail_port_order, order_edge_head_port_order) =
+    compute_edge_port_orders(
+      nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      x_order_sizes,
+    )
+  (
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -8097,24 +8130,18 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
       ordering.vnode_info.edge_vnodes,
       ordering.vnode_info.vnode_ranks,
     )
-    let (order_edge_tail_port_x, order_edge_head_port_x) =
-      compute_edge_port_positions(
-        prep.nodes,
-        ordering.order_edges,
-        ordering.order_edge_tail,
-        ordering.order_edge_head,
-        x_order_sizes,
-      )
     // Graphviz parity: even non-cluster xpos reorder uses compass/record
     // port-order fractions when mincross scoring ties are evaluated.
-    let (order_edge_tail_port_order, order_edge_head_port_order) =
-      compute_edge_port_orders(
-        prep.nodes,
-        ordering.order_edges,
-        ordering.order_edge_tail,
-        ordering.order_edge_head,
-        x_order_sizes,
-      )
+    let (
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    ) = build_noncluster_xpos_reorder_port_hints_for_positions(
+      prep.nodes,
+      ordering,
+      x_order_sizes,
+    )
     let tmp_rank_keys = collect_rank_keys(x_groups)
     reorder_rank_groups(
       tmp_rank_keys,
