@@ -1601,6 +1601,25 @@ fn collect_creation_order(
 }
 
 ///|
+/// Graphviz parity: order-graph tail buckets copy ND_out edge insertion order
+/// for each agfstnode name, with empty lists for nodes without out edges.
+/// Do not change behavior without updating fixtures/tests.
+fn build_edges_by_tail_from_out_order(
+  nodes : Array[@cgraph.Node],
+  edge_out_order : Map[String, Array[Int]],
+) -> Map[String, Array[Int]] {
+  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    match edge_out_order.get(name) {
+      Some(list) => edges_by_tail[name] = list.copy()
+      None => edges_by_tail[name] = []
+    }
+  }
+  edges_by_tail
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1720,14 +1739,8 @@ fn compute_ordering_and_vnodes(
   // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
   let creation_order = collect_creation_order(nodes)
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    match edge_out_order.get(name) {
-      Some(list) => edges_by_tail[name] = list.copy()
-      None => edges_by_tail[name] = []
-    }
-  }
+  let edges_by_tail =
+    build_edges_by_tail_from_out_order(nodes, edge_out_order)
   let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
     build_order_edges_by_tail_graphviz(
       creation_order,
