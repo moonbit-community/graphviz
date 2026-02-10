@@ -245,6 +245,12 @@ priv struct DotRoutingEdgesAndPaddingData {
 }
 
 ///|
+priv struct DotRoutingEdgeSolvePrecomputeData {
+  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics
+  routing_path_context_data : DotRoutingPathContextData
+}
+
+///|
 priv struct DotRoutingSpatialAndTuningData {
   routing_spatial_data : DotRoutingSpatialData
   routing_label_and_tuning_data : DotRoutingLabelAndTuningData
@@ -609,17 +615,16 @@ fn build_routing_edges_from_precomputed_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding substage derives metrics, path
-/// context, and routed edges from spatial+tuning data in fixed order.
+/// Graphviz parity: routing edge solve precompute keeps metric and path-context
+/// derivation in fixed order before routed-edge solve wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_data_for_stage(
-  graph : @cgraph.Graph,
+fn build_routing_edge_solve_precompute_data_for_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
   positions_state : PositionResult,
   routing_spatial_data : DotRoutingSpatialData,
   routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
-) -> DotRoutingEdgesAndPaddingData {
+) -> DotRoutingEdgeSolvePrecomputeData {
   let routing_padding_and_head_port_metrics =
     build_routing_padding_and_head_port_metrics_for_stage(
       prep,
@@ -635,6 +640,29 @@ fn build_routing_edges_and_padding_data_for_stage(
       positions_state,
       routing_spatial_data.cluster_bboxes,
     )
+  { routing_padding_and_head_port_metrics, routing_path_context_data }
+}
+
+///|
+/// Graphviz parity: routing edge/padding substage derives metrics, path
+/// context, and routed edges from spatial+tuning data in fixed order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_and_padding_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+) -> DotRoutingEdgesAndPaddingData {
+  let routing_edge_solve_precompute_data =
+    build_routing_edge_solve_precompute_data_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
+      routing_spatial_data,
+      routing_label_and_tuning_data,
+    )
   let edges_out =
     build_routing_edges_from_precomputed_data_for_stage(
       graph,
@@ -643,12 +671,12 @@ fn build_routing_edges_and_padding_data_for_stage(
       positions_state,
       routing_spatial_data,
       routing_label_and_tuning_data,
-      routing_padding_and_head_port_metrics,
-      routing_path_context_data,
+      routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
+      routing_edge_solve_precompute_data.routing_path_context_data,
     )
   build_routing_edges_and_padding_output_for_stage(
     edges_out,
-    routing_padding_and_head_port_metrics,
+    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
   )
 }
 
