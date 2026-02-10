@@ -4286,6 +4286,58 @@ fn build_noncluster_order_node_order(
 }
 
 ///|
+/// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
+/// edge_out_order and ND_in head order from edge sequence (AGSEQ).
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_graphviz_neighbor_maps(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for i in 0..<nodes.length() {
+    let name = nodes[i].name()
+    graphviz_out_neighbors[name] = []
+    graphviz_in_neighbors[name] = []
+  }
+  for name, list in edge_out_order {
+    let heads : Array[String] = []
+    for edge_idx in list {
+      let head =
+        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+          edges[edge_idx].head().name()
+        }
+      heads.push(head)
+    }
+    graphviz_out_neighbors[name] = heads
+  }
+  let in_entries : Map[String, Array[String]] = Map::new()
+  let mut edge_idx = 0
+  while edge_idx < edges.length() {
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edges[edge_idx].tail().name()
+      }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edges[edge_idx].head().name()
+      }
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+    edge_idx = edge_idx + 1
+  }
+  for head, entries in in_entries {
+    graphviz_in_neighbors[head] = entries
+  }
+  (graphviz_out_neighbors, graphviz_in_neighbors)
+}
+
+///|
 /// Graphviz parity: non-cluster reorder path seeds node order from GD_nlist,
 /// builds Graphviz-style ND_out/ND_in neighbor order, and runs rank reorder
 /// without cluster remapping.
@@ -4327,46 +4379,14 @@ fn run_noncluster_reorder_pass(
       order_edge_head,
       ranks,
     )
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  for i in 0..<nodes.length() {
-    let name = nodes[i].name()
-    graphviz_out_neighbors[name] = []
-    graphviz_in_neighbors[name] = []
-  }
-  for name, list in edge_out_order {
-    let heads : Array[String] = []
-    for edge_idx in list {
-      let head =
-        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-          edges[edge_idx].head().name()
-        }
-      heads.push(head)
-    }
-    graphviz_out_neighbors[name] = heads
-  }
-  // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
-  // fixed head, so preserve edge index order.
-  let in_entries : Map[String, Array[String]] = Map::new()
-  let mut edge_idx = 0
-  while edge_idx < edges.length() {
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edges[edge_idx].tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edges[edge_idx].head().name()
-      }
-    match in_entries.get(head) {
-      Some(list) => list.push(tail)
-      None => in_entries[head] = [tail]
-    }
-    edge_idx = edge_idx + 1
-  }
-  for head, entries in in_entries {
-    graphviz_in_neighbors[head] = entries
-  }
+  let (graphviz_out_neighbors, graphviz_in_neighbors) =
+    build_noncluster_graphviz_neighbor_maps(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+    )
   let ordered_groups =
     reorder_rank_groups(
       rank_keys,
