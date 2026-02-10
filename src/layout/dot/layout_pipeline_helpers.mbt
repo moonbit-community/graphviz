@@ -308,6 +308,12 @@ priv struct XStageSeedAndFlatLabelData {
 }
 
 ///|
+priv struct XStageModeAndSeedData {
+  mode_slack_data : XStageModeAndSlackData
+  seed_flat_label_data : XStageSeedAndFlatLabelData
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -8925,17 +8931,16 @@ fn build_x_stage_output_from_mode_and_seed_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
-/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
-/// Graphviz-aligned order and wiring.
+/// Graphviz parity: x-stage mode/slack and seed/flat-label stages are executed
+/// in fixed order before final x-stage output assembly.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_labels_for_positions(
+fn build_x_stage_mode_and_seed_data_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageWithFlatLabelData {
+) -> XStageModeAndSeedData {
   let mode_slack_data =
     build_x_stage_mode_and_virtual_slack_data_for_positions(
       prep,
@@ -8952,9 +8957,32 @@ fn build_x_stage_with_flat_labels_for_positions(
       ordering,
       mode_slack_data,
     )
+  { mode_slack_data, seed_flat_label_data }
+}
+
+///|
+/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
+/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
+/// Graphviz-aligned order and wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_with_flat_labels_for_positions(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XStageWithFlatLabelData {
+  let x_stage_mode_and_seed_data =
+    build_x_stage_mode_and_seed_data_for_positions(
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+    )
   build_x_stage_output_from_mode_and_seed_data_for_positions(
-    mode_slack_data,
-    seed_flat_label_data,
+    x_stage_mode_and_seed_data.mode_slack_data,
+    x_stage_mode_and_seed_data.seed_flat_label_data,
   )
 }
 
