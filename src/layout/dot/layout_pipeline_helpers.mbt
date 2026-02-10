@@ -5991,6 +5991,35 @@ fn build_ordering_runtime_context_with_tail_constraints(
 }
 
 ///|
+/// Graphviz parity: reorder-setup output object maps precomputed flags,
+/// constraints, class2 payload, and vnode-order keys without extra transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_reorder_setup_output(
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  graphviz_flip : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  class2_data : OrderingClass2Data,
+  gdnlist_order : Array[String],
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> OrderingReorderSetup {
+  {
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    graphviz_flip,
+    flat_rank_constraints,
+    class2_data,
+    gdnlist_order,
+    vnode_order_keys_for_ordering,
+  }
+}
+
+
+///|
 /// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
 /// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
@@ -6070,7 +6099,7 @@ fn build_ordering_reorder_setup(
       ordering_groups_base,
       nlist_order_index,
     )
-  {
+  build_ordering_reorder_setup_output(
     ordering_groups_base,
     base_order_index,
     order_with_vnodes,
@@ -6080,7 +6109,7 @@ fn build_ordering_reorder_setup(
     class2_data,
     gdnlist_order,
     vnode_order_keys_for_ordering,
-  }
+  )
 }
 
 ///|
