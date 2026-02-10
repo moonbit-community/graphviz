@@ -7603,6 +7603,54 @@ fn build_position_output_maps_for_positions(
 }
 
 ///|
+/// Graphviz parity: projection x-solve and output-map assembly consume
+/// precomputed y positions/rank_y without changing solve or mapping order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_output_maps_with_x_solve_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+  y_positions : Map[String, Double],
+  rank_y : Map[Int, Double],
+) -> PositionOutputMaps {
+  let x_positions =
+    compute_x_positions_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      x_cluster_keys,
+      virtual_slack_edges,
+      flat_label_edges,
+    )
+  build_position_output_maps_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    use_vnodes_for_xpos,
+    x_positions,
+    y_positions,
+    rank_y,
+  )
+}
+
+///|
 /// Graphviz parity: position projection stage keeps y-precompute, x solve, and
 /// final output-map assembly wiring identical to Graphviz-aligned pipeline.
 /// Do not change behavior without updating fixtures/tests.
@@ -7634,22 +7682,8 @@ fn build_position_projection_data_for_positions(
   let y_positions = y_position_data.y_positions
   let rank_y = y_position_data.rank_y
   let cluster_bbox_heights = y_position_data.cluster_bbox_heights
-  let x_positions =
-    compute_x_positions_for_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      ordering,
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      x_cluster_keys,
-      virtual_slack_edges,
-      flat_label_edges,
-    )
   let position_output_maps =
-    build_position_output_maps_for_positions(
+    build_position_output_maps_with_x_solve_for_positions(
       graph,
       prep,
       rank_data,
@@ -7657,7 +7691,11 @@ fn build_position_projection_data_for_positions(
       cluster_meta,
       ordering,
       use_vnodes_for_xpos,
-      x_positions,
+      x_base_sizes,
+      x_groups,
+      x_cluster_keys,
+      virtual_slack_edges,
+      flat_label_edges,
       y_positions,
       rank_y,
     )
