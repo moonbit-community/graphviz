@@ -2437,6 +2437,104 @@ fn build_root_groups_base_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
+/// sequence from input order, prioritizes source tails, then rebuilds nlist via
+/// edge creation order while appending any missing root nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_nlist_order_for_cluster_reorder(
+  nlist_order : Array[String],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  root_nodes : Array[String],
+  root_node_map : Map[String, @cgraph.Node],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+) -> Array[String] {
+  let tail_order_root : Array[String] = []
+  let tail_root_seen : Map[String, Bool] = Map::new()
+  for name in nlist_order {
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster != "" {
+      let rank = match ranks.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      if tail_root_seen.get(skel) is None {
+        tail_root_seen[skel] = true
+        tail_order_root.push(skel)
+      }
+    } else if tail_root_seen.get(name) is None {
+      tail_root_seen[name] = true
+      tail_order_root.push(name)
+    }
+  }
+  let root_edge_creation_order : Array[(String, String)] = []
+  for edge in skeleton_edge_creation {
+    root_edge_creation_order.push(edge)
+  }
+  for edge in root_edge_creation {
+    root_edge_creation_order.push(edge)
+  }
+  // Graphviz parity: build_ranks visits source nodes (no incoming edges)
+  // first in GD_nlist order.
+  // Do not change behavior without updating fixtures/tests.
+  let root_has_in : Map[String, Bool] = Map::new()
+  for name in root_nodes {
+    root_has_in[name] = false
+  }
+  for edge in root_edge_creation_order {
+    let (_tail, head) = edge
+    if root_has_in.get(head) is Some(_) {
+      root_has_in[head] = true
+    }
+  }
+  let root_tail_order : Array[String] = []
+  let root_tail_seen : Map[String, Bool] = Map::new()
+  for name in tail_order_root {
+    if root_has_in.get(name) == Some(false) {
+      if root_tail_seen.get(name) is None {
+        root_tail_seen[name] = true
+        root_tail_order.push(name)
+      }
+    }
+  }
+  for name in tail_order_root {
+    if root_tail_seen.get(name) is None {
+      root_tail_seen[name] = true
+      root_tail_order.push(name)
+    }
+  }
+  let root_nlist_full =
+    build_graphviz_nlist_order_from_edges(
+      root_tail_order,
+      root_nodes,
+      root_edge_creation_order,
+      flat_rank_constraints,
+    )
+  let root_nlist_order : Array[String] = []
+  let root_seen : Map[String, Bool] = Map::new()
+  for name in root_nlist_full {
+    if root_node_map.get(name) is Some(_) {
+      root_seen[name] = true
+      root_nlist_order.push(name)
+    }
+  }
+  if root_nlist_order.length() < root_nodes.length() {
+    for name in root_nodes {
+      if root_seen.get(name) is None {
+        root_nlist_order.push(name)
+      }
+    }
+  }
+  root_nlist_order
+}
+
+///|
 /// Graphviz parity: root mincross vnode inputs keep only root-vnodes from
 /// vnode rank buckets and vnode order keys.
 /// Do not change behavior without updating fixtures/tests.
@@ -3794,86 +3892,17 @@ fn compute_ordering_and_vnodes(
         let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
         let (root_graph, root_node_map) =
           build_order_graph_and_nodes("order_root", root_nodes)
-        let tail_order_root : Array[String] = []
-        let tail_root_seen : Map[String, Bool] = Map::new()
-        for name in nlist_order {
-          let cluster = match cluster_meta.cluster_keys.get(name) {
-            Some(value) => value
-            None => ""
-          }
-          if cluster != "" {
-            let rank = match ranks.get(name) {
-              Some(value) => value
-              None => 0
-            }
-            let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-            if tail_root_seen.get(skel) is None {
-              tail_root_seen[skel] = true
-              tail_order_root.push(skel)
-            }
-          } else if tail_root_seen.get(name) is None {
-            tail_root_seen[name] = true
-            tail_order_root.push(name)
-          }
-        }
-        let root_edge_creation_order : Array[(String, String)] = []
-        for edge in skeleton_edge_creation {
-          root_edge_creation_order.push(edge)
-        }
-        for edge in root_edge_creation {
-          root_edge_creation_order.push(edge)
-        }
-        // Graphviz parity: build_ranks visits source nodes (no incoming edges)
-        // first in GD_nlist order.
-        // Do not change behavior without updating fixtures/tests.
-        let root_has_in : Map[String, Bool] = Map::new()
-        for name in root_nodes {
-          root_has_in[name] = false
-        }
-        for edge in root_edge_creation_order {
-          let (_tail, head) = edge
-          if root_has_in.get(head) is Some(_) {
-            root_has_in[head] = true
-          }
-        }
-        let root_tail_order : Array[String] = []
-        let root_tail_seen : Map[String, Bool] = Map::new()
-        for name in tail_order_root {
-          if root_has_in.get(name) == Some(false) {
-            if root_tail_seen.get(name) is None {
-              root_tail_seen[name] = true
-              root_tail_order.push(name)
-            }
-          }
-        }
-        for name in tail_order_root {
-          if root_tail_seen.get(name) is None {
-            root_tail_seen[name] = true
-            root_tail_order.push(name)
-          }
-        }
-        let root_nlist_full =
-          build_graphviz_nlist_order_from_edges(
-            root_tail_order,
+        let root_nlist_order =
+          build_root_nlist_order_for_cluster_reorder(
+            nlist_order,
+            cluster_meta.cluster_keys,
+            ranks,
             root_nodes,
-            root_edge_creation_order,
+            root_node_map,
+            skeleton_edge_creation,
+            root_edge_creation,
             flat_rank_constraints,
           )
-        let root_nlist_order : Array[String] = []
-        let root_seen : Map[String, Bool] = Map::new()
-        for name in root_nlist_full {
-          if root_node_map.get(name) is Some(_) {
-            root_seen[name] = true
-            root_nlist_order.push(name)
-          }
-        }
-        if root_nlist_order.length() < root_nodes.length() {
-          for name in root_nodes {
-            if root_seen.get(name) is None {
-              root_nlist_order.push(name)
-            }
-          }
-        }
         let root_node_order : Map[String, Int] = Map::new()
         let mut root_order_idx = 0
         for name in root_nlist_order {
