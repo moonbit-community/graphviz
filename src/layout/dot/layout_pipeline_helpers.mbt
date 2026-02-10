@@ -274,6 +274,13 @@ priv struct PositionOutputMaps {
 }
 
 ///|
+priv struct PositionBoundaryAndVnodeData {
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  vnode_positions : Map[String, @geom.Point]
+}
+
+///|
 priv struct PositionProjectionData {
   rank_y : Map[Int, Double]
   cluster_bbox_heights : Map[String, (Double, Double)]
@@ -7566,10 +7573,10 @@ fn maybe_adjust_cluster_positions_for_rounding_for_positions(
 }
 
 ///|
-/// Graphviz parity: final output map assembly keeps intercluster alignment,
-/// cluster boundary capture, vnode projection, and rounding adjustment order.
+/// Graphviz parity: intercluster alignment, cluster boundary x capture, and
+/// vnode position projection are executed in fixed order before node map build.
 /// Do not change behavior without updating fixtures/tests.
-fn build_position_output_maps_for_positions(
+fn build_position_boundary_and_vnode_data_for_positions(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -7578,9 +7585,8 @@ fn build_position_output_maps_for_positions(
   ordering : OrderingResult,
   use_vnodes_for_xpos : Bool,
   x_positions : Map[String, Double],
-  y_positions : Map[String, Double],
   rank_y : Map[Int, Double],
-) -> PositionOutputMaps {
+) -> PositionBoundaryAndVnodeData {
   maybe_adjust_intercluster_alignment(
     cluster_meta,
     prep,
@@ -7601,17 +7607,53 @@ fn build_position_output_maps_for_positions(
       x_positions,
       rank_y,
     )
+  { cluster_ln_x, cluster_rn_x, vnode_positions }
+}
+
+///|
+/// Graphviz parity: final output map assembly keeps intercluster alignment,
+/// cluster boundary capture, vnode projection, and rounding adjustment order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_output_maps_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_positions : Map[String, Double],
+  y_positions : Map[String, Double],
+  rank_y : Map[Int, Double],
+) -> PositionOutputMaps {
+  let position_boundary_and_vnode_data =
+    build_position_boundary_and_vnode_data_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      use_vnodes_for_xpos,
+      x_positions,
+      rank_y,
+    )
   let positions =
     build_node_positions_for_output(prep.nodes, x_positions, y_positions)
   maybe_adjust_cluster_positions_for_rounding_for_positions(
     graph,
     cluster_meta,
     positions,
-    vnode_positions,
+    position_boundary_and_vnode_data.vnode_positions,
     ordering,
     prep,
   )
-  { positions, vnode_positions, cluster_ln_x, cluster_rn_x }
+  {
+    positions,
+    vnode_positions: position_boundary_and_vnode_data.vnode_positions,
+    cluster_ln_x: position_boundary_and_vnode_data.cluster_ln_x,
+    cluster_rn_x: position_boundary_and_vnode_data.cluster_rn_x,
+  }
 }
 
 ///|
