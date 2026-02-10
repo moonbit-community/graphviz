@@ -205,6 +205,12 @@ priv struct DotRoutingEdgesAndPaddingData {
 }
 
 ///|
+priv struct DotRoutingSpatialAndTuningData {
+  routing_spatial_data : DotRoutingSpatialData
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -557,15 +563,15 @@ fn build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
-/// + lib/common/routespl.c + lib/pathplan/* (fixtures).
+/// Graphviz parity: routing precompute bundle keeps spatial precompute and
+/// label/tuning gate derivation in fixed order before edge routing.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_dot_routing_stage(
+fn build_routing_spatial_and_tuning_data_for_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_stage : DotRankStage,
   positions_state : PositionResult,
-) -> DotRoutingStage {
+) -> DotRoutingSpatialAndTuningData {
   let routing_spatial_data =
     build_routing_spatial_data_for_stage(
       graph,
@@ -575,17 +581,37 @@ fn compute_dot_routing_stage(
     )
   let routing_label_and_tuning_data =
     build_routing_label_and_tuning_data_for_stage(prep)
+  { routing_spatial_data, routing_label_and_tuning_data }
+}
+
+///|
+/// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
+/// + lib/common/routespl.c + lib/pathplan/* (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_dot_routing_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+) -> DotRoutingStage {
+  let routing_spatial_and_tuning_data =
+    build_routing_spatial_and_tuning_data_for_stage(
+      graph,
+      prep,
+      rank_stage,
+      positions_state,
+    )
   let routing_edges_and_padding_data =
     build_routing_edges_and_padding_data_for_stage(
       graph,
       prep,
       rank_stage,
       positions_state,
-      routing_spatial_data,
-      routing_label_and_tuning_data,
+      routing_spatial_and_tuning_data.routing_spatial_data,
+      routing_spatial_and_tuning_data.routing_label_and_tuning_data,
     )
   build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
-    routing_spatial_data,
+    routing_spatial_and_tuning_data.routing_spatial_data,
     routing_edges_and_padding_data,
   )
 }
