@@ -580,6 +580,35 @@ fn build_dot_routing_stage_result_from_edges_for_stage(
 }
 
 ///|
+/// Graphviz parity: routed-edge solve call consumes path-context, label/tuning,
+/// and head-port metrics precompute without remapping stage inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_from_precomputed_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
+  routing_path_context_data : DotRoutingPathContextData,
+) -> Array[DotLayoutEdge] {
+  build_edges_out_for_routing_stage(
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+    routing_path_context_data.path_groups,
+    routing_spatial_data.label_ports_map,
+    routing_spatial_data.label_ports_raw,
+    routing_label_and_tuning_data.label_edge_counts,
+    routing_padding_and_head_port_metrics.head_port_metrics,
+    routing_path_context_data.routing_context,
+    routing_label_and_tuning_data.enable_complex_tuning,
+  )
+}
+
+///|
 /// Graphviz parity: routing edge/padding substage derives metrics, path
 /// context, and routed edges from spatial+tuning data in fixed order.
 /// Do not change behavior without updating fixtures/tests.
@@ -607,18 +636,15 @@ fn build_routing_edges_and_padding_data_for_stage(
       routing_spatial_data.cluster_bboxes,
     )
   let edges_out =
-    build_edges_out_for_routing_stage(
+    build_routing_edges_from_precomputed_data_for_stage(
       graph,
       prep,
       rank_stage,
       positions_state,
-      routing_path_context_data.path_groups,
-      routing_spatial_data.label_ports_map,
-      routing_spatial_data.label_ports_raw,
-      routing_label_and_tuning_data.label_edge_counts,
-      routing_padding_and_head_port_metrics.head_port_metrics,
-      routing_path_context_data.routing_context,
-      routing_label_and_tuning_data.enable_complex_tuning,
+      routing_spatial_data,
+      routing_label_and_tuning_data,
+      routing_padding_and_head_port_metrics,
+      routing_path_context_data,
     )
   build_routing_edges_and_padding_output_for_stage(
     edges_out,
