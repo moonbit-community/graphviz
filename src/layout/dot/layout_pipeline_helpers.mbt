@@ -137,6 +137,16 @@ priv struct OrderMaterializationData {
 }
 
 ///|
+priv struct OrderingBaseContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -5291,14 +5301,7 @@ fn build_ordering_base_context(
   nodesep_pt : Double,
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
-) -> (
-  Map[String, Bool],
-  Map[String, String],
-  EdgeVnodeInfo,
-  Map[String, Bool],
-  Map[String, Int],
-  Map[String, Bool],
-) {
+) -> OrderingBaseContext {
   let real_nodes : Map[String, Bool] = Map::new()
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -5344,14 +5347,14 @@ fn build_ordering_base_context(
     port_edge_nodes,
     ranks,
   )
-  (
+  {
     real_nodes,
     edge_cluster_keys,
     vnode_info,
     port_edge_nodes,
     local_cluster_order,
     rank_same_constraints,
-  )
+  }
 }
 
 ///|
@@ -5377,14 +5380,7 @@ fn compute_ordering_and_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
-  let (
-    real_nodes,
-    edge_cluster_keys,
-    vnode_info,
-    port_edge_nodes,
-    local_cluster_order,
-    rank_same_constraints,
-  ) =
+  let base_context =
     build_ordering_base_context(
       graph,
       nodes,
@@ -5398,6 +5394,12 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
+  let real_nodes = base_context.real_nodes
+  let edge_cluster_keys = base_context.edge_cluster_keys
+  let vnode_info = base_context.vnode_info
+  let port_edge_nodes = base_context.port_edge_nodes
+  let local_cluster_order = base_context.local_cluster_order
+  let rank_same_constraints = base_context.rank_same_constraints
   let vnode_count = vnode_info.vnode_ranks.length()
   let vnode_tail_constraints =
     if vnode_count > 0 {
