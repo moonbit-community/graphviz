@@ -3147,22 +3147,9 @@ fn compute_ordering_and_vnodes(
           }
         let root_rank_keys = collect_rank_keys(root_groups)
         let root_ranks = build_node_ranks(root_groups)
-        let root_nodes : Array[String] = []
-        for rank in root_rank_keys {
-          let names = match root_groups.get(rank) {
-            Some(list) => list
-            None => []
-          }
-          for name in names {
-            root_nodes.push(name)
-          }
-        }
-        let root_graph =
-          @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="order_root", strict=false)
-        let root_node_map : Map[String, @cgraph.Node] = Map::new()
-        for name in root_nodes {
-          root_node_map[name] = root_graph.node(name)
-        }
+        let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+        let (root_graph, root_node_map) =
+          build_order_graph_and_nodes("order_root", root_nodes)
         let tail_order_root : Array[String] = []
         let tail_root_seen : Map[String, Bool] = Map::new()
         for name in nlist_order {
@@ -3268,35 +3255,19 @@ fn compute_ordering_and_vnodes(
         let root_edge_head_port_x : Array[Double] = []
         let root_edge_tail_port_order : Array[Double] = []
         let root_edge_head_port_order : Array[Double] = []
-        for tail_name in root_nlist_order {
-          let list = match order_edges_by_tail_root.get(tail_name) {
-            Some(value) => value
-            None => []
-          }
-          for entry in list {
-            let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-              entry
-            add_order_edge(
-              root_graph,
-              root_node_map,
-              root_edges_out,
-              root_edge_tail_out,
-              root_edge_head_out,
-              root_edge_tail_port_x,
-              root_edge_head_port_x,
-              root_edge_tail_port_order,
-              root_edge_head_port_order,
-              edge_tail_name,
-              edge_head_name,
-              penalty,
-              constraint,
-              tail_port_x,
-              head_port_x,
-              tail_port_order,
-              head_port_order,
-            )
-          }
-        }
+        append_order_edges_for_tail_sequence(
+          root_nlist_order,
+          order_edges_by_tail_root,
+          root_graph,
+          root_node_map,
+          root_edges_out,
+          root_edge_tail_out,
+          root_edge_head_out,
+          root_edge_tail_port_x,
+          root_edge_head_port_x,
+          root_edge_tail_port_order,
+          root_edge_head_port_order,
+        )
         if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
           let mut edge_idx = 0
           while edge_idx < root_edges_out.length() {
