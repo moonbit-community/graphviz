@@ -2759,6 +2759,38 @@ fn build_rem_order_creation_sequence(
 }
 
 ///|
+/// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
+/// + vnode expansion + fast-graph edge insertion order (decompose parity).
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_nlist_order(
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+  rem_edge_creation : Array[(String, String)],
+  rem_flat_constraints : Map[String, Bool],
+) -> Array[String] {
+  let rem_edge_creation_order : Array[(String, String)] = []
+  for edge in rem_edge_creation {
+    rem_edge_creation_order.push(edge)
+  }
+  let rem_order_creation =
+    build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
+  // Graphviz parity: GD_nlist seeding uses agfstnode order for the
+  // fast graph (reverse creation insertion).
+  let rem_order_creation_rev : Array[String] = []
+  let mut rem_rev_idx = rem_order_creation.length()
+  while rem_rev_idx > 0 {
+    rem_rev_idx = rem_rev_idx - 1
+    rem_order_creation_rev.push(rem_order_creation[rem_rev_idx])
+  }
+  build_graphviz_nlist_order_from_edges(
+    rem_order_creation_rev,
+    rem_order_creation,
+    rem_edge_creation_order,
+    rem_flat_constraints,
+  )
+}
+
+///|
 /// Graphviz parity: ReMincross cluster keys start from intercluster keys,
 /// map empty keys to the root graph key, and assign edge vnodes to the LCA
 /// cluster (mark_lowclusters) for cluster-boundary swap guards.
@@ -4019,25 +4051,11 @@ fn compute_ordering_and_vnodes(
               flat_rank_constraints,
               rem_node_map,
             )
-          let rem_edge_creation_order : Array[(String, String)] = []
-          for edge in rem_edge_creation {
-            rem_edge_creation_order.push(edge)
-          }
-          let rem_order_creation =
-            build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
-          // Graphviz parity: GD_nlist seeding uses agfstnode order for the
-          // fast graph (reverse creation insertion).
-          let rem_order_creation_rev : Array[String] = []
-          let mut rem_rev_idx = rem_order_creation.length()
-          while rem_rev_idx > 0 {
-            rem_rev_idx = rem_rev_idx - 1
-            rem_order_creation_rev.push(rem_order_creation[rem_rev_idx])
-          }
           let rem_nlist_order =
-            build_graphviz_nlist_order_from_edges(
-              rem_order_creation_rev,
-              rem_order_creation,
-              rem_edge_creation_order,
+            build_remincross_nlist_order(
+              creation_order,
+              rem_vnode_creation,
+              rem_edge_creation,
               rem_flat_constraints,
             )
           let rem_node_order =
