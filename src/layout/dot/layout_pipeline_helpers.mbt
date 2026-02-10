@@ -2693,6 +2693,154 @@ fn build_cluster_rank_order_from_root_ordered(
 }
 
 ///|
+/// Graphviz parity: cluster-phase rank-order map is built from root-only
+/// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
+/// reordering in final real-node groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order_for_cluster_reorder(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  graphviz_flip : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  real_nodes : Map[String, Bool],
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> Map[Int, Map[String, Int]] {
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  if !order_with_clusters {
+    return cluster_rank_order
+  }
+  let root_groups =
+    build_root_groups_for_cluster_reorder(
+      order_with_vnodes,
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_meta.cluster_keys,
+      vnode_info.edge_vnodes,
+      vnode_info.vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+    )
+  let root_rank_keys = collect_rank_keys(root_groups)
+  let root_ranks = build_node_ranks(root_groups)
+  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let (root_graph, root_node_map) =
+    build_order_graph_and_nodes("order_root", root_nodes)
+  let root_nlist_order =
+    build_root_nlist_order_for_cluster_reorder(
+      nlist_order,
+      cluster_meta.cluster_keys,
+      ranks,
+      root_nodes,
+      root_node_map,
+      skeleton_edge_creation,
+      root_edge_creation,
+      flat_rank_constraints,
+    )
+  let root_node_order =
+    build_order_node_order_from_nlist_and_groups(
+      root_nlist_order,
+      root_node_map,
+      root_groups,
+    )
+  let (
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+  ) =
+    collect_order_edges_for_tail_sequence(
+      root_nlist_order,
+      order_edges_by_tail_root,
+      root_graph,
+      root_node_map,
+    )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let mut edge_idx = 0
+    while edge_idx < root_edges_out.length() {
+      let tail = root_edge_tail_out[edge_idx]
+      let head = root_edge_head_out[edge_idx]
+      let pen = edge_xpenalty(root_edges_out[edge_idx])
+      println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
+      edge_idx = edge_idx + 1
+    }
+  }
+  let (root_parents, root_children, root_edge_order) =
+    build_order_edge_indices_and_order(
+      root_nodes,
+      root_edge_tail_out,
+      root_edge_head_out,
+      root_ranks,
+      root_edges_out,
+    )
+  let ordered_root = reorder_rank_groups(
+    root_rank_keys,
+    root_groups,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    order_cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    root_edge_order,
+    root_node_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    Map::new(),
+    order_cluster_skeleton,
+    cluster_meta.flat_constraints,
+    graphviz_flip=graphviz_flip,
+  )
+  dot_trace_groups("order_root", ordered_root)
+  let root_cluster_rank_order =
+    build_cluster_rank_order_from_root_ordered(
+      root_rank_keys,
+      ordered_root,
+      order_cluster_skeleton,
+      order_cluster_keys,
+      real_nodes,
+    )
+  for rank, order_map in root_cluster_rank_order {
+    cluster_rank_order[rank] = order_map
+  }
+  cluster_rank_order
+}
+
+///|
 /// Graphviz parity: final rank groups drop non-real nodes after root ordering,
 /// preserving rank iteration order and per-rank sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -4038,118 +4186,34 @@ fn compute_ordering_and_vnodes(
       if order_with_vnodes {
         ordered_with_vnodes = ordered
       }
-      let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
-      if order_with_clusters {
-        let root_groups =
-          build_root_groups_for_cluster_reorder(
-            order_with_vnodes,
-            order_rank_keys,
-            order_groups_for_mincross,
-            order_cluster_keys,
-            order_cluster_skeleton,
-            edges,
-            edge_tail,
-            edge_head,
-            cluster_meta.cluster_keys,
-            vnode_info.edge_vnodes,
-            vnode_info.vnodes_by_rank,
-            vnode_order_keys_for_ordering,
-          )
-        let root_rank_keys = collect_rank_keys(root_groups)
-        let root_ranks = build_node_ranks(root_groups)
-        let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-        let (root_graph, root_node_map) =
-          build_order_graph_and_nodes("order_root", root_nodes)
-        let root_nlist_order =
-          build_root_nlist_order_for_cluster_reorder(
-            nlist_order,
-            cluster_meta.cluster_keys,
-            ranks,
-            root_nodes,
-            root_node_map,
-            skeleton_edge_creation,
-            root_edge_creation,
-            flat_rank_constraints,
-          )
-        let root_node_order =
-          build_order_node_order_from_nlist_and_groups(
-            root_nlist_order,
-            root_node_map,
-            root_groups,
-          )
-        let (
-          root_edges_out,
-          root_edge_tail_out,
-          root_edge_head_out,
-          root_edge_tail_port_x,
-          root_edge_head_port_x,
-          root_edge_tail_port_order,
-          root_edge_head_port_order,
-        ) =
-          collect_order_edges_for_tail_sequence(
-            root_nlist_order,
-            order_edges_by_tail_root,
-            root_graph,
-            root_node_map,
-          )
-        if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-          let mut edge_idx = 0
-          while edge_idx < root_edges_out.length() {
-            let tail = root_edge_tail_out[edge_idx]
-            let head = root_edge_head_out[edge_idx]
-            let pen = edge_xpenalty(root_edges_out[edge_idx])
-            println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
-            edge_idx = edge_idx + 1
-          }
-        }
-        let (root_parents, root_children, root_edge_order) =
-          build_order_edge_indices_and_order(
-            root_nodes,
-            root_edge_tail_out,
-            root_edge_head_out,
-            root_ranks,
-            root_edges_out,
-          )
-        let ordered_root = reorder_rank_groups(
-          root_rank_keys,
-          root_groups,
-          root_edges_out,
-          root_edge_tail_out,
-          root_edge_head_out,
-          root_edge_tail_port_x,
-          root_edge_head_port_x,
-          root_edge_tail_port_order,
-          root_edge_head_port_order,
-          root_parents,
-          root_children,
+      let cluster_rank_order =
+        build_cluster_rank_order_for_cluster_reorder(
+          order_with_clusters,
+          order_with_vnodes,
+          graphviz_flip,
+          edges,
+          edge_tail,
+          edge_head,
+          nlist_order,
+          ranks,
+          order_rank_keys,
+          order_groups_for_mincross,
           order_cluster_keys,
-          cluster_meta.rank_same_groups,
-          cluster_meta.rank_same_order,
-          root_edge_order,
-          root_node_order,
+          order_cluster_skeleton,
+          order_edges_by_tail_root,
+          skeleton_edge_creation,
+          root_edge_creation,
+          flat_rank_constraints,
+          cluster_meta,
+          vnode_info,
+          vnode_order_keys_for_ordering,
+          real_nodes,
           order_sizes_out,
           nodesep_pt,
           has_edge_labels,
           port_order_positions,
           port_order_contrib,
-          Map::new(),
-          order_cluster_skeleton,
-          cluster_meta.flat_constraints,
-          graphviz_flip=graphviz_flip,
         )
-        dot_trace_groups("order_root", ordered_root)
-        let root_cluster_rank_order =
-          build_cluster_rank_order_from_root_ordered(
-            root_rank_keys,
-            ordered_root,
-            order_cluster_skeleton,
-            order_cluster_keys,
-            real_nodes,
-          )
-        for rank, order_map in root_cluster_rank_order {
-          cluster_rank_order[rank] = order_map
-        }
-      }
       let cleaned_groups =
         collect_real_only_rank_groups(order_rank_keys, ordered, real_nodes)
       dot_trace_groups("cleaned_groups_pre", cleaned_groups)
