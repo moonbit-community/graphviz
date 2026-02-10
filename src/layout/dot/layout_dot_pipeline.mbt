@@ -230,6 +230,53 @@ fn build_routing_padding_and_head_port_metrics_for_stage(
 }
 
 ///|
+/// Graphviz parity: edge routing call preserves Graphviz-aligned argument
+/// mapping, including layout rankdir override and path-group/vnode wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_edges_out_for_routing_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  path_groups : Map[Int, Array[String]],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+  label_edge_counts : Map[String, Int],
+  head_port_metrics : HeadPortMetrics,
+  routing_context : RoutingContext,
+  enable_complex_tuning : Bool,
+) -> Array[DotLayoutEdge] {
+  let layout_rankdir = RankDir::TB
+  route_edges(
+    graph,
+    prep.edges,
+    rank_stage.rank_data.ranks,
+    prep.sizes,
+    prep.record_orientation,
+    prep.rankdir,
+    layout_rankdir,
+    prep.splines,
+    positions_state.positions,
+    positions_state.vnode_positions,
+    rank_stage.ordering.vnode_info,
+    positions_state.rank_y,
+    positions_state.rank_ht1,
+    positions_state.rank_ht2,
+    path_groups,
+    rank_stage.rank_heights.nodesep_pt,
+    rank_stage.rank_heights.ranksep_pt,
+    rank_stage.cluster_meta.has_clusters,
+    label_ports_map,
+    label_ports_raw,
+    label_edge_counts,
+    head_port_metrics,
+    positions_state.flat_label_edge_vnodes,
+    routing_context,
+    enable_complex_tuning,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -285,32 +332,17 @@ fn compute_dot_routing_stage(
       path_groups,
       cluster_bboxes,
     )
-  let layout_rankdir = RankDir::TB
   let edges_out =
-    route_edges(
+    build_edges_out_for_routing_stage(
       graph,
-      prep.edges,
-      rank_stage.rank_data.ranks,
-      prep.sizes,
-      prep.record_orientation,
-      prep.rankdir,
-      layout_rankdir,
-      prep.splines,
-      positions_state.positions,
-      positions_state.vnode_positions,
-      rank_stage.ordering.vnode_info,
-      positions_state.rank_y,
-      positions_state.rank_ht1,
-      positions_state.rank_ht2,
+      prep,
+      rank_stage,
+      positions_state,
       path_groups,
-      rank_stage.rank_heights.nodesep_pt,
-      rank_stage.rank_heights.ranksep_pt,
-      rank_stage.cluster_meta.has_clusters,
       label_ports_map,
       label_ports_raw,
       label_edge_counts,
       head_port_metrics,
-      positions_state.flat_label_edge_vnodes,
       routing_context,
       enable_complex_tuning,
     )
