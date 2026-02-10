@@ -1429,6 +1429,48 @@ fn append_cluster_skeleton_edges(
 }
 
 ///|
+/// Graphviz parity: class2 order_creation starts with cluster skeletons, then
+/// agfstnode real nodes interleaved with edge-vnodes per tail.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_creation_with_vnodes(
+  cluster_skeleton_creation : Array[String],
+  creation_order : Array[String],
+  vnode_creation_by_tail : Map[String, Array[String]],
+) -> (Array[String], Array[String]) {
+  let order_creation : Array[String] = []
+  let order_seen : Map[String, Bool] = Map::new()
+  for name in cluster_skeleton_creation {
+    if order_seen.get(name) is None {
+      order_seen[name] = true
+      order_creation.push(name)
+    }
+  }
+  for tail_name in creation_order {
+    if order_seen.get(tail_name) is None {
+      order_seen[tail_name] = true
+      order_creation.push(tail_name)
+    }
+    let vnodes = match vnode_creation_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for vnode in vnodes {
+      if order_seen.get(vnode) is None {
+        order_seen[vnode] = true
+        order_creation.push(vnode)
+      }
+    }
+  }
+  let vnode_creation_order : Array[String] = []
+  for name in order_creation {
+    if name.has_prefix(EDGE_VNODE_PREFIX) {
+      vnode_creation_order.push(name)
+    }
+  }
+  (order_creation, vnode_creation_order)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1697,38 +1739,14 @@ fn compute_ordering_and_vnodes(
   for edge in order_edge_creation {
     edge_creation_order.push(edge)
   }
-  let order_creation : Array[String] = []
-  let order_seen : Map[String, Bool] = Map::new()
   // Graphviz parity: class2 creates cluster skeletons first, then interleaves
   // real nodes with their edge vnodes in agfstnode order.
-  for name in cluster_skeleton_creation {
-    if order_seen.get(name) is None {
-      order_seen[name] = true
-      order_creation.push(name)
-    }
-  }
-  for tail_name in creation_order {
-    if order_seen.get(tail_name) is None {
-      order_seen[tail_name] = true
-      order_creation.push(tail_name)
-    }
-    let vnodes = match vnode_creation_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for vnode in vnodes {
-      if order_seen.get(vnode) is None {
-        order_seen[vnode] = true
-        order_creation.push(vnode)
-      }
-    }
-  }
-  let vnode_creation_order : Array[String] = []
-  for name in order_creation {
-    if name.has_prefix(EDGE_VNODE_PREFIX) {
-      vnode_creation_order.push(name)
-    }
-  }
+  let (order_creation, vnode_creation_order) =
+    build_order_creation_with_vnodes(
+      cluster_skeleton_creation,
+      creation_order,
+      vnode_creation_by_tail,
+    )
   // Graphviz parity: decompose DFS starts from agfstnode (creation) order
   // regardless of rankdir flip.
   // Do not change behavior without updating fixtures/tests.
