@@ -446,6 +446,17 @@ fn build_routing_node_and_port_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing label/tuning output object maps label-edge counts
+/// and complex-tuning gate values without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_label_and_tuning_output_for_stage(
+  label_edge_counts : Map[String, Int],
+  enable_complex_tuning : Bool,
+) -> DotRoutingLabelAndTuningData {
+  { label_edge_counts, enable_complex_tuning }
+}
+
+///|
 /// Graphviz parity: label-edge counts and complex-tuning gate are read before
 /// routing metric derivation and spline routing, without remapping.
 /// Do not change behavior without updating fixtures/tests.
@@ -454,7 +465,10 @@ fn build_routing_label_and_tuning_data_for_stage(
 ) -> DotRoutingLabelAndTuningData {
   let label_edge_counts = build_label_edge_counts(prep.edges)
   let enable_complex_tuning = complex_tuning_enabled()
-  { label_edge_counts, enable_complex_tuning }
+  build_routing_label_and_tuning_output_for_stage(
+    label_edge_counts,
+    enable_complex_tuning,
+  )
 }
 
 ///|
