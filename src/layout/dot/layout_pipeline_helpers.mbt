@@ -5812,6 +5812,29 @@ fn build_port_edge_nodes_for_ordering_base_context(
 }
 
 ///|
+/// Graphviz parity: ordering base-context output object maps precomputed node,
+/// cluster, vnode, and rank-same artifacts without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_base_context_output(
+  real_nodes : Map[String, Bool],
+  edge_cluster_keys : Map[String, String],
+  vnode_info : EdgeVnodeInfo,
+  port_edge_nodes : Map[String, Bool],
+  local_cluster_order : Map[String, Int],
+  rank_same_constraints : Map[String, Bool],
+) -> OrderingBaseContext {
+  {
+    real_nodes,
+    edge_cluster_keys,
+    vnode_info,
+    port_edge_nodes,
+    local_cluster_order,
+    rank_same_constraints,
+  }
+}
+
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5864,14 +5887,14 @@ fn build_ordering_base_context(
     port_edge_nodes,
     ranks,
   )
-  {
+  build_ordering_base_context_output(
     real_nodes,
     edge_cluster_keys,
     vnode_info,
     port_edge_nodes,
     local_cluster_order,
     rank_same_constraints,
-  }
+  )
 }
 
 ///|
