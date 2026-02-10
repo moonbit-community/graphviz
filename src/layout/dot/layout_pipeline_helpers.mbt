@@ -8207,6 +8207,37 @@ fn maybe_apply_xpos_reorder_for_positions(
 }
 
 ///|
+/// Graphviz parity: transpose cleanup performs two limited passes in fixed
+/// order (forward then reverse), matching Graphviz fixture behavior.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_xpos_transpose_cleanup_passes(
+  tmp_rank_keys : Array[Int],
+  x_groups : Map[Int, Array[String]],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  tmp_ranks : Map[String, Int],
+) -> Unit {
+  let _ = transpose_rank_groups_limited(
+    tmp_rank_keys,
+    x_groups,
+    parents,
+    children,
+    tmp_ranks,
+    false,
+    4,
+  )
+  let _ = transpose_rank_groups_limited(
+    tmp_rank_keys,
+    x_groups,
+    parents,
+    children,
+    tmp_ranks,
+    true,
+    4,
+  )
+}
+
+///|
 /// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
@@ -8233,23 +8264,12 @@ fn maybe_apply_xpos_transpose_cleanup(
     )
     let tmp_rank_keys = collect_rank_keys(x_groups)
     let tmp_ranks = build_node_ranks(x_groups)
-    let _ = transpose_rank_groups_limited(
+    apply_xpos_transpose_cleanup_passes(
       tmp_rank_keys,
       x_groups,
       parents,
       children,
       tmp_ranks,
-      false,
-      4,
-    )
-    let _ = transpose_rank_groups_limited(
-      tmp_rank_keys,
-      x_groups,
-      parents,
-      children,
-      tmp_ranks,
-      true,
-      4,
     )
   }
 }
