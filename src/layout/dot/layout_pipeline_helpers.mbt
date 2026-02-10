@@ -9050,6 +9050,42 @@ fn maybe_apply_xpos_transpose_cleanup(
 }
 
 ///|
+/// Graphviz parity: final projection precompute call uses x-stage projection
+/// inputs unchanged before result-object assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_data_for_projection_result_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+) -> PositionProjectionData {
+  build_position_projection_data_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    use_vnodes_for_xpos,
+    x_base_sizes,
+    x_groups,
+    x_cluster_keys,
+    virtual_slack_edges,
+    flat_label_edges,
+    flat_label_nodes,
+  )
+}
+
+///|
 /// Graphviz parity: final projection stage in compute_positions keeps y/x solve
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -9072,7 +9108,7 @@ fn build_projection_result_for_positions(
   rank_ht2 : Map[Int, Double],
 ) -> PositionResult {
   let position_projection_data =
-    build_position_projection_data_for_positions(
+    build_projection_data_for_projection_result_for_positions(
       graph,
       prep,
       rank_data,
