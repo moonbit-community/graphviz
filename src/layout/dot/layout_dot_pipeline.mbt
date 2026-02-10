@@ -198,6 +198,13 @@ priv struct DotRoutingSpatialData {
 }
 
 ///|
+priv struct DotRoutingEdgesAndPaddingData {
+  edges_out : Array[DotLayoutEdge]
+  port_pad_below : Double
+  port_pad_above : Double
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -464,6 +471,54 @@ fn build_dot_routing_stage_result_from_edges_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing edge/padding substage derives metrics, path
+/// context, and routed edges from spatial+tuning data in fixed order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_and_padding_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+) -> DotRoutingEdgesAndPaddingData {
+  let routing_padding_and_head_port_metrics =
+    build_routing_padding_and_head_port_metrics_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
+      routing_spatial_data.label_ports_map,
+      routing_label_and_tuning_data.enable_complex_tuning,
+    )
+  let routing_path_context_data =
+    build_routing_path_context_data_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
+      routing_spatial_data.cluster_bboxes,
+    )
+  let edges_out =
+    build_edges_out_for_routing_stage(
+      graph,
+      prep,
+      rank_stage,
+      positions_state,
+      routing_path_context_data.path_groups,
+      routing_spatial_data.label_ports_map,
+      routing_spatial_data.label_ports_raw,
+      routing_label_and_tuning_data.label_edge_counts,
+      routing_padding_and_head_port_metrics.head_port_metrics,
+      routing_path_context_data.routing_context,
+      routing_label_and_tuning_data.enable_complex_tuning,
+    )
+  {
+    edges_out,
+    port_pad_below: routing_padding_and_head_port_metrics.port_pad_below,
+    port_pad_above: routing_padding_and_head_port_metrics.port_pad_above,
+  }
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -480,56 +535,21 @@ fn compute_dot_routing_stage(
       rank_stage,
       positions_state,
     )
-  let nodes_out = routing_spatial_data.nodes_out
-  let label_ports_map = routing_spatial_data.label_ports_map
-  let label_ports_raw = routing_spatial_data.label_ports_raw
-  let cluster_bboxes = routing_spatial_data.cluster_bboxes
   let routing_label_and_tuning_data =
     build_routing_label_and_tuning_data_for_stage(prep)
-  let label_edge_counts = routing_label_and_tuning_data.label_edge_counts
-  let enable_complex_tuning =
-    routing_label_and_tuning_data.enable_complex_tuning
-  let routing_padding_and_head_port_metrics =
-    build_routing_padding_and_head_port_metrics_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      label_ports_map,
-      enable_complex_tuning,
-    )
-  let port_pad_below =
-    routing_padding_and_head_port_metrics.port_pad_below
-  let port_pad_above =
-    routing_padding_and_head_port_metrics.port_pad_above
-  let head_port_metrics =
-    routing_padding_and_head_port_metrics.head_port_metrics
-  let routing_path_context_data =
-    build_routing_path_context_data_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      cluster_bboxes,
-    )
-  let path_groups = routing_path_context_data.path_groups
-  let routing_context = routing_path_context_data.routing_context
-  let edges_out =
-    build_edges_out_for_routing_stage(
+  let routing_edges_and_padding_data =
+    build_routing_edges_and_padding_data_for_stage(
       graph,
       prep,
       rank_stage,
       positions_state,
-      path_groups,
-      label_ports_map,
-      label_ports_raw,
-      label_edge_counts,
-      head_port_metrics,
-      routing_context,
-      enable_complex_tuning,
+      routing_spatial_data,
+      routing_label_and_tuning_data,
     )
   build_dot_routing_stage_result_from_edges_for_stage(
-    nodes_out,
-    edges_out,
-    port_pad_below,
-    port_pad_above,
+    routing_spatial_data.nodes_out,
+    routing_edges_and_padding_data.edges_out,
+    routing_edges_and_padding_data.port_pad_below,
+    routing_edges_and_padding_data.port_pad_above,
   )
 }
