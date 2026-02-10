@@ -358,6 +358,12 @@ priv struct XposTransposeCleanupInputs {
 }
 
 ///|
+priv struct PositionRankHeightMaps {
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -8989,6 +8995,16 @@ fn build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
 }
 
 ///|
+/// Graphviz parity: projection handoff rank-height maps are sourced directly
+/// from rank_heights and forwarded unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_rank_height_maps_for_projection_for_positions(
+  rank_heights : RankHeights,
+) -> PositionRankHeightMaps {
+  { rank_ht1: rank_heights.rank_ht1, rank_ht2: rank_heights.rank_ht2 }
+}
+
+///|
 /// Graphviz parity: projection handoff from x-stage bundle keeps field-to-parameter
 /// wiring and rank-height map sourcing unchanged before final projection stage.
 /// Do not change behavior without updating fixtures/tests.
@@ -9001,6 +9017,8 @@ fn build_projection_result_from_x_stage_data_for_positions(
   ordering : OrderingResult,
   x_stage_data : XStageWithFlatLabelData,
 ) -> PositionResult {
+  let projection_rank_height_maps =
+    build_position_rank_height_maps_for_projection_for_positions(rank_heights)
   build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
     graph,
     prep,
@@ -9009,8 +9027,8 @@ fn build_projection_result_from_x_stage_data_for_positions(
     cluster_meta,
     ordering,
     x_stage_data,
-    rank_heights.rank_ht1,
-    rank_heights.rank_ht2,
+    projection_rank_height_maps.rank_ht1,
+    projection_rank_height_maps.rank_ht2,
   )
 }
 
