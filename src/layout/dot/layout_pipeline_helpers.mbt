@@ -1768,6 +1768,27 @@ fn build_reverse_creation_order_from_nlist(
 }
 
 ///|
+/// Graphviz parity: order graph cluster-key map starts from real-node keys and
+/// appends vnode cluster keys only when vnode ordering is enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_cluster_keys_for_order_graph(
+  cluster_keys : Map[String, String],
+  order_with_vnodes : Bool,
+  vnode_clusters : Map[String, String],
+) -> Map[String, String] {
+  let order_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_keys {
+    order_cluster_keys[name] = key
+  }
+  if order_with_vnodes {
+    for name, key in vnode_clusters {
+      order_cluster_keys[name] = key
+    }
+  }
+  order_cluster_keys
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2093,15 +2114,12 @@ fn compute_ordering_and_vnodes(
           order_with_vnodes,
           vnode_info.vnode_sizes,
         )
-      let order_cluster_keys : Map[String, String] = Map::new()
-      for name, key in cluster_meta.cluster_keys {
-        order_cluster_keys[name] = key
-      }
-      if order_with_vnodes {
-        for name, key in vnode_info.vnode_clusters {
-          order_cluster_keys[name] = key
-        }
-      }
+      let order_cluster_keys =
+        build_order_cluster_keys_for_order_graph(
+          cluster_meta.cluster_keys,
+          order_with_vnodes,
+          vnode_info.vnode_clusters,
+        )
       let order_cluster_skeleton : Map[String, Bool] = Map::new()
       if order_with_clusters {
         // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
