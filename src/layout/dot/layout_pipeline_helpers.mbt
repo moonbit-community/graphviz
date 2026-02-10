@@ -7271,6 +7271,54 @@ fn build_flat_label_vnode_augmentation_for_positions(
 }
 
 ///|
+/// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
+/// mode after reorder_rank_groups, and mutates x_groups in-place.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_apply_xpos_transpose_cleanup(
+  xpos_reorder_enabled : Bool,
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  cluster_meta : ClusterMetadata,
+  nodes : Array[@cgraph.Node],
+  ordering : OrderingResult,
+  ranks : Map[String, Int],
+  x_groups : Map[Int, Array[String]],
+) -> Unit {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
+    !cluster_meta.ordering_set {
+    let (parents, children) = build_edge_index_for_order_with_vnodes(
+      nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      ranks,
+      ordering.vnode_info.edge_vnodes,
+      ordering.vnode_info.vnode_ranks,
+    )
+    let tmp_rank_keys = collect_rank_keys(x_groups)
+    let tmp_ranks = build_node_ranks(x_groups)
+    let _ = transpose_rank_groups_limited(
+      tmp_rank_keys,
+      x_groups,
+      parents,
+      children,
+      tmp_ranks,
+      false,
+      4,
+    )
+    let _ = transpose_rank_groups_limited(
+      tmp_rank_keys,
+      x_groups,
+      parents,
+      children,
+      tmp_ranks,
+      true,
+      4,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7646,38 +7694,16 @@ fn compute_positions(
     )
   }
   dot_trace_groups("x-groups", x_groups)
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
-    let (parents, children) = build_edge_index_for_order_with_vnodes(
-      prep.nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      rank_data.ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
-    )
-    let tmp_rank_keys = collect_rank_keys(x_groups)
-    let tmp_ranks = build_node_ranks(x_groups)
-    let _ = transpose_rank_groups_limited(
-      tmp_rank_keys,
-      x_groups,
-      parents,
-      children,
-      tmp_ranks,
-      false,
-      4,
-    )
-    let _ = transpose_rank_groups_limited(
-      tmp_rank_keys,
-      x_groups,
-      parents,
-      children,
-      tmp_ranks,
-      true,
-      4,
-    )
-  }
+  maybe_apply_xpos_transpose_cleanup(
+    xpos_reorder_enabled,
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    cluster_meta,
+    prep.nodes,
+    ordering,
+    rank_data.ranks,
+    x_groups,
+  )
   let flat_label_augmentation =
     build_flat_label_vnode_augmentation_for_positions(
       use_vnodes_for_xpos,
