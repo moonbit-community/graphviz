@@ -5633,6 +5633,22 @@ fn build_materialized_order_edges_and_neighbors(
 }
 
 ///|
+/// Graphviz parity: root+cluster build_ranks stage output preserves root
+/// mincross groups and vnode-augmented ordering groups unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_and_cluster_build_ranks_stage_output(
+  order_groups_for_mincross : Map[Int, Array[String]],
+  ordered : Map[Int, Array[String]],
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+) -> OrderRootClusterStageData {
+  {
+    order_groups_for_mincross,
+    ordered,
+    ordered_with_vnodes: next_ordered_with_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -5749,11 +5765,11 @@ fn run_root_and_cluster_build_ranks_stage(
       graphviz_flip,
       ordered_with_vnodes,
     )
-  {
+  build_root_and_cluster_build_ranks_stage_output(
     order_groups_for_mincross,
     ordered,
-    ordered_with_vnodes: next_ordered_with_vnodes,
-  }
+    next_ordered_with_vnodes,
+  )
 }
 
 ///|
