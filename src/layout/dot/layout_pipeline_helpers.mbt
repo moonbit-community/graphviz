@@ -8431,6 +8431,32 @@ fn build_xpos_transpose_cleanup_inputs_for_positions(
 }
 
 ///|
+/// Graphviz parity: transpose cleanup apply step preserves input derivation
+/// and fixed two-pass execution order used by Graphviz-aligned fixtures.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_xpos_transpose_cleanup_for_positions(
+  nodes : Array[@cgraph.Node],
+  ordering : OrderingResult,
+  ranks : Map[String, Int],
+  x_groups : Map[Int, Array[String]],
+) -> Unit {
+  let (parents, children, tmp_rank_keys, tmp_ranks) =
+    build_xpos_transpose_cleanup_inputs_for_positions(
+      nodes,
+      ordering,
+      ranks,
+      x_groups,
+    )
+  apply_xpos_transpose_cleanup_passes(
+    tmp_rank_keys,
+    x_groups,
+    parents,
+    children,
+    tmp_ranks,
+  )
+}
+
+///|
 /// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
@@ -8450,19 +8476,11 @@ fn maybe_apply_xpos_transpose_cleanup(
     allow_xpos_reorder,
     cluster_meta,
   ) {
-    let (parents, children, tmp_rank_keys, tmp_ranks) =
-      build_xpos_transpose_cleanup_inputs_for_positions(
-        nodes,
-        ordering,
-        ranks,
-        x_groups,
-      )
-    apply_xpos_transpose_cleanup_passes(
-      tmp_rank_keys,
+    apply_xpos_transpose_cleanup_for_positions(
+      nodes,
+      ordering,
+      ranks,
       x_groups,
-      parents,
-      children,
-      tmp_ranks,
     )
   }
 }
