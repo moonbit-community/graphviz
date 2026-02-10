@@ -6898,6 +6898,59 @@ fn build_xpos_computation_input(
 }
 
 ///|
+/// Graphviz parity: x-position stage must use identical xpos input assembly,
+/// solver invocation, and trace points as Graphviz-aligned pipeline order.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_x_positions_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+) -> Map[String, Double] {
+  let xpos_input =
+    build_xpos_computation_input(
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      ordering,
+      virtual_slack_edges,
+    )
+  let x_positions = compute_x_positions(
+    graph,
+    prep.nodes,
+    prep.edges,
+    rank_data.edge_tail,
+    rank_data.edge_head,
+    rank_data.edge_out_order,
+    ordering.nlist_order,
+    ordering.gdnlist_order,
+    xpos_input.x_ranks,
+    xpos_input.x_rank_keys,
+    x_groups,
+    xpos_input.x_sizes,
+    prep.output_sizes,
+    x_cluster_keys,
+    rank_heights.nodesep_pt,
+    prep.has_edge_labels,
+    xpos_input.x_extra_nodes,
+    flat_label_edges,
+    xpos_input.x_edge_vnodes,
+    xpos_input.x_slack_edges,
+  )
+  dot_trace("layout_dot: x positions computed")
+  dot_trace_positions("xpos", x_positions)
+  x_positions
+}
+
+
+///|
 /// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
 /// and these maxima must feed y-rank placement exactly as in Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -8014,38 +8067,20 @@ fn compute_positions(
       cluster_bbox_heights,
       y_all_ranks,
     )
-  let xpos_input =
-    build_xpos_computation_input(
+  let x_positions =
+    compute_x_positions_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
       use_vnodes_for_xpos,
       x_base_sizes,
       x_groups,
-      ordering,
+      x_cluster_keys,
       virtual_slack_edges,
+      flat_label_edges,
     )
-  let x_positions = compute_x_positions(
-    graph,
-    prep.nodes,
-    prep.edges,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_data.edge_out_order,
-    ordering.nlist_order,
-    ordering.gdnlist_order,
-    xpos_input.x_ranks,
-    xpos_input.x_rank_keys,
-    x_groups,
-    xpos_input.x_sizes,
-    prep.output_sizes,
-    x_cluster_keys,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
-    xpos_input.x_extra_nodes,
-    flat_label_edges,
-    xpos_input.x_edge_vnodes,
-    xpos_input.x_slack_edges,
-  )
-  dot_trace("layout_dot: x positions computed")
-  dot_trace_positions("xpos", x_positions)
   maybe_adjust_intercluster_alignment(
     cluster_meta,
     prep,
