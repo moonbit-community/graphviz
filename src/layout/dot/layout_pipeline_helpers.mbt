@@ -2887,6 +2887,32 @@ fn collect_intercluster_nodes_with_short_span(
 }
 
 ///|
+/// Graphviz parity: ReMincross node-order seeding follows GD_nlist order and
+/// fills missing nodes from current rank-group index.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_node_order(
+  rem_nlist_order : Array[String],
+  rem_node_map : Map[String, @cgraph.Node],
+  rem_groups : Map[Int, Array[String]],
+) -> Map[String, Int] {
+  let rem_node_order : Map[String, Int] = Map::new()
+  let mut rem_node_idx = 0
+  for name in rem_nlist_order {
+    if rem_node_map.get(name) is Some(_) {
+      rem_node_order[name] = rem_node_idx
+      rem_node_idx = rem_node_idx + 1
+    }
+  }
+  let rem_order_index = build_order_index(rem_groups)
+  for name, idx in rem_order_index {
+    if rem_node_order.get(name) is None {
+      rem_node_order[name] = idx
+    }
+  }
+  rem_node_order
+}
+
+///|
 /// Graphviz parity: ReMincross flat constraints combine existing same-rank
 /// constraints with local intra-cluster adjacency locks for non-intercluster
 /// real-node pairs (flat.c cluster-local reorder guard).
@@ -4014,22 +4040,8 @@ fn compute_ordering_and_vnodes(
               rem_edge_creation_order,
               rem_flat_constraints,
             )
-          // Graphviz parity: ReMincross seeding follows GD_nlist order.
-          // Do not change behavior without updating fixtures/tests.
-          let rem_node_order : Map[String, Int] = Map::new()
-          let mut rem_node_idx = 0
-          for name in rem_nlist_order {
-            if rem_node_map.get(name) is Some(_) {
-              rem_node_order[name] = rem_node_idx
-              rem_node_idx = rem_node_idx + 1
-            }
-          }
-          let rem_order_index = build_order_index(rem_groups)
-          for name, idx in rem_order_index {
-            if rem_node_order.get(name) is None {
-              rem_node_order[name] = idx
-            }
-          }
+          let rem_node_order =
+            build_remincross_node_order(rem_nlist_order, rem_node_map, rem_groups)
           let rem_edges_out : Array[@cgraph.Edge] = []
           let rem_edge_tail_out : Array[String] = []
           let rem_edge_head_out : Array[String] = []
