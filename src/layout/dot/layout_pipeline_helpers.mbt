@@ -6116,15 +6116,13 @@ fn run_ordering_stage_dispatch(
   cluster_meta : ClusterMetadata,
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
-  real_nodes : Map[String, Bool],
-  port_edge_nodes : Map[String, Bool],
-  local_cluster_order : Map[String, Int],
-  rank_same_constraints : Map[String, Bool],
-  vnode_info : EdgeVnodeInfo,
-  edge_port_data : OrderingEdgePortData,
-  reorder_setup : OrderingReorderSetup,
+  runtime_context : OrderingRuntimeContext,
+  dispatch_setup : OrderingDispatchSetup,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
   let class2_data = reorder_setup.class2_data
+  let vnode_info = runtime_context.vnode_info
   let order_with_vnodes = reorder_setup.order_with_vnodes
   let order_with_clusters = reorder_setup.order_with_clusters
   if order_with_vnodes || order_with_clusters {
@@ -6143,10 +6141,10 @@ fn run_ordering_stage_dispatch(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
-      real_nodes,
-      port_edge_nodes,
-      local_cluster_order,
-      rank_same_constraints,
+      runtime_context.real_nodes,
+      runtime_context.port_edge_nodes,
+      runtime_context.local_cluster_order,
+      runtime_context.rank_same_constraints,
       edge_port_data.edge_tail_port_x,
       edge_port_data.edge_head_port_x,
       edge_port_data.edge_tail_port_order,
@@ -6268,12 +6266,8 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let real_nodes = runtime_context.real_nodes
   let edge_cluster_keys = runtime_context.edge_cluster_keys
   let vnode_info = runtime_context.vnode_info
-  let port_edge_nodes = runtime_context.port_edge_nodes
-  let local_cluster_order = runtime_context.local_cluster_order
-  let rank_same_constraints = runtime_context.rank_same_constraints
   let vnode_count = runtime_context.vnode_count
   let vnode_tail_constraints =
     if vnode_count > 0 {
@@ -6293,14 +6287,13 @@ fn compute_ordering_and_vnodes(
       groups,
       node_order,
       order_sizes,
-      port_edge_nodes,
+      runtime_context.port_edge_nodes,
       vnode_count,
       rankdir,
       cluster_meta,
       vnode_info,
     )
   let edge_port_data = dispatch_setup.edge_port_data
-  let reorder_setup = dispatch_setup.reorder_setup
   let nlist_order = dispatch_setup.nlist_order
   let vnode_creation_order = dispatch_setup.vnode_creation_order
   let gdnlist_order = dispatch_setup.gdnlist_order
@@ -6323,13 +6316,8 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
-      real_nodes,
-      port_edge_nodes,
-      local_cluster_order,
-      rank_same_constraints,
-      vnode_info,
-      edge_port_data,
-      reorder_setup,
+      runtime_context,
+      dispatch_setup,
     )
   build_ordering_result(
     ordered_groups_internal,
