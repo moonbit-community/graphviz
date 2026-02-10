@@ -2005,6 +2005,109 @@ fn collect_unconstrained_order_nodes(
 }
 
 ///|
+/// Graphviz parity: incoming-only unconstrained handling uses non-self edges
+/// to mark ND_out/ND_in presence, matching class2 neighbor detection.
+/// Do not change behavior without updating fixtures/tests.
+fn build_node_in_out_presence_maps(
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (Map[String, Bool], Map[String, Bool]) {
+  let node_has_out : Map[String, Bool] = Map::new()
+  let node_has_in : Map[String, Bool] = Map::new()
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      node_has_out[tail] = true
+      node_has_in[head] = true
+    }
+    edge_idx = edge_idx + 1
+  }
+  (node_has_out, node_has_in)
+}
+
+///|
+/// Graphviz parity: local cluster node creation order follows node scan order
+/// per intercluster key, matching class2 fast-node insertion inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_local_cluster_creation_order(
+  nodes : Array[@cgraph.Node],
+  intercluster_keys : Map[String, String],
+) -> Map[String, Array[String]] {
+  let local_creation : Map[String, Array[String]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let local_cluster = match intercluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if local_cluster == "" {
+      continue
+    }
+    match local_creation.get(local_cluster) {
+      Some(list) => list.push(name)
+      None => local_creation[local_cluster] = [name]
+    }
+  }
+  local_creation
+}
+
+///|
+/// Graphviz parity: incoming-only unconstrained local nodes are reassigned in
+/// reverse creation order while preserving their sorted order slots.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_incoming_only_unconstrained_local_nodes(
+  local_creation : Map[String, Array[String]],
+  unconstrained_nodes : Map[String, Bool],
+  rank_same_groups : Map[String, Int],
+  node_has_out : Map[String, Bool],
+  node_has_in : Map[String, Bool],
+  order_node_order : Map[String, Int],
+) -> Unit {
+  for _cluster, names in local_creation {
+    let unconstrained_local : Array[String] = []
+    for name in names {
+      if unconstrained_nodes.get(name) is Some(_) &&
+        rank_same_groups.get(name) is None &&
+        node_has_out.get(name) is None &&
+        node_has_in.get(name) is Some(_) {
+        unconstrained_local.push(name)
+      }
+    }
+    if unconstrained_local.length() <= 1 {
+      continue
+    }
+    let desired : Array[String] = []
+    let mut rev_idx = unconstrained_local.length()
+    while rev_idx > 0 {
+      rev_idx = rev_idx - 1
+      desired.push(unconstrained_local[rev_idx])
+    }
+    let orders : Array[Int] = []
+    let mut all_present = true
+    for name in unconstrained_local {
+      match order_node_order.get(name) {
+        Some(value) => orders.push(value)
+        None => {
+          all_present = false
+          break
+        }
+      }
+    }
+    if !all_present || orders.length() != desired.length() {
+      continue
+    }
+    orders.sort()
+    let mut idx = 0
+    while idx < desired.length() && idx < orders.length() {
+      order_node_order[desired[idx]] = orders[idx]
+      idx = idx + 1
+    }
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2512,73 +2615,18 @@ fn compute_ordering_and_vnodes(
       }
       // Graphviz parity: incoming-only unconstrained nodes inside local
       // clusters follow reverse input order (fast_node inserts at head).
-      let node_has_out : Map[String, Bool] = Map::new()
-      let node_has_in : Map[String, Bool] = Map::new()
-      let mut edge_idx = 0
-      while edge_idx < edge_tail.length() {
-        let tail = edge_tail[edge_idx]
-        let head = edge_head[edge_idx]
-        if tail != head {
-          node_has_out[tail] = true
-          node_has_in[head] = true
-        }
-        edge_idx = edge_idx + 1
-      }
-      let local_creation : Map[String, Array[String]] = Map::new()
-      for node in nodes {
-        let name = node.name()
-        let local_cluster = match cluster_meta.intercluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        if local_cluster == "" {
-          continue
-        }
-        match local_creation.get(local_cluster) {
-          Some(list) => list.push(name)
-          None => local_creation[local_cluster] = [name]
-        }
-      }
-      for _cluster, names in local_creation {
-        let unconstrained_local : Array[String] = []
-        for name in names {
-          if unconstrained_nodes.get(name) is Some(_) &&
-            cluster_meta.rank_same_groups.get(name) is None &&
-            node_has_out.get(name) is None &&
-            node_has_in.get(name) is Some(_) {
-            unconstrained_local.push(name)
-          }
-        }
-        if unconstrained_local.length() <= 1 {
-          continue
-        }
-        let desired : Array[String] = []
-        let mut rev_idx = unconstrained_local.length()
-        while rev_idx > 0 {
-          rev_idx = rev_idx - 1
-          desired.push(unconstrained_local[rev_idx])
-        }
-        let orders : Array[Int] = []
-        let mut all_present = true
-        for name in unconstrained_local {
-          match order_node_order.get(name) {
-            Some(value) => orders.push(value)
-            None => {
-              all_present = false
-              break
-            }
-          }
-        }
-        if !all_present || orders.length() != desired.length() {
-          continue
-        }
-        orders.sort()
-        let mut idx = 0
-        while idx < desired.length() && idx < orders.length() {
-          order_node_order[desired[idx]] = orders[idx]
-          idx = idx + 1
-        }
-      }
+      let (node_has_out, node_has_in) =
+        build_node_in_out_presence_maps(edge_tail, edge_head)
+      let local_creation =
+        build_local_cluster_creation_order(nodes, cluster_meta.intercluster_keys)
+      reorder_incoming_only_unconstrained_local_nodes(
+        local_creation,
+        unconstrained_nodes,
+        cluster_meta.rank_same_groups,
+        node_has_out,
+        node_has_in,
+        order_node_order,
+      )
       // Graphviz parity: seed build_ranks from component-scoped walk,
       // matching decompose/install traversal used by remincross with
       // cluster-expanded flat constraints.
