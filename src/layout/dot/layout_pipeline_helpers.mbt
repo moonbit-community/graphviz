@@ -5953,10 +5953,10 @@ fn build_ordering_class2_data_output(
 }
 
 ///|
-/// Graphviz parity: class2/decompose ordering prep follows creation order,
-/// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
+/// Graphviz parity: class2 builds ND_out edge chains in agfstnode order,
+/// then derives root/unmapped variants for clustered build_ranks passes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_data(
+fn build_ordering_class2_edge_chain_data(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -5970,10 +5970,17 @@ fn build_ordering_class2_data(
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
-  flat_rank_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> OrderingClass2Data {
+  cluster_keys : Map[String, String],
+) -> (
+  Array[String],
+  Map[String, Array[Int]],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Map[String, Array[String]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) {
   // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
   let creation_order = collect_creation_order(nodes)
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
@@ -5992,7 +5999,7 @@ fn build_ordering_class2_data(
       ranks,
       edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
+      cluster_keys,
       order_with_clusters,
       false,
       true,
@@ -6014,7 +6021,7 @@ fn build_ordering_class2_data(
       ranks,
       edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
+      cluster_keys,
       edges_by_tail,
     )
   // Graphviz parity: cluster-local build_ranks uses edge chains before
@@ -6034,8 +6041,68 @@ fn build_ordering_class2_data(
       ranks,
       edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
+      cluster_keys,
       edges_by_tail,
+    )
+  (
+    creation_order,
+    edges_by_tail,
+    order_edges_by_tail,
+    vnode_creation_by_tail,
+    order_edge_creation,
+    order_edges_by_tail_root,
+    root_edge_creation,
+    order_edges_by_tail_unmapped,
+  )
+}
+
+///|
+/// Graphviz parity: class2/decompose ordering prep follows creation order,
+/// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_data(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  cluster_meta : ClusterMetadata,
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+) -> OrderingClass2Data {
+  let (
+    creation_order,
+    edges_by_tail,
+    order_edges_by_tail,
+    vnode_creation_by_tail,
+    order_edge_creation,
+    order_edges_by_tail_root,
+    root_edge_creation,
+    order_edges_by_tail_unmapped,
+  ) =
+    build_ordering_class2_edge_chain_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      order_with_clusters,
+      cluster_meta.cluster_keys,
     )
   let cluster_skeleton_creation =
     build_cluster_skeleton_creation(
