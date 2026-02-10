@@ -5898,6 +5898,24 @@ fn build_ordering_base_context(
 }
 
 ///|
+/// Graphviz parity: ordering runtime output object maps base-context fields and
+/// vnode-count derivation without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_runtime_context_output(
+  base_context : OrderingBaseContext,
+) -> OrderingRuntimeContext {
+  {
+    real_nodes: base_context.real_nodes,
+    edge_cluster_keys: base_context.edge_cluster_keys,
+    vnode_info: base_context.vnode_info,
+    port_edge_nodes: base_context.port_edge_nodes,
+    local_cluster_order: base_context.local_cluster_order,
+    rank_same_constraints: base_context.rank_same_constraints,
+    vnode_count: base_context.vnode_info.vnode_ranks.length(),
+  }
+}
+
+///|
 /// Graphviz parity: ordering runtime context keeps base-context extraction and
 /// vnode-count derivation in the same sequence as Graphviz prep flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -5928,15 +5946,7 @@ fn build_ordering_runtime_context(
       rankdir,
       cluster_meta,
     )
-  {
-    real_nodes: base_context.real_nodes,
-    edge_cluster_keys: base_context.edge_cluster_keys,
-    vnode_info: base_context.vnode_info,
-    port_edge_nodes: base_context.port_edge_nodes,
-    local_cluster_order: base_context.local_cluster_order,
-    rank_same_constraints: base_context.rank_same_constraints,
-    vnode_count: base_context.vnode_info.vnode_ranks.length(),
-  }
+  build_ordering_runtime_context_output(base_context)
 }
 
 ///|
