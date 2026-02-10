@@ -9965,33 +9965,27 @@ fn append_cluster_skeleton_edges_for_xpos_reorder(
 }
 
 ///|
-/// Graphviz parity: clustered xpos reorder edge materialization preserves
-/// vnode chain splitting and cluster skeleton linking before reorder_rank_groups.
+/// Graphviz parity: clustered xpos reorder first materializes input
+/// edges in Graphviz iteration order before appending cluster skeleton edges.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_reorder_edges(
+fn append_clustered_xpos_reorder_input_edges(
   prep : LayoutPrep,
   rank_data : RankData,
   ordering : OrderingResult,
-  cluster_meta : ClusterMetadata,
-  order_nodes : Array[String],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
   x_edge_tail_port_x : Array[Double],
   x_edge_head_port_x : Array[Double],
   x_edge_tail_port_order : Array[Double],
   x_edge_head_port_order : Array[Double],
-) -> XposClusteredReorderEdgesData {
-  let order_graph =
-    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
-  let order_node_map : Map[String, @cgraph.Node] = Map::new()
-  for name in order_nodes {
-    order_node_map[name] = order_graph.node(name)
-  }
-  let order_edges_out : Array[@cgraph.Edge] = []
-  let order_edge_tail_out : Array[String] = []
-  let order_edge_head_out : Array[String] = []
-  let order_edge_tail_port_x : Array[Double] = []
-  let order_edge_head_port_x : Array[Double] = []
-  let order_edge_tail_port_order : Array[Double] = []
-  let order_edge_head_port_order : Array[Double] = []
+) -> Unit {
   let mut edge_idx = 0
   for edge in prep.edges {
     let tail =
@@ -10047,6 +10041,54 @@ fn build_clustered_xpos_reorder_edges(
     )
     edge_idx = edge_idx + 1
   }
+}
+
+///|
+/// Graphviz parity: clustered xpos reorder edge materialization preserves
+/// vnode chain splitting and cluster skeleton linking before reorder_rank_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_xpos_reorder_edges(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  cluster_meta : ClusterMetadata,
+  order_nodes : Array[String],
+  x_edge_tail_port_x : Array[Double],
+  x_edge_head_port_x : Array[Double],
+  x_edge_tail_port_order : Array[Double],
+  x_edge_head_port_order : Array[Double],
+) -> XposClusteredReorderEdgesData {
+  let order_graph =
+    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
+  let order_node_map : Map[String, @cgraph.Node] = Map::new()
+  for name in order_nodes {
+    order_node_map[name] = order_graph.node(name)
+  }
+  let order_edges_out : Array[@cgraph.Edge] = []
+  let order_edge_tail_out : Array[String] = []
+  let order_edge_head_out : Array[String] = []
+  let order_edge_tail_port_x : Array[Double] = []
+  let order_edge_head_port_x : Array[Double] = []
+  let order_edge_tail_port_order : Array[Double] = []
+  let order_edge_head_port_order : Array[Double] = []
+  append_clustered_xpos_reorder_input_edges(
+    prep,
+    rank_data,
+    ordering,
+    order_graph,
+    order_node_map,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    x_edge_tail_port_x,
+    x_edge_head_port_x,
+    x_edge_tail_port_order,
+    x_edge_head_port_order,
+  )
   append_cluster_skeleton_edges_for_xpos_reorder(
     order_graph,
     order_node_map,
