@@ -4366,6 +4366,89 @@ fn apply_unconstrained_order_node_overrides(
 }
 
 ///|
+/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
+/// then applies transpose when crossings remain (port-offset aware tie-breaks).
+/// Do not change behavior without updating fixtures/tests.
+fn build_seeded_groups_for_order_reorder(
+  order_rank_keys : Array[Int],
+  order_groups : Map[Int, Array[String]],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_ranks : Map[String, Int],
+  order_node_order : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  flat_rank_constraints : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  // Graphviz parity: seed build_ranks from component-scoped walk,
+  // matching decompose/install traversal used by remincross with
+  // cluster-expanded flat constraints.
+  let seeded_groups = build_rank_groups_graphviz_components(
+    order_rank_keys,
+    order_groups,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_ranks,
+    order_node_order,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    0,
+    order_flat_constraints,
+    flip=graphviz_flip,
+    graphviz_out_neighbors=graphviz_out_neighbors,
+    graphviz_in_neighbors=graphviz_in_neighbors,
+  )
+  // Graphviz parity: build_ranks applies transpose if crossings remain;
+  // crossing count uses endpoint port x offsets for tie-correct ordering.
+  let seed_cross = count_crossings_graphviz(
+    seeded_groups,
+    order_ranks,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    edge_tail_port_x=order_edge_tail_port_x,
+    edge_head_port_x=order_edge_head_port_x,
+  )
+  if seed_cross > 0 {
+    let (edge_penalty, edge_in, edge_out) =
+      build_transpose_seed_edge_maps(
+        order_rank_keys,
+        seeded_groups,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_ranks,
+      )
+    let _ = transpose_rank_groups_graphviz(
+      order_rank_keys,
+      seeded_groups,
+      order_ranks,
+      edge_in,
+      edge_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      edge_penalty,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      flat_rank_constraints,
+      false,
+      0,
+    )
+  }
+  dot_trace_groups("seeded_groups", seeded_groups)
+  seeded_groups
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -4891,64 +4974,25 @@ fn compute_ordering_and_vnodes(
         cluster_meta.intercluster_keys,
         order_node_order,
       )
-      // Graphviz parity: seed build_ranks from component-scoped walk,
-      // matching decompose/install traversal used by remincross with
-      // cluster-expanded flat constraints.
-      let seeded_groups = build_rank_groups_graphviz_components(
-        order_rank_keys,
-        order_groups,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_ranks,
-        order_node_order,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        0,
-        order_flat_constraints,
-        flip=graphviz_flip,
-        graphviz_out_neighbors=graphviz_out_neighbors,
-        graphviz_in_neighbors=graphviz_in_neighbors,
-      )
-      // Graphviz parity: build_ranks applies transpose if crossings remain;
-      // crossing count uses endpoint port x offsets for tie-correct ordering.
-      let seed_cross = count_crossings_graphviz(
-        seeded_groups,
-        order_ranks,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        edge_tail_port_x=order_edge_tail_port_x,
-        edge_head_port_x=order_edge_head_port_x,
-      )
-      if seed_cross > 0 {
-        let (edge_penalty, edge_in, edge_out) =
-          build_transpose_seed_edge_maps(
-            order_rank_keys,
-            seeded_groups,
-            order_edges_out,
-            order_edge_tail_out,
-            order_edge_head_out,
-            order_ranks,
-          )
-        let _ = transpose_rank_groups_graphviz(
+      let seeded_groups =
+        build_seeded_groups_for_order_reorder(
           order_rank_keys,
-          seeded_groups,
-          order_ranks,
-          edge_in,
-          edge_out,
+          order_groups,
           order_edge_tail_out,
           order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          edge_penalty,
+          order_ranks,
+          order_node_order,
           order_cluster_keys,
           order_cluster_skeleton,
+          order_flat_constraints,
+          graphviz_flip,
+          graphviz_out_neighbors,
+          graphviz_in_neighbors,
+          order_edges_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
           flat_rank_constraints,
-          false,
-          0,
         )
-      }
-      dot_trace_groups("seeded_groups", seeded_groups)
       let (order_groups_for_mincross, ordered) =
         run_root_mincross_reorder(
           order_with_clusters,
