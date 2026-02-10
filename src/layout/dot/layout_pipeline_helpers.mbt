@@ -2906,6 +2906,63 @@ fn build_rem_order_creation_sequence(
 }
 
 ///|
+/// Graphviz parity: ReMincross vnode order keys follow vnodes_by_rank keys
+/// with trailing intercluster vnode floor adjustment before rank merge.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_vnode_order_keys(
+  order_with_vnodes : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  rem_base_order_index : Map[String, Int],
+  cluster_keys : Map[String, String],
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+) -> Map[String, Double] {
+  if !order_with_vnodes {
+    return Map::new()
+  }
+  let intercluster_vnodes =
+    collect_intercluster_trailing_vnodes(
+      order_with_vnodes,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+      cluster_parents,
+      cluster_min_rank,
+      cluster_max_rank,
+      edge_vnodes,
+    )
+  let keys = build_vnode_order_keys(
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    ranks,
+    rem_base_order_index,
+    intercluster_keys,
+    cluster_parents,
+    edge_vnodes,
+    vnode_ranks,
+  )
+  apply_intercluster_vnode_order_key_floor(
+    keys,
+    intercluster_vnodes,
+    rem_base_order_index,
+    ranks,
+    vnode_ranks,
+  )
+  keys
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
@@ -4003,43 +4060,23 @@ fn compute_ordering_and_vnodes(
         // Graphviz parity: ReMincross runs on real nodes + edge vnodes (no cluster skeletons).
         let rem_base_groups = clone_rank_groups(final_groups)
         let rem_base_order_index = build_order_index(rem_base_groups)
-        let intercluster_vnodes =
-          collect_intercluster_trailing_vnodes(
+        let rem_vnode_order_keys =
+          build_remincross_vnode_order_keys(
             order_with_vnodes,
             edges,
             edge_tail,
             edge_head,
+            edge_reversed,
+            ranks,
+            rem_base_order_index,
             cluster_meta.cluster_keys,
+            cluster_meta.intercluster_keys,
             cluster_meta.cluster_parents,
             cluster_meta.cluster_min_rank,
             cluster_meta.cluster_max_rank,
             vnode_info.edge_vnodes,
+            vnode_info.vnode_ranks,
           )
-        let rem_vnode_order_keys =
-          if order_with_vnodes {
-            let keys = build_vnode_order_keys(
-              edges,
-              edge_tail,
-              edge_head,
-              edge_reversed,
-              ranks,
-              rem_base_order_index,
-              cluster_meta.intercluster_keys,
-              cluster_meta.cluster_parents,
-              vnode_info.edge_vnodes,
-              vnode_info.vnode_ranks,
-            )
-            apply_intercluster_vnode_order_key_floor(
-              keys,
-              intercluster_vnodes,
-              rem_base_order_index,
-              ranks,
-              vnode_info.vnode_ranks,
-            )
-            keys
-          } else {
-            Map::new()
-          }
         let rem_groups =
           if order_with_vnodes {
             build_x_groups_with_vnodes(
