@@ -8768,6 +8768,23 @@ fn build_position_mode_flags(
   }
 }
 
+///|
+/// Graphviz parity: x-stage mode/slack output object maps gate flags and
+/// synthesized virtual-slack edges without extra normalization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_mode_and_virtual_slack_output_for_positions(
+  mode_flags : PositionModeFlags,
+  virtual_slack_edges : Array[ConstraintEdge],
+) -> XStageModeAndSlackData {
+  {
+    use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+    allow_xpos_reorder: mode_flags.allow_xpos_reorder,
+    graphviz_flip: mode_flags.graphviz_flip,
+    xpos_reorder_enabled: mode_flags.xpos_reorder_enabled,
+    virtual_slack_edges,
+  }
+}
+
 
 ///|
 /// Graphviz parity: x-stage mode/virtual-slack setup keeps gate derivation,
@@ -8780,26 +8797,19 @@ fn build_x_stage_mode_and_virtual_slack_data_for_positions(
   ordering : OrderingResult,
 ) -> XStageModeAndSlackData {
   let mode_flags = build_position_mode_flags(prep, ordering)
-  let use_vnodes_for_xpos = mode_flags.use_vnodes_for_xpos
-  let allow_xpos_reorder = mode_flags.allow_xpos_reorder
-  let graphviz_flip = mode_flags.graphviz_flip
-  let xpos_reorder_enabled = mode_flags.xpos_reorder_enabled
   dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
     build_virtual_slack_edges_for_positions(
-      use_vnodes_for_xpos,
+      mode_flags.use_vnodes_for_xpos,
       prep,
       rank_data,
       ordering,
       cluster_meta,
     )
-  {
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    graphviz_flip,
-    xpos_reorder_enabled,
+  build_x_stage_mode_and_virtual_slack_output_for_positions(
+    mode_flags,
     virtual_slack_edges,
-  }
+  )
 }
 
 ///|
