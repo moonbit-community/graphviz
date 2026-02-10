@@ -8286,20 +8286,37 @@ fn build_projection_result_for_positions(
       flat_label_edges,
       flat_label_nodes,
     )
-  let rank_y = position_projection_data.rank_y
-  let cluster_bbox_heights = position_projection_data.cluster_bbox_heights
-  let position_output_maps = position_projection_data.position_output_maps
-  build_position_result_for_positions(
+  build_position_result_from_projection_data_for_positions(
     x_groups,
-    rank_y,
-    position_output_maps,
+    position_projection_data,
     flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
-    cluster_bbox_heights,
   )
 }
 
+
+///|
+/// Graphviz parity: projection-data to result-object mapping keeps rank_y,
+/// output-map, and cluster height wiring unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_result_from_projection_data_for_positions(
+  x_groups : Map[Int, Array[String]],
+  position_projection_data : PositionProjectionData,
+  flat_label_edge_vnodes : Map[String, String],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> PositionResult {
+  build_position_result_for_positions(
+    x_groups,
+    position_projection_data.rank_y,
+    position_projection_data.position_output_maps,
+    flat_label_edge_vnodes,
+    rank_ht1,
+    rank_ht2,
+    position_projection_data.cluster_bbox_heights,
+  )
+}
 
 ///|
 /// Graphviz parity: final position result object is assembled from already-
