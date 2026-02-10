@@ -7732,6 +7732,64 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
 }
 
 ///|
+/// Graphviz parity: xpos reorder control-flow must match Graphviz clustered/non-cluster
+/// branch selection before transpose cleanup.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_apply_xpos_reorder_for_positions(
+  xpos_reorder_enabled : Bool,
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  has_vnode_order : Bool,
+  cluster_meta : ClusterMetadata,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  ordering : OrderingResult,
+  x_order_sizes : Map[String, NodeSize],
+  x_cluster_keys : Map[String, String],
+  x_edge_tail_port_x : Array[Double],
+  x_edge_head_port_x : Array[Double],
+  x_edge_tail_port_order : Array[Double],
+  x_edge_head_port_order : Array[Double],
+  graphviz_flip : Bool,
+  x_groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
+    !cluster_meta.ordering_set {
+    build_clustered_xpos_reordered_groups(
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      x_groups,
+      x_order_sizes,
+      x_cluster_keys,
+      x_edge_tail_port_x,
+      x_edge_head_port_x,
+      x_edge_tail_port_order,
+      x_edge_head_port_order,
+      graphviz_flip,
+    )
+  } else {
+    maybe_apply_noncluster_xpos_reorder_fallback(
+      xpos_reorder_enabled,
+      allow_xpos_reorder,
+      has_vnode_order,
+      cluster_meta,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
+      x_order_sizes,
+      x_cluster_keys,
+      graphviz_flip,
+      x_groups,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
@@ -7870,41 +7928,26 @@ fn compute_positions(
       use_vnodes_for_xpos,
       ordering.vnode_info.vnode_clusters,
     )
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
-    x_groups =
-      build_clustered_xpos_reordered_groups(
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
-        x_groups,
-        x_order_sizes,
-        x_cluster_keys,
-        x_edge_tail_port_x,
-        x_edge_head_port_x,
-        x_edge_tail_port_order,
-        x_edge_head_port_order,
-        graphviz_flip,
-      )
-  } else {
-    x_groups =
-      maybe_apply_noncluster_xpos_reorder_fallback(
-        xpos_reorder_enabled,
-        allow_xpos_reorder,
-        has_vnode_order,
-        cluster_meta,
-        prep,
-        rank_data,
-        rank_heights,
-        ordering,
-        x_order_sizes,
-        x_cluster_keys,
-        graphviz_flip,
-        x_groups,
-      )
-  }
+  x_groups =
+    maybe_apply_xpos_reorder_for_positions(
+      xpos_reorder_enabled,
+      use_vnodes_for_xpos,
+      allow_xpos_reorder,
+      has_vnode_order,
+      cluster_meta,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
+      x_order_sizes,
+      x_cluster_keys,
+      x_edge_tail_port_x,
+      x_edge_head_port_x,
+      x_edge_tail_port_order,
+      x_edge_head_port_order,
+      graphviz_flip,
+      x_groups,
+    )
   dot_trace_groups("x-groups", x_groups)
   maybe_apply_xpos_transpose_cleanup(
     xpos_reorder_enabled,
