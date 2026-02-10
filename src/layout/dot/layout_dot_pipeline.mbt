@@ -190,6 +190,14 @@ priv struct DotRoutingLabelAndTuningData {
 }
 
 ///|
+priv struct DotRoutingSpatialData {
+  nodes_out : Array[DotLayoutNode]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -282,6 +290,32 @@ fn build_cluster_bboxes_for_routing_stage(
     positions_state.rank_ht1,
     positions_state.rank_ht2,
   )
+}
+
+///|
+/// Graphviz parity: routing spatial precompute keeps node projection, port-map
+/// derivation, and cluster-bbox computation order unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_spatial_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+) -> DotRoutingSpatialData {
+  let routing_node_and_port_data =
+    build_routing_node_and_port_data_for_stage(prep, positions_state)
+  let nodes_out = routing_node_and_port_data.nodes_out
+  let label_ports_map = routing_node_and_port_data.label_ports_map
+  let label_ports_raw = routing_node_and_port_data.label_ports_raw
+  let cluster_bboxes =
+    build_cluster_bboxes_for_routing_stage(
+      graph,
+      rank_stage,
+      positions_state,
+      nodes_out,
+      prep.rankdir,
+    )
+  { nodes_out, label_ports_map, label_ports_raw, cluster_bboxes }
 }
 
 ///|
@@ -425,19 +459,17 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let routing_node_and_port_data =
-    build_routing_node_and_port_data_for_stage(prep, positions_state)
-  let nodes_out = routing_node_and_port_data.nodes_out
-  let label_ports_map = routing_node_and_port_data.label_ports_map
-  let label_ports_raw = routing_node_and_port_data.label_ports_raw
-  let cluster_bboxes =
-    build_cluster_bboxes_for_routing_stage(
+  let routing_spatial_data =
+    build_routing_spatial_data_for_stage(
       graph,
+      prep,
       rank_stage,
       positions_state,
-      nodes_out,
-      prep.rankdir,
     )
+  let nodes_out = routing_spatial_data.nodes_out
+  let label_ports_map = routing_spatial_data.label_ports_map
+  let label_ports_raw = routing_spatial_data.label_ports_raw
+  let cluster_bboxes = routing_spatial_data.cluster_bboxes
   let routing_label_and_tuning_data =
     build_routing_label_and_tuning_data_for_stage(prep)
   let label_edge_counts = routing_label_and_tuning_data.label_edge_counts
