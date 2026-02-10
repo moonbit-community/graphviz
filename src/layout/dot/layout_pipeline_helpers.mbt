@@ -256,6 +256,12 @@ priv struct XStageSeedGroupAndClusterData {
 }
 
 ///|
+priv struct XStageSeedOrderAndVNodeData {
+  order_index : Map[String, Int]
+  vnode_order_state : XposVNodeOrderState
+}
+
+///|
 priv struct XposFlatLabelAugmentation {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
@@ -7025,16 +7031,16 @@ fn build_x_stage_seed_group_and_cluster_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
-/// order probing, edge-port metadata, and initial group/cluster maps unchanged.
+/// Graphviz parity: x-stage seed order-index and vnode-order probe are derived
+/// before seed group/cluster maps and edge-port metadata assembly.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_position_stage_seed_data_for_positions(
+fn build_x_stage_seed_order_and_vnode_data_for_positions(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XPositionStageSeedData {
+) -> XStageSeedOrderAndVNodeData {
   let order_index = build_order_index(ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state_for_positions(
@@ -7046,7 +7052,30 @@ fn build_x_position_stage_seed_data_for_positions(
       cluster_meta,
       ordering,
     )
-  let has_vnode_order = vnode_order_state.has_vnode_order
+  { order_index, vnode_order_state }
+}
+
+///|
+/// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
+/// order probing, edge-port metadata, and initial group/cluster maps unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_position_stage_seed_data_for_positions(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XPositionStageSeedData {
+  let seed_order_vnode_data =
+    build_x_stage_seed_order_and_vnode_data_for_positions(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      cluster_meta,
+      ordering,
+    )
+  let has_vnode_order =
+    seed_order_vnode_data.vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
     build_x_order_edge_port_data_for_positions(
       use_vnodes_for_xpos,
@@ -7058,8 +7087,8 @@ fn build_x_position_stage_seed_data_for_positions(
     build_x_stage_seed_group_and_cluster_data_for_positions(
       use_vnodes_for_xpos,
       ordering,
-      order_index,
-      vnode_order_state.vnode_order_keys,
+      seed_order_vnode_data.order_index,
+      seed_order_vnode_data.vnode_order_state.vnode_order_keys,
       cluster_meta,
     )
   build_x_position_stage_seed_output_for_positions(
