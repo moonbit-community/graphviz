@@ -579,6 +579,20 @@ fn build_routing_edges_and_padding_data_for_stage(
       routing_path_context_data.routing_context,
       routing_label_and_tuning_data.enable_complex_tuning,
     )
+  build_routing_edges_and_padding_output_for_stage(
+    edges_out,
+    routing_padding_and_head_port_metrics,
+  )
+}
+
+///|
+/// Graphviz parity: routing edge/padding output object maps routed edges with
+/// computed port padding metrics without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_and_padding_output_for_stage(
+  edges_out : Array[DotLayoutEdge],
+  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
+) -> DotRoutingEdgesAndPaddingData {
   {
     edges_out,
     port_pad_below: routing_padding_and_head_port_metrics.port_pad_below,
