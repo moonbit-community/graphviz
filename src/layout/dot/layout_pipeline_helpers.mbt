@@ -4046,6 +4046,92 @@ fn run_noncluster_reorder_pass(
 }
 
 ///|
+/// Graphviz parity: order-graph edge arrays are materialized from GD_nlist
+/// tail order for both mapped (cluster-remapped) and unmapped variants.
+/// Do not change behavior without updating fixtures/tests.
+fn materialize_mapped_and_unmapped_order_edges(
+  nlist_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph_unmapped : @cgraph.Graph,
+  order_node_map_unmapped : Map[String, @cgraph.Node],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  let order_edges_out : Array[@cgraph.Edge] = []
+  let order_edge_tail_out : Array[String] = []
+  let order_edge_head_out : Array[String] = []
+  let order_edge_tail_port_x : Array[Double] = []
+  let order_edge_head_port_x : Array[Double] = []
+  let order_edge_tail_port_order : Array[Double] = []
+  let order_edge_head_port_order : Array[Double] = []
+  let order_edges_out_unmapped : Array[@cgraph.Edge] = []
+  let order_edge_tail_out_unmapped : Array[String] = []
+  let order_edge_head_out_unmapped : Array[String] = []
+  let order_edge_tail_port_x_unmapped : Array[Double] = []
+  let order_edge_head_port_x_unmapped : Array[Double] = []
+  let order_edge_tail_port_order_unmapped : Array[Double] = []
+  let order_edge_head_port_order_unmapped : Array[Double] = []
+  append_order_edges_for_tail_sequence(
+    nlist_order,
+    order_edges_by_tail,
+    order_graph,
+    order_node_map,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+  append_order_edges_for_tail_sequence(
+    nlist_order,
+    order_edges_by_tail_unmapped,
+    order_graph_unmapped,
+    order_node_map_unmapped,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+  )
+  (
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+  )
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -4604,25 +4690,7 @@ fn compute_ordering_and_vnodes(
           }
         }
       }
-      let order_edges_out : Array[@cgraph.Edge] = []
-      let order_edge_tail_out : Array[String] = []
-      let order_edge_head_out : Array[String] = []
-      let order_edge_tail_port_x : Array[Double] = []
-      let order_edge_head_port_x : Array[Double] = []
-      let order_edge_tail_port_order : Array[Double] = []
-      let order_edge_head_port_order : Array[Double] = []
-      let order_edges_out_unmapped : Array[@cgraph.Edge] = []
-      let order_edge_tail_out_unmapped : Array[String] = []
-      let order_edge_head_out_unmapped : Array[String] = []
-      let order_edge_tail_port_x_unmapped : Array[Double] = []
-      let order_edge_head_port_x_unmapped : Array[Double] = []
-      let order_edge_tail_port_order_unmapped : Array[Double] = []
-      let order_edge_head_port_order_unmapped : Array[Double] = []
-      append_order_edges_for_tail_sequence(
-        nlist_order,
-        order_edges_by_tail,
-        order_graph,
-        order_node_map,
+      let (
         order_edges_out,
         order_edge_tail_out,
         order_edge_head_out,
@@ -4630,12 +4698,6 @@ fn compute_ordering_and_vnodes(
         order_edge_head_port_x,
         order_edge_tail_port_order,
         order_edge_head_port_order,
-      )
-      append_order_edges_for_tail_sequence(
-        nlist_order,
-        order_edges_by_tail_unmapped,
-        order_graph_unmapped,
-        order_node_map_unmapped,
         order_edges_out_unmapped,
         order_edge_tail_out_unmapped,
         order_edge_head_out_unmapped,
@@ -4643,7 +4705,16 @@ fn compute_ordering_and_vnodes(
         order_edge_head_port_x_unmapped,
         order_edge_tail_port_order_unmapped,
         order_edge_head_port_order_unmapped,
-      )
+      ) =
+        materialize_mapped_and_unmapped_order_edges(
+          nlist_order,
+          order_edges_by_tail,
+          order_graph,
+          order_node_map,
+          order_edges_by_tail_unmapped,
+          order_graph_unmapped,
+          order_node_map_unmapped,
+        )
       if @sys.get_env_var("DOT_TRACE_ORDER_EDGES") is Some(_) {
         let mut edge_idx = 0
         for _edge in order_edges_out {
