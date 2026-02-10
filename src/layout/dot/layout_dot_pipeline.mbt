@@ -635,6 +635,20 @@ fn build_routing_spatial_and_tuning_data_for_stage(
     )
   let routing_label_and_tuning_data =
     build_routing_label_and_tuning_data_for_stage(prep)
+  build_routing_spatial_and_tuning_output_for_stage(
+    routing_spatial_data,
+    routing_label_and_tuning_data,
+  )
+}
+
+///|
+/// Graphviz parity: routing spatial+tuning output object maps precomputed
+/// spatial data and tuning gates without extra transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_spatial_and_tuning_output_for_stage(
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+) -> DotRoutingSpatialAndTuningData {
   { routing_spatial_data, routing_label_and_tuning_data }
 }
 
