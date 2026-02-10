@@ -6992,6 +6992,71 @@ fn build_y_positions_with_cluster_flip_adjustment(
 }
 
 ///|
+/// Graphviz parity: intercluster alignment is gated by DOT_INTERCLUSTER_ALIGN
+/// and only applied for clustered dotted-edge graphs.
+/// Do not change behavior without updating fixtures/tests.
+fn is_intercluster_alignment_enabled() -> Bool {
+  match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: intercluster alignment mutates x positions only under the
+/// same runtime and graph-shape gates as Graphviz fixtures.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_adjust_intercluster_alignment(
+  cluster_meta : ClusterMetadata,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  x_positions : Map[String, Double],
+) -> Unit {
+  if cluster_meta.has_clusters && prep.has_dotted_edges &&
+    is_intercluster_alignment_enabled() {
+    adjust_intercluster_alignment(
+      prep.nodes,
+      prep.edges,
+      rank_data.ranks,
+      x_positions,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      rank_heights.nodesep_pt,
+      prep.has_edge_labels,
+    )
+  }
+}
+
+///|
+/// Graphviz parity: final node output positions are direct x/y map lookups for
+/// each real node, with missing coordinates defaulting to zero.
+/// Do not change behavior without updating fixtures/tests.
+fn build_node_positions_for_output(
+  nodes : Array[@cgraph.Node],
+  x_positions : Map[String, Double],
+  y_positions : Map[String, Double],
+) -> Map[String, @geom.Point] {
+  let positions : Map[String, @geom.Point] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let pos_x = match x_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    let pos_y = match y_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    positions[name] = { x: pos_x, y: pos_y }
+  }
+  positions
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7549,25 +7614,13 @@ fn compute_positions(
   )
   dot_trace("layout_dot: x positions computed")
   dot_trace_positions("xpos", x_positions)
-  let intercluster_align_enabled = match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
-  if cluster_meta.has_clusters && prep.has_dotted_edges && intercluster_align_enabled {
-    adjust_intercluster_alignment(
-      prep.nodes,
-      prep.edges,
-      rank_data.ranks,
-      x_positions,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      rank_heights.nodesep_pt,
-      prep.has_edge_labels,
-    )
-  }
+  maybe_adjust_intercluster_alignment(
+    cluster_meta,
+    prep,
+    rank_data,
+    rank_heights,
+    x_positions,
+  )
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let (cluster_ln_x, cluster_rn_x) =
     build_cluster_boundary_x_positions(graph, cluster_meta, x_positions)
@@ -7581,19 +7634,8 @@ fn compute_positions(
       x_positions,
       rank_y,
     )
-  let positions : Map[String, @geom.Point] = Map::new()
-  for node in prep.nodes {
-    let name = node.name()
-    let pos_x = match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    let pos_y = match y_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    positions[name] = { x: pos_x, y: pos_y }
-  }
+  let positions =
+    build_node_positions_for_output(prep.nodes, x_positions, y_positions)
   if cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions_for_rounding(
       graph,
