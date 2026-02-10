@@ -8176,6 +8176,56 @@ fn build_noncluster_xpos_reorder_graph_inputs_for_positions(
 }
 
 ///|
+/// Graphviz parity: non-cluster reorder_rank_groups consumes the same port-hint,
+/// parent/child, and cluster/order maps as Graphviz branch wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_noncluster_xpos_reorder_rank_groups_for_positions(
+  tmp_rank_keys : Array[Int],
+  x_groups : Map[Int, Array[String]],
+  ordering : OrderingResult,
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  x_cluster_keys : Map[String, String],
+  cluster_meta : ClusterMetadata,
+  prep : LayoutPrep,
+  x_order_sizes : Map[String, NodeSize],
+  rank_heights : RankHeights,
+  graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    tmp_rank_keys,
+    x_groups,
+    ordering.order_edges,
+    ordering.order_edge_tail,
+    ordering.order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    parents,
+    children,
+    x_cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    ordering.edge_order,
+    prep.node_order,
+    x_order_sizes,
+    rank_heights.nodesep_pt,
+    prep.has_edge_labels,
+    prep.port_order_positions,
+    prep.port_order_contrib,
+    Map::new(),
+    cluster_meta.cluster_skeleton,
+    cluster_meta.flat_constraints,
+    graphviz_flip=graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -8215,12 +8265,10 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
       ordering,
       x_order_sizes,
     )
-    reorder_rank_groups(
+    apply_noncluster_xpos_reorder_rank_groups_for_positions(
       tmp_rank_keys,
       x_groups,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
+      ordering,
       order_edge_tail_port_x,
       order_edge_head_port_x,
       order_edge_tail_port_order,
@@ -8228,19 +8276,11 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
       parents,
       children,
       x_cluster_keys,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      ordering.edge_order,
-      prep.node_order,
+      cluster_meta,
+      prep,
       x_order_sizes,
-      rank_heights.nodesep_pt,
-      prep.has_edge_labels,
-      prep.port_order_positions,
-      prep.port_order_contrib,
-      Map::new(),
-      cluster_meta.cluster_skeleton,
-      cluster_meta.flat_constraints,
-      graphviz_flip=graphviz_flip,
+      rank_heights,
+      graphviz_flip,
     )
   } else {
     x_groups
