@@ -293,6 +293,15 @@ priv struct XStageWithFlatLabelData {
 }
 
 ///|
+priv struct XStageModeAndSlackData {
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+  xpos_reorder_enabled : Bool
+  virtual_slack_edges : Array[ConstraintEdge]
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -8349,17 +8358,15 @@ fn build_position_mode_flags(
 
 
 ///|
-/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
-/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
-/// Graphviz-aligned order and wiring.
+/// Graphviz parity: x-stage mode/virtual-slack setup keeps gate derivation,
+/// vnode trace emission, and virtual-slack synthesis ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_labels_for_positions(
+fn build_x_stage_mode_and_virtual_slack_data_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
-  rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageWithFlatLabelData {
+) -> XStageModeAndSlackData {
   let mode_flags = build_position_mode_flags(prep, ordering)
   let use_vnodes_for_xpos = mode_flags.use_vnodes_for_xpos
   let allow_xpos_reorder = mode_flags.allow_xpos_reorder
@@ -8374,6 +8381,40 @@ fn build_x_stage_with_flat_labels_for_positions(
       ordering,
       cluster_meta,
     )
+  {
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    graphviz_flip,
+    xpos_reorder_enabled,
+    virtual_slack_edges,
+  }
+}
+
+
+///|
+/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
+/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
+/// Graphviz-aligned order and wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_with_flat_labels_for_positions(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XStageWithFlatLabelData {
+  let mode_slack_data =
+    build_x_stage_mode_and_virtual_slack_data_for_positions(
+      prep,
+      rank_data,
+      cluster_meta,
+      ordering,
+    )
+  let use_vnodes_for_xpos = mode_slack_data.use_vnodes_for_xpos
+  let allow_xpos_reorder = mode_slack_data.allow_xpos_reorder
+  let graphviz_flip = mode_slack_data.graphviz_flip
+  let xpos_reorder_enabled = mode_slack_data.xpos_reorder_enabled
+  let virtual_slack_edges = mode_slack_data.virtual_slack_edges
   let x_stage_seed =
     build_x_position_stage_seed_data_for_positions(
       use_vnodes_for_xpos,
