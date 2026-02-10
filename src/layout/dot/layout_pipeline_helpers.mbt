@@ -846,31 +846,19 @@ fn compute_rank_heights(
 }
 
 ///|
-/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Graphviz parity: cluster subgraph node order follows GD_nlist traversal
+/// direction and rankdir flip behavior from dotgen cluster ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_cluster_metadata(
-  graph : @cgraph.Graph,
+fn assign_cluster_node_order_for_metadata(
   nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
   node_order : Map[String, Int],
-  edge_tail : Array[String],
-  edge_head : Array[String],
   graphviz_flip : Bool,
-) -> ClusterMetadata {
-  let has_clusters = graph_has_cluster(graph)
-  let cluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    cluster_keys[node.name()] = node_cluster_key(node)
-  }
+) -> Unit {
   let creation_order : Map[String, Int] = Map::new()
   for i, node in nodes {
     creation_order[node.name()] = i
   }
-  // Graphviz parity: cluster subgraphs walk GD_nlist backward to preserve input
-  // order. For TB/BT, use creation order (input). For LR/RL, use reverse
-  // creation order so the later rank flip restores input order.
   let total_nodes = nodes.length()
   for node in nodes {
     let name = node.name()
@@ -893,6 +881,33 @@ fn compute_cluster_metadata(
     }
     node_order[name] = order_value
   }
+}
+
+///|
+/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_cluster_metadata(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  graphviz_flip : Bool,
+) -> ClusterMetadata {
+  let has_clusters = graph_has_cluster(graph)
+  let cluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    cluster_keys[node.name()] = node_cluster_key(node)
+  }
+  assign_cluster_node_order_for_metadata(
+    nodes,
+    cluster_keys,
+    node_order,
+    graphviz_flip,
+  )
   let cluster_skeleton : Map[String, Bool] = Map::new()
   let cluster_rank_seen : Map[String, Bool] = Map::new()
   for rank, names in groups {
