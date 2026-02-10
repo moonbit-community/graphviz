@@ -5864,6 +5864,98 @@ fn build_ordering_dispatch_setup(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root ordering preparation keeps order-group
+/// expansion, reorder context, and materialization sequence aligned to Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_ordering_pre_root_stage(
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_sizes : Map[String, NodeSize],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  node_order : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  port_edge_nodes : Map[String, Bool],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nodes : Array[@cgraph.Node],
+) -> (
+  Map[Int, Array[String]],
+  Map[String, NodeSize],
+  Map[String, String],
+  Map[String, Bool],
+  OrderReorderContext,
+  OrderMaterializationData,
+) {
+  let (
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  ) =
+    build_order_groups_sizes_and_cluster_skeleton(
+      ordering_groups_base,
+      base_order_index,
+      order_with_vnodes,
+      order_with_clusters,
+      cluster_meta,
+      vnode_info,
+      vnode_order_keys_for_ordering,
+      order_sizes,
+    )
+  dot_trace_groups("order_groups_pre", order_groups)
+  let reorder_context =
+    build_order_reorder_context(
+      order_groups,
+      nlist_order,
+      gdnlist_order,
+      node_order,
+      real_nodes,
+      base_order_index,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      port_edge_nodes,
+    )
+  trace_order_node_order_debug(reorder_context.order_node_order)
+  let materialized =
+    build_materialized_order_edges_and_neighbors(
+      nlist_order,
+      order_edges_by_tail,
+      reorder_context.order_graph,
+      reorder_context.order_node_map,
+      order_edges_by_tail_unmapped,
+      reorder_context.order_graph_unmapped,
+      reorder_context.order_node_map_unmapped,
+      reorder_context.order_ranks,
+      real_nodes,
+      reorder_context.order_nodes,
+      edge_creation_order,
+      cluster_meta,
+      gdnlist_order,
+      edge_tail,
+      edge_head,
+      nodes,
+      reorder_context.order_node_order,
+    )
+  (
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    reorder_context,
+    materialized,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -5913,8 +6005,10 @@ fn run_clustered_ordering_stage(
     order_sizes_out,
     order_cluster_keys,
     order_cluster_skeleton,
+    reorder_context,
+    materialized,
   ) =
-    build_order_groups_sizes_and_cluster_skeleton(
+    build_clustered_ordering_pre_root_stage(
       ordering_groups_base,
       base_order_index,
       order_with_vnodes,
@@ -5923,50 +6017,22 @@ fn run_clustered_ordering_stage(
       vnode_info,
       vnode_order_keys_for_ordering,
       order_sizes,
-    )
-  dot_trace_groups("order_groups_pre", order_groups)
-  let reorder_context =
-    build_order_reorder_context(
-      order_groups,
       nlist_order,
       gdnlist_order,
       node_order,
       real_nodes,
-      base_order_index,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
       port_edge_nodes,
-    )
-  let order_rank_keys = reorder_context.order_rank_keys
-  let order_ranks = reorder_context.order_ranks
-  let order_nodes = reorder_context.order_nodes
-  let order_graph = reorder_context.order_graph
-  let order_node_map = reorder_context.order_node_map
-  let order_graph_unmapped = reorder_context.order_graph_unmapped
-  let order_node_map_unmapped = reorder_context.order_node_map_unmapped
-  let creation_order = reorder_context.creation_order
-  let order_node_order = reorder_context.order_node_order
-  trace_order_node_order_debug(order_node_order)
-  let materialized =
-    build_materialized_order_edges_and_neighbors(
-      nlist_order,
       order_edges_by_tail,
-      order_graph,
-      order_node_map,
       order_edges_by_tail_unmapped,
-      order_graph_unmapped,
-      order_node_map_unmapped,
-      order_ranks,
-      real_nodes,
-      order_nodes,
       edge_creation_order,
-      cluster_meta,
-      gdnlist_order,
       edge_tail,
       edge_head,
       nodes,
-      order_node_order,
     )
+  let order_rank_keys = reorder_context.order_rank_keys
+  let order_ranks = reorder_context.order_ranks
+  let creation_order = reorder_context.creation_order
+  let order_node_order = reorder_context.order_node_order
   let order_edges_out = materialized.order_edges_out
   let order_edge_tail_out = materialized.order_edge_tail_out
   let order_edge_head_out = materialized.order_edge_head_out
