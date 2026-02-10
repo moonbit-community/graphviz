@@ -246,6 +246,14 @@ priv struct XposFlatLabelAugmentation {
 }
 
 ///|
+priv struct PositionModeFlags {
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+  xpos_reorder_enabled : Bool
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7400,6 +7408,30 @@ fn maybe_apply_xpos_transpose_cleanup(
 }
 
 ///|
+/// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
+/// rankdir flip) are computed once from prep+ordering and forwarded unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_mode_flags(
+  prep : LayoutPrep,
+  ordering : OrderingResult,
+) -> PositionModeFlags {
+  let use_vnodes_for_xpos =
+    prep.has_edge_labels || prep.has_port_edges || ordering.vnode_count <= MAX_XPOS_VNODES
+  let allow_xpos_reorder =
+    !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
+  let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
+  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
+  let xpos_reorder_enabled = false
+  {
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    graphviz_flip,
+    xpos_reorder_enabled,
+  }
+}
+
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7410,13 +7442,11 @@ fn compute_positions(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
 ) -> PositionResult {
-  let use_vnodes_for_xpos =
-    prep.has_edge_labels || prep.has_port_edges || ordering.vnode_count <= MAX_XPOS_VNODES
-  let allow_xpos_reorder =
-    !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
-  let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
-  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
-  let xpos_reorder_enabled = false
+  let mode_flags = build_position_mode_flags(prep, ordering)
+  let use_vnodes_for_xpos = mode_flags.use_vnodes_for_xpos
+  let allow_xpos_reorder = mode_flags.allow_xpos_reorder
+  let graphviz_flip = mode_flags.graphviz_flip
+  let xpos_reorder_enabled = mode_flags.xpos_reorder_enabled
   dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
     build_virtual_slack_edges_for_positions(
