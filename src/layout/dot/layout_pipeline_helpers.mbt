@@ -350,6 +350,14 @@ priv struct NonclusterXposReorderInputs {
 }
 
 ///|
+priv struct XposTransposeCleanupInputs {
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  tmp_rank_keys : Array[Int]
+  tmp_ranks : Map[String, Int]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -8540,12 +8548,7 @@ fn build_xpos_transpose_cleanup_inputs_for_positions(
   ordering : OrderingResult,
   ranks : Map[String, Int],
   x_groups : Map[Int, Array[String]],
-) -> (
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Array[Int],
-  Map[String, Int],
-) {
+) -> XposTransposeCleanupInputs {
   let (parents, children) = build_edge_index_for_order_with_vnodes(
     nodes,
     ordering.order_edges,
@@ -8557,7 +8560,7 @@ fn build_xpos_transpose_cleanup_inputs_for_positions(
   )
   let tmp_rank_keys = collect_rank_keys(x_groups)
   let tmp_ranks = build_node_ranks(x_groups)
-  (parents, children, tmp_rank_keys, tmp_ranks)
+  { parents, children, tmp_rank_keys, tmp_ranks }
 }
 
 ///|
@@ -8570,7 +8573,7 @@ fn apply_xpos_transpose_cleanup_for_positions(
   ranks : Map[String, Int],
   x_groups : Map[Int, Array[String]],
 ) -> Unit {
-  let (parents, children, tmp_rank_keys, tmp_ranks) =
+  let transpose_cleanup_inputs =
     build_xpos_transpose_cleanup_inputs_for_positions(
       nodes,
       ordering,
@@ -8578,11 +8581,11 @@ fn apply_xpos_transpose_cleanup_for_positions(
       x_groups,
     )
   apply_xpos_transpose_cleanup_passes(
-    tmp_rank_keys,
+    transpose_cleanup_inputs.tmp_rank_keys,
     x_groups,
-    parents,
-    children,
-    tmp_ranks,
+    transpose_cleanup_inputs.parents,
+    transpose_cleanup_inputs.children,
+    transpose_cleanup_inputs.tmp_ranks,
   )
 }
 
