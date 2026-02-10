@@ -3756,6 +3756,173 @@ fn trace_remincross_materialized_edges(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
+/// edge vnodes, then materializes/remaps edges and executes final startpass=2
+/// reorder before dropping non-real nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_pass(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  creation_order : Array[String],
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  base_groups : Map[Int, Array[String]],
+  ordered_with_vnodes : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  graphviz_flip : Bool,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  // Graphviz parity: ReMincross runs on real nodes + edge vnodes (no cluster skeletons).
+  let rem_groups =
+    build_remincross_groups_with_optional_vnodes(
+      base_groups,
+      order_with_vnodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      vnode_info.edge_vnodes,
+      vnode_info.vnode_ranks,
+      vnode_info.vnodes_by_rank,
+    )
+  dot_trace_groups("remincross_groups", rem_groups)
+  let rem_rank_keys = collect_rank_keys(rem_groups)
+  let mut next_ordered_with_vnodes = ordered_with_vnodes
+  let mut next_final_groups = base_groups
+  if rem_rank_keys.length() > 1 {
+    let rem_ranks = build_node_ranks(rem_groups)
+    let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+    let (rem_graph, rem_node_map) =
+      build_order_graph_and_nodes("order_remincross", rem_nodes)
+    let rem_edges_by_tail = edges_by_tail
+    // Graphviz parity: ReMincross uses real intercluster edges
+    // (no cluster skeleton mapping).
+    let (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation) =
+      build_order_edges_by_tail_graphviz(
+        creation_order,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
+        ranks,
+        vnode_info.edge_vnodes,
+        order_with_vnodes,
+        cluster_meta.cluster_keys,
+        order_with_clusters,
+        false,
+        false,
+        rem_edges_by_tail,
+      )
+    trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
+    let (
+      rem_node_order,
+      rem_edges_out,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_edge_tail_port_x,
+      rem_edge_head_port_x,
+      rem_edge_tail_port_order,
+      rem_edge_head_port_order,
+    ) =
+      build_remincross_materialized_order_graph(
+        flat_rank_constraints,
+        creation_order,
+        rem_vnode_creation,
+        rem_edge_creation,
+        rem_order_edges_by_tail,
+        rem_graph,
+        rem_node_map,
+        rem_groups,
+      )
+    trace_remincross_materialized_edges(
+      rem_edges_out,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+    )
+    let (rem_parents, rem_children, rem_edge_order) =
+      build_order_edge_indices_and_order(
+        rem_nodes,
+        rem_edge_tail_out,
+        rem_edge_head_out,
+        rem_ranks,
+        rem_edges_out,
+      )
+    let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
+      build_remincross_reorder_inputs(
+        graph,
+        edges,
+        edge_tail,
+        edge_head,
+        order_with_vnodes,
+        order_with_clusters,
+        ranks,
+        cluster_meta,
+        vnode_info,
+        order_sizes,
+        rank_same_constraints,
+        rem_groups,
+        real_nodes,
+      )
+    let (rem_ordered, rem_cleaned) =
+      run_remincross_reorder_and_collect_real_groups(
+        rem_rank_keys,
+        rem_groups,
+        rem_edges_out,
+        rem_edge_tail_out,
+        rem_edge_head_out,
+        rem_edge_tail_port_x,
+        rem_edge_head_port_x,
+        rem_edge_tail_port_order,
+        rem_edge_head_port_order,
+        rem_parents,
+        rem_children,
+        rem_cluster_keys,
+        cluster_meta.rank_same_groups,
+        cluster_meta.rank_same_order,
+        rem_edge_order,
+        rem_node_order,
+        rem_sizes,
+        nodesep_pt,
+        has_edge_labels,
+        port_order_positions,
+        port_order_contrib,
+        rem_flat_constraints,
+        graphviz_flip,
+        real_nodes,
+      )
+    next_ordered_with_vnodes = rem_ordered
+    next_final_groups = rem_cleaned
+  }
+  (next_ordered_with_vnodes, next_final_groups)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -4510,134 +4677,38 @@ fn compute_ordering_and_vnodes(
           local_cluster_order,
         )
         dot_trace_groups("cleaned_groups_post", final_groups)
-        // Graphviz parity: ReMincross runs on real nodes + edge vnodes (no cluster skeletons).
-        let rem_groups =
-          build_remincross_groups_with_optional_vnodes(
-            final_groups,
-            order_with_vnodes,
+        let (rem_ordered_with_vnodes, rem_final_groups) =
+          run_clustered_remincross_pass(
+            graph,
             edges,
             edge_tail,
             edge_head,
             edge_reversed,
+            edge_tail_port_x,
+            edge_head_port_x,
+            edge_tail_port_order,
+            edge_head_port_order,
             ranks,
-            cluster_meta.cluster_keys,
-            cluster_meta.intercluster_keys,
-            cluster_meta.cluster_parents,
-            cluster_meta.cluster_min_rank,
-            cluster_meta.cluster_max_rank,
-            vnode_info.edge_vnodes,
-            vnode_info.vnode_ranks,
-            vnode_info.vnodes_by_rank,
+            order_with_vnodes,
+            order_with_clusters,
+            flat_rank_constraints,
+            creation_order,
+            edges_by_tail,
+            cluster_meta,
+            vnode_info,
+            order_sizes,
+            rank_same_constraints,
+            final_groups,
+            ordered_with_vnodes,
+            real_nodes,
+            graphviz_flip,
+            nodesep_pt,
+            has_edge_labels,
+            port_order_positions,
+            port_order_contrib,
           )
-        dot_trace_groups("remincross_groups", rem_groups)
-        let rem_rank_keys = collect_rank_keys(rem_groups)
-        if rem_rank_keys.length() > 1 {
-          let rem_ranks = build_node_ranks(rem_groups)
-          let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
-          let (rem_graph, rem_node_map) =
-            build_order_graph_and_nodes("order_remincross", rem_nodes)
-          let rem_edges_by_tail = edges_by_tail
-          // Graphviz parity: ReMincross uses real intercluster edges
-          // (no cluster skeleton mapping).
-          let (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation) =
-            build_order_edges_by_tail_graphviz(
-              creation_order,
-              edges,
-              edge_tail,
-              edge_head,
-              edge_tail_port_x,
-              edge_head_port_x,
-              edge_tail_port_order,
-              edge_head_port_order,
-              ranks,
-              vnode_info.edge_vnodes,
-              order_with_vnodes,
-              cluster_meta.cluster_keys,
-              order_with_clusters,
-              false,
-              false,
-              rem_edges_by_tail,
-            )
-          trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
-          let (
-            rem_node_order,
-            rem_edges_out,
-            rem_edge_tail_out,
-            rem_edge_head_out,
-            rem_edge_tail_port_x,
-            rem_edge_head_port_x,
-            rem_edge_tail_port_order,
-            rem_edge_head_port_order,
-          ) =
-            build_remincross_materialized_order_graph(
-              flat_rank_constraints,
-              creation_order,
-              rem_vnode_creation,
-              rem_edge_creation,
-              rem_order_edges_by_tail,
-              rem_graph,
-              rem_node_map,
-              rem_groups,
-            )
-          trace_remincross_materialized_edges(
-            rem_edges_out,
-            rem_edge_tail_out,
-            rem_edge_head_out,
-          )
-          let (rem_parents, rem_children, rem_edge_order) =
-            build_order_edge_indices_and_order(
-              rem_nodes,
-              rem_edge_tail_out,
-              rem_edge_head_out,
-              rem_ranks,
-              rem_edges_out,
-            )
-          let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
-            build_remincross_reorder_inputs(
-              graph,
-              edges,
-              edge_tail,
-              edge_head,
-              order_with_vnodes,
-              order_with_clusters,
-              ranks,
-              cluster_meta,
-              vnode_info,
-              order_sizes,
-              rank_same_constraints,
-              rem_groups,
-              real_nodes,
-            )
-          let (rem_ordered, rem_cleaned) =
-            run_remincross_reorder_and_collect_real_groups(
-              rem_rank_keys,
-              rem_groups,
-              rem_edges_out,
-              rem_edge_tail_out,
-              rem_edge_head_out,
-              rem_edge_tail_port_x,
-              rem_edge_head_port_x,
-              rem_edge_tail_port_order,
-              rem_edge_head_port_order,
-              rem_parents,
-              rem_children,
-              rem_cluster_keys,
-              cluster_meta.rank_same_groups,
-              cluster_meta.rank_same_order,
-              rem_edge_order,
-              rem_node_order,
-              rem_sizes,
-              nodesep_pt,
-              has_edge_labels,
-              port_order_positions,
-              port_order_contrib,
-              rem_flat_constraints,
-              graphviz_flip,
-              real_nodes,
-            )
-          ordered_with_vnodes = rem_ordered
-          final_groups = rem_cleaned
-        }
+        ordered_with_vnodes = rem_ordered_with_vnodes
+        final_groups = rem_final_groups
       }
       final_groups
     } else {
