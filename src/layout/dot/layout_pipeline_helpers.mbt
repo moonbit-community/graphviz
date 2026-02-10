@@ -9089,22 +9089,21 @@ fn build_position_result_from_projection_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: final position result object is assembled from already-
-/// computed maps without extra transforms or normalization.
+/// Graphviz parity: position-result output object maps prepared position/rank
+/// fields directly without additional transforms.
 /// Do not change behavior without updating fixtures/tests.
-fn build_position_result_for_positions(
+fn build_position_result_output_for_positions(
   x_groups : Map[Int, Array[String]],
   rank_y : Map[Int, Double],
-  position_output_maps : PositionOutputMaps,
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
   flat_label_edge_vnodes : Map[String, String],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   cluster_bbox_heights : Map[String, (Double, Double)],
 ) -> PositionResult {
-  let positions = position_output_maps.positions
-  let vnode_positions = position_output_maps.vnode_positions
-  let cluster_ln_x = position_output_maps.cluster_ln_x
-  let cluster_rn_x = position_output_maps.cluster_rn_x
   {
     x_groups,
     rank_y,
@@ -9117,6 +9116,33 @@ fn build_position_result_for_positions(
     rank_ht2,
     cluster_bbox_heights,
   }
+}
+
+///|
+/// Graphviz parity: final position result object is assembled from already-
+/// computed maps without extra transforms or normalization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_result_for_positions(
+  x_groups : Map[Int, Array[String]],
+  rank_y : Map[Int, Double],
+  position_output_maps : PositionOutputMaps,
+  flat_label_edge_vnodes : Map[String, String],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  cluster_bbox_heights : Map[String, (Double, Double)],
+) -> PositionResult {
+  build_position_result_output_for_positions(
+    x_groups,
+    rank_y,
+    position_output_maps.positions,
+    position_output_maps.vnode_positions,
+    position_output_maps.cluster_ln_x,
+    position_output_maps.cluster_rn_x,
+    flat_label_edge_vnodes,
+    rank_ht1,
+    rank_ht2,
+    cluster_bbox_heights,
+  )
 }
 
 ///|
