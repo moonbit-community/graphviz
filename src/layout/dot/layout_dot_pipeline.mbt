@@ -104,6 +104,23 @@ priv struct DotRoutingStage {
 }
 
 ///|
+/// Graphviz parity: routing path-groups selection prefers positioned x-groups,
+/// then vnode-expanded order groups, then base order groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_path_groups_for_routing_stage(
+  positions_state : PositionResult,
+  ordering : OrderingResult,
+) -> Map[Int, Array[String]] {
+  if positions_state.x_groups.length() > 0 {
+    positions_state.x_groups
+  } else if ordering.ordered_groups_with_vnodes.length() > 0 {
+    ordering.ordered_groups_with_vnodes
+  } else {
+    ordering.ordered_groups
+  }
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -164,13 +181,7 @@ fn compute_dot_routing_stage(
     )
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
-    if positions_state.x_groups.length() > 0 {
-      positions_state.x_groups
-    } else if rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
-      rank_stage.ordering.ordered_groups_with_vnodes
-    } else {
-      rank_stage.ordering.ordered_groups
-    }
+    build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
   let routing_context =
     prepare_routing_context(
       prep.nodes,
