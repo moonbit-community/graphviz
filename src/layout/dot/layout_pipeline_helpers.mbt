@@ -8153,6 +8153,29 @@ fn build_noncluster_xpos_reorder_port_hints_for_positions(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder reads vnode edge-index parents/
+/// children and current rank keys before calling reorder_rank_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_xpos_reorder_graph_inputs_for_positions(
+  nodes : Array[@cgraph.Node],
+  ordering : OrderingResult,
+  ranks : Map[String, Int],
+  x_groups : Map[Int, Array[String]],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Array[Int]) {
+  let (parents, children) = build_edge_index_for_order_with_vnodes(
+    nodes,
+    ordering.order_edges,
+    ordering.order_edge_tail,
+    ordering.order_edge_head,
+    ranks,
+    ordering.vnode_info.edge_vnodes,
+    ordering.vnode_info.vnode_ranks,
+  )
+  let tmp_rank_keys = collect_rank_keys(x_groups)
+  (parents, children, tmp_rank_keys)
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -8173,15 +8196,13 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
   if xpos_reorder_enabled &&
     allow_xpos_reorder && !cluster_meta.ordering_set && !has_vnode_order &&
     !cluster_meta.has_clusters {
-    let (parents, children) = build_edge_index_for_order_with_vnodes(
-      prep.nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      rank_data.ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
-    )
+    let (parents, children, tmp_rank_keys) =
+      build_noncluster_xpos_reorder_graph_inputs_for_positions(
+        prep.nodes,
+        ordering,
+        rank_data.ranks,
+        x_groups,
+      )
     // Graphviz parity: even non-cluster xpos reorder uses compass/record
     // port-order fractions when mincross scoring ties are evaluated.
     let (
@@ -8194,7 +8215,6 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
       ordering,
       x_order_sizes,
     )
-    let tmp_rank_keys = collect_rank_keys(x_groups)
     reorder_rank_groups(
       tmp_rank_keys,
       x_groups,
