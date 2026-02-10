@@ -3548,6 +3548,77 @@ fn build_remincross_flat_constraints(
 }
 
 ///|
+/// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
+/// vnode LCA assignments), local intercluster-node guards, size map extension,
+/// and flat-constraint augmentation before final reorder pass.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_reorder_inputs(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ranks : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
+  let rem_cluster_keys =
+    build_remincross_cluster_keys(
+      graph,
+      edges,
+      edge_tail,
+      edge_head,
+      order_with_vnodes,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
+      vnode_info.edge_vnodes,
+    )
+  let intercluster_nodes =
+    collect_intercluster_nodes_with_short_span(
+      order_with_clusters,
+      edge_tail,
+      edge_head,
+      cluster_meta.intercluster_keys,
+      ranks,
+    )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let debug_vnodes : Array[String] = [
+      "_mbt_edge_vn_0_3",
+      "_mbt_edge_vn_1_3",
+    ]
+    for name in debug_vnodes {
+      let cluster = match rem_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      println("remincross vnode \{name} cluster=\{cluster}")
+    }
+  }
+  let rem_sizes =
+    build_order_sizes_for_order_graph(
+      order_sizes,
+      order_with_vnodes,
+      vnode_info.vnode_sizes,
+    )
+  let rem_flat_constraints =
+    build_remincross_flat_constraints(
+      cluster_meta.flat_constraints,
+      rank_same_constraints,
+      order_with_clusters,
+      rem_groups,
+      real_nodes,
+      rem_cluster_keys,
+      intercluster_nodes,
+    )
+  (rem_cluster_keys, rem_sizes, rem_flat_constraints)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -4430,53 +4501,21 @@ fn compute_ordering_and_vnodes(
               rem_ranks,
               rem_edges_out,
             )
-          let rem_cluster_keys =
-            build_remincross_cluster_keys(
+          let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
+            build_remincross_reorder_inputs(
               graph,
               edges,
               edge_tail,
               edge_head,
               order_with_vnodes,
-              cluster_meta.intercluster_keys,
-              cluster_meta.cluster_parents,
-              vnode_info.edge_vnodes,
-            )
-          let intercluster_nodes =
-            collect_intercluster_nodes_with_short_span(
               order_with_clusters,
-              edge_tail,
-              edge_head,
-              cluster_meta.intercluster_keys,
               ranks,
-            )
-          if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-            let debug_vnodes : Array[String] = [
-              "_mbt_edge_vn_0_3",
-              "_mbt_edge_vn_1_3",
-            ]
-            for name in debug_vnodes {
-              let cluster = match rem_cluster_keys.get(name) {
-                Some(value) => value
-                None => ""
-              }
-              println("remincross vnode \{name} cluster=\{cluster}")
-            }
-          }
-          let rem_sizes =
-            build_order_sizes_for_order_graph(
+              cluster_meta,
+              vnode_info,
               order_sizes,
-              order_with_vnodes,
-              vnode_info.vnode_sizes,
-            )
-          let rem_flat_constraints =
-            build_remincross_flat_constraints(
-              cluster_meta.flat_constraints,
               rank_same_constraints,
-              order_with_clusters,
               rem_groups,
               real_nodes,
-              rem_cluster_keys,
-              intercluster_nodes,
             )
           let rem_ordered = reorder_rank_groups(
             rem_rank_keys,
