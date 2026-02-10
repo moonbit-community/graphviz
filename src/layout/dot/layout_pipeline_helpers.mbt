@@ -9811,6 +9811,110 @@ fn build_clustered_xpos_reorder_seed_data(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder expands vnode edge chains
+/// into order-graph segments while preserving endpoint port hints.
+/// Do not change behavior without updating fixtures/tests.
+fn append_clustered_xpos_reorder_edge_with_vnodes(
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  tail : String,
+  head : String,
+  penalty : Int,
+  constraint : Bool,
+  tail_port_x : Double,
+  head_port_x : Double,
+  tail_port_order : Double,
+  head_port_order : Double,
+  vnodes : Array[String],
+) -> Unit {
+  if vnodes.length() == 0 {
+    add_order_edge(
+      order_graph,
+      order_node_map,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      tail,
+      head,
+      penalty,
+      constraint,
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+    )
+  } else {
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    let chain : Array[String] = []
+    chain.push(tail)
+    if tail_rank <= head_rank {
+      for vnode in vnodes {
+        chain.push(vnode)
+      }
+    } else {
+      let mut i = vnodes.length()
+      while i > 0 {
+        i = i - 1
+        chain.push(vnodes[i])
+      }
+    }
+    chain.push(head)
+    let mut idx = 0
+    while idx + 1 < chain.length() {
+      let seg_tail_port =
+        if chain[idx] == tail { tail_port_x } else { 0.0 }
+      let seg_head_port =
+        if chain[idx + 1] == head { head_port_x } else { 0.0 }
+      // Graphviz parity: split edge segments keep neutral midpoint
+      // port-order (0.5) unless endpoint matches real tail/head.
+      let seg_tail_order =
+        if chain[idx] == tail { tail_port_order } else { 0.5 }
+      let seg_head_order =
+        if chain[idx + 1] == head { head_port_order } else { 0.5 }
+      add_order_edge(
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        chain[idx],
+        chain[idx + 1],
+        penalty,
+        constraint,
+        seg_tail_port,
+        seg_head_port,
+        seg_tail_order,
+        seg_head_order,
+      )
+      idx = idx + 1
+    }
+  }
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder appends cluster skeleton chain
 /// edges between consecutive cluster ranks with CL_CROSS penalty.
 /// Do not change behavior without updating fixtures/tests.
@@ -9920,83 +10024,27 @@ fn build_clustered_xpos_reorder_edges(
       Some(list) => list
       None => []
     }
-    if vnodes.length() == 0 {
-      add_order_edge(
-        order_graph,
-        order_node_map,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        tail,
-        head,
-        penalty,
-        constraint,
-        tail_port_x,
-        head_port_x,
-        tail_port_order,
-        head_port_order,
-      )
-    } else {
-      let tail_rank = match rank_data.ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match rank_data.ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
-      let chain : Array[String] = []
-      chain.push(tail)
-      if tail_rank <= head_rank {
-        for vnode in vnodes {
-          chain.push(vnode)
-        }
-      } else {
-        let mut i = vnodes.length()
-        while i > 0 {
-          i = i - 1
-          chain.push(vnodes[i])
-        }
-      }
-      chain.push(head)
-      let mut idx = 0
-      while idx + 1 < chain.length() {
-        let seg_tail_port =
-          if chain[idx] == tail { tail_port_x } else { 0.0 }
-        let seg_head_port =
-          if chain[idx + 1] == head { head_port_x } else { 0.0 }
-        // Graphviz parity: split edge segments keep neutral midpoint
-        // port-order (0.5) unless endpoint matches real tail/head.
-        let seg_tail_order =
-          if chain[idx] == tail { tail_port_order } else { 0.5 }
-        let seg_head_order =
-          if chain[idx + 1] == head { head_port_order } else { 0.5 }
-        add_order_edge(
-          order_graph,
-          order_node_map,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          chain[idx],
-          chain[idx + 1],
-          penalty,
-          constraint,
-          seg_tail_port,
-          seg_head_port,
-          seg_tail_order,
-          seg_head_order,
-        )
-        idx = idx + 1
-      }
-    }
+    append_clustered_xpos_reorder_edge_with_vnodes(
+      order_graph,
+      order_node_map,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      rank_data.ranks,
+      tail,
+      head,
+      penalty,
+      constraint,
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+      vnodes,
+    )
     edge_idx = edge_idx + 1
   }
   append_cluster_skeleton_edges_for_xpos_reorder(
