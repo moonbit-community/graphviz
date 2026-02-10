@@ -5763,6 +5763,33 @@ fn run_cluster_rank_order_and_finalize_stage(
 }
 
 ///|
+/// Graphviz parity: existing-name map is seeded from declared nodes before
+/// vnode synthesis and flat-label augmentation overlays.
+/// Do not change behavior without updating fixtures/tests.
+fn build_existing_node_names_map_for_positions(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, Bool] {
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in nodes {
+    existing_names[node.name()] = true
+  }
+  existing_names
+}
+
+///|
+/// Graphviz parity: vnode names are overlaid onto existing-name maps before
+/// helper calls that need collision-safe synthetic node naming.
+/// Do not change behavior without updating fixtures/tests.
+fn add_vnode_names_to_existing_names_for_positions(
+  existing_names : Map[String, Bool],
+  vnode_ranks : Map[String, Int],
+) -> Unit {
+  for vnode, _ in vnode_ranks {
+    existing_names[vnode] = true
+  }
+}
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5780,11 +5807,10 @@ fn build_ordering_base_context(
   cluster_meta : ClusterMetadata,
 ) -> OrderingBaseContext {
   let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
+  let existing_names = build_existing_node_names_map_for_positions(nodes)
   for node in nodes {
     let name = node.name()
     real_nodes[name] = true
-    existing_names[name] = true
   }
   let edge_cluster_keys : Map[String, String] = Map::new()
   collect_edge_cluster_keys(graph, edge_cluster_keys)
@@ -8099,13 +8125,11 @@ fn build_flat_label_vnode_augmentation_for_positions(
   let mut flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
   let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
   let next_x_cluster_keys = x_cluster_keys
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in prep.nodes {
-    existing_names[node.name()] = true
-  }
-  for vnode, _ in ordering.vnode_info.vnode_ranks {
-    existing_names[vnode] = true
-  }
+  let existing_names = build_existing_node_names_map_for_positions(prep.nodes)
+  add_vnode_names_to_existing_names_for_positions(
+    existing_names,
+    ordering.vnode_info.vnode_ranks,
+  )
   if use_vnodes_for_xpos {
     let (
       updated_groups,
