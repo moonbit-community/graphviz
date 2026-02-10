@@ -7271,6 +7271,87 @@ fn build_flat_label_vnode_augmentation_for_positions(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
+/// vnode reorder path is not taken, matching Graphviz branch structure.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_apply_noncluster_xpos_reorder_fallback(
+  xpos_reorder_enabled : Bool,
+  allow_xpos_reorder : Bool,
+  has_vnode_order : Bool,
+  cluster_meta : ClusterMetadata,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  ordering : OrderingResult,
+  x_order_sizes : Map[String, NodeSize],
+  x_cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+  x_groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  if xpos_reorder_enabled &&
+    allow_xpos_reorder && !cluster_meta.ordering_set && !has_vnode_order &&
+    !cluster_meta.has_clusters {
+    let (parents, children) = build_edge_index_for_order_with_vnodes(
+      prep.nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      rank_data.ranks,
+      ordering.vnode_info.edge_vnodes,
+      ordering.vnode_info.vnode_ranks,
+    )
+    let (order_edge_tail_port_x, order_edge_head_port_x) =
+      compute_edge_port_positions(
+        prep.nodes,
+        ordering.order_edges,
+        ordering.order_edge_tail,
+        ordering.order_edge_head,
+        x_order_sizes,
+      )
+    // Graphviz parity: even non-cluster xpos reorder uses compass/record
+    // port-order fractions when mincross scoring ties are evaluated.
+    let (order_edge_tail_port_order, order_edge_head_port_order) =
+      compute_edge_port_orders(
+        prep.nodes,
+        ordering.order_edges,
+        ordering.order_edge_tail,
+        ordering.order_edge_head,
+        x_order_sizes,
+      )
+    let tmp_rank_keys = collect_rank_keys(x_groups)
+    reorder_rank_groups(
+      tmp_rank_keys,
+      x_groups,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      parents,
+      children,
+      x_cluster_keys,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      ordering.edge_order,
+      prep.node_order,
+      x_order_sizes,
+      rank_heights.nodesep_pt,
+      prep.has_edge_labels,
+      prep.port_order_positions,
+      prep.port_order_contrib,
+      Map::new(),
+      cluster_meta.cluster_skeleton,
+      cluster_meta.flat_constraints,
+      graphviz_flip=graphviz_flip,
+    )
+  } else {
+    x_groups
+  }
+}
+
+///|
 /// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
@@ -7634,64 +7715,22 @@ fn compute_positions(
       graphviz_flip=graphviz_flip,
     )
     x_groups = ordered_groups
-  } else if xpos_reorder_enabled &&
-    allow_xpos_reorder && !cluster_meta.ordering_set && !has_vnode_order &&
-    !cluster_meta.has_clusters {
-    let (parents, children) = build_edge_index_for_order_with_vnodes(
-      prep.nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      rank_data.ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
-    )
-    let (order_edge_tail_port_x, order_edge_head_port_x) =
-      compute_edge_port_positions(
-        prep.nodes,
-        ordering.order_edges,
-        ordering.order_edge_tail,
-        ordering.order_edge_head,
+  } else {
+    x_groups =
+      maybe_apply_noncluster_xpos_reorder_fallback(
+        xpos_reorder_enabled,
+        allow_xpos_reorder,
+        has_vnode_order,
+        cluster_meta,
+        prep,
+        rank_data,
+        rank_heights,
+        ordering,
         x_order_sizes,
+        x_cluster_keys,
+        graphviz_flip,
+        x_groups,
       )
-    // Graphviz parity: even non-cluster xpos reorder uses compass/record
-    // port-order fractions when mincross scoring ties are evaluated.
-    let (order_edge_tail_port_order, order_edge_head_port_order) =
-      compute_edge_port_orders(
-        prep.nodes,
-        ordering.order_edges,
-        ordering.order_edge_tail,
-        ordering.order_edge_head,
-        x_order_sizes,
-      )
-    let tmp_rank_keys = collect_rank_keys(x_groups)
-    x_groups = reorder_rank_groups(
-      tmp_rank_keys,
-      x_groups,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      parents,
-      children,
-      x_cluster_keys,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      ordering.edge_order,
-      prep.node_order,
-      x_order_sizes,
-      rank_heights.nodesep_pt,
-      prep.has_edge_labels,
-      prep.port_order_positions,
-      prep.port_order_contrib,
-      Map::new(),
-      cluster_meta.cluster_skeleton,
-      cluster_meta.flat_constraints,
-      graphviz_flip=graphviz_flip,
-    )
   }
   dot_trace_groups("x-groups", x_groups)
   maybe_apply_xpos_transpose_cleanup(
