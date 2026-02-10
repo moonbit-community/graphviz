@@ -5160,6 +5160,40 @@ fn run_root_mincross_reorder(
 }
 
 ///|
+/// Graphviz parity: edge-port data output keeps original and deduplicated edge
+/// arrays plus sampled port coordinates/orders unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_edge_port_data_output(
+  edge_order : Map[String, Int],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+) -> OrderingEdgePortData {
+  {
+    edge_order,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  }
+}
+
+///|
 /// Graphviz parity: order-graph edge arrays preserve original edge sequence,
 /// then reuse deduplicated order edges for mincross-specific port sampling.
 /// Do not change behavior without updating fixtures/tests.
@@ -5193,7 +5227,7 @@ fn build_ordering_edge_port_data(
       order_edge_head,
       order_sizes,
     )
-  {
+  build_ordering_edge_port_data_output(
     edge_order,
     edge_tail_port_x,
     edge_head_port_x,
@@ -5206,7 +5240,7 @@ fn build_ordering_edge_port_data(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
-  }
+  )
 }
 
 ///|
