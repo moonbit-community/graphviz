@@ -2887,6 +2887,57 @@ fn collect_intercluster_nodes_with_short_span(
 }
 
 ///|
+/// Graphviz parity: ReMincross flat constraints combine existing same-rank
+/// constraints with local intra-cluster adjacency locks for non-intercluster
+/// real-node pairs (flat.c cluster-local reorder guard).
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_flat_constraints(
+  flat_constraints : Map[String, Bool],
+  rank_same_constraints : Map[String, Bool],
+  order_with_clusters : Bool,
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  rem_cluster_keys : Map[String, String],
+  intercluster_nodes : Map[String, Bool],
+) -> Map[String, Bool] {
+  let rem_flat_constraints = clone_flat_constraints(flat_constraints)
+  for key, _ in rank_same_constraints {
+    rem_flat_constraints[key] = true
+  }
+  if !order_with_clusters {
+    return rem_flat_constraints
+  }
+  // Graphviz parity: keep relative order of real nodes that are
+  // internal to a cluster; allow nodes with intercluster edges to reorder.
+  for _rank, names in rem_groups {
+    let mut prev_real : String? = None
+    let mut prev_cluster = ""
+    let mut prev_inter = false
+    for name in names {
+      if real_nodes.get(name) is None {
+        continue
+      }
+      let cluster = match rem_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      let inter = intercluster_nodes.get(name) is Some(_)
+      match prev_real {
+        Some(prev) =>
+          if cluster != "" && cluster == prev_cluster && !prev_inter && !inter {
+            rem_flat_constraints["\{prev}|\{name}"] = true
+          }
+        None => ()
+      }
+      prev_real = Some(name)
+      prev_cluster = cluster
+      prev_inter = inter
+    }
+  }
+  rem_flat_constraints
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -4070,40 +4121,15 @@ fn compute_ordering_and_vnodes(
               vnode_info.vnode_sizes,
             )
           let rem_flat_constraints =
-            clone_flat_constraints(cluster_meta.flat_constraints)
-          for key, _ in rank_same_constraints {
-            rem_flat_constraints[key] = true
-          }
-          if order_with_clusters {
-            // Graphviz parity: keep relative order of real nodes that are
-            // internal to a cluster; allow nodes with intercluster edges to reorder.
-            for _rank, names in rem_groups {
-              let mut prev_real : String? = None
-              let mut prev_cluster = ""
-              let mut prev_inter = false
-              for name in names {
-                if real_nodes.get(name) is None {
-                  continue
-                }
-                let cluster = match rem_cluster_keys.get(name) {
-                  Some(value) => value
-                  None => ""
-                }
-                let inter = intercluster_nodes.get(name) is Some(_)
-                match prev_real {
-                  Some(prev) =>
-                    if cluster != "" && cluster == prev_cluster &&
-                      !prev_inter && !inter {
-                      rem_flat_constraints["\{prev}|\{name}"] = true
-                    }
-                  None => ()
-                }
-                prev_real = Some(name)
-                prev_cluster = cluster
-                prev_inter = inter
-              }
-            }
-          }
+            build_remincross_flat_constraints(
+              cluster_meta.flat_constraints,
+              rank_same_constraints,
+              order_with_clusters,
+              rem_groups,
+              real_nodes,
+              rem_cluster_keys,
+              intercluster_nodes,
+            )
           let rem_ordered = reorder_rank_groups(
             rem_rank_keys,
             rem_groups,
@@ -4136,23 +4162,8 @@ fn compute_ordering_and_vnodes(
             dot_trace_groups("remincross_ordered", rem_ordered)
           }
           ordered_with_vnodes = rem_ordered
-          let rem_cleaned : Map[Int, Array[String]] = Map::new()
-          for rank in rem_rank_keys {
-            let names = match rem_ordered.get(rank) {
-              Some(list) => list
-              None => []
-            }
-            let cleaned : Array[String] = []
-            for name in names {
-              if real_nodes.get(name) is Some(_) {
-                cleaned.push(name)
-              }
-            }
-            if cleaned.length() > 0 {
-              rem_cleaned[rank] = cleaned
-            }
-          }
-          final_groups = rem_cleaned
+          final_groups =
+            collect_real_only_rank_groups(rem_rank_keys, rem_ordered, real_nodes)
         }
       }
       final_groups
