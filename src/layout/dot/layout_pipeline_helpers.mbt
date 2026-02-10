@@ -8238,6 +8238,35 @@ fn apply_xpos_transpose_cleanup_passes(
 }
 
 ///|
+/// Graphviz parity: transpose cleanup input derivation uses vnode edge index
+/// plus current x_groups rank snapshot before limited transpose passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_xpos_transpose_cleanup_inputs_for_positions(
+  nodes : Array[@cgraph.Node],
+  ordering : OrderingResult,
+  ranks : Map[String, Int],
+  x_groups : Map[Int, Array[String]],
+) -> (
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Array[Int],
+  Map[String, Int],
+) {
+  let (parents, children) = build_edge_index_for_order_with_vnodes(
+    nodes,
+    ordering.order_edges,
+    ordering.order_edge_tail,
+    ordering.order_edge_head,
+    ranks,
+    ordering.vnode_info.edge_vnodes,
+    ordering.vnode_info.vnode_ranks,
+  )
+  let tmp_rank_keys = collect_rank_keys(x_groups)
+  let tmp_ranks = build_node_ranks(x_groups)
+  (parents, children, tmp_rank_keys, tmp_ranks)
+}
+
+///|
 /// Graphviz parity: optional transpose cleanup runs only in vnode xpos-reorder
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
@@ -8253,17 +8282,13 @@ fn maybe_apply_xpos_transpose_cleanup(
 ) -> Unit {
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
-    let (parents, children) = build_edge_index_for_order_with_vnodes(
-      nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
-    )
-    let tmp_rank_keys = collect_rank_keys(x_groups)
-    let tmp_ranks = build_node_ranks(x_groups)
+    let (parents, children, tmp_rank_keys, tmp_ranks) =
+      build_xpos_transpose_cleanup_inputs_for_positions(
+        nodes,
+        ordering,
+        ranks,
+        x_groups,
+      )
     apply_xpos_transpose_cleanup_passes(
       tmp_rank_keys,
       x_groups,
