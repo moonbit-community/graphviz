@@ -6650,6 +6650,77 @@ fn compute_ordering_and_vnodes(
 }
 
 ///|
+/// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_boundary_x_positions(
+  graph : @cgraph.Graph,
+  cluster_meta : ClusterMetadata,
+  x_positions : Map[String, Double],
+) -> (Map[String, Double], Map[String, Double]) {
+  let cluster_ln_x : Map[String, Double] = Map::new()
+  let cluster_rn_x : Map[String, Double] = Map::new()
+  if cluster_meta.has_clusters {
+    let cluster_names : Map[String, Bool] = Map::new()
+    collect_cluster_names(graph, cluster_names)
+    if cluster_names.length() > 0 {
+      for name, pos_x in x_positions {
+        if name.has_prefix(CLUSTER_LN_PREFIX) ||
+          name.has_prefix(CLUSTER_RN_PREFIX) {
+          match cluster_key_from_boundary_name(name, cluster_names) {
+            Some(cluster_key) =>
+              if name.has_prefix(CLUSTER_LN_PREFIX) {
+                cluster_ln_x[cluster_key] = pos_x
+              } else {
+                cluster_rn_x[cluster_key] = pos_x
+              }
+            None => ()
+          }
+        }
+      }
+    }
+  }
+  (cluster_ln_x, cluster_rn_x)
+}
+
+///|
+/// Graphviz parity: vnode output positions are either direct xpos/rank pairs
+/// (when xpos consumed vnode graph) or endpoint-interpolated fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn build_vnode_positions_for_output(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  x_positions : Map[String, Double],
+  rank_y : Map[Int, Double],
+) -> Map[String, @geom.Point] {
+  if use_vnodes_for_xpos {
+    let positions : Map[String, @geom.Point] = Map::new()
+    for name, rank in ordering.vnode_info.vnode_ranks {
+      let pos_x = match x_positions.get(name) {
+        Some(value) => value
+        None => 0.0
+      }
+      let pos_y = match rank_y.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      positions[name] = { x: pos_x, y: pos_y }
+    }
+    positions
+  } else {
+    vnode_positions_from_endpoints(
+      prep.edges,
+      rank_data.ranks,
+      ordering.vnode_info.vnode_ranks,
+      ordering.vnode_info.edge_vnodes,
+      x_positions,
+      rank_y,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7342,54 +7413,18 @@ fn compute_positions(
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
-  let cluster_ln_x : Map[String, Double] = Map::new()
-  let cluster_rn_x : Map[String, Double] = Map::new()
-  if cluster_meta.has_clusters {
-    let cluster_names : Map[String, Bool] = Map::new()
-    collect_cluster_names(graph, cluster_names)
-    if cluster_names.length() > 0 {
-      for name, pos_x in x_positions {
-        if name.has_prefix(CLUSTER_LN_PREFIX) ||
-          name.has_prefix(CLUSTER_RN_PREFIX) {
-          match cluster_key_from_boundary_name(name, cluster_names) {
-            Some(cluster_key) =>
-              if name.has_prefix(CLUSTER_LN_PREFIX) {
-                cluster_ln_x[cluster_key] = pos_x
-              } else {
-                cluster_rn_x[cluster_key] = pos_x
-              }
-            None => ()
-          }
-        }
-      }
-    }
-  }
+  let (cluster_ln_x, cluster_rn_x) =
+    build_cluster_boundary_x_positions(graph, cluster_meta, x_positions)
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
-    if use_vnodes_for_xpos {
-      let positions : Map[String, @geom.Point] = Map::new()
-      for name, rank in ordering.vnode_info.vnode_ranks {
-        let pos_x = match x_positions.get(name) {
-          Some(value) => value
-          None => 0.0
-        }
-        let pos_y = match rank_y.get(rank) {
-          Some(value) => value
-          None => 0.0
-        }
-        positions[name] = { x: pos_x, y: pos_y }
-      }
-      positions
-    } else {
-      vnode_positions_from_endpoints(
-        prep.edges,
-        rank_data.ranks,
-        ordering.vnode_info.vnode_ranks,
-        ordering.vnode_info.edge_vnodes,
-        x_positions,
-        rank_y,
-      )
-    }
+    build_vnode_positions_for_output(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      ordering,
+      x_positions,
+      rank_y,
+    )
   let positions : Map[String, @geom.Point] = Map::new()
   for node in prep.nodes {
     let name = node.name()
