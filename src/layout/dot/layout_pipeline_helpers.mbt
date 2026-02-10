@@ -266,6 +266,17 @@ priv struct XposClusteredReorderSeedData {
 }
 
 ///|
+priv struct XposClusteredReorderEdgesData {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7367,6 +7378,187 @@ fn build_clustered_xpos_reorder_seed_data(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder edge materialization preserves
+/// vnode chain splitting and cluster skeleton linking before reorder_rank_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_xpos_reorder_edges(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  cluster_meta : ClusterMetadata,
+  order_nodes : Array[String],
+  x_edge_tail_port_x : Array[Double],
+  x_edge_head_port_x : Array[Double],
+  x_edge_tail_port_order : Array[Double],
+  x_edge_head_port_order : Array[Double],
+) -> XposClusteredReorderEdgesData {
+  let order_graph =
+    @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
+  let order_node_map : Map[String, @cgraph.Node] = Map::new()
+  for name in order_nodes {
+    order_node_map[name] = order_graph.node(name)
+  }
+  let order_edges_out : Array[@cgraph.Edge] = []
+  let order_edge_tail_out : Array[String] = []
+  let order_edge_head_out : Array[String] = []
+  let order_edge_tail_port_x : Array[Double] = []
+  let order_edge_head_port_x : Array[Double] = []
+  let order_edge_tail_port_order : Array[Double] = []
+  let order_edge_head_port_order : Array[Double] = []
+  let mut edge_idx = 0
+  for edge in prep.edges {
+    let tail =
+      if edge_idx < rank_data.edge_tail.length() { rank_data.edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let head =
+      if edge_idx < rank_data.edge_head.length() { rank_data.edge_head[edge_idx] } else {
+        edge.head().name()
+      }
+    let penalty = edge_xpenalty(edge)
+    let constraint = edge_is_constraint(edge)
+    let tail_port_x =
+      if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
+        0.0
+      }
+    let head_port_x =
+      if edge_idx < x_edge_head_port_x.length() { x_edge_head_port_x[edge_idx] } else {
+        0.0
+      }
+    let tail_port_order =
+      if edge_idx < x_edge_tail_port_order.length() { x_edge_tail_port_order[edge_idx] } else {
+        0.5
+      }
+    let head_port_order =
+      if edge_idx < x_edge_head_port_order.length() { x_edge_head_port_order[edge_idx] } else {
+        0.5
+      }
+    let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      add_order_edge(
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        tail,
+        head,
+        penalty,
+        constraint,
+        tail_port_x,
+        head_port_x,
+        tail_port_order,
+        head_port_order,
+      )
+    } else {
+      let tail_rank = match rank_data.ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match rank_data.ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      let chain : Array[String] = []
+      chain.push(tail)
+      if tail_rank <= head_rank {
+        for vnode in vnodes {
+          chain.push(vnode)
+        }
+      } else {
+        let mut i = vnodes.length()
+        while i > 0 {
+          i = i - 1
+          chain.push(vnodes[i])
+        }
+      }
+      chain.push(head)
+      let mut idx = 0
+      while idx + 1 < chain.length() {
+        let seg_tail_port =
+          if chain[idx] == tail { tail_port_x } else { 0.0 }
+        let seg_head_port =
+          if chain[idx + 1] == head { head_port_x } else { 0.0 }
+        // Graphviz parity: split edge segments keep neutral midpoint
+        // port-order (0.5) unless endpoint matches real tail/head.
+        let seg_tail_order =
+          if chain[idx] == tail { tail_port_order } else { 0.5 }
+        let seg_head_order =
+          if chain[idx + 1] == head { head_port_order } else { 0.5 }
+        add_order_edge(
+          order_graph,
+          order_node_map,
+          order_edges_out,
+          order_edge_tail_out,
+          order_edge_head_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
+          chain[idx],
+          chain[idx + 1],
+          penalty,
+          constraint,
+          seg_tail_port,
+          seg_head_port,
+          seg_tail_order,
+          seg_head_order,
+        )
+        idx = idx + 1
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+  for cluster, min_rank in cluster_meta.cluster_min_rank {
+    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    let mut rank = min_rank
+    while rank < max_rank {
+      let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
+      add_order_edge(
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        tail_name,
+        head_name,
+        CL_CROSS,
+        true,
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+      )
+      rank = rank + 1
+    }
+  }
+  {
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  }
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -7604,161 +7796,25 @@ fn compute_positions(
     let order_rank_keys = reorder_seed_data.order_rank_keys
     let order_ranks = reorder_seed_data.order_ranks
     let order_nodes = reorder_seed_data.order_nodes
-    let order_graph =
-      @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="xpos_order", strict=false)
-    let order_node_map : Map[String, @cgraph.Node] = Map::new()
-    for name in order_nodes {
-      order_node_map[name] = order_graph.node(name)
-    }
-    let order_edges_out : Array[@cgraph.Edge] = []
-    let order_edge_tail_out : Array[String] = []
-    let order_edge_head_out : Array[String] = []
-    let order_edge_tail_port_x : Array[Double] = []
-    let order_edge_head_port_x : Array[Double] = []
-    let order_edge_tail_port_order : Array[Double] = []
-    let order_edge_head_port_order : Array[Double] = []
-    let mut edge_idx = 0
-    for edge in prep.edges {
-      let tail =
-        if edge_idx < rank_data.edge_tail.length() { rank_data.edge_tail[edge_idx] } else {
-          edge.tail().name()
-        }
-      let head =
-        if edge_idx < rank_data.edge_head.length() { rank_data.edge_head[edge_idx] } else {
-          edge.head().name()
-        }
-      let penalty = edge_xpenalty(edge)
-      let constraint = edge_is_constraint(edge)
-      let tail_port_x =
-        if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
-          0.0
-        }
-      let head_port_x =
-        if edge_idx < x_edge_head_port_x.length() { x_edge_head_port_x[edge_idx] } else {
-          0.0
-        }
-      let tail_port_order =
-        if edge_idx < x_edge_tail_port_order.length() { x_edge_tail_port_order[edge_idx] } else {
-          0.5
-        }
-      let head_port_order =
-        if edge_idx < x_edge_head_port_order.length() { x_edge_head_port_order[edge_idx] } else {
-          0.5
-        }
-      let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
-        Some(list) => list
-        None => []
-      }
-      if vnodes.length() == 0 {
-        add_order_edge(
-          order_graph,
-          order_node_map,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          tail,
-          head,
-          penalty,
-          constraint,
-          tail_port_x,
-          head_port_x,
-          tail_port_order,
-          head_port_order,
-        )
-      } else {
-        let tail_rank = match rank_data.ranks.get(tail) {
-          Some(value) => value
-          None => 0
-        }
-        let head_rank = match rank_data.ranks.get(head) {
-          Some(value) => value
-          None => 0
-        }
-        let chain : Array[String] = []
-        chain.push(tail)
-        if tail_rank <= head_rank {
-          for vnode in vnodes {
-            chain.push(vnode)
-          }
-        } else {
-          let mut i = vnodes.length()
-          while i > 0 {
-            i = i - 1
-            chain.push(vnodes[i])
-          }
-        }
-        chain.push(head)
-        let mut idx = 0
-        while idx + 1 < chain.length() {
-          let seg_tail_port =
-            if chain[idx] == tail { tail_port_x } else { 0.0 }
-          let seg_head_port =
-            if chain[idx + 1] == head { head_port_x } else { 0.0 }
-          // Graphviz parity: split edge segments keep neutral midpoint
-          // port-order (0.5) unless endpoint matches real tail/head.
-          let seg_tail_order =
-            if chain[idx] == tail { tail_port_order } else { 0.5 }
-          let seg_head_order =
-            if chain[idx + 1] == head { head_port_order } else { 0.5 }
-          add_order_edge(
-            order_graph,
-            order_node_map,
-            order_edges_out,
-            order_edge_tail_out,
-            order_edge_head_out,
-            order_edge_tail_port_x,
-            order_edge_head_port_x,
-            order_edge_tail_port_order,
-            order_edge_head_port_order,
-            chain[idx],
-            chain[idx + 1],
-            penalty,
-            constraint,
-            seg_tail_port,
-            seg_head_port,
-            seg_tail_order,
-            seg_head_order,
-          )
-          idx = idx + 1
-        }
-      }
-      edge_idx = edge_idx + 1
-    }
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      let mut rank = min_rank
-      while rank < max_rank {
-        let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-        let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-        add_order_edge(
-          order_graph,
-          order_node_map,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          tail_name,
-          head_name,
-          CL_CROSS,
-          true,
-          0.0,
-          0.0,
-          0.5,
-          0.5,
-        )
-        rank = rank + 1
-      }
-    }
+    let reorder_edges_data =
+      build_clustered_xpos_reorder_edges(
+        prep,
+        rank_data,
+        ordering,
+        cluster_meta,
+        order_nodes,
+        x_edge_tail_port_x,
+        x_edge_head_port_x,
+        x_edge_tail_port_order,
+        x_edge_head_port_order,
+      )
+    let order_edges_out = reorder_edges_data.order_edges_out
+    let order_edge_tail_out = reorder_edges_data.order_edge_tail_out
+    let order_edge_head_out = reorder_edges_data.order_edge_head_out
+    let order_edge_tail_port_x = reorder_edges_data.order_edge_tail_port_x
+    let order_edge_head_port_x = reorder_edges_data.order_edge_head_port_x
+    let order_edge_tail_port_order = reorder_edges_data.order_edge_tail_port_order
+    let order_edge_head_port_order = reorder_edges_data.order_edge_head_port_order
     let (parents, children) = build_edge_index_for_order_names(
       order_nodes,
       order_edge_tail_out,
