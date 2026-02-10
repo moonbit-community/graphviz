@@ -121,6 +121,35 @@ fn build_path_groups_for_routing_stage(
 }
 
 ///|
+/// Graphviz parity: routing context is assembled from final ordering, vnode,
+/// rank, and cluster bbox data without altering parameter mapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_context_for_stage(
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  path_groups : Map[Int, Array[String]],
+  cluster_bboxes : Map[String, @geom.Rect],
+) -> RoutingContext {
+  prepare_routing_context(
+    prep.nodes,
+    prep.edges,
+    rank_stage.rank_data.edge_tail,
+    rank_stage.rank_data.edge_head,
+    prep.sizes,
+    prep.rankdir,
+    prep.record_orientation,
+    rank_stage.rank_data.ranks,
+    rank_stage.ordering.ordered_groups,
+    path_groups,
+    rank_stage.rank_heights.nodesep_pt,
+    rank_stage.ordering.vnode_info,
+    positions_state.vnode_positions,
+    cluster_bboxes,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -183,20 +212,11 @@ fn compute_dot_routing_stage(
   let path_groups =
     build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
   let routing_context =
-    prepare_routing_context(
-      prep.nodes,
-      prep.edges,
-      rank_stage.rank_data.edge_tail,
-      rank_stage.rank_data.edge_head,
-      prep.sizes,
-      prep.rankdir,
-      prep.record_orientation,
-      rank_stage.rank_data.ranks,
-      rank_stage.ordering.ordered_groups,
+    build_routing_context_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
       path_groups,
-      rank_stage.rank_heights.nodesep_pt,
-      rank_stage.ordering.vnode_info,
-      positions_state.vnode_positions,
       cluster_bboxes,
     )
   let layout_rankdir = RankDir::TB
