@@ -281,6 +281,18 @@ priv struct PositionProjectionData {
 }
 
 ///|
+priv struct XStageWithFlatLabelData {
+  use_vnodes_for_xpos : Bool
+  virtual_slack_edges : Array[ConstraintEdge]
+  x_base_sizes : Map[String, NodeSize]
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+  flat_label_edges : Array[ConstraintEdge]
+  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_edge_vnodes : Map[String, String]
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -8284,16 +8296,17 @@ fn build_position_mode_flags(
 
 
 ///|
-/// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
+/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
+/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
+/// Graphviz-aligned order and wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_positions(
-  graph : @cgraph.Graph,
+fn build_x_stage_with_flat_labels_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> PositionResult {
+) -> XStageWithFlatLabelData {
   let mode_flags = build_position_mode_flags(prep, ordering)
   let use_vnodes_for_xpos = mode_flags.use_vnodes_for_xpos
   let allow_xpos_reorder = mode_flags.allow_xpos_reorder
@@ -8335,6 +8348,46 @@ fn compute_positions(
   let flat_label_edges = flat_label_augmentation.flat_label_edges
   let flat_label_nodes = flat_label_augmentation.flat_label_nodes
   let flat_label_edge_vnodes = flat_label_augmentation.flat_label_edge_vnodes
+  {
+    use_vnodes_for_xpos,
+    virtual_slack_edges,
+    x_base_sizes,
+    x_groups,
+    x_cluster_keys,
+    flat_label_edges,
+    flat_label_nodes,
+    flat_label_edge_vnodes,
+  }
+}
+
+
+///|
+/// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> PositionResult {
+  let x_stage_data =
+    build_x_stage_with_flat_labels_for_positions(
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+    )
+  let use_vnodes_for_xpos = x_stage_data.use_vnodes_for_xpos
+  let virtual_slack_edges = x_stage_data.virtual_slack_edges
+  let x_base_sizes = x_stage_data.x_base_sizes
+  let x_groups = x_stage_data.x_groups
+  let x_cluster_keys = x_stage_data.x_cluster_keys
+  let flat_label_edges = x_stage_data.flat_label_edges
+  let flat_label_nodes = x_stage_data.flat_label_nodes
+  let flat_label_edge_vnodes = x_stage_data.flat_label_edge_vnodes
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
   let position_projection_data =
