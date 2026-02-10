@@ -7586,6 +7586,81 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root(
 }
 
 ///|
+/// Graphviz parity: clustered ordering runs pre-root graph materialization
+/// before root+cluster build_ranks stage, preserving phase boundaries.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  real_nodes : Map[String, Bool],
+  port_edge_nodes : Map[String, Bool],
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  let pre_root_stage =
+    build_clustered_ordering_pre_root_stage(
+      ordering_groups_base,
+      base_order_index,
+      order_with_vnodes,
+      order_with_clusters,
+      cluster_meta,
+      vnode_info,
+      vnode_order_keys_for_ordering,
+      order_sizes,
+      nlist_order,
+      gdnlist_order,
+      node_order,
+      real_nodes,
+      port_edge_nodes,
+      order_edges_by_tail,
+      order_edges_by_tail_unmapped,
+      edge_creation_order,
+      edge_tail,
+      edge_head,
+      nodes,
+    )
+  let root_cluster_stage =
+    run_root_and_cluster_build_ranks_stage_from_pre_root(
+      order_with_clusters,
+      order_with_vnodes,
+      graph,
+      cluster_meta,
+      vnode_order_keys_for_ordering,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      graphviz_flip,
+      flat_rank_constraints,
+      ranks,
+      vnode_info,
+      pre_root_stage,
+    )
+  (pre_root_stage, root_cluster_stage)
+}
+
+///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -7630,44 +7705,35 @@ fn run_clustered_ordering_stage(
   skeleton_edge_creation : Array[(String, String)],
   edge_creation_order : Array[(String, String)],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let pre_root_stage =
-    build_clustered_ordering_pre_root_stage(
-      ordering_groups_base,
-      base_order_index,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      vnode_info,
-      vnode_order_keys_for_ordering,
-      order_sizes,
-      nlist_order,
-      gdnlist_order,
+  let (pre_root_stage, root_cluster_stage) =
+    run_clustered_ordering_pre_root_and_root_stage(
+      graph,
+      nodes,
+      edge_tail,
+      edge_head,
+      ranks,
       node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
       real_nodes,
       port_edge_nodes,
+      flat_rank_constraints,
+      graphviz_flip,
+      order_with_vnodes,
+      order_with_clusters,
+      ordering_groups_base,
+      base_order_index,
+      vnode_info,
+      vnode_order_keys_for_ordering,
+      nlist_order,
+      gdnlist_order,
       order_edges_by_tail,
       order_edges_by_tail_unmapped,
       edge_creation_order,
-      edge_tail,
-      edge_head,
-      nodes,
-    )
-  let root_cluster_stage =
-    run_root_and_cluster_build_ranks_stage_from_pre_root(
-      order_with_clusters,
-      order_with_vnodes,
-      graph,
-      cluster_meta,
-      vnode_order_keys_for_ordering,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      graphviz_flip,
-      flat_rank_constraints,
-      ranks,
-      vnode_info,
-      pre_root_stage,
     )
   let (next_ordered_with_vnodes, final_groups) =
     run_cluster_rank_order_and_finalize_stage_from_pre_root(
