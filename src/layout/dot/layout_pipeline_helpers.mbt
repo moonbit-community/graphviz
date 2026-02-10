@@ -370,6 +370,18 @@ priv struct PositionRankHeightMaps {
 }
 
 ///|
+priv struct ProjectionFromXStageData {
+  use_vnodes_for_xpos : Bool
+  x_base_sizes : Map[String, NodeSize]
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+  virtual_slack_edges : Array[ConstraintEdge]
+  flat_label_edges : Array[ConstraintEdge]
+  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_edge_vnodes : Map[String, String]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -9012,6 +9024,25 @@ fn build_x_stage_with_flat_labels_for_positions(
 
 
 ///|
+/// Graphviz parity: x-stage to projection handoff copies each computed field
+/// unchanged before projection call wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_from_x_stage_data_for_positions(
+  x_stage_data : XStageWithFlatLabelData,
+) -> ProjectionFromXStageData {
+  {
+    use_vnodes_for_xpos: x_stage_data.use_vnodes_for_xpos,
+    x_base_sizes: x_stage_data.x_base_sizes,
+    x_groups: x_stage_data.x_groups,
+    x_cluster_keys: x_stage_data.x_cluster_keys,
+    virtual_slack_edges: x_stage_data.virtual_slack_edges,
+    flat_label_edges: x_stage_data.flat_label_edges,
+    flat_label_nodes: x_stage_data.flat_label_nodes,
+    flat_label_edge_vnodes: x_stage_data.flat_label_edge_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: projection handoff consumes x-stage bundle fields and rank
 /// height maps without changing Graphviz-aligned parameter wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -9026,6 +9057,8 @@ fn build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
 ) -> PositionResult {
+  let projection_from_x_stage_data =
+    build_projection_from_x_stage_data_for_positions(x_stage_data)
   build_projection_result_for_positions(
     graph,
     prep,
@@ -9033,14 +9066,14 @@ fn build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
     rank_heights,
     cluster_meta,
     ordering,
-    x_stage_data.use_vnodes_for_xpos,
-    x_stage_data.x_base_sizes,
-    x_stage_data.x_groups,
-    x_stage_data.x_cluster_keys,
-    x_stage_data.virtual_slack_edges,
-    x_stage_data.flat_label_edges,
-    x_stage_data.flat_label_nodes,
-    x_stage_data.flat_label_edge_vnodes,
+    projection_from_x_stage_data.use_vnodes_for_xpos,
+    projection_from_x_stage_data.x_base_sizes,
+    projection_from_x_stage_data.x_groups,
+    projection_from_x_stage_data.x_cluster_keys,
+    projection_from_x_stage_data.virtual_slack_edges,
+    projection_from_x_stage_data.flat_label_edges,
+    projection_from_x_stage_data.flat_label_nodes,
+    projection_from_x_stage_data.flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
   )
