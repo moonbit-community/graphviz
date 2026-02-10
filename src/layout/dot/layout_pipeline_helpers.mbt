@@ -7057,6 +7057,38 @@ fn build_node_positions_for_output(
 }
 
 ///|
+/// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
+/// paths and must preserve node-singleton and cluster-key inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_virtual_slack_edges_for_positions(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  cluster_meta : ClusterMetadata,
+) -> Array[ConstraintEdge] {
+  if use_vnodes_for_xpos {
+    let node_singletons = build_node_singletons(prep.nodes, prep.edges)
+    let edges_out = build_virtual_slack_edges(
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      rank_data.edge_reversed,
+      rank_data.ranks,
+      ordering.vnode_info.edge_vnodes,
+      ordering.vnode_info.vnode_ranks,
+      node_singletons,
+      cluster_meta.cluster_keys,
+    )
+    dot_trace("layout_dot: virtual slack edges=\{edges_out.length()}")
+    edges_out
+  } else {
+    dot_trace("layout_dot: virtual slack edges=0 (skipped)")
+    []
+  }
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7076,25 +7108,13 @@ fn compute_positions(
   let xpos_reorder_enabled = false
   dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
-    if use_vnodes_for_xpos {
-      let node_singletons = build_node_singletons(prep.nodes, prep.edges)
-      let edges_out = build_virtual_slack_edges(
-        prep.edges,
-        rank_data.edge_tail,
-        rank_data.edge_head,
-        rank_data.edge_reversed,
-        rank_data.ranks,
-        ordering.vnode_info.edge_vnodes,
-        ordering.vnode_info.vnode_ranks,
-        node_singletons,
-        cluster_meta.cluster_keys,
-      )
-      dot_trace("layout_dot: virtual slack edges=\{edges_out.length()}")
-      edges_out
-    } else {
-      dot_trace("layout_dot: virtual slack edges=0 (skipped)")
-      []
-    }
+    build_virtual_slack_edges_for_positions(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      ordering,
+      cluster_meta,
+    )
   let order_index = build_order_index(ordering.ordered_groups)
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
