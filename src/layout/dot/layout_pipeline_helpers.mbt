@@ -4194,6 +4194,107 @@ fn materialize_mapped_and_unmapped_order_edges(
 }
 
 ///|
+/// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
+/// vnodes, and install cluster skeleton nodes with virtual-node defaults.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_groups_sizes_and_cluster_skeleton(
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_sizes : Map[String, NodeSize],
+) -> (
+  Map[Int, Array[String]],
+  Map[String, NodeSize],
+  Map[String, String],
+  Map[String, Bool],
+) {
+  let order_groups =
+    if order_with_vnodes {
+      build_x_groups_with_vnodes(
+        ordering_groups_base,
+        base_order_index,
+        vnode_info.vnodes_by_rank,
+        vnode_order_keys_for_ordering,
+      )
+    } else {
+      let out : Map[Int, Array[String]] = Map::new()
+      for rank, names in ordering_groups_base {
+        out[rank] = names.copy()
+      }
+      out
+    }
+  let order_sizes_out =
+    build_order_sizes_for_order_graph(
+      order_sizes,
+      order_with_vnodes,
+      vnode_info.vnode_sizes,
+    )
+  let order_cluster_keys =
+    build_order_cluster_keys_for_order_graph(
+      cluster_meta.cluster_keys,
+      order_with_vnodes,
+      vnode_info.vnode_clusters,
+    )
+  let order_cluster_skeleton : Map[String, Bool] = Map::new()
+  if order_with_clusters {
+    // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+    let cluster_seen : Map[String, Bool] = Map::new()
+    for cluster in cluster_meta.cluster_order {
+      match cluster_meta.cluster_min_rank.get(cluster) {
+        Some(min_rank) => {
+          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+            Some(value) => value
+            None => min_rank
+          }
+          append_order_cluster_skeleton_range(
+            cluster,
+            min_rank,
+            max_rank,
+            order_cluster_keys,
+            order_cluster_skeleton,
+            order_sizes_out,
+            order_groups,
+            skeleton_size,
+          )
+          cluster_seen[cluster] = true
+        }
+        None => ()
+      }
+    }
+    for cluster, min_rank in cluster_meta.cluster_min_rank {
+      if cluster_seen.get(cluster) is Some(_) {
+        continue
+      }
+      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+        Some(value) => value
+        None => min_rank
+      }
+      append_order_cluster_skeleton_range(
+        cluster,
+        min_rank,
+        max_rank,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        order_sizes_out,
+        order_groups,
+        skeleton_size,
+      )
+    }
+  }
+  (
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -4636,80 +4737,22 @@ fn compute_ordering_and_vnodes(
   let mut ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
   let ordered_groups_internal =
     if order_with_vnodes || order_with_clusters {
-      let order_groups =
-        if order_with_vnodes {
-          build_x_groups_with_vnodes(
-            ordering_groups_base,
-            base_order_index,
-            vnode_info.vnodes_by_rank,
-            vnode_order_keys_for_ordering,
-          )
-        } else {
-          let out : Map[Int, Array[String]] = Map::new()
-          for rank, names in ordering_groups_base {
-            out[rank] = names.copy()
-          }
-          out
-        }
-      let order_sizes_out =
-        build_order_sizes_for_order_graph(
+      let (
+        order_groups,
+        order_sizes_out,
+        order_cluster_keys,
+        order_cluster_skeleton,
+      ) =
+        build_order_groups_sizes_and_cluster_skeleton(
+          ordering_groups_base,
+          base_order_index,
+          order_with_vnodes,
+          order_with_clusters,
+          cluster_meta,
+          vnode_info,
+          vnode_order_keys_for_ordering,
           order_sizes,
-          order_with_vnodes,
-          vnode_info.vnode_sizes,
         )
-      let order_cluster_keys =
-        build_order_cluster_keys_for_order_graph(
-          cluster_meta.cluster_keys,
-          order_with_vnodes,
-          vnode_info.vnode_clusters,
-        )
-      let order_cluster_skeleton : Map[String, Bool] = Map::new()
-      if order_with_clusters {
-        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-        let skeleton_size = vnode_size_from_widths(1.0, 1.0)
-        let cluster_seen : Map[String, Bool] = Map::new()
-        for cluster in cluster_meta.cluster_order {
-          match cluster_meta.cluster_min_rank.get(cluster) {
-            Some(min_rank) => {
-              let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-                Some(value) => value
-                None => min_rank
-              }
-              append_order_cluster_skeleton_range(
-                cluster,
-                min_rank,
-                max_rank,
-                order_cluster_keys,
-                order_cluster_skeleton,
-                order_sizes_out,
-                order_groups,
-                skeleton_size,
-              )
-              cluster_seen[cluster] = true
-            }
-            None => ()
-          }
-        }
-        for cluster, min_rank in cluster_meta.cluster_min_rank {
-          if cluster_seen.get(cluster) is Some(_) {
-            continue
-          }
-          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-            Some(value) => value
-            None => min_rank
-          }
-          append_order_cluster_skeleton_range(
-            cluster,
-            min_rank,
-            max_rank,
-            order_cluster_keys,
-            order_cluster_skeleton,
-            order_sizes_out,
-            order_groups,
-            skeleton_size,
-          )
-        }
-      }
       dot_trace_groups("order_groups_pre", order_groups)
       let order_rank_keys = collect_rank_keys(order_groups)
       let order_ranks = build_node_ranks(order_groups)
