@@ -29,6 +29,39 @@ fn build_cluster_meta_for_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
+/// and cluster metadata with unchanged Graphviz call wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_for_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+) -> OrderingResult {
+  compute_ordering_and_vnodes(
+    graph,
+    prep.nodes,
+    prep.edges,
+    rank_data.edge_tail,
+    rank_data.edge_head,
+    rank_data.edge_reversed,
+    rank_data.edge_out_order,
+    rank_data.ranks,
+    rank_data.groups,
+    rank_data.rank_keys,
+    prep.node_order,
+    prep.order_sizes,
+    rank_heights.nodesep_pt,
+    prep.has_edge_labels,
+    prep.rankdir,
+    cluster_meta,
+    prep.port_order_positions,
+    prep.port_order_contrib,
+  )
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -65,26 +98,14 @@ fn compute_dot_rank_stage(
   )
   let cluster_meta =
     build_cluster_meta_for_dot_rank_stage(graph, prep, rank_data)
-  let ordering = compute_ordering_and_vnodes(
-    graph,
-    prep.nodes,
-    prep.edges,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_data.edge_reversed,
-    rank_data.edge_out_order,
-    rank_data.ranks,
-    rank_data.groups,
-    rank_data.rank_keys,
-    prep.node_order,
-    prep.order_sizes,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
-    prep.rankdir,
-    cluster_meta,
-    prep.port_order_positions,
-    prep.port_order_contrib,
-  )
+  let ordering =
+    build_ordering_for_dot_rank_stage(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+    )
   dot_trace("layout_dot: rank order computed")
   { rank_data, rank_heights, cluster_meta, ordering }
 }
