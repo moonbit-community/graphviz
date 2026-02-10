@@ -5760,6 +5760,30 @@ fn build_root_mincross_groups_with_trace(
 }
 
 ///|
+/// Graphviz parity: root ReMincross stage output merges reordered root nodes
+/// into seeded groups (clustered mode) and preserves tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_reorder_stage_output(
+  order_with_clusters : Bool,
+  order_rank_keys : Array[Int],
+  seeded_groups : Map[Int, Array[String]],
+  ordered_mincross : Map[Int, Array[String]],
+  mincross_nodes : Map[String, Bool],
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let ordered =
+    build_root_mincross_final_ordered_groups(
+      order_with_clusters,
+      order_rank_keys,
+      seeded_groups,
+      ordered_mincross,
+      mincross_nodes,
+    )
+  build_root_mincross_reorder_output(order_groups_for_mincross, ordered)
+}
+
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -5865,15 +5889,14 @@ fn run_root_mincross_reorder(
       graphviz_in_neighbors,
       graphviz_flip,
     )
-  let ordered =
-    build_root_mincross_final_ordered_groups(
-      order_with_clusters,
-      order_rank_keys,
-      seeded_groups,
-      ordered_mincross,
-      mincross_nodes,
-    )
-  build_root_mincross_reorder_output(order_groups_for_mincross, ordered)
+  build_root_mincross_reorder_stage_output(
+    order_with_clusters,
+    order_rank_keys,
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_groups_for_mincross,
+  )
 }
 
 ///|
