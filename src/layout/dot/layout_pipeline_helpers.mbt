@@ -6573,6 +6573,17 @@ fn run_clustered_ordering_stage(
 
 
 ///|
+/// Graphviz parity: non-clustered ordering stage returns mincross groups plus
+/// an empty vnode map (matching Graphviz no-vnode ordering path).
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_ordering_stage_output(
+  ordered_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
+  (ordered_groups, ordered_with_vnodes)
+}
+
+///|
 /// Graphviz parity: non-clustered ordering path still runs the single mincross
 /// pass directly (matching Graphviz control flow).
 /// Do not change behavior without updating fixtures/tests.
@@ -6631,8 +6642,7 @@ fn run_noncluster_ordering_stage(
       port_order_contrib,
       graphviz_flip,
     )
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  (ordered_groups, ordered_with_vnodes)
+  build_noncluster_ordering_stage_output(ordered_groups)
 }
 
 ///|
