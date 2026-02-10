@@ -4885,6 +4885,17 @@ fn build_skeleton_edge_creation_for_order_graph(
 }
 
 ///|
+/// Graphviz parity: final cleanup output preserves vnode-augmented groups and
+/// finalized real-node groups in Graphviz tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_finalize_order_groups_with_cluster_remincross_output(
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+  final_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  (next_ordered_with_vnodes, final_groups)
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -4974,7 +4985,7 @@ fn finalize_order_groups_with_cluster_remincross(
     next_ordered_with_vnodes = rem_ordered_with_vnodes
     final_groups = rem_final_groups
   }
-  (next_ordered_with_vnodes, final_groups)
+  build_finalize_order_groups_with_cluster_remincross_output(next_ordered_with_vnodes, final_groups)
 }
 
 ///|
