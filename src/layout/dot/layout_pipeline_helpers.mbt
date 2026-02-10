@@ -5950,6 +5950,22 @@ fn build_ordering_runtime_context(
 }
 
 ///|
+/// Graphviz parity: vnode tail-constraint probe runs only when vnode ordering
+/// data exists, preserving Graphviz-aligned diagnostic derivation path.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_probe_vnode_tail_constraints_for_ordering_runtime_context(
+  runtime_context : OrderingRuntimeContext,
+  edge_tail : Array[String],
+) -> Unit {
+  let _ =
+    if runtime_context.vnode_count > 0 {
+      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
+    } else {
+      Map::new()
+    }
+}
+
+///|
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
 /// in the same position as Graphviz ordering setup, even when only used for
 /// parity diagnostics.
@@ -5981,12 +5997,10 @@ fn build_ordering_runtime_context_with_tail_constraints(
       rankdir,
       cluster_meta,
     )
-  let _ =
-    if runtime_context.vnode_count > 0 {
-      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
-    } else {
-      Map::new()
-    }
+  maybe_probe_vnode_tail_constraints_for_ordering_runtime_context(
+    runtime_context,
+    edge_tail,
+  )
   runtime_context
 }
 
