@@ -1857,6 +1857,61 @@ fn build_order_graph_and_nodes(
 }
 
 ///|
+/// Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
+/// fills with nlist/order_groups/base order while applying rank=same overrides.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_node_order_for_build_ranks(
+  gdnlist_order : Array[String],
+  nlist_order : Array[String],
+  node_order : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  order_groups : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+) -> Map[String, Int] {
+  let order_node_order : Map[String, Int] = Map::new()
+  let mut order_idx = 0
+  for name in gdnlist_order {
+    order_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
+  for name in nlist_order {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = order_idx
+      order_idx = order_idx + 1
+    }
+  }
+  // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
+  for name, idx in node_order {
+    if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  let order_index = build_order_index(order_groups)
+  for name, idx in order_index {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  // Graphviz parity: seed missing real-node order from initial rank order;
+  // GD_nlist order remains the primary source.
+  for name, idx in base_order_index {
+    if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  apply_rank_same_order_to_node_order(
+    order_node_order,
+    rank_same_groups,
+    rank_same_order,
+    port_edge_nodes,
+  )
+  order_node_order
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2246,45 +2301,18 @@ fn compute_ordering_and_vnodes(
         build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
       let creation_order =
         build_reverse_creation_order_from_nlist(nlist_order)
-      let order_node_order : Map[String, Int] = Map::new()
-      let mut order_idx = 0
-      let gdnlist_seed = gdnlist_order
-      // Graphviz parity: build_ranks walks GD_nlist order first.
-      for name in gdnlist_seed {
-        order_node_order[name] = order_idx
-        order_idx = order_idx + 1
-      }
-      for name in nlist_order {
-        if order_node_order.get(name) is None {
-          order_node_order[name] = order_idx
-          order_idx = order_idx + 1
-        }
-      }
-      // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
-      for name, idx in node_order {
-        if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
-          order_node_order[name] = idx
-        }
-      }
-      let order_index = build_order_index(order_groups)
-      for name, idx in order_index {
-        if order_node_order.get(name) is None {
-          order_node_order[name] = idx
-        }
-      }
-      // Graphviz parity: seed missing real-node order from initial rank order;
-      // GD_nlist order remains the primary source.
-      for name, idx in base_order_index {
-        if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
-          order_node_order[name] = idx
-        }
-      }
-      apply_rank_same_order_to_node_order(
-        order_node_order,
-        cluster_meta.rank_same_groups,
-        cluster_meta.rank_same_order,
-        port_edge_nodes,
-      )
+      let order_node_order =
+        build_order_node_order_for_build_ranks(
+          gdnlist_order,
+          nlist_order,
+          node_order,
+          real_nodes,
+          order_groups,
+          base_order_index,
+          cluster_meta.rank_same_groups,
+          cluster_meta.rank_same_order,
+          port_edge_nodes,
+        )
       if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
         let debug_names : Array[String] = [
           "z_req",
