@@ -5210,6 +5210,34 @@ fn build_ordering_edge_port_data(
 }
 
 ///|
+/// Graphviz parity: class2/decompose stage output preserves edge-chain maps and
+/// node-order arrays used by later ordering passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_data_output(
+  edges_by_tail : Map[String, Array[Int]],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  root_edge_creation : Array[(String, String)],
+  skeleton_edge_creation : Array[(String, String)],
+  edge_creation_order : Array[(String, String)],
+  nlist_order : Array[String],
+  vnode_creation_order : Array[String],
+) -> OrderingClass2Data {
+  {
+    edges_by_tail,
+    order_edges_by_tail,
+    order_edges_by_tail_root,
+    order_edges_by_tail_unmapped,
+    root_edge_creation,
+    skeleton_edge_creation,
+    edge_creation_order,
+    nlist_order,
+    vnode_creation_order,
+  }
+}
+
+///|
 /// Graphviz parity: class2/decompose ordering prep follows creation order,
 /// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
 /// Do not change behavior without updating fixtures/tests.
@@ -5326,7 +5354,7 @@ fn build_ordering_class2_data(
       cluster_meta.has_clusters,
       cluster_meta.cluster_keys,
     )
-  {
+  build_ordering_class2_data_output(
     edges_by_tail,
     order_edges_by_tail,
     order_edges_by_tail_root,
@@ -5336,7 +5364,7 @@ fn build_ordering_class2_data(
     edge_creation_order,
     nlist_order,
     vnode_creation_order,
-  }
+  )
 }
 
 ///|
