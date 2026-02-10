@@ -237,6 +237,19 @@ priv struct XposOrderEdgePortData {
 }
 
 ///|
+priv struct XPositionStageSeedData {
+  has_vnode_order : Bool
+  x_base_sizes : Map[String, NodeSize]
+  x_order_sizes : Map[String, NodeSize]
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
+}
+
+///|
 priv struct XposFlatLabelAugmentation {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
@@ -6869,6 +6882,72 @@ fn build_x_cluster_keys_for_positions(
 }
 
 ///|
+/// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
+/// order probing, edge-port metadata, and initial group/cluster maps unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_position_stage_seed_data_for_positions(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> XPositionStageSeedData {
+  let order_index = build_order_index(ordering.ordered_groups)
+  let vnode_order_state =
+    build_vnode_order_state_for_positions(
+      use_vnodes_for_xpos,
+      ordering.ordered_groups_with_vnodes,
+      prep,
+      rank_data,
+      order_index,
+      cluster_meta,
+      ordering,
+    )
+  let vnode_order_keys = vnode_order_state.vnode_order_keys
+  let has_vnode_order = vnode_order_state.has_vnode_order
+  let x_order_edge_port_data =
+    build_x_order_edge_port_data_for_positions(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      ordering,
+    )
+  let x_base_sizes = x_order_edge_port_data.x_base_sizes
+  let x_order_sizes = x_order_edge_port_data.x_order_sizes
+  let x_edge_tail_port_x = x_order_edge_port_data.x_edge_tail_port_x
+  let x_edge_head_port_x = x_order_edge_port_data.x_edge_head_port_x
+  let x_edge_tail_port_order = x_order_edge_port_data.x_edge_tail_port_order
+  let x_edge_head_port_order = x_order_edge_port_data.x_edge_head_port_order
+  let x_groups =
+    build_initial_x_groups(
+      use_vnodes_for_xpos,
+      ordering.ordered_groups,
+      ordering.ordered_groups_with_vnodes,
+      order_index,
+      ordering.vnode_info.vnodes_by_rank,
+      vnode_order_keys,
+      cluster_meta,
+    )
+  let x_cluster_keys =
+    build_x_cluster_keys_for_positions(
+      cluster_meta,
+      use_vnodes_for_xpos,
+      ordering.vnode_info.vnode_clusters,
+    )
+  {
+    has_vnode_order,
+    x_base_sizes,
+    x_order_sizes,
+    x_edge_tail_port_x,
+    x_edge_head_port_x,
+    x_edge_tail_port_order,
+    x_edge_head_port_order,
+    x_groups,
+    x_cluster_keys,
+  }
+}
+
+///|
 /// Graphviz parity: xpos solver inputs must preserve vnode-size merge,
 /// rank-map/key derivation, and vnode-edge/slack toggles.
 /// Do not change behavior without updating fixtures/tests.
@@ -8059,48 +8138,23 @@ fn compute_positions(
       ordering,
       cluster_meta,
     )
-  let order_index = build_order_index(ordering.ordered_groups)
-  let vnode_order_state =
-    build_vnode_order_state_for_positions(
-      use_vnodes_for_xpos,
-      ordering.ordered_groups_with_vnodes,
-      prep,
-      rank_data,
-      order_index,
-      cluster_meta,
-      ordering,
-    )
-  let vnode_order_keys = vnode_order_state.vnode_order_keys
-  let has_vnode_order = vnode_order_state.has_vnode_order
-  let x_order_edge_port_data =
-    build_x_order_edge_port_data_for_positions(
+  let x_stage_seed =
+    build_x_position_stage_seed_data_for_positions(
       use_vnodes_for_xpos,
       prep,
       rank_data,
+      cluster_meta,
       ordering,
     )
-  let x_base_sizes = x_order_edge_port_data.x_base_sizes
-  let x_order_sizes = x_order_edge_port_data.x_order_sizes
-  let x_edge_tail_port_x = x_order_edge_port_data.x_edge_tail_port_x
-  let x_edge_head_port_x = x_order_edge_port_data.x_edge_head_port_x
-  let x_edge_tail_port_order = x_order_edge_port_data.x_edge_tail_port_order
-  let x_edge_head_port_order = x_order_edge_port_data.x_edge_head_port_order
-  let mut x_groups =
-    build_initial_x_groups(
-      use_vnodes_for_xpos,
-      ordering.ordered_groups,
-      ordering.ordered_groups_with_vnodes,
-      order_index,
-      ordering.vnode_info.vnodes_by_rank,
-      vnode_order_keys,
-      cluster_meta,
-    )
-  let x_cluster_keys =
-    build_x_cluster_keys_for_positions(
-      cluster_meta,
-      use_vnodes_for_xpos,
-      ordering.vnode_info.vnode_clusters,
-    )
+  let has_vnode_order = x_stage_seed.has_vnode_order
+  let x_base_sizes = x_stage_seed.x_base_sizes
+  let x_order_sizes = x_stage_seed.x_order_sizes
+  let x_edge_tail_port_x = x_stage_seed.x_edge_tail_port_x
+  let x_edge_head_port_x = x_stage_seed.x_edge_head_port_x
+  let x_edge_tail_port_order = x_stage_seed.x_edge_tail_port_order
+  let x_edge_head_port_order = x_stage_seed.x_edge_head_port_order
+  let mut x_groups = x_stage_seed.x_groups
+  let x_cluster_keys = x_stage_seed.x_cluster_keys
   x_groups =
     maybe_apply_xpos_reorder_for_positions(
       xpos_reorder_enabled,
