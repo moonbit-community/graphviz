@@ -1731,6 +1731,27 @@ fn build_nlist_order_index(
 }
 
 ///|
+/// Graphviz parity: order graph starts from measured node sizes and augments
+/// with vnode virtual sizes when vnode ordering is enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_sizes_for_order_graph(
+  order_sizes : Map[String, NodeSize],
+  order_with_vnodes : Bool,
+  vnode_sizes : Map[String, NodeSize],
+) -> Map[String, NodeSize] {
+  let order_sizes_out : Map[String, NodeSize] = Map::new()
+  for name, size in order_sizes {
+    order_sizes_out[name] = size
+  }
+  if order_with_vnodes {
+    for name, size in vnode_sizes {
+      order_sizes_out[name] = size
+    }
+  }
+  order_sizes_out
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2050,15 +2071,12 @@ fn compute_ordering_and_vnodes(
           }
           out
         }
-      let order_sizes_out : Map[String, NodeSize] = Map::new()
-      for name, size in order_sizes {
-        order_sizes_out[name] = size
-      }
-      if order_with_vnodes {
-        for name, size in vnode_info.vnode_sizes {
-          order_sizes_out[name] = size
-        }
-      }
+      let order_sizes_out =
+        build_order_sizes_for_order_graph(
+          order_sizes,
+          order_with_vnodes,
+          vnode_info.vnode_sizes,
+        )
       let order_cluster_keys : Map[String, String] = Map::new()
       for name, key in cluster_meta.cluster_keys {
         order_cluster_keys[name] = key
