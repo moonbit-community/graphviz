@@ -5049,6 +5049,52 @@ fn build_ordering_class2_data(
 }
 
 ///|
+/// Graphviz parity: vnode ordering keys come from cluster-aware class2 walks,
+/// or from GD_nlist fallback ordering when clusters are absent.
+/// Do not change behavior without updating fixtures/tests.
+fn build_vnode_order_keys_for_ordering_stage(
+  vnode_count : Int,
+  cluster_meta : ClusterMetadata,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  base_order_index : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  ordering_groups_base : Map[Int, Array[String]],
+  nlist_order_index : Map[String, Int],
+) -> Map[String, Double] {
+  if vnode_count > 0 {
+    if cluster_meta.has_clusters {
+      build_vnode_order_keys(
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        ranks,
+        base_order_index,
+        cluster_meta.cluster_keys,
+        cluster_meta.cluster_parents,
+        vnode_info.edge_vnodes,
+        vnode_info.vnode_ranks,
+      )
+    } else {
+      build_vnode_order_keys_from_nlist(
+        ordering_groups_base,
+        vnode_info.vnodes_by_rank,
+        base_order_index,
+        nlist_order_index,
+        Map::new(),
+        false,
+      )
+    }
+  } else {
+    Map::new()
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -5195,33 +5241,19 @@ fn compute_ordering_and_vnodes(
   let gdnlist_order = nlist_order
   let nlist_order_index = build_nlist_order_index(nlist_order)
   let vnode_order_keys_for_ordering =
-    if vnode_count > 0 {
-      if cluster_meta.has_clusters {
-        build_vnode_order_keys(
-          edges,
-          edge_tail,
-          edge_head,
-          edge_reversed,
-          ranks,
-          base_order_index,
-          cluster_meta.cluster_keys,
-          cluster_meta.cluster_parents,
-          vnode_info.edge_vnodes,
-          vnode_info.vnode_ranks,
-        )
-      } else {
-        build_vnode_order_keys_from_nlist(
-          ordering_groups_base,
-          vnode_info.vnodes_by_rank,
-          base_order_index,
-          nlist_order_index,
-          Map::new(),
-          false,
-        )
-      }
-    } else {
-      Map::new()
-    }
+    build_vnode_order_keys_for_ordering_stage(
+      vnode_count,
+      cluster_meta,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      base_order_index,
+      vnode_info,
+      ordering_groups_base,
+      nlist_order_index,
+    )
   let mut ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
   let ordered_groups_internal =
     if order_with_vnodes || order_with_clusters {
