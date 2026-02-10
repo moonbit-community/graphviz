@@ -111,6 +111,13 @@ priv struct DotRoutingPaddingAndHeadPortMetrics {
 }
 
 ///|
+priv struct DotRoutingNodeAndPortData {
+  nodes_out : Array[DotLayoutNode]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -196,6 +203,30 @@ fn build_port_layout_maps_for_routing_stage(
     prep.rankdir,
     prep.has_port_edges,
   )
+}
+
+///|
+/// Graphviz parity: node geometry projection and port-map derivation are
+/// sequenced together before routing precompute consumption.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_node_and_port_data_for_stage(
+  prep : LayoutPrep,
+  positions_state : PositionResult,
+) -> DotRoutingNodeAndPortData {
+  let nodes_out =
+    build_layout_nodes(
+      prep.nodes,
+      positions_state.positions,
+      prep.output_sizes,
+      prep.record_orientation,
+    )
+  let port_maps =
+    build_port_layout_maps_for_routing_stage(prep, nodes_out)
+  {
+    nodes_out,
+    label_ports_map: port_maps.label_ports_map,
+    label_ports_raw: port_maps.label_ports_raw,
+  }
 }
 
 ///|
@@ -286,17 +317,11 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let nodes_out =
-    build_layout_nodes(
-      prep.nodes,
-      positions_state.positions,
-      prep.output_sizes,
-      prep.record_orientation,
-    )
-  let port_maps =
-    build_port_layout_maps_for_routing_stage(prep, nodes_out)
-  let label_ports_map = port_maps.label_ports_map
-  let label_ports_raw = port_maps.label_ports_raw
+  let routing_node_and_port_data =
+    build_routing_node_and_port_data_for_stage(prep, positions_state)
+  let nodes_out = routing_node_and_port_data.nodes_out
+  let label_ports_map = routing_node_and_port_data.label_ports_map
+  let label_ports_raw = routing_node_and_port_data.label_ports_raw
   let cluster_bboxes =
     build_cluster_bboxes_for_routing_stage(
       graph,
