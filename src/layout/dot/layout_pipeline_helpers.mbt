@@ -8415,6 +8415,41 @@ fn build_x_stage_with_flat_labels_for_positions(
 
 
 ///|
+/// Graphviz parity: projection handoff from x-stage bundle keeps field-to-parameter
+/// wiring and rank-height map sourcing unchanged before final projection stage.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_result_from_x_stage_data_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  x_stage_data : XStageWithFlatLabelData,
+) -> PositionResult {
+  let rank_ht1 = rank_heights.rank_ht1
+  let rank_ht2 = rank_heights.rank_ht2
+  build_projection_result_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    x_stage_data.use_vnodes_for_xpos,
+    x_stage_data.x_base_sizes,
+    x_stage_data.x_groups,
+    x_stage_data.x_cluster_keys,
+    x_stage_data.virtual_slack_edges,
+    x_stage_data.flat_label_edges,
+    x_stage_data.flat_label_nodes,
+    x_stage_data.flat_label_edge_vnodes,
+    rank_ht1,
+    rank_ht2,
+  )
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -8433,32 +8468,13 @@ fn compute_positions(
       cluster_meta,
       ordering,
     )
-  let use_vnodes_for_xpos = x_stage_data.use_vnodes_for_xpos
-  let virtual_slack_edges = x_stage_data.virtual_slack_edges
-  let x_base_sizes = x_stage_data.x_base_sizes
-  let x_groups = x_stage_data.x_groups
-  let x_cluster_keys = x_stage_data.x_cluster_keys
-  let flat_label_edges = x_stage_data.flat_label_edges
-  let flat_label_nodes = x_stage_data.flat_label_nodes
-  let flat_label_edge_vnodes = x_stage_data.flat_label_edge_vnodes
-  let rank_ht1 = rank_heights.rank_ht1
-  let rank_ht2 = rank_heights.rank_ht2
-  build_projection_result_for_positions(
+  build_projection_result_from_x_stage_data_for_positions(
     graph,
     prep,
     rank_data,
     rank_heights,
     cluster_meta,
     ordering,
-    use_vnodes_for_xpos,
-    x_base_sizes,
-    x_groups,
-    x_cluster_keys,
-    virtual_slack_edges,
-    flat_label_edges,
-    flat_label_nodes,
-    flat_label_edge_vnodes,
-    rank_ht1,
-    rank_ht2,
+    x_stage_data,
   )
 }
