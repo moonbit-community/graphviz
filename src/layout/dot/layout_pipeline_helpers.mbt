@@ -6825,6 +6825,40 @@ fn run_ordering_stage_dispatch(
 }
 
 ///|
+/// Graphviz parity: final ordering result output object maps ordering arrays,
+/// vnode metadata, and edge-port-derived edge order fields unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_result_output(
+  ordered_groups : Map[Int, Array[String]],
+  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  vnode_info : EdgeVnodeInfo,
+  vnode_count : Int,
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  edge_order : Map[String, Int],
+  edge_cluster_keys : Map[String, String],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  vnode_creation_order : Array[String],
+) -> OrderingResult {
+  {
+    ordered_groups,
+    ordered_groups_with_vnodes,
+    vnode_info,
+    vnode_count,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    edge_order,
+    edge_cluster_keys,
+    nlist_order,
+    gdnlist_order,
+    vnode_creation_order,
+  }
+}
+
+///|
 /// Graphviz parity: final ordering result must keep the exact arrays/maps produced
 /// by ordering stages for downstream xpos/routing parity checks.
 /// Do not change behavior without updating fixtures/tests.
@@ -6839,20 +6873,20 @@ fn build_ordering_result(
   gdnlist_order : Array[String],
   vnode_creation_order : Array[String],
 ) -> OrderingResult {
-  {
+  build_ordering_result_output(
     ordered_groups,
     ordered_groups_with_vnodes,
     vnode_info,
     vnode_count,
-    order_edges: edge_port_data.order_edges,
-    order_edge_tail: edge_port_data.order_edge_tail,
-    order_edge_head: edge_port_data.order_edge_head,
-    edge_order: edge_port_data.edge_order,
+    edge_port_data.order_edges,
+    edge_port_data.order_edge_tail,
+    edge_port_data.order_edge_head,
+    edge_port_data.edge_order,
     edge_cluster_keys,
     nlist_order,
     gdnlist_order,
     vnode_creation_order,
-  }
+  )
 }
 
 ///|
