@@ -7013,6 +7013,57 @@ fn build_x_position_stage_seed_data_for_positions(
 }
 
 ///|
+/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
+/// fixed order before flat-label augmentation consumes updated x_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
+  xpos_reorder_enabled : Bool,
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  graphviz_flip : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  x_stage_seed : XPositionStageSeedData,
+) -> Map[Int, Array[String]] {
+  let mut x_groups = x_stage_seed.x_groups
+  x_groups =
+    maybe_apply_xpos_reorder_for_positions(
+      xpos_reorder_enabled,
+      use_vnodes_for_xpos,
+      allow_xpos_reorder,
+      x_stage_seed.has_vnode_order,
+      cluster_meta,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
+      x_stage_seed.x_order_sizes,
+      x_stage_seed.x_cluster_keys,
+      x_stage_seed.x_edge_tail_port_x,
+      x_stage_seed.x_edge_head_port_x,
+      x_stage_seed.x_edge_tail_port_order,
+      x_stage_seed.x_edge_head_port_order,
+      graphviz_flip,
+      x_groups,
+    )
+  dot_trace_groups("x-groups", x_groups)
+  maybe_apply_xpos_transpose_cleanup(
+    xpos_reorder_enabled,
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    cluster_meta,
+    prep.nodes,
+    ordering,
+    rank_data.ranks,
+    x_groups,
+  )
+  x_groups
+}
+
+///|
 /// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -7028,46 +7079,19 @@ fn build_x_stage_with_flat_label_augmentation_for_positions(
   ordering : OrderingResult,
   x_stage_seed : XPositionStageSeedData,
 ) -> XposFlatLabelAugmentation {
-  let has_vnode_order = x_stage_seed.has_vnode_order
-  let x_base_sizes = x_stage_seed.x_base_sizes
-  let x_order_sizes = x_stage_seed.x_order_sizes
-  let x_edge_tail_port_x = x_stage_seed.x_edge_tail_port_x
-  let x_edge_head_port_x = x_stage_seed.x_edge_head_port_x
-  let x_edge_tail_port_order = x_stage_seed.x_edge_tail_port_order
-  let x_edge_head_port_order = x_stage_seed.x_edge_head_port_order
-  let mut x_groups = x_stage_seed.x_groups
-  let x_cluster_keys = x_stage_seed.x_cluster_keys
-  x_groups =
-    maybe_apply_xpos_reorder_for_positions(
+  let x_groups =
+    build_x_stage_groups_after_reorder_and_cleanup_for_positions(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
-      has_vnode_order,
-      cluster_meta,
+      graphviz_flip,
       prep,
       rank_data,
       rank_heights,
+      cluster_meta,
       ordering,
-      x_order_sizes,
-      x_cluster_keys,
-      x_edge_tail_port_x,
-      x_edge_head_port_x,
-      x_edge_tail_port_order,
-      x_edge_head_port_order,
-      graphviz_flip,
-      x_groups,
+      x_stage_seed,
     )
-  dot_trace_groups("x-groups", x_groups)
-  maybe_apply_xpos_transpose_cleanup(
-    xpos_reorder_enabled,
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    cluster_meta,
-    prep.nodes,
-    ordering,
-    rank_data.ranks,
-    x_groups,
-  )
   build_flat_label_vnode_augmentation_for_positions(
     use_vnodes_for_xpos,
     prep,
@@ -7075,9 +7099,9 @@ fn build_x_stage_with_flat_label_augmentation_for_positions(
     ordering,
     rank_heights,
     cluster_meta,
-    x_base_sizes,
+    x_stage_seed.x_base_sizes,
     x_groups,
-    x_cluster_keys,
+    x_stage_seed.x_cluster_keys,
   )
 }
 
