@@ -988,52 +988,16 @@ fn collect_cluster_rank_bounds_for_metadata(
 }
 
 ///|
-/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Graphviz parity: optional cluster order base expansion follows the
+/// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_cluster_metadata(
-  graph : @cgraph.Graph,
+fn apply_cluster_order_base_for_metadata(
   nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+  cluster_min_rank : Map[String, Int],
+  cluster_first_order : Map[String, Int],
   node_order : Map[String, Int],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  graphviz_flip : Bool,
-) -> ClusterMetadata {
-  let has_clusters = graph_has_cluster(graph)
-  let cluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    cluster_keys[node.name()] = node_cluster_key(node)
-  }
-  assign_cluster_node_order_for_metadata(
-    nodes,
-    cluster_keys,
-    node_order,
-    graphviz_flip,
-  )
-  let cluster_skeleton = build_cluster_skeleton_for_metadata(groups, cluster_keys)
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
-  collect_cluster_rank_bounds_for_metadata(
-    nodes,
-    cluster_keys,
-    ranks,
-    node_order,
-    cluster_min_rank,
-    cluster_max_rank,
-    cluster_first_order,
-  )
-  let cluster_order : Array[String] = []
-  collect_cluster_names_graphviz_order(graph, cluster_order)
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
-    let joined = cluster_order.join(" ")
-    println("cluster_order \{joined}")
-  }
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+) -> Unit {
   let cluster_order_list : Array[(String, Int, Int)] = []
   for cluster, rank in cluster_min_rank {
     let order = match cluster_first_order.get(cluster) {
@@ -1087,6 +1051,62 @@ fn compute_cluster_metadata(
       node_order[name] = base_order + inner
     }
   }
+}
+
+///|
+/// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_cluster_metadata(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  graphviz_flip : Bool,
+) -> ClusterMetadata {
+  let has_clusters = graph_has_cluster(graph)
+  let cluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    cluster_keys[node.name()] = node_cluster_key(node)
+  }
+  assign_cluster_node_order_for_metadata(
+    nodes,
+    cluster_keys,
+    node_order,
+    graphviz_flip,
+  )
+  let cluster_skeleton = build_cluster_skeleton_for_metadata(groups, cluster_keys)
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  collect_cluster_rank_bounds_for_metadata(
+    nodes,
+    cluster_keys,
+    ranks,
+    node_order,
+    cluster_min_rank,
+    cluster_max_rank,
+    cluster_first_order,
+  )
+  let cluster_order : Array[String] = []
+  collect_cluster_names_graphviz_order(graph, cluster_order)
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
+    let joined = cluster_order.join(" ")
+    println("cluster_order \{joined}")
+  }
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  apply_cluster_order_base_for_metadata(
+    nodes,
+    cluster_keys,
+    cluster_min_rank,
+    cluster_first_order,
+    node_order,
+  )
   let intercluster_keys : Map[String, String] = Map::new()
   for node in nodes {
     intercluster_keys[node.name()] = node_local_cluster_key(node)
