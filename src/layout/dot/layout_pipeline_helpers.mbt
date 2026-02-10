@@ -4034,15 +4034,12 @@ fn compute_ordering_and_vnodes(
               println("remincross vnode \{name} cluster=\{cluster}")
             }
           }
-          let rem_sizes : Map[String, NodeSize] = Map::new()
-          for name, size in order_sizes {
-            rem_sizes[name] = size
-          }
-          if order_with_vnodes {
-            for name, size in vnode_info.vnode_sizes {
-              rem_sizes[name] = size
-            }
-          }
+          let rem_sizes =
+            build_order_sizes_for_order_graph(
+              order_sizes,
+              order_with_vnodes,
+              vnode_info.vnode_sizes,
+            )
           let rem_flat_constraints =
             clone_flat_constraints(cluster_meta.flat_constraints)
           for key, _ in rank_same_constraints {
