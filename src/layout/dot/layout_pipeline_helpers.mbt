@@ -9150,6 +9150,25 @@ fn is_graphviz_rankdir_flip_for_positions(prep : LayoutPrep) -> Bool {
 
 
 ///|
+/// Graphviz parity: position-mode output object maps computed gate values and
+/// preserves fixed xpos_reorder_enabled=false behavior.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_mode_flags_output_for_positions(
+  use_vnodes_for_xpos : Bool,
+  allow_xpos_reorder : Bool,
+  graphviz_flip : Bool,
+) -> PositionModeFlags {
+  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
+  let xpos_reorder_enabled = false
+  {
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    graphviz_flip,
+    xpos_reorder_enabled,
+  }
+}
+
+///|
 /// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
 /// rankdir flip) are computed once from prep+ordering and forwarded unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -9161,14 +9180,11 @@ fn build_position_mode_flags(
   let allow_xpos_reorder =
     should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
   let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
-  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
-  let xpos_reorder_enabled = false
-  {
+  build_position_mode_flags_output_for_positions(
     use_vnodes_for_xpos,
     allow_xpos_reorder,
     graphviz_flip,
-    xpos_reorder_enabled,
-  }
+  )
 }
 
 ///|
