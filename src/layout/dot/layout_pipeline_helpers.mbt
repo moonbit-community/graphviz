@@ -6184,6 +6184,28 @@ fn build_ordering_dispatch_setup(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root stage output object maps grouped sizes,
+/// cluster skeleton keys, reorder context, and materialized edges unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_ordering_pre_root_stage_output(
+  order_groups : Map[Int, Array[String]],
+  order_sizes_out : Map[String, NodeSize],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  reorder_context : OrderReorderContext,
+  materialized : OrderMaterializationData,
+) -> OrderClusteredPreRootStageData {
+  {
+    order_groups,
+    order_sizes_out,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    reorder_context,
+    materialized,
+  }
+}
+
+///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -6258,14 +6280,14 @@ fn build_clustered_ordering_pre_root_stage(
       nodes,
       reorder_context.order_node_order,
     )
-  {
+  build_clustered_ordering_pre_root_stage_output(
     order_groups,
     order_sizes_out,
     order_cluster_keys,
     order_cluster_skeleton,
     reorder_context,
     materialized,
-  }
+  )
 }
 
 ///|
