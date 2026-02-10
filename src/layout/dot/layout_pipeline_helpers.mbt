@@ -227,6 +227,16 @@ priv struct XposVNodeOrderState {
 }
 
 ///|
+priv struct XposOrderEdgePortData {
+  x_base_sizes : Map[String, NodeSize]
+  x_order_sizes : Map[String, NodeSize]
+  x_edge_tail_port_x : Array[Double]
+  x_edge_head_port_x : Array[Double]
+  x_edge_tail_port_order : Array[Double]
+  x_edge_head_port_order : Array[Double]
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 ///|
@@ -7135,6 +7145,58 @@ fn build_vnode_order_state_for_positions(
 }
 
 ///|
+/// Graphviz parity: x-order sizes and edge port position/order arrays are
+/// derived from layout-coordinate sizes before any xpos reorder pass.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_order_edge_port_data_for_positions(
+  use_vnodes_for_xpos : Bool,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  ordering : OrderingResult,
+) -> XposOrderEdgePortData {
+  // Graphviz parity: x-positioning uses layout-coordinate node sizes,
+  // so rankdir flip is handled via prep.sizes (not ordering-space widths).
+  let x_base_sizes = apply_self_edge_right_space(
+    prep.nodes,
+    prep.edges,
+    prep.sizes,
+    prep.rankdir,
+    prep.record_orientation,
+  )
+  let x_order_sizes =
+    if use_vnodes_for_xpos {
+      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
+    } else {
+      x_base_sizes
+    }
+  let (x_edge_tail_port_x, x_edge_head_port_x) =
+    compute_edge_port_positions(
+      prep.nodes,
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      x_order_sizes,
+    )
+  let (x_edge_tail_port_order, x_edge_head_port_order) =
+    compute_edge_port_orders(
+      prep.nodes,
+      prep.edges,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      x_order_sizes,
+    )
+  {
+    x_base_sizes,
+    x_order_sizes,
+    x_edge_tail_port_x,
+    x_edge_head_port_x,
+    x_edge_tail_port_order,
+    x_edge_head_port_order,
+  }
+}
+
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7174,37 +7236,19 @@ fn compute_positions(
     )
   let vnode_order_keys = vnode_order_state.vnode_order_keys
   let has_vnode_order = vnode_order_state.has_vnode_order
-  // Graphviz parity: x-positioning uses layout-coordinate node sizes,
-  // so rankdir flip is handled via prep.sizes (not ordering-space widths).
-  let x_base_sizes = apply_self_edge_right_space(
-    prep.nodes,
-    prep.edges,
-    prep.sizes,
-    prep.rankdir,
-    prep.record_orientation,
-  )
-  let x_order_sizes =
-    if use_vnodes_for_xpos {
-      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
-    } else {
-      x_base_sizes
-    }
-  let (x_edge_tail_port_x, x_edge_head_port_x) =
-    compute_edge_port_positions(
-      prep.nodes,
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      x_order_sizes,
+  let x_order_edge_port_data =
+    build_x_order_edge_port_data_for_positions(
+      use_vnodes_for_xpos,
+      prep,
+      rank_data,
+      ordering,
     )
-  let (x_edge_tail_port_order, x_edge_head_port_order) =
-    compute_edge_port_orders(
-      prep.nodes,
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      x_order_sizes,
-    )
+  let x_base_sizes = x_order_edge_port_data.x_base_sizes
+  let x_order_sizes = x_order_edge_port_data.x_order_sizes
+  let x_edge_tail_port_x = x_order_edge_port_data.x_edge_tail_port_x
+  let x_edge_head_port_x = x_order_edge_port_data.x_edge_head_port_x
+  let x_edge_tail_port_order = x_order_edge_port_data.x_edge_tail_port_order
+  let x_edge_head_port_order = x_order_edge_port_data.x_edge_head_port_order
   let mut x_groups =
     build_initial_x_groups(
       use_vnodes_for_xpos,
