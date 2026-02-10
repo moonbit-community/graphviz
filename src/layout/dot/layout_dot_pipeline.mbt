@@ -7,6 +7,28 @@ priv struct DotRankStage {
 }
 
 ///|
+/// Graphviz parity: cluster metadata in rank/order stage uses the same
+/// rank-group and edge endpoint wiring as Graphviz ordering setup.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_meta_for_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+) -> ClusterMetadata {
+  compute_cluster_metadata(
+    graph,
+    prep.nodes,
+    prep.edges,
+    rank_data.groups,
+    rank_data.ranks,
+    prep.node_order,
+    rank_data.edge_tail,
+    rank_data.edge_head,
+    prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
+  )
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -42,17 +64,7 @@ fn compute_dot_rank_stage(
     prep.has_edge_labels,
   )
   let cluster_meta =
-    compute_cluster_metadata(
-      graph,
-      prep.nodes,
-      prep.edges,
-      rank_data.groups,
-      rank_data.ranks,
-      prep.node_order,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
-    )
+    build_cluster_meta_for_dot_rank_stage(graph, prep, rank_data)
   let ordering = compute_ordering_and_vnodes(
     graph,
     prep.nodes,
