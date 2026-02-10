@@ -5580,6 +5580,19 @@ fn build_root_mincross_rank_keys_and_nodes(
 }
 
 ///|
+/// Graphviz parity: root ReMincross builds rank-key/node flattening and
+/// membership map from seeded root/skeleton groups before edge filtering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_node_membership_inputs(
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> (Array[Int], Array[String], Map[String, Bool]) {
+  let (order_rank_keys_for_mincross, order_nodes_for_mincross) =
+    build_root_mincross_rank_keys_and_nodes(order_groups_for_mincross)
+  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes)
+}
+
+///|
 /// Graphviz parity: root ReMincross filters order edges to root/skeleton
 /// membership before mincross reorder, preserving sampled port metadata.
 /// Do not change behavior without updating fixtures/tests.
@@ -5765,9 +5778,8 @@ fn run_root_mincross_reorder(
     graphviz_in_neighbors,
     graphviz_out_neighbors,
   )
-  let (order_rank_keys_for_mincross, order_nodes_for_mincross) =
-    build_root_mincross_rank_keys_and_nodes(order_groups_for_mincross)
-  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  let (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes) =
+    build_root_mincross_node_membership_inputs(order_groups_for_mincross)
   let (
     order_edges_out_mincross,
     order_edge_tail_out_mincross,
