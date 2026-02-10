@@ -2303,6 +2303,91 @@ fn merge_root_mincross_order_into_seeded_groups(
 }
 
 ///|
+/// Graphviz parity: root-vnode set for cluster root reorder includes vnodes on
+/// edges crossing cluster boundaries (same edge_vnode_key mapping as routing).
+/// Do not change behavior without updating fixtures/tests.
+fn collect_root_vnodes_for_cluster_reorder(
+  order_with_vnodes : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+) -> Map[String, Bool] {
+  let root_vnodes : Map[String, Bool] = Map::new()
+  if !order_with_vnodes {
+    return root_vnodes
+  }
+  let mut edge_idx = 0
+  for edge in edges {
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edge.head().name()
+      }
+    let tail_cluster = match cluster_keys.get(tail) {
+      Some(value) => value
+      None => ""
+    }
+    let head_cluster = match cluster_keys.get(head) {
+      Some(value) => value
+      None => ""
+    }
+    if tail_cluster != head_cluster {
+      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+        Some(list) => list
+        None => []
+      }
+      for vnode in vnodes {
+        root_vnodes[vnode] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+  root_vnodes
+}
+
+///|
+/// Graphviz parity: root cluster reorder base groups keep only root/skeleton
+/// nodes, and include edge-vnodes only when flagged as root-vnodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_groups_base_for_cluster_reorder(
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  root_vnodes : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let root_groups_base : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys {
+    let names = match order_groups_for_mincross.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let root_names : Array[String] = []
+    for name in names {
+      let cluster = match order_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      if is_skeleton || cluster == "" {
+        if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
+          root_names.push(name)
+        }
+      }
+    }
+    if root_names.length() > 0 {
+      root_groups_base[rank] = root_names
+    }
+  }
+  root_groups_base
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -3011,61 +3096,23 @@ fn compute_ordering_and_vnodes(
       }
       let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
       if order_with_clusters {
-        let root_vnodes : Map[String, Bool] = Map::new()
-        if order_with_vnodes {
-          let mut edge_idx = 0
-          for edge in edges {
-            let tail =
-              if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-                edge.tail().name()
-              }
-            let head =
-              if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-                edge.head().name()
-              }
-            let tail_cluster = match cluster_meta.cluster_keys.get(tail) {
-              Some(value) => value
-              None => ""
-            }
-            let head_cluster = match cluster_meta.cluster_keys.get(head) {
-              Some(value) => value
-              None => ""
-            }
-            if tail_cluster != head_cluster {
-              let vnodes = match vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
-                Some(list) => list
-                None => []
-              }
-              for vnode in vnodes {
-                root_vnodes[vnode] = true
-              }
-            }
-            edge_idx = edge_idx + 1
-          }
-        }
-        let root_groups_base : Map[Int, Array[String]] = Map::new()
-        for rank in order_rank_keys {
-          let names = match order_groups_for_mincross.get(rank) {
-            Some(list) => list
-            None => []
-          }
-          let root_names : Array[String] = []
-          for name in names {
-            let cluster = match order_cluster_keys.get(name) {
-              Some(value) => value
-              None => ""
-            }
-            let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-            if is_skeleton || cluster == "" {
-              if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
-                root_names.push(name)
-              }
-            }
-          }
-          if root_names.length() > 0 {
-            root_groups_base[rank] = root_names
-          }
-        }
+        let root_vnodes =
+          collect_root_vnodes_for_cluster_reorder(
+            order_with_vnodes,
+            edges,
+            edge_tail,
+            edge_head,
+            cluster_meta.cluster_keys,
+            vnode_info.edge_vnodes,
+          )
+        let root_groups_base =
+          build_root_groups_base_for_cluster_reorder(
+            order_rank_keys,
+            order_groups_for_mincross,
+            order_cluster_keys,
+            order_cluster_skeleton,
+            root_vnodes,
+          )
         let root_order_index = build_order_index(root_groups_base)
         let root_vnodes_by_rank : Map[Int, Array[String]] = Map::new()
         let root_vnode_order_keys : Map[String, Double] = Map::new()
