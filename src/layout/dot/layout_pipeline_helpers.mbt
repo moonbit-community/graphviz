@@ -1836,6 +1836,27 @@ fn build_order_nodes_from_groups(
 }
 
 ///|
+/// Graphviz parity: order graph node table is built by creating each name in
+/// order_nodes sequence, matching agnode creation iteration order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_graph_and_nodes(
+  graph_name : String,
+  order_nodes : Array[String],
+) -> (@cgraph.Graph, Map[String, @cgraph.Node]) {
+  let order_graph =
+    @cgraph.Graph::new(
+      @cgraph.GraphKind::Directed,
+      name=graph_name,
+      strict=false,
+    )
+  let order_node_map : Map[String, @cgraph.Node] = Map::new()
+  for name in order_nodes {
+    order_node_map[name] = order_graph.node(name)
+  }
+  (order_graph, order_node_map)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2219,22 +2240,10 @@ fn compute_ordering_and_vnodes(
       let order_ranks = build_node_ranks(order_groups)
       let order_nodes =
         build_order_nodes_from_groups(order_groups, order_rank_keys)
-      let order_graph =
-        @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="order_graph", strict=false)
-      let order_node_map : Map[String, @cgraph.Node] = Map::new()
-      for name in order_nodes {
-        order_node_map[name] = order_graph.node(name)
-      }
-      let order_graph_unmapped =
-        @cgraph.Graph::new(
-          @cgraph.GraphKind::Directed,
-          name="order_graph_unmapped",
-          strict=false,
-        )
-      let order_node_map_unmapped : Map[String, @cgraph.Node] = Map::new()
-      for name in order_nodes {
-        order_node_map_unmapped[name] = order_graph_unmapped.node(name)
-      }
+      let (order_graph, order_node_map) =
+        build_order_graph_and_nodes("order_graph", order_nodes)
+      let (order_graph_unmapped, order_node_map_unmapped) =
+        build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
       let creation_order =
         build_reverse_creation_order_from_nlist(nlist_order)
       let order_node_order : Map[String, Int] = Map::new()
