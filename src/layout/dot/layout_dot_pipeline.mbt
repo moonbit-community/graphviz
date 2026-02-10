@@ -62,6 +62,31 @@ fn build_ordering_for_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: rank-height stage consumes computed ranks/groups and
+/// spacing inputs with unchanged Graphviz argument wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_heights_for_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+) -> RankHeights {
+  compute_rank_heights(
+    graph,
+    prep.edges,
+    rank_data.ranks,
+    rank_data.groups,
+    rank_data.rank_keys,
+    rank_data.all_ranks,
+    prep.sizes,
+    rank_data.self_edge_labels,
+    prep.rankdir,
+    prep.nodesep_in,
+    prep.ranksep_in,
+    prep.has_edge_labels,
+  )
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -82,20 +107,8 @@ fn compute_dot_rank_stage(
     rank_data.edge_head,
     rank_data.ranks,
   )
-  let rank_heights = compute_rank_heights(
-    graph,
-    prep.edges,
-    rank_data.ranks,
-    rank_data.groups,
-    rank_data.rank_keys,
-    rank_data.all_ranks,
-    prep.sizes,
-    rank_data.self_edge_labels,
-    prep.rankdir,
-    prep.nodesep_in,
-    prep.ranksep_in,
-    prep.has_edge_labels,
-  )
+  let rank_heights =
+    build_rank_heights_for_dot_rank_stage(graph, prep, rank_data)
   let cluster_meta =
     build_cluster_meta_for_dot_rank_stage(graph, prep, rank_data)
   let ordering =
