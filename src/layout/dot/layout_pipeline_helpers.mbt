@@ -6915,6 +6915,83 @@ fn build_y_all_ranks_with_flat_labels(
 }
 
 ///|
+/// Graphviz parity: when flipped cluster-rank heights adjust rank_y, node y
+/// coordinates are rebuilt from rank order/groups without extra transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_y_positions_from_rank_groups(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  rank_y : Map[Int, Double],
+) -> Map[String, Double] {
+  let y_positions : Map[String, Double] = Map::new()
+  for rank in rank_keys {
+    let pos_y = match rank_y.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      y_positions[name] = pos_y
+    }
+  }
+  y_positions
+}
+
+///|
+/// Graphviz parity: y-position stage runs fill_rank_positions first, then
+/// optional flip-cluster height correction (cluster.c path) and y rebuild.
+/// Do not change behavior without updating fixtures/tests.
+fn build_y_positions_with_cluster_flip_adjustment(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  rank_pht : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  ranksep_pt : Double,
+  cluster_bbox_heights : Map[String, (Double, Double)],
+  y_all_ranks : Array[Int],
+) -> (Map[String, Double], Map[Int, Double]) {
+  let mut y_positions : Map[String, Double] = Map::new()
+  let rank_y : Map[Int, Double] = Map::new()
+  fill_rank_positions(
+    rank_keys,
+    groups,
+    y_all_ranks,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+    ranksep_pt,
+    y_positions,
+    rank_y,
+  )
+  if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    graph_has_cluster(graph) {
+    let min_root_rank = if y_all_ranks.length() > 0 { y_all_ranks[0] } else { 0 }
+    let adjusted =
+      adjust_flip_cluster_rank_heights(
+      graph,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      cluster_bbox_heights,
+      min_root_rank,
+      0.0,
+    )
+    if adjusted {
+      y_positions = build_y_positions_from_rank_groups(rank_keys, groups, rank_y)
+    }
+  }
+  (y_positions, rank_y)
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7426,50 +7503,20 @@ fn compute_positions(
   )
   let y_all_ranks =
     build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
-  let mut y_positions : Map[String, Double] = Map::new()
-  let rank_y : Map[Int, Double] = Map::new()
-  fill_rank_positions(
-    rank_data.rank_keys,
-    rank_data.groups,
-    y_all_ranks,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-    rank_heights.ranksep_pt,
-    y_positions,
-    rank_y,
-  )
-  if (prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL) &&
-    graph_has_cluster(graph) {
-    let min_root_rank = if y_all_ranks.length() > 0 { y_all_ranks[0] } else { 0 }
-    let adjusted =
-      adjust_flip_cluster_rank_heights(
+  let (y_positions, rank_y) =
+    build_y_positions_with_cluster_flip_adjustment(
       graph,
+      prep.rankdir,
+      rank_data.rank_keys,
+      rank_data.groups,
       rank_data.ranks,
-      rank_y,
+      rank_pht,
       rank_ht1,
       rank_ht2,
+      rank_heights.ranksep_pt,
       cluster_bbox_heights,
-      min_root_rank,
-      0.0,
+      y_all_ranks,
     )
-    if adjusted {
-      y_positions = Map::new()
-      for rank in rank_data.rank_keys {
-        let pos_y = match rank_y.get(rank) {
-          Some(value) => value
-          None => 0.0
-        }
-        let names = match rank_data.groups.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        for name in names {
-          y_positions[name] = pos_y
-        }
-      }
-    }
-  }
   let xpos_input =
     build_xpos_computation_input(
       use_vnodes_for_xpos,
