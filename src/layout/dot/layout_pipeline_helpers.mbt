@@ -2590,6 +2590,62 @@ fn collect_root_vnode_rank_groups_and_order_keys(
 }
 
 ///|
+/// Graphviz parity: root cluster reorder groups keep root/skeleton base order
+/// and optionally merge only root-vnodes into rank groups using filtered vnode
+/// keys/rank buckets from root-mincross inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_groups_for_cluster_reorder(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> Map[Int, Array[String]] {
+  let root_vnodes =
+    collect_root_vnodes_for_cluster_reorder(
+      order_with_vnodes,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+      edge_vnodes,
+    )
+  let root_groups_base =
+    build_root_groups_base_for_cluster_reorder(
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      root_vnodes,
+    )
+  let root_order_index = build_order_index(root_groups_base)
+  let (root_vnodes_by_rank, root_vnode_order_keys) =
+    collect_root_vnode_rank_groups_and_order_keys(
+      order_with_vnodes,
+      root_vnodes,
+      vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+    )
+  if order_with_vnodes {
+    build_x_groups_with_vnodes(
+      root_groups_base,
+      root_order_index,
+      root_vnodes_by_rank,
+      root_vnode_order_keys,
+    )
+  } else {
+    root_groups_base
+  }
+}
+
+///|
 /// Graphviz parity: root mincross rank map records first-seen cluster skeleton
 /// (or root real-node bucket) order per rank for cluster-phase reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -3984,42 +4040,21 @@ fn compute_ordering_and_vnodes(
       }
       let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
       if order_with_clusters {
-        let root_vnodes =
-          collect_root_vnodes_for_cluster_reorder(
+        let root_groups =
+          build_root_groups_for_cluster_reorder(
             order_with_vnodes,
+            order_rank_keys,
+            order_groups_for_mincross,
+            order_cluster_keys,
+            order_cluster_skeleton,
             edges,
             edge_tail,
             edge_head,
             cluster_meta.cluster_keys,
             vnode_info.edge_vnodes,
-          )
-        let root_groups_base =
-          build_root_groups_base_for_cluster_reorder(
-            order_rank_keys,
-            order_groups_for_mincross,
-            order_cluster_keys,
-            order_cluster_skeleton,
-            root_vnodes,
-          )
-        let root_order_index = build_order_index(root_groups_base)
-        let (root_vnodes_by_rank, root_vnode_order_keys) =
-          collect_root_vnode_rank_groups_and_order_keys(
-            order_with_vnodes,
-            root_vnodes,
             vnode_info.vnodes_by_rank,
             vnode_order_keys_for_ordering,
           )
-        let root_groups =
-          if order_with_vnodes {
-            build_x_groups_with_vnodes(
-              root_groups_base,
-              root_order_index,
-              root_vnodes_by_rank,
-              root_vnode_order_keys,
-            )
-          } else {
-            root_groups_base
-          }
         let root_rank_keys = collect_rank_keys(root_groups)
         let root_ranks = build_node_ranks(root_groups)
         let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
