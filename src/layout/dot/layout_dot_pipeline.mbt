@@ -104,6 +104,13 @@ priv struct DotRoutingStage {
 }
 
 ///|
+priv struct DotRoutingPaddingAndHeadPortMetrics {
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -192,6 +199,37 @@ fn build_port_layout_maps_for_routing_stage(
 }
 
 ///|
+/// Graphviz parity: port padding and head-port metrics are computed from the
+/// same inputs and in the same order before spline routing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_padding_and_head_port_metrics_for_stage(
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  enable_complex_tuning : Bool,
+) -> DotRoutingPaddingAndHeadPortMetrics {
+  let (port_pad_below, port_pad_above) =
+    compute_port_padding(
+      rank_stage.cluster_meta.has_clusters,
+      prep.has_port_edges,
+      prep.edges,
+      positions_state.positions,
+      label_ports_map,
+    )
+  let head_port_metrics =
+    collect_head_port_metrics(
+      prep.edges,
+      positions_state.positions,
+      prep.sizes,
+      label_ports_map,
+      prep.record_orientation,
+      enable_complex_tuning,
+    )
+  { port_pad_below, port_pad_above, head_port_metrics }
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -222,23 +260,20 @@ fn compute_dot_routing_stage(
     )
   let label_edge_counts = build_label_edge_counts(prep.edges)
   let enable_complex_tuning = complex_tuning_enabled()
-  let (port_pad_below, port_pad_above) =
-    compute_port_padding(
-      rank_stage.cluster_meta.has_clusters,
-      prep.has_port_edges,
-      prep.edges,
-      positions_state.positions,
+  let routing_padding_and_head_port_metrics =
+    build_routing_padding_and_head_port_metrics_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
       label_ports_map,
-    )
-  let head_port_metrics =
-    collect_head_port_metrics(
-      prep.edges,
-      positions_state.positions,
-      prep.sizes,
-      label_ports_map,
-      prep.record_orientation,
       enable_complex_tuning,
     )
+  let port_pad_below =
+    routing_padding_and_head_port_metrics.port_pad_below
+  let port_pad_above =
+    routing_padding_and_head_port_metrics.port_pad_above
+  let head_port_metrics =
+    routing_padding_and_head_port_metrics.head_port_metrics
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
     build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
