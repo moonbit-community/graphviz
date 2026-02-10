@@ -5910,6 +5910,69 @@ fn run_clustered_ordering_stage(
 }
 
 ///|
+/// Graphviz parity: non-clustered ordering path still runs the single mincross
+/// pass directly (matching Graphviz control flow).
+/// Do not change behavior without updating fixtures/tests.
+fn run_noncluster_ordering_stage(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  nlist_order : Array[String],
+  node_order : Map[String, Int],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_meta : ClusterMetadata,
+  edge_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  graphviz_flip : Bool,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let ordered_groups =
+    run_noncluster_reorder_pass(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      rank_keys,
+      groups,
+      nlist_order,
+      node_order,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_meta,
+      edge_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      graphviz_flip,
+    )
+  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
+  (ordered_groups, ordered_with_vnodes)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -6063,36 +6126,33 @@ fn compute_ordering_and_vnodes(
         edge_creation_order,
       )
     } else {
-      let ordered_groups =
-        run_noncluster_reorder_pass(
-          nodes,
-          edges,
-          edge_tail,
-          edge_head,
-          edge_out_order,
-          ranks,
-          rank_keys,
-          groups,
-          nlist_order,
-          node_order,
-          order_edges,
-          order_edge_tail,
-          order_edge_head,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          cluster_meta,
-          edge_order,
-          order_sizes,
-          nodesep_pt,
-          has_edge_labels,
-          port_order_positions,
-          port_order_contrib,
-          graphviz_flip,
-        )
-      let empty_ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-      (ordered_groups, empty_ordered_with_vnodes)
+      run_noncluster_ordering_stage(
+        nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_out_order,
+        ranks,
+        rank_keys,
+        groups,
+        nlist_order,
+        node_order,
+        order_edges,
+        order_edge_tail,
+        order_edge_head,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        cluster_meta,
+        edge_order,
+        order_sizes,
+        nodesep_pt,
+        has_edge_labels,
+        port_order_positions,
+        port_order_contrib,
+        graphviz_flip,
+      )
     }
   {
     ordered_groups: ordered_groups_internal,
