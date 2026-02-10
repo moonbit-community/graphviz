@@ -1857,6 +1857,54 @@ fn build_order_graph_and_nodes(
 }
 
 ///|
+/// Graphviz parity: order edges are materialized in nlist tail iteration order
+/// with per-tail edge lists consumed exactly in stored sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn append_order_edges_for_tail_sequence(
+  tail_sequence : Array[String],
+  edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+) -> Unit {
+  for tail_name in tail_sequence {
+    let list = match edges_by_tail.get(tail_name) {
+      Some(value) => value
+      None => []
+    }
+    for entry in list {
+      let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+        entry
+      add_order_edge(
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        edge_tail_name,
+        edge_head_name,
+        penalty,
+        constraint,
+        tail_port_x,
+        head_port_x,
+        tail_port_order,
+        head_port_order,
+      )
+    }
+  }
+}
+
+///|
 /// Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
 /// fills with nlist/order_groups/base order while applying rank=same overrides.
 /// Do not change behavior without updating fixtures/tests.
@@ -2346,62 +2394,32 @@ fn compute_ordering_and_vnodes(
       let order_edge_head_port_x_unmapped : Array[Double] = []
       let order_edge_tail_port_order_unmapped : Array[Double] = []
       let order_edge_head_port_order_unmapped : Array[Double] = []
-      for tail_name in nlist_order {
-        let list = match order_edges_by_tail.get(tail_name) {
-          Some(value) => value
-          None => []
-        }
-        for entry in list {
-          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-            entry
-          add_order_edge(
-            order_graph,
-            order_node_map,
-            order_edges_out,
-            order_edge_tail_out,
-            order_edge_head_out,
-            order_edge_tail_port_x,
-            order_edge_head_port_x,
-            order_edge_tail_port_order,
-            order_edge_head_port_order,
-            edge_tail_name,
-            edge_head_name,
-            penalty,
-            constraint,
-            tail_port_x,
-            head_port_x,
-            tail_port_order,
-            head_port_order,
-          )
-        }
-        let unmapped_list = match order_edges_by_tail_unmapped.get(tail_name) {
-          Some(value) => value
-          None => []
-        }
-        for entry in unmapped_list {
-          let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-            entry
-          add_order_edge(
-            order_graph_unmapped,
-            order_node_map_unmapped,
-            order_edges_out_unmapped,
-            order_edge_tail_out_unmapped,
-            order_edge_head_out_unmapped,
-            order_edge_tail_port_x_unmapped,
-            order_edge_head_port_x_unmapped,
-            order_edge_tail_port_order_unmapped,
-            order_edge_head_port_order_unmapped,
-            edge_tail_name,
-            edge_head_name,
-            penalty,
-            constraint,
-            tail_port_x,
-            head_port_x,
-            tail_port_order,
-            head_port_order,
-          )
-        }
-      }
+      append_order_edges_for_tail_sequence(
+        nlist_order,
+        order_edges_by_tail,
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+      )
+      append_order_edges_for_tail_sequence(
+        nlist_order,
+        order_edges_by_tail_unmapped,
+        order_graph_unmapped,
+        order_node_map_unmapped,
+        order_edges_out_unmapped,
+        order_edge_tail_out_unmapped,
+        order_edge_head_out_unmapped,
+        order_edge_tail_port_x_unmapped,
+        order_edge_head_port_x_unmapped,
+        order_edge_tail_port_order_unmapped,
+        order_edge_head_port_order_unmapped,
+      )
       if @sys.get_env_var("DOT_TRACE_ORDER_EDGES") is Some(_) {
         let mut edge_idx = 0
         for _edge in order_edges_out {
