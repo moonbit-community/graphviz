@@ -3698,22 +3698,9 @@ fn compute_ordering_and_vnodes(
         let rem_rank_keys = collect_rank_keys(rem_groups)
         if rem_rank_keys.length() > 1 {
           let rem_ranks = build_node_ranks(rem_groups)
-          let rem_nodes : Array[String] = []
-          for rank in rem_rank_keys {
-            let names = match rem_groups.get(rank) {
-              Some(list) => list
-              None => []
-            }
-            for name in names {
-              rem_nodes.push(name)
-            }
-          }
-          let rem_graph =
-            @cgraph.Graph::new(@cgraph.GraphKind::Directed, name="order_remincross", strict=false)
-          let rem_node_map : Map[String, @cgraph.Node] = Map::new()
-          for name in rem_nodes {
-            rem_node_map[name] = rem_graph.node(name)
-          }
+          let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+          let (rem_graph, rem_node_map) =
+            build_order_graph_and_nodes("order_remincross", rem_nodes)
           let rem_edges_by_tail = edges_by_tail
           // Graphviz parity: ReMincross uses real intercluster edges
           // (no cluster skeleton mapping).
@@ -3843,35 +3830,19 @@ fn compute_ordering_and_vnodes(
           let rem_edge_head_port_x : Array[Double] = []
           let rem_edge_tail_port_order : Array[Double] = []
           let rem_edge_head_port_order : Array[Double] = []
-          for tail_name in rem_nlist_order {
-            let list = match rem_order_edges_by_tail.get(tail_name) {
-              Some(value) => value
-              None => []
-            }
-            for entry in list {
-              let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-                entry
-              add_order_edge(
-                rem_graph,
-                rem_node_map,
-                rem_edges_out,
-                rem_edge_tail_out,
-                rem_edge_head_out,
-                rem_edge_tail_port_x,
-                rem_edge_head_port_x,
-                rem_edge_tail_port_order,
-                rem_edge_head_port_order,
-                edge_tail_name,
-                edge_head_name,
-                penalty,
-                constraint,
-                tail_port_x,
-                head_port_x,
-                tail_port_order,
-                head_port_order,
-              )
-            }
-          }
+          append_order_edges_for_tail_sequence(
+            rem_nlist_order,
+            rem_order_edges_by_tail,
+            rem_graph,
+            rem_node_map,
+            rem_edges_out,
+            rem_edge_tail_out,
+            rem_edge_head_out,
+            rem_edge_tail_port_x,
+            rem_edge_head_port_x,
+            rem_edge_tail_port_order,
+            rem_edge_head_port_order,
+          )
           if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
             let mut idx = 0
             while idx < rem_edges_out.length() {
