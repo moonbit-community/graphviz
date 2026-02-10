@@ -1667,6 +1667,54 @@ fn build_unmapped_order_edges_by_tail(
 }
 
 ///|
+/// Graphviz parity: root order-edge chains use remapped cluster endpoints,
+/// while non-cluster graphs reuse the base order_edges_by_tail mapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_order_edges_by_tail(
+  order_with_clusters : Bool,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edge_creation : Array[(String, String)],
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  edges_by_tail : Map[String, Array[Int]],
+) -> (Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]], Array[(String, String)]) {
+  if order_with_clusters {
+    let (root_edges_by_tail, _root_vnode_creation_by_tail, root_edge_creation) =
+      build_order_edges_by_tail_graphviz(
+        creation_order,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
+        ranks,
+        edge_vnodes,
+        order_with_vnodes,
+        cluster_keys,
+        order_with_clusters,
+        true,
+        true,
+        edges_by_tail,
+      )
+    (root_edges_by_tail, root_edge_creation)
+  } else {
+    (order_edges_by_tail, order_edge_creation)
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1807,29 +1855,25 @@ fn compute_ordering_and_vnodes(
       true,
       edges_by_tail,
     )
-  let (order_edges_by_tail_root, _root_vnode_creation_by_tail, _root_edge_creation) =
-    if order_with_clusters {
-      build_order_edges_by_tail_graphviz(
-        creation_order,
-        edges,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_tail_port_order,
-        edge_head_port_order,
-        ranks,
-        vnode_info.edge_vnodes,
-        order_with_vnodes,
-        cluster_meta.cluster_keys,
-        order_with_clusters,
-        true,
-        true,
-        edges_by_tail,
-      )
-    } else {
-      (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation)
-    }
+  let (order_edges_by_tail_root, root_edge_creation) =
+    build_root_order_edges_by_tail(
+      order_with_clusters,
+      order_edges_by_tail,
+      order_edge_creation,
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      vnode_info.edge_vnodes,
+      order_with_vnodes,
+      cluster_meta.cluster_keys,
+      edges_by_tail,
+    )
   // Graphviz parity: cluster-local build_ranks uses edge chains before
   // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
@@ -2751,7 +2795,7 @@ fn compute_ordering_and_vnodes(
         for edge in skeleton_edge_creation {
           root_edge_creation_order.push(edge)
         }
-        for edge in _root_edge_creation {
+        for edge in root_edge_creation {
           root_edge_creation_order.push(edge)
         }
         // Graphviz parity: build_ranks visits source nodes (no incoming edges)
