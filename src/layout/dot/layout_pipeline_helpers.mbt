@@ -1789,6 +1789,32 @@ fn build_order_cluster_keys_for_order_graph(
 }
 
 ///|
+/// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
+/// and are appended into every covered rank in cluster order.
+/// Do not change behavior without updating fixtures/tests.
+fn append_order_cluster_skeleton_range(
+  cluster : String,
+  min_rank : Int,
+  max_rank : Int,
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_sizes_out : Map[String, NodeSize],
+  order_groups : Map[Int, Array[String]],
+  skeleton_size : NodeSize,
+) -> Unit {
+  for rank in min_rank..=max_rank {
+    let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+    order_cluster_keys[name] = cluster
+    order_cluster_skeleton[name] = true
+    order_sizes_out[name] = skeleton_size
+    match order_groups.get(rank) {
+      Some(list) => list.push(name)
+      None => order_groups[rank] = [name]
+    }
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2132,16 +2158,16 @@ fn compute_ordering_and_vnodes(
                 Some(value) => value
                 None => min_rank
               }
-              for rank in min_rank..=max_rank {
-                let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-                order_cluster_keys[name] = cluster
-                order_cluster_skeleton[name] = true
-                order_sizes_out[name] = skeleton_size
-                match order_groups.get(rank) {
-                  Some(list) => list.push(name)
-                  None => order_groups[rank] = [name]
-                }
-              }
+              append_order_cluster_skeleton_range(
+                cluster,
+                min_rank,
+                max_rank,
+                order_cluster_keys,
+                order_cluster_skeleton,
+                order_sizes_out,
+                order_groups,
+                skeleton_size,
+              )
               cluster_seen[cluster] = true
             }
             None => ()
@@ -2155,16 +2181,16 @@ fn compute_ordering_and_vnodes(
             Some(value) => value
             None => min_rank
           }
-          for rank in min_rank..=max_rank {
-            let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-            order_cluster_keys[name] = cluster
-            order_cluster_skeleton[name] = true
-            order_sizes_out[name] = skeleton_size
-            match order_groups.get(rank) {
-              Some(list) => list.push(name)
-              None => order_groups[rank] = [name]
-            }
-          }
+          append_order_cluster_skeleton_range(
+            cluster,
+            min_rank,
+            max_rank,
+            order_cluster_keys,
+            order_cluster_skeleton,
+            order_sizes_out,
+            order_groups,
+            skeleton_size,
+          )
         }
       }
       dot_trace_groups("order_groups_pre", order_groups)
