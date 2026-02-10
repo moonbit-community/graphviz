@@ -3373,6 +3373,31 @@ fn build_root_cluster_reorder_context(
 }
 
 ///|
+/// Graphviz parity: root-order rank map is transferred into the cluster
+/// rank-order output map before final clustered reorder pass.
+/// Do not change behavior without updating fixtures/tests.
+fn append_root_cluster_rank_order_for_cluster_reorder(
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  root_rank_keys : Array[Int],
+  ordered_root : Map[Int, Array[String]],
+  order_cluster_skeleton : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  real_nodes : Map[String, Bool],
+) -> Unit {
+  let root_cluster_rank_order =
+    build_cluster_rank_order_from_root_ordered(
+      root_rank_keys,
+      ordered_root,
+      order_cluster_skeleton,
+      order_cluster_keys,
+      real_nodes,
+    )
+  for rank, order_map in root_cluster_rank_order {
+    cluster_rank_order[rank] = order_map
+  }
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -3483,17 +3508,14 @@ fn build_cluster_rank_order_for_cluster_reorder(
     cluster_meta.flat_constraints,
     graphviz_flip,
   )
-  let root_cluster_rank_order =
-    build_cluster_rank_order_from_root_ordered(
-      root_rank_keys,
-      ordered_root,
-      order_cluster_skeleton,
-      order_cluster_keys,
-      real_nodes,
-    )
-  for rank, order_map in root_cluster_rank_order {
-    cluster_rank_order[rank] = order_map
-  }
+  append_root_cluster_rank_order_for_cluster_reorder(
+    cluster_rank_order,
+    root_rank_keys,
+    ordered_root,
+    order_cluster_skeleton,
+    order_cluster_keys,
+    real_nodes,
+  )
   cluster_rank_order
 }
 
