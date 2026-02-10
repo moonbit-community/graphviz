@@ -7365,6 +7365,29 @@ fn build_y_positions_with_cluster_flip_adjustment(
 }
 
 ///|
+/// Graphviz parity: cluster bbox heights for y-positioning are computed only
+/// for clustered graphs and otherwise remain an empty map.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_bbox_heights_for_y_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  cluster_meta : ClusterMetadata,
+) -> Map[String, (Double, Double)] {
+  if cluster_meta.has_clusters {
+    compute_cluster_bbox_heights(
+      graph,
+      rank_data.ranks,
+      prep.sizes,
+      rank_data.self_edge_labels,
+      prep.rankdir,
+    )
+  } else {
+    Map::new()
+  }
+}
+
+///|
 /// Graphviz parity: y-position pre-solve in compute_positions keeps cluster bbox
 /// derivation, flat-label rank-height updates, and y-sweep wiring unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -7381,17 +7404,12 @@ fn build_y_position_data_for_positions(
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
   let cluster_bbox_heights =
-    if cluster_meta.has_clusters {
-      compute_cluster_bbox_heights(
-        graph,
-        rank_data.ranks,
-        prep.sizes,
-        rank_data.self_edge_labels,
-        prep.rankdir,
-      )
-    } else {
-      Map::new()
-    }
+    build_cluster_bbox_heights_for_y_positions(
+      graph,
+      prep,
+      rank_data,
+      cluster_meta,
+    )
   apply_flat_label_rank_height_updates(
     flat_label_nodes,
     ordering.vnode_info.vnode_sizes,
