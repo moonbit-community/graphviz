@@ -4046,6 +4046,68 @@ fn run_noncluster_reorder_pass(
 }
 
 ///|
+/// Debug trace: dump selected order-node positions when DOT_TRACE_GROUPS is
+/// enabled (diagnostic only).
+fn trace_order_node_order_debug(
+  order_node_order : Map[String, Int],
+) -> Unit {
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
+    return
+  }
+  let debug_names : Array[String] = [
+    "z_req",
+    "z_req1",
+    "handle_x",
+    "handle_1",
+    "mobvm_a_req",
+    "mobvm_a_req1",
+    "front_end_jz",
+    "other_xprot",
+    "z_shapeshifter",
+  ]
+  for name in debug_names {
+    match order_node_order.get(name) {
+      Some(value) => println("order_node_order \{name}=\{value}")
+      None => ()
+    }
+  }
+}
+
+///|
+/// Debug trace: dump materialized order edges with rank/real-node flags when
+/// DOT_TRACE_ORDER_EDGES is enabled (diagnostic only).
+fn trace_order_edges_with_ranks(
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_ranks : Map[String, Int],
+  real_nodes : Map[String, Bool],
+) -> Unit {
+  if @sys.get_env_var("DOT_TRACE_ORDER_EDGES") is None {
+    return
+  }
+  let mut edge_idx = 0
+  for _edge in order_edges_out {
+    let tail = order_edge_tail_out[edge_idx]
+    let head = order_edge_head_out[edge_idx]
+    let tail_rank = match order_ranks.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match order_ranks.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    let tail_real = real_nodes.get(tail) is Some(_)
+    let head_real = real_nodes.get(head) is Some(_)
+    println(
+      "order_edge \{edge_idx}: \{tail}(\{tail_rank},\{tail_real}) -> \{head}(\{head_rank},\{head_real})",
+    )
+    edge_idx = edge_idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: order-graph edge arrays are materialized from GD_nlist
 /// tail order for both mapped (cluster-remapped) and unmapped variants.
 /// Do not change behavior without updating fixtures/tests.
@@ -4671,25 +4733,7 @@ fn compute_ordering_and_vnodes(
           cluster_meta.rank_same_order,
           port_edge_nodes,
         )
-      if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-        let debug_names : Array[String] = [
-          "z_req",
-          "z_req1",
-          "handle_x",
-          "handle_1",
-          "mobvm_a_req",
-          "mobvm_a_req1",
-          "front_end_jz",
-          "other_xprot",
-          "z_shapeshifter",
-        ]
-        for name in debug_names {
-          match order_node_order.get(name) {
-            Some(value) => println("order_node_order \{name}=\{value}")
-            None => ()
-          }
-        }
-      }
+      trace_order_node_order_debug(order_node_order)
       let (
         order_edges_out,
         order_edge_tail_out,
@@ -4715,27 +4759,13 @@ fn compute_ordering_and_vnodes(
           order_graph_unmapped,
           order_node_map_unmapped,
         )
-      if @sys.get_env_var("DOT_TRACE_ORDER_EDGES") is Some(_) {
-        let mut edge_idx = 0
-        for _edge in order_edges_out {
-          let tail = order_edge_tail_out[edge_idx]
-          let head = order_edge_head_out[edge_idx]
-          let tail_rank = match order_ranks.get(tail) {
-            Some(value) => value
-            None => 0
-          }
-          let head_rank = match order_ranks.get(head) {
-            Some(value) => value
-            None => 0
-          }
-          let tail_real = real_nodes.get(tail) is Some(_)
-          let head_real = real_nodes.get(head) is Some(_)
-          println(
-            "order_edge \{edge_idx}: \{tail}(\{tail_rank},\{tail_real}) -> \{head}(\{head_rank},\{head_real})",
-          )
-          edge_idx = edge_idx + 1
-        }
-      }
+      trace_order_edges_with_ranks(
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_ranks,
+        real_nodes,
+      )
       let (graphviz_out_neighbors, graphviz_in_neighbors) =
         build_graphviz_neighbor_maps(
           order_nodes,
