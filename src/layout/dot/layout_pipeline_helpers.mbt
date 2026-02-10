@@ -7503,6 +7503,29 @@ fn build_node_positions_for_output(
 }
 
 ///|
+/// Graphviz parity: cluster rounding post-adjustment runs only for clustered
+/// graphs when the runtime gate is enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_adjust_cluster_positions_for_rounding_for_positions(
+  graph : @cgraph.Graph,
+  cluster_meta : ClusterMetadata,
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  ordering : OrderingResult,
+  prep : LayoutPrep,
+) -> Unit {
+  if cluster_meta.has_clusters && cluster_rounding_enabled() {
+    let _ = adjust_cluster_positions_for_rounding(
+      graph,
+      positions,
+      vnode_positions,
+      ordering.vnode_info.vnode_clusters,
+      prep.sizes,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
@@ -7540,15 +7563,14 @@ fn build_position_output_maps_for_positions(
     )
   let positions =
     build_node_positions_for_output(prep.nodes, x_positions, y_positions)
-  if cluster_meta.has_clusters && cluster_rounding_enabled() {
-    let _ = adjust_cluster_positions_for_rounding(
-      graph,
-      positions,
-      vnode_positions,
-      ordering.vnode_info.vnode_clusters,
-      prep.sizes,
-    )
-  }
+  maybe_adjust_cluster_positions_for_rounding_for_positions(
+    graph,
+    cluster_meta,
+    positions,
+    vnode_positions,
+    ordering,
+    prep,
+  )
   { positions, vnode_positions, cluster_ln_x, cluster_rn_x }
 }
 
