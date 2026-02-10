@@ -7162,30 +7162,20 @@ fn build_xpos_computation_input(
 }
 
 ///|
-/// Graphviz parity: x-position stage must use identical xpos input assembly,
-/// solver invocation, and trace points as Graphviz-aligned pipeline order.
+/// Graphviz parity: x-position solver call and trace emission consume
+/// preassembled xpos inputs without additional remapping.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_x_positions_for_positions(
+fn build_x_positions_from_xpos_input_for_positions(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_base_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
   x_cluster_keys : Map[String, String],
-  virtual_slack_edges : Array[ConstraintEdge],
   flat_label_edges : Array[ConstraintEdge],
+  xpos_input : XposComputationInput,
 ) -> Map[String, Double] {
-  let xpos_input =
-    build_xpos_computation_input(
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      ordering,
-      virtual_slack_edges,
-    )
   let x_positions = compute_x_positions(
     graph,
     prep.nodes,
@@ -7211,6 +7201,44 @@ fn compute_x_positions_for_positions(
   dot_trace("layout_dot: x positions computed")
   dot_trace_positions("xpos", x_positions)
   x_positions
+}
+
+///|
+/// Graphviz parity: x-position stage must use identical xpos input assembly,
+/// solver invocation, and trace points as Graphviz-aligned pipeline order.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_x_positions_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+) -> Map[String, Double] {
+  let xpos_input =
+    build_xpos_computation_input(
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      ordering,
+      virtual_slack_edges,
+    )
+  build_x_positions_from_xpos_input_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    ordering,
+    x_groups,
+    x_cluster_keys,
+    flat_label_edges,
+    xpos_input,
+  )
 }
 
 
