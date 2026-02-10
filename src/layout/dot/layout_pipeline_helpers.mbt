@@ -74,6 +74,35 @@ priv struct OrderingResult {
 }
 
 ///|
+priv struct OrderingEdgePortData {
+  edge_order : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
+priv struct OrderingClass2Data {
+  edges_by_tail : Map[String, Array[Int]]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  root_edge_creation : Array[(String, String)]
+  skeleton_edge_creation : Array[(String, String)]
+  edge_creation_order : Array[(String, String)]
+  nlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -4840,6 +4869,186 @@ fn run_root_mincross_reorder(
 }
 
 ///|
+/// Graphviz parity: order-graph edge arrays preserve original edge sequence,
+/// then reuse deduplicated order edges for mincross-specific port sampling.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_edge_port_data(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_sizes : Map[String, NodeSize],
+) -> OrderingEdgePortData {
+  let edge_order = collect_edge_order(edges)
+  let (edge_tail_port_x, edge_head_port_x) =
+    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
+  let (edge_tail_port_order, edge_head_port_order) =
+    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, order_sizes)
+  let (order_edges, order_edge_tail, order_edge_head) =
+    dedup_ordering_edges(edges, edge_tail, edge_head)
+  let (order_edge_tail_port_x, order_edge_head_port_x) =
+    compute_edge_port_positions(
+      nodes,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_sizes,
+    )
+  let (order_edge_tail_port_order, order_edge_head_port_order) =
+    compute_edge_port_orders(
+      nodes,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_sizes,
+    )
+  {
+    edge_order,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  }
+}
+
+///|
+/// Graphviz parity: class2/decompose ordering prep follows creation order,
+/// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_data(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  cluster_meta : ClusterMetadata,
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+) -> OrderingClass2Data {
+  // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
+  let creation_order = collect_creation_order(nodes)
+  // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
+  let edges_by_tail =
+    build_edges_by_tail_from_out_order(nodes, edge_out_order)
+  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
+    build_order_edges_by_tail_graphviz(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_meta.cluster_keys,
+      order_with_clusters,
+      false,
+      true,
+      edges_by_tail,
+    )
+  let (order_edges_by_tail_root, root_edge_creation) =
+    build_root_order_edges_by_tail(
+      order_with_clusters,
+      order_edges_by_tail,
+      order_edge_creation,
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_meta.cluster_keys,
+      edges_by_tail,
+    )
+  // Graphviz parity: cluster-local build_ranks uses edge chains before
+  // root/cluster remapping so local passes see original cluster endpoints.
+  let order_edges_by_tail_unmapped =
+    build_unmapped_order_edges_by_tail(
+      order_with_clusters,
+      order_edges_by_tail,
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_meta.cluster_keys,
+      edges_by_tail,
+    )
+  let cluster_skeleton_creation =
+    build_cluster_skeleton_creation(
+      order_with_clusters,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+    )
+  let skeleton_edge_creation =
+    build_skeleton_edge_creation_for_order_graph(
+      order_with_clusters,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      order_edges_by_tail,
+      order_edges_by_tail_root,
+    )
+  let edge_creation_order =
+    build_edge_creation_order(
+      skeleton_edge_creation,
+      order_edge_creation,
+    )
+  let (nlist_order, vnode_creation_order) =
+    build_nlist_order_and_vnode_creation_order(
+      cluster_skeleton_creation,
+      creation_order,
+      vnode_creation_by_tail,
+      edge_creation_order,
+      flat_rank_constraints,
+      graphviz_flip,
+      cluster_meta.has_clusters,
+      cluster_meta.cluster_keys,
+    )
+  {
+    edges_by_tail,
+    order_edges_by_tail,
+    order_edges_by_tail_root,
+    order_edges_by_tail_unmapped,
+    root_edge_creation,
+    skeleton_edge_creation,
+    edge_creation_order,
+    nlist_order,
+    vnode_creation_order,
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -4914,29 +5123,26 @@ fn compute_ordering_and_vnodes(
     } else {
       Map::new()
     }
-  let edge_order = collect_edge_order(edges)
-  let (edge_tail_port_x, edge_head_port_x) =
-    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
-  let (edge_tail_port_order, edge_head_port_order) =
-    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, order_sizes)
-  let (order_edges, order_edge_tail, order_edge_head) =
-    dedup_ordering_edges(edges, edge_tail, edge_head)
-  let (order_edge_tail_port_x, order_edge_head_port_x) =
-    compute_edge_port_positions(
+  let edge_port_data =
+    build_ordering_edge_port_data(
       nodes,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
+      edges,
+      edge_tail,
+      edge_head,
       order_sizes,
     )
-  let (order_edge_tail_port_order, order_edge_head_port_order) =
-    compute_edge_port_orders(
-      nodes,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_sizes,
-    )
+  let edge_order = edge_port_data.edge_order
+  let edge_tail_port_x = edge_port_data.edge_tail_port_x
+  let edge_head_port_x = edge_port_data.edge_head_port_x
+  let edge_tail_port_order = edge_port_data.edge_tail_port_order
+  let edge_head_port_order = edge_port_data.edge_head_port_order
+  let order_edges = edge_port_data.order_edges
+  let order_edge_tail = edge_port_data.order_edge_tail
+  let order_edge_head = edge_port_data.order_edge_head
+  let order_edge_tail_port_x = edge_port_data.order_edge_tail_port_x
+  let order_edge_head_port_x = edge_port_data.order_edge_head_port_x
+  let order_edge_tail_port_order = edge_port_data.order_edge_tail_port_order
+  let order_edge_head_port_order = edge_port_data.order_edge_head_port_order
   let ordering_groups_base = apply_rank_same_order_with_port_override(
     groups,
     cluster_meta.rank_same_groups,
@@ -4956,17 +5162,13 @@ fn compute_ordering_and_vnodes(
       edge_head,
       ranks,
     )
-  // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
-  let creation_order = collect_creation_order(nodes)
-  // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
-  let edges_by_tail =
-    build_edges_by_tail_from_out_order(nodes, edge_out_order)
-  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
-    build_order_edges_by_tail_graphviz(
-      creation_order,
+  let class2_data =
+    build_ordering_class2_data(
+      nodes,
       edges,
       edge_tail,
       edge_head,
+      edge_out_order,
       edge_tail_port_x,
       edge_head_port_x,
       edge_tail_port_order,
@@ -4974,83 +5176,20 @@ fn compute_ordering_and_vnodes(
       ranks,
       vnode_info.edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
       order_with_clusters,
-      false,
-      true,
-      edges_by_tail,
-    )
-  let (order_edges_by_tail_root, root_edge_creation) =
-    build_root_order_edges_by_tail(
-      order_with_clusters,
-      order_edges_by_tail,
-      order_edge_creation,
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      vnode_info.edge_vnodes,
-      order_with_vnodes,
-      cluster_meta.cluster_keys,
-      edges_by_tail,
-    )
-  // Graphviz parity: cluster-local build_ranks uses edge chains before
-  // root/cluster remapping so local passes see original cluster endpoints.
-  let order_edges_by_tail_unmapped =
-    build_unmapped_order_edges_by_tail(
-      order_with_clusters,
-      order_edges_by_tail,
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      vnode_info.edge_vnodes,
-      order_with_vnodes,
-      cluster_meta.cluster_keys,
-      edges_by_tail,
-    )
-  let cluster_skeleton_creation =
-    build_cluster_skeleton_creation(
-      order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-    )
-  let skeleton_edge_creation =
-    build_skeleton_edge_creation_for_order_graph(
-      order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-      order_edges_by_tail,
-      order_edges_by_tail_root,
-    )
-  let edge_creation_order =
-    build_edge_creation_order(
-      skeleton_edge_creation,
-      order_edge_creation,
-    )
-  let (nlist_order, vnode_creation_order) =
-    build_nlist_order_and_vnode_creation_order(
-      cluster_skeleton_creation,
-      creation_order,
-      vnode_creation_by_tail,
-      edge_creation_order,
+      cluster_meta,
       flat_rank_constraints,
       graphviz_flip,
-      cluster_meta.has_clusters,
-      cluster_meta.cluster_keys,
     )
+  let edges_by_tail = class2_data.edges_by_tail
+  let order_edges_by_tail = class2_data.order_edges_by_tail
+  let order_edges_by_tail_root = class2_data.order_edges_by_tail_root
+  let order_edges_by_tail_unmapped = class2_data.order_edges_by_tail_unmapped
+  let root_edge_creation = class2_data.root_edge_creation
+  let skeleton_edge_creation = class2_data.skeleton_edge_creation
+  let edge_creation_order = class2_data.edge_creation_order
+  let nlist_order = class2_data.nlist_order
+  let vnode_creation_order = class2_data.vnode_creation_order
   // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
   // Do not change behavior without updating fixtures/tests.
   let gdnlist_order = nlist_order
