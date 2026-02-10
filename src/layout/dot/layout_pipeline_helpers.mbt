@@ -913,6 +913,37 @@ fn build_cluster_skeleton_for_metadata(
 }
 
 ///|
+/// Graphviz parity: same-rank edges are promoted to flat ordering
+/// constraints for clustered metadata reorder paths.
+/// Do not change behavior without updating fixtures/tests.
+fn append_same_rank_flat_constraints_for_metadata(
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  flat_constraints : Map[String, Bool],
+) -> Unit {
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      if tail_rank == head_rank {
+        flat_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -1047,26 +1078,12 @@ fn compute_cluster_metadata(
     edge_head,
     cluster_keys,
   )
-  // Graphviz parity: flat edges (same-rank) act as ordering constraints.
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    if tail != head {
-      let tail_rank = match ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
-      if tail_rank == head_rank {
-        flat_constraints["\{tail}|\{head}"] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
+  append_same_rank_flat_constraints_for_metadata(
+    edge_tail,
+    edge_head,
+    ranks,
+    flat_constraints,
+  )
   {
     has_clusters,
     cluster_keys,
