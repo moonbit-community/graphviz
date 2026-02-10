@@ -6842,6 +6842,79 @@ fn build_xpos_computation_input(
 }
 
 ///|
+/// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
+/// and these maxima must feed y-rank placement exactly as in Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_flat_label_rank_height_updates(
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+  vnode_sizes : Map[String, NodeSize],
+  rank_pht : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> Unit {
+  if flat_label_nodes.length() > 0 {
+    for name, info in flat_label_nodes {
+      let size = match vnode_sizes.get(name) {
+        Some(value) => value
+        None => continue
+      }
+      let half_height = size.height_pt / 2.0
+      let rank = info.rank
+      let current = match rank_pht.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      if half_height > current {
+        rank_pht[rank] = half_height
+      }
+      let current_ht1 = match rank_ht1.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      if half_height > current_ht1 {
+        rank_ht1[rank] = half_height
+      }
+      let current_ht2 = match rank_ht2.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      if half_height > current_ht2 {
+        rank_ht2[rank] = half_height
+      }
+    }
+  }
+}
+
+///|
+/// Graphviz parity: y-rank sweep range expands to include inserted flat-label
+/// vnode ranks, while preserving continuous rank iteration.
+/// Do not change behavior without updating fixtures/tests.
+fn build_y_all_ranks_with_flat_labels(
+  rank_keys : Array[Int],
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+) -> Array[Int] {
+  let y_all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let mut min_rank = rank_keys[0]
+    let mut max_rank = rank_keys[rank_keys.length() - 1]
+    if flat_label_nodes.length() > 0 {
+      for _name, info in flat_label_nodes {
+        if info.rank < min_rank {
+          min_rank = info.rank
+        }
+        if info.rank > max_rank {
+          max_rank = info.rank
+        }
+      }
+    }
+    for rank in min_rank..=max_rank {
+      y_all_ranks.push(rank)
+    }
+  }
+  y_all_ranks
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -7344,55 +7417,15 @@ fn compute_positions(
     } else {
       Map::new()
     }
-  if flat_label_nodes.length() > 0 {
-    for name, info in flat_label_nodes {
-      let size = match ordering.vnode_info.vnode_sizes.get(name) {
-        Some(value) => value
-        None => continue
-      }
-      let half_height = size.height_pt / 2.0
-      let rank = info.rank
-      let current = match rank_pht.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current {
-        rank_pht[rank] = half_height
-      }
-      let current_ht1 = match rank_ht1.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current_ht1 {
-        rank_ht1[rank] = half_height
-      }
-      let current_ht2 = match rank_ht2.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current_ht2 {
-        rank_ht2[rank] = half_height
-      }
-    }
-  }
-  let y_all_ranks : Array[Int] = []
-  if rank_data.rank_keys.length() > 0 {
-    let mut min_rank = rank_data.rank_keys[0]
-    let mut max_rank = rank_data.rank_keys[rank_data.rank_keys.length() - 1]
-    if flat_label_nodes.length() > 0 {
-      for _name, info in flat_label_nodes {
-        if info.rank < min_rank {
-          min_rank = info.rank
-        }
-        if info.rank > max_rank {
-          max_rank = info.rank
-        }
-      }
-    }
-    for rank in min_rank..=max_rank {
-      y_all_ranks.push(rank)
-    }
-  }
+  apply_flat_label_rank_height_updates(
+    flat_label_nodes,
+    ordering.vnode_info.vnode_sizes,
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+  )
+  let y_all_ranks =
+    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
