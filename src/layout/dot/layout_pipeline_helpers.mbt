@@ -2468,6 +2468,109 @@ fn build_cluster_rank_order_from_root_ordered(
 }
 
 ///|
+/// Graphviz parity: final rank groups drop non-real nodes after root ordering,
+/// preserving rank iteration order and per-rank sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_real_only_rank_groups(
+  rank_keys : Array[Int],
+  ordered : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let cleaned_groups : Map[Int, Array[String]] = Map::new()
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let cleaned : Array[String] = []
+    for name in names {
+      if real_nodes.get(name) is Some(_) {
+        cleaned.push(name)
+      }
+    }
+    if cleaned.length() > 0 {
+      cleaned_groups[rank] = cleaned
+    }
+  }
+  cleaned_groups
+}
+
+///|
+/// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
+/// reorders cluster buckets by root mincross rank map with stable tie-breaks.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_rank_groups_by_cluster_rank_order(
+  final_groups : Map[Int, Array[String]],
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_keys : Map[String, String],
+) -> Map[Int, Array[String]] {
+  let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
+  for rank, names in final_groups {
+    let order_map = match cluster_rank_order.get(rank) {
+      Some(value) => value
+      None => {
+        ordered_by_cluster[rank] = names
+        continue
+      }
+    }
+    let cluster_nodes : Map[String, Array[String]] = Map::new()
+    let cluster_seq : Array[String] = []
+    for name in names {
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      match cluster_nodes.get(cluster) {
+        Some(list) => list.push(name)
+        None => {
+          cluster_nodes[cluster] = [name]
+          cluster_seq.push(cluster)
+        }
+      }
+    }
+    let cluster_ordered : Array[(Int, Int, String)] = []
+    for idx, cluster in cluster_seq {
+      let base =
+        match order_map.get(cluster) {
+          Some(value) => value
+          None => order_map.length() + idx
+        }
+      cluster_ordered.push((base, idx, cluster))
+    }
+    if cluster_ordered.length() > 1 {
+      cluster_ordered.sort_by((a, b) => {
+        let (a_order, a_idx, _a_name) = a
+        let (b_order, b_idx, _b_name) = b
+        if a_order < b_order {
+          -1
+        } else if a_order > b_order {
+          1
+        } else if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      })
+    }
+    let ordered_names : Array[String] = []
+    for entry in cluster_ordered {
+      let (_order, _idx, cluster) = entry
+      let nodes_in_cluster = match cluster_nodes.get(cluster) {
+        Some(list) => list
+        None => []
+      }
+      for name in nodes_in_cluster {
+        ordered_names.push(name)
+      }
+    }
+    ordered_by_cluster[rank] = ordered_names
+  }
+  ordered_by_cluster
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -3392,89 +3495,17 @@ fn compute_ordering_and_vnodes(
           cluster_rank_order[rank] = order_map
         }
       }
-      let cleaned_groups : Map[Int, Array[String]] = Map::new()
-      for rank in order_rank_keys {
-        let names = match ordered.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        let cleaned : Array[String] = []
-        for name in names {
-          if real_nodes.get(name) is Some(_) {
-            cleaned.push(name)
-          }
-        }
-        if cleaned.length() > 0 {
-          cleaned_groups[rank] = cleaned
-        }
-      }
+      let cleaned_groups =
+        collect_real_only_rank_groups(order_rank_keys, ordered, real_nodes)
       dot_trace_groups("cleaned_groups_pre", cleaned_groups)
       let mut final_groups = cleaned_groups
       if order_with_clusters {
-        let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
-        for rank, names in final_groups {
-          let order_map = match cluster_rank_order.get(rank) {
-            Some(value) => value
-            None => {
-              ordered_by_cluster[rank] = names
-              continue
-            }
-          }
-          let cluster_nodes : Map[String, Array[String]] = Map::new()
-          let cluster_seq : Array[String] = []
-          for name in names {
-            let cluster = match cluster_meta.cluster_keys.get(name) {
-              Some(value) => value
-              None => ""
-            }
-            match cluster_nodes.get(cluster) {
-              Some(list) => list.push(name)
-              None => {
-                cluster_nodes[cluster] = [name]
-                cluster_seq.push(cluster)
-              }
-            }
-          }
-          let cluster_ordered : Array[(Int, Int, String)] = []
-          for idx, cluster in cluster_seq {
-            let base =
-              match order_map.get(cluster) {
-                Some(value) => value
-                None => order_map.length() + idx
-              }
-            cluster_ordered.push((base, idx, cluster))
-          }
-          if cluster_ordered.length() > 1 {
-            cluster_ordered.sort_by((a, b) => {
-              let (a_order, a_idx, _a_name) = a
-              let (b_order, b_idx, _b_name) = b
-              if a_order < b_order {
-                -1
-              } else if a_order > b_order {
-                1
-              } else if a_idx < b_idx {
-                -1
-              } else if a_idx > b_idx {
-                1
-              } else {
-                0
-              }
-            })
-          }
-          let ordered_names : Array[String] = []
-          for entry in cluster_ordered {
-            let (_order, _idx, cluster) = entry
-            let nodes_in_cluster = match cluster_nodes.get(cluster) {
-              Some(list) => list
-              None => []
-            }
-            for name in nodes_in_cluster {
-              ordered_names.push(name)
-            }
-          }
-          ordered_by_cluster[rank] = ordered_names
-        }
-        final_groups = ordered_by_cluster
+        final_groups =
+          reorder_rank_groups_by_cluster_rank_order(
+            final_groups,
+            cluster_rank_order,
+            cluster_meta.cluster_keys,
+          )
         // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
         reorder_groups_by_local_cluster_order(
           final_groups,
