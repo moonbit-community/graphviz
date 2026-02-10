@@ -6315,6 +6315,86 @@ fn build_ordering_result(
 }
 
 ///|
+/// Graphviz parity: ordering dispatch pipeline keeps setup/dispatch/result stages
+/// in Graphviz-equivalent sequence while using structured runtime context.
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_dispatch_pipeline(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+) -> OrderingResult {
+  let vnode_info = runtime_context.vnode_info
+  let vnode_count = runtime_context.vnode_count
+  let dispatch_setup =
+    build_ordering_dispatch_setup(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      order_sizes,
+      runtime_context.port_edge_nodes,
+      vnode_count,
+      rankdir,
+      cluster_meta,
+      vnode_info,
+    )
+  let (ordered_groups_internal, ordered_with_vnodes) =
+    run_ordering_stage_dispatch(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      rank_keys,
+      groups,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      dispatch_setup,
+    )
+  build_ordering_result(
+    ordered_groups_internal,
+    ordered_with_vnodes,
+    vnode_info,
+    vnode_count,
+    dispatch_setup.edge_port_data,
+    runtime_context.edge_cluster_keys,
+    dispatch_setup.nlist_order,
+    dispatch_setup.gdnlist_order,
+    dispatch_setup.vnode_creation_order,
+  )
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -6351,69 +6431,33 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let edge_cluster_keys = runtime_context.edge_cluster_keys
-  let vnode_info = runtime_context.vnode_info
   let vnode_count = runtime_context.vnode_count
   let vnode_tail_constraints =
     if vnode_count > 0 {
-      build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
+      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
     } else {
       Map::new()
     }
-  let dispatch_setup =
-    build_ordering_dispatch_setup(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      groups,
-      node_order,
-      order_sizes,
-      runtime_context.port_edge_nodes,
-      vnode_count,
-      rankdir,
-      cluster_meta,
-      vnode_info,
-    )
-  let edge_port_data = dispatch_setup.edge_port_data
-  let nlist_order = dispatch_setup.nlist_order
-  let vnode_creation_order = dispatch_setup.vnode_creation_order
-  let gdnlist_order = dispatch_setup.gdnlist_order
-  let (ordered_groups_internal, ordered_with_vnodes) =
-    run_ordering_stage_dispatch(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      rank_keys,
-      groups,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-      dispatch_setup,
-    )
-  build_ordering_result(
-    ordered_groups_internal,
-    ordered_with_vnodes,
-    vnode_info,
-    vnode_count,
-    edge_port_data,
-    edge_cluster_keys,
-    nlist_order,
-    gdnlist_order,
-    vnode_creation_order,
+  run_ordering_dispatch_pipeline(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    groups,
+    rank_keys,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    rankdir,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
   )
 }
 
