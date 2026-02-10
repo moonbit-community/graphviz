@@ -116,6 +116,27 @@ priv struct OrderReorderContext {
 }
 
 ///|
+priv struct OrderMaterializationData {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  order_edges_out_unmapped : Array[@cgraph.Edge]
+  order_edge_tail_out_unmapped : Array[String]
+  order_edge_head_out_unmapped : Array[String]
+  order_edge_tail_port_x_unmapped : Array[Double]
+  order_edge_head_port_x_unmapped : Array[Double]
+  order_edge_tail_port_order_unmapped : Array[Double]
+  order_edge_head_port_order_unmapped : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_flat_constraints : Map[String, Bool]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -5158,6 +5179,103 @@ fn build_order_reorder_context(
 }
 
 ///|
+/// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
+/// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
+/// Do not change behavior without updating fixtures/tests.
+fn build_materialized_order_edges_and_neighbors(
+  nlist_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph_unmapped : @cgraph.Graph,
+  order_node_map_unmapped : Map[String, @cgraph.Node],
+  order_ranks : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  order_nodes : Array[String],
+  edge_creation_order : Array[(String, String)],
+  cluster_meta : ClusterMetadata,
+  gdnlist_order : Array[String],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nodes : Array[@cgraph.Node],
+  order_node_order : Map[String, Int],
+) -> OrderMaterializationData {
+  let (
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+  ) =
+    materialize_mapped_and_unmapped_order_edges(
+      nlist_order,
+      order_edges_by_tail,
+      order_graph,
+      order_node_map,
+      order_edges_by_tail_unmapped,
+      order_graph_unmapped,
+      order_node_map_unmapped,
+    )
+  trace_order_edges_with_ranks(
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_ranks,
+    real_nodes,
+  )
+  let (graphviz_out_neighbors, graphviz_in_neighbors) =
+    build_graphviz_neighbor_maps(
+      order_nodes,
+      order_edges_by_tail,
+      edge_creation_order,
+    )
+  let order_flat_constraints =
+    clone_flat_constraints(cluster_meta.flat_constraints)
+  apply_unconstrained_order_node_overrides(
+    gdnlist_order,
+    real_nodes,
+    order_nodes,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    cluster_meta.rank_same_groups,
+    edge_tail,
+    edge_head,
+    nodes,
+    cluster_meta.intercluster_keys,
+    order_node_order,
+  )
+  {
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    order_flat_constraints,
+  }
+}
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5414,23 +5532,8 @@ fn compute_ordering_and_vnodes(
       let creation_order = reorder_context.creation_order
       let order_node_order = reorder_context.order_node_order
       trace_order_node_order_debug(order_node_order)
-      let (
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        order_edges_out_unmapped,
-        order_edge_tail_out_unmapped,
-        order_edge_head_out_unmapped,
-        order_edge_tail_port_x_unmapped,
-        order_edge_head_port_x_unmapped,
-        order_edge_tail_port_order_unmapped,
-        order_edge_head_port_order_unmapped,
-      ) =
-        materialize_mapped_and_unmapped_order_edges(
+      let materialized =
+        build_materialized_order_edges_and_neighbors(
           nlist_order,
           order_edges_by_tail,
           order_graph,
@@ -5438,35 +5541,34 @@ fn compute_ordering_and_vnodes(
           order_edges_by_tail_unmapped,
           order_graph_unmapped,
           order_node_map_unmapped,
-        )
-      trace_order_edges_with_ranks(
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_ranks,
-        real_nodes,
-      )
-      let (graphviz_out_neighbors, graphviz_in_neighbors) =
-        build_graphviz_neighbor_maps(
+          order_ranks,
+          real_nodes,
           order_nodes,
-          order_edges_by_tail,
           edge_creation_order,
+          cluster_meta,
+          gdnlist_order,
+          edge_tail,
+          edge_head,
+          nodes,
+          order_node_order,
         )
-      let order_flat_constraints =
-        clone_flat_constraints(cluster_meta.flat_constraints)
-      apply_unconstrained_order_node_overrides(
-        gdnlist_order,
-        real_nodes,
-        order_nodes,
-        graphviz_out_neighbors,
-        graphviz_in_neighbors,
-        cluster_meta.rank_same_groups,
-        edge_tail,
-        edge_head,
-        nodes,
-        cluster_meta.intercluster_keys,
-        order_node_order,
-      )
+      let order_edges_out = materialized.order_edges_out
+      let order_edge_tail_out = materialized.order_edge_tail_out
+      let order_edge_head_out = materialized.order_edge_head_out
+      let order_edge_tail_port_x = materialized.order_edge_tail_port_x
+      let order_edge_head_port_x = materialized.order_edge_head_port_x
+      let order_edge_tail_port_order = materialized.order_edge_tail_port_order
+      let order_edge_head_port_order = materialized.order_edge_head_port_order
+      let order_edges_out_unmapped = materialized.order_edges_out_unmapped
+      let order_edge_tail_out_unmapped = materialized.order_edge_tail_out_unmapped
+      let order_edge_head_out_unmapped = materialized.order_edge_head_out_unmapped
+      let order_edge_tail_port_x_unmapped = materialized.order_edge_tail_port_x_unmapped
+      let order_edge_head_port_x_unmapped = materialized.order_edge_head_port_x_unmapped
+      let order_edge_tail_port_order_unmapped = materialized.order_edge_tail_port_order_unmapped
+      let order_edge_head_port_order_unmapped = materialized.order_edge_head_port_order_unmapped
+      let graphviz_out_neighbors = materialized.graphviz_out_neighbors
+      let graphviz_in_neighbors = materialized.graphviz_in_neighbors
+      let order_flat_constraints = materialized.order_flat_constraints
       let seeded_groups =
         build_seeded_groups_for_order_reorder(
           order_rank_keys,
