@@ -8880,10 +8880,10 @@ fn build_x_stage_with_flat_labels_for_positions(
 
 
 ///|
-/// Graphviz parity: projection handoff from x-stage bundle keeps field-to-parameter
-/// wiring and rank-height map sourcing unchanged before final projection stage.
+/// Graphviz parity: projection handoff consumes x-stage bundle fields and rank
+/// height maps without changing Graphviz-aligned parameter wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_projection_result_from_x_stage_data_for_positions(
+fn build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -8891,9 +8891,9 @@ fn build_projection_result_from_x_stage_data_for_positions(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
   x_stage_data : XStageWithFlatLabelData,
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
 ) -> PositionResult {
-  let rank_ht1 = rank_heights.rank_ht1
-  let rank_ht2 = rank_heights.rank_ht2
   build_projection_result_for_positions(
     graph,
     prep,
@@ -8911,6 +8911,32 @@ fn build_projection_result_from_x_stage_data_for_positions(
     x_stage_data.flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
+  )
+}
+
+///|
+/// Graphviz parity: projection handoff from x-stage bundle keeps field-to-parameter
+/// wiring and rank-height map sourcing unchanged before final projection stage.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_result_from_x_stage_data_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  x_stage_data : XStageWithFlatLabelData,
+) -> PositionResult {
+  build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    x_stage_data,
+    rank_heights.rank_ht1,
+    rank_heights.rank_ht2,
   )
 }
 
