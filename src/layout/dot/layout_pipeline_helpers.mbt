@@ -6778,6 +6778,16 @@ fn run_noncluster_ordering_stage_from_context(
 }
 
 ///|
+/// Graphviz parity: dispatch clustered ordering when vnode/cluster mode is
+/// active, matching Graphviz mincross control gating.
+/// Do not change behavior without updating fixtures/tests.
+fn should_run_clustered_ordering_stage(
+  reorder_setup : OrderingReorderSetup,
+) -> Bool {
+  reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters
+}
+
+///|
 /// Graphviz parity: choose clustered/non-clustered ordering flow using the same
 /// flag gates as Graphviz (vnode/cluster mode).
 /// Do not change behavior without updating fixtures/tests.
@@ -6803,7 +6813,7 @@ fn run_ordering_stage_dispatch(
   dispatch_setup : OrderingDispatchSetup,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let reorder_setup = dispatch_setup.reorder_setup
-  if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
+  if should_run_clustered_ordering_stage(reorder_setup) {
     run_clustered_ordering_stage_from_context(
       graph,
       nodes,
