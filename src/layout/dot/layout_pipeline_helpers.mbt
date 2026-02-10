@@ -884,6 +884,35 @@ fn assign_cluster_node_order_for_metadata(
 }
 
 ///|
+/// Graphviz parity: each cluster contributes one skeleton node per rank
+/// (first node encountered in rank order).
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_skeleton_for_metadata(
+  groups : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
+) -> Map[String, Bool] {
+  let cluster_skeleton : Map[String, Bool] = Map::new()
+  let cluster_rank_seen : Map[String, Bool] = Map::new()
+  for rank, names in groups {
+    for name in names {
+      let cluster = match cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        continue
+      }
+      let key = "\{cluster}@\{rank}"
+      if cluster_rank_seen.get(key) is None {
+        cluster_rank_seen[key] = true
+        cluster_skeleton[name] = true
+      }
+    }
+  }
+  cluster_skeleton
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -908,24 +937,7 @@ fn compute_cluster_metadata(
     node_order,
     graphviz_flip,
   )
-  let cluster_skeleton : Map[String, Bool] = Map::new()
-  let cluster_rank_seen : Map[String, Bool] = Map::new()
-  for rank, names in groups {
-    for name in names {
-      let cluster = match cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      if cluster == "" {
-        continue
-      }
-      let key = "\{cluster}@\{rank}"
-      if cluster_rank_seen.get(key) is None {
-        cluster_rank_seen[key] = true
-        cluster_skeleton[name] = true
-      }
-    }
-  }
+  let cluster_skeleton = build_cluster_skeleton_for_metadata(groups, cluster_keys)
   let cluster_min_rank : Map[String, Int] = Map::new()
   let cluster_max_rank : Map[String, Int] = Map::new()
   let cluster_first_order : Map[String, Int] = Map::new()
