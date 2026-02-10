@@ -156,6 +156,28 @@ fn compute_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: position-stage result wiring forwards rank-stage artifacts
+/// directly into compute_positions without remapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_position_stage_result_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> PositionResult {
+  compute_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+  )
+}
+
+///|
 /// Graphviz parity: dot position stage mirrors refs/graphviz/lib/dotgen/position.c.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_position_stage(
@@ -163,7 +185,7 @@ fn compute_dot_position_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
 ) -> PositionResult {
-  compute_positions(
+  build_dot_position_stage_result_for_stage(
     graph,
     prep,
     rank_stage.rank_data,
