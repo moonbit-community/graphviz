@@ -6568,9 +6568,19 @@ fn run_clustered_ordering_stage(
       pre_root_stage,
       root_cluster_stage,
     )
-  (final_groups, next_ordered_with_vnodes)
+  build_clustered_ordering_stage_output(next_ordered_with_vnodes, final_groups)
 }
 
+///|
+/// Graphviz parity: clustered ordering stage returns finalized groups and
+/// vnode-augmented groups with Graphviz tuple ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_ordering_stage_output(
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+  final_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  (final_groups, next_ordered_with_vnodes)
+}
 
 ///|
 /// Graphviz parity: non-clustered ordering stage returns mincross groups plus
