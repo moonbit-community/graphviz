@@ -87,19 +87,20 @@ fn build_rank_heights_for_dot_rank_stage(
 }
 
 ///|
-/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
-/// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
+/// Graphviz parity: rank-data creation emits the same rank trace points before
+/// downstream stage assembly.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_dot_rank_stage(
+fn build_rank_data_for_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-) -> DotRankStage {
-  let rank_data = compute_rank_data(
-    graph,
-    prep.nodes,
-    prep.edges,
-    prep.has_edge_labels,
-  )
+) -> RankData {
+  let rank_data =
+    compute_rank_data(
+      graph,
+      prep.nodes,
+      prep.edges,
+      prep.has_edge_labels,
+    )
   dot_trace("layout_dot: ranks computed")
   dot_trace_edges(
     prep.edges,
@@ -107,6 +108,19 @@ fn compute_dot_rank_stage(
     rank_data.edge_head,
     rank_data.ranks,
   )
+  rank_data
+}
+
+///|
+/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
+/// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+) -> DotRankStage {
+  let rank_data =
+    build_rank_data_for_dot_rank_stage(graph, prep)
   let rank_heights =
     build_rank_heights_for_dot_rank_stage(graph, prep, rank_data)
   let cluster_meta =
