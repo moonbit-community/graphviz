@@ -147,6 +147,17 @@ priv struct OrderingBaseContext {
 }
 
 ///|
+priv struct OrderingRuntimeContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+  vnode_count : Int
+}
+
+///|
 priv struct OrderingReorderSetup {
   ordering_groups_base : Map[Int, Array[String]]
   base_order_index : Map[String, Int]
@@ -5617,6 +5628,48 @@ fn build_ordering_base_context(
 }
 
 ///|
+/// Graphviz parity: ordering runtime context keeps base-context extraction and
+/// vnode-count derivation in the same sequence as Graphviz prep flow.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_runtime_context(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+) -> OrderingRuntimeContext {
+  let base_context =
+    build_ordering_base_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      node_order,
+      nodesep_pt,
+      rankdir,
+      cluster_meta,
+    )
+  {
+    real_nodes: base_context.real_nodes,
+    edge_cluster_keys: base_context.edge_cluster_keys,
+    vnode_info: base_context.vnode_info,
+    port_edge_nodes: base_context.port_edge_nodes,
+    local_cluster_order: base_context.local_cluster_order,
+    rank_same_constraints: base_context.rank_same_constraints,
+    vnode_count: base_context.vnode_info.vnode_ranks.length(),
+  }
+}
+
+///|
 /// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
 /// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
@@ -6201,8 +6254,8 @@ fn compute_ordering_and_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
-  let base_context =
-    build_ordering_base_context(
+  let runtime_context =
+    build_ordering_runtime_context(
       graph,
       nodes,
       edges,
@@ -6215,13 +6268,13 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let real_nodes = base_context.real_nodes
-  let edge_cluster_keys = base_context.edge_cluster_keys
-  let vnode_info = base_context.vnode_info
-  let port_edge_nodes = base_context.port_edge_nodes
-  let local_cluster_order = base_context.local_cluster_order
-  let rank_same_constraints = base_context.rank_same_constraints
-  let vnode_count = vnode_info.vnode_ranks.length()
+  let real_nodes = runtime_context.real_nodes
+  let edge_cluster_keys = runtime_context.edge_cluster_keys
+  let vnode_info = runtime_context.vnode_info
+  let port_edge_nodes = runtime_context.port_edge_nodes
+  let local_cluster_order = runtime_context.local_cluster_order
+  let rank_same_constraints = runtime_context.rank_same_constraints
+  let vnode_count = runtime_context.vnode_count
   let vnode_tail_constraints =
     if vnode_count > 0 {
       build_vnode_tail_constraints(vnode_info.vnodes_by_rank, edge_tail)
