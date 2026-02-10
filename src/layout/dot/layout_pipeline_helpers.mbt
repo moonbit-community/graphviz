@@ -6113,6 +6113,24 @@ fn build_ordering_reorder_setup(
 }
 
 ///|
+/// Graphviz parity: dispatch-setup output object maps edge-port data with
+/// reorder/class2-derived traversal orders without extra transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_setup_output(
+  edge_port_data : OrderingEdgePortData,
+  reorder_setup : OrderingReorderSetup,
+) -> OrderingDispatchSetup {
+  let class2_data = reorder_setup.class2_data
+  {
+    edge_port_data,
+    reorder_setup,
+    nlist_order: class2_data.nlist_order,
+    vnode_creation_order: class2_data.vnode_creation_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
+  }
+}
+
+///|
 /// Graphviz parity: dispatch setup keeps edge-port extraction and reorder setup
 /// sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
@@ -6162,14 +6180,7 @@ fn build_ordering_dispatch_setup(
       edge_port_data.edge_tail_port_order,
       edge_port_data.edge_head_port_order,
     )
-  let class2_data = reorder_setup.class2_data
-  {
-    edge_port_data,
-    reorder_setup,
-    nlist_order: class2_data.nlist_order,
-    vnode_creation_order: class2_data.vnode_creation_order,
-    gdnlist_order: reorder_setup.gdnlist_order,
-  }
+  build_ordering_dispatch_setup_output(edge_port_data, reorder_setup)
 }
 
 ///|
