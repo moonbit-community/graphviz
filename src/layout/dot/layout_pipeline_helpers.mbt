@@ -1068,6 +1068,25 @@ fn build_intercluster_keys_for_metadata(
 }
 
 ///|
+/// Graphviz parity: cluster order and parent map are collected from
+/// Graphviz cluster traversal before clustered ordering stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_order_and_parents_for_metadata(
+  graph : @cgraph.Graph,
+) -> (Array[String], Map[String, String?]) {
+  let cluster_order : Array[String] = []
+  collect_cluster_names_graphviz_order(graph, cluster_order)
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
+    let joined = cluster_order.join(" ")
+    println("cluster_order \{joined}")
+  }
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  (cluster_order, cluster_parents)
+}
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -1105,15 +1124,9 @@ fn compute_cluster_metadata(
     cluster_max_rank,
     cluster_first_order,
   )
-  let cluster_order : Array[String] = []
-  collect_cluster_names_graphviz_order(graph, cluster_order)
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
-    let joined = cluster_order.join(" ")
-    println("cluster_order \{joined}")
-  }
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let (cluster_order, cluster_parents) = build_cluster_order_and_parents_for_metadata(
+    graph,
+  )
   apply_cluster_order_base_for_metadata(
     nodes,
     cluster_keys,
