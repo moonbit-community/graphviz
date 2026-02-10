@@ -9529,6 +9529,41 @@ fn build_projection_from_x_stage_data_for_positions(
 }
 
 ///|
+/// Graphviz parity: projection stage call consumes x-stage handoff fields and
+/// rank-height maps directly, without extra remapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_projection_result_from_handoff_with_rank_maps_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  projection_from_x_stage_data : ProjectionFromXStageData,
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> PositionResult {
+  build_projection_result_for_positions(
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+    projection_from_x_stage_data.use_vnodes_for_xpos,
+    projection_from_x_stage_data.x_base_sizes,
+    projection_from_x_stage_data.x_groups,
+    projection_from_x_stage_data.x_cluster_keys,
+    projection_from_x_stage_data.virtual_slack_edges,
+    projection_from_x_stage_data.flat_label_edges,
+    projection_from_x_stage_data.flat_label_nodes,
+    projection_from_x_stage_data.flat_label_edge_vnodes,
+    rank_ht1,
+    rank_ht2,
+  )
+}
+
+///|
 /// Graphviz parity: projection handoff consumes x-stage bundle fields and rank
 /// height maps without changing Graphviz-aligned parameter wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -9545,21 +9580,14 @@ fn build_projection_result_from_x_stage_data_with_rank_maps_for_positions(
 ) -> PositionResult {
   let projection_from_x_stage_data =
     build_projection_from_x_stage_data_for_positions(x_stage_data)
-  build_projection_result_for_positions(
+  build_projection_result_from_handoff_with_rank_maps_for_positions(
     graph,
     prep,
     rank_data,
     rank_heights,
     cluster_meta,
     ordering,
-    projection_from_x_stage_data.use_vnodes_for_xpos,
-    projection_from_x_stage_data.x_base_sizes,
-    projection_from_x_stage_data.x_groups,
-    projection_from_x_stage_data.x_cluster_keys,
-    projection_from_x_stage_data.virtual_slack_edges,
-    projection_from_x_stage_data.flat_label_edges,
-    projection_from_x_stage_data.flat_label_nodes,
-    projection_from_x_stage_data.flat_label_edge_vnodes,
+    projection_from_x_stage_data,
     rank_ht1,
     rank_ht2,
   )
