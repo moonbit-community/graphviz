@@ -1620,6 +1620,53 @@ fn build_edges_by_tail_from_out_order(
 }
 
 ///|
+/// Graphviz parity: cluster-local build_ranks consumes edge chains before
+/// root/cluster remapping, so unmapped tails/heads must remain available.
+/// Do not change behavior without updating fixtures/tests.
+fn build_unmapped_order_edges_by_tail(
+  order_with_clusters : Bool,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  edges_by_tail : Map[String, Array[Int]],
+) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
+  if order_with_clusters {
+    let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
+      build_order_edges_by_tail_graphviz(
+        creation_order,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
+        ranks,
+        edge_vnodes,
+        order_with_vnodes,
+        cluster_keys,
+        order_with_clusters,
+        false,
+        false,
+        edges_by_tail,
+      )
+    unmapped_edges_by_tail
+  } else {
+    order_edges_by_tail
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1786,30 +1833,23 @@ fn compute_ordering_and_vnodes(
   // Graphviz parity: cluster-local build_ranks uses edge chains before
   // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
-    if order_with_clusters {
-    let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
-      build_order_edges_by_tail_graphviz(
-        creation_order,
-        edges,
-        edge_tail,
-        edge_head,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_tail_port_order,
-        edge_head_port_order,
-        ranks,
-        vnode_info.edge_vnodes,
-        order_with_vnodes,
-        cluster_meta.cluster_keys,
-        order_with_clusters,
-        false,
-        false,
-        edges_by_tail,
-      )
-    unmapped_edges_by_tail
-  } else {
-    order_edges_by_tail
-  }
+    build_unmapped_order_edges_by_tail(
+      order_with_clusters,
+      order_edges_by_tail,
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      vnode_info.edge_vnodes,
+      order_with_vnodes,
+      cluster_meta.cluster_keys,
+      edges_by_tail,
+    )
   let cluster_skeleton_creation =
     build_cluster_skeleton_creation(
       order_with_clusters,
