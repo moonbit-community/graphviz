@@ -1905,6 +1905,55 @@ fn append_order_edges_for_tail_sequence(
 }
 
 ///|
+/// Graphviz parity: edge arrays are materialized from per-tail lists in exact
+/// nlist tail iteration order (shared root/remincross order-graph builder).
+/// Do not change behavior without updating fixtures/tests.
+fn collect_order_edges_for_tail_sequence(
+  tail_sequence : Array[String],
+  edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  let order_edges_out : Array[@cgraph.Edge] = []
+  let order_edge_tail_out : Array[String] = []
+  let order_edge_head_out : Array[String] = []
+  let order_edge_tail_port_x : Array[Double] = []
+  let order_edge_head_port_x : Array[Double] = []
+  let order_edge_tail_port_order : Array[Double] = []
+  let order_edge_head_port_order : Array[Double] = []
+  append_order_edges_for_tail_sequence(
+    tail_sequence,
+    edges_by_tail,
+    order_graph,
+    order_node_map,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+  (
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+}
+
+///|
 /// Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
 /// fills with nlist/order_groups/base order while applying rank=same overrides.
 /// Do not change behavior without updating fixtures/tests.
@@ -3843,18 +3892,7 @@ fn compute_ordering_and_vnodes(
           root_idx = root_idx - 1
           root_creation_order.push(root_nlist_order[root_idx])
         }
-        let root_edges_out : Array[@cgraph.Edge] = []
-        let root_edge_tail_out : Array[String] = []
-        let root_edge_head_out : Array[String] = []
-        let root_edge_tail_port_x : Array[Double] = []
-        let root_edge_head_port_x : Array[Double] = []
-        let root_edge_tail_port_order : Array[Double] = []
-        let root_edge_head_port_order : Array[Double] = []
-        append_order_edges_for_tail_sequence(
-          root_nlist_order,
-          order_edges_by_tail_root,
-          root_graph,
-          root_node_map,
+        let (
           root_edges_out,
           root_edge_tail_out,
           root_edge_head_out,
@@ -3862,7 +3900,13 @@ fn compute_ordering_and_vnodes(
           root_edge_head_port_x,
           root_edge_tail_port_order,
           root_edge_head_port_order,
-        )
+        ) =
+          collect_order_edges_for_tail_sequence(
+            root_nlist_order,
+            order_edges_by_tail_root,
+            root_graph,
+            root_node_map,
+          )
         if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
           let mut edge_idx = 0
           while edge_idx < root_edges_out.length() {
@@ -4060,18 +4104,7 @@ fn compute_ordering_and_vnodes(
             )
           let rem_node_order =
             build_remincross_node_order(rem_nlist_order, rem_node_map, rem_groups)
-          let rem_edges_out : Array[@cgraph.Edge] = []
-          let rem_edge_tail_out : Array[String] = []
-          let rem_edge_head_out : Array[String] = []
-          let rem_edge_tail_port_x : Array[Double] = []
-          let rem_edge_head_port_x : Array[Double] = []
-          let rem_edge_tail_port_order : Array[Double] = []
-          let rem_edge_head_port_order : Array[Double] = []
-          append_order_edges_for_tail_sequence(
-            rem_nlist_order,
-            rem_order_edges_by_tail,
-            rem_graph,
-            rem_node_map,
+          let (
             rem_edges_out,
             rem_edge_tail_out,
             rem_edge_head_out,
@@ -4079,7 +4112,13 @@ fn compute_ordering_and_vnodes(
             rem_edge_head_port_x,
             rem_edge_tail_port_order,
             rem_edge_head_port_order,
-          )
+          ) =
+            collect_order_edges_for_tail_sequence(
+              rem_nlist_order,
+              rem_order_edges_by_tail,
+              rem_graph,
+              rem_node_map,
+            )
           if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
             let mut idx = 0
             while idx < rem_edges_out.length() {
