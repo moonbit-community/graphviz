@@ -723,40 +723,16 @@ fn compute_rank_data(
 }
 
 ///|
-/// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
+/// Graphviz parity: edge labels can raise intermediate rank half-heights
+/// for long edges before vnode rank expansion in rank.c/position.c flow.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_rank_heights(
-  graph : @cgraph.Graph,
+fn apply_edge_label_half_heights_for_rank_pht(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  all_ranks : Array[Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
+  rank_pht : Map[Int, Double],
   rankdir : RankDir,
-  nodesep_in : Double,
-  ranksep_in : Double,
   has_edge_labels : Bool,
-) -> RankHeights {
-  let rank_pht : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
-    rank_pht[rank] = 0.0
-  }
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let mut max_half = 0.0
-    for name in names {
-      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
-      if half_height > max_half {
-        max_half = half_height
-      }
-    }
-    rank_pht[rank] = max_half
-  }
+) -> Unit {
   if has_edge_labels {
     for edge in edges {
       if !edge_has_label(edge) {
@@ -796,6 +772,50 @@ fn compute_rank_heights(
       }
     }
   }
+}
+
+///|
+/// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_rank_heights(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  all_ranks : Array[Int],
+  sizes : Map[String, NodeSize],
+  self_edge_labels : Map[String, Double],
+  rankdir : RankDir,
+  nodesep_in : Double,
+  ranksep_in : Double,
+  has_edge_labels : Bool,
+) -> RankHeights {
+  let rank_pht : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    rank_pht[rank] = 0.0
+  }
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let mut max_half = 0.0
+    for name in names {
+      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      if half_height > max_half {
+        max_half = half_height
+      }
+    }
+    rank_pht[rank] = max_half
+  }
+  apply_edge_label_half_heights_for_rank_pht(
+    edges,
+    ranks,
+    rank_pht,
+    rankdir,
+    has_edge_labels,
+  )
   let vnode_half_height = VNODE_HEIGHT_PT / 2.0
   for edge in edges {
     let tail = edge.tail().name()
