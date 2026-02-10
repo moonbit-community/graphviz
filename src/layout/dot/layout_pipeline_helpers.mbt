@@ -9811,6 +9811,56 @@ fn build_clustered_xpos_reorder_seed_data(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder appends cluster skeleton chain
+/// edges between consecutive cluster ranks with CL_CROSS penalty.
+/// Do not change behavior without updating fixtures/tests.
+fn append_cluster_skeleton_edges_for_xpos_reorder(
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Unit {
+  for cluster, min_rank in cluster_min_rank {
+    let max_rank = match cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    let mut rank = min_rank
+    while rank < max_rank {
+      let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
+      add_order_edge(
+        order_graph,
+        order_node_map,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        tail_name,
+        head_name,
+        CL_CROSS,
+        true,
+        0.0,
+        0.0,
+        0.5,
+        0.5,
+      )
+      rank = rank + 1
+    }
+  }
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder edge materialization preserves
 /// vnode chain splitting and cluster skeleton linking before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -9949,37 +9999,19 @@ fn build_clustered_xpos_reorder_edges(
     }
     edge_idx = edge_idx + 1
   }
-  for cluster, min_rank in cluster_meta.cluster_min_rank {
-    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-      Some(value) => value
-      None => min_rank
-    }
-    let mut rank = min_rank
-    while rank < max_rank {
-      let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-      let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-      add_order_edge(
-        order_graph,
-        order_node_map,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        tail_name,
-        head_name,
-        CL_CROSS,
-        true,
-        0.0,
-        0.0,
-        0.5,
-        0.5,
-      )
-      rank = rank + 1
-    }
-  }
+  append_cluster_skeleton_edges_for_xpos_reorder(
+    order_graph,
+    order_node_map,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    cluster_meta.cluster_min_rank,
+    cluster_meta.cluster_max_rank,
+  )
   {
     order_edges_out,
     order_edge_tail_out,
