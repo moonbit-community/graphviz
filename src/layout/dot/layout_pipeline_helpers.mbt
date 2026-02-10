@@ -1588,6 +1588,19 @@ fn build_flat_rank_constraints(
 }
 
 ///|
+/// Graphviz parity: class2 traverses agfstnode creation order.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_creation_order(
+  nodes : Array[@cgraph.Node],
+) -> Array[String] {
+  let creation_order : Array[String] = []
+  for node in nodes {
+    creation_order.push(node.name())
+  }
+  creation_order
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -1705,10 +1718,7 @@ fn compute_ordering_and_vnodes(
       ranks,
     )
   // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
-  let creation_order : Array[String] = []
-  for node in nodes {
-    creation_order.push(node.name())
-  }
+  let creation_order = collect_creation_order(nodes)
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
   let edges_by_tail : Map[String, Array[Int]] = Map::new()
   for node in nodes {
