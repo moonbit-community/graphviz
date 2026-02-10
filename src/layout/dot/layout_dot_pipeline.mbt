@@ -112,6 +112,20 @@ fn build_rank_data_for_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: rank-stage result object keeps computed rank/cluster/order
+/// artifacts unchanged and emits rank-order trace at the same stage boundary.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_rank_stage_result_for_stage(
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+) -> DotRankStage {
+  dot_trace("layout_dot: rank order computed")
+  { rank_data, rank_heights, cluster_meta, ordering }
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -133,8 +147,12 @@ fn compute_dot_rank_stage(
       rank_heights,
       cluster_meta,
     )
-  dot_trace("layout_dot: rank order computed")
-  { rank_data, rank_heights, cluster_meta, ordering }
+  build_dot_rank_stage_result_for_stage(
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+  )
 }
 
 ///|
