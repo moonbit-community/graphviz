@@ -9353,6 +9353,17 @@ fn build_x_stage_output_from_mode_and_seed_data_for_positions(
 }
 
 ///|
+/// Graphviz parity: x-stage mode/seed output object maps stage-local data
+/// bundles without additional transforms.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_stage_mode_and_seed_output_for_positions(
+  mode_slack_data : XStageModeAndSlackData,
+  seed_flat_label_data : XStageSeedAndFlatLabelData,
+) -> XStageModeAndSeedData {
+  { mode_slack_data, seed_flat_label_data }
+}
+
+///|
 /// Graphviz parity: x-stage mode/slack and seed/flat-label stages are executed
 /// in fixed order before final x-stage output assembly.
 /// Do not change behavior without updating fixtures/tests.
@@ -9379,7 +9390,10 @@ fn build_x_stage_mode_and_seed_data_for_positions(
       ordering,
       mode_slack_data,
     )
-  { mode_slack_data, seed_flat_label_data }
+  build_x_stage_mode_and_seed_output_for_positions(
+    mode_slack_data,
+    seed_flat_label_data,
+  )
 }
 
 ///|
