@@ -5790,6 +5790,28 @@ fn add_vnode_names_to_existing_names_for_positions(
 }
 
 ///|
+/// Graphviz parity: ordering base-context port-edge map marks both endpoints
+/// for edges with explicit tail/head ports before rank-same constraints build.
+/// Do not change behavior without updating fixtures/tests.
+fn build_port_edge_nodes_for_ordering_base_context(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> Map[String, Bool] {
+  let port_edge_nodes : Map[String, Bool] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let ported = port_is_explicit(edge.tail_port()) ||
+      port_is_explicit(edge.head_port())
+    if ported {
+      port_edge_nodes[edge_tail[edge_idx]] = true
+      port_edge_nodes[edge_head[edge_idx]] = true
+    }
+  }
+  port_edge_nodes
+}
+
+///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -5827,16 +5849,8 @@ fn build_ordering_base_context(
     edge_cluster_keys,
     cluster_meta.cluster_parents,
   )
-  let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let ported = port_is_explicit(edge.tail_port()) ||
-      port_is_explicit(edge.head_port())
-    if ported {
-      port_edge_nodes[edge_tail[edge_idx]] = true
-      port_edge_nodes[edge_head[edge_idx]] = true
-    }
-  }
+  let port_edge_nodes =
+    build_port_edge_nodes_for_ordering_base_context(edges, edge_tail, edge_head)
   let local_cluster_order = build_local_cluster_order(
     nodes,
     cluster_meta.intercluster_keys,
