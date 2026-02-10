@@ -274,6 +274,13 @@ priv struct PositionOutputMaps {
 }
 
 ///|
+priv struct PositionProjectionData {
+  rank_y : Map[Int, Double]
+  cluster_bbox_heights : Map[String, (Double, Double)]
+  position_output_maps : PositionOutputMaps
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -7434,6 +7441,68 @@ fn build_position_output_maps_for_positions(
 }
 
 ///|
+/// Graphviz parity: position projection stage keeps y-precompute, x solve, and
+/// final output-map assembly wiring identical to Graphviz-aligned pipeline.
+/// Do not change behavior without updating fixtures/tests.
+fn build_position_projection_data_for_positions(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+  x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
+  flat_label_edges : Array[ConstraintEdge],
+  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+) -> PositionProjectionData {
+  let y_position_data =
+    build_y_position_data_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      flat_label_nodes,
+    )
+  let y_positions = y_position_data.y_positions
+  let rank_y = y_position_data.rank_y
+  let cluster_bbox_heights = y_position_data.cluster_bbox_heights
+  let x_positions =
+    compute_x_positions_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      ordering,
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      x_cluster_keys,
+      virtual_slack_edges,
+      flat_label_edges,
+    )
+  let position_output_maps =
+    build_position_output_maps_for_positions(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      use_vnodes_for_xpos,
+      x_positions,
+      y_positions,
+      rank_y,
+    )
+  { rank_y, cluster_bbox_heights, position_output_maps }
+}
+
+///|
 /// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
 /// paths and must preserve node-singleton and cluster-key inputs.
 /// Do not change behavior without updating fixtures/tests.
@@ -8236,25 +8305,13 @@ fn compute_positions(
   let flat_label_edge_vnodes = flat_label_augmentation.flat_label_edge_vnodes
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
-  let y_position_data =
-    build_y_position_data_for_positions(
+  let position_projection_data =
+    build_position_projection_data_for_positions(
       graph,
       prep,
       rank_data,
       rank_heights,
       cluster_meta,
-      ordering,
-      flat_label_nodes,
-    )
-  let y_positions = y_position_data.y_positions
-  let rank_y = y_position_data.rank_y
-  let cluster_bbox_heights = y_position_data.cluster_bbox_heights
-  let x_positions =
-    compute_x_positions_for_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
       ordering,
       use_vnodes_for_xpos,
       x_base_sizes,
@@ -8262,20 +8319,11 @@ fn compute_positions(
       x_cluster_keys,
       virtual_slack_edges,
       flat_label_edges,
+      flat_label_nodes,
     )
-  let position_output_maps =
-    build_position_output_maps_for_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      use_vnodes_for_xpos,
-      x_positions,
-      y_positions,
-      rank_y,
-    )
+  let rank_y = position_projection_data.rank_y
+  let cluster_bbox_heights = position_projection_data.cluster_bbox_heights
+  let position_output_maps = position_projection_data.position_output_maps
   let positions = position_output_maps.positions
   let vnode_positions = position_output_maps.vnode_positions
   let cluster_ln_x = position_output_maps.cluster_ln_x
