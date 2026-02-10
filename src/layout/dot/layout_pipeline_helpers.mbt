@@ -4978,6 +4978,17 @@ fn finalize_order_groups_with_cluster_remincross(
 }
 
 ///|
+/// Graphviz parity: class2 nlist/vnode output keeps GD_nlist order and vnode
+/// creation sequence unchanged after cluster-flip adjustment.
+/// Do not change behavior without updating fixtures/tests.
+fn build_nlist_order_and_vnode_creation_order_output(
+  nlist_order : Array[String],
+  vnode_creation_order : Array[String],
+) -> (Array[String], Array[String]) {
+  (nlist_order, vnode_creation_order)
+}
+
+///|
 /// Graphviz parity: class2 creation and decompose build GD_nlist from cluster
 /// skeletons + real-node/vnode creation order, with cluster-flip adjustment.
 /// Do not change behavior without updating fixtures/tests.
@@ -5018,7 +5029,7 @@ fn build_nlist_order_and_vnode_creation_order(
       cluster_keys,
     )
   trace_nlist_order_debug(nlist_order)
-  (nlist_order, vnode_creation_order)
+  build_nlist_order_and_vnode_creation_order_output(nlist_order, vnode_creation_order)
 }
 
 ///|
