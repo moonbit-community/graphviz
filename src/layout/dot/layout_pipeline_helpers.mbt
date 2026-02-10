@@ -5939,6 +5939,17 @@ fn run_root_and_cluster_build_ranks_stage(
 }
 
 ///|
+/// Graphviz parity: clustered finalize stage output keeps final rank groups and
+/// vnode-augmented groups in Graphviz tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order_and_finalize_stage_output(
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+  final_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  (next_ordered_with_vnodes, final_groups)
+}
+
+///|
 /// Graphviz parity: clustered cleanup applies root cluster-rank ordering,
 /// then runs final clustered ReMincross with local-cluster tie handling.
 /// Do not change behavior without updating fixtures/tests.
@@ -6010,37 +6021,42 @@ fn run_cluster_rank_order_and_finalize_stage(
       port_order_positions,
       port_order_contrib,
     )
-  finalize_order_groups_with_cluster_remincross(
-    order_with_clusters,
-    order_with_vnodes,
-    cluster_rank_order,
-    cluster_meta,
-    local_cluster_order,
-    order_rank_keys,
-    ordered,
-    real_nodes,
-    ordered_with_vnodes,
-    graph,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    ranks,
-    flat_rank_constraints,
-    creation_order,
-    edges_by_tail,
-    vnode_info,
-    order_sizes,
-    rank_same_constraints,
-    graphviz_flip,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
+  let (next_ordered_with_vnodes, final_groups) =
+    finalize_order_groups_with_cluster_remincross(
+      order_with_clusters,
+      order_with_vnodes,
+      cluster_rank_order,
+      cluster_meta,
+      local_cluster_order,
+      order_rank_keys,
+      ordered,
+      real_nodes,
+      ordered_with_vnodes,
+      graph,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      flat_rank_constraints,
+      creation_order,
+      edges_by_tail,
+      vnode_info,
+      order_sizes,
+      rank_same_constraints,
+      graphviz_flip,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+    )
+  build_cluster_rank_order_and_finalize_stage_output(
+    next_ordered_with_vnodes,
+    final_groups,
   )
 }
 
