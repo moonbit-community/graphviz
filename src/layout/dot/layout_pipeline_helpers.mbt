@@ -5095,28 +5095,29 @@ fn build_vnode_order_keys_for_ordering_stage(
 }
 
 ///|
-/// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
+/// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
+/// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_ordering_and_vnodes(
+fn build_ordering_base_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_reversed : Array[Bool],
   edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
   node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
-  has_edge_labels : Bool,
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-) -> OrderingResult {
+) -> (
+  Map[String, Bool],
+  Map[String, String],
+  EdgeVnodeInfo,
+  Map[String, Bool],
+  Map[String, Int],
+  Map[String, Bool],
+) {
   let real_nodes : Map[String, Bool] = Map::new()
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -5162,6 +5163,60 @@ fn compute_ordering_and_vnodes(
     port_edge_nodes,
     ranks,
   )
+  (
+    real_nodes,
+    edge_cluster_keys,
+    vnode_info,
+    port_edge_nodes,
+    local_cluster_order,
+    rank_same_constraints,
+  )
+}
+
+///|
+/// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_ordering_and_vnodes(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> OrderingResult {
+  let (
+    real_nodes,
+    edge_cluster_keys,
+    vnode_info,
+    port_edge_nodes,
+    local_cluster_order,
+    rank_same_constraints,
+  ) =
+    build_ordering_base_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      node_order,
+      nodesep_pt,
+      rankdir,
+      cluster_meta,
+    )
   let vnode_count = vnode_info.vnode_ranks.length()
   let vnode_tail_constraints =
     if vnode_count > 0 {
