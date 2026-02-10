@@ -1954,6 +1954,28 @@ fn collect_order_edges_for_tail_sequence(
 }
 
 ///|
+/// Graphviz parity: parent/child adjacency maps and edge-order indices are
+/// derived from the exact materialized edge arrays in current order graph.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_edge_indices_and_order(
+  order_nodes : Array[String],
+  edge_tail_out : Array[String],
+  edge_head_out : Array[String],
+  order_ranks : Map[String, Int],
+  edges_out : Array[@cgraph.Edge],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
+  let (parents, children) =
+    build_edge_index_for_order_names(
+      order_nodes,
+      edge_tail_out,
+      edge_head_out,
+      order_ranks,
+    )
+  let edge_order = collect_edge_order(edges_out)
+  (parents, children, edge_order)
+}
+
+///|
 /// Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
 /// fills with nlist/order_groups/base order while applying rank=same overrides.
 /// Do not change behavior without updating fixtures/tests.
@@ -3826,13 +3848,14 @@ fn compute_ordering_and_vnodes(
           order_edge_tail_port_order,
           order_edge_head_port_order,
         )
-      let (parents, children) = build_edge_index_for_order_names(
-        order_nodes_for_mincross,
-        order_edge_tail_out_mincross,
-        order_edge_head_out_mincross,
-        order_ranks,
-      )
-      let edge_order = collect_edge_order(order_edges_out_mincross)
+      let (parents, children, edge_order) =
+        build_order_edge_indices_and_order(
+          order_nodes_for_mincross,
+          order_edge_tail_out_mincross,
+          order_edge_head_out_mincross,
+          order_ranks,
+          order_edges_out_mincross,
+        )
       let preferred_positions =
         if order_with_vnodes {
         vnode_order_keys_for_ordering
@@ -3991,13 +4014,14 @@ fn compute_ordering_and_vnodes(
             edge_idx = edge_idx + 1
           }
         }
-        let (root_parents, root_children) = build_edge_index_for_order_names(
-          root_nodes,
-          root_edge_tail_out,
-          root_edge_head_out,
-          root_ranks,
-        )
-        let root_edge_order = collect_edge_order(root_edges_out)
+        let (root_parents, root_children, root_edge_order) =
+          build_order_edge_indices_and_order(
+            root_nodes,
+            root_edge_tail_out,
+            root_edge_head_out,
+            root_ranks,
+            root_edges_out,
+          )
         let ordered_root = reorder_rank_groups(
           root_rank_keys,
           root_groups,
@@ -4198,13 +4222,14 @@ fn compute_ordering_and_vnodes(
               edge_idx = edge_idx + 1
             }
           }
-          let (rem_parents, rem_children) = build_edge_index_for_order_names(
-            rem_nodes,
-            rem_edge_tail_out,
-            rem_edge_head_out,
-            rem_ranks,
-          )
-          let rem_edge_order = collect_edge_order(rem_edges_out)
+          let (rem_parents, rem_children, rem_edge_order) =
+            build_order_edge_indices_and_order(
+              rem_nodes,
+              rem_edge_tail_out,
+              rem_edge_head_out,
+              rem_ranks,
+              rem_edges_out,
+            )
           let rem_cluster_keys =
             build_remincross_cluster_keys(
               graph,
