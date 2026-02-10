@@ -8233,6 +8233,59 @@ fn apply_noncluster_xpos_reorder_rank_groups_for_positions(
 }
 
 ///|
+/// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
+/// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_xpos_reordered_groups_for_positions(
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
+  x_order_sizes : Map[String, NodeSize],
+  x_cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+  x_groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let (parents, children, tmp_rank_keys) =
+    build_noncluster_xpos_reorder_graph_inputs_for_positions(
+      prep.nodes,
+      ordering,
+      rank_data.ranks,
+      x_groups,
+    )
+  // Graphviz parity: even non-cluster xpos reorder uses compass/record
+  // port-order fractions when mincross scoring ties are evaluated.
+  let (
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  ) = build_noncluster_xpos_reorder_port_hints_for_positions(
+    prep.nodes,
+    ordering,
+    x_order_sizes,
+  )
+  apply_noncluster_xpos_reorder_rank_groups_for_positions(
+    tmp_rank_keys,
+    x_groups,
+    ordering,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    parents,
+    children,
+    x_cluster_keys,
+    cluster_meta,
+    prep,
+    x_order_sizes,
+    rank_heights,
+    graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
@@ -8253,41 +8306,16 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
   if xpos_reorder_enabled &&
     allow_xpos_reorder && !cluster_meta.ordering_set && !has_vnode_order &&
     !cluster_meta.has_clusters {
-    let (parents, children, tmp_rank_keys) =
-      build_noncluster_xpos_reorder_graph_inputs_for_positions(
-        prep.nodes,
-        ordering,
-        rank_data.ranks,
-        x_groups,
-      )
-    // Graphviz parity: even non-cluster xpos reorder uses compass/record
-    // port-order fractions when mincross scoring ties are evaluated.
-    let (
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-    ) = build_noncluster_xpos_reorder_port_hints_for_positions(
-      prep.nodes,
-      ordering,
-      x_order_sizes,
-    )
-    apply_noncluster_xpos_reorder_rank_groups_for_positions(
-      tmp_rank_keys,
-      x_groups,
-      ordering,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      parents,
-      children,
-      x_cluster_keys,
-      cluster_meta,
+    build_noncluster_xpos_reordered_groups_for_positions(
       prep,
-      x_order_sizes,
+      rank_data,
       rank_heights,
+      cluster_meta,
+      ordering,
+      x_order_sizes,
+      x_cluster_keys,
       graphviz_flip,
+      x_groups,
     )
   } else {
     x_groups
