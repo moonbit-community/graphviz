@@ -4046,6 +4046,27 @@ fn run_noncluster_reorder_pass(
 }
 
 ///|
+/// Debug trace: dump GD_nlist sequence and skeleton-node subset when
+/// DOT_TRACE_GROUPS is enabled (diagnostic only).
+fn trace_nlist_order_debug(
+  nlist_order : Array[String],
+) -> Unit {
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
+    return
+  }
+  let order_joined = nlist_order.join(" ")
+  if order_joined.length() > 0 {
+    println("nlist_order \{order_joined}")
+  }
+  let skeleton_names =
+    nlist_order.filter(name => name.has_prefix(CLUSTER_SKELETON_PREFIX))
+  let joined = skeleton_names.join(" ")
+  if joined.length() > 0 {
+    println("nlist_skeleton \{joined}")
+  }
+}
+
+///|
 /// Debug trace: dump selected order-node positions when DOT_TRACE_GROUPS is
 /// enabled (diagnostic only).
 fn trace_order_node_order_debug(
@@ -4694,17 +4715,7 @@ fn compute_ordering_and_vnodes(
   // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
   // Do not change behavior without updating fixtures/tests.
   let gdnlist_order = nlist_order
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let order_joined = nlist_order.join(" ")
-    if order_joined.length() > 0 {
-      println("nlist_order \{order_joined}")
-    }
-    let skeleton_names = nlist_order.filter(name => name.has_prefix(CLUSTER_SKELETON_PREFIX))
-    let joined = skeleton_names.join(" ")
-    if joined.length() > 0 {
-      println("nlist_skeleton \{joined}")
-    }
-  }
+  trace_nlist_order_debug(nlist_order)
   let nlist_order_index = build_nlist_order_index(nlist_order)
   let vnode_order_keys_for_ordering =
     if vnode_count > 0 {
