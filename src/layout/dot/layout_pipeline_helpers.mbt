@@ -2198,6 +2198,111 @@ fn build_order_groups_for_root_mincross(
 }
 
 ///|
+/// Graphviz parity: membership checks for mincross subgraph are exact-name set
+/// lookups over the filtered node list.
+/// Do not change behavior without updating fixtures/tests.
+fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
+  let membership : Map[String, Bool] = Map::new()
+  for name in names {
+    membership[name] = true
+  }
+  membership
+}
+
+///|
+/// Graphviz parity: root mincross edge set keeps only edges whose endpoints are
+/// both in the filtered node set, preserving edge and port-order sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_mincross_order_edges(
+  mincross_nodes : Map[String, Bool],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  let order_edges_out_mincross : Array[@cgraph.Edge] = []
+  let order_edge_tail_out_mincross : Array[String] = []
+  let order_edge_head_out_mincross : Array[String] = []
+  let order_edge_tail_port_x_mincross : Array[Double] = []
+  let order_edge_head_port_x_mincross : Array[Double] = []
+  let order_edge_tail_port_order_mincross : Array[Double] = []
+  let order_edge_head_port_order_mincross : Array[Double] = []
+  let mut edge_idx = 0
+  while edge_idx < order_edges_out.length() {
+    let tail = order_edge_tail_out[edge_idx]
+    let head = order_edge_head_out[edge_idx]
+    if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
+      order_edges_out_mincross.push(order_edges_out[edge_idx])
+      order_edge_tail_out_mincross.push(tail)
+      order_edge_head_out_mincross.push(head)
+      order_edge_tail_port_x_mincross.push(order_edge_tail_port_x[edge_idx])
+      order_edge_head_port_x_mincross.push(order_edge_head_port_x[edge_idx])
+      order_edge_tail_port_order_mincross.push(order_edge_tail_port_order[edge_idx])
+      order_edge_head_port_order_mincross.push(order_edge_head_port_order[edge_idx])
+    }
+    edge_idx = edge_idx + 1
+  }
+  (
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+  )
+}
+
+///|
+/// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
+/// merged back into seeded rank lists by replacing only filtered positions.
+/// Do not change behavior without updating fixtures/tests.
+fn merge_root_mincross_order_into_seeded_groups(
+  order_rank_keys : Array[Int],
+  seeded_groups : Map[Int, Array[String]],
+  ordered_mincross : Map[Int, Array[String]],
+  mincross_nodes : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let merged : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys {
+    let names = match seeded_groups.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    let replacements = match ordered_mincross.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if replacements.length() == 0 {
+      merged[rank] = names
+      continue
+    }
+    let mut replace_idx = 0
+    for i in 0..<names.length() {
+      if mincross_nodes.get(names[i]) is Some(_) {
+        if replace_idx < replacements.length() {
+          names[i] = replacements[replace_idx]
+          replace_idx = replace_idx + 1
+        }
+      }
+    }
+    merged[rank] = names
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2804,32 +2909,26 @@ fn compute_ordering_and_vnodes(
           order_groups_for_mincross,
           order_rank_keys_for_mincross,
         )
-      let mincross_nodes : Map[String, Bool] = Map::new()
-      for name in order_nodes_for_mincross {
-        mincross_nodes[name] = true
-      }
-      let order_edges_out_mincross : Array[@cgraph.Edge] = []
-      let order_edge_tail_out_mincross : Array[String] = []
-      let order_edge_head_out_mincross : Array[String] = []
-      let order_edge_tail_port_x_mincross : Array[Double] = []
-      let order_edge_head_port_x_mincross : Array[Double] = []
-      let order_edge_tail_port_order_mincross : Array[Double] = []
-      let order_edge_head_port_order_mincross : Array[Double] = []
-      let mut edge_idx = 0
-      while edge_idx < order_edges_out.length() {
-        let tail = order_edge_tail_out[edge_idx]
-        let head = order_edge_head_out[edge_idx]
-        if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
-          order_edges_out_mincross.push(order_edges_out[edge_idx])
-          order_edge_tail_out_mincross.push(tail)
-          order_edge_head_out_mincross.push(head)
-          order_edge_tail_port_x_mincross.push(order_edge_tail_port_x[edge_idx])
-          order_edge_head_port_x_mincross.push(order_edge_head_port_x[edge_idx])
-          order_edge_tail_port_order_mincross.push(order_edge_tail_port_order[edge_idx])
-          order_edge_head_port_order_mincross.push(order_edge_head_port_order[edge_idx])
-        }
-        edge_idx = edge_idx + 1
-      }
+      let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+      let (
+        order_edges_out_mincross,
+        order_edge_tail_out_mincross,
+        order_edge_head_out_mincross,
+        order_edge_tail_port_x_mincross,
+        order_edge_head_port_x_mincross,
+        order_edge_tail_port_order_mincross,
+        order_edge_head_port_order_mincross,
+      ) =
+        collect_mincross_order_edges(
+          mincross_nodes,
+          order_edges_out,
+          order_edge_tail_out,
+          order_edge_head_out,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
+        )
       let (parents, children) = build_edge_index_for_order_names(
         order_nodes_for_mincross,
         order_edge_tail_out_mincross,
@@ -2874,32 +2973,12 @@ fn compute_ordering_and_vnodes(
       )
       let ordered =
         if order_with_clusters {
-        let merged : Map[Int, Array[String]] = Map::new()
-        for rank in order_rank_keys {
-          let names = match seeded_groups.get(rank) {
-            Some(list) => list.copy()
-            None => []
-          }
-          let replacements = match ordered_mincross.get(rank) {
-            Some(list) => list
-            None => []
-          }
-          if replacements.length() == 0 {
-            merged[rank] = names
-            continue
-          }
-          let mut replace_idx = 0
-          for i in 0..<names.length() {
-            if mincross_nodes.get(names[i]) is Some(_) {
-              if replace_idx < replacements.length() {
-                names[i] = replacements[replace_idx]
-                replace_idx = replace_idx + 1
-              }
-            }
-          }
-          merged[rank] = names
-        }
-        merged
+        merge_root_mincross_order_into_seeded_groups(
+          order_rank_keys,
+          seeded_groups,
+          ordered_mincross,
+          mincross_nodes,
+        )
       } else {
         ordered_mincross
       }
