@@ -1960,6 +1960,51 @@ fn build_order_node_order_for_build_ranks(
 }
 
 ///|
+/// Graphviz parity: unconstrained-node seeding uses GD_nlist indices for real
+/// nodes only, matching class2 fallback behavior.
+/// Do not change behavior without updating fixtures/tests.
+fn build_gdnlist_order_index_for_real_nodes(
+  gdnlist_order : Array[String],
+  real_nodes : Map[String, Bool],
+) -> Map[String, Int] {
+  let gdnlist_order_index : Map[String, Int] = Map::new()
+  let mut gdnlist_idx = 0
+  for name in gdnlist_order {
+    if real_nodes.get(name) is Some(_) {
+      gdnlist_order_index[name] = gdnlist_idx
+      gdnlist_idx = gdnlist_idx + 1
+    }
+  }
+  gdnlist_order_index
+}
+
+///|
+/// Graphviz parity: unconstrained nodes are exactly nodes with zero ND_out and
+/// zero ND_in neighbors in the order graph.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_unconstrained_order_nodes(
+  order_nodes : Array[String],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+) -> Map[String, Bool] {
+  let unconstrained_nodes : Map[String, Bool] = Map::new()
+  for name in order_nodes {
+    let out = match graphviz_out_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let inn = match graphviz_in_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    if out.length() == 0 && inn.length() == 0 {
+      unconstrained_nodes[name] = true
+    }
+  }
+  unconstrained_nodes
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2450,28 +2495,14 @@ fn compute_ordering_and_vnodes(
       let order_flat_constraints =
         clone_flat_constraints(cluster_meta.flat_constraints)
       // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-      let gdnlist_order_index : Map[String, Int] = Map::new()
-      let mut gdnlist_idx = 0
-      for name in gdnlist_order {
-        if real_nodes.get(name) is Some(_) {
-          gdnlist_order_index[name] = gdnlist_idx
-          gdnlist_idx = gdnlist_idx + 1
-        }
-      }
-      let unconstrained_nodes : Map[String, Bool] = Map::new()
-      for name in order_nodes {
-        let out = match graphviz_out_neighbors.get(name) {
-          Some(list) => list
-          None => []
-        }
-        let inn = match graphviz_in_neighbors.get(name) {
-          Some(list) => list
-          None => []
-        }
-        if out.length() == 0 && inn.length() == 0 {
-          unconstrained_nodes[name] = true
-        }
-      }
+      let gdnlist_order_index =
+        build_gdnlist_order_index_for_real_nodes(gdnlist_order, real_nodes)
+      let unconstrained_nodes =
+        collect_unconstrained_order_nodes(
+          order_nodes,
+          graphviz_out_neighbors,
+          graphviz_in_neighbors,
+        )
       for name, idx in gdnlist_order_index {
         if real_nodes.get(name) is Some(_) &&
           unconstrained_nodes.get(name) is Some(_) &&
