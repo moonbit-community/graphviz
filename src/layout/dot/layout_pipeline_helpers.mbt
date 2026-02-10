@@ -2165,6 +2165,39 @@ fn build_transpose_seed_edge_maps(
 }
 
 ///|
+/// Graphviz parity: root ReMincross keeps only root and cluster-skeleton nodes;
+/// cluster-internal ordering stays in cluster-local build_ranks passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_groups_for_root_mincross(
+  order_with_clusters : Bool,
+  seeded_groups : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  if !order_with_clusters {
+    return seeded_groups
+  }
+  let filtered : Map[Int, Array[String]] = Map::new()
+  for rank, names in seeded_groups {
+    let list : Array[String] = []
+    for name in names {
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      let cluster = match order_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if is_skeleton || cluster == "" {
+        list.push(name)
+      }
+    }
+    if list.length() > 0 {
+      filtered[rank] = list
+    }
+  }
+  filtered
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -2745,28 +2778,12 @@ fn compute_ordering_and_vnodes(
       // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
       // cluster-internal nodes are handled by cluster-local build_ranks passes.
       let order_groups_for_mincross =
-        if order_with_clusters {
-        let filtered : Map[Int, Array[String]] = Map::new()
-        for rank, names in seeded_groups {
-          let list : Array[String] = []
-          for name in names {
-            let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-            let cluster = match order_cluster_keys.get(name) {
-              Some(value) => value
-              None => ""
-            }
-            if is_skeleton || cluster == "" {
-              list.push(name)
-            }
-          }
-          if list.length() > 0 {
-            filtered[rank] = list
-          }
-        }
-        filtered
-      } else {
-        seeded_groups
-      }
+        build_order_groups_for_root_mincross(
+          order_with_clusters,
+          seeded_groups,
+          order_cluster_keys,
+          order_cluster_skeleton,
+        )
       if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
         let debug_nodes : Array[String] = ["front_end_jz", "z_req1", "z_req"]
         for name in debug_nodes {
@@ -2782,16 +2799,11 @@ fn compute_ordering_and_vnodes(
         }
       }
       let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
-      let order_nodes_for_mincross : Array[String] = []
-      for rank in order_rank_keys_for_mincross {
-        let names = match order_groups_for_mincross.get(rank) {
-          Some(list) => list
-          None => []
-        }
-        for name in names {
-          order_nodes_for_mincross.push(name)
-        }
-      }
+      let order_nodes_for_mincross =
+        build_order_nodes_from_groups(
+          order_groups_for_mincross,
+          order_rank_keys_for_mincross,
+        )
       let mincross_nodes : Map[String, Bool] = Map::new()
       for name in order_nodes_for_mincross {
         mincross_nodes[name] = true
