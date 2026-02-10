@@ -6721,6 +6721,73 @@ fn build_vnode_positions_for_output(
 }
 
 ///|
+/// Graphviz parity: initial x-groups must preserve vnode-aware ordering and
+/// strip cluster skeleton placeholders before xpos constraints run.
+/// Do not change behavior without updating fixtures/tests.
+fn build_initial_x_groups(
+  use_vnodes_for_xpos : Bool,
+  ordered_groups : Map[Int, Array[String]],
+  ordered_groups_with_vnodes : Map[Int, Array[String]],
+  order_index : Map[String, Int],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys : Map[String, Double],
+  cluster_meta : ClusterMetadata,
+) -> Map[Int, Array[String]] {
+  let mut x_groups =
+    if use_vnodes_for_xpos {
+      if ordered_groups_with_vnodes.length() > 0 {
+        clone_rank_groups(ordered_groups_with_vnodes)
+      } else {
+        build_x_groups_with_vnodes(
+          ordered_groups,
+          order_index,
+          vnodes_by_rank,
+          vnode_order_keys,
+        )
+      }
+    } else {
+      ordered_groups
+    }
+  if cluster_meta.has_clusters {
+    let cleaned : Map[Int, Array[String]] = Map::new()
+    for rank, names in x_groups {
+      let filtered : Array[String] = []
+      for name in names {
+        if cluster_key_from_skeleton_name(name) is None {
+          filtered.push(name)
+        }
+      }
+      if filtered.length() > 0 {
+        cleaned[rank] = filtered
+      }
+    }
+    x_groups = cleaned
+  }
+  x_groups
+}
+
+///|
+/// Graphviz parity: xpos cluster ownership map starts from real cluster keys,
+/// then overlays vnode cluster keys only when vnode xpos path is enabled.
+/// Do not change behavior without updating fixtures/tests.
+fn build_x_cluster_keys_for_positions(
+  cluster_meta : ClusterMetadata,
+  use_vnodes_for_xpos : Bool,
+  vnode_clusters : Map[String, String],
+) -> Map[String, String] {
+  let x_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_meta.cluster_keys {
+    x_cluster_keys[name] = key
+  }
+  if use_vnodes_for_xpos {
+    for name, key in vnode_clusters {
+      x_cluster_keys[name] = key
+    }
+  }
+  x_cluster_keys
+}
+
+///|
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
@@ -6815,44 +6882,21 @@ fn compute_positions(
       x_order_sizes,
     )
   let mut x_groups =
-    if use_vnodes_for_xpos {
-      if ordering.ordered_groups_with_vnodes.length() > 0 {
-        clone_rank_groups(ordering.ordered_groups_with_vnodes)
-      } else {
-        build_x_groups_with_vnodes(
-          ordering.ordered_groups,
-          order_index,
-          ordering.vnode_info.vnodes_by_rank,
-          vnode_order_keys,
-        )
-      }
-    } else {
-      ordering.ordered_groups
-    }
-  if cluster_meta.has_clusters {
-    let cleaned : Map[Int, Array[String]] = Map::new()
-    for rank, names in x_groups {
-      let filtered : Array[String] = []
-      for name in names {
-        if cluster_key_from_skeleton_name(name) is None {
-          filtered.push(name)
-        }
-      }
-      if filtered.length() > 0 {
-        cleaned[rank] = filtered
-      }
-    }
-    x_groups = cleaned
-  }
-  let x_cluster_keys : Map[String, String] = Map::new()
-  for name, key in cluster_meta.cluster_keys {
-    x_cluster_keys[name] = key
-  }
-  if use_vnodes_for_xpos {
-    for name, key in ordering.vnode_info.vnode_clusters {
-      x_cluster_keys[name] = key
-    }
-  }
+    build_initial_x_groups(
+      use_vnodes_for_xpos,
+      ordering.ordered_groups,
+      ordering.ordered_groups_with_vnodes,
+      order_index,
+      ordering.vnode_info.vnodes_by_rank,
+      vnode_order_keys,
+      cluster_meta,
+    )
+  let x_cluster_keys =
+    build_x_cluster_keys_for_positions(
+      cluster_meta,
+      use_vnodes_for_xpos,
+      ordering.vnode_info.vnode_clusters,
+    )
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
     let order_groups : Map[Int, Array[String]] = Map::new()
