@@ -7976,6 +7976,71 @@ fn build_clustered_xpos_reorder_edges(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder consumes order-graph parents/children
+/// plus edge-order hints exactly once before reorder_rank_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_clustered_xpos_reorder_rank_groups_for_positions(
+  order_rank_keys : Array[Int],
+  order_groups : Map[Int, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_nodes : Array[String],
+  order_ranks : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  order_node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  order_cluster_skeleton : Map[String, Bool],
+  flat_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  let (parents, children) = build_edge_index_for_order_names(
+    order_nodes,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_ranks,
+  )
+  let edge_order = collect_edge_order(order_edges_out)
+  // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
+  // computed for the order graph (mincross median tie-breaking path).
+  reorder_rank_groups(
+    order_rank_keys,
+    order_groups,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    parents,
+    children,
+    order_cluster_keys,
+    rank_same_groups,
+    rank_same_order,
+    edge_order,
+    order_node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    Map::new(),
+    Map::new(),
+    Map::new(),
+    order_cluster_skeleton,
+    flat_constraints,
+    graphviz_flip=graphviz_flip,
+  )
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder branch keeps the same seed build,
 /// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -8029,16 +8094,7 @@ fn build_clustered_xpos_reordered_groups(
   let order_edge_head_port_x = reorder_edges_data.order_edge_head_port_x
   let order_edge_tail_port_order = reorder_edges_data.order_edge_tail_port_order
   let order_edge_head_port_order = reorder_edges_data.order_edge_head_port_order
-  let (parents, children) = build_edge_index_for_order_names(
-    order_nodes,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_ranks,
-  )
-  let edge_order = collect_edge_order(order_edges_out)
-  // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
-  // computed for the order graph (mincross median tie-breaking path).
-  reorder_rank_groups(
+  apply_clustered_xpos_reorder_rank_groups_for_positions(
     order_rank_keys,
     order_groups,
     order_edges_out,
@@ -8048,22 +8104,18 @@ fn build_clustered_xpos_reordered_groups(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
-    parents,
-    children,
+    order_nodes,
+    order_ranks,
     order_cluster_keys,
     cluster_meta.rank_same_groups,
     cluster_meta.rank_same_order,
-    edge_order,
     order_node_order,
     order_sizes,
     rank_heights.nodesep_pt,
     prep.has_edge_labels,
-    Map::new(),
-    Map::new(),
-    Map::new(),
     order_cluster_skeleton,
     cluster_meta.flat_constraints,
-    graphviz_flip=graphviz_flip,
+    graphviz_flip,
   )
 }
 
