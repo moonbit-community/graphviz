@@ -1021,22 +1021,16 @@ fn apply_edge_label_half_heights_for_rank_pht(
 }
 
 ///|
-/// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
+/// Graphviz parity: initial per-rank half-heights come from the tallest
+/// real node (plus self-edge label inflation) in each rank.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_rank_heights(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+fn build_initial_rank_pht_for_rank_heights(
   groups : Map[Int, Array[String]],
   rank_keys : Array[Int],
   all_ranks : Array[Int],
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
-  rankdir : RankDir,
-  nodesep_in : Double,
-  ranksep_in : Double,
-  has_edge_labels : Bool,
-) -> RankHeights {
+) -> Map[Int, Double] {
   let rank_pht : Map[Int, Double] = Map::new()
   for rank in all_ranks {
     rank_pht[rank] = 0.0
@@ -1055,6 +1049,35 @@ fn compute_rank_heights(
     }
     rank_pht[rank] = max_half
   }
+  rank_pht
+}
+
+
+
+///|
+/// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_rank_heights(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  all_ranks : Array[Int],
+  sizes : Map[String, NodeSize],
+  self_edge_labels : Map[String, Double],
+  rankdir : RankDir,
+  nodesep_in : Double,
+  ranksep_in : Double,
+  has_edge_labels : Bool,
+) -> RankHeights {
+  let rank_pht = build_initial_rank_pht_for_rank_heights(
+    groups,
+    rank_keys,
+    all_ranks,
+    sizes,
+    self_edge_labels,
+  )
   apply_edge_label_half_heights_for_rank_pht(
     edges,
     ranks,
