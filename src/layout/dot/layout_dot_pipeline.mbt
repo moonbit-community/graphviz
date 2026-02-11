@@ -442,6 +442,17 @@ priv struct DotRoutingSpatialAndTuningData {
 }
 
 ///|
+/// Graphviz parity: routing path-context input payload keeps prep/rank/position
+/// and cluster-bbox fields in path-context build order.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotRoutingPathContextInputs {
+  prep : LayoutPrep
+  rank_stage : DotRankStage
+  positions_state : PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+///|
 /// Graphviz parity: routing path-groups selection prefers positioned x-groups,
 /// then vnode-expanded order groups, then base order groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -488,6 +499,43 @@ fn build_routing_context_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing path-context input payload assembly reads stage
+/// fields without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_path_context_inputs_for_stage(
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  cluster_bboxes : Map[String, @geom.Rect],
+) -> DotRoutingPathContextInputs {
+  { prep, rank_stage, positions_state, cluster_bboxes }
+}
+
+///|
+/// Graphviz parity: routing path-context execution consumes typed stage payload
+/// while preserving path-group selection then context-assembly order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_routing_path_context_from_inputs(
+  routing_path_context_inputs : DotRoutingPathContextInputs,
+) -> DotRoutingPathContextData {
+  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
+  let path_groups =
+    build_path_groups_for_routing_stage(
+      routing_path_context_inputs.positions_state,
+      routing_path_context_inputs.rank_stage.ordering,
+    )
+  let routing_context =
+    build_routing_context_for_stage(
+      routing_path_context_inputs.prep,
+      routing_path_context_inputs.rank_stage,
+      routing_path_context_inputs.positions_state,
+      path_groups,
+      routing_path_context_inputs.cluster_bboxes,
+    )
+  { path_groups, routing_context }
+}
+
+///|
 /// Graphviz parity: routing path groups are selected first, then the routing
 /// context is derived from those groups and cluster bboxes.
 /// Do not change behavior without updating fixtures/tests.
@@ -497,18 +545,14 @@ fn build_routing_path_context_data_for_stage(
   positions_state : PositionResult,
   cluster_bboxes : Map[String, @geom.Rect],
 ) -> DotRoutingPathContextData {
-  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
-  let path_groups =
-    build_path_groups_for_routing_stage(positions_state, rank_stage.ordering)
-  let routing_context =
-    build_routing_context_for_stage(
+  let routing_path_context_inputs =
+    build_routing_path_context_inputs_for_stage(
       prep,
       rank_stage,
       positions_state,
-      path_groups,
       cluster_bboxes,
     )
-  { path_groups, routing_context }
+  run_routing_path_context_from_inputs(routing_path_context_inputs)
 }
 
 ///|
