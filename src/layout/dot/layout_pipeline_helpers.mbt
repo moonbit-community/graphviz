@@ -3064,6 +3064,33 @@ fn build_edge_port_offsets_from_endpoint_ports(
 }
 
 ///|
+/// Graphviz parity: port-sampling inputs reuse one endpoint remap + per-node
+/// port offset table so x-offset and order passes share identical edge context.
+/// Do not change behavior without updating fixtures/tests.
+fn build_edge_port_sampling_inputs(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (
+  Map[String, Map[String, RecordPort]],
+  Array[String],
+  Array[String],
+  Array[@cgraph.Port?],
+  Array[@cgraph.Port?],
+) {
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  let (tail_names, head_names, tail_ports, head_ports) =
+    collect_order_edge_endpoint_ports(
+      edges,
+      edge_tail,
+      edge_head,
+    )
+  (port_offsets, tail_names, head_names, tail_ports, head_ports)
+}
+
+///|
 /// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_edge_port_positions(
@@ -3076,12 +3103,13 @@ fn compute_edge_port_positions(
   if edges.length() == 0 {
     return ([], [])
   }
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let (tail_names, head_names, tail_ports, head_ports) =
-    collect_order_edge_endpoint_ports(
+  let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
+    build_edge_port_sampling_inputs(
+      nodes,
       edges,
       edge_tail,
       edge_head,
+      sizes,
     )
   build_edge_port_offsets_from_endpoint_ports(
     edges,
@@ -3149,14 +3177,15 @@ fn compute_edge_port_orders(
   if edges.length() == 0 {
     return ([], [])
   }
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
-  let (tail_names, head_names, tail_ports, head_ports) =
-    collect_order_edge_endpoint_ports(
+  let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
+    build_edge_port_sampling_inputs(
+      nodes,
       edges,
       edge_tail,
       edge_head,
+      sizes,
     )
   build_edge_port_orders_from_endpoint_ports(
     edges,
