@@ -5110,6 +5110,27 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
 }
 
 ///|
+/// Graphviz parity: root cluster-reorder derives rank keys/ranks, ordered
+/// root nodes, and order_root graph directly from root-group membership.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_rank_graph_bundle_for_cluster_reorder(
+  root_groups : Map[Int, Array[String]],
+) -> (
+  Array[Int],
+  Map[String, Int],
+  Array[String],
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+) {
+  let root_rank_keys = collect_rank_keys(root_groups)
+  let root_ranks = build_node_ranks(root_groups)
+  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let (root_graph, root_node_map) =
+    build_order_graph_and_nodes("order_root", root_nodes)
+  (root_rank_keys, root_ranks, root_nodes, root_graph, root_node_map)
+}
+
+///|
 /// Graphviz parity: root cluster-reorder context is assembled from root
 /// groups, root graph, and root nlist ordering before edge materialization.
 /// Do not change behavior without updating fixtures/tests.
@@ -5156,11 +5177,8 @@ fn build_root_cluster_reorder_context(
       vnodes_by_rank,
       vnode_order_keys_for_ordering,
     )
-  let root_rank_keys = collect_rank_keys(root_groups)
-  let root_ranks = build_node_ranks(root_groups)
-  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let (root_graph, root_node_map) =
-    build_order_graph_and_nodes("order_root", root_nodes)
+  let (root_rank_keys, root_ranks, root_nodes, root_graph, root_node_map) =
+    build_root_rank_graph_bundle_for_cluster_reorder(root_groups)
   let root_nlist_order =
     build_root_nlist_order_for_cluster_reorder(
       nlist_order,
