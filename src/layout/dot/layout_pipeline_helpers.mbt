@@ -197,6 +197,21 @@ priv struct OrderRootClusterStageData {
 }
 
 ///|
+/// Graphviz parity: clustered finalize-stage input payload keeps rank/group,
+/// cluster keys/skeleton, order sizes, and vnode ordering fields unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterFinalizeStageInputs {
+  order_rank_keys : Array[Int]
+  order_groups_for_mincross : Map[Int, Array[String]]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_sizes_out : Map[String, NodeSize]
+  ordered : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+  creation_order : Array[String]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -16284,14 +16299,7 @@ fn run_cluster_rank_order_and_finalize_stage_from_stage_inputs(
   edges_by_tail : Map[String, Array[Int]],
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
-  order_rank_keys : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  order_sizes_out : Map[String, NodeSize],
-  ordered : Map[Int, Array[String]],
-  ordered_with_vnodes : Map[Int, Array[String]],
-  creation_order : Array[String],
+  stage_inputs : ClusterFinalizeStageInputs,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   run_cluster_rank_order_and_finalize_stage(
     order_with_clusters,
@@ -16303,10 +16311,10 @@ fn run_cluster_rank_order_and_finalize_stage_from_stage_inputs(
     edge_reversed,
     nlist_order,
     ranks,
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
+    stage_inputs.order_rank_keys,
+    stage_inputs.order_groups_for_mincross,
+    stage_inputs.order_cluster_keys,
+    stage_inputs.order_cluster_skeleton,
     order_edges_by_tail_root,
     skeleton_edge_creation,
     root_edge_creation,
@@ -16315,25 +16323,64 @@ fn run_cluster_rank_order_and_finalize_stage_from_stage_inputs(
     vnode_info,
     vnode_order_keys_for_ordering,
     real_nodes,
-    order_sizes_out,
+    stage_inputs.order_sizes_out,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     local_cluster_order,
-    ordered,
-    ordered_with_vnodes,
+    stage_inputs.ordered,
+    stage_inputs.ordered_with_vnodes,
     graph,
     edge_tail_port_x,
     edge_head_port_x,
     edge_tail_port_order,
     edge_head_port_order,
-    creation_order,
+    stage_inputs.creation_order,
     edges_by_tail,
     order_sizes,
     rank_same_constraints,
   )
 }
+
+///|
+/// Graphviz parity: clustered finalize-stage tuple output is unpacked into
+/// named fields before forwarding to final cluster-rank-order dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_finalize_stage_inputs_from_stage_inputs_output(
+  stage_inputs_output : (
+    Array[Int],
+    Map[Int, Array[String]],
+    Map[String, String],
+    Map[String, Bool],
+    Map[String, NodeSize],
+    Map[Int, Array[String]],
+    Map[Int, Array[String]],
+    Array[String],
+  ),
+) -> ClusterFinalizeStageInputs {
+  let (
+    order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    order_sizes_out,
+    ordered,
+    ordered_with_vnodes,
+    creation_order,
+  ) = stage_inputs_output
+  {
+    order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    order_sizes_out,
+    ordered,
+    ordered_with_vnodes,
+    creation_order,
+  }
+}
+
 
 ///|
 /// Graphviz parity: clustered finalize pre-root dispatch reads stage-derived
@@ -16381,16 +16428,10 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root_with_stage_inputs_out
     Array[String],
   ),
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    order_sizes_out,
-    ordered,
-    ordered_with_vnodes,
-    creation_order,
-  ) = stage_inputs_output
+  let stage_inputs =
+    build_cluster_finalize_stage_inputs_from_stage_inputs_output(
+      stage_inputs_output,
+    )
   run_cluster_rank_order_and_finalize_stage_from_stage_inputs(
     order_with_clusters,
     order_with_vnodes,
@@ -16422,14 +16463,7 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root_with_stage_inputs_out
     edges_by_tail,
     order_sizes,
     rank_same_constraints,
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    order_sizes_out,
-    ordered,
-    ordered_with_vnodes,
-    creation_order,
+    stage_inputs,
   )
 }
 
