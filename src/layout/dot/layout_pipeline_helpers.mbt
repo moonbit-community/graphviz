@@ -881,6 +881,20 @@ fn build_edge_direction_and_order_maps_for_rank_data(
 
 
 ///|
+/// Graphviz parity: undirected rank preprocessing assigns all nodes rank 0,
+/// mirroring Graphviz single-rank behavior before ordering stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_undirected_zero_ranks_for_rank_data(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, Int] {
+  let base : Map[String, Int] = Map::new()
+  for node in nodes {
+    base[node.name()] = 0
+  }
+  base
+}
+
+///|
 /// Graphviz parity: directed graphs run rank.c flow, while undirected
 /// graphs stay on a single rank as in Graphviz dot preprocessing.
 /// Do not change behavior without updating fixtures/tests.
@@ -904,11 +918,7 @@ fn compute_ranks_for_rank_data(
       edge_reversed,
     )
   } else {
-    let base : Map[String, Int] = Map::new()
-    for node in nodes {
-      base[node.name()] = 0
-    }
-    base
+    build_undirected_zero_ranks_for_rank_data(nodes)
   }
 }
 
