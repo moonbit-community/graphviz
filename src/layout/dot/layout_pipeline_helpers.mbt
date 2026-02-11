@@ -8708,6 +8708,86 @@ fn build_root_mincross_reorder_stage_output(
 
 
 ///|
+/// Graphviz parity: root ReMincross rank-reorder inputs derive root-node
+/// membership, filtered edge arrays, and preferred positions in pass order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_rank_reorder_inputs(
+  order_with_vnodes : Bool,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_ranks : Map[String, Int],
+) -> (
+  Array[Int],
+  Map[String, Bool],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Double],
+) {
+  let (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes) =
+    build_root_mincross_node_membership_inputs(order_groups_for_mincross)
+  let (
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    edge_order,
+  ) =
+    build_root_mincross_edges_and_indices(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_nodes_for_mincross,
+      order_ranks,
+    )
+  let preferred_positions =
+    build_root_mincross_preferred_positions(
+      order_with_vnodes,
+      vnode_order_keys_for_ordering,
+    )
+  (
+    order_rank_keys_for_mincross,
+    mincross_nodes,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    edge_order,
+    preferred_positions,
+  )
+}
+
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -8750,9 +8830,9 @@ fn run_root_mincross_reorder(
       graphviz_in_neighbors,
       graphviz_out_neighbors,
     )
-  let (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes) =
-    build_root_mincross_node_membership_inputs(order_groups_for_mincross)
   let (
+    order_rank_keys_for_mincross,
+    mincross_nodes,
     order_edges_out_mincross,
     order_edge_tail_out_mincross,
     order_edge_head_out_mincross,
@@ -8763,9 +8843,12 @@ fn run_root_mincross_reorder(
     parents,
     children,
     edge_order,
+    preferred_positions,
   ) =
-    build_root_mincross_edges_and_indices(
-      mincross_nodes,
+    build_root_mincross_rank_reorder_inputs(
+      order_with_vnodes,
+      vnode_order_keys_for_ordering,
+      order_groups_for_mincross,
       order_edges_out,
       order_edge_tail_out,
       order_edge_head_out,
@@ -8773,13 +8856,7 @@ fn run_root_mincross_reorder(
       order_edge_head_port_x,
       order_edge_tail_port_order,
       order_edge_head_port_order,
-      order_nodes_for_mincross,
       order_ranks,
-    )
-  let preferred_positions =
-    build_root_mincross_preferred_positions(
-      order_with_vnodes,
-      vnode_order_keys_for_ordering,
     )
   let ordered_mincross =
     run_root_mincross_rank_reorder(
