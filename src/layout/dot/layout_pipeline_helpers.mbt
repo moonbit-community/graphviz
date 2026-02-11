@@ -12779,6 +12779,17 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root(
 
 
 ///|
+/// Graphviz parity: clustered pre-root/root stage output keeps stage tuple
+/// ordering unchanged before clustered finalize-phase dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_ordering_pre_root_and_root_stage_output(
+  pre_root_stage : OrderClusteredPreRootStageData,
+  root_cluster_stage : OrderRootClusterStageData,
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  (pre_root_stage, root_cluster_stage)
+}
+
+///|
 /// Graphviz parity: clustered ordering runs pre-root graph materialization
 /// before root+cluster build_ranks stage, preserving phase boundaries.
 /// Do not change behavior without updating fixtures/tests.
@@ -12850,7 +12861,10 @@ fn run_clustered_ordering_pre_root_and_root_stage(
       vnode_info,
       pre_root_stage,
     )
-  (pre_root_stage, root_cluster_stage)
+  build_clustered_ordering_pre_root_and_root_stage_output(
+    pre_root_stage,
+    root_cluster_stage,
+  )
 }
 
 ///|
