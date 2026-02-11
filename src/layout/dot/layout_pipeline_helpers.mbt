@@ -19365,6 +19365,58 @@ fn build_flat_label_vnode_augmentation_for_positions(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder seed skeleton injection appends
+/// per-rank cluster skeleton vnodes before rank-order/index materialization.
+/// Do not change behavior without updating fixtures/tests.
+fn append_cluster_skeleton_nodes_for_xpos_reorder_seed(
+  order_groups : Map[Int, Array[String]],
+  order_sizes : Map[String, NodeSize],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  cluster_meta : ClusterMetadata,
+) -> Unit {
+  // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+  let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+  for cluster, min_rank in cluster_meta.cluster_min_rank {
+    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    for rank in min_rank..=max_rank {
+      let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      order_cluster_keys[name] = cluster
+      order_cluster_skeleton[name] = true
+      order_sizes[name] = skeleton_size
+      match order_groups.get(rank) {
+        Some(list) => list.push(name)
+        None => order_groups[rank] = [name]
+      }
+    }
+  }
+}
+
+///|
+/// Graphviz parity: clustered xpos reorder seed expands grouped rank buckets
+/// into rank-ordered node arrays without filtering/reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_nodes_for_clustered_xpos_reorder_seed(
+  order_groups : Map[Int, Array[String]],
+  order_rank_keys : Array[Int],
+) -> Array[String] {
+  let order_nodes : Array[String] = []
+  for rank in order_rank_keys {
+    let names = match order_groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      order_nodes.push(name)
+    }
+  }
+  order_nodes
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder seed setup clones x-order groups,
 /// injects cluster skeleton nodes, and materializes rank/order maps.
 /// Do not change behavior without updating fixtures/tests.
@@ -19388,24 +19440,13 @@ fn build_clustered_xpos_reorder_seed_data(
     order_cluster_keys[name] = key
   }
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
-  // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-  let skeleton_size = vnode_size_from_widths(1.0, 1.0)
-  for cluster, min_rank in cluster_meta.cluster_min_rank {
-    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-      Some(value) => value
-      None => min_rank
-    }
-    for rank in min_rank..=max_rank {
-      let name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-      order_cluster_keys[name] = cluster
-      order_cluster_skeleton[name] = true
-      order_sizes[name] = skeleton_size
-      match order_groups.get(rank) {
-        Some(list) => list.push(name)
-        None => order_groups[rank] = [name]
-      }
-    }
-  }
+  append_cluster_skeleton_nodes_for_xpos_reorder_seed(
+    order_groups,
+    order_sizes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    cluster_meta,
+  )
   let order_node_order : Map[String, Int] = Map::new()
   for name, value in node_order {
     order_node_order[name] = value
@@ -19418,16 +19459,10 @@ fn build_clustered_xpos_reorder_seed_data(
   }
   let order_rank_keys = collect_rank_keys(order_groups)
   let order_ranks = build_node_ranks(order_groups)
-  let order_nodes : Array[String] = []
-  for rank in order_rank_keys {
-    let names = match order_groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for name in names {
-      order_nodes.push(name)
-    }
-  }
+  let order_nodes = build_order_nodes_for_clustered_xpos_reorder_seed(
+    order_groups,
+    order_rank_keys,
+  )
   {
     order_groups,
     order_sizes,
