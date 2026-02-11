@@ -10893,6 +10893,58 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
 
 
 ///|
+/// Graphviz parity: reorder setup derives rank-same-adjusted groups, order
+/// indices, cluster/vnode flags, flip direction, and flat-rank constraints.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_reorder_flags_and_constraints(
+  groups : Map[Int, Array[String]],
+  cluster_meta : ClusterMetadata,
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+) -> (
+  Map[Int, Array[String]],
+  Map[String, Int],
+  Bool,
+  Bool,
+  Bool,
+  Map[String, Bool],
+) {
+  let ordering_groups_base = apply_rank_same_order_with_port_override(
+    groups,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    node_order,
+    port_edge_nodes,
+  )
+  let base_order_index = build_order_index(ordering_groups_base)
+  let order_with_vnodes = vnode_count > 0
+  let order_with_clusters =
+    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
+  // Graphviz parity: GD_flip is true for horizontal rankdir (LR/RL).
+  let graphviz_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  let flat_rank_constraints =
+    build_flat_rank_constraints(
+      edge_tail,
+      edge_head,
+      ranks,
+    )
+  (
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    graphviz_flip,
+    flat_rank_constraints,
+  )
+}
+
+
+///|
 /// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
 /// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
@@ -10916,21 +10968,21 @@ fn build_ordering_reorder_setup(
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
 ) -> OrderingReorderSetup {
-  let ordering_groups_base = apply_rank_same_order_with_port_override(
-    groups,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    node_order,
-    port_edge_nodes,
-  )
-  let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = vnode_count > 0
-  let order_with_clusters =
-    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  // Graphviz parity: GD_flip is true for horizontal rankdir (LR/RL).
-  let graphviz_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let flat_rank_constraints =
-    build_flat_rank_constraints(
+  let (
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    graphviz_flip,
+    flat_rank_constraints,
+  ) =
+    build_ordering_reorder_flags_and_constraints(
+      groups,
+      cluster_meta,
+      node_order,
+      port_edge_nodes,
+      vnode_count,
+      rankdir,
       edge_tail,
       edge_head,
       ranks,
