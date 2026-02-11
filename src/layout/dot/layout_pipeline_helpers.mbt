@@ -11465,21 +11465,50 @@ fn build_ordering_edge_port_data_output(
 }
 
 ///|
-/// Graphviz parity: order-graph edge arrays preserve original edge sequence,
-/// then reuse deduplicated order edges for mincross-specific port sampling.
+/// Graphviz parity: edge-port original phase keeps original edge order map and
+/// per-edge port position/order arrays before any ordering-edge deduplication.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_edge_port_data(
+fn build_ordering_edge_port_data_original_phase(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   order_sizes : Map[String, NodeSize],
-) -> OrderingEdgePortData {
+) -> (Map[String, Int], Array[Double], Array[Double], Array[Double], Array[Double]) {
   let edge_order = collect_edge_order(edges)
   let (edge_tail_port_x, edge_head_port_x) =
     compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
   let (edge_tail_port_order, edge_head_port_order) =
     compute_edge_port_orders(nodes, edges, edge_tail, edge_head, order_sizes)
+  (
+    edge_order,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+  )
+}
+
+
+///|
+/// Graphviz parity: edge-port dedup phase derives ordering-edge arrays and
+/// recomputes port position/order samples on deduplicated ordering edges.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_edge_port_data_dedup_phase(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_sizes : Map[String, NodeSize],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
   let (order_edges, order_edge_tail, order_edge_head) =
     dedup_ordering_edges(edges, edge_tail, edge_head)
   let (order_edge_tail_port_x, order_edge_head_port_x) =
@@ -11498,6 +11527,59 @@ fn build_ordering_edge_port_data(
       order_edge_head,
       order_sizes,
     )
+  (
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  )
+}
+
+
+///|
+/// Graphviz parity: order-graph edge arrays preserve original edge sequence,
+/// then reuse deduplicated order edges for mincross-specific port sampling.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_edge_port_data(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_sizes : Map[String, NodeSize],
+) -> OrderingEdgePortData {
+  let (
+    edge_order,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+  ) =
+    build_ordering_edge_port_data_original_phase(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
+    )
+  let (
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  ) =
+    build_ordering_edge_port_data_dedup_phase(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
+    )
   build_ordering_edge_port_data_output(
     edge_order,
     edge_tail_port_x,
@@ -11513,6 +11595,7 @@ fn build_ordering_edge_port_data(
     order_edge_head_port_order,
   )
 }
+
 
 ///|
 /// Graphviz parity: class2/decompose stage output preserves edge-chain maps and
