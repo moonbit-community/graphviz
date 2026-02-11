@@ -262,6 +262,32 @@ priv struct ClusteredOrderingStageDispatchContext {
 }
 
 ///|
+/// Graphviz parity: ordering-stage dispatch context keeps clustered/non-cluster
+/// branch payload ordering unchanged before dispatch-stage gating.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingStageDispatchContext {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  runtime_context : OrderingRuntimeContext
+  dispatch_setup : OrderingDispatchSetup
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -17766,10 +17792,10 @@ fn should_run_clustered_ordering_stage(
 }
 
 ///|
-/// Graphviz parity: choose clustered/non-clustered ordering flow using the same
-/// flag gates as Graphviz (vnode/cluster mode).
+/// Graphviz parity: ordering-stage dispatch context builder preserves
+/// clustered/non-clustered branch payload ordering before dispatch.
 /// Do not change behavior without updating fixtures/tests.
-fn run_ordering_stage_dispatch(
+fn build_ordering_stage_dispatch_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -17789,48 +17815,79 @@ fn run_ordering_stage_dispatch(
   port_order_contrib : Map[String, Array[(String, Double)]],
   runtime_context : OrderingRuntimeContext,
   dispatch_setup : OrderingDispatchSetup,
+) -> OrderingStageDispatchContext {
+  {
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    rank_keys,
+    groups,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
+    dispatch_setup,
+  }
+}
+
+///|
+/// Graphviz parity: choose clustered/non-clustered ordering flow using the same
+/// flag gates as Graphviz (vnode/cluster mode).
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_stage_dispatch(
+  dispatch_context : OrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let reorder_setup = dispatch_setup.reorder_setup
+  let reorder_setup = dispatch_context.dispatch_setup.reorder_setup
   if should_run_clustered_ordering_stage(reorder_setup) {
     run_clustered_ordering_stage_from_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-      dispatch_setup,
+      dispatch_context.graph,
+      dispatch_context.nodes,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.edge_reversed,
+      dispatch_context.ranks,
+      dispatch_context.node_order,
+      dispatch_context.order_sizes,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.cluster_meta,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
+      dispatch_context.runtime_context,
+      dispatch_context.dispatch_setup,
     )
   } else {
     run_noncluster_ordering_stage_from_context(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      rank_keys,
-      groups,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      dispatch_setup,
+      dispatch_context.nodes,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.edge_out_order,
+      dispatch_context.ranks,
+      dispatch_context.rank_keys,
+      dispatch_context.groups,
+      dispatch_context.node_order,
+      dispatch_context.order_sizes,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.cluster_meta,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
+      dispatch_context.dispatch_setup,
     )
   }
 }
+
 
 ///|
 /// Graphviz parity: final ordering result output object maps ordering arrays,
@@ -17983,27 +18040,29 @@ fn run_ordering_dispatch_pipeline_stage_dispatch_phase(
   runtime_context : OrderingRuntimeContext,
   dispatch_setup : OrderingDispatchSetup,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_ordering_stage_dispatch(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    rank_keys,
-    groups,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-    dispatch_setup,
-  )
+  let stage_dispatch_context =
+    build_ordering_stage_dispatch_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      rank_keys,
+      groups,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      dispatch_setup,
+    )
+  run_ordering_stage_dispatch(stage_dispatch_context)
 }
 
 ///|
