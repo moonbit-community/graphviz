@@ -5547,6 +5547,65 @@ fn build_cluster_rank_order_from_enabled_cluster_root_inputs(
 }
 
 ///|
+/// Graphviz parity: enabled-cluster rank-order prep pulls cluster-key/vnode
+/// fields from cluster metadata before root-only reorder input assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Int],
+) {
+  build_root_cluster_reorder_inputs_for_rank_order(
+    order_with_vnodes,
+    order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_meta.cluster_keys,
+    vnode_info.edge_vnodes,
+    vnode_info.vnodes_by_rank,
+    vnode_order_keys_for_ordering,
+    nlist_order,
+    ranks,
+    skeleton_edge_creation,
+    root_edge_creation,
+    flat_rank_constraints,
+    order_edges_by_tail_root,
+  )
+}
+
+///|
 /// Graphviz parity: when cluster ordering is enabled, cluster rank-order map
 /// is built from root-only reorder inputs and root mincross output.
 /// Do not change behavior without updating fixtures/tests.
@@ -5591,7 +5650,7 @@ fn build_cluster_rank_order_when_clusters_enabled(
     root_edge_order,
     root_node_order,
   ) =
-    build_root_cluster_reorder_inputs_for_rank_order(
+    build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -5600,16 +5659,15 @@ fn build_cluster_rank_order_when_clusters_enabled(
       edges,
       edge_tail,
       edge_head,
-      cluster_meta.cluster_keys,
-      vnode_info.edge_vnodes,
-      vnode_info.vnodes_by_rank,
-      vnode_order_keys_for_ordering,
       nlist_order,
       ranks,
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
       order_edges_by_tail_root,
+      cluster_meta,
+      vnode_info,
+      vnode_order_keys_for_ordering,
     )
   build_cluster_rank_order_from_enabled_cluster_root_inputs(
     root_rank_keys,
