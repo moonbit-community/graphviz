@@ -7759,6 +7759,61 @@ fn build_clustered_remincross_multi_rank_reorder_inputs_output(
   )
 }
 
+///|
+/// Graphviz parity: clustered ReMincross multi-rank edge materialization keeps
+/// cluster-key and vnode maps sourced from stage metadata before forwarding.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_multi_rank_materialized_edges(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  rem_groups : Map[Int, Array[String]],
+) -> (
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  build_clustered_remincross_materialized_edges(
+    creation_order,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    vnode_info.edge_vnodes,
+    order_with_vnodes,
+    cluster_meta.cluster_keys,
+    order_with_clusters,
+    edges_by_tail,
+    flat_rank_constraints,
+    rem_graph,
+    rem_node_map,
+    rem_groups,
+  )
+}
+
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder inputs are built
@@ -7809,7 +7864,7 @@ fn build_clustered_remincross_multi_rank_reorder_inputs(
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
   ) =
-    build_clustered_remincross_materialized_edges(
+    build_clustered_remincross_multi_rank_materialized_edges(
       creation_order,
       edges,
       edge_tail,
@@ -7819,12 +7874,12 @@ fn build_clustered_remincross_multi_rank_reorder_inputs(
       edge_tail_port_order,
       edge_head_port_order,
       ranks,
-      vnode_info.edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
       order_with_clusters,
-      edges_by_tail,
       flat_rank_constraints,
+      edges_by_tail,
+      cluster_meta,
+      vnode_info,
       rem_graph,
       rem_node_map,
       rem_groups,
