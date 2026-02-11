@@ -9083,6 +9083,66 @@ fn build_ordering_root_and_unmapped_edge_chains(
 
 
 ///|
+/// Graphviz parity: class2 base edge-chain build follows agfstnode creation
+/// order and ND_out traversal before root/unmapped derivations.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_base_edge_chains(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  cluster_keys : Map[String, String],
+) -> (
+  Array[String],
+  Map[String, Array[Int]],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Map[String, Array[String]],
+  Array[(String, String)],
+) {
+  // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
+  let creation_order = collect_creation_order(nodes)
+  // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
+  let edges_by_tail =
+    build_edges_by_tail_from_out_order(nodes, edge_out_order)
+  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
+    build_order_edges_by_tail_graphviz(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_keys,
+      order_with_clusters,
+      false,
+      true,
+      edges_by_tail,
+    )
+  (
+    creation_order,
+    edges_by_tail,
+    order_edges_by_tail,
+    vnode_creation_by_tail,
+    order_edge_creation,
+  )
+}
+
+
+///|
 /// Graphviz parity: class2 builds ND_out edge chains in agfstnode order,
 /// then derives root/unmapped variants for clustered build_ranks passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -9111,17 +9171,19 @@ fn build_ordering_class2_edge_chain_data(
   Array[(String, String)],
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) {
-  // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
-  let creation_order = collect_creation_order(nodes)
-  // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
-  let edges_by_tail =
-    build_edges_by_tail_from_out_order(nodes, edge_out_order)
-  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
-    build_order_edges_by_tail_graphviz(
-      creation_order,
+  let (
+    creation_order,
+    edges_by_tail,
+    order_edges_by_tail,
+    vnode_creation_by_tail,
+    order_edge_creation,
+  ) =
+    build_ordering_class2_base_edge_chains(
+      nodes,
       edges,
       edge_tail,
       edge_head,
+      edge_out_order,
       edge_tail_port_x,
       edge_head_port_x,
       edge_tail_port_order,
@@ -9129,11 +9191,8 @@ fn build_ordering_class2_edge_chain_data(
       ranks,
       edge_vnodes,
       order_with_vnodes,
-      cluster_keys,
       order_with_clusters,
-      false,
-      true,
-      edges_by_tail,
+      cluster_keys,
     )
   let (
     order_edges_by_tail_root,
