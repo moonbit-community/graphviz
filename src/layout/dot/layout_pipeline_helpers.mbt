@@ -475,6 +475,30 @@ priv struct ClusteredReMincrossPassDispatchContext {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch context
+/// keeps cleanup reorder payload ordering unchanged before tuple unpack.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredReMincrossReorderStepFinalizeDispatchContext {
+  rem_rank_keys : Array[Int]
+  rem_groups : Map[Int, Array[String]]
+  rem_edges_out : Array[@cgraph.Edge]
+  rem_edge_tail_out : Array[String]
+  rem_edge_head_out : Array[String]
+  rem_edge_tail_port_x : Array[Double]
+  rem_edge_head_port_x : Array[Double]
+  rem_edge_tail_port_order : Array[Double]
+  rem_edge_head_port_order : Array[Double]
+  cluster_meta : ClusterMetadata
+  rem_node_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graphviz_flip : Bool
+  real_nodes : Map[String, Bool]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -8761,10 +8785,10 @@ fn run_clustered_remincross_reorder_step_input_phase(
 
 
 ///|
-/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch reads
-/// input-phase tuple and forwards values in Graphviz finalize-call order.
+/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch context
+/// preserves cleanup reorder arguments in Graphviz call ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
+fn build_clustered_remincross_reorder_step_finalize_dispatch_context(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
   rem_edges_out : Array[@cgraph.Edge],
@@ -8782,6 +8806,35 @@ fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
   real_nodes : Map[String, Bool],
+) -> ClusteredReMincrossReorderStepFinalizeDispatchContext {
+  {
+    rem_rank_keys,
+    rem_groups,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    cluster_meta,
+    rem_node_order,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    graphviz_flip,
+    real_nodes,
+  }
+}
+
+
+///|
+/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch reads
+/// input-phase tuple and forwards values in Graphviz finalize-call order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
+  dispatch_context : ClusteredReMincrossReorderStepFinalizeDispatchContext,
   input_phase_output : ClusteredReMincrossReorderStepInputsOutput,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (
@@ -8793,29 +8846,29 @@ fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
     rem_flat_constraints,
   ) = input_phase_output
   run_clustered_remincross_reorder_step_finalize_phase(
-    rem_rank_keys,
-    rem_groups,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
+    dispatch_context.rem_rank_keys,
+    dispatch_context.rem_groups,
+    dispatch_context.rem_edges_out,
+    dispatch_context.rem_edge_tail_out,
+    dispatch_context.rem_edge_head_out,
+    dispatch_context.rem_edge_tail_port_x,
+    dispatch_context.rem_edge_head_port_x,
+    dispatch_context.rem_edge_tail_port_order,
+    dispatch_context.rem_edge_head_port_order,
     rem_parents,
     rem_children,
     rem_cluster_keys,
-    cluster_meta,
+    dispatch_context.cluster_meta,
     rem_edge_order,
-    rem_node_order,
+    dispatch_context.rem_node_order,
     rem_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
     rem_flat_constraints,
-    graphviz_flip,
-    real_nodes,
+    dispatch_context.graphviz_flip,
+    dispatch_context.real_nodes,
   )
 }
 
@@ -8876,24 +8929,28 @@ fn run_clustered_remincross_reorder_step(
       rem_ranks,
       rem_edges_out,
     )
+  let dispatch_context =
+    build_clustered_remincross_reorder_step_finalize_dispatch_context(
+      rem_rank_keys,
+      rem_groups,
+      rem_edges_out,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_edge_tail_port_x,
+      rem_edge_head_port_x,
+      rem_edge_tail_port_order,
+      rem_edge_head_port_order,
+      cluster_meta,
+      rem_node_order,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      graphviz_flip,
+      real_nodes,
+    )
   run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
-    rem_rank_keys,
-    rem_groups,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-    cluster_meta,
-    rem_node_order,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    graphviz_flip,
-    real_nodes,
+    dispatch_context,
     input_phase_output,
   )
 }
