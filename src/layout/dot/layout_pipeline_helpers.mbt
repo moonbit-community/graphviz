@@ -5859,20 +5859,13 @@ fn build_remincross_materialized_order_graph(
 }
 
 ///|
-/// Graphviz parity: ReMincross cluster keys start from intercluster keys,
-/// map empty keys to the root graph key, and assign edge vnodes to the LCA
-/// cluster (mark_lowclusters) for cluster-boundary swap guards.
+/// Graphviz parity: ReMincross base cluster keys copy intercluster keys and
+/// map empty keys to a non-empty root ND_clust key (mark_lowclusters).
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_keys(
+fn build_remincross_cluster_keys_base(
   graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_with_vnodes : Bool,
   intercluster_keys : Map[String, String],
-  cluster_parents : Map[String, String?],
-  edge_vnodes : Map[String, Array[String]],
-) -> Map[String, String] {
+) -> (Map[String, String], String) {
   let rem_cluster_keys : Map[String, String] = Map::new()
   for name, key in intercluster_keys {
     rem_cluster_keys[name] = key
@@ -5889,6 +5882,27 @@ fn build_remincross_cluster_keys(
       rem_cluster_keys[name] = root_cluster
     }
   }
+  (rem_cluster_keys, root_cluster)
+}
+
+
+///|
+/// Graphviz parity: ReMincross cluster keys start from intercluster keys,
+/// map empty keys to the root graph key, and assign edge vnodes to the LCA
+/// cluster (mark_lowclusters) for cluster-boundary swap guards.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_cluster_keys(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_with_vnodes : Bool,
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  edge_vnodes : Map[String, Array[String]],
+) -> Map[String, String] {
+  let (rem_cluster_keys, root_cluster) =
+    build_remincross_cluster_keys_base(graph, intercluster_keys)
   if !order_with_vnodes {
     return rem_cluster_keys
   }
