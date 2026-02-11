@@ -1369,6 +1369,96 @@ fn build_cluster_local_fixed_positions_and_ranks(
 }
 
 ///|
+/// Graphviz parity: cluster-local rank groups follow global node-order seeds
+/// before running local mincross in expanded cluster context.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_rank_groups_and_order(
+  groups : Map[Int, Array[String]],
+  cluster_node_set : Map[String, Bool],
+  node_order : Map[String, Int],
+) -> (
+  Array[String],
+  Map[String, Int],
+  Map[Int, Array[String]],
+  Array[Int],
+) {
+  if cluster_node_set.length() <= 1 {
+    return ([], Map::new(), Map::new(), [])
+  }
+  let cluster_nodes : Array[String] = []
+  for name, _ in cluster_node_set {
+    cluster_nodes.push(name)
+  }
+  let cluster_node_order : Map[String, Int] = Map::new()
+  let cluster_ordered_nodes = cluster_nodes.copy()
+  if cluster_ordered_nodes.length() > 1 {
+    cluster_ordered_nodes.sort_by((a, b) => {
+      let a_idx = match node_order.get(a) {
+        Some(value) => value
+        None => 0
+      }
+      let b_idx = match node_order.get(b) {
+        Some(value) => value
+        None => 0
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else if a < b {
+        -1
+      } else if a > b {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let mut order_idx = 0
+  for name in cluster_ordered_nodes {
+    cluster_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
+  let cluster_groups : Map[Int, Array[String]] = Map::new()
+  for rank, names in groups {
+    let list : Array[String] = []
+    for name in names {
+      if cluster_node_set.get(name) is Some(_) {
+        list.push(name)
+      }
+    }
+    if list.length() > 1 {
+      list.sort_by((a, b) => {
+        let a_idx = match cluster_node_order.get(a) {
+          Some(value) => value
+          None => 0
+        }
+        let b_idx = match cluster_node_order.get(b) {
+          Some(value) => value
+          None => 0
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else if a < b {
+          -1
+        } else if a > b {
+          1
+        } else {
+          0
+        }
+      })
+    }
+    if list.length() > 0 {
+      cluster_groups[rank] = list
+    }
+  }
+  let cluster_rank_keys = collect_rank_keys(cluster_groups)
+  (cluster_nodes, cluster_node_order, cluster_groups, cluster_rank_keys)
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1436,79 +1526,17 @@ fn reorder_groups_by_cluster_build_ranks(
         }
       }
     }
-    if cluster_node_set.length() <= 1 {
-      continue
-    }
-    let cluster_nodes : Array[String] = []
-    for name, _ in cluster_node_set {
-      cluster_nodes.push(name)
-    }
-    let cluster_node_order : Map[String, Int] = Map::new()
-    let cluster_ordered_nodes = cluster_nodes.copy()
-    if cluster_ordered_nodes.length() > 1 {
-      cluster_ordered_nodes.sort_by((a, b) => {
-        let a_idx = match node_order.get(a) {
-          Some(value) => value
-          None => 0
-        }
-        let b_idx = match node_order.get(b) {
-          Some(value) => value
-          None => 0
-        }
-        if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    let mut order_idx = 0
-    for name in cluster_ordered_nodes {
-      cluster_node_order[name] = order_idx
-      order_idx = order_idx + 1
-    }
-    let cluster_groups : Map[Int, Array[String]] = Map::new()
-    for rank, names in groups {
-      let list : Array[String] = []
-      for name in names {
-        if cluster_nodes_set.get(name) is Some(_) {
-          list.push(name)
-        }
-      }
-      if list.length() > 1 {
-        list.sort_by((a, b) => {
-          let a_idx = match cluster_node_order.get(a) {
-            Some(value) => value
-            None => 0
-          }
-          let b_idx = match cluster_node_order.get(b) {
-            Some(value) => value
-            None => 0
-          }
-          if a_idx < b_idx {
-            -1
-          } else if a_idx > b_idx {
-            1
-          } else if a < b {
-            -1
-          } else if a > b {
-            1
-          } else {
-            0
-          }
-        })
-      }
-      if list.length() > 0 {
-        cluster_groups[rank] = list
-      }
-    }
-    let cluster_rank_keys = collect_rank_keys(cluster_groups)
+    let (
+      cluster_nodes,
+      cluster_node_order,
+      cluster_groups,
+      cluster_rank_keys,
+    ) =
+      build_cluster_local_rank_groups_and_order(
+        groups,
+        cluster_node_set,
+        node_order,
+      )
     if cluster_rank_keys.length() == 0 {
       continue
     }
