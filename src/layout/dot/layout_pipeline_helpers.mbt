@@ -3644,6 +3644,35 @@ fn consume_cluster_flip_name(
 }
 
 ///|
+/// Graphviz parity: flipped nlist reconstruction preserves non-cluster names
+/// and replaces cluster names by sequential consumption from reversed buckets.
+/// Do not change behavior without updating fixtures/tests.
+fn build_adjusted_nlist_order_for_cluster_flip(
+  nlist_order_raw : Array[String],
+  cluster_keys : Map[String, String],
+  cluster_reversed : Map[String, Array[String]],
+  cluster_index : Map[String, Int],
+) -> Array[String] {
+  let adjusted : Array[String] = []
+  for name in nlist_order_raw {
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      adjusted.push(name)
+    } else {
+      adjusted.push(
+        consume_cluster_flip_name(
+          cluster,
+          name,
+          cluster_reversed,
+          cluster_index,
+        ),
+      )
+    }
+  }
+  adjusted
+}
+
+///|
 /// Graphviz parity: when GD_flip is true, decompose nlist reverses node order
 /// inside each cluster while preserving cluster membership positions.
 /// Do not change behavior without updating fixtures/tests.
@@ -3662,23 +3691,12 @@ fn adjust_nlist_order_for_cluster_flip(
   )
   let (cluster_reversed, cluster_index) =
     build_cluster_reversed_nodes_and_index_for_flip(cluster_nodes)
-  let adjusted : Array[String] = []
-  for name in nlist_order_raw {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      adjusted.push(name)
-    } else {
-      adjusted.push(
-        consume_cluster_flip_name(
-          cluster,
-          name,
-          cluster_reversed,
-          cluster_index,
-        ),
-      )
-    }
-  }
-  adjusted
+  build_adjusted_nlist_order_for_cluster_flip(
+    nlist_order_raw,
+    cluster_keys,
+    cluster_reversed,
+    cluster_index,
+  )
 }
 
 ///|
