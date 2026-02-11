@@ -2834,6 +2834,26 @@ priv struct ClusterLocalReorderRunInputsContext {
   flat_constraints : Map[String, Bool]
 }
 
+///|
+/// Graphviz parity: cluster-local reorder apply dispatch context keeps
+/// tuple-independent apply-phase payload in Graphviz ordering.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReorderApplyDispatchContext {
+  groups : Map[Int, Array[String]]
+  cluster_rank_keys : Array[Int]
+  cluster_groups : Map[Int, Array[String]]
+  cluster_meta : ClusterMetadata
+  cluster_node_order : Map[String, Int]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  empty_cluster_skeleton : Map[String, Bool]
+  fixed_positions : Map[String, Double]
+  fixed_ranks : Map[String, Int]
+  cluster_node_set : Map[String, Bool]
+}
+
 
 ///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
@@ -3039,19 +3059,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
 /// tuple and forwards cluster-scoped payload in Graphviz call ordering.
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
-  groups : Map[Int, Array[String]],
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-  cluster_meta : ClusterMetadata,
-  cluster_node_order : Map[String, Int],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  empty_cluster_skeleton : Map[String, Bool],
-  fixed_positions : Map[String, Double],
-  fixed_ranks : Map[String, Int],
-  cluster_node_set : Map[String, Bool],
+  dispatch_context : ClusterLocalReorderApplyDispatchContext,
   input_phase_output : (
     Array[@cgraph.Edge],
     Array[String],
@@ -3084,9 +3092,9 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
     cluster_flat_constraints,
   ) = input_phase_output
   run_cluster_local_rank_reorder_execution_phase_apply_phase(
-    groups,
-    cluster_rank_keys,
-    cluster_groups,
+    dispatch_context.groups,
+    dispatch_context.cluster_rank_keys,
+    dispatch_context.cluster_groups,
     cluster_edges,
     cluster_edge_tail,
     cluster_edge_head,
@@ -3097,19 +3105,19 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
     parents,
     children,
     cluster_keys,
-    cluster_meta,
+    dispatch_context.cluster_meta,
     edge_order,
-    cluster_node_order,
+    dispatch_context.cluster_node_order,
     cluster_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    empty_cluster_skeleton,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    dispatch_context.empty_cluster_skeleton,
     cluster_flat_constraints,
-    fixed_positions,
-    fixed_ranks,
-    cluster_node_set,
+    dispatch_context.fixed_positions,
+    dispatch_context.fixed_ranks,
+    dispatch_context.cluster_node_set,
   )
 }
 
@@ -3159,7 +3167,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
       cluster_meta,
       vnode_info,
     )
-  run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
+  let dispatch_context : ClusterLocalReorderApplyDispatchContext = {
     groups,
     cluster_rank_keys,
     cluster_groups,
@@ -3173,6 +3181,9 @@ fn run_cluster_local_rank_reorder_execution_phase(
     fixed_positions,
     fixed_ranks,
     cluster_node_set,
+  }
+  run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
+    dispatch_context,
     input_phase_output,
   )
 }
