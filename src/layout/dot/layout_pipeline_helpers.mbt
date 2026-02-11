@@ -5383,6 +5383,40 @@ fn build_root_cluster_reorder_inputs_for_rank_order_output(
 }
 
 ///|
+/// Graphviz parity: root reorder edge-bundle phase consumes root context
+/// graph artifacts before root-only mincross input tuple assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
+  root_nlist_order : Array[String],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  root_graph : @cgraph.Graph,
+  root_node_map : Map[String, @cgraph.Node],
+  root_nodes : Array[String],
+  root_ranks : Map[String, Int],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+) {
+  build_root_cluster_reorder_edge_bundle(
+    root_nlist_order,
+    order_edges_by_tail_root,
+    root_graph,
+    root_node_map,
+    root_nodes,
+    root_ranks,
+  )
+}
+
+
+///|
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
@@ -5461,7 +5495,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
     root_children,
     root_edge_order,
   ) =
-    build_root_cluster_reorder_edge_bundle(
+    build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
       root_nlist_order,
       order_edges_by_tail_root,
       root_graph,
