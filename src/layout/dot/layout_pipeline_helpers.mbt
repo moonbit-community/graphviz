@@ -8199,6 +8199,35 @@ fn build_finalize_order_groups_with_cluster_remincross_output(
 }
 
 ///|
+/// Graphviz parity: cluster-enabled final groups apply cluster-rank ordering
+/// then local-cluster bucket ordering before clustered ReMincross refinement.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_final_groups_for_cluster_remincross(
+  final_groups : Map[Int, Array[String]],
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_keys : Map[String, String],
+  intercluster_keys : Map[String, String],
+  local_cluster_order : Map[String, Int],
+) -> Map[Int, Array[String]] {
+  let reordered =
+    reorder_rank_groups_by_cluster_rank_order(
+      final_groups,
+      cluster_rank_order,
+      cluster_keys,
+    )
+  // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
+  reorder_groups_by_local_cluster_order(
+    reordered,
+    cluster_keys,
+    intercluster_keys,
+    local_cluster_order,
+  )
+  dot_trace_groups("cleaned_groups_post", reordered)
+  reordered
+}
+
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -8242,19 +8271,13 @@ fn finalize_order_groups_with_cluster_remincross(
   let mut next_ordered_with_vnodes = ordered_with_vnodes
   if order_with_clusters {
     final_groups =
-      reorder_rank_groups_by_cluster_rank_order(
+      reorder_final_groups_for_cluster_remincross(
         final_groups,
         cluster_rank_order,
         cluster_meta.cluster_keys,
+        cluster_meta.intercluster_keys,
+        local_cluster_order,
       )
-    // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
-    reorder_groups_by_local_cluster_order(
-      final_groups,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      local_cluster_order,
-    )
-    dot_trace_groups("cleaned_groups_post", final_groups)
     let (rem_ordered_with_vnodes, rem_final_groups) =
       run_clustered_remincross_pass(
         graph,
