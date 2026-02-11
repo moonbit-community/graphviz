@@ -2931,6 +2931,38 @@ fn resolve_order_edge_names_and_ports(
 }
 
 ///|
+/// Graphviz parity: order-edge endpoint remap is computed once per edge index
+/// and reused by both port-offset and port-order passes.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_order_edge_endpoint_ports(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (Array[String], Array[String], Array[@cgraph.Port?], Array[@cgraph.Port?]) {
+  let tail_names : Array[String] = []
+  let head_names : Array[String] = []
+  let tail_ports : Array[@cgraph.Port?] = []
+  let head_ports : Array[@cgraph.Port?] = []
+  let mut idx = 0
+  while idx < edges.length() {
+    let edge = edges[idx]
+    let (tail_name, head_name, tail_port, head_port) =
+      resolve_order_edge_names_and_ports(
+        edge,
+        idx,
+        edge_tail,
+        edge_head,
+      )
+    tail_names.push(tail_name)
+    head_names.push(head_name)
+    tail_ports.push(tail_port)
+    head_ports.push(head_port)
+    idx = idx + 1
+  }
+  (tail_names, head_names, tail_ports, head_ports)
+}
+
+///|
 /// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_edge_port_positions(
@@ -2944,25 +2976,35 @@ fn compute_edge_port_positions(
     return ([], [])
   }
   let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let tail_ports : Array[Double] = []
-  let head_ports : Array[Double] = []
+  let (tail_names, head_names, tail_ports, head_ports) =
+    collect_order_edge_endpoint_ports(
+      edges,
+      edge_tail,
+      edge_head,
+    )
+  let tail_offsets : Array[Double] = []
+  let head_offsets : Array[Double] = []
   let mut idx = 0
   while idx < edges.length() {
-    let edge = edges[idx]
-    let (tail_name, head_name, tail_port, head_port) =
-      resolve_order_edge_names_and_ports(
-        edge,
-        idx,
-        edge_tail,
-        edge_head,
+    let tail_x =
+      edge_port_offset(
+        tail_names[idx],
+        tail_ports[idx],
+        port_offsets,
+        sizes,
       )
-    let tail_x = edge_port_offset(tail_name, tail_port, port_offsets, sizes)
-    let head_x = edge_port_offset(head_name, head_port, port_offsets, sizes)
-    tail_ports.push(tail_x)
-    head_ports.push(head_x)
+    let head_x =
+      edge_port_offset(
+        head_names[idx],
+        head_ports[idx],
+        port_offsets,
+        sizes,
+      )
+    tail_offsets.push(tail_x)
+    head_offsets.push(head_x)
     idx = idx + 1
   }
-  (tail_ports, head_ports)
+  (tail_offsets, head_offsets)
 }
 
 ///|
@@ -2982,20 +3024,32 @@ fn compute_edge_port_orders(
   let port_offsets = port_offsets_for_nodes(nodes, sizes)
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+  let (tail_names, head_names, tail_ports, head_ports) =
+    collect_order_edge_endpoint_ports(
+      edges,
+      edge_tail,
+      edge_head,
+    )
   let tail_orders : Array[Double] = []
   let head_orders : Array[Double] = []
   let mut idx = 0
   while idx < edges.length() {
-    let edge = edges[idx]
-    let (tail_name, head_name, tail_port, head_port) =
-      resolve_order_edge_names_and_ports(
-        edge,
-        idx,
-        edge_tail,
-        edge_head,
+    let tail_order =
+      edge_port_order(
+        tail_names[idx],
+        tail_ports[idx],
+        port_offsets,
+        sizes,
+        rankdir,
       )
-    let tail_order = edge_port_order(tail_name, tail_port, port_offsets, sizes, rankdir)
-    let head_order = edge_port_order(head_name, head_port, port_offsets, sizes, rankdir)
+    let head_order =
+      edge_port_order(
+        head_names[idx],
+        head_ports[idx],
+        port_offsets,
+        sizes,
+        rankdir,
+      )
     tail_orders.push(tail_order)
     head_orders.push(head_order)
     idx = idx + 1
