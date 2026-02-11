@@ -630,6 +630,58 @@ fn build_record_port_order_map_for_layout_inputs(
 
 
 ///|
+/// Graphviz parity: edge-side port-order contributions are accumulated from
+/// explicit record/html ports onto opposite endpoints before averaging.
+/// Do not change behavior without updating fixtures/tests.
+fn accumulate_port_order_contrib_for_layout_inputs(
+  edges : Array[@cgraph.Edge],
+  record_port_order : Map[String, Map[String, Double]],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> Map[String, (Double, Int)] {
+  let order_sum : Map[String, (Double, Int)] = Map::new()
+  let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
+    match port {
+      Some(value) =>
+        match value.name {
+          Some(port_name) =>
+            match record_port_order.get(anchor) {
+              Some(ports) =>
+                match ports.get(port_name) {
+                  Some(order) => {
+                    let (sum, count) = match order_sum.get(target) {
+                      Some(value) => value
+                      None => (0.0, 0)
+                    }
+                    order_sum[target] = (sum + order, count + 1)
+                    match port_order_contrib.get(target) {
+                      Some(list) => list.push((anchor, order))
+                      None => port_order_contrib[target] = [(anchor, order)]
+                    }
+                  }
+                  None => ()
+                }
+              None => ()
+            }
+          None => ()
+        }
+      None => ()
+    }
+  }
+  for edge in edges {
+    let tail_name = edge.tail().name()
+    let head_name = edge.head().name()
+    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+      update_order(head_name, tail_name, edge.tail_port())
+    }
+    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+      update_order(tail_name, head_name, edge.head_port())
+    }
+  }
+  order_sum
+}
+
+
+///|
 /// Graphviz parity: record/html port order hints are collected for LR/RL only
 /// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
@@ -651,45 +703,12 @@ fn build_port_order_metadata_for_layout_inputs(
         rankdir,
         record_orientation,
       )
-    let order_sum : Map[String, (Double, Int)] = Map::new()
-    let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
-      match port {
-        Some(value) =>
-          match value.name {
-            Some(port_name) =>
-              match record_port_order.get(anchor) {
-                Some(ports) =>
-                  match ports.get(port_name) {
-                    Some(order) => {
-                      let (sum, count) = match order_sum.get(target) {
-                        Some(value) => value
-                        None => (0.0, 0)
-                      }
-                      order_sum[target] = (sum + order, count + 1)
-                      match port_order_contrib.get(target) {
-                        Some(list) => list.push((anchor, order))
-                        None => port_order_contrib[target] = [(anchor, order)]
-                      }
-                    }
-                    None => ()
-                  }
-                None => ()
-              }
-            None => ()
-          }
-        None => ()
-      }
-    }
-    for edge in edges {
-      let tail_name = edge.tail().name()
-      let head_name = edge.head().name()
-      if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
-        update_order(head_name, tail_name, edge.tail_port())
-      }
-      if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
-        update_order(tail_name, head_name, edge.head_port())
-      }
-    }
+    let order_sum =
+      accumulate_port_order_contrib_for_layout_inputs(
+        edges,
+        record_port_order,
+        port_order_contrib,
+      )
     for name, entry in order_sum {
       let (sum, count) = entry
       if count > 0 {
