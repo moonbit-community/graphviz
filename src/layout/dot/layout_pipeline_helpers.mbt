@@ -825,17 +825,19 @@ fn build_edge_direction_and_order_maps_for_rank_data(
 
 
 ///|
-/// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
+/// Graphviz parity: directed graphs run rank.c flow, while undirected
+/// graphs stay on a single rank as in Graphviz dot preprocessing.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_rank_data(
+fn compute_ranks_for_rank_data(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-) -> RankData {
-  let (edge_tail, edge_head, edge_reversed, edge_out_order, edge_in_order) =
-    build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
-  let ranks = if graph.kind() == @cgraph.GraphKind::Directed {
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+) -> Map[String, Int] {
+  if graph.kind() == @cgraph.GraphKind::Directed {
     compute_ranks_directed(
       graph,
       nodes,
@@ -852,6 +854,30 @@ fn compute_rank_data(
     }
     base
   }
+}
+
+
+
+///|
+/// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_rank_data(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+) -> RankData {
+  let (edge_tail, edge_head, edge_reversed, edge_out_order, edge_in_order) =
+    build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
+  let ranks = compute_ranks_for_rank_data(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+  )
   let groups = build_rank_groups(nodes, ranks)
   let rank_keys : Array[Int] = []
   for key, _ in groups {
