@@ -335,6 +335,32 @@ priv struct ClusteredReMincrossMultiRankReorderInputsContext {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross multi-rank finalize context keeps
+/// startpass=2 cleanup payload ordering unchanged before dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredReMincrossMultiRankFinalizeContext {
+  graph : @cgraph.Graph
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  ranks : Map[String, Int]
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  order_sizes : Map[String, NodeSize]
+  rank_same_constraints : Map[String, Bool]
+  rem_rank_keys : Array[Int]
+  rem_groups : Map[Int, Array[String]]
+  real_nodes : Map[String, Bool]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graphviz_flip : Bool
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -9248,6 +9274,71 @@ fn run_clustered_remincross_multi_rank_finalize_phase(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross finalize output dispatch unpacks
+/// rematerialized reorder tuple and forwards typed payload unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_multi_rank_finalize_phase_from_reorder_inputs_output_with_context(
+  finalize_context : ClusteredReMincrossMultiRankFinalizeContext,
+  reorder_inputs_output : (
+    Map[String, Int],
+    Array[String],
+    Map[String, Int],
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+  ),
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let (
+    rem_node_order,
+    rem_nodes,
+    rem_ranks,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+  ) = reorder_inputs_output
+  run_clustered_remincross_multi_rank_finalize_phase(
+    finalize_context.graph,
+    finalize_context.edges,
+    finalize_context.edge_tail,
+    finalize_context.edge_head,
+    finalize_context.order_with_vnodes,
+    finalize_context.order_with_clusters,
+    finalize_context.ranks,
+    finalize_context.cluster_meta,
+    finalize_context.vnode_info,
+    finalize_context.order_sizes,
+    finalize_context.rank_same_constraints,
+    finalize_context.rem_rank_keys,
+    finalize_context.rem_groups,
+    rem_nodes,
+    rem_ranks,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_node_order,
+    finalize_context.real_nodes,
+    finalize_context.nodesep_pt,
+    finalize_context.has_edge_labels,
+    finalize_context.port_order_positions,
+    finalize_context.port_order_contrib,
+    finalize_context.graphviz_flip,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross multi-rank finalize dispatch reads
 /// rematerialized reorder tuple then forwards values in Graphviz call order.
 /// Do not change behavior without updating fixtures/tests.
@@ -9284,19 +9375,7 @@ fn run_clustered_remincross_multi_rank_finalize_phase_from_reorder_inputs_output
     Array[Double],
   ),
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (
-    rem_node_order,
-    rem_nodes,
-    rem_ranks,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-  ) = reorder_inputs_output
-  run_clustered_remincross_multi_rank_finalize_phase(
+  let finalize_context : ClusteredReMincrossMultiRankFinalizeContext = {
     graph,
     edges,
     edge_tail,
@@ -9310,22 +9389,16 @@ fn run_clustered_remincross_multi_rank_finalize_phase_from_reorder_inputs_output
     rank_same_constraints,
     rem_rank_keys,
     rem_groups,
-    rem_nodes,
-    rem_ranks,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-    rem_node_order,
     real_nodes,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     graphviz_flip,
+  }
+  run_clustered_remincross_multi_rank_finalize_phase_from_reorder_inputs_output_with_context(
+    finalize_context,
+    reorder_inputs_output,
   )
 }
 
