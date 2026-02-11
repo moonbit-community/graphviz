@@ -3285,6 +3285,22 @@ fn append_order_creation_name_if_absent(
 }
 
 ///|
+/// Graphviz parity: vnode creation order is the stable subsequence of
+/// order_creation names prefixed with EDGE_VNODE_PREFIX.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_vnode_creation_order_from_order_creation(
+  order_creation : Array[String],
+) -> Array[String] {
+  let vnode_creation_order : Array[String] = []
+  for name in order_creation {
+    if name.has_prefix(EDGE_VNODE_PREFIX) {
+      vnode_creation_order.push(name)
+    }
+  }
+  vnode_creation_order
+}
+
+///|
 /// Graphviz parity: class2 order_creation starts with cluster skeletons, then
 /// agfstnode real nodes interleaved with edge-vnodes per tail.
 /// Do not change behavior without updating fixtures/tests.
@@ -3320,12 +3336,8 @@ fn build_order_creation_with_vnodes(
       )
     }
   }
-  let vnode_creation_order : Array[String] = []
-  for name in order_creation {
-    if name.has_prefix(EDGE_VNODE_PREFIX) {
-      vnode_creation_order.push(name)
-    }
-  }
+  let vnode_creation_order =
+    collect_vnode_creation_order_from_order_creation(order_creation)
   (order_creation, vnode_creation_order)
 }
 
