@@ -411,6 +411,19 @@ priv struct DotRoutingEdgeSolveInputs {
 }
 
 ///|
+/// Graphviz parity: routing edge/padding input payload keeps graph/prep/rank/
+/// position and spatial+tuning fields in stage call order.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotRoutingEdgesAndPaddingInputs {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_stage : DotRankStage
+  positions_state : PositionResult
+  routing_spatial_data : DotRoutingSpatialData
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData
+}
+
+///|
 priv struct DotRoutingSpatialAndTuningData {
   routing_spatial_data : DotRoutingSpatialData
   routing_label_and_tuning_data : DotRoutingLabelAndTuningData
@@ -893,6 +906,59 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing edge/padding input payload assembly reads stage
+/// routing fields without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_and_padding_inputs_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+) -> DotRoutingEdgesAndPaddingInputs {
+  {
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+    routing_spatial_data,
+    routing_label_and_tuning_data,
+  }
+}
+
+///|
+/// Graphviz parity: routing edge/padding execution consumes typed stage payload
+/// while preserving precompute->edge-solve->output order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_routing_edges_and_padding_from_inputs(
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
+) -> DotRoutingEdgesAndPaddingData {
+  let routing_edge_solve_precompute_data =
+    build_routing_edge_solve_precompute_data_for_stage(
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data,
+      routing_inputs.routing_label_and_tuning_data,
+    )
+  let edges_out =
+    build_routing_edges_from_edge_solve_precompute_data_for_stage(
+      routing_inputs.graph,
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data,
+      routing_inputs.routing_label_and_tuning_data,
+      routing_edge_solve_precompute_data,
+    )
+  build_routing_edges_and_padding_output_for_stage(
+    edges_out,
+    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
+  )
+}
+
+///|
 /// Graphviz parity: routing edge/padding substage derives metrics, path
 /// context, and routed edges from spatial+tuning data in fixed order.
 /// Do not change behavior without updating fixtures/tests.
@@ -904,28 +970,16 @@ fn build_routing_edges_and_padding_data_for_stage(
   routing_spatial_data : DotRoutingSpatialData,
   routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
 ) -> DotRoutingEdgesAndPaddingData {
-  let routing_edge_solve_precompute_data =
-    build_routing_edge_solve_precompute_data_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_data,
-      routing_label_and_tuning_data,
-    )
-  let edges_out =
-    build_routing_edges_from_edge_solve_precompute_data_for_stage(
+  let routing_inputs =
+    build_routing_edges_and_padding_inputs_for_stage(
       graph,
       prep,
       rank_stage,
       positions_state,
       routing_spatial_data,
       routing_label_and_tuning_data,
-      routing_edge_solve_precompute_data,
     )
-  build_routing_edges_and_padding_output_for_stage(
-    edges_out,
-    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
-  )
+  run_routing_edges_and_padding_from_inputs(routing_inputs)
 }
 
 ///|
