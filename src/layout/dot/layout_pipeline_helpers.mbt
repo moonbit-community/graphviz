@@ -362,6 +362,31 @@ priv struct OrderingDispatchPipelineContext {
 }
 
 ///|
+/// Graphviz parity: ordering+vnode compute input payload keeps ordering/rank/
+/// port fields in Graphviz compute_ordering_and_vnodes call sequence.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingAndVnodesInputs {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
 /// Graphviz parity: clustered pre-root reorder/materialization context keeps
 /// stage payload ordering unchanged before reorder/materialize dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -18368,6 +18393,98 @@ fn build_ordering_runtime_context_from_ordering_inputs(
 
 
 ///|
+/// Graphviz parity: ordering+vnode input payload assembly reads ordering stage
+/// inputs without argument reordering before runtime/pipeline dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_and_vnodes_inputs(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> OrderingAndVnodesInputs {
+  {
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    groups,
+    rank_keys,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    rankdir,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+  }
+}
+
+///|
+/// Graphviz parity: ordering+vnode execution consumes typed input payload and
+/// preserves runtime-context + dispatch-pipeline stage ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_compute_ordering_and_vnodes_from_inputs(
+  ordering_inputs : OrderingAndVnodesInputs,
+) -> OrderingResult {
+  let runtime_context =
+    build_ordering_runtime_context_from_ordering_inputs(
+      ordering_inputs.graph,
+      ordering_inputs.nodes,
+      ordering_inputs.edges,
+      ordering_inputs.edge_tail,
+      ordering_inputs.edge_head,
+      ordering_inputs.edge_out_order,
+      ordering_inputs.ranks,
+      ordering_inputs.node_order,
+      ordering_inputs.nodesep_pt,
+      ordering_inputs.rankdir,
+      ordering_inputs.cluster_meta,
+    )
+  let pipeline_context =
+    build_ordering_dispatch_pipeline_context_from_ordering_inputs(
+      ordering_inputs.graph,
+      ordering_inputs.nodes,
+      ordering_inputs.edges,
+      ordering_inputs.edge_tail,
+      ordering_inputs.edge_head,
+      ordering_inputs.edge_reversed,
+      ordering_inputs.edge_out_order,
+      ordering_inputs.ranks,
+      ordering_inputs.groups,
+      ordering_inputs.rank_keys,
+      ordering_inputs.node_order,
+      ordering_inputs.order_sizes,
+      ordering_inputs.nodesep_pt,
+      ordering_inputs.has_edge_labels,
+      ordering_inputs.rankdir,
+      ordering_inputs.cluster_meta,
+      ordering_inputs.port_order_positions,
+      ordering_inputs.port_order_contrib,
+      runtime_context,
+    )
+  run_ordering_dispatch_pipeline(pipeline_context)
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -18390,22 +18507,8 @@ fn compute_ordering_and_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
-  let runtime_context =
-    build_ordering_runtime_context_from_ordering_inputs(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      node_order,
-      nodesep_pt,
-      rankdir,
-      cluster_meta,
-    )
-  let pipeline_context =
-    build_ordering_dispatch_pipeline_context_from_ordering_inputs(
+  let ordering_inputs =
+    build_ordering_and_vnodes_inputs(
       graph,
       nodes,
       edges,
@@ -18424,9 +18527,8 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
-      runtime_context,
     )
-  run_ordering_dispatch_pipeline(pipeline_context)
+  run_compute_ordering_and_vnodes_from_inputs(ordering_inputs)
 }
 
 ///|
