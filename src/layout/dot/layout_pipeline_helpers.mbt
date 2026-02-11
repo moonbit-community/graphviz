@@ -313,6 +313,28 @@ priv struct RootClusterRootReorderContext {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross multi-rank reorder-input context keeps
+/// materialization flags, edge arrays, and metadata payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredReMincrossMultiRankReorderInputsContext {
+  creation_order : Array[String]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  ranks : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  flat_rank_constraints : Map[String, Bool]
+  edges_by_tail : Map[String, Array[Int]]
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -8897,21 +8919,7 @@ fn build_clustered_remincross_multi_rank_materialized_edges(
 /// edge arrays seeded from GD_nlist order.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_remincross_multi_rank_reorder_inputs(
-  creation_order : Array[String],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  edges_by_tail : Map[String, Array[Int]],
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  input_context : ClusteredReMincrossMultiRankReorderInputsContext,
   rem_groups : Map[Int, Array[String]],
   rem_rank_keys : Array[Int],
 ) -> (
@@ -8941,21 +8949,21 @@ fn build_clustered_remincross_multi_rank_reorder_inputs(
     rem_edge_head_port_order,
   ) =
     build_clustered_remincross_multi_rank_materialized_edges(
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      order_with_vnodes,
-      order_with_clusters,
-      flat_rank_constraints,
-      edges_by_tail,
-      cluster_meta,
-      vnode_info,
+      input_context.creation_order,
+      input_context.edges,
+      input_context.edge_tail,
+      input_context.edge_head,
+      input_context.edge_tail_port_x,
+      input_context.edge_head_port_x,
+      input_context.edge_tail_port_order,
+      input_context.edge_head_port_order,
+      input_context.ranks,
+      input_context.order_with_vnodes,
+      input_context.order_with_clusters,
+      input_context.flat_rank_constraints,
+      input_context.edges_by_tail,
+      input_context.cluster_meta,
+      input_context.vnode_info,
       rem_graph,
       rem_node_map,
       rem_groups,
@@ -9077,7 +9085,7 @@ fn build_clustered_remincross_multi_rank_reorder_inputs_phase(
   Array[Double],
   Array[Double],
 ) {
-  build_clustered_remincross_multi_rank_reorder_inputs(
+  let input_context : ClusteredReMincrossMultiRankReorderInputsContext = {
     creation_order,
     edges,
     edge_tail,
@@ -9093,6 +9101,9 @@ fn build_clustered_remincross_multi_rank_reorder_inputs_phase(
     edges_by_tail,
     cluster_meta,
     vnode_info,
+  }
+  build_clustered_remincross_multi_rank_reorder_inputs(
+    input_context,
     rem_groups,
     rem_rank_keys,
   )
