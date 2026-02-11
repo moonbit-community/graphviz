@@ -787,6 +787,38 @@ priv struct NonclusterXposReorderInputs {
 }
 
 ///|
+/// Graphviz parity: non-cluster ordering stage dispatch context keeps
+/// single-pass mincross payload ordering unchanged before stage helpers.
+/// Do not change behavior without updating fixtures/tests.
+priv struct NonclusterOrderingStageDispatchContext {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  cluster_meta : ClusterMetadata
+  edge_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graphviz_flip : Bool
+}
+
+///|
 priv struct XposTransposeCleanupInputs {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
@@ -17385,7 +17417,7 @@ fn build_noncluster_ordering_stage_output(
 /// Graphviz parity: non-clustered ordering path still runs the single mincross
 /// pass directly (matching Graphviz control flow).
 /// Do not change behavior without updating fixtures/tests.
-fn run_noncluster_ordering_stage(
+fn build_noncluster_ordering_stage_dispatch_context(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -17411,34 +17443,70 @@ fn run_noncluster_ordering_stage(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
+) -> NonclusterOrderingStageDispatchContext {
+  {
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_out_order,
+    ranks,
+    rank_keys,
+    groups,
+    nlist_order,
+    node_order,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    cluster_meta,
+    edge_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    graphviz_flip,
+  }
+}
+
+///|
+/// Graphviz parity: non-clustered ordering path still runs the single mincross
+/// pass directly (matching Graphviz control flow).
+/// Do not change behavior without updating fixtures/tests.
+fn run_noncluster_ordering_stage(
+  dispatch_context : NonclusterOrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let ordered_groups =
     run_noncluster_reorder_pass(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      rank_keys,
-      groups,
-      nlist_order,
-      node_order,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_meta,
-      edge_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      graphviz_flip,
+      dispatch_context.nodes,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.edge_out_order,
+      dispatch_context.ranks,
+      dispatch_context.rank_keys,
+      dispatch_context.groups,
+      dispatch_context.nlist_order,
+      dispatch_context.node_order,
+      dispatch_context.order_edges,
+      dispatch_context.order_edge_tail,
+      dispatch_context.order_edge_head,
+      dispatch_context.order_edge_tail_port_x,
+      dispatch_context.order_edge_head_port_x,
+      dispatch_context.order_edge_tail_port_order,
+      dispatch_context.order_edge_head_port_order,
+      dispatch_context.cluster_meta,
+      dispatch_context.edge_order,
+      dispatch_context.order_sizes,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
+      dispatch_context.graphviz_flip,
     )
   build_noncluster_ordering_stage_output(ordered_groups)
 }
@@ -17527,33 +17595,35 @@ fn run_noncluster_ordering_stage_from_context(
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (edge_port_data, reorder_setup, class2_data) =
     unpack_ordering_dispatch_setup(dispatch_setup)
-  run_noncluster_ordering_stage(
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_out_order,
-    ranks,
-    rank_keys,
-    groups,
-    class2_data.nlist_order,
-    node_order,
-    edge_port_data.order_edges,
-    edge_port_data.order_edge_tail,
-    edge_port_data.order_edge_head,
-    edge_port_data.order_edge_tail_port_x,
-    edge_port_data.order_edge_head_port_x,
-    edge_port_data.order_edge_tail_port_order,
-    edge_port_data.order_edge_head_port_order,
-    cluster_meta,
-    edge_port_data.edge_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    reorder_setup.graphviz_flip,
-  )
+  let dispatch_context =
+    build_noncluster_ordering_stage_dispatch_context(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      rank_keys,
+      groups,
+      class2_data.nlist_order,
+      node_order,
+      edge_port_data.order_edges,
+      edge_port_data.order_edge_tail,
+      edge_port_data.order_edge_head,
+      edge_port_data.order_edge_tail_port_x,
+      edge_port_data.order_edge_head_port_x,
+      edge_port_data.order_edge_tail_port_order,
+      edge_port_data.order_edge_head_port_order,
+      cluster_meta,
+      edge_port_data.edge_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      reorder_setup.graphviz_flip,
+    )
+  run_noncluster_ordering_stage(dispatch_context)
 }
 
 ///|
