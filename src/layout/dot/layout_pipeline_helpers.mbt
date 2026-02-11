@@ -237,6 +237,31 @@ priv struct ClusteredOrderingPreRootAndRootPhaseContext {
 }
 
 ///|
+/// Graphviz parity: clustered ordering stage dispatch context keeps complete
+/// clustered ordering payload ordering unchanged before stage execution.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredOrderingStageDispatchContext {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
+  class2_data : OrderingClass2Data
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -17354,10 +17379,10 @@ fn run_clustered_ordering_stage_output_phase_from_stage_output(
 
 
 ///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
+/// Graphviz parity: clustered ordering stage dispatch context builder keeps
+/// full clustered stage payload ordering unchanged before stage execution.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage(
+fn build_clustered_ordering_stage_dispatch_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -17376,50 +17401,79 @@ fn run_clustered_ordering_stage(
   edge_port_data : OrderingEdgePortData,
   reorder_setup : OrderingReorderSetup,
   class2_data : OrderingClass2Data,
+) -> ClusteredOrderingStageDispatchContext {
+  {
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    ranks,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
+    edge_port_data,
+    reorder_setup,
+    class2_data,
+  }
+}
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage(
+  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let phase_context =
     build_clustered_ordering_stage_pre_root_and_root_phase_context(
-      graph,
-      nodes,
-      edge_tail,
-      edge_head,
-      ranks,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-      reorder_setup,
-      class2_data,
+      stage_dispatch_context.graph,
+      stage_dispatch_context.nodes,
+      stage_dispatch_context.edge_tail,
+      stage_dispatch_context.edge_head,
+      stage_dispatch_context.ranks,
+      stage_dispatch_context.node_order,
+      stage_dispatch_context.order_sizes,
+      stage_dispatch_context.nodesep_pt,
+      stage_dispatch_context.has_edge_labels,
+      stage_dispatch_context.cluster_meta,
+      stage_dispatch_context.port_order_positions,
+      stage_dispatch_context.port_order_contrib,
+      stage_dispatch_context.runtime_context,
+      stage_dispatch_context.reorder_setup,
+      stage_dispatch_context.class2_data,
     )
   let stage_output =
     run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
       phase_context,
     )
-  let dispatch_context =
+  let finalize_dispatch_context =
     build_clustered_ordering_stage_output_phase_dispatch_context(
-      graph,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-      edge_port_data,
-      reorder_setup,
-      class2_data,
+      stage_dispatch_context.graph,
+      stage_dispatch_context.edges,
+      stage_dispatch_context.edge_tail,
+      stage_dispatch_context.edge_head,
+      stage_dispatch_context.edge_reversed,
+      stage_dispatch_context.ranks,
+      stage_dispatch_context.order_sizes,
+      stage_dispatch_context.nodesep_pt,
+      stage_dispatch_context.has_edge_labels,
+      stage_dispatch_context.cluster_meta,
+      stage_dispatch_context.port_order_positions,
+      stage_dispatch_context.port_order_contrib,
+      stage_dispatch_context.runtime_context,
+      stage_dispatch_context.edge_port_data,
+      stage_dispatch_context.reorder_setup,
+      stage_dispatch_context.class2_data,
     )
   run_clustered_ordering_stage_output_phase_from_stage_output(
-    dispatch_context,
+    finalize_dispatch_context,
     stage_output,
   )
 }
@@ -17583,26 +17637,28 @@ fn run_clustered_ordering_stage_from_context(
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (edge_port_data, reorder_setup, class2_data) =
     unpack_ordering_dispatch_setup(dispatch_setup)
-  run_clustered_ordering_stage(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    ranks,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-    edge_port_data,
-    reorder_setup,
-    class2_data,
-  )
+  let stage_dispatch_context =
+    build_clustered_ordering_stage_dispatch_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      edge_port_data,
+      reorder_setup,
+      class2_data,
+    )
+  run_clustered_ordering_stage(stage_dispatch_context)
 }
 
 ///|
