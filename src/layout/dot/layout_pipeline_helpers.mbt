@@ -1764,6 +1764,27 @@ fn build_local_cluster_order(
 }
 
 ///|
+/// Graphviz parity: cluster parent lookup prefers explicit traversal hints
+/// and falls back to collected parent graph edges.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_cluster_parent_for_order(
+  cluster : String,
+  parents : Map[String, String?],
+  fallback_parents : Map[String, String?],
+) -> String? {
+  match parents.get(cluster) {
+    Some(value) => value
+    None =>
+      match fallback_parents.get(cluster) {
+        Some(value) => value
+        None => None
+      }
+  }
+}
+
+
+
+///|
 fn cluster_depth_for_order(
   cluster : String,
   parents : Map[String, String?],
@@ -1774,14 +1795,7 @@ fn cluster_depth_for_order(
     Some(value) => value
     None => {
       let parent_opt =
-        match parents.get(cluster) {
-          Some(value) => value
-          None =>
-            match fallback_parents.get(cluster) {
-              Some(value) => value
-              None => None
-            }
-        }
+        resolve_cluster_parent_for_order(cluster, parents, fallback_parents)
       let depth = match parent_opt {
         Some(parent) => cluster_depth_for_order(parent, parents, fallback_parents, memo) + 1
         None => 0
