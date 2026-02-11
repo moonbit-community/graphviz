@@ -5131,6 +5131,41 @@ fn build_root_rank_graph_bundle_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
+/// root-node order map from the same root graph/group membership snapshot.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_nlist_and_node_order_for_cluster_reorder(
+  nlist_order : Array[String],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  root_nodes : Array[String],
+  root_node_map : Map[String, @cgraph.Node],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  root_groups : Map[Int, Array[String]],
+) -> (Array[String], Map[String, Int]) {
+  let root_nlist_order =
+    build_root_nlist_order_for_cluster_reorder(
+      nlist_order,
+      cluster_keys,
+      ranks,
+      root_nodes,
+      root_node_map,
+      skeleton_edge_creation,
+      root_edge_creation,
+      flat_rank_constraints,
+    )
+  let root_node_order =
+    build_order_node_order_from_nlist_and_groups(
+      root_nlist_order,
+      root_node_map,
+      root_groups,
+    )
+  (root_nlist_order, root_node_order)
+}
+
+///|
 /// Graphviz parity: root cluster-reorder context is assembled from root
 /// groups, root graph, and root nlist ordering before edge materialization.
 /// Do not change behavior without updating fixtures/tests.
@@ -5179,8 +5214,8 @@ fn build_root_cluster_reorder_context(
     )
   let (root_rank_keys, root_ranks, root_nodes, root_graph, root_node_map) =
     build_root_rank_graph_bundle_for_cluster_reorder(root_groups)
-  let root_nlist_order =
-    build_root_nlist_order_for_cluster_reorder(
+  let (root_nlist_order, root_node_order) =
+    build_root_nlist_and_node_order_for_cluster_reorder(
       nlist_order,
       cluster_keys,
       ranks,
@@ -5189,11 +5224,6 @@ fn build_root_cluster_reorder_context(
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
-    )
-  let root_node_order =
-    build_order_node_order_from_nlist_and_groups(
-      root_nlist_order,
-      root_node_map,
       root_groups,
     )
   (
