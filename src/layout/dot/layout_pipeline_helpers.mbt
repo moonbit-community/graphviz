@@ -1621,6 +1621,40 @@ fn build_cluster_local_reorder_metadata(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder writes only cluster members back to
+/// existing rank slots, preserving non-cluster node positions.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_cluster_local_rank_order_to_groups(
+  groups : Map[Int, Array[String]],
+  cluster_rank_keys : Array[Int],
+  ordered_cluster : Map[Int, Array[String]],
+  cluster_node_set : Map[String, Bool],
+) -> Unit {
+  for rank in cluster_rank_keys {
+    let desired = match ordered_cluster.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if desired.length() <= 1 {
+      continue
+    }
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => continue
+    }
+    let mut idx = 0
+    let mut pos = 0
+    while pos < names.length() && idx < desired.length() {
+      if cluster_node_set.get(names[pos]) is Some(_) {
+        names[pos] = desired[idx]
+        idx = idx + 1
+      }
+      pos = pos + 1
+    }
+  }
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1758,28 +1792,12 @@ fn reorder_groups_by_cluster_build_ranks(
       graphviz_flip=false,
       startpass=2,
     )
-    for rank in cluster_rank_keys {
-      let desired = match ordered_cluster.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      if desired.length() <= 1 {
-        continue
-      }
-      let names = match groups.get(rank) {
-        Some(list) => list
-        None => continue
-      }
-      let mut idx = 0
-      let mut pos = 0
-      while pos < names.length() && idx < desired.length() {
-        if cluster_node_set.get(names[pos]) is Some(_) {
-          names[pos] = desired[idx]
-          idx = idx + 1
-        }
-        pos = pos + 1
-      }
-    }
+    apply_cluster_local_rank_order_to_groups(
+      groups,
+      cluster_rank_keys,
+      ordered_cluster,
+      cluster_node_set,
+    )
   }
 }
 
