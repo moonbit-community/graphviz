@@ -9470,6 +9470,41 @@ fn build_ordering_class2_base_edge_chains(
 
 
 ///|
+/// Graphviz parity: class2 edge-chain data output preserves tuple field order
+/// consumed by subsequent build_ranks + ordering preprocessing stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_edge_chain_data_output(
+  creation_order : Array[String],
+  edges_by_tail : Map[String, Array[Int]],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  vnode_creation_by_tail : Map[String, Array[String]],
+  order_edge_creation : Array[(String, String)],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  root_edge_creation : Array[(String, String)],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> (
+  Array[String],
+  Map[String, Array[Int]],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Map[String, Array[String]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) {
+  (
+    creation_order,
+    edges_by_tail,
+    order_edges_by_tail,
+    vnode_creation_by_tail,
+    order_edge_creation,
+    order_edges_by_tail_root,
+    root_edge_creation,
+    order_edges_by_tail_unmapped,
+  )
+}
+
+///|
 /// Graphviz parity: class2 builds ND_out edge chains in agfstnode order,
 /// then derives root/unmapped variants for clustered build_ranks passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -9544,7 +9579,7 @@ fn build_ordering_class2_edge_chain_data(
       cluster_keys,
       edges_by_tail,
     )
-  (
+  build_ordering_class2_edge_chain_data_output(
     creation_order,
     edges_by_tail,
     order_edges_by_tail,
