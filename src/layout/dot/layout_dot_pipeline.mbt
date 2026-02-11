@@ -724,6 +724,31 @@ fn build_routing_edges_from_precomputed_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: routed-edge solve dispatch reads grouped edge-solve
+/// precompute payload without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
+) -> Array[DotLayoutEdge] {
+  build_routing_edges_from_precomputed_data_for_stage(
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+    routing_spatial_data,
+    routing_label_and_tuning_data,
+    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
+    routing_edge_solve_precompute_data.routing_path_context_data,
+  )
+}
+
+///|
 /// Graphviz parity: routing edge-solve precompute output object maps metric
 /// and path-context bundles without additional transforms.
 /// Do not change behavior without updating fixtures/tests.
@@ -787,15 +812,14 @@ fn build_routing_edges_and_padding_data_for_stage(
       routing_label_and_tuning_data,
     )
   let edges_out =
-    build_routing_edges_from_precomputed_data_for_stage(
+    build_routing_edges_from_edge_solve_precompute_data_for_stage(
       graph,
       prep,
       rank_stage,
       positions_state,
       routing_spatial_data,
       routing_label_and_tuning_data,
-      routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
-      routing_edge_solve_precompute_data.routing_path_context_data,
+      routing_edge_solve_precompute_data,
     )
   build_routing_edges_and_padding_output_for_stage(
     edges_out,
