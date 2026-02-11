@@ -3250,6 +3250,22 @@ fn build_empty_graphviz_neighbor_maps(
 }
 
 ///|
+/// Graphviz parity: ND_in map assignment replays AGSEQ-derived head buckets
+/// directly onto pre-seeded neighbor maps.
+/// Do not change behavior without updating fixtures/tests.
+fn assign_graphviz_in_neighbors_from_edge_sequence(
+  graphviz_in_neighbors : Map[String, Array[String]],
+  edge_creation_order : Array[(String, String)],
+) -> Unit {
+  let in_entries = build_graphviz_in_entries_from_edge_sequence(
+    edge_creation_order,
+  )
+  for head, entries in in_entries {
+    graphviz_in_neighbors[head] = entries
+  }
+}
+
+///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_neighbor_maps(
@@ -3262,12 +3278,10 @@ fn build_graphviz_neighbor_maps(
   for tail, entries in order_edges_by_tail {
     graphviz_out_neighbors[tail] = collect_graphviz_out_heads(entries)
   }
-  let in_entries = build_graphviz_in_entries_from_edge_sequence(
+  assign_graphviz_in_neighbors_from_edge_sequence(
+    graphviz_in_neighbors,
     edge_creation_order,
   )
-  for head, entries in in_entries {
-    graphviz_in_neighbors[head] = entries
-  }
   (graphviz_out_neighbors, graphviz_in_neighbors)
 }
 
