@@ -3494,6 +3494,34 @@ fn collect_vnode_creation_order_from_order_creation(
 }
 
 ///|
+/// Graphviz parity: each real-node tail emits itself first, followed by its
+/// per-tail vnode sequence, while preserving first-seen dedup semantics.
+/// Do not change behavior without updating fixtures/tests.
+fn append_order_creation_tail_and_vnodes(
+  order_creation : Array[String],
+  order_seen : Map[String, Bool],
+  tail_name : String,
+  vnode_creation_by_tail : Map[String, Array[String]],
+) -> Unit {
+  append_order_creation_name_if_absent(
+    order_creation,
+    order_seen,
+    tail_name,
+  )
+  let vnodes = match vnode_creation_by_tail.get(tail_name) {
+    Some(list) => list
+    None => []
+  }
+  for vnode in vnodes {
+    append_order_creation_name_if_absent(
+      order_creation,
+      order_seen,
+      vnode,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: class2 order_creation starts with cluster skeletons, then
 /// agfstnode real nodes interleaved with edge-vnodes per tail.
 /// Do not change behavior without updating fixtures/tests.
@@ -3512,22 +3540,12 @@ fn build_order_creation_with_vnodes(
     )
   }
   for tail_name in creation_order {
-    append_order_creation_name_if_absent(
+    append_order_creation_tail_and_vnodes(
       order_creation,
       order_seen,
       tail_name,
+      vnode_creation_by_tail,
     )
-    let vnodes = match vnode_creation_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for vnode in vnodes {
-      append_order_creation_name_if_absent(
-        order_creation,
-        order_seen,
-        vnode,
-      )
-    }
   }
   let vnode_creation_order =
     collect_vnode_creation_order_from_order_creation(order_creation)
