@@ -814,6 +814,37 @@ fn prepare_layout_inputs(
 }
 
 ///|
+/// Graphviz parity: undirected graphs seed in/out edge-order buckets in
+/// original endpoint order from edge_endpoints_from_edges.
+/// Do not change behavior without updating fixtures/tests.
+fn build_undirected_edge_order_maps_for_rank_data(
+  nodes : Array[@cgraph.Node],
+  tail : Array[String],
+  head : Array[String],
+) -> (Map[String, Array[Int]], Map[String, Array[Int]]) {
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_in_order : Map[String, Array[Int]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    edge_out_order[name] = []
+    edge_in_order[name] = []
+  }
+  for i in 0..<tail.length() {
+    let t = tail[i]
+    let h = head[i]
+    match edge_out_order.get(t) {
+      Some(list) => list.push(i)
+      None => edge_out_order[t] = [i]
+    }
+    match edge_in_order.get(h) {
+      Some(list) => list.push(i)
+      None => edge_in_order[h] = [i]
+    }
+  }
+  (edge_out_order, edge_in_order)
+}
+
+///|
 /// Graphviz parity: directed edge direction/order comes from acyclic.c,
 /// while undirected graphs seed in/out orders by original edge endpoints.
 /// Do not change behavior without updating fixtures/tests.
@@ -828,9 +859,9 @@ fn build_edge_direction_and_order_maps_for_rank_data(
   Map[String, Array[Int]],
   Map[String, Array[Int]],
 ) {
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let edge_in_order : Map[String, Array[Int]] = Map::new()
   if graph.kind() == @cgraph.GraphKind::Directed {
+    let edge_out_order : Map[String, Array[Int]] = Map::new()
+    let edge_in_order : Map[String, Array[Int]] = Map::new()
     let (tail, head, reversed, out_edges, in_edges) =
       acyclic_edge_directions_with_order(graph, nodes, edges)
     for i in 0..<nodes.length() {
@@ -841,23 +872,8 @@ fn build_edge_direction_and_order_maps_for_rank_data(
     (tail, head, reversed, edge_out_order, edge_in_order)
   } else {
     let (tail, head, reversed) = edge_endpoints_from_edges(edges)
-    for node in nodes {
-      let name = node.name()
-      edge_out_order[name] = []
-      edge_in_order[name] = []
-    }
-    for i in 0..<tail.length() {
-      let t = tail[i]
-      let h = head[i]
-      match edge_out_order.get(t) {
-        Some(list) => list.push(i)
-        None => edge_out_order[t] = [i]
-      }
-      match edge_in_order.get(h) {
-        Some(list) => list.push(i)
-        None => edge_in_order[h] = [i]
-      }
-    }
+    let (edge_out_order, edge_in_order) =
+      build_undirected_edge_order_maps_for_rank_data(nodes, tail, head)
     (tail, head, reversed, edge_out_order, edge_in_order)
   }
 }
