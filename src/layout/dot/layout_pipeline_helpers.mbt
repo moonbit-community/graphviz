@@ -9442,6 +9442,18 @@ fn run_root_mincross_rank_reorder_from_inputs(
 
 
 ///|
+/// Graphviz parity: root ReMincross rank-reorder pass output preserves
+/// reordered-root groups plus mincross-node membership tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_rank_reorder_pass_output(
+  ordered_mincross : Map[Int, Array[String]],
+  mincross_nodes : Map[String, Bool],
+) -> (Map[Int, Array[String]], Map[String, Bool]) {
+  (ordered_mincross, mincross_nodes)
+}
+
+
+///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -9528,7 +9540,10 @@ fn run_root_mincross_rank_reorder_pass(
       graphviz_in_neighbors,
       graphviz_flip,
     )
-  (ordered_mincross, mincross_nodes)
+  build_root_mincross_rank_reorder_pass_output(
+    ordered_mincross,
+    mincross_nodes,
+  )
 }
 
 
