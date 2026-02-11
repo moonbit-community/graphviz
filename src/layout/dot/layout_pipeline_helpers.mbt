@@ -17139,63 +17139,75 @@ fn run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_o
 }
 
 ///|
-/// Graphviz parity: clustered ordering runs pre-root graph materialization
-/// before root+cluster build_ranks stage, preserving phase boundaries.
+/// Graphviz parity: clustered ordering pre-root phase dispatch reads typed
+/// stage context fields and preserves Graphviz pre-root call ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  runtime_context : OrderingRuntimeContext,
-  reorder_setup : OrderingReorderSetup,
-  class2_data : OrderingClass2Data,
+fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase_from_context(
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
+) -> OrderClusteredPreRootStageData {
+  run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
+    phase_context.nodes,
+    phase_context.edge_tail,
+    phase_context.edge_head,
+    phase_context.node_order,
+    phase_context.order_sizes,
+    phase_context.cluster_meta,
+    phase_context.runtime_context.real_nodes,
+    phase_context.runtime_context.port_edge_nodes,
+    phase_context.reorder_setup.order_with_vnodes,
+    phase_context.reorder_setup.order_with_clusters,
+    phase_context.reorder_setup.ordering_groups_base,
+    phase_context.reorder_setup.base_order_index,
+    phase_context.runtime_context.vnode_info,
+    phase_context.reorder_setup.vnode_order_keys_for_ordering,
+    phase_context.class2_data.nlist_order,
+    phase_context.reorder_setup.gdnlist_order,
+    phase_context.class2_data.order_edges_by_tail,
+    phase_context.class2_data.order_edges_by_tail_unmapped,
+    phase_context.class2_data.edge_creation_order,
+  )
+}
+
+///|
+/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
+/// typed stage context + pre-root output without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
+  pre_root_stage : OrderClusteredPreRootStageData,
+) -> OrderRootClusterStageData {
+  run_clustered_ordering_pre_root_and_root_stage_root_phase(
+    phase_context.reorder_setup.order_with_clusters,
+    phase_context.reorder_setup.order_with_vnodes,
+    phase_context.graph,
+    phase_context.cluster_meta,
+    phase_context.reorder_setup.vnode_order_keys_for_ordering,
+    phase_context.nodesep_pt,
+    phase_context.has_edge_labels,
+    phase_context.port_order_positions,
+    phase_context.port_order_contrib,
+    phase_context.reorder_setup.graphviz_flip,
+    phase_context.reorder_setup.flat_rank_constraints,
+    phase_context.ranks,
+    phase_context.runtime_context.vnode_info,
+    pre_root_stage,
+  )
+}
+
+///|
+/// Graphviz parity: clustered ordering pre-root/root phase execution preserves
+/// Graphviz phase boundaries while forwarding through typed stage context.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
 ) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
   let pre_root_stage =
-    run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
-      nodes,
-      edge_tail,
-      edge_head,
-      node_order,
-      order_sizes,
-      cluster_meta,
-      runtime_context.real_nodes,
-      runtime_context.port_edge_nodes,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.order_with_clusters,
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      class2_data.order_edges_by_tail,
-      class2_data.order_edges_by_tail_unmapped,
-      class2_data.edge_creation_order,
+    run_clustered_ordering_pre_root_and_root_stage_pre_root_phase_from_context(
+      phase_context,
     )
   let root_phase_output =
-    run_clustered_ordering_pre_root_and_root_stage_root_phase(
-      reorder_setup.order_with_clusters,
-      reorder_setup.order_with_vnodes,
-      graph,
-      cluster_meta,
-      reorder_setup.vnode_order_keys_for_ordering,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      reorder_setup.graphviz_flip,
-      reorder_setup.flat_rank_constraints,
-      ranks,
-      runtime_context.vnode_info,
+    run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
+      phase_context,
       pre_root_stage,
     )
   run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_output(
@@ -17386,22 +17398,8 @@ fn build_clustered_ordering_stage_pre_root_and_root_phase_context(
 fn run_clustered_ordering_stage_pre_root_and_root_phase(
   phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
 ) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  run_clustered_ordering_pre_root_and_root_stage(
-    phase_context.graph,
-    phase_context.nodes,
-    phase_context.edge_tail,
-    phase_context.edge_head,
-    phase_context.ranks,
-    phase_context.node_order,
-    phase_context.order_sizes,
-    phase_context.nodesep_pt,
-    phase_context.has_edge_labels,
-    phase_context.cluster_meta,
-    phase_context.port_order_positions,
-    phase_context.port_order_contrib,
-    phase_context.runtime_context,
-    phase_context.reorder_setup,
-    phase_context.class2_data,
+  run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+    phase_context,
   )
 }
 
