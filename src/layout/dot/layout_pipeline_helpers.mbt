@@ -592,26 +592,17 @@ fn build_size_maps_for_layout_inputs(
 }
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: record/html port order hints are collected for LR/RL only
+/// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
-  graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
-  let (nodesep_in, ranksep_in) =
-    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
-  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
-  let nodes = ordered_nodes(graph)
-  let edges = graph.edges()
-  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
-  let (has_dotted_edges, has_port_edges) =
-    scan_edge_flags_for_layout_inputs(edges)
-  let has_edge_labels = graph_has_edge_labels(edges)
-  let node_order = build_node_order_for_layout_inputs(nodes, rankdir)
-  let record_orientation = record_layout_orientation(rankdir)
-  let (output_sizes, order_sizes, sizes) =
-    build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
+fn build_port_order_metadata_for_layout_inputs(
+  rankdir : RankDir,
+  has_port_edges : Bool,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  output_sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+) -> (Map[String, Double], Map[String, Array[(String, Double)]]) {
   let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
@@ -685,6 +676,40 @@ fn prepare_layout_inputs(
       }
     }
   }
+  (port_order_positions, port_order_contrib)
+}
+
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let (nodesep_in, ranksep_in) =
+    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
+  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
+  let nodes = ordered_nodes(graph)
+  let edges = graph.edges()
+  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
+  let (has_dotted_edges, has_port_edges) =
+    scan_edge_flags_for_layout_inputs(edges)
+  let has_edge_labels = graph_has_edge_labels(edges)
+  let node_order = build_node_order_for_layout_inputs(nodes, rankdir)
+  let record_orientation = record_layout_orientation(rankdir)
+  let (output_sizes, order_sizes, sizes) =
+    build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
+  let (port_order_positions, port_order_contrib) =
+    build_port_order_metadata_for_layout_inputs(
+      rankdir,
+      has_port_edges,
+      nodes,
+      edges,
+      output_sizes,
+      record_orientation,
+    )
   {
     rankdir,
     nodesep_in,
