@@ -492,19 +492,12 @@ fn resolve_splines_for_layout_inputs(
 }
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: edge flag scan checks dotted style and explicit ports in
+/// edge creation order before downstream ordering setup.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
-  graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
-  let (nodesep_in, ranksep_in) =
-    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
-  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
-  let nodes = ordered_nodes(graph)
-  let edges = graph.edges()
-  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
+fn scan_edge_flags_for_layout_inputs(
+  edges : Array[@cgraph.Edge],
+) -> (Bool, Bool) {
   let mut has_dotted_edges = false
   let mut has_port_edges = false
   for edge in edges {
@@ -523,6 +516,26 @@ fn prepare_layout_inputs(
       }
     }
   }
+  (has_dotted_edges, has_port_edges)
+}
+
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let (nodesep_in, ranksep_in) =
+    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
+  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
+  let nodes = ordered_nodes(graph)
+  let edges = graph.edges()
+  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
+  let (has_dotted_edges, has_port_edges) =
+    scan_edge_flags_for_layout_inputs(edges)
   let has_edge_labels = graph_has_edge_labels(edges)
   // Graphviz parity: GD_nlist iteration follows creation order (AGSEQ).
   let node_order : Map[String, Int] = Map::new()
