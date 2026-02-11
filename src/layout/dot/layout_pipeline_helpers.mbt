@@ -1532,6 +1532,62 @@ fn build_cluster_local_edge_bundle(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder metadata keeps node sizes,
+/// local cluster keys, and same-rank flat constraints scoped to the cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_reorder_metadata(
+  cluster_node_set : Map[String, Bool],
+  order_sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+  intercluster_keys : Map[String, String],
+  vnode_clusters : Map[String, String],
+  flat_constraints : Map[String, Bool],
+) -> (Map[String, NodeSize], Map[String, String], Map[String, Bool]) {
+  let cluster_sizes : Map[String, NodeSize] = Map::new()
+  for name, _ in cluster_node_set {
+    match order_sizes.get(name) {
+      Some(size) => cluster_sizes[name] = size
+      None =>
+        match vnode_sizes.get(name) {
+          Some(size) => cluster_sizes[name] = size
+          None => ()
+        }
+    }
+  }
+  let cluster_keys : Map[String, String] = Map::new()
+  for name, _ in cluster_node_set {
+    let key = match intercluster_keys.get(name) {
+      Some(value) => value
+      None =>
+        match vnode_clusters.get(name) {
+          Some(value) => value
+          None => ""
+        }
+    }
+    cluster_keys[name] = key
+  }
+  let cluster_flat_constraints : Map[String, Bool] = Map::new()
+  for key, value in flat_constraints {
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if cluster_node_set.get(tail) is Some(_) &&
+          cluster_node_set.get(head) is Some(_) {
+          cluster_flat_constraints[key] = value
+        }
+      }
+      None => ()
+    }
+  }
+  (cluster_sizes, cluster_keys, cluster_flat_constraints)
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1637,47 +1693,15 @@ fn reorder_groups_by_cluster_build_ranks(
         cluster_nodes,
         fixed_ranks,
       )
-    let cluster_sizes : Map[String, NodeSize] = Map::new()
-    for name, _ in cluster_node_set {
-      match order_sizes.get(name) {
-        Some(size) => cluster_sizes[name] = size
-        None =>
-          match vnode_info.vnode_sizes.get(name) {
-            Some(size) => cluster_sizes[name] = size
-            None => ()
-          }
-      }
-    }
-    let cluster_keys : Map[String, String] = Map::new()
-    for name, _ in cluster_node_set {
-      let key = match cluster_meta.intercluster_keys.get(name) {
-        Some(value) => value
-        None =>
-          match vnode_info.vnode_clusters.get(name) {
-            Some(value) => value
-            None => ""
-          }
-      }
-      cluster_keys[name] = key
-    }
-    let cluster_flat_constraints : Map[String, Bool] = Map::new()
-    for key, value in cluster_meta.flat_constraints {
-      match key.find("|") {
-        Some(pos) => {
-          let len = key.length()
-          let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-          let head =
-            if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-              ""
-            }
-          if cluster_node_set.get(tail) is Some(_) &&
-            cluster_node_set.get(head) is Some(_) {
-            cluster_flat_constraints[key] = value
-          }
-        }
-        None => ()
-      }
-    }
+    let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
+      build_cluster_local_reorder_metadata(
+        cluster_node_set,
+        order_sizes,
+        vnode_info.vnode_sizes,
+        cluster_meta.intercluster_keys,
+        vnode_info.vnode_clusters,
+        cluster_meta.flat_constraints,
+      )
     // Graphviz parity: no internal edges/ordering constraints -> keep input order.
     if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
       continue
