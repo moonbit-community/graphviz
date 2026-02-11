@@ -7452,6 +7452,72 @@ fn run_clustered_remincross_reorder_step_from_reorder_inputs(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross reorder-step input phase derives edge
+/// indices plus cluster-aware reorder maps before final cleanup forwarding.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_reorder_step_inputs(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ranks : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  rem_nodes : Array[String],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_edges_out : Array[@cgraph.Edge],
+) -> (
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, String],
+  Map[String, NodeSize],
+  Map[String, Bool],
+) {
+  let (rem_parents, rem_children, rem_edge_order) =
+    build_clustered_remincross_edge_indices_for_reorder(
+      rem_nodes,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_ranks,
+      rem_edges_out,
+    )
+  let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
+    build_remincross_reorder_inputs(
+      graph,
+      edges,
+      edge_tail,
+      edge_head,
+      order_with_vnodes,
+      order_with_clusters,
+      ranks,
+      cluster_meta,
+      vnode_info,
+      order_sizes,
+      rank_same_constraints,
+      rem_groups,
+      real_nodes,
+    )
+  (
+    rem_parents,
+    rem_children,
+    rem_edge_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross computes edge indices, prepares
 /// cluster-aware reorder inputs, then runs final real-node cleanup reorder.
 /// Do not change behavior without updating fixtures/tests.
@@ -7486,16 +7552,15 @@ fn run_clustered_remincross_reorder_step(
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (rem_parents, rem_children, rem_edge_order) =
-    build_clustered_remincross_edge_indices_for_reorder(
-      rem_nodes,
-      rem_edge_tail_out,
-      rem_edge_head_out,
-      rem_ranks,
-      rem_edges_out,
-    )
-  let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
-    build_remincross_reorder_inputs(
+  let (
+    rem_parents,
+    rem_children,
+    rem_edge_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  ) =
+    build_clustered_remincross_reorder_step_inputs(
       graph,
       edges,
       edge_tail,
@@ -7509,6 +7574,11 @@ fn run_clustered_remincross_reorder_step(
       rank_same_constraints,
       rem_groups,
       real_nodes,
+      rem_nodes,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_ranks,
+      rem_edges_out,
     )
   run_clustered_remincross_reorder_step_from_reorder_inputs(
     rem_rank_keys,
