@@ -3282,6 +3282,21 @@ fn append_cluster_skeleton_edges(
 }
 
 ///|
+/// Graphviz parity: class2 order_creation keeps first-seen insertion order,
+/// suppressing duplicates across skeleton, real-node, and vnode phases.
+/// Do not change behavior without updating fixtures/tests.
+fn append_order_creation_name_if_absent(
+  order_creation : Array[String],
+  order_seen : Map[String, Bool],
+  name : String,
+) -> Unit {
+  if order_seen.get(name) is None {
+    order_seen[name] = true
+    order_creation.push(name)
+  }
+}
+
+///|
 /// Graphviz parity: class2 order_creation starts with cluster skeletons, then
 /// agfstnode real nodes interleaved with edge-vnodes per tail.
 /// Do not change behavior without updating fixtures/tests.
@@ -3293,25 +3308,28 @@ fn build_order_creation_with_vnodes(
   let order_creation : Array[String] = []
   let order_seen : Map[String, Bool] = Map::new()
   for name in cluster_skeleton_creation {
-    if order_seen.get(name) is None {
-      order_seen[name] = true
-      order_creation.push(name)
-    }
+    append_order_creation_name_if_absent(
+      order_creation,
+      order_seen,
+      name,
+    )
   }
   for tail_name in creation_order {
-    if order_seen.get(tail_name) is None {
-      order_seen[tail_name] = true
-      order_creation.push(tail_name)
-    }
+    append_order_creation_name_if_absent(
+      order_creation,
+      order_seen,
+      tail_name,
+    )
     let vnodes = match vnode_creation_by_tail.get(tail_name) {
       Some(list) => list
       None => []
     }
     for vnode in vnodes {
-      if order_seen.get(vnode) is None {
-        order_seen[vnode] = true
-        order_creation.push(vnode)
-      }
+      append_order_creation_name_if_absent(
+        order_creation,
+        order_seen,
+        vnode,
+      )
     }
   }
   let vnode_creation_order : Array[String] = []
