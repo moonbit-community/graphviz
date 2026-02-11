@@ -3076,6 +3076,22 @@ fn build_graphviz_in_entries_from_edge_sequence(
 }
 
 ///|
+/// Graphviz parity: ND_out keeps tail-local edge insertion order for heads,
+/// mirroring Graphviz AGSEQ traversal on each tail adjacency list.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_graphviz_out_heads(
+  entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+) -> Array[String] {
+  let heads : Array[String] = []
+  for entry in entries {
+    let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
+      entry
+    heads.push(h)
+  }
+  heads
+}
+
+///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_neighbor_maps(
@@ -3090,13 +3106,7 @@ fn build_graphviz_neighbor_maps(
     graphviz_in_neighbors[name] = []
   }
   for tail, entries in order_edges_by_tail {
-    let heads : Array[String] = []
-    for entry in entries {
-      let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
-        entry
-      heads.push(h)
-    }
-    graphviz_out_neighbors[tail] = heads
+    graphviz_out_neighbors[tail] = collect_graphviz_out_heads(entries)
   }
   let in_entries = build_graphviz_in_entries_from_edge_sequence(
     edge_creation_order,
