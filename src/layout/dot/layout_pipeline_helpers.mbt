@@ -1222,10 +1222,7 @@ fn assign_cluster_node_order_for_metadata(
   let total_nodes = nodes.length()
   for node in nodes {
     let name = node.name()
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -1318,10 +1315,7 @@ fn collect_cluster_rank_bounds_for_metadata(
 ) -> Unit {
   for node in nodes {
     let name = node.name()
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -3342,6 +3336,20 @@ fn build_order_creation_with_vnodes(
 }
 
 ///|
+/// Graphviz parity: cluster membership lookup treats missing keys as
+/// non-cluster entries across class2 preprocessing passes.
+/// Do not change behavior without updating fixtures/tests.
+fn cluster_key_or_empty(
+  cluster_keys : Map[String, String],
+  name : String,
+) -> String {
+  match cluster_keys.get(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 /// Graphviz parity: when GD_flip is true, decompose nlist reverses node order
 /// inside each cluster while preserving cluster membership positions.
 /// Do not change behavior without updating fixtures/tests.
@@ -3356,10 +3364,7 @@ fn adjust_nlist_order_for_cluster_flip(
   }
   let cluster_nodes : Map[String, Array[String]] = Map::new()
   for name in nlist_order_raw {
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -3382,10 +3387,7 @@ fn adjust_nlist_order_for_cluster_flip(
   }
   let adjusted : Array[String] = []
   for name in nlist_order_raw {
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       adjusted.push(name)
     } else {
