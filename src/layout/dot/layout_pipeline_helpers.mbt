@@ -11483,12 +11483,6 @@ fn build_root_mincross_rank_reorder_pass_output(
 
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
-/// and reorder_rank_groups execution in the same Graphviz call sequence.
-/// Do not change behavior without updating fixtures/tests.
-
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder pass finalize phase runs
 /// reorder execution and packages mincross-node membership output tuple.
 /// Do not change behavior without updating fixtures/tests.
@@ -11555,6 +11549,11 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
     mincross_nodes,
   )
 }
+
+///|
+/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
+/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_rank_reorder_pass(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
