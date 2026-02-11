@@ -14853,6 +14853,21 @@ fn run_cluster_rank_order_and_finalize_stage_finalize_pass(
 
 
 ///|
+/// Graphviz parity: clustered finalize stage output dispatch reads finalize
+/// pass tuple and preserves Graphviz output tuple ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_rank_order_and_finalize_stage_output_phase_from_finalize_pass_output(
+  finalize_pass_output : (Map[Int, Array[String]], Map[Int, Array[String]]),
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let (next_ordered_with_vnodes, final_groups) = finalize_pass_output
+  build_cluster_rank_order_and_finalize_stage_output(
+    next_ordered_with_vnodes,
+    final_groups,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered cleanup applies root cluster-rank ordering,
 /// then runs final clustered ReMincross with local-cluster tie handling.
 /// Do not change behavior without updating fixtures/tests.
@@ -14896,7 +14911,7 @@ fn run_cluster_rank_order_and_finalize_stage(
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (next_ordered_with_vnodes, final_groups) =
+  let finalize_pass_output =
     run_cluster_rank_order_and_finalize_stage_finalize_pass(
       order_with_clusters,
       order_with_vnodes,
@@ -14937,9 +14952,8 @@ fn run_cluster_rank_order_and_finalize_stage(
       order_sizes,
       rank_same_constraints,
     )
-  build_cluster_rank_order_and_finalize_stage_output(
-    next_ordered_with_vnodes,
-    final_groups,
+  run_cluster_rank_order_and_finalize_stage_output_phase_from_finalize_pass_output(
+    finalize_pass_output,
   )
 }
 
