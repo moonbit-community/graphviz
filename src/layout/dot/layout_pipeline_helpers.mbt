@@ -10693,6 +10693,53 @@ fn run_root_mincross_rank_reorder_pass_reorder_phase(
 
 
 ///|
+/// Graphviz parity: root ReMincross rank-reorder pass input phase builds
+/// root-only membership/edge/preferred-position tuples without reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_rank_reorder_pass_inputs_phase(
+  order_with_vnodes : Bool,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_ranks : Map[String, Int],
+) -> (
+  Array[Int],
+  Map[String, Bool],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Double],
+) {
+  build_root_mincross_rank_reorder_inputs(
+    order_with_vnodes,
+    vnode_order_keys_for_ordering,
+    order_groups_for_mincross,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_ranks,
+  )
+}
+
+
+///|
 /// Graphviz parity: root ReMincross rank-reorder pass output preserves
 /// reordered-root groups plus mincross-node membership tuple ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -10749,7 +10796,7 @@ fn run_root_mincross_rank_reorder_pass(
     edge_order,
     preferred_positions,
   ) =
-    build_root_mincross_rank_reorder_inputs(
+    build_root_mincross_rank_reorder_pass_inputs_phase(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
       order_groups_for_mincross,
