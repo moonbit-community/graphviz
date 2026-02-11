@@ -3266,6 +3266,19 @@ fn assign_graphviz_in_neighbors_from_edge_sequence(
 }
 
 ///|
+/// Graphviz parity: ND_out assignment replays AGSEQ-ordered tail adjacency
+/// lists directly onto pre-seeded neighbor maps.
+/// Do not change behavior without updating fixtures/tests.
+fn assign_graphviz_out_neighbors_from_tail_entries(
+  graphviz_out_neighbors : Map[String, Array[String]],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Unit {
+  for tail, entries in order_edges_by_tail {
+    graphviz_out_neighbors[tail] = collect_graphviz_out_heads(entries)
+  }
+}
+
+///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_neighbor_maps(
@@ -3275,9 +3288,10 @@ fn build_graphviz_neighbor_maps(
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
     build_empty_graphviz_neighbor_maps(order_nodes)
-  for tail, entries in order_edges_by_tail {
-    graphviz_out_neighbors[tail] = collect_graphviz_out_heads(entries)
-  }
+  assign_graphviz_out_neighbors_from_tail_entries(
+    graphviz_out_neighbors,
+    order_edges_by_tail,
+  )
   assign_graphviz_in_neighbors_from_edge_sequence(
     graphviz_in_neighbors,
     edge_creation_order,
