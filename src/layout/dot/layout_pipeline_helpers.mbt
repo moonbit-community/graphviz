@@ -9627,6 +9627,24 @@ fn build_ordering_class2_skeleton_and_edge_creation_sequences(
 }
 
 ///|
+/// Graphviz parity: class2 creation-sequence output preserves tuple field order
+/// consumed by class2/decompose preprocessing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_creation_sequences_output(
+  skeleton_edge_creation : Array[(String, String)],
+  edge_creation_order : Array[(String, String)],
+  nlist_order : Array[String],
+  vnode_creation_order : Array[String],
+) -> (Array[(String, String)], Array[(String, String)], Array[String], Array[String]) {
+  (
+    skeleton_edge_creation,
+    edge_creation_order,
+    nlist_order,
+    vnode_creation_order,
+  )
+}
+
+///|
 /// Graphviz parity: class2 creation sequences build cluster skeleton edges,
 /// then edge creation order and GD_nlist ordering in Graphviz pass order.
 /// Do not change behavior without updating fixtures/tests.
@@ -9660,7 +9678,7 @@ fn build_ordering_class2_creation_sequences(
       cluster_meta.has_clusters,
       cluster_meta.cluster_keys,
     )
-  (
+  build_ordering_class2_creation_sequences_output(
     skeleton_edge_creation,
     edge_creation_order,
     nlist_order,
