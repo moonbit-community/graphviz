@@ -1505,6 +1505,38 @@ fn build_rank_same_maps_for_metadata(
 
 
 ///|
+/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
+/// plus same-rank edge constraints before clustered reorder dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_flat_constraints_for_cluster_metadata(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> (Map[String, Bool], Bool) {
+  let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_keys,
+  )
+  append_same_rank_flat_constraints_for_metadata(
+    edge_tail,
+    edge_head,
+    ranks,
+    flat_constraints,
+  )
+  (flat_constraints, ordering_set)
+}
+
+
+
+///|
 /// Graphviz parity: clustered ordering stage consumes a fixed ClusterMetadata
 /// field set assembled from preprocessing helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -1583,20 +1615,16 @@ fn compute_cluster_metadata(
   let intercluster_keys = build_intercluster_keys_for_metadata(nodes)
   let (rank_same_groups, rank_same_order) =
     build_rank_same_maps_for_metadata(graph)
-  let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    cluster_keys,
-  )
-  append_same_rank_flat_constraints_for_metadata(
-    edge_tail,
-    edge_head,
-    ranks,
-    flat_constraints,
-  )
+  let (flat_constraints, ordering_set) =
+    build_flat_constraints_for_cluster_metadata(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      ranks,
+      cluster_keys,
+    )
   build_cluster_metadata_output(
     has_clusters,
     cluster_keys,
