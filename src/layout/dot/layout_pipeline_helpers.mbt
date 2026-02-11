@@ -461,6 +461,22 @@ priv struct RootMincrossRankReorderFinalizeDispatchContext {
 }
 
 ///|
+/// Graphviz parity: order-edge trace materialization dispatch context keeps
+/// mapped/unmapped materialize+trace payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct MaterializeOrderEdgesWithTraceContext {
+  nlist_order : Array[String]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  order_ranks : Map[String, Int]
+  real_nodes : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder-input context keeps
 /// materialization flags, edge arrays, and metadata payload ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -13768,10 +13784,10 @@ fn materialize_order_edges_with_trace_output_phase(
 
 
 ///|
-/// Graphviz parity: mapped/unmapped order-edge arrays are materialized first,
-/// and trace emission observes the mapped arrays before neighbor construction.
+/// Graphviz parity: order-edge trace context builder preserves mapped/unmapped
+/// materialization inputs before trace-output dispatch.
 /// Do not change behavior without updating fixtures/tests.
-fn materialize_order_edges_with_trace(
+fn build_materialize_order_edges_with_trace_context(
   nlist_order : Array[String],
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph : @cgraph.Graph,
@@ -13781,6 +13797,27 @@ fn materialize_order_edges_with_trace(
   order_node_map_unmapped : Map[String, @cgraph.Node],
   order_ranks : Map[String, Int],
   real_nodes : Map[String, Bool],
+) -> MaterializeOrderEdgesWithTraceContext {
+  {
+    nlist_order,
+    order_edges_by_tail,
+    order_graph,
+    order_node_map,
+    order_edges_by_tail_unmapped,
+    order_graph_unmapped,
+    order_node_map_unmapped,
+    order_ranks,
+    real_nodes,
+  }
+}
+
+
+///|
+/// Graphviz parity: mapped/unmapped order-edge arrays are materialized first,
+/// and trace emission observes the mapped arrays before neighbor construction.
+/// Do not change behavior without updating fixtures/tests.
+fn materialize_order_edges_with_trace(
+  trace_context : MaterializeOrderEdgesWithTraceContext,
 ) -> (
   Array[@cgraph.Edge],
   Array[String],
@@ -13814,13 +13851,13 @@ fn materialize_order_edges_with_trace(
     order_edge_head_port_order_unmapped,
   ) =
     materialize_mapped_and_unmapped_order_edges(
-      nlist_order,
-      order_edges_by_tail,
-      order_graph,
-      order_node_map,
-      order_edges_by_tail_unmapped,
-      order_graph_unmapped,
-      order_node_map_unmapped,
+      trace_context.nlist_order,
+      trace_context.order_edges_by_tail,
+      trace_context.order_graph,
+      trace_context.order_node_map,
+      trace_context.order_edges_by_tail_unmapped,
+      trace_context.order_graph_unmapped,
+      trace_context.order_node_map_unmapped,
     )
   materialize_order_edges_with_trace_output_phase(
     order_edges_out,
@@ -13837,8 +13874,8 @@ fn materialize_order_edges_with_trace(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
-    order_ranks,
-    real_nodes,
+    trace_context.order_ranks,
+    trace_context.real_nodes,
   )
 }
 
@@ -13873,17 +13910,19 @@ fn build_materialized_order_edges_and_neighbors_materialization_phase(
   Array[Double],
   Array[Double],
 ) {
-  materialize_order_edges_with_trace(
-    nlist_order,
-    order_edges_by_tail,
-    order_graph,
-    order_node_map,
-    order_edges_by_tail_unmapped,
-    order_graph_unmapped,
-    order_node_map_unmapped,
-    order_ranks,
-    real_nodes,
-  )
+  let trace_context =
+    build_materialize_order_edges_with_trace_context(
+      nlist_order,
+      order_edges_by_tail,
+      order_graph,
+      order_node_map,
+      order_edges_by_tail_unmapped,
+      order_graph_unmapped,
+      order_node_map_unmapped,
+      order_ranks,
+      real_nodes,
+    )
+  materialize_order_edges_with_trace(trace_context)
 }
 
 ///|
