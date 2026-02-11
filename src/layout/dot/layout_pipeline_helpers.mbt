@@ -3058,6 +3058,24 @@ fn compute_edge_port_orders(
 }
 
 ///|
+/// Graphviz parity: ND_in order follows edge sequence (AGSEQ) within each
+/// fixed head, preserving edge creation insertion order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_graphviz_in_entries_from_edge_sequence(
+  edge_creation_order : Array[(String, String)],
+) -> Map[String, Array[String]] {
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for edge in edge_creation_order {
+    let (tail, head) = edge
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+  }
+  in_entries
+}
+
+///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_neighbor_maps(
@@ -3080,16 +3098,9 @@ fn build_graphviz_neighbor_maps(
     }
     graphviz_out_neighbors[tail] = heads
   }
-  // Graphviz parity: ND_in order follows edge sequence (AGSEQ) within a
-  // fixed head, so preserve edge_creation insertion order.
-  let in_entries : Map[String, Array[String]] = Map::new()
-  for edge in edge_creation_order {
-    let (tail, head) = edge
-    match in_entries.get(head) {
-      Some(list) => list.push(tail)
-      None => in_entries[head] = [tail]
-    }
-  }
+  let in_entries = build_graphviz_in_entries_from_edge_sequence(
+    edge_creation_order,
+  )
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
