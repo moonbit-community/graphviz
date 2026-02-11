@@ -3598,6 +3598,20 @@ fn collect_cluster_nodes_for_flip(
 
 
 ///|
+/// Graphviz parity: cluster flip uses explicit reverse traversal to construct
+/// per-cluster replacement lists in reverse local order.
+/// Do not change behavior without updating fixtures/tests.
+fn reverse_cluster_nodes_for_flip(list : Array[String]) -> Array[String] {
+  let reversed : Array[String] = []
+  let mut idx = list.length()
+  while idx > 0 {
+    idx = idx - 1
+    reversed.push(list[idx])
+  }
+  reversed
+}
+
+///|
 /// Graphviz parity: cluster flip precomputes reversed per-cluster node lists
 /// and zeroed consumption indices before reconstructing adjusted nlist order.
 /// Do not change behavior without updating fixtures/tests.
@@ -3607,13 +3621,7 @@ fn build_cluster_reversed_nodes_and_index_for_flip(
   let cluster_reversed : Map[String, Array[String]] = Map::new()
   let cluster_index : Map[String, Int] = Map::new()
   for cluster, list in cluster_nodes {
-    let reversed : Array[String] = []
-    let mut idx = list.length()
-    while idx > 0 {
-      idx = idx - 1
-      reversed.push(list[idx])
-    }
-    cluster_reversed[cluster] = reversed
+    cluster_reversed[cluster] = reverse_cluster_nodes_for_flip(list)
     cluster_index[cluster] = 0
   }
   (cluster_reversed, cluster_index)
