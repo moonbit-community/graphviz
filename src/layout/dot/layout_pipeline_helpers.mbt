@@ -1823,6 +1823,22 @@ fn build_cluster_index_for_local_reorder(
 
 
 ///|
+/// Graphviz parity: local cluster pass begins from collected cluster names
+/// before depth/index tie-break sorting.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_name_list_for_local_reorder(
+  cluster_graphs : Map[String, @cgraph.Graph],
+) -> Array[String] {
+  let cluster_names : Array[String] = []
+  for name, _ in cluster_graphs {
+    cluster_names.push(name)
+  }
+  cluster_names
+}
+
+
+
+///|
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
@@ -1834,15 +1850,12 @@ fn build_cluster_graph_order_for_local_reorder(
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
-  let cluster_names : Array[String] = []
+  let cluster_names = build_cluster_name_list_for_local_reorder(cluster_graphs)
   if cluster_graphs.length() == 0 {
     return (cluster_graphs, cluster_names)
   }
   let cluster_index = build_cluster_index_for_local_reorder(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
-  for name, _ in cluster_graphs {
-    cluster_names.push(name)
-  }
   if cluster_names.length() > 1 {
     cluster_names.sort_by((a, b) => {
       let a_depth =
