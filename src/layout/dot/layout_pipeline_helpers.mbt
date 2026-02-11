@@ -1723,6 +1723,127 @@ fn run_cluster_local_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
+/// but only mutates rank entries that belong to that cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_single_cluster_rank_groups(
+  cluster : String,
+  cluster_graph : @cgraph.Graph,
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  fixed_positions : Map[String, Double],
+  fixed_ranks : Map[String, Int],
+  empty_cluster_skeleton : Map[String, Bool],
+  order_with_vnodes : Bool,
+) -> Unit {
+  let cluster_node_set = build_cluster_local_node_set_for_reorder(
+    cluster_graph,
+    cluster,
+    groups,
+    vnode_info.vnode_clusters,
+    order_with_vnodes,
+  )
+  let (
+    cluster_nodes,
+    cluster_node_order,
+    cluster_groups,
+    cluster_rank_keys,
+  ) =
+    build_cluster_local_rank_groups_and_order(
+      groups,
+      cluster_node_set,
+      node_order,
+    )
+  if cluster_rank_keys.length() == 0 {
+    return ()
+  }
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    edge_order,
+  ) =
+    build_cluster_local_edge_bundle(
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+      cluster_nodes,
+      fixed_ranks,
+    )
+  let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
+    build_cluster_local_reorder_metadata(
+      cluster_node_set,
+      order_sizes,
+      vnode_info.vnode_sizes,
+      cluster_meta.intercluster_keys,
+      vnode_info.vnode_clusters,
+      cluster_meta.flat_constraints,
+    )
+  let (has_internal_constraints, ordered_cluster) =
+    run_cluster_local_rank_reorder(
+      cluster_rank_keys,
+      cluster_groups,
+      cluster_edges,
+      cluster_edge_tail,
+      cluster_edge_head,
+      cluster_edge_tail_port_x,
+      cluster_edge_head_port_x,
+      cluster_edge_tail_port_order,
+      cluster_edge_head_port_order,
+      parents,
+      children,
+      cluster_keys,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      edge_order,
+      cluster_node_order,
+      cluster_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      empty_cluster_skeleton,
+      cluster_flat_constraints,
+      fixed_positions,
+      fixed_ranks,
+    )
+  if !has_internal_constraints {
+    return ()
+  }
+  apply_cluster_local_rank_order_to_groups(
+    groups,
+    cluster_rank_keys,
+    ordered_cluster,
+    cluster_node_set,
+  )
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1771,96 +1892,29 @@ fn reorder_groups_by_cluster_build_ranks(
       Some(value) => value
       None => continue
     }
-    let cluster_node_set = build_cluster_local_node_set_for_reorder(
-      cluster_graph,
+    reorder_single_cluster_rank_groups(
       cluster,
+      cluster_graph,
       groups,
-      vnode_info.vnode_clusters,
+      node_order,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      cluster_meta,
+      vnode_info,
+      fixed_positions,
+      fixed_ranks,
+      empty_cluster_skeleton,
       order_with_vnodes,
-    )
-    let (
-      cluster_nodes,
-      cluster_node_order,
-      cluster_groups,
-      cluster_rank_keys,
-    ) =
-      build_cluster_local_rank_groups_and_order(
-        groups,
-        cluster_node_set,
-        node_order,
-      )
-    if cluster_rank_keys.length() == 0 {
-      continue
-    }
-    let (
-      cluster_edges,
-      cluster_edge_tail,
-      cluster_edge_head,
-      cluster_edge_tail_port_x,
-      cluster_edge_head_port_x,
-      cluster_edge_tail_port_order,
-      cluster_edge_head_port_order,
-      parents,
-      children,
-      edge_order,
-    ) =
-      build_cluster_local_edge_bundle(
-        order_edges,
-        order_edge_tail,
-        order_edge_head,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        cluster_node_set,
-        cluster_nodes,
-        fixed_ranks,
-      )
-    let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
-      build_cluster_local_reorder_metadata(
-        cluster_node_set,
-        order_sizes,
-        vnode_info.vnode_sizes,
-        cluster_meta.intercluster_keys,
-        vnode_info.vnode_clusters,
-        cluster_meta.flat_constraints,
-      )
-    let (has_internal_constraints, ordered_cluster) =
-      run_cluster_local_rank_reorder(
-        cluster_rank_keys,
-        cluster_groups,
-        cluster_edges,
-        cluster_edge_tail,
-        cluster_edge_head,
-        cluster_edge_tail_port_x,
-        cluster_edge_head_port_x,
-        cluster_edge_tail_port_order,
-        cluster_edge_head_port_order,
-        parents,
-        children,
-        cluster_keys,
-        cluster_meta.rank_same_groups,
-        cluster_meta.rank_same_order,
-        edge_order,
-        cluster_node_order,
-        cluster_sizes,
-        nodesep_pt,
-        has_edge_labels,
-        port_order_positions,
-        port_order_contrib,
-        empty_cluster_skeleton,
-        cluster_flat_constraints,
-        fixed_positions,
-        fixed_ranks,
-      )
-    if !has_internal_constraints {
-      continue
-    }
-    apply_cluster_local_rank_order_to_groups(
-      groups,
-      cluster_rank_keys,
-      ordered_cluster,
-      cluster_node_set,
     )
   }
 }
