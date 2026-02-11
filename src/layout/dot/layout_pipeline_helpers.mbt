@@ -16556,6 +16556,20 @@ fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
 }
 
 ///|
+/// Graphviz parity: clustered ordering pre-root/root stage output dispatch
+/// reads root-phase output and preserves Graphviz tuple ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_output(
+  pre_root_stage : OrderClusteredPreRootStageData,
+  root_phase_output : OrderRootClusterStageData,
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  build_clustered_ordering_pre_root_and_root_stage_output(
+    pre_root_stage,
+    root_phase_output,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ordering runs pre-root graph materialization
 /// before root+cluster build_ranks stage, preserving phase boundaries.
 /// Do not change behavior without updating fixtures/tests.
@@ -16610,7 +16624,7 @@ fn run_clustered_ordering_pre_root_and_root_stage(
       order_edges_by_tail_unmapped,
       edge_creation_order,
     )
-  let root_cluster_stage =
+  let root_phase_output =
     run_clustered_ordering_pre_root_and_root_stage_root_phase(
       order_with_clusters,
       order_with_vnodes,
@@ -16627,9 +16641,9 @@ fn run_clustered_ordering_pre_root_and_root_stage(
       vnode_info,
       pre_root_stage,
     )
-  build_clustered_ordering_pre_root_and_root_stage_output(
+  run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_output(
     pre_root_stage,
-    root_cluster_stage,
+    root_phase_output,
   )
 }
 
