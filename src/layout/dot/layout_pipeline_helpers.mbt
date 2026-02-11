@@ -15147,6 +15147,74 @@ fn run_cluster_rank_ordered_finalize_pass_remincross_phase_output(
 
 
 ///|
+/// Graphviz parity: finalize-stage ReMincross output dispatch forwards typed
+/// stage payload fields with cluster-rank-order output unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_rank_ordered_finalize_pass_remincross_phase_output_from_stage_inputs(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  cluster_meta : ClusterMetadata,
+  local_cluster_order : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  flat_rank_constraints : Map[String, Bool],
+  edges_by_tail : Map[String, Array[Int]],
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  stage_inputs : ClusterFinalizeStageInputs,
+  cluster_rank_order_output : Map[Int, Map[String, Int]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_cluster_rank_ordered_finalize_pass_remincross_phase_output(
+    order_with_clusters,
+    order_with_vnodes,
+    cluster_meta,
+    local_cluster_order,
+    stage_inputs.order_rank_keys,
+    stage_inputs.ordered,
+    real_nodes,
+    stage_inputs.ordered_with_vnodes,
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    flat_rank_constraints,
+    stage_inputs.creation_order,
+    edges_by_tail,
+    vnode_info,
+    order_sizes,
+    rank_same_constraints,
+    graphviz_flip,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    cluster_rank_order_output,
+  )
+}
+
+
+///|
 /// Graphviz parity: finalize-stage cluster rank order is derived first, then
 /// consumed by final clustered ReMincross without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -15211,15 +15279,12 @@ fn run_cluster_rank_ordered_finalize_pass(
       port_order_positions,
       port_order_contrib,
     )
-  run_cluster_rank_ordered_finalize_pass_remincross_phase_output(
+  run_cluster_rank_ordered_finalize_pass_remincross_phase_output_from_stage_inputs(
     order_with_clusters,
     order_with_vnodes,
     cluster_meta,
     local_cluster_order,
-    stage_inputs.order_rank_keys,
-    stage_inputs.ordered,
     real_nodes,
-    stage_inputs.ordered_with_vnodes,
     graph,
     edges,
     edge_tail,
@@ -15231,7 +15296,6 @@ fn run_cluster_rank_ordered_finalize_pass(
     edge_head_port_order,
     ranks,
     flat_rank_constraints,
-    stage_inputs.creation_order,
     edges_by_tail,
     vnode_info,
     order_sizes,
@@ -15241,6 +15305,7 @@ fn run_cluster_rank_ordered_finalize_pass(
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
+    stage_inputs,
     cluster_rank_order_output,
   )
 }
