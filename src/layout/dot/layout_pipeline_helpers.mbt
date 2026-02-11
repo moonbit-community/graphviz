@@ -5333,6 +5333,43 @@ fn collect_cluster_nodes_and_sequence_for_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: cluster bucket sort keys use root rank-order map with
+/// stable first-seen sequence fallback for clusters missing from the map.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_ordered_keys_for_rank_reorder(
+  order_map : Map[String, Int],
+  cluster_seq : Array[String],
+) -> Array[(Int, Int, String)] {
+  let cluster_ordered : Array[(Int, Int, String)] = []
+  for idx, cluster in cluster_seq {
+    let base =
+      match order_map.get(cluster) {
+        Some(value) => value
+        None => order_map.length() + idx
+      }
+    cluster_ordered.push((base, idx, cluster))
+  }
+  if cluster_ordered.length() > 1 {
+    cluster_ordered.sort_by((a, b) => {
+      let (a_order, a_idx, _a_name) = a
+      let (b_order, b_idx, _b_name) = b
+      if a_order < b_order {
+        -1
+      } else if a_order > b_order {
+        1
+      } else if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  cluster_ordered
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -5352,32 +5389,8 @@ fn reorder_rank_groups_by_cluster_rank_order(
     }
     let (cluster_nodes, cluster_seq) =
       collect_cluster_nodes_and_sequence_for_rank_reorder(names, cluster_keys)
-    let cluster_ordered : Array[(Int, Int, String)] = []
-    for idx, cluster in cluster_seq {
-      let base =
-        match order_map.get(cluster) {
-          Some(value) => value
-          None => order_map.length() + idx
-        }
-      cluster_ordered.push((base, idx, cluster))
-    }
-    if cluster_ordered.length() > 1 {
-      cluster_ordered.sort_by((a, b) => {
-        let (a_order, a_idx, _a_name) = a
-        let (b_order, b_idx, _b_name) = b
-        if a_order < b_order {
-          -1
-        } else if a_order > b_order {
-          1
-        } else if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else {
-          0
-        }
-      })
-    }
+    let cluster_ordered =
+      build_cluster_ordered_keys_for_rank_reorder(order_map, cluster_seq)
     let ordered_names : Array[String] = []
     for entry in cluster_ordered {
       let (_order, _idx, cluster) = entry
