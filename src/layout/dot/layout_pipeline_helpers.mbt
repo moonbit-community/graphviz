@@ -6293,6 +6293,42 @@ fn build_remincross_cluster_inputs_for_reorder(
 }
 
 ///|
+/// Graphviz parity: ReMincross reorder size/constraint inputs extend sizes with
+/// vnode dimensions and augment flat constraints with same-rank + cluster-local
+/// guards before final reorder.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_sizes_and_flat_constraints(
+  order_sizes : Map[String, NodeSize],
+  order_with_vnodes : Bool,
+  vnode_sizes : Map[String, NodeSize],
+  flat_constraints : Map[String, Bool],
+  rank_same_constraints : Map[String, Bool],
+  order_with_clusters : Bool,
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  rem_cluster_keys : Map[String, String],
+  intercluster_nodes : Map[String, Bool],
+) -> (Map[String, NodeSize], Map[String, Bool]) {
+  let rem_sizes =
+    build_order_sizes_for_order_graph(
+      order_sizes,
+      order_with_vnodes,
+      vnode_sizes,
+    )
+  let rem_flat_constraints =
+    build_remincross_flat_constraints(
+      flat_constraints,
+      rank_same_constraints,
+      order_with_clusters,
+      rem_groups,
+      real_nodes,
+      rem_cluster_keys,
+      intercluster_nodes,
+    )
+  (rem_sizes, rem_flat_constraints)
+}
+
+///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), local intercluster-node guards, size map extension,
 /// and flat-constraint augmentation before final reorder pass.
@@ -6324,14 +6360,11 @@ fn build_remincross_reorder_inputs(
       cluster_meta,
       vnode_info,
     )
-  let rem_sizes =
-    build_order_sizes_for_order_graph(
+  let (rem_sizes, rem_flat_constraints) =
+    build_remincross_sizes_and_flat_constraints(
       order_sizes,
       order_with_vnodes,
       vnode_info.vnode_sizes,
-    )
-  let rem_flat_constraints =
-    build_remincross_flat_constraints(
       cluster_meta.flat_constraints,
       rank_same_constraints,
       order_with_clusters,
