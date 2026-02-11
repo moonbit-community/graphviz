@@ -859,6 +859,31 @@ fn compute_ranks_for_rank_data(
 
 
 ///|
+/// Graphviz parity: rank groups expand to a continuous rank interval
+/// from min to max rank before later per-rank passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_keys_and_all_ranks_for_rank_data(
+  groups : Map[Int, Array[String]],
+) -> (Array[Int], Array[Int]) {
+  let rank_keys : Array[Int] = []
+  for key, _ in groups {
+    rank_keys.push(key)
+  }
+  rank_keys.sort()
+  let all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let min_rank = rank_keys[0]
+    let max_rank = rank_keys[rank_keys.length() - 1]
+    for rank in min_rank..=max_rank {
+      all_ranks.push(rank)
+    }
+  }
+  (rank_keys, all_ranks)
+}
+
+
+
+///|
 /// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_data(
@@ -879,19 +904,8 @@ fn compute_rank_data(
     edge_reversed,
   )
   let groups = build_rank_groups(nodes, ranks)
-  let rank_keys : Array[Int] = []
-  for key, _ in groups {
-    rank_keys.push(key)
-  }
-  rank_keys.sort()
-  let all_ranks : Array[Int] = []
-  if rank_keys.length() > 0 {
-    let min_rank = rank_keys[0]
-    let max_rank = rank_keys[rank_keys.length() - 1]
-    for rank in min_rank..=max_rank {
-      all_ranks.push(rank)
-    }
-  }
+  let (rank_keys, all_ranks) =
+    build_rank_keys_and_all_ranks_for_rank_data(groups)
   let self_edge_labels = self_edge_label_half_heights(edges)
   {
     edge_tail,
