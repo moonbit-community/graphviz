@@ -5936,21 +5936,24 @@ priv struct ClusterRankOrderFromRootReorderContext {
 /// produced by root mincross reorder followed by root-rank map transfer.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_rank_order_output_from_root_reorder(
-  root_rank_keys : Array[Int],
-  root_groups : Map[Int, Array[String]],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
   dispatch_context : ClusterRankOrderFromRootReorderContext,
+  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
 ) -> Map[Int, Map[String, Int]] {
+  let (
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+  ) = root_reorder_output
   let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let ordered_root = run_root_cluster_reorder_for_cluster_rank_order(
     root_rank_keys,
@@ -6260,36 +6263,9 @@ fn build_cluster_rank_order_from_enabled_cluster_root_inputs(
   dispatch_context : ClusterRankOrderFromRootReorderContext,
   root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
 ) -> Map[Int, Map[String, Int]] {
-  let (
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-  ) = root_reorder_output
   build_cluster_rank_order_output_from_root_reorder(
-    root_rank_keys,
-    root_groups,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
     dispatch_context,
+    root_reorder_output,
   )
 }
 
