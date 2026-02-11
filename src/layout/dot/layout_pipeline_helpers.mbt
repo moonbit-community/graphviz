@@ -7791,6 +7791,68 @@ fn build_order_groups_sizes_and_cluster_skeleton_output(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton nodes are installed by cluster_order
+/// first, then by cluster_min_rank fallback, using virtual_node() defaults.
+/// Do not change behavior without updating fixtures/tests.
+fn install_order_cluster_skeleton_nodes(
+  order_with_clusters : Bool,
+  cluster_meta : ClusterMetadata,
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_sizes_out : Map[String, NodeSize],
+  order_groups : Map[Int, Array[String]],
+) -> Unit {
+  if !order_with_clusters {
+    return
+  }
+  // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+  let skeleton_size = vnode_size_from_widths(1.0, 1.0)
+  let cluster_seen : Map[String, Bool] = Map::new()
+  for cluster in cluster_meta.cluster_order {
+    match cluster_meta.cluster_min_rank.get(cluster) {
+      Some(min_rank) => {
+        let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+          Some(value) => value
+          None => min_rank
+        }
+        append_order_cluster_skeleton_range(
+          cluster,
+          min_rank,
+          max_rank,
+          order_cluster_keys,
+          order_cluster_skeleton,
+          order_sizes_out,
+          order_groups,
+          skeleton_size,
+        )
+        cluster_seen[cluster] = true
+      }
+      None => ()
+    }
+  }
+  for cluster, min_rank in cluster_meta.cluster_min_rank {
+    if cluster_seen.get(cluster) is Some(_) {
+      continue
+    }
+    let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    append_order_cluster_skeleton_range(
+      cluster,
+      min_rank,
+      max_rank,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      order_sizes_out,
+      order_groups,
+      skeleton_size,
+    )
+  }
+}
+
+
+///|
 /// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
 /// vnodes, and install cluster skeleton nodes with virtual-node defaults.
 /// Do not change behavior without updating fixtures/tests.
@@ -7837,52 +7899,14 @@ fn build_order_groups_sizes_and_cluster_skeleton(
       vnode_info.vnode_clusters,
     )
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
-  if order_with_clusters {
-    // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-    let skeleton_size = vnode_size_from_widths(1.0, 1.0)
-    let cluster_seen : Map[String, Bool] = Map::new()
-    for cluster in cluster_meta.cluster_order {
-      match cluster_meta.cluster_min_rank.get(cluster) {
-        Some(min_rank) => {
-          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-            Some(value) => value
-            None => min_rank
-          }
-          append_order_cluster_skeleton_range(
-            cluster,
-            min_rank,
-            max_rank,
-            order_cluster_keys,
-            order_cluster_skeleton,
-            order_sizes_out,
-            order_groups,
-            skeleton_size,
-          )
-          cluster_seen[cluster] = true
-        }
-        None => ()
-      }
-    }
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
-      if cluster_seen.get(cluster) is Some(_) {
-        continue
-      }
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
-        Some(value) => value
-        None => min_rank
-      }
-      append_order_cluster_skeleton_range(
-        cluster,
-        min_rank,
-        max_rank,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        order_sizes_out,
-        order_groups,
-        skeleton_size,
-      )
-    }
-  }
+  install_order_cluster_skeleton_nodes(
+    order_with_clusters,
+    cluster_meta,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    order_sizes_out,
+    order_groups,
+  )
   build_order_groups_sizes_and_cluster_skeleton_output(
     order_groups,
     order_sizes_out,
