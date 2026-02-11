@@ -1919,22 +1919,13 @@ fn build_cluster_local_fixed_positions_and_ranks(
 }
 
 ///|
-/// Graphviz parity: cluster-local rank groups follow global node-order seeds
-/// before running local mincross in expanded cluster context.
+/// Graphviz parity: cluster-local node set uses global node_order as stable
+/// seed to create deterministic local node indices.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_groups_and_order(
-  groups : Map[Int, Array[String]],
+fn build_cluster_local_nodes_and_order(
   cluster_node_set : Map[String, Bool],
   node_order : Map[String, Int],
-) -> (
-  Array[String],
-  Map[String, Int],
-  Map[Int, Array[String]],
-  Array[Int],
-) {
-  if cluster_node_set.length() <= 1 {
-    return ([], Map::new(), Map::new(), [])
-  }
+) -> (Array[String], Map[String, Int]) {
   let cluster_nodes : Array[String] = []
   for name, _ in cluster_node_set {
     cluster_nodes.push(name)
@@ -1969,6 +1960,30 @@ fn build_cluster_local_rank_groups_and_order(
     cluster_node_order[name] = order_idx
     order_idx = order_idx + 1
   }
+  (cluster_nodes, cluster_node_order)
+}
+
+
+
+///|
+/// Graphviz parity: cluster-local rank groups follow global node-order seeds
+/// before running local mincross in expanded cluster context.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_rank_groups_and_order(
+  groups : Map[Int, Array[String]],
+  cluster_node_set : Map[String, Bool],
+  node_order : Map[String, Int],
+) -> (
+  Array[String],
+  Map[String, Int],
+  Map[Int, Array[String]],
+  Array[Int],
+) {
+  if cluster_node_set.length() <= 1 {
+    return ([], Map::new(), Map::new(), [])
+  }
+  let (cluster_nodes, cluster_node_order) =
+    build_cluster_local_nodes_and_order(cluster_node_set, node_order)
   let cluster_groups : Map[Int, Array[String]] = Map::new()
   for rank, names in groups {
     let list : Array[String] = []
