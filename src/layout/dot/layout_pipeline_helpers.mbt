@@ -5424,6 +5424,46 @@ fn reorder_rank_groups_by_cluster_rank_order(
 }
 
 ///|
+/// Graphviz parity: trailing-vnode marking applies only to non-internal,
+/// cross-cluster edges whose endpoint cluster rank ranges do not overlap.
+/// Do not change behavior without updating fixtures/tests.
+fn should_trail_intercluster_vnodes_for_edge(
+  tail_cluster : String,
+  head_cluster : String,
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Bool {
+  let internal =
+    tail_cluster != "" && head_cluster != "" &&
+    edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+  if internal || tail_cluster == head_cluster {
+    return false
+  }
+  if tail_cluster == "" || head_cluster == "" {
+    return false
+  }
+  let tail_min = match cluster_min_rank.get(tail_cluster) {
+    Some(value) => value
+    None => 0
+  }
+  let tail_max = match cluster_max_rank.get(tail_cluster) {
+    Some(value) => value
+    None => tail_min
+  }
+  let head_min = match cluster_min_rank.get(head_cluster) {
+    Some(value) => value
+    None => 0
+  }
+  let head_max = match cluster_max_rank.get(head_cluster) {
+    Some(value) => value
+    None => head_min
+  }
+  let overlap = tail_min <= head_max && head_min <= tail_max
+  !overlap
+}
+
+///|
 /// Graphviz parity: ReMincross trailing vnode set marks intercluster edge
 /// vnodes whose endpoint cluster rank ranges do not overlap.
 /// Do not change behavior without updating fixtures/tests.
@@ -5460,39 +5500,19 @@ fn collect_intercluster_trailing_vnodes(
       Some(value) => value
       None => ""
     }
-    let internal =
-      tail_cluster != "" && head_cluster != "" &&
-      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
-    if !internal && tail_cluster != head_cluster {
-      let mut should_trail = false
-      if tail_cluster != "" && head_cluster != "" {
-        let tail_min = match cluster_min_rank.get(tail_cluster) {
-          Some(value) => value
-          None => 0
-        }
-        let tail_max = match cluster_max_rank.get(tail_cluster) {
-          Some(value) => value
-          None => tail_min
-        }
-        let head_min = match cluster_min_rank.get(head_cluster) {
-          Some(value) => value
-          None => 0
-        }
-        let head_max = match cluster_max_rank.get(head_cluster) {
-          Some(value) => value
-          None => head_min
-        }
-        let overlap = tail_min <= head_max && head_min <= tail_max
-        should_trail = !overlap
+    if should_trail_intercluster_vnodes_for_edge(
+      tail_cluster,
+      head_cluster,
+      cluster_parents,
+      cluster_min_rank,
+      cluster_max_rank,
+    ) {
+      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+        Some(list) => list
+        None => []
       }
-      if should_trail {
-        let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-          Some(list) => list
-          None => []
-        }
-        for vnode in vnodes {
-          intercluster_vnodes[vnode] = true
-        }
+      for vnode in vnodes {
+        intercluster_vnodes[vnode] = true
       }
     }
     edge_idx = edge_idx + 1
