@@ -9248,6 +9248,57 @@ fn build_root_mincross_reorder_stage_output(
 
 
 ///|
+/// Graphviz parity: root ReMincross rank-reorder input tuple preserves
+/// Graphviz field ordering across membership/edge/preferred-position outputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_rank_reorder_inputs_output(
+  order_rank_keys_for_mincross : Array[Int],
+  mincross_nodes : Map[String, Bool],
+  order_edges_out_mincross : Array[@cgraph.Edge],
+  order_edge_tail_out_mincross : Array[String],
+  order_edge_head_out_mincross : Array[String],
+  order_edge_tail_port_x_mincross : Array[Double],
+  order_edge_head_port_x_mincross : Array[Double],
+  order_edge_tail_port_order_mincross : Array[Double],
+  order_edge_head_port_order_mincross : Array[Double],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  edge_order : Map[String, Int],
+  preferred_positions : Map[String, Double],
+) -> (
+  Array[Int],
+  Map[String, Bool],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Double],
+) {
+  (
+    order_rank_keys_for_mincross,
+    mincross_nodes,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    edge_order,
+    preferred_positions,
+  )
+}
+
+
+///|
 /// Graphviz parity: root ReMincross rank-reorder inputs derive root-node
 /// membership, filtered edge arrays, and preferred positions in pass order.
 /// Do not change behavior without updating fixtures/tests.
@@ -9309,7 +9360,7 @@ fn build_root_mincross_rank_reorder_inputs(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
     )
-  (
+  build_root_mincross_rank_reorder_inputs_output(
     order_rank_keys_for_mincross,
     mincross_nodes,
     order_edges_out_mincross,
