@@ -3351,6 +3351,21 @@ fn append_cluster_skeleton_rank_span(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton max rank falls back to min rank when
+/// cluster_max_rank has no entry for the cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn cluster_skeleton_max_rank_or_min(
+  cluster_max_rank : Map[String, Int],
+  cluster : String,
+  min_rank : Int,
+) -> Int {
+  match cluster_max_rank.get(cluster) {
+    Some(value) => value
+    None => min_rank
+  }
+}
+
+///|
 /// Graphviz parity: cluster skeleton creation follows cluster_order first,
 /// then remaining cluster_min_rank iteration order.
 /// Do not change behavior without updating fixtures/tests.
@@ -3368,10 +3383,8 @@ fn build_cluster_skeleton_creation(
   for cluster in cluster_order {
     match cluster_min_rank.get(cluster) {
       Some(min_rank) => {
-        let max_rank = match cluster_max_rank.get(cluster) {
-          Some(value) => value
-          None => min_rank
-        }
+        let max_rank =
+          cluster_skeleton_max_rank_or_min(cluster_max_rank, cluster, min_rank)
         append_cluster_skeleton_rank_span(
           cluster_skeleton_creation,
           cluster,
@@ -3387,10 +3400,8 @@ fn build_cluster_skeleton_creation(
     if cluster_seen.get(cluster) is Some(_) {
       continue
     }
-    let max_rank = match cluster_max_rank.get(cluster) {
-      Some(value) => value
-      None => min_rank
-    }
+    let max_rank =
+      cluster_skeleton_max_rank_or_min(cluster_max_rank, cluster, min_rank)
     append_cluster_skeleton_rank_span(
       cluster_skeleton_creation,
       cluster,
