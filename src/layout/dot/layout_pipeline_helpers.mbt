@@ -18286,6 +18286,55 @@ fn run_ordering_dispatch_pipeline(
 
 
 ///|
+/// Graphviz parity: ordering dispatch pipeline context extraction reads
+/// ordering-stage inputs + runtime context without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_pipeline_context_from_ordering_inputs(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+) -> OrderingDispatchPipelineContext {
+  build_ordering_dispatch_pipeline_context(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    groups,
+    rank_keys,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    rankdir,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
+  )
+}
+
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -18323,7 +18372,7 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
     )
   let pipeline_context =
-    build_ordering_dispatch_pipeline_context(
+    build_ordering_dispatch_pipeline_context_from_ordering_inputs(
       graph,
       nodes,
       edges,
