@@ -5970,6 +5970,31 @@ fn build_remincross_cluster_keys(
 }
 
 ///|
+/// Graphviz parity: intercluster short-span guard selects only edges crossing
+/// cluster keys with absolute rank difference <= 1.
+/// Do not change behavior without updating fixtures/tests.
+fn edge_has_intercluster_short_span(
+  tail : String,
+  head : String,
+  intercluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+) -> Bool {
+  let tail_cluster = cluster_key_or_empty(intercluster_keys, tail)
+  let head_cluster = cluster_key_or_empty(intercluster_keys, head)
+  if tail_cluster == head_cluster {
+    return false
+  }
+  let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+  let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+  let span = if tail_rank <= head_rank {
+    head_rank - tail_rank
+  } else {
+    tail_rank - head_rank
+  }
+  span <= 1
+}
+
+///|
 /// Graphviz parity: intercluster node guard marks real endpoints of
 /// intercluster edges with rank span <= 1 for local-order relaxation.
 /// Do not change behavior without updating fixtures/tests.
@@ -5988,32 +6013,14 @@ fn collect_intercluster_nodes_with_short_span(
   while edge_idx < edge_tail.length() {
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
-    let tail_cluster = match intercluster_keys.get(tail) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match intercluster_keys.get(head) {
-      Some(value) => value
-      None => ""
-    }
-    if tail_cluster != head_cluster {
-      let tail_rank = match ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
-      let span = if tail_rank <= head_rank {
-        head_rank - tail_rank
-      } else {
-        tail_rank - head_rank
-      }
-      if span <= 1 {
-        intercluster_nodes[tail] = true
-        intercluster_nodes[head] = true
-      }
+    if edge_has_intercluster_short_span(
+      tail,
+      head,
+      intercluster_keys,
+      ranks,
+    ) {
+      intercluster_nodes[tail] = true
+      intercluster_nodes[head] = true
     }
     edge_idx = edge_idx + 1
   }
