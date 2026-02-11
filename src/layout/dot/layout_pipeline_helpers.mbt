@@ -6938,6 +6938,44 @@ fn build_clustered_remincross_groups_output(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross pass seeds rem_groups from real-node
+/// groups plus edge vnodes (no cluster skeletons) before rematerialization.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_pass_groups(
+  base_groups : Map[Int, Array[String]],
+  order_with_vnodes : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+) -> Map[Int, Array[String]] {
+  let rem_groups =
+    build_remincross_groups_with_optional_vnodes(
+      base_groups,
+      order_with_vnodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      vnode_info.edge_vnodes,
+      vnode_info.vnode_ranks,
+      vnode_info.vnodes_by_rank,
+    )
+  dot_trace_groups("remincross_groups", rem_groups)
+  rem_groups
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
 /// edge vnodes, then materializes/remaps edges and executes final startpass=2
 /// reorder before dropping non-real nodes.
@@ -6971,9 +7009,8 @@ fn run_clustered_remincross_pass(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  // Graphviz parity: ReMincross runs on real nodes + edge vnodes (no cluster skeletons).
   let rem_groups =
-    build_remincross_groups_with_optional_vnodes(
+    build_clustered_remincross_pass_groups(
       base_groups,
       order_with_vnodes,
       edges,
@@ -6981,16 +7018,9 @@ fn run_clustered_remincross_pass(
       edge_head,
       edge_reversed,
       ranks,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      cluster_meta.cluster_parents,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-      vnode_info.edge_vnodes,
-      vnode_info.vnode_ranks,
-      vnode_info.vnodes_by_rank,
+      cluster_meta,
+      vnode_info,
     )
-  dot_trace_groups("remincross_groups", rem_groups)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   let (next_ordered_with_vnodes, next_final_groups) =
     build_clustered_remincross_groups_output(
