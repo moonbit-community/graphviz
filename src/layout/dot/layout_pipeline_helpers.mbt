@@ -8473,6 +8473,19 @@ fn build_clustered_remincross_reorder_step_inputs_metadata_phase(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross reorder-step input payload keeps
+/// edge-index and cluster-aware metadata tuple ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+type ClusteredReMincrossReorderStepInputsOutput = (
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, String],
+  Map[String, NodeSize],
+  Map[String, Bool],
+)
+
+///|
 /// Graphviz parity: clustered ReMincross reorder-step input output preserves
 /// edge-index maps and cluster-aware metadata tuple ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -8483,14 +8496,7 @@ fn build_clustered_remincross_reorder_step_inputs_output(
   rem_cluster_keys : Map[String, String],
   rem_sizes : Map[String, NodeSize],
   rem_flat_constraints : Map[String, Bool],
-) -> (
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, String],
-  Map[String, NodeSize],
-  Map[String, Bool],
-) {
+) -> ClusteredReMincrossReorderStepInputsOutput {
   (
     rem_parents,
     rem_children,
@@ -8525,14 +8531,7 @@ fn build_clustered_remincross_reorder_step_inputs(
   rem_edge_head_out : Array[String],
   rem_ranks : Map[String, Int],
   rem_edges_out : Array[@cgraph.Edge],
-) -> (
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, String],
-  Map[String, NodeSize],
-  Map[String, Bool],
-) {
+) -> ClusteredReMincrossReorderStepInputsOutput {
   let (rem_parents, rem_children, rem_edge_order) =
     build_clustered_remincross_reorder_step_inputs_edge_indices_phase(
       rem_nodes,
@@ -8704,14 +8703,7 @@ fn run_clustered_remincross_reorder_step_input_phase(
   rem_edge_head_out : Array[String],
   rem_ranks : Map[String, Int],
   rem_edges_out : Array[@cgraph.Edge],
-) -> (
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, String],
-  Map[String, NodeSize],
-  Map[String, Bool],
-) {
+) -> ClusteredReMincrossReorderStepInputsOutput {
   build_clustered_remincross_reorder_step_inputs(
     graph,
     edges,
@@ -8757,14 +8749,7 @@ fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
   real_nodes : Map[String, Bool],
-  input_phase_output : (
-    Map[String, Array[String]],
-    Map[String, Array[String]],
-    Map[String, Int],
-    Map[String, String],
-    Map[String, NodeSize],
-    Map[String, Bool],
-  ),
+  input_phase_output : ClusteredReMincrossReorderStepInputsOutput,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (
     rem_parents,
