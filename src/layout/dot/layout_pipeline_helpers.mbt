@@ -16723,6 +16723,41 @@ fn build_clustered_xpos_reorder_seed_data(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder vnode chain direction follows
+/// rank order (forward/reverse) before segment emission.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_xpos_reorder_edge_chain_with_vnodes(
+  ranks : Map[String, Int],
+  tail : String,
+  head : String,
+  vnodes : Array[String],
+) -> Array[String] {
+  let tail_rank = match ranks.get(tail) {
+    Some(value) => value
+    None => 0
+  }
+  let head_rank = match ranks.get(head) {
+    Some(value) => value
+    None => 0
+  }
+  let chain : Array[String] = []
+  chain.push(tail)
+  if tail_rank <= head_rank {
+    for vnode in vnodes {
+      chain.push(vnode)
+    }
+  } else {
+    let mut i = vnodes.length()
+    while i > 0 {
+      i = i - 1
+      chain.push(vnodes[i])
+    }
+  }
+  chain.push(head)
+  chain
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder expands vnode edge chains
 /// into order-graph segments while preserving endpoint port hints.
 /// Do not change behavior without updating fixtures/tests.
@@ -16768,28 +16803,12 @@ fn append_clustered_xpos_reorder_edge_with_vnodes(
       head_port_order,
     )
   } else {
-    let tail_rank = match ranks.get(tail) {
-      Some(value) => value
-      None => 0
-    }
-    let head_rank = match ranks.get(head) {
-      Some(value) => value
-      None => 0
-    }
-    let chain : Array[String] = []
-    chain.push(tail)
-    if tail_rank <= head_rank {
-      for vnode in vnodes {
-        chain.push(vnode)
-      }
-    } else {
-      let mut i = vnodes.length()
-      while i > 0 {
-        i = i - 1
-        chain.push(vnodes[i])
-      }
-    }
-    chain.push(head)
+    let chain = build_clustered_xpos_reorder_edge_chain_with_vnodes(
+      ranks,
+      tail,
+      head,
+      vnodes,
+    )
     let mut idx = 0
     while idx + 1 < chain.length() {
       let seg_tail_port =
