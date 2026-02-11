@@ -13717,6 +13717,44 @@ fn build_clustered_ordering_pre_root_and_root_stage_output(
 }
 
 ///|
+/// Graphviz parity: clustered ordering root+cluster build_ranks phase consumes
+/// pre-root stage payload unchanged before finalize-stage dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  graph : @cgraph.Graph,
+  cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  graphviz_flip : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  pre_root_stage : OrderClusteredPreRootStageData,
+) -> OrderRootClusterStageData {
+  run_root_and_cluster_build_ranks_stage_from_pre_root(
+    order_with_clusters,
+    order_with_vnodes,
+    graph,
+    cluster_meta,
+    vnode_order_keys_for_ordering,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    graphviz_flip,
+    flat_rank_constraints,
+    ranks,
+    vnode_info,
+    pre_root_stage,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ordering runs pre-root graph materialization
 /// before root+cluster build_ranks stage, preserving phase boundaries.
 /// Do not change behavior without updating fixtures/tests.
@@ -13772,7 +13810,7 @@ fn run_clustered_ordering_pre_root_and_root_stage(
       nodes,
     )
   let root_cluster_stage =
-    run_root_and_cluster_build_ranks_stage_from_pre_root(
+    run_clustered_ordering_pre_root_and_root_stage_root_phase(
       order_with_clusters,
       order_with_vnodes,
       graph,
