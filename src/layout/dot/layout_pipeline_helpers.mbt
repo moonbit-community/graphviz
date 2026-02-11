@@ -5887,6 +5887,56 @@ fn build_remincross_cluster_keys_base(
 
 
 ///|
+/// Graphviz parity: ReMincross virtual nodes take the LCA endpoint cluster
+/// (or root fallback) from intercluster edge endpoints.
+/// Do not change behavior without updating fixtures/tests.
+fn assign_remincross_vnode_clusters_from_edges(
+  rem_cluster_keys : Map[String, String],
+  root_cluster : String,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  edge_vnodes : Map[String, Array[String]],
+) -> Unit {
+  let mut edge_idx = 0
+  for edge in edges {
+    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      edge_idx = edge_idx + 1
+      continue
+    }
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edge.head().name()
+      }
+    let tail_cluster = cluster_key_or_empty(intercluster_keys, tail)
+    let head_cluster = cluster_key_or_empty(intercluster_keys, head)
+    // Graphviz parity: mark_lowclusters assigns virtual nodes to the
+    // lowest common ancestor cluster for intercluster edges.
+    let vnode_cluster =
+      cluster_lowest_common_ancestor(
+        tail_cluster,
+        head_cluster,
+        cluster_parents,
+      )
+    let rem_cluster = if vnode_cluster == "" { root_cluster } else { vnode_cluster }
+    for vnode in vnodes {
+      rem_cluster_keys[vnode] = rem_cluster
+    }
+    edge_idx = edge_idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross cluster keys start from intercluster keys,
 /// map empty keys to the root graph key, and assign edge vnodes to the LCA
 /// cluster (mark_lowclusters) for cluster-boundary swap guards.
@@ -5906,46 +5956,16 @@ fn build_remincross_cluster_keys(
   if !order_with_vnodes {
     return rem_cluster_keys
   }
-  let mut edge_idx = 0
-  for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-      Some(list) => list
-      None => []
-    }
-    if vnodes.length() == 0 {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let tail_cluster = match intercluster_keys.get(tail) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match intercluster_keys.get(head) {
-      Some(value) => value
-      None => ""
-    }
-    // Graphviz parity: mark_lowclusters assigns virtual nodes to the
-    // lowest common ancestor cluster for intercluster edges.
-    let vnode_cluster =
-      cluster_lowest_common_ancestor(
-        tail_cluster,
-        head_cluster,
-        cluster_parents,
-      )
-    let rem_cluster = if vnode_cluster == "" { root_cluster } else { vnode_cluster }
-    for vnode in vnodes {
-      rem_cluster_keys[vnode] = rem_cluster
-    }
-    edge_idx = edge_idx + 1
-  }
+  assign_remincross_vnode_clusters_from_edges(
+    rem_cluster_keys,
+    root_cluster,
+    edges,
+    edge_tail,
+    edge_head,
+    intercluster_keys,
+    cluster_parents,
+    edge_vnodes,
+  )
   rem_cluster_keys
 }
 
