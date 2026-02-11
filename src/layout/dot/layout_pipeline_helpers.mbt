@@ -566,6 +566,32 @@ fn build_node_order_for_layout_inputs(
 }
 
 ///|
+/// Graphviz parity: node size maps for output/order/layout are derived once
+/// per node, with LR/RL swapping only applied to layout-time sizes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_size_maps_for_layout_inputs(
+  nodes : Array[@cgraph.Node],
+  rankdir : RankDir,
+  record_orientation : RecordOrientation,
+) -> (Map[String, NodeSize], Map[String, NodeSize], Map[String, NodeSize]) {
+  let output_sizes : Map[String, NodeSize] = Map::new()
+  let order_sizes : Map[String, NodeSize] = Map::new()
+  let sizes : Map[String, NodeSize] = Map::new()
+  for node in nodes {
+    let size = node_size(node, record_orientation)
+    output_sizes[node.name()] = size
+    order_sizes[node.name()] = size
+    sizes[node.name()] =
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+      swap_node_size(size)
+    } else {
+      size
+    }
+  }
+  (output_sizes, order_sizes, sizes)
+}
+
+///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 fn prepare_layout_inputs(
@@ -584,20 +610,8 @@ fn prepare_layout_inputs(
   let has_edge_labels = graph_has_edge_labels(edges)
   let node_order = build_node_order_for_layout_inputs(nodes, rankdir)
   let record_orientation = record_layout_orientation(rankdir)
-  let output_sizes : Map[String, NodeSize] = Map::new()
-  let order_sizes : Map[String, NodeSize] = Map::new()
-  let sizes : Map[String, NodeSize] = Map::new()
-  for node in nodes {
-    let size = node_size(node, record_orientation)
-    output_sizes[node.name()] = size
-    order_sizes[node.name()] = size
-    sizes[node.name()] =
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
-      swap_node_size(size)
-    } else {
-      size
-    }
-  }
+  let (output_sizes, order_sizes, sizes) =
+    build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
   let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
