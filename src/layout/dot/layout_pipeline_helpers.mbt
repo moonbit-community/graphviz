@@ -616,6 +616,19 @@ priv struct XposClusteredReorderEdgesData {
 }
 
 ///|
+priv struct XposClusteredInputEdgeData {
+  tail : String
+  head : String
+  penalty : Int
+  constraint : Bool
+  tail_port_x : Double
+  head_port_x : Double
+  tail_port_order : Double
+  head_port_order : Double
+  vnodes : Array[String]
+}
+
+///|
 priv struct NonclusterXposReorderInputs {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
@@ -19487,6 +19500,63 @@ fn append_cluster_skeleton_edges_for_xpos_reorder(
 }
 
 ///|
+/// Graphviz parity: clustered xpos edge-input extraction keeps fallback
+/// defaults and vnode lookup ordering unchanged per Graphviz edge iteration.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_xpos_reorder_input_edge_data(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  rank_data : RankData,
+  ordering : OrderingResult,
+  x_edge_tail_port_x : Array[Double],
+  x_edge_head_port_x : Array[Double],
+  x_edge_tail_port_order : Array[Double],
+  x_edge_head_port_order : Array[Double],
+) -> XposClusteredInputEdgeData {
+  let tail =
+    if edge_idx < rank_data.edge_tail.length() { rank_data.edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head =
+    if edge_idx < rank_data.edge_head.length() { rank_data.edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  let penalty = edge_xpenalty(edge)
+  let constraint = edge_is_constraint(edge)
+  let tail_port_x =
+    if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
+      0.0
+    }
+  let head_port_x =
+    if edge_idx < x_edge_head_port_x.length() { x_edge_head_port_x[edge_idx] } else {
+      0.0
+    }
+  let tail_port_order =
+    if edge_idx < x_edge_tail_port_order.length() { x_edge_tail_port_order[edge_idx] } else {
+      0.5
+    }
+  let head_port_order =
+    if edge_idx < x_edge_head_port_order.length() { x_edge_head_port_order[edge_idx] } else {
+      0.5
+    }
+  let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
+    Some(list) => list
+    None => []
+  }
+  {
+    tail,
+    head,
+    penalty,
+    constraint,
+    tail_port_x,
+    head_port_x,
+    tail_port_order,
+    head_port_order,
+    vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder first materializes input
 /// edges in Graphviz iteration order before appending cluster skeleton edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -19510,36 +19580,17 @@ fn append_clustered_xpos_reorder_input_edges(
 ) -> Unit {
   let mut edge_idx = 0
   for edge in prep.edges {
-    let tail =
-      if edge_idx < rank_data.edge_tail.length() { rank_data.edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if edge_idx < rank_data.edge_head.length() { rank_data.edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let penalty = edge_xpenalty(edge)
-    let constraint = edge_is_constraint(edge)
-    let tail_port_x =
-      if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
-        0.0
-      }
-    let head_port_x =
-      if edge_idx < x_edge_head_port_x.length() { x_edge_head_port_x[edge_idx] } else {
-        0.0
-      }
-    let tail_port_order =
-      if edge_idx < x_edge_tail_port_order.length() { x_edge_tail_port_order[edge_idx] } else {
-        0.5
-      }
-    let head_port_order =
-      if edge_idx < x_edge_head_port_order.length() { x_edge_head_port_order[edge_idx] } else {
-        0.5
-      }
-    let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
-      Some(list) => list
-      None => []
-    }
+    let edge_data =
+      build_clustered_xpos_reorder_input_edge_data(
+        edge,
+        edge_idx,
+        rank_data,
+        ordering,
+        x_edge_tail_port_x,
+        x_edge_head_port_x,
+        x_edge_tail_port_order,
+        x_edge_head_port_order,
+      )
     append_clustered_xpos_reorder_edge_with_vnodes(
       order_graph,
       order_node_map,
@@ -19551,15 +19602,15 @@ fn append_clustered_xpos_reorder_input_edges(
       order_edge_tail_port_order,
       order_edge_head_port_order,
       rank_data.ranks,
-      tail,
-      head,
-      penalty,
-      constraint,
-      tail_port_x,
-      head_port_x,
-      tail_port_order,
-      head_port_order,
-      vnodes,
+      edge_data.tail,
+      edge_data.head,
+      edge_data.penalty,
+      edge_data.constraint,
+      edge_data.tail_port_x,
+      edge_data.head_port_x,
+      edge_data.tail_port_order,
+      edge_data.head_port_order,
+      edge_data.vnodes,
     )
     edge_idx = edge_idx + 1
   }
