@@ -4406,6 +4406,38 @@ fn build_root_groups_base_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root cluster reorder seeds tail order from current nlist,
+/// replacing cluster members with rank-qualified skeleton names and deduping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_tail_seed_order_for_cluster_reorder(
+  nlist_order : Array[String],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+) -> Array[String] {
+  let tail_order_root : Array[String] = []
+  let tail_root_seen : Map[String, Bool] = Map::new()
+  for name in nlist_order {
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster != "" {
+      let rank = rank_or_zero_for_flat_constraints(ranks, name)
+      let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+      append_order_creation_name_if_absent(
+        tail_order_root,
+        tail_root_seen,
+        skel,
+      )
+    } else {
+      append_order_creation_name_if_absent(
+        tail_order_root,
+        tail_root_seen,
+        name,
+      )
+    }
+  }
+  tail_order_root
+}
+
+///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
@@ -4420,28 +4452,12 @@ fn build_root_nlist_order_for_cluster_reorder(
   root_edge_creation : Array[(String, String)],
   flat_rank_constraints : Map[String, Bool],
 ) -> Array[String] {
-  let tail_order_root : Array[String] = []
-  let tail_root_seen : Map[String, Bool] = Map::new()
-  for name in nlist_order {
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
-    if cluster != "" {
-      let rank = match ranks.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-      if tail_root_seen.get(skel) is None {
-        tail_root_seen[skel] = true
-        tail_order_root.push(skel)
-      }
-    } else if tail_root_seen.get(name) is None {
-      tail_root_seen[name] = true
-      tail_order_root.push(name)
-    }
-  }
+  let tail_order_root =
+    build_root_tail_seed_order_for_cluster_reorder(
+      nlist_order,
+      cluster_keys,
+      ranks,
+    )
   let root_edge_creation_order =
     merge_edge_creation_sequences(
       skeleton_edge_creation,
