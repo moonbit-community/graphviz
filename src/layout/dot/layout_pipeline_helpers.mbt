@@ -206,6 +206,28 @@ priv struct OrderingReorderSetupContext {
 }
 
 ///|
+/// Graphviz parity: dispatch-setup context keeps edge-port extraction +
+/// reorder-setup payload ordering unchanged before setup assembly.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingDispatchSetupContext {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  port_edge_nodes : Map[String, Bool]
+  vnode_count : Int
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+}
+
+///|
 priv struct OrderingDispatchSetup {
   edge_port_data : OrderingEdgePortData
   reorder_setup : OrderingReorderSetup
@@ -16499,45 +16521,31 @@ fn build_ordering_dispatch_setup_output(
 /// sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_dispatch_setup(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  port_edge_nodes : Map[String, Bool],
-  vnode_count : Int,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  context : OrderingDispatchSetupContext,
 ) -> OrderingDispatchSetup {
   let edge_port_data =
     build_ordering_edge_port_data(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      order_sizes,
+      context.nodes,
+      context.edges,
+      context.edge_tail,
+      context.edge_head,
+      context.order_sizes,
     )
   let reorder_setup_context : OrderingReorderSetupContext = {
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    node_order,
-    port_edge_nodes,
-    vnode_count,
-    rankdir,
-    cluster_meta,
-    vnode_info,
+    nodes: context.nodes,
+    edges: context.edges,
+    edge_tail: context.edge_tail,
+    edge_head: context.edge_head,
+    edge_reversed: context.edge_reversed,
+    edge_out_order: context.edge_out_order,
+    ranks: context.ranks,
+    groups: context.groups,
+    node_order: context.node_order,
+    port_edge_nodes: context.port_edge_nodes,
+    vnode_count: context.vnode_count,
+    rankdir: context.rankdir,
+    cluster_meta: context.cluster_meta,
+    vnode_info: context.vnode_info,
     edge_tail_port_x: edge_port_data.edge_tail_port_x,
     edge_head_port_x: edge_port_data.edge_head_port_x,
     edge_tail_port_order: edge_port_data.edge_tail_port_order,
@@ -16547,6 +16555,7 @@ fn build_ordering_dispatch_setup(
     build_ordering_reorder_setup(reorder_setup_context)
   build_ordering_dispatch_setup_output(edge_port_data, reorder_setup)
 }
+
 
 ///|
 /// Graphviz parity: clustered pre-root stage output object maps grouped sizes,
@@ -18010,7 +18019,7 @@ fn build_ordering_dispatch_setup_from_runtime_context(
   cluster_meta : ClusterMetadata,
   runtime_context : OrderingRuntimeContext,
 ) -> OrderingDispatchSetup {
-  build_ordering_dispatch_setup(
+  let setup_context : OrderingDispatchSetupContext = {
     nodes,
     edges,
     edge_tail,
@@ -18021,12 +18030,13 @@ fn build_ordering_dispatch_setup_from_runtime_context(
     groups,
     node_order,
     order_sizes,
-    runtime_context.port_edge_nodes,
-    runtime_context.vnode_count,
+    port_edge_nodes: runtime_context.port_edge_nodes,
+    vnode_count: runtime_context.vnode_count,
     rankdir,
     cluster_meta,
-    runtime_context.vnode_info,
-  )
+    vnode_info: runtime_context.vnode_info,
+  }
+  build_ordering_dispatch_setup(setup_context)
 }
 
 ///|
