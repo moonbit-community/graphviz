@@ -18053,6 +18053,36 @@ fn build_ordering_dispatch_setup_from_runtime_context(
 }
 
 ///|
+/// Graphviz parity: stage-dispatch context extraction reads execution payloads
+/// without argument reordering before ordering stage dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_stage_dispatch_context_from_execution_context(
+  execution_context : OrderingDispatchPipelineExecutionContext,
+) -> OrderingStageDispatchContext {
+  build_ordering_stage_dispatch_context(
+    execution_context.graph,
+    execution_context.nodes,
+    execution_context.edges,
+    execution_context.edge_tail,
+    execution_context.edge_head,
+    execution_context.edge_reversed,
+    execution_context.edge_out_order,
+    execution_context.ranks,
+    execution_context.rank_keys,
+    execution_context.groups,
+    execution_context.node_order,
+    execution_context.order_sizes,
+    execution_context.nodesep_pt,
+    execution_context.has_edge_labels,
+    execution_context.cluster_meta,
+    execution_context.port_order_positions,
+    execution_context.port_order_contrib,
+    execution_context.runtime_context,
+    execution_context.dispatch_setup,
+  )
+}
+
+///|
 /// Graphviz parity: ordering dispatch stage forwards setup/runtime context
 /// into clustered/non-clustered stage dispatch without argument reshuffling.
 /// Do not change behavior without updating fixtures/tests.
@@ -18060,26 +18090,8 @@ fn run_ordering_dispatch_pipeline_stage_dispatch_phase(
   execution_context : OrderingDispatchPipelineExecutionContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let stage_dispatch_context =
-    build_ordering_stage_dispatch_context(
-      execution_context.graph,
-      execution_context.nodes,
-      execution_context.edges,
-      execution_context.edge_tail,
-      execution_context.edge_head,
-      execution_context.edge_reversed,
-      execution_context.edge_out_order,
-      execution_context.ranks,
-      execution_context.rank_keys,
-      execution_context.groups,
-      execution_context.node_order,
-      execution_context.order_sizes,
-      execution_context.nodesep_pt,
-      execution_context.has_edge_labels,
-      execution_context.cluster_meta,
-      execution_context.port_order_positions,
-      execution_context.port_order_contrib,
-      execution_context.runtime_context,
-      execution_context.dispatch_setup,
+    build_ordering_stage_dispatch_context_from_execution_context(
+      execution_context,
     )
   run_ordering_stage_dispatch(stage_dispatch_context)
 }
