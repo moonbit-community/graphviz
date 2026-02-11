@@ -362,6 +362,27 @@ priv struct OrderingDispatchPipelineContext {
 }
 
 ///|
+/// Graphviz parity: clustered pre-root reorder/materialization context keeps
+/// stage payload ordering unchanged before reorder/materialize dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredPreRootReorderMaterializedContext {
+  order_groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  base_order_index : Map[String, Int]
+  cluster_meta : ClusterMetadata
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -16622,47 +16643,34 @@ fn build_clustered_ordering_pre_root_stage_output(
 /// materialized order-edge/neighbor data, matching Graphviz stage sequence.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_pre_root_reorder_context_and_materialized(
-  order_groups : Map[Int, Array[String]],
-  nlist_order : Array[String],
-  gdnlist_order : Array[String],
-  node_order : Map[String, Int],
-  real_nodes : Map[String, Bool],
-  base_order_index : Map[String, Int],
-  cluster_meta : ClusterMetadata,
-  port_edge_nodes : Map[String, Bool],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  edge_creation_order : Array[(String, String)],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nodes : Array[@cgraph.Node],
+  context : ClusteredPreRootReorderMaterializedContext,
 ) -> (OrderReorderContext, OrderMaterializationData) {
   let reorder_context =
     build_order_reorder_context(
-      order_groups,
-      nlist_order,
-      gdnlist_order,
-      node_order,
-      real_nodes,
-      base_order_index,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      port_edge_nodes,
+      context.order_groups,
+      context.nlist_order,
+      context.gdnlist_order,
+      context.node_order,
+      context.real_nodes,
+      context.base_order_index,
+      context.cluster_meta.rank_same_groups,
+      context.cluster_meta.rank_same_order,
+      context.port_edge_nodes,
     )
   trace_order_node_order_debug(reorder_context.order_node_order)
   let materialized_inputs =
     build_materialized_order_edges_and_neighbors_context(
-      nlist_order,
-      order_edges_by_tail,
-      order_edges_by_tail_unmapped,
+      context.nlist_order,
+      context.order_edges_by_tail,
+      context.order_edges_by_tail_unmapped,
       reorder_context,
-      real_nodes,
-      edge_creation_order,
-      cluster_meta,
-      gdnlist_order,
-      edge_tail,
-      edge_head,
-      nodes,
+      context.real_nodes,
+      context.edge_creation_order,
+      context.cluster_meta,
+      context.gdnlist_order,
+      context.edge_tail,
+      context.edge_head,
+      context.nodes,
     )
   let materialized =
     build_materialized_order_edges_and_neighbors(materialized_inputs)
@@ -16712,22 +16720,25 @@ fn build_clustered_ordering_pre_root_stage(
       order_sizes,
     )
   dot_trace_groups("order_groups_pre", order_groups)
+  let reorder_materialized_context : ClusteredPreRootReorderMaterializedContext = {
+    order_groups,
+    nlist_order,
+    gdnlist_order,
+    node_order,
+    real_nodes,
+    base_order_index,
+    cluster_meta,
+    port_edge_nodes,
+    order_edges_by_tail,
+    order_edges_by_tail_unmapped,
+    edge_creation_order,
+    edge_tail,
+    edge_head,
+    nodes,
+  }
   let (reorder_context, materialized) =
     build_clustered_pre_root_reorder_context_and_materialized(
-      order_groups,
-      nlist_order,
-      gdnlist_order,
-      node_order,
-      real_nodes,
-      base_order_index,
-      cluster_meta,
-      port_edge_nodes,
-      order_edges_by_tail,
-      order_edges_by_tail_unmapped,
-      edge_creation_order,
-      edge_tail,
-      edge_head,
-      nodes,
+      reorder_materialized_context,
     )
   build_clustered_ordering_pre_root_stage_output(
     order_groups,
