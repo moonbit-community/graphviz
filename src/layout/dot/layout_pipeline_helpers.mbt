@@ -884,6 +884,38 @@ fn build_rank_keys_and_all_ranks_for_rank_data(
 
 
 ///|
+/// Graphviz parity: rank preprocessing stages consume RankData fields in
+/// fixed order for ranking, ordering, and position pipeline steps.
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_data_output(
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  edge_in_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  rank_keys : Array[Int],
+  all_ranks : Array[Int],
+  self_edge_labels : Map[String, Double],
+) -> RankData {
+  {
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    edge_in_order,
+    ranks,
+    groups,
+    rank_keys,
+    all_ranks,
+    self_edge_labels,
+  }
+}
+
+
+
+///|
 /// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_data(
@@ -907,7 +939,7 @@ fn compute_rank_data(
   let (rank_keys, all_ranks) =
     build_rank_keys_and_all_ranks_for_rank_data(groups)
   let self_edge_labels = self_edge_label_half_heights(edges)
-  {
+  build_rank_data_output(
     edge_tail,
     edge_head,
     edge_reversed,
@@ -918,7 +950,7 @@ fn compute_rank_data(
     rank_keys,
     all_ranks,
     self_edge_labels,
-  }
+  )
 }
 
 ///|
