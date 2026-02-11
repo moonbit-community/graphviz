@@ -1966,24 +1966,14 @@ fn build_cluster_local_nodes_and_order(
 
 
 ///|
-/// Graphviz parity: cluster-local rank groups follow global node-order seeds
-/// before running local mincross in expanded cluster context.
+/// Graphviz parity: local cluster rank groups include only cluster members
+/// and keep cluster-local node order as stable sort key.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_groups_and_order(
+fn build_cluster_local_rank_groups(
   groups : Map[Int, Array[String]],
   cluster_node_set : Map[String, Bool],
-  node_order : Map[String, Int],
-) -> (
-  Array[String],
-  Map[String, Int],
-  Map[Int, Array[String]],
-  Array[Int],
-) {
-  if cluster_node_set.length() <= 1 {
-    return ([], Map::new(), Map::new(), [])
-  }
-  let (cluster_nodes, cluster_node_order) =
-    build_cluster_local_nodes_and_order(cluster_node_set, node_order)
+  cluster_node_order : Map[String, Int],
+) -> Map[Int, Array[String]] {
   let cluster_groups : Map[Int, Array[String]] = Map::new()
   for rank, names in groups {
     let list : Array[String] = []
@@ -2019,6 +2009,35 @@ fn build_cluster_local_rank_groups_and_order(
       cluster_groups[rank] = list
     }
   }
+  cluster_groups
+}
+
+
+
+///|
+/// Graphviz parity: cluster-local rank groups follow global node-order seeds
+/// before running local mincross in expanded cluster context.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_rank_groups_and_order(
+  groups : Map[Int, Array[String]],
+  cluster_node_set : Map[String, Bool],
+  node_order : Map[String, Int],
+) -> (
+  Array[String],
+  Map[String, Int],
+  Map[Int, Array[String]],
+  Array[Int],
+) {
+  if cluster_node_set.length() <= 1 {
+    return ([], Map::new(), Map::new(), [])
+  }
+  let (cluster_nodes, cluster_node_order) =
+    build_cluster_local_nodes_and_order(cluster_node_set, node_order)
+  let cluster_groups = build_cluster_local_rank_groups(
+    groups,
+    cluster_node_set,
+    cluster_node_order,
+  )
   let cluster_rank_keys = collect_rank_keys(cluster_groups)
   (cluster_nodes, cluster_node_order, cluster_groups, cluster_rank_keys)
 }
