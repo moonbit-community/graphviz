@@ -9869,6 +9869,26 @@ fn build_order_reorder_context_output(
   }
 }
 
+
+///|
+/// Graphviz parity: order-reorder context builds paired mapped/unmapped order
+/// graphs from the same order-node sequence before edge materialization passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_graph_pairs_for_reorder_context(
+  order_nodes : Array[String],
+) -> (
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+) {
+  let (order_graph, order_node_map) =
+    build_order_graph_and_nodes("order_graph", order_nodes)
+  let (order_graph_unmapped, order_node_map_unmapped) =
+    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  (order_graph, order_node_map, order_graph_unmapped, order_node_map_unmapped)
+}
+
 ///|
 /// Graphviz parity: order-graph rebuild uses GD_nlist-derived creation order
 /// and build_ranks seed order before mapped/unmapped edge materialization.
@@ -9888,10 +9908,8 @@ fn build_order_reorder_context(
   let order_ranks = build_node_ranks(order_groups)
   let order_nodes =
     build_order_nodes_from_groups(order_groups, order_rank_keys)
-  let (order_graph, order_node_map) =
-    build_order_graph_and_nodes("order_graph", order_nodes)
-  let (order_graph_unmapped, order_node_map_unmapped) =
-    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  let (order_graph, order_node_map, order_graph_unmapped, order_node_map_unmapped) =
+    build_order_graph_pairs_for_reorder_context(order_nodes)
   let creation_order =
     build_reverse_creation_order_from_nlist(nlist_order)
   let order_node_order =
