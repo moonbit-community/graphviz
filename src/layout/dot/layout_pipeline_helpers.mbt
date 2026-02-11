@@ -6054,6 +6054,39 @@ fn build_order_node_order_from_nlist_and_groups(
 }
 
 ///|
+/// Graphviz parity: ReMincross cluster-local flat locks keep adjacent real
+/// nodes in the same non-empty cluster when both are non-intercluster nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_cluster_local_flat_constraints_for_remincross_rank(
+  rem_flat_constraints : Map[String, Bool],
+  names : Array[String],
+  real_nodes : Map[String, Bool],
+  rem_cluster_keys : Map[String, String],
+  intercluster_nodes : Map[String, Bool],
+) -> Unit {
+  let mut prev_real : String? = None
+  let mut prev_cluster = ""
+  let mut prev_inter = false
+  for name in names {
+    if real_nodes.get(name) is None {
+      continue
+    }
+    let cluster = cluster_key_or_empty(rem_cluster_keys, name)
+    let inter = intercluster_nodes.get(name) is Some(_)
+    match prev_real {
+      Some(prev) =>
+        if cluster != "" && cluster == prev_cluster && !prev_inter && !inter {
+          rem_flat_constraints["\{prev}|\{name}"] = true
+        }
+      None => ()
+    }
+    prev_real = Some(name)
+    prev_cluster = cluster
+    prev_inter = inter
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross flat constraints combine existing same-rank
 /// constraints with local intra-cluster adjacency locks for non-intercluster
 /// real-node pairs (flat.c cluster-local reorder guard).
@@ -6077,29 +6110,13 @@ fn build_remincross_flat_constraints(
   // Graphviz parity: keep relative order of real nodes that are
   // internal to a cluster; allow nodes with intercluster edges to reorder.
   for _rank, names in rem_groups {
-    let mut prev_real : String? = None
-    let mut prev_cluster = ""
-    let mut prev_inter = false
-    for name in names {
-      if real_nodes.get(name) is None {
-        continue
-      }
-      let cluster = match rem_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      let inter = intercluster_nodes.get(name) is Some(_)
-      match prev_real {
-        Some(prev) =>
-          if cluster != "" && cluster == prev_cluster && !prev_inter && !inter {
-            rem_flat_constraints["\{prev}|\{name}"] = true
-          }
-        None => ()
-      }
-      prev_real = Some(name)
-      prev_cluster = cluster
-      prev_inter = inter
-    }
+    apply_cluster_local_flat_constraints_for_remincross_rank(
+      rem_flat_constraints,
+      names,
+      real_nodes,
+      rem_cluster_keys,
+      intercluster_nodes,
+    )
   }
   rem_flat_constraints
 }
