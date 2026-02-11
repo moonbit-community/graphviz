@@ -4438,6 +4438,35 @@ fn build_root_tail_seed_order_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root tail visit order places source tails (no incoming
+/// edges) first while preserving original deduped tail sequence order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_tail_order_sources_first(
+  tail_order_root : Array[String],
+  root_has_in : Map[String, Bool],
+) -> Array[String] {
+  let root_tail_order : Array[String] = []
+  let root_tail_seen : Map[String, Bool] = Map::new()
+  for name in tail_order_root {
+    if root_has_in.get(name) == Some(false) {
+      append_order_creation_name_if_absent(
+        root_tail_order,
+        root_tail_seen,
+        name,
+      )
+    }
+  }
+  for name in tail_order_root {
+    append_order_creation_name_if_absent(
+      root_tail_order,
+      root_tail_seen,
+      name,
+    )
+  }
+  root_tail_order
+}
+
+///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
@@ -4476,22 +4505,8 @@ fn build_root_nlist_order_for_cluster_reorder(
       root_has_in[head] = true
     }
   }
-  let root_tail_order : Array[String] = []
-  let root_tail_seen : Map[String, Bool] = Map::new()
-  for name in tail_order_root {
-    if root_has_in.get(name) == Some(false) {
-      if root_tail_seen.get(name) is None {
-        root_tail_seen[name] = true
-        root_tail_order.push(name)
-      }
-    }
-  }
-  for name in tail_order_root {
-    if root_tail_seen.get(name) is None {
-      root_tail_seen[name] = true
-      root_tail_order.push(name)
-    }
-  }
+  let root_tail_order =
+    build_root_tail_order_sources_first(tail_order_root, root_has_in)
   let root_nlist_full =
     build_graphviz_nlist_order_from_edges(
       root_tail_order,
