@@ -5708,6 +5708,73 @@ fn build_root_cluster_reorder_inputs_for_rank_order_context_phase(
 
 
 ///|
+/// Graphviz parity: root reorder from-context phase materializes root edge
+/// bundle and assembles root-only reorder input tuple without reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order_from_context_phase(
+  root_groups : Map[Int, Array[String]],
+  root_rank_keys : Array[Int],
+  root_ranks : Map[String, Int],
+  root_nodes : Array[String],
+  root_graph : @cgraph.Graph,
+  root_node_map : Map[String, @cgraph.Node],
+  root_nlist_order : Array[String],
+  root_node_order : Map[String, Int],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Int],
+) {
+  let (
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+  ) =
+    build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
+      root_nlist_order,
+      order_edges_by_tail_root,
+      root_graph,
+      root_node_map,
+      root_nodes,
+      root_ranks,
+    )
+  build_root_cluster_reorder_inputs_for_rank_order_output(
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+  )
+}
+
+
+///|
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
@@ -5774,40 +5841,16 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_edge_creation,
       flat_rank_constraints,
     )
-  let (
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-  ) =
-    build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
-      root_nlist_order,
-      order_edges_by_tail_root,
-      root_graph,
-      root_node_map,
-      root_nodes,
-      root_ranks,
-    )
-  build_root_cluster_reorder_inputs_for_rank_order_output(
+  build_root_cluster_reorder_inputs_for_rank_order_from_context_phase(
     root_groups,
     root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
     root_node_order,
+    order_edges_by_tail_root,
   )
 }
 
