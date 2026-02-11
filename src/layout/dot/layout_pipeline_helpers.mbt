@@ -9641,6 +9641,71 @@ fn reorder_final_groups_for_cluster_remincross(
 
 
 ///|
+/// Graphviz parity: cluster-enabled finalize phase forwards cleaned groups
+/// into clustered ReMincross refinement with Graphviz argument ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_finalize_order_groups_cluster_remincross_phase(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  creation_order : Array[String],
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  final_groups : Map[Int, Array[String]],
+  next_ordered_with_vnodes : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  graphviz_flip : Bool,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_clustered_remincross_pass(
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    order_with_vnodes,
+    order_with_clusters,
+    flat_rank_constraints,
+    creation_order,
+    edges_by_tail,
+    cluster_meta,
+    vnode_info,
+    order_sizes,
+    rank_same_constraints,
+    final_groups,
+    next_ordered_with_vnodes,
+    real_nodes,
+    graphviz_flip,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+  )
+}
+
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -9692,7 +9757,7 @@ fn finalize_order_groups_with_cluster_remincross(
         local_cluster_order,
       )
     let (rem_ordered_with_vnodes, rem_final_groups) =
-      run_clustered_remincross_pass(
+      run_finalize_order_groups_cluster_remincross_phase(
         graph,
         edges,
         edge_tail,
