@@ -1490,6 +1490,21 @@ fn build_cluster_keys_for_metadata(
 
 
 ///|
+/// Graphviz parity: rank=same groups/order are collected once for clustered
+/// ordering constraints, matching Graphviz same-rank preprocessing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_same_maps_for_metadata(
+  graph : @cgraph.Graph,
+) -> (Map[String, Int], Map[String, Int]) {
+  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map::new()
+  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  (rank_same_groups, rank_same_order)
+}
+
+
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -1530,9 +1545,8 @@ fn compute_cluster_metadata(
     node_order,
   )
   let intercluster_keys = build_intercluster_keys_for_metadata(nodes)
-  let rank_same_groups : Map[String, Int] = Map::new()
-  let rank_same_order : Map[String, Int] = Map::new()
-  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  let (rank_same_groups, rank_same_order) =
+    build_rank_same_maps_for_metadata(graph)
   let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
     graph,
     nodes,
