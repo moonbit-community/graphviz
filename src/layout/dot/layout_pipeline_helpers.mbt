@@ -8465,6 +8465,73 @@ fn run_clustered_remincross_reorder_step_input_phase(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch reads
+/// input-phase tuple and forwards values in Graphviz finalize-call order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
+  rem_rank_keys : Array[Int],
+  rem_groups : Map[Int, Array[String]],
+  rem_edges_out : Array[@cgraph.Edge],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_edge_tail_port_x : Array[Double],
+  rem_edge_head_port_x : Array[Double],
+  rem_edge_tail_port_order : Array[Double],
+  rem_edge_head_port_order : Array[Double],
+  cluster_meta : ClusterMetadata,
+  rem_node_order : Map[String, Int],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  graphviz_flip : Bool,
+  real_nodes : Map[String, Bool],
+  input_phase_output : (
+    Map[String, Array[String]],
+    Map[String, Array[String]],
+    Map[String, Int],
+    Map[String, String],
+    Map[String, NodeSize],
+    Map[String, Bool],
+  ),
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let (
+    rem_parents,
+    rem_children,
+    rem_edge_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  ) = input_phase_output
+  run_clustered_remincross_reorder_step_finalize_phase(
+    rem_rank_keys,
+    rem_groups,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_parents,
+    rem_children,
+    rem_cluster_keys,
+    cluster_meta,
+    rem_edge_order,
+    rem_node_order,
+    rem_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    rem_flat_constraints,
+    graphviz_flip,
+    real_nodes,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross computes edge indices, prepares
 /// cluster-aware reorder inputs, then runs final real-node cleanup reorder.
 /// Do not change behavior without updating fixtures/tests.
@@ -8499,14 +8566,7 @@ fn run_clustered_remincross_reorder_step(
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (
-    rem_parents,
-    rem_children,
-    rem_edge_order,
-    rem_cluster_keys,
-    rem_sizes,
-    rem_flat_constraints,
-  ) =
+  let input_phase_output =
     run_clustered_remincross_reorder_step_input_phase(
       graph,
       edges,
@@ -8527,7 +8587,7 @@ fn run_clustered_remincross_reorder_step(
       rem_ranks,
       rem_edges_out,
     )
-  run_clustered_remincross_reorder_step_finalize_phase(
+  run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
     rem_rank_keys,
     rem_groups,
     rem_edges_out,
@@ -8537,20 +8597,15 @@ fn run_clustered_remincross_reorder_step(
     rem_edge_head_port_x,
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
-    rem_parents,
-    rem_children,
-    rem_cluster_keys,
     cluster_meta,
-    rem_edge_order,
     rem_node_order,
-    rem_sizes,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
-    rem_flat_constraints,
     graphviz_flip,
     real_nodes,
+    input_phase_output,
   )
 }
 
