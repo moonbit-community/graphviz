@@ -32,6 +32,19 @@ priv struct DotRankStageOrderingInputs {
 }
 
 ///|
+/// Graphviz parity: dot position-stage input payload keeps rank-stage outputs
+/// and prep fields in the same compute_positions call sequence.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotPositionStageInputs {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
 /// Graphviz parity: cluster metadata in rank/order stage uses the same
 /// rank-group and edge endpoint wiring as Graphviz ordering setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -232,24 +245,38 @@ fn compute_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: dot position-stage input payload assembly reads rank-stage
+/// artifacts and prep fields without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_position_stage_inputs(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+) -> DotPositionStageInputs {
+  {
+    graph,
+    prep,
+    rank_data: rank_stage.rank_data,
+    rank_heights: rank_stage.rank_heights,
+    cluster_meta: rank_stage.cluster_meta,
+    ordering: rank_stage.ordering,
+  }
+}
+
+///|
 /// Graphviz parity: position-stage result wiring forwards rank-stage artifacts
 /// directly into compute_positions without remapping.
 /// Do not change behavior without updating fixtures/tests.
-fn build_dot_position_stage_result_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+fn run_dot_position_stage_from_inputs(
+  position_stage_inputs : DotPositionStageInputs,
 ) -> PositionResult {
   compute_positions(
-    graph,
-    prep,
-    rank_data,
-    rank_heights,
-    cluster_meta,
-    ordering,
+    position_stage_inputs.graph,
+    position_stage_inputs.prep,
+    position_stage_inputs.rank_data,
+    position_stage_inputs.rank_heights,
+    position_stage_inputs.cluster_meta,
+    position_stage_inputs.ordering,
   )
 }
 
@@ -261,14 +288,9 @@ fn compute_dot_position_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
 ) -> PositionResult {
-  build_dot_position_stage_result_for_stage(
-    graph,
-    prep,
-    rank_stage.rank_data,
-    rank_stage.rank_heights,
-    rank_stage.cluster_meta,
-    rank_stage.ordering,
-  )
+  let position_stage_inputs =
+    build_dot_position_stage_inputs(graph, prep, rank_stage)
+  run_dot_position_stage_from_inputs(position_stage_inputs)
 }
 
 ///|
