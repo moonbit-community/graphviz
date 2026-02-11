@@ -2523,6 +2523,67 @@ fn reorder_single_cluster_rank_groups(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder iterates clusters in deterministic
+/// build order and applies one independent local pass per cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_cluster_rank_groups_for_cluster_names(
+  cluster_names : Array[String],
+  cluster_graphs : Map[String, @cgraph.Graph],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  fixed_positions : Map[String, Double],
+  fixed_ranks : Map[String, Int],
+  empty_cluster_skeleton : Map[String, Bool],
+  order_with_vnodes : Bool,
+) -> Unit {
+  for cluster in cluster_names {
+    let cluster_graph = match cluster_graphs.get(cluster) {
+      Some(value) => value
+      None => continue
+    }
+    reorder_single_cluster_rank_groups(
+      cluster,
+      cluster_graph,
+      groups,
+      node_order,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      cluster_meta,
+      vnode_info,
+      fixed_positions,
+      fixed_ranks,
+      empty_cluster_skeleton,
+      order_with_vnodes,
+    )
+  }
+}
+
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -2566,36 +2627,30 @@ fn reorder_groups_by_cluster_build_ranks(
       ranks,
       vnode_info.vnode_ranks,
     )
-  for cluster in cluster_names {
-    let cluster_graph = match cluster_graphs.get(cluster) {
-      Some(value) => value
-      None => continue
-    }
-    reorder_single_cluster_rank_groups(
-      cluster,
-      cluster_graph,
-      groups,
-      node_order,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      cluster_meta,
-      vnode_info,
-      fixed_positions,
-      fixed_ranks,
-      empty_cluster_skeleton,
-      order_with_vnodes,
-    )
-  }
+  reorder_cluster_rank_groups_for_cluster_names(
+    cluster_names,
+    cluster_graphs,
+    groups,
+    node_order,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    cluster_meta,
+    vnode_info,
+    fixed_positions,
+    fixed_ranks,
+    empty_cluster_skeleton,
+    order_with_vnodes,
+  )
 }
 
 ///|
