@@ -2611,6 +2611,68 @@ fn reorder_single_cluster_rank_groups(
       vnode_info.vnode_clusters,
       cluster_meta.flat_constraints,
     )
+  run_and_apply_cluster_local_rank_reorder(
+    groups,
+    cluster_rank_keys,
+    cluster_groups,
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    cluster_keys,
+    cluster_meta,
+    edge_order,
+    cluster_node_order,
+    cluster_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    empty_cluster_skeleton,
+    cluster_flat_constraints,
+    fixed_positions,
+    fixed_ranks,
+    cluster_node_set,
+  )
+}
+
+///|
+/// Graphviz parity: local cluster reorder runs mincross with cluster-restricted
+/// maps and applies results only when internal constraints exist.
+/// Do not change behavior without updating fixtures/tests.
+fn run_and_apply_cluster_local_rank_reorder(
+  groups : Map[Int, Array[String]],
+  cluster_rank_keys : Array[Int],
+  cluster_groups : Map[Int, Array[String]],
+  cluster_edges : Array[@cgraph.Edge],
+  cluster_edge_tail : Array[String],
+  cluster_edge_head : Array[String],
+  cluster_edge_tail_port_x : Array[Double],
+  cluster_edge_head_port_x : Array[Double],
+  cluster_edge_tail_port_order : Array[Double],
+  cluster_edge_head_port_order : Array[Double],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  cluster_keys : Map[String, String],
+  cluster_meta : ClusterMetadata,
+  edge_order : Map[String, Int],
+  cluster_node_order : Map[String, Int],
+  cluster_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  empty_cluster_skeleton : Map[String, Bool],
+  cluster_flat_constraints : Map[String, Bool],
+  fixed_positions : Map[String, Double],
+  fixed_ranks : Map[String, Int],
+  cluster_node_set : Map[String, Bool],
+) -> Unit {
   let (has_internal_constraints, ordered_cluster) =
     run_cluster_local_rank_reorder(
       cluster_rank_keys,
