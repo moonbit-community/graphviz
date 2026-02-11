@@ -11784,6 +11784,69 @@ fn build_materialize_order_edges_with_trace_output(
 }
 
 ///|
+/// Graphviz parity: order-edge trace/output phase emits mapped-edge rank traces
+/// before returning mapped/unmapped edge tuples in Graphviz field order.
+/// Do not change behavior without updating fixtures/tests.
+fn materialize_order_edges_with_trace_output_phase(
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_edges_out_unmapped : Array[@cgraph.Edge],
+  order_edge_tail_out_unmapped : Array[String],
+  order_edge_head_out_unmapped : Array[String],
+  order_edge_tail_port_x_unmapped : Array[Double],
+  order_edge_head_port_x_unmapped : Array[Double],
+  order_edge_tail_port_order_unmapped : Array[Double],
+  order_edge_head_port_order_unmapped : Array[Double],
+  order_ranks : Map[String, Int],
+  real_nodes : Map[String, Bool],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  trace_order_edges_with_ranks(
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_ranks,
+    real_nodes,
+  )
+  build_materialize_order_edges_with_trace_output(
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+  )
+}
+
+
+///|
 /// Graphviz parity: mapped/unmapped order-edge arrays are materialized first,
 /// and trace emission observes the mapped arrays before neighbor construction.
 /// Do not change behavior without updating fixtures/tests.
@@ -11838,14 +11901,7 @@ fn materialize_order_edges_with_trace(
       order_graph_unmapped,
       order_node_map_unmapped,
     )
-  trace_order_edges_with_ranks(
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_ranks,
-    real_nodes,
-  )
-  build_materialize_order_edges_with_trace_output(
+  materialize_order_edges_with_trace_output_phase(
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
@@ -11860,6 +11916,8 @@ fn materialize_order_edges_with_trace(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    order_ranks,
+    real_nodes,
   )
 }
 
