@@ -18439,6 +18439,59 @@ fn build_ordering_and_vnodes_inputs(
 }
 
 ///|
+/// Graphviz parity: runtime-context extraction from ordering+vnode payload
+/// reads typed inputs without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_runtime_context_from_ordering_and_vnodes_inputs(
+  ordering_inputs : OrderingAndVnodesInputs,
+) -> OrderingRuntimeContext {
+  build_ordering_runtime_context_from_ordering_inputs(
+    ordering_inputs.graph,
+    ordering_inputs.nodes,
+    ordering_inputs.edges,
+    ordering_inputs.edge_tail,
+    ordering_inputs.edge_head,
+    ordering_inputs.edge_out_order,
+    ordering_inputs.ranks,
+    ordering_inputs.node_order,
+    ordering_inputs.nodesep_pt,
+    ordering_inputs.rankdir,
+    ordering_inputs.cluster_meta,
+  )
+}
+
+///|
+/// Graphviz parity: dispatch-pipeline context extraction from ordering+vnode
+/// payload keeps field ordering unchanged before pipeline execution.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_dispatch_pipeline_context_from_ordering_and_vnodes_inputs(
+  ordering_inputs : OrderingAndVnodesInputs,
+  runtime_context : OrderingRuntimeContext,
+) -> OrderingDispatchPipelineContext {
+  build_ordering_dispatch_pipeline_context_from_ordering_inputs(
+    ordering_inputs.graph,
+    ordering_inputs.nodes,
+    ordering_inputs.edges,
+    ordering_inputs.edge_tail,
+    ordering_inputs.edge_head,
+    ordering_inputs.edge_reversed,
+    ordering_inputs.edge_out_order,
+    ordering_inputs.ranks,
+    ordering_inputs.groups,
+    ordering_inputs.rank_keys,
+    ordering_inputs.node_order,
+    ordering_inputs.order_sizes,
+    ordering_inputs.nodesep_pt,
+    ordering_inputs.has_edge_labels,
+    ordering_inputs.rankdir,
+    ordering_inputs.cluster_meta,
+    ordering_inputs.port_order_positions,
+    ordering_inputs.port_order_contrib,
+    runtime_context,
+  )
+}
+
+///|
 /// Graphviz parity: ordering+vnode execution consumes typed input payload and
 /// preserves runtime-context + dispatch-pipeline stage ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -18446,39 +18499,12 @@ fn run_compute_ordering_and_vnodes_from_inputs(
   ordering_inputs : OrderingAndVnodesInputs,
 ) -> OrderingResult {
   let runtime_context =
-    build_ordering_runtime_context_from_ordering_inputs(
-      ordering_inputs.graph,
-      ordering_inputs.nodes,
-      ordering_inputs.edges,
-      ordering_inputs.edge_tail,
-      ordering_inputs.edge_head,
-      ordering_inputs.edge_out_order,
-      ordering_inputs.ranks,
-      ordering_inputs.node_order,
-      ordering_inputs.nodesep_pt,
-      ordering_inputs.rankdir,
-      ordering_inputs.cluster_meta,
+    build_ordering_runtime_context_from_ordering_and_vnodes_inputs(
+      ordering_inputs,
     )
   let pipeline_context =
-    build_ordering_dispatch_pipeline_context_from_ordering_inputs(
-      ordering_inputs.graph,
-      ordering_inputs.nodes,
-      ordering_inputs.edges,
-      ordering_inputs.edge_tail,
-      ordering_inputs.edge_head,
-      ordering_inputs.edge_reversed,
-      ordering_inputs.edge_out_order,
-      ordering_inputs.ranks,
-      ordering_inputs.groups,
-      ordering_inputs.rank_keys,
-      ordering_inputs.node_order,
-      ordering_inputs.order_sizes,
-      ordering_inputs.nodesep_pt,
-      ordering_inputs.has_edge_labels,
-      ordering_inputs.rankdir,
-      ordering_inputs.cluster_meta,
-      ordering_inputs.port_order_positions,
-      ordering_inputs.port_order_contrib,
+    build_ordering_dispatch_pipeline_context_from_ordering_and_vnodes_inputs(
+      ordering_inputs,
       runtime_context,
     )
   run_ordering_dispatch_pipeline(pipeline_context)
