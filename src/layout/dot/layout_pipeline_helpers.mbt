@@ -408,16 +408,14 @@ priv struct ProjectionFromXStageData {
 }
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: rankdir resolution uses option override first, then
+/// graph attribute parsing with TB fallback (dotinit/input behavior).
 /// Do not change behavior without updating fixtures/tests.
-///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
-/// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
+fn resolve_rankdir_for_layout_inputs(
   graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = match opts.rankdir {
+  option_rankdir : RankDir?,
+) -> RankDir {
+  match option_rankdir {
     Some(value) => value
     None =>
       match graph.get_attr("rankdir") {
@@ -429,6 +427,16 @@ fn prepare_layout_inputs(
         None => RankDir::TB
       }
   }
+}
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
   let nodesep_raw = match opts.nodesep {
     Some(value) => value
     None =>
