@@ -3463,6 +3463,24 @@ fn adjust_nlist_order_for_cluster_flip(
 }
 
 ///|
+/// Graphviz parity: edge creation sequence concatenates skeleton links before
+/// regular order-edge links to preserve AGSEQ head-neighbor replay.
+/// Do not change behavior without updating fixtures/tests.
+fn merge_edge_creation_sequences(
+  leading : Array[(String, String)],
+  trailing : Array[(String, String)],
+) -> Array[(String, String)] {
+  let merged : Array[(String, String)] = []
+  for edge in leading {
+    merged.push(edge)
+  }
+  for edge in trailing {
+    merged.push(edge)
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: edge creation order feeds ND_in AGSEQ capture with cluster
 /// skeleton links preceding regular order_edge_creation links.
 /// Do not change behavior without updating fixtures/tests.
@@ -3470,14 +3488,10 @@ fn build_edge_creation_order(
   skeleton_edge_creation : Array[(String, String)],
   order_edge_creation : Array[(String, String)],
 ) -> Array[(String, String)] {
-  let edge_creation_order : Array[(String, String)] = []
-  for edge in skeleton_edge_creation {
-    edge_creation_order.push(edge)
-  }
-  for edge in order_edge_creation {
-    edge_creation_order.push(edge)
-  }
-  edge_creation_order
+  merge_edge_creation_sequences(
+    skeleton_edge_creation,
+    order_edge_creation,
+  )
 }
 
 ///|
@@ -4428,13 +4442,11 @@ fn build_root_nlist_order_for_cluster_reorder(
       tail_order_root.push(name)
     }
   }
-  let root_edge_creation_order : Array[(String, String)] = []
-  for edge in skeleton_edge_creation {
-    root_edge_creation_order.push(edge)
-  }
-  for edge in root_edge_creation {
-    root_edge_creation_order.push(edge)
-  }
+  let root_edge_creation_order =
+    merge_edge_creation_sequences(
+      skeleton_edge_creation,
+      root_edge_creation,
+    )
   // Graphviz parity: build_ranks visits source nodes (no incoming edges)
   // first in GD_nlist order.
   // Do not change behavior without updating fixtures/tests.
