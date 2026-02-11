@@ -866,25 +866,20 @@ fn build_routing_edges_from_precomputed_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routed-edge solve dispatch reads grouped edge-solve
-/// precompute payload without argument reordering.
+/// Graphviz parity: routed-edge solve dispatch reads typed edge/padding inputs
+/// plus grouped edge-solve precompute payload without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
   routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
 ) -> Array[DotLayoutEdge] {
   build_routing_edges_from_precomputed_data_for_stage(
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-    routing_spatial_data,
-    routing_label_and_tuning_data,
+    routing_inputs.graph,
+    routing_inputs.prep,
+    routing_inputs.rank_stage,
+    routing_inputs.positions_state,
+    routing_inputs.routing_spatial_data,
+    routing_inputs.routing_label_and_tuning_data,
     routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
     routing_edge_solve_precompute_data.routing_path_context_data,
   )
@@ -903,29 +898,25 @@ fn build_routing_edge_solve_precompute_output_for_stage(
 
 ///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
-/// derivation in fixed order before routed-edge solve wiring.
+/// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edge_solve_precompute_data_for_stage(
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingEdgeSolvePrecomputeData {
   let routing_padding_and_head_port_metrics =
     build_routing_padding_and_head_port_metrics_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_data.label_ports_map,
-      routing_label_and_tuning_data.enable_complex_tuning,
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data.label_ports_map,
+      routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
     )
   let routing_path_context_data =
     build_routing_path_context_data_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_data.cluster_bboxes,
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data.cluster_bboxes,
     )
   build_routing_edge_solve_precompute_output_for_stage(
     routing_padding_and_head_port_metrics,
@@ -963,21 +954,10 @@ fn run_routing_edges_and_padding_from_inputs(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingEdgesAndPaddingData {
   let routing_edge_solve_precompute_data =
-    build_routing_edge_solve_precompute_data_for_stage(
-      routing_inputs.prep,
-      routing_inputs.rank_stage,
-      routing_inputs.positions_state,
-      routing_inputs.routing_spatial_data,
-      routing_inputs.routing_label_and_tuning_data,
-    )
+    build_routing_edge_solve_precompute_data_for_stage(routing_inputs)
   let edges_out =
     build_routing_edges_from_edge_solve_precompute_data_for_stage(
-      routing_inputs.graph,
-      routing_inputs.prep,
-      routing_inputs.rank_stage,
-      routing_inputs.positions_state,
-      routing_inputs.routing_spatial_data,
-      routing_inputs.routing_label_and_tuning_data,
+      routing_inputs,
       routing_edge_solve_precompute_data,
     )
   build_routing_edges_and_padding_output_for_stage(
