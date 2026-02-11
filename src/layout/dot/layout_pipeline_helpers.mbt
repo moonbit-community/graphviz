@@ -5969,13 +5969,22 @@ priv struct ClusterRankOrderFromRootReorderContext {
 }
 
 ///|
-/// Graphviz parity: root reorder output map for clustered ordering is
-/// produced by root mincross reorder followed by root-rank map transfer.
+/// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
+/// and ordered-root groups tuple ordering unchanged before rank transfer.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_output_from_root_reorder(
+type RootClusterRankOrderPhaseOutput = (
+  Array[Int],
+  Map[Int, Array[String]],
+)
+
+///|
+/// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
+/// and dispatch context without reordering Graphviz call arguments.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   dispatch_context : ClusterRankOrderFromRootReorderContext,
   root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
-) -> Map[Int, Map[String, Int]] {
+) -> RootClusterRankOrderPhaseOutput {
   let (
     root_groups,
     root_rank_keys,
@@ -5991,7 +6000,6 @@ fn build_cluster_rank_order_output_from_root_reorder(
     root_edge_order,
     root_node_order,
   ) = root_reorder_output
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let ordered_root = run_root_cluster_reorder_for_cluster_rank_order(
     root_rank_keys,
     root_groups,
@@ -6018,6 +6026,24 @@ fn build_cluster_rank_order_output_from_root_reorder(
     dispatch_context.flat_constraints,
     dispatch_context.graphviz_flip,
   )
+  (root_rank_keys, ordered_root)
+}
+
+
+///|
+/// Graphviz parity: root reorder output map for clustered ordering is
+/// produced by root mincross reorder followed by root-rank map transfer.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order_output_from_root_reorder(
+  dispatch_context : ClusterRankOrderFromRootReorderContext,
+  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
+) -> Map[Int, Map[String, Int]] {
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let (root_rank_keys, ordered_root) =
+    run_root_cluster_rank_order_phase_from_root_reorder_output(
+      dispatch_context,
+      root_reorder_output,
+    )
   append_root_cluster_rank_order_for_cluster_reorder(
     cluster_rank_order,
     root_rank_keys,
