@@ -13963,15 +13963,7 @@ fn materialize_order_edges_with_trace(
 /// GD_nlist-seeded traces before neighbor/constraint reconstruction.
 /// Do not change behavior without updating fixtures/tests.
 fn build_materialized_order_edges_and_neighbors_materialization_phase(
-  nlist_order : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_graph : @cgraph.Graph,
-  order_node_map : Map[String, @cgraph.Node],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_graph_unmapped : @cgraph.Graph,
-  order_node_map_unmapped : Map[String, @cgraph.Node],
-  order_ranks : Map[String, Int],
-  real_nodes : Map[String, Bool],
+  context : MaterializedOrderEdgesAndNeighborsContext,
 ) -> (
   Array[@cgraph.Edge],
   Array[String],
@@ -13990,15 +13982,15 @@ fn build_materialized_order_edges_and_neighbors_materialization_phase(
 ) {
   let trace_context =
     build_materialize_order_edges_with_trace_context(
-      nlist_order,
-      order_edges_by_tail,
-      order_graph,
-      order_node_map,
-      order_edges_by_tail_unmapped,
-      order_graph_unmapped,
-      order_node_map_unmapped,
-      order_ranks,
-      real_nodes,
+      context.nlist_order,
+      context.order_edges_by_tail,
+      context.order_graph,
+      context.order_node_map,
+      context.order_edges_by_tail_unmapped,
+      context.order_graph_unmapped,
+      context.order_node_map_unmapped,
+      context.order_ranks,
+      context.real_nodes,
     )
   materialize_order_edges_with_trace(trace_context)
 }
@@ -14008,28 +14000,19 @@ fn build_materialized_order_edges_and_neighbors_materialization_phase(
 /// in/out neighbor maps and flat constraints before build_ranks reuse.
 /// Do not change behavior without updating fixtures/tests.
 fn build_materialized_order_edges_and_neighbors_neighbor_phase(
-  order_nodes : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  edge_creation_order : Array[(String, String)],
-  cluster_meta : ClusterMetadata,
-  gdnlist_order : Array[String],
-  real_nodes : Map[String, Bool],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nodes : Array[@cgraph.Node],
-  order_node_order : Map[String, Int],
+  context : MaterializedOrderEdgesAndNeighborsContext,
 ) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Bool]) {
   build_order_neighbors_and_flat_constraints(
-    order_nodes,
-    order_edges_by_tail,
-    edge_creation_order,
-    cluster_meta,
-    gdnlist_order,
-    real_nodes,
-    edge_tail,
-    edge_head,
-    nodes,
-    order_node_order,
+    context.order_nodes,
+    context.order_edges_by_tail,
+    context.edge_creation_order,
+    context.cluster_meta,
+    context.gdnlist_order,
+    context.real_nodes,
+    context.edge_tail,
+    context.edge_head,
+    context.nodes,
+    context.order_node_order,
   )
 }
 
@@ -14126,30 +14109,9 @@ fn build_materialized_order_edges_and_neighbors(
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
   ) =
-    build_materialized_order_edges_and_neighbors_materialization_phase(
-      context.nlist_order,
-      context.order_edges_by_tail,
-      context.order_graph,
-      context.order_node_map,
-      context.order_edges_by_tail_unmapped,
-      context.order_graph_unmapped,
-      context.order_node_map_unmapped,
-      context.order_ranks,
-      context.real_nodes,
-    )
+    build_materialized_order_edges_and_neighbors_materialization_phase(context)
   let (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints) =
-    build_materialized_order_edges_and_neighbors_neighbor_phase(
-      context.order_nodes,
-      context.order_edges_by_tail,
-      context.edge_creation_order,
-      context.cluster_meta,
-      context.gdnlist_order,
-      context.real_nodes,
-      context.edge_tail,
-      context.edge_head,
-      context.nodes,
-      context.order_node_order,
-    )
+    build_materialized_order_edges_and_neighbors_neighbor_phase(context)
   build_materialized_order_edges_and_neighbors_output_phase(
     order_edges_out,
     order_edge_tail_out,
