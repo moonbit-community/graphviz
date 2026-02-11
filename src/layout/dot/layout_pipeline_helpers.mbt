@@ -18335,6 +18335,39 @@ fn build_ordering_dispatch_pipeline_context_from_ordering_inputs(
 
 
 ///|
+/// Graphviz parity: ordering runtime-context extraction reads ordering inputs
+/// without argument reordering before runtime-context assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_runtime_context_from_ordering_inputs(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+) -> OrderingRuntimeContext {
+  build_ordering_runtime_context_with_tail_constraints(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_out_order,
+    ranks,
+    node_order,
+    nodesep_pt,
+    rankdir,
+    cluster_meta,
+  )
+}
+
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -18358,7 +18391,7 @@ fn compute_ordering_and_vnodes(
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
   let runtime_context =
-    build_ordering_runtime_context_with_tail_constraints(
+    build_ordering_runtime_context_from_ordering_inputs(
       graph,
       nodes,
       edges,
