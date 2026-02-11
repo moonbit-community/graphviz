@@ -6246,11 +6246,10 @@ fn run_remincross_reorder_and_collect_real_groups(
 }
 
 ///|
-/// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
-/// vnode LCA assignments), local intercluster-node guards, size map extension,
-/// and flat-constraint augmentation before final reorder pass.
+/// Graphviz parity: ReMincross reorder cluster inputs derive cluster keys
+/// (including vnode LCA assignments) and intercluster short-span node guards.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_reorder_inputs(
+fn build_remincross_cluster_inputs_for_reorder(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -6260,11 +6259,7 @@ fn build_remincross_reorder_inputs(
   ranks : Map[String, Int],
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
-  order_sizes : Map[String, NodeSize],
-  rank_same_constraints : Map[String, Bool],
-  rem_groups : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
-) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
+) -> (Map[String, String], Map[String, Bool]) {
   let rem_cluster_keys =
     build_remincross_cluster_keys(
       graph,
@@ -6290,13 +6285,45 @@ fn build_remincross_reorder_inputs(
       "_mbt_edge_vn_1_3",
     ]
     for name in debug_vnodes {
-      let cluster = match rem_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
+      let cluster = cluster_key_or_empty(rem_cluster_keys, name)
       println("remincross vnode \{name} cluster=\{cluster}")
     }
   }
+  (rem_cluster_keys, intercluster_nodes)
+}
+
+///|
+/// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
+/// vnode LCA assignments), local intercluster-node guards, size map extension,
+/// and flat-constraint augmentation before final reorder pass.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_reorder_inputs(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ranks : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
+  let (rem_cluster_keys, intercluster_nodes) =
+    build_remincross_cluster_inputs_for_reorder(
+      graph,
+      edges,
+      edge_tail,
+      edge_head,
+      order_with_vnodes,
+      order_with_clusters,
+      ranks,
+      cluster_meta,
+      vnode_info,
+    )
   let rem_sizes =
     build_order_sizes_for_order_graph(
       order_sizes,
