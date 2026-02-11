@@ -575,23 +575,20 @@ fn build_cluster_bboxes_for_routing_stage(
 }
 
 ///|
-/// Graphviz parity: routing spatial output object reuses node/port precompute
-/// fields and cluster-bbox derivation without remapping.
+/// Graphviz parity: routing spatial output object consumes typed routing-stage
+/// inputs and node/port precompute output without remapping fields.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_output_from_node_port_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
   routing_node_and_port_data : DotRoutingNodeAndPortData,
 ) -> DotRoutingSpatialData {
   let cluster_bboxes =
     build_cluster_bboxes_for_routing_stage(
-      graph,
-      rank_stage,
-      positions_state,
+      routing_stage_inputs.graph,
+      routing_stage_inputs.rank_stage,
+      routing_stage_inputs.positions_state,
       routing_node_and_port_data.nodes_out,
-      prep.rankdir,
+      routing_stage_inputs.prep.rankdir,
     )
   {
     nodes_out: routing_node_and_port_data.nodes_out,
@@ -611,13 +608,16 @@ fn build_routing_spatial_data_for_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingSpatialData {
-  let routing_node_and_port_data =
-    build_routing_node_and_port_data_for_stage(prep, positions_state)
-  build_routing_spatial_output_from_node_port_data_for_stage(
+  let routing_stage_inputs : DotRoutingStageInputs = {
     graph,
     prep,
     rank_stage,
     positions_state,
+  }
+  let routing_node_and_port_data =
+    build_routing_node_and_port_data_for_stage(prep, positions_state)
+  build_routing_spatial_output_from_node_port_data_for_stage(
+    routing_stage_inputs,
     routing_node_and_port_data,
   )
 }
