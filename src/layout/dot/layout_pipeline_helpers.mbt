@@ -1293,6 +1293,62 @@ fn cluster_depth_for_order(
 }
 
 ///|
+/// Graphviz parity: cluster-local pass iterates cluster subgraphs in
+/// depth-first parent order with cluster_order tie-breaking (cluster.c path).
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_graph_order_for_local_reorder(
+  graph : @cgraph.Graph,
+  cluster_order : Array[String],
+  cluster_parents_hint : Map[String, String?],
+) -> (Map[String, @cgraph.Graph], Array[String]) {
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let cluster_names : Array[String] = []
+  if cluster_graphs.length() == 0 {
+    return (cluster_graphs, cluster_names)
+  }
+  let cluster_index : Map[String, Int] = Map::new()
+  for idx, name in cluster_order {
+    cluster_index[name] = idx
+  }
+  let cluster_depth : Map[String, Int] = Map::new()
+  for name, _ in cluster_graphs {
+    cluster_names.push(name)
+  }
+  if cluster_names.length() > 1 {
+    cluster_names.sort_by((a, b) => {
+      let a_depth =
+        cluster_depth_for_order(a, cluster_parents_hint, cluster_parents, cluster_depth)
+      let b_depth =
+        cluster_depth_for_order(b, cluster_parents_hint, cluster_parents, cluster_depth)
+      if a_depth < b_depth {
+        -1
+      } else if a_depth > b_depth {
+        1
+      } else {
+        let a_idx = match cluster_index.get(a) {
+          Some(value) => value
+          None => cluster_index.length() + 1
+        }
+        let b_idx = match cluster_index.get(b) {
+          Some(value) => value
+          None => cluster_index.length() + 1
+        }
+        if a_idx < b_idx {
+          -1
+        } else if a_idx > b_idx {
+          1
+        } else {
+          0
+        }
+      }
+    })
+  }
+  (cluster_graphs, cluster_names)
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1320,49 +1376,14 @@ fn reorder_groups_by_cluster_build_ranks(
   if cluster_meta.cluster_order.length() == 0 {
     return ()
   }
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  let (cluster_graphs, cluster_names) =
+    build_cluster_graph_order_for_local_reorder(
+      graph,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_parents,
+    )
   if cluster_graphs.length() == 0 {
     return ()
-  }
-  let cluster_index : Map[String, Int] = Map::new()
-  for idx, name in cluster_meta.cluster_order {
-    cluster_index[name] = idx
-  }
-  let cluster_depth : Map[String, Int] = Map::new()
-  let cluster_names : Array[String] = []
-  for name, _ in cluster_graphs {
-    cluster_names.push(name)
-  }
-  if cluster_names.length() > 1 {
-    cluster_names.sort_by((a, b) => {
-      let a_depth =
-        cluster_depth_for_order(a, cluster_meta.cluster_parents, cluster_parents, cluster_depth)
-      let b_depth =
-        cluster_depth_for_order(b, cluster_meta.cluster_parents, cluster_parents, cluster_depth)
-      if a_depth < b_depth {
-        -1
-      } else if a_depth > b_depth {
-        1
-      } else {
-        let a_idx = match cluster_index.get(a) {
-          Some(value) => value
-          None => cluster_index.length() + 1
-        }
-        let b_idx = match cluster_index.get(b) {
-          Some(value) => value
-          None => cluster_index.length() + 1
-        }
-        if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else {
-          0
-        }
-      }
-    })
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   // Graphviz parity: cluster-local ordering keeps global node order hints so
