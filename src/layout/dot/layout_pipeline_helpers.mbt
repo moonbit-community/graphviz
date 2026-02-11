@@ -3086,28 +3086,19 @@ fn compute_edge_port_positions(
 }
 
 ///|
-/// Graphviz parity: port order fractions for mincross medians
-/// (shapes.c compassPort + mincross.c VAL/MC_SCALE).
+/// Graphviz parity: per-edge tail/head port-order samples are emitted in edge
+/// sequence order using the same endpoint remap as tie-break x-offsets.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_edge_port_orders(
-  nodes : Array[@cgraph.Node],
+fn build_edge_port_orders_from_endpoint_ports(
   edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
+  tail_names : Array[String],
+  head_names : Array[String],
+  tail_ports : Array[@cgraph.Port?],
+  head_ports : Array[@cgraph.Port?],
+  port_offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
+  rankdir : RankDir,
 ) -> (Array[Double], Array[Double]) {
-  if edges.length() == 0 {
-    return ([], [])
-  }
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let rankdir =
-    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
-  let (tail_names, head_names, tail_ports, head_ports) =
-    collect_order_edge_endpoint_ports(
-      edges,
-      edge_tail,
-      edge_head,
-    )
   let tail_orders : Array[Double] = []
   let head_orders : Array[Double] = []
   let mut idx = 0
@@ -3133,6 +3124,41 @@ fn compute_edge_port_orders(
     idx = idx + 1
   }
   (tail_orders, head_orders)
+}
+
+///|
+/// Graphviz parity: port order fractions for mincross medians
+/// (shapes.c compassPort + mincross.c VAL/MC_SCALE).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_edge_port_orders(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  if edges.length() == 0 {
+    return ([], [])
+  }
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  let rankdir =
+    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+  let (tail_names, head_names, tail_ports, head_ports) =
+    collect_order_edge_endpoint_ports(
+      edges,
+      edge_tail,
+      edge_head,
+    )
+  build_edge_port_orders_from_endpoint_ports(
+    edges,
+    tail_names,
+    head_names,
+    tail_ports,
+    head_ports,
+    port_offsets,
+    sizes,
+    rankdir,
+  )
 }
 
 ///|
