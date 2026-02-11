@@ -17298,18 +17298,69 @@ fn run_clustered_ordering_stage_finalize_phase_from_stage_output(
 
 
 ///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
+/// Graphviz parity: clustered ordering pre-root/root stage dispatch reads
+/// typed runtime/reorder payloads and forwards Graphviz call ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage(
+fn run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+  reorder_setup : OrderingReorderSetup,
+  class2_data : OrderingClass2Data,
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  run_clustered_ordering_stage_pre_root_and_root_phase(
+    graph,
+    nodes,
+    edge_tail,
+    edge_head,
+    ranks,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context.real_nodes,
+    runtime_context.port_edge_nodes,
+    reorder_setup.flat_rank_constraints,
+    reorder_setup.graphviz_flip,
+    reorder_setup.order_with_vnodes,
+    reorder_setup.order_with_clusters,
+    reorder_setup.ordering_groups_base,
+    reorder_setup.base_order_index,
+    runtime_context.vnode_info,
+    reorder_setup.vnode_order_keys_for_ordering,
+    class2_data.nlist_order,
+    reorder_setup.gdnlist_order,
+    class2_data.order_edges_by_tail,
+    class2_data.order_edges_by_tail_unmapped,
+    class2_data.edge_creation_order,
+  )
+}
+
+
+///|
+/// Graphviz parity: clustered ordering finalize output dispatch reads typed
+/// stage/context payloads and preserves Graphviz finalize call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage_output_phase_from_stage_output(
+  graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_reversed : Array[Bool],
   ranks : Map[String, Int],
-  node_order : Map[String, Int],
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -17320,37 +17371,8 @@ fn run_clustered_ordering_stage(
   edge_port_data : OrderingEdgePortData,
   reorder_setup : OrderingReorderSetup,
   class2_data : OrderingClass2Data,
+  stage_output : (OrderClusteredPreRootStageData, OrderRootClusterStageData),
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let stage_output =
-    run_clustered_ordering_stage_pre_root_and_root_phase(
-      graph,
-      nodes,
-      edge_tail,
-      edge_head,
-      ranks,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context.real_nodes,
-      runtime_context.port_edge_nodes,
-      reorder_setup.flat_rank_constraints,
-      reorder_setup.graphviz_flip,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.order_with_clusters,
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      class2_data.order_edges_by_tail,
-      class2_data.order_edges_by_tail_unmapped,
-      class2_data.edge_creation_order,
-    )
   run_clustered_ordering_stage_finalize_phase_from_stage_output(
     reorder_setup.order_with_clusters,
     reorder_setup.order_with_vnodes,
@@ -17385,6 +17407,71 @@ fn run_clustered_ordering_stage(
     stage_output,
   )
 }
+
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+  edge_port_data : OrderingEdgePortData,
+  reorder_setup : OrderingReorderSetup,
+  class2_data : OrderingClass2Data,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let stage_output =
+    run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
+      graph,
+      nodes,
+      edge_tail,
+      edge_head,
+      ranks,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      reorder_setup,
+      class2_data,
+    )
+  run_clustered_ordering_stage_output_phase_from_stage_output(
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    ranks,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
+    edge_port_data,
+    reorder_setup,
+    class2_data,
+    stage_output,
+  )
+}
+
 
 ///|
 /// Graphviz parity: clustered ordering stage returns finalized groups and
