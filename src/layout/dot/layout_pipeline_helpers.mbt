@@ -2402,6 +2402,52 @@ fn run_cluster_local_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder seeds node/rank subsets from the
+/// cluster graph before running mincross on local groups only.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_rank_reorder_seed(
+  cluster_graph : @cgraph.Graph,
+  cluster : String,
+  groups : Map[Int, Array[String]],
+  vnode_clusters : Map[String, String],
+  order_with_vnodes : Bool,
+  node_order : Map[String, Int],
+) ->
+  (
+    Map[String, Bool],
+    Array[String],
+    Map[String, Int],
+    Map[Int, Array[String]],
+    Array[Int],
+  ) {
+  let cluster_node_set = build_cluster_local_node_set_for_reorder(
+    cluster_graph,
+    cluster,
+    groups,
+    vnode_clusters,
+    order_with_vnodes,
+  )
+  let (
+    cluster_nodes,
+    cluster_node_order,
+    cluster_groups,
+    cluster_rank_keys,
+  ) =
+    build_cluster_local_rank_groups_and_order(
+      groups,
+      cluster_node_set,
+      node_order,
+    )
+  (
+    cluster_node_set,
+    cluster_nodes,
+    cluster_node_order,
+    cluster_groups,
+    cluster_rank_keys,
+  )
+}
+
+///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -2429,22 +2475,19 @@ fn reorder_single_cluster_rank_groups(
   empty_cluster_skeleton : Map[String, Bool],
   order_with_vnodes : Bool,
 ) -> Unit {
-  let cluster_node_set = build_cluster_local_node_set_for_reorder(
-    cluster_graph,
-    cluster,
-    groups,
-    vnode_info.vnode_clusters,
-    order_with_vnodes,
-  )
   let (
+    cluster_node_set,
     cluster_nodes,
     cluster_node_order,
     cluster_groups,
     cluster_rank_keys,
   ) =
-    build_cluster_local_rank_groups_and_order(
+    build_cluster_local_rank_reorder_seed(
+      cluster_graph,
+      cluster,
       groups,
-      cluster_node_set,
+      vnode_info.vnode_clusters,
+      order_with_vnodes,
       node_order,
     )
   if cluster_rank_keys.length() == 0 {
