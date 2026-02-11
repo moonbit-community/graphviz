@@ -5521,19 +5521,13 @@ fn collect_intercluster_trailing_vnodes(
 }
 
 ///|
-/// Graphviz parity: trailing intercluster vnodes get a minimum order key just
-/// after the max real-node order on their rank (stable tiny seq offset).
+/// Graphviz parity: trailing-vnode floor uses the maximum real-node order seen
+/// per rank from the current ReMincross base order index.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_intercluster_vnode_order_key_floor(
-  keys : Map[String, Double],
-  intercluster_vnodes : Map[String, Bool],
+fn collect_max_real_order_by_rank_for_intercluster_floor(
   rem_base_order_index : Map[String, Int],
   ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> Unit {
-  if intercluster_vnodes.length() == 0 {
-    return
-  }
+) -> Map[Int, Int] {
   let max_order_by_rank : Map[Int, Int] = Map::new()
   for name, order in rem_base_order_index {
     let rank = match ranks.get(name) {
@@ -5548,6 +5542,28 @@ fn apply_intercluster_vnode_order_key_floor(
       None => max_order_by_rank[rank] = order
     }
   }
+  max_order_by_rank
+}
+
+///|
+/// Graphviz parity: trailing intercluster vnodes get a minimum order key just
+/// after the max real-node order on their rank (stable tiny seq offset).
+/// Do not change behavior without updating fixtures/tests.
+fn apply_intercluster_vnode_order_key_floor(
+  keys : Map[String, Double],
+  intercluster_vnodes : Map[String, Bool],
+  rem_base_order_index : Map[String, Int],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+) -> Unit {
+  if intercluster_vnodes.length() == 0 {
+    return
+  }
+  let max_order_by_rank =
+    collect_max_real_order_by_rank_for_intercluster_floor(
+      rem_base_order_index,
+      ranks,
+    )
   let mut seq = 0
   for vnode, _ in intercluster_vnodes {
     let rank = match vnode_ranks.get(vnode) {
