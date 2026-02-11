@@ -7232,6 +7232,36 @@ fn build_noncluster_order_node_order(
 }
 
 ///|
+/// Graphviz parity: non-cluster ND_in neighbor entries preserve AGSEQ edge
+/// traversal order while resolving tail/head from materialized arrays.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_noncluster_in_neighbor_entries(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> Map[String, Array[String]] {
+  let in_entries : Map[String, Array[String]] = Map::new()
+  let mut edge_idx = 0
+  while edge_idx < edges.length() {
+    let tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edges[edge_idx].tail().name()
+      }
+    let head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edges[edge_idx].head().name()
+      }
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+    edge_idx = edge_idx + 1
+  }
+  in_entries
+}
+
+
+///|
 /// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
 /// edge_out_order and ND_in head order from edge sequence (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
@@ -7260,23 +7290,8 @@ fn build_noncluster_graphviz_neighbor_maps(
     }
     graphviz_out_neighbors[name] = heads
   }
-  let in_entries : Map[String, Array[String]] = Map::new()
-  let mut edge_idx = 0
-  while edge_idx < edges.length() {
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edges[edge_idx].tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edges[edge_idx].head().name()
-      }
-    match in_entries.get(head) {
-      Some(list) => list.push(tail)
-      None => in_entries[head] = [tail]
-    }
-    edge_idx = edge_idx + 1
-  }
+  let in_entries =
+    collect_noncluster_in_neighbor_entries(edges, edge_tail, edge_head)
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
