@@ -2448,6 +2448,92 @@ fn build_cluster_local_rank_reorder_seed(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder builds internal edge bundle and
+/// metadata maps from the same filtered cluster node subset.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_reorder_run_inputs(
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_node_set : Map[String, Bool],
+  cluster_nodes : Array[String],
+  fixed_ranks : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+  intercluster_keys : Map[String, String],
+  vnode_clusters : Map[String, String],
+  flat_constraints : Map[String, Bool],
+) ->
+  (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+    Map[String, Array[String]],
+    Map[String, Array[String]],
+    Map[String, Int],
+    Map[String, NodeSize],
+    Map[String, String],
+    Map[String, Bool],
+  ) {
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    edge_order,
+  ) =
+    build_cluster_local_edge_bundle(
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+      cluster_nodes,
+      fixed_ranks,
+    )
+  let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
+    build_cluster_local_reorder_metadata(
+      cluster_node_set,
+      order_sizes,
+      vnode_sizes,
+      intercluster_keys,
+      vnode_clusters,
+      flat_constraints,
+    )
+  (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    edge_order,
+    cluster_sizes,
+    cluster_keys,
+    cluster_flat_constraints,
+  )
+}
+
+///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -2504,8 +2590,11 @@ fn reorder_single_cluster_rank_groups(
     parents,
     children,
     edge_order,
+    cluster_sizes,
+    cluster_keys,
+    cluster_flat_constraints,
   ) =
-    build_cluster_local_edge_bundle(
+    build_cluster_local_reorder_run_inputs(
       order_edges,
       order_edge_tail,
       order_edge_head,
@@ -2516,10 +2605,6 @@ fn reorder_single_cluster_rank_groups(
       cluster_node_set,
       cluster_nodes,
       fixed_ranks,
-    )
-  let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
-    build_cluster_local_reorder_metadata(
-      cluster_node_set,
       order_sizes,
       vnode_info.vnode_sizes,
       cluster_meta.intercluster_keys,
