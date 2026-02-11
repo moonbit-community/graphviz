@@ -5333,6 +5333,56 @@ fn build_cluster_rank_order_output_from_root_reorder(
 }
 
 ///|
+/// Graphviz parity: root cluster-rank-order prep output keeps root groups,
+/// root edge materialization arrays, and root node-order map tuple ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order_output(
+  root_groups : Map[Int, Array[String]],
+  root_rank_keys : Array[Int],
+  root_edges_out : Array[@cgraph.Edge],
+  root_edge_tail_out : Array[String],
+  root_edge_head_out : Array[String],
+  root_edge_tail_port_x : Array[Double],
+  root_edge_head_port_x : Array[Double],
+  root_edge_tail_port_order : Array[Double],
+  root_edge_head_port_order : Array[Double],
+  root_parents : Map[String, Array[String]],
+  root_children : Map[String, Array[String]],
+  root_edge_order : Map[String, Int],
+  root_node_order : Map[String, Int],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Int],
+) {
+  (
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+  )
+}
+
+///|
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
@@ -5419,7 +5469,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_nodes,
       root_ranks,
     )
-  (
+  build_root_cluster_reorder_inputs_for_rank_order_output(
     root_groups,
     root_rank_keys,
     root_edges_out,
