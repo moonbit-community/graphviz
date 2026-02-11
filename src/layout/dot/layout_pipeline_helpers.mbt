@@ -212,6 +212,43 @@ priv struct ClusterFinalizeStageInputs {
 }
 
 ///|
+/// Graphviz parity: finalize-pass dispatch context keeps clustered finalize
+/// runtime payload ordering unchanged across cluster-rank/ReMincross phases.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterFinalizePassDispatchContext {
+  order_with_clusters : Bool
+  order_with_vnodes : Bool
+  graphviz_flip : Bool
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  nlist_order : Array[String]
+  ranks : Map[String, Int]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  skeleton_edge_creation : Array[(String, String)]
+  root_edge_creation : Array[(String, String)]
+  flat_rank_constraints : Map[String, Bool]
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  vnode_order_keys_for_ordering : Map[String, Double]
+  real_nodes : Map[String, Bool]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  local_cluster_order : Map[String, Int]
+  graph : @cgraph.Graph
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  edges_by_tail : Map[String, Array[Int]]
+  order_sizes : Map[String, NodeSize]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: root+cluster build_ranks stage input payload keeps root
 /// reorder/materialized artifacts and vnode groups unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -15272,6 +15309,81 @@ fn run_cluster_rank_ordered_finalize_pass_remincross_phase_output_from_stage_inp
 
 
 ///|
+/// Graphviz parity: finalize-pass cluster-rank-order context dispatch reads
+/// typed finalize runtime payloads and preserves Graphviz call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_rank_ordered_finalize_pass_cluster_rank_order_phase_output_from_context(
+  dispatch_context : ClusterFinalizePassDispatchContext,
+  stage_inputs : ClusterFinalizeStageInputs,
+) -> Map[Int, Map[String, Int]] {
+  run_cluster_rank_ordered_finalize_pass_cluster_rank_order_phase_output_from_stage_inputs(
+    dispatch_context.order_with_clusters,
+    dispatch_context.order_with_vnodes,
+    dispatch_context.graphviz_flip,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.nlist_order,
+    dispatch_context.ranks,
+    dispatch_context.order_edges_by_tail_root,
+    dispatch_context.skeleton_edge_creation,
+    dispatch_context.root_edge_creation,
+    dispatch_context.flat_rank_constraints,
+    dispatch_context.cluster_meta,
+    dispatch_context.vnode_info,
+    dispatch_context.vnode_order_keys_for_ordering,
+    dispatch_context.real_nodes,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    stage_inputs,
+  )
+}
+
+
+///|
+/// Graphviz parity: finalize-pass output dispatch reads cluster-rank-order
+/// output plus typed runtime payload and forwards ReMincross unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_rank_ordered_finalize_pass_output_phase_from_cluster_rank_order_output(
+  dispatch_context : ClusterFinalizePassDispatchContext,
+  stage_inputs : ClusterFinalizeStageInputs,
+  cluster_rank_order_output : Map[Int, Map[String, Int]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_cluster_rank_ordered_finalize_pass_remincross_phase_output_from_stage_inputs(
+    dispatch_context.order_with_clusters,
+    dispatch_context.order_with_vnodes,
+    dispatch_context.cluster_meta,
+    dispatch_context.local_cluster_order,
+    dispatch_context.real_nodes,
+    dispatch_context.graph,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.edge_reversed,
+    dispatch_context.edge_tail_port_x,
+    dispatch_context.edge_head_port_x,
+    dispatch_context.edge_tail_port_order,
+    dispatch_context.edge_head_port_order,
+    dispatch_context.ranks,
+    dispatch_context.flat_rank_constraints,
+    dispatch_context.edges_by_tail,
+    dispatch_context.vnode_info,
+    dispatch_context.order_sizes,
+    dispatch_context.rank_same_constraints,
+    dispatch_context.graphviz_flip,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    stage_inputs,
+    cluster_rank_order_output,
+  )
+}
+
+
+///|
 /// Graphviz parity: finalize-stage cluster rank order is derived first, then
 /// consumed by final clustered ReMincross without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -15308,56 +15420,45 @@ fn run_cluster_rank_ordered_finalize_pass(
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let cluster_rank_order_output =
-    run_cluster_rank_ordered_finalize_pass_cluster_rank_order_phase_output_from_stage_inputs(
-      order_with_clusters,
-      order_with_vnodes,
-      graphviz_flip,
-      edges,
-      edge_tail,
-      edge_head,
-      nlist_order,
-      ranks,
-      order_edges_by_tail_root,
-      skeleton_edge_creation,
-      root_edge_creation,
-      flat_rank_constraints,
-      cluster_meta,
-      vnode_info,
-      vnode_order_keys_for_ordering,
-      real_nodes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      stage_inputs,
-    )
-  run_cluster_rank_ordered_finalize_pass_remincross_phase_output_from_stage_inputs(
+  let dispatch_context : ClusterFinalizePassDispatchContext = {
     order_with_clusters,
     order_with_vnodes,
-    cluster_meta,
-    local_cluster_order,
-    real_nodes,
-    graph,
+    graphviz_flip,
     edges,
     edge_tail,
     edge_head,
     edge_reversed,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
+    nlist_order,
     ranks,
+    order_edges_by_tail_root,
+    skeleton_edge_creation,
+    root_edge_creation,
     flat_rank_constraints,
-    edges_by_tail,
+    cluster_meta,
     vnode_info,
-    order_sizes,
-    rank_same_constraints,
-    graphviz_flip,
+    vnode_order_keys_for_ordering,
+    real_nodes,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
+    local_cluster_order,
+    graph,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    edges_by_tail,
+    order_sizes,
+    rank_same_constraints,
+  }
+  let cluster_rank_order_output =
+    run_cluster_rank_ordered_finalize_pass_cluster_rank_order_phase_output_from_context(
+      dispatch_context,
+      stage_inputs,
+    )
+  run_cluster_rank_ordered_finalize_pass_output_phase_from_cluster_rank_order_output(
+    dispatch_context,
     stage_inputs,
     cluster_rank_order_output,
   )
