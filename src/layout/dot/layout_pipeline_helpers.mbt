@@ -15137,6 +15137,61 @@ fn run_ordering_dispatch_pipeline_stage_dispatch_phase(
 }
 
 ///|
+/// Graphviz parity: ordering dispatch execution phase consumes prepared
+/// dispatch setup, then maps staged outputs into OrderingResult unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_dispatch_pipeline_execution_phase(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  runtime_context : OrderingRuntimeContext,
+  dispatch_setup : OrderingDispatchSetup,
+) -> OrderingResult {
+  let (ordered_groups_internal, ordered_with_vnodes) =
+    run_ordering_dispatch_pipeline_stage_dispatch_phase(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      rank_keys,
+      groups,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      dispatch_setup,
+    )
+  build_ordering_dispatch_pipeline_result(
+    ordered_groups_internal,
+    ordered_with_vnodes,
+    runtime_context,
+    dispatch_setup,
+  )
+}
+
+///|
 /// Graphviz parity: ordering dispatch pipeline keeps setup/dispatch/result stages
 /// in Graphviz-equivalent sequence while using structured runtime context.
 /// Do not change behavior without updating fixtures/tests.
@@ -15177,31 +15232,24 @@ fn run_ordering_dispatch_pipeline(
       cluster_meta,
       runtime_context,
     )
-  let (ordered_groups_internal, ordered_with_vnodes) =
-    run_ordering_dispatch_pipeline_stage_dispatch_phase(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      rank_keys,
-      groups,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-      dispatch_setup,
-    )
-  build_ordering_dispatch_pipeline_result(
-    ordered_groups_internal,
-    ordered_with_vnodes,
+  run_ordering_dispatch_pipeline_execution_phase(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    rank_keys,
+    groups,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
     runtime_context,
     dispatch_setup,
   )
