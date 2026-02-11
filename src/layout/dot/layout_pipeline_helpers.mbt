@@ -2712,25 +2712,34 @@ fn build_cluster_local_reorder_run_inputs_output(
 
 
 ///|
+/// Graphviz parity: cluster-local reorder context keeps edge bundle and
+/// metadata inputs unchanged before local mincross preprocessing.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReorderRunInputsContext {
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  cluster_node_set : Map[String, Bool]
+  cluster_nodes : Array[String]
+  fixed_ranks : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, NodeSize]
+  intercluster_keys : Map[String, String]
+  vnode_clusters : Map[String, String]
+  flat_constraints : Map[String, Bool]
+}
+
+
+///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs(
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  cluster_node_set : Map[String, Bool],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-  intercluster_keys : Map[String, String],
-  vnode_clusters : Map[String, String],
-  flat_constraints : Map[String, Bool],
+  context : ClusterLocalReorderRunInputsContext,
 ) ->
   (
     Array[@cgraph.Edge],
@@ -2760,25 +2769,25 @@ fn build_cluster_local_reorder_run_inputs(
     edge_order,
   ) =
     build_cluster_local_reorder_run_inputs_edge_bundle_phase(
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_node_set,
-      cluster_nodes,
-      fixed_ranks,
+      context.order_edges,
+      context.order_edge_tail,
+      context.order_edge_head,
+      context.order_edge_tail_port_x,
+      context.order_edge_head_port_x,
+      context.order_edge_tail_port_order,
+      context.order_edge_head_port_order,
+      context.cluster_node_set,
+      context.cluster_nodes,
+      context.fixed_ranks,
     )
   let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
     build_cluster_local_reorder_run_inputs_metadata_phase(
-      cluster_node_set,
-      order_sizes,
-      vnode_sizes,
-      intercluster_keys,
-      vnode_clusters,
-      flat_constraints,
+      context.cluster_node_set,
+      context.order_sizes,
+      context.vnode_sizes,
+      context.intercluster_keys,
+      context.vnode_clusters,
+      context.flat_constraints,
     )
   build_cluster_local_reorder_run_inputs_output(
     cluster_edges,
@@ -2903,7 +2912,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
   Map[String, String],
   Map[String, Bool],
 ) {
-  build_cluster_local_reorder_run_inputs(
+  let input_context : ClusterLocalReorderRunInputsContext = {
     order_edges,
     order_edge_tail,
     order_edge_head,
@@ -2915,11 +2924,12 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
     cluster_nodes,
     fixed_ranks,
     order_sizes,
-    vnode_info.vnode_sizes,
-    cluster_meta.intercluster_keys,
-    vnode_info.vnode_clusters,
-    cluster_meta.flat_constraints,
-  )
+    vnode_sizes: vnode_info.vnode_sizes,
+    intercluster_keys: cluster_meta.intercluster_keys,
+    vnode_clusters: vnode_info.vnode_clusters,
+    flat_constraints: cluster_meta.flat_constraints,
+  }
+  build_cluster_local_reorder_run_inputs(input_context)
 }
 
 
