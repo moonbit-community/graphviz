@@ -1447,6 +1447,22 @@ fn build_cluster_order_and_parents_for_metadata(
 }
 
 ///|
+/// Graphviz parity: cluster key map comes from per-node cluster ownership
+/// used throughout clustered ordering and compound-edge setup.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_keys_for_metadata(
+  nodes : Array[@cgraph.Node],
+) -> Map[String, String] {
+  let cluster_keys : Map[String, String] = Map::new()
+  for node in nodes {
+    cluster_keys[node.name()] = node_cluster_key(node)
+  }
+  cluster_keys
+}
+
+
+
+///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -1461,10 +1477,7 @@ fn compute_cluster_metadata(
   graphviz_flip : Bool,
 ) -> ClusterMetadata {
   let has_clusters = graph_has_cluster(graph)
-  let cluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    cluster_keys[node.name()] = node_cluster_key(node)
-  }
+  let cluster_keys = build_cluster_keys_for_metadata(nodes)
   assign_cluster_node_order_for_metadata(
     nodes,
     cluster_keys,
