@@ -1284,14 +1284,8 @@ fn append_same_rank_flat_constraints_for_metadata(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     if tail != head {
-      let tail_rank = match ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
+      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
       if tail_rank == head_rank {
         flat_constraints["\{tail}|\{head}"] = true
       }
@@ -3475,6 +3469,20 @@ fn build_edge_creation_order(
 }
 
 ///|
+/// Graphviz parity: class2 flat-rank preprocessing treats unknown node ranks
+/// as 0 when evaluating same-rank non-self edge constraints.
+/// Do not change behavior without updating fixtures/tests.
+fn rank_or_zero_for_flat_constraints(
+  ranks : Map[String, Int],
+  name : String,
+) -> Int {
+  match ranks.get(name) {
+    Some(value) => value
+    None => 0
+  }
+}
+
+///|
 /// Graphviz parity: flat edge constraints include same-rank non-self edges
 /// and use missing-rank fallback 0 exactly as class2 input pre-pass.
 /// Do not change behavior without updating fixtures/tests.
@@ -3489,14 +3497,8 @@ fn build_flat_rank_constraints(
     let tail = edge_tail[flat_idx]
     let head = edge_head[flat_idx]
     if tail != head {
-      let tail_rank = match ranks.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_rank = match ranks.get(head) {
-        Some(value) => value
-        None => 0
-      }
+      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
       if tail_rank == head_rank {
         flat_rank_constraints["\{tail}|\{head}"] = true
       }
