@@ -8249,6 +8249,60 @@ fn run_clustered_remincross_reorder_step_finalize_phase(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross reorder-step input phase prepares
+/// edge-index maps and cluster-aware reorder metadata before cleanup phase.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_reorder_step_input_phase(
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ranks : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  rem_groups : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  rem_nodes : Array[String],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_edges_out : Array[@cgraph.Edge],
+) -> (
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, String],
+  Map[String, NodeSize],
+  Map[String, Bool],
+) {
+  build_clustered_remincross_reorder_step_inputs(
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    order_with_vnodes,
+    order_with_clusters,
+    ranks,
+    cluster_meta,
+    vnode_info,
+    order_sizes,
+    rank_same_constraints,
+    rem_groups,
+    real_nodes,
+    rem_nodes,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_ranks,
+    rem_edges_out,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross computes edge indices, prepares
 /// cluster-aware reorder inputs, then runs final real-node cleanup reorder.
 /// Do not change behavior without updating fixtures/tests.
@@ -8291,7 +8345,7 @@ fn run_clustered_remincross_reorder_step(
     rem_sizes,
     rem_flat_constraints,
   ) =
-    build_clustered_remincross_reorder_step_inputs(
+    run_clustered_remincross_reorder_step_input_phase(
       graph,
       edges,
       edge_tail,
