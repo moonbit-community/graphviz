@@ -592,6 +592,44 @@ fn build_size_maps_for_layout_inputs(
 }
 
 ///|
+/// Graphviz parity: record/html nodes expose per-port horizontal order offsets
+/// (layout_port_offset.x) used by later opposite-endpoint averaging.
+/// Do not change behavior without updating fixtures/tests.
+fn build_record_port_order_map_for_layout_inputs(
+  nodes : Array[@cgraph.Node],
+  output_sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  record_orientation : RecordOrientation,
+) -> Map[String, Map[String, Double]] {
+  let record_port_order : Map[String, Map[String, Double]] = Map::new()
+  for node in nodes {
+    let label = label_text(node)
+    let has_html = @html_label.is_html_label_text(label)
+    if has_html || is_record_shape(node) {
+      let name = node.name()
+      let size = match output_sizes.get(name) {
+        Some(value) => value
+        None => node_size(node, record_orientation)
+      }
+      let raw_ports =
+        if has_html {
+          html_ports(node, { x: 0.0, y: 0.0 }, size)
+        } else {
+          record_ports(node, { x: 0.0, y: 0.0 }, size, record_orientation)
+        }
+      let order_map : Map[String, Double] = Map::new()
+      for port_name, port in raw_ports {
+        let offset = layout_port_offset(port.center, rankdir)
+        order_map[port_name] = offset.x
+      }
+      record_port_order[name] = order_map
+    }
+  }
+  record_port_order
+}
+
+
+///|
 /// Graphviz parity: record/html port order hints are collected for LR/RL only
 /// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
@@ -606,30 +644,13 @@ fn build_port_order_metadata_for_layout_inputs(
   let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
-    let record_port_order : Map[String, Map[String, Double]] = Map::new()
-    for node in nodes {
-      let label = label_text(node)
-      let has_html = @html_label.is_html_label_text(label)
-      if has_html || is_record_shape(node) {
-        let name = node.name()
-        let size = match output_sizes.get(name) {
-          Some(value) => value
-          None => node_size(node, record_orientation)
-        }
-        let raw_ports =
-          if has_html {
-            html_ports(node, { x: 0.0, y: 0.0 }, size)
-          } else {
-            record_ports(node, { x: 0.0, y: 0.0 }, size, record_orientation)
-          }
-        let order_map : Map[String, Double] = Map::new()
-        for port_name, port in raw_ports {
-          let offset = layout_port_offset(port.center, rankdir)
-          order_map[port_name] = offset.x
-        }
-        record_port_order[name] = order_map
-      }
-    }
+    let record_port_order =
+      build_record_port_order_map_for_layout_inputs(
+        nodes,
+        output_sizes,
+        rankdir,
+        record_orientation,
+      )
     let order_sum : Map[String, (Double, Int)] = Map::new()
     let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
       match port {
