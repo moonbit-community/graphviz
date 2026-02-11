@@ -8026,6 +8026,61 @@ fn run_clustered_remincross_multi_rank_from_reorder_inputs(
 
 
 ///|
+/// Graphviz parity: clustered ReMincross multi-rank input phase keeps
+/// rematerialized reorder arrays in Graphviz tuple ordering before cleanup.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_multi_rank_reorder_inputs_phase(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  rem_groups : Map[Int, Array[String]],
+  rem_rank_keys : Array[Int],
+) -> (
+  Map[String, Int],
+  Array[String],
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  build_clustered_remincross_multi_rank_reorder_inputs(
+    creation_order,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    order_with_vnodes,
+    order_with_clusters,
+    flat_rank_constraints,
+    edges_by_tail,
+    cluster_meta,
+    vnode_info,
+    rem_groups,
+    rem_rank_keys,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ReMincross multi-rank branch materializes
 /// remapped edges and executes clustered cleanup reorder in startpass=2 flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -8069,7 +8124,7 @@ fn run_clustered_remincross_multi_rank(
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
   ) =
-    build_clustered_remincross_multi_rank_reorder_inputs(
+    build_clustered_remincross_multi_rank_reorder_inputs_phase(
       creation_order,
       edges,
       edge_tail,
