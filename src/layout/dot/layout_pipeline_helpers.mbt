@@ -2120,6 +2120,29 @@ fn collect_internal_cluster_edges_for_local_bundle(
 
 
 ///|
+/// Graphviz parity: local cluster edge bundle derives neighbor maps and edge
+/// ordering from the filtered in-cluster edge list.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_edge_index_and_order(
+  cluster_nodes : Array[String],
+  cluster_edges : Array[@cgraph.Edge],
+  cluster_edge_tail : Array[String],
+  cluster_edge_head : Array[String],
+  fixed_ranks : Map[String, Int],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
+  let (parents, children) = build_edge_index_for_order_names(
+    cluster_nodes,
+    cluster_edge_tail,
+    cluster_edge_head,
+    fixed_ranks,
+  )
+  let edge_order = collect_edge_order(cluster_edges)
+  (parents, children, edge_order)
+}
+
+
+
+///|
 /// Graphviz parity: cluster-local edge bundle keeps only internal expanded
 /// cluster edges, preserving per-edge port hints and edge-order indexing.
 /// Do not change behavior without updating fixtures/tests.
@@ -2165,13 +2188,14 @@ fn build_cluster_local_edge_bundle(
       order_edge_head_port_order,
       cluster_node_set,
     )
-  let (parents, children) = build_edge_index_for_order_names(
-    cluster_nodes,
-    cluster_edge_tail,
-    cluster_edge_head,
-    fixed_ranks,
-  )
-  let edge_order = collect_edge_order(cluster_edges)
+  let (parents, children, edge_order) =
+    build_cluster_local_edge_index_and_order(
+      cluster_nodes,
+      cluster_edges,
+      cluster_edge_tail,
+      cluster_edge_head,
+      fixed_ranks,
+    )
   (
     cluster_edges,
     cluster_edge_tail,
