@@ -6653,6 +6653,26 @@ fn build_clustered_remincross_materialized_edges(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross edge index inputs are derived from
+/// rematerialized edge arrays before the final startpass=2 reorder call.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_edge_indices_for_reorder(
+  rem_nodes : Array[String],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_edges_out : Array[@cgraph.Edge],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
+  build_order_edge_indices_and_order(
+    rem_nodes,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_ranks,
+    rem_edges_out,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ReMincross computes edge indices, prepares
 /// cluster-aware reorder inputs, then runs final real-node cleanup reorder.
 /// Do not change behavior without updating fixtures/tests.
@@ -6688,7 +6708,7 @@ fn run_clustered_remincross_reorder_step(
   graphviz_flip : Bool,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (rem_parents, rem_children, rem_edge_order) =
-    build_order_edge_indices_and_order(
+    build_clustered_remincross_edge_indices_for_reorder(
       rem_nodes,
       rem_edge_tail_out,
       rem_edge_head_out,
