@@ -215,6 +215,28 @@ priv struct OrderingDispatchSetup {
 }
 
 ///|
+/// Graphviz parity: clustered ordering pre-root/root phase context keeps
+/// stage setup payload ordering unchanged before stage-phase dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredOrderingPreRootAndRootPhaseContext {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  runtime_context : OrderingRuntimeContext
+  reorder_setup : OrderingReorderSetup
+  class2_data : OrderingClass2Data
+}
+
+///|
 priv struct OrderRootClusterStageData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
@@ -17150,10 +17172,10 @@ fn run_clustered_ordering_stage_from_phase_context(
 }
 
 ///|
-/// Graphviz parity: clustered ordering stage first computes pre-root/root phase
-/// context and forwards the untouched stage tuple into finalize-phase dispatch.
+/// Graphviz parity: clustered ordering pre-root/root phase context builder
+/// preserves stage setup payload ordering before phase dispatch.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_pre_root_and_root_phase(
+fn build_clustered_ordering_stage_pre_root_and_root_phase_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edge_tail : Array[String],
@@ -17169,8 +17191,8 @@ fn run_clustered_ordering_stage_pre_root_and_root_phase(
   runtime_context : OrderingRuntimeContext,
   reorder_setup : OrderingReorderSetup,
   class2_data : OrderingClass2Data,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  run_clustered_ordering_pre_root_and_root_stage(
+) -> ClusteredOrderingPreRootAndRootPhaseContext {
+  {
     graph,
     nodes,
     edge_tail,
@@ -17186,6 +17208,32 @@ fn run_clustered_ordering_stage_pre_root_and_root_phase(
     runtime_context,
     reorder_setup,
     class2_data,
+  }
+}
+
+///|
+/// Graphviz parity: clustered ordering stage first computes pre-root/root phase
+/// context and forwards the untouched stage tuple into finalize-phase dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage_pre_root_and_root_phase(
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  run_clustered_ordering_pre_root_and_root_stage(
+    phase_context.graph,
+    phase_context.nodes,
+    phase_context.edge_tail,
+    phase_context.edge_head,
+    phase_context.ranks,
+    phase_context.node_order,
+    phase_context.order_sizes,
+    phase_context.nodesep_pt,
+    phase_context.has_edge_labels,
+    phase_context.cluster_meta,
+    phase_context.port_order_positions,
+    phase_context.port_order_contrib,
+    phase_context.runtime_context,
+    phase_context.reorder_setup,
+    phase_context.class2_data,
   )
 }
 
@@ -17228,39 +17276,9 @@ fn run_clustered_ordering_stage_finalize_phase_from_stage_output(
 /// typed runtime/reorder payloads and forwards Graphviz call ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  runtime_context : OrderingRuntimeContext,
-  reorder_setup : OrderingReorderSetup,
-  class2_data : OrderingClass2Data,
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
 ) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  run_clustered_ordering_stage_pre_root_and_root_phase(
-    graph,
-    nodes,
-    edge_tail,
-    edge_head,
-    ranks,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-    reorder_setup,
-    class2_data,
-  )
+  run_clustered_ordering_stage_pre_root_and_root_phase(phase_context)
 }
 
 
@@ -17359,8 +17377,8 @@ fn run_clustered_ordering_stage(
   reorder_setup : OrderingReorderSetup,
   class2_data : OrderingClass2Data,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let stage_output =
-    run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
+  let phase_context =
+    build_clustered_ordering_stage_pre_root_and_root_phase_context(
       graph,
       nodes,
       edge_tail,
@@ -17376,6 +17394,10 @@ fn run_clustered_ordering_stage(
       runtime_context,
       reorder_setup,
       class2_data,
+    )
+  let stage_output =
+    run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
+      phase_context,
     )
   let dispatch_context =
     build_clustered_ordering_stage_output_phase_dispatch_context(
