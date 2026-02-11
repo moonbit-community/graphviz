@@ -3776,6 +3776,110 @@ fn build_cluster_rank_order_output_from_root_reorder(
 }
 
 ///|
+/// Graphviz parity: root reorder context + root edge bundle are materialized
+/// before root-only mincross in cluster-order phase.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Int],
+) {
+  let (
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
+    root_node_order,
+  ) =
+    build_root_cluster_reorder_context(
+      order_with_vnodes,
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+      edge_vnodes,
+      vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+      nlist_order,
+      ranks,
+      skeleton_edge_creation,
+      root_edge_creation,
+      flat_rank_constraints,
+    )
+  let (
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+  ) =
+    build_root_cluster_reorder_edge_bundle(
+      root_nlist_order,
+      order_edges_by_tail_root,
+      root_graph,
+      root_node_map,
+      root_nodes,
+      root_ranks,
+    )
+  (
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+  )
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -3814,14 +3918,19 @@ fn build_cluster_rank_order_for_cluster_reorder(
   let (
     root_groups,
     root_rank_keys,
-    root_ranks,
-    root_nodes,
-    root_graph,
-    root_node_map,
-    root_nlist_order,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
     root_node_order,
   ) =
-    build_root_cluster_reorder_context(
+    build_root_cluster_reorder_inputs_for_rank_order(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -3839,26 +3948,7 @@ fn build_cluster_rank_order_for_cluster_reorder(
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
-    )
-  let (
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-  ) =
-    build_root_cluster_reorder_edge_bundle(
-      root_nlist_order,
       order_edges_by_tail_root,
-      root_graph,
-      root_node_map,
-      root_nodes,
-      root_ranks,
     )
   build_cluster_rank_order_output_from_root_reorder(
     root_rank_keys,
