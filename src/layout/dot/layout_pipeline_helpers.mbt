@@ -1642,14 +1642,15 @@ fn compute_cluster_metadata(
 }
 
 ///|
-/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
+/// Graphviz parity: local cluster ordering seeds per-cluster minimum rank and
+/// first-seen node order prior to stable cluster sorting.
 /// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_order(
+fn collect_local_cluster_rank_and_first_order(
   nodes : Array[@cgraph.Node],
   local_cluster_keys : Map[String, String],
   ranks : Map[String, Int],
   node_order : Map[String, Int],
-) -> Map[String, Int] {
+) -> (Map[String, Int], Map[String, Int]) {
   let min_rank : Map[String, Int] = Map::new()
   let first_order : Map[String, Int] = Map::new()
   for node in nodes {
@@ -1677,6 +1678,26 @@ fn build_local_cluster_order(
       first_order[cluster] = order_value
     }
   }
+  (min_rank, first_order)
+}
+
+
+
+///|
+/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
+/// Do not change behavior without updating fixtures/tests.
+fn build_local_cluster_order(
+  nodes : Array[@cgraph.Node],
+  local_cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+) -> Map[String, Int] {
+  let (min_rank, first_order) = collect_local_cluster_rank_and_first_order(
+    nodes,
+    local_cluster_keys,
+    ranks,
+    node_order,
+  )
   let entries : Array[(String, Int, Int)] = []
   for cluster, rank in min_rank {
     let order = match first_order.get(cluster) {
