@@ -470,16 +470,14 @@ fn resolve_spacing_for_layout_inputs(
 }
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: splines mode resolution uses option override first, then
+/// graph attribute parsing with Spline fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
+fn resolve_splines_for_layout_inputs(
   graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
-  let (nodesep_in, ranksep_in) =
-    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
-  let splines = match opts.splines {
+  option_splines : SplinesMode?,
+) -> SplinesMode {
+  match option_splines {
     Some(value) => value
     None =>
       match graph.get_attr("splines") {
@@ -491,6 +489,19 @@ fn prepare_layout_inputs(
         None => SplinesMode::Spline
       }
   }
+}
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let (nodesep_in, ranksep_in) =
+    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
+  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
   let nodes = ordered_nodes(graph)
   let edges = graph.edges()
   dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
