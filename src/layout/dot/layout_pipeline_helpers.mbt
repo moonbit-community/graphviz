@@ -10605,6 +10605,73 @@ fn build_ordering_reorder_setup_output(
 
 
 ///|
+/// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
+/// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  vnode_count : Int,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+) -> (OrderingClass2Data, Array[String], Map[String, Double]) {
+  let class2_data =
+    build_ordering_class2_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      vnode_info.edge_vnodes,
+      order_with_vnodes,
+      order_with_clusters,
+      cluster_meta,
+      flat_rank_constraints,
+      graphviz_flip,
+    )
+  // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
+  // Do not change behavior without updating fixtures/tests.
+  let gdnlist_order = class2_data.nlist_order
+  let nlist_order_index = build_nlist_order_index(class2_data.nlist_order)
+  let vnode_order_keys_for_ordering =
+    build_vnode_order_keys_for_ordering_stage(
+      vnode_count,
+      cluster_meta,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      base_order_index,
+      vnode_info,
+      ordering_groups_base,
+      nlist_order_index,
+    )
+  (class2_data, gdnlist_order, vnode_order_keys_for_ordering)
+}
+
+
+///|
 /// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
 /// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
@@ -10647,42 +10714,28 @@ fn build_ordering_reorder_setup(
       edge_head,
       ranks,
     )
-  let class2_data =
-    build_ordering_class2_data(
+  let (class2_data, gdnlist_order, vnode_order_keys_for_ordering) =
+    build_ordering_class2_and_vnode_keys_for_reorder_setup(
       nodes,
       edges,
       edge_tail,
       edge_head,
+      edge_reversed,
       edge_out_order,
+      ranks,
+      vnode_count,
+      cluster_meta,
+      vnode_info,
+      ordering_groups_base,
+      base_order_index,
+      order_with_vnodes,
+      order_with_clusters,
+      flat_rank_constraints,
+      graphviz_flip,
       edge_tail_port_x,
       edge_head_port_x,
       edge_tail_port_order,
       edge_head_port_order,
-      ranks,
-      vnode_info.edge_vnodes,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      flat_rank_constraints,
-      graphviz_flip,
-    )
-  // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
-  // Do not change behavior without updating fixtures/tests.
-  let gdnlist_order = class2_data.nlist_order
-  let nlist_order_index = build_nlist_order_index(class2_data.nlist_order)
-  let vnode_order_keys_for_ordering =
-    build_vnode_order_keys_for_ordering_stage(
-      vnode_count,
-      cluster_meta,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      vnode_info,
-      ordering_groups_base,
-      nlist_order_index,
     )
   build_ordering_reorder_setup_output(
     ordering_groups_base,
