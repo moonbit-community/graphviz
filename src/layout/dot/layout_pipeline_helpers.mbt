@@ -3334,6 +3334,14 @@ fn prepend_order_edge_entry(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton node naming uses
+/// CLUSTER_SKELETON_PREFIX + cluster + @rank across all class2 passes.
+/// Do not change behavior without updating fixtures/tests.
+fn cluster_skeleton_name_for_rank(cluster : String, rank : Int) -> String {
+  "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+}
+
+///|
 /// Graphviz parity: cluster skeleton names expand to one deterministic token
 /// per rank between min/max bounds using CLUSTER_SKELETON_PREFIX naming.
 /// Do not change behavior without updating fixtures/tests.
@@ -3345,7 +3353,7 @@ fn append_cluster_skeleton_rank_span(
 ) -> Unit {
   for rank in min_rank..=max_rank {
     cluster_skeleton_creation.push(
-      "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+      cluster_skeleton_name_for_rank(cluster, rank),
     )
   }
 }
@@ -3448,8 +3456,8 @@ fn append_cluster_skeleton_edges(
 ) -> Unit {
   let mut rank = min_rank
   while rank < max_rank {
-    let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-    let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
+    let tail_name = cluster_skeleton_name_for_rank(cluster, rank)
+    let head_name = cluster_skeleton_name_for_rank(cluster, rank + 1)
     let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
     skeleton_edge_creation.push((tail_name, head_name))
     prepend_cluster_skeleton_edge_to_local_and_root(
