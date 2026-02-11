@@ -9934,6 +9934,18 @@ fn build_materialized_order_edges_and_neighbors_output(
 }
 
 ///|
+/// Graphviz parity: neighbor/constraint output keeps ND_out, ND_in, and flat
+/// constraint maps in fixed tuple order for ordering stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_order_neighbors_and_flat_constraints_output(
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_flat_constraints : Map[String, Bool],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Bool]) {
+  (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints)
+}
+
+///|
 /// Graphviz parity: Graphviz neighbor maps and flat constraints are derived
 /// before unconstrained-node seed-order overrides for build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -9970,7 +9982,11 @@ fn build_order_neighbors_and_flat_constraints(
     cluster_meta.intercluster_keys,
     order_node_order,
   )
-  (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints)
+  build_order_neighbors_and_flat_constraints_output(
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    order_flat_constraints,
+  )
 }
 
 
