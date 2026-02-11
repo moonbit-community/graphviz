@@ -11553,6 +11553,36 @@ fn build_materialized_order_edges_and_neighbors_materialization_phase(
 }
 
 ///|
+/// Graphviz parity: order-edge neighbor/constraint phase derives Graphviz
+/// in/out neighbor maps and flat constraints before build_ranks reuse.
+/// Do not change behavior without updating fixtures/tests.
+fn build_materialized_order_edges_and_neighbors_neighbor_phase(
+  order_nodes : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+  cluster_meta : ClusterMetadata,
+  gdnlist_order : Array[String],
+  real_nodes : Map[String, Bool],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nodes : Array[@cgraph.Node],
+  order_node_order : Map[String, Int],
+) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Bool]) {
+  build_order_neighbors_and_flat_constraints(
+    order_nodes,
+    order_edges_by_tail,
+    edge_creation_order,
+    cluster_meta,
+    gdnlist_order,
+    real_nodes,
+    edge_tail,
+    edge_head,
+    nodes,
+    order_node_order,
+  )
+}
+
+///|
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -11603,7 +11633,7 @@ fn build_materialized_order_edges_and_neighbors(
       real_nodes,
     )
   let (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints) =
-    build_order_neighbors_and_flat_constraints(
+    build_materialized_order_edges_and_neighbors_neighbor_phase(
       order_nodes,
       order_edges_by_tail,
       edge_creation_order,
