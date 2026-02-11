@@ -281,6 +281,38 @@ priv struct RootClusterBuildRanksStageInputs {
 }
 
 ///|
+/// Graphviz parity: root+cluster root-reorder dispatch context keeps seeded
+/// build_ranks and root ReMincross payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootClusterRootReorderContext {
+  order_with_clusters : Bool
+  order_with_vnodes : Bool
+  cluster_meta : ClusterMetadata
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_node_order : Map[String, Int]
+  order_sizes_out : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graphviz_flip : Bool
+  order_ranks : Map[String, Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -13963,84 +13995,94 @@ fn run_root_and_cluster_root_reorder_seed_phase(
 
 
 ///|
+/// Graphviz parity: root+cluster seed dispatch reads typed root-reorder
+/// context and forwards build_ranks seed inputs in Graphviz ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_and_cluster_root_reorder_seed_phase_from_context(
+  reorder_context : RootClusterRootReorderContext,
+  order_rank_keys : Array[Int],
+  order_groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  run_root_and_cluster_root_reorder_seed_phase(
+    order_rank_keys,
+    order_groups,
+    reorder_context.order_edge_tail_out,
+    reorder_context.order_edge_head_out,
+    reorder_context.order_ranks,
+    reorder_context.order_node_order,
+    reorder_context.order_cluster_keys,
+    reorder_context.order_cluster_skeleton,
+    reorder_context.order_flat_constraints,
+    reorder_context.graphviz_flip,
+    reorder_context.graphviz_out_neighbors,
+    reorder_context.graphviz_in_neighbors,
+    reorder_context.order_edges_out,
+    reorder_context.order_edge_tail_port_x,
+    reorder_context.order_edge_head_port_x,
+    reorder_context.flat_rank_constraints,
+  )
+}
+
+
+///|
+/// Graphviz parity: root+cluster output dispatch forwards seeded groups and
+/// typed root-reorder context into root ReMincross unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_and_cluster_root_reorder_output_phase_from_seeded_groups(
+  reorder_context : RootClusterRootReorderContext,
+  order_rank_keys : Array[Int],
+  seeded_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_root_and_cluster_root_reorder_mincross_phase(
+    reorder_context.order_with_clusters,
+    reorder_context.order_with_vnodes,
+    seeded_groups,
+    order_rank_keys,
+    reorder_context.order_ranks,
+    reorder_context.order_edges_out,
+    reorder_context.order_edge_tail_out,
+    reorder_context.order_edge_head_out,
+    reorder_context.order_edge_tail_port_x,
+    reorder_context.order_edge_head_port_x,
+    reorder_context.order_edge_tail_port_order,
+    reorder_context.order_edge_head_port_order,
+    reorder_context.order_cluster_keys,
+    reorder_context.order_cluster_skeleton,
+    reorder_context.cluster_meta,
+    reorder_context.vnode_order_keys_for_ordering,
+    reorder_context.order_node_order,
+    reorder_context.order_sizes_out,
+    reorder_context.nodesep_pt,
+    reorder_context.has_edge_labels,
+    reorder_context.port_order_positions,
+    reorder_context.port_order_contrib,
+    reorder_context.order_flat_constraints,
+    reorder_context.graphviz_out_neighbors,
+    reorder_context.graphviz_in_neighbors,
+    reorder_context.graphviz_flip,
+  )
+}
+
+
+///|
 /// Graphviz parity: root+cluster stage seeds build_ranks groups then runs
 /// root ReMincross before any cluster-local unmapped-edge build_ranks pass.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_and_cluster_root_reorder(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_flip : Bool,
+  reorder_context : RootClusterRootReorderContext,
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
-  order_ranks : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  flat_rank_constraints : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let seeded_groups =
-    run_root_and_cluster_root_reorder_seed_phase(
+    run_root_and_cluster_root_reorder_seed_phase_from_context(
+      reorder_context,
       order_rank_keys,
       order_groups,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_ranks,
-      order_node_order,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      order_flat_constraints,
-      graphviz_flip,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      order_edges_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      flat_rank_constraints,
     )
-  run_root_and_cluster_root_reorder_mincross_phase(
-    order_with_clusters,
-    order_with_vnodes,
-    seeded_groups,
+  run_root_and_cluster_root_reorder_output_phase_from_seeded_groups(
+    reorder_context,
     order_rank_keys,
-    order_ranks,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    cluster_meta,
-    vnode_order_keys_for_ordering,
-    order_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_flat_constraints,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    graphviz_flip,
+    seeded_groups,
   )
 }
 
@@ -14131,7 +14173,7 @@ fn build_root_and_cluster_root_reorder_result(
   order_edge_head_port_order : Array[Double],
   flat_rank_constraints : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_root_and_cluster_root_reorder(
+  let reorder_context : RootClusterRootReorderContext = {
     order_with_clusters,
     order_with_vnodes,
     cluster_meta,
@@ -14143,8 +14185,6 @@ fn build_root_and_cluster_root_reorder_result(
     port_order_positions,
     port_order_contrib,
     graphviz_flip,
-    order_rank_keys,
-    order_groups,
     order_ranks,
     order_cluster_keys,
     order_cluster_skeleton,
@@ -14159,6 +14199,11 @@ fn build_root_and_cluster_root_reorder_result(
     order_edge_tail_port_order,
     order_edge_head_port_order,
     flat_rank_constraints,
+  }
+  run_root_and_cluster_root_reorder(
+    reorder_context,
+    order_rank_keys,
+    order_groups,
   )
 }
 
