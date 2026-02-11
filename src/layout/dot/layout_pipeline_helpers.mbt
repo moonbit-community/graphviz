@@ -9706,6 +9706,80 @@ fn run_finalize_order_groups_cluster_remincross_phase(
 
 
 ///|
+/// Graphviz parity: cluster-enabled final cleanup phase applies cluster/local
+/// ordering then forwards into clustered ReMincross refinement unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_finalize_order_groups_cluster_enabled_phase(
+  order_with_vnodes : Bool,
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_meta : ClusterMetadata,
+  local_cluster_order : Map[String, Int],
+  ordered_with_vnodes : Map[Int, Array[String]],
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  flat_rank_constraints : Map[String, Bool],
+  creation_order : Array[String],
+  edges_by_tail : Map[String, Array[Int]],
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  real_nodes : Map[String, Bool],
+  graphviz_flip : Bool,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  cleaned_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let final_groups =
+    reorder_final_groups_for_cluster_remincross(
+      cleaned_groups,
+      cluster_rank_order,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      local_cluster_order,
+    )
+  run_finalize_order_groups_cluster_remincross_phase(
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    order_with_vnodes,
+    true,
+    flat_rank_constraints,
+    creation_order,
+    edges_by_tail,
+    cluster_meta,
+    vnode_info,
+    order_sizes,
+    rank_same_constraints,
+    final_groups,
+    ordered_with_vnodes,
+    real_nodes,
+    graphviz_flip,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+  )
+}
+
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -9745,19 +9819,14 @@ fn finalize_order_groups_with_cluster_remincross(
   let cleaned_groups =
     collect_real_only_rank_groups(order_rank_keys, ordered, real_nodes)
   dot_trace_groups("cleaned_groups_pre", cleaned_groups)
-  let mut final_groups = cleaned_groups
-  let mut next_ordered_with_vnodes = ordered_with_vnodes
-  if order_with_clusters {
-    final_groups =
-      reorder_final_groups_for_cluster_remincross(
-        final_groups,
+  let (next_ordered_with_vnodes, final_groups) =
+    if order_with_clusters {
+      run_finalize_order_groups_cluster_enabled_phase(
+        order_with_vnodes,
         cluster_rank_order,
-        cluster_meta.cluster_keys,
-        cluster_meta.intercluster_keys,
+        cluster_meta,
         local_cluster_order,
-      )
-    let (rem_ordered_with_vnodes, rem_final_groups) =
-      run_finalize_order_groups_cluster_remincross_phase(
+        ordered_with_vnodes,
         graph,
         edges,
         edge_tail,
@@ -9768,28 +9837,27 @@ fn finalize_order_groups_with_cluster_remincross(
         edge_tail_port_order,
         edge_head_port_order,
         ranks,
-        order_with_vnodes,
-        order_with_clusters,
         flat_rank_constraints,
         creation_order,
         edges_by_tail,
-        cluster_meta,
         vnode_info,
         order_sizes,
         rank_same_constraints,
-        final_groups,
-        next_ordered_with_vnodes,
         real_nodes,
         graphviz_flip,
         nodesep_pt,
         has_edge_labels,
         port_order_positions,
         port_order_contrib,
+        cleaned_groups,
       )
-    next_ordered_with_vnodes = rem_ordered_with_vnodes
-    final_groups = rem_final_groups
-  }
-  build_finalize_order_groups_with_cluster_remincross_output(next_ordered_with_vnodes, final_groups)
+    } else {
+      (ordered_with_vnodes, cleaned_groups)
+    }
+  build_finalize_order_groups_with_cluster_remincross_output(
+    next_ordered_with_vnodes,
+    final_groups,
+  )
 }
 
 ///|
