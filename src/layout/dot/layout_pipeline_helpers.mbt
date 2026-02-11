@@ -11008,6 +11008,63 @@ fn build_clustered_ordering_pre_root_stage_output(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root reorder context is built before
+/// materialized order-edge/neighbor data, matching Graphviz stage sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_pre_root_reorder_context_and_materialized(
+  order_groups : Map[Int, Array[String]],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  node_order : Map[String, Int],
+  real_nodes : Map[String, Bool],
+  base_order_index : Map[String, Int],
+  cluster_meta : ClusterMetadata,
+  port_edge_nodes : Map[String, Bool],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  nodes : Array[@cgraph.Node],
+) -> (OrderReorderContext, OrderMaterializationData) {
+  let reorder_context =
+    build_order_reorder_context(
+      order_groups,
+      nlist_order,
+      gdnlist_order,
+      node_order,
+      real_nodes,
+      base_order_index,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      port_edge_nodes,
+    )
+  trace_order_node_order_debug(reorder_context.order_node_order)
+  let materialized =
+    build_materialized_order_edges_and_neighbors(
+      nlist_order,
+      order_edges_by_tail,
+      reorder_context.order_graph,
+      reorder_context.order_node_map,
+      order_edges_by_tail_unmapped,
+      reorder_context.order_graph_unmapped,
+      reorder_context.order_node_map_unmapped,
+      reorder_context.order_ranks,
+      real_nodes,
+      reorder_context.order_nodes,
+      edge_creation_order,
+      cluster_meta,
+      gdnlist_order,
+      edge_tail,
+      edge_head,
+      nodes,
+      reorder_context.order_node_order,
+    )
+  (reorder_context, materialized)
+}
+
+
+///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -11049,38 +11106,22 @@ fn build_clustered_ordering_pre_root_stage(
       order_sizes,
     )
   dot_trace_groups("order_groups_pre", order_groups)
-  let reorder_context =
-    build_order_reorder_context(
+  let (reorder_context, materialized) =
+    build_clustered_pre_root_reorder_context_and_materialized(
       order_groups,
       nlist_order,
       gdnlist_order,
       node_order,
       real_nodes,
       base_order_index,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      port_edge_nodes,
-    )
-  trace_order_node_order_debug(reorder_context.order_node_order)
-  let materialized =
-    build_materialized_order_edges_and_neighbors(
-      nlist_order,
-      order_edges_by_tail,
-      reorder_context.order_graph,
-      reorder_context.order_node_map,
-      order_edges_by_tail_unmapped,
-      reorder_context.order_graph_unmapped,
-      reorder_context.order_node_map_unmapped,
-      reorder_context.order_ranks,
-      real_nodes,
-      reorder_context.order_nodes,
-      edge_creation_order,
       cluster_meta,
-      gdnlist_order,
+      port_edge_nodes,
+      order_edges_by_tail,
+      order_edges_by_tail_unmapped,
+      edge_creation_order,
       edge_tail,
       edge_head,
       nodes,
-      reorder_context.order_node_order,
     )
   build_clustered_ordering_pre_root_stage_output(
     order_groups,
