@@ -16758,6 +16758,65 @@ fn build_clustered_xpos_reorder_edge_chain_with_vnodes(
 }
 
 ///|
+/// Graphviz parity: clustered xpos reorder emits chain segments with
+/// endpoint port hints and midpoint-neutral port-order values.
+/// Do not change behavior without updating fixtures/tests.
+fn append_clustered_xpos_reorder_edge_chain_segments(
+  order_graph : @cgraph.Graph,
+  order_node_map : Map[String, @cgraph.Node],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  chain : Array[String],
+  tail : String,
+  head : String,
+  penalty : Int,
+  constraint : Bool,
+  tail_port_x : Double,
+  head_port_x : Double,
+  tail_port_order : Double,
+  head_port_order : Double,
+) -> Unit {
+  let mut idx = 0
+  while idx + 1 < chain.length() {
+    let seg_tail_port =
+      if chain[idx] == tail { tail_port_x } else { 0.0 }
+    let seg_head_port =
+      if chain[idx + 1] == head { head_port_x } else { 0.0 }
+    // Graphviz parity: split edge segments keep neutral midpoint
+    // port-order (0.5) unless endpoint matches real tail/head.
+    let seg_tail_order =
+      if chain[idx] == tail { tail_port_order } else { 0.5 }
+    let seg_head_order =
+      if chain[idx + 1] == head { head_port_order } else { 0.5 }
+    add_order_edge(
+      order_graph,
+      order_node_map,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      chain[idx],
+      chain[idx + 1],
+      penalty,
+      constraint,
+      seg_tail_port,
+      seg_head_port,
+      seg_tail_order,
+      seg_head_order,
+    )
+    idx = idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: clustered xpos reorder expands vnode edge chains
 /// into order-graph segments while preserving endpoint port hints.
 /// Do not change behavior without updating fixtures/tests.
@@ -16809,39 +16868,26 @@ fn append_clustered_xpos_reorder_edge_with_vnodes(
       head,
       vnodes,
     )
-    let mut idx = 0
-    while idx + 1 < chain.length() {
-      let seg_tail_port =
-        if chain[idx] == tail { tail_port_x } else { 0.0 }
-      let seg_head_port =
-        if chain[idx + 1] == head { head_port_x } else { 0.0 }
-      // Graphviz parity: split edge segments keep neutral midpoint
-      // port-order (0.5) unless endpoint matches real tail/head.
-      let seg_tail_order =
-        if chain[idx] == tail { tail_port_order } else { 0.5 }
-      let seg_head_order =
-        if chain[idx + 1] == head { head_port_order } else { 0.5 }
-      add_order_edge(
-        order_graph,
-        order_node_map,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        chain[idx],
-        chain[idx + 1],
-        penalty,
-        constraint,
-        seg_tail_port,
-        seg_head_port,
-        seg_tail_order,
-        seg_head_order,
-      )
-      idx = idx + 1
-    }
+    append_clustered_xpos_reorder_edge_chain_segments(
+      order_graph,
+      order_node_map,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      chain,
+      tail,
+      head,
+      penalty,
+      constraint,
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+    )
   }
 }
 
