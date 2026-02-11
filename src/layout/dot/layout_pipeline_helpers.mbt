@@ -1118,6 +1118,26 @@ fn build_rank_ht_maps_from_rank_pht(
 
 
 ///|
+/// Graphviz parity: nodesep/ranksep convert from inches to points, and
+/// ranksep is halved (rounded) when edge labels participate.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_nodesep_and_ranksep_pt_for_rank_heights(
+  nodesep_in : Double,
+  ranksep_in : Double,
+  has_edge_labels : Bool,
+) -> (Double, Double) {
+  let nodesep_pt = round_int(nodesep_in * 72.0).to_double()
+  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
+  if has_edge_labels {
+    ranksep_pt_int = (ranksep_pt_int + 1) / 2
+  }
+  let ranksep_pt = ranksep_pt_int.to_double()
+  (nodesep_pt, ranksep_pt)
+}
+
+
+
+///|
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_heights(
@@ -1154,12 +1174,12 @@ fn compute_rank_heights(
   let _ = apply_cluster_rank_heights(
     graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
   )
-  let nodesep_pt = round_int(nodesep_in * 72.0).to_double()
-  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
-  if has_edge_labels {
-    ranksep_pt_int = (ranksep_pt_int + 1) / 2
-  }
-  let ranksep_pt = ranksep_pt_int.to_double()
+  let (nodesep_pt, ranksep_pt) =
+    resolve_nodesep_and_ranksep_pt_for_rank_heights(
+      nodesep_in,
+      ranksep_in,
+      has_edge_labels,
+    )
   { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
 }
 
