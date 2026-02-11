@@ -2816,27 +2816,32 @@ priv struct ClusterLocalReorderRunInputsOutputContext {
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder run-input output tuple alias keeps
+/// edge/metadata tuple ordering shared across input/apply dispatch steps.
+/// Do not change behavior without updating fixtures/tests.
+type ClusterLocalReorderRunInputsOutput = (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, NodeSize],
+  Map[String, String],
+  Map[String, Bool],
+)
+
+///|
 /// Graphviz parity: cluster-local reorder input output preserves edge bundle
 /// arrays/maps followed by metadata tuple ordering for local mincross call.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs_output(
   context : ClusterLocalReorderRunInputsOutputContext,
-) ->
-  (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Map[String, Array[String]],
-    Map[String, Array[String]],
-    Map[String, Int],
-    Map[String, NodeSize],
-    Map[String, String],
-    Map[String, Bool],
-  ) {
+) -> ClusterLocalReorderRunInputsOutput {
   (
     context.cluster_edges,
     context.cluster_edge_tail,
@@ -2904,22 +2909,7 @@ priv struct ClusterLocalReorderApplyDispatchContext {
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs(
   context : ClusterLocalReorderRunInputsContext,
-) ->
-  (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Map[String, Array[String]],
-    Map[String, Array[String]],
-    Map[String, Int],
-    Map[String, NodeSize],
-    Map[String, String],
-    Map[String, Bool],
-  ) {
+) -> ClusterLocalReorderRunInputsOutput {
   let (
     cluster_edges,
     cluster_edge_tail,
@@ -3062,21 +3052,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
   order_sizes : Map[String, NodeSize],
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, NodeSize],
-  Map[String, String],
-  Map[String, Bool],
-) {
+) -> ClusterLocalReorderRunInputsOutput {
   let input_context : ClusterLocalReorderRunInputsContext = {
     order_edges,
     order_edge_tail,
@@ -3104,21 +3080,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
   dispatch_context : ClusterLocalReorderApplyDispatchContext,
-  input_phase_output : (
-    Array[@cgraph.Edge],
-    Array[String],
-    Array[String],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Array[Double],
-    Map[String, Array[String]],
-    Map[String, Array[String]],
-    Map[String, Int],
-    Map[String, NodeSize],
-    Map[String, String],
-    Map[String, Bool],
-  ),
+  input_phase_output : ClusterLocalReorderRunInputsOutput,
 ) -> Unit {
   let (
     cluster_edges,
