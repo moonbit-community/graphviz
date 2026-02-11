@@ -14105,6 +14105,70 @@ fn run_clustered_ordering_stage_from_phase_context(
   )
 }
 
+///|
+/// Graphviz parity: clustered ordering stage first computes pre-root/root phase
+/// context and forwards the untouched stage tuple into finalize-phase dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage_pre_root_and_root_phase(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  cluster_meta : ClusterMetadata,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  real_nodes : Map[String, Bool],
+  port_edge_nodes : Map[String, Bool],
+  flat_rank_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
+  run_clustered_ordering_pre_root_and_root_stage(
+    graph,
+    nodes,
+    edge_tail,
+    edge_head,
+    ranks,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    real_nodes,
+    port_edge_nodes,
+    flat_rank_constraints,
+    graphviz_flip,
+    order_with_vnodes,
+    order_with_clusters,
+    ordering_groups_base,
+    base_order_index,
+    vnode_info,
+    vnode_order_keys_for_ordering,
+    nlist_order,
+    gdnlist_order,
+    order_edges_by_tail,
+    order_edges_by_tail_unmapped,
+    edge_creation_order,
+  )
+}
+
 
 ///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
@@ -14152,7 +14216,7 @@ fn run_clustered_ordering_stage(
   edge_creation_order : Array[(String, String)],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (pre_root_stage, root_cluster_stage) =
-    run_clustered_ordering_pre_root_and_root_stage(
+    run_clustered_ordering_stage_pre_root_and_root_phase(
       graph,
       nodes,
       edge_tail,
