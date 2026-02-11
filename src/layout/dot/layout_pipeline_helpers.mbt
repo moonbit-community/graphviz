@@ -5700,6 +5700,65 @@ fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
 }
 
 ///|
+/// Graphviz parity: cluster-enabled rank-order forwarding reads rank-same and
+/// flat-constraint maps from cluster metadata before root-order assembly call.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_with_cluster_meta(
+  root_groups : Map[Int, Array[String]],
+  root_rank_keys : Array[Int],
+  root_edges_out : Array[@cgraph.Edge],
+  root_edge_tail_out : Array[String],
+  root_edge_head_out : Array[String],
+  root_edge_tail_port_x : Array[Double],
+  root_edge_head_port_x : Array[Double],
+  root_edge_tail_port_order : Array[Double],
+  root_edge_head_port_order : Array[Double],
+  root_parents : Map[String, Array[String]],
+  root_children : Map[String, Array[String]],
+  root_edge_order : Map[String, Int],
+  root_node_order : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  cluster_meta : ClusterMetadata,
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  order_cluster_skeleton : Map[String, Bool],
+  graphviz_flip : Bool,
+  real_nodes : Map[String, Bool],
+) -> Map[Int, Map[String, Int]] {
+  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+    order_cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    order_cluster_skeleton,
+    cluster_meta.flat_constraints,
+    graphviz_flip,
+    real_nodes,
+  )
+}
+
+
+///|
 /// Graphviz parity: when cluster ordering is enabled, cluster rank-order map
 /// is built from root-only reorder inputs and root mincross output.
 /// Do not change behavior without updating fixtures/tests.
@@ -5763,7 +5822,7 @@ fn build_cluster_rank_order_when_clusters_enabled(
       vnode_info,
       vnode_order_keys_for_ordering,
     )
-  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
+  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_with_cluster_meta(
     root_groups,
     root_rank_keys,
     root_edges_out,
@@ -5778,15 +5837,13 @@ fn build_cluster_rank_order_when_clusters_enabled(
     root_edge_order,
     root_node_order,
     order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
+    cluster_meta,
     order_sizes_out,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     order_cluster_skeleton,
-    cluster_meta.flat_constraints,
     graphviz_flip,
     real_nodes,
   )
