@@ -2642,6 +2642,62 @@ fn reorder_single_cluster_rank_groups(
   if cluster_rank_keys.length() == 0 {
     return ()
   }
+  run_cluster_local_rank_reorder_execution_phase(
+    groups,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    cluster_meta,
+    vnode_info,
+    fixed_positions,
+    fixed_ranks,
+    empty_cluster_skeleton,
+    cluster_node_set,
+    cluster_nodes,
+    cluster_node_order,
+    cluster_groups,
+    cluster_rank_keys,
+  )
+}
+
+///|
+/// Graphviz parity: cluster-local reorder execution phase builds cluster-scoped
+/// edge/metadata inputs before applying local mincross results back to groups.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_local_rank_reorder_execution_phase(
+  groups : Map[Int, Array[String]],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  fixed_positions : Map[String, Double],
+  fixed_ranks : Map[String, Int],
+  empty_cluster_skeleton : Map[String, Bool],
+  cluster_node_set : Map[String, Bool],
+  cluster_nodes : Array[String],
+  cluster_node_order : Map[String, Int],
+  cluster_groups : Map[Int, Array[String]],
+  cluster_rank_keys : Array[Int],
+) -> Unit {
   let (
     cluster_edges,
     cluster_edge_tail,
@@ -2703,6 +2759,7 @@ fn reorder_single_cluster_rank_groups(
     cluster_node_set,
   )
 }
+
 
 ///|
 /// Graphviz parity: local cluster reorder runs mincross with cluster-restricted
