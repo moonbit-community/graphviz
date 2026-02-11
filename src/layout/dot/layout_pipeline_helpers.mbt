@@ -11626,6 +11626,114 @@ fn build_ordering_class2_data_output(
 }
 
 ///|
+/// Graphviz parity: root edge-chain phase derives root-only ND_out chains and
+/// root edge creation order before unmapped edge-chain derivation.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_root_and_unmapped_edge_chains_root_phase(
+  order_with_clusters : Bool,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edge_creation : Array[(String, String)],
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  edges_by_tail : Map[String, Array[Int]],
+) -> (
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Array[(String, String)],
+) {
+  build_root_order_edges_by_tail(
+    order_with_clusters,
+    order_edges_by_tail,
+    order_edge_creation,
+    creation_order,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    edge_vnodes,
+    order_with_vnodes,
+    cluster_keys,
+    edges_by_tail,
+  )
+}
+
+
+///|
+/// Graphviz parity: unmapped edge-chain phase keeps pre-remap cluster-local
+/// endpoints for cluster build_ranks passes before root/cluster remapping.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_root_and_unmapped_edge_chains_unmapped_phase(
+  order_with_clusters : Bool,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  edges_by_tail : Map[String, Array[Int]],
+) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
+  build_unmapped_order_edges_by_tail(
+    order_with_clusters,
+    order_edges_by_tail,
+    creation_order,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    edge_vnodes,
+    order_with_vnodes,
+    cluster_keys,
+    edges_by_tail,
+  )
+}
+
+
+///|
+/// Graphviz parity: root/unmapped edge-chain output preserves tuple ordering
+/// consumed by class2 edge-chain assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_root_and_unmapped_edge_chains_output(
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  root_edge_creation : Array[(String, String)],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> (
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) {
+  (
+    order_edges_by_tail_root,
+    root_edge_creation,
+    order_edges_by_tail_unmapped,
+  )
+}
+
+
+///|
 /// Graphviz parity: root and unmapped edge chains are derived from ND_out
 /// ordering after class2 edge-chain construction for clustered passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -11652,7 +11760,7 @@ fn build_ordering_root_and_unmapped_edge_chains(
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) {
   let (order_edges_by_tail_root, root_edge_creation) =
-    build_root_order_edges_by_tail(
+    build_ordering_root_and_unmapped_edge_chains_root_phase(
       order_with_clusters,
       order_edges_by_tail,
       order_edge_creation,
@@ -11673,7 +11781,7 @@ fn build_ordering_root_and_unmapped_edge_chains(
   // Graphviz parity: cluster-local build_ranks uses edge chains before
   // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
-    build_unmapped_order_edges_by_tail(
+    build_ordering_root_and_unmapped_edge_chains_unmapped_phase(
       order_with_clusters,
       order_edges_by_tail,
       creation_order,
@@ -11690,7 +11798,7 @@ fn build_ordering_root_and_unmapped_edge_chains(
       cluster_keys,
       edges_by_tail,
     )
-  (
+  build_ordering_root_and_unmapped_edge_chains_output(
     order_edges_by_tail_root,
     root_edge_creation,
     order_edges_by_tail_unmapped,
