@@ -7549,6 +7549,48 @@ fn build_clustered_remincross_pass_output(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross multi-rank input tuple preserves
+/// node-order, rank map, and rematerialized edge/port arrays ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_multi_rank_reorder_inputs_output(
+  rem_node_order : Map[String, Int],
+  rem_nodes : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_edges_out : Array[@cgraph.Edge],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_edge_tail_port_x : Array[Double],
+  rem_edge_head_port_x : Array[Double],
+  rem_edge_tail_port_order : Array[Double],
+  rem_edge_head_port_order : Array[Double],
+) -> (
+  Map[String, Int],
+  Array[String],
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  (
+    rem_node_order,
+    rem_nodes,
+    rem_ranks,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+  )
+}
+
+
+///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder inputs are built
 /// from vnode-augmented rem_groups via temporary order graph + rematerialized
 /// edge arrays seeded from GD_nlist order.
@@ -7617,7 +7659,7 @@ fn build_clustered_remincross_multi_rank_reorder_inputs(
       rem_node_map,
       rem_groups,
     )
-  (
+  build_clustered_remincross_multi_rank_reorder_inputs_output(
     rem_node_order,
     rem_nodes,
     rem_ranks,
