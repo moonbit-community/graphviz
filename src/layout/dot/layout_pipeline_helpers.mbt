@@ -13795,6 +13795,80 @@ fn run_clustered_ordering_pre_root_and_root_stage(
 }
 
 ///|
+/// Graphviz parity: clustered ordering finalize-phase forwarding keeps stage
+/// payloads and rank-order inputs in Graphviz finalize-call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_finalize_phase_finalize_pass(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  graphviz_flip : Bool,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  real_nodes : Map[String, Bool],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  local_cluster_order : Map[String, Int],
+  graph : @cgraph.Graph,
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  edges_by_tail : Map[String, Array[Int]],
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  pre_root_stage : OrderClusteredPreRootStageData,
+  root_cluster_stage : OrderRootClusterStageData,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  run_cluster_rank_order_and_finalize_stage_from_pre_root(
+    order_with_clusters,
+    order_with_vnodes,
+    graphviz_flip,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    nlist_order,
+    ranks,
+    order_edges_by_tail_root,
+    skeleton_edge_creation,
+    root_edge_creation,
+    flat_rank_constraints,
+    cluster_meta,
+    vnode_info,
+    vnode_order_keys_for_ordering,
+    real_nodes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    local_cluster_order,
+    graph,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    edges_by_tail,
+    order_sizes,
+    rank_same_constraints,
+    pre_root_stage,
+    root_cluster_stage,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ordering finalize phase consumes pre-root/root
 /// stage data before running cluster-rank-order + final ReMincross cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -13833,7 +13907,7 @@ fn run_clustered_ordering_finalize_phase(
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let (next_ordered_with_vnodes, final_groups) =
-    run_cluster_rank_order_and_finalize_stage_from_pre_root(
+    run_clustered_ordering_finalize_phase_finalize_pass(
       order_with_clusters,
       order_with_vnodes,
       graphviz_flip,
