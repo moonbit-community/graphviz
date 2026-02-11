@@ -7,6 +7,31 @@ priv struct DotRankStage {
 }
 
 ///|
+/// Graphviz parity: dot rank-stage ordering input payload keeps ordering call
+/// fields in the same sequence as Graphviz rank/mincross setup.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotRankStageOrderingInputs {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
 /// Graphviz parity: cluster metadata in rank/order stage uses the same
 /// rank-group and edge endpoint wiring as Graphviz ordering setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -29,6 +54,68 @@ fn build_cluster_meta_for_dot_rank_stage(
 }
 
 ///|
+/// Graphviz parity: dot rank-stage ordering input payload assembly reads prep/
+/// rank outputs without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_inputs_for_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+) -> DotRankStageOrderingInputs {
+  {
+    graph,
+    nodes: prep.nodes,
+    edges: prep.edges,
+    edge_tail: rank_data.edge_tail,
+    edge_head: rank_data.edge_head,
+    edge_reversed: rank_data.edge_reversed,
+    edge_out_order: rank_data.edge_out_order,
+    ranks: rank_data.ranks,
+    groups: rank_data.groups,
+    rank_keys: rank_data.rank_keys,
+    node_order: prep.node_order,
+    order_sizes: prep.order_sizes,
+    nodesep_pt: rank_heights.nodesep_pt,
+    has_edge_labels: prep.has_edge_labels,
+    rankdir: prep.rankdir,
+    cluster_meta,
+    port_order_positions: prep.port_order_positions,
+    port_order_contrib: prep.port_order_contrib,
+  }
+}
+
+///|
+/// Graphviz parity: ordering/vnode stage consumes rank-stage ordering payload
+/// with unchanged Graphviz call wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_for_dot_rank_stage_from_inputs(
+  ordering_inputs : DotRankStageOrderingInputs,
+) -> OrderingResult {
+  compute_ordering_and_vnodes(
+    ordering_inputs.graph,
+    ordering_inputs.nodes,
+    ordering_inputs.edges,
+    ordering_inputs.edge_tail,
+    ordering_inputs.edge_head,
+    ordering_inputs.edge_reversed,
+    ordering_inputs.edge_out_order,
+    ordering_inputs.ranks,
+    ordering_inputs.groups,
+    ordering_inputs.rank_keys,
+    ordering_inputs.node_order,
+    ordering_inputs.order_sizes,
+    ordering_inputs.nodesep_pt,
+    ordering_inputs.has_edge_labels,
+    ordering_inputs.rankdir,
+    ordering_inputs.cluster_meta,
+    ordering_inputs.port_order_positions,
+    ordering_inputs.port_order_contrib,
+  )
+}
+
+///|
 /// Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
 /// and cluster metadata with unchanged Graphviz call wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -39,26 +126,15 @@ fn build_ordering_for_dot_rank_stage(
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
 ) -> OrderingResult {
-  compute_ordering_and_vnodes(
-    graph,
-    prep.nodes,
-    prep.edges,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_data.edge_reversed,
-    rank_data.edge_out_order,
-    rank_data.ranks,
-    rank_data.groups,
-    rank_data.rank_keys,
-    prep.node_order,
-    prep.order_sizes,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
-    prep.rankdir,
-    cluster_meta,
-    prep.port_order_positions,
-    prep.port_order_contrib,
-  )
+  let ordering_inputs =
+    build_ordering_inputs_for_dot_rank_stage(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+    )
+  run_ordering_for_dot_rank_stage_from_inputs(ordering_inputs)
 }
 
 ///|
