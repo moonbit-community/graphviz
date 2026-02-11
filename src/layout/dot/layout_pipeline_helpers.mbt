@@ -3746,6 +3746,26 @@ fn rank_or_zero_for_flat_constraints(
 }
 
 ///|
+/// Graphviz parity: flat-constraint insertion only records non-self edges whose
+/// endpoints resolve to the same rank under missing-rank fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn append_flat_rank_constraint_if_same_rank(
+  flat_rank_constraints : Map[String, Bool],
+  tail : String,
+  head : String,
+  ranks : Map[String, Int],
+) -> Unit {
+  if tail == head {
+    return
+  }
+  let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+  let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+  if tail_rank == head_rank {
+    flat_rank_constraints["\{tail}|\{head}"] = true
+  }
+}
+
+///|
 /// Graphviz parity: flat edge constraints include same-rank non-self edges
 /// and use missing-rank fallback 0 exactly as class2 input pre-pass.
 /// Do not change behavior without updating fixtures/tests.
@@ -3759,13 +3779,12 @@ fn build_flat_rank_constraints(
   while flat_idx < edge_tail.length() {
     let tail = edge_tail[flat_idx]
     let head = edge_head[flat_idx]
-    if tail != head {
-      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
-      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
-      if tail_rank == head_rank {
-        flat_rank_constraints["\{tail}|\{head}"] = true
-      }
-    }
+    append_flat_rank_constraint_if_same_rank(
+      flat_rank_constraints,
+      tail,
+      head,
+      ranks,
+    )
     flat_idx = flat_idx + 1
   }
   flat_rank_constraints
