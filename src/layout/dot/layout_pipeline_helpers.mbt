@@ -1684,20 +1684,13 @@ fn collect_local_cluster_rank_and_first_order(
 
 
 ///|
-/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
+/// Graphviz parity: local cluster order entries are sorted by min rank, then
+/// first node order, then cluster name for deterministic stable ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_order(
-  nodes : Array[@cgraph.Node],
-  local_cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-) -> Map[String, Int] {
-  let (min_rank, first_order) = collect_local_cluster_rank_and_first_order(
-    nodes,
-    local_cluster_keys,
-    ranks,
-    node_order,
-  )
+fn build_sorted_local_cluster_entries(
+  min_rank : Map[String, Int],
+  first_order : Map[String, Int],
+) -> Array[(String, Int, Int)] {
   let entries : Array[(String, Int, Int)] = []
   for cluster, rank in min_rank {
     let order = match first_order.get(cluster) {
@@ -1725,6 +1718,27 @@ fn build_local_cluster_order(
       0
     }
   })
+  entries
+}
+
+
+
+///|
+/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
+/// Do not change behavior without updating fixtures/tests.
+fn build_local_cluster_order(
+  nodes : Array[@cgraph.Node],
+  local_cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  node_order : Map[String, Int],
+) -> Map[String, Int] {
+  let (min_rank, first_order) = collect_local_cluster_rank_and_first_order(
+    nodes,
+    local_cluster_keys,
+    ranks,
+    node_order,
+  )
+  let entries = build_sorted_local_cluster_entries(min_rank, first_order)
   let order_map : Map[String, Int] = Map::new()
   let mut idx = 0
   for entry in entries {
