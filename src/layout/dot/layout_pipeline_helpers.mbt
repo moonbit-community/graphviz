@@ -1138,6 +1138,22 @@ fn resolve_nodesep_and_ranksep_pt_for_rank_heights(
 
 
 ///|
+/// Graphviz parity: rank height stage returns fixed RankHeights fields used
+/// by downstream y-position and spacing computations.
+/// Do not change behavior without updating fixtures/tests.
+fn build_rank_heights_output(
+  rank_pht : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  nodesep_pt : Double,
+  ranksep_pt : Double,
+) -> RankHeights {
+  { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
+}
+
+
+
+///|
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_heights(
@@ -1180,7 +1196,13 @@ fn compute_rank_heights(
       ranksep_in,
       has_edge_labels,
     )
-  { rank_pht, rank_ht1, rank_ht2, nodesep_pt, ranksep_pt }
+  build_rank_heights_output(
+    rank_pht,
+    rank_ht1,
+    rank_ht2,
+    nodesep_pt,
+    ranksep_pt,
+  )
 }
 
 ///|
