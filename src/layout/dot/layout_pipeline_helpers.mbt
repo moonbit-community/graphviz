@@ -8108,21 +8108,17 @@ fn apply_cluster_build_ranks_and_track_vnodes(
 }
 
 ///|
-/// Graphviz parity: cluster skeleton edge chains are emitted in Graphviz
-/// cluster-order sequence first, then for any remaining cluster-min-rank keys.
+/// Graphviz parity: cluster skeleton edge chains are appended by cluster_order
+/// first, then remaining cluster_min_rank keys, matching Graphviz ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_skeleton_edge_creation_for_order_graph(
-  order_with_clusters : Bool,
+fn append_cluster_skeleton_edges_for_order_graph(
   cluster_order : Array[String],
   cluster_min_rank : Map[String, Int],
   cluster_max_rank : Map[String, Int],
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> Array[(String, String)] {
-  let skeleton_edge_creation : Array[(String, String)] = []
-  if !order_with_clusters {
-    return skeleton_edge_creation
-  }
+  skeleton_edge_creation : Array[(String, String)],
+) -> Unit {
   let cluster_seen : Map[String, Bool] = Map::new()
   for cluster in cluster_order {
     match cluster_min_rank.get(cluster) {
@@ -8161,6 +8157,33 @@ fn build_skeleton_edge_creation_for_order_graph(
       skeleton_edge_creation,
     )
   }
+}
+
+
+///|
+/// Graphviz parity: cluster skeleton edge chains are emitted in Graphviz
+/// cluster-order sequence first, then for any remaining cluster-min-rank keys.
+/// Do not change behavior without updating fixtures/tests.
+fn build_skeleton_edge_creation_for_order_graph(
+  order_with_clusters : Bool,
+  cluster_order : Array[String],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Array[(String, String)] {
+  let skeleton_edge_creation : Array[(String, String)] = []
+  if !order_with_clusters {
+    return skeleton_edge_creation
+  }
+  append_cluster_skeleton_edges_for_order_graph(
+    cluster_order,
+    cluster_min_rank,
+    cluster_max_rank,
+    order_edges_by_tail,
+    order_edges_by_tail_root,
+    skeleton_edge_creation,
+  )
   skeleton_edge_creation
 }
 
