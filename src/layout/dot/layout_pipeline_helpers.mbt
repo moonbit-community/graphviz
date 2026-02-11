@@ -2840,6 +2840,86 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
 
 
 ///|
+/// Graphviz parity: cluster-local reorder apply dispatch reads input-phase
+/// tuple and forwards cluster-scoped payload in Graphviz call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
+  groups : Map[Int, Array[String]],
+  cluster_rank_keys : Array[Int],
+  cluster_groups : Map[Int, Array[String]],
+  cluster_meta : ClusterMetadata,
+  cluster_node_order : Map[String, Int],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  empty_cluster_skeleton : Map[String, Bool],
+  fixed_positions : Map[String, Double],
+  fixed_ranks : Map[String, Int],
+  cluster_node_set : Map[String, Bool],
+  input_phase_output : (
+    Array[@cgraph.Edge],
+    Array[String],
+    Array[String],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+    Array[Double],
+    Map[String, Array[String]],
+    Map[String, Array[String]],
+    Map[String, Int],
+    Map[String, NodeSize],
+    Map[String, String],
+    Map[String, Bool],
+  ),
+) -> Unit {
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    edge_order,
+    cluster_sizes,
+    cluster_keys,
+    cluster_flat_constraints,
+  ) = input_phase_output
+  run_cluster_local_rank_reorder_execution_phase_apply_phase(
+    groups,
+    cluster_rank_keys,
+    cluster_groups,
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    cluster_keys,
+    cluster_meta,
+    edge_order,
+    cluster_node_order,
+    cluster_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    empty_cluster_skeleton,
+    cluster_flat_constraints,
+    fixed_positions,
+    fixed_ranks,
+    cluster_node_set,
+  )
+}
+
+
+///|
 /// Graphviz parity: cluster-local reorder execution phase builds cluster-scoped
 /// edge/metadata inputs before applying local mincross results back to groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -2868,21 +2948,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
   cluster_groups : Map[Int, Array[String]],
   cluster_rank_keys : Array[Int],
 ) -> Unit {
-  let (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    edge_order,
-    cluster_sizes,
-    cluster_keys,
-    cluster_flat_constraints,
-  ) =
+  let input_phase_output =
     run_cluster_local_rank_reorder_execution_phase_input_phase(
       order_edges,
       order_edge_tail,
@@ -2898,33 +2964,21 @@ fn run_cluster_local_rank_reorder_execution_phase(
       cluster_meta,
       vnode_info,
     )
-  run_cluster_local_rank_reorder_execution_phase_apply_phase(
+  run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
     groups,
     cluster_rank_keys,
     cluster_groups,
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    cluster_keys,
     cluster_meta,
-    edge_order,
     cluster_node_order,
-    cluster_sizes,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     empty_cluster_skeleton,
-    cluster_flat_constraints,
     fixed_positions,
     fixed_ranks,
     cluster_node_set,
+    input_phase_output,
   )
 }
 
