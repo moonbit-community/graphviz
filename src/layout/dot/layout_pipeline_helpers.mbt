@@ -7250,6 +7250,52 @@ fn build_clustered_remincross_order_edges_by_tail(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross materialized-edge flow traces
+/// ND_out-derived remapped edge chains immediately after Graphviz-style
+/// edge rematerialization inputs are constructed.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_order_edges_by_tail_with_trace(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  order_with_clusters : Bool,
+  edges_by_tail : Map[String, Array[Int]],
+) -> (
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Map[String, Array[String]],
+  Array[(String, String)],
+) {
+  let (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation) =
+    build_clustered_remincross_order_edges_by_tail(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_keys,
+      order_with_clusters,
+      edges_by_tail,
+    )
+  trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
+  (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation)
+}
+
+///|
 /// Graphviz parity: clustered ReMincross materialized-edge output preserves
 /// node-order and remapped edge/port arrays in Graphviz tuple ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -7319,7 +7365,7 @@ fn build_clustered_remincross_materialized_edges(
   Array[Double],
 ) {
   let (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation) =
-    build_clustered_remincross_order_edges_by_tail(
+    build_clustered_remincross_order_edges_by_tail_with_trace(
       creation_order,
       edges,
       edge_tail,
@@ -7335,7 +7381,6 @@ fn build_clustered_remincross_materialized_edges(
       order_with_clusters,
       edges_by_tail,
     )
-  trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
   let (
     rem_node_order,
     rem_edges_out,
