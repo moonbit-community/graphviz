@@ -17265,10 +17265,10 @@ fn run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
 
 
 ///|
-/// Graphviz parity: clustered ordering finalize output dispatch reads typed
-/// stage/context payloads and preserves Graphviz finalize call ordering.
+/// Graphviz parity: clustered ordering finalize output dispatch-context
+/// builder preserves finalize-phase payload ordering before stage output run.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_output_phase_from_stage_output(
+fn build_clustered_ordering_stage_output_phase_dispatch_context(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -17285,41 +17285,49 @@ fn run_clustered_ordering_stage_output_phase_from_stage_output(
   edge_port_data : OrderingEdgePortData,
   reorder_setup : OrderingReorderSetup,
   class2_data : OrderingClass2Data,
+) -> ClusterFinalizePassDispatchContext {
+  build_clustered_ordering_finalize_dispatch_context(
+    reorder_setup.order_with_clusters,
+    reorder_setup.order_with_vnodes,
+    reorder_setup.graphviz_flip,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    class2_data.nlist_order,
+    ranks,
+    class2_data.order_edges_by_tail_root,
+    class2_data.skeleton_edge_creation,
+    class2_data.root_edge_creation,
+    reorder_setup.flat_rank_constraints,
+    cluster_meta,
+    runtime_context.vnode_info,
+    reorder_setup.vnode_order_keys_for_ordering,
+    runtime_context.real_nodes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context.local_cluster_order,
+    graph,
+    edge_port_data.edge_tail_port_x,
+    edge_port_data.edge_head_port_x,
+    edge_port_data.edge_tail_port_order,
+    edge_port_data.edge_head_port_order,
+    class2_data.edges_by_tail,
+    order_sizes,
+    runtime_context.rank_same_constraints,
+  )
+}
+
+///|
+/// Graphviz parity: clustered ordering finalize output dispatch reads typed
+/// stage/context payloads and preserves Graphviz finalize call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage_output_phase_from_stage_output(
+  dispatch_context : ClusterFinalizePassDispatchContext,
   stage_output : (OrderClusteredPreRootStageData, OrderRootClusterStageData),
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let dispatch_context =
-    build_clustered_ordering_finalize_dispatch_context(
-      reorder_setup.order_with_clusters,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.graphviz_flip,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      class2_data.nlist_order,
-      ranks,
-      class2_data.order_edges_by_tail_root,
-      class2_data.skeleton_edge_creation,
-      class2_data.root_edge_creation,
-      reorder_setup.flat_rank_constraints,
-      cluster_meta,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      runtime_context.real_nodes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context.local_cluster_order,
-      graph,
-      edge_port_data.edge_tail_port_x,
-      edge_port_data.edge_head_port_x,
-      edge_port_data.edge_tail_port_order,
-      edge_port_data.edge_head_port_order,
-      class2_data.edges_by_tail,
-      order_sizes,
-      runtime_context.rank_same_constraints,
-    )
   run_clustered_ordering_stage_finalize_phase_from_stage_output(
     dispatch_context,
     stage_output,
@@ -17369,23 +17377,27 @@ fn run_clustered_ordering_stage(
       reorder_setup,
       class2_data,
     )
+  let dispatch_context =
+    build_clustered_ordering_stage_output_phase_dispatch_context(
+      graph,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      ranks,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      runtime_context,
+      edge_port_data,
+      reorder_setup,
+      class2_data,
+    )
   run_clustered_ordering_stage_output_phase_from_stage_output(
-    graph,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    ranks,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-    edge_port_data,
-    reorder_setup,
-    class2_data,
+    dispatch_context,
     stage_output,
   )
 }
