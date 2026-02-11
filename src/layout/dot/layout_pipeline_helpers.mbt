@@ -12165,10 +12165,10 @@ fn build_clustered_ordering_pre_root_stage(
 }
 
 ///|
-/// Graphviz parity: root + cluster build_ranks stage reads clustered pre-root
-/// context directly and forwards unchanged ordering/materialized maps.
+/// Graphviz parity: pre-root payload forwarding into root+cluster build_ranks
+/// keeps reorder/materialized field mapping in Graphviz stage-call order.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_build_ranks_stage_from_pre_root(
+fn run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   graph : @cgraph.Graph,
@@ -12183,9 +12183,9 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root(
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   pre_root_stage : OrderClusteredPreRootStageData,
+  reorder_context : OrderReorderContext,
+  materialized : OrderMaterializationData,
 ) -> OrderRootClusterStageData {
-  let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
   run_root_and_cluster_build_ranks_stage(
     order_with_clusters,
     order_with_vnodes,
@@ -12227,6 +12227,50 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root(
     Map::new(),
   )
 }
+
+
+///|
+/// Graphviz parity: root + cluster build_ranks stage reads clustered pre-root
+/// context directly and forwards unchanged ordering/materialized maps.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_and_cluster_build_ranks_stage_from_pre_root(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  graph : @cgraph.Graph,
+  cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  graphviz_flip : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  ranks : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  pre_root_stage : OrderClusteredPreRootStageData,
+) -> OrderRootClusterStageData {
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
+  run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
+    order_with_clusters,
+    order_with_vnodes,
+    graph,
+    cluster_meta,
+    vnode_order_keys_for_ordering,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    graphviz_flip,
+    flat_rank_constraints,
+    ranks,
+    vnode_info,
+    pre_root_stage,
+    reorder_context,
+    materialized,
+  )
+}
+
 
 ///|
 /// Graphviz parity: finalize-stage inputs are read directly from pre-root/root
