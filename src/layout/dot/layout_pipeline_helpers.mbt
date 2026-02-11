@@ -2060,10 +2060,10 @@ fn build_cluster_local_rank_groups_and_order(
 }
 
 ///|
-/// Graphviz parity: cluster-local edge bundle keeps only internal expanded
-/// cluster edges, preserving per-edge port hints and edge-order indexing.
+/// Graphviz parity: cluster-local reorder keeps only edges whose endpoints
+/// are both inside the expanded cluster graph.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_edge_bundle(
+fn collect_internal_cluster_edges_for_local_bundle(
   order_edges : Array[@cgraph.Edge],
   order_edge_tail : Array[String],
   order_edge_head : Array[String],
@@ -2072,8 +2072,6 @@ fn build_cluster_local_edge_bundle(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
 ) -> (
   Array[@cgraph.Edge],
   Array[String],
@@ -2082,9 +2080,6 @@ fn build_cluster_local_edge_bundle(
   Array[Double],
   Array[Double],
   Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
 ) {
   let cluster_edges : Array[@cgraph.Edge] = []
   let cluster_edge_tail : Array[String] = []
@@ -2111,6 +2106,65 @@ fn build_cluster_local_edge_bundle(
     cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
     cluster_edge_head_port_order.push(order_edge_head_port_order[i])
   }
+  (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+  )
+}
+
+
+
+///|
+/// Graphviz parity: cluster-local edge bundle keeps only internal expanded
+/// cluster edges, preserving per-edge port hints and edge-order indexing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_edge_bundle(
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_node_set : Map[String, Bool],
+  cluster_nodes : Array[String],
+  fixed_ranks : Map[String, Int],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+) {
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+  ) =
+    collect_internal_cluster_edges_for_local_bundle(
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+    )
   let (parents, children) = build_edge_index_for_order_names(
     cluster_nodes,
     cluster_edge_tail,
