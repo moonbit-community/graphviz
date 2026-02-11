@@ -5417,6 +5417,60 @@ fn build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
 
 
 ///|
+/// Graphviz parity: root reorder context phase materializes root rank/group
+/// graph artifacts before root-edge bundle expansion for mincross inputs.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order_context_phase(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+) -> (
+  Map[Int, Array[String]],
+  Array[Int],
+  Map[String, Int],
+  Array[String],
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+  Array[String],
+  Map[String, Int],
+) {
+  build_root_cluster_reorder_context(
+    order_with_vnodes,
+    order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_keys,
+    edge_vnodes,
+    vnodes_by_rank,
+    vnode_order_keys_for_ordering,
+    nlist_order,
+    ranks,
+    skeleton_edge_creation,
+    root_edge_creation,
+    flat_rank_constraints,
+  )
+}
+
+
+///|
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
@@ -5464,7 +5518,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
     root_nlist_order,
     root_node_order,
   ) =
-    build_root_cluster_reorder_context(
+    build_root_cluster_reorder_inputs_for_rank_order_context_phase(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
