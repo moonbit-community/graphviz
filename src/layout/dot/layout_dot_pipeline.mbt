@@ -470,31 +470,28 @@ fn build_path_groups_for_routing_stage(
 }
 
 ///|
-/// Graphviz parity: routing context is assembled from final ordering, vnode,
-/// rank, and cluster bbox data without altering parameter mapping.
+/// Graphviz parity: routing context is assembled from typed path-context inputs,
+/// final ordering, vnode, rank, and cluster bbox data without remapping.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_context_for_stage(
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
+  routing_path_context_inputs : DotRoutingPathContextInputs,
   path_groups : Map[Int, Array[String]],
-  cluster_bboxes : Map[String, @geom.Rect],
 ) -> RoutingContext {
   prepare_routing_context(
-    prep.nodes,
-    prep.edges,
-    rank_stage.rank_data.edge_tail,
-    rank_stage.rank_data.edge_head,
-    prep.sizes,
-    prep.rankdir,
-    prep.record_orientation,
-    rank_stage.rank_data.ranks,
-    rank_stage.ordering.ordered_groups,
+    routing_path_context_inputs.prep.nodes,
+    routing_path_context_inputs.prep.edges,
+    routing_path_context_inputs.rank_stage.rank_data.edge_tail,
+    routing_path_context_inputs.rank_stage.rank_data.edge_head,
+    routing_path_context_inputs.prep.sizes,
+    routing_path_context_inputs.prep.rankdir,
+    routing_path_context_inputs.prep.record_orientation,
+    routing_path_context_inputs.rank_stage.rank_data.ranks,
+    routing_path_context_inputs.rank_stage.ordering.ordered_groups,
     path_groups,
-    rank_stage.rank_heights.nodesep_pt,
-    rank_stage.ordering.vnode_info,
-    positions_state.vnode_positions,
-    cluster_bboxes,
+    routing_path_context_inputs.rank_stage.rank_heights.nodesep_pt,
+    routing_path_context_inputs.rank_stage.ordering.vnode_info,
+    routing_path_context_inputs.positions_state.vnode_positions,
+    routing_path_context_inputs.cluster_bboxes,
   )
 }
 
@@ -526,11 +523,8 @@ fn run_routing_path_context_from_inputs(
     )
   let routing_context =
     build_routing_context_for_stage(
-      routing_path_context_inputs.prep,
-      routing_path_context_inputs.rank_stage,
-      routing_path_context_inputs.positions_state,
+      routing_path_context_inputs,
       path_groups,
-      routing_path_context_inputs.cluster_bboxes,
     )
   { path_groups, routing_context }
 }
