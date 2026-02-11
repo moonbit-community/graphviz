@@ -12823,6 +12823,51 @@ fn build_materialized_order_edges_and_neighbors_neighbor_phase(
 }
 
 ///|
+/// Graphviz parity: materialized order-edge output phase packages mapped/
+/// unmapped edge arrays with neighbor/flat-constraint maps in tuple order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_materialized_order_edges_and_neighbors_output_phase(
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_edges_out_unmapped : Array[@cgraph.Edge],
+  order_edge_tail_out_unmapped : Array[String],
+  order_edge_head_out_unmapped : Array[String],
+  order_edge_tail_port_x_unmapped : Array[Double],
+  order_edge_head_port_x_unmapped : Array[Double],
+  order_edge_tail_port_order_unmapped : Array[Double],
+  order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_flat_constraints : Map[String, Bool],
+) -> OrderMaterializationData {
+  build_materialized_order_edges_and_neighbors_output(
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped,
+    order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    order_flat_constraints,
+  )
+}
+
+
+///|
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -12885,7 +12930,7 @@ fn build_materialized_order_edges_and_neighbors(
       nodes,
       order_node_order,
     )
-  build_materialized_order_edges_and_neighbors_output(
+  build_materialized_order_edges_and_neighbors_output_phase(
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
