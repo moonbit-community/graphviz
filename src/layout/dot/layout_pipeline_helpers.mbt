@@ -3164,6 +3164,23 @@ fn prepend_order_edge_entry(
 }
 
 ///|
+/// Graphviz parity: cluster skeleton names expand to one deterministic token
+/// per rank between min/max bounds using CLUSTER_SKELETON_PREFIX naming.
+/// Do not change behavior without updating fixtures/tests.
+fn append_cluster_skeleton_rank_span(
+  cluster_skeleton_creation : Array[String],
+  cluster : String,
+  min_rank : Int,
+  max_rank : Int,
+) -> Unit {
+  for rank in min_rank..=max_rank {
+    cluster_skeleton_creation.push(
+      "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
+    )
+  }
+}
+
+///|
 /// Graphviz parity: cluster skeleton creation follows cluster_order first,
 /// then remaining cluster_min_rank iteration order.
 /// Do not change behavior without updating fixtures/tests.
@@ -3185,11 +3202,12 @@ fn build_cluster_skeleton_creation(
           Some(value) => value
           None => min_rank
         }
-        for rank in min_rank..=max_rank {
-          cluster_skeleton_creation.push(
-            "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
-          )
-        }
+        append_cluster_skeleton_rank_span(
+          cluster_skeleton_creation,
+          cluster,
+          min_rank,
+          max_rank,
+        )
         cluster_seen[cluster] = true
       }
       None => ()
@@ -3203,11 +3221,12 @@ fn build_cluster_skeleton_creation(
       Some(value) => value
       None => min_rank
     }
-    for rank in min_rank..=max_rank {
-      cluster_skeleton_creation.push(
-        "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}",
-      )
-    }
+    append_cluster_skeleton_rank_span(
+      cluster_skeleton_creation,
+      cluster,
+      min_rank,
+      max_rank,
+    )
   }
   cluster_skeleton_creation
 }
