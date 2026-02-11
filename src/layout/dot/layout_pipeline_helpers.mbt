@@ -954,6 +954,55 @@ fn compute_rank_data(
 }
 
 ///|
+/// Graphviz parity: long-edge label midpoint contributes half height to the
+/// midpoint rank slot before rank height normalization.
+/// Do not change behavior without updating fixtures/tests.
+fn update_rank_pht_for_edge_label_midpoint(
+  edge : @cgraph.Edge,
+  ranks : Map[String, Int],
+  rank_pht : Map[Int, Double],
+  rankdir : RankDir,
+) -> Unit {
+  if !edge_has_label(edge) {
+    return
+  }
+  let tail = edge.tail().name()
+  let head = edge.head().name()
+  let tail_rank = match ranks.get(tail) {
+    Some(value) => value
+    None => return
+  }
+  let head_rank = match ranks.get(head) {
+    Some(value) => value
+    None => return
+  }
+  let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+  let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+  if max_rank - min_rank <= 1 {
+    return
+  }
+  let label_rank = (min_rank + max_rank) / 2
+  let half_height = match edge_mid_label_metrics(edge) {
+    Some((width, height)) =>
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        width / 2.0
+      } else {
+        height / 2.0
+      }
+    None => 0.0
+  }
+  let current = match rank_pht.get(label_rank) {
+    Some(value) => value
+    None => 0.0
+  }
+  if half_height > current {
+    rank_pht[label_rank] = half_height
+  }
+}
+
+
+
+///|
 /// Graphviz parity: edge labels can raise intermediate rank half-heights
 /// for long edges before vnode rank expansion in rank.c/position.c flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -966,41 +1015,7 @@ fn apply_edge_label_half_heights_for_rank_pht(
 ) -> Unit {
   if has_edge_labels {
     for edge in edges {
-      if !edge_has_label(edge) {
-        continue
-      }
-      let tail = edge.tail().name()
-      let head = edge.head().name()
-      let tail_rank = match ranks.get(tail) {
-        Some(value) => value
-        None => continue
-      }
-      let head_rank = match ranks.get(head) {
-        Some(value) => value
-        None => continue
-      }
-      let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-      let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-      if max_rank - min_rank <= 1 {
-        continue
-      }
-      let label_rank = (min_rank + max_rank) / 2
-      let half_height = match edge_mid_label_metrics(edge) {
-        Some((width, height)) =>
-          if rankdir == RankDir::LR || rankdir == RankDir::RL {
-            width / 2.0
-          } else {
-            height / 2.0
-          }
-        None => 0.0
-      }
-      let current = match rank_pht.get(label_rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current {
-        rank_pht[label_rank] = half_height
-      }
+      update_rank_pht_for_edge_label_midpoint(edge, ranks, rank_pht, rankdir)
     }
   }
 }
