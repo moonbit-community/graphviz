@@ -111,13 +111,13 @@ fn build_ordering_inputs_for_dot_rank_stage(
 }
 
 ///|
-/// Graphviz parity: ordering/vnode stage consumes rank-stage ordering payload
-/// with unchanged Graphviz call wiring.
+/// Graphviz parity: ordering+vnode typed payload extraction reads rank-stage
+/// ordering inputs without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_ordering_for_dot_rank_stage_from_inputs(
+fn build_ordering_and_vnodes_inputs_from_dot_rank_stage_inputs(
   ordering_inputs : DotRankStageOrderingInputs,
-) -> OrderingResult {
-  compute_ordering_and_vnodes(
+) -> OrderingAndVnodesInputs {
+  build_ordering_and_vnodes_inputs(
     ordering_inputs.graph,
     ordering_inputs.nodes,
     ordering_inputs.edges,
@@ -136,6 +136,39 @@ fn run_ordering_for_dot_rank_stage_from_inputs(
     ordering_inputs.cluster_meta,
     ordering_inputs.port_order_positions,
     ordering_inputs.port_order_contrib,
+  )
+}
+
+///|
+/// Graphviz parity: ordering/vnode stage consumes rank-stage ordering payload
+/// with unchanged Graphviz call wiring.
+/// Do not change behavior without updating fixtures/tests.
+fn run_ordering_for_dot_rank_stage_from_inputs(
+  ordering_inputs : DotRankStageOrderingInputs,
+) -> OrderingResult {
+  let ordering_and_vnodes_inputs =
+    build_ordering_and_vnodes_inputs_from_dot_rank_stage_inputs(
+      ordering_inputs,
+    )
+  compute_ordering_and_vnodes(
+    ordering_and_vnodes_inputs.graph,
+    ordering_and_vnodes_inputs.nodes,
+    ordering_and_vnodes_inputs.edges,
+    ordering_and_vnodes_inputs.edge_tail,
+    ordering_and_vnodes_inputs.edge_head,
+    ordering_and_vnodes_inputs.edge_reversed,
+    ordering_and_vnodes_inputs.edge_out_order,
+    ordering_and_vnodes_inputs.ranks,
+    ordering_and_vnodes_inputs.groups,
+    ordering_and_vnodes_inputs.rank_keys,
+    ordering_and_vnodes_inputs.node_order,
+    ordering_and_vnodes_inputs.order_sizes,
+    ordering_and_vnodes_inputs.nodesep_pt,
+    ordering_and_vnodes_inputs.has_edge_labels,
+    ordering_and_vnodes_inputs.rankdir,
+    ordering_and_vnodes_inputs.cluster_meta,
+    ordering_and_vnodes_inputs.port_order_positions,
+    ordering_and_vnodes_inputs.port_order_contrib,
   )
 }
 
