@@ -45,6 +45,17 @@ priv struct DotPositionStageInputs {
 }
 
 ///|
+/// Graphviz parity: dot routing-stage input payload keeps graph/prep/rank/
+/// position artifacts in the same routing-stage call sequence.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotRoutingStageInputs {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_stage : DotRankStage
+  positions_state : PositionResult
+}
+
+///|
 /// Graphviz parity: cluster metadata in rank/order stage uses the same
 /// rank-group and edge endpoint wiring as Graphviz ordering setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -886,6 +897,42 @@ fn build_dot_routing_stage_from_spatial_tuning_data_for_stage(
 }
 
 ///|
+/// Graphviz parity: dot routing-stage input payload assembly reads graph/prep/
+/// rank-stage/position-stage fields without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_dot_routing_stage_inputs(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+) -> DotRoutingStageInputs {
+  { graph, prep, rank_stage, positions_state }
+}
+
+///|
+/// Graphviz parity: dot routing stage consumes typed routing input payload and
+/// preserves Graphviz routing-stage precompute and solve order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_dot_routing_stage_from_inputs(
+  routing_stage_inputs : DotRoutingStageInputs,
+) -> DotRoutingStage {
+  let routing_spatial_and_tuning_data =
+    build_routing_spatial_and_tuning_data_for_stage(
+      routing_stage_inputs.graph,
+      routing_stage_inputs.prep,
+      routing_stage_inputs.rank_stage,
+      routing_stage_inputs.positions_state,
+    )
+  build_dot_routing_stage_from_spatial_tuning_data_for_stage(
+    routing_stage_inputs.graph,
+    routing_stage_inputs.prep,
+    routing_stage_inputs.rank_stage,
+    routing_stage_inputs.positions_state,
+    routing_spatial_and_tuning_data,
+  )
+}
+
+///|
 /// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -895,18 +942,12 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let routing_spatial_and_tuning_data =
-    build_routing_spatial_and_tuning_data_for_stage(
+  let routing_stage_inputs =
+    build_dot_routing_stage_inputs(
       graph,
       prep,
       rank_stage,
       positions_state,
     )
-  build_dot_routing_stage_from_spatial_tuning_data_for_stage(
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-    routing_spatial_and_tuning_data,
-  )
+  run_dot_routing_stage_from_inputs(routing_stage_inputs)
 }
