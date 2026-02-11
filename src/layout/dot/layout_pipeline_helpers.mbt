@@ -13755,6 +13755,54 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
 }
 
 ///|
+/// Graphviz parity: clustered ordering pre-root phase constructs reorder
+/// context/materialized payload from ordering base inputs before root phase.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
+  nodes : Array[@cgraph.Node],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  cluster_meta : ClusterMetadata,
+  real_nodes : Map[String, Bool],
+  port_edge_nodes : Map[String, Bool],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  ordering_groups_base : Map[Int, Array[String]],
+  base_order_index : Map[String, Int],
+  vnode_info : EdgeVnodeInfo,
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  gdnlist_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  edge_creation_order : Array[(String, String)],
+) -> OrderClusteredPreRootStageData {
+  build_clustered_ordering_pre_root_stage(
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    cluster_meta,
+    vnode_info,
+    vnode_order_keys_for_ordering,
+    order_sizes,
+    nlist_order,
+    gdnlist_order,
+    node_order,
+    real_nodes,
+    port_edge_nodes,
+    order_edges_by_tail,
+    order_edges_by_tail_unmapped,
+    edge_creation_order,
+    edge_tail,
+    edge_head,
+    nodes,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ordering runs pre-root graph materialization
 /// before root+cluster build_ranks stage, preserving phase boundaries.
 /// Do not change behavior without updating fixtures/tests.
@@ -13788,26 +13836,26 @@ fn run_clustered_ordering_pre_root_and_root_stage(
   edge_creation_order : Array[(String, String)],
 ) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
   let pre_root_stage =
-    build_clustered_ordering_pre_root_stage(
-      ordering_groups_base,
-      base_order_index,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      vnode_info,
-      vnode_order_keys_for_ordering,
-      order_sizes,
-      nlist_order,
-      gdnlist_order,
+    run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
+      nodes,
+      edge_tail,
+      edge_head,
       node_order,
+      order_sizes,
+      cluster_meta,
       real_nodes,
       port_edge_nodes,
+      order_with_vnodes,
+      order_with_clusters,
+      ordering_groups_base,
+      base_order_index,
+      vnode_info,
+      vnode_order_keys_for_ordering,
+      nlist_order,
+      gdnlist_order,
       order_edges_by_tail,
       order_edges_by_tail_unmapped,
       edge_creation_order,
-      edge_tail,
-      edge_head,
-      nodes,
     )
   let root_cluster_stage =
     run_clustered_ordering_pre_root_and_root_stage_root_phase(
