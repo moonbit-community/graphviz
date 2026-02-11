@@ -16708,6 +16708,18 @@ fn run_clustered_ordering_finalize_phase_finalize_pass(
 }
 
 ///|
+/// Graphviz parity: clustered ordering finalize-stage output dispatch reads
+/// finalize-pass tuple and preserves Graphviz tuple ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_finalize_phase_output_from_finalize_pass_output(
+  finalize_pass_output : (Map[Int, Array[String]], Map[Int, Array[String]]),
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let (next_ordered_with_vnodes, final_groups) = finalize_pass_output
+  build_clustered_ordering_stage_output(next_ordered_with_vnodes, final_groups)
+}
+
+
+///|
 /// Graphviz parity: clustered ordering finalize phase consumes pre-root/root
 /// stage data before running cluster-rank-order + final ReMincross cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -16745,7 +16757,7 @@ fn run_clustered_ordering_finalize_phase(
   pre_root_stage : OrderClusteredPreRootStageData,
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (next_ordered_with_vnodes, final_groups) =
+  let finalize_pass_output =
     run_clustered_ordering_finalize_phase_finalize_pass(
       order_with_clusters,
       order_with_vnodes,
@@ -16780,7 +16792,9 @@ fn run_clustered_ordering_finalize_phase(
       pre_root_stage,
       root_cluster_stage,
     )
-  build_clustered_ordering_stage_output(next_ordered_with_vnodes, final_groups)
+  run_clustered_ordering_finalize_phase_output_from_finalize_pass_output(
+    finalize_pass_output,
+  )
 }
 
 
