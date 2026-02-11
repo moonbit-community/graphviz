@@ -430,14 +430,15 @@ fn resolve_rankdir_for_layout_inputs(
 }
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: nodesep/ranksep parse option overrides first, then graph
+/// attributes, reject negatives, and clamp with Graphviz minima.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
+fn resolve_spacing_for_layout_inputs(
   graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
-  let nodesep_raw = match opts.nodesep {
+  option_nodesep : Double?,
+  option_ranksep : Double?,
+) -> (Double, Double) raise DotLayoutError {
+  let nodesep_raw = match option_nodesep {
     Some(value) => value
     None =>
       match graph.get_attr("nodesep") {
@@ -451,7 +452,7 @@ fn prepare_layout_inputs(
   // Graphviz parity: late_double clamps nodesep to MIN_NODESEP.
   let nodesep_in =
     if nodesep_raw < MIN_NODESEP_IN { MIN_NODESEP_IN } else { nodesep_raw }
-  let ranksep_raw = match opts.ranksep {
+  let ranksep_raw = match option_ranksep {
     Some(value) => value
     None =>
       match graph.get_attr("ranksep") {
@@ -465,6 +466,19 @@ fn prepare_layout_inputs(
   // Graphviz parity: ranksep clamps to MIN_RANKSEP.
   let ranksep_in =
     if ranksep_raw < MIN_RANKSEP_IN { MIN_RANKSEP_IN } else { ranksep_raw }
+  (nodesep_in, ranksep_in)
+}
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let (nodesep_in, ranksep_in) =
+    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
   let splines = match opts.splines {
     Some(value) => value
     None =>
