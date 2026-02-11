@@ -838,29 +838,23 @@ fn run_routing_edge_solve_from_inputs(
 }
 
 ///|
-/// Graphviz parity: routed-edge solve call consumes path-context, label/tuning,
-/// and head-port metrics precompute without remapping stage inputs.
+/// Graphviz parity: routed-edge solve call consumes typed edge/padding inputs
+/// and precompute payload without remapping stage inputs.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edges_from_precomputed_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
-  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
-  routing_path_context_data : DotRoutingPathContextData,
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
+  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
 ) -> Array[DotLayoutEdge] {
   let routing_edge_solve_inputs =
     build_routing_edge_solve_inputs_for_stage(
-      graph,
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_data,
-      routing_label_and_tuning_data,
-      routing_padding_and_head_port_metrics,
-      routing_path_context_data,
+      routing_inputs.graph,
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data,
+      routing_inputs.routing_label_and_tuning_data,
+      routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
+      routing_edge_solve_precompute_data.routing_path_context_data,
     )
   run_routing_edge_solve_from_inputs(routing_edge_solve_inputs)
 }
@@ -874,14 +868,8 @@ fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
   routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
 ) -> Array[DotLayoutEdge] {
   build_routing_edges_from_precomputed_data_for_stage(
-    routing_inputs.graph,
-    routing_inputs.prep,
-    routing_inputs.rank_stage,
-    routing_inputs.positions_state,
-    routing_inputs.routing_spatial_data,
-    routing_inputs.routing_label_and_tuning_data,
-    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
-    routing_edge_solve_precompute_data.routing_path_context_data,
+    routing_inputs,
+    routing_edge_solve_precompute_data,
   )
 }
 
