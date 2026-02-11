@@ -5887,6 +5887,26 @@ fn build_cluster_rank_order_output_from_root_reorder(
 }
 
 ///|
+/// Graphviz parity: root cluster-rank-order prep tuple alias keeps root
+/// groups/edges/node-order field ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+type RootClusterReorderInputsForRankOrderOutput = (
+  Map[Int, Array[String]],
+  Array[Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, Int],
+)
+
+///|
 /// Graphviz parity: root cluster-rank-order prep output keeps root groups,
 /// root edge materialization arrays, and root node-order map tuple ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -5904,21 +5924,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order_output(
   root_children : Map[String, Array[String]],
   root_edge_order : Map[String, Int],
   root_node_order : Map[String, Int],
-) -> (
-  Map[Int, Array[String]],
-  Array[Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, Int],
-) {
+) -> RootClusterReorderInputsForRankOrderOutput {
   (
     root_groups,
     root_rank_keys,
@@ -6038,21 +6044,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order_from_context_phase(
   root_nlist_order : Array[String],
   root_node_order : Map[String, Int],
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> (
-  Map[Int, Array[String]],
-  Array[Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, Int],
-) {
+) -> RootClusterReorderInputsForRankOrderOutput {
   let (
     root_edges_out,
     root_edge_tail_out,
@@ -6114,21 +6106,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
   root_edge_creation : Array[(String, String)],
   flat_rank_constraints : Map[String, Bool],
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> (
-  Map[Int, Array[String]],
-  Array[Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, Int],
-) {
+) -> RootClusterReorderInputsForRankOrderOutput {
   let (
     root_groups,
     root_rank_keys,
