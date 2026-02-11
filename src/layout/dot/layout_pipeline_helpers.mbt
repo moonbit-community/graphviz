@@ -1349,6 +1349,26 @@ fn build_cluster_graph_order_for_local_reorder(
 }
 
 ///|
+/// Graphviz parity: cluster-local mincross keeps global fixed positions and
+/// fixed ranks (including vnodes) for constrained reorder passes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_fixed_positions_and_ranks(
+  groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+) -> (Map[String, Double], Map[String, Int]) {
+  let fixed_positions = order_positions_from_groups(groups)
+  let fixed_ranks : Map[String, Int] = Map::new()
+  for name, rank in ranks {
+    fixed_ranks[name] = rank
+  }
+  for name, rank in vnode_ranks {
+    fixed_ranks[name] = rank
+  }
+  (fixed_positions, fixed_ranks)
+}
+
+///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1386,18 +1406,12 @@ fn reorder_groups_by_cluster_build_ranks(
     return ()
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
-  // Graphviz parity: cluster-local ordering keeps global node order hints so
-  // local passes can consult external positions when needed.
-  let fixed_positions = order_positions_from_groups(groups)
-  // Graphviz parity: cluster-local ordering must include vnode rank metadata.
-  // Do not change behavior without updating fixtures/tests.
-  let fixed_ranks : Map[String, Int] = Map::new()
-  for name, rank in ranks {
-    fixed_ranks[name] = rank
-  }
-  for name, rank in vnode_info.vnode_ranks {
-    fixed_ranks[name] = rank
-  }
+  let (fixed_positions, fixed_ranks) =
+    build_cluster_local_fixed_positions_and_ranks(
+      groups,
+      ranks,
+      vnode_info.vnode_ranks,
+    )
   for cluster in cluster_names {
     let cluster_graph = match cluster_graphs.get(cluster) {
       Some(value) => value
