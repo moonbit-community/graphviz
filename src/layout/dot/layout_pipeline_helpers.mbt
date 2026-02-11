@@ -7849,6 +7849,76 @@ fn build_cluster_rank_order_for_finalize_stage(
 }
 
 ///|
+/// Graphviz parity: clustered finalize stage applies cluster-rank-order maps
+/// before the final clustered ReMincross cleanup pass.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_remincross_finalize_stage(
+  order_with_clusters : Bool,
+  order_with_vnodes : Bool,
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_meta : ClusterMetadata,
+  local_cluster_order : Map[String, Int],
+  order_rank_keys : Array[Int],
+  ordered : Map[Int, Array[String]],
+  real_nodes : Map[String, Bool],
+  ordered_with_vnodes : Map[Int, Array[String]],
+  graph : @cgraph.Graph,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  flat_rank_constraints : Map[String, Bool],
+  creation_order : Array[String],
+  edges_by_tail : Map[String, Array[Int]],
+  vnode_info : EdgeVnodeInfo,
+  order_sizes : Map[String, NodeSize],
+  rank_same_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  finalize_order_groups_with_cluster_remincross(
+    order_with_clusters,
+    order_with_vnodes,
+    cluster_rank_order,
+    cluster_meta,
+    local_cluster_order,
+    order_rank_keys,
+    ordered,
+    real_nodes,
+    ordered_with_vnodes,
+    graph,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_tail_port_x,
+    edge_head_port_x,
+    edge_tail_port_order,
+    edge_head_port_order,
+    ranks,
+    flat_rank_constraints,
+    creation_order,
+    edges_by_tail,
+    vnode_info,
+    order_sizes,
+    rank_same_constraints,
+    graphviz_flip,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+  )
+}
+
+///|
 /// Graphviz parity: clustered cleanup applies root cluster-rank ordering,
 /// then runs final clustered ReMincross with local-cluster tie handling.
 /// Do not change behavior without updating fixtures/tests.
@@ -7921,7 +7991,7 @@ fn run_cluster_rank_order_and_finalize_stage(
       port_order_contrib,
     )
   let (next_ordered_with_vnodes, final_groups) =
-    finalize_order_groups_with_cluster_remincross(
+    run_cluster_remincross_finalize_stage(
       order_with_clusters,
       order_with_vnodes,
       cluster_rank_order,
