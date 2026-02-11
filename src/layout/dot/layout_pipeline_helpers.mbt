@@ -442,6 +442,39 @@ priv struct ClusteredReMincrossMultiRankFinalizeContext {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross pass dispatch context keeps
+/// rematerialize+cleanup payload ordering unchanged before rank-count branch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredReMincrossPassDispatchContext {
+  graph : @cgraph.Graph
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  ranks : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  flat_rank_constraints : Map[String, Bool]
+  creation_order : Array[String]
+  edges_by_tail : Map[String, Array[Int]]
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  order_sizes : Map[String, NodeSize]
+  rank_same_constraints : Map[String, Bool]
+  ordered_with_vnodes : Map[Int, Array[String]]
+  base_groups : Map[Int, Array[String]]
+  real_nodes : Map[String, Bool]
+  graphviz_flip : Bool
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -9681,10 +9714,10 @@ fn build_clustered_remincross_pass_groups(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross pass derives rem_rank_keys from
-/// vnode-augmented rem_groups before rank-count branch and cleanup reorder.
+/// Graphviz parity: clustered ReMincross pass dispatch context keeps
+/// rematerialize+cleanup inputs in Graphviz argument ordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_pass_groups_output_from_rem_groups(
+fn build_clustered_remincross_pass_dispatch_context(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -9703,7 +9736,6 @@ fn build_clustered_remincross_pass_groups_output_from_rem_groups(
   vnode_info : EdgeVnodeInfo,
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
-  rem_groups : Map[Int, Array[String]],
   ordered_with_vnodes : Map[Int, Array[String]],
   base_groups : Map[Int, Array[String]],
   real_nodes : Map[String, Bool],
@@ -9712,9 +9744,8 @@ fn build_clustered_remincross_pass_groups_output_from_rem_groups(
   has_edge_labels : Bool,
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let rem_rank_keys = collect_rank_keys(rem_groups)
-  build_clustered_remincross_groups_output(
+) -> ClusteredReMincrossPassDispatchContext {
+  {
     graph,
     edges,
     edge_tail,
@@ -9733,8 +9764,6 @@ fn build_clustered_remincross_pass_groups_output_from_rem_groups(
     vnode_info,
     order_sizes,
     rank_same_constraints,
-    rem_rank_keys,
-    rem_groups,
     ordered_with_vnodes,
     base_groups,
     real_nodes,
@@ -9743,6 +9772,48 @@ fn build_clustered_remincross_pass_groups_output_from_rem_groups(
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
+  }
+}
+
+
+///|
+/// Graphviz parity: clustered ReMincross pass derives rem_rank_keys from
+/// vnode-augmented rem_groups before rank-count branch and cleanup reorder.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_pass_groups_output_from_rem_groups(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+  rem_groups : Map[Int, Array[String]],
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let rem_rank_keys = collect_rank_keys(rem_groups)
+  build_clustered_remincross_groups_output(
+    dispatch_context.graph,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.edge_tail_port_x,
+    dispatch_context.edge_head_port_x,
+    dispatch_context.edge_tail_port_order,
+    dispatch_context.edge_head_port_order,
+    dispatch_context.ranks,
+    dispatch_context.order_with_vnodes,
+    dispatch_context.order_with_clusters,
+    dispatch_context.flat_rank_constraints,
+    dispatch_context.creation_order,
+    dispatch_context.edges_by_tail,
+    dispatch_context.cluster_meta,
+    dispatch_context.vnode_info,
+    dispatch_context.order_sizes,
+    dispatch_context.rank_same_constraints,
+    rem_rank_keys,
+    rem_groups,
+    dispatch_context.ordered_with_vnodes,
+    dispatch_context.base_groups,
+    dispatch_context.real_nodes,
+    dispatch_context.graphviz_flip,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
   )
 }
 
@@ -9793,8 +9864,8 @@ fn run_clustered_remincross_pass(
       cluster_meta,
       vnode_info,
     )
-  let (next_ordered_with_vnodes, next_final_groups) =
-    build_clustered_remincross_pass_groups_output_from_rem_groups(
+  let dispatch_context =
+    build_clustered_remincross_pass_dispatch_context(
       graph,
       edges,
       edge_tail,
@@ -9813,7 +9884,6 @@ fn run_clustered_remincross_pass(
       vnode_info,
       order_sizes,
       rank_same_constraints,
-      rem_groups,
       ordered_with_vnodes,
       base_groups,
       real_nodes,
@@ -9822,6 +9892,11 @@ fn run_clustered_remincross_pass(
       has_edge_labels,
       port_order_positions,
       port_order_contrib,
+    )
+  let (next_ordered_with_vnodes, next_final_groups) =
+    build_clustered_remincross_pass_groups_output_from_rem_groups(
+      dispatch_context,
+      rem_groups,
     )
   build_clustered_remincross_pass_output(next_ordered_with_vnodes, next_final_groups)
 }
