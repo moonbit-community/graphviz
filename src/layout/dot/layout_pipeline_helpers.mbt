@@ -521,23 +521,13 @@ fn scan_edge_flags_for_layout_inputs(
 
 
 ///|
-/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Graphviz parity: node-order seeds follow GD_nlist creation order and apply
+/// RL reversal after seeding (matching Graphviz ordering behavior).
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_layout_inputs(
-  graph : @cgraph.Graph,
-  opts : DotLayoutOptions,
-) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
-  let (nodesep_in, ranksep_in) =
-    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
-  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
-  let nodes = ordered_nodes(graph)
-  let edges = graph.edges()
-  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
-  let (has_dotted_edges, has_port_edges) =
-    scan_edge_flags_for_layout_inputs(edges)
-  let has_edge_labels = graph_has_edge_labels(edges)
-  // Graphviz parity: GD_nlist iteration follows creation order (AGSEQ).
+fn build_node_order_for_layout_inputs(
+  nodes : Array[@cgraph.Node],
+  rankdir : RankDir,
+) -> Map[String, Int] {
   let node_order : Map[String, Int] = Map::new()
   let nlist_nodes = nodes
   let mut order_idx = 0
@@ -572,6 +562,27 @@ fn prepare_layout_inputs(
       node_order[name] = total - 1 - base
     }
   }
+  node_order
+}
+
+///|
+/// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
+/// Do not change behavior without updating fixtures/tests.
+fn prepare_layout_inputs(
+  graph : @cgraph.Graph,
+  opts : DotLayoutOptions,
+) -> LayoutPrep raise DotLayoutError {
+  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let (nodesep_in, ranksep_in) =
+    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
+  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
+  let nodes = ordered_nodes(graph)
+  let edges = graph.edges()
+  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
+  let (has_dotted_edges, has_port_edges) =
+    scan_edge_flags_for_layout_inputs(edges)
+  let has_edge_labels = graph_has_edge_labels(edges)
+  let node_order = build_node_order_for_layout_inputs(nodes, rankdir)
   let record_orientation = record_layout_orientation(rankdir)
   let output_sizes : Map[String, NodeSize] = Map::new()
   let order_sizes : Map[String, NodeSize] = Map::new()
