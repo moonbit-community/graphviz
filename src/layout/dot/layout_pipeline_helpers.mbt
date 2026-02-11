@@ -3017,25 +3017,18 @@ fn collect_order_edge_endpoint_ports(
 }
 
 ///|
-/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
+/// Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
+/// sequence order after endpoint-name/port remap.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_edge_port_positions(
-  nodes : Array[@cgraph.Node],
+fn build_edge_port_offsets_from_endpoint_ports(
   edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
+  tail_names : Array[String],
+  head_names : Array[String],
+  tail_ports : Array[@cgraph.Port?],
+  head_ports : Array[@cgraph.Port?],
+  port_offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
 ) -> (Array[Double], Array[Double]) {
-  if edges.length() == 0 {
-    return ([], [])
-  }
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let (tail_names, head_names, tail_ports, head_ports) =
-    collect_order_edge_endpoint_ports(
-      edges,
-      edge_tail,
-      edge_head,
-    )
   let tail_offsets : Array[Double] = []
   let head_offsets : Array[Double] = []
   let mut idx = 0
@@ -3059,6 +3052,37 @@ fn compute_edge_port_positions(
     idx = idx + 1
   }
   (tail_offsets, head_offsets)
+}
+
+///|
+/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_edge_port_positions(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> (Array[Double], Array[Double]) {
+  if edges.length() == 0 {
+    return ([], [])
+  }
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  let (tail_names, head_names, tail_ports, head_ports) =
+    collect_order_edge_endpoint_ports(
+      edges,
+      edge_tail,
+      edge_head,
+    )
+  build_edge_port_offsets_from_endpoint_ports(
+    edges,
+    tail_names,
+    head_names,
+    tail_ports,
+    head_ports,
+    port_offsets,
+    sizes,
+  )
 }
 
 ///|
