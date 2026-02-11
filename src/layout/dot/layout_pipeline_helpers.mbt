@@ -2787,6 +2787,59 @@ fn reorder_single_cluster_rank_groups(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder execution input phase builds
+/// cluster-scoped edge and metadata tuples before local apply phase.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_local_rank_reorder_execution_phase_input_phase(
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_node_set : Map[String, Bool],
+  cluster_nodes : Array[String],
+  fixed_ranks : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
+  Map[String, Int],
+  Map[String, NodeSize],
+  Map[String, String],
+  Map[String, Bool],
+) {
+  build_cluster_local_reorder_run_inputs(
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    cluster_node_set,
+    cluster_nodes,
+    fixed_ranks,
+    order_sizes,
+    vnode_info.vnode_sizes,
+    cluster_meta.intercluster_keys,
+    vnode_info.vnode_clusters,
+    cluster_meta.flat_constraints,
+  )
+}
+
+
+///|
 /// Graphviz parity: cluster-local reorder execution phase builds cluster-scoped
 /// edge/metadata inputs before applying local mincross results back to groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -2830,7 +2883,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
     cluster_keys,
     cluster_flat_constraints,
   ) =
-    build_cluster_local_reorder_run_inputs(
+    run_cluster_local_rank_reorder_execution_phase_input_phase(
       order_edges,
       order_edge_tail,
       order_edge_head,
@@ -2842,10 +2895,8 @@ fn run_cluster_local_rank_reorder_execution_phase(
       cluster_nodes,
       fixed_ranks,
       order_sizes,
-      vnode_info.vnode_sizes,
-      cluster_meta.intercluster_keys,
-      vnode_info.vnode_clusters,
-      cluster_meta.flat_constraints,
+      cluster_meta,
+      vnode_info,
     )
   run_cluster_local_rank_reorder_execution_phase_apply_phase(
     groups,
