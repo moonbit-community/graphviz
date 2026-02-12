@@ -1375,6 +1375,9 @@ fn build_edge_spline(
   let same_local_cluster = base.same_local_cluster
   let layout_rankdir = base.layout_rankdir
   let parallel_offset = base.parallel_offset
+  // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
+  let swap_clip_shapes = base.swap_ends
+  let swap_arrow_attrs = base.swap_ends
   let orig_tail_name = base.orig_tail_name
   let mut label_pad_boost = 0.0
   let mut using_pathplan = false
@@ -1401,6 +1404,8 @@ fn build_edge_spline(
         tail_cluster_bbox=tail_cluster_bbox,
         head_cluster_bbox=head_cluster_bbox,
         parallel_offset=parallel_offset,
+        clip_swapped=swap_clip_shapes,
+        arrow_swapped=swap_arrow_attrs,
       )
     SplinesMode::Ortho =>
       edge_spline_for_polyline(
@@ -1419,6 +1424,8 @@ fn build_edge_spline(
         tail_cluster_bbox=tail_cluster_bbox,
         head_cluster_bbox=head_cluster_bbox,
         parallel_offset=parallel_offset,
+        clip_swapped=swap_clip_shapes,
+        arrow_swapped=swap_arrow_attrs,
       )
     _ => {
       let label_width_pt = edge_mid_label_width_pt(edge)
@@ -1633,6 +1640,8 @@ fn build_edge_spline(
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
               parallel_offset=parallel_offset,
+              clip_swapped=swap_clip_shapes,
+              arrow_swapped=swap_arrow_attrs,
             )
           } else {
             if using_pathplan {
@@ -1664,6 +1673,8 @@ fn build_edge_spline(
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
                 parallel_offset=parallel_offset,
+                clip_swapped=swap_clip_shapes,
+                arrow_swapped=swap_arrow_attrs,
               )
             } else {
               edge_spline_for_line(
@@ -1685,6 +1696,8 @@ fn build_edge_spline(
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
                 parallel_offset=parallel_offset,
+                clip_swapped=swap_clip_shapes,
+                arrow_swapped=swap_arrow_attrs,
               )
             }
           }
@@ -1759,6 +1772,8 @@ fn build_edge_spline(
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
                 parallel_offset=parallel_offset,
+                clip_swapped=swap_clip_shapes,
+                arrow_swapped=swap_arrow_attrs,
               )
             apply_dotted_adjustment = true
             spline
@@ -1793,6 +1808,8 @@ fn build_edge_spline(
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
                 parallel_offset=parallel_offset,
+                clip_swapped=swap_clip_shapes,
+                arrow_swapped=swap_arrow_attrs,
               )
             apply_dotted_adjustment = true
             spline
@@ -1904,6 +1921,8 @@ fn build_edge_spline(
             tail_cluster_bbox=tail_cluster_bbox,
             head_cluster_bbox=head_cluster_bbox,
             parallel_offset=parallel_offset,
+            clip_swapped=swap_clip_shapes,
+            arrow_swapped=swap_arrow_attrs,
           )
         } else {
           let line_start =
@@ -1948,6 +1967,8 @@ fn build_edge_spline(
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
               parallel_offset=parallel_offset,
+              clip_swapped=swap_clip_shapes,
+              arrow_swapped=swap_arrow_attrs,
             )
           } else {
             edge_spline_for_line(
@@ -1969,6 +1990,8 @@ fn build_edge_spline(
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
               parallel_offset=parallel_offset,
+              clip_swapped=swap_clip_shapes,
+              arrow_swapped=swap_arrow_attrs,
             )
           }
         }

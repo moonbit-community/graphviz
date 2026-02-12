@@ -133,6 +133,8 @@ fn edge_spline_for_polyline(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_polyline(
     edge,
@@ -150,6 +152,8 @@ fn edge_spline_for_polyline(
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
     parallel_offset=parallel_offset,
+    clip_swapped=clip_swapped,
+    arrow_swapped=arrow_swapped,
   )
 }
 
@@ -173,6 +177,8 @@ fn edge_spline_for_points(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_points(
     edge,
@@ -193,6 +199,8 @@ fn edge_spline_for_points(
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
     parallel_offset=parallel_offset,
+    clip_swapped=clip_swapped,
+    arrow_swapped=arrow_swapped,
   )
 }
 
@@ -210,6 +218,8 @@ fn edge_spline_for_bezier_points(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_bezier_points(
     edge,
@@ -224,6 +234,8 @@ fn edge_spline_for_bezier_points(
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
     parallel_offset=parallel_offset,
+    clip_swapped=clip_swapped,
+    arrow_swapped=arrow_swapped,
   )
 }
 
@@ -264,6 +276,8 @@ fn edge_spline_for_line(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   @edge_spline.edge_spline_for_line(
     edge,
@@ -284,6 +298,8 @@ fn edge_spline_for_line(
     tail_cluster_bbox=tail_cluster_bbox,
     head_cluster_bbox=head_cluster_bbox,
     parallel_offset=parallel_offset,
+    clip_swapped=clip_swapped,
+    arrow_swapped=arrow_swapped,
   )
 }
 

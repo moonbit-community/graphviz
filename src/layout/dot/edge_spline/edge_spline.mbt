@@ -968,6 +968,45 @@ pub fn arrow_length_for_edge(
 }
 
 ///|
+/// Graphviz parity: when route orientation is swapped, arrow attrs are swapped too
+/// (refs/graphviz/lib/common/splines.c clip_and_install call path).
+fn arrow_length_for_edge_oriented(
+  edge : @cgraph.Edge,
+  include_tail : Bool,
+  include_head : Bool,
+  arrow_len_override : Double?,
+  swapped : Bool,
+) -> (Double, Double) {
+  if !swapped {
+    return arrow_length_for_edge(
+      edge,
+      include_tail,
+      include_head,
+      arrow_len_override,
+    )
+  }
+  let tail_len =
+    if include_tail {
+      arrow_len_with_override(
+        arrow_length_for_attr(edge, "arrowhead", [ARR_TYPE_NORM]),
+        arrow_len_override,
+      )
+    } else {
+      0.0
+    }
+  let head_len =
+    if include_head {
+      arrow_len_with_override(
+        arrow_length_for_attr(edge, "arrowtail", [ARR_TYPE_NORM]),
+        arrow_len_override,
+      )
+    } else {
+      0.0
+    }
+  (tail_len, head_len)
+}
+
+///|
 priv enum ClipShape {
   None
   Rect
@@ -1390,21 +1429,26 @@ fn clip_spline_to_nodes(
   head_port_side? : Int = 0,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  clip_swapped? : Bool = false,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
     return points
   }
-  let tail_port = edge.tail_port()
-  let head_port = edge.head_port()
-  let tail_shape = clip_shape_kind(edge.tail(), tail_port)
-  let head_shape = clip_shape_kind(edge.head(), head_port)
+  let (tail_node, head_node, tail_port, head_port) =
+    if clip_swapped {
+      (edge.head(), edge.tail(), edge.head_port(), edge.tail_port())
+    } else {
+      (edge.tail(), edge.head(), edge.tail_port(), edge.head_port())
+    }
+  let tail_shape = clip_shape_kind(tail_node, tail_port)
+  let head_shape = clip_shape_kind(head_node, head_port)
   let tail_center = tail_clip_center
   let head_center = head_clip_center
   // Graphviz parity: penwidth inflates only shapes with peripheries.
   let tail_penwidth =
-    if shape_has_outline(edge.tail()) { node_penwidth_pt(edge.tail()) } else { 0.0 }
+    if shape_has_outline(tail_node) { node_penwidth_pt(tail_node) } else { 0.0 }
   let head_penwidth =
-    if shape_has_outline(edge.head()) { node_penwidth_pt(edge.head()) } else { 0.0 }
+    if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if tail_penwidth > 0.0 {
@@ -2959,6 +3003,8 @@ pub fn edge_spline_for_polyline(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   let (tail, head) = if tail_clip == head_clip {
     (tail_clip, point(head_clip.x + 1.0, head_clip.y))
@@ -2972,7 +3018,13 @@ pub fn edge_spline_for_polyline(
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge_oriented(
+        edge,
+        include_tail,
+        include_head,
+        arrow_len_override,
+        arrow_swapped,
+      )
     } else {
       (0.0, 0.0)
     }
@@ -2992,6 +3044,7 @@ pub fn edge_spline_for_polyline(
       head_anchor_size,
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
+      clip_swapped=clip_swapped,
     )
   let trimmed = trim_degenerate_spline_segments(clipped)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
@@ -3034,13 +3087,21 @@ pub fn edge_spline_for_points(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge_oriented(
+        edge,
+        include_tail,
+        include_head,
+        arrow_len_override,
+        arrow_swapped,
+      )
     } else {
       (0.0, 0.0)
     }
@@ -3067,6 +3128,7 @@ pub fn edge_spline_for_points(
       head_port_side=head_port_side,
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
+      clip_swapped=clip_swapped,
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
@@ -3112,13 +3174,21 @@ pub fn edge_spline_for_bezier_points(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   if bezier.length() == 0 {
     return { start: None, end: None, points: [] }
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge_oriented(
+        edge,
+        include_tail,
+        include_head,
+        arrow_len_override,
+        arrow_swapped,
+      )
     } else {
       (0.0, 0.0)
     }
@@ -3138,6 +3208,7 @@ pub fn edge_spline_for_bezier_points(
       head_anchor_size,
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
+      clip_swapped=clip_swapped,
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
@@ -3333,10 +3404,18 @@ pub fn edge_spline_for_line(
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
+  clip_swapped? : Bool = false,
+  arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge_oriented(
+        edge,
+        include_tail,
+        include_head,
+        arrow_len_override,
+        arrow_swapped,
+      )
     } else {
       (0.0, 0.0)
     }
@@ -3363,6 +3442,7 @@ pub fn edge_spline_for_line(
       head_anchor_size,
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
+      clip_swapped=clip_swapped,
     )
   points = trim_degenerate_spline_segments(points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
