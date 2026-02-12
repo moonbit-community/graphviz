@@ -7,15 +7,6 @@ priv struct DotRankStage {
 }
 
 ///|
-/// Graphviz parity: dot rank-stage input payload keeps graph+prep fields in
-/// rank-data/rank-height/cluster/order stage call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotRankStageInputs {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-}
-
-///|
 /// Graphviz parity: dot rank-stage ordering input payload keeps ordering call
 /// fields in the same sequence as Graphviz rank/mincross setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -69,20 +60,21 @@ priv struct DotRoutingStageInputs {
 /// keeps rank-data/rank-height/cluster/order compute sequence unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn run_dot_rank_stage_from_inputs(
-  rank_stage_inputs : DotRankStageInputs,
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
 ) -> DotRankStage {
   // Graphviz parity: rank-data creation emits the same rank trace
   // points before downstream stage assembly.
   let rank_data =
     compute_rank_data(
-      rank_stage_inputs.graph,
-      rank_stage_inputs.prep.nodes,
-      rank_stage_inputs.prep.edges,
-      rank_stage_inputs.prep.has_edge_labels,
+      graph,
+      prep.nodes,
+      prep.edges,
+      prep.has_edge_labels,
     )
   dot_trace("layout_dot: ranks computed")
   dot_trace_edges(
-    rank_stage_inputs.prep.edges,
+    prep.edges,
     rank_data.edge_tail,
     rank_data.edge_head,
     rank_data.ranks,
@@ -91,41 +83,41 @@ fn run_dot_rank_stage_from_inputs(
   // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
     compute_rank_heights(
-      rank_stage_inputs.graph,
-      rank_stage_inputs.prep.edges,
+      graph,
+      prep.edges,
       rank_data.ranks,
       rank_data.groups,
       rank_data.rank_keys,
       rank_data.all_ranks,
-      rank_stage_inputs.prep.sizes,
+      prep.sizes,
       rank_data.self_edge_labels,
-      rank_stage_inputs.prep.rankdir,
-      rank_stage_inputs.prep.nodesep_in,
-      rank_stage_inputs.prep.ranksep_in,
-      rank_stage_inputs.prep.has_edge_labels,
+      prep.rankdir,
+      prep.nodesep_in,
+      prep.ranksep_in,
+      prep.has_edge_labels,
     )
   // Graphviz parity: cluster metadata in rank/order stage uses
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
   let cluster_meta =
     compute_cluster_metadata(
-      rank_stage_inputs.graph,
-      rank_stage_inputs.prep.nodes,
-      rank_stage_inputs.prep.edges,
+      graph,
+      prep.nodes,
+      prep.edges,
       rank_data.groups,
       rank_data.ranks,
-      rank_stage_inputs.prep.node_order,
+      prep.node_order,
       rank_data.edge_tail,
       rank_data.edge_head,
-      rank_stage_inputs.prep.rankdir == RankDir::LR || rank_stage_inputs.prep.rankdir == RankDir::RL,
+      prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
     )
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
   // Graphviz parity: dot rank-stage ordering input payload assembly
   // reads prep/rank outputs without argument reordering.
   let ordering_inputs : DotRankStageOrderingInputs = {
-    graph: rank_stage_inputs.graph,
-    nodes: rank_stage_inputs.prep.nodes,
-    edges: rank_stage_inputs.prep.edges,
+    graph: graph,
+    nodes: prep.nodes,
+    edges: prep.edges,
     edge_tail: rank_data.edge_tail,
     edge_head: rank_data.edge_head,
     edge_reversed: rank_data.edge_reversed,
@@ -133,14 +125,14 @@ fn run_dot_rank_stage_from_inputs(
     ranks: rank_data.ranks,
     groups: rank_data.groups,
     rank_keys: rank_data.rank_keys,
-    node_order: rank_stage_inputs.prep.node_order,
-    order_sizes: rank_stage_inputs.prep.order_sizes,
+    node_order: prep.node_order,
+    order_sizes: prep.order_sizes,
     nodesep_pt: rank_heights.nodesep_pt,
-    has_edge_labels: rank_stage_inputs.prep.has_edge_labels,
-    rankdir: rank_stage_inputs.prep.rankdir,
+    has_edge_labels: prep.has_edge_labels,
+    rankdir: prep.rankdir,
     cluster_meta,
-    port_order_positions: rank_stage_inputs.prep.port_order_positions,
-    port_order_contrib: rank_stage_inputs.prep.port_order_contrib,
+    port_order_positions: prep.port_order_positions,
+    port_order_contrib: prep.port_order_contrib,
   }
   // Graphviz parity: ordering/vnode stage consumes rank-stage ordering
   // payload with unchanged Graphviz call wiring.
@@ -202,13 +194,9 @@ fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
 ) -> DotRankStage {
-  let rank_stage_inputs : DotRankStageInputs = {
-    // Graphviz parity: dot rank-stage input payload assembly reads graph/prep
-    // fields without argument reordering.
-    graph,
-    prep,
-  }
-  run_dot_rank_stage_from_inputs(rank_stage_inputs)
+  // Graphviz parity: dot rank-stage forwards graph/prep directly to
+  // rank/order execution without argument reordering.
+  run_dot_rank_stage_from_inputs(graph, prep)
 }
 
 ///|
