@@ -74,6 +74,7 @@ fn shape_table() -> Array[(String, ArrowBase)] {
     ("box", ArrowBase::Box),
     ("tee", ArrowBase::Tee),
     ("vee", ArrowBase::Vee),
+    ("pen", ArrowBase::Vee),
     ("dot", ArrowBase::Dot),
     ("inv", ArrowBase::Inv),
     ("none", ArrowBase::None),
@@ -112,14 +113,39 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
   let names = shape_table()
   let mut index = 0
   while index < value.length() {
+    if has_prefix_at(value, index, "invempty") {
+      shapes.push(ArrowShape::{
+        base: ArrowBase::Inv,
+        open: true,
+        left: false,
+        right: false,
+      })
+      index = index + "invempty".length()
+      continue
+    }
+    if has_prefix_at(value, index, "empty") {
+      shapes.push(ArrowShape::{
+        base: ArrowBase::Normal,
+        open: true,
+        left: false,
+        right: false,
+      })
+      index = index + "empty".length()
+      continue
+    }
     let mut open = false
     let mut left = false
     let mut right = false
     let mut scanning = true
     while scanning && index < value.length() {
+      if has_prefix_at(value, index, "half") {
+        left = true
+        index = index + "half".length()
+        continue
+      }
       let ch = value.unsafe_substring(start=index, end=index + 1)
       match ch {
-        "o" => {
+        "o" | "e" => {
           open = true
           index = index + 1
         }
