@@ -543,18 +543,8 @@ fn run_routing_path_context_from_inputs(
 /// context is derived from those groups and cluster bboxes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_path_context_data_for_stage(
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  cluster_bboxes : Map[String, @geom.Rect],
+  routing_path_context_inputs : DotRoutingPathContextInputs,
 ) -> DotRoutingPathContextData {
-  let routing_path_context_inputs =
-    build_routing_path_context_inputs_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      cluster_bboxes,
-    )
   run_routing_path_context_from_inputs(routing_path_context_inputs)
 }
 
@@ -795,20 +785,8 @@ fn run_routing_padding_and_head_port_metrics_from_inputs(
 /// same inputs and in the same order before spline routing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_padding_and_head_port_metrics_for_stage(
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  enable_complex_tuning : Bool,
+  routing_metric_inputs : DotRoutingPaddingAndHeadPortMetricsInputs,
 ) -> DotRoutingPaddingAndHeadPortMetrics {
-  let routing_metric_inputs =
-    build_routing_padding_and_head_port_metrics_inputs_for_stage(
-      prep,
-      rank_stage,
-      positions_state,
-      label_ports_map,
-      enable_complex_tuning,
-    )
   run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
 }
 
@@ -944,13 +922,15 @@ fn build_routing_edge_solve_precompute_output_for_stage(
 fn build_routing_padding_and_head_port_metrics_from_routing_inputs(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingPaddingAndHeadPortMetrics {
-  build_routing_padding_and_head_port_metrics_for_stage(
-    routing_inputs.prep,
-    routing_inputs.rank_stage,
-    routing_inputs.positions_state,
-    routing_inputs.routing_spatial_data.label_ports_map,
-    routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
-  )
+  let routing_metric_inputs =
+    build_routing_padding_and_head_port_metrics_inputs_for_stage(
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data.label_ports_map,
+      routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
+    )
+  build_routing_padding_and_head_port_metrics_for_stage(routing_metric_inputs)
 }
 
 ///|
@@ -960,12 +940,14 @@ fn build_routing_padding_and_head_port_metrics_from_routing_inputs(
 fn build_routing_path_context_data_from_routing_inputs(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingPathContextData {
-  build_routing_path_context_data_for_stage(
-    routing_inputs.prep,
-    routing_inputs.rank_stage,
-    routing_inputs.positions_state,
-    routing_inputs.routing_spatial_data.cluster_bboxes,
-  )
+  let routing_path_context_inputs =
+    build_routing_path_context_inputs_for_stage(
+      routing_inputs.prep,
+      routing_inputs.rank_stage,
+      routing_inputs.positions_state,
+      routing_inputs.routing_spatial_data.cluster_bboxes,
+    )
+  build_routing_path_context_data_for_stage(routing_path_context_inputs)
 }
 
 ///|
