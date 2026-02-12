@@ -231,17 +231,6 @@ priv struct DotRoutingEdgesAndPaddingInputs {
 }
 
 ///|
-/// Graphviz parity: routing path-context input payload keeps prep/rank/position
-/// and cluster-bbox fields in path-context build order.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotRoutingPathContextInputs {
-  prep : LayoutPrep
-  rank_stage : DotRankStage
-  positions_state : PositionResult
-  cluster_bboxes : Map[String, @geom.Rect]
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -331,45 +320,37 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     port_pad_above,
     head_port_metrics,
   }
-  // Graphviz parity: routing path-context input payload assembly reads typed
-  // edge/padding stage inputs without argument reordering.
-  let routing_path_context_inputs : DotRoutingPathContextInputs = {
-    prep: routing_inputs.prep,
-    rank_stage: routing_inputs.rank_stage,
-    positions_state: routing_inputs.positions_state,
-    cluster_bboxes: routing_inputs.routing_spatial_data.cluster_bboxes,
-  }
-  // Graphviz parity: routing path-context execution consumes typed
-  // stage payload while preserving path-group selection then context-assembly order.
+  // Graphviz parity: routing path-context execution consumes routing-stage
+  // fields while preserving path-group selection then context-assembly order.
   // Graphviz parity: path-groups selection prefers positioned x-groups,
   // then vnode-expanded order groups, then base order groups.
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
-    if routing_path_context_inputs.positions_state.x_groups.length() > 0 {
-      routing_path_context_inputs.positions_state.x_groups
-    } else if routing_path_context_inputs.rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
-      routing_path_context_inputs.rank_stage.ordering.ordered_groups_with_vnodes
+    if routing_inputs.positions_state.x_groups.length() > 0 {
+      routing_inputs.positions_state.x_groups
+    } else if routing_inputs.rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
+      routing_inputs.rank_stage.ordering.ordered_groups_with_vnodes
     } else {
-      routing_path_context_inputs.rank_stage.ordering.ordered_groups
+      routing_inputs.rank_stage.ordering.ordered_groups
     }
-  // Graphviz parity: routing context is assembled from typed
-  // path-context inputs, final ordering, vnode/rank, and cluster bboxes.
+  // Graphviz parity: routing context is assembled from routing-stage
+  // inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
     prepare_routing_context(
-      routing_path_context_inputs.prep.nodes,
-      routing_path_context_inputs.prep.edges,
-      routing_path_context_inputs.rank_stage.rank_data.edge_tail,
-      routing_path_context_inputs.rank_stage.rank_data.edge_head,
-      routing_path_context_inputs.prep.sizes,
-      routing_path_context_inputs.prep.rankdir,
-      routing_path_context_inputs.prep.record_orientation,
-      routing_path_context_inputs.rank_stage.rank_data.ranks,
-      routing_path_context_inputs.rank_stage.ordering.ordered_groups,
+      routing_inputs.prep.nodes,
+      routing_inputs.prep.edges,
+      routing_inputs.rank_stage.rank_data.edge_tail,
+      routing_inputs.rank_stage.rank_data.edge_head,
+      routing_inputs.prep.sizes,
+      routing_inputs.prep.rankdir,
+      routing_inputs.prep.record_orientation,
+      routing_inputs.rank_stage.rank_data.ranks,
+      routing_inputs.rank_stage.ordering.ordered_groups,
       path_groups,
-      routing_path_context_inputs.rank_stage.rank_heights.nodesep_pt,
-      routing_path_context_inputs.rank_stage.ordering.vnode_info,
-      routing_path_context_inputs.positions_state.vnode_positions,
-      routing_path_context_inputs.cluster_bboxes,
+      routing_inputs.rank_stage.rank_heights.nodesep_pt,
+      routing_inputs.rank_stage.ordering.vnode_info,
+      routing_inputs.positions_state.vnode_positions,
+      routing_inputs.routing_spatial_data.cluster_bboxes,
     )
   let routing_path_context_data : DotRoutingPathContextData = {
     path_groups,
