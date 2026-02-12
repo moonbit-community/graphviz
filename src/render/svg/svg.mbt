@@ -435,7 +435,6 @@ fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
   @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
 }
 
-///|
 fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -1141,6 +1140,10 @@ fn write_record_node(
   let node = layout.node
   let label = label_text(node.get_attr("label"), node.name())
   let nodes = record_nodes(label)
+  let rounded = match node.get_attr("shape") {
+    Some(value) => value.to_lower() == "mrecord"
+    None => false
+  }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
     lly: rect.lly + RECORD_BORDER_PT,
@@ -1153,10 +1156,6 @@ fn write_record_node(
   let y = svg_y(draw_rect.ury, bbox.lly)
   let w = draw_rect.urx - draw_rect.llx
   let h = draw_rect.ury - draw_rect.lly
-  let rounded = match node.get_attr("shape") {
-    Some(value) => value.to_lower() == "mrecord"
-    None => false
-  }
   write_line(
     sb,
     if rounded {

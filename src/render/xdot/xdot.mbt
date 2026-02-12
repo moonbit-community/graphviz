@@ -348,7 +348,6 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
   sign * rounded / scale
 }
 
-///|
 fn format_double(value : Double) -> String {
   let rounded = round_half_even(value, 2)
   if rounded == 0.0 {
@@ -1311,9 +1310,9 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     urx: rect.urx,
     ury: rect.ury - RECORD_BORDER_PT,
   }
+  ops.push(@render.DrawOp::PenColor(color~))
   // Graphviz parity: record outline uses field bbox (height without +1 kluge).
   let draw_rect = inner_rect
-  ops.push(@render.DrawOp::PenColor(color~))
   if is_mrecord {
     ops.push(
       @render.DrawOp::Bezier(
