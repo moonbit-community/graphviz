@@ -61,6 +61,9 @@ const ARR_MOD_RIGHT : Int = 1 << 7
 const BEZIER_CLIP_EPS : Double = 0.5
 
 ///|
+const MILLIPOINT : Double = 0.001
+
+///|
 const ARROW_CLIP_EPS : Double = 0.5
 
 
@@ -884,18 +887,59 @@ fn clip_spline_to_nodes(
 }
 
 ///|
+fn approx_eq_point(a : @geom.Point, b : @geom.Point, eps : Double) -> Bool {
+  Double::abs(a.x - b.x) <= eps && Double::abs(a.y - b.y) <= eps
+}
+
+///|
+/// Graphviz parity: trim degenerate spline segments before arrow clipping
+/// (splines.c clip_and_install).
+fn trim_degenerate_spline_segments(
+  points : Array[@geom.Point],
+) -> Array[@geom.Point] {
+  if points.length() < 4 {
+    return points
+  }
+  let mut start = 0
+  let mut end = points.length() - 4
+  while start < points.length() - 4 &&
+    approx_eq_point(points[start], points[start + 3], MILLIPOINT) {
+    start += 3
+  }
+  while end > 0 && approx_eq_point(points[end], points[end + 3], MILLIPOINT) {
+    end -= 3
+  }
+  if start == 0 && end == points.length() - 4 {
+    return points
+  }
+  if end < start {
+    end = start
+  }
+  let out : Array[@geom.Point] = []
+  let mut idx = start
+  let limit = end + 4
+  while idx < limit {
+    out.push(points[idx])
+    idx += 1
+  }
+  out
+}
+
+///|
 fn arrow_clip_start_segment(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
-) -> (Array[@geom.Point], @geom.Point) {
-  let start_point = points[0]
+  start_idx : Int,
+  end_idx : Int,
+) -> (Array[@geom.Point], Int, @geom.Point) {
+  let start_point = points[start_idx]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return (points, start_point)
+    return (points, start_idx, start_point)
   }
   let len2 = arrow_len * arrow_len
-  let mut start = 0
-  if points.length() > 4 && point_dist2(points[start], points[start + 3]) < len2 {
+  let mut start = start_idx
+  if end_idx > start_idx && point_dist2(points[start], points[start + 3]) < len2 {
     start += 3
   }
   let segment : Array[@geom.Point] = [
@@ -910,7 +954,7 @@ fn arrow_clip_start_segment(
   out[start + 1] = clipped[1]
   out[start + 2] = clipped[2]
   out[start + 3] = clipped[3]
-  (out, start_point)
+  (out, start, start_point)
 }
 
 ///|
@@ -918,14 +962,16 @@ fn arrow_clip_end_segment(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
-) -> (Array[@geom.Point], @geom.Point) {
-  let end_point = points[points.length() - 1]
+  start_idx : Int,
+  end_idx : Int,
+) -> (Array[@geom.Point], Int, @geom.Point) {
+  let end_point = points[end_idx + 3]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return (points, end_point)
+    return (points, end_idx, end_point)
   }
   let len2 = arrow_len * arrow_len
-  let mut end = points.length() - 4
-  if end > 0 && point_dist2(points[end], points[end + 3]) < len2 {
+  let mut end = end_idx
+  if end > start_idx && point_dist2(points[end], points[end + 3]) < len2 {
     end -= 3
   }
   let segment : Array[@geom.Point] = [
@@ -940,7 +986,7 @@ fn arrow_clip_end_segment(
   out[end + 1] = clipped[1]
   out[end + 2] = clipped[2]
   out[end + 3] = clipped[3]
-  (out, end_point)
+  (out, end, end_point)
 }
 
 ///|
@@ -951,20 +997,40 @@ fn clip_spline_arrows(
   include_head : Bool,
   eps : Double,
 ) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
-  let mut out = points
+  let mut out = trim_degenerate_spline_segments(points)
+  if out.length() < 4 {
+    return (out, None, None)
+  }
+  let mut start_idx = 0
+  let mut end_idx = out.length() - 4
   let mut start_point : @geom.Point? = None
   let mut end_point : @geom.Point? = None
   if include_tail {
-    let (clipped, start) = arrow_clip_start_segment(out, arrow_len, eps)
+    let (clipped, new_start_idx, start) =
+      arrow_clip_start_segment(out, arrow_len, eps, start_idx, end_idx)
     out = clipped
+    start_idx = new_start_idx
     start_point = Some(start)
   }
   if include_head {
-    let (clipped, end) = arrow_clip_end_segment(out, arrow_len, eps)
+    let (clipped, new_end_idx, end) =
+      arrow_clip_end_segment(out, arrow_len, eps, start_idx, end_idx)
     out = clipped
+    end_idx = new_end_idx
     end_point = Some(end)
   }
-  (out, start_point, end_point)
+  if start_idx > 0 || end_idx < out.length() - 4 {
+    let trimmed : Array[@geom.Point] = []
+    let mut idx = start_idx
+    let limit = end_idx + 4
+    while idx < limit {
+      trimmed.push(out[idx])
+      idx += 1
+    }
+    (trimmed, start_point, end_point)
+  } else {
+    (out, start_point, end_point)
+  }
 }
 
 ///|
