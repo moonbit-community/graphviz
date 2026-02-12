@@ -437,28 +437,6 @@ fn build_routing_context_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing cluster bboxes are derived from typed routing-stage
-/// inputs, positioned nodes, and rank/cluster maps before spline routing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_bboxes_for_routing_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-  nodes_out : Array[DotLayoutNode],
-) -> Map[String, @geom.Rect] {
-  compute_cluster_bboxes_for_routing(
-    routing_stage_inputs.graph,
-    nodes_out,
-    routing_stage_inputs.positions_state.cluster_ln_x,
-    routing_stage_inputs.positions_state.cluster_rn_x,
-    routing_stage_inputs.positions_state.cluster_bbox_heights,
-    routing_stage_inputs.prep.rankdir,
-    routing_stage_inputs.rank_stage.rank_data.ranks,
-    routing_stage_inputs.positions_state.rank_y,
-    routing_stage_inputs.positions_state.rank_ht1,
-    routing_stage_inputs.positions_state.rank_ht2,
-  )
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -492,10 +470,20 @@ fn build_routing_spatial_data_for_stage(
   }
   // Graphviz parity: routing spatial output object consumes typed
   // routing-stage inputs and node/port precompute output without remapping.
+  // Graphviz parity: routing cluster bboxes are derived from typed
+  // routing-stage inputs, positioned nodes, and rank/cluster maps.
   let cluster_bboxes =
-    build_cluster_bboxes_for_routing_stage(
-      routing_stage_inputs,
+    compute_cluster_bboxes_for_routing(
+      routing_stage_inputs.graph,
       routing_node_and_port_data.nodes_out,
+      routing_stage_inputs.positions_state.cluster_ln_x,
+      routing_stage_inputs.positions_state.cluster_rn_x,
+      routing_stage_inputs.positions_state.cluster_bbox_heights,
+      routing_stage_inputs.prep.rankdir,
+      routing_stage_inputs.rank_stage.rank_data.ranks,
+      routing_stage_inputs.positions_state.rank_y,
+      routing_stage_inputs.positions_state.rank_ht1,
+      routing_stage_inputs.positions_state.rank_ht2,
     )
   {
     nodes_out: routing_node_and_port_data.nodes_out,
