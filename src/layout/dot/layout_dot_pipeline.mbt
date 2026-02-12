@@ -160,12 +160,6 @@ priv struct DotRoutingPaddingAndHeadPortMetrics {
 }
 
 ///|
-priv struct DotRoutingPathContextData {
-  path_groups : Map[Int, Array[String]]
-  routing_context : RoutingContext
-}
-
-///|
 priv struct DotRoutingSpatialData {
   nodes_out : Array[DotLayoutNode]
   label_ports_map : Map[String, Map[String, RecordPort]]
@@ -239,7 +233,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   positions_state : PositionResult,
   routing_spatial_data : DotRoutingSpatialData,
   enable_complex_tuning : Bool,
-) -> (DotRoutingPaddingAndHeadPortMetrics, DotRoutingPathContextData) {
+) -> (DotRoutingPaddingAndHeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
@@ -296,11 +290,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       positions_state.vnode_positions,
       routing_spatial_data.cluster_bboxes,
     )
-  let routing_path_context_data : DotRoutingPathContextData = {
-    path_groups,
-    routing_context,
-  }
-  (routing_padding_and_head_port_metrics, routing_path_context_data)
+  (routing_padding_and_head_port_metrics, path_groups, routing_context)
 }
 
 ///|
@@ -321,7 +311,7 @@ fn run_dot_routing_stage_from_inputs(
   let enable_complex_tuning = complex_tuning_enabled()
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
-  let (routing_padding_and_head_port_metrics, routing_path_context_data) =
+  let (routing_padding_and_head_port_metrics, path_groups, routing_context) =
     build_routing_edge_solve_precompute_data_for_stage(
       prep,
       rank_stage,
@@ -350,7 +340,7 @@ fn run_dot_routing_stage_from_inputs(
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
-      routing_path_context_data.path_groups,
+      path_groups,
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.rank_heights.ranksep_pt,
       rank_stage.cluster_meta.has_clusters,
@@ -359,7 +349,7 @@ fn run_dot_routing_stage_from_inputs(
       label_edge_counts,
       routing_padding_and_head_port_metrics.head_port_metrics,
       positions_state.flat_label_edge_vnodes,
-      routing_path_context_data.routing_context,
+      routing_context,
       enable_complex_tuning,
     )
   // Graphviz parity: routing stage result object is built directly
