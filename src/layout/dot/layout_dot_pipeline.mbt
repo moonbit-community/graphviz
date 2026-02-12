@@ -180,12 +180,6 @@ priv struct DotRoutingSpatialData {
 }
 
 ///|
-priv struct DotRoutingEdgeSolvePrecomputeData {
-  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics
-  routing_path_context_data : DotRoutingPathContextData
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -251,7 +245,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   positions_state : PositionResult,
   routing_spatial_data : DotRoutingSpatialData,
   routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
-) -> DotRoutingEdgeSolvePrecomputeData {
+) -> (DotRoutingPaddingAndHeadPortMetrics, DotRoutingPathContextData) {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
@@ -312,10 +306,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     path_groups,
     routing_context,
   }
-  {
-    routing_padding_and_head_port_metrics,
-    routing_path_context_data,
-  }
+  (routing_padding_and_head_port_metrics, routing_path_context_data)
 }
 
 ///|
@@ -338,7 +329,7 @@ fn run_dot_routing_stage_from_inputs(
   }
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
-  let routing_edge_solve_precompute_data =
+  let (routing_padding_and_head_port_metrics, routing_path_context_data) =
     build_routing_edge_solve_precompute_data_for_stage(
       prep,
       rank_stage,
@@ -367,16 +358,16 @@ fn run_dot_routing_stage_from_inputs(
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
-      routing_edge_solve_precompute_data.routing_path_context_data.path_groups,
+      routing_path_context_data.path_groups,
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.rank_heights.ranksep_pt,
       rank_stage.cluster_meta.has_clusters,
       routing_spatial_data.label_ports_map,
       routing_spatial_data.label_ports_raw,
       routing_label_and_tuning_data.label_edge_counts,
-      routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.head_port_metrics,
+      routing_padding_and_head_port_metrics.head_port_metrics,
       positions_state.flat_label_edge_vnodes,
-      routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
+      routing_path_context_data.routing_context,
       routing_label_and_tuning_data.enable_complex_tuning,
     )
   // Graphviz parity: routing stage result object is built directly
@@ -385,8 +376,8 @@ fn run_dot_routing_stage_from_inputs(
   {
     nodes_out: routing_spatial_data.nodes_out,
     edges_out,
-    port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
-    port_pad_above: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_above,
+    port_pad_below: routing_padding_and_head_port_metrics.port_pad_below,
+    port_pad_above: routing_padding_and_head_port_metrics.port_pad_above,
   }
 }
 
