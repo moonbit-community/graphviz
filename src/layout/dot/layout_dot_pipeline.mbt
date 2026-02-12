@@ -118,44 +118,34 @@ fn build_ordering_inputs_for_dot_rank_stage(
 }
 
 ///|
-/// Graphviz parity: ordering+vnode typed payload extraction reads rank-stage
-/// ordering inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_and_vnodes_inputs_from_dot_rank_stage_inputs(
-  ordering_inputs : DotRankStageOrderingInputs,
-) -> OrderingAndVnodesInputs {
-  build_ordering_and_vnodes_inputs(
-    ordering_inputs.graph,
-    ordering_inputs.nodes,
-    ordering_inputs.edges,
-    ordering_inputs.edge_tail,
-    ordering_inputs.edge_head,
-    ordering_inputs.edge_reversed,
-    ordering_inputs.edge_out_order,
-    ordering_inputs.ranks,
-    ordering_inputs.groups,
-    ordering_inputs.rank_keys,
-    ordering_inputs.node_order,
-    ordering_inputs.order_sizes,
-    ordering_inputs.nodesep_pt,
-    ordering_inputs.has_edge_labels,
-    ordering_inputs.rankdir,
-    ordering_inputs.cluster_meta,
-    ordering_inputs.port_order_positions,
-    ordering_inputs.port_order_contrib,
-  )
-}
-
-///|
 /// Graphviz parity: ordering/vnode stage consumes rank-stage ordering payload
 /// with unchanged Graphviz call wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn run_ordering_for_dot_rank_stage_from_inputs(
   ordering_inputs : DotRankStageOrderingInputs,
 ) -> OrderingResult {
+  // Graphviz parity: ordering+vnode typed payload extraction reads
+  // rank-stage ordering inputs without argument reordering.
   let ordering_and_vnodes_inputs =
-    build_ordering_and_vnodes_inputs_from_dot_rank_stage_inputs(
-      ordering_inputs,
+    build_ordering_and_vnodes_inputs(
+      ordering_inputs.graph,
+      ordering_inputs.nodes,
+      ordering_inputs.edges,
+      ordering_inputs.edge_tail,
+      ordering_inputs.edge_head,
+      ordering_inputs.edge_reversed,
+      ordering_inputs.edge_out_order,
+      ordering_inputs.ranks,
+      ordering_inputs.groups,
+      ordering_inputs.rank_keys,
+      ordering_inputs.node_order,
+      ordering_inputs.order_sizes,
+      ordering_inputs.nodesep_pt,
+      ordering_inputs.has_edge_labels,
+      ordering_inputs.rankdir,
+      ordering_inputs.cluster_meta,
+      ordering_inputs.port_order_positions,
+      ordering_inputs.port_order_contrib,
     )
   compute_ordering_and_vnodes(
     ordering_and_vnodes_inputs.graph,
