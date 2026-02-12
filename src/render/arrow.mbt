@@ -550,8 +550,9 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Bezier(filled=false, points=curve_points))
     }
     ArrowBase::None => {
-      // Graphviz parity: "none" consumes arrow space but draws no primitive.
-      ()
+      // Graphviz parity: internal "none" heads draw a short gap polyline.
+      let base = point_add(tip, point_scale(dir, -length))
+      ops.push(DrawOp::Polyline(points=[tip, base]))
     }
   }
   ops
