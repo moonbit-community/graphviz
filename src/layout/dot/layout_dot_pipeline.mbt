@@ -785,22 +785,6 @@ fn build_routing_edge_solve_inputs_for_stage(
 }
 
 ///|
-/// Graphviz parity: routed-edge solve dispatch reads typed edge/padding inputs
-/// plus grouped edge-solve precompute payload without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
-) -> Array[DotLayoutEdge] {
-  let routing_edge_solve_inputs =
-    build_routing_edge_solve_inputs_for_stage(
-      routing_inputs,
-      routing_edge_solve_precompute_data,
-    )
-  build_edges_out_for_routing_stage(routing_edge_solve_inputs)
-}
-
-///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -850,11 +834,15 @@ fn run_routing_edges_and_padding_from_inputs(
 ) -> DotRoutingEdgesAndPaddingData {
   let routing_edge_solve_precompute_data =
     build_routing_edge_solve_precompute_data_for_stage(routing_inputs)
-  let edges_out =
-    build_routing_edges_from_edge_solve_precompute_data_for_stage(
+  // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
+  // inputs plus grouped edge-solve precompute payload without argument reordering.
+  let routing_edge_solve_inputs =
+    build_routing_edge_solve_inputs_for_stage(
       routing_inputs,
       routing_edge_solve_precompute_data,
     )
+  let edges_out =
+    build_edges_out_for_routing_stage(routing_edge_solve_inputs)
   {
     edges_out,
     port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
