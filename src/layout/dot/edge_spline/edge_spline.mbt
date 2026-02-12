@@ -1451,7 +1451,9 @@ fn clip_spline_to_nodes(
     if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
-      if tail_penwidth > 0.0 {
+      // Graphviz parity: record node sizes already include the 1pt frame
+      // extent used by record_inside; avoid double penwidth inflation.
+      if tail_penwidth > 0.0 && !is_record_shape(tail_node) {
         inflate_node_size(tail_size, tail_penwidth / 2.0)
       } else {
         tail_size
@@ -1460,7 +1462,7 @@ fn clip_spline_to_nodes(
   }
   let head_clip_size = match head_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
-      if head_penwidth > 0.0 {
+      if head_penwidth > 0.0 && !is_record_shape(head_node) {
         inflate_node_size(head_size, head_penwidth / 2.0)
       } else {
         head_size
