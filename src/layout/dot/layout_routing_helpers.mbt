@@ -1308,6 +1308,18 @@ fn compute_curve_offset(
 }
 
 ///|
+/// Graphviz parity: straight_path segment slopes follow rankdir axis.
+/// Do not change behavior without updating fixtures/tests.
+fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
+  match rankdir {
+    RankDir::TB => point(0.0, -1.0)
+    RankDir::BT => point(0.0, 1.0)
+    RankDir::LR => point(1.0, 0.0)
+    RankDir::RL => point(-1.0, 0.0)
+  }
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -1683,46 +1695,108 @@ fn build_edge_spline(
             } else {
               point(0.0, 0.0)
             }
-        let head_slope_for =
-          if port_is_explicit(head_port) {
-            head_slope
-          } else {
-            point(0.0, 0.0)
+          let head_slope_for =
+            if port_is_explicit(head_port) {
+              head_slope
+            } else {
+              point(0.0, 0.0)
+            }
+          // Graphviz parity: pathplan edges always allow spline fitting.
+          let edge_force_segmented = if using_pathplan { false } else { force_segmented }
+          let use_segmented_pathplan =
+            using_pathplan && pathplan_segments.length() > 0
+          let segmented_raw : Array[@geom.Point] = []
+          if use_segmented_pathplan {
+            // Graphviz parity: straight_path segment joins constrain slope along rankdir.
+            let join_dir = straight_path_join_dir(layout_rankdir)
+            let join_tail = join_dir
+            let join_head = join_dir
+            let mut seg_idx = 0
+            while seg_idx < pathplan_segments.length() {
+              let segment = pathplan_segments[seg_idx]
+              let seg_tail_slope =
+                if seg_idx == 0 { tail_slope_for } else { join_tail }
+              let seg_head_slope =
+                if seg_idx + 1 == pathplan_segments.length() {
+                  head_slope_for
+                } else {
+                  join_head
+                }
+              let seg_raw =
+                edge_spline_raw_for_points(
+                  segment.points,
+                  seg_tail_slope,
+                  seg_head_slope,
+                  edge_force_segmented,
+                  route_barriers=segment.barriers,
+                )
+              if seg_raw.length() > 0 {
+                if segmented_raw.length() > 0 {
+                  let last = segmented_raw[segmented_raw.length() - 1]
+                  segmented_raw.push(last)
+                  segmented_raw.push(last)
+                }
+                for point in seg_raw {
+                  segmented_raw.push(point)
+                }
+              }
+              seg_idx = seg_idx + 1
+            }
           }
-        let edge_force_segmented = force_segmented
-        if using_pathplan {
-          raw_bezier =
-            edge_spline_raw_for_points(
-              adjusted,
-              tail_slope_for,
-              head_slope_for,
-              edge_force_segmented,
-              route_barriers=route_barriers,
-            )
-        }
-        let spline =
-          edge_spline_for_points(
-            edge,
-            adjusted,
-            tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
-              tail_slope_for,
-              head_slope_for,
-              edge_force_segmented,
-              route_include_tail,
-              route_include_head,
-              tail_port_side=base.tail_port_side,
-              head_port_side=base.head_port_side,
-              route_barriers=route_barriers,
-              arrow_len_override=arrow_len_override,
-              tail_cluster_bbox=tail_cluster_bbox,
-              head_cluster_bbox=head_cluster_bbox,
-              parallel_offset=parallel_offset,
-            )
-        apply_dotted_adjustment = true
-        spline
+          if use_segmented_pathplan && segmented_raw.length() > 0 {
+            raw_bezier = segmented_raw
+            let spline =
+              edge_spline_for_bezier_points(
+                edge,
+                raw_bezier,
+                tail_clip_center,
+                head_clip_center,
+                tail_clip_size,
+                head_clip_size,
+                route_include_tail,
+                route_include_head,
+                arrow_len_override=arrow_len_override,
+                tail_cluster_bbox=tail_cluster_bbox,
+                head_cluster_bbox=head_cluster_bbox,
+                parallel_offset=parallel_offset,
+              )
+            apply_dotted_adjustment = true
+            spline
+          } else {
+            if using_pathplan {
+              raw_bezier =
+                edge_spline_raw_for_points(
+                  adjusted,
+                  tail_slope_for,
+                  head_slope_for,
+                  edge_force_segmented,
+                  route_barriers=route_barriers,
+                )
+            }
+            let spline =
+              edge_spline_for_points(
+                edge,
+                adjusted,
+                tail_clip_center,
+                head_clip_center,
+                tail_clip_size,
+                head_clip_size,
+                tail_slope_for,
+                head_slope_for,
+                edge_force_segmented,
+                route_include_tail,
+                route_include_head,
+                tail_port_side=base.tail_port_side,
+                head_port_side=base.head_port_side,
+                route_barriers=route_barriers,
+                arrow_len_override=arrow_len_override,
+                tail_cluster_bbox=tail_cluster_bbox,
+                head_cluster_bbox=head_cluster_bbox,
+                parallel_offset=parallel_offset,
+              )
+            apply_dotted_adjustment = true
+            spline
+          }
         }
       } else {
         let tail_slope_line =
