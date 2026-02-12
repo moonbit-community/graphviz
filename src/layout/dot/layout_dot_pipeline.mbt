@@ -461,11 +461,8 @@ fn compute_dot_routing_stage(
       label_ports_raw
     }
   let routing_sizes =
-    if ratio_scaled {
-      scale_node_size_map(prep.sizes, ratio_sx, ratio_sy)
-    } else {
-      prep.sizes
-    }
+    // Graphviz parity: route spline clipping keeps node extents in pre-ratio units.
+    prep.sizes
   let routing_positions_state : PositionResult =
     if ratio_scaled {
       {
