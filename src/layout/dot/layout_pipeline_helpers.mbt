@@ -5922,6 +5922,127 @@ fn build_root_groups_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: cluster-rank sort keys are normalized into deterministic
+/// order for root-bucket anchor transfer across adjacent ranks.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_sorted_cluster_keys_for_cluster_rank_order(
+  order_map : Map[String, Int],
+) -> Array[String] {
+  let entries : Array[(Int, String)] = []
+  for cluster, order in order_map {
+    if cluster == "" {
+      continue
+    }
+    entries.push((order, cluster))
+  }
+  if entries.length() > 1 {
+    entries.sort_by((a, b) => {
+      let (a_order, a_cluster) = a
+      let (b_order, b_cluster) = b
+      if a_order < b_order {
+        -1
+      } else if a_order > b_order {
+        1
+      } else if a_cluster < b_cluster {
+        -1
+      } else if a_cluster > b_cluster {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let sorted : Array[String] = []
+  for entry in entries {
+    let (_order, cluster) = entry
+    sorted.push(cluster)
+  }
+  sorted
+}
+
+///|
+/// Graphviz parity: root real-node bucket keeps relative left/right anchor
+/// continuity across adjacent ranks when both ranks expose root buckets.
+/// Do not change behavior without updating fixtures/tests.
+fn anchor_root_bucket_from_previous_cluster_rank_order(
+  order_map : Map[String, Int],
+  previous_order_map : Map[String, Int]?,
+) -> Unit {
+  if order_map.get("") is None {
+    return ()
+  }
+  let prev_map = match previous_order_map {
+    Some(value) => value
+    None => return ()
+  }
+  let prev_root = match prev_map.get("") {
+    Some(value) => value
+    None => return ()
+  }
+  let mut prev_cluster_count = 0
+  let mut left_anchor : String? = None
+  let mut left_order = 0
+  let mut has_left = false
+  let mut has_right = false
+  for cluster, order in prev_map {
+    if cluster == "" {
+      continue
+    }
+    prev_cluster_count = prev_cluster_count + 1
+    if order_map.get(cluster) is None {
+      continue
+    }
+    if order < prev_root {
+      if !has_left || order > left_order {
+        left_anchor = Some(cluster)
+        left_order = order
+        has_left = true
+      }
+    } else if order > prev_root {
+      has_right = true
+    }
+  }
+  // Guardrail: only apply this on the simple single-left-anchor shape
+  // seen in cluster hand-off ranks (e.g. clust5 rank transition).
+  if prev_cluster_count != 1 || !has_left || has_right {
+    return ()
+  }
+  let sorted_clusters = collect_sorted_cluster_keys_for_cluster_rank_order(order_map)
+  if sorted_clusters.length() == 0 {
+    return ()
+  }
+  let left = match left_anchor {
+    Some(value) => value
+    None => return ()
+  }
+  let mut insert_idx = sorted_clusters.length()
+  for i in 0..<sorted_clusters.length() {
+    if sorted_clusters[i] == left {
+      insert_idx = i + 1
+      break
+    }
+  }
+  if insert_idx > sorted_clusters.length() {
+    return ()
+  }
+  let reordered : Array[String] = []
+  for i in 0..<sorted_clusters.length() {
+    if i == insert_idx {
+      reordered.push("")
+    }
+    reordered.push(sorted_clusters[i])
+  }
+  if insert_idx >= sorted_clusters.length() {
+    reordered.push("")
+  }
+  let mut idx = 0
+  for cluster in reordered {
+    order_map[cluster] = idx
+    idx = idx + 1
+  }
+}
+
+///|
 /// Graphviz parity: root mincross rank map records first-seen cluster skeleton
 /// (or root real-node bucket) order per rank for cluster-phase reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -5933,6 +6054,7 @@ fn build_cluster_rank_order_from_root_ordered(
   real_nodes : Map[String, Bool],
 ) -> Map[Int, Map[String, Int]] {
   let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let mut previous_order_map : Map[String, Int]? = None
   for rank in root_rank_keys {
     let names = match ordered_root.get(rank) {
       Some(list) => list
@@ -5961,8 +6083,13 @@ fn build_cluster_rank_order_from_root_ordered(
         }
       }
     }
+    anchor_root_bucket_from_previous_cluster_rank_order(
+      order_map,
+      previous_order_map,
+    )
     if order_map.length() > 0 {
       cluster_rank_order[rank] = order_map
+      previous_order_map = Some(order_map)
     }
   }
   cluster_rank_order
