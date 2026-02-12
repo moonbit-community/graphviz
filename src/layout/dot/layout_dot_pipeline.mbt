@@ -65,30 +65,6 @@ priv struct DotRoutingStageInputs {
 }
 
 ///|
-/// Graphviz parity: rank-height stage consumes computed ranks/groups and
-/// spacing inputs with unchanged Graphviz argument wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn build_rank_heights_for_dot_rank_stage(
-  rank_stage_inputs : DotRankStageInputs,
-  rank_data : RankData,
-) -> RankHeights {
-  compute_rank_heights(
-    rank_stage_inputs.graph,
-    rank_stage_inputs.prep.edges,
-    rank_data.ranks,
-    rank_data.groups,
-    rank_data.rank_keys,
-    rank_data.all_ranks,
-    rank_stage_inputs.prep.sizes,
-    rank_data.self_edge_labels,
-    rank_stage_inputs.prep.rankdir,
-    rank_stage_inputs.prep.nodesep_in,
-    rank_stage_inputs.prep.ranksep_in,
-    rank_stage_inputs.prep.has_edge_labels,
-  )
-}
-
-///|
 /// Graphviz parity: rank-data creation emits the same rank trace points before
 /// downstream stage assembly.
 /// Do not change behavior without updating fixtures/tests.
@@ -121,8 +97,23 @@ fn run_dot_rank_stage_from_inputs(
 ) -> DotRankStage {
   let rank_data =
     build_rank_data_for_dot_rank_stage(rank_stage_inputs)
+  // Graphviz parity: rank-height stage consumes computed ranks/groups
+  // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
-    build_rank_heights_for_dot_rank_stage(rank_stage_inputs, rank_data)
+    compute_rank_heights(
+      rank_stage_inputs.graph,
+      rank_stage_inputs.prep.edges,
+      rank_data.ranks,
+      rank_data.groups,
+      rank_data.rank_keys,
+      rank_data.all_ranks,
+      rank_stage_inputs.prep.sizes,
+      rank_data.self_edge_labels,
+      rank_stage_inputs.prep.rankdir,
+      rank_stage_inputs.prep.nodesep_in,
+      rank_stage_inputs.prep.ranksep_in,
+      rank_stage_inputs.prep.has_edge_labels,
+    )
   // Graphviz parity: cluster metadata in rank/order stage uses
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
   let cluster_meta =
