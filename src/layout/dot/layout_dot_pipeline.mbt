@@ -180,26 +180,6 @@ fn run_ordering_for_dot_rank_stage_from_inputs(
 }
 
 ///|
-/// Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
-/// and cluster metadata with unchanged Graphviz call wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_for_dot_rank_stage(
-  rank_stage_inputs : DotRankStageInputs,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-) -> OrderingResult {
-  let ordering_inputs =
-    build_ordering_inputs_for_dot_rank_stage(
-      rank_stage_inputs,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-    )
-  run_ordering_for_dot_rank_stage_from_inputs(ordering_inputs)
-}
-
-///|
 /// Graphviz parity: rank-height stage consumes computed ranks/groups and
 /// spacing inputs with unchanged Graphviz argument wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -274,13 +254,17 @@ fn run_dot_rank_stage_from_inputs(
     build_rank_heights_for_dot_rank_stage(rank_stage_inputs, rank_data)
   let cluster_meta =
     build_cluster_meta_for_dot_rank_stage(rank_stage_inputs, rank_data)
-  let ordering =
-    build_ordering_for_dot_rank_stage(
+  // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
+  // and cluster metadata with unchanged Graphviz call wiring.
+  let ordering_inputs =
+    build_ordering_inputs_for_dot_rank_stage(
       rank_stage_inputs,
       rank_data,
       rank_heights,
       cluster_meta,
     )
+  let ordering =
+    run_ordering_for_dot_rank_stage_from_inputs(ordering_inputs)
   build_dot_rank_stage_result_for_stage(
     rank_data,
     rank_heights,
