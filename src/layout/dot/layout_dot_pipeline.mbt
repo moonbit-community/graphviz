@@ -360,6 +360,15 @@ priv struct DotRoutingNodeAndPortData {
 }
 
 ///|
+/// Graphviz parity: routing node/port input payload keeps prep and positioned
+/// node geometry fields in projection and port-map build order.
+/// Do not change behavior without updating fixtures/tests.
+priv struct DotRoutingNodeAndPortInputs {
+  prep : LayoutPrep
+  positions_state : PositionResult
+}
+
+///|
 priv struct DotRoutingPathContextData {
   path_groups : Map[Int, Array[String]]
   routing_context : RoutingContext
@@ -655,6 +664,39 @@ fn build_routing_node_and_port_output_for_stage(
 }
 
 ///|
+/// Graphviz parity: routing node/port input payload assembly reads stage fields
+/// without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_node_and_port_inputs_for_stage(
+  prep : LayoutPrep,
+  positions_state : PositionResult,
+) -> DotRoutingNodeAndPortInputs {
+  { prep, positions_state }
+}
+
+///|
+/// Graphviz parity: node geometry projection and port-map derivation consume
+/// typed stage payload in the same precompute order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_routing_node_and_port_from_inputs(
+  routing_node_and_port_inputs : DotRoutingNodeAndPortInputs,
+) -> DotRoutingNodeAndPortData {
+  let nodes_out =
+    build_layout_nodes(
+      routing_node_and_port_inputs.prep.nodes,
+      routing_node_and_port_inputs.positions_state.positions,
+      routing_node_and_port_inputs.prep.output_sizes,
+      routing_node_and_port_inputs.prep.record_orientation,
+    )
+  let port_maps =
+    build_port_layout_maps_for_routing_stage(
+      routing_node_and_port_inputs.prep,
+      nodes_out,
+    )
+  build_routing_node_and_port_output_for_stage(nodes_out, port_maps)
+}
+
+///|
 /// Graphviz parity: node geometry projection and port-map derivation are
 /// sequenced together before routing precompute consumption.
 /// Do not change behavior without updating fixtures/tests.
@@ -662,16 +704,9 @@ fn build_routing_node_and_port_data_for_stage(
   prep : LayoutPrep,
   positions_state : PositionResult,
 ) -> DotRoutingNodeAndPortData {
-  let nodes_out =
-    build_layout_nodes(
-      prep.nodes,
-      positions_state.positions,
-      prep.output_sizes,
-      prep.record_orientation,
-    )
-  let port_maps =
-    build_port_layout_maps_for_routing_stage(prep, nodes_out)
-  build_routing_node_and_port_output_for_stage(nodes_out, port_maps)
+  let routing_node_and_port_inputs =
+    build_routing_node_and_port_inputs_for_stage(prep, positions_state)
+  run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
 }
 
 ///|
