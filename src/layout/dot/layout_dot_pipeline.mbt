@@ -172,14 +172,15 @@ fn scale_edge_layout_output(
 }
 
 ///|
-fn scale_point_map(
+fn scale_point_map_rounded(
   points : Map[String, @geom.Point],
   sx : Double,
   sy : Double,
 ) -> Map[String, @geom.Point] {
   let scaled : Map[String, @geom.Point] = Map::new()
   for name, point in points {
-    scaled[name] = scale_point_value(point, sx, sy)
+    let p = scale_point_value(point, sx, sy)
+    scaled[name] = { x: p.x.round(), y: p.y.round() }
   }
   scaled
 }
@@ -216,10 +217,13 @@ fn scale_node_size_map(
 }
 
 ///|
-fn scale_double_map(values : Map[Int, Double], scale : Double) -> Map[Int, Double] {
+fn scale_double_map_rounded(
+  values : Map[Int, Double],
+  scale : Double,
+) -> Map[Int, Double] {
   let scaled : Map[Int, Double] = Map::new()
   for key, value in values {
-    scaled[key] = value * scale
+    scaled[key] = (value * scale).round()
   }
   scaled
 }
@@ -412,7 +416,26 @@ fn compute_dot_routing_stage(
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
     build_routing_spatial_data_for_stage(graph, prep, rank_data.ranks, positions_state)
   let empty_edges : Array[DotLayoutEdge] = []
-  let routing_bbox = compute_bbox(nodes_out, empty_edges)
+  let ratio_bbox_nodes : Array[DotLayoutNode] =
+    if prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL {
+      let swapped : Array[DotLayoutNode] = []
+      for node_layout in nodes_out {
+        swapped.push({
+          node: node_layout.node,
+          pos: node_layout.pos,
+          // Graphviz parity: set_aspect rec_bb runs before rankdir flip,
+          // so ratio bbox for LR/RL uses unflipped node extents.
+          width_in: node_layout.height_in,
+          height_in: node_layout.width_in,
+          label_pos: node_layout.label_pos,
+          xlabel_pos: node_layout.xlabel_pos,
+        })
+      }
+      swapped
+    } else {
+      nodes_out
+    }
+  let routing_bbox = compute_bbox(ratio_bbox_nodes, empty_edges)
   let (ratio_sx, ratio_sy) =
     match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
       Some((sx, sy)) =>
@@ -426,19 +449,19 @@ fn compute_dot_routing_stage(
   let ratio_scaled = ratio_sx != 1.0 || ratio_sy != 1.0
   let routing_positions =
     if ratio_scaled {
-      scale_point_map(positions_state.positions, ratio_sx, ratio_sy)
+      scale_point_map_rounded(positions_state.positions, ratio_sx, ratio_sy)
     } else {
       positions_state.positions
     }
   let routing_vnode_positions =
     if ratio_scaled {
-      scale_point_map(positions_state.vnode_positions, ratio_sx, ratio_sy)
+      scale_point_map_rounded(positions_state.vnode_positions, ratio_sx, ratio_sy)
     } else {
       positions_state.vnode_positions
     }
   let routing_rank_y =
     if ratio_scaled {
-      scale_double_map(positions_state.rank_y, ratio_sy)
+      scale_double_map_rounded(positions_state.rank_y, ratio_sy)
     } else {
       positions_state.rank_y
     }

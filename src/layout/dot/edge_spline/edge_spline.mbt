@@ -1384,26 +1384,16 @@ fn point_inside_polygon(
   match polygon_shape_params(shape) {
     Some((sides, orientation_deg, distortion, skew)) => {
       let rel = point(pt.x - center.x, pt.y - center.y)
-      let rotated = rotate_ccw_quadrant(rel, rankdir_quadrant)
-      let apply_lr_norm = match shape {
-        ClipShape::Trapezium | ClipShape::InvTrapezium | ClipShape::Parallelogram =>
-          true
-        _ => false
-      }
-      let probe =
-        if apply_lr_norm && (rankdir_quadrant == 1 || rankdir_quadrant == 3) {
-          if size.height_pt <= 0.0 || size.width_pt <= 0.0 {
-            return false
-          }
-          point(
-            rotated.x * size.width_pt / size.height_pt,
-            rotated.y * size.height_pt / size.width_pt,
-          )
+      let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
+      let polygon_size =
+        if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
+          // Graphviz parity: poly_inside tests in unflipped shape space.
+          @dot_shared.node_size_from_points(size.height_pt, size.width_pt)
         } else {
-          rotated
+          size
         }
       let base_vertices = polygon_vertices_for_shape(
-        size,
+        polygon_size,
         sides,
         orientation_deg,
         distortion,
@@ -1785,7 +1775,9 @@ fn clip_spline_to_nodes(
     match tail_shape {
       ClipShape::Trapezium
       | ClipShape::InvTrapezium
-      | ClipShape::Parallelogram =>
+      | ClipShape::Parallelogram
+      | ClipShape::House
+      | ClipShape::InvHouse =>
         // Graphviz parity guard: poly_inside clips against bisector-expanded
         // polygon outline + penwidth/2 (shapes.c poly_init outp path).
         if tail_penwidth > 0.0 { tail_penwidth / 2.0 } else { 0.0 }
@@ -1795,7 +1787,9 @@ fn clip_spline_to_nodes(
     match head_shape {
       ClipShape::Trapezium
       | ClipShape::InvTrapezium
-      | ClipShape::Parallelogram =>
+      | ClipShape::Parallelogram
+      | ClipShape::House
+      | ClipShape::InvHouse =>
         if head_penwidth > 0.0 { head_penwidth / 2.0 } else { 0.0 }
       _ => 0.0
     }
