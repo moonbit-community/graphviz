@@ -408,7 +408,8 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Box => {
-      let back = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: box head polygon consumes ~0.8 head length, then joins shaft.
+      let back = point_add(tip, point_scale(dir, -length * 0.8))
       let points = box_points(
         tip,
         back,
@@ -418,7 +419,7 @@ fn arrow_shape_primitives(
         shape.right,
       )
       ops.push(DrawOp::Polygon(filled~, points~))
-      let line_end = point_add(back, point_scale(dir, -length * 0.3))
+      let line_end = point_add(tip, point_scale(dir, -length))
       ops.push(DrawOp::Polyline(points=[back, line_end]))
     }
     ArrowBase::Tee => {
