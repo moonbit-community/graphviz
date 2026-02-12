@@ -397,13 +397,14 @@ fn arrow_shape_primitives(
       if arrowsize > 0.0 && penwidth > 4.0 * arrowsize {
         vee_half_width = vee_half_width * penwidth / (4.0 * arrowsize)
       }
+      // Graphviz parity: vee half-selection follows inverse-crow orientation.
       let points = triangle_points(
         vee_tip,
         base,
         perp,
         vee_half_width,
-        shape.left,
         shape.right,
+        shape.left,
       )
       // Graphviz parity: crow/vee ignore ARR_MOD_OPEN and stay filled.
       ops.push(DrawOp::Polygon(filled=true, points~))
