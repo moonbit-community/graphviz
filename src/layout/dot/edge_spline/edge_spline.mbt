@@ -410,6 +410,40 @@ pub fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+fn arrow_len_with_override(base : Double, override_len : Double?) -> Double {
+  match override_len {
+    Some(value) =>
+      if value > 0.0 && value < base {
+      value
+    } else {
+      base
+    }
+    None => base
+  }
+}
+
+///|
+fn arrow_lengths_for_edge(
+  edge : @cgraph.Edge,
+  include_tail : Bool,
+  include_head : Bool,
+  arrow_len_override : Double?,
+) -> (Double, Double) {
+  let base = arrow_length_for_edge(edge)
+  let tail_len = if include_tail {
+    arrow_len_with_override(base, arrow_len_override)
+  } else {
+    0.0
+  }
+  let head_len = if include_head {
+    arrow_len_with_override(base, arrow_len_override)
+  } else {
+    0.0
+  }
+  (tail_len, head_len)
+}
+
+///|
 priv enum ClipShape {
   None
   Rect
@@ -992,7 +1026,8 @@ fn arrow_clip_end_segment(
 ///|
 fn clip_spline_arrows(
   points : Array[@geom.Point],
-  arrow_len : Double,
+  tail_len : Double,
+  head_len : Double,
   include_tail : Bool,
   include_head : Bool,
   eps : Double,
@@ -1007,14 +1042,14 @@ fn clip_spline_arrows(
   let mut end_point : @geom.Point? = None
   if include_tail {
     let (clipped, new_start_idx, start) =
-      arrow_clip_start_segment(out, arrow_len, eps, start_idx, end_idx)
+      arrow_clip_start_segment(out, tail_len, eps, start_idx, end_idx)
     out = clipped
     start_idx = new_start_idx
     start_point = Some(start)
   }
   if include_head {
     let (clipped, new_end_idx, end) =
-      arrow_clip_end_segment(out, arrow_len, eps, start_idx, end_idx)
+      arrow_clip_end_segment(out, head_len, eps, start_idx, end_idx)
     out = clipped
     end_idx = new_end_idx
     end_point = Some(end)
@@ -2385,20 +2420,11 @@ pub fn edge_spline_for_polyline(
   } else {
     [tail, head]
   }
-  let arrow_len =
+  let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      let base = arrow_length_for_edge(edge)
-      match arrow_len_override {
-        Some(value) =>
-          if value > 0.0 && value < base {
-          value
-        } else {
-          base
-        }
-        None => base
-      }
+      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
-      0.0
+      (0.0, 0.0)
     }
   let polyline = compact_polyline(raw_points)
   let bezier =
@@ -2423,7 +2449,8 @@ pub fn edge_spline_for_polyline(
     if include_tail || include_head {
     clip_spline_arrows(
       clipped,
-      arrow_len,
+      tail_arrow_len,
+      head_arrow_len,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -2458,20 +2485,11 @@ pub fn edge_spline_for_points(
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let arrow_len =
+  let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      let base = arrow_length_for_edge(edge)
-      match arrow_len_override {
-        Some(value) =>
-          if value > 0.0 && value < base {
-          value
-        } else {
-          base
-        }
-        None => base
-      }
+      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
-      0.0
+      (0.0, 0.0)
     }
   let bezier =
     apply_parallel_offset(
@@ -2501,7 +2519,8 @@ pub fn edge_spline_for_points(
     if include_tail || include_head {
     clip_spline_arrows(
       spline_points,
-      arrow_len,
+      tail_arrow_len,
+      head_arrow_len,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -2541,20 +2560,11 @@ pub fn edge_spline_for_bezier_points(
   if bezier.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let arrow_len =
+  let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      let base = arrow_length_for_edge(edge)
-      match arrow_len_override {
-        Some(value) =>
-          if value > 0.0 && value < base {
-          value
-        } else {
-          base
-        }
-        None => base
-      }
+      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
-      0.0
+      (0.0, 0.0)
     }
   let bezier_points =
     if parallel_offset != 0.0 {
@@ -2579,7 +2589,8 @@ pub fn edge_spline_for_bezier_points(
     if include_tail || include_head {
     clip_spline_arrows(
       spline_points,
-      arrow_len,
+      tail_arrow_len,
+      head_arrow_len,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -2766,20 +2777,11 @@ pub fn edge_spline_for_line(
   head_cluster_bbox~ : @geom.Rect?,
   parallel_offset? : Double = 0.0,
 ) -> @geom.Spline {
-  let arrow_len =
+  let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      let base = arrow_length_for_edge(edge)
-      match arrow_len_override {
-        Some(value) =>
-          if value > 0.0 && value < base {
-          value
-        } else {
-          base
-        }
-        None => base
-      }
+      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
-      0.0
+      (0.0, 0.0)
     }
   let mut points =
     line_bezier_points(
@@ -2811,7 +2813,8 @@ pub fn edge_spline_for_line(
     if include_tail || include_head {
       clip_spline_arrows(
         points,
-        arrow_len,
+        tail_arrow_len,
+        head_arrow_len,
         include_tail,
         include_head,
         arrow_clip_eps,
