@@ -914,22 +914,6 @@ fn build_routing_spatial_and_tuning_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding derivation from spatial+tuning bundle
-/// reads typed routing-stage inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_data_from_spatial_tuning_data_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-  routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
-) -> DotRoutingEdgesAndPaddingData {
-  let routing_inputs =
-    build_routing_edges_and_padding_inputs_for_stage(
-      routing_stage_inputs,
-      routing_spatial_and_tuning_data,
-    )
-  run_routing_edges_and_padding_from_inputs(routing_inputs)
-}
-
-///|
 /// Graphviz parity: routing-stage edge/padding + result assembly consumes
 /// spatial+tuning precompute bundle without altering argument wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -937,11 +921,13 @@ fn build_dot_routing_stage_from_spatial_tuning_data_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
   routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
 ) -> DotRoutingStage {
-  let routing_edges_and_padding_data =
-    build_routing_edges_and_padding_data_from_spatial_tuning_data_for_stage(
+  let routing_inputs =
+    build_routing_edges_and_padding_inputs_for_stage(
       routing_stage_inputs,
       routing_spatial_and_tuning_data,
     )
+  let routing_edges_and_padding_data =
+    run_routing_edges_and_padding_from_inputs(routing_inputs)
   build_dot_routing_stage_result_from_edges_for_stage(
     routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
     routing_edges_and_padding_data.edges_out,
