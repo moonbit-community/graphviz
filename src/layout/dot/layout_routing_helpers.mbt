@@ -2396,8 +2396,42 @@ fn recover_pathplan_slack_for_edge(
   vnode_positions : Map[String, @geom.Point],
   path_adjacency : @routesplines.PathAdjacency,
 ) -> Unit {
-  if !spline_result.using_pathplan ||
-    spline_result.pathplan_boxes.length() == 0 ||
+  if !spline_result.using_pathplan {
+    return ()
+  }
+  if spline_result.pathplan_segments.length() > 0 {
+    // Graphviz parity: straight_path recovers slack per routed segment.
+    for segment in spline_result.pathplan_segments {
+      if segment.vnodes.length() == 0 || segment.boxes.length() == 0 {
+        continue
+      }
+      let ordered_vnodes =
+        if base.tail_rank <= base.head_rank {
+          segment.vnodes.copy()
+        } else {
+          let reversed : Array[String] = []
+          let mut idx = segment.vnodes.length()
+          while idx > 0 {
+            idx = idx - 1
+            reversed.push(segment.vnodes[idx])
+          }
+          reversed
+        }
+      recover_slack_vnodes(
+        edge,
+        ordered_vnodes,
+        segment.boxes,
+        ranks,
+        vnode_info.vnode_ranks,
+        rank_y,
+        vnode_positions,
+        vnode_info.vnode_sizes,
+        path_adjacency,
+      )
+    }
+    return ()
+  }
+  if spline_result.pathplan_boxes.length() == 0 ||
     spline_result.raw_bezier.length() < 4 {
     return ()
   }
