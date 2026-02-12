@@ -361,10 +361,14 @@ fn arrow_shape_primitives(
   perp : @geom.Point,
   length : Double,
   width : Double,
+  penwidth : Double,
 ) -> Array[DrawOp] {
   let ops : Array[DrawOp] = []
   let filled = !shape.open
-  let half_width = width / 2.0
+  let mut half_width = width / 2.0
+  if penwidth > 4.0 {
+    half_width = half_width * penwidth / 4.0
+  }
   match shape.base {
     ArrowBase::Normal => {
       let base = point_add(tip, point_scale(dir, -length))
@@ -521,6 +525,7 @@ pub fn arrow_primitives(
       perp,
       shape_len,
       width,
+      penwidth,
     )
     for op in primitives {
       ops.push(op)
