@@ -32,19 +32,6 @@ priv struct DotRankStageOrderingInputs {
 }
 
 ///|
-/// Graphviz parity: dot position-stage input payload keeps rank-stage outputs
-/// and prep fields in the same compute_positions call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotPositionStageInputs {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
-}
-
-///|
 /// Graphviz parity: dot routing-stage input payload keeps graph/prep/rank/
 /// position artifacts in the same routing-stage call sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -207,25 +194,15 @@ fn compute_dot_position_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
 ) -> PositionResult {
-  let position_stage_inputs : DotPositionStageInputs = {
-    // Graphviz parity: position-stage input payload assembly reads rank-stage
-    // artifacts and prep fields without argument reordering.
-    graph,
-    prep,
-    rank_data: rank_stage.rank_data,
-    rank_heights: rank_stage.rank_heights,
-    cluster_meta: rank_stage.cluster_meta,
-    ordering: rank_stage.ordering,
-  }
   // Graphviz parity: position-stage result wiring forwards rank-stage
   // artifacts directly into compute_positions without remapping.
   compute_positions(
-    position_stage_inputs.graph,
-    position_stage_inputs.prep,
-    position_stage_inputs.rank_data,
-    position_stage_inputs.rank_heights,
-    position_stage_inputs.cluster_meta,
-    position_stage_inputs.ordering,
+    graph,
+    prep,
+    rank_stage.rank_data,
+    rank_stage.rank_heights,
+    rank_stage.cluster_meta,
+    rank_stage.ordering,
   )
 }
 
