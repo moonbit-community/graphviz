@@ -566,16 +566,6 @@ fn run_routing_path_context_from_inputs(
 }
 
 ///|
-/// Graphviz parity: routing path groups are selected first, then the routing
-/// context is derived from those groups and cluster bboxes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_path_context_data_for_stage(
-  routing_path_context_inputs : DotRoutingPathContextInputs,
-) -> DotRoutingPathContextData {
-  run_routing_path_context_from_inputs(routing_path_context_inputs)
-}
-
-///|
 /// Graphviz parity: routing cluster bboxes are derived from typed routing-stage
 /// inputs, positioned nodes, and rank/cluster maps before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -799,16 +789,6 @@ fn run_routing_padding_and_head_port_metrics_from_inputs(
 }
 
 ///|
-/// Graphviz parity: port padding and head-port metrics are computed from the
-/// same inputs and in the same order before spline routing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_padding_and_head_port_metrics_for_stage(
-  routing_metric_inputs : DotRoutingPaddingAndHeadPortMetricsInputs,
-) -> DotRoutingPaddingAndHeadPortMetrics {
-  run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
-}
-
-///|
 /// Graphviz parity: edge routing call consumes typed edge-solve payload while
 /// preserving Graphviz-aligned argument mapping and rankdir override.
 /// Do not change behavior without updating fixtures/tests.
@@ -930,7 +910,7 @@ fn build_routing_padding_and_head_port_metrics_from_routing_inputs(
     build_routing_padding_and_head_port_metrics_inputs_for_stage(
       routing_inputs,
     )
-  build_routing_padding_and_head_port_metrics_for_stage(routing_metric_inputs)
+  run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
 }
 
 ///|
@@ -942,7 +922,7 @@ fn build_routing_path_context_data_from_routing_inputs(
 ) -> DotRoutingPathContextData {
   let routing_path_context_inputs =
     build_routing_path_context_inputs_for_stage(routing_inputs)
-  build_routing_path_context_data_for_stage(routing_path_context_inputs)
+  run_routing_path_context_from_inputs(routing_path_context_inputs)
 }
 
 ///|
