@@ -893,10 +893,10 @@ fn run_routing_edge_solve_from_inputs(
 }
 
 ///|
-/// Graphviz parity: routed-edge solve call consumes typed edge/padding inputs
-/// and precompute payload without remapping stage inputs.
+/// Graphviz parity: routed-edge solve dispatch reads typed edge/padding inputs
+/// plus grouped edge-solve precompute payload without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_from_precomputed_data_for_stage(
+fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
   routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
 ) -> Array[DotLayoutEdge] {
@@ -906,20 +906,6 @@ fn build_routing_edges_from_precomputed_data_for_stage(
       routing_edge_solve_precompute_data,
     )
   run_routing_edge_solve_from_inputs(routing_edge_solve_inputs)
-}
-
-///|
-/// Graphviz parity: routed-edge solve dispatch reads typed edge/padding inputs
-/// plus grouped edge-solve precompute payload without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
-) -> Array[DotLayoutEdge] {
-  build_routing_edges_from_precomputed_data_for_stage(
-    routing_inputs,
-    routing_edge_solve_precompute_data,
-  )
 }
 
 ///|
