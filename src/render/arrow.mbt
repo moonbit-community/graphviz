@@ -5,6 +5,9 @@ const ARROW_LENGTH : Double = 10.0
 const ARROW_WIDTH : Double = 6.0
 
 ///|
+const EPSILON : Double = 0.0001
+
+///|
 enum ArrowBase {
   Normal
   Box
@@ -55,7 +58,7 @@ fn unit_vectors(
   let dx = tip.x - from.x
   let dy = tip.y - from.y
   let len = Double::sqrt(dx * dx + dy * dy)
-  if len < 0.0001 {
+  if len < EPSILON {
     return (point(0.0, 0.0), point(0.0, 0.0), 0.0)
   }
   let dir = point(dx / len, dy / len)
@@ -496,8 +499,7 @@ pub fn arrow_primitives(
   arrowhead : String?,
 ) -> Array[DrawOp] {
   let (dir, perp, len) = unit_vectors(tip, from)
-  let _ = penwidth
-  if len < 0.0001 || size <= 0.0 {
+  if len < EPSILON || size <= 0.0 || penwidth <= 0.0 {
     return []
   }
   let length = ARROW_LENGTH * size
