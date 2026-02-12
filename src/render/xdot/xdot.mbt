@@ -1282,17 +1282,19 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     urx: rect.urx,
     ury: rect.ury - RECORD_BORDER_PT,
   }
+  // Graphviz parity: record outline uses field bbox (height without +1 kluge).
+  let draw_rect = inner_rect
   ops.push(@render.DrawOp::PenColor(color~))
   if is_mrecord {
     ops.push(
       @render.DrawOp::Bezier(
         filled=false,
-        points=rounded_rect_bezier_points(rect),
+        points=rounded_rect_bezier_points(draw_rect),
       ),
     )
   } else {
     ops.push(
-      @render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)),
+      @render.DrawOp::Polygon(filled=false, points=outline_rect_points(draw_rect)),
     )
   }
   let label = label_text(node.get_attr("label"), node.name())

@@ -1130,19 +1130,21 @@ fn write_record_node(
   let node = layout.node
   let label = label_text(node.get_attr("label"), node.name())
   let nodes = record_nodes(label)
-  let x = svg_x(rect.llx, bbox.llx)
-  let y = svg_y(rect.ury, bbox.lly)
-  let w = rect.urx - rect.llx
-  let h = rect.ury - rect.lly
-  let rounded = match node.get_attr("shape") {
-    Some(value) => value.to_lower() == "mrecord"
-    None => false
-  }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
     lly: rect.lly + RECORD_BORDER_PT,
     urx: rect.urx,
     ury: rect.ury - RECORD_BORDER_PT,
+  }
+  // Graphviz parity: record outline uses field bbox (height without +1 kluge).
+  let draw_rect = inner_rect
+  let x = svg_x(draw_rect.llx, bbox.llx)
+  let y = svg_y(draw_rect.ury, bbox.lly)
+  let w = draw_rect.urx - draw_rect.llx
+  let h = draw_rect.ury - draw_rect.lly
+  let rounded = match node.get_attr("shape") {
+    Some(value) => value.to_lower() == "mrecord"
+    None => false
   }
   write_line(
     sb,
