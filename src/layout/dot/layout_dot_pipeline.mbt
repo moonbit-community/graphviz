@@ -314,12 +314,6 @@ priv struct DotRoutingEdgesAndPaddingInputs {
 }
 
 ///|
-priv struct DotRoutingSpatialAndTuningData {
-  routing_spatial_data : DotRoutingSpatialData
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData
-}
-
-///|
 /// Graphviz parity: routing path-context input payload keeps prep/rank/position
 /// and cluster-bbox fields in path-context build order.
 /// Do not change behavior without updating fixtures/tests.
@@ -497,10 +491,6 @@ fn run_dot_routing_stage_from_inputs(
     label_edge_counts: build_label_edge_counts(routing_stage_inputs.prep.edges),
     enable_complex_tuning: complex_tuning_enabled(),
   }
-  let routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData = {
-    routing_spatial_data,
-    routing_label_and_tuning_data,
-  }
   // Graphviz parity: routing edge/padding input payload assembly reads
   // typed stage and spatial+tuning bundles without argument reordering.
   let routing_inputs : DotRoutingEdgesAndPaddingInputs = {
@@ -508,8 +498,8 @@ fn run_dot_routing_stage_from_inputs(
     prep: routing_stage_inputs.prep,
     rank_stage: routing_stage_inputs.rank_stage,
     positions_state: routing_stage_inputs.positions_state,
-    routing_spatial_data: routing_spatial_and_tuning_data.routing_spatial_data,
-    routing_label_and_tuning_data: routing_spatial_and_tuning_data.routing_label_and_tuning_data,
+    routing_spatial_data,
+    routing_label_and_tuning_data,
   }
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
@@ -572,7 +562,7 @@ fn run_dot_routing_stage_from_inputs(
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")
   {
-    nodes_out: routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
+    nodes_out: routing_spatial_data.nodes_out,
     edges_out: routing_edges_and_padding_data.edges_out,
     port_pad_below: routing_edges_and_padding_data.port_pad_below,
     port_pad_above: routing_edges_and_padding_data.port_pad_above,
