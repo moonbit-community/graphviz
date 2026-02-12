@@ -749,24 +749,6 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding input payload assembly reads typed
-/// stage and spatial+tuning bundles without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_inputs_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-  routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
-) -> DotRoutingEdgesAndPaddingInputs {
-  {
-    graph: routing_stage_inputs.graph,
-    prep: routing_stage_inputs.prep,
-    rank_stage: routing_stage_inputs.rank_stage,
-    positions_state: routing_stage_inputs.positions_state,
-    routing_spatial_data: routing_spatial_and_tuning_data.routing_spatial_data,
-    routing_label_and_tuning_data: routing_spatial_and_tuning_data.routing_label_and_tuning_data,
-  }
-}
-
-///|
 /// Graphviz parity: routing edge/padding execution consumes typed stage payload
 /// while preserving precompute->edge-solve->output order.
 /// Do not change behavior without updating fixtures/tests.
@@ -806,11 +788,16 @@ fn run_dot_routing_stage_from_inputs(
     routing_spatial_data,
     routing_label_and_tuning_data,
   }
-  let routing_inputs =
-    build_routing_edges_and_padding_inputs_for_stage(
-      routing_stage_inputs,
-      routing_spatial_and_tuning_data,
-    )
+  // Graphviz parity: routing edge/padding input payload assembly reads
+  // typed stage and spatial+tuning bundles without argument reordering.
+  let routing_inputs : DotRoutingEdgesAndPaddingInputs = {
+    graph: routing_stage_inputs.graph,
+    prep: routing_stage_inputs.prep,
+    rank_stage: routing_stage_inputs.rank_stage,
+    positions_state: routing_stage_inputs.positions_state,
+    routing_spatial_data: routing_spatial_and_tuning_data.routing_spatial_data,
+    routing_label_and_tuning_data: routing_spatial_and_tuning_data.routing_label_and_tuning_data,
+  }
   let routing_edges_and_padding_data =
     run_routing_edges_and_padding_from_inputs(routing_inputs)
   build_dot_routing_stage_result_from_edges_for_stage(
