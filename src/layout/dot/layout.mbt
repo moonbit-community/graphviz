@@ -15,10 +15,27 @@ pub fn layout_dot(
   validate_layout_graph(graph)
   reset_label_caches()
   let prep = prepare_layout_inputs(graph, opts)
-  let rank_stage = compute_dot_rank_stage(graph, prep)
-  let positions_state = compute_dot_position_stage(graph, prep, rank_stage)
+  let (rank_data, rank_heights, cluster_meta, ordering) =
+    compute_dot_rank_stage(graph, prep)
+  let positions_state =
+    compute_dot_position_stage(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+    )
   let (nodes_out, edges_out, port_pad_below, port_pad_above) =
-    compute_dot_routing_stage(graph, prep, rank_stage, positions_state)
+    compute_dot_routing_stage(
+      graph,
+      prep,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
+      positions_state,
+    )
   finalize_layout_graph(
     graph,
     prep.nodes,
@@ -26,8 +43,8 @@ pub fn layout_dot(
     edges_out,
     prep.rankdir,
     prep.splines,
-    rank_stage.rank_data.all_ranks,
-    rank_stage.rank_data.ranks,
+    rank_data.all_ranks,
+    rank_data.ranks,
     prep.sizes,
     positions_state.cluster_ln_x,
     positions_state.cluster_rn_x,
@@ -35,7 +52,7 @@ pub fn layout_dot(
     positions_state.rank_y,
     positions_state.rank_ht1,
     positions_state.rank_ht2,
-    rank_stage.rank_heights.nodesep_pt,
+    rank_heights.nodesep_pt,
     port_pad_below,
     port_pad_above,
     positions_state.flat_label_edge_vnodes,

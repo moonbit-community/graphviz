@@ -1,19 +1,11 @@
 ///|
-priv struct DotRankStage {
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
-}
-
-///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-) -> DotRankStage {
+) -> (RankData, RankHeights, ClusterMetadata, OrderingResult) {
   // Graphviz parity: rank-data creation emits the same rank trace
   // points before downstream stage assembly.
   let rank_data =
@@ -87,7 +79,7 @@ fn compute_dot_rank_stage(
   // Graphviz parity: rank-stage result object keeps computed
   // rank/cluster/order artifacts unchanged and emits rank-order trace.
   dot_trace("layout_dot: rank order computed")
-  { rank_data, rank_heights, cluster_meta, ordering }
+  (rank_data, rank_heights, cluster_meta, ordering)
 }
 
 ///|
@@ -96,17 +88,20 @@ fn compute_dot_rank_stage(
 fn compute_dot_position_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-  rank_stage : DotRankStage,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
 ) -> PositionResult {
   // Graphviz parity: position-stage result wiring forwards rank-stage
   // artifacts directly into compute_positions without remapping.
   compute_positions(
     graph,
     prep,
-    rank_stage.rank_data,
-    rank_stage.rank_heights,
-    rank_stage.cluster_meta,
-    rank_stage.ordering,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
   )
 }
 
@@ -117,7 +112,7 @@ fn compute_dot_position_stage(
 fn build_routing_spatial_data_for_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-  rank_stage : DotRankStage,
+  ranks : Map[String, Int],
   positions_state : PositionResult,
 ) -> (Array[DotLayoutNode], Map[String, Map[String, RecordPort]], Map[String, Map[String, RecordPort]], Map[String, @geom.Rect]) {
   // Graphviz parity: node geometry projection and port-map derivation
@@ -153,7 +148,7 @@ fn build_routing_spatial_data_for_stage(
       positions_state.cluster_rn_x,
       positions_state.cluster_bbox_heights,
       prep.rankdir,
-      rank_stage.rank_data.ranks,
+      ranks,
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
@@ -167,7 +162,10 @@ fn build_routing_spatial_data_for_stage(
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edge_solve_precompute_data_for_stage(
   prep : LayoutPrep,
-  rank_stage : DotRankStage,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
   positions_state : PositionResult,
   label_ports_map : Map[String, Map[String, RecordPort]],
   cluster_bboxes : Map[String, @geom.Rect],
@@ -177,7 +175,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
     compute_port_padding(
-      rank_stage.cluster_meta.has_clusters,
+      cluster_meta.has_clusters,
       prep.has_port_edges,
       prep.edges,
       positions_state.positions,
@@ -200,10 +198,10 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   let path_groups =
     if positions_state.x_groups.length() > 0 {
       positions_state.x_groups
-    } else if rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
-      rank_stage.ordering.ordered_groups_with_vnodes
+    } else if ordering.ordered_groups_with_vnodes.length() > 0 {
+      ordering.ordered_groups_with_vnodes
     } else {
-      rank_stage.ordering.ordered_groups
+      ordering.ordered_groups
     }
   // Graphviz parity: routing context is assembled from routing-stage
   // inputs, final ordering, vnode/rank, and cluster bboxes.
@@ -211,16 +209,16 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     prepare_routing_context(
       prep.nodes,
       prep.edges,
-      rank_stage.rank_data.edge_tail,
-      rank_stage.rank_data.edge_head,
+      rank_data.edge_tail,
+      rank_data.edge_head,
       prep.sizes,
       prep.rankdir,
       prep.record_orientation,
-      rank_stage.rank_data.ranks,
-      rank_stage.ordering.ordered_groups,
+      rank_data.ranks,
+      ordering.ordered_groups,
       path_groups,
-      rank_stage.rank_heights.nodesep_pt,
-      rank_stage.ordering.vnode_info,
+      rank_heights.nodesep_pt,
+      ordering.vnode_info,
       positions_state.vnode_positions,
       cluster_bboxes,
     )
@@ -234,11 +232,14 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 fn compute_dot_routing_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-  rank_stage : DotRankStage,
+  rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
+  ordering : OrderingResult,
   positions_state : PositionResult,
 ) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
-    build_routing_spatial_data_for_stage(graph, prep, rank_stage, positions_state)
+    build_routing_spatial_data_for_stage(graph, prep, rank_data.ranks, positions_state)
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
   let label_edge_counts = build_label_edge_counts(prep.edges)
@@ -248,7 +249,10 @@ fn compute_dot_routing_stage(
   let (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context) =
     build_routing_edge_solve_precompute_data_for_stage(
       prep,
-      rank_stage,
+      rank_data,
+      rank_heights,
+      cluster_meta,
+      ordering,
       positions_state,
       label_ports_map,
       cluster_bboxes,
@@ -263,7 +267,7 @@ fn compute_dot_routing_stage(
     route_edges(
       graph,
       prep.edges,
-      rank_stage.rank_data.ranks,
+      rank_data.ranks,
       prep.sizes,
       prep.record_orientation,
       prep.rankdir,
@@ -271,14 +275,14 @@ fn compute_dot_routing_stage(
       prep.splines,
       positions_state.positions,
       positions_state.vnode_positions,
-      rank_stage.ordering.vnode_info,
+      ordering.vnode_info,
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
       path_groups,
-      rank_stage.rank_heights.nodesep_pt,
-      rank_stage.rank_heights.ranksep_pt,
-      rank_stage.cluster_meta.has_clusters,
+      rank_heights.nodesep_pt,
+      rank_heights.ranksep_pt,
+      cluster_meta.has_clusters,
       label_ports_map,
       label_ports_raw,
       label_edge_counts,
