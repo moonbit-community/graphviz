@@ -86,38 +86,6 @@ fn build_cluster_meta_for_dot_rank_stage(
 }
 
 ///|
-/// Graphviz parity: dot rank-stage ordering input payload assembly reads prep/
-/// rank outputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_inputs_for_dot_rank_stage(
-  rank_stage_inputs : DotRankStageInputs,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-) -> DotRankStageOrderingInputs {
-  {
-    graph: rank_stage_inputs.graph,
-    nodes: rank_stage_inputs.prep.nodes,
-    edges: rank_stage_inputs.prep.edges,
-    edge_tail: rank_data.edge_tail,
-    edge_head: rank_data.edge_head,
-    edge_reversed: rank_data.edge_reversed,
-    edge_out_order: rank_data.edge_out_order,
-    ranks: rank_data.ranks,
-    groups: rank_data.groups,
-    rank_keys: rank_data.rank_keys,
-    node_order: rank_stage_inputs.prep.node_order,
-    order_sizes: rank_stage_inputs.prep.order_sizes,
-    nodesep_pt: rank_heights.nodesep_pt,
-    has_edge_labels: rank_stage_inputs.prep.has_edge_labels,
-    rankdir: rank_stage_inputs.prep.rankdir,
-    cluster_meta,
-    port_order_positions: rank_stage_inputs.prep.port_order_positions,
-    port_order_contrib: rank_stage_inputs.prep.port_order_contrib,
-  }
-}
-
-///|
 /// Graphviz parity: rank-height stage consumes computed ranks/groups and
 /// spacing inputs with unchanged Graphviz argument wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -180,13 +148,28 @@ fn run_dot_rank_stage_from_inputs(
     build_cluster_meta_for_dot_rank_stage(rank_stage_inputs, rank_data)
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
-  let ordering_inputs =
-    build_ordering_inputs_for_dot_rank_stage(
-      rank_stage_inputs,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-    )
+  // Graphviz parity: dot rank-stage ordering input payload assembly
+  // reads prep/rank outputs without argument reordering.
+  let ordering_inputs : DotRankStageOrderingInputs = {
+    graph: rank_stage_inputs.graph,
+    nodes: rank_stage_inputs.prep.nodes,
+    edges: rank_stage_inputs.prep.edges,
+    edge_tail: rank_data.edge_tail,
+    edge_head: rank_data.edge_head,
+    edge_reversed: rank_data.edge_reversed,
+    edge_out_order: rank_data.edge_out_order,
+    ranks: rank_data.ranks,
+    groups: rank_data.groups,
+    rank_keys: rank_data.rank_keys,
+    node_order: rank_stage_inputs.prep.node_order,
+    order_sizes: rank_stage_inputs.prep.order_sizes,
+    nodesep_pt: rank_heights.nodesep_pt,
+    has_edge_labels: rank_stage_inputs.prep.has_edge_labels,
+    rankdir: rank_stage_inputs.prep.rankdir,
+    cluster_meta,
+    port_order_positions: rank_stage_inputs.prep.port_order_positions,
+    port_order_contrib: rank_stage_inputs.prep.port_order_contrib,
+  }
   // Graphviz parity: ordering/vnode stage consumes rank-stage ordering
   // payload with unchanged Graphviz call wiring.
   // Graphviz parity: ordering+vnode typed payload extraction reads
