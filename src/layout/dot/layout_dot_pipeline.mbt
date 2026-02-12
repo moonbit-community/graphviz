@@ -866,31 +866,25 @@ fn build_dot_routing_stage_result_from_edges_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge-solve input payload assembly reads stage
-/// precompute bundles without argument reordering.
+/// Graphviz parity: routing edge-solve input payload assembly reads typed
+/// edge/padding stage inputs and grouped precompute bundles without reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edge_solve_inputs_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
-  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
-  routing_path_context_data : DotRoutingPathContextData,
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
+  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
 ) -> DotRoutingEdgeSolveInputs {
   {
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-    path_groups: routing_path_context_data.path_groups,
-    label_ports_map: routing_spatial_data.label_ports_map,
-    label_ports_raw: routing_spatial_data.label_ports_raw,
-    label_edge_counts: routing_label_and_tuning_data.label_edge_counts,
-    head_port_metrics: routing_padding_and_head_port_metrics.head_port_metrics,
-    routing_context: routing_path_context_data.routing_context,
-    enable_complex_tuning: routing_label_and_tuning_data.enable_complex_tuning,
+    graph: routing_inputs.graph,
+    prep: routing_inputs.prep,
+    rank_stage: routing_inputs.rank_stage,
+    positions_state: routing_inputs.positions_state,
+    path_groups: routing_edge_solve_precompute_data.routing_path_context_data.path_groups,
+    label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
+    label_ports_raw: routing_inputs.routing_spatial_data.label_ports_raw,
+    label_edge_counts: routing_inputs.routing_label_and_tuning_data.label_edge_counts,
+    head_port_metrics: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.head_port_metrics,
+    routing_context: routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
+    enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
   }
 }
 
@@ -914,14 +908,8 @@ fn build_routing_edges_from_precomputed_data_for_stage(
 ) -> Array[DotLayoutEdge] {
   let routing_edge_solve_inputs =
     build_routing_edge_solve_inputs_for_stage(
-      routing_inputs.graph,
-      routing_inputs.prep,
-      routing_inputs.rank_stage,
-      routing_inputs.positions_state,
-      routing_inputs.routing_spatial_data,
-      routing_inputs.routing_label_and_tuning_data,
-      routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
-      routing_edge_solve_precompute_data.routing_path_context_data,
+      routing_inputs,
+      routing_edge_solve_precompute_data,
     )
   run_routing_edge_solve_from_inputs(routing_edge_solve_inputs)
 }
