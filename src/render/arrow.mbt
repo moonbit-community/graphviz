@@ -313,15 +313,22 @@ fn triangle_points(
 }
 
 ///|
+priv struct JoinTriangle {
+  p0 : @geom.Point
+  p1 : @geom.Point
+  p2 : @geom.Point
+}
+
+///|
 fn miter_shape(
   base_left : @geom.Point,
   p : @geom.Point,
   base_right : @geom.Point,
   penwidth : Double,
-) -> @geom.Point {
+) -> JoinTriangle {
   if (base_left.x == p.x && base_left.y == p.y) ||
     (base_right.x == p.x && base_right.y == p.y) {
-    return p
+    return JoinTriangle::{ p0: p, p1: p, p2: p }
   }
   let dx_a = p.x - base_left.x
   let dy_a = p.y - base_left.y
@@ -366,10 +373,12 @@ fn miter_shape(
   )
 
   if normalized_miter_length > stroke_miterlimit {
-    point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
+    let p_bevel = point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
+    JoinTriangle::{ p0: p_bevel, p1, p2 }
   } else {
     let l = penwidth / 2.0 / @math.tan(theta / 2.0)
-    point(p1.x + l * cos_alpha, p1.y + l * sin_alpha)
+    let p3 = point(p1.x + l * cos_alpha, p1.y + l * sin_alpha)
+    JoinTriangle::{ p0: p3, p1, p2 }
   }
 }
 
@@ -392,8 +401,8 @@ fn diamond_points(
   let base_left = if right { origin } else { unmod_left }
   let base_right = if left { origin } else { unmod_right }
   let p_tip = point_scale(u, -1.0)
-  let miter_tip = miter_shape(base_left, p_tip, base_right, penwidth)
-  let delta = point_sub(miter_tip, p_tip)
+  let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+  let delta = point_sub(line_join_shape.p0, p_tip)
 
   // Graphviz parity: diamond offset uses miter join instead of fixed penwidth shift.
   p = point_sub(p, delta)
@@ -415,6 +424,122 @@ fn diamond_points(
     [a0, a1, a2, a3]
   }
 }
+
+///|
+/// Graphviz parity: normal/inv head corners use arrows.c miter projection.
+fn normal_arrow_points(
+  tip : @geom.Point,
+  u : @geom.Point,
+  penwidth : Double,
+  left : Bool,
+  right : Bool,
+  inv : Bool,
+) -> Array[@geom.Point] {
+  let mut arrowwidth = 0.35
+  if penwidth > 4.0 {
+    arrowwidth = arrowwidth * penwidth / 4.0
+  }
+  let v = point(-u.y * arrowwidth, u.x * arrowwidth)
+  let mut p = tip
+  let mut q = point_add(p, u)
+
+  let mut delta_base = point(0.0, 0.0)
+
+  let origin = point(0.0, 0.0)
+  let v_inv = point(-v.x, -v.y)
+  let normal_left = if right { origin } else { v_inv }
+  let normal_right = if left { origin } else { v }
+  let base_left = if inv { normal_right } else { normal_left }
+  let base_right = if inv { normal_left } else { normal_right }
+  let normal_tip = point(-u.x, -u.y)
+  let inv_tip = u
+  let p_tip = if inv { inv_tip } else { normal_tip }
+
+  let mut delta_tip = point(0.0, 0.0)
+
+  if u.x != 0.0 || u.y != 0.0 {
+    let cos_phi = p_tip.x / @math.hypot(p_tip.x, p_tip.y)
+    let sin_phi = p_tip.y / @math.hypot(p_tip.x, p_tip.y)
+    let phi = if p_tip.y > 0.0 {
+      @math.acos(cos_phi)
+    } else {
+      -@math.acos(cos_phi)
+    }
+
+    if left {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p1 = line_join_shape.p1
+      let dx = p1.x - p_tip.x
+      let dy = p1.y - p_tip.y
+      let hypot_p = @math.hypot(dx, dy)
+      let cos_alpha = dx / hypot_p
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
+      let gamma = alpha - phi
+      let delta_tip_length = hypot_p * @math.cos(gamma)
+      delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
+    } else if right {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p2 = line_join_shape.p2
+      let dx = p2.x - p_tip.x
+      let dy = p2.y - p_tip.y
+      let hypot_p = @math.hypot(dx, dy)
+      let cos_alpha = dx / hypot_p
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
+      let gamma = alpha - phi
+      let delta_tip_length = hypot_p * @math.cos(gamma)
+      delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
+    } else {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p3 = line_join_shape.p0
+      delta_tip = point_sub(p3, p_tip)
+    }
+    delta_base = point(penwidth / 2.0 * cos_phi, penwidth / 2.0 * sin_phi)
+  }
+
+  let a : Array[@geom.Point] = [
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+  ]
+
+  if inv {
+    p = point_add(p, delta_base)
+    q = point_add(q, delta_base)
+    a[0] = p
+    a[4] = p
+    a[1] = point_sub(p, v)
+    a[2] = q
+    a[3] = point_add(p, v)
+  } else {
+    p = point_sub(p, delta_tip)
+    q = point_sub(q, delta_tip)
+    a[0] = q
+    a[4] = q
+    a[1] = point_sub(q, v)
+    a[2] = p
+    a[3] = point_add(q, v)
+  }
+
+  if left {
+    [a[0], a[1], a[2]]
+  } else if right {
+    [a[2], a[3], a[4]]
+  } else {
+    [a[1], a[2], a[3]]
+  }
+}
+
+///|
 
 ///|
 /// Graphviz parity: ARR_MOD_LEFT/ARR_MOD_RIGHT on curve heads split cubic at t=0.5.
@@ -452,21 +577,16 @@ fn arrow_shape_primitives(
   let filled = !shape.open
   match shape.base {
     ArrowBase::Normal => {
-      // Graphviz parity: normal heads back off by half penwidth to avoid overlap.
       let normal_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
-      let base = point_add(normal_tip, point_scale(dir, -length))
-      // Graphviz parity: normal head base uses 0.35 * head length.
-      let mut normal_half_width = length * 0.35
-      if penwidth > 4.0 {
-        normal_half_width = normal_half_width * penwidth / 4.0
-      }
-      let points = triangle_points(
+      let u = point_scale(dir, -length)
+      // Graphviz parity: normal half-head + miter logic follows arrow_type_normal0.
+      let points = normal_arrow_points(
         normal_tip,
-        base,
-        perp,
-        normal_half_width,
+        u,
+        penwidth,
         shape.left,
         shape.right,
+        false,
       )
       ops.push(DrawOp::Polygon(filled~, points~))
     }
@@ -493,22 +613,16 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled=true, points~))
     }
     ArrowBase::Inv => {
-      // Graphviz parity: inv heads back off by half penwidth to avoid overlap.
-      let inv_base = point_sub(tip, point_scale(dir, penwidth / 2.0))
-      let point_tip = point_add(inv_base, point_scale(dir, -length))
-      // Graphviz parity: inv head base uses the same width factor as normal.
-      let mut normal_half_width = length * 0.35
-      if penwidth > 4.0 {
-        normal_half_width = normal_half_width * penwidth / 4.0
-      }
-      // Graphviz parity: inv side modifiers map opposite to normal orientation.
-      let points = triangle_points(
-        point_tip,
-        inv_base,
-        perp,
-        normal_half_width,
-        shape.right,
+      let inv_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
+      let u = point_scale(dir, -length)
+      // Graphviz parity: inverted normal uses arrow_type_normal0 with ARR_MOD_INV.
+      let points = normal_arrow_points(
+        inv_tip,
+        u,
+        penwidth,
         shape.left,
+        shape.right,
+        true,
       )
       ops.push(DrawOp::Polygon(filled~, points~))
     }
