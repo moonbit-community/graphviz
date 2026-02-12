@@ -180,6 +180,7 @@ priv struct EdgeSplineResult {
   pathplan_boxes : Array[@geom.Rect]
   pathplan_points : Array[@geom.Point]
   raw_bezier : Array[@geom.Point]
+  pathplan_segments : Array[@routesplines.PathplanSegment]
   apply_dotted_adjustment : Bool
 }
 
@@ -1040,6 +1041,7 @@ priv struct RoutePointState {
   pathplan_boxes : Array[@geom.Rect]
   pathplan_points : Array[@geom.Point]
   route_barriers : Array[(@geom.Point, @geom.Point)]
+  pathplan_segments : Array[@routesplines.PathplanSegment]
 }
 
 ///|
@@ -1064,6 +1066,7 @@ fn compute_route_points_with_pathplan(
   let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
   let mut pathplan_boxes : Array[@geom.Rect] = []
   let mut pathplan_points : Array[@geom.Point] = []
+  let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
   let (points, pathplan_used) =
     if base.use_pathplan && !base.is_flat_edge {
     let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
@@ -1126,11 +1129,12 @@ fn compute_route_points_with_pathplan(
       nodesep_pt,
       has_edge_label,
     ) {
-      Some((path_points, barriers, path_boxes)) => {
-        route_barriers = barriers
-        pathplan_boxes = path_boxes
-        pathplan_points = path_points.copy()
-        (path_points, true)
+      Some(result) => {
+        route_barriers = result.barriers
+        pathplan_boxes = result.boxes
+        pathplan_points = result.points.copy()
+        pathplan_segments = result.segments
+        (result.points, true)
       }
       None => (guide_points, false)
     }
@@ -1146,6 +1150,7 @@ fn compute_route_points_with_pathplan(
     pathplan_boxes,
     pathplan_points,
     route_barriers,
+    pathplan_segments,
   }
 }
 
@@ -1357,6 +1362,7 @@ fn build_edge_spline(
   let mut using_pathplan = false
   let mut pathplan_boxes : Array[@geom.Rect] = []
   let mut pathplan_points : Array[@geom.Point] = []
+  let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
   let mut raw_bezier : Array[@geom.Point] = []
   let mut apply_dotted_adjustment = false
   let spline = match splines {
@@ -1451,6 +1457,7 @@ fn build_edge_spline(
       using_pathplan = route_state.using_pathplan
       pathplan_boxes = route_state.pathplan_boxes
       pathplan_points = route_state.pathplan_points
+      pathplan_segments = route_state.pathplan_segments
       let route_barriers = route_state.route_barriers
       let points =
         adjust_route_points(
@@ -1894,6 +1901,7 @@ fn build_edge_spline(
     pathplan_boxes,
     pathplan_points,
     raw_bezier,
+    pathplan_segments,
     apply_dotted_adjustment,
   }
 }
@@ -2449,6 +2457,7 @@ fn build_self_edge_layout(
     pathplan_boxes: [],
     pathplan_points: [],
     raw_bezier: route.points,
+    pathplan_segments: [],
     apply_dotted_adjustment: false,
   }
   let final_spline = finalize_edge_spline(base, spline_result)

@@ -183,6 +183,24 @@ fn pathplan_sizes(
 }
 
 ///|
+/// Graphviz parity: pathplan split metadata for straight-path routing.
+pub(all) struct PathplanSegment {
+  points : Array[@geom.Point]
+  barriers : Array[(@geom.Point, @geom.Point)]
+  boxes : Array[@geom.Rect]
+  vnodes : Array[String]
+}
+
+///|
+/// Graphviz parity: pathplan result for routesplines.
+pub(all) struct PathplanResult {
+  points : Array[@geom.Point]
+  barriers : Array[(@geom.Point, @geom.Point)]
+  boxes : Array[@geom.Rect]
+  segments : Array[PathplanSegment]
+}
+
+///|
 fn compute_horizontal_bounds(
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
@@ -1676,7 +1694,7 @@ pub fn edge_pathplan_polyline(
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
   has_edge_label : Bool,
-) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
+) -> PathplanResult? {
   let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(list) => list.copy()
     None => []
@@ -1924,7 +1942,26 @@ pub fn edge_pathplan_polyline(
               } else {
                 combined
               }
-            return Some((out_points, all_barriers, all_boxes))
+            let segments : Array[PathplanSegment] = [
+              {
+                points: points1,
+                barriers: barriers1,
+                boxes: boxes1,
+                vnodes: seg1_vnodes,
+              },
+              {
+                points: points2,
+                barriers: barriers2,
+                boxes: boxes2,
+                vnodes: seg2_vnodes,
+              },
+            ]
+            return Some({
+              points: out_points,
+              barriers: all_barriers,
+              boxes: all_boxes,
+              segments,
+            })
           }
           _ => ()
         }
@@ -1982,7 +2019,12 @@ pub fn edge_pathplan_polyline(
         } else {
           points
         }
-      Some((out_points, barriers, boxes))
+      Some({
+        points: out_points,
+        barriers,
+        boxes,
+        segments: [],
+      })
     }
     None => None
   }
