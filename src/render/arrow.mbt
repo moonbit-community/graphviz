@@ -302,13 +302,13 @@ fn triangle_points(
 ) -> Array[@geom.Point] {
   let left_point = point_add(base, point_scale(perp, half_width))
   let right_point = point_add(base, point_scale(perp, -half_width))
+  // Graphviz parity: ordering matches normal arrow polygon emission patterns.
   if left && !right {
-    [tip, left_point, base]
+    [base, left_point, tip]
   } else if right && !left {
-    // Graphviz parity: right half triangle orders [tip, right, base].
     [tip, right_point, base]
   } else {
-    [tip, left_point, right_point]
+    [left_point, tip, right_point]
   }
 }
 
