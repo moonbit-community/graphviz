@@ -319,18 +319,11 @@ fn record_nodes(label : String) -> Array[RecordNode] {
         chars.push(ch)
       }
       let parser = RecordParser::{ chars, index: 0 }
+      // Graphviz parity: preserve outer braces as an explicit group.
+      // Do not flatten a single top-level group; it flips field orientation.
       let nodes = parse_record_nodes(parser)
-      let flattened =
-        if nodes.length() == 1 {
-          match nodes[0] {
-            RecordNode::Group(children) => children
-            _ => nodes
-          }
-        } else {
-          nodes
-        }
-      record_nodes_cache.val[label] = flattened
-      flattened
+      record_nodes_cache.val[label] = nodes
+      nodes
     }
   }
 }

@@ -165,8 +165,15 @@ fn build_rank_same_reps(
     let current = stack[stack.length() - 1]
     let _ = stack.pop()
     match current.get_attr("rank") {
-      Some(value) =>
-        if value.to_lower() == "same" {
+      Some(value) => {
+        let rank_value = value.to_lower()
+        if rank_value == "same" ||
+          rank_value == "min" ||
+          rank_value == "max" ||
+          rank_value == "source" ||
+          rank_value == "sink" {
+          // Graphviz parity: collapse_rankset merges same/min/max/source/sink
+          // subgraph members into one representative before ranking.
           let members = current.nodes()
           let mut leader : String? = None
           for node in members {
@@ -180,6 +187,7 @@ fn build_rank_same_reps(
             }
           }
         }
+      }
       None => ()
     }
     for child in current.subgraphs() {
