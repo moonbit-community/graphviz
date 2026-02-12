@@ -612,11 +612,26 @@ pub fn arrow_primitives(
   penwidth : Double,
   arrowhead : String?,
 ) -> Array[DrawOp] {
-  let (dir, perp, len) = unit_vectors(tip, from)
-  if len < EPSILON || size <= 0.0 || penwidth <= 0.0 {
+  if size <= 0.0 || penwidth <= 0.0 {
     return []
   }
-  let length = ARROW_LENGTH * size
+  // Graphviz parity: stabilize arrow direction by epsilon-adjusting the edge vector.
+  let mut ux = from.x - tip.x
+  let mut uy = from.y - tip.y
+  let raw_len = Double::sqrt(ux * ux + uy * uy)
+  if raw_len < EPSILON {
+    return []
+  }
+  let scale = ARROW_LENGTH * size / (raw_len + EPSILON)
+  let ux_adjust = if ux >= 0.0 { EPSILON } else { -EPSILON }
+  let uy_adjust = if uy >= 0.0 { EPSILON } else { -EPSILON }
+  ux = ux + ux_adjust
+  uy = uy + uy_adjust
+  let adjusted_from = point(tip.x + ux * scale, tip.y + uy * scale)
+  let (dir, perp, len) = unit_vectors(tip, adjusted_from)
+  if len < EPSILON {
+    return []
+  }
   let shapes = parse_arrow_shapes(arrowhead)
   if shapes.length() == 0 {
     return []
@@ -624,7 +639,7 @@ pub fn arrow_primitives(
   let ops : Array[DrawOp] = []
   let mut offset = 0.0
   for shape in shapes {
-    let shape_len = length * arrow_length_factor(shape.base)
+    let shape_len = len * arrow_length_factor(shape.base)
     let shape_tip = point_add(tip, point_scale(dir, -offset))
     let primitives = arrow_shape_primitives(
       shape,
