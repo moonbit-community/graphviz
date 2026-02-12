@@ -323,12 +323,13 @@ fn diamond_points(
   let mid = point_add(tip, point_scale(point_sub(base, tip), 0.5))
   let left_point = point_add(mid, point_scale(perp, half_width))
   let right_point = point_add(mid, point_scale(perp, -half_width))
+  // Graphviz parity: point order follows arrow_type_diamond polygon emission.
   if left && !right {
     [tip, left_point, base]
   } else if right && !left {
-    [tip, base, right_point]
+    [base, right_point, tip]
   } else {
-    [tip, left_point, base, right_point]
+    [base, right_point, tip, left_point]
   }
 }
 
