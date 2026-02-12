@@ -846,20 +846,6 @@ fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing metric precompute extraction reads typed edge/
-/// padding inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_padding_and_head_port_metrics_from_routing_inputs(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-) -> DotRoutingPaddingAndHeadPortMetrics {
-  let routing_metric_inputs =
-    build_routing_padding_and_head_port_metrics_inputs_for_stage(
-      routing_inputs,
-    )
-  run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
-}
-
-///|
 /// Graphviz parity: routing path-context precompute extraction reads typed edge/
 /// padding inputs without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -878,10 +864,12 @@ fn build_routing_path_context_data_from_routing_inputs(
 fn build_routing_edge_solve_precompute_data_for_stage(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingEdgeSolvePrecomputeData {
-  let routing_padding_and_head_port_metrics =
-    build_routing_padding_and_head_port_metrics_from_routing_inputs(
+  let routing_metric_inputs =
+    build_routing_padding_and_head_port_metrics_inputs_for_stage(
       routing_inputs,
     )
+  let routing_padding_and_head_port_metrics =
+    run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
   let routing_path_context_data =
     build_routing_path_context_data_from_routing_inputs(routing_inputs)
   {
