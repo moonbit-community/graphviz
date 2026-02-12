@@ -70,6 +70,7 @@ pub fn arrow_primitives(
   tip : @geom.Point,
   from : @geom.Point,
   size : Double,
+  penwidth : Double,
   arrowhead : String?,
 ) -> Array[DrawOp] {
   ...

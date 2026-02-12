@@ -431,6 +431,11 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
+  @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
+}
+
+///|
 fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -469,7 +474,13 @@ fn arrow_primitives(
   } else {
     layout.edge.get_attr("arrowtail")
   }
-  @render.arrow_primitives(tip, from, arrow_size(layout.edge), arrowhead)
+  @render.arrow_primitives(
+    tip,
+    from,
+    arrow_size(layout.edge),
+    arrow_penwidth(layout.edge),
+    arrowhead,
+  )
 }
 
 ///|

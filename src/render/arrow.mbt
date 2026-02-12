@@ -378,9 +378,11 @@ pub fn arrow_primitives(
   tip : @geom.Point,
   from : @geom.Point,
   size : Double,
+  penwidth : Double,
   arrowhead : String?,
 ) -> Array[DrawOp] {
   let (dir, perp, len) = unit_vectors(tip, from)
+  let _ = penwidth
   if len < 0.0001 || size <= 0.0 {
     return []
   }

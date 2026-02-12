@@ -488,6 +488,11 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
+  @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
+}
+
+///|
 fn arrow_ops(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -531,6 +536,7 @@ fn arrow_ops(
     tip,
     from,
     arrow_size(layout.edge),
+    arrow_penwidth(layout.edge),
     arrowhead,
   )
   if primitives.length() == 0 {
