@@ -417,13 +417,14 @@ fn arrow_shape_primitives(
       if penwidth > 4.0 {
         normal_half_width = normal_half_width * penwidth / 4.0
       }
+      // Graphviz parity: inv side modifiers map opposite to normal orientation.
       let points = triangle_points(
         point_tip,
         inv_base,
         perp,
         normal_half_width,
-        shape.left,
         shape.right,
+        shape.left,
       )
       ops.push(DrawOp::Polygon(filled~, points~))
     }
