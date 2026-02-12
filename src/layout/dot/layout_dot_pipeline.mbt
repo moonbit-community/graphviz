@@ -639,22 +639,6 @@ fn build_routing_label_and_tuning_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing padding/head-port metric input payload assembly
-/// reads typed edge/padding stage inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_padding_and_head_port_metrics_inputs_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-) -> DotRoutingPaddingAndHeadPortMetricsInputs {
-  {
-    prep: routing_inputs.prep,
-    rank_stage: routing_inputs.rank_stage,
-    positions_state: routing_inputs.positions_state,
-    label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
-    enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
-  }
-}
-
-///|
 /// Graphviz parity: port padding and head-port metrics consume typed metric
 /// inputs while preserving compute order before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -766,10 +750,15 @@ fn build_routing_edge_solve_inputs_for_stage(
 fn build_routing_edge_solve_precompute_data_for_stage(
   routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingEdgeSolvePrecomputeData {
-  let routing_metric_inputs =
-    build_routing_padding_and_head_port_metrics_inputs_for_stage(
-      routing_inputs,
-    )
+  // Graphviz parity: routing padding/head-port metric input payload
+  // assembly reads typed edge/padding stage inputs without argument reordering.
+  let routing_metric_inputs : DotRoutingPaddingAndHeadPortMetricsInputs = {
+    prep: routing_inputs.prep,
+    rank_stage: routing_inputs.rank_stage,
+    positions_state: routing_inputs.positions_state,
+    label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
+    enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
+  }
   let routing_padding_and_head_port_metrics =
     run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
   // Graphviz parity: routing path-context input payload assembly reads typed
