@@ -2,9 +2,6 @@
 const ARROW_LENGTH : Double = 10.0
 
 ///|
-const ARROW_WIDTH : Double = 6.0
-
-///|
 const EPSILON : Double = 0.0001
 
 ///|
@@ -365,15 +362,10 @@ fn arrow_shape_primitives(
   dir : @geom.Point,
   perp : @geom.Point,
   length : Double,
-  width : Double,
   penwidth : Double,
 ) -> Array[DrawOp] {
   let ops : Array[DrawOp] = []
   let filled = !shape.open
-  let mut half_width = width / 2.0
-  if penwidth > 4.0 {
-    half_width = half_width * penwidth / 4.0
-  }
   match shape.base {
     ArrowBase::Normal => {
       let base = point_add(tip, point_scale(dir, -length))
@@ -396,8 +388,9 @@ fn arrow_shape_primitives(
       let base = point_add(tip, point_scale(dir, -length))
       // Graphviz parity: vee is inverse crow, using wider 0.45 head span.
       let mut vee_half_width = length * 0.45
-      if penwidth > 4.0 {
-        vee_half_width = vee_half_width * penwidth / 4.0
+      let arrowsize = length / ARROW_LENGTH
+      if arrowsize > 0.0 && penwidth > 4.0 * arrowsize {
+        vee_half_width = vee_half_width * penwidth / (4.0 * arrowsize)
       }
       let points = triangle_points(
         tip,
@@ -532,7 +525,8 @@ fn arrow_shape_primitives(
     }
     ArrowBase::Crow => {
       let base = point_add(tip, point_scale(dir, -length))
-      let wing = width * 0.75
+      // Graphviz parity: crow wing span is 0.45 * head length.
+      let wing = length * 0.45
       let left_point = point_add(tip, point_scale(perp, wing))
       let right_point = point_add(tip, point_scale(perp, -wing))
       let tail = point_add(base, point_scale(dir, length * 0.2))
@@ -615,7 +609,6 @@ pub fn arrow_primitives(
     return []
   }
   let length = ARROW_LENGTH * size
-  let width = ARROW_WIDTH * size
   let shapes = parse_arrow_shapes(arrowhead)
   if shapes.length() == 0 {
     return []
@@ -631,7 +624,6 @@ pub fn arrow_primitives(
       dir,
       perp,
       shape_len,
-      width,
       penwidth,
     )
     for op in primitives {
