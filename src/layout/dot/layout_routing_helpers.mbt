@@ -2030,6 +2030,16 @@ fn build_edge_spline(
     }
     pathplan_segments = limited_segments
   }
+  if using_pathplan && raw_bezier.length() > 0 &&
+    @sys.get_env_var("DOT_TRACE_SPLINE_OUTPUT") is Some(_) {
+    let parts : Array[String] = []
+    for point in raw_bezier {
+      parts.push("{\"x\":\{point.x},\"y\":\{point.y}}")
+    }
+    let joined = parts.join(",")
+    println(
+      "{\"event\":\"spline_output\",\"tail\":\"\{base.orig_tail_name}\",\"head\":\"\{base.orig_head_name}\",\"points\":[\{joined}]}",)
+  }
   {
     spline,
     label_pad_boost,
