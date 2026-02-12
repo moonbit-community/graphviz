@@ -7,10 +7,10 @@ priv struct DotRankStage {
 }
 
 ///|
-/// Graphviz parity: dot rank/order stage consumes typed rank-stage inputs and
-/// keeps rank-data/rank-height/cluster/order compute sequence unchanged.
+/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
+/// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn run_dot_rank_stage_from_inputs(
+fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
 ) -> DotRankStage {
@@ -109,19 +109,6 @@ fn run_dot_rank_stage_from_inputs(
   // rank/cluster/order artifacts unchanged and emits rank-order trace.
   dot_trace("layout_dot: rank order computed")
   { rank_data, rank_heights, cluster_meta, ordering }
-}
-
-///|
-/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
-/// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_dot_rank_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-) -> DotRankStage {
-  // Graphviz parity: dot rank-stage forwards graph/prep directly to
-  // rank/order execution without argument reordering.
-  run_dot_rank_stage_from_inputs(graph, prep)
 }
 
 ///|
@@ -282,10 +269,10 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: dot routing stage consumes typed routing input payload and
-/// preserves Graphviz routing-stage precompute and solve order.
+/// Graphviz parity: dot routing stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
+/// + lib/common/routespl.c + lib/pathplan/* (fixtures), with typed stage payload.
 /// Do not change behavior without updating fixtures/tests.
-fn run_dot_routing_stage_from_inputs(
+fn compute_dot_routing_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_stage : DotRankStage,
@@ -351,17 +338,3 @@ fn run_dot_routing_stage_from_inputs(
   }
 }
 
-///|
-/// Graphviz parity: dot splines stage mirrors refs/graphviz/lib/dotgen/dotsplines.c
-/// + lib/common/routespl.c + lib/pathplan/* (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_dot_routing_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-) -> DotRoutingStage {
-  // Graphviz parity: dot routing-stage forwards graph/prep/rank/position
-  // artifacts directly to routing execution without argument reordering.
-  run_dot_routing_stage_from_inputs(graph, prep, rank_stage, positions_state)
-}
