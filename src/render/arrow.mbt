@@ -64,23 +64,49 @@ fn unit_vectors(
 }
 
 ///|
-fn shape_table() -> Array[(String, ArrowBase)] {
-  [
-    ("icurve", ArrowBase::ICurve),
-    ("curve", ArrowBase::Curve),
-    ("diamond", ArrowBase::Diamond),
-    ("normal", ArrowBase::Normal),
-    ("crow", ArrowBase::Crow),
-    ("box", ArrowBase::Box),
-    ("tee", ArrowBase::Tee),
-    ("vee", ArrowBase::Vee),
-    ("pen", ArrowBase::Vee),
-    ("mpty", ArrowBase::Normal),
-    ("dot", ArrowBase::Dot),
-    ("inv", ArrowBase::Inv),
-    ("none", ArrowBase::None),
-  ]
-}
+const NUMB_OF_ARROW_HEADS : Int = 4
+
+///|
+const BITS_PER_ARROW_TYPE : Int = 4
+
+///|
+const ARR_TYPE_NONE : Int = 0
+
+///|
+const ARR_TYPE_NORM : Int = 1
+
+///|
+const ARR_TYPE_CROW : Int = 2
+
+///|
+const ARR_TYPE_TEE : Int = 3
+
+///|
+const ARR_TYPE_BOX : Int = 4
+
+///|
+const ARR_TYPE_DIAMOND : Int = 5
+
+///|
+const ARR_TYPE_DOT : Int = 6
+
+///|
+const ARR_TYPE_CURVE : Int = 7
+
+///|
+const ARR_TYPE_GAP : Int = 8
+
+///|
+const ARR_MOD_OPEN : Int = 1 << (BITS_PER_ARROW_TYPE + 0)
+
+///|
+const ARR_MOD_INV : Int = 1 << (BITS_PER_ARROW_TYPE + 1)
+
+///|
+const ARR_MOD_LEFT : Int = 1 << (BITS_PER_ARROW_TYPE + 2)
+
+///|
+const ARR_MOD_RIGHT : Int = 1 << (BITS_PER_ARROW_TYPE + 3)
 
 ///|
 fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
@@ -92,106 +118,153 @@ fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
 }
 
 ///|
-fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
-  let value = match text {
+fn arrow_synonyms() -> Array[(String, Int)] {
+  [
+    ("invempty", ARR_TYPE_NORM | ARR_MOD_INV | ARR_MOD_OPEN),
+  ]
+}
+
+///|
+fn arrow_mods() -> Array[(String, Int)] {
+  [
+    ("o", ARR_MOD_OPEN),
+    ("r", ARR_MOD_RIGHT),
+    ("l", ARR_MOD_LEFT),
+    ("e", ARR_MOD_OPEN),
+    ("half", ARR_MOD_LEFT),
+  ]
+}
+
+///|
+fn arrow_names() -> Array[(String, Int)] {
+  [
+    ("normal", ARR_TYPE_NORM),
+    ("crow", ARR_TYPE_CROW),
+    ("tee", ARR_TYPE_TEE),
+    ("box", ARR_TYPE_BOX),
+    ("diamond", ARR_TYPE_DIAMOND),
+    ("dot", ARR_TYPE_DOT),
+    ("none", ARR_TYPE_GAP),
+    ("inv", ARR_TYPE_NORM | ARR_MOD_INV),
+    ("vee", ARR_TYPE_CROW | ARR_MOD_INV),
+    ("pen", ARR_TYPE_CROW | ARR_MOD_INV),
+    ("mpty", ARR_TYPE_NORM),
+    ("curve", ARR_TYPE_CURVE),
+    ("icurve", ARR_TYPE_CURVE | ARR_MOD_INV),
+  ]
+}
+
+///|
+fn arrow_match_name_frag(
+  value : String,
+  start : Int,
+  names : Array[(String, Int)],
+  flag : Int,
+) -> (Int, Int) {
+  for pair in names {
+    let (name, arrow_flag) = pair
+    if has_prefix_at(value, start, name) {
+      return (start + name.length(), flag | arrow_flag)
+    }
+  }
+  (start, flag)
+}
+
+///|
+fn arrow_match_shape(value : String, start : Int) -> (Int, Int) {
+  let type_mask = (1 << BITS_PER_ARROW_TYPE) - 1
+  let (syn_rest, syn_flag) =
+    arrow_match_name_frag(value, start, arrow_synonyms(), ARR_TYPE_NONE)
+  if syn_rest != start {
+    return (syn_rest, syn_flag)
+  }
+  let mut rest = start
+  let mut flag = ARR_TYPE_NONE
+  while true {
+    let (next, next_flag) =
+      arrow_match_name_frag(value, rest, arrow_mods(), flag)
+    if next == rest {
+      break
+    }
+    rest = next
+    flag = next_flag
+  }
+  let (name_rest, name_flag) =
+    arrow_match_name_frag(value, rest, arrow_names(), flag)
+  flag = name_flag
+  rest = name_rest
+  if flag != ARR_TYPE_NONE && (flag & type_mask) == 0 {
+    flag = flag | ARR_TYPE_NORM
+  }
+  (rest, flag)
+}
+
+///|
+fn parse_arrow_flags(value : String?) -> Array[Int] {
+  let text = match value {
     Some(v) => v.to_lower()
     None => "normal"
   }
-  if value == "" {
-    return [
-      ArrowShape::{
-        base: ArrowBase::Normal,
-        open: false,
-        left: false,
-        right: false,
-      },
-    ]
+  if text == "" {
+    return [ARR_TYPE_NORM]
   }
-  if value == "none" {
-    return []
+  let flags : Array[Int] = []
+  let mut idx = 0
+  while idx < text.length() && flags.length() < NUMB_OF_ARROW_HEADS {
+    let (next, parsed) = arrow_match_shape(text, idx)
+    if parsed == ARR_TYPE_NONE {
+      return []
+    }
+    let mut flag = parsed
+    if flag == ARR_TYPE_GAP && flags.length() == NUMB_OF_ARROW_HEADS - 1 {
+      flag = ARR_TYPE_NONE
+    }
+    if flag == ARR_TYPE_GAP && flags.length() == 0 && next >= text.length() {
+      flag = ARR_TYPE_NONE
+    }
+    if flag != ARR_TYPE_NONE {
+      flags.push(flag)
+    }
+    idx = next
   }
+  flags
+}
+
+///|
+fn arrow_type_mask(flag : Int) -> Int {
+  let mask = (1 << BITS_PER_ARROW_TYPE) - 1
+  flag & mask
+}
+
+///|
+fn arrow_flag_to_shape(flag : Int) -> ArrowShape? {
+  let open = (flag & ARR_MOD_OPEN) != 0
+  let left = (flag & ARR_MOD_LEFT) != 0
+  let right = (flag & ARR_MOD_RIGHT) != 0
+  let inv = (flag & ARR_MOD_INV) != 0
+  let base = match arrow_type_mask(flag) {
+    ARR_TYPE_NORM => if inv { ArrowBase::Inv } else { ArrowBase::Normal }
+    ARR_TYPE_CROW => if inv { ArrowBase::Vee } else { ArrowBase::Crow }
+    ARR_TYPE_TEE => ArrowBase::Tee
+    ARR_TYPE_BOX => ArrowBase::Box
+    ARR_TYPE_DIAMOND => ArrowBase::Diamond
+    ARR_TYPE_DOT => ArrowBase::Dot
+    ARR_TYPE_CURVE => if inv { ArrowBase::ICurve } else { ArrowBase::Curve }
+    ARR_TYPE_GAP => ArrowBase::None
+    _ => return None
+  }
+  Some(ArrowShape::{ base, open, left, right })
+}
+
+///|
+fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
+  let flags = parse_arrow_flags(text)
   let shapes : Array[ArrowShape] = []
-  let names = shape_table()
-  let mut index = 0
-  while index < value.length() {
-    if has_prefix_at(value, index, "invempty") {
-      shapes.push(ArrowShape::{
-        base: ArrowBase::Inv,
-        open: true,
-        left: false,
-        right: false,
-      })
-      index = index + "invempty".length()
-      continue
+  for flag in flags {
+    match arrow_flag_to_shape(flag) {
+      Some(shape) => shapes.push(shape)
+      None => ()
     }
-    if has_prefix_at(value, index, "empty") {
-      shapes.push(ArrowShape::{
-        base: ArrowBase::Normal,
-        open: true,
-        left: false,
-        right: false,
-      })
-      index = index + "empty".length()
-      continue
-    }
-    let mut open = false
-    let mut left = false
-    let mut right = false
-    let mut scanning = true
-    while scanning && index < value.length() {
-      if has_prefix_at(value, index, "half") {
-        left = true
-        index = index + "half".length()
-        continue
-      }
-      let ch = value.unsafe_substring(start=index, end=index + 1)
-      match ch {
-        "o" | "e" => {
-          open = true
-          index = index + 1
-        }
-        "l" => {
-          left = true
-          index = index + 1
-        }
-        "r" => {
-          right = true
-          index = index + 1
-        }
-        _ => scanning = false
-      }
-    }
-    let mut matched = false
-    for pair in names {
-      let (name, base) = pair
-      if has_prefix_at(value, index, name) {
-        shapes.push(ArrowShape::{ base, open, left, right })
-        index = index + name.length()
-        matched = true
-        break
-      }
-    }
-    if !matched {
-      break
-    }
-  }
-  if shapes.length() == 0 {
-    // Graphviz parity: unknown arrow names are ignored (no arrowhead drawn).
-    return []
-  }
-  if shapes.length() > 4 {
-    let trimmed : Array[ArrowShape] = []
-    for i in 0..<4 {
-      trimmed.push(shapes[i])
-    }
-    return trimmed
-  }
-  if shapes.length() == 4 && shapes[3].base == ArrowBase::None {
-    let trimmed : Array[ArrowShape] = []
-    for i in 0..<3 {
-      trimmed.push(shapes[i])
-    }
-    return trimmed
   }
   shapes
 }
