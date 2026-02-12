@@ -496,8 +496,25 @@ fn build_routing_spatial_data_for_stage(
     prep: routing_stage_inputs.prep,
     positions_state: routing_stage_inputs.positions_state,
   }
-  let routing_node_and_port_data =
-    run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
+  // Graphviz parity: node geometry projection and port-map derivation
+  // consume typed stage payload in the same precompute order.
+  let nodes_out =
+    build_layout_nodes(
+      routing_node_and_port_inputs.prep.nodes,
+      routing_node_and_port_inputs.positions_state.positions,
+      routing_node_and_port_inputs.prep.output_sizes,
+      routing_node_and_port_inputs.prep.record_orientation,
+    )
+  let port_maps =
+    build_port_layout_maps_for_routing_stage(
+      routing_node_and_port_inputs.prep,
+      nodes_out,
+    )
+  let routing_node_and_port_data : DotRoutingNodeAndPortData = {
+    nodes_out,
+    label_ports_map: port_maps.label_ports_map,
+    label_ports_raw: port_maps.label_ports_raw,
+  }
   // Graphviz parity: routing spatial output object consumes typed
   // routing-stage inputs and node/port precompute output without remapping.
   let cluster_bboxes =
@@ -528,32 +545,6 @@ fn build_port_layout_maps_for_routing_stage(
     prep.rankdir,
     prep.has_port_edges,
   )
-}
-
-///|
-/// Graphviz parity: node geometry projection and port-map derivation consume
-/// typed stage payload in the same precompute order.
-/// Do not change behavior without updating fixtures/tests.
-fn run_routing_node_and_port_from_inputs(
-  routing_node_and_port_inputs : DotRoutingNodeAndPortInputs,
-) -> DotRoutingNodeAndPortData {
-  let nodes_out =
-    build_layout_nodes(
-      routing_node_and_port_inputs.prep.nodes,
-      routing_node_and_port_inputs.positions_state.positions,
-      routing_node_and_port_inputs.prep.output_sizes,
-      routing_node_and_port_inputs.prep.record_orientation,
-    )
-  let port_maps =
-    build_port_layout_maps_for_routing_stage(
-      routing_node_and_port_inputs.prep,
-      nodes_out,
-    )
-  {
-    nodes_out,
-    label_ports_map: port_maps.label_ports_map,
-    label_ports_raw: port_maps.label_ports_raw,
-  }
 }
 
 ///|
