@@ -292,27 +292,6 @@ fn arrow_length_factor(base : ArrowBase) -> Double {
 }
 
 ///|
-fn triangle_points(
-  tip : @geom.Point,
-  base : @geom.Point,
-  perp : @geom.Point,
-  half_width : Double,
-  left : Bool,
-  right : Bool,
-) -> Array[@geom.Point] {
-  let left_point = point_add(base, point_scale(perp, half_width))
-  let right_point = point_add(base, point_scale(perp, -half_width))
-  // Graphviz parity: ordering matches normal arrow polygon emission patterns.
-  if left && !right {
-    [base, left_point, tip]
-  } else if right && !left {
-    [tip, right_point, base]
-  } else {
-    [left_point, tip, right_point]
-  }
-}
-
-///|
 priv struct JoinTriangle {
   p0 : @geom.Point
   p1 : @geom.Point
@@ -542,6 +521,164 @@ fn normal_arrow_points(
 ///|
 
 ///|
+/// Graphviz parity: crow/vee polygon generation mirrors arrows.c arrow_type_crow0.
+fn crow_arrow_points(
+  tip : @geom.Point,
+  u : @geom.Point,
+  arrowsize : Double,
+  penwidth : Double,
+  left : Bool,
+  right : Bool,
+  inv : Bool,
+) -> Array[@geom.Point] {
+  let mut p = tip
+  let mut arrowwidth = 0.45
+  if arrowsize > 0.0 && penwidth > 4.0 * arrowsize && inv {
+    arrowwidth = arrowwidth * penwidth / (4.0 * arrowsize)
+  }
+
+  let mut shaftwidth = 0.0
+  if arrowsize > 0.0 && penwidth > 1.0 && inv {
+    shaftwidth = 0.05 * (penwidth - 1.0) / arrowsize
+  }
+
+  let v = point(-u.y * arrowwidth, u.x * arrowwidth)
+  let w = point(-u.y * shaftwidth, u.x * shaftwidth)
+  let mut q = point_add(p, u)
+  let m = point_add(p, point_scale(u, 0.5))
+
+  let mut delta_base = point(0.0, 0.0)
+
+  let origin = point(0.0, 0.0)
+  let v_inv = point(-v.x, -v.y)
+  let normal_left = if right { origin } else { v }
+  let normal_right = if left { origin } else { v_inv }
+  let base_left = if inv { normal_right } else { normal_left }
+  let base_right = if inv { normal_left } else { normal_right }
+  let normal_tip = u
+  let inv_tip = point(-u.x, -u.y)
+  let p_tip = if inv { inv_tip } else { normal_tip }
+
+  let mut delta_tip = point(0.0, 0.0)
+
+  if u.x != 0.0 || u.y != 0.0 {
+    let cos_phi = p_tip.x / @math.hypot(p_tip.x, p_tip.y)
+    let sin_phi = p_tip.y / @math.hypot(p_tip.x, p_tip.y)
+    let phi = if p_tip.y > 0.0 {
+      @math.acos(cos_phi)
+    } else {
+      -@math.acos(cos_phi)
+    }
+
+    if (left && inv) || (right && !inv) {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p2 = line_join_shape.p2
+      let dx = p2.x - p_tip.x
+      let dy = p2.y - p_tip.y
+      let hypot_p = @math.hypot(dx, dy)
+      let cos_alpha = dx / hypot_p
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
+      let gamma = alpha - phi
+      let delta_tip_length = hypot_p * @math.cos(gamma)
+      delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
+    } else if (left && !inv) || (right && inv) {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p1 = line_join_shape.p1
+      let dx = p1.x - p_tip.x
+      let dy = p1.y - p_tip.y
+      let hypot_p = @math.hypot(dx, dy)
+      let cos_alpha = dx / hypot_p
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
+      let gamma = alpha - phi
+      let delta_tip_length = hypot_p * @math.cos(gamma)
+      delta_tip = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
+    } else {
+      let line_join_shape = miter_shape(base_left, p_tip, base_right, penwidth)
+      let p3 = line_join_shape.p0
+      delta_tip = point_sub(p3, p_tip)
+    }
+
+    if inv {
+      delta_base = point(penwidth / 2.0 * cos_phi, penwidth / 2.0 * sin_phi)
+    } else {
+      let toe_base_left = point_add(point_sub(m, q), w)
+      let toe_base_right = origin
+      let toe_p = point_sub(v, u)
+      let toe_line_join_shape =
+        miter_shape(toe_base_left, toe_p, toe_base_right, penwidth)
+      let p1 = toe_line_join_shape.p1
+      let dx = p1.x - toe_p.x
+      let dy = p1.y - toe_p.y
+      let hypot_p = @math.hypot(dx, dy)
+      let cos_alpha = dx / hypot_p
+      let alpha = if dy > 0.0 {
+        @math.acos(cos_alpha)
+      } else {
+        -@math.acos(cos_alpha)
+      }
+      let gamma = alpha - phi
+      let delta_tip_length = -hypot_p * @math.cos(gamma)
+      delta_base = point(delta_tip_length * cos_phi, delta_tip_length * sin_phi)
+    }
+  }
+
+  let a : Array[@geom.Point] = [
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+    point(0.0, 0.0),
+  ]
+
+  if inv {
+    p = point_sub(p, delta_tip)
+    q = point_sub(q, delta_tip)
+    a[0] = p
+    a[8] = p
+    a[1] = point_sub(q, v)
+    a[2] = point_sub(m, w)
+    a[3] = point_sub(q, w)
+    a[4] = q
+    a[5] = point_add(q, w)
+    a[6] = point_add(m, w)
+    a[7] = point_add(q, v)
+  } else {
+    p = point_add(p, delta_base)
+    q = point_add(q, delta_base)
+    a[0] = q
+    a[8] = q
+    a[1] = point_sub(p, v)
+    a[2] = point_sub(m, w)
+    a[3] = point_add(p, delta_base)
+    a[4] = point_add(p, delta_base)
+    a[5] = point_add(p, delta_base)
+    a[6] = point_add(m, w)
+    a[7] = point_add(p, v)
+  }
+
+  if left && !right {
+    [a[0], a[1], a[2], a[3], a[4]]
+  } else if right && !left {
+    [a[4], a[5], a[6], a[7], a[8]]
+  } else {
+    [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]]
+  }
+}
+
+///|
+///|
 /// Graphviz parity: ARR_MOD_LEFT/ARR_MOD_RIGHT on curve heads split cubic at t=0.5.
 fn bezier_split_half(
   points : Array[@geom.Point],
@@ -569,7 +706,6 @@ fn arrow_shape_primitives(
   shape : ArrowShape,
   tip : @geom.Point,
   dir : @geom.Point,
-  perp : @geom.Point,
   length : Double,
   penwidth : Double,
 ) -> Array[DrawOp] {
@@ -591,23 +727,18 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Vee => {
-      // Graphviz parity: vee heads back off by half penwidth to reduce overlap.
       let vee_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
-      let base = point_add(vee_tip, point_scale(dir, -length))
-      // Graphviz parity: vee is inverse crow, using wider 0.45 head span.
-      let mut vee_half_width = length * 0.45
+      let u = point_scale(dir, -length)
       let arrowsize = length / ARROW_LENGTH
-      if arrowsize > 0.0 && penwidth > 4.0 * arrowsize {
-        vee_half_width = vee_half_width * penwidth / (4.0 * arrowsize)
-      }
-      // Graphviz parity: vee half-selection follows inverse-crow orientation.
-      let points = triangle_points(
+      // Graphviz parity: vee generation uses inverse-crow arrow_type_crow0 branch.
+      let points = crow_arrow_points(
         vee_tip,
-        base,
-        perp,
-        vee_half_width,
-        shape.right,
+        u,
+        arrowsize,
+        penwidth,
         shape.left,
+        shape.right,
+        true,
       )
       // Graphviz parity: crow/vee ignore ARR_MOD_OPEN and stay filled.
       ops.push(DrawOp::Polygon(filled=true, points~))
@@ -728,21 +859,18 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Ellipse(filled~, rect~))
     }
     ArrowBase::Crow => {
-      // Graphviz parity: crow heads back off by half penwidth to avoid overlap.
       let crow_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
-      let base = point_add(crow_tip, point_scale(dir, -length))
-      // Graphviz parity: crow wing span is 0.45 * head length.
-      let wing = length * 0.45
-      let left_point = point_add(crow_tip, point_scale(perp, wing))
-      let right_point = point_add(crow_tip, point_scale(perp, -wing))
-      let tail = point_add(base, point_scale(dir, length * 0.2))
-      let points = if shape.left && !shape.right {
-        [left_point, crow_tip, tail]
-      } else if shape.right && !shape.left {
-        [crow_tip, right_point, tail]
-      } else {
-        [left_point, crow_tip, right_point, tail]
-      }
+      let u = point_scale(dir, -length)
+      let arrowsize = length / ARROW_LENGTH
+      let points = crow_arrow_points(
+        crow_tip,
+        u,
+        arrowsize,
+        penwidth,
+        shape.left,
+        shape.right,
+        false,
+      )
       // Graphviz parity: crow heads are always filled (ARR_MOD_OPEN ignored).
       ops.push(DrawOp::Polygon(filled=true, points~))
     }
@@ -832,7 +960,7 @@ pub fn arrow_primitives(
   ux = ux + ux_adjust
   uy = uy + uy_adjust
   let adjusted_from = point(tip.x + ux * scale, tip.y + uy * scale)
-  let (dir, perp, len) = unit_vectors(tip, adjusted_from)
+  let (dir, _, len) = unit_vectors(tip, adjusted_from)
   if len < EPSILON {
     return []
   }
@@ -849,7 +977,6 @@ pub fn arrow_primitives(
       shape,
       shape_tip,
       dir,
-      perp,
       shape_len,
       penwidth,
     )
