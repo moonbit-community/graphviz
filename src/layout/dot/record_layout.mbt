@@ -1409,27 +1409,11 @@ fn dynamic_port_anchor_for_edge(
           // Graphviz parity: keep resolvePort side in all rankdirs.
           // beginpath/endpath rely on this side to build record_path boxes.
           let effective_side = side
-          // Graphviz parity: beginpath/endpath 1pt nudges only apply when
-          // a concrete side is active; side=0 routes keep the raw anchor.
-          let adjusted_anchor =
-            match anchor {
-              Some(point) =>
-                if effective_side != 0 &&
-                  record_border_adjust > 0.0 &&
-                  (raw_port.sides & PORT_SIDE_TOP) != 0 &&
-                  (raw_port.sides & PORT_SIDE_BOTTOM) != 0 {
-                  let mut y = point.y
-                  if side == PORT_SIDE_BOTTOM {
-                    y = y + record_border_adjust
-                  } else if side == PORT_SIDE_TOP {
-                    y = y - record_border_adjust
-                  }
-                  Some(@geom.Point::{ x: point.x, y })
-                } else {
-                  Some(point)
-                }
-              None => None
-            }
+          // Graphviz parity: keep the raw dynamic anchor.
+          // beginpath/endpath clamp start/end to box bounds in routespl.c,
+          // and extra record-border shifts introduce 0.5pt drift in structs/records.
+          let adjusted_anchor = anchor
+          ignore(record_border_adjust)
           if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
             let anchor_text = match adjusted_anchor {
               Some(point) => "\{point.x},\{point.y}"
