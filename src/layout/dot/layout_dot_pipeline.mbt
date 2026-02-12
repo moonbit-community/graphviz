@@ -615,8 +615,10 @@ fn build_routing_spatial_output_from_node_port_data_for_stage(
 fn build_routing_spatial_data_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialData {
+  let routing_node_and_port_inputs =
+    build_routing_node_and_port_inputs_for_stage(routing_stage_inputs)
   let routing_node_and_port_data =
-    build_routing_node_and_port_data_for_stage(routing_stage_inputs)
+    run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
   build_routing_spatial_output_from_node_port_data_for_stage(
     routing_stage_inputs,
     routing_node_and_port_data,
@@ -688,18 +690,6 @@ fn run_routing_node_and_port_from_inputs(
       nodes_out,
     )
   build_routing_node_and_port_output_for_stage(nodes_out, port_maps)
-}
-
-///|
-/// Graphviz parity: node geometry projection and port-map derivation are
-/// sequenced together before routing precompute consumption.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_node_and_port_data_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-) -> DotRoutingNodeAndPortData {
-  let routing_node_and_port_inputs =
-    build_routing_node_and_port_inputs_for_stage(routing_stage_inputs)
-  run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
 }
 
 ///|
