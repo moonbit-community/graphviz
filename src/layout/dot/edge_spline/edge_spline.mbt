@@ -423,6 +423,21 @@ fn arrow_len_with_override(base : Double, override_len : Double?) -> Double {
 }
 
 ///|
+fn arrow_attr_draws_marker(edge : @cgraph.Edge, attr_name : String) -> Bool {
+  match edge.get_attr(attr_name) {
+    Some(value) => {
+      let raw = value.trim()
+      if raw == "" {
+        true
+      } else {
+        raw.to_lower() != "none"
+      }
+    }
+    None => true
+  }
+}
+
+///|
 fn arrow_lengths_for_edge(
   edge : @cgraph.Edge,
   include_tail : Bool,
@@ -430,19 +445,21 @@ fn arrow_lengths_for_edge(
   arrow_len_override : Double?,
 ) -> (Double, Double) {
   let base = arrow_length_for_edge(edge)
-  let tail_len = if include_tail {
+  // Graphviz parity: explicit arrowhead/arrowtail=none suppresses marker clipping.
+  let tail_enabled = include_tail && arrow_attr_draws_marker(edge, "arrowtail")
+  let head_enabled = include_head && arrow_attr_draws_marker(edge, "arrowhead")
+  let tail_len = if tail_enabled {
     arrow_len_with_override(base, arrow_len_override)
   } else {
     0.0
   }
-  let head_len = if include_head {
+  let head_len = if head_enabled {
     arrow_len_with_override(base, arrow_len_override)
   } else {
     0.0
   }
   (tail_len, head_len)
 }
-
 ///|
 priv enum ClipShape {
   None
