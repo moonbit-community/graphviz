@@ -377,11 +377,16 @@ fn arrow_shape_primitives(
   match shape.base {
     ArrowBase::Normal => {
       let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: normal head base uses 0.35 * head length.
+      let mut normal_half_width = length * 0.35
+      if penwidth > 4.0 {
+        normal_half_width = normal_half_width * penwidth / 4.0
+      }
       let points = triangle_points(
         tip,
         base,
         perp,
-        half_width,
+        normal_half_width,
         shape.left,
         shape.right,
       )
@@ -402,11 +407,16 @@ fn arrow_shape_primitives(
     ArrowBase::Inv => {
       let base = tip
       let point_tip = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: inv head base uses the same width factor as normal.
+      let mut normal_half_width = length * 0.35
+      if penwidth > 4.0 {
+        normal_half_width = normal_half_width * penwidth / 4.0
+      }
       let points = triangle_points(
         point_tip,
         base,
         perp,
-        half_width,
+        normal_half_width,
         shape.left,
         shape.right,
       )
