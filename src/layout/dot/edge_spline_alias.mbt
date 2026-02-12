@@ -64,10 +64,19 @@ fn polyline_length(points : Array[@geom.Point]) -> Double {
 }
 
 ///|
-fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
-  @edge_spline.arrow_length_for_edge(edge)
+fn arrow_length_for_edge(
+  edge : @cgraph.Edge,
+  include_tail : Bool,
+  include_head : Bool,
+  arrow_len_override : Double?,
+) -> (Double, Double) {
+  @edge_spline.arrow_length_for_edge(
+    edge,
+    include_tail,
+    include_head,
+    arrow_len_override,
+  )
 }
-
 ///|
 fn port_side_rect(node_pos : @geom.Point, node_size : NodeSize) -> @geom.Rect {
   @edge_spline.port_side_rect(node_pos, node_size)

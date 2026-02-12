@@ -619,22 +619,6 @@ fn arrow_length_normal(
 }
 
 ///|
-pub fn arrow_length_for_edge(edge : @cgraph.Edge) -> Double {
-  let arrowsize = match edge.get_attr("arrowsize") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-  let penwidth = match edge.get_attr("penwidth") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-  if arrowsize <= 0.0 || penwidth <= 0.0 {
-    return 0.0
-  }
-  arrow_length_normal(1.0, arrowsize, penwidth, 0)
-}
-
-///|
 fn has_prefix_at(text : String, start : Int, prefix : String) -> Bool {
   let end = start + prefix.length()
   if end > text.length() {
@@ -956,7 +940,7 @@ fn arrow_len_with_override(base : Double, override_len : Double?) -> Double {
 ///|
 /// Graphviz parity: arrow length for spline clipping aligned to
 /// refs/graphviz/lib/common/arrows.c.
-fn arrow_lengths_for_edge(
+pub fn arrow_length_for_edge(
   edge : @cgraph.Edge,
   include_tail : Bool,
   include_head : Bool,
@@ -2988,7 +2972,7 @@ pub fn edge_spline_for_polyline(
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
       (0.0, 0.0)
     }
@@ -3056,7 +3040,7 @@ pub fn edge_spline_for_points(
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
       (0.0, 0.0)
     }
@@ -3134,7 +3118,7 @@ pub fn edge_spline_for_bezier_points(
   }
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
       (0.0, 0.0)
     }
@@ -3352,7 +3336,7 @@ pub fn edge_spline_for_line(
 ) -> @geom.Spline {
   let (tail_arrow_len, head_arrow_len) =
     if include_tail || include_head {
-      arrow_lengths_for_edge(edge, include_tail, include_head, arrow_len_override)
+      arrow_length_for_edge(edge, include_tail, include_head, arrow_len_override)
     } else {
       (0.0, 0.0)
     }

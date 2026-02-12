@@ -944,7 +944,9 @@ fn build_edge_route_base(
   let arrow_len_override : Double? =
     if include_tail || include_head {
     if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-      let base = arrow_length_for_edge(edge)
+      let (tail_len, head_len) =
+        arrow_length_for_edge(edge, include_tail, include_head, None)
+      let base = if tail_len > head_len { tail_len } else { head_len }
       let span = point_dist(tail_clip, head_clip)
       let max_len = span * 0.25
       if max_len > 0.0 && max_len < base {
