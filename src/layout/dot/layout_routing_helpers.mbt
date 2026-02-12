@@ -1059,6 +1059,8 @@ fn compute_route_points_with_pathplan(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
+  path_left_bound : Double,
+  path_right_bound : Double,
   ranksep_pt : Double,
   routing_context : RoutingContext,
   guide_points : Array[@geom.Point],
@@ -1127,6 +1129,8 @@ fn compute_route_points_with_pathplan(
       rank_ht1,
       rank_ht2,
       nodesep_pt,
+      path_left_bound,
+      path_right_bound,
       has_edge_label,
     ) {
       Some(result) => {
@@ -1319,6 +1323,8 @@ fn build_edge_spline(
   rank_ht2 : Map[Int, Double],
   x_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
+  path_left_bound : Double,
+  path_right_bound : Double,
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
@@ -1450,6 +1456,8 @@ fn build_edge_spline(
           rank_ht1,
           rank_ht2,
           nodesep_pt,
+          path_left_bound,
+          path_right_bound,
           ranksep_pt,
           routing_context,
           guide_points,
@@ -2646,6 +2654,8 @@ fn build_regular_edge_layout(
   rank_ht2 : Map[Int, Double],
   x_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
+  path_left_bound : Double,
+  path_right_bound : Double,
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
@@ -2668,6 +2678,8 @@ fn build_regular_edge_layout(
     rank_ht2,
     x_groups,
     nodesep_pt,
+    path_left_bound,
+    path_right_bound,
     ranksep_pt,
     label_edge_counts,
     head_port_metrics,
@@ -2824,6 +2836,14 @@ fn route_edges(
     )
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let (path_left_bound, path_right_bound) =
+    @routesplines.pathplan_bounds(
+      positions,
+      vnode_positions,
+      sizes,
+      vnode_info.vnode_sizes,
+      x_groups,
+    )
   dot_trace("layout_dot: routing edges")
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
@@ -2879,6 +2899,8 @@ fn route_edges(
         rank_ht2,
         x_groups,
         nodesep_pt,
+        path_left_bound,
+        path_right_bound,
         ranksep_pt,
         label_edge_counts,
         head_port_metrics,

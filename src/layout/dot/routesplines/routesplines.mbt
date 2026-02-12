@@ -260,6 +260,21 @@ fn compute_horizontal_bounds(
 }
 
 ///|
+/// Graphviz parity: compute pathplan left/right bounds once (sd.LeftBound/RightBound).
+/// Do not change behavior without updating fixtures/tests.
+pub fn pathplan_bounds(
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+  x_groups : Map[Int, Array[String]],
+) -> (Double, Double) {
+  let merged_positions = merge_positions(positions, vnode_positions)
+  let route_sizes = pathplan_sizes(sizes, vnode_sizes, 0.0)
+  compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
+}
+
+///|
 fn is_virtual_node(name : String, vnode_sizes : Map[String, NodeSize]) -> Bool {
   vnode_sizes.get(name) is Some(_)
 }
@@ -1693,6 +1708,8 @@ pub fn edge_pathplan_polyline(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   nodesep_pt : Double,
+  left_bound : Double,
+  right_bound : Double,
   has_edge_label : Bool,
 ) -> PathplanResult? {
   let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
@@ -1747,8 +1764,6 @@ pub fn edge_pathplan_polyline(
   let mval_route_sizes = merge_sizes(mval_sizes, vnode_mval_sizes)
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (round_int(nodesep_pt) / 4).to_double()
-  let (left_bound, right_bound) =
-    compute_horizontal_bounds(merged_positions, route_sizes, x_groups)
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
     println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
   }
