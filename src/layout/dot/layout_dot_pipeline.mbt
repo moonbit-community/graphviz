@@ -869,17 +869,6 @@ fn build_routing_edges_from_edge_solve_precompute_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge-solve precompute output object maps metric
-/// and path-context bundles without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edge_solve_precompute_output_for_stage(
-  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
-  routing_path_context_data : DotRoutingPathContextData,
-) -> DotRoutingEdgeSolvePrecomputeData {
-  { routing_padding_and_head_port_metrics, routing_path_context_data }
-}
-
-///|
 /// Graphviz parity: routing metric precompute extraction reads typed edge/
 /// padding inputs without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -918,10 +907,10 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     )
   let routing_path_context_data =
     build_routing_path_context_data_from_routing_inputs(routing_inputs)
-  build_routing_edge_solve_precompute_output_for_stage(
+  {
     routing_padding_and_head_port_metrics,
     routing_path_context_data,
-  )
+  }
 }
 
 ///|
