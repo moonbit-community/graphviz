@@ -486,21 +486,6 @@ fn build_routing_context_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing path-context input payload assembly reads typed
-/// edge/padding stage inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_path_context_inputs_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-) -> DotRoutingPathContextInputs {
-  {
-    prep: routing_inputs.prep,
-    rank_stage: routing_inputs.rank_stage,
-    positions_state: routing_inputs.positions_state,
-    cluster_bboxes: routing_inputs.routing_spatial_data.cluster_bboxes,
-  }
-}
-
-///|
 /// Graphviz parity: routing path-context execution consumes typed stage payload
 /// while preserving path-group selection then context-assembly order.
 /// Do not change behavior without updating fixtures/tests.
@@ -787,8 +772,14 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     )
   let routing_padding_and_head_port_metrics =
     run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
-  let routing_path_context_inputs =
-    build_routing_path_context_inputs_for_stage(routing_inputs)
+  // Graphviz parity: routing path-context input payload assembly reads typed
+  // edge/padding stage inputs without argument reordering.
+  let routing_path_context_inputs : DotRoutingPathContextInputs = {
+    prep: routing_inputs.prep,
+    rank_stage: routing_inputs.rank_stage,
+    positions_state: routing_inputs.positions_state,
+    cluster_bboxes: routing_inputs.routing_spatial_data.cluster_bboxes,
+  }
   let routing_path_context_data =
     run_routing_path_context_from_inputs(routing_path_context_inputs)
   {
