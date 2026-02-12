@@ -549,27 +549,24 @@ fn build_routing_path_context_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing cluster bboxes are derived from positioned nodes,
-/// rank heights, and cluster x-bound maps before spline routing.
+/// Graphviz parity: routing cluster bboxes are derived from typed routing-stage
+/// inputs, positioned nodes, and rank/cluster maps before spline routing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_bboxes_for_routing_stage(
-  graph : @cgraph.Graph,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
   nodes_out : Array[DotLayoutNode],
-  rankdir : RankDir,
 ) -> Map[String, @geom.Rect] {
   compute_cluster_bboxes_for_routing(
-    graph,
+    routing_stage_inputs.graph,
     nodes_out,
-    positions_state.cluster_ln_x,
-    positions_state.cluster_rn_x,
-    positions_state.cluster_bbox_heights,
-    rankdir,
-    rank_stage.rank_data.ranks,
-    positions_state.rank_y,
-    positions_state.rank_ht1,
-    positions_state.rank_ht2,
+    routing_stage_inputs.positions_state.cluster_ln_x,
+    routing_stage_inputs.positions_state.cluster_rn_x,
+    routing_stage_inputs.positions_state.cluster_bbox_heights,
+    routing_stage_inputs.prep.rankdir,
+    routing_stage_inputs.rank_stage.rank_data.ranks,
+    routing_stage_inputs.positions_state.rank_y,
+    routing_stage_inputs.positions_state.rank_ht1,
+    routing_stage_inputs.positions_state.rank_ht2,
   )
 }
 
@@ -583,11 +580,8 @@ fn build_routing_spatial_output_from_node_port_data_for_stage(
 ) -> DotRoutingSpatialData {
   let cluster_bboxes =
     build_cluster_bboxes_for_routing_stage(
-      routing_stage_inputs.graph,
-      routing_stage_inputs.rank_stage,
-      routing_stage_inputs.positions_state,
+      routing_stage_inputs,
       routing_node_and_port_data.nodes_out,
-      routing_stage_inputs.prep.rankdir,
     )
   {
     nodes_out: routing_node_and_port_data.nodes_out,
