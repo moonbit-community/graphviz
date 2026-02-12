@@ -281,23 +281,6 @@ fn compute_dot_rank_stage(
 }
 
 ///|
-/// Graphviz parity: position-stage result wiring forwards rank-stage artifacts
-/// directly into compute_positions without remapping.
-/// Do not change behavior without updating fixtures/tests.
-fn run_dot_position_stage_from_inputs(
-  position_stage_inputs : DotPositionStageInputs,
-) -> PositionResult {
-  compute_positions(
-    position_stage_inputs.graph,
-    position_stage_inputs.prep,
-    position_stage_inputs.rank_data,
-    position_stage_inputs.rank_heights,
-    position_stage_inputs.cluster_meta,
-    position_stage_inputs.ordering,
-  )
-}
-
-///|
 /// Graphviz parity: dot position stage mirrors refs/graphviz/lib/dotgen/position.c.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_position_stage(
@@ -315,7 +298,16 @@ fn compute_dot_position_stage(
     cluster_meta: rank_stage.cluster_meta,
     ordering: rank_stage.ordering,
   }
-  run_dot_position_stage_from_inputs(position_stage_inputs)
+  // Graphviz parity: position-stage result wiring forwards rank-stage
+  // artifacts directly into compute_positions without remapping.
+  compute_positions(
+    position_stage_inputs.graph,
+    position_stage_inputs.prep,
+    position_stage_inputs.rank_data,
+    position_stage_inputs.rank_heights,
+    position_stage_inputs.cluster_meta,
+    position_stage_inputs.ordering,
+  )
 }
 
 ///|
