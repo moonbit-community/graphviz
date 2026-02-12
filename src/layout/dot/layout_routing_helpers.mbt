@@ -1976,6 +1976,51 @@ fn build_edge_spline(
       routed_spline
     }
   }
+  if using_pathplan && pathplan_segments.length() > 0 {
+    // Graphviz parity: limit segment boxes independently to match straight_path sampling.
+    let tail_slope_for =
+      if port_is_explicit(tail_port) { tail_slope } else { point(0.0, 0.0) }
+    let head_slope_for =
+      if port_is_explicit(head_port) { head_slope } else { point(0.0, 0.0) }
+    let join_dir = straight_path_join_dir(layout_rankdir)
+    let join_tail = join_dir
+    let join_head = join_dir
+    let limited_segments : Array[@routesplines.PathplanSegment] = []
+    let mut seg_idx = 0
+    while seg_idx < pathplan_segments.length() {
+      let segment = pathplan_segments[seg_idx]
+      let seg_tail_slope =
+        if seg_idx == 0 { tail_slope_for } else { join_tail }
+      let seg_head_slope =
+        if seg_idx + 1 == pathplan_segments.length() {
+          head_slope_for
+        } else {
+          join_head
+        }
+      let segment_raw =
+        edge_spline_raw_for_points(
+          segment.points,
+          seg_tail_slope,
+          seg_head_slope,
+          false,
+          route_barriers=segment.barriers,
+        )
+      let limited_boxes =
+        @routesplines.limit_boxes_for_spline(
+          segment.boxes,
+          segment_raw,
+          fallback_polyline=segment.points,
+        )
+      limited_segments.push({
+        points: segment.points,
+        barriers: segment.barriers,
+        boxes: limited_boxes,
+        vnodes: segment.vnodes,
+      })
+      seg_idx = seg_idx + 1
+    }
+    pathplan_segments = limited_segments
+  }
   {
     spline,
     label_pad_boost,
