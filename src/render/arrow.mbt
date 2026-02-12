@@ -473,9 +473,12 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Dot => {
+      // Graphviz parity: dot heads back off by half penwidth to avoid node overlap.
+      let delta = point_scale(dir, penwidth / 2.0)
+      let dot_tip = point_sub(tip, delta)
       // Graphviz parity: dot radius derives from arrow length, not base width.
       let radius = length / 2.0
-      let center = point_add(tip, point_scale(dir, -radius))
+      let center = point_add(dot_tip, point_scale(dir, -radius))
       let rect = @geom.Rect::{
         llx: center.x - radius,
         lly: center.y - radius,
