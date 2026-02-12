@@ -914,29 +914,6 @@ fn build_routing_spatial_and_tuning_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing-stage edge/padding + result assembly consumes
-/// spatial+tuning precompute bundle without altering argument wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn build_dot_routing_stage_from_spatial_tuning_data_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-  routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
-) -> DotRoutingStage {
-  let routing_inputs =
-    build_routing_edges_and_padding_inputs_for_stage(
-      routing_stage_inputs,
-      routing_spatial_and_tuning_data,
-    )
-  let routing_edges_and_padding_data =
-    run_routing_edges_and_padding_from_inputs(routing_inputs)
-  build_dot_routing_stage_result_from_edges_for_stage(
-    routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
-    routing_edges_and_padding_data.edges_out,
-    routing_edges_and_padding_data.port_pad_below,
-    routing_edges_and_padding_data.port_pad_above,
-  )
-}
-
-///|
 /// Graphviz parity: dot routing-stage input payload assembly reads graph/prep/
 /// rank-stage/position-stage fields without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -958,9 +935,18 @@ fn run_dot_routing_stage_from_inputs(
 ) -> DotRoutingStage {
   let routing_spatial_and_tuning_data =
     build_routing_spatial_and_tuning_data_for_stage(routing_stage_inputs)
-  build_dot_routing_stage_from_spatial_tuning_data_for_stage(
-    routing_stage_inputs,
-    routing_spatial_and_tuning_data,
+  let routing_inputs =
+    build_routing_edges_and_padding_inputs_for_stage(
+      routing_stage_inputs,
+      routing_spatial_and_tuning_data,
+    )
+  let routing_edges_and_padding_data =
+    run_routing_edges_and_padding_from_inputs(routing_inputs)
+  build_dot_routing_stage_result_from_edges_for_stage(
+    routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
+    routing_edges_and_padding_data.edges_out,
+    routing_edges_and_padding_data.port_pad_below,
+    routing_edges_and_padding_data.port_pad_above,
   )
 }
 
