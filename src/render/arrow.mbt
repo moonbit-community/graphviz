@@ -313,24 +313,106 @@ fn triangle_points(
 }
 
 ///|
+fn miter_shape(
+  base_left : @geom.Point,
+  p : @geom.Point,
+  base_right : @geom.Point,
+  penwidth : Double,
+) -> @geom.Point {
+  if (base_left.x == p.x && base_left.y == p.y) ||
+    (base_right.x == p.x && base_right.y == p.y) {
+    return p
+  }
+  let dx_a = p.x - base_left.x
+  let dy_a = p.y - base_left.y
+  let hypot_a = @math.hypot(dx_a, dy_a)
+  let cos_alpha = dx_a / hypot_a
+  let sin_alpha = dy_a / hypot_a
+  let alpha = if dy_a > 0.0 {
+    @math.acos(cos_alpha)
+  } else {
+    -@math.acos(cos_alpha)
+  }
+  let p1 = point(
+    p.x - penwidth / 2.0 * sin_alpha,
+    p.y + penwidth / 2.0 * cos_alpha,
+  )
+
+  let dx_b = base_right.x - p.x
+  let dy_b = base_right.y - p.y
+  let hypot_b = @math.hypot(dx_b, dy_b)
+  let cos_beta = dx_b / hypot_b
+  let beta = if dy_b > 0.0 {
+    @math.acos(cos_beta)
+  } else {
+    -@math.acos(cos_beta)
+  }
+
+  let beta_rev = beta - @math.PI
+  let mut theta = beta_rev - alpha
+  if theta <= -@math.PI {
+    theta = theta + 2.0 * @math.PI
+  }
+
+  let stroke_miterlimit = 4.0
+  let normalized_miter_length = 1.0 / @math.sin(theta / 2.0)
+
+  let sin_beta = dy_b / hypot_b
+  let sin_beta_minus_pi = -sin_beta
+  let cos_beta_minus_pi = -cos_beta
+  let p2 = point(
+    p.x + penwidth / 2.0 * sin_beta_minus_pi,
+    p.y - penwidth / 2.0 * cos_beta_minus_pi,
+  )
+
+  if normalized_miter_length > stroke_miterlimit {
+    point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
+  } else {
+    let l = penwidth / 2.0 / @math.tan(theta / 2.0)
+    point(p1.x + l * cos_alpha, p1.y + l * sin_alpha)
+  }
+}
+
+///|
 fn diamond_points(
   tip : @geom.Point,
-  base : @geom.Point,
-  perp : @geom.Point,
-  half_width : Double,
+  u : @geom.Point,
+  penwidth : Double,
   left : Bool,
   right : Bool,
 ) -> Array[@geom.Point] {
-  let mid = point_add(tip, point_scale(point_sub(base, tip), 0.5))
-  let left_point = point_add(mid, point_scale(perp, half_width))
-  let right_point = point_add(mid, point_scale(perp, -half_width))
+  let v = point(-u.y / 3.0, u.x / 3.0)
+  let mut p = tip
+  let mut r = point_add(p, point_scale(u, 0.5))
+  let mut q = point_add(p, u)
+
+  let origin = point(0.0, 0.0)
+  let unmod_left = point_sub(point_scale(u, -0.5), v)
+  let unmod_right = point_add(point_scale(u, -0.5), v)
+  let base_left = if right { origin } else { unmod_left }
+  let base_right = if left { origin } else { unmod_right }
+  let p_tip = point_scale(u, -1.0)
+  let miter_tip = miter_shape(base_left, p_tip, base_right, penwidth)
+  let delta = point_sub(miter_tip, p_tip)
+
+  // Graphviz parity: diamond offset uses miter join instead of fixed penwidth shift.
+  p = point_sub(p, delta)
+  r = point_sub(r, delta)
+  q = point_sub(q, delta)
+
+  let a0 = q
+  let a1 = point_add(r, v)
+  let a2 = p
+  let a3 = point_sub(r, v)
+  let a4 = q
+
   // Graphviz parity: left/right branches map to arrow_type_diamond (a2,a3,a4)/(a0,a1,a2).
   if left && !right {
-    [tip, right_point, base]
+    [a2, a3, a4]
   } else if right && !left {
-    [base, left_point, tip]
+    [a0, a1, a2]
   } else {
-    [base, left_point, tip, right_point]
+    [a0, a1, a2, a3]
   }
 }
 
@@ -504,16 +586,13 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polyline(points=[p, q]))
     }
     ArrowBase::Diamond => {
-      // Graphviz parity: diamond tip backs off by penwidth/2 to avoid node overlap.
+      // Graphviz parity: diamond still starts with penwidth/2 backoff from node edge.
       let diamond_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
-      let base = point_add(diamond_tip, point_scale(dir, -length))
-      // Graphviz parity: diamond wing uses one-third of head length.
-      let diamond_half_width = length / 3.0
+      let u = point_scale(dir, -length)
       let points = diamond_points(
         diamond_tip,
-        base,
-        perp,
-        diamond_half_width,
+        u,
+        penwidth,
         shape.left,
         shape.right,
       )
