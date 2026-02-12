@@ -1746,6 +1746,19 @@ fn node_size(
       scaled_label_height_pt = temp
     }
     scaled_label_width_pt = scaled_label_width_pt * ELLIPSE_LABEL_SCALE
+    // Graphviz parity: skew/distortion polygon labels (e.g. trapezium/parallelogram)
+    // expand by polygon cosine factor in shapes.c poly_init.
+    let polygon_sides = match shape {
+      "trapezium" | "invtrapezium" | "parallelogram" => 4
+      _ => 0
+    }
+    if polygon_sides > 2 {
+      let cos_val = @math.cos(@math.PI / polygon_sides.to_double())
+      if cos_val > 0.0 {
+        scaled_label_width_pt = scaled_label_width_pt / cos_val
+        scaled_label_height_pt = scaled_label_height_pt / cos_val
+      }
+    }
   }
   let scaled_label_width_in = scaled_label_width_pt / 72.0
   let scaled_label_height_in = scaled_label_height_pt / 72.0
@@ -1763,6 +1776,11 @@ fn node_size(
     let size_in = if width_in > height_in { width_in } else { height_in }
     width_in = size_in
     height_in = size_in
+  }
+  if shape == "parallelogram" {
+    // Graphviz parity: skewed quad bbox in shapes.c poly_init widens by a
+    // constant factor for the built-in skew=0.6 parallelogram polygon.
+    width_in = width_in * 1.0367531594794965
   }
   if shape == "doublecircle" {
     let gap_in = PERIPHERY_GAP_PT * 2.0 / 72.0

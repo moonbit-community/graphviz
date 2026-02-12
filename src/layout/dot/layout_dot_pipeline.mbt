@@ -106,6 +106,145 @@ fn compute_dot_position_stage(
 }
 
 ///|
+fn scale_point_value(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
+  { x: point.x * sx, y: point.y * sy }
+}
+
+///|
+fn scale_optional_point_value(
+  point : @geom.Point?,
+  sx : Double,
+  sy : Double,
+) -> @geom.Point? {
+  match point {
+    Some(value) => Some(scale_point_value(value, sx, sy))
+    None => None
+  }
+}
+
+///|
+fn scale_spline_value(
+  spline : @geom.Spline,
+  sx : Double,
+  sy : Double,
+) -> @geom.Spline {
+  let points : Array[@geom.Point] = []
+  for point in spline.points {
+    points.push(scale_point_value(point, sx, sy))
+  }
+  {
+    start: scale_optional_point_value(spline.start, sx, sy),
+    end: scale_optional_point_value(spline.end, sx, sy),
+    points,
+  }
+}
+
+///|
+fn scale_edge_layout_output(
+  edges : Array[DotLayoutEdge],
+  sx : Double,
+  sy : Double,
+) -> Array[DotLayoutEdge] {
+  let scaled : Array[DotLayoutEdge] = []
+  for edge_layout in edges {
+    let splines : Array[@geom.Spline] = []
+    for spline in edge_layout.splines {
+      splines.push(scale_spline_value(spline, sx, sy))
+    }
+    scaled.push({
+      edge: edge_layout.edge,
+      splines,
+      label_pos: scale_optional_point_value(edge_layout.label_pos, sx, sy),
+      head_label_pos: scale_optional_point_value(
+        edge_layout.head_label_pos,
+        sx,
+        sy,
+      ),
+      tail_label_pos: scale_optional_point_value(
+        edge_layout.tail_label_pos,
+        sx,
+        sy,
+      ),
+      xlabel_pos: scale_optional_point_value(edge_layout.xlabel_pos, sx, sy),
+    })
+  }
+  scaled
+}
+
+///|
+fn scale_point_map(
+  points : Map[String, @geom.Point],
+  sx : Double,
+  sy : Double,
+) -> Map[String, @geom.Point] {
+  let scaled : Map[String, @geom.Point] = Map::new()
+  for name, point in points {
+    scaled[name] = scale_point_value(point, sx, sy)
+  }
+  scaled
+}
+
+///|
+fn scale_double_map(values : Map[Int, Double], scale : Double) -> Map[Int, Double] {
+  let scaled : Map[Int, Double] = Map::new()
+  for key, value in values {
+    scaled[key] = value * scale
+  }
+  scaled
+}
+
+///|
+fn scale_named_double_map(
+  values : Map[String, Double],
+  scale : Double,
+) -> Map[String, Double] {
+  let scaled : Map[String, Double] = Map::new()
+  for key, value in values {
+    scaled[key] = value * scale
+  }
+  scaled
+}
+
+///|
+fn scale_rect_map(
+  rects : Map[String, @geom.Rect],
+  sx : Double,
+  sy : Double,
+) -> Map[String, @geom.Rect] {
+  let scaled : Map[String, @geom.Rect] = Map::new()
+  for key, rect in rects {
+    scaled[key] = {
+      llx: rect.llx * sx,
+      lly: rect.lly * sy,
+      urx: rect.urx * sx,
+      ury: rect.ury * sy,
+    }
+  }
+  scaled
+}
+
+///|
+fn scale_record_port_maps(
+  maps : Map[String, Map[String, RecordPort]],
+  sx : Double,
+  sy : Double,
+) -> Map[String, Map[String, RecordPort]] {
+  let scaled : Map[String, Map[String, RecordPort]] = Map::new()
+  for node_name, ports in maps {
+    let scaled_ports : Map[String, RecordPort] = Map::new()
+    for port_name, port in ports {
+      scaled_ports[port_name] = {
+        center: scale_point_value(port.center, sx, sy),
+        size: port.size,
+        sides: port.sides,
+      }
+    }
+    scaled[node_name] = scaled_ports
+  }
+  scaled
+}
+
+///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -240,6 +379,72 @@ fn compute_dot_routing_stage(
 ) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
     build_routing_spatial_data_for_stage(graph, prep, rank_data.ranks, positions_state)
+  let empty_edges : Array[DotLayoutEdge] = []
+  let routing_bbox = compute_bbox(nodes_out, empty_edges)
+  let (ratio_sx, ratio_sy) =
+    match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+      Some((sx, sy)) =>
+        if sx != 1.0 || sy != 1.0 {
+          (sx, sy)
+        } else {
+          (1.0, 1.0)
+        }
+      None => (1.0, 1.0)
+    }
+  let ratio_scaled = ratio_sx != 1.0 || ratio_sy != 1.0
+  let routing_positions =
+    if ratio_scaled {
+      scale_point_map(positions_state.positions, ratio_sx, ratio_sy)
+    } else {
+      positions_state.positions
+    }
+  let routing_vnode_positions =
+    if ratio_scaled {
+      scale_point_map(positions_state.vnode_positions, ratio_sx, ratio_sy)
+    } else {
+      positions_state.vnode_positions
+    }
+  let routing_rank_y =
+    if ratio_scaled {
+      scale_double_map(positions_state.rank_y, ratio_sy)
+    } else {
+      positions_state.rank_y
+    }
+  let routing_cluster_bboxes =
+    if ratio_scaled {
+      scale_rect_map(cluster_bboxes, ratio_sx, ratio_sy)
+    } else {
+      cluster_bboxes
+    }
+  let routing_label_ports_map =
+    if ratio_scaled {
+      scale_record_port_maps(label_ports_map, ratio_sx, ratio_sy)
+    } else {
+      label_ports_map
+    }
+  let routing_label_ports_raw =
+    if ratio_scaled {
+      scale_record_port_maps(label_ports_raw, ratio_sx, ratio_sy)
+    } else {
+      label_ports_raw
+    }
+  let routing_positions_state : PositionResult =
+    if ratio_scaled {
+      {
+        x_groups: positions_state.x_groups,
+        rank_y: routing_rank_y,
+        positions: routing_positions,
+        vnode_positions: routing_vnode_positions,
+        cluster_ln_x: scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
+        cluster_rn_x: scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
+        flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
+        rank_ht1: positions_state.rank_ht1,
+        rank_ht2: positions_state.rank_ht2,
+        cluster_bbox_heights: positions_state.cluster_bbox_heights,
+      }
+    } else {
+      positions_state
+    }
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
   let label_edge_counts = build_label_edge_counts(prep.edges)
@@ -253,9 +458,9 @@ fn compute_dot_routing_stage(
       rank_heights,
       cluster_meta,
       ordering,
-      positions_state,
-      label_ports_map,
-      cluster_bboxes,
+      routing_positions_state,
+      routing_label_ports_map,
+      routing_cluster_bboxes,
       enable_complex_tuning,
     )
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
@@ -263,7 +468,7 @@ fn compute_dot_routing_stage(
   // Graphviz parity: edge routing call consumes edge/padding fields plus
   // grouped precompute payload while preserving Graphviz-aligned argument mapping.
   let layout_rankdir = RankDir::TB
-  let edges_out =
+  let edges_routed =
     route_edges(
       graph,
       prep.edges,
@@ -273,24 +478,30 @@ fn compute_dot_routing_stage(
       prep.rankdir,
       layout_rankdir,
       prep.splines,
-      positions_state.positions,
-      positions_state.vnode_positions,
+      routing_positions_state.positions,
+      routing_positions_state.vnode_positions,
       ordering.vnode_info,
-      positions_state.rank_y,
-      positions_state.rank_ht1,
-      positions_state.rank_ht2,
+      routing_positions_state.rank_y,
+      routing_positions_state.rank_ht1,
+      routing_positions_state.rank_ht2,
       path_groups,
       rank_heights.nodesep_pt,
       rank_heights.ranksep_pt,
       cluster_meta.has_clusters,
-      label_ports_map,
-      label_ports_raw,
+      routing_label_ports_map,
+      routing_label_ports_raw,
       label_edge_counts,
       head_port_metrics,
-      positions_state.flat_label_edge_vnodes,
+      routing_positions_state.flat_label_edge_vnodes,
       routing_context,
       enable_complex_tuning,
     )
+  let edges_out =
+    if ratio_scaled {
+      scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
+    } else {
+      edges_routed
+    }
   // Graphviz parity: routing stage result tuple is built directly
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")

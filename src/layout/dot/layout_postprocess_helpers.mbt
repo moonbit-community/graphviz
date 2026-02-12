@@ -940,6 +940,201 @@ fn apply_root_margin_x(
 }
 
 ///|
+fn parse_graph_size_pt(graph : @cgraph.Graph) -> (Double, Double)? {
+  match graph.get_attr("size") {
+    Some(value) => {
+      let parts : Array[String] = []
+      for part in value.split(",") {
+        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        if cleaned != "" {
+          parts.push(cleaned)
+        }
+      }
+      if parts.length() == 0 {
+        return None
+      }
+      let width_in = @attrs.parse_double(Some(parts[0]), -1.0)
+      let height_in = if parts.length() > 1 {
+        @attrs.parse_double(Some(parts[1]), -1.0)
+      } else {
+        width_in
+      }
+      if width_in <= 0.0 || height_in <= 0.0 {
+        return None
+      }
+      Some((width_in * 72.0, height_in * 72.0))
+    }
+    None => None
+  }
+}
+
+///|
+/// Graphviz parity: ratio=fill scaling aligned to refs/graphviz/lib/dotgen/position.c
+/// (set_aspect R_FILL branch).
+fn ratio_fill_scale_factors(
+  graph : @cgraph.Graph,
+  bbox : @geom.Rect,
+  rankdir : RankDir,
+) -> (Double, Double)? {
+  let ratio = match graph.get_attr("ratio") {
+    Some(value) => value.trim().to_lower()
+    None => return None
+  }
+  if ratio != "fill" {
+    return None
+  }
+  let (target_w, target_h) = match parse_graph_size_pt(graph) {
+    Some(size) => size
+    None => return None
+  }
+  let mut span_w = bbox.urx - bbox.llx
+  let mut span_h = bbox.ury - bbox.lly
+  if span_w <= 0.0 || span_h <= 0.0 {
+    return None
+  }
+  let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  if flip {
+    let tmp = span_w
+    span_w = span_h
+    span_h = tmp
+  }
+  let mut xf = target_w / span_w
+  let mut yf = target_h / span_h
+  if xf <= 0.0 || yf <= 0.0 {
+    return None
+  }
+  if xf < 1.0 || yf < 1.0 {
+    if xf < yf {
+      yf = yf / xf
+      xf = 1.0
+    } else {
+      xf = xf / yf
+      yf = 1.0
+    }
+  }
+  if flip {
+    let tmp = xf
+    xf = yf
+    yf = tmp
+  }
+  Some((xf, yf))
+}
+
+///|
+fn scale_layout_point(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
+  { x: point.x * sx, y: point.y * sy }
+}
+
+///|
+fn scale_layout_optional_point(
+  point : @geom.Point?,
+  sx : Double,
+  sy : Double,
+) -> @geom.Point? {
+  match point {
+    Some(value) => Some(scale_layout_point(value, sx, sy))
+    None => None
+  }
+}
+
+///|
+fn scale_layout_spline(
+  spline : @geom.Spline,
+  sx : Double,
+  sy : Double,
+) -> @geom.Spline {
+  let points : Array[@geom.Point] = []
+  for point in spline.points {
+    points.push(scale_layout_point(point, sx, sy))
+  }
+  {
+    start: scale_layout_optional_point(spline.start, sx, sy),
+    end: scale_layout_optional_point(spline.end, sx, sy),
+    points,
+  }
+}
+
+///|
+fn scale_layout_graph(
+  layout : DotLayoutGraph,
+  sx : Double,
+  sy : Double,
+) -> DotLayoutGraph {
+  let nodes : Array[DotLayoutNode] = []
+  for node_layout in layout.nodes {
+    nodes.push({
+      node: node_layout.node,
+      pos: scale_layout_point(node_layout.pos, sx, sy),
+      width_in: node_layout.width_in,
+      height_in: node_layout.height_in,
+      label_pos: scale_layout_optional_point(node_layout.label_pos, sx, sy),
+      xlabel_pos: scale_layout_optional_point(node_layout.xlabel_pos, sx, sy),
+    })
+  }
+  let edges : Array[DotLayoutEdge] = []
+  for edge_layout in layout.edges {
+    let splines : Array[@geom.Spline] = []
+    for spline in edge_layout.splines {
+      splines.push(scale_layout_spline(spline, sx, sy))
+    }
+    edges.push({
+      edge: edge_layout.edge,
+      splines,
+      label_pos: scale_layout_optional_point(edge_layout.label_pos, sx, sy),
+      head_label_pos: scale_layout_optional_point(
+        edge_layout.head_label_pos,
+        sx,
+        sy,
+      ),
+      tail_label_pos: scale_layout_optional_point(
+        edge_layout.tail_label_pos,
+        sx,
+        sy,
+      ),
+      xlabel_pos: scale_layout_optional_point(edge_layout.xlabel_pos, sx, sy),
+    })
+  }
+  let subgraphs : Array[DotLayoutGraph] = []
+  for subgraph in layout.subgraphs {
+    subgraphs.push(scale_layout_graph(subgraph, sx, sy))
+  }
+  {
+    graph: layout.graph,
+    bbox: {
+      llx: layout.bbox.llx * sx,
+      lly: layout.bbox.lly * sy,
+      urx: layout.bbox.urx * sx,
+      ury: layout.bbox.ury * sy,
+    },
+    label_pos: scale_layout_optional_point(layout.label_pos, sx, sy),
+    nodes,
+    edges,
+    subgraphs,
+  }
+}
+
+///|
+fn apply_ratio_fill_scale_if_needed(
+  graph : @cgraph.Graph,
+  layout : DotLayoutGraph,
+  rankdir : RankDir,
+) -> DotLayoutGraph {
+  if !graph.is_root() {
+    return layout
+  }
+  match ratio_fill_scale_factors(graph, layout.bbox, rankdir) {
+    Some((sx, sy)) => {
+      if sx == 1.0 && sy == 1.0 {
+        layout
+      } else {
+        scale_layout_graph(layout, sx, sy)
+      }
+    }
+    None => layout
+  }
+}
+
+///|
 /// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
 fn adjust_edge_labels_if_enabled(
   layout : DotLayoutGraph,
@@ -1109,6 +1304,7 @@ fn finalize_layout_graph(
     edges: layout_with_root_pad.edges,
     subgraphs: layout_with_root_pad.subgraphs,
   }
+  let layout = apply_ratio_fill_scale_if_needed(graph, layout, rankdir)
   let adjusted = adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
   let labeled =
     expand_bbox_for_edge_labels(

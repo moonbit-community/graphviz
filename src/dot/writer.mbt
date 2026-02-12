@@ -191,6 +191,53 @@ fn root_graph(graph : @cgraph.Graph) -> @cgraph.Graph {
 }
 
 ///|
+fn graph_is_cluster_subgraph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn should_skip_layout_subgraph(
+  parent : @cgraph.Graph,
+  child : @cgraph.Graph,
+  is_layout_output : Bool,
+) -> Bool {
+  if !is_layout_output {
+    return false
+  }
+  if child.name() is Some(_) {
+    return false
+  }
+  if parent.name() is Some(_) {
+    return false
+  }
+  if parent.edges().length() == 0 {
+    return false
+  }
+  if child.attrs().length() > 0 {
+    return false
+  }
+  if child.default_attrs(@cgraph.AttrKind::Graph).length() > 0 {
+    return false
+  }
+  if child.default_attrs(@cgraph.AttrKind::Node).length() > 0 {
+    return false
+  }
+  if child.default_attrs(@cgraph.AttrKind::Edge).length() > 0 {
+    return false
+  }
+  if child.edges().length() > 0 {
+    return false
+  }
+  if child.subgraphs().length() > 0 {
+    return false
+  }
+  true
+}
+
+///|
 fn collect_effective_defaults(
   graph : @cgraph.Graph,
   kind : @cgraph.AttrKind,
@@ -334,6 +381,9 @@ fn write_graph(
     sb.write_string(";\n")
   }
   for subgraph in graph.subgraphs() {
+    if should_skip_layout_subgraph(graph, subgraph, is_layout_output) {
+      continue
+    }
     write_graph(subgraph, sb, inner, false, all_edges, written_edges)
   }
   let nodes = graph.nodes()
@@ -358,16 +408,52 @@ fn write_graph(
     @cgraph.GraphKind::Directed => "->"
     @cgraph.GraphKind::Undirected => "--"
   }
-  let allow_edges =
-    if indent == 0 {
-    true
-  } else {
-    match graph.name() {
-      Some(name) => name.has_prefix("cluster")
-      None => false
-    }
+  let graph_edges = graph.edges()
+  let graph_edge_ids : Map[Int, Bool] = Map::new()
+  for edge in graph_edges {
+    graph_edge_ids[edge.id()] = true
   }
+  let is_cluster_subgraph = graph_is_cluster_subgraph(graph)
+  let allow_edges =
+    if is_root {
+      true
+    } else if is_cluster_subgraph {
+      true
+    } else if is_layout_output {
+      graph_edge_ids.length() > 0
+    } else {
+      false
+    }
   if allow_edges {
+    if is_layout_output && indent > 0 && !is_cluster_subgraph {
+      // Graphviz parity: anonymous edge subgraphs materialize out-of-subgraph
+      // endpoints as bare node statements before writing those edges.
+      let implicit_node_names : Array[String] = []
+      let implicit_node_set : Map[String, Bool] = Map::new()
+      for edge in graph_edges {
+        let edge_id = edge.id()
+        if written_edges.contains(edge_id) {
+          continue
+        }
+        let tail_name = edge.tail().name()
+        if !node_names.contains(tail_name) && !implicit_node_set.contains(tail_name) {
+          implicit_node_set[tail_name] = true
+          implicit_node_names.push(tail_name)
+        }
+        let head_name = edge.head().name()
+        if !node_names.contains(head_name) && !implicit_node_set.contains(head_name) {
+          implicit_node_set[head_name] = true
+          implicit_node_names.push(head_name)
+        }
+      }
+      implicit_node_names.sort()
+      for name in implicit_node_names {
+        write_indent(sb, inner)
+        sb.write_string(write_id(name))
+        sb.write_string(";\n")
+        node_names[name] = true
+      }
+    }
     for edge in all_edges {
       let edge_id = edge.id()
       if written_edges.contains(edge_id) {
@@ -375,7 +461,17 @@ fn write_graph(
       }
       let tail_name = edge.tail().name()
       let head_name = edge.head().name()
-      if !node_names.contains(tail_name) || !node_names.contains(head_name) {
+      if is_layout_output {
+        if indent > 0 {
+          if is_cluster_subgraph {
+            if !node_names.contains(tail_name) || !node_names.contains(head_name) {
+              continue
+            }
+          } else if !graph_edge_ids.contains(edge_id) {
+            continue
+          }
+        }
+      } else if !node_names.contains(tail_name) || !node_names.contains(head_name) {
         continue
       }
       let tail = edge.tail()
