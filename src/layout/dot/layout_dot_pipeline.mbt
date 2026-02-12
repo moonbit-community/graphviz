@@ -678,20 +678,6 @@ fn build_edges_out_for_routing_stage(
 }
 
 ///|
-/// Graphviz parity: routing stage result object is built directly from routed
-/// edges and computed padding, with trace emission preserved.
-/// Do not change behavior without updating fixtures/tests.
-fn build_dot_routing_stage_result_from_edges_for_stage(
-  nodes_out : Array[DotLayoutNode],
-  edges_out : Array[DotLayoutEdge],
-  port_pad_below : Double,
-  port_pad_above : Double,
-) -> DotRoutingStage {
-  dot_trace("layout_dot: edges routed")
-  { nodes_out, edges_out, port_pad_below, port_pad_above }
-}
-
-///|
 /// Graphviz parity: routing edge-solve input payload assembly reads typed
 /// edge/padding stage inputs and grouped precompute bundles without reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -800,12 +786,15 @@ fn run_dot_routing_stage_from_inputs(
   }
   let routing_edges_and_padding_data =
     run_routing_edges_and_padding_from_inputs(routing_inputs)
-  build_dot_routing_stage_result_from_edges_for_stage(
-    routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
-    routing_edges_and_padding_data.edges_out,
-    routing_edges_and_padding_data.port_pad_below,
-    routing_edges_and_padding_data.port_pad_above,
-  )
+  // Graphviz parity: routing stage result object is built directly
+  // from routed edges and computed padding, with trace emission preserved.
+  dot_trace("layout_dot: edges routed")
+  {
+    nodes_out: routing_spatial_and_tuning_data.routing_spatial_data.nodes_out,
+    edges_out: routing_edges_and_padding_data.edges_out,
+    port_pad_below: routing_edges_and_padding_data.port_pad_below,
+    port_pad_above: routing_edges_and_padding_data.port_pad_above,
+  }
 }
 
 ///|
