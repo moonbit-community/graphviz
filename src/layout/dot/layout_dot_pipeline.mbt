@@ -160,13 +160,6 @@ priv struct DotRoutingPaddingAndHeadPortMetrics {
 }
 
 ///|
-priv struct DotRoutingNodeAndPortData {
-  nodes_out : Array[DotLayoutNode]
-  label_ports_map : Map[String, Map[String, RecordPort]]
-  label_ports_raw : Map[String, Map[String, RecordPort]]
-}
-
-///|
 priv struct DotRoutingPathContextData {
   path_groups : Map[Int, Array[String]]
   routing_context : RoutingContext
@@ -252,11 +245,8 @@ fn build_routing_spatial_data_for_stage(
       prep.rankdir,
       prep.has_port_edges,
     )
-  let routing_node_and_port_data : DotRoutingNodeAndPortData = {
-    nodes_out,
-    label_ports_map: port_maps.label_ports_map,
-    label_ports_raw: port_maps.label_ports_raw,
-  }
+  let label_ports_map = port_maps.label_ports_map
+  let label_ports_raw = port_maps.label_ports_raw
   // Graphviz parity: routing spatial output object consumes typed
   // routing-stage inputs and node/port precompute output without remapping.
   // Graphviz parity: routing cluster bboxes are derived from typed
@@ -264,7 +254,7 @@ fn build_routing_spatial_data_for_stage(
   let cluster_bboxes =
     compute_cluster_bboxes_for_routing(
       graph,
-      routing_node_and_port_data.nodes_out,
+      nodes_out,
       positions_state.cluster_ln_x,
       positions_state.cluster_rn_x,
       positions_state.cluster_bbox_heights,
@@ -275,9 +265,9 @@ fn build_routing_spatial_data_for_stage(
       positions_state.rank_ht2,
     )
   {
-    nodes_out: routing_node_and_port_data.nodes_out,
-    label_ports_map: routing_node_and_port_data.label_ports_map,
-    label_ports_raw: routing_node_and_port_data.label_ports_raw,
+    nodes_out,
+    label_ports_map,
+    label_ports_raw,
     cluster_bboxes,
   }
 }
