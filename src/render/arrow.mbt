@@ -530,18 +530,20 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Ellipse(filled~, rect~))
     }
     ArrowBase::Crow => {
-      let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: crow heads back off by half penwidth to avoid overlap.
+      let crow_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
+      let base = point_add(crow_tip, point_scale(dir, -length))
       // Graphviz parity: crow wing span is 0.45 * head length.
       let wing = length * 0.45
-      let left_point = point_add(tip, point_scale(perp, wing))
-      let right_point = point_add(tip, point_scale(perp, -wing))
+      let left_point = point_add(crow_tip, point_scale(perp, wing))
+      let right_point = point_add(crow_tip, point_scale(perp, -wing))
       let tail = point_add(base, point_scale(dir, length * 0.2))
       let points = if shape.left && !shape.right {
-        [left_point, tip, tail]
+        [left_point, crow_tip, tail]
       } else if shape.right && !shape.left {
-        [tip, right_point, tail]
+        [crow_tip, right_point, tail]
       } else {
-        [left_point, tip, right_point, tail]
+        [left_point, crow_tip, right_point, tail]
       }
       // Graphviz parity: crow heads are always filled (ARR_MOD_OPEN ignored).
       ops.push(DrawOp::Polygon(filled=true, points~))
