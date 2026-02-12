@@ -1012,6 +1012,11 @@ priv enum ClipShape {
   Rect
   Ellipse
   Diamond
+  Trapezium
+  InvTrapezium
+  Parallelogram
+  House
+  InvHouse
 }
 
 ///|
@@ -1054,7 +1059,7 @@ fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
 }
 
 ///|
-fn graph_rankdir_lr_rl(edge : @cgraph.Edge) -> Bool {
+fn graph_rankdir_quadrant(edge : @cgraph.Edge) -> Int {
   let mut graph = edge.tail().graph()
   while true {
     match graph.parent() {
@@ -1066,7 +1071,12 @@ fn graph_rankdir_lr_rl(edge : @cgraph.Edge) -> Bool {
     Some(value) => value.to_lower()
     None => ""
   }
-  rankdir == "lr" || rankdir == "rl"
+  match rankdir {
+    "lr" => 1
+    "bt" => 2
+    "rl" => 3
+    _ => 0
+  }
 }
 
 ///|
@@ -1121,6 +1131,11 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "plain" =>
       ClipShape::Rect
     "diamond" | "mdiamond" => ClipShape::Diamond
+    "trapezium" => ClipShape::Trapezium
+    "invtrapezium" => ClipShape::InvTrapezium
+    "parallelogram" => ClipShape::Parallelogram
+    "house" => ClipShape::House
+    "invhouse" => ClipShape::InvHouse
     "none" => ClipShape::None
     "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
       ClipShape::Ellipse
@@ -1175,16 +1190,179 @@ fn point_inside_diamond(
 }
 
 ///|
+fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
+  match quadrant {
+    1 => point(-pt.y, pt.x)
+    2 => point(-pt.x, -pt.y)
+    3 => point(pt.y, -pt.x)
+    _ => pt
+  }
+}
+
+///|
+fn polygon_shape_params(
+  shape : ClipShape,
+) -> (Int, Double, Double, Double)? {
+  match shape {
+    ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0))
+    ClipShape::InvTrapezium => Some((4, 180.0, -0.4, 0.0))
+    ClipShape::Parallelogram => Some((4, 0.0, 0.0, 0.6))
+    ClipShape::House => Some((5, 0.0, -0.64, 0.0))
+    ClipShape::InvHouse => Some((5, 180.0, -0.64, 0.0))
+    _ => None
+  }
+}
+
+///|
+/// Graphviz parity: rebuild built-in polygon vertices from shapes.c poly_init
+/// (sides/distortion/skew/orientation), then scale to current node extents.
+fn polygon_vertices_for_shape(
+  size : NodeSize,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  if sides < 3 {
+    return []
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return []
+  }
+  let sector = 2.0 * @math.PI / sides.to_double()
+  let side_len = @math.sin(sector / 2.0)
+  let abs_mix = Double::abs(distortion) + Double::abs(skew)
+  let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
+  let cos_half = @math.cos(sector / 2.0)
+  if Double::abs(cos_half) <= 0.0000001 {
+    return []
+  }
+  let g_distortion = distortion * Double::sqrt(2.0) / cos_half
+  let g_skew = skew / 2.0
+  let mut angle = (sector - @math.PI) / 2.0
+  let mut sinx = @math.sin(angle)
+  let mut cosx = @math.cos(angle)
+  let mut r = point(0.5 * cosx, 0.5 * sinx)
+  let mut xmax = 0.0
+  let mut ymax = 0.0
+  angle = angle + (@math.PI - sector) / 2.0
+  let base : Array[@geom.Point] = []
+  for _ in 0..<sides {
+    angle = angle + sector
+    sinx = @math.sin(angle)
+    cosx = @math.cos(angle)
+    r = point(r.x + side_len * cosx, r.y + side_len * sinx)
+    let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
+    let mut py = r.y
+    let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
+    let radius = Double::sqrt(px * px + py * py)
+    px = radius * @math.cos(alpha)
+    py = radius * @math.sin(alpha)
+    if Double::abs(px) > xmax {
+      xmax = Double::abs(px)
+    }
+    if Double::abs(py) > ymax {
+      ymax = Double::abs(py)
+    }
+    base.push(point(px, py))
+  }
+  if xmax <= 0.0 || ymax <= 0.0 {
+    return []
+  }
+  let scale_x = half_w / xmax
+  let scale_y = half_h / ymax
+  let out : Array[@geom.Point] = []
+  for vertex in base {
+    out.push(point(vertex.x * scale_x, vertex.y * scale_y))
+  }
+  out
+}
+
+///|
+fn point_in_convex_polygon(
+  point : @geom.Point,
+  vertices : Array[@geom.Point],
+) -> Bool {
+  if vertices.length() < 3 {
+    return false
+  }
+  let mut sign = 0
+  for i in 0..<vertices.length() {
+    let a = vertices[i]
+    let b = vertices[(i + 1) % vertices.length()]
+    let cross = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)
+    if Double::abs(cross) <= 0.000001 {
+      continue
+    }
+    let current = if cross > 0.0 { 1 } else { -1 }
+    if sign == 0 {
+      sign = current
+    } else if sign != current {
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// Graphviz parity: poly_inside rotates test points by rankdir, and for LR/RL
+/// applies width/height normalization before face tests.
+fn point_inside_polygon(
+  pt : @geom.Point,
+  center : @geom.Point,
+  size : NodeSize,
+  shape : ClipShape,
+  rankdir_quadrant : Int,
+) -> Bool {
+  match polygon_shape_params(shape) {
+    Some((sides, orientation_deg, distortion, skew)) => {
+      let rel = point(pt.x - center.x, pt.y - center.y)
+      let rotated = rotate_ccw_quadrant(rel, rankdir_quadrant)
+      let probe =
+        if rankdir_quadrant == 1 || rankdir_quadrant == 3 {
+          if size.height_pt <= 0.0 || size.width_pt <= 0.0 {
+            return false
+          }
+          point(
+            rotated.x * size.width_pt / size.height_pt,
+            rotated.y * size.height_pt / size.width_pt,
+          )
+        } else {
+          rotated
+        }
+      let vertices = polygon_vertices_for_shape(
+        size,
+        sides,
+        orientation_deg,
+        distortion,
+        skew,
+      )
+      point_in_convex_polygon(probe, vertices)
+    }
+    None => false
+  }
+}
+
+///|
 fn point_inside_shape(
   point : @geom.Point,
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
+  rankdir_quadrant : Int,
 ) -> Bool {
   match shape {
     ClipShape::Rect => point_inside_rect(point, center, size)
     ClipShape::Ellipse => point_inside_ellipse(point, center, size)
     ClipShape::Diamond => point_inside_diamond(point, center, size)
+    ClipShape::Trapezium
+    | ClipShape::InvTrapezium
+    | ClipShape::Parallelogram
+    | ClipShape::House
+    | ClipShape::InvHouse =>
+      point_inside_polygon(point, center, size, shape, rankdir_quadrant)
     ClipShape::None => false
   }
 }
@@ -1195,6 +1373,7 @@ fn clip_spline_start(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
+  rankdir_quadrant : Int,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
     return points
@@ -1203,7 +1382,8 @@ fn clip_spline_start(
     ClipShape::None => return points
     _ => ()
   }
-  let inside = (p : @geom.Point) => point_inside_shape(p, center, size, shape)
+  let inside =
+    (p : @geom.Point) => point_inside_shape(p, center, size, shape, rankdir_quadrant)
   let mut start = 0
   while start + 3 < points.length() && inside(points[start + 3]) {
     start += 3
@@ -1233,6 +1413,7 @@ fn clip_spline_end(
   center : @geom.Point,
   size : NodeSize,
   shape : ClipShape,
+  rankdir_quadrant : Int,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
     return points
@@ -1241,7 +1422,8 @@ fn clip_spline_end(
     ClipShape::None => return points
     _ => ()
   }
-  let inside = (p : @geom.Point) => point_inside_shape(p, center, size, shape)
+  let inside =
+    (p : @geom.Point) => point_inside_shape(p, center, size, shape, rankdir_quadrant)
   let mut end = points.length() - 4
   while end > 0 && inside(points[end]) {
     end -= 3
@@ -1488,7 +1670,8 @@ fn clip_spline_to_nodes(
     if shape_has_outline(tail_node) { node_penwidth_pt(tail_node) } else { 0.0 }
   let head_penwidth =
     if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
-  let rankdir_lr_rl = graph_rankdir_lr_rl(edge)
+  let rankdir_quadrant = graph_rankdir_quadrant(edge)
+  let rankdir_lr_rl = rankdir_quadrant == 1 || rankdir_quadrant == 3
   let tail_shape_size =
     if is_record_shape(tail_node) && !port_is_explicit(tail_port) {
       trim_record_border_for_clip(tail_size, rankdir_lr_rl)
@@ -1502,7 +1685,14 @@ fn clip_spline_to_nodes(
       head_size
     }
   let tail_clip_size = match tail_shape {
-    ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
+    ClipShape::Rect
+    | ClipShape::Ellipse
+    | ClipShape::Diamond
+    | ClipShape::Trapezium
+    | ClipShape::InvTrapezium
+    | ClipShape::Parallelogram
+    | ClipShape::House
+    | ClipShape::InvHouse =>
       // Graphviz parity guard: shape_clip(record_inside) extends both node
       // and port boxes by penwidth/2 before Bézier clipping. Keep this inflation.
       if tail_penwidth > 0.0 {
@@ -1513,7 +1703,14 @@ fn clip_spline_to_nodes(
     ClipShape::None => tail_shape_size
   }
   let head_clip_size = match head_shape {
-    ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
+    ClipShape::Rect
+    | ClipShape::Ellipse
+    | ClipShape::Diamond
+    | ClipShape::Trapezium
+    | ClipShape::InvTrapezium
+    | ClipShape::Parallelogram
+    | ClipShape::House
+    | ClipShape::InvHouse =>
       if head_penwidth > 0.0 {
         inflate_node_size(head_shape_size, head_penwidth / 2.0)
       } else {
@@ -1549,7 +1746,14 @@ fn clip_spline_to_nodes(
     } else {
       match tail_shape {
         ClipShape::None => points
-        _ => clip_spline_start(points, tail_center, tail_clip_size, tail_shape)
+        _ =>
+          clip_spline_start(
+            points,
+            tail_center,
+            tail_clip_size,
+            tail_shape,
+            rankdir_quadrant,
+          )
       }
     }
   let head_clipped =
@@ -1558,7 +1762,14 @@ fn clip_spline_to_nodes(
     } else {
       match head_shape {
         ClipShape::None => tail_clipped
-        _ => clip_spline_end(tail_clipped, head_center, head_clip_size, head_shape)
+        _ =>
+          clip_spline_end(
+            tail_clipped,
+            head_center,
+            head_clip_size,
+            head_shape,
+            rankdir_quadrant,
+          )
       }
     }
   let head_cluster_clipped = match head_cluster_bbox {

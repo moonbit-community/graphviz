@@ -185,6 +185,37 @@ fn scale_point_map(
 }
 
 ///|
+fn scale_node_size_value(
+  size : NodeSize,
+  sx : Double,
+  sy : Double,
+) -> NodeSize {
+  let width_pt = size.width_pt * sx
+  let height_pt = size.height_pt * sy
+  {
+    width_in: width_pt / 72.0,
+    height_in: height_pt / 72.0,
+    width_pt,
+    height_pt,
+    left_pt: size.left_pt * sx,
+    right_pt: size.right_pt * sx,
+  }
+}
+
+///|
+fn scale_node_size_map(
+  sizes : Map[String, NodeSize],
+  sx : Double,
+  sy : Double,
+) -> Map[String, NodeSize] {
+  let scaled : Map[String, NodeSize] = Map::new()
+  for name, size in sizes {
+    scaled[name] = scale_node_size_value(size, sx, sy)
+  }
+  scaled
+}
+
+///|
 fn scale_double_map(values : Map[Int, Double], scale : Double) -> Map[Int, Double] {
   let scaled : Map[Int, Double] = Map::new()
   for key, value in values {
@@ -235,7 +266,7 @@ fn scale_record_port_maps(
     for port_name, port in ports {
       scaled_ports[port_name] = {
         center: scale_point_value(port.center, sx, sy),
-        size: port.size,
+        size: scale_node_size_value(port.size, sx, sy),
         sides: port.sides,
       }
     }
@@ -308,6 +339,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   positions_state : PositionResult,
   label_ports_map : Map[String, Map[String, RecordPort]],
   cluster_bboxes : Map[String, @geom.Rect],
+  sizes : Map[String, NodeSize],
   enable_complex_tuning : Bool,
 ) -> (Double, Double, HeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
   // Graphviz parity: port padding and head-port metrics consume
@@ -324,7 +356,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     collect_head_port_metrics(
       prep.edges,
       positions_state.positions,
-      prep.sizes,
+      sizes,
       label_ports_map,
       prep.record_orientation,
       enable_complex_tuning,
@@ -350,7 +382,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       prep.edges,
       rank_data.edge_tail,
       rank_data.edge_head,
-      prep.sizes,
+      sizes,
       prep.rankdir,
       prep.record_orientation,
       rank_data.ranks,
@@ -428,6 +460,12 @@ fn compute_dot_routing_stage(
     } else {
       label_ports_raw
     }
+  let routing_sizes =
+    if ratio_scaled {
+      scale_node_size_map(prep.sizes, ratio_sx, ratio_sy)
+    } else {
+      prep.sizes
+    }
   let routing_positions_state : PositionResult =
     if ratio_scaled {
       {
@@ -461,6 +499,7 @@ fn compute_dot_routing_stage(
       routing_positions_state,
       routing_label_ports_map,
       routing_cluster_bboxes,
+      routing_sizes,
       enable_complex_tuning,
     )
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
@@ -473,7 +512,7 @@ fn compute_dot_routing_stage(
       graph,
       prep.edges,
       rank_data.ranks,
-      prep.sizes,
+      routing_sizes,
       prep.record_orientation,
       prep.rankdir,
       layout_rankdir,
