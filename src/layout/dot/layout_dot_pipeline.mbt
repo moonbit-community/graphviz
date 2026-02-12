@@ -186,19 +186,6 @@ priv struct DotRoutingEdgeSolvePrecomputeData {
 }
 
 ///|
-/// Graphviz parity: routing edge/padding input payload keeps graph/prep/rank/
-/// position and spatial+tuning fields in stage call order.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotRoutingEdgesAndPaddingInputs {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_stage : DotRankStage
-  positions_state : PositionResult
-  routing_spatial_data : DotRoutingSpatialData
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -259,26 +246,30 @@ fn build_routing_spatial_data_for_stage(
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edge_solve_precompute_data_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
+  routing_spatial_data : DotRoutingSpatialData,
+  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
 ) -> DotRoutingEdgeSolvePrecomputeData {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
     compute_port_padding(
-      routing_inputs.rank_stage.cluster_meta.has_clusters,
-      routing_inputs.prep.has_port_edges,
-      routing_inputs.prep.edges,
-      routing_inputs.positions_state.positions,
-      routing_inputs.routing_spatial_data.label_ports_map,
+      rank_stage.cluster_meta.has_clusters,
+      prep.has_port_edges,
+      prep.edges,
+      positions_state.positions,
+      routing_spatial_data.label_ports_map,
     )
   let head_port_metrics =
     collect_head_port_metrics(
-      routing_inputs.prep.edges,
-      routing_inputs.positions_state.positions,
-      routing_inputs.prep.sizes,
-      routing_inputs.routing_spatial_data.label_ports_map,
-      routing_inputs.prep.record_orientation,
-      routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
+      prep.edges,
+      positions_state.positions,
+      prep.sizes,
+      routing_spatial_data.label_ports_map,
+      prep.record_orientation,
+      routing_label_and_tuning_data.enable_complex_tuning,
     )
   let routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics = {
     port_pad_below,
@@ -291,31 +282,31 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   // then vnode-expanded order groups, then base order groups.
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
-    if routing_inputs.positions_state.x_groups.length() > 0 {
-      routing_inputs.positions_state.x_groups
-    } else if routing_inputs.rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
-      routing_inputs.rank_stage.ordering.ordered_groups_with_vnodes
+    if positions_state.x_groups.length() > 0 {
+      positions_state.x_groups
+    } else if rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
+      rank_stage.ordering.ordered_groups_with_vnodes
     } else {
-      routing_inputs.rank_stage.ordering.ordered_groups
+      rank_stage.ordering.ordered_groups
     }
   // Graphviz parity: routing context is assembled from routing-stage
   // inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
     prepare_routing_context(
-      routing_inputs.prep.nodes,
-      routing_inputs.prep.edges,
-      routing_inputs.rank_stage.rank_data.edge_tail,
-      routing_inputs.rank_stage.rank_data.edge_head,
-      routing_inputs.prep.sizes,
-      routing_inputs.prep.rankdir,
-      routing_inputs.prep.record_orientation,
-      routing_inputs.rank_stage.rank_data.ranks,
-      routing_inputs.rank_stage.ordering.ordered_groups,
+      prep.nodes,
+      prep.edges,
+      rank_stage.rank_data.edge_tail,
+      rank_stage.rank_data.edge_head,
+      prep.sizes,
+      prep.rankdir,
+      prep.record_orientation,
+      rank_stage.rank_data.ranks,
+      rank_stage.ordering.ordered_groups,
       path_groups,
-      routing_inputs.rank_stage.rank_heights.nodesep_pt,
-      routing_inputs.rank_stage.ordering.vnode_info,
-      routing_inputs.positions_state.vnode_positions,
-      routing_inputs.routing_spatial_data.cluster_bboxes,
+      rank_stage.rank_heights.nodesep_pt,
+      rank_stage.ordering.vnode_info,
+      positions_state.vnode_positions,
+      routing_spatial_data.cluster_bboxes,
     )
   let routing_path_context_data : DotRoutingPathContextData = {
     path_groups,
@@ -345,20 +336,16 @@ fn run_dot_routing_stage_from_inputs(
     label_edge_counts: build_label_edge_counts(prep.edges),
     enable_complex_tuning: complex_tuning_enabled(),
   }
-  // Graphviz parity: routing edge/padding input payload assembly reads
-  // typed stage and spatial+tuning bundles without argument reordering.
-  let routing_inputs : DotRoutingEdgesAndPaddingInputs = {
-    graph: graph,
-    prep: prep,
-    rank_stage: rank_stage,
-    positions_state: positions_state,
-    routing_spatial_data,
-    routing_label_and_tuning_data,
-  }
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
   let routing_edge_solve_precompute_data =
-    build_routing_edge_solve_precompute_data_for_stage(routing_inputs)
+    build_routing_edge_solve_precompute_data_for_stage(
+      prep,
+      rank_stage,
+      positions_state,
+      routing_spatial_data,
+      routing_label_and_tuning_data,
+    )
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
   // inputs plus grouped edge-solve precompute payload without argument reordering.
   // Graphviz parity: edge routing call consumes edge/padding fields plus
@@ -366,31 +353,31 @@ fn run_dot_routing_stage_from_inputs(
   let layout_rankdir = RankDir::TB
   let edges_out =
     route_edges(
-      routing_inputs.graph,
-      routing_inputs.prep.edges,
-      routing_inputs.rank_stage.rank_data.ranks,
-      routing_inputs.prep.sizes,
-      routing_inputs.prep.record_orientation,
-      routing_inputs.prep.rankdir,
+      graph,
+      prep.edges,
+      rank_stage.rank_data.ranks,
+      prep.sizes,
+      prep.record_orientation,
+      prep.rankdir,
       layout_rankdir,
-      routing_inputs.prep.splines,
-      routing_inputs.positions_state.positions,
-      routing_inputs.positions_state.vnode_positions,
-      routing_inputs.rank_stage.ordering.vnode_info,
-      routing_inputs.positions_state.rank_y,
-      routing_inputs.positions_state.rank_ht1,
-      routing_inputs.positions_state.rank_ht2,
+      prep.splines,
+      positions_state.positions,
+      positions_state.vnode_positions,
+      rank_stage.ordering.vnode_info,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
       routing_edge_solve_precompute_data.routing_path_context_data.path_groups,
-      routing_inputs.rank_stage.rank_heights.nodesep_pt,
-      routing_inputs.rank_stage.rank_heights.ranksep_pt,
-      routing_inputs.rank_stage.cluster_meta.has_clusters,
-      routing_inputs.routing_spatial_data.label_ports_map,
-      routing_inputs.routing_spatial_data.label_ports_raw,
-      routing_inputs.routing_label_and_tuning_data.label_edge_counts,
+      rank_stage.rank_heights.nodesep_pt,
+      rank_stage.rank_heights.ranksep_pt,
+      rank_stage.cluster_meta.has_clusters,
+      routing_spatial_data.label_ports_map,
+      routing_spatial_data.label_ports_raw,
+      routing_label_and_tuning_data.label_edge_counts,
       routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.head_port_metrics,
-      routing_inputs.positions_state.flat_label_edge_vnodes,
+      positions_state.flat_label_edge_vnodes,
       routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
-      routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
+      routing_label_and_tuning_data.enable_complex_tuning,
     )
   // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding, with trace emission preserved.
