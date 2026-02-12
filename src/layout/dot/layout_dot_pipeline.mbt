@@ -979,43 +979,21 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding input payload assembly reads stage
-/// routing fields without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_inputs_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
-) -> DotRoutingEdgesAndPaddingInputs {
-  {
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-    routing_spatial_data,
-    routing_label_and_tuning_data,
-  }
-}
-
-///|
-/// Graphviz parity: routing edge/padding input payload extraction reads typed
+/// Graphviz parity: routing edge/padding input payload assembly reads typed
 /// stage and spatial+tuning bundles without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_inputs_from_spatial_tuning_data_for_stage(
+fn build_routing_edges_and_padding_inputs_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
   routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
 ) -> DotRoutingEdgesAndPaddingInputs {
-  build_routing_edges_and_padding_inputs_for_stage(
-    routing_stage_inputs.graph,
-    routing_stage_inputs.prep,
-    routing_stage_inputs.rank_stage,
-    routing_stage_inputs.positions_state,
-    routing_spatial_and_tuning_data.routing_spatial_data,
-    routing_spatial_and_tuning_data.routing_label_and_tuning_data,
-  )
+  {
+    graph: routing_stage_inputs.graph,
+    prep: routing_stage_inputs.prep,
+    rank_stage: routing_stage_inputs.rank_stage,
+    positions_state: routing_stage_inputs.positions_state,
+    routing_spatial_data: routing_spatial_and_tuning_data.routing_spatial_data,
+    routing_label_and_tuning_data: routing_spatial_and_tuning_data.routing_label_and_tuning_data,
+  }
 }
 
 ///|
@@ -1116,7 +1094,7 @@ fn build_routing_edges_and_padding_data_from_spatial_tuning_data_for_stage(
   routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
 ) -> DotRoutingEdgesAndPaddingData {
   let routing_inputs =
-    build_routing_edges_and_padding_inputs_from_spatial_tuning_data_for_stage(
+    build_routing_edges_and_padding_inputs_for_stage(
       routing_stage_inputs,
       routing_spatial_and_tuning_data,
     )
