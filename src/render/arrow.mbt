@@ -75,6 +75,7 @@ fn shape_table() -> Array[(String, ArrowBase)] {
     ("tee", ArrowBase::Tee),
     ("vee", ArrowBase::Vee),
     ("pen", ArrowBase::Vee),
+    ("mpty", ArrowBase::Normal),
     ("dot", ArrowBase::Dot),
     ("inv", ArrowBase::Inv),
     ("none", ArrowBase::None),
