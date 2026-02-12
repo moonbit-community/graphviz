@@ -1054,6 +1054,45 @@ fn inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
 }
 
 ///|
+fn graph_rankdir_lr_rl(edge : @cgraph.Edge) -> Bool {
+  let mut graph = edge.tail().graph()
+  while true {
+    match graph.parent() {
+      Some(parent) => graph = parent
+      None => break
+    }
+  }
+  let rankdir = match graph.get_attr("rankdir") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  rankdir == "lr" || rankdir == "rl"
+}
+
+///|
+fn trim_record_border_for_clip(
+  size : NodeSize,
+  rankdir_lr_rl : Bool,
+) -> NodeSize {
+  let trim = RECORD_BORDER_PT * 2.0
+  if trim <= 0.0 || !rankdir_lr_rl {
+    return size
+  }
+  // Graphviz parity: for LR/RL, record_inside rotates probe points before
+  // testing the inner record bbox; in layout coords this trims X by border.
+  let width_pt = if size.width_pt > trim { size.width_pt - trim } else { 0.0 }
+  let half = width_pt / 2.0
+  {
+    width_in: width_pt / 72.0,
+    height_in: size.height_in,
+    width_pt,
+    height_pt: size.height_pt,
+    left_pt: half,
+    right_pt: half,
+  }
+}
+
+///|
 ///|
 ///|
 ///|
@@ -1449,25 +1488,38 @@ fn clip_spline_to_nodes(
     if shape_has_outline(tail_node) { node_penwidth_pt(tail_node) } else { 0.0 }
   let head_penwidth =
     if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
+  let rankdir_lr_rl = graph_rankdir_lr_rl(edge)
+  let tail_shape_size =
+    if is_record_shape(tail_node) && !port_is_explicit(tail_port) {
+      trim_record_border_for_clip(tail_size, rankdir_lr_rl)
+    } else {
+      tail_size
+    }
+  let head_shape_size =
+    if is_record_shape(head_node) && !port_is_explicit(head_port) {
+      trim_record_border_for_clip(head_size, rankdir_lr_rl)
+    } else {
+      head_size
+    }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       // Graphviz parity guard: shape_clip(record_inside) extends both node
       // and port boxes by penwidth/2 before Bézier clipping. Keep this inflation.
       if tail_penwidth > 0.0 {
-        inflate_node_size(tail_size, tail_penwidth / 2.0)
+        inflate_node_size(tail_shape_size, tail_penwidth / 2.0)
       } else {
-        tail_size
+        tail_shape_size
       }
-    ClipShape::None => tail_size
+    ClipShape::None => tail_shape_size
   }
   let head_clip_size = match head_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if head_penwidth > 0.0 {
-        inflate_node_size(head_size, head_penwidth / 2.0)
+        inflate_node_size(head_shape_size, head_penwidth / 2.0)
       } else {
-        head_size
+        head_shape_size
       }
-    ClipShape::None => head_size
+    ClipShape::None => head_shape_size
   }
   // Graphviz parity: compass/dynamic ports disable clipping after resolvePort
   // when the resolved side is exposed.
