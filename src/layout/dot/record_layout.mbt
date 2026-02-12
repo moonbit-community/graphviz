@@ -1406,10 +1406,9 @@ fn dynamic_port_anchor_for_edge(
               other_pos,
               rankdir,
             )
-          let effective_side = match rankdir {
-            RankDir::LR | RankDir::RL => 0
-            _ => side
-          }
+          // Graphviz parity: keep resolvePort side in all rankdirs.
+          // beginpath/endpath rely on this side to build record_path boxes.
+          let effective_side = side
           // Graphviz parity: beginpath/endpath 1pt nudges only apply when
           // a concrete side is active; side=0 routes keep the raw anchor.
           let adjusted_anchor =

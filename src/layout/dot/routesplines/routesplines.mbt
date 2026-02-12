@@ -1096,6 +1096,39 @@ fn route_pathplan_from_boxes(
   if boxes.length() < 2 {
     return None
   }
+  let mut start = start
+  let mut end = end
+  let clamp = (value : Double, min_value : Double, max_value : Double) => {
+    if value < min_value {
+      min_value
+    } else if value > max_value {
+      max_value
+    } else {
+      value
+    }
+  }
+  // Graphviz parity: routespl.c clamps start/end into first/last boxes
+  // before shortest path; keep this guard to avoid 1pt drift regressions.
+  let first_box = boxes[0]
+  if start.x < first_box.llx ||
+    start.x > first_box.urx ||
+    start.y < first_box.lly ||
+    start.y > first_box.ury {
+    start = {
+      x: clamp(start.x, first_box.llx, first_box.urx),
+      y: clamp(start.y, first_box.lly, first_box.ury),
+    }
+  }
+  let last_box = boxes[boxes.length() - 1]
+  if end.x < last_box.llx ||
+    end.x > last_box.urx ||
+    end.y < last_box.lly ||
+    end.y > last_box.ury {
+    end = {
+      x: clamp(end.x, last_box.llx, last_box.urx),
+      y: clamp(end.y, last_box.lly, last_box.ury),
+    }
+  }
   let polygon = boxes_to_polygon_points(boxes)
   if polygon.length() < 3 {
     return None
