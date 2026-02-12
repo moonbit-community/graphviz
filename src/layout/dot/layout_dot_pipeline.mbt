@@ -886,19 +886,6 @@ fn run_routing_edges_and_padding_from_inputs(
 }
 
 ///|
-/// Graphviz parity: dot routing-stage input payload assembly reads graph/prep/
-/// rank-stage/position-stage fields without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_dot_routing_stage_inputs(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-) -> DotRoutingStageInputs {
-  { graph, prep, rank_stage, positions_state }
-}
-
-///|
 /// Graphviz parity: dot routing stage consumes typed routing input payload and
 /// preserves Graphviz routing-stage precompute and solve order.
 /// Do not change behavior without updating fixtures/tests.
@@ -938,12 +925,13 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let routing_stage_inputs =
-    build_dot_routing_stage_inputs(
-      graph,
-      prep,
-      rank_stage,
-      positions_state,
-    )
+  let routing_stage_inputs : DotRoutingStageInputs = {
+    // Graphviz parity: dot routing-stage input payload assembly reads graph/prep/
+    // rank-stage/position-stage fields without argument reordering.
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+  }
   run_dot_routing_stage_from_inputs(routing_stage_inputs)
 }
