@@ -494,20 +494,51 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Curve | ArrowBase::ICurve => {
-      let base = point_add(tip, point_scale(dir, -length))
-      ops.push(DrawOp::Polyline(points=[tip, base]))
-      let mut sign = 1.0
-      match shape.base {
-        ArrowBase::ICurve => sign = -1.0
-        _ => ()
+      // Graphviz parity: curve/icurve control points follow arrows.c arrow_type_curve.
+      let mut p = tip
+      let u = point_scale(dir, -length)
+      let inv = shape.base == ArrowBase::ICurve
+      if !inv && (u.x != 0.0 || u.y != 0.0) {
+        let p_dir = point(-u.x, -u.y)
+        let p_dir_len = Double::sqrt(p_dir.x * p_dir.x + p_dir.y * p_dir.y)
+        let cos_phi = p_dir.x / p_dir_len
+        let sin_phi = p_dir.y / p_dir_len
+        let delta = point(penwidth / 2.0 * cos_phi, penwidth / 2.0 * sin_phi)
+        p = point_sub(p, delta)
       }
-      let offset = point_scale(perp, width * 0.6 * sign)
+      let q = point_add(p, u)
+      ops.push(DrawOp::Polyline(points=[p, q]))
+      let mut arrowwidth = 0.5
+      if penwidth > 4.0 {
+        arrowwidth = 0.5 * penwidth / 4.0
+      }
+      let v = point(-u.y * arrowwidth, u.x * arrowwidth)
+      let w = point(v.y, -v.x)
       let mut curve_points = [
-        tip,
-        point_add(tip, offset),
-        point_add(base, offset),
-        base,
+        point(p.x + v.x + w.x, p.y + v.y + w.y),
+        point(0.0, 0.0),
+        point(0.0, 0.0),
+        point(p.x - v.x + w.x, p.y - v.y + w.y),
       ]
+      if inv {
+        curve_points[1] = point(
+          p.x + 0.95 * v.x + w.x + w.x * 4.0 / 3.0,
+          curve_points[0].y + w.y * 4.0 / 3.0,
+        )
+        curve_points[2] = point(
+          p.x - 0.95 * v.x + w.x + w.x * 4.0 / 3.0,
+          curve_points[3].y + w.y * 4.0 / 3.0,
+        )
+      } else {
+        curve_points[1] = point(
+          p.x + 0.95 * v.x + w.x - w.x * 4.0 / 3.0,
+          curve_points[0].y - w.y * 4.0 / 3.0,
+        )
+        curve_points[2] = point(
+          p.x - 0.95 * v.x + w.x - w.x * 4.0 / 3.0,
+          curve_points[3].y - w.y * 4.0 / 3.0,
+        )
+      }
       if shape.left && !shape.right {
         curve_points = bezier_split_half(curve_points, false)
       } else if shape.right && !shape.left {
