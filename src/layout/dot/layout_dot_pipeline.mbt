@@ -615,10 +615,7 @@ fn build_routing_spatial_data_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialData {
   let routing_node_and_port_data =
-    build_routing_node_and_port_data_for_stage(
-      routing_stage_inputs.prep,
-      routing_stage_inputs.positions_state,
-    )
+    build_routing_node_and_port_data_for_stage(routing_stage_inputs)
   build_routing_spatial_output_from_node_port_data_for_stage(
     routing_stage_inputs,
     routing_node_and_port_data,
@@ -662,10 +659,12 @@ fn build_routing_node_and_port_output_for_stage(
 /// without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_node_and_port_inputs_for_stage(
-  prep : LayoutPrep,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingNodeAndPortInputs {
-  { prep, positions_state }
+  {
+    prep: routing_stage_inputs.prep,
+    positions_state: routing_stage_inputs.positions_state,
+  }
 }
 
 ///|
@@ -695,11 +694,10 @@ fn run_routing_node_and_port_from_inputs(
 /// sequenced together before routing precompute consumption.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_node_and_port_data_for_stage(
-  prep : LayoutPrep,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingNodeAndPortData {
   let routing_node_and_port_inputs =
-    build_routing_node_and_port_inputs_for_stage(prep, positions_state)
+    build_routing_node_and_port_inputs_for_stage(routing_stage_inputs)
   run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
 }
 
