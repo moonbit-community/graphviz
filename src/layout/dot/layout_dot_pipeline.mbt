@@ -65,27 +65,6 @@ priv struct DotRoutingStageInputs {
 }
 
 ///|
-/// Graphviz parity: cluster metadata in rank/order stage uses the same
-/// rank-group and edge endpoint wiring as Graphviz ordering setup.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_meta_for_dot_rank_stage(
-  rank_stage_inputs : DotRankStageInputs,
-  rank_data : RankData,
-) -> ClusterMetadata {
-  compute_cluster_metadata(
-    rank_stage_inputs.graph,
-    rank_stage_inputs.prep.nodes,
-    rank_stage_inputs.prep.edges,
-    rank_data.groups,
-    rank_data.ranks,
-    rank_stage_inputs.prep.node_order,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_stage_inputs.prep.rankdir == RankDir::LR || rank_stage_inputs.prep.rankdir == RankDir::RL,
-  )
-}
-
-///|
 /// Graphviz parity: rank-height stage consumes computed ranks/groups and
 /// spacing inputs with unchanged Graphviz argument wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -144,8 +123,20 @@ fn run_dot_rank_stage_from_inputs(
     build_rank_data_for_dot_rank_stage(rank_stage_inputs)
   let rank_heights =
     build_rank_heights_for_dot_rank_stage(rank_stage_inputs, rank_data)
+  // Graphviz parity: cluster metadata in rank/order stage uses
+  // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
   let cluster_meta =
-    build_cluster_meta_for_dot_rank_stage(rank_stage_inputs, rank_data)
+    compute_cluster_metadata(
+      rank_stage_inputs.graph,
+      rank_stage_inputs.prep.nodes,
+      rank_stage_inputs.prep.edges,
+      rank_data.groups,
+      rank_data.ranks,
+      rank_stage_inputs.prep.node_order,
+      rank_data.edge_tail,
+      rank_data.edge_head,
+      rank_stage_inputs.prep.rankdir == RankDir::LR || rank_stage_inputs.prep.rankdir == RankDir::RL,
+    )
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
   // Graphviz parity: dot rank-stage ordering input payload assembly
