@@ -428,43 +428,6 @@ fn build_routing_spatial_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: edge routing call consumes typed edge-solve payload while
-/// preserving Graphviz-aligned argument mapping and rankdir override.
-/// Do not change behavior without updating fixtures/tests.
-fn build_edges_out_for_routing_stage(
-  routing_edge_solve_inputs : DotRoutingEdgeSolveInputs,
-) -> Array[DotLayoutEdge] {
-  let layout_rankdir = RankDir::TB
-  route_edges(
-    routing_edge_solve_inputs.graph,
-    routing_edge_solve_inputs.prep.edges,
-    routing_edge_solve_inputs.rank_stage.rank_data.ranks,
-    routing_edge_solve_inputs.prep.sizes,
-    routing_edge_solve_inputs.prep.record_orientation,
-    routing_edge_solve_inputs.prep.rankdir,
-    layout_rankdir,
-    routing_edge_solve_inputs.prep.splines,
-    routing_edge_solve_inputs.positions_state.positions,
-    routing_edge_solve_inputs.positions_state.vnode_positions,
-    routing_edge_solve_inputs.rank_stage.ordering.vnode_info,
-    routing_edge_solve_inputs.positions_state.rank_y,
-    routing_edge_solve_inputs.positions_state.rank_ht1,
-    routing_edge_solve_inputs.positions_state.rank_ht2,
-    routing_edge_solve_inputs.path_groups,
-    routing_edge_solve_inputs.rank_stage.rank_heights.nodesep_pt,
-    routing_edge_solve_inputs.rank_stage.rank_heights.ranksep_pt,
-    routing_edge_solve_inputs.rank_stage.cluster_meta.has_clusters,
-    routing_edge_solve_inputs.label_ports_map,
-    routing_edge_solve_inputs.label_ports_raw,
-    routing_edge_solve_inputs.label_edge_counts,
-    routing_edge_solve_inputs.head_port_metrics,
-    routing_edge_solve_inputs.positions_state.flat_label_edge_vnodes,
-    routing_edge_solve_inputs.routing_context,
-    routing_edge_solve_inputs.enable_complex_tuning,
-  )
-}
-
-///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -604,8 +567,37 @@ fn run_dot_routing_stage_from_inputs(
     routing_context: routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
     enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
   }
+  // Graphviz parity: edge routing call consumes typed edge-solve
+  // payload while preserving Graphviz-aligned argument mapping.
+  let layout_rankdir = RankDir::TB
   let edges_out =
-    build_edges_out_for_routing_stage(routing_edge_solve_inputs)
+    route_edges(
+      routing_edge_solve_inputs.graph,
+      routing_edge_solve_inputs.prep.edges,
+      routing_edge_solve_inputs.rank_stage.rank_data.ranks,
+      routing_edge_solve_inputs.prep.sizes,
+      routing_edge_solve_inputs.prep.record_orientation,
+      routing_edge_solve_inputs.prep.rankdir,
+      layout_rankdir,
+      routing_edge_solve_inputs.prep.splines,
+      routing_edge_solve_inputs.positions_state.positions,
+      routing_edge_solve_inputs.positions_state.vnode_positions,
+      routing_edge_solve_inputs.rank_stage.ordering.vnode_info,
+      routing_edge_solve_inputs.positions_state.rank_y,
+      routing_edge_solve_inputs.positions_state.rank_ht1,
+      routing_edge_solve_inputs.positions_state.rank_ht2,
+      routing_edge_solve_inputs.path_groups,
+      routing_edge_solve_inputs.rank_stage.rank_heights.nodesep_pt,
+      routing_edge_solve_inputs.rank_stage.rank_heights.ranksep_pt,
+      routing_edge_solve_inputs.rank_stage.cluster_meta.has_clusters,
+      routing_edge_solve_inputs.label_ports_map,
+      routing_edge_solve_inputs.label_ports_raw,
+      routing_edge_solve_inputs.label_edge_counts,
+      routing_edge_solve_inputs.head_port_metrics,
+      routing_edge_solve_inputs.positions_state.flat_label_edge_vnodes,
+      routing_edge_solve_inputs.routing_context,
+      routing_edge_solve_inputs.enable_complex_tuning,
+    )
   let routing_edges_and_padding_data : DotRoutingEdgesAndPaddingData = {
     edges_out,
     port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
