@@ -456,7 +456,8 @@ fn arrow_shape_primitives(
         shape.left,
         shape.right,
       )
-      ops.push(DrawOp::Polygon(filled~, points~))
+      // Graphviz parity: tee heads are always filled (ARR_MOD_OPEN ignored).
+      ops.push(DrawOp::Polygon(filled=true, points~))
       let line_end = point_add(back, point_scale(dir, -length * 0.6))
       ops.push(DrawOp::Polyline(points=[back, line_end]))
     }
@@ -494,7 +495,8 @@ fn arrow_shape_primitives(
       let right_point = point_add(tip, point_scale(perp, -wing))
       let tail = point_add(base, point_scale(dir, length * 0.2))
       let points = [left_point, tip, right_point, tail]
-      ops.push(DrawOp::Polygon(filled~, points~))
+      // Graphviz parity: crow heads are always filled (ARR_MOD_OPEN ignored).
+      ops.push(DrawOp::Polygon(filled=true, points~))
     }
     ArrowBase::Curve | ArrowBase::ICurve => {
       // Graphviz parity: curve/icurve control points follow arrows.c arrow_type_curve.
