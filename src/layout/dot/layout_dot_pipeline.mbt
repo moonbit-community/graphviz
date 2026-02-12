@@ -140,14 +140,6 @@ priv struct DotRoutingStage {
 }
 
 ///|
-priv struct DotRoutingSpatialData {
-  nodes_out : Array[DotLayoutNode]
-  label_ports_map : Map[String, Map[String, RecordPort]]
-  label_ports_raw : Map[String, Map[String, RecordPort]]
-  cluster_bboxes : Map[String, @geom.Rect]
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -156,7 +148,7 @@ fn build_routing_spatial_data_for_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
   positions_state : PositionResult,
-) -> DotRoutingSpatialData {
+) -> (Array[DotLayoutNode], Map[String, Map[String, RecordPort]], Map[String, Map[String, RecordPort]], Map[String, @geom.Rect]) {
   // Graphviz parity: node geometry projection and port-map derivation
   // consume stage inputs in the same precompute order.
   let nodes_out =
@@ -195,12 +187,7 @@ fn build_routing_spatial_data_for_stage(
       positions_state.rank_ht1,
       positions_state.rank_ht2,
     )
-  {
-    nodes_out,
-    label_ports_map,
-    label_ports_raw,
-    cluster_bboxes,
-  }
+  (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes)
 }
 
 ///|
@@ -211,7 +198,8 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
   positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  cluster_bboxes : Map[String, @geom.Rect],
   enable_complex_tuning : Bool,
 ) -> (Double, Double, HeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
   // Graphviz parity: port padding and head-port metrics consume
@@ -222,14 +210,14 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       prep.has_port_edges,
       prep.edges,
       positions_state.positions,
-      routing_spatial_data.label_ports_map,
+      label_ports_map,
     )
   let head_port_metrics =
     collect_head_port_metrics(
       prep.edges,
       positions_state.positions,
       prep.sizes,
-      routing_spatial_data.label_ports_map,
+      label_ports_map,
       prep.record_orientation,
       enable_complex_tuning,
     )
@@ -263,7 +251,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.ordering.vnode_info,
       positions_state.vnode_positions,
-      routing_spatial_data.cluster_bboxes,
+      cluster_bboxes,
     )
   (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context)
 }
@@ -278,7 +266,7 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let routing_spatial_data =
+  let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
     build_routing_spatial_data_for_stage(graph, prep, rank_stage, positions_state)
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read before routing precompute and edge solve.
@@ -291,7 +279,8 @@ fn compute_dot_routing_stage(
       prep,
       rank_stage,
       positions_state,
-      routing_spatial_data,
+      label_ports_map,
+      cluster_bboxes,
       enable_complex_tuning,
     )
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
@@ -319,8 +308,8 @@ fn compute_dot_routing_stage(
       rank_stage.rank_heights.nodesep_pt,
       rank_stage.rank_heights.ranksep_pt,
       rank_stage.cluster_meta.has_clusters,
-      routing_spatial_data.label_ports_map,
-      routing_spatial_data.label_ports_raw,
+      label_ports_map,
+      label_ports_raw,
       label_edge_counts,
       head_port_metrics,
       positions_state.flat_label_edge_vnodes,
@@ -331,7 +320,7 @@ fn compute_dot_routing_stage(
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")
   {
-    nodes_out: routing_spatial_data.nodes_out,
+    nodes_out: nodes_out,
     edges_out,
     port_pad_below: port_pad_below,
     port_pad_above: port_pad_above,
