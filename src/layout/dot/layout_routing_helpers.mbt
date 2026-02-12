@@ -1976,6 +1976,15 @@ fn build_edge_spline(
       routed_spline
     }
   }
+  if using_pathplan && pathplan_boxes.length() > 0 && raw_bezier.length() >= 4 {
+    // Graphviz parity: limit boxes based on routed spline before recover_slack.
+    pathplan_boxes =
+      @routesplines.limit_boxes_for_spline(
+        pathplan_boxes,
+        raw_bezier,
+        fallback_polyline=pathplan_points,
+      )
+  }
   if using_pathplan && pathplan_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.
     let tail_slope_for =
