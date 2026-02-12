@@ -305,7 +305,8 @@ fn triangle_points(
   if left && !right {
     [tip, left_point, base]
   } else if right && !left {
-    [tip, base, right_point]
+    // Graphviz parity: right half triangle orders [tip, right, base].
+    [tip, right_point, base]
   } else {
     [tip, left_point, right_point]
   }
