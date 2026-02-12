@@ -187,13 +187,6 @@ priv struct DotRoutingSpatialData {
 }
 
 ///|
-priv struct DotRoutingEdgesAndPaddingData {
-  edges_out : Array[DotLayoutEdge]
-  port_pad_below : Double
-  port_pad_above : Double
-}
-
-///|
 priv struct DotRoutingEdgeSolvePrecomputeData {
   routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics
   routing_path_context_data : DotRoutingPathContextData
@@ -442,19 +435,14 @@ fn run_dot_routing_stage_from_inputs(
       routing_edge_solve_inputs.routing_context,
       routing_edge_solve_inputs.enable_complex_tuning,
     )
-  let routing_edges_and_padding_data : DotRoutingEdgesAndPaddingData = {
-    edges_out,
-    port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
-    port_pad_above: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_above,
-  }
   // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")
   {
     nodes_out: routing_spatial_data.nodes_out,
-    edges_out: routing_edges_and_padding_data.edges_out,
-    port_pad_below: routing_edges_and_padding_data.port_pad_below,
-    port_pad_above: routing_edges_and_padding_data.port_pad_above,
+    edges_out,
+    port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
+    port_pad_above: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_above,
   }
 }
 
