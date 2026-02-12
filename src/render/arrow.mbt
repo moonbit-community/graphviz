@@ -394,15 +394,21 @@ fn arrow_shape_primitives(
     }
     ArrowBase::Vee => {
       let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: vee is inverse crow, using wider 0.45 head span.
+      let mut vee_half_width = length * 0.45
+      if penwidth > 4.0 {
+        vee_half_width = vee_half_width * penwidth / 4.0
+      }
       let points = triangle_points(
         tip,
         base,
         perp,
-        half_width,
+        vee_half_width,
         shape.left,
         shape.right,
       )
-      ops.push(DrawOp::Polygon(filled~, points~))
+      // Graphviz parity: crow/vee ignore ARR_MOD_OPEN and stay filled.
+      ops.push(DrawOp::Polygon(filled=true, points~))
     }
     ArrowBase::Inv => {
       let base = tip
