@@ -385,23 +385,6 @@ priv struct DotRoutingPathContextInputs {
 }
 
 ///|
-/// Graphviz parity: routing path-groups selection prefers positioned x-groups,
-/// then vnode-expanded order groups, then base order groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_path_groups_for_routing_stage(
-  positions_state : PositionResult,
-  ordering : OrderingResult,
-) -> Map[Int, Array[String]] {
-  if positions_state.x_groups.length() > 0 {
-    positions_state.x_groups
-  } else if ordering.ordered_groups_with_vnodes.length() > 0 {
-    ordering.ordered_groups_with_vnodes
-  } else {
-    ordering.ordered_groups
-  }
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -559,12 +542,17 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   }
   // Graphviz parity: routing path-context execution consumes typed
   // stage payload while preserving path-group selection then context-assembly order.
+  // Graphviz parity: path-groups selection prefers positioned x-groups,
+  // then vnode-expanded order groups, then base order groups.
   // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
   let path_groups =
-    build_path_groups_for_routing_stage(
-      routing_path_context_inputs.positions_state,
-      routing_path_context_inputs.rank_stage.ordering,
-    )
+    if routing_path_context_inputs.positions_state.x_groups.length() > 0 {
+      routing_path_context_inputs.positions_state.x_groups
+    } else if routing_path_context_inputs.rank_stage.ordering.ordered_groups_with_vnodes.length() > 0 {
+      routing_path_context_inputs.rank_stage.ordering.ordered_groups_with_vnodes
+    } else {
+      routing_path_context_inputs.rank_stage.ordering.ordered_groups
+    }
   // Graphviz parity: routing context is assembled from typed
   // path-context inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
