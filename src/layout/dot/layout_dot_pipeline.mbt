@@ -273,15 +273,12 @@ fn build_dot_rank_stage_result_for_stage(
 }
 
 ///|
-/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
-/// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
+/// Graphviz parity: dot rank/order stage consumes typed rank-stage inputs and
+/// keeps rank-data/rank-height/cluster/order compute sequence unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_dot_rank_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
+fn run_dot_rank_stage_from_inputs(
+  rank_stage_inputs : DotRankStageInputs,
 ) -> DotRankStage {
-  let rank_stage_inputs =
-    build_dot_rank_stage_inputs(graph, prep)
   let rank_data =
     build_rank_data_for_dot_rank_stage(rank_stage_inputs)
   let rank_heights =
@@ -301,6 +298,19 @@ fn compute_dot_rank_stage(
     cluster_meta,
     ordering,
   )
+}
+
+///|
+/// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
+/// (dotinit.c, rank.c, mincross.c, flat.c, position.c).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_dot_rank_stage(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+) -> DotRankStage {
+  let rank_stage_inputs =
+    build_dot_rank_stage_inputs(graph, prep)
+  run_dot_rank_stage_from_inputs(rank_stage_inputs)
 }
 
 ///|
