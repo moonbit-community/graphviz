@@ -556,8 +556,12 @@ fn build_routing_spatial_output_from_node_port_data_for_stage(
 fn build_routing_spatial_data_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialData {
-  let routing_node_and_port_inputs =
-    build_routing_node_and_port_inputs_for_stage(routing_stage_inputs)
+  // Graphviz parity: routing node/port input payload assembly reads
+  // stage fields without argument reordering.
+  let routing_node_and_port_inputs : DotRoutingNodeAndPortInputs = {
+    prep: routing_stage_inputs.prep,
+    positions_state: routing_stage_inputs.positions_state,
+  }
   let routing_node_and_port_data =
     run_routing_node_and_port_from_inputs(routing_node_and_port_inputs)
   build_routing_spatial_output_from_node_port_data_for_stage(
@@ -581,19 +585,6 @@ fn build_port_layout_maps_for_routing_stage(
     prep.rankdir,
     prep.has_port_edges,
   )
-}
-
-///|
-/// Graphviz parity: routing node/port input payload assembly reads stage fields
-/// without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_node_and_port_inputs_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-) -> DotRoutingNodeAndPortInputs {
-  {
-    prep: routing_stage_inputs.prep,
-    positions_state: routing_stage_inputs.positions_state,
-  }
 }
 
 ///|
