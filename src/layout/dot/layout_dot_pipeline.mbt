@@ -153,13 +153,6 @@ priv struct DotRoutingStage {
 }
 
 ///|
-priv struct DotRoutingPaddingAndHeadPortMetrics {
-  port_pad_below : Double
-  port_pad_above : Double
-  head_port_metrics : HeadPortMetrics
-}
-
-///|
 priv struct DotRoutingSpatialData {
   nodes_out : Array[DotLayoutNode]
   label_ports_map : Map[String, Map[String, RecordPort]]
@@ -233,7 +226,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   positions_state : PositionResult,
   routing_spatial_data : DotRoutingSpatialData,
   enable_complex_tuning : Bool,
-) -> (DotRoutingPaddingAndHeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
+) -> (Double, Double, HeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
@@ -253,11 +246,6 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       prep.record_orientation,
       enable_complex_tuning,
     )
-  let routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics = {
-    port_pad_below,
-    port_pad_above,
-    head_port_metrics,
-  }
   // Graphviz parity: routing path-context execution consumes routing-stage
   // fields while preserving path-group selection then context-assembly order.
   // Graphviz parity: path-groups selection prefers positioned x-groups,
@@ -290,7 +278,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       positions_state.vnode_positions,
       routing_spatial_data.cluster_bboxes,
     )
-  (routing_padding_and_head_port_metrics, path_groups, routing_context)
+  (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context)
 }
 
 ///|
@@ -311,7 +299,7 @@ fn run_dot_routing_stage_from_inputs(
   let enable_complex_tuning = complex_tuning_enabled()
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
-  let (routing_padding_and_head_port_metrics, path_groups, routing_context) =
+  let (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context) =
     build_routing_edge_solve_precompute_data_for_stage(
       prep,
       rank_stage,
@@ -347,7 +335,7 @@ fn run_dot_routing_stage_from_inputs(
       routing_spatial_data.label_ports_map,
       routing_spatial_data.label_ports_raw,
       label_edge_counts,
-      routing_padding_and_head_port_metrics.head_port_metrics,
+      head_port_metrics,
       positions_state.flat_label_edge_vnodes,
       routing_context,
       enable_complex_tuning,
@@ -358,8 +346,8 @@ fn run_dot_routing_stage_from_inputs(
   {
     nodes_out: routing_spatial_data.nodes_out,
     edges_out,
-    port_pad_below: routing_padding_and_head_port_metrics.port_pad_below,
-    port_pad_above: routing_padding_and_head_port_metrics.port_pad_above,
+    port_pad_below: port_pad_below,
+    port_pad_above: port_pad_above,
   }
 }
 
