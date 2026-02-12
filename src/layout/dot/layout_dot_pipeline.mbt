@@ -1022,26 +1022,12 @@ fn run_routing_edges_and_padding_from_inputs(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding substage derives metrics, path
-/// context, and routed edges from spatial+tuning data in fixed order.
+/// Graphviz parity: routing edge/padding substage consumes typed stage payload
+/// and keeps metrics/path-context/edge-solve order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_edges_and_padding_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
-  routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  routing_inputs : DotRoutingEdgesAndPaddingInputs,
 ) -> DotRoutingEdgesAndPaddingData {
-  let routing_inputs =
-    build_routing_edges_and_padding_inputs_for_stage(
-      graph,
-      prep,
-      rank_stage,
-      positions_state,
-      routing_spatial_data,
-      routing_label_and_tuning_data,
-    )
   run_routing_edges_and_padding_from_inputs(routing_inputs)
 }
 
@@ -1112,14 +1098,16 @@ fn build_routing_edges_and_padding_data_from_spatial_tuning_data_for_stage(
   routing_stage_inputs : DotRoutingStageInputs,
   routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData,
 ) -> DotRoutingEdgesAndPaddingData {
-  build_routing_edges_and_padding_data_for_stage(
-    routing_stage_inputs.graph,
-    routing_stage_inputs.prep,
-    routing_stage_inputs.rank_stage,
-    routing_stage_inputs.positions_state,
-    routing_spatial_and_tuning_data.routing_spatial_data,
-    routing_spatial_and_tuning_data.routing_label_and_tuning_data,
-  )
+  let routing_inputs =
+    build_routing_edges_and_padding_inputs_for_stage(
+      routing_stage_inputs.graph,
+      routing_stage_inputs.prep,
+      routing_stage_inputs.rank_stage,
+      routing_stage_inputs.positions_state,
+      routing_spatial_and_tuning_data.routing_spatial_data,
+      routing_spatial_and_tuning_data.routing_label_and_tuning_data,
+    )
+  build_routing_edges_and_padding_data_for_stage(routing_inputs)
 }
 
 ///|
