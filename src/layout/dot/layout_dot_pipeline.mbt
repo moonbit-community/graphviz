@@ -607,29 +607,6 @@ fn build_edges_out_for_routing_stage(
 }
 
 ///|
-/// Graphviz parity: routing edge-solve input payload assembly reads typed
-/// edge/padding stage inputs and grouped precompute bundles without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edge_solve_inputs_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-  routing_edge_solve_precompute_data : DotRoutingEdgeSolvePrecomputeData,
-) -> DotRoutingEdgeSolveInputs {
-  {
-    graph: routing_inputs.graph,
-    prep: routing_inputs.prep,
-    rank_stage: routing_inputs.rank_stage,
-    positions_state: routing_inputs.positions_state,
-    path_groups: routing_edge_solve_precompute_data.routing_path_context_data.path_groups,
-    label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
-    label_ports_raw: routing_inputs.routing_spatial_data.label_ports_raw,
-    label_edge_counts: routing_inputs.routing_label_and_tuning_data.label_edge_counts,
-    head_port_metrics: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.head_port_metrics,
-    routing_context: routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
-    enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
-  }
-}
-
-///|
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
@@ -709,11 +686,21 @@ fn run_dot_routing_stage_from_inputs(
     build_routing_edge_solve_precompute_data_for_stage(routing_inputs)
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
   // inputs plus grouped edge-solve precompute payload without argument reordering.
-  let routing_edge_solve_inputs =
-    build_routing_edge_solve_inputs_for_stage(
-      routing_inputs,
-      routing_edge_solve_precompute_data,
-    )
+  // Graphviz parity: routing edge-solve input payload assembly
+  // reads typed edge/padding inputs and grouped precompute bundles.
+  let routing_edge_solve_inputs : DotRoutingEdgeSolveInputs = {
+    graph: routing_inputs.graph,
+    prep: routing_inputs.prep,
+    rank_stage: routing_inputs.rank_stage,
+    positions_state: routing_inputs.positions_state,
+    path_groups: routing_edge_solve_precompute_data.routing_path_context_data.path_groups,
+    label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
+    label_ports_raw: routing_inputs.routing_spatial_data.label_ports_raw,
+    label_edge_counts: routing_inputs.routing_label_and_tuning_data.label_edge_counts,
+    head_port_metrics: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.head_port_metrics,
+    routing_context: routing_edge_solve_precompute_data.routing_path_context_data.routing_context,
+    enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
+  }
   let edges_out =
     build_edges_out_for_routing_stage(routing_edge_solve_inputs)
   let routing_edges_and_padding_data : DotRoutingEdgesAndPaddingData = {
