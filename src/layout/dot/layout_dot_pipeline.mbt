@@ -900,24 +900,10 @@ fn run_routing_edges_and_padding_from_inputs(
       routing_inputs,
       routing_edge_solve_precompute_data,
     )
-  build_routing_edges_and_padding_output_for_stage(
-    edges_out,
-    routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics,
-  )
-}
-
-///|
-/// Graphviz parity: routing edge/padding output object maps routed edges with
-/// computed port padding metrics without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_output_for_stage(
-  edges_out : Array[DotLayoutEdge],
-  routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics,
-) -> DotRoutingEdgesAndPaddingData {
   {
     edges_out,
-    port_pad_below: routing_padding_and_head_port_metrics.port_pad_below,
-    port_pad_above: routing_padding_and_head_port_metrics.port_pad_above,
+    port_pad_below: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_below,
+    port_pad_above: routing_edge_solve_precompute_data.routing_padding_and_head_port_metrics.port_pad_above,
   }
 }
 
