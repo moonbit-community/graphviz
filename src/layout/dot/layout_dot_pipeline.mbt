@@ -432,10 +432,15 @@ fn build_routing_spatial_data_for_stage(
       routing_node_and_port_inputs.prep.output_sizes,
       routing_node_and_port_inputs.prep.record_orientation,
     )
+  // Graphviz parity: routing port maps are built from final node
+  // geometry and rankdir/port-edge flags before padding and edge routing.
   let port_maps =
-    build_port_layout_maps_for_routing_stage(
-      routing_node_and_port_inputs.prep,
+    build_port_layout_maps(
       nodes_out,
+      routing_node_and_port_inputs.prep.output_sizes,
+      routing_node_and_port_inputs.prep.record_orientation,
+      routing_node_and_port_inputs.prep.rankdir,
+      routing_node_and_port_inputs.prep.has_port_edges,
     )
   let routing_node_and_port_data : DotRoutingNodeAndPortData = {
     nodes_out,
@@ -465,23 +470,6 @@ fn build_routing_spatial_data_for_stage(
     label_ports_raw: routing_node_and_port_data.label_ports_raw,
     cluster_bboxes,
   }
-}
-
-///|
-/// Graphviz parity: routing port maps are built from final node geometry and
-/// rankdir/port-edge flags before padding and edge routing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_port_layout_maps_for_routing_stage(
-  prep : LayoutPrep,
-  nodes_out : Array[DotLayoutNode],
-) -> PortLayoutMaps {
-  build_port_layout_maps(
-    nodes_out,
-    prep.output_sizes,
-    prep.record_orientation,
-    prep.rankdir,
-    prep.has_port_edges,
-  )
 }
 
 ///|
