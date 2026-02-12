@@ -450,20 +450,43 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polyline(points=[back, line_end]))
     }
     ArrowBase::Tee => {
-      let tee_length = length * 0.3
-      let back = point_add(tip, point_scale(dir, -tee_length))
-      let points = box_points(
-        tip,
-        back,
-        perp,
-        half_width,
-        shape.left,
-        shape.right,
-      )
+      // Graphviz parity: tee geometry follows arrows.c arrow_type_tee.
+      let mut p = tip
+      let u = point_scale(dir, -length)
+      let mut q = point_add(p, u)
+      let mut m = point_add(p, point_scale(u, 0.2))
+      let mut n = point_add(p, point_scale(u, 0.6))
+      let v = point(-u.y, u.x)
+      let u_len = Double::sqrt(u.x * u.x + u.y * u.y)
+      let polygon_extend_over_polyline = penwidth / 2.0 - 0.2 * u_len
+      if u_len > 0.0 && polygon_extend_over_polyline > 0.0 {
+        let p_dir = point(-u.x, -u.y)
+        let p_dir_len = Double::sqrt(p_dir.x * p_dir.x + p_dir.y * p_dir.y)
+        let delta = point(
+          polygon_extend_over_polyline * p_dir.x / p_dir_len,
+          polygon_extend_over_polyline * p_dir.y / p_dir_len,
+        )
+        p = point_sub(p, delta)
+        m = point_sub(m, delta)
+        n = point_sub(n, delta)
+        q = point_sub(q, delta)
+      }
+      let points : Array[@geom.Point] = [
+        point_add(m, v),
+        point_sub(m, v),
+        point_sub(n, v),
+        point_add(n, v),
+      ]
+      if shape.left && !shape.right {
+        points[0] = m
+        points[3] = n
+      } else if shape.right && !shape.left {
+        points[1] = m
+        points[2] = n
+      }
       // Graphviz parity: tee heads are always filled (ARR_MOD_OPEN ignored).
       ops.push(DrawOp::Polygon(filled=true, points~))
-      let line_end = point_add(back, point_scale(dir, -length * 0.6))
-      ops.push(DrawOp::Polyline(points=[back, line_end]))
+      ops.push(DrawOp::Polyline(points=[p, q]))
     }
     ArrowBase::Diamond => {
       let base = point_add(tip, point_scale(dir, -length))
