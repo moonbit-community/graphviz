@@ -1120,16 +1120,6 @@ fn build_dot_routing_stage_inputs(
 }
 
 ///|
-/// Graphviz parity: routing spatial+tuning precompute extraction reads typed
-/// routing-stage inputs without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_spatial_and_tuning_data_from_stage_inputs(
-  routing_stage_inputs : DotRoutingStageInputs,
-) -> DotRoutingSpatialAndTuningData {
-  build_routing_spatial_and_tuning_data_for_stage(routing_stage_inputs)
-}
-
-///|
 /// Graphviz parity: dot routing stage consumes typed routing input payload and
 /// preserves Graphviz routing-stage precompute and solve order.
 /// Do not change behavior without updating fixtures/tests.
@@ -1137,9 +1127,7 @@ fn run_dot_routing_stage_from_inputs(
   routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingStage {
   let routing_spatial_and_tuning_data =
-    build_routing_spatial_and_tuning_data_from_stage_inputs(
-      routing_stage_inputs,
-    )
+    build_routing_spatial_and_tuning_data_for_stage(routing_stage_inputs)
   build_dot_routing_stage_from_spatial_tuning_data_for_stage(
     routing_stage_inputs,
     routing_spatial_and_tuning_data,
