@@ -63,8 +63,8 @@ fn compute_dot_rank_stage(
     )
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
-  let ordering_and_vnodes_inputs =
-    build_ordering_and_vnodes_inputs(
+  let ordering =
+    compute_ordering_and_vnodes(
       graph,
       prep.nodes,
       prep.edges,
@@ -83,27 +83,6 @@ fn compute_dot_rank_stage(
       cluster_meta,
       prep.port_order_positions,
       prep.port_order_contrib,
-    )
-  let ordering =
-    compute_ordering_and_vnodes(
-      ordering_and_vnodes_inputs.graph,
-      ordering_and_vnodes_inputs.nodes,
-      ordering_and_vnodes_inputs.edges,
-      ordering_and_vnodes_inputs.edge_tail,
-      ordering_and_vnodes_inputs.edge_head,
-      ordering_and_vnodes_inputs.edge_reversed,
-      ordering_and_vnodes_inputs.edge_out_order,
-      ordering_and_vnodes_inputs.ranks,
-      ordering_and_vnodes_inputs.groups,
-      ordering_and_vnodes_inputs.rank_keys,
-      ordering_and_vnodes_inputs.node_order,
-      ordering_and_vnodes_inputs.order_sizes,
-      ordering_and_vnodes_inputs.nodesep_pt,
-      ordering_and_vnodes_inputs.has_edge_labels,
-      ordering_and_vnodes_inputs.rankdir,
-      ordering_and_vnodes_inputs.cluster_meta,
-      ordering_and_vnodes_inputs.port_order_positions,
-      ordering_and_vnodes_inputs.port_order_contrib,
     )
   // Graphviz parity: rank-stage result object keeps computed
   // rank/cluster/order artifacts unchanged and emits rank-order trace.
