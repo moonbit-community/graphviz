@@ -32,17 +32,6 @@ priv struct DotRankStageOrderingInputs {
 }
 
 ///|
-/// Graphviz parity: dot routing-stage input payload keeps graph/prep/rank/
-/// position artifacts in the same routing-stage call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotRoutingStageInputs {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_stage : DotRankStage
-  positions_state : PositionResult
-}
-
-///|
 /// Graphviz parity: dot rank/order stage consumes typed rank-stage inputs and
 /// keeps rank-data/rank-height/cluster/order compute sequence unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -329,13 +318,16 @@ priv struct DotRoutingPathContextInputs {
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_data_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
 ) -> DotRoutingSpatialData {
   // Graphviz parity: routing node/port input payload assembly reads
   // stage fields without argument reordering.
   let routing_node_and_port_inputs : DotRoutingNodeAndPortInputs = {
-    prep: routing_stage_inputs.prep,
-    positions_state: routing_stage_inputs.positions_state,
+    prep: prep,
+    positions_state: positions_state,
   }
   // Graphviz parity: node geometry projection and port-map derivation
   // consume typed stage payload in the same precompute order.
@@ -367,16 +359,16 @@ fn build_routing_spatial_data_for_stage(
   // routing-stage inputs, positioned nodes, and rank/cluster maps.
   let cluster_bboxes =
     compute_cluster_bboxes_for_routing(
-      routing_stage_inputs.graph,
+      graph,
       routing_node_and_port_data.nodes_out,
-      routing_stage_inputs.positions_state.cluster_ln_x,
-      routing_stage_inputs.positions_state.cluster_rn_x,
-      routing_stage_inputs.positions_state.cluster_bbox_heights,
-      routing_stage_inputs.prep.rankdir,
-      routing_stage_inputs.rank_stage.rank_data.ranks,
-      routing_stage_inputs.positions_state.rank_y,
-      routing_stage_inputs.positions_state.rank_ht1,
-      routing_stage_inputs.positions_state.rank_ht2,
+      positions_state.cluster_ln_x,
+      positions_state.cluster_rn_x,
+      positions_state.cluster_bbox_heights,
+      prep.rankdir,
+      rank_stage.rank_data.ranks,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
     )
   {
     nodes_out: routing_node_and_port_data.nodes_out,
@@ -481,23 +473,26 @@ fn build_routing_edge_solve_precompute_data_for_stage(
 /// preserves Graphviz routing-stage precompute and solve order.
 /// Do not change behavior without updating fixtures/tests.
 fn run_dot_routing_stage_from_inputs(
-  routing_stage_inputs : DotRoutingStageInputs,
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_stage : DotRankStage,
+  positions_state : PositionResult,
 ) -> DotRoutingStage {
   let routing_spatial_data =
-    build_routing_spatial_data_for_stage(routing_stage_inputs)
+    build_routing_spatial_data_for_stage(graph, prep, rank_stage, positions_state)
   // Graphviz parity: label-edge counts and complex-tuning gate
   // are read from typed routing-stage inputs before metric derivation.
   let routing_label_and_tuning_data : DotRoutingLabelAndTuningData = {
-    label_edge_counts: build_label_edge_counts(routing_stage_inputs.prep.edges),
+    label_edge_counts: build_label_edge_counts(prep.edges),
     enable_complex_tuning: complex_tuning_enabled(),
   }
   // Graphviz parity: routing edge/padding input payload assembly reads
   // typed stage and spatial+tuning bundles without argument reordering.
   let routing_inputs : DotRoutingEdgesAndPaddingInputs = {
-    graph: routing_stage_inputs.graph,
-    prep: routing_stage_inputs.prep,
-    rank_stage: routing_stage_inputs.rank_stage,
-    positions_state: routing_stage_inputs.positions_state,
+    graph: graph,
+    prep: prep,
+    rank_stage: rank_stage,
+    positions_state: positions_state,
     routing_spatial_data,
     routing_label_and_tuning_data,
   }
@@ -579,13 +574,7 @@ fn compute_dot_routing_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingStage {
-  let routing_stage_inputs : DotRoutingStageInputs = {
-    // Graphviz parity: dot routing-stage input payload assembly reads graph/prep/
-    // rank-stage/position-stage fields without argument reordering.
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-  }
-  run_dot_routing_stage_from_inputs(routing_stage_inputs)
+  // Graphviz parity: dot routing-stage forwards graph/prep/rank/position
+  // artifacts directly to routing execution without argument reordering.
+  run_dot_routing_stage_from_inputs(graph, prep, rank_stage, positions_state)
 }
