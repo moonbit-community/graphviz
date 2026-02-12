@@ -1003,16 +1003,6 @@ fn run_routing_edges_and_padding_from_inputs(
 }
 
 ///|
-/// Graphviz parity: routing edge/padding substage consumes typed stage payload
-/// and keeps metrics/path-context/edge-solve order unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_edges_and_padding_data_for_stage(
-  routing_inputs : DotRoutingEdgesAndPaddingInputs,
-) -> DotRoutingEdgesAndPaddingData {
-  run_routing_edges_and_padding_from_inputs(routing_inputs)
-}
-
-///|
 /// Graphviz parity: routing edge/padding output object maps routed edges with
 /// computed port padding metrics without additional transforms.
 /// Do not change behavior without updating fixtures/tests.
@@ -1084,7 +1074,7 @@ fn build_routing_edges_and_padding_data_from_spatial_tuning_data_for_stage(
       routing_stage_inputs,
       routing_spatial_and_tuning_data,
     )
-  build_routing_edges_and_padding_data_for_stage(routing_inputs)
+  run_routing_edges_and_padding_from_inputs(routing_inputs)
 }
 
 ///|
