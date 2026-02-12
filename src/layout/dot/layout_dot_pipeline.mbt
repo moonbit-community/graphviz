@@ -643,21 +643,6 @@ fn build_port_layout_maps_for_routing_stage(
 }
 
 ///|
-/// Graphviz parity: routing node/port output object maps projected nodes and
-/// derived port-layout maps without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_node_and_port_output_for_stage(
-  nodes_out : Array[DotLayoutNode],
-  port_maps : PortLayoutMaps,
-) -> DotRoutingNodeAndPortData {
-  {
-    nodes_out,
-    label_ports_map: port_maps.label_ports_map,
-    label_ports_raw: port_maps.label_ports_raw,
-  }
-}
-
-///|
 /// Graphviz parity: routing node/port input payload assembly reads stage fields
 /// without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -689,7 +674,11 @@ fn run_routing_node_and_port_from_inputs(
       routing_node_and_port_inputs.prep,
       nodes_out,
     )
-  build_routing_node_and_port_output_for_stage(nodes_out, port_maps)
+  {
+    nodes_out,
+    label_ports_map: port_maps.label_ports_map,
+    label_ports_raw: port_maps.label_ports_raw,
+  }
 }
 
 ///|
