@@ -65,17 +65,6 @@ priv struct DotRoutingStageInputs {
 }
 
 ///|
-/// Graphviz parity: dot rank-stage input payload assembly reads graph/prep
-/// fields without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_dot_rank_stage_inputs(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-) -> DotRankStageInputs {
-  { graph, prep }
-}
-
-///|
 /// Graphviz parity: cluster metadata in rank/order stage uses the same
 /// rank-group and edge endpoint wiring as Graphviz ordering setup.
 /// Do not change behavior without updating fixtures/tests.
@@ -308,8 +297,12 @@ fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
 ) -> DotRankStage {
-  let rank_stage_inputs =
-    build_dot_rank_stage_inputs(graph, prep)
+  let rank_stage_inputs : DotRankStageInputs = {
+    // Graphviz parity: dot rank-stage input payload assembly reads graph/prep
+    // fields without argument reordering.
+    graph,
+    prep,
+  }
   run_dot_rank_stage_from_inputs(rank_stage_inputs)
 }
 
