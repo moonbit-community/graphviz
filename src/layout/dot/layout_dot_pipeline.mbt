@@ -464,22 +464,6 @@ fn build_routing_spatial_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: label-edge counts and complex-tuning gate are read from
-/// typed routing-stage inputs before metric derivation and spline routing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_routing_label_and_tuning_data_for_stage(
-  routing_stage_inputs : DotRoutingStageInputs,
-) -> DotRoutingLabelAndTuningData {
-  let label_edge_counts =
-    build_label_edge_counts(routing_stage_inputs.prep.edges)
-  let enable_complex_tuning = complex_tuning_enabled()
-  {
-    label_edge_counts,
-    enable_complex_tuning,
-  }
-}
-
-///|
 /// Graphviz parity: port padding and head-port metrics consume typed metric
 /// inputs while preserving compute order before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -619,8 +603,12 @@ fn run_dot_routing_stage_from_inputs(
 ) -> DotRoutingStage {
   let routing_spatial_data =
     build_routing_spatial_data_for_stage(routing_stage_inputs)
-  let routing_label_and_tuning_data =
-    build_routing_label_and_tuning_data_for_stage(routing_stage_inputs)
+  // Graphviz parity: label-edge counts and complex-tuning gate
+  // are read from typed routing-stage inputs before metric derivation.
+  let routing_label_and_tuning_data : DotRoutingLabelAndTuningData = {
+    label_edge_counts: build_label_edge_counts(routing_stage_inputs.prep.edges),
+    enable_complex_tuning: complex_tuning_enabled(),
+  }
   let routing_spatial_and_tuning_data : DotRoutingSpatialAndTuningData = {
     routing_spatial_data,
     routing_label_and_tuning_data,
