@@ -431,70 +431,6 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
-const MIN_ARROW_DIST2 : Double = 0.00000001
-
-///|
-fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
-  let dx = a.x - b.x
-  let dy = a.y - b.y
-  dx * dx + dy * dy
-}
-
-///|
-fn points_close(a : @geom.Point, b : @geom.Point) -> Bool {
-  point_dist2(a, b) <= MIN_ARROW_DIST2
-}
-
-///|
-fn fallback_arrow_from(tip : @geom.Point, at_head : Bool) -> @geom.Point {
-  if at_head {
-    { x: tip.x - 1.0, y: tip.y }
-  } else {
-    { x: tip.x + 1.0, y: tip.y }
-  }
-}
-
-///|
-fn select_arrow_from(
-  spline : @geom.Spline,
-  tip : @geom.Point,
-  from : @geom.Point,
-  at_head : Bool,
-) -> @geom.Point {
-  if !points_close(tip, from) {
-    return from
-  }
-  if at_head {
-    let mut idx = spline.points.length()
-    while idx > 0 {
-      idx = idx - 1
-      let candidate = spline.points[idx]
-      if !points_close(candidate, tip) {
-        return candidate
-      }
-    }
-    match spline.start {
-      Some(point) => if !points_close(point, tip) { return point }
-      None => ()
-    }
-  } else {
-    let mut idx = 0
-    while idx < spline.points.length() {
-      let candidate = spline.points[idx]
-      if !points_close(candidate, tip) {
-        return candidate
-      }
-      idx = idx + 1
-    }
-    match spline.end {
-      Some(point) => if !points_close(point, tip) { return point }
-      None => ()
-    }
-  }
-  fallback_arrow_from(tip, at_head)
-}
-
-///|
 fn arrow_primitives(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -521,12 +457,13 @@ fn arrow_primitives(
       None => spline.points[0]
     }
   }
-  let from_raw = if at_head {
-    spline.points[spline.points.length() - 2]
+  // Graphviz parity: arrow direction uses the end control point (bz.list[size-1]),
+  // not the preceding control point.
+  let from = if at_head {
+    spline.points[spline.points.length() - 1]
   } else {
-    spline.points[1]
+    spline.points[0]
   }
-  let from = select_arrow_from(spline, tip, from_raw, at_head)
   let arrowhead = if at_head {
     layout.edge.get_attr("arrowhead")
   } else {
