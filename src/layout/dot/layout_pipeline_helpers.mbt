@@ -10594,6 +10594,282 @@ fn build_noncluster_edge_indices_for_reorder(
 }
 
 ///|
+/// Graphviz parity: per-component neighbor filtering preserves the local ND_out
+/// / ND_in order used when mincross runs each connected component separately.
+/// Do not change behavior without updating fixtures/tests.
+fn filter_noncluster_neighbor_map_for_component(
+  component_nodes : Array[String],
+  component_set : Map[String, Bool],
+  neighbors : Map[String, Array[String]],
+) -> Map[String, Array[String]] {
+  let filtered : Map[String, Array[String]] = Map::new()
+  for name in component_nodes {
+    let values = match neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let keep : Array[String] = []
+    for other in values {
+      if component_set.get(other) is Some(_) {
+        keep.push(other)
+      }
+    }
+    filtered[name] = keep
+  }
+  filtered
+}
+
+///|
+/// Graphviz parity: component-local flat constraints are forwarded to mincross
+/// only when both endpoints belong to the current connected component.
+/// Do not change behavior without updating fixtures/tests.
+fn filter_noncluster_flat_constraints_for_component(
+  flat_constraints : Map[String, Bool],
+  component_set : Map[String, Bool],
+) -> Map[String, Bool] {
+  let filtered : Map[String, Bool] = Map::new()
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if tail == "" || head == "" {
+          continue
+        }
+        if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
+          filtered[key] = true
+        }
+      }
+      None => ()
+    }
+  }
+  filtered
+}
+
+///|
+/// Graphviz parity: component reorder keeps each rank's relative extraction order
+/// from the full group list before running mincross on that component.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_reorder_component_groups(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  component_set : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let component_groups : Map[Int, Array[String]] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let keep : Array[String] = []
+    for name in names {
+      if component_set.get(name) is Some(_) {
+        keep.push(name)
+      }
+    }
+    if keep.length() > 0 {
+      component_groups[rank] = keep
+    }
+  }
+  component_groups
+}
+
+///|
+/// Graphviz parity: non-cluster mincross traverses connected components in
+/// GD_nlist order (real nodes first), then runs mincross on each component.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_noncluster_reorder_components(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  order_node_order : Map[String, Int],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  flat_constraints : Map[String, Bool],
+) -> Array[Array[String]] {
+  let order_nodes = build_order_nodes_from_groups(groups, rank_keys)
+  if order_nodes.length() == 0 {
+    return []
+  }
+  let node_set = build_node_membership_set(order_nodes)
+  let fallback_order : Map[String, Int] = Map::new()
+  for i, name in order_nodes {
+    fallback_order[name] = i
+  }
+  let start_nodes = order_nodes.copy()
+  if start_nodes.length() > 1 {
+    start_nodes.sort_by((a, b) => {
+      let a_idx = match order_node_order.get(a) {
+        Some(value) => value
+        None =>
+          match fallback_order.get(a) {
+            Some(value) => value
+            None => 0
+          }
+      }
+      let b_idx = match order_node_order.get(b) {
+        Some(value) => value
+        None =>
+          match fallback_order.get(b) {
+            Some(value) => value
+            None => 0
+          }
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let preferred_start_nodes : Array[String] = []
+  for name in start_nodes {
+    if !name.has_prefix(EDGE_VNODE_PREFIX) {
+      preferred_start_nodes.push(name)
+    }
+  }
+  let traversal_starts =
+    if preferred_start_nodes.length() > 0 { preferred_start_nodes } else { start_nodes }
+
+  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    let out_list = match graphviz_out_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let out_keep : Array[String] = []
+    for other in out_list {
+      if node_set.get(other) is Some(_) {
+        out_keep.push(other)
+      }
+    }
+    out_neighbors[name] = out_keep
+
+    let in_list = match graphviz_in_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let in_keep : Array[String] = []
+    for other in in_list {
+      if node_set.get(other) is Some(_) {
+        in_keep.push(other)
+      }
+    }
+    in_neighbors[name] = in_keep
+    flat_out[name] = []
+    flat_in[name] = []
+  }
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if tail == "" || head == "" {
+          continue
+        }
+        if node_set.get(tail) is None || node_set.get(head) is None {
+          continue
+        }
+        match flat_out.get(tail) {
+          Some(list) => list.push(head)
+          None => flat_out[tail] = [head]
+        }
+        match flat_in.get(head) {
+          Some(list) => list.push(tail)
+          None => flat_in[head] = [tail]
+        }
+      }
+      None => ()
+    }
+  }
+
+  let visited : Map[String, Bool] = Map::new()
+  for name in order_nodes {
+    visited[name] = false
+  }
+  let components : Array[Array[String]] = []
+  let stack : Array[String] = []
+  let push_neighbors = (list : Array[String]) => {
+    let mut idx = list.length()
+    while idx > 0 {
+      idx = idx - 1
+      let other = list[idx]
+      if node_set.get(other) is None {
+        continue
+      }
+      if visited.get(other) != Some(true) {
+        stack.push(other)
+      }
+    }
+  }
+  let visit_start = (start : String) => {
+    if visited.get(start) == Some(true) {
+      ()
+    } else {
+      let component : Array[String] = []
+      stack.push(start)
+      while stack.length() > 0 {
+        let current = stack[stack.length() - 1]
+        let _ = stack.pop()
+        if visited.get(current) == Some(true) {
+          continue
+        }
+        visited[current] = true
+        component.push(current)
+        let fin = match flat_in.get(current) {
+          Some(list) => list
+          None => []
+        }
+        let fout = match flat_out.get(current) {
+          Some(list) => list
+          None => []
+        }
+        let inn = match in_neighbors.get(current) {
+          Some(list) => list
+          None => []
+        }
+        let out = match out_neighbors.get(current) {
+          Some(list) => list
+          None => []
+        }
+        push_neighbors(fin)
+        push_neighbors(fout)
+        push_neighbors(inn)
+        push_neighbors(out)
+      }
+      if component.length() > 0 {
+        components.push(component)
+      }
+    }
+  }
+  for start in traversal_starts {
+    visit_start(start)
+  }
+  for start in start_nodes {
+    visit_start(start)
+  }
+  components
+}
+
+///|
 /// Graphviz parity: non-cluster rank reorder runs build_ranks permutation using
 /// Graphviz ND_out/ND_in neighbor ordering and current edge/materialized maps.
 /// Do not change behavior without updating fixtures/tests.
@@ -12059,8 +12335,50 @@ fn trace_root_mincross_graphviz_neighbors(
 }
 
 ///|
-/// Graphviz parity: root ReMincross executes reorder_rank_groups using
-/// root/skeleton-filtered edges, preserving ND_in/ND_out neighbor guards.
+/// Graphviz parity: component-local node-position hints are passed to mincross
+/// only for nodes belonging to the active connected component.
+/// Do not change behavior without updating fixtures/tests.
+fn filter_node_double_map_for_component(
+  component_set : Map[String, Bool],
+  values : Map[String, Double],
+) -> Map[String, Double] {
+  let filtered : Map[String, Double] = Map::new()
+  for name, value in values {
+    if component_set.get(name) is Some(_) {
+      filtered[name] = value
+    }
+  }
+  filtered
+}
+
+///|
+/// Graphviz parity: component-local port-order contributor lists drop endpoints
+/// outside the active connected component before mincross.
+/// Do not change behavior without updating fixtures/tests.
+fn filter_node_contrib_map_for_component(
+  component_set : Map[String, Bool],
+  values : Map[String, Array[(String, Double)]],
+) -> Map[String, Array[(String, Double)]] {
+  let filtered : Map[String, Array[(String, Double)]] = Map::new()
+  for name, entries in values {
+    if component_set.get(name) is None {
+      continue
+    }
+    let keep : Array[(String, Double)] = []
+    for entry in entries {
+      let (other, weight) = entry
+      if component_set.get(other) is Some(_) {
+        keep.push((other, weight))
+      }
+    }
+    filtered[name] = keep
+  }
+  filtered
+}
+
+///|
+/// Graphviz parity: root ReMincross runs mincross per connected component
+/// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_rank_reorder(
   order_rank_keys_for_mincross : Array[Int],
@@ -12090,35 +12408,182 @@ fn run_root_mincross_rank_reorder(
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
-    order_rank_keys_for_mincross,
-    order_groups_for_mincross,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    edge_order,
-    order_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    preferred_positions,
-    order_cluster_skeleton,
-    order_flat_constraints,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
-    graphviz_flip=graphviz_flip,
-  )
+  let mut has_cluster_keys = false
+  for _name, cluster in order_cluster_keys {
+    if cluster != "" {
+      has_cluster_keys = true
+      break
+    }
+  }
+  let components =
+    if has_cluster_keys {
+      []
+    } else {
+      collect_noncluster_reorder_components(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        order_node_order,
+        graphviz_out_neighbors,
+        graphviz_in_neighbors,
+        order_flat_constraints,
+      )
+    }
+  if components.length() <= 1 {
+    return reorder_rank_groups(
+      order_rank_keys_for_mincross,
+      order_groups_for_mincross,
+      order_edges_out_mincross,
+      order_edge_tail_out_mincross,
+      order_edge_head_out_mincross,
+      order_edge_tail_port_x_mincross,
+      order_edge_head_port_x_mincross,
+      order_edge_tail_port_order_mincross,
+      order_edge_head_port_order_mincross,
+      parents,
+      children,
+      order_cluster_keys,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      edge_order,
+      order_node_order,
+      order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      preferred_positions,
+      order_cluster_skeleton,
+      order_flat_constraints,
+      graphviz_out_neighbors=graphviz_out_neighbors,
+      graphviz_in_neighbors=graphviz_in_neighbors,
+      graphviz_flip=graphviz_flip,
+    )
+  }
+
+  let merged : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys_for_mincross {
+    merged[rank] = []
+  }
+  for component_nodes in components {
+    let component_set = build_node_membership_set(component_nodes)
+    let component_groups =
+      build_noncluster_reorder_component_groups(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        component_set,
+      )
+    let (
+      component_edges,
+      component_edge_tail,
+      component_edge_head,
+      component_edge_tail_port_x,
+      component_edge_head_port_x,
+      component_edge_tail_port_order,
+      component_edge_head_port_order,
+    ) =
+      collect_mincross_order_edges(
+        component_set,
+        order_edges_out_mincross,
+        order_edge_tail_out_mincross,
+        order_edge_head_out_mincross,
+        order_edge_tail_port_x_mincross,
+        order_edge_head_port_x_mincross,
+        order_edge_tail_port_order_mincross,
+        order_edge_head_port_order_mincross,
+      )
+    let component_parents =
+      filter_noncluster_neighbor_map_for_component(
+        component_nodes,
+        component_set,
+        parents,
+      )
+    let component_children =
+      filter_noncluster_neighbor_map_for_component(
+        component_nodes,
+        component_set,
+        children,
+      )
+    let component_graphviz_out_neighbors =
+      filter_noncluster_neighbor_map_for_component(
+        component_nodes,
+        component_set,
+        graphviz_out_neighbors,
+      )
+    let component_graphviz_in_neighbors =
+      filter_noncluster_neighbor_map_for_component(
+        component_nodes,
+        component_set,
+        graphviz_in_neighbors,
+      )
+    let component_port_order_positions =
+      filter_node_double_map_for_component(
+        component_set,
+        port_order_positions,
+      )
+    let component_preferred_positions =
+      filter_node_double_map_for_component(
+        component_set,
+        preferred_positions,
+      )
+    let component_port_order_contrib =
+      filter_node_contrib_map_for_component(
+        component_set,
+        port_order_contrib,
+      )
+    let component_flat_constraints =
+      filter_noncluster_flat_constraints_for_component(
+        order_flat_constraints,
+        component_set,
+      )
+    let ordered_component =
+      reorder_rank_groups(
+        order_rank_keys_for_mincross,
+        component_groups,
+        component_edges,
+        component_edge_tail,
+        component_edge_head,
+        component_edge_tail_port_x,
+        component_edge_head_port_x,
+        component_edge_tail_port_order,
+        component_edge_head_port_order,
+        component_parents,
+        component_children,
+        order_cluster_keys,
+        cluster_meta.rank_same_groups,
+        cluster_meta.rank_same_order,
+        edge_order,
+        order_node_order,
+        order_sizes_out,
+        nodesep_pt,
+        has_edge_labels,
+        component_port_order_positions,
+        component_port_order_contrib,
+        component_preferred_positions,
+        order_cluster_skeleton,
+        component_flat_constraints,
+        graphviz_out_neighbors=component_graphviz_out_neighbors,
+        graphviz_in_neighbors=component_graphviz_in_neighbors,
+        graphviz_flip=graphviz_flip,
+      )
+    for rank in order_rank_keys_for_mincross {
+      let names = match ordered_component.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      if names.length() == 0 {
+        continue
+      }
+      let merged_names = match merged.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      for name in names {
+        merged_names.push(name)
+      }
+      merged[rank] = merged_names
+    }
+  }
+  merged
 }
 
 ///|
