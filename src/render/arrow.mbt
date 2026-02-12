@@ -495,11 +495,13 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polyline(points=[p, q]))
     }
     ArrowBase::Diamond => {
-      let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: diamond tip backs off by penwidth/2 to avoid node overlap.
+      let diamond_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
+      let base = point_add(diamond_tip, point_scale(dir, -length))
       // Graphviz parity: diamond wing uses one-third of head length.
       let diamond_half_width = length / 3.0
       let points = diamond_points(
-        tip,
+        diamond_tip,
         base,
         perp,
         diamond_half_width,
