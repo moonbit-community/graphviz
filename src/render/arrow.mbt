@@ -369,14 +369,16 @@ fn arrow_shape_primitives(
   let filled = !shape.open
   match shape.base {
     ArrowBase::Normal => {
-      let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: normal heads back off by half penwidth to avoid overlap.
+      let normal_tip = point_sub(tip, point_scale(dir, penwidth / 2.0))
+      let base = point_add(normal_tip, point_scale(dir, -length))
       // Graphviz parity: normal head base uses 0.35 * head length.
       let mut normal_half_width = length * 0.35
       if penwidth > 4.0 {
         normal_half_width = normal_half_width * penwidth / 4.0
       }
       let points = triangle_points(
-        tip,
+        normal_tip,
         base,
         perp,
         normal_half_width,
@@ -405,8 +407,9 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled=true, points~))
     }
     ArrowBase::Inv => {
-      let base = tip
-      let point_tip = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: inv heads back off by half penwidth to avoid overlap.
+      let inv_base = point_sub(tip, point_scale(dir, penwidth / 2.0))
+      let point_tip = point_add(inv_base, point_scale(dir, -length))
       // Graphviz parity: inv head base uses the same width factor as normal.
       let mut normal_half_width = length * 0.35
       if penwidth > 4.0 {
@@ -414,7 +417,7 @@ fn arrow_shape_primitives(
       }
       let points = triangle_points(
         point_tip,
-        base,
+        inv_base,
         perp,
         normal_half_width,
         shape.left,
