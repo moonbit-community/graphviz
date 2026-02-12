@@ -784,7 +784,7 @@ fn build_edge_route_base(
       label_ports_raw,
       tail_pos,
       head_pos,
-      layout_rankdir,
+      rankdir,
       tail_record_border_adjust,
       "tail",
     )
@@ -795,7 +795,7 @@ fn build_edge_route_base(
       label_ports_raw,
       head_pos,
       tail_pos,
-      layout_rankdir,
+      rankdir,
       head_record_border_adjust,
       "head",
     )
@@ -1080,7 +1080,7 @@ fn compute_route_points_with_pathplan(
           base.tail_port,
           base.tail_pos,
           base.tail_size,
-          base.layout_rankdir,
+          base.rankdir,
         )
       } else {
         None
@@ -1092,7 +1092,7 @@ fn compute_route_points_with_pathplan(
           base.head_port,
           base.head_pos,
           base.head_size,
-          base.layout_rankdir,
+          base.rankdir,
         )
       } else {
         None
