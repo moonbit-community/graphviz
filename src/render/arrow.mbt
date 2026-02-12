@@ -445,7 +445,8 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Dot => {
-      let radius = half_width
+      // Graphviz parity: dot radius derives from arrow length, not base width.
+      let radius = length / 2.0
       let center = point_add(tip, point_scale(dir, -radius))
       let rect = @geom.Rect::{
         llx: center.x - radius,
