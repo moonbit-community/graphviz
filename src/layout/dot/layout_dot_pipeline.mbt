@@ -1077,25 +1077,16 @@ fn build_dot_routing_stage_from_spatial_and_edges_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing precompute bundle keeps spatial precompute and
-/// label/tuning gate derivation in fixed order before edge routing.
+/// Graphviz parity: routing precompute bundle consumes typed routing-stage
+/// inputs and keeps spatial then label/tuning derivation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_and_tuning_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialAndTuningData {
-  let routing_stage_inputs : DotRoutingStageInputs = {
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-  }
   let routing_spatial_data =
     build_routing_spatial_data_for_stage(routing_stage_inputs)
   let routing_label_and_tuning_data =
-    build_routing_label_and_tuning_data_for_stage(prep)
+    build_routing_label_and_tuning_data_for_stage(routing_stage_inputs.prep)
   build_routing_spatial_and_tuning_output_for_stage(
     routing_spatial_data,
     routing_label_and_tuning_data,
@@ -1170,12 +1161,7 @@ fn build_dot_routing_stage_inputs(
 fn build_routing_spatial_and_tuning_data_from_stage_inputs(
   routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialAndTuningData {
-  build_routing_spatial_and_tuning_data_for_stage(
-    routing_stage_inputs.graph,
-    routing_stage_inputs.prep,
-    routing_stage_inputs.rank_stage,
-    routing_stage_inputs.positions_state,
-  )
+  build_routing_spatial_and_tuning_data_for_stage(routing_stage_inputs)
 }
 
 ///|
