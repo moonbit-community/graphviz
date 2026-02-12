@@ -487,11 +487,13 @@ fn arrow_shape_primitives(
     }
     ArrowBase::Diamond => {
       let base = point_add(tip, point_scale(dir, -length))
+      // Graphviz parity: diamond wing uses one-third of head length.
+      let diamond_half_width = length / 3.0
       let points = diamond_points(
         tip,
         base,
         perp,
-        half_width,
+        diamond_half_width,
         shape.left,
         shape.right,
       )
