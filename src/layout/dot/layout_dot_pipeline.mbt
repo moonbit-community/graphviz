@@ -166,12 +166,6 @@ priv struct DotRoutingPathContextData {
 }
 
 ///|
-priv struct DotRoutingLabelAndTuningData {
-  label_edge_counts : Map[String, Int]
-  enable_complex_tuning : Bool
-}
-
-///|
 priv struct DotRoutingSpatialData {
   nodes_out : Array[DotLayoutNode]
   label_ports_map : Map[String, Map[String, RecordPort]]
@@ -244,7 +238,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
   routing_spatial_data : DotRoutingSpatialData,
-  routing_label_and_tuning_data : DotRoutingLabelAndTuningData,
+  enable_complex_tuning : Bool,
 ) -> (DotRoutingPaddingAndHeadPortMetrics, DotRoutingPathContextData) {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
@@ -263,7 +257,7 @@ fn build_routing_edge_solve_precompute_data_for_stage(
       prep.sizes,
       routing_spatial_data.label_ports_map,
       prep.record_orientation,
-      routing_label_and_tuning_data.enable_complex_tuning,
+      enable_complex_tuning,
     )
   let routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics = {
     port_pad_below,
@@ -322,11 +316,9 @@ fn run_dot_routing_stage_from_inputs(
   let routing_spatial_data =
     build_routing_spatial_data_for_stage(graph, prep, rank_stage, positions_state)
   // Graphviz parity: label-edge counts and complex-tuning gate
-  // are read from typed routing-stage inputs before metric derivation.
-  let routing_label_and_tuning_data : DotRoutingLabelAndTuningData = {
-    label_edge_counts: build_label_edge_counts(prep.edges),
-    enable_complex_tuning: complex_tuning_enabled(),
-  }
+  // are read before routing precompute and edge solve.
+  let label_edge_counts = build_label_edge_counts(prep.edges)
+  let enable_complex_tuning = complex_tuning_enabled()
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
   let (routing_padding_and_head_port_metrics, routing_path_context_data) =
@@ -335,7 +327,7 @@ fn run_dot_routing_stage_from_inputs(
       rank_stage,
       positions_state,
       routing_spatial_data,
-      routing_label_and_tuning_data,
+      enable_complex_tuning,
     )
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
   // inputs plus grouped edge-solve precompute payload without argument reordering.
@@ -364,11 +356,11 @@ fn run_dot_routing_stage_from_inputs(
       rank_stage.cluster_meta.has_clusters,
       routing_spatial_data.label_ports_map,
       routing_spatial_data.label_ports_raw,
-      routing_label_and_tuning_data.label_edge_counts,
+      label_edge_counts,
       routing_padding_and_head_port_metrics.head_port_metrics,
       positions_state.flat_label_edge_vnodes,
       routing_path_context_data.routing_context,
-      routing_label_and_tuning_data.enable_complex_tuning,
+      enable_complex_tuning,
     )
   // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding, with trace emission preserved.
