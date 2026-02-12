@@ -532,7 +532,13 @@ fn arrow_shape_primitives(
       let left_point = point_add(tip, point_scale(perp, wing))
       let right_point = point_add(tip, point_scale(perp, -wing))
       let tail = point_add(base, point_scale(dir, length * 0.2))
-      let points = [left_point, tip, right_point, tail]
+      let points = if shape.left && !shape.right {
+        [left_point, tip, tail]
+      } else if shape.right && !shape.left {
+        [tip, right_point, tail]
+      } else {
+        [left_point, tip, right_point, tail]
+      }
       // Graphviz parity: crow heads are always filled (ARR_MOD_OPEN ignored).
       ops.push(DrawOp::Polygon(filled=true, points~))
     }
