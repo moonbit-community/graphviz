@@ -1402,54 +1402,83 @@ fn clip_spline_to_nodes(
   tail_size : NodeSize,
   head_clip_center : @geom.Point,
   head_size : NodeSize,
+  tail_port_side? : Int = 0,
+  head_port_side? : Int = 0,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
 ) -> Array[@geom.Point] {
   if points.length() < 4 {
     return points
   }
-  let tail_shape = clip_shape_kind(edge.tail(), edge.tail_port())
-  let head_shape = clip_shape_kind(edge.head(), edge.head_port())
+  let tail_port = edge.tail_port()
+  let head_port = edge.head_port()
+  let tail_shape = clip_shape_kind(edge.tail(), tail_port)
+  let head_shape = clip_shape_kind(edge.head(), head_port)
   let tail_center = tail_clip_center
   let head_center = head_clip_center
-  let tail_base_size = tail_size
-  let head_base_size = head_size
-  let tail_penwidth = if shape_has_outline(edge.tail()) {
-    node_penwidth_pt(edge.tail())
-  } else {
-    0.0
-  }
-  let head_penwidth = if shape_has_outline(edge.head()) {
-    node_penwidth_pt(edge.head())
-  } else {
-    0.0
-  }
+  // Graphviz parity: penwidth inflates only shapes with peripheries.
+  let tail_penwidth =
+    if shape_has_outline(edge.tail()) { node_penwidth_pt(edge.tail()) } else { 0.0 }
+  let head_penwidth =
+    if shape_has_outline(edge.head()) { node_penwidth_pt(edge.head()) } else { 0.0 }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if tail_penwidth > 0.0 {
-      inflate_node_size(tail_base_size, tail_penwidth / 2.0)
-    } else {
-      tail_base_size
-    }
-    _ => tail_base_size
+        inflate_node_size(tail_size, tail_penwidth / 2.0)
+      } else {
+        tail_size
+      }
+    ClipShape::None => tail_size
   }
   let head_clip_size = match head_shape {
     ClipShape::Rect | ClipShape::Ellipse | ClipShape::Diamond =>
       if head_penwidth > 0.0 {
-      inflate_node_size(head_base_size, head_penwidth / 2.0)
-    } else {
-      head_base_size
+        inflate_node_size(head_size, head_penwidth / 2.0)
+      } else {
+        head_size
+      }
+    ClipShape::None => head_size
+  }
+  // Graphviz parity: compass/dynamic ports disable clipping after resolvePort
+  // when the resolved side is exposed.
+  let tail_clip_enabled =
+    match tail_port {
+      Some(value) =>
+        match value.compass {
+          Some(@cgraph.Compass::C) => true
+          Some(_) => false
+          None => tail_port_side == 0
+        }
+      None => true
     }
-    _ => head_base_size
-  }
-  let tail_clipped = match tail_shape {
-    ClipShape::None => points
-    _ => clip_spline_start(points, tail_center, tail_clip_size, tail_shape)
-  }
-  let head_clipped = match head_shape {
-    ClipShape::None => tail_clipped
-    _ => clip_spline_end(tail_clipped, head_center, head_clip_size, head_shape)
-  }
+  let head_clip_enabled =
+    match head_port {
+      Some(value) =>
+        match value.compass {
+          Some(@cgraph.Compass::C) => true
+          Some(_) => false
+          None => head_port_side == 0
+        }
+      None => true
+    }
+  let tail_clipped =
+    if !tail_clip_enabled {
+      points
+    } else {
+      match tail_shape {
+        ClipShape::None => points
+        _ => clip_spline_start(points, tail_center, tail_clip_size, tail_shape)
+      }
+    }
+  let head_clipped =
+    if !head_clip_enabled {
+      tail_clipped
+    } else {
+      match head_shape {
+        ClipShape::None => tail_clipped
+        _ => clip_spline_end(tail_clipped, head_center, head_clip_size, head_shape)
+      }
+    }
   let head_cluster_clipped = match head_cluster_bbox {
     Some(rect) => clip_spline_end_to_bbox(head_clipped, rect)
     None => head_clipped
@@ -3016,6 +3045,8 @@ pub fn edge_spline_for_points(
   force_segmented : Bool,
   include_tail : Bool,
   include_head : Bool,
+  tail_port_side? : Int = 0,
+  head_port_side? : Int = 0,
   route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
@@ -3050,6 +3081,8 @@ pub fn edge_spline_for_points(
       tail_anchor_size,
       head_clip_center,
       head_anchor_size,
+      tail_port_side=tail_port_side,
+      head_port_side=head_port_side,
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
     )
