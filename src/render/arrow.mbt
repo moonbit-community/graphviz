@@ -336,28 +336,6 @@ fn diamond_points(
 }
 
 ///|
-fn box_points(
-  front : @geom.Point,
-  back : @geom.Point,
-  perp : @geom.Point,
-  half_width : Double,
-  left : Bool,
-  right : Bool,
-) -> Array[@geom.Point] {
-  let front_left = point_add(front, point_scale(perp, half_width))
-  let front_right = point_add(front, point_scale(perp, -half_width))
-  let back_left = point_add(back, point_scale(perp, half_width))
-  let back_right = point_add(back, point_scale(perp, -half_width))
-  if left && !right {
-    [front_left, front, back, back_left]
-  } else if right && !left {
-    [front, front_right, back_right, back]
-  } else {
-    [front_left, front_right, back_right, back_left]
-  }
-}
-
-///|
 /// Graphviz parity: ARR_MOD_LEFT/ARR_MOD_RIGHT on curve heads split cubic at t=0.5.
 fn bezier_split_half(
   points : Array[@geom.Point],
@@ -435,19 +413,38 @@ fn arrow_shape_primitives(
       ops.push(DrawOp::Polygon(filled~, points~))
     }
     ArrowBase::Box => {
-      // Graphviz parity: box head polygon consumes ~0.8 head length, then joins shaft.
-      let back = point_add(tip, point_scale(dir, -length * 0.8))
-      let points = box_points(
-        tip,
-        back,
-        perp,
-        half_width,
-        shape.left,
-        shape.right,
-      )
+      // Graphviz parity: box geometry follows arrows.c arrow_type_box.
+      let mut p = tip
+      let u = point_scale(dir, -length)
+      let mut m = point_add(p, point_scale(u, 0.8))
+      let mut q = point_add(p, u)
+      let v = point(-u.y * 0.4, u.x * 0.4)
+      if u.x != 0.0 || u.y != 0.0 {
+        let p_dir = point(-u.x, -u.y)
+        let p_dir_len = Double::sqrt(p_dir.x * p_dir.x + p_dir.y * p_dir.y)
+        let delta = point(
+          penwidth / 2.0 * p_dir.x / p_dir_len,
+          penwidth / 2.0 * p_dir.y / p_dir_len,
+        )
+        p = point_sub(p, delta)
+        m = point_sub(m, delta)
+        q = point_sub(q, delta)
+      }
+      let points : Array[@geom.Point] = [
+        point_add(p, v),
+        point_sub(p, v),
+        point_sub(m, v),
+        point_add(m, v),
+      ]
+      if shape.left && !shape.right {
+        points[0] = p
+        points[3] = m
+      } else if shape.right && !shape.left {
+        points[1] = p
+        points[2] = m
+      }
       ops.push(DrawOp::Polygon(filled~, points~))
-      let line_end = point_add(tip, point_scale(dir, -length))
-      ops.push(DrawOp::Polyline(points=[back, line_end]))
+      ops.push(DrawOp::Polyline(points=[m, q]))
     }
     ArrowBase::Tee => {
       // Graphviz parity: tee geometry follows arrows.c arrow_type_tee.
