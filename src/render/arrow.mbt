@@ -176,12 +176,8 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
     }
   }
   if shapes.length() == 0 {
-    shapes.push(ArrowShape::{
-      base: ArrowBase::Normal,
-      open: false,
-      left: false,
-      right: false,
-    })
+    // Graphviz parity: unknown arrow names are ignored (no arrowhead drawn).
+    return []
   }
   if shapes.length() > 4 {
     let trimmed : Array[ArrowShape] = []
