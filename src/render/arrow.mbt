@@ -216,7 +216,11 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
   while idx < text.length() && flags.length() < NUMB_OF_ARROW_HEADS {
     let (next, parsed) = arrow_match_shape(text, idx)
     if parsed == ARR_TYPE_NONE {
-      return []
+      // Graphviz parity: keep already-parsed heads, ignore unknown suffix.
+      if flags.length() == 0 {
+        return []
+      }
+      break
     }
     let mut flag = parsed
     if flag == ARR_TYPE_GAP && flags.length() == NUMB_OF_ARROW_HEADS - 1 {
