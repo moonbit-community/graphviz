@@ -608,23 +608,17 @@ fn build_routing_spatial_output_from_node_port_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing spatial precompute keeps node projection, port-map
-/// derivation, and cluster-bbox computation order unchanged.
+/// Graphviz parity: routing spatial precompute consumes typed routing-stage
+/// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_data_for_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_stage : DotRankStage,
-  positions_state : PositionResult,
+  routing_stage_inputs : DotRoutingStageInputs,
 ) -> DotRoutingSpatialData {
-  let routing_stage_inputs : DotRoutingStageInputs = {
-    graph,
-    prep,
-    rank_stage,
-    positions_state,
-  }
   let routing_node_and_port_data =
-    build_routing_node_and_port_data_for_stage(prep, positions_state)
+    build_routing_node_and_port_data_for_stage(
+      routing_stage_inputs.prep,
+      routing_stage_inputs.positions_state,
+    )
   build_routing_spatial_output_from_node_port_data_for_stage(
     routing_stage_inputs,
     routing_node_and_port_data,
@@ -1092,13 +1086,14 @@ fn build_routing_spatial_and_tuning_data_for_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingSpatialAndTuningData {
+  let routing_stage_inputs : DotRoutingStageInputs = {
+    graph,
+    prep,
+    rank_stage,
+    positions_state,
+  }
   let routing_spatial_data =
-    build_routing_spatial_data_for_stage(
-      graph,
-      prep,
-      rank_stage,
-      positions_state,
-    )
+    build_routing_spatial_data_for_stage(routing_stage_inputs)
   let routing_label_and_tuning_data =
     build_routing_label_and_tuning_data_for_stage(prep)
   build_routing_spatial_and_tuning_output_for_stage(
