@@ -167,15 +167,6 @@ priv struct DotRoutingNodeAndPortData {
 }
 
 ///|
-/// Graphviz parity: routing node/port input payload keeps prep and positioned
-/// node geometry fields in projection and port-map build order.
-/// Do not change behavior without updating fixtures/tests.
-priv struct DotRoutingNodeAndPortInputs {
-  prep : LayoutPrep
-  positions_state : PositionResult
-}
-
-///|
 priv struct DotRoutingPathContextData {
   path_groups : Map[Int, Array[String]]
   routing_context : RoutingContext
@@ -272,30 +263,24 @@ fn build_routing_spatial_data_for_stage(
   rank_stage : DotRankStage,
   positions_state : PositionResult,
 ) -> DotRoutingSpatialData {
-  // Graphviz parity: routing node/port input payload assembly reads
-  // stage fields without argument reordering.
-  let routing_node_and_port_inputs : DotRoutingNodeAndPortInputs = {
-    prep: prep,
-    positions_state: positions_state,
-  }
   // Graphviz parity: node geometry projection and port-map derivation
-  // consume typed stage payload in the same precompute order.
+  // consume stage inputs in the same precompute order.
   let nodes_out =
     build_layout_nodes(
-      routing_node_and_port_inputs.prep.nodes,
-      routing_node_and_port_inputs.positions_state.positions,
-      routing_node_and_port_inputs.prep.output_sizes,
-      routing_node_and_port_inputs.prep.record_orientation,
+      prep.nodes,
+      positions_state.positions,
+      prep.output_sizes,
+      prep.record_orientation,
     )
   // Graphviz parity: routing port maps are built from final node
   // geometry and rankdir/port-edge flags before padding and edge routing.
   let port_maps =
     build_port_layout_maps(
       nodes_out,
-      routing_node_and_port_inputs.prep.output_sizes,
-      routing_node_and_port_inputs.prep.record_orientation,
-      routing_node_and_port_inputs.prep.rankdir,
-      routing_node_and_port_inputs.prep.has_port_edges,
+      prep.output_sizes,
+      prep.record_orientation,
+      prep.rankdir,
+      prep.has_port_edges,
     )
   let routing_node_and_port_data : DotRoutingNodeAndPortData = {
     nodes_out,
