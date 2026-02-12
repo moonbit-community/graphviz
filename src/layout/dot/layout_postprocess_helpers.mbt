@@ -1133,6 +1133,14 @@ fn finalize_layout_graph(
   } else {
     rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
   }
+  // Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
+  // rotation (dotgen cluster decompose + postproc map_point ordering).
+  let rotated = if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    graph_has_cluster(graph) {
+    rotate_layout_graph(rotated, rotated.bbox, RankDir::BT)
+  } else {
+    rotated
+  }
   let rotated_with_margin = {
     graph: rotated.graph,
     bbox: apply_root_margin_x(graph, rotated.bbox),

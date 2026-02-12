@@ -207,17 +207,130 @@ fn root_graph_for_graph(graph : @cgraph.Graph) -> @cgraph.Graph {
 }
 
 ///|
+fn parser_is_cluster_graph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn parser_graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
+  let target = node.name()
+  for entry in graph.nodes() {
+    if entry.name() == target {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn parser_cluster_has_descendant_with_node(
+  cluster : @cgraph.Graph,
+  node : @cgraph.Node,
+) -> Bool {
+  let stack : Array[@cgraph.Graph] = []
+  for child in cluster.subgraphs() {
+    stack.push(child)
+  }
+  while stack.length() > 0 {
+    let current = stack[stack.length() - 1]
+    let _ = stack.pop()
+    if parser_is_cluster_graph(current) && parser_graph_contains_node(current, node) {
+      return true
+    }
+    for child in current.subgraphs() {
+      stack.push(child)
+    }
+  }
+  false
+}
+
+///|
+fn parser_innermost_cluster_names_for_node(
+  root : @cgraph.Graph,
+  node : @cgraph.Node,
+) -> Map[String, Bool] {
+  let names : Map[String, Bool] = Map::new()
+  let stack : Array[@cgraph.Graph] = [root]
+  while stack.length() > 0 {
+    let current = stack[stack.length() - 1]
+    let _ = stack.pop()
+    if parser_is_cluster_graph(current) && parser_graph_contains_node(current, node) &&
+      !parser_cluster_has_descendant_with_node(current, node) {
+      match current.name() {
+        Some(name) => names[name] = true
+        None => ()
+      }
+    }
+    for child in current.subgraphs() {
+      stack.push(child)
+    }
+  }
+  names
+}
+
+///|
+fn parser_cluster_is_descendant_of_innermost(
+  graph : @cgraph.Graph,
+  innermost : Map[String, Bool],
+) -> Bool {
+  let mut current = graph
+  while true {
+    if parser_is_cluster_graph(current) {
+      match current.name() {
+        Some(name) => {
+          if innermost.get(name) is Some(_) {
+            return true
+          }
+        }
+        None => ()
+      }
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  false
+}
+
+///|
+/// Graphviz parity: when parsing edges inside a cluster, existing nodes are
+/// attached only if they are currently unclustered or the target cluster is a
+/// descendant of the node innermost existing cluster.
+fn parser_should_attach_existing_node_to_graph(
+  graph : @cgraph.Graph,
+  node : @cgraph.Node,
+) -> Bool {
+  if !parser_is_cluster_graph(graph) {
+    return false
+  }
+  let root = root_graph_for_graph(graph)
+  let innermost = parser_innermost_cluster_names_for_node(root, node)
+  if innermost.length() == 0 {
+    return true
+  }
+  parser_cluster_is_descendant_of_innermost(graph, innermost)
+}
+
+///|
 fn Parser::endpoint_nodes(
   graph : @cgraph.Graph,
   endpoint : Endpoint,
 ) -> (Array[@cgraph.Node], @cgraph.Port?) {
   match endpoint {
     Node(node_id) => {
-      // Graphviz parity: edges inside subgraphs should not add existing nodes
-      // to the subgraph; only create new nodes in the current graph.
       let root = root_graph_for_graph(graph)
       let node = match root.find_node(node_id.name) {
-        Some(existing) => existing
+        Some(existing) => {
+          if parser_should_attach_existing_node_to_graph(graph, existing) {
+            graph.node(node_id.name)
+          } else {
+            existing
+          }
+        }
         None => graph.node(node_id.name)
       }
       ([node], node_id.port)
