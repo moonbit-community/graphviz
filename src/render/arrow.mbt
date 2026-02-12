@@ -354,6 +354,29 @@ fn box_points(
 }
 
 ///|
+/// Graphviz parity: ARR_MOD_LEFT/ARR_MOD_RIGHT on curve heads split cubic at t=0.5.
+fn bezier_split_half(
+  points : Array[@geom.Point],
+  keep_left : Bool,
+) -> Array[@geom.Point] {
+  let p0 = points[0]
+  let p1 = points[1]
+  let p2 = points[2]
+  let p3 = points[3]
+  let p01 = point((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0)
+  let p12 = point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
+  let p23 = point((p2.x + p3.x) / 2.0, (p2.y + p3.y) / 2.0)
+  let p012 = point((p01.x + p12.x) / 2.0, (p01.y + p12.y) / 2.0)
+  let p123 = point((p12.x + p23.x) / 2.0, (p12.y + p23.y) / 2.0)
+  let p0123 = point((p012.x + p123.x) / 2.0, (p012.y + p123.y) / 2.0)
+  if keep_left {
+    [p0, p01, p012, p0123]
+  } else {
+    [p0123, p123, p23, p3]
+  }
+}
+
+///|
 fn arrow_shape_primitives(
   shape : ArrowShape,
   tip : @geom.Point,
@@ -478,15 +501,19 @@ fn arrow_shape_primitives(
         ArrowBase::ICurve => sign = -1.0
         _ => ()
       }
-      if shape.left && !shape.right {
-        sign = 1.0
-      } else if shape.right && !shape.left {
-        sign = -1.0
-      }
       let offset = point_scale(perp, width * 0.6 * sign)
-      let c1 = point_add(tip, offset)
-      let c2 = point_add(base, offset)
-      ops.push(DrawOp::Bezier(filled=false, points=[tip, c1, c2, base]))
+      let mut curve_points = [
+        tip,
+        point_add(tip, offset),
+        point_add(base, offset),
+        base,
+      ]
+      if shape.left && !shape.right {
+        curve_points = bezier_split_half(curve_points, false)
+      } else if shape.right && !shape.left {
+        curve_points = bezier_split_half(curve_points, true)
+      }
+      ops.push(DrawOp::Bezier(filled=false, points=curve_points))
     }
     ArrowBase::None => {
       // Graphviz parity: "none" consumes arrow space but draws no primitive.
