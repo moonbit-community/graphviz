@@ -132,14 +132,6 @@ fn compute_dot_position_stage(
 }
 
 ///|
-priv struct DotRoutingStage {
-  nodes_out : Array[DotLayoutNode]
-  edges_out : Array[DotLayoutEdge]
-  port_pad_below : Double
-  port_pad_above : Double
-}
-
-///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -265,7 +257,7 @@ fn compute_dot_routing_stage(
   prep : LayoutPrep,
   rank_stage : DotRankStage,
   positions_state : PositionResult,
-) -> DotRoutingStage {
+) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
     build_routing_spatial_data_for_stage(graph, prep, rank_stage, positions_state)
   // Graphviz parity: label-edge counts and complex-tuning gate
@@ -316,14 +308,9 @@ fn compute_dot_routing_stage(
       routing_context,
       enable_complex_tuning,
     )
-  // Graphviz parity: routing stage result object is built directly
+  // Graphviz parity: routing stage result tuple is built directly
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")
-  {
-    nodes_out: nodes_out,
-    edges_out,
-    port_pad_below: port_pad_below,
-    port_pad_above: port_pad_above,
-  }
+  (nodes_out, edges_out, port_pad_below, port_pad_above)
 }
 

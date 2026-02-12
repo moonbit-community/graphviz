@@ -17,13 +17,13 @@ pub fn layout_dot(
   let prep = prepare_layout_inputs(graph, opts)
   let rank_stage = compute_dot_rank_stage(graph, prep)
   let positions_state = compute_dot_position_stage(graph, prep, rank_stage)
-  let routing_stage =
+  let (nodes_out, edges_out, port_pad_below, port_pad_above) =
     compute_dot_routing_stage(graph, prep, rank_stage, positions_state)
   finalize_layout_graph(
     graph,
     prep.nodes,
-    routing_stage.nodes_out,
-    routing_stage.edges_out,
+    nodes_out,
+    edges_out,
     prep.rankdir,
     prep.splines,
     rank_stage.rank_data.all_ranks,
@@ -36,8 +36,8 @@ pub fn layout_dot(
     positions_state.rank_ht1,
     positions_state.rank_ht2,
     rank_stage.rank_heights.nodesep_pt,
-    routing_stage.port_pad_below,
-    routing_stage.port_pad_above,
+    port_pad_below,
+    port_pad_above,
     positions_state.flat_label_edge_vnodes,
   )
 }
