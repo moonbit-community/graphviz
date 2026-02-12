@@ -1403,27 +1403,27 @@ fn reorder_rank_groups(
             idx = idx - 1
           }
         }
-        if !has_port_order {
-          let _ = transpose_rank_groups_graphviz(
-            rank_keys,
-            ordered,
-            node_ranks,
-            edge_in,
-            edge_out,
-            edge_tail,
-            edge_head,
-            edge_tail_port_x,
-            edge_head_port_x,
-            edge_penalty,
-            cluster_keys,
-            cluster_skeleton,
-            flat_constraints,
-            !reverse,
-            0,
-          )
-          order_positions = order_positions_from_groups(ordered)
-          merge_fixed_positions()
-        }
+        // Graphviz parity: transpose remains active with port-order hints;
+        // ties are resolved by in/out port x during crossing checks.
+        let _ = transpose_rank_groups_graphviz(
+          rank_keys,
+          ordered,
+          node_ranks,
+          edge_in,
+          edge_out,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x,
+          edge_head_port_x,
+          edge_penalty,
+          cluster_keys,
+          cluster_skeleton,
+          flat_constraints,
+          !reverse,
+          0,
+        )
+        order_positions = order_positions_from_groups(ordered)
+        merge_fixed_positions()
         cur_cross =
           count_crossings_graphviz(
             ordered,
@@ -1461,7 +1461,7 @@ fn reorder_rank_groups(
       order_positions = order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
-    if best_cross > 0 && !has_port_order {
+    if best_cross > 0 {
       let _ = transpose_rank_groups_graphviz(
         rank_keys,
         ordered,
