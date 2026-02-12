@@ -462,27 +462,6 @@ fn build_routing_context_for_stage(
 }
 
 ///|
-/// Graphviz parity: routing path-context execution consumes typed stage payload
-/// while preserving path-group selection then context-assembly order.
-/// Do not change behavior without updating fixtures/tests.
-fn run_routing_path_context_from_inputs(
-  routing_path_context_inputs : DotRoutingPathContextInputs,
-) -> DotRoutingPathContextData {
-  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
-  let path_groups =
-    build_path_groups_for_routing_stage(
-      routing_path_context_inputs.positions_state,
-      routing_path_context_inputs.rank_stage.ordering,
-    )
-  let routing_context =
-    build_routing_context_for_stage(
-      routing_path_context_inputs,
-      path_groups,
-    )
-  { path_groups, routing_context }
-}
-
-///|
 /// Graphviz parity: routing cluster bboxes are derived from typed routing-stage
 /// inputs, positioned nodes, and rank/cluster maps before spline routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -710,8 +689,23 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     positions_state: routing_inputs.positions_state,
     cluster_bboxes: routing_inputs.routing_spatial_data.cluster_bboxes,
   }
-  let routing_path_context_data =
-    run_routing_path_context_from_inputs(routing_path_context_inputs)
+  // Graphviz parity: routing path-context execution consumes typed
+  // stage payload while preserving path-group selection then context-assembly order.
+  // Graphviz parity: pathplan uses final x-order (after positioning) with vnodes.
+  let path_groups =
+    build_path_groups_for_routing_stage(
+      routing_path_context_inputs.positions_state,
+      routing_path_context_inputs.rank_stage.ordering,
+    )
+  let routing_context =
+    build_routing_context_for_stage(
+      routing_path_context_inputs,
+      path_groups,
+    )
+  let routing_path_context_data : DotRoutingPathContextData = {
+    path_groups,
+    routing_context,
+  }
   {
     routing_padding_and_head_port_metrics,
     routing_path_context_data,
