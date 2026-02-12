@@ -428,37 +428,6 @@ fn build_routing_spatial_data_for_stage(
 }
 
 ///|
-/// Graphviz parity: port padding and head-port metrics consume typed metric
-/// inputs while preserving compute order before spline routing.
-/// Do not change behavior without updating fixtures/tests.
-fn run_routing_padding_and_head_port_metrics_from_inputs(
-  routing_metric_inputs : DotRoutingPaddingAndHeadPortMetricsInputs,
-) -> DotRoutingPaddingAndHeadPortMetrics {
-  let (port_pad_below, port_pad_above) =
-    compute_port_padding(
-      routing_metric_inputs.rank_stage.cluster_meta.has_clusters,
-      routing_metric_inputs.prep.has_port_edges,
-      routing_metric_inputs.prep.edges,
-      routing_metric_inputs.positions_state.positions,
-      routing_metric_inputs.label_ports_map,
-    )
-  let head_port_metrics =
-    collect_head_port_metrics(
-      routing_metric_inputs.prep.edges,
-      routing_metric_inputs.positions_state.positions,
-      routing_metric_inputs.prep.sizes,
-      routing_metric_inputs.label_ports_map,
-      routing_metric_inputs.prep.record_orientation,
-      routing_metric_inputs.enable_complex_tuning,
-    )
-  {
-    port_pad_below,
-    port_pad_above,
-    head_port_metrics,
-  }
-}
-
-///|
 /// Graphviz parity: edge routing call consumes typed edge-solve payload while
 /// preserving Graphviz-aligned argument mapping and rankdir override.
 /// Do not change behavior without updating fixtures/tests.
@@ -511,8 +480,30 @@ fn build_routing_edge_solve_precompute_data_for_stage(
     label_ports_map: routing_inputs.routing_spatial_data.label_ports_map,
     enable_complex_tuning: routing_inputs.routing_label_and_tuning_data.enable_complex_tuning,
   }
-  let routing_padding_and_head_port_metrics =
-    run_routing_padding_and_head_port_metrics_from_inputs(routing_metric_inputs)
+  // Graphviz parity: port padding and head-port metrics consume
+  // typed metric inputs while preserving compute order before spline routing.
+  let (port_pad_below, port_pad_above) =
+    compute_port_padding(
+      routing_metric_inputs.rank_stage.cluster_meta.has_clusters,
+      routing_metric_inputs.prep.has_port_edges,
+      routing_metric_inputs.prep.edges,
+      routing_metric_inputs.positions_state.positions,
+      routing_metric_inputs.label_ports_map,
+    )
+  let head_port_metrics =
+    collect_head_port_metrics(
+      routing_metric_inputs.prep.edges,
+      routing_metric_inputs.positions_state.positions,
+      routing_metric_inputs.prep.sizes,
+      routing_metric_inputs.label_ports_map,
+      routing_metric_inputs.prep.record_orientation,
+      routing_metric_inputs.enable_complex_tuning,
+    )
+  let routing_padding_and_head_port_metrics : DotRoutingPaddingAndHeadPortMetrics = {
+    port_pad_below,
+    port_pad_above,
+    head_port_metrics,
+  }
   // Graphviz parity: routing path-context input payload assembly reads typed
   // edge/padding stage inputs without argument reordering.
   let routing_path_context_inputs : DotRoutingPathContextInputs = {
