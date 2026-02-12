@@ -197,6 +197,24 @@ fn parse_arrow_shapes(text : String?) -> Array[ArrowShape] {
 }
 
 ///|
+/// Graphviz parity: per-head length factors follow arrows.c arrow_gen_type.
+fn arrow_length_factor(base : ArrowBase) -> Double {
+  match base {
+    ArrowBase::Normal => 1.0
+    ArrowBase::Box => 1.0
+    ArrowBase::Crow => 1.0
+    ArrowBase::Diamond => 1.2
+    ArrowBase::Dot => 0.8
+    ArrowBase::Inv => 1.0
+    ArrowBase::Tee => 0.5
+    ArrowBase::Vee => 1.0
+    ArrowBase::Curve => 1.0
+    ArrowBase::ICurve => 1.0
+    ArrowBase::None => 0.5
+  }
+}
+
+///|
 fn triangle_points(
   tip : @geom.Point,
   base : @geom.Point,
@@ -418,14 +436,20 @@ pub fn arrow_primitives(
   let ops : Array[DrawOp] = []
   let mut offset = 0.0
   for shape in shapes {
+    let shape_len = length * arrow_length_factor(shape.base)
     let shape_tip = point_add(tip, point_scale(dir, -offset))
     let primitives = arrow_shape_primitives(
-      shape, shape_tip, dir, perp, length, width,
+      shape,
+      shape_tip,
+      dir,
+      perp,
+      shape_len,
+      width,
     )
     for op in primitives {
       ops.push(op)
     }
-    offset = offset + length
+    offset = offset + shape_len
   }
   ops
 }
