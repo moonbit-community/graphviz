@@ -8539,6 +8539,7 @@ fn run_remincross_rank_reorder_startpass2(
     // with summed xpenalty before startpass=2 transposition.
     coalesce_parallel_edges=true,
     startpass=2,
+    remincross_mode=true,
   )
 }
 

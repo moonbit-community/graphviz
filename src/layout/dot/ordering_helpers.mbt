@@ -660,6 +660,7 @@ fn left2right_constraint(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
+  remincross_mode? : Bool = false,
 ) -> Bool {
   let left_cluster = match cluster_keys.get(left) {
     Some(value) => value
@@ -668,6 +669,12 @@ fn left2right_constraint(
   let right_cluster = match cluster_keys.get(right) {
     Some(value) => value
     None => ""
+  }
+  if remincross_mode {
+    // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
+    if left_cluster != right_cluster {
+      return true
+    }
   }
   if left_cluster != "" && right_cluster != "" && left_cluster != right_cluster {
     let left_skel = cluster_skeleton.get(left) == Some(true)

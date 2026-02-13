@@ -135,6 +135,7 @@ fn reorder_by_medians(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
+  remincross_mode? : Bool = false,
 ) -> Array[String] {
   let sorted = names.copy()
   if sorted.length() < 2 {
@@ -170,6 +171,7 @@ fn reorder_by_medians(
           cluster_keys,
           cluster_skeleton,
           flat_constraints,
+          remincross_mode=remincross_mode,
         ) {
           muststay = true
           break
@@ -626,6 +628,7 @@ fn transpose_rank_graphviz(
   cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
   reverse : Bool,
+  remincross_mode : Bool,
 ) -> (Int, Bool) {
   let mut changed = false
   let mut delta = 0
@@ -639,6 +642,7 @@ fn transpose_rank_graphviz(
       cluster_keys,
       cluster_skeleton,
       flat_constraints,
+      remincross_mode=remincross_mode,
     ) {
       i = i + 1
       continue
@@ -719,6 +723,7 @@ fn transpose_rank_groups_graphviz(
   flat_constraints : Map[String, Bool],
   reverse : Bool,
   max_passes : Int,
+  remincross_mode? : Bool = false,
 ) -> Bool {
   let mut changed_any = false
   let mut passes = 0
@@ -763,6 +768,7 @@ fn transpose_rank_groups_graphviz(
         cluster_skeleton,
         flat_constraints,
         reverse,
+        remincross_mode,
       )
       if changed {
         ordered[rank] = names
@@ -996,6 +1002,7 @@ fn reorder_rank_groups(
   graphviz_flip? : Bool = false,
   coalesce_parallel_edges? : Bool = false,
   startpass? : Int = 0,
+  remincross_mode? : Bool = false,
 ) -> Map[Int, Array[String]] {
   let startpass =
     if startpass < 0 { 0 } else if startpass > 2 { 2 } else { startpass }
@@ -1254,6 +1261,7 @@ fn reorder_rank_groups(
         flat_constraints,
         false,
         0,
+        remincross_mode=remincross_mode,
       )
       order_positions = order_positions_from_groups(ordered)
       merge_fixed_positions()
@@ -1319,6 +1327,7 @@ fn reorder_rank_groups(
             flat_constraints,
             false,
             0,
+            remincross_mode=remincross_mode,
           )
         }
         ordered = flat_reorder_rank_groups_graphviz(
@@ -1388,6 +1397,7 @@ fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
+                remincross_mode=remincross_mode,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -1416,6 +1426,7 @@ fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
+                remincross_mode=remincross_mode,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -1444,6 +1455,7 @@ fn reorder_rank_groups(
           flat_constraints,
           !reverse,
           0,
+          remincross_mode=remincross_mode,
         )
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
@@ -1501,6 +1513,7 @@ fn reorder_rank_groups(
         flat_constraints,
         false,
         0,
+        remincross_mode=remincross_mode,
       )
     }
     return ordered
@@ -1533,6 +1546,7 @@ fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
+                remincross_mode=remincross_mode,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -1561,6 +1575,7 @@ fn reorder_rank_groups(
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
+                remincross_mode=remincross_mode,
               )
               order_positions = order_positions_from_groups(ordered)
               merge_fixed_positions()
@@ -1588,6 +1603,7 @@ fn reorder_rank_groups(
             flat_constraints,
             !reverse_ties,
             0,
+            remincross_mode=remincross_mode,
           )
           order_positions = order_positions_from_groups(ordered)
           merge_fixed_positions()
