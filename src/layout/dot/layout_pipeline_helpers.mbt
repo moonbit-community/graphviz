@@ -7715,7 +7715,6 @@ fn build_remincross_vnode_order_keys(
   edge_reversed : Array[Bool],
   ranks : Map[String, Int],
   rem_base_order_index : Map[String, Int],
-  cluster_keys : Map[String, String],
   intercluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   cluster_min_rank : Map[String, Int],
@@ -7726,13 +7725,26 @@ fn build_remincross_vnode_order_keys(
   if !order_with_vnodes {
     return Map::new()
   }
+  let remincross_cluster_keys : Map[String, String] = Map::new()
+  for name, key in intercluster_keys {
+    remincross_cluster_keys[name] = key
+  }
+  for name, _ in rem_base_order_index {
+    match remincross_cluster_keys.get(name) {
+      Some(value) =>
+        if value == "" {
+          remincross_cluster_keys[name] = "g"
+        }
+      None => remincross_cluster_keys[name] = "g"
+    }
+  }
   let intercluster_vnodes =
     collect_intercluster_trailing_vnodes(
       order_with_vnodes,
       edges,
       edge_tail,
       edge_head,
-      cluster_keys,
+      remincross_cluster_keys,
       cluster_parents,
       cluster_min_rank,
       cluster_max_rank,
@@ -7745,7 +7757,7 @@ fn build_remincross_vnode_order_keys(
     edge_reversed,
     ranks,
     rem_base_order_index,
-    intercluster_keys,
+    remincross_cluster_keys,
     cluster_parents,
     edge_vnodes,
     vnode_ranks,
@@ -7773,7 +7785,6 @@ fn build_remincross_groups_with_optional_vnodes(
   edge_head : Array[String],
   edge_reversed : Array[Bool],
   ranks : Map[String, Int],
-  cluster_keys : Map[String, String],
   intercluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   cluster_min_rank : Map[String, Int],
@@ -7793,7 +7804,6 @@ fn build_remincross_groups_with_optional_vnodes(
       edge_reversed,
       ranks,
       rem_base_order_index,
-      cluster_keys,
       intercluster_keys,
       cluster_parents,
       cluster_min_rank,
@@ -10326,7 +10336,6 @@ fn build_clustered_remincross_pass_groups(
       edge_head,
       edge_reversed,
       ranks,
-      cluster_meta.cluster_keys,
       cluster_meta.intercluster_keys,
       cluster_meta.cluster_parents,
       cluster_meta.cluster_min_rank,
