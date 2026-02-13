@@ -6154,6 +6154,21 @@ fn build_root_cluster_reorder_edge_bundle(
       root_graph,
       root_node_map,
     )
+  // Graphviz parity: root cluster reorder mincross uses 0 defaults for
+  // non-explicit ports in crossing tie-breaks.
+  let mut edge_idx = 0
+  while edge_idx < root_edges_out.length() {
+    let edge = root_edges_out[edge_idx]
+    if !port_is_explicit(edge.tail_port()) {
+      root_edge_tail_port_x[edge_idx] = 0.0
+      root_edge_tail_port_order[edge_idx] = 0.0
+    }
+    if !port_is_explicit(edge.head_port()) {
+      root_edge_head_port_x[edge_idx] = 0.0
+      root_edge_head_port_order[edge_idx] = 0.0
+    }
+    edge_idx = edge_idx + 1
+  }
   trace_root_edges_for_cluster_reorder(
     root_edges_out,
     root_edge_tail_out,
@@ -12244,15 +12259,47 @@ fn build_root_mincross_order_edges(
   Array[Double],
   Array[Double],
 ) {
-  collect_mincross_order_edges(
-    mincross_nodes,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
+  let (
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+  ) =
+    collect_mincross_order_edges(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    )
+  // Graphviz parity: root mincross uses 0 for non-explicit ports in tie-breaks.
+  let mut edge_idx = 0
+  while edge_idx < order_edges_out_mincross.length() {
+    let edge = order_edges_out_mincross[edge_idx]
+    if !port_is_explicit(edge.tail_port()) {
+      order_edge_tail_port_x_mincross[edge_idx] = 0.0
+      order_edge_tail_port_order_mincross[edge_idx] = 0.0
+    }
+    if !port_is_explicit(edge.head_port()) {
+      order_edge_head_port_x_mincross[edge_idx] = 0.0
+      order_edge_head_port_order_mincross[edge_idx] = 0.0
+    }
+    edge_idx = edge_idx + 1
+  }
+  (
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
   )
 }
 
