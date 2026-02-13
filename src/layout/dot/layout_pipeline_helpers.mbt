@@ -4837,6 +4837,281 @@ fn build_edges_by_tail_from_out_order(
 }
 
 ///|
+fn order_edge_merge_key(
+  tail : String,
+  head : String,
+  constraint : Bool,
+  tail_port_order : Double,
+  head_port_order : Double,
+) -> String {
+  "\{tail}|\{head}|\{constraint}|\{tail_port_order.to_string()}|\{head_port_order.to_string()}"
+}
+
+///|
+/// Graphviz parity: class2 merges adjacent mergeable chain segments by adding
+/// xpenalty into the first representative segment and suppressing duplicates.
+/// Do not change behavior without updating fixtures/tests.
+fn coalesce_order_edges_for_tail(
+  entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
+) -> Array[(String, String, Int, Bool, Double, Double, Double, Double)] {
+  let coalesced : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
+  let mut prev_key = ""
+  let mut prev_index = -1
+  for entry in entries {
+    let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+      entry
+    let key =
+      order_edge_merge_key(
+        tail,
+        head,
+        constraint,
+        tail_port_order,
+        head_port_order,
+      )
+    if penalty > 0 && prev_index >= 0 && key == prev_key {
+      let (rep_tail, rep_head, rep_penalty, rep_constraint, rep_tail_port_x, rep_head_port_x, rep_tail_port_order, rep_head_port_order) =
+        coalesced[prev_index]
+      coalesced[prev_index] = (
+        rep_tail,
+        rep_head,
+        rep_penalty + penalty,
+        rep_constraint,
+        rep_tail_port_x,
+        rep_head_port_x,
+        rep_tail_port_order,
+        rep_head_port_order,
+      )
+      continue
+    }
+    coalesced.push(
+      (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+    )
+    prev_key = key
+    prev_index = coalesced.length() - 1
+  }
+  coalesced
+}
+
+///|
+/// Graphviz parity: class2 merge_chain compacts adjacent mergeable ND_out
+/// segments per tail after chain materialization.
+/// Do not change behavior without updating fixtures/tests.
+fn coalesce_order_edges_by_tail(
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
+  let coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
+    Map::new()
+  for tail_name, entries in order_edges_by_tail {
+    coalesced[tail_name] = coalesce_order_edges_for_tail(entries)
+  }
+  coalesced
+}
+
+///|
+/// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
+/// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_intercluster_vnode_tail_bonus(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  order_with_clusters : Bool,
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_keys : Map[String, String],
+) -> Map[String, Int] {
+  let count_by_key : Map[String, Int] = Map::new()
+  for tail_name in creation_order {
+    let indices = match edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for idx in indices {
+      let edge = edges[idx]
+      let tail =
+        if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
+      let head =
+        if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+      let tail_rank = match ranks.get(tail) {
+        Some(value) => value
+        None => 0
+      }
+      let head_rank = match ranks.get(head) {
+        Some(value) => value
+        None => 0
+      }
+      if tail_rank == head_rank {
+        continue
+      }
+      let tail_cluster =
+        if order_with_clusters {
+          cluster_key_or_empty(cluster_keys, tail)
+        } else {
+          ""
+        }
+      let head_cluster =
+        if order_with_clusters {
+          cluster_key_or_empty(cluster_keys, head)
+        } else {
+          ""
+        }
+      let intercluster =
+        order_with_clusters && tail_cluster != head_cluster &&
+        (tail_cluster != "" || head_cluster != "")
+      if !intercluster || !edge_is_constraint(edge) || edge_xpenalty(edge) <= 0 {
+        continue
+      }
+      let tail_port_order =
+        if idx < edge_tail_port_order.length() { edge_tail_port_order[idx] } else {
+          0.5
+        }
+      let head_port_order =
+        if idx < edge_head_port_order.length() { edge_head_port_order[idx] } else {
+          0.5
+        }
+      let vnodes =
+        if order_with_vnodes {
+          match edge_vnodes.get(edge_vnode_key(edge)) {
+            Some(list) => list
+            None => []
+          }
+        } else {
+          []
+        }
+      let chain : Array[String] = []
+      let (chain_tail, chain_head) =
+        if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
+      chain.push(chain_tail)
+      if order_with_vnodes && vnodes.length() > 0 {
+        for vnode in vnodes {
+          chain.push(vnode)
+        }
+      }
+      chain.push(chain_head)
+      let mut i = 0
+      while i + 1 < chain.length() {
+        let t = chain[i]
+        let h = chain[i + 1]
+        if t != h && t.has_prefix(EDGE_VNODE_PREFIX) {
+          let seg_tail_order =
+            if t == tail && chain_tail == tail {
+              tail_port_order
+            } else if t == head && chain_head == head {
+              head_port_order
+            } else {
+              0.0
+            }
+          let seg_head_order =
+            if h == head && chain_head == head {
+              head_port_order
+            } else if h == tail && chain_tail == tail {
+              tail_port_order
+            } else {
+              0.0
+            }
+          let key =
+            order_edge_merge_key(
+              t,
+              h,
+              true,
+              seg_tail_order,
+              seg_head_order,
+            )
+          let prev = match count_by_key.get(key) {
+            Some(value) => value
+            None => 0
+          }
+          count_by_key[key] = prev + 1
+        }
+        i = i + 1
+      }
+    }
+  }
+  let bonus_by_key : Map[String, Int] = Map::new()
+  for key, count in count_by_key {
+    if count > 1 {
+      bonus_by_key[key] = count - 1
+    }
+  }
+  bonus_by_key
+}
+
+///|
+/// Graphviz parity: apply nested intercluster merge-chain bonus to the first
+/// representative vnode-tail segment for each merge key.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_intercluster_vnode_tail_bonus(
+  order_edges_by_tail_coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  bonus_by_key : Map[String, Int],
+) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
+  if bonus_by_key.length() == 0 {
+    return order_edges_by_tail_coalesced
+  }
+  let remaining_bonus : Map[String, Int] = Map::new()
+  for key, value in bonus_by_key {
+    remaining_bonus[key] = value
+  }
+  let adjusted : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
+    Map::new()
+  for tail_name, entries in order_edges_by_tail_coalesced {
+    let adjusted_entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
+    for entry in entries {
+      let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+        entry
+      let key =
+        order_edge_merge_key(
+          tail,
+          head,
+          constraint,
+          tail_port_order,
+          head_port_order,
+        )
+      let mut adjusted_penalty = penalty
+      match remaining_bonus.get(key) {
+        Some(extra) =>
+          if extra > 0 {
+            adjusted_penalty = adjusted_penalty + extra
+            remaining_bonus[key] = 0
+          }
+        None => ()
+      }
+      adjusted_entries.push(
+        (tail, head, adjusted_penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+      )
+    }
+    adjusted[tail_name] = adjusted_entries
+  }
+  adjusted
+}
+
+///|
+/// Graphviz parity: edge creation replay follows per-tail ND_out order after
+/// class2 merge-chain coalescing in rematerialized clustered passes.
+/// Do not change behavior without updating fixtures/tests.
+fn rebuild_edge_creation_from_tail_order(
+  tail_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Array[(String, String)] {
+  let edge_creation : Array[(String, String)] = []
+  for tail_name in tail_order {
+    let entries = match order_edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for entry in entries {
+      let (tail, head, _, _, _, _, _, _) = entry
+      edge_creation.push((tail, head))
+    }
+  }
+  edge_creation
+}
+
+///|
 /// Graphviz parity: cluster-local build_ranks consumes edge chains before
 /// root/cluster remapping, so unmapped tails/heads must remain available.
 /// Do not change behavior without updating fixtures/tests.
@@ -8631,24 +8906,53 @@ fn build_clustered_remincross_order_edges_by_tail(
   Array[(String, String)],
 ) {
   let rem_edges_by_tail = edges_by_tail
-  build_order_edges_by_tail_graphviz(
-    creation_order,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    ranks,
-    edge_vnodes,
-    order_with_vnodes,
-    cluster_keys,
-    order_with_clusters,
-    false,
-    false,
-    rem_edges_by_tail,
-  )
+  let (rem_order_edges_by_tail_raw, rem_vnode_creation, _rem_edge_creation_raw) =
+    build_order_edges_by_tail_graphviz(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_keys,
+      order_with_clusters,
+      false,
+      false,
+      rem_edges_by_tail,
+    )
+  let rem_order_edges_by_tail_coalesced =
+    coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
+  let intercluster_bonus =
+    collect_intercluster_vnode_tail_bonus(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      order_with_clusters,
+      rem_edges_by_tail,
+      cluster_keys,
+    )
+  let rem_order_edges_by_tail =
+    apply_intercluster_vnode_tail_bonus(
+      rem_order_edges_by_tail_coalesced,
+      intercluster_bonus,
+    )
+  let rem_edge_creation =
+    rebuild_edge_creation_from_tail_order(
+      creation_order,
+      rem_order_edges_by_tail,
+    )
+  (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation)
 }
 
 ///|
