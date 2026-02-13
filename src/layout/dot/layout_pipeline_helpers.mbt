@@ -8216,6 +8216,24 @@ fn run_remincross_rank_reorder_startpass2(
   rem_flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
+  if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
+    for rank in rem_rank_keys {
+      let names = match rem_groups.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      let rank_joined = names.join(" ")
+      println("remincross_input_rank \{rank}: \{rank_joined}")
+    }
+    let mut idx = 0
+    while idx < rem_edges_out.length() {
+      let tail = rem_edge_tail_out[idx]
+      let head = rem_edge_head_out[idx]
+      let pen = edge_xpenalty(rem_edges_out[idx])
+      println("remincross_input_edge \{idx}: \{tail} -> \{head} pen=\{pen}")
+      idx = idx + 1
+    }
+  }
   reorder_rank_groups(
     rem_rank_keys,
     rem_groups,
@@ -8242,6 +8260,9 @@ fn run_remincross_rank_reorder_startpass2(
     Map::new(),
     rem_flat_constraints,
     graphviz_flip=graphviz_flip,
+    // Graphviz parity: ReMincross counts parallel chain segments once
+    // with summed xpenalty before startpass=2 transposition.
+    coalesce_parallel_edges=true,
     startpass=2,
   )
 }
@@ -12137,11 +12158,16 @@ fn build_root_mincross_preferred_positions(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> Map[String, Double] {
-  if order_with_vnodes {
-    vnode_order_keys_for_ordering
-  } else {
-    Map::new()
+  if !order_with_vnodes {
+    return Map::new()
   }
+  let filtered : Map[String, Double] = Map::new()
+  for name, value in vnode_order_keys_for_ordering {
+    if name.has_prefix(EDGE_VNODE_PREFIX) {
+      filtered[name] = value
+    }
+  }
+  filtered
 }
 
 ///|
@@ -12466,6 +12492,9 @@ fn run_root_mincross_rank_reorder(
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
       graphviz_flip=graphviz_flip,
+      // Graphviz parity: root ReMincross coalesces parallel edge segments
+      // into a single crossing edge with summed xpenalty.
+      coalesce_parallel_edges=true,
     )
   }
 
@@ -12573,6 +12602,9 @@ fn run_root_mincross_rank_reorder(
         graphviz_out_neighbors=component_graphviz_out_neighbors,
         graphviz_in_neighbors=component_graphviz_in_neighbors,
         graphviz_flip=graphviz_flip,
+        // Graphviz parity: component root reorder uses the same
+        // parallel-edge xpenalty coalescing as init_mccomp.
+        coalesce_parallel_edges=true,
       )
     for rank in order_rank_keys_for_mincross {
       let names = match ordered_component.get(rank) {
@@ -12614,6 +12646,20 @@ fn build_root_mincross_groups_with_trace(
       order_cluster_keys,
       order_cluster_skeleton,
     )
+  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
+    for rank, names in order_groups_for_mincross {
+      let rank_joined = names.join(" ")
+      println("root_input_rank \{rank}: \{rank_joined}")
+      for name in names {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        let skel = order_cluster_skeleton.get(name) == Some(true)
+        println("root_input_node \{name} cluster=\{cluster} skel=\{skel}")
+      }
+    }
+  }
   trace_root_mincross_graphviz_neighbors(
     graphviz_in_neighbors,
     graphviz_out_neighbors,
@@ -13014,6 +13060,16 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
   graphviz_flip : Bool,
   mincross_nodes : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[String, Bool]) {
+  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
+    let mut edge_idx = 0
+    while edge_idx < order_edges_out_mincross.length() {
+      let tail = order_edge_tail_out_mincross[edge_idx]
+      let head = order_edge_head_out_mincross[edge_idx]
+      let pen = edge_xpenalty(order_edges_out_mincross[edge_idx])
+      println("root_input_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
+      edge_idx = edge_idx + 1
+    }
+  }
   let ordered_mincross =
     run_root_mincross_rank_reorder_pass_reorder_phase(
       order_rank_keys_for_mincross,

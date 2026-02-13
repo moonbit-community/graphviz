@@ -994,6 +994,7 @@ fn reorder_rank_groups(
   fixed_positions? : Map[String, Double] = Map::new(),
   fixed_ranks? : Map[String, Int] = Map::new(),
   graphviz_flip? : Bool = false,
+  coalesce_parallel_edges? : Bool = false,
   startpass? : Int = 0,
 ) -> Map[Int, Array[String]] {
   let startpass =
@@ -1109,15 +1110,37 @@ fn reorder_rank_groups(
       edge_out[name] = []
     }
   }
+  let coalesced_edge_index : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = edge_xpenalty(edge)
+    let base_penalty = edge_xpenalty(edge)
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    let mut penalty = base_penalty
+    if coalesce_parallel_edges && base_penalty > 0 && edge_is_constraint(edge) {
+      let tail_port_order =
+        if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
+          0.5
+        }
+      let head_port_order =
+        if edge_idx < edge_head_port_order.length() { edge_head_port_order[edge_idx] } else {
+          0.5
+        }
+      let merge_key =
+        "\{tail}|\{head}|\{tail_port_order.to_string()}|\{head_port_order.to_string()}"
+      match coalesced_edge_index.get(merge_key) {
+        Some(first_idx) => {
+          let prev = edge_penalty[first_idx]
+          edge_penalty[first_idx] = prev + base_penalty
+          penalty = 0
+        }
+        None => coalesced_edge_index[merge_key] = edge_idx
+      }
+    }
     edge_penalty.push(penalty)
     if penalty <= 0 || !edge_is_constraint(edge) {
       continue
     }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
     let tail_rank = match node_ranks.get(tail) {
       Some(value) => value
       None => 0
