@@ -5773,6 +5773,36 @@ fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
 }
 
 ///|
+/// Graphviz parity: mincross port metadata on synthetic ordering nodes uses
+/// default zero offsets/order unless an explicit non-default port survives
+/// into the materialized order edge.
+/// Do not change behavior without updating fixtures/tests.
+fn should_zero_synthetic_mincross_ports(
+  tail : String,
+  head : String,
+  tail_port_x : Double,
+  head_port_x : Double,
+  tail_port_order : Double,
+  head_port_order : Double,
+) -> Bool {
+  let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
+  let head_is_skeleton = head.has_prefix(CLUSTER_SKELETON_PREFIX)
+  let synthetic_endpoint =
+    is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
+    tail_is_skeleton || head_is_skeleton
+  if !synthetic_endpoint {
+    return false
+  }
+  let defaultish_x =
+    (tail_port_x == 0.0 || tail_port_x == 0.5) &&
+    (head_port_x == 0.0 || head_port_x == 0.5)
+  if tail_is_skeleton && head_is_skeleton {
+    return true
+  }
+  defaultish_x && tail_port_order == 0.0 && head_port_order == 0.0
+}
+
+///|
 /// Graphviz parity: root mincross edge set keeps only edges whose endpoints are
 /// both in the filtered node set, preserving edge and port-order sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -5806,13 +5836,42 @@ fn collect_mincross_order_edges(
     let tail = order_edge_tail_out[edge_idx]
     let head = order_edge_head_out[edge_idx]
     if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
+      let tail_port_x_raw = order_edge_tail_port_x[edge_idx]
+      let head_port_x_raw = order_edge_head_port_x[edge_idx]
+      let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
+      let head_port_order_raw = order_edge_head_port_order[edge_idx]
+      let zero_synthetic_defaults =
+        should_zero_synthetic_mincross_ports(
+          tail,
+          head,
+          tail_port_x_raw,
+          head_port_x_raw,
+          tail_port_order_raw,
+          head_port_order_raw,
+        )
+      let tail_port_x =
+        if zero_synthetic_defaults { 0.0 } else { tail_port_x_raw }
+      let head_port_x =
+        if zero_synthetic_defaults { 0.0 } else { head_port_x_raw }
+      let tail_port_order =
+        if zero_synthetic_defaults {
+          0.0
+        } else {
+          tail_port_order_raw
+        }
+      let head_port_order =
+        if zero_synthetic_defaults {
+          0.0
+        } else {
+          head_port_order_raw
+        }
       order_edges_out_mincross.push(order_edges_out[edge_idx])
       order_edge_tail_out_mincross.push(tail)
       order_edge_head_out_mincross.push(head)
-      order_edge_tail_port_x_mincross.push(order_edge_tail_port_x[edge_idx])
-      order_edge_head_port_x_mincross.push(order_edge_head_port_x[edge_idx])
-      order_edge_tail_port_order_mincross.push(order_edge_tail_port_order[edge_idx])
-      order_edge_head_port_order_mincross.push(order_edge_head_port_order[edge_idx])
+      order_edge_tail_port_x_mincross.push(tail_port_x)
+      order_edge_head_port_x_mincross.push(head_port_x)
+      order_edge_tail_port_order_mincross.push(tail_port_order)
+      order_edge_head_port_order_mincross.push(head_port_order)
     }
     edge_idx = edge_idx + 1
   }
@@ -6429,6 +6488,41 @@ fn build_root_cluster_reorder_edge_bundle(
       root_graph,
       root_node_map,
     )
+  let root_edge_tail_port_x_norm : Array[Double] = []
+  let root_edge_head_port_x_norm : Array[Double] = []
+  let root_edge_tail_port_order_norm : Array[Double] = []
+  let root_edge_head_port_order_norm : Array[Double] = []
+  let mut root_port_idx = 0
+  while root_port_idx < root_edges_out.length() {
+    let tail = root_edge_tail_out[root_port_idx]
+    let head = root_edge_head_out[root_port_idx]
+    let tail_port_x_raw = root_edge_tail_port_x[root_port_idx]
+    let head_port_x_raw = root_edge_head_port_x[root_port_idx]
+    let tail_port_order_raw = root_edge_tail_port_order[root_port_idx]
+    let head_port_order_raw = root_edge_head_port_order[root_port_idx]
+    let zero_ports =
+      should_zero_synthetic_mincross_ports(
+        tail,
+        head,
+        tail_port_x_raw,
+        head_port_x_raw,
+        tail_port_order_raw,
+        head_port_order_raw,
+      )
+    root_edge_tail_port_x_norm.push(
+      if zero_ports { 0.0 } else { tail_port_x_raw },
+    )
+    root_edge_head_port_x_norm.push(
+      if zero_ports { 0.0 } else { head_port_x_raw },
+    )
+    root_edge_tail_port_order_norm.push(
+      if zero_ports { 0.0 } else { tail_port_order_raw },
+    )
+    root_edge_head_port_order_norm.push(
+      if zero_ports { 0.0 } else { head_port_order_raw },
+    )
+    root_port_idx = root_port_idx + 1
+  }
   trace_root_edges_for_cluster_reorder(
     root_edges_out,
     root_edge_tail_out,
@@ -6446,10 +6540,10 @@ fn build_root_cluster_reorder_edge_bundle(
     root_edges_out,
     root_edge_tail_out,
     root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
+    root_edge_tail_port_x_norm,
+    root_edge_head_port_x_norm,
+    root_edge_tail_port_order_norm,
+    root_edge_head_port_order_norm,
     root_parents,
     root_children,
     root_edge_order,
