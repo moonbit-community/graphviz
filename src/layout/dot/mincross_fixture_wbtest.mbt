@@ -15,6 +15,10 @@ struct MincrossEdge {
   xpenalty : Int
   seq : Int
   order : Int
+  tail_port_x : Double
+  head_port_x : Double
+  tail_port_order : Double
+  head_port_order : Double
 }
 
 ///|
@@ -123,7 +127,39 @@ fn parse_mincross_edges(value : Json) -> Array[MincrossEdge] raise {
         Some(value) => @json.from_json(value)
         None => order
       }
-    edges.push({ tail, head, xpenalty, seq, order })
+    let tail_port_x =
+      match obj.get("tail_port_x") {
+        Some(value) => @json.from_json(value)
+        None => 0.0
+      }
+    let head_port_x =
+      match obj.get("head_port_x") {
+        Some(value) => @json.from_json(value)
+        None => 0.0
+      }
+    let tail_port_order =
+      match obj.get("tail_port_order") {
+        Some(value) => @json.from_json(value)
+        None => 0.0
+      }
+    let head_port_order =
+      match obj.get("head_port_order") {
+        Some(value) => @json.from_json(value)
+        None => 0.0
+      }
+    edges.push(
+      {
+        tail,
+        head,
+        xpenalty,
+        seq,
+        order,
+        tail_port_x,
+        head_port_x,
+        tail_port_order,
+        head_port_order,
+      },
+    )
   }
   edges
 }
@@ -263,6 +299,10 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
   let edges : Array[@cgraph.Edge] = []
   let edge_tail : Array[String] = []
   let edge_head : Array[String] = []
+  let edge_tail_port_x : Array[Double] = []
+  let edge_head_port_x : Array[Double] = []
+  let edge_tail_port_order : Array[Double] = []
+  let edge_head_port_order : Array[Double] = []
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
   for node in input.nodes {
@@ -314,6 +354,10 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     edges.push(edge_obj)
     edge_tail.push(tail_name)
     edge_head.push(head_name)
+    edge_tail_port_x.push(edge.tail_port_x)
+    edge_head_port_x.push(edge.head_port_x)
+    edge_tail_port_order.push(edge.tail_port_order)
+    edge_head_port_order.push(edge.head_port_order)
   }
   let rank_keys : Array[Int] = []
   for rank in input.minrank..=input.maxrank {
@@ -409,10 +453,6 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
       idx = idx + 1
     }
   }
-  let edge_tail_port_x = Array::make(edges.length(), 0.0)
-  let edge_head_port_x = Array::make(edges.length(), 0.0)
-  let edge_tail_port_order = Array::make(edges.length(), 0.5)
-  let edge_head_port_order = Array::make(edges.length(), 0.5)
   let ordered = reorder_rank_groups(
     rank_keys,
     groups,
