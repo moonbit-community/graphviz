@@ -5888,13 +5888,16 @@ fn collect_mincross_order_edges(
 
 ///|
 /// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
-/// merged back into seeded rank lists by replacing only filtered positions.
+/// merged back into seeded rank lists by expanding each skeleton slot with the
+/// cluster-local rank bucket for that cluster (when present).
 /// Do not change behavior without updating fixtures/tests.
 fn merge_root_mincross_order_into_seeded_groups(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
   mincross_nodes : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
@@ -5910,16 +5913,65 @@ fn merge_root_mincross_order_into_seeded_groups(
       merged[rank] = names
       continue
     }
-    let mut replace_idx = 0
-    for i in 0..<names.length() {
-      if mincross_nodes.get(names[i]) is Some(_) {
-        if replace_idx < replacements.length() {
-          names[i] = replacements[replace_idx]
-          replace_idx = replace_idx + 1
-        }
+    let cluster_bucket : Map[String, Array[String]] = Map::new()
+    for name in names {
+      if mincross_nodes.get(name) is Some(_) {
+        continue
+      }
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      if cluster == "" {
+        continue
+      }
+      match cluster_bucket.get(cluster) {
+        Some(list) => list.push(name)
+        None => cluster_bucket[cluster] = [name]
       }
     }
-    merged[rank] = names
+    let merged_names : Array[String] = []
+    let consumed_clusters : Map[String, Bool] = Map::new()
+    for replacement in replacements {
+      if order_cluster_skeleton.get(replacement) == Some(true) {
+        let cluster = cluster_key_or_empty(order_cluster_keys, replacement)
+        if cluster != "" {
+          let bucket = match cluster_bucket.get(cluster) {
+            Some(list) => list
+            None => []
+          }
+          if bucket.length() > 0 {
+            for name in bucket {
+              merged_names.push(name)
+            }
+            consumed_clusters[cluster] = true
+          } else {
+            merged_names.push(replacement)
+          }
+        } else {
+          merged_names.push(replacement)
+        }
+      } else {
+        merged_names.push(replacement)
+      }
+    }
+    for name in names {
+      if mincross_nodes.get(name) is Some(_) {
+        continue
+      }
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      if cluster != "" && consumed_clusters.get(cluster) == Some(true) {
+        continue
+      }
+      let mut exists = false
+      for merged_name in merged_names {
+        if merged_name == name {
+          exists = true
+          break
+        }
+      }
+      if !exists {
+        merged_names.push(name)
+      }
+    }
+    merged[rank] = merged_names
   }
   merged
 }
@@ -12211,6 +12263,29 @@ fn build_finalize_order_groups_with_cluster_remincross_output(
 }
 
 ///|
+/// Graphviz parity: cluster-rank reorder is skipped when root reorder exposes
+/// only one non-root cluster bucket, so cluster-local ordering remains anchored
+/// at the root-skeleton expansion position.
+/// Do not change behavior without updating fixtures/tests.
+fn has_single_cluster_rank_order_bucket(
+  cluster_rank_order : Map[Int, Map[String, Int]],
+) -> Bool {
+  let seen_clusters : Map[String, Bool] = Map::new()
+  for _rank, order_map in cluster_rank_order {
+    for cluster, _order in order_map {
+      if cluster == "" {
+        continue
+      }
+      seen_clusters[cluster] = true
+      if seen_clusters.length() > 1 {
+        return false
+      }
+    }
+  }
+  seen_clusters.length() == 1
+}
+
+///|
 /// Graphviz parity: cluster-enabled final groups apply cluster-rank ordering
 /// then local-cluster bucket ordering before clustered ReMincross refinement.
 /// Do not change behavior without updating fixtures/tests.
@@ -12222,11 +12297,15 @@ fn reorder_final_groups_for_cluster_remincross(
   local_cluster_order : Map[String, Int],
 ) -> Map[Int, Array[String]] {
   let reordered =
-    reorder_rank_groups_by_cluster_rank_order(
-      final_groups,
-      cluster_rank_order,
-      cluster_keys,
-    )
+    if has_single_cluster_rank_order_bucket(cluster_rank_order) {
+      final_groups
+    } else {
+      reorder_rank_groups_by_cluster_rank_order(
+        final_groups,
+        cluster_rank_order,
+        cluster_keys,
+      )
+    }
   // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
   reorder_groups_by_local_cluster_order(
     reordered,
@@ -12579,6 +12658,8 @@ fn build_root_mincross_final_ordered_groups(
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
   mincross_nodes : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   if order_with_clusters {
     merge_root_mincross_order_into_seeded_groups(
@@ -12586,6 +12667,8 @@ fn build_root_mincross_final_ordered_groups(
       seeded_groups,
       ordered_mincross,
       mincross_nodes,
+      order_cluster_keys,
+      order_cluster_skeleton,
     )
   } else {
     ordered_mincross
@@ -13076,6 +13159,8 @@ fn build_root_mincross_reorder_stage_output(
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
   mincross_nodes : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let ordered =
@@ -13085,6 +13170,8 @@ fn build_root_mincross_reorder_stage_output(
       seeded_groups,
       ordered_mincross,
       mincross_nodes,
+      order_cluster_keys,
+      order_cluster_skeleton,
     )
   build_root_mincross_reorder_output(order_groups_for_mincross, ordered)
 }
@@ -13764,6 +13851,8 @@ fn run_root_mincross_reorder(
     seeded_groups,
     ordered_mincross,
     mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
     order_groups_for_mincross,
   )
 }
