@@ -2828,9 +2828,9 @@ fn collect_internal_cluster_edges_for_local_bundle(
     let head = order_edge_head[i]
     let tail_in = cluster_node_set.get(tail) is Some(_)
     let head_in = cluster_node_set.get(head) is Some(_)
-    // Graphviz parity: include boundary-touching edges so local ordering can
-    // react to fixed endpoints outside the cluster rank subgraph.
-    if !(tail_in || head_in) {
+    // Graphviz parity: cluster-local mincross only sees edges whose endpoints
+    // are inside the expanded cluster graph (expand_cluster/interclexp).
+    if !(tail_in && head_in) {
       continue
     }
     cluster_edges.push(order_edges[i])
@@ -5888,16 +5888,15 @@ fn collect_mincross_order_edges(
 
 ///|
 /// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
-/// merged back into seeded rank lists by expanding each skeleton slot with the
-/// cluster-local rank bucket for that cluster (when present).
+/// merged back into seeded rank lists by replacing only filtered positions.
 /// Do not change behavior without updating fixtures/tests.
 fn merge_root_mincross_order_into_seeded_groups(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
   mincross_nodes : Map[String, Bool],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
+  _order_cluster_keys : Map[String, String],
+  _order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
@@ -5913,65 +5912,16 @@ fn merge_root_mincross_order_into_seeded_groups(
       merged[rank] = names
       continue
     }
-    let cluster_bucket : Map[String, Array[String]] = Map::new()
-    for name in names {
-      if mincross_nodes.get(name) is Some(_) {
-        continue
-      }
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
-      if cluster == "" {
-        continue
-      }
-      match cluster_bucket.get(cluster) {
-        Some(list) => list.push(name)
-        None => cluster_bucket[cluster] = [name]
-      }
-    }
-    let merged_names : Array[String] = []
-    let consumed_clusters : Map[String, Bool] = Map::new()
-    for replacement in replacements {
-      if order_cluster_skeleton.get(replacement) == Some(true) {
-        let cluster = cluster_key_or_empty(order_cluster_keys, replacement)
-        if cluster != "" {
-          let bucket = match cluster_bucket.get(cluster) {
-            Some(list) => list
-            None => []
-          }
-          if bucket.length() > 0 {
-            for name in bucket {
-              merged_names.push(name)
-            }
-            consumed_clusters[cluster] = true
-          } else {
-            merged_names.push(replacement)
-          }
-        } else {
-          merged_names.push(replacement)
-        }
-      } else {
-        merged_names.push(replacement)
-      }
-    }
-    for name in names {
-      if mincross_nodes.get(name) is Some(_) {
-        continue
-      }
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
-      if cluster != "" && consumed_clusters.get(cluster) == Some(true) {
-        continue
-      }
-      let mut exists = false
-      for merged_name in merged_names {
-        if merged_name == name {
-          exists = true
-          break
+    let mut replace_idx = 0
+    for i in 0..<names.length() {
+      if mincross_nodes.get(names[i]) is Some(_) {
+        if replace_idx < replacements.length() {
+          names[i] = replacements[replace_idx]
+          replace_idx = replace_idx + 1
         }
       }
-      if !exists {
-        merged_names.push(name)
-      }
     }
-    merged[rank] = merged_names
+    merged[rank] = names
   }
   merged
 }
@@ -12264,11 +12214,14 @@ fn build_finalize_order_groups_with_cluster_remincross_output(
 
 ///|
 /// Graphviz parity: cluster-rank reorder is skipped when root reorder exposes
-/// only one non-root cluster bucket, so cluster-local ordering remains anchored
-/// at the root-skeleton expansion position.
+/// a single-cluster single-anchor shape (one cluster bucket globally and at
+/// most one clustered node per rank), so cluster-local ordering remains
+/// anchored at the root-skeleton expansion position.
 /// Do not change behavior without updating fixtures/tests.
 fn has_single_cluster_rank_order_bucket(
+  final_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_keys : Map[String, String],
 ) -> Bool {
   let seen_clusters : Map[String, Bool] = Map::new()
   for _rank, order_map in cluster_rank_order {
@@ -12282,7 +12235,21 @@ fn has_single_cluster_rank_order_bucket(
       }
     }
   }
-  seen_clusters.length() == 1
+  if seen_clusters.length() != 1 {
+    return false
+  }
+  for _rank, names in final_groups {
+    let mut cluster_nodes = 0
+    for name in names {
+      if cluster_key_or_empty(cluster_keys, name) != "" {
+        cluster_nodes = cluster_nodes + 1
+        if cluster_nodes > 1 {
+          return false
+        }
+      }
+    }
+  }
+  true
 }
 
 ///|
@@ -12297,7 +12264,11 @@ fn reorder_final_groups_for_cluster_remincross(
   local_cluster_order : Map[String, Int],
 ) -> Map[Int, Array[String]] {
   let reordered =
-    if has_single_cluster_rank_order_bucket(cluster_rank_order) {
+    if has_single_cluster_rank_order_bucket(
+      final_groups,
+      cluster_rank_order,
+      cluster_keys,
+    ) {
       final_groups
     } else {
       reorder_rank_groups_by_cluster_rank_order(
