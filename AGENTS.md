@@ -40,3 +40,4 @@ bd sync               # Sync with git
 - When you want to say "Next steps" to user, you should create issues for these next steps, and follow bd workflow to continue.
 - When creating task, write a detailed handoff in description so you may start work on it with zero context.
 - When there's no ready tasks, you should carefully review the open epic issues. Don't close epic issue without reviewing. After review you decide if need update plan. If update needed, re-plan it use bd workflow, and optionally update the epic issue.
+- Commit your changes in atomic way when you made progress without regression. Changes with regression should not commited in VCS.
