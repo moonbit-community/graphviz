@@ -2957,8 +2957,14 @@ fn build_cluster_local_node_set_for_reorder(
   order_with_vnodes : Bool,
 ) -> Map[String, Bool] {
   let cluster_nodes_set : Map[String, Bool] = Map::new()
+  let cluster_graph_node_order : Array[String] = []
   for node in cluster_graph.nodes() {
     cluster_nodes_set[node.name()] = true
+    cluster_graph_node_order.push(node.name())
+  }
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let joined = cluster_graph_node_order.join(" ")
+    println("cluster_graph_nodes \{cluster}: \{joined}")
   }
   if order_with_vnodes {
     for vnode, vnode_cluster in vnode_clusters {
@@ -3102,41 +3108,223 @@ fn run_cluster_local_rank_reorder(
   if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
     return (false, Map::new())
   }
-  let ordered_cluster = reorder_rank_groups(
-    cluster_rank_keys,
-    cluster_groups,
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    edge_order,
-    cluster_node_order,
-    cluster_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    Map::new(),
-    empty_cluster_skeleton,
-    cluster_flat_constraints,
-    // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
-    fixed_positions=fixed_positions,
-    fixed_ranks=fixed_ranks,
-    graphviz_flip=false,
-    // Graphviz parity: cluster-local startpass=2 mincross coalesces
-    // parallel edge segments by endpoint+port order and sums xpenalty.
-    coalesce_parallel_edges=true,
-    startpass=2,
-  )
+  let seeded_by_vnode_interp =
+    seed_cluster_local_groups_by_vnode_interpolation(
+      cluster_rank_keys,
+      cluster_groups,
+      fixed_ranks,
+      parents,
+      children,
+    )
+  // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
+  let seeded_cluster_groups =
+    flat_reorder_rank_groups_graphviz(
+      cluster_rank_keys,
+      seeded_by_vnode_interp,
+      fixed_ranks,
+      cluster_flat_constraints,
+      false,
+    )
+  dot_trace_groups("cluster_local_mincross_input", seeded_cluster_groups)
+  let ordered_cluster =
+    reorder_rank_groups(
+      cluster_rank_keys,
+      seeded_cluster_groups,
+      cluster_edges,
+      cluster_edge_tail,
+      cluster_edge_head,
+      cluster_edge_tail_port_x,
+      cluster_edge_head_port_x,
+      cluster_edge_tail_port_order,
+      cluster_edge_head_port_order,
+      parents,
+      children,
+      cluster_keys,
+      rank_same_groups,
+      rank_same_order,
+      edge_order,
+      cluster_node_order,
+      cluster_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      Map::new(),
+      empty_cluster_skeleton,
+      cluster_flat_constraints,
+      // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
+      fixed_positions=fixed_positions,
+      fixed_ranks=fixed_ranks,
+      graphviz_flip=false,
+      // Graphviz parity: cluster-local startpass=2 mincross coalesces
+      // parallel edge segments by endpoint+port order and sums xpenalty.
+      coalesce_parallel_edges=true,
+      startpass=2,
+    )
+  dot_trace_groups("cluster_local_mincross_output", ordered_cluster)
   (true, ordered_cluster)
+}
+
+///|
+/// Graphviz parity: cluster-local ND_order seeds vnode positions by
+/// interpolating between current tail/head orders inside the cluster.
+/// Do not change behavior without updating fixtures/tests.
+fn seed_cluster_local_groups_by_vnode_interpolation(
+  cluster_rank_keys : Array[Int],
+  cluster_groups : Map[Int, Array[String]],
+  ranks : Map[String, Int],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+) -> Map[Int, Array[String]] {
+  let order_index : Map[String, Int] = Map::new()
+  for rank in cluster_rank_keys {
+    let names = match cluster_groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for idx, name in names {
+      order_index[name] = idx
+    }
+  }
+  let seeded : Map[Int, Array[String]] = Map::new()
+  for rank in cluster_rank_keys {
+    let names = match cluster_groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if names.length() <= 1 {
+      if names.length() > 0 {
+        seeded[rank] = names.copy()
+      }
+      continue
+    }
+    let items : Array[(Double, Int, String)] = []
+    for idx, name in names {
+      let base_order = match order_index.get(name) {
+        Some(value) => value
+        None => idx
+      }
+      let mut key = Double::from_int(base_order)
+      if is_edge_vnode_name(name) {
+        let vnode_rank = match ranks.get(name) {
+          Some(value) => value
+          None => rank
+        }
+        let parent_name =
+          match parents.get(name) {
+            Some(list) => {
+              let mut selected : String? = None
+              for candidate in list {
+                let candidate_rank = match ranks.get(candidate) {
+                  Some(value) => value
+                  None => vnode_rank - 1
+                }
+                if candidate_rank < vnode_rank {
+                  selected = Some(candidate)
+                  break
+                }
+              }
+              match selected {
+                Some(value) => value
+                None =>
+                  if list.length() > 0 { list[0] } else { "" }
+              }
+            }
+            None => ""
+          }
+        let child_name =
+          match children.get(name) {
+            Some(list) => {
+              let mut selected : String? = None
+              for candidate in list {
+                let candidate_rank = match ranks.get(candidate) {
+                  Some(value) => value
+                  None => vnode_rank + 1
+                }
+                if candidate_rank > vnode_rank {
+                  selected = Some(candidate)
+                  break
+                }
+              }
+              match selected {
+                Some(value) => value
+                None =>
+                  if list.length() > 0 { list[0] } else { "" }
+              }
+            }
+            None => ""
+          }
+        if parent_name != "" && child_name != "" {
+          let parent_rank = match ranks.get(parent_name) {
+            Some(value) => value
+            None => vnode_rank - 1
+          }
+          let child_rank = match ranks.get(child_name) {
+            Some(value) => value
+            None => vnode_rank + 1
+          }
+          let parent_order = match order_index.get(parent_name) {
+            Some(value) => value
+            None => base_order
+          }
+          let child_order = match order_index.get(child_name) {
+            Some(value) => value
+            None => base_order
+          }
+          let (low_rank, high_rank, low_order, high_order) =
+            if parent_rank <= child_rank {
+              (parent_rank, child_rank, parent_order, child_order)
+            } else {
+              (child_rank, parent_rank, child_order, parent_order)
+            }
+          let span = high_rank - low_rank
+          if span > 0 {
+            let t = Double::from_int(vnode_rank - low_rank) / Double::from_int(span)
+            if low_order == high_order {
+              key = Double::from_int(low_order) - (1.0 - t)
+            } else {
+              key =
+                Double::from_int(low_order) +
+                Double::from_int(high_order - low_order) * t
+            }
+          }
+        }
+      }
+      items.push((key, idx, name))
+    }
+    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+      let parts : Array[String] = []
+      for item in items {
+        let (k, _i, n) = item
+        parts.push("\{n}=\{k}")
+      }
+      let joined = parts.join(" ")
+      println("cluster_local_seed_keys rank \{rank}: \{joined}")
+    }
+    items.sort_by((a, b) => {
+      let (a_key, a_idx, _a_name) = a
+      let (b_key, b_idx, _b_name) = b
+      let diff = a_key - b_key
+      if diff < -0.000000001 {
+        -1
+      } else if diff > 0.000000001 {
+        1
+      } else if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+    let reordered : Array[String] = []
+    for item in items {
+      let (_key, _idx, name) = item
+      reordered.push(name)
+    }
+    seeded[rank] = reordered
+  }
+  seeded
 }
 
 ///|
@@ -15991,6 +16179,7 @@ fn build_root_and_cluster_stage_output_after_root_reorder(
   ordered_with_vnodes : Map[Int, Array[String]],
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> OrderRootClusterStageData {
+  dot_trace_groups("ordered_after_root_merge", ordered)
   let next_ordered_with_vnodes =
     build_root_and_cluster_next_ordered_with_vnodes(
       order_with_clusters,
@@ -16016,6 +16205,7 @@ fn build_root_and_cluster_stage_output_after_root_reorder(
       graphviz_flip,
       ordered_with_vnodes,
     )
+  dot_trace_groups("ordered_before_clean", ordered)
   build_root_and_cluster_build_ranks_stage_output(
     order_groups_for_mincross,
     ordered,
