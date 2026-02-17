@@ -5915,16 +5915,66 @@ fn merge_root_mincross_order_into_seeded_groups(
       merged[rank] = names
       continue
     }
-    let mut replace_idx = 0
-    for i in 0..<names.length() {
-      if mincross_nodes.get(names[i]) is Some(_) {
-        if replace_idx < replacements.length() {
-          names[i] = replacements[replace_idx]
-          replace_idx = replace_idx + 1
+    // Graphviz parity: keep cluster-internal nodes attached to the rankleader
+    // skeleton position when root mincross reorders cluster skeleton chains.
+    let skeleton_for_cluster : Map[String, String] = Map::new()
+    for name in names {
+      if _order_cluster_skeleton.get(name) == Some(true) {
+        let cluster = match _order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster != "" {
+          skeleton_for_cluster[cluster] = name
         }
       }
     }
-    merged[rank] = names
+    let attached_by_skeleton : Map[String, Array[String]] = Map::new()
+    for name in names {
+      if mincross_nodes.get(name) is Some(_) {
+        continue
+      }
+      let cluster = match _order_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      if cluster == "" {
+        continue
+      }
+      match skeleton_for_cluster.get(cluster) {
+        Some(skeleton_name) =>
+          match attached_by_skeleton.get(skeleton_name) {
+            Some(list) => list.push(name)
+            None => attached_by_skeleton[skeleton_name] = [name]
+          }
+        None => ()
+      }
+    }
+    let next_names : Array[String] = []
+    let seen : Map[String, Bool] = Map::new()
+    for replacement in replacements {
+      next_names.push(replacement)
+      seen[replacement] = true
+      if _order_cluster_skeleton.get(replacement) == Some(true) {
+        let attached = match attached_by_skeleton.get(replacement) {
+          Some(list) => list
+          None => []
+        }
+        for attached_name in attached {
+          if seen.get(attached_name) is None {
+            next_names.push(attached_name)
+            seen[attached_name] = true
+          }
+        }
+      }
+    }
+    for name in names {
+      if seen.get(name) is None {
+        next_names.push(name)
+        seen[name] = true
+      }
+    }
+    merged[rank] = next_names
   }
   merged
 }
@@ -7835,6 +7885,41 @@ fn reorder_rank_groups_by_cluster_rank_order(
     let order_map = match cluster_rank_order.get(rank) {
       Some(value) => value
       None => {
+        ordered_by_cluster[rank] = names
+        continue
+      }
+    }
+    if names.length() > 2 {
+      let mut first_cluster = -1
+      let mut last_cluster = -1
+      let mut root_before = false
+      let mut root_after = false
+      for i in 0..<names.length() {
+        let cluster = cluster_key_or_empty(cluster_keys, names[i])
+        if cluster != "" {
+          if first_cluster < 0 {
+            first_cluster = i
+          }
+          last_cluster = i
+        }
+      }
+      if first_cluster >= 0 {
+        for i in 0..<first_cluster {
+          if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+            root_before = true
+            break
+          }
+        }
+        if last_cluster + 1 < names.length() {
+          for i in (last_cluster + 1)..<names.length() {
+            if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+              root_after = true
+              break
+            }
+          }
+        }
+      }
+      if root_before && root_after {
         ordered_by_cluster[rank] = names
         continue
       }
