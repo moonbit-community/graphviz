@@ -477,6 +477,7 @@ fn in_cross_graphviz(
   rank : Int,
   ranks : Map[String, Int],
   order : Map[String, Int],
+  fixed_order : Map[String, Int],
   edge_in : Map[String, Array[Int]],
   edge_tail : Array[String],
   edge_tail_port_x : Array[Double],
@@ -505,7 +506,11 @@ fn in_cross_graphviz(
     }
     let inv = match order.get(edge_tail[edge_idx]) {
       Some(value) => value
-      None => 0
+      None =>
+        match fixed_order.get(edge_tail[edge_idx]) {
+          Some(value) => value
+          None => 0
+        }
     }
     let inv_port =
       if edge_idx < edge_tail_port_x.length() { edge_tail_port_x[edge_idx] } else {
@@ -525,7 +530,11 @@ fn in_cross_graphviz(
       }
       let tail_order = match order.get(edge_tail[edge_idx2]) {
         Some(value) => value
-        None => 0
+        None =>
+          match fixed_order.get(edge_tail[edge_idx2]) {
+            Some(value) => value
+            None => 0
+          }
       }
       let t = tail_order - inv
       let tail_port =
@@ -548,6 +557,7 @@ fn out_cross_graphviz(
   rank : Int,
   ranks : Map[String, Int],
   order : Map[String, Int],
+  fixed_order : Map[String, Int],
   edge_out : Map[String, Array[Int]],
   edge_head : Array[String],
   edge_head_port_x : Array[Double],
@@ -576,7 +586,11 @@ fn out_cross_graphviz(
     }
     let inv = match order.get(edge_head[edge_idx]) {
       Some(value) => value
-      None => 0
+      None =>
+        match fixed_order.get(edge_head[edge_idx]) {
+          Some(value) => value
+          None => 0
+        }
     }
     let inv_port =
       if edge_idx < edge_head_port_x.length() { edge_head_port_x[edge_idx] } else {
@@ -596,7 +610,11 @@ fn out_cross_graphviz(
       }
       let head_order = match order.get(edge_head[edge_idx2]) {
         Some(value) => value
-        None => 0
+        None =>
+          match fixed_order.get(edge_head[edge_idx2]) {
+            Some(value) => value
+            None => 0
+          }
       }
       let t = head_order - inv
       let head_port =
@@ -617,6 +635,7 @@ fn transpose_rank_graphviz(
   ranks : Map[String, Int],
   names : Array[String],
   order : Map[String, Int],
+  fixed_order : Map[String, Int],
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
@@ -655,6 +674,7 @@ fn transpose_rank_graphviz(
       rank,
       ranks,
       order,
+      fixed_order,
       edge_in,
       edge_tail,
       edge_tail_port_x,
@@ -666,6 +686,7 @@ fn transpose_rank_graphviz(
       rank,
       ranks,
       order,
+      fixed_order,
       edge_in,
       edge_tail,
       edge_tail_port_x,
@@ -677,6 +698,7 @@ fn transpose_rank_graphviz(
       rank,
       ranks,
       order,
+      fixed_order,
       edge_out,
       edge_head,
       edge_head_port_x,
@@ -688,6 +710,7 @@ fn transpose_rank_graphviz(
       rank,
       ranks,
       order,
+      fixed_order,
       edge_out,
       edge_head,
       edge_head_port_x,
@@ -711,6 +734,7 @@ fn transpose_rank_groups_graphviz(
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
   ranks : Map[String, Int],
+  fixed_order? : Map[String, Int] = Map::new(),
   edge_in : Map[String, Array[Int]],
   edge_out : Map[String, Array[Int]],
   edge_tail : Array[String],
@@ -757,6 +781,7 @@ fn transpose_rank_groups_graphviz(
         ranks,
         names,
         order,
+        fixed_order,
         edge_in,
         edge_out,
         edge_tail,
@@ -1070,6 +1095,10 @@ fn reorder_rank_groups(
   }
   let mut best_ordered = clone_rank_groups(ordered)
   let mut order_positions = order_positions_from_groups(ordered)
+  let fixed_order : Map[String, Int] = Map::new()
+  for name, pos in fixed_positions {
+    fixed_order[name] = pos.to_int()
+  }
   let merge_fixed_positions = () => {
     if fixed_positions.length() == 0 {
       return ()
@@ -1202,6 +1231,7 @@ fn reorder_rank_groups(
       edge_head,
       edge_tail_port_x=edge_tail_port_x,
       edge_head_port_x=edge_head_port_x,
+      fixed_order=fixed_order,
     )
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
@@ -1243,12 +1273,14 @@ fn reorder_rank_groups(
         edge_head,
         edge_tail_port_x=edge_tail_port_x,
         edge_head_port_x=edge_head_port_x,
+        fixed_order=fixed_order,
       )
     if seed_cross > 0 {
       let _ = transpose_rank_groups_graphviz(
         rank_keys,
         ordered,
         node_ranks,
+        fixed_order=fixed_order,
         edge_in,
         edge_out,
         edge_tail,
@@ -1309,12 +1341,14 @@ fn reorder_rank_groups(
             edge_head,
             edge_tail_port_x=edge_tail_port_x,
             edge_head_port_x=edge_head_port_x,
+            fixed_order=fixed_order,
           )
         if seed_cross > 0 {
           let _ = transpose_rank_groups_graphviz(
             rank_keys,
             ordered,
             node_ranks,
+            fixed_order=fixed_order,
             edge_in,
             edge_out,
             edge_tail,
@@ -1348,6 +1382,7 @@ fn reorder_rank_groups(
             edge_head,
             edge_tail_port_x=edge_tail_port_x,
             edge_head_port_x=edge_head_port_x,
+            fixed_order=fixed_order,
           )
         if cur_cross <= best_cross {
           best_cross = cur_cross
@@ -1443,6 +1478,7 @@ fn reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
+          fixed_order=fixed_order,
           edge_in,
           edge_out,
           edge_tail,
@@ -1468,6 +1504,7 @@ fn reorder_rank_groups(
             edge_head,
             edge_tail_port_x=edge_tail_port_x,
             edge_head_port_x=edge_head_port_x,
+            fixed_order=fixed_order,
           )
         if cur_cross <= best_cross {
           let prev_best = best_cross
@@ -1501,6 +1538,7 @@ fn reorder_rank_groups(
         rank_keys,
         ordered,
         node_ranks,
+        fixed_order=fixed_order,
         edge_in,
         edge_out,
         edge_tail,
@@ -1591,6 +1629,7 @@ fn reorder_rank_groups(
             rank_keys,
             ordered,
             node_ranks,
+            fixed_order=fixed_order,
             edge_in,
             edge_out,
             edge_tail,
@@ -1617,6 +1656,7 @@ fn reorder_rank_groups(
             edge_head,
             edge_tail_port_x=edge_tail_port_x,
             edge_head_port_x=edge_head_port_x,
+            fixed_order=fixed_order,
           )
         if cross <= best_cross {
           best_cross = cross

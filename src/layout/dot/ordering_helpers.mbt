@@ -1343,6 +1343,7 @@ fn count_crossings_graphviz(
   edge_head : Array[String],
   edge_tail_port_x? : Array[Double] = [],
   edge_head_port_x? : Array[Double] = [],
+  fixed_order? : Map[String, Int] = Map::new(),
 ) -> Int {
   let order = build_order_index(groups)
   let rank_keys : Array[Int] = []
@@ -1403,7 +1404,41 @@ fn count_crossings_graphviz(
       Some(list) => list
       None => []
     }
-    let count = Array::make(next_nodes.length() + 1, 0)
+    let mut max_slot = next_nodes.length()
+    for top in top_nodes {
+      let outs = match edge_out.get(top) {
+        Some(list) => list
+        None => []
+      }
+      for edge_idx in outs {
+        let head = edge_head[edge_idx]
+        if ranks.get(head) != Some(next_rank) {
+          continue
+        }
+        let penalty = edge_penalty[edge_idx]
+        if penalty <= 0 {
+          continue
+        }
+        let inv =
+          match order.get(head) {
+            Some(value) => value
+            None =>
+              match fixed_order.get(head) {
+                Some(value) => value
+                None => continue
+              }
+          }
+        if inv < 0 {
+          continue
+        }
+        if inv > max_slot {
+          max_slot = inv
+        }
+      }
+    }
+    // Graphviz parity with fixed external slots: local rank slices may carry
+    // sparse slot indices, so the counting array must follow max slot.
+    let count = Array::make(max_slot + 1, 0)
     let mut max_order = 0
     for top in top_nodes {
       let outs = match edge_out.get(top) {
@@ -1416,9 +1451,17 @@ fn count_crossings_graphviz(
           if ranks.get(head) != Some(next_rank) {
             continue
           }
-          let inv = match order.get(head) {
-            Some(value) => value
-            None => continue
+          let inv =
+            match order.get(head) {
+              Some(value) => value
+              None =>
+                match fixed_order.get(head) {
+                  Some(value) => value
+                  None => continue
+                }
+            }
+          if inv < 0 {
+            continue
           }
           let penalty = edge_penalty[edge_idx]
           if penalty <= 0 {
@@ -1436,9 +1479,17 @@ fn count_crossings_graphviz(
         if ranks.get(head) != Some(next_rank) {
           continue
         }
-        let inv = match order.get(head) {
-          Some(value) => value
-          None => continue
+        let inv =
+          match order.get(head) {
+            Some(value) => value
+            None =>
+              match fixed_order.get(head) {
+                Some(value) => value
+                None => continue
+              }
+          }
+        if inv < 0 {
+          continue
         }
         let penalty = edge_penalty[edge_idx]
         if penalty <= 0 {

@@ -3131,6 +3131,9 @@ fn run_cluster_local_rank_reorder(
     fixed_positions=fixed_positions,
     fixed_ranks=fixed_ranks,
     graphviz_flip=false,
+    // Graphviz parity: cluster-local startpass=2 mincross coalesces
+    // parallel edge segments by endpoint+port order and sums xpenalty.
+    coalesce_parallel_edges=true,
     startpass=2,
   )
   (true, ordered_cluster)
