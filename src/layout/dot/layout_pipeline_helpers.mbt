@@ -2735,27 +2735,43 @@ fn build_cluster_local_rank_groups(
       }
     }
     if list.length() > 1 {
-      list.sort_by((a, b) => {
-        let a_idx = match cluster_node_order.get(a) {
-          Some(value) => value
-          None => 0
+      let real_nodes : Array[String] = []
+      for name in list {
+        if !is_edge_vnode_name(name) {
+          real_nodes.push(name)
         }
-        let b_idx = match cluster_node_order.get(b) {
-          Some(value) => value
-          None => 0
+      }
+      if real_nodes.length() > 1 {
+        real_nodes.sort_by((a, b) => {
+          let a_idx = match cluster_node_order.get(a) {
+            Some(value) => value
+            None => 0
+          }
+          let b_idx = match cluster_node_order.get(b) {
+            Some(value) => value
+            None => 0
+          }
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else if a < b {
+            -1
+          } else if a > b {
+            1
+          } else {
+            0
+          }
+        })
+        let mut real_idx = 0
+        for i in 0..<list.length() {
+          if is_edge_vnode_name(list[i]) {
+            continue
+          }
+          list[i] = real_nodes[real_idx]
+          real_idx = real_idx + 1
         }
-        if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else if a < b {
-          -1
-        } else if a > b {
-          1
-        } else {
-          0
-        }
-      })
+      }
     }
     if list.length() > 0 {
       cluster_groups[rank] = list
