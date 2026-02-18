@@ -11027,10 +11027,34 @@ fn build_clustered_remincross_groups_output(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross pass seeds rem_groups from real-node
-/// groups plus edge vnodes (no cluster skeletons) before rematerialization.
+/// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
+/// order by removing transient cluster skeleton nodes only.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_groups_from_ordered_with_vnodes(
+  ordered_with_vnodes : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let rem_groups : Map[Int, Array[String]] = Map::new()
+  for rank, names in ordered_with_vnodes {
+    let filtered : Array[String] = []
+    for name in names {
+      if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+        filtered.push(name)
+      }
+    }
+    if filtered.length() > 0 {
+      rem_groups[rank] = filtered
+    }
+  }
+  rem_groups
+}
+
+///|
+/// Graphviz parity: clustered ReMincross seeds rem_groups from current
+/// vnode-inclusive order for single-cluster graphs; fallback rebuild keeps
+/// existing multi-cluster behavior unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_remincross_pass_groups(
+  ordered_with_vnodes : Map[Int, Array[String]],
   base_groups : Map[Int, Array[String]],
   order_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],
@@ -11041,6 +11065,13 @@ fn build_clustered_remincross_pass_groups(
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
 ) -> Map[Int, Array[String]] {
+  if order_with_vnodes && cluster_meta.cluster_order.length() == 1 {
+    let seeded = build_remincross_groups_from_ordered_with_vnodes(ordered_with_vnodes)
+    if seeded.length() > 0 {
+      dot_trace_groups("remincross_groups", seeded)
+      return seeded
+    }
+  }
   let rem_groups =
     build_remincross_groups_with_optional_vnodes(
       base_groups,
@@ -11179,6 +11210,7 @@ fn run_clustered_remincross_pass(
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let rem_groups =
     build_clustered_remincross_pass_groups(
+      dispatch_context.ordered_with_vnodes,
       dispatch_context.base_groups,
       dispatch_context.order_with_vnodes,
       dispatch_context.edges,
