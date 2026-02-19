@@ -297,6 +297,21 @@ fn parser_cluster_is_descendant_of_innermost(
 }
 
 ///|
+fn parser_nearest_cluster_ancestor(graph : @cgraph.Graph) -> @cgraph.Graph? {
+  let mut current = graph
+  while true {
+    if parser_is_cluster_graph(current) {
+      return Some(current)
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  None
+}
+
+///|
 /// Graphviz parity: when parsing edges inside a cluster, existing nodes are
 /// attached only if they are currently unclustered or the target cluster is a
 /// descendant of the node innermost existing cluster.
@@ -304,15 +319,16 @@ fn parser_should_attach_existing_node_to_graph(
   graph : @cgraph.Graph,
   node : @cgraph.Node,
 ) -> Bool {
-  if !parser_is_cluster_graph(graph) {
-    return false
+  let target_cluster = match parser_nearest_cluster_ancestor(graph) {
+    Some(cluster) => cluster
+    None => return false
   }
-  let root = root_graph_for_graph(graph)
+  let root = root_graph_for_graph(target_cluster)
   let innermost = parser_innermost_cluster_names_for_node(root, node)
   if innermost.length() == 0 {
     return true
   }
-  parser_cluster_is_descendant_of_innermost(graph, innermost)
+  parser_cluster_is_descendant_of_innermost(target_cluster, innermost)
 }
 
 ///|
