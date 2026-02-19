@@ -301,13 +301,26 @@ fn try_multiline_textspan_override(
     return None
   }
   let mut max_width = 0.0
+  let mut max_line_height = 0.0
   for line in lines {
     match @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
-      Some((width, _height)) => if width > max_width { max_width = width }
+      Some((width, height)) => {
+        if width > max_width {
+          max_width = width
+        }
+        if height > max_line_height {
+          max_line_height = height
+        }
+      }
       None => return None
     }
   }
-  let line_height = text_line_height(font_name, font_size_pt)
+  let line_height =
+    if max_line_height > 0.0 {
+      max_line_height
+    } else {
+      text_line_height(font_name, font_size_pt)
+    }
   Some((max_width, line_height * lines.length().to_double()))
 }
 

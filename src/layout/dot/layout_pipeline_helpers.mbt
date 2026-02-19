@@ -2843,10 +2843,9 @@ fn collect_internal_cluster_edges_for_local_bundle(
     let tail = order_edge_tail[i]
     let head = order_edge_head[i]
     let tail_in = cluster_node_set.get(tail) is Some(_)
-    let head_in = cluster_node_set.get(head) is Some(_)
-    // Graphviz parity: cluster-local mincross only sees edges whose endpoints
-    // are inside the expanded cluster graph (expand_cluster/interclexp).
-    if !(tail_in && head_in) {
+    // Graphviz parity: ND_out/transpose for expanded-cluster nodes still sees
+    // their outgoing edges to out-of-cluster nodes.
+    if !tail_in {
       continue
     }
     cluster_edges.push(order_edges[i])
@@ -3025,15 +3024,10 @@ fn build_cluster_local_reorder_metadata(
   }
   let cluster_keys : Map[String, String] = Map::new()
   for name, _ in cluster_node_set {
-    let key = match intercluster_keys.get(name) {
-      Some(value) => value
-      None =>
-        match vnode_clusters.get(name) {
-          Some(value) => value
-          None => ""
-        }
-    }
-    cluster_keys[name] = key
+    // Graphviz parity: mincross_clust() runs on the expanded subgraph where
+    // ND_clust is cleared, so local reorder/transpose should not see
+    // cross-cluster barriers for these nodes.
+    cluster_keys[name] = ""
   }
   let cluster_flat_constraints : Map[String, Bool] = Map::new()
   for key, value in flat_constraints {
