@@ -199,6 +199,34 @@ fn edge_parallel_key(
 }
 
 ///|
+/// Graphviz parity: remap pass keeps sameport-tagged edges separate from plain
+/// parallels while preserving class2 endpoint/port grouping.
+/// Do not change behavior without updating fixtures/tests.
+fn edge_parallel_group_key(edge : @cgraph.Edge) -> String {
+  let base =
+    edge_parallel_key(
+      edge.tail().name(),
+      edge.head().name(),
+      edge.tail_port(),
+      edge.head_port(),
+    )
+  let sameport_mark =
+    match edge.get_attr("samehead") {
+      Some(value) => value != ""
+      None =>
+        match edge.get_attr("sametail") {
+          Some(value) => value != ""
+          None => false
+        }
+    }
+  if sameport_mark {
+    "\{base}|sameport"
+  } else {
+    "\{base}|plain"
+  }
+}
+
+///|
 /// Graphviz parity: parallel offsets group by unordered endpoints/ports (set of
 /// tail/head), and only for unlabeled edges (class2 merge_chain).
 /// Do not change behavior without updating fixtures/tests.
@@ -211,6 +239,7 @@ fn edge_parallel_offsets(
   let groups : Map[String, Array[Int]] = Map::new()
   let group_first_dir_attr : Map[String, String] = Map::new()
   let group_has_mixed_dir_attr : Map[String, Bool] = Map::new()
+  let sameport_marked : Map[Int, Bool] = Map::new()
   for edge in edges {
     if edge_has_label(edge) {
       continue
@@ -242,6 +271,16 @@ fn edge_parallel_offsets(
       Some(value) => value.to_lower()
       None => "forward"
     }
+    let mark =
+      match edge.get_attr("samehead") {
+        Some(value) => value != ""
+        None =>
+          match edge.get_attr("sametail") {
+            Some(value) => value != ""
+            None => false
+          }
+      }
+    sameport_marked[edge.id()] = mark
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
@@ -262,7 +301,21 @@ fn edge_parallel_offsets(
     if ids.length() <= 1 {
       continue
     }
-    ids.sort()
+    ids.sort_by((a, b) => {
+      let a_mark = match sameport_marked.get(a) {
+        Some(value) => if value { 1 } else { 0 }
+        None => 0
+      }
+      let b_mark = match sameport_marked.get(b) {
+        Some(value) => if value { 1 } else { 0 }
+        None => 0
+      }
+      if a_mark != b_mark {
+        b_mark - a_mark
+      } else {
+        a - b
+      }
+    })
     let mixed_dir = match group_has_mixed_dir_attr.get(key) {
       Some(value) => value
       None => false

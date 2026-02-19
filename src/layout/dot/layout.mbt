@@ -147,19 +147,35 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     let pos = segments.join(";")
     edge.set_attr("pos", pos)
     match edge_layout.label_pos {
-      Some(pos) => edge.set_attr("lp", format_point(pos))
+      Some(pos) =>
+        match edge.get_attr("label") {
+          Some(value) => if value != "" { edge.set_attr("lp", format_point(pos)) }
+          None => ()
+        }
       None => ()
     }
     match edge_layout.head_label_pos {
-      Some(pos) => edge.set_attr("head_lp", format_point(pos))
+      Some(pos) =>
+        match edge.get_attr("headlabel") {
+          Some(value) => if value != "" { edge.set_attr("head_lp", format_point(pos)) }
+          None => ()
+        }
       None => ()
     }
     match edge_layout.tail_label_pos {
-      Some(pos) => edge.set_attr("tail_lp", format_point(pos))
+      Some(pos) =>
+        match edge.get_attr("taillabel") {
+          Some(value) => if value != "" { edge.set_attr("tail_lp", format_point(pos)) }
+          None => ()
+        }
       None => ()
     }
     match edge_layout.xlabel_pos {
-      Some(pos) => edge.set_attr("xlp", format_point(pos))
+      Some(pos) =>
+        match edge.get_attr("xlabel") {
+          Some(value) => if value != "" { edge.set_attr("xlp", format_point(pos)) }
+          None => ()
+        }
       None => ()
     }
   }

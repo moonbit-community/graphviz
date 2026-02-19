@@ -1537,7 +1537,9 @@ fn clip_spline_start(
   out[start] = clipped[0]
   out[start + 1] = clipped[1]
   out[start + 2] = clipped[2]
-  out[start + 3] = clipped[3]
+  // Preserve segment end while clipping the start; this matches shape_clip0's
+  // t..1 subdivision used by Graphviz for tail clipping.
+  out[start + 3] = segment[3]
   out
 }
 
@@ -1791,6 +1793,8 @@ fn clip_spline_to_nodes(
   head_size : NodeSize,
   tail_port_side? : Int = 0,
   head_port_side? : Int = 0,
+  tail_clip_enabled_override~ : Bool?,
+  head_clip_enabled_override~ : Bool?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
   clip_swapped? : Bool = false,
@@ -1890,24 +1894,32 @@ fn clip_spline_to_nodes(
   // Graphviz parity: compass/dynamic ports disable clipping after resolvePort
   // when the resolved side is exposed.
   let tail_clip_enabled =
-    match tail_port {
-      Some(value) =>
-        match value.compass {
-          Some(@cgraph.Compass::C) => true
-          Some(_) => false
-          None => tail_port_side == 0
+    match tail_clip_enabled_override {
+      Some(value) => value
+      None =>
+        match tail_port {
+          Some(value) =>
+            match value.compass {
+              Some(@cgraph.Compass::C) => true
+              Some(_) => false
+              None => tail_port_side == 0
+            }
+          None => true
         }
-      None => true
     }
   let head_clip_enabled =
-    match head_port {
-      Some(value) =>
-        match value.compass {
-          Some(@cgraph.Compass::C) => true
-          Some(_) => false
-          None => head_port_side == 0
+    match head_clip_enabled_override {
+      Some(value) => value
+      None =>
+        match head_port {
+          Some(value) =>
+            match value.compass {
+              Some(@cgraph.Compass::C) => true
+              Some(_) => false
+              None => head_port_side == 0
+            }
+          None => true
         }
-      None => true
     }
   let tail_clipped =
     if !tail_clip_enabled {
@@ -3435,6 +3447,8 @@ pub fn edge_spline_for_polyline(
   orthogonal : Bool,
   include_tail : Bool,
   include_head : Bool,
+  tail_clip_enabled? : Bool = true,
+  head_clip_enabled? : Bool = true,
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
@@ -3478,6 +3492,8 @@ pub fn edge_spline_for_polyline(
       tail_anchor_size,
       head_clip_center,
       head_anchor_size,
+      tail_clip_enabled_override=Some(tail_clip_enabled),
+      head_clip_enabled_override=Some(head_clip_enabled),
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
       clip_swapped=clip_swapped,
@@ -3516,6 +3532,8 @@ pub fn edge_spline_for_points(
   force_segmented : Bool,
   include_tail : Bool,
   include_head : Bool,
+  tail_clip_enabled? : Bool = true,
+  head_clip_enabled? : Bool = true,
   tail_port_side? : Int = 0,
   head_port_side? : Int = 0,
   route_barriers? : Array[(@geom.Point, @geom.Point)] = [],
@@ -3560,6 +3578,8 @@ pub fn edge_spline_for_points(
       tail_anchor_size,
       head_clip_center,
       head_anchor_size,
+      tail_clip_enabled_override=Some(tail_clip_enabled),
+      head_clip_enabled_override=Some(head_clip_enabled),
       tail_port_side=tail_port_side,
       head_port_side=head_port_side,
       tail_cluster_bbox=tail_cluster_bbox,
@@ -3606,6 +3626,8 @@ pub fn edge_spline_for_bezier_points(
   head_anchor_size : NodeSize,
   include_tail : Bool,
   include_head : Bool,
+  tail_clip_enabled? : Bool = true,
+  head_clip_enabled? : Bool = true,
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
@@ -3642,6 +3664,8 @@ pub fn edge_spline_for_bezier_points(
       tail_anchor_size,
       head_clip_center,
       head_anchor_size,
+      tail_clip_enabled_override=Some(tail_clip_enabled),
+      head_clip_enabled_override=Some(head_clip_enabled),
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
       clip_swapped=clip_swapped,
@@ -3839,6 +3863,8 @@ pub fn edge_spline_for_line(
   head_slope : @geom.Point,
   include_tail : Bool,
   include_head : Bool,
+  tail_clip_enabled? : Bool = true,
+  head_clip_enabled? : Bool = true,
   rankdir : RankDir,
   curve_offset : Double,
   curve_skew : Double,
@@ -3884,6 +3910,8 @@ pub fn edge_spline_for_line(
       tail_anchor_size,
       head_clip_center,
       head_anchor_size,
+      tail_clip_enabled_override=Some(tail_clip_enabled),
+      head_clip_enabled_override=Some(head_clip_enabled),
       tail_cluster_bbox=tail_cluster_bbox,
       head_cluster_bbox=head_cluster_bbox,
       clip_swapped=clip_swapped,

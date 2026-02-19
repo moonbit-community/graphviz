@@ -139,6 +139,8 @@ priv struct EdgeRouteBase {
   tail_clip_size : NodeSize
   head_clip_center : @geom.Point
   head_clip_size : NodeSize
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
   tail_clip : @geom.Point
   head_clip : @geom.Point
   tail_slope : @geom.Point
@@ -618,6 +620,307 @@ fn clip_to_node_shape(
 }
 
 ///|
+/// Graphviz parity: samehead/sametail group collection aligned to
+/// refs/graphviz/lib/dotgen/sameport.c (dot_sameports/sameedge).
+/// Do not change behavior without updating fixtures/tests.
+fn add_sameport_group_edge(
+  groups : Map[String, Array[@cgraph.Edge]],
+  group_order : Array[String],
+  key : String,
+  edge : @cgraph.Edge,
+) -> Unit {
+  match groups.get(key) {
+    Some(list) => list.push(edge)
+    None => {
+      groups[key] = [edge]
+      group_order.push(key)
+    }
+  }
+}
+
+///|
+fn sameport_merge_key(edge : @cgraph.Edge) -> String {
+  let label = match edge.get_attr("label") {
+    Some(value) => value
+    None => ""
+  }
+  "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{port_key(edge.tail_port())}|\{port_key(edge.head_port())}"
+}
+
+///|
+fn collect_sameport_merge_classes(
+  edges : Array[@cgraph.Edge],
+) -> Map[String, Array[@cgraph.Edge]] {
+  let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in edges {
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    let key = sameport_merge_key(edge)
+    match classes.get(key) {
+      Some(list) => list.push(edge)
+      None => classes[key] = [edge]
+    }
+  }
+  classes
+}
+
+///|
+fn assign_sameport_override_with_merge(
+  overrides : Map[Int, @geom.Point],
+  merge_classes : Map[String, Array[@cgraph.Edge]],
+  edge : @cgraph.Edge,
+  anchor : @geom.Point,
+) -> Unit {
+  if edge_has_label(edge) {
+    overrides[edge.id()] = anchor
+    return ()
+  }
+  match merge_classes.get(sameport_merge_key(edge)) {
+    Some(class_edges) =>
+      for member_edge in class_edges {
+        overrides[member_edge.id()] = anchor
+      }
+    None => overrides[edge.id()] = anchor
+  }
+}
+
+///|
+fn sameport_node_penwidth_pt(node : @cgraph.Node) -> Double {
+  match node.get_attr("penwidth") {
+    Some(value) => {
+      let penwidth = parse_double(value, 1.0)
+      if penwidth < 0.0 {
+        0.0
+      } else {
+        penwidth
+      }
+    }
+    None => 1.0
+  }
+}
+
+///|
+fn sameport_shape_has_outline(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "plain" | "plaintext" | "none" => false
+    _ => true
+  }
+}
+
+///|
+/// Graphviz parity: sameport anchor construction aligned to
+/// refs/graphviz/lib/dotgen/sameport.c (sameport).
+/// Do not change behavior without updating fixtures/tests.
+fn sameport_anchor_for_group(
+  node : @cgraph.Node,
+  group_edges : Array[@cgraph.Edge],
+  head_group : Bool,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+  layout_rankdir : RankDir,
+  ranksep_pt : Double,
+) -> @geom.Point? {
+  let node_name = node.name()
+  let node_pos = match positions.get(node_name) {
+    Some(value) => value
+    None => return None
+  }
+  let node_size = match sizes.get(node_name) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+  let clip_size =
+    match layout_rankdir {
+      RankDir::LR | RankDir::RL =>
+        node_size_from_points(node_size.height_pt, node_size.width_pt)
+      RankDir::TB | RankDir::BT => node_size
+    }
+  let clip_size =
+    if sameport_shape_has_outline(node) {
+      let penwidth = sameport_node_penwidth_pt(node)
+      if penwidth > 0.0 {
+        node_size_from_points(
+          clip_size.width_pt + penwidth / 2.0,
+          clip_size.height_pt + penwidth / 2.0,
+        )
+      } else {
+        clip_size
+      }
+    } else {
+      clip_size
+    }
+  let clip_size =
+    if group_edges.length() > 2 {
+      node_size_from_points(
+        clip_size.width_pt + 2.0,
+        clip_size.height_pt + 2.0,
+      )
+    } else {
+      clip_size
+    }
+  let mut sum_x = 0.0
+  let mut sum_y = 0.0
+  for edge in group_edges {
+    let peer_name = if head_group { edge.tail().name() } else { edge.head().name() }
+    let peer_pos = match positions.get(peer_name) {
+      Some(value) => value
+      None => continue
+    }
+    let dx = peer_pos.x - node_pos.x
+    let dy = peer_pos.y - node_pos.y
+    let len = Double::sqrt(dx * dx + dy * dy)
+    if len <= 0.0 {
+      continue
+    }
+    sum_x = sum_x + dx / len
+    sum_y = sum_y + dy / len
+  }
+  let sum_len = Double::sqrt(sum_x * sum_x + sum_y * sum_y)
+  if sum_len <= 0.0 {
+    return None
+  }
+  let dir_x = sum_x / sum_len
+  let dir_y = sum_y / sum_len
+  let far = max_double(
+    clip_size.left_pt + clip_size.right_pt,
+    clip_size.height_pt + ranksep_pt,
+  )
+  let target = point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
+  let clipped = clip_to_node_shape(node, node_pos, clip_size, target)
+  let sameport_nudge =
+    if group_edges.length() > 2 {
+      0.5
+    } else {
+      1.0
+    }
+  let clipped = point(
+    clipped.x + dir_x * sameport_nudge,
+    clipped.y + dir_y * sameport_nudge,
+  )
+  // Graphviz sameport stores integer offset from node center.
+  let rel_x = (clipped.x - node_pos.x).round()
+  let rel_y = (clipped.y - node_pos.y).round()
+  Some(point(node_pos.x + rel_x, node_pos.y + rel_y))
+}
+
+///|
+/// Graphviz parity: samehead/sametail handling aligned to
+/// refs/graphviz/lib/dotgen/sameport.c (dot_sameports).
+/// Do not change behavior without updating fixtures/tests.
+fn collect_sameport_anchor_overrides(
+  edges : Array[@cgraph.Edge],
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+  layout_rankdir : RankDir,
+  ranksep_pt : Double,
+) -> (Map[Int, @geom.Point], Map[Int, @geom.Point]) {
+  let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  let samehead_group_order : Array[String] = []
+  let sametail_group_order : Array[String] = []
+  let merge_classes = collect_sameport_merge_classes(edges)
+  for edge in edges {
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    match edge.get_attr("samehead") {
+      Some(id) =>
+        if id != "" {
+          add_sameport_group_edge(
+            samehead_groups,
+            samehead_group_order,
+            "\{edge.head().name()}|\{id}",
+            edge,
+          )
+        }
+      None => ()
+    }
+    match edge.get_attr("sametail") {
+      Some(id) =>
+        if id != "" {
+          add_sameport_group_edge(
+            sametail_groups,
+            sametail_group_order,
+            "\{edge.tail().name()}|\{id}",
+            edge,
+          )
+        }
+      None => ()
+    }
+  }
+  let samehead_overrides : Map[Int, @geom.Point] = Map::new()
+  for key in samehead_group_order {
+    let group_edges = match samehead_groups.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    if group_edges.length() <= 1 {
+      continue
+    }
+    match sameport_anchor_for_group(
+      group_edges[0].head(),
+      group_edges,
+      true,
+      positions,
+      sizes,
+      record_orientation,
+      layout_rankdir,
+      ranksep_pt,
+    ) {
+      Some(anchor) =>
+        for edge in group_edges {
+          assign_sameport_override_with_merge(
+            samehead_overrides,
+            merge_classes,
+            edge,
+            anchor,
+          )
+        }
+      None => ()
+    }
+  }
+  let sametail_overrides : Map[Int, @geom.Point] = Map::new()
+  for key in sametail_group_order {
+    let group_edges = match sametail_groups.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    if group_edges.length() <= 1 {
+      continue
+    }
+    match sameport_anchor_for_group(
+      group_edges[0].tail(),
+      group_edges,
+      false,
+      positions,
+      sizes,
+      record_orientation,
+      layout_rankdir,
+      ranksep_pt,
+    ) {
+      Some(anchor) =>
+        for edge in group_edges {
+          assign_sameport_override_with_merge(
+            sametail_overrides,
+            merge_classes,
+            edge,
+            anchor,
+          )
+        }
+      None => ()
+    }
+  }
+  (samehead_overrides, sametail_overrides)
+}
+
+///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_route_base(
@@ -634,23 +937,29 @@ fn build_edge_route_base(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
+  samehead_overrides : Map[Int, @geom.Point],
+  sametail_overrides : Map[Int, @geom.Point],
 ) -> EdgeRouteBase {
   let order_index = routing_context.order_index
   let parallel_offsets = routing_context.parallel_offsets
   let cluster_bboxes = routing_context.cluster_bboxes
+  let orig_tail_name = edge.tail().name()
+  let orig_head_name = edge.head().name()
+  let swap_ends = edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+  let samehead_anchor = samehead_overrides.get(edge.id())
+  let sametail_anchor = sametail_overrides.get(edge.id())
   let parallel_offset = match parallel_offsets.get(edge.id()) {
     Some(value) => value
     None => 0.0
   }
-  let orig_tail_name = edge.tail().name()
-  let orig_head_name = edge.head().name()
-  let swap_ends = edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
   let (tail_name, head_name, tail_port, head_port, tail_node, head_node) =
     if swap_ends {
       (orig_head_name, orig_tail_name, edge.head_port(), edge.tail_port(), edge.head(), edge.tail())
     } else {
       (orig_tail_name, orig_head_name, edge.tail_port(), edge.head_port(), edge.tail(), edge.head())
     }
+  let tail_sameport_anchor = if swap_ends { samehead_anchor } else { sametail_anchor }
+  let head_sameport_anchor = if swap_ends { sametail_anchor } else { samehead_anchor }
   let tail_pos = match positions.get(tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
@@ -800,17 +1109,30 @@ fn build_edge_route_base(
       "head",
     )
   let has_side_anchor =
-    tail_side_anchor is Some(_) || head_side_anchor is Some(_)
-  let tail_anchor_base = match tail_side_anchor {
+    tail_side_anchor is Some(_) ||
+      head_side_anchor is Some(_) ||
+      tail_sameport_anchor is Some(_) ||
+      head_sameport_anchor is Some(_)
+  let tail_anchor_base = match tail_sameport_anchor {
     Some(pos) => pos
-    None => raw_tail_anchor
+    None =>
+      match tail_side_anchor {
+        Some(pos) => pos
+        None => raw_tail_anchor
+      }
   }
-  let head_anchor_base = match head_side_anchor {
+  let head_anchor_base = match head_sameport_anchor {
     Some(pos) => pos
-    None => raw_head_anchor
+    None =>
+      match head_side_anchor {
+        Some(pos) => pos
+        None => raw_head_anchor
+      }
   }
   let tail_port_side =
-    if tail_dynamic {
+    if tail_sameport_anchor is Some(_) {
+    port_side_mask_from_anchor(tail_anchor_base, tail_pos, tail_size)
+  } else if tail_dynamic {
     tail_dynamic_side
   } else {
     port_side_for_edge(
@@ -822,7 +1144,9 @@ fn build_edge_route_base(
     )
   }
   let head_port_side =
-    if head_dynamic {
+    if head_sameport_anchor is Some(_) {
+    port_side_mask_from_anchor(head_anchor_base, head_pos, head_size)
+  } else if head_dynamic {
     head_dynamic_side
   } else {
     port_side_for_edge(
@@ -839,6 +1163,8 @@ fn build_edge_route_base(
   let tail_clip_size = raw_tail_anchor_size
   let head_clip_center = raw_head_anchor
   let head_clip_size = raw_head_anchor_size
+  let tail_clip_enabled = tail_sameport_anchor is None
+  let head_clip_enabled = head_sameport_anchor is None
   let tail_target = match tail_port_rect {
     Some(_) => head_pos
     None => tail_anchor
@@ -870,14 +1196,18 @@ fn build_edge_route_base(
     head_port_rect,
   )
   let tail_clip_target =
-    if port_is_explicit(tail_port) &&
+    if tail_sameport_anchor is Some(_) {
+      tail_anchor
+    } else if port_is_explicit(tail_port) &&
       (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
       point_add(tail_clip_center, tail_slope)
     } else {
       head_anchor
     }
   let head_clip_target =
-    if port_is_explicit(head_port) &&
+    if head_sameport_anchor is Some(_) {
+      head_anchor
+    } else if port_is_explicit(head_port) &&
       (head_slope.x != 0.0 || head_slope.y != 0.0) {
       point_add(head_clip_center, head_slope)
     } else {
@@ -1000,6 +1330,8 @@ fn build_edge_route_base(
     tail_clip_size,
     head_clip_center,
     head_clip_size,
+    tail_clip_enabled,
+    head_clip_enabled,
     tail_clip,
     head_clip,
     tail_slope,
@@ -1045,6 +1377,17 @@ priv struct RoutePointState {
 }
 
 ///|
+fn sameport_path_port_box(anchor : @geom.Point) -> @geom.Rect {
+  let eps = 0.01
+  {
+    llx: anchor.x - eps,
+    lly: anchor.y - eps,
+    urx: anchor.x + eps,
+    ury: anchor.y + eps,
+  }
+}
+
+///|
 /// Graphviz parity: pathplan polyline aligned to refs/graphviz/lib/pathplan/* + lib/common/routespl.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_route_points_with_pathplan(
@@ -1074,7 +1417,9 @@ fn compute_route_points_with_pathplan(
     let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
     let tail_port_box =
-      if base.tail_port_side == 0 {
+      if !base.tail_clip_enabled {
+        Some(sameport_path_port_box(base.tail_anchor))
+      } else if base.tail_port_side == 0 {
         record_port_path_box(
           base.tail_node,
           base.tail_port,
@@ -1086,7 +1431,9 @@ fn compute_route_points_with_pathplan(
         None
       }
     let head_port_box =
-      if base.head_port_side == 0 {
+      if !base.head_clip_enabled {
+        Some(sameport_path_port_box(base.head_anchor))
+      } else if base.head_port_side == 0 {
         record_port_path_box(
           base.head_node,
           base.head_port,
@@ -1357,6 +1704,8 @@ fn build_edge_spline(
   let head_clip_center = base.head_clip_center
   let tail_clip_size = base.tail_clip_size
   let head_clip_size = base.head_clip_size
+  let tail_clip_enabled = base.tail_clip_enabled
+  let head_clip_enabled = base.head_clip_enabled
   let tail_clip = base.tail_clip
   let head_clip = base.head_clip
   let tail_slope = base.tail_slope
@@ -1400,6 +1749,8 @@ fn build_edge_spline(
         false,
         route_include_tail,
         route_include_head,
+        tail_clip_enabled=tail_clip_enabled,
+        head_clip_enabled=head_clip_enabled,
         arrow_len_override=arrow_len_override,
         tail_cluster_bbox=tail_cluster_bbox,
         head_cluster_bbox=head_cluster_bbox,
@@ -1420,6 +1771,8 @@ fn build_edge_spline(
         true,
         route_include_tail,
         route_include_head,
+        tail_clip_enabled=tail_clip_enabled,
+        head_clip_enabled=head_clip_enabled,
         arrow_len_override=arrow_len_override,
         tail_cluster_bbox=tail_cluster_bbox,
         head_cluster_bbox=head_cluster_bbox,
@@ -1644,6 +1997,8 @@ fn build_edge_spline(
               true,
               route_include_tail,
               route_include_head,
+              tail_clip_enabled=tail_clip_enabled,
+              head_clip_enabled=head_clip_enabled,
               tail_port_side=base.tail_port_side,
               head_port_side=base.head_port_side,
               route_barriers=route_barriers,
@@ -1677,6 +2032,8 @@ fn build_edge_spline(
                 force_segmented,
                 route_include_tail,
                 route_include_head,
+                tail_clip_enabled=tail_clip_enabled,
+                head_clip_enabled=head_clip_enabled,
                 tail_port_side=base.tail_port_side,
                 head_port_side=base.head_port_side,
                 route_barriers=route_barriers,
@@ -1780,6 +2137,8 @@ fn build_edge_spline(
                 head_clip_size,
                 route_include_tail,
                 route_include_head,
+                tail_clip_enabled=tail_clip_enabled,
+                head_clip_enabled=head_clip_enabled,
                 arrow_len_override=arrow_len_override,
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
@@ -1813,6 +2172,8 @@ fn build_edge_spline(
                 edge_force_segmented,
                 route_include_tail,
                 route_include_head,
+                tail_clip_enabled=tail_clip_enabled,
+                head_clip_enabled=head_clip_enabled,
                 tail_port_side=base.tail_port_side,
                 head_port_side=base.head_port_side,
                 route_barriers=route_barriers,
@@ -1926,6 +2287,8 @@ fn build_edge_spline(
             true,
             route_include_tail,
             route_include_head,
+            tail_clip_enabled=tail_clip_enabled,
+            head_clip_enabled=head_clip_enabled,
             tail_port_side=base.tail_port_side,
             head_port_side=base.head_port_side,
             route_barriers=route_barriers,
@@ -1972,6 +2335,8 @@ fn build_edge_spline(
               force_segmented,
               route_include_tail,
               route_include_head,
+              tail_clip_enabled=tail_clip_enabled,
+              head_clip_enabled=head_clip_enabled,
               tail_port_side=base.tail_port_side,
               head_port_side=base.head_port_side,
               route_barriers=route_barriers,
@@ -1995,6 +2360,8 @@ fn build_edge_spline(
               head_slope_line,
               route_include_tail,
               route_include_head,
+              tail_clip_enabled=tail_clip_enabled,
+              head_clip_enabled=head_clip_enabled,
               layout_rankdir,
               curve_offset,
               curve_skew,
@@ -2522,6 +2889,8 @@ fn build_route_base_cache(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
+  samehead_overrides : Map[Int, @geom.Point],
+  sametail_overrides : Map[Int, @geom.Point],
 ) -> Map[Int, EdgeRouteBase] {
   let base_cache : Map[Int, EdgeRouteBase] = Map::new()
   for edge in edges {
@@ -2541,6 +2910,8 @@ fn build_route_base_cache(
         layout_rankdir,
         enable_complex_tuning,
         edge_vnodes,
+        samehead_overrides,
+        sametail_overrides,
       )
       base_cache[edge_id] = value
     }
@@ -2680,6 +3051,8 @@ fn build_self_edge_layout(
       base.head_clip_size,
       base.route_include_tail,
       base.route_include_head,
+      tail_clip_enabled=base.tail_clip_enabled,
+      head_clip_enabled=base.head_clip_enabled,
       arrow_len_override=base.arrow_len_override,
       tail_cluster_bbox=base.tail_cluster_bbox,
       head_cluster_bbox=base.head_cluster_bbox,
@@ -2743,6 +3116,8 @@ fn ensure_self_edge_routes(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
+  samehead_overrides : Map[Int, @geom.Point],
+  sametail_overrides : Map[Int, @geom.Point],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
@@ -2774,6 +3149,8 @@ fn ensure_self_edge_routes(
               layout_rankdir,
               enable_complex_tuning,
               edge_vnodes,
+              samehead_overrides,
+              sametail_overrides,
             )
             base_cache[gid] = value
             value
@@ -2818,13 +3195,55 @@ fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
 ) -> DotLayoutEdge {
+  let label_pos = match edge.get_attr("label") {
+    Some(value) => if value != "" { layout.label_pos } else { None }
+    None => None
+  }
+  let head_label_pos = match edge.get_attr("headlabel") {
+    Some(value) =>
+      if value != "" {
+        if layout.splines.length() == 0 {
+          layout.head_label_pos
+        } else {
+          let head_spline = layout.splines[layout.splines.length() - 1]
+          match edge_port_label_pos(edge, head_spline, true) {
+            Some(pos) => Some(pos)
+            None => layout.head_label_pos
+          }
+        }
+      } else {
+        None
+      }
+    None => None
+  }
+  let tail_label_pos = match edge.get_attr("taillabel") {
+    Some(value) =>
+      if value != "" {
+        if layout.splines.length() == 0 {
+          layout.tail_label_pos
+        } else {
+          let tail_spline = layout.splines[0]
+          match edge_port_label_pos(edge, tail_spline, false) {
+            Some(pos) => Some(pos)
+            None => layout.tail_label_pos
+          }
+        }
+      } else {
+        None
+      }
+    None => None
+  }
+  let xlabel_pos = match edge.get_attr("xlabel") {
+    Some(value) => if value != "" { layout.xlabel_pos } else { None }
+    None => None
+  }
   {
     edge,
     splines: layout.splines,
-    label_pos: layout.label_pos,
-    head_label_pos: layout.head_label_pos,
-    tail_label_pos: layout.tail_label_pos,
-    xlabel_pos: layout.xlabel_pos,
+    label_pos,
+    head_label_pos,
+    tail_label_pos,
+    xlabel_pos,
   }
 }
 
@@ -2860,19 +3279,23 @@ fn remap_parallel_edge_layouts_for_graphviz(
     if tail_rank == head_rank {
       continue
     }
-    let key =
-      edge_parallel_key(
-        tail,
-        head,
-        edge.tail_port(),
-        edge.head_port(),
-      )
+    let key = edge_parallel_group_key(edge)
+    let sameport_mark =
+      match edge.get_attr("samehead") {
+        Some(value) => value != ""
+        None =>
+          match edge.get_attr("sametail") {
+            Some(value) => value != ""
+            None => false
+          }
+      }
     let dir_key = match edge.get_attr("dir") {
       Some(value) => value.to_lower()
       None => "forward"
     }
+    let sameport_tag = if sameport_mark { "sameport" } else { "plain" }
     let direction_key =
-      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}|\{dir_key}"
+      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}|\{dir_key}|\{sameport_tag}"
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
@@ -3086,6 +3509,8 @@ fn maybe_build_self_edge_layout(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
+  samehead_overrides : Map[Int, @geom.Point],
+  sametail_overrides : Map[Int, @geom.Point],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   vnode_info : EdgeVnodeInfo,
@@ -3115,6 +3540,8 @@ fn maybe_build_self_edge_layout(
     layout_rankdir,
     enable_complex_tuning,
     edge_vnodes,
+    samehead_overrides,
+    sametail_overrides,
     nodesep_pt,
     rank_y,
     self_edge_routes,
@@ -3173,6 +3600,15 @@ fn route_edges(
   let path_adjacency = routing_context.path_adjacency
   let order_index = routing_context.path_order_index
   let self_edge_groups = collect_self_edge_groups(edges)
+  let (samehead_overrides, sametail_overrides) =
+    collect_sameport_anchor_overrides(
+      edges,
+      positions,
+      sizes,
+      record_orientation,
+      layout_rankdir,
+      ranksep_pt,
+    )
   let base_cache =
     build_route_base_cache(
       graph,
@@ -3188,6 +3624,8 @@ fn route_edges(
       layout_rankdir,
       enable_complex_tuning,
       vnode_info.edge_vnodes,
+      samehead_overrides,
+      sametail_overrides,
     )
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
@@ -3231,6 +3669,8 @@ fn route_edges(
       layout_rankdir,
       enable_complex_tuning,
       vnode_info.edge_vnodes,
+      samehead_overrides,
+      sametail_overrides,
       nodesep_pt,
       rank_y,
       vnode_info,
