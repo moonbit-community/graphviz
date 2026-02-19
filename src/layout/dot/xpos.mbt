@@ -1841,10 +1841,31 @@ fn x_positions_from_simplex(
           Some(list) => list
           None => []
         }
+        // Graphviz parity: decompose-created virtual nodes are visited before
+        // their rank peers in clustered GD_nlist traversals.
         let mut name_idx = names.length()
         while name_idx > 0 {
           name_idx = name_idx - 1
           let name = names[name_idx]
+          if !is_edge_vnode_name(name) {
+            continue
+          }
+          let name_cluster = match cluster_keys.get(name) {
+            Some(value) => value
+            None => ""
+          }
+          if name_cluster == cluster && xpos_seen.get(name) is None {
+            xpos_nlist_order.push(name)
+            xpos_seen[name] = true
+          }
+        }
+        let mut name_idx = names.length()
+        while name_idx > 0 {
+          name_idx = name_idx - 1
+          let name = names[name_idx]
+          if is_edge_vnode_name(name) {
+            continue
+          }
           let name_cluster = match cluster_keys.get(name) {
             Some(value) => value
             None => ""
