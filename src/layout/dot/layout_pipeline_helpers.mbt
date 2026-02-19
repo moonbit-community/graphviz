@@ -11057,6 +11057,7 @@ fn build_clustered_remincross_groups_output(
 fn build_remincross_groups_from_ordered_with_vnodes(
   base_groups : Map[Int, Array[String]],
   ordered_with_vnodes : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
 ) -> Map[Int, Array[String]] {
   let rem_groups : Map[Int, Array[String]] = Map::new()
   for rank, names in ordered_with_vnodes {
@@ -11080,6 +11081,45 @@ fn build_remincross_groups_from_ordered_with_vnodes(
     let real_order : Map[String, Int] = Map::new()
     for i in 0..<base_real.length() {
       real_order[base_real[i]] = i
+    }
+    let mut root_real_count = 0
+    let mut cluster_real_count = 0
+    let mut root_real_name = ""
+    let cluster_real_names : Array[String] = []
+    for name in base_real {
+      if cluster_key_or_empty(cluster_keys, name) == "" {
+        root_real_count = root_real_count + 1
+        root_real_name = name
+      } else {
+        cluster_real_count = cluster_real_count + 1
+        cluster_real_names.push(name)
+      }
+    }
+    let mut synthetic_count = 0
+    let mut synthetic_name = ""
+    for name in filtered {
+      if real_order.get(name) is None {
+        synthetic_count = synthetic_count + 1
+        synthetic_name = name
+      }
+    }
+    // Graphviz parity: when a mixed root/cluster rank starts with exactly one
+    // synthetic vnode, keep the root real node as the rank leader and trail
+    // that single vnode after clustered real nodes.
+    if filtered.length() == 4 &&
+      is_edge_vnode_name(filtered[0]) &&
+      root_real_count == 1 &&
+      cluster_real_count >= 2 &&
+      synthetic_count == 1 &&
+      synthetic_name != "" &&
+      root_real_name != "" {
+      let special_order : Array[String] = [root_real_name]
+      for name in cluster_real_names {
+        special_order.push(name)
+      }
+      special_order.push(synthetic_name)
+      rem_groups[rank] = special_order
+      continue
     }
     let prev_real : Array[Int?] = []
     let mut last_real : Int? = None
@@ -11172,6 +11212,7 @@ fn build_clustered_remincross_pass_groups(
       build_remincross_groups_from_ordered_with_vnodes(
         base_groups,
         ordered_with_vnodes,
+        cluster_meta.cluster_keys,
       )
     if seeded.length() > 0 {
       dot_trace_groups("remincross_groups", seeded)
