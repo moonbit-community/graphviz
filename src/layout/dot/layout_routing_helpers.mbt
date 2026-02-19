@@ -2564,11 +2564,25 @@ fn recover_pathplan_slack_for_edge(
   rank_y : Map[Int, Double],
   vnode_positions : Map[String, @geom.Point],
   path_adjacency : @routesplines.PathAdjacency,
+  recover_edge_id_by_key : Map[String, Int],
+  recovered_slack_keys : Map[String, Bool],
 ) -> Unit {
   if !spline_result.using_pathplan {
     return ()
   }
+  let recover_key = edge_vnode_key(edge)
+  match recover_edge_id_by_key.get(recover_key) {
+    Some(recover_edge_id) =>
+      if recover_edge_id != edge.id() {
+        return ()
+      }
+    None => ()
+  }
+  if recovered_slack_keys.get(recover_key) is Some(_) {
+    return ()
+  }
   if spline_result.pathplan_segments.length() > 0 {
+    let mut did_recover = false
     // Graphviz parity: straight_path recovers slack per routed segment.
     for segment in spline_result.pathplan_segments {
       if segment.vnodes.length() == 0 || segment.boxes.length() == 0 {
@@ -2597,6 +2611,10 @@ fn recover_pathplan_slack_for_edge(
         vnode_info.vnode_sizes,
         path_adjacency,
       )
+      did_recover = true
+    }
+    if did_recover {
+      recovered_slack_keys[recover_key] = true
     }
     return ()
   }
@@ -2622,6 +2640,7 @@ fn recover_pathplan_slack_for_edge(
     vnode_info.vnode_sizes,
     path_adjacency,
   )
+  recovered_slack_keys[recover_key] = true
 }
 
 ///|
@@ -2910,6 +2929,49 @@ fn sorted_edges_for_routing(
 }
 
 ///|
+/// Graphviz parity: recover_slack for regular-edge classes uses the
+/// center-most parallel member (tie: later edge id).
+fn recover_edge_selection_for_regular_edges(
+  ordered_edges : Array[@cgraph.Edge],
+  base_cache : Map[Int, EdgeRouteBase],
+) -> Map[String, Int] {
+  let selected_ids : Map[String, Int] = Map::new()
+  let selected_scores : Map[String, Double] = Map::new()
+  for edge in ordered_edges {
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    let base = match base_cache.get(edge.id()) {
+      Some(value) => value
+      None => continue
+    }
+    if base.is_flat_edge {
+      continue
+    }
+    let key = edge_vnode_key(edge)
+    let score = Double::abs(base.parallel_offset)
+    match selected_ids.get(key) {
+      Some(current_id) => {
+        let current_score = match selected_scores.get(key) {
+          Some(value) => value
+          None => score
+        }
+        if score < current_score ||
+          (score == current_score && edge.id() > current_id) {
+          selected_ids[key] = edge.id()
+          selected_scores[key] = score
+        }
+      }
+      None => {
+        selected_ids[key] = edge.id()
+        selected_scores[key] = score
+      }
+    }
+  }
+  selected_ids
+}
+
+///|
 /// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_edge_layout(
@@ -2936,6 +2998,8 @@ fn build_regular_edge_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
   path_adjacency : @routesplines.PathAdjacency,
+  recover_edge_id_by_key : Map[String, Int],
+  recovered_slack_keys : Map[String, Bool],
 ) -> DotLayoutEdge {
   let spline_result = build_edge_spline(
     base,
@@ -2968,6 +3032,8 @@ fn build_regular_edge_layout(
     rank_y,
     vnode_positions,
     path_adjacency,
+    recover_edge_id_by_key,
+    recovered_slack_keys,
   )
   build_edge_layout(
     base,
@@ -3108,6 +3174,7 @@ fn route_edges(
     )
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  let recovered_slack_keys : Map[String, Bool] = Map::new()
   let (path_left_bound, path_right_bound) =
     @routesplines.pathplan_bounds(
       positions,
@@ -3119,6 +3186,8 @@ fn route_edges(
   dot_trace("layout_dot: routing edges")
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
+  let recover_edge_id_by_key =
+    recover_edge_selection_for_regular_edges(ordered_edges, base_cache)
   for edge in ordered_edges {
     let edge_id = edge.id()
     if edges_out_by_id.get(edge_id) is Some(_) {
@@ -3181,9 +3250,10 @@ fn route_edges(
         has_clusters,
         flat_label_edge_vnodes,
         path_adjacency,
+        recover_edge_id_by_key,
+        recovered_slack_keys,
       )
     edges_out_by_id[edge_id] = edge_layout
   }
-  remap_parallel_edge_layouts_for_graphviz(edges, ranks, edges_out_by_id)
   collect_edges_in_input_order(edges, edges_out_by_id)
 }
