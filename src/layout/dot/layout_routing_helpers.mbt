@@ -686,33 +686,6 @@ fn assign_sameport_override_with_merge(
 }
 
 ///|
-fn sameport_node_penwidth_pt(node : @cgraph.Node) -> Double {
-  match node.get_attr("penwidth") {
-    Some(value) => {
-      let penwidth = parse_double(value, 1.0)
-      if penwidth < 0.0 {
-        0.0
-      } else {
-        penwidth
-      }
-    }
-    None => 1.0
-  }
-}
-
-///|
-fn sameport_shape_has_outline(node : @cgraph.Node) -> Bool {
-  let shape = match node.get_attr("shape") {
-    Some(value) => value.to_lower()
-    None => ""
-  }
-  match shape {
-    "plain" | "plaintext" | "none" => false
-    _ => true
-  }
-}
-
-///|
 /// Graphviz parity: sameport anchor construction aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (sameport).
 /// Do not change behavior without updating fixtures/tests.
@@ -740,29 +713,6 @@ fn sameport_anchor_for_group(
       RankDir::LR | RankDir::RL =>
         node_size_from_points(node_size.height_pt, node_size.width_pt)
       RankDir::TB | RankDir::BT => node_size
-    }
-  let clip_size =
-    if sameport_shape_has_outline(node) {
-      let penwidth = sameport_node_penwidth_pt(node)
-      if penwidth > 0.0 {
-        node_size_from_points(
-          clip_size.width_pt + penwidth / 2.0,
-          clip_size.height_pt + penwidth / 2.0,
-        )
-      } else {
-        clip_size
-      }
-    } else {
-      clip_size
-    }
-  let clip_size =
-    if group_edges.length() > 2 {
-      node_size_from_points(
-        clip_size.width_pt + 2.0,
-        clip_size.height_pt + 2.0,
-      )
-    } else {
-      clip_size
     }
   let mut sum_x = 0.0
   let mut sum_y = 0.0
@@ -792,17 +742,13 @@ fn sameport_anchor_for_group(
     clip_size.height_pt + ranksep_pt,
   )
   let target = point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
-  let clipped = clip_to_node_shape(node, node_pos, clip_size, target)
-  let sameport_nudge =
-    if group_edges.length() > 2 {
-      0.5
+  let clipped0 = clip_to_node_shape(node, node_pos, clip_size, target)
+  let clipped =
+    if Double::abs(dir_x) <= Double::abs(dir_y) * 0.25 {
+      point(clipped0.x + dir_x, clipped0.y + dir_y)
     } else {
-      1.0
+      clipped0
     }
-  let clipped = point(
-    clipped.x + dir_x * sameport_nudge,
-    clipped.y + dir_y * sameport_nudge,
-  )
   // Graphviz sameport stores integer offset from node center.
   let rel_x = (clipped.x - node_pos.x).round()
   let rel_y = (clipped.y - node_pos.y).round()
@@ -1377,13 +1323,26 @@ priv struct RoutePointState {
 }
 
 ///|
-fn sameport_path_port_box(anchor : @geom.Point) -> @geom.Rect {
+fn sameport_path_port_box(
+  center : @geom.Point,
+  anchor : @geom.Point,
+) -> @geom.Rect {
+  let dx = anchor.x - center.x
+  let dy = anchor.y - center.y
+  let len = Double::sqrt(dx * dx + dy * dy)
+  let offset = 0.5
+  let (bx, by) =
+    if len > 0.0 {
+      (anchor.x - dx / len * offset, anchor.y - dy / len * offset)
+    } else {
+      (anchor.x, anchor.y)
+    }
   let eps = 0.01
   {
-    llx: anchor.x - eps,
-    lly: anchor.y - eps,
-    urx: anchor.x + eps,
-    ury: anchor.y + eps,
+    llx: bx - eps,
+    lly: by - eps,
+    urx: bx + eps,
+    ury: by + eps,
   }
 }
 
@@ -1416,9 +1375,9 @@ fn compute_route_points_with_pathplan(
     if base.use_pathplan && !base.is_flat_edge {
     let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
-    let tail_port_box =
+    let tail_port_box : @geom.Rect? =
       if !base.tail_clip_enabled {
-        Some(sameport_path_port_box(base.tail_anchor))
+        Some(sameport_path_port_box(base.tail_pos, base.tail_anchor))
       } else if base.tail_port_side == 0 {
         record_port_path_box(
           base.tail_node,
@@ -1430,9 +1389,9 @@ fn compute_route_points_with_pathplan(
       } else {
         None
       }
-    let head_port_box =
+    let head_port_box : @geom.Rect? =
       if !base.head_clip_enabled {
-        Some(sameport_path_port_box(base.head_anchor))
+        Some(sameport_path_port_box(base.head_pos, base.head_anchor))
       } else if base.head_port_side == 0 {
         record_port_path_box(
           base.head_node,

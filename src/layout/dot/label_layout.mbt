@@ -708,6 +708,7 @@ fn port_label_points(
   head_p : Bool,
 ) -> (@geom.Point, @geom.Point)? {
   let points = spline.points
+  let distinct_eps2 = 0.0001
   if points.length() < 4 {
     return None
   }
@@ -725,7 +726,18 @@ fn port_label_points(
     }
   } else {
     match spline.start {
-      Some(start_point) => Some((start_point, points[0]))
+      Some(start_point) => {
+        let mut tangent = points[0]
+        for candidate in points {
+          let dx = candidate.x - start_point.x
+          let dy = candidate.y - start_point.y
+          if dx * dx + dy * dy > distinct_eps2 {
+            tangent = candidate
+            break
+          }
+        }
+        Some((start_point, tangent))
+      }
       None => {
         let p0 = points[0]
         let p1 = points[1]
