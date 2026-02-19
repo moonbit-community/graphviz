@@ -5670,13 +5670,15 @@ fn build_order_edge_indices_and_order(
 
 ///|
 /// Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
-/// fills with nlist/order_groups/base order while applying rank=same overrides.
+/// fills with nlist/order_groups/base order; rank=same ND_order normalization
+/// is applied only on clustered reorder paths.
 /// Do not change behavior without updating fixtures/tests.
 fn build_order_node_order_for_build_ranks(
   gdnlist_order : Array[String],
   nlist_order : Array[String],
   node_order : Map[String, Int],
   real_nodes : Map[String, Bool],
+  has_clusters : Bool,
   order_groups : Map[Int, Array[String]],
   base_order_index : Map[String, Int],
   rank_same_groups : Map[String, Int],
@@ -5714,12 +5716,16 @@ fn build_order_node_order_for_build_ranks(
       order_node_order[name] = idx
     }
   }
-  apply_rank_same_order_to_node_order(
-    order_node_order,
-    rank_same_groups,
-    rank_same_order,
-    port_edge_nodes,
-  )
+  if has_clusters {
+    // Graphviz parity: non-cluster root reorder keeps GD_nlist-derived order
+    // (world.gv) and does not re-normalize ND_order by rank=same declaration.
+    apply_rank_same_order_to_node_order(
+      order_node_order,
+      rank_same_groups,
+      rank_same_order,
+      port_edge_nodes,
+    )
+  }
   order_node_order
 }
 
@@ -15209,6 +15215,7 @@ fn build_creation_and_node_order_for_reorder_context(
   gdnlist_order : Array[String],
   node_order : Map[String, Int],
   real_nodes : Map[String, Bool],
+  has_clusters : Bool,
   order_groups : Map[Int, Array[String]],
   base_order_index : Map[String, Int],
   rank_same_groups : Map[String, Int],
@@ -15223,6 +15230,7 @@ fn build_creation_and_node_order_for_reorder_context(
       nlist_order,
       node_order,
       real_nodes,
+      has_clusters,
       order_groups,
       base_order_index,
       rank_same_groups,
@@ -15242,6 +15250,7 @@ fn build_order_reorder_context(
   gdnlist_order : Array[String],
   node_order : Map[String, Int],
   real_nodes : Map[String, Bool],
+  has_clusters : Bool,
   base_order_index : Map[String, Int],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
@@ -15259,6 +15268,7 @@ fn build_order_reorder_context(
       gdnlist_order,
       node_order,
       real_nodes,
+      has_clusters,
       order_groups,
       base_order_index,
       rank_same_groups,
@@ -18245,6 +18255,7 @@ fn build_clustered_pre_root_reorder_context_and_materialized(
       context.gdnlist_order,
       context.node_order,
       context.real_nodes,
+      context.cluster_meta.has_clusters,
       context.base_order_index,
       context.cluster_meta.rank_same_groups,
       context.cluster_meta.rank_same_order,
