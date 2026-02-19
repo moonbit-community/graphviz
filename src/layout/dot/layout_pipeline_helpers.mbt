@@ -8853,11 +8853,14 @@ fn build_remincross_flat_constraints(
   rem_cluster_keys : Map[String, String],
   intercluster_nodes : Map[String, Bool],
 ) -> Map[String, Bool] {
-  let rem_flat_constraints = clone_flat_constraints(flat_constraints)
-  for key, _ in rank_same_constraints {
-    rem_flat_constraints[key] = true
-  }
+  let rem_flat_constraints : Map[String, Bool] = Map::new()
   if !order_with_clusters {
+    for key, value in flat_constraints {
+      rem_flat_constraints[key] = value
+    }
+    for key, _ in rank_same_constraints {
+      rem_flat_constraints[key] = true
+    }
     return rem_flat_constraints
   }
   // Graphviz parity: keep relative order of real nodes that are
