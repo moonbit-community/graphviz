@@ -3255,5 +3255,6 @@ fn route_edges(
       )
     edges_out_by_id[edge_id] = edge_layout
   }
+  remap_parallel_edge_layouts_for_graphviz(edges, ranks, edges_out_by_id)
   collect_edges_in_input_order(edges, edges_out_by_id)
 }
