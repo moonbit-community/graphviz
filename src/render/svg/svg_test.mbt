@@ -661,6 +661,21 @@ fn sorted_text_nodes(svg : String) -> Array[String] {
 }
 
 ///|
+fn spot_check_case_name(input_path : String) -> String {
+  let mut name = input_path
+  for part in input_path.split("/") {
+    name = part.to_string()
+  }
+  if name.has_suffix(".gv") {
+    name.unsafe_substring(start=0, end=name.length() - 3)
+  } else if name.has_suffix(".dot") {
+    name.unsafe_substring(start=0, end=name.length() - 4)
+  } else {
+    name
+  }
+}
+
+///|
 test "render_svg honors size attribute" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
@@ -691,35 +706,67 @@ test "svg spot-check outputs" {
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir(out_dir)
-  let cases : Array[(String, String)] = [
-    ("refs/graphviz/doc/dotguide/graph1.dot", "graph1"),
-    ("refs/graphviz/graphs/directed/arrows.gv", "arrows"),
-    ("refs/graphviz/graphs/directed/arr_none.gv", "arr_none"),
-    ("refs/graphviz/graphs/directed/records.gv", "records"),
-    ("refs/graphviz/graphs/directed/record2.gv", "record2"),
-    ("refs/graphviz/graphs/directed/clust.gv", "clust"),
-    ("refs/graphviz/graphs/directed/clust1.gv", "clust1"),
-    ("refs/graphviz/graphs/directed/clust2.gv", "clust2"),
-    ("refs/graphviz/graphs/directed/clust3.gv", "clust3"),
-    ("refs/graphviz/graphs/directed/clust4.gv", "clust4"),
-    ("refs/graphviz/graphs/directed/clust5.gv", "clust5"),
-    ("refs/graphviz/graphs/directed/ctext.gv", "ctext"),
-    ("refs/graphviz/graphs/directed/dfa.gv", "dfa"),
-    ("refs/graphviz/graphs/directed/fig6.gv", "fig6"),
-    ("refs/graphviz/graphs/directed/fsm.gv", "fsm"),
-    ("refs/graphviz/graphs/directed/grammar.gv", "grammar"),
-    ("refs/graphviz/graphs/directed/longflat.gv", "longflat"),
-    ("refs/graphviz/graphs/directed/states.gv", "states"),
-    ("refs/graphviz/graphs/directed/structs.gv", "structs"),
-    ("refs/graphviz/graphs/directed/table.gv", "table"),
-    ("refs/graphviz/graphs/directed/train11.gv", "train11"),
-    ("refs/graphviz/graphs/directed/tree.gv", "tree"),
-    ("refs/graphviz/graphs/directed/try.gv", "try"),
-    ("tests/layout/dot/compound.dot", "compound"),
-    ("tests/layout/dot/complex.dot", "complex"),
+  let cases : Array[String] = [
+    "refs/graphviz/doc/dotguide/graph1.dot",
+    "tests/layout/dot/compound.dot",
+    "tests/layout/dot/complex.dot",
+    "refs/graphviz/graphs/directed/grammar.gv",
+    "refs/graphviz/graphs/directed/clust1.gv",
+    "refs/graphviz/graphs/directed/clust2.gv",
+    "refs/graphviz/graphs/directed/clust3.gv",
+    "refs/graphviz/graphs/directed/clust4.gv",
+    "refs/graphviz/graphs/directed/clust5.gv",
+    "refs/graphviz/graphs/directed/try.gv",
+    "refs/graphviz/graphs/directed/fsm.gv",
+    "refs/graphviz/graphs/directed/dfa.gv",
+    "refs/graphviz/graphs/directed/longflat.gv",
+    "refs/graphviz/graphs/directed/states.gv",
+    "refs/graphviz/graphs/directed/record2.gv",
+    "refs/graphviz/graphs/directed/structs.gv",
+    "refs/graphviz/graphs/directed/arr_none.gv",
+    "refs/graphviz/graphs/directed/table.gv",
+    "refs/graphviz/graphs/directed/train11.gv",
+    "refs/graphviz/graphs/directed/tree.gv",
+    "refs/graphviz/graphs/directed/abstract.gv",
+    "refs/graphviz/graphs/directed/arrows.gv",
+    "refs/graphviz/graphs/directed/biological.gv",
+    "refs/graphviz/graphs/directed/ctext.gv",
+    "refs/graphviz/graphs/directed/fig6.gv",
+    "refs/graphviz/graphs/directed/hashtable.gv",
+    "refs/graphviz/graphs/directed/records.gv",
+    "refs/graphviz/graphs/directed/switch.gv",
+    "refs/graphviz/graphs/directed/trapeziumlr.gv",
+    "refs/graphviz/graphs/directed/triedds.gv",
+    "refs/graphviz/graphs/directed/unix.gv",
+    "refs/graphviz/graphs/directed/viewfile.gv",
+    "refs/graphviz/graphs/directed/ldbxtried.gv",
+    "refs/graphviz/graphs/directed/proc3d.gv",
+    "refs/graphviz/graphs/directed/world.gv",
+    "refs/graphviz/graphs/directed/pmpipe.gv",
+    "refs/graphviz/graphs/directed/polypoly.gv",
+    "refs/graphviz/graphs/directed/alf.gv",
+    "refs/graphviz/graphs/directed/clust.gv",
+    "refs/graphviz/graphs/directed/jcctree.gv",
+    "refs/graphviz/graphs/directed/jsort.gv",
+    "refs/graphviz/graphs/directed/shells.gv",
+    "refs/graphviz/graphs/directed/awilliams.gv",
+    "refs/graphviz/graphs/directed/crazy.gv",
+    "refs/graphviz/graphs/directed/honda-tokoro.gv",
+    "refs/graphviz/graphs/directed/KW91.gv",
+    "refs/graphviz/graphs/directed/Latin1.gv",
+    "refs/graphviz/graphs/directed/mike.gv",
+    "refs/graphviz/graphs/directed/NaN.gv",
+    "refs/graphviz/graphs/directed/nhg.gv",
+    "refs/graphviz/graphs/directed/oldarrows.gv",
+    "refs/graphviz/graphs/directed/pgram.gv",
+    "refs/graphviz/graphs/directed/pm2way.gv",
+    "refs/graphviz/graphs/directed/psfonttest.gv",
+    "refs/graphviz/graphs/directed/rowe.gv",
+    "refs/graphviz/graphs/directed/sdh.gv",
+    "refs/graphviz/graphs/directed/unix2.gv",
   ]
-  for pair in cases {
-    let (input_path, name) = pair
+  for input_path in cases {
+    let name = spot_check_case_name(input_path)
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
