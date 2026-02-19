@@ -2782,6 +2782,117 @@ fn collect_edges_in_input_order(
 }
 
 ///|
+fn remap_edge_layout_edge(
+  edge : @cgraph.Edge,
+  layout : DotLayoutEdge,
+) -> DotLayoutEdge {
+  {
+    edge,
+    splines: layout.splines,
+    label_pos: layout.label_pos,
+    head_label_pos: layout.head_label_pos,
+    tail_label_pos: layout.tail_label_pos,
+    xlabel_pos: layout.xlabel_pos,
+  }
+}
+
+///|
+/// Graphviz parity: duplicate regular-edge spline slots are assigned in
+/// pair order after routing, but only within one-direction parallel classes.
+/// Do not change behavior without updating fixtures/tests.
+fn remap_parallel_edge_layouts_for_graphviz(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  edges_out_by_id : Map[Int, DotLayoutEdge],
+) -> Unit {
+  let groups : Map[String, Array[Int]] = Map::new()
+  let group_first_direction : Map[String, String] = Map::new()
+  let group_has_mixed_direction : Map[String, Bool] = Map::new()
+  for edge in edges {
+    if edge_has_label(edge) {
+      continue
+    }
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if tail == head {
+      continue
+    }
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => 0
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => 0
+    }
+    if tail_rank == head_rank {
+      continue
+    }
+    let key =
+      edge_parallel_key(
+        tail,
+        head,
+        edge.tail_port(),
+        edge.head_port(),
+      )
+    let direction_key =
+      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}"
+    match groups.get(key) {
+      Some(list) => list.push(edge.id())
+      None => groups[key] = [edge.id()]
+    }
+    match group_first_direction.get(key) {
+      Some(first_direction) =>
+        if first_direction != direction_key {
+          group_has_mixed_direction[key] = true
+        }
+      None => {
+        group_first_direction[key] = direction_key
+        group_has_mixed_direction[key] = false
+      }
+    }
+  }
+  for key, ids in groups {
+    if ids.length() <= 1 {
+      continue
+    }
+    let mixed_direction = match group_has_mixed_direction.get(key) {
+      Some(value) => value
+      None => false
+    }
+    if mixed_direction {
+      continue
+    }
+    ids.sort()
+    let layouts : Array[DotLayoutEdge] = []
+    for edge_id in ids {
+      match edges_out_by_id.get(edge_id) {
+        Some(layout) => layouts.push(layout)
+        None => ()
+      }
+    }
+    if layouts.length() != ids.length() {
+      continue
+    }
+    let mut out_idx = 0
+    let mut src_idx = layouts.length()
+    while out_idx < ids.length() {
+      src_idx = src_idx - 1
+      let edge_id = ids[out_idx]
+      let edge = match edges_out_by_id.get(edge_id) {
+        Some(layout) => layout.edge
+        None => {
+          out_idx = out_idx + 1
+          continue
+        }
+      }
+      edges_out_by_id[edge_id] =
+        remap_edge_layout_edge(edge, layouts[src_idx])
+      out_idx = out_idx + 1
+    }
+  }
+}
+
 /// Graphviz parity: edge routing pass order follows dot edgecmp.
 /// Do not change behavior without updating fixtures/tests.
 fn sorted_edges_for_routing(
@@ -3073,5 +3184,6 @@ fn route_edges(
       )
     edges_out_by_id[edge_id] = edge_layout
   }
+  remap_parallel_edge_layouts_for_graphviz(edges, ranks, edges_out_by_id)
   collect_edges_in_input_order(edges, edges_out_by_id)
 }
