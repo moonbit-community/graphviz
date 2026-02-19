@@ -6148,6 +6148,30 @@ fn merge_root_mincross_order_into_seeded_groups(
         None => ()
       }
     }
+    // Graphviz parity: when root mincross returns [root, skeleton] in a
+    // single-root rank, keep the attached cluster node in front via positional
+    // replacement (matches biological rank handoff in Graphviz).
+    let should_use_positional_merge =
+      replacements.length() == 2 &&
+      _order_cluster_skeleton.get(replacements[1]) == Some(true) &&
+      _order_cluster_skeleton.get(replacements[0]) != Some(true) &&
+      (match attached_by_skeleton.get(replacements[1]) {
+        Some(list) => list.length()
+        None => 0
+      }) == 1
+    if should_use_positional_merge {
+      let mut replace_idx = 0
+      for i in 0..<names.length() {
+        if mincross_nodes.get(names[i]) is Some(_) {
+          if replace_idx < replacements.length() {
+            names[i] = replacements[replace_idx]
+            replace_idx = replace_idx + 1
+          }
+        }
+      }
+      merged[rank] = names
+      continue
+    }
     let next_names : Array[String] = []
     let seen : Map[String, Bool] = Map::new()
     for replacement in replacements {
