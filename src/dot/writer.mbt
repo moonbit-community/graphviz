@@ -293,6 +293,38 @@ fn filter_attrs(
 }
 
 ///|
+fn add_local_default_resets_for_node(
+  node : @cgraph.Node,
+  attrs : Array[(String, String)],
+  local_defaults : Array[(String, String)],
+) -> Array[(String, String)] {
+  if local_defaults.length() == 0 {
+    return attrs
+  }
+  let out : Array[(String, String)] = []
+  let seen : Map[String, Bool] = Map::new()
+  for pair in attrs {
+    let (key, value) = pair
+    out.push((key, value))
+    seen[key] = true
+  }
+  for pair in local_defaults {
+    let (key, value) = pair
+    if value == "" || seen.contains(key) {
+      continue
+    }
+    if node.get_attr(key) is Some(_) {
+      continue
+    }
+    // Preserve node creation-time default snapshots when local defaults were
+    // introduced later (Graphviz emits explicit empty attrs in this case).
+    out.push((key, ""))
+    seen[key] = true
+  }
+  out
+}
+
+///|
 fn write_graph(
   graph : @cgraph.Graph,
   sb : StringBuilder,
@@ -352,6 +384,7 @@ fn write_graph(
   for key, value in node_defaults {
     node_defaults_list.push((key, value))
   }
+  let local_node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
   let node_effective_defaults = if is_layout_output {
     collect_effective_defaults(
       graph,
@@ -394,7 +427,12 @@ fn write_graph(
     write_indent(sb, inner)
     sb.write_string(write_id(node.name()))
     let attrs = if is_layout_output {
-      filter_attrs(node.attrs(), node_effective_defaults)
+      let with_resets = add_local_default_resets_for_node(
+        node,
+        node.attrs(),
+        local_node_defaults,
+      )
+      filter_attrs(with_resets, node_effective_defaults)
     } else {
       node.attrs()
     }

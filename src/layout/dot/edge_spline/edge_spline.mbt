@@ -1015,6 +1015,7 @@ priv enum ClipShape {
   Rect
   Ellipse
   Diamond
+  Polygon(Int, Double, Double, Double)
   Trapezium
   InvTrapezium
   Parallelogram
@@ -1106,6 +1107,35 @@ fn trim_record_border_for_clip(
 }
 
 ///|
+fn polygon_clip_params(node : @cgraph.Node) -> (Int, Double, Double, Double) {
+  // Graphviz parity (poly_init): explicit sides=0 keeps ellipse mode unless
+  // skew/distortion force high-sided polygon fallback.
+  let mut sides = match node.get_attr("sides") {
+    Some(value) => parse_double(value, 4.0).round().to_int()
+    None => 4
+  }
+  if sides < 0 {
+    sides = 0
+  }
+  let orientation = match node.get_attr("orientation") {
+    Some(value) => parse_double(value, 0.0)
+    None => 0.0
+  }
+  let distortion = match node.get_attr("distortion") {
+    Some(value) => parse_double(value, 0.0)
+    None => 0.0
+  }
+  let skew = match node.get_attr("skew") {
+    Some(value) => parse_double(value, 0.0)
+    None => 0.0
+  }
+  if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+    sides = 120
+  }
+  (sides, orientation, distortion, skew)
+}
+
+///|
 ///|
 ///|
 ///|
@@ -1134,6 +1164,14 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "plain" =>
       ClipShape::Rect
     "diamond" | "mdiamond" => ClipShape::Diamond
+    "polygon" => {
+      let (sides, orientation, distortion, skew) = polygon_clip_params(node)
+      if sides < 3 {
+        ClipShape::Ellipse
+      } else {
+        ClipShape::Polygon(sides, orientation, distortion, skew)
+      }
+    }
     "trapezium" => ClipShape::Trapezium
     "invtrapezium" => ClipShape::InvTrapezium
     "parallelogram" => ClipShape::Parallelogram
@@ -1207,6 +1245,8 @@ fn polygon_shape_params(
   shape : ClipShape,
 ) -> (Int, Double, Double, Double)? {
   match shape {
+    ClipShape::Polygon(sides, orientation, distortion, skew) =>
+      Some((sides, orientation, distortion, skew))
     ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0))
     ClipShape::InvTrapezium => Some((4, 180.0, -0.4, 0.0))
     ClipShape::Parallelogram => Some((4, 0.0, 0.0, 0.6))
@@ -1423,7 +1463,8 @@ fn point_inside_shape(
     | ClipShape::InvTrapezium
     | ClipShape::Parallelogram
     | ClipShape::House
-    | ClipShape::InvHouse =>
+    | ClipShape::InvHouse
+    | ClipShape::Polygon(_, _, _, _) =>
       point_inside_polygon(
         point,
         center,
@@ -1777,7 +1818,8 @@ fn clip_spline_to_nodes(
       | ClipShape::InvTrapezium
       | ClipShape::Parallelogram
       | ClipShape::House
-      | ClipShape::InvHouse =>
+      | ClipShape::InvHouse
+      | ClipShape::Polygon(_, _, _, _) =>
         // Graphviz parity guard: poly_inside clips against bisector-expanded
         // polygon outline + penwidth/2 (shapes.c poly_init outp path).
         if tail_penwidth > 0.0 { tail_penwidth / 2.0 } else { 0.0 }
@@ -1789,7 +1831,8 @@ fn clip_spline_to_nodes(
       | ClipShape::InvTrapezium
       | ClipShape::Parallelogram
       | ClipShape::House
-      | ClipShape::InvHouse =>
+      | ClipShape::InvHouse
+      | ClipShape::Polygon(_, _, _, _) =>
         if head_penwidth > 0.0 { head_penwidth / 2.0 } else { 0.0 }
       _ => 0.0
     }
@@ -1809,6 +1852,7 @@ fn clip_spline_to_nodes(
     | ClipShape::Parallelogram
     | ClipShape::House
     | ClipShape::InvHouse
+    | ClipShape::Polygon(_, _, _, _)
     | ClipShape::None => tail_shape_size
   }
   let head_clip_size = match head_shape {
@@ -1825,6 +1869,7 @@ fn clip_spline_to_nodes(
     | ClipShape::Parallelogram
     | ClipShape::House
     | ClipShape::InvHouse
+    | ClipShape::Polygon(_, _, _, _)
     | ClipShape::None => head_shape_size
   }
   // Graphviz parity: compass/dynamic ports disable clipping after resolvePort

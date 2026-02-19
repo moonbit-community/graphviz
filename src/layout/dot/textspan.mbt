@@ -303,6 +303,9 @@ fn try_multiline_textspan_override(
   let mut max_width = 0.0
   let mut max_line_height = 0.0
   for line in lines {
+    if line == "" {
+      continue
+    }
     match @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
       Some((width, height)) => {
         if width > max_width {
