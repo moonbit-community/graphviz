@@ -538,14 +538,30 @@ fn vnode_is_merged(
   name : String,
   adjacency : @routesplines.PathAdjacency,
 ) -> Bool {
-  let out_count = match adjacency.out_edges.get(name) {
-    Some(list) => list.length()
-    None => 0
+  let out_raw = match adjacency.out_edges.get(name) {
+    Some(list) => list
+    None => []
   }
-  let in_count = match adjacency.in_edges.get(name) {
-    Some(list) => list.length()
-    None => 0
+  let in_raw = match adjacency.in_edges.get(name) {
+    Some(list) => list
+    None => []
   }
+  let unique_count = (list : Array[String]) => {
+    let seen : Map[String, Bool] = Map::new()
+    let mut count = 0
+    for item in list {
+      if seen.get(item) is None {
+        seen[item] = true
+        count = count + 1
+      }
+    }
+    count
+  }
+  // Graphviz virtual edges can carry parallel multiplicity on one edge record.
+  // Our path adjacency lists parallel hops explicitly, so merge detection must
+  // compare distinct predecessors/successors instead of raw multiplicity.
+  let out_count = unique_count(out_raw)
+  let in_count = unique_count(in_raw)
   out_count > 1 || in_count > 1
 }
 
