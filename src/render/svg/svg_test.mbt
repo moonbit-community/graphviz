@@ -710,6 +710,8 @@ test "svg spot-check outputs" {
     "refs/graphviz/doc/dotguide/graph1.dot",
     "tests/layout/dot/compound.dot",
     "tests/layout/dot/complex.dot",
+    "tests/layout/dot/edge_vnode_spacing.dot",
+    "tests/layout/dot/edge_label_spacing.dot",
     "refs/graphviz/graphs/directed/grammar.gv",
     "refs/graphviz/graphs/directed/clust1.gv",
     "refs/graphviz/graphs/directed/clust2.gv",
