@@ -1089,20 +1089,35 @@ fn trim_record_border_for_clip(
   rankdir_lr_rl : Bool,
 ) -> NodeSize {
   let trim = RECORD_BORDER_PT * 2.0
-  if trim <= 0.0 || !rankdir_lr_rl {
+  if trim <= 0.0 {
     return size
   }
-  // Graphviz parity: for LR/RL, record_inside rotates probe points before
-  // testing the inner record bbox; in layout coords this trims X by border.
-  let width_pt = if size.width_pt > trim { size.width_pt - trim } else { 0.0 }
-  let half = width_pt / 2.0
-  {
-    width_in: width_pt / 72.0,
-    height_in: size.height_in,
-    width_pt,
-    height_pt: size.height_pt,
-    left_pt: half,
-    right_pt: half,
+  if rankdir_lr_rl {
+    // Graphviz parity: for LR/RL, record_inside rotates probe points before
+    // testing the inner record bbox; in layout coords this trims X by border.
+    let width_pt = if size.width_pt > trim { size.width_pt - trim } else { 0.0 }
+    let half = width_pt / 2.0
+    {
+      width_in: width_pt / 72.0,
+      height_in: size.height_in,
+      width_pt,
+      height_pt: size.height_pt,
+      left_pt: half,
+      right_pt: half,
+    }
+  } else {
+    // Graphviz record shapes store ND_height with a +1pt render kluge.
+    // record_inside clips against the pre-kluge field bbox, so strip the
+    // border term on Y before adding penwidth during clipping.
+    let height_pt = if size.height_pt > trim { size.height_pt - trim } else { 0.0 }
+    {
+      width_in: size.width_in,
+      height_in: height_pt / 72.0,
+      width_pt: size.width_pt,
+      height_pt,
+      left_pt: size.left_pt,
+      right_pt: size.right_pt,
+    }
   }
 }
 
