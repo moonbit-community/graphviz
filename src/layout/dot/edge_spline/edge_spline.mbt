@@ -2047,7 +2047,7 @@ fn arrow_clip_end_segment(
     points[end + 2],
     points[end + 3],
   ]
-  let (clipped, _) = arrow_end_clip(segment, arrow_len, eps)
+  let (clipped, _) = arrow_end_clip(segment, arrow_len, eps, end_point)
   let out = points.copy()
   out[end] = clipped[0]
   out[end + 1] = clipped[1]
@@ -2105,8 +2105,8 @@ fn arrow_end_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
+  end_point : @geom.Point,
 ) -> (Array[@geom.Point], @geom.Point) {
-  let end_point = points[3]
   if arrow_len <= 0.0 {
     return (points, end_point)
   }
