@@ -325,6 +325,38 @@ fn add_local_default_resets_for_node(
 }
 
 ///|
+fn add_local_default_resets_for_edge(
+  edge : @cgraph.Edge,
+  attrs : Array[(String, String)],
+  local_defaults : Array[(String, String)],
+) -> Array[(String, String)] {
+  if local_defaults.length() == 0 {
+    return attrs
+  }
+  let out : Array[(String, String)] = []
+  let seen : Map[String, Bool] = Map::new()
+  for pair in attrs {
+    let (key, value) = pair
+    out.push((key, value))
+    seen[key] = true
+  }
+  for pair in local_defaults {
+    let (key, value) = pair
+    if value == "" || seen.contains(key) {
+      continue
+    }
+    if edge.get_attr(key) is Some(_) {
+      continue
+    }
+    // Graphviz parity: when local edge defaults are introduced after earlier
+    // edges were created, emit explicit empty attrs on those earlier edges.
+    out.push((key, ""))
+    seen[key] = true
+  }
+  out
+}
+
+///|
 fn write_graph(
   graph : @cgraph.Graph,
   sb : StringBuilder,
@@ -402,6 +434,7 @@ fn write_graph(
   }
   let edge_defaults : Array[(String, String)] =
     if is_layout_output { graph.default_attrs(@cgraph.AttrKind::Edge) } else { [] }
+  let local_edge_defaults = edge_defaults
   let edge_effective_defaults = if is_layout_output {
     collect_effective_defaults(graph, @cgraph.AttrKind::Edge, None)
   } else {
@@ -523,7 +556,12 @@ fn write_graph(
       sb.write_string(write_id(head.name()))
       sb.write_string(write_port(edge.head_port()))
       let attrs = if is_layout_output {
-        filter_attrs(edge.attrs(), edge_effective_defaults)
+        let with_resets = add_local_default_resets_for_edge(
+          edge,
+          edge.attrs(),
+          local_edge_defaults,
+        )
+        filter_attrs(with_resets, edge_effective_defaults)
       } else {
         edge.attrs()
       }
