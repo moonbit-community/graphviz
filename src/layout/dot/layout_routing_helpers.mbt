@@ -1505,6 +1505,17 @@ fn build_edge_spline(
           nodesep_pt,
           enable_complex_tuning,
         )
+      let style_value = match edge.get_attr("style") {
+        Some(value) => value.to_lower()
+        None => ""
+      }
+      // Graphviz parity: flat invisible edges use linear control points in
+      // line routing (matches proc3d rank=same invis edge snapshots).
+      let prefer_linear_flat_invis =
+        is_flat_edge &&
+        !has_explicit_port &&
+        label_width_pt <= 0.0 &&
+        style_value.contains("invis")
       let routed_spline = if points.length() > 2 {
         let clipped = points
         let simplify_tol = nodesep_pt * 0.8
@@ -1695,6 +1706,7 @@ fn build_edge_spline(
                 arrow_len_override=arrow_len_override,
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
+                prefer_linear=prefer_linear_flat_invis,
                 parallel_offset=parallel_offset,
                 clip_swapped=swap_clip_shapes,
                 arrow_swapped=swap_arrow_attrs,
@@ -1989,6 +2001,7 @@ fn build_edge_spline(
               arrow_len_override=arrow_len_override,
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
+              prefer_linear=prefer_linear_flat_invis,
               parallel_offset=parallel_offset,
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,

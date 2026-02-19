@@ -3641,6 +3641,7 @@ fn line_bezier_points(
   curve_skew : Double,
   tail_cluster_bbox : @geom.Rect?,
   head_cluster_bbox : @geom.Rect?,
+  prefer_linear : Bool,
 ) -> Array[@geom.Point] {
   let (tail_base, head_base) =
     if point_dist(tail_center, head_center) <= 0.000001 {
@@ -3712,8 +3713,12 @@ fn line_bezier_points(
       linear_bezier(tail_shift, head_shift)
     }
   } else {
+    // Graphviz parity: selected flat/invisible edges bypass route.c fitting and
+    // keep linear control points.
     let use_linear =
-      tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_)
+      prefer_linear ||
+      tail_cluster_bbox is Some(_) ||
+      head_cluster_bbox is Some(_)
     if use_linear {
       linear_bezier(tail_seed, head_seed)
     } else {
@@ -3757,6 +3762,7 @@ pub fn edge_spline_raw_for_line(
     curve_skew,
     tail_cluster_bbox,
     head_cluster_bbox,
+    false,
   )
 }
 
@@ -3779,6 +3785,7 @@ pub fn edge_spline_for_line(
   arrow_len_override~ : Double?,
   tail_cluster_bbox~ : @geom.Rect?,
   head_cluster_bbox~ : @geom.Rect?,
+  prefer_linear? : Bool = false,
   parallel_offset? : Double = 0.0,
   clip_swapped? : Bool = false,
   arrow_swapped? : Bool = false,
@@ -3806,6 +3813,7 @@ pub fn edge_spline_for_line(
       curve_skew,
       tail_cluster_bbox,
       head_cluster_bbox,
+      prefer_linear,
     )
   points = apply_parallel_offset(points, parallel_offset)
   points =
