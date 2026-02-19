@@ -65,10 +65,21 @@ fn build_edge_vnodes(
   let plain_width = 1.0 + nodesep_pt / 2.0
   for idx in edge_indices {
     let edge = edges[idx]
+    let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
+      edge.tail().name()
+    }
+    let head = if idx < edge_head.length() { edge_head[idx] } else {
+      edge.head().name()
+    }
+    let tail_cluster = node_cluster_key(edge.tail())
+    let head_cluster = node_cluster_key(edge.head())
+    // Graphviz parity: cluster-local parallel chains do not widen class2 vnodes.
+    let use_cluster_plain =
+      tail_cluster != "" && tail_cluster == head_cluster
     let key = edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
-        let delta = nodesep_pt / 2.0
+        let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
         for name in list {
           match vnode_sizes.get(name) {
             Some(size) => {
@@ -84,17 +95,7 @@ fn build_edge_vnodes(
       }
       None => ()
     }
-    let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
-      edge.tail().name()
-    }
-    let head = if idx < edge_head.length() { edge_head[idx] } else {
-      edge.head().name()
-    }
-    let tail_cluster = node_cluster_key(edge.tail())
-    let head_cluster = node_cluster_key(edge.head())
     // Graphviz parity: cluster-local vnodes use the virtual_node default width.
-    let use_cluster_plain =
-      tail_cluster != "" && tail_cluster == head_cluster
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
