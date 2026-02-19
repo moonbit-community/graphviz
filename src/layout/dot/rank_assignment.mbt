@@ -10,7 +10,6 @@ fn compute_ranks_directed_base(
   edge_head : Array[String],
   _edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
-  let graph = new_graph()
   let node_by_name : Map[String, @cgraph.Node] = Map::new()
   let tail_order : Array[String] = []
   for node in nodes {
@@ -68,17 +67,23 @@ fn compute_ranks_directed_base(
   }
   let rank_same_reps = build_rank_same_reps(source, nodes)
   let rep_index : Map[String, Int] = Map::new()
+  let rep_order : Array[String] = []
   let index : Map[String, Int] = Map::new()
+  let mut has_rank_same_groups = false
   for node in rank_nodes {
     let name = node.name()
     let rep = match rank_same_reps.get(name) {
       Some(value) => value
       None => name
     }
+    if rep != name {
+      has_rank_same_groups = true
+    }
     let idx = match rep_index.get(rep) {
       Some(value) => value
       None => {
-        let value = add_node(graph, rep)
+        let value = rep_order.length()
+        rep_order.push(rep)
         rep_index[rep] = value
         value
       }
@@ -127,21 +132,153 @@ fn compute_ranks_directed_base(
       }
     }
   }
-  for _key, entry in merged_edges {
-    let (tail_idx, head_idx, minlen, weight) = entry
-    let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+  let adjacency : Array[Array[Int]] = []
+  for _ in 0..<rep_order.length() {
+    adjacency.push([])
   }
-  network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+  let components : Array[Array[Int]] = []
+  if has_rank_same_groups {
+    let component : Array[Int] = []
+    for i in 0..<rep_order.length() {
+      component.push(i)
+    }
+    components.push(component)
+  } else {
+    for _key, entry in merged_edges {
+      let (tail_idx, head_idx, _minlen, _weight) = entry
+      if tail_idx >= 0 && tail_idx < adjacency.length() &&
+        head_idx >= 0 && head_idx < adjacency.length() {
+        adjacency[tail_idx].push(head_idx)
+        adjacency[head_idx].push(tail_idx)
+      }
+    }
+    let visited : Array[Bool] = []
+    for _ in 0..<rep_order.length() {
+      visited.push(false)
+    }
+    for start in 0..<rep_order.length() {
+      if visited[start] {
+        continue
+      }
+      visited[start] = true
+      let stack : Array[Int] = [start]
+      let component : Array[Int] = []
+      while stack.length() > 0 {
+        let top = stack.length() - 1
+        let idx = stack[top]
+        let _ = stack.pop()
+        component.push(idx)
+        for other in adjacency[idx] {
+          if other >= 0 && other < visited.length() && !visited[other] {
+            visited[other] = true
+            stack.push(other)
+          }
+        }
+      }
+      component.sort_by((a, b) =>
+        if a < b {
+          -1
+        } else if a > b {
+          1
+        } else {
+          0
+        })
+      components.push(component)
+    }
+  }
+  if @sys.get_env_var("DOT_TRACE_RANK_COMPONENTS") is Some(_) {
+    let graph_name = match source.name() {
+      Some(value) => value
+      None => ""
+    }
+    let sizes : Array[Int] = []
+    for component in components {
+      sizes.push(component.length())
+    }
+    println(
+      "rank-components graph=\{graph_name} reps=\{rep_order.length()} has_rank_same=\{has_rank_same_groups} sizes=\{sizes}",
+    )
+  }
+  let rep_ranks : Map[String, Int] = Map::new()
+  // Graphviz parity: rank1 runs network simplex per connected component
+  // (refs/graphviz/lib/dotgen/rank.c), and each component is normalized
+  // independently before readout.
+  for component in components {
+    let graph = new_graph()
+    let local_index : Map[Int, Int] = Map::new()
+    for rep_idx in component {
+      let rep_name =
+        if rep_idx >= 0 && rep_idx < rep_order.length() {
+          rep_order[rep_idx]
+        } else {
+          ""
+        }
+      local_index[rep_idx] = add_node(graph, rep_name)
+    }
+    for _key, entry in merged_edges {
+      let (tail_idx, head_idx, minlen, weight) = entry
+      let tail_local = match local_index.get(tail_idx) {
+        Some(value) => value
+        None => continue
+      }
+      let head_local = match local_index.get(head_idx) {
+        Some(value) => value
+        None => continue
+      }
+      let _ = add_edge(graph, tail_local, head_local, minlen, weight)
+    }
+    network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+    let mut component_min_rank = 0
+    let mut component_seen = false
+    for rep_idx in component {
+      let local_idx = match local_index.get(rep_idx) {
+        Some(value) => value
+        None => continue
+      }
+      let rank = node_rank(graph, local_idx)
+      if !component_seen {
+        component_min_rank = rank
+        component_seen = true
+      } else if rank < component_min_rank {
+        component_min_rank = rank
+      }
+    }
+    for rep_idx in component {
+      let local_idx = match local_index.get(rep_idx) {
+        Some(value) => value
+        None => continue
+      }
+      let rep_name =
+        if rep_idx >= 0 && rep_idx < rep_order.length() {
+          rep_order[rep_idx]
+        } else {
+          ""
+        }
+      rep_ranks[rep_name] = node_rank(graph, local_idx) - component_min_rank
+    }
+  }
+  let default_rank =
+    if rep_order.length() > 0 {
+      match rep_ranks.get(rep_order[0]) {
+        Some(value) => value
+        None => 0
+      }
+    } else {
+      0
+    }
   let ranks : Map[String, Int] = Map::new()
   let mut min_rank = 0
   let mut seen = false
   for node in nodes {
     let name = node.name()
-    let idx = match index.get(name) {
+    let rep = match rank_same_reps.get(name) {
       Some(value) => value
-      None => 0
+      None => name
     }
-    let rank = node_rank(graph, idx)
+    let rank = match rep_ranks.get(rep) {
+      Some(value) => value
+      None => default_rank
+    }
     if !seen {
       min_rank = rank
       seen = true
@@ -151,12 +288,15 @@ fn compute_ranks_directed_base(
   }
   for node in nodes {
     let name = node.name()
-    let idx = match index.get(name) {
+    let rep = match rank_same_reps.get(name) {
       Some(value) => value
-      None => 0
+      None => name
     }
-    let rank = node_rank(graph, idx) - min_rank
-    ranks[name] = rank
+    let base_rank = match rep_ranks.get(rep) {
+      Some(value) => value
+      None => default_rank
+    }
+    ranks[name] = base_rank - min_rank
   }
   let min_nodes : Map[String, Bool] = Map::new()
   let max_nodes : Map[String, Bool] = Map::new()

@@ -817,6 +817,144 @@ fn transpose_rank_groups_graphviz(
 }
 
 ///|
+/// Graphviz parity: medians() assigns flat_mval for nodes with no in/out
+/// non-flat edges (mincross.c flat_mval + medians).
+fn apply_flat_mvals_graphviz(
+  names : Array[String],
+  desired : Map[String, Double],
+  edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
+  flat_constraints : Map[String, Bool],
+) -> Bool {
+  let order_index : Map[String, Int] = Map::new()
+  let rank_nodes : Map[String, Bool] = Map::new()
+  for i, name in names {
+    order_index[name] = i
+    rank_nodes[name] = true
+  }
+  let flat_in : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map::new()
+  for name in names {
+    flat_in[name] = []
+    flat_out[name] = []
+  }
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        if tail == "" || head == "" {
+          continue
+        }
+        if rank_nodes.get(tail) is Some(_) && rank_nodes.get(head) is Some(_) {
+          match flat_out.get(tail) {
+            Some(list) => list.push(head)
+            None => flat_out[tail] = [head]
+          }
+          match flat_in.get(head) {
+            Some(list) => list.push(tail)
+            None => flat_in[head] = [tail]
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  let mc_eps = 1.0 / 256.0
+  let mut hasfixed = false
+  for name in names {
+    let in_edges = match edge_in.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let out_edges = match edge_out.get(name) {
+      Some(list) => list
+      None => []
+    }
+    if in_edges.length() > 0 || out_edges.length() > 0 {
+      continue
+    }
+    let in_list = match flat_in.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let mut assigned = false
+    if in_list.length() > 0 {
+      let mut chosen = in_list[0]
+      let mut chosen_idx = match order_index.get(chosen) {
+        Some(value) => value
+        None => -1
+      }
+      let mut i = 1
+      while i < in_list.length() {
+        let candidate = in_list[i]
+        let candidate_idx = match order_index.get(candidate) {
+          Some(value) => value
+          None => -1
+        }
+        if candidate_idx > chosen_idx {
+          chosen = candidate
+          chosen_idx = candidate_idx
+        }
+        i = i + 1
+      }
+      match desired.get(chosen) {
+        Some(value) => {
+          desired[name] = value + mc_eps
+          assigned = true
+        }
+        None => ()
+      }
+    } else {
+      let out_list = match flat_out.get(name) {
+        Some(list) => list
+        None => []
+      }
+      if out_list.length() > 0 {
+        let mut chosen = out_list[0]
+        let mut chosen_idx = match order_index.get(chosen) {
+          Some(value) => value
+          None => 0x7fffffff
+        }
+        let mut i = 1
+        while i < out_list.length() {
+          let candidate = out_list[i]
+          let candidate_idx = match order_index.get(candidate) {
+            Some(value) => value
+            None => 0x7fffffff
+          }
+          if candidate_idx < chosen_idx {
+            chosen = candidate
+            chosen_idx = candidate_idx
+          }
+          i = i + 1
+        }
+        match desired.get(chosen) {
+          Some(value) => {
+            if value > 0.0 {
+              desired[name] = value - mc_eps
+              assigned = true
+            }
+          }
+          None => ()
+        }
+      }
+    }
+    if !assigned {
+      hasfixed = true
+    }
+  }
+  hasfixed
+}
+
+///|
 /// Graphviz parity: flat edge reorder aligned to refs/graphviz/lib/dotgen/flat.c.
 /// Do not change behavior without updating fixtures/tests.
 fn flat_reorder_rank_groups_graphviz(
@@ -1424,11 +1562,18 @@ fn reorder_rank_groups(
                 median_parents,
                 order_positions,
               )
+              let hasfixed = apply_flat_mvals_graphviz(
+                names,
+                desired,
+                edge_in,
+                edge_out,
+                flat_constraints,
+              )
               ordered[rank] = reorder_by_medians(
                 names,
                 desired,
                 reverse,
-                false,
+                hasfixed,
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
@@ -1453,11 +1598,18 @@ fn reorder_rank_groups(
                 median_children,
                 order_positions,
               )
+              let hasfixed = apply_flat_mvals_graphviz(
+                names,
+                desired,
+                edge_in,
+                edge_out,
+                flat_constraints,
+              )
               ordered[rank] = reorder_by_medians(
                 names,
                 desired,
                 reverse,
-                false,
+                hasfixed,
                 cluster_keys,
                 cluster_skeleton,
                 flat_constraints,
