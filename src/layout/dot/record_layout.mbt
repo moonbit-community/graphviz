@@ -1580,6 +1580,239 @@ fn port_is_label_port(
 }
 
 ///|
+fn attr_bool_true(value : String?) -> Bool {
+  match value {
+    Some(raw) =>
+      match raw.to_lower() {
+        "true" | "yes" | "1" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
+fn polygon_attr_int(node : @cgraph.Node, key : String, fallback : Int) -> Int {
+  match node.get_attr(key) {
+    Some(value) => parse_double(value, fallback.to_double()).round().to_int()
+    None => fallback
+  }
+}
+
+///|
+fn polygon_attr_double(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Double,
+) -> Double {
+  match node.get_attr(key) {
+    Some(value) => parse_double(value, fallback)
+    None => fallback
+  }
+}
+
+///|
+fn polygon_shape_attrs(
+  node : @cgraph.Node,
+) -> (Int, Int, Double, Double, Double, Bool) {
+  let mut sides = polygon_attr_int(node, "sides", 4)
+  if sides <= 0 {
+    sides = 4
+  }
+  let mut peripheries = polygon_attr_int(node, "peripheries", 1)
+  if peripheries < 0 {
+    peripheries = 0
+  }
+  let orientation = polygon_attr_double(node, "orientation", 0.0)
+  let skew = polygon_attr_double(node, "skew", 0.0)
+  let distortion = polygon_attr_double(node, "distortion", 0.0)
+  if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+    // Graphviz parity: skew/distort forces polygon fallback from ellipse to
+    // high-side polygon (poly_init sides=120).
+    sides = 120
+  }
+  let regular = attr_bool_true(node.get_attr("regular"))
+  (sides, peripheries, orientation, distortion, skew, regular)
+}
+
+///|
+fn polygon_is_box_like(
+  sides : Int,
+  orientation : Double,
+  distortion : Double,
+  skew : Double,
+) -> Bool {
+  if sides != 4 || Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001 {
+    return false
+  }
+  let nearest = (orientation / 90.0).round() * 90.0
+  Double::abs(orientation - nearest) < 0.5
+}
+
+///|
+fn polygon_scaled_label_bbox(
+  label_width_pt : Double,
+  label_height_pt : Double,
+  base_height_pt : Double,
+  sides : Int,
+  is_box : Bool,
+) -> (Double, Double) {
+  if is_box {
+    return (label_width_pt, label_height_pt)
+  }
+  let sqrt2 = Double::sqrt(2.0)
+  let mut bb_width = label_width_pt
+  let mut bb_height = label_height_pt
+  let temp = bb_height * sqrt2
+  if base_height_pt > temp {
+    let ratio = if base_height_pt > 0.0 { bb_height / base_height_pt } else { 0.0 }
+    let denom = 1.0 - ratio * ratio
+    if denom > 0.0 {
+      bb_width = bb_width * Double::sqrt(1.0 / denom)
+    } else {
+      bb_width = bb_width * sqrt2
+      bb_height = temp
+    }
+  } else {
+    bb_width = bb_width * sqrt2
+    bb_height = temp
+  }
+  if sides > 2 {
+    let cos_val = @math.cos(@math.PI / sides.to_double())
+    if cos_val > 0.0000001 {
+      bb_width = bb_width / cos_val
+      bb_height = bb_height / cos_val
+    }
+  }
+  (bb_width, bb_height)
+}
+
+///|
+fn polygon_vertices_for_size(
+  width_pt : Double,
+  height_pt : Double,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  if sides < 3 {
+    return []
+  }
+  let half_w = width_pt / 2.0
+  let half_h = height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return []
+  }
+  let sector = 2.0 * @math.PI / sides.to_double()
+  let side_len = @math.sin(sector / 2.0)
+  let abs_mix = Double::abs(distortion) + Double::abs(skew)
+  let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
+  let cos_half = @math.cos(sector / 2.0)
+  if Double::abs(cos_half) <= 0.0000001 {
+    return []
+  }
+  let g_distortion = distortion * Double::sqrt(2.0) / cos_half
+  let g_skew = skew / 2.0
+  let mut angle = (sector - @math.PI) / 2.0
+  let mut sinx = @math.sin(angle)
+  let mut cosx = @math.cos(angle)
+  let mut r = point(0.5 * cosx, 0.5 * sinx)
+  let mut max_x = 0.0
+  let mut max_y = 0.0
+  angle = angle + (@math.PI - sector) / 2.0
+  let base : Array[@geom.Point] = []
+  for _ in 0..<sides {
+    angle = angle + sector
+    sinx = @math.sin(angle)
+    cosx = @math.cos(angle)
+    r = point(r.x + side_len * cosx, r.y + side_len * sinx)
+    let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
+    let mut py = r.y
+    let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
+    let radius = Double::sqrt(px * px + py * py)
+    px = radius * @math.cos(alpha)
+    py = radius * @math.sin(alpha)
+    if Double::abs(px) > max_x {
+      max_x = Double::abs(px)
+    }
+    if Double::abs(py) > max_y {
+      max_y = Double::abs(py)
+    }
+    base.push(point(px, py))
+  }
+  if max_x <= 0.0 || max_y <= 0.0 {
+    return []
+  }
+  let scale_x = half_w / max_x
+  let scale_y = half_h / max_y
+  let out : Array[@geom.Point] = []
+  for vertex in base {
+    out.push(point(vertex.x * scale_x, vertex.y * scale_y))
+  }
+  out
+}
+
+///|
+fn points_nearly_equal(a : @geom.Point, b : @geom.Point) -> Bool {
+  Double::abs(a.x - b.x) <= 0.0000001 && Double::abs(a.y - b.y) <= 0.0000001
+}
+
+///|
+fn polygon_outline_vertices_for_size(
+  base : Array[@geom.Point],
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  if outline_pad_pt <= 0.0 || base.length() < 3 {
+    return base
+  }
+  let sides = base.length()
+  let mut prev = base[sides - 1]
+  for j in 1..=sides {
+    let candidate = base[(sides - j) % sides]
+    if !points_nearly_equal(candidate, base[0]) {
+      prev = candidate
+      break
+    }
+  }
+  let mut beta = @math.atan2(base[0].y - prev.y, base[0].x - prev.x)
+  let mut prev_vertex = prev
+  let mut offset_x = 0.0
+  let mut offset_y = 0.0
+  let out : Array[@geom.Point] = []
+  for i in 0..<sides {
+    let q = base[i]
+    if !points_nearly_equal(q, prev_vertex) {
+      let mut next = base[(i + 1) % sides]
+      for j in 1..<sides {
+        let candidate = base[(i + j) % sides]
+        if !points_nearly_equal(candidate, q) {
+          next = candidate
+          break
+        }
+      }
+      let alpha = beta
+      beta = @math.atan2(next.y - q.y, next.x - q.x)
+      let gamma = (alpha + @math.PI - beta) / 2.0
+      let sin_gamma = @math.sin(gamma)
+      if Double::abs(sin_gamma) > 0.0000001 {
+        let temp = PERIPHERY_GAP_PT / sin_gamma
+        offset_y = @math.sin(alpha - gamma) * temp
+        offset_x = @math.cos(alpha - gamma) * temp
+      }
+    }
+    prev_vertex = q
+    out.push(
+      point(
+        q.x + offset_x * outline_pad_pt / PERIPHERY_GAP_PT,
+        q.y + offset_y * outline_pad_pt / PERIPHERY_GAP_PT,
+      ),
+    )
+  }
+  out
+}
+
+///|
 fn node_size(
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
@@ -1706,9 +1939,28 @@ fn node_size(
     } else {
       (0.0, 0.0)
     }
+  let polygon_shape =
+    if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
   let mut scaled_label_width_pt = label_width_pt
   let mut scaled_label_height_pt = label_height_pt
-  if shape == "mdiamond" && has_label {
+  if shape == "polygon" && has_label {
+    let (sides, _peripheries, orientation, distortion, skew, _regular) =
+      match polygon_shape {
+        Some(values) => values
+        None => (4, 1, 0.0, 0.0, 0.0, false)
+      }
+    let is_box = polygon_is_box_like(sides, orientation, distortion, skew)
+    let (scaled_width_pt, scaled_height_pt) =
+      polygon_scaled_label_bbox(
+        label_width_pt,
+        label_height_pt,
+        base_height_pt,
+        sides,
+        is_box,
+      )
+    scaled_label_width_pt = scaled_width_pt
+    scaled_label_height_pt = scaled_height_pt
+  } else if shape == "mdiamond" && has_label {
     let sqrt2 = Double::sqrt(2.0)
     let temp = label_height_pt * sqrt2
     if base_height_pt > temp {
@@ -1776,6 +2028,58 @@ fn node_size(
     let size_in = if width_in > height_in { width_in } else { height_in }
     width_in = size_in
     height_in = size_in
+  }
+  if shape == "polygon" {
+    let (sides, peripheries, orientation, distortion, skew, regular_polygon) =
+      match polygon_shape {
+        Some(values) => values
+        None => (4, 1, 0.0, 0.0, 0.0, false)
+      }
+    if regular_polygon {
+      let size_in = if width_in > height_in { width_in } else { height_in }
+      width_in = size_in
+      height_in = size_in
+    }
+    if peripheries > 1 {
+      let mut polygon_width_pt = width_in * 72.0
+      let mut polygon_height_pt = height_in * 72.0
+      if sides < 3 {
+        let extra =
+          PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1)
+        polygon_width_pt = polygon_width_pt + extra
+        polygon_height_pt = polygon_height_pt + extra
+      } else {
+        let base_vertices =
+          polygon_vertices_for_size(
+            polygon_width_pt,
+            polygon_height_pt,
+            sides,
+            orientation,
+            distortion,
+            skew,
+          )
+        if base_vertices.length() > 0 {
+          let outline_pad_pt =
+            PERIPHERY_GAP_PT * Double::from_int(peripheries - 1)
+          let expanded_vertices =
+            polygon_outline_vertices_for_size(base_vertices, outline_pad_pt)
+          let mut max_x = polygon_width_pt / 2.0
+          let mut max_y = polygon_height_pt / 2.0
+          for vertex in expanded_vertices {
+            if Double::abs(vertex.x) > max_x {
+              max_x = Double::abs(vertex.x)
+            }
+            if Double::abs(vertex.y) > max_y {
+              max_y = Double::abs(vertex.y)
+            }
+          }
+          polygon_width_pt = max_x * 2.0
+          polygon_height_pt = max_y * 2.0
+        }
+      }
+      width_in = polygon_width_pt / 72.0
+      height_in = polygon_height_pt / 72.0
+    }
   }
   if shape == "parallelogram" {
     // Graphviz parity: skewed quad bbox in shapes.c poly_init widens by a
