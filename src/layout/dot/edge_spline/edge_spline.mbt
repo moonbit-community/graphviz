@@ -1955,7 +1955,7 @@ fn arrow_clip_start_segment(
     points[start + 2],
     points[start + 3],
   ]
-  let (clipped, _) = arrow_start_clip(segment, arrow_len, eps)
+  let (clipped, _) = arrow_start_clip(segment, arrow_len, eps, start_point)
   let out = points.copy()
   out[start] = clipped[0]
   out[start + 1] = clipped[1]
@@ -2068,8 +2068,8 @@ fn arrow_start_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
+  start_point : @geom.Point,
 ) -> (Array[@geom.Point], @geom.Point) {
-  let start_point = points[0]
   if arrow_len <= 0.0 {
     return (points, start_point)
   }
