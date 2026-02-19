@@ -8,6 +8,9 @@ const CLUSTER_LABEL_PAD_PT : Double = 8.0
 const CLUSTER_COMPACT_WEIGHT : Int = 128
 
 ///|
+const ROOT_COMPRESS_WEIGHT : Int = 1000
+
+///|
 const CLUSTER_LN_PREFIX : String = "_mbt_cluster_ln_"
 
 ///|
@@ -336,6 +339,72 @@ fn cluster_margin_pt(graph : @cgraph.Graph) -> Double {
     }
     None => CLUSTER_MARGIN_PT
   }
+}
+
+///|
+/// Graphviz parity: ratio=compress detection aligned to refs/graphviz/lib/dotgen/dotinit.c.
+fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("ratio") {
+    Some(value) => value.trim().to_lower() == "compress"
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c
+/// and dotgen/position.c (compress_graph input width).
+fn parse_graph_size_pt_for_compress(graph : @cgraph.Graph) -> (Double, Double)? {
+  match graph.get_attr("size") {
+    Some(value) => {
+      let parts : Array[String] = []
+      for part in value.split(",") {
+        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        if cleaned != "" {
+          parts.push(cleaned)
+        }
+      }
+      if parts.length() == 0 {
+        return None
+      }
+      let width_in = parse_double(parts[0], -1.0)
+      let height_in =
+        if parts.length() > 1 {
+          parse_double(parts[1], -1.0)
+        } else {
+          width_in
+        }
+      if width_in <= 0.0 || height_in <= 0.0 {
+        return None
+      }
+      Some((width_in * 72.0, height_in * 72.0))
+    }
+    None => None
+  }
+}
+
+///|
+/// Graphviz parity: compress_graph width clamp aligned to
+/// refs/graphviz/lib/dotgen/position.c (MIN(size, USHRT_MAX)).
+fn compress_width_minlen_pt(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+) -> Int? {
+  if !graph_ratio_is_compress(graph) {
+    return None
+  }
+  let (size_w, size_h) = match parse_graph_size_pt_for_compress(graph) {
+    Some(value) => value
+    None => return None
+  }
+  let width_pt = match rankdir {
+    RankDir::LR | RankDir::RL => size_h
+    _ => size_w
+  }
+  if width_pt <= 1.0 {
+    return None
+  }
+  let clamped = if width_pt > 65535.0 { 65535.0 } else { width_pt }
+  Some(round_int(clamped))
 }
 
 ///|
@@ -1284,6 +1353,7 @@ fn build_constraint_graph(
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
+  compress_width_minlen : Int?,
 ) -> (NsGraph, Map[String, Int]) {
   let graph = new_graph()
   let ordered_nodes = nodes
@@ -1733,10 +1803,16 @@ fn build_constraint_graph(
     } else {
       CLUSTER_MARGIN_PT
     }
-    let minlen = round_int(root_margin)
+    let compress_mode = compress_width_minlen is Some(_)
     for name in root_ln_targets {
       match index.get(name) {
         Some(idx) => {
+          let minlen =
+            if compress_mode {
+              round_int(node_left_pt(name, sizes) + root_margin)
+            } else {
+              round_int(root_margin)
+            }
           let _ = add_edge(graph, root_ln, idx, minlen, 0)
         }
         None => ()
@@ -1745,10 +1821,28 @@ fn build_constraint_graph(
     for name in root_rn_targets {
       match index.get(name) {
         Some(idx) => {
+          let minlen =
+            if compress_mode {
+              round_int(node_right_pt(name, sizes) + root_margin)
+            } else {
+              round_int(root_margin)
+            }
           let _ = add_edge(graph, idx, root_rn, minlen, 0)
         }
         None => ()
       }
+    }
+    match compress_width_minlen {
+      Some(width_minlen) => {
+        let _ = add_edge(
+          graph,
+          root_ln,
+          root_rn,
+          width_minlen,
+          ROOT_COMPRESS_WEIGHT,
+        )
+      }
+      None => ()
     }
   }
   for edge in extra_edges {
@@ -1797,6 +1891,7 @@ fn x_positions_from_simplex(
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
+  compress_width_minlen : Int?,
 ) -> Map[String, Double] {
   dot_trace("xpos: build constraint graph")
   // Graphviz parity: class2/decompose creation order is the reverse of
@@ -1907,6 +2002,7 @@ fn x_positions_from_simplex(
     edge_vnodes,
     root_ln_targets,
     root_rn_targets,
+    compress_width_minlen,
   )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
   let order = build_constraint_reorder(graph, index, xpos_nlist_order)
@@ -1989,6 +2085,44 @@ fn compute_x_positions(
   for edge in flat_label_edges {
     all_extra_edges.push(edge)
   }
+  let rankdir = graph_rankdir(graph)
+  let compress_width_minlen = compress_width_minlen_pt(graph, rankdir)
+  let all_root_ln_targets = root_ln_targets.copy()
+  let all_root_rn_targets = root_rn_targets.copy()
+  match compress_width_minlen {
+    Some(_) => {
+      // Graphviz parity: contain_nodes constrains per-rank leftmost/rightmost
+      // nodes against root ln/rn before adding the compress edge.
+      let ln_seen : Map[String, Bool] = Map::new()
+      let rn_seen : Map[String, Bool] = Map::new()
+      for name in all_root_ln_targets {
+        ln_seen[name] = true
+      }
+      for name in all_root_rn_targets {
+        rn_seen[name] = true
+      }
+      for rank in rank_keys {
+        let names = match groups.get(rank) {
+          Some(value) => value
+          None => []
+        }
+        if names.length() == 0 {
+          continue
+        }
+        let left_name = names[0]
+        let right_name = names[names.length() - 1]
+        if ln_seen.get(left_name) is None {
+          all_root_ln_targets.push(left_name)
+          ln_seen[left_name] = true
+        }
+        if rn_seen.get(right_name) is None {
+          all_root_rn_targets.push(right_name)
+          rn_seen[right_name] = true
+        }
+      }
+    }
+    None => ()
+  }
   x_positions_from_simplex(
     graph,
     nodes,
@@ -2010,7 +2144,8 @@ fn compute_x_positions(
     all_extra_edges,
     extra_slack_edges,
     edge_vnodes,
-    root_ln_targets,
-    root_rn_targets,
+    all_root_ln_targets,
+    all_root_rn_targets,
+    compress_width_minlen,
   )
 }
