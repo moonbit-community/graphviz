@@ -1537,9 +1537,7 @@ fn clip_spline_start(
   out[start] = clipped[0]
   out[start + 1] = clipped[1]
   out[start + 2] = clipped[2]
-  // Preserve segment end while clipping the start; this matches shape_clip0's
-  // t..1 subdivision used by Graphviz for tail clipping.
-  out[start + 3] = segment[3]
+  out[start + 3] = clipped[3]
   out
 }
 
@@ -1893,33 +1891,35 @@ fn clip_spline_to_nodes(
   }
   // Graphviz parity: compass/dynamic ports disable clipping after resolvePort
   // when the resolved side is exposed.
+  let tail_clip_default =
+    match tail_port {
+      Some(value) =>
+        match value.compass {
+          Some(@cgraph.Compass::C) => true
+          Some(_) => false
+          None => tail_port_side == 0
+        }
+      None => true
+    }
   let tail_clip_enabled =
     match tail_clip_enabled_override {
-      Some(value) => value
-      None =>
-        match tail_port {
-          Some(value) =>
-            match value.compass {
-              Some(@cgraph.Compass::C) => true
-              Some(_) => false
-              None => tail_port_side == 0
-            }
-          None => true
+      Some(value) => if value { tail_clip_default } else { false }
+      None => tail_clip_default
+    }
+  let head_clip_default =
+    match head_port {
+      Some(value) =>
+        match value.compass {
+          Some(@cgraph.Compass::C) => true
+          Some(_) => false
+          None => head_port_side == 0
         }
+      None => true
     }
   let head_clip_enabled =
     match head_clip_enabled_override {
-      Some(value) => value
-      None =>
-        match head_port {
-          Some(value) =>
-            match value.compass {
-              Some(@cgraph.Compass::C) => true
-              Some(_) => false
-              None => head_port_side == 0
-            }
-          None => true
-        }
+      Some(value) => if value { head_clip_default } else { false }
+      None => head_clip_default
     }
   let tail_clipped =
     if !tail_clip_enabled {
