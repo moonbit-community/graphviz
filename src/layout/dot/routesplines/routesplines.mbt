@@ -119,12 +119,23 @@ pub fn build_path_adjacency(
     while idx + 1 < path_nodes.length() {
       let tail = path_nodes[idx]
       let head = path_nodes[idx + 1]
+      // Graphviz path adjacency is based on distinct predecessor/successor
+      // links in the virtual chain; parallel multiplicity must not duplicate
+      // neighbor entries here, or pathplan ordering drifts.
+      let push_unique = (list : Array[String], value : String) => {
+        for item in list {
+          if item == value {
+            return ()
+          }
+        }
+        list.push(value)
+      }
       match out_edges.get(tail) {
-        Some(list) => list.push(head)
+        Some(list) => push_unique(list, head)
         None => out_edges[tail] = [head]
       }
       match in_edges.get(head) {
-        Some(list) => list.push(tail)
+        Some(list) => push_unique(list, tail)
         None => in_edges[head] = [tail]
       }
       idx = idx + 1
