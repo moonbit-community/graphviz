@@ -240,6 +240,16 @@ fn edge_parallel_offsets(
   let group_first_dir_attr : Map[String, String] = Map::new()
   let group_has_mixed_dir_attr : Map[String, Bool] = Map::new()
   let sameport_marked : Map[Int, Bool] = Map::new()
+  let edge_by_id : Map[Int, @cgraph.Edge] = Map::new()
+  let has_self_edge : Map[String, Bool] = Map::new()
+  for edge in edges {
+    edge_by_id[edge.id()] = edge
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    if tail == head {
+      has_self_edge[tail] = true
+    }
+  }
   for edge in edges {
     if edge_has_label(edge) {
       continue
@@ -329,6 +339,36 @@ fn edge_parallel_offsets(
         ids[left] = ids[right]
         ids[right] = tmp
         left = left + 1
+      }
+    }
+    // Graphviz parity: for reverse-edge pairs, prefer the tail without a
+    // self-loop first. This matches class2/dotsplines slot assignment on NaN.gv.
+    if ids.length() == 2 {
+      let edge0 = edge_by_id.get(ids[0])
+      let edge1 = edge_by_id.get(ids[1])
+      match (edge0, edge1) {
+        (Some(a), Some(b)) => {
+          let a_tail = a.tail().name()
+          let a_head = a.head().name()
+          let b_tail = b.tail().name()
+          let b_head = b.head().name()
+          if a_tail == b_head && a_head == b_tail {
+            let a_tail_has_self = match has_self_edge.get(a_tail) {
+              Some(value) => value
+              None => false
+            }
+            let b_tail_has_self = match has_self_edge.get(b_tail) {
+              Some(value) => value
+              None => false
+            }
+            if a_tail_has_self && !b_tail_has_self {
+              let tmp = ids[0]
+              ids[0] = ids[1]
+              ids[1] = tmp
+            }
+          }
+        }
+        _ => ()
       }
     }
     let count = ids.length()
