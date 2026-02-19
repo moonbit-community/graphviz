@@ -301,9 +301,13 @@ fn try_multiline_textspan_override(
     return None
   }
   let mut max_width = 0.0
-  let mut max_line_height = 0.0
+  let mut total_height = 0.0
+  // Graphviz labels.c::storeline uses integer-truncated fontsize*LINESPACING
+  // for empty lines, while non-empty lines use renderer-provided span height.
+  let empty_line_height = (font_size_pt * LINE_SPACING).trunc()
   for line in lines {
     if line == "" {
+      total_height = total_height + empty_line_height
       continue
     }
     match @font_metrics.lookup_textspan_override(line, font_name, font_size_pt) {
@@ -311,20 +315,12 @@ fn try_multiline_textspan_override(
         if width > max_width {
           max_width = width
         }
-        if height > max_line_height {
-          max_line_height = height
-        }
+        total_height = total_height + height
       }
       None => return None
     }
   }
-  let line_height =
-    if max_line_height > 0.0 {
-      max_line_height
-    } else {
-      text_line_height(font_name, font_size_pt)
-    }
-  Some((max_width, line_height * lines.length().to_double()))
+  Some((max_width, total_height))
 }
 
 ///|
