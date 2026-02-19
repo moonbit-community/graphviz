@@ -186,6 +186,24 @@ fn build_rank_same_reps(
               None => leader = Some(name)
             }
           }
+          // Graphviz parity: rankset edge statements imply endpoint membership;
+          // include their endpoints when explicit node statements are omitted.
+          for edge in current.edges() {
+            let tail_name = edge.tail().name()
+            if parent.get(tail_name) is Some(_) {
+              match leader {
+                Some(lead) => union(lead, tail_name)
+                None => leader = Some(tail_name)
+              }
+            }
+            let head_name = edge.head().name()
+            if parent.get(head_name) is Some(_) {
+              match leader {
+                Some(lead) => union(lead, head_name)
+                None => leader = Some(head_name)
+              }
+            }
+          }
         }
       }
       None => ()

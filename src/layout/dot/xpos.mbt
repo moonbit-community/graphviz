@@ -1391,6 +1391,8 @@ fn build_constraint_graph(
         }
     }
   }
+  let rank_adj_constraints : Map[String, (String, String, Int, Int)] = Map::new()
+  let rank_adj_order : Array[String] = []
   for rank in rank_keys {
     let names = match groups.get(rank) {
       Some(list) => list
@@ -1401,25 +1403,30 @@ fn build_constraint_graph(
     while i + 1 < names.length() {
       let tail = names[i]
       let head = names[i + 1]
-      let tail_idx = match index.get(tail) {
-        Some(value) => value
-        None => 0
-      }
-      let head_idx = match index.get(head) {
-        Some(value) => value
-        None => 0
-      }
       let minlen = nodesep_minlen(
         tail,
         head,
         sizes,
         rank_nodesep,
       )
-      let _ = add_edge(graph, tail_idx, head_idx, minlen, 0)
+      let key = "\{tail}|\{head}"
+      rank_adj_constraints[key] = (tail, head, minlen, 0)
+      rank_adj_order.push(key)
       i = i + 1
     }
   }
+  let order_in_rank : Map[String, Int] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for i in 0..<names.length() {
+      order_in_rank[names[i]] = i
+    }
+  }
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
+  let flat_minlen_constraints : Map[String, (String, String, Int, Int)] = Map::new()
   let add_segment = (
     seg_tail : String,
     seg_head : String,
@@ -1460,63 +1467,107 @@ fn build_constraint_graph(
             // Graphviz parity: make_edge_pairs skips self-edges (handled via ND_other).
             ()
           } else {
-            let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
-              Some(list) => list
-              None => []
-            }
-            let ordered_vnodes =
-              if tail_rank <= head_rank {
-              vnodes
+            if tail_rank == head_rank && edge_is_constraint(edge) &&
+              edge_mid_label_metrics(edge) is None {
+              let (left, right) =
+                match (order_in_rank.get(tail_name), order_in_rank.get(head_name)) {
+                  (Some(tail_order), Some(head_order)) =>
+                    if tail_order <= head_order {
+                      (tail_name, head_name)
+                    } else {
+                      (head_name, tail_name)
+                    }
+                  _ =>
+                    if tail_name <= head_name {
+                      (tail_name, head_name)
+                    } else {
+                      (head_name, tail_name)
+                    }
+                }
+              let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
+              let minlen =
+                trunc_int(Double::from_int(edge_minlen(edge)) * nodesep_pt + width)
+              let weight = edge_weight(edge)
+              let flat_key = "\{left}|\{right}"
+              match rank_adj_constraints.get(flat_key) {
+                Some(entry) => {
+                  let (tail, head, prev_minlen, prev_weight) = entry
+                  let next_minlen = if minlen > prev_minlen { minlen } else { prev_minlen }
+                  let next_weight = if weight > prev_weight { weight } else { prev_weight }
+                  rank_adj_constraints[flat_key] = (tail, head, next_minlen, next_weight)
+                }
+                None =>
+                  match flat_minlen_constraints.get(flat_key) {
+                    Some(entry) => {
+                      let (_prev_left, _prev_right, prev_minlen, prev_weight) = entry
+                      let next_minlen = if minlen > prev_minlen { minlen } else { prev_minlen }
+                      let next_weight = if weight > prev_weight { weight } else { prev_weight }
+                      flat_minlen_constraints[flat_key] =
+                        (left, right, next_minlen, next_weight)
+                    }
+                    None => flat_minlen_constraints[flat_key] =
+                      (left, right, minlen, weight)
+                  }
+              }
             } else {
-              let reversed : Array[String] = []
-              let mut idx = vnodes.length()
-              while idx > 0 {
-                idx = idx - 1
-                reversed.push(vnodes[idx])
+              let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+                Some(list) => list
+                None => []
               }
-              reversed
-            }
-            let chain : Array[String] = []
-            chain.push(tail_name)
-            for vnode in ordered_vnodes {
-              chain.push(vnode)
-            }
-            if tail_name != head_name || ordered_vnodes.length() == 0 {
-              chain.push(head_name)
-            }
-            let base_weight = edge_weight(edge)
-            let orig_tail = edge.tail().name()
-            let orig_head = edge.head().name()
-            let mut idx = 0
-            while idx + 1 < chain.length() {
-              let seg_tail = chain[idx]
-              let seg_head = chain[idx + 1]
-              idx = idx + 1
-              let weight =
-                if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
-                let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
-                let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
-                scaled_edge_weight(base_weight, tail_class, head_class)
+              let ordered_vnodes =
+                if tail_rank <= head_rank {
+                vnodes
               } else {
-                base_weight
+                let reversed : Array[String] = []
+                let mut idx = vnodes.length()
+                while idx > 0 {
+                  idx = idx - 1
+                  reversed.push(vnodes[idx])
+                }
+                reversed
               }
-              let tail_port =
-                if seg_tail == orig_tail {
-                edge.tail_port()
-              } else if seg_tail == orig_head {
-                edge.head_port()
-              } else {
-                None
+              let chain : Array[String] = []
+              chain.push(tail_name)
+              for vnode in ordered_vnodes {
+                chain.push(vnode)
               }
-              let head_port =
-                if seg_head == orig_head {
-                edge.head_port()
-              } else if seg_head == orig_tail {
-                edge.tail_port()
-              } else {
-                None
+              if tail_name != head_name || ordered_vnodes.length() == 0 {
+                chain.push(head_name)
               }
-              add_segment(seg_tail, seg_head, weight, tail_port, head_port)
+              let base_weight = edge_weight(edge)
+              let orig_tail = edge.tail().name()
+              let orig_head = edge.head().name()
+              let mut idx = 0
+              while idx + 1 < chain.length() {
+                let seg_tail = chain[idx]
+                let seg_head = chain[idx + 1]
+                idx = idx + 1
+                let weight =
+                  if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
+                  let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
+                  let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
+                  scaled_edge_weight(base_weight, tail_class, head_class)
+                } else {
+                  base_weight
+                }
+                let tail_port =
+                  if seg_tail == orig_tail {
+                  edge.tail_port()
+                } else if seg_tail == orig_head {
+                  edge.head_port()
+                } else {
+                  None
+                }
+                let head_port =
+                  if seg_head == orig_head {
+                  edge.head_port()
+                } else if seg_head == orig_tail {
+                  edge.tail_port()
+                } else {
+                  None
+                }
+                add_segment(seg_tail, seg_head, weight, tail_port, head_port)
+              }
             }
           }
         _ => ()
@@ -1542,6 +1593,37 @@ fn build_constraint_graph(
       if seen_edges.get(edge_idx) is None {
         record_edge_segments(edge_idx, edges[edge_idx])
       }
+    }
+  }
+  for key in rank_adj_order {
+    match rank_adj_constraints.get(key) {
+      Some(entry) => {
+        let (tail, head, minlen, weight) = entry
+        match index.get(tail) {
+          Some(tail_idx) =>
+            match index.get(head) {
+              Some(head_idx) => {
+                let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+              }
+              None => ()
+            }
+          None => ()
+        }
+      }
+      None => ()
+    }
+  }
+  for _flat_key, entry in flat_minlen_constraints {
+    let (left, right, minlen, weight) = entry
+    match index.get(left) {
+      Some(tail_idx) =>
+        match index.get(right) {
+          Some(head_idx) => {
+            let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+          }
+          None => ()
+        }
+      None => ()
     }
   }
   let tail_seen : Map[String, Bool] = Map::new()
@@ -1717,6 +1799,70 @@ fn x_positions_from_simplex(
   root_rn_targets : Array[String],
 ) -> Map[String, Double] {
   dot_trace("xpos: build constraint graph")
+  // Graphviz parity: class2/decompose creation order is the reverse of
+  // GD_nlist iteration order consumed by create_aux_edges/position.
+  let nlist_source =
+    if gdnlist_order.length() > 0 {
+      gdnlist_order
+    } else {
+      nlist_order
+    }
+  let nlist_reversed : Array[String] = []
+  let mut nlist_idx = nlist_source.length()
+  while nlist_idx > 0 {
+    nlist_idx = nlist_idx - 1
+    nlist_reversed.push(nlist_source[nlist_idx])
+  }
+  let xpos_nlist_order : Array[String] = []
+  let cluster_order : Array[String] = []
+  let cluster_seen : Map[String, Bool] = Map::new()
+  for name in nlist_reversed {
+    let cluster = match cluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if cluster != "" && cluster_seen.get(cluster) is None {
+      cluster_seen[cluster] = true
+      cluster_order.push(cluster)
+    }
+  }
+  if cluster_order.length() == 0 {
+    for name in nlist_source {
+      xpos_nlist_order.push(name)
+    }
+  } else {
+    let xpos_seen : Map[String, Bool] = Map::new()
+    for cluster in cluster_order {
+      let mut rank_idx = rank_keys.length()
+      while rank_idx > 0 {
+        rank_idx = rank_idx - 1
+        let rank = rank_keys[rank_idx]
+        let names = match groups.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        let mut name_idx = names.length()
+        while name_idx > 0 {
+          name_idx = name_idx - 1
+          let name = names[name_idx]
+          let name_cluster = match cluster_keys.get(name) {
+            Some(value) => value
+            None => ""
+          }
+          if name_cluster == cluster && xpos_seen.get(name) is None {
+            xpos_nlist_order.push(name)
+            xpos_seen[name] = true
+          }
+        }
+      }
+    }
+    for name in nlist_reversed {
+      if xpos_seen.get(name) is None {
+        xpos_nlist_order.push(name)
+        xpos_seen[name] = true
+      }
+    }
+  }
   let order_index = build_order_index(groups)
   let (graph, index) = build_constraint_graph(
     nodes,
@@ -1724,8 +1870,8 @@ fn x_positions_from_simplex(
     edge_tail,
     edge_head,
     edge_out_order,
-    nlist_order,
-    gdnlist_order,
+    xpos_nlist_order,
+    xpos_nlist_order,
     ranks,
     rank_keys,
     groups,
@@ -1742,7 +1888,7 @@ fn x_positions_from_simplex(
     root_rn_targets,
   )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
-  let order = build_constraint_reorder(graph, index, gdnlist_order)
+  let order = build_constraint_reorder(graph, index, xpos_nlist_order)
   let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_constraints(graph_root) {
     xpos_constraint_snapshot.val = Some(

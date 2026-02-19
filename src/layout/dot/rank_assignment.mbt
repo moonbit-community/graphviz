@@ -463,6 +463,31 @@ fn compute_ranks_directed_with_clusters(
   for name, rank in ranks {
     ranks[name] = rank - min_rank
   }
+  // Graphviz parity: rank=same/min/max/source/sink collapse applies after
+  // clustered rank assignment as well; grouped nodes share their representative
+  // rank before extrema post-processing.
+  let rank_same_reps = build_rank_same_reps(source, nodes)
+  let rep_ranks : Map[String, Int] = Map::new()
+  for name, rank in ranks {
+    let rep = match rank_same_reps.get(name) {
+      Some(value) => value
+      None => name
+    }
+    if name == rep {
+      rep_ranks[rep] = rank
+    }
+  }
+  for name, rank in ranks {
+    let rep = match rank_same_reps.get(name) {
+      Some(value) => value
+      None => name
+    }
+    let rep_rank = match rep_ranks.get(rep) {
+      Some(value) => value
+      None => rank
+    }
+    ranks[name] = rep_rank
+  }
   let min_nodes : Map[String, Bool] = Map::new()
   let max_nodes : Map[String, Bool] = Map::new()
   collect_rank_extremes(source, min_nodes, max_nodes)
