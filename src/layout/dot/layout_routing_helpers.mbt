@@ -2854,8 +2854,12 @@ fn remap_parallel_edge_layouts_for_graphviz(
         edge.tail_port(),
         edge.head_port(),
       )
+    let dir_key = match edge.get_attr("dir") {
+      Some(value) => value.to_lower()
+      None => "forward"
+    }
     let direction_key =
-      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}"
+      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}|\{dir_key}"
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]

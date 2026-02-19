@@ -209,6 +209,8 @@ fn edge_parallel_offsets(
   nodesep_pt : Double,
 ) -> Map[Int, Double] {
   let groups : Map[String, Array[Int]] = Map::new()
+  let group_first_dir_attr : Map[String, String] = Map::new()
+  let group_has_mixed_dir_attr : Map[String, Bool] = Map::new()
   for edge in edges {
     if edge_has_label(edge) {
       continue
@@ -236,17 +238,46 @@ fn edge_parallel_offsets(
         edge.tail_port(),
         edge.head_port(),
       )
+    let dir_attr = match edge.get_attr("dir") {
+      Some(value) => value.to_lower()
+      None => "forward"
+    }
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
     }
+    match group_first_dir_attr.get(key) {
+      Some(first_dir) =>
+        if first_dir != dir_attr {
+          group_has_mixed_dir_attr[key] = true
+        }
+      None => {
+        group_first_dir_attr[key] = dir_attr
+        group_has_mixed_dir_attr[key] = false
+      }
+    }
   }
   let offsets : Map[Int, Double] = Map::new()
-  for _key, ids in groups {
+  for key, ids in groups {
     if ids.length() <= 1 {
       continue
     }
     ids.sort()
+    let mixed_dir = match group_has_mixed_dir_attr.get(key) {
+      Some(value) => value
+      None => false
+    }
+    if mixed_dir {
+      let mut left = 0
+      let mut right = ids.length()
+      while left + 1 < right {
+        right = right - 1
+        let tmp = ids[left]
+        ids[left] = ids[right]
+        ids[right] = tmp
+        left = left + 1
+      }
+    }
     let count = ids.length()
     let dx = nodesep_pt * Double::from_int(count - 1) / 2.0
     for i in 0..<count {
@@ -319,4 +350,3 @@ fn adjust_intracluster_dotted_points(
   }
   adjusted
 }
-
