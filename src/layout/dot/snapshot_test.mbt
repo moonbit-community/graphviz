@@ -298,8 +298,8 @@ fn assert_snapshot(
   let layout = layout_dot(graph)
   layout.apply()
   let actual = @dot_parser.write_dot(graph)
-  let expected = @fs.read_file_to_string(expected_path)
-  let expected_graph = @dot_parser.parse_dot(expected)
+  // Some Graphviz fixtures (e.g. Latin1.gv.dot) contain non-UTF8 bytes.
+  let expected_graph = @dot_parser.parse_dot_file(expected_path)
   let actual_graph = @dot_parser.parse_dot(actual)
   compare_graph(expected_graph, actual_graph, tol)
 }
@@ -317,8 +317,8 @@ fn assert_snapshot_nodes_only(
   let layout = layout_dot(graph)
   layout.apply()
   let actual = @dot_parser.write_dot(graph)
-  let expected = @fs.read_file_to_string(expected_path)
-  let expected_graph = @dot_parser.parse_dot(expected)
+  // Keep fixture decoding consistent with parse_dot_file fallback logic.
+  let expected_graph = @dot_parser.parse_dot_file(expected_path)
   let actual_graph = @dot_parser.parse_dot(actual)
   compare_graph_nodes_only(expected_graph, actual_graph, tol)
 }
