@@ -52,6 +52,7 @@ pairs=(
   "refs/graphviz/graphs/directed/awilliams.gv tests/render/xdot/awilliams.xdot"
   "refs/graphviz/graphs/directed/honda-tokoro.gv tests/render/xdot/honda-tokoro.xdot"
   "refs/graphviz/graphs/directed/jcctree.gv tests/render/xdot/jcctree.xdot"
+  "refs/graphviz/graphs/directed/jsort.gv tests/render/xdot/jsort.xdot"
   "refs/graphviz/graphs/directed/mike.gv tests/render/xdot/mike.xdot"
   "refs/graphviz/graphs/directed/nhg.gv tests/render/xdot/nhg.xdot"
   "refs/graphviz/graphs/directed/proc3d.gv tests/render/xdot/proc3d.xdot"
