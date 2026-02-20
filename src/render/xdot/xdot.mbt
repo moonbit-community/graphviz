@@ -3230,6 +3230,10 @@ pub fn attach_xdot_attrs(
     if tail_label_ops.length() > 0 {
       edge_layout.edge.set_attr("_tldraw_", encode_xdot_ops(tail_label_ops))
     }
+    let edge_style = @attrs.parse_style(edge_layout.edge.get_attr("style"))
+    if style_is_invisible(edge_style) {
+      continue
+    }
     let flags = arrow_flags(edge_layout.edge, kind)
     if flags.head {
       let head_ops = arrow_ops(edge_layout, true)

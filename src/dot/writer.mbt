@@ -431,6 +431,15 @@ fn filter_nondefault_node_attrs(
         }
     }
   }
+  if node.get_attr("distortion") is None {
+    match graph.get_default_attr(@cgraph.AttrKind::Node, "distortion") {
+      Some(default_value) =>
+        if default_value != "" {
+          filtered.push(("distortion", ""))
+        }
+      None => ()
+    }
+  }
   filtered
 }
 
@@ -452,6 +461,15 @@ fn filter_nondefault_edge_attrs(
         if value != "" || key == "style" {
           filtered.push((key, value))
         }
+    }
+  }
+  if edge.get_attr("style") is None {
+    match graph.get_default_attr(@cgraph.AttrKind::Edge, "style") {
+      Some(default_value) =>
+        if default_value != "" && edge.get_attr("_draw_") is Some(_) {
+          filtered.push(("style", ""))
+        }
+      None => ()
     }
   }
   filtered
@@ -487,6 +505,12 @@ fn node_has_nondefault_attrs(
         if value != "" || key == "distortion" || key == "style" {
           return true
         }
+    }
+  }
+  if node.get_attr("distortion") is None {
+    match graph.get_default_attr(@cgraph.AttrKind::Node, "distortion") {
+      Some(default_value) => if default_value != "" { return true }
+      None => ()
     }
   }
   false
