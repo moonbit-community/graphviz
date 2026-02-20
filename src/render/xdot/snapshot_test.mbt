@@ -742,6 +742,10 @@ test "xdot snapshot parity" {
       "tests/render/xdot/awilliams.xdot",
     ),
     (
+      "refs/graphviz/graphs/directed/honda-tokoro.gv",
+      "tests/render/xdot/honda-tokoro.xdot",
+    ),
+    (
       "refs/graphviz/graphs/directed/jcctree.gv",
       "tests/render/xdot/jcctree.xdot",
     ),
