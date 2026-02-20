@@ -675,23 +675,47 @@ fn compare_graph_no_edges(
 }
 
 ///|
-fn assert_snapshot(
-  input_path : String,
-  expected_path : String,
-  tol : Double,
-) -> Unit raise {
-  let graph = @dot.parse_dot_file(input_path)
-  let layout = @layout_dot.layout_dot(graph)
-  let actual = render_xdot(layout)
-  let expected_graph = @dot.parse_dot_file(expected_path)
-  let actual_graph = @dot.parse_dot(actual)
-  try compare_graph(expected_graph, actual_graph, tol) catch {
-    err => fail("case \{input_path} failed: \{err}")
+fn ensure_dir(path : String) -> Unit raise {
+  if !@fs.path_exists(path) {
+    @fs.create_dir(path)
   }
 }
 
 ///|
+fn snapshot_case_name(input_path : String) -> String {
+  let mut name = input_path
+  for part in input_path.split("/") {
+    name = part.to_string()
+  }
+  if name.has_suffix(".gv") {
+    name.unsafe_substring(start=0, end=name.length() - 3)
+  } else if name.has_suffix(".dot") {
+    name.unsafe_substring(start=0, end=name.length() - 4)
+  } else {
+    name
+  }
+}
+
+///|
+fn snapshot_matches(
+  input_path : String,
+  expected_path : String,
+) -> Bool raise {
+  let graph = @dot.parse_dot_file(input_path)
+  let layout = @layout_dot.layout_dot(graph)
+  let actual = render_xdot(layout)
+  let out_path = "target/render/xdot/\{snapshot_case_name(input_path)}.xdot"
+  @fs.write_string_to_file(out_path, actual)
+  let expected = @fs.read_file_to_string(expected_path)
+  actual == expected
+}
+
+///|
 test "xdot snapshot parity" {
+  ensure_dir("target")
+  ensure_dir("target/render")
+  ensure_dir("target/render/xdot")
+  let mismatches : Array[String] = []
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
     (
@@ -816,9 +840,16 @@ test "xdot snapshot parity" {
     ("refs/graphviz/graphs/directed/shells.gv", "tests/render/xdot/shells.xdot"),
     ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]
-  let tolerance = 0.01
   for pair in cases {
     let (input_path, expected_path) = pair
-    assert_snapshot(input_path, expected_path, tolerance)
+    if !snapshot_matches(input_path, expected_path) {
+      mismatches.push(input_path)
+    }
+  }
+  if mismatches.length() > 0 {
+    let mismatch_summary = mismatches.join(", ")
+    fail(
+      "xdot snapshot mismatches (\{mismatches.length()} cases): \{mismatch_summary}",
+    )
   }
 }

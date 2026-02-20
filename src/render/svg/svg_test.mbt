@@ -63,6 +63,21 @@ test "render_svg draws polygon node shapes" {
 }
 
 ///|
+test "render_svg keeps trapeziumlr node families as polygons" {
+  let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/trapeziumlr.gv")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains(">Trapezium</text>"))
+  assert_true(svg.contains("<polygon"))
+  // trapeziumlr has only polygon-like node shapes; fallback ellipses indicate
+  // shape mapping regression in SVG rendering.
+  assert_true(!svg.contains("<ellipse"))
+}
+
+///|
 test "render_svg skips outlines for plaintext nodes" {
   let graph = @dot.parse_dot("digraph { a [shape=plaintext,label=\"hello\"]; }")
   let layout = @layout_dot.layout_dot(graph)
@@ -188,38 +203,6 @@ fn ensure_dir(path : String) -> Unit raise {
 }
 
 ///|
-fn extract_text_nodes(svg : String) -> Array[String] {
-  let texts : Array[String] = []
-  let mut skip_first = true
-  for part_view in svg.split("<text ") {
-    if skip_first {
-      skip_first = false
-      continue
-    }
-    let part = part_view.to_string()
-    match part.find(">") {
-      Some(end_pos) => {
-        let body = part.unsafe_substring(start=end_pos + 1, end=part.length())
-        match body.find("</text>") {
-          Some(close_pos) => {
-            let text = body.unsafe_substring(start=0, end=close_pos)
-            let normalized = normalize_text(
-              text.trim(chars=" \n\r\t").to_string(),
-            )
-            if normalized != "" {
-              texts.push(normalized)
-            }
-          }
-          None => ()
-        }
-      }
-      None => ()
-    }
-  }
-  texts
-}
-
-///|
 fn normalize_text(text : String) -> String {
   let mut out = text.replace_all(old="&#45;", new="-")
   out = out.replace_all(old="&amp;", new="&")
@@ -227,7 +210,10 @@ fn normalize_text(text : String) -> String {
   out = out.replace_all(old="&gt;", new=">")
   out = out.replace_all(old="&quot;", new="\"")
   out = out.replace_all(old="&apos;", new="'")
-  out
+  out = out.replace_all(old="&#160;", new=" ")
+  out = out.replace_all(old="&#xA0;", new=" ")
+  out = out.replace_all(old="&#xa0;", new=" ")
+  out.trim(chars=" \n\r\t").to_string()
 }
 
 ///|
@@ -654,14 +640,7 @@ fn assert_rect_close(
 }
 
 ///|
-fn sorted_text_nodes(svg : String) -> Array[String] {
-  let texts = extract_text_nodes(svg)
-  texts.sort_by(String::compare)
-  texts
-}
-
-///|
-fn spot_check_case_name(input_path : String) -> String {
+fn snapshot_case_name(input_path : String) -> String {
   let mut name = input_path
   for part in input_path.split("/") {
     name = part.to_string()
@@ -700,11 +679,13 @@ test "render_svg honors size attribute" {
 }
 
 ///|
-test "svg spot-check outputs" {
+test "svg snapshot parity" {
   let out_dir = "target/render/svg"
+  let fixture_dir = "tests/render/svg_snapshot"
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir(out_dir)
+  let mismatches : Array[String] = []
   let cases : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot",
     "tests/layout/dot/compound.dot",
@@ -769,20 +750,26 @@ test "svg spot-check outputs" {
     "refs/graphviz/graphs/directed/unix2.gv",
   ]
   for input_path in cases {
-    let name = spot_check_case_name(input_path)
+    let name = snapshot_case_name(input_path)
+    let fixture_path = "\{fixture_dir}/\{name}.svg"
+    if !@fs.path_exists(fixture_path) {
+      fail("missing svg fixture: \{fixture_path}")
+    }
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
     let out_path = "\{out_dir}/\{name}.svg"
     @fs.write_string_to_file(out_path, svg)
-    assert_true(svg.contains("<svg"))
-    let baseline_path = "tests/render/svg/\{name}.svg"
-    if @fs.path_exists(baseline_path) {
-      let baseline = @fs.read_file_to_string(baseline_path)
-      let actual_nodes = sorted_text_nodes(svg)
-      let expected_nodes = sorted_text_nodes(baseline)
-      assert_eq(actual_nodes, expected_nodes)
+    let fixture = @fs.read_file_to_string(fixture_path)
+    if svg != fixture {
+      mismatches.push(input_path)
     }
+  }
+  if mismatches.length() > 0 {
+    let mismatch_summary = mismatches.join(", ")
+    fail(
+      "svg snapshot mismatches (\{mismatches.length()} cases): \{mismatch_summary}",
+    )
   }
 }
 

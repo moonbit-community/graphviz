@@ -18,6 +18,7 @@
   ],
   "test-import": [
     "moonbit-community/graphviz/cgraph",
+    "moonbitlang/x/fs",
     "moonbitlang/core/buffer",
     "moonbitlang/core/encoding/utf8"
   ]
