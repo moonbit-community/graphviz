@@ -384,6 +384,14 @@ fn label_text(value : String?, fallback : String) -> String {
 }
 
 ///|
+fn node_attr(node : @cgraph.Node, name : String) -> String? {
+  match node.get_attr(name) {
+    Some(value) => Some(value)
+    None => node.graph().get_default_attr(@cgraph.AttrKind::Node, name)
+  }
+}
+
+///|
 fn shape_kind(value : String?) -> String {
   let shape = match value {
     Some(text) => text.to_lower()
@@ -411,7 +419,7 @@ fn shape_kind(value : String?) -> String {
 fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
-  match node.get_attr("margin") {
+  match node_attr(node, "margin") {
     Some(value) =>
       match parse_margin(value) {
         Some((margin_x, margin_y)) => {
@@ -1379,16 +1387,16 @@ fn record_label_ops_from_layout(
 fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let pen = match node.get_attr("color") {
+  let pen = match node_attr(node, "color") {
     Some(value) => value
     None => "black"
   }
-  let style = @attrs.parse_style(node.get_attr("style"))
-  let is_mrecord = match node.get_attr("shape") {
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  let is_mrecord = match node_attr(node, "shape") {
     Some(value) => value.to_lower() == "mrecord"
     None => false
   }
-  push_stroke_style_ops(ops, style, node.get_attr("penwidth"))
+  push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)
   let inner_rect : @geom.Rect = {
@@ -1412,10 +1420,10 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
       @render.DrawOp::Polygon(filled=false, points=outline_rect_points(draw_rect)),
     )
   }
-  let label = label_text(node.get_attr("label"), node.name())
+  let label = label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
-  let font = @attrs.font_name(node.get_attr("fontname"))
-  let size = @attrs.font_size(node.get_attr("fontsize"))
+  let font = @attrs.font_name(node_attr(node, "fontname"))
+  let size = @attrs.font_size(node_attr(node, "fontsize"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let orientation = record_layout_orientation(node.graph())
   let layouts = record_layout_nodes(
@@ -1444,13 +1452,13 @@ fn record_label_ops(
 ) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let label = label_text(node.get_attr("label"), node.name())
+  let label = label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
   let font = @render.Font::{
-    name: @attrs.font_name(node.get_attr("fontname")),
-    size: @attrs.font_size(node.get_attr("fontsize")),
+    name: @attrs.font_name(node_attr(node, "fontname")),
+    size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
   let rect = node_rect(layout)
   let inner_rect : @geom.Rect = {
@@ -1693,16 +1701,16 @@ fn html_table_ops(
 fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let label = label_text(node.get_attr("label"), node.name())
+  let label = label_text(node_attr(node, "label"), node.name())
   let rect = node_rect(layout)
   let font = @render.Font::{
-    name: @attrs.font_name(node.get_attr("fontname")),
-    size: @attrs.font_size(node.get_attr("fontsize")),
+    name: @attrs.font_name(node_attr(node, "fontname")),
+    size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
   let stroke = @attrs.normalize_color(
-    @attrs.color(node.get_attr("color"), default="black"),
+    @attrs.color(node_attr(node, "color"), default="black"),
   )
   match @html_label.parse_html_label(label) {
     Some(@html_label.HtmlLabel::Table(table)) =>
@@ -1744,13 +1752,13 @@ fn spline_midpoint(spline : @geom.Spline) -> @geom.Point {
 fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
   let ops : Array[@render.DrawOp] = []
-  let pen = @attrs.color(node.get_attr("color"), default="black")
+  let pen = @attrs.color(node_attr(node, "color"), default="black")
   let normalized_pen = @attrs.normalize_color(pen)
-  let raw_shape = match node.get_attr("shape") {
+  let raw_shape = match node_attr(node, "shape") {
     Some(value) => value.to_lower()
     None => ""
   }
-  let shape = shape_kind(node.get_attr("shape"))
+  let shape = shape_kind(node_attr(node, "shape"))
   let is_doublecircle = raw_shape == "doublecircle"
   if shape == "record" {
     return record_draw_ops(layout)
@@ -1758,18 +1766,18 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   if shape == "plaintext" {
     return ops
   }
-  let style = @attrs.parse_style(node.get_attr("style"))
-  push_stroke_style_ops(ops, style, node.get_attr("penwidth"))
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = if shape == "point" { true } else { style.filled }
   if filled {
-    let fill = match node.get_attr("fillcolor") {
+    let fill = match node_attr(node, "fillcolor") {
       Some(value) => value
       None =>
         if shape == "point" {
           pen
         } else {
-          @attrs.color(node.get_attr("color"), default="lightgrey")
+          @attrs.color(node_attr(node, "color"), default="lightgrey")
         }
     }
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
@@ -1779,9 +1787,13 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     _ if is_doublecircle =>
       match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
         Some(inner) => {
-          ops.push(@render.DrawOp::Ellipse(filled=false, rect=inner))
+          if filled {
+            ops.push(@render.DrawOp::Ellipse(filled=true, rect=inner))
+          } else {
+            ops.push(@render.DrawOp::Ellipse(filled=false, rect=inner))
+          }
           ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-          ops.push(@render.DrawOp::Ellipse(filled~, rect~))
+          ops.push(@render.DrawOp::Ellipse(filled=false, rect~))
         }
         None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
       }
@@ -1825,7 +1837,7 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 ///|
 fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
-  let shape = shape_kind(node.get_attr("shape"))
+  let shape = shape_kind(node_attr(node, "shape"))
   if shape == "point" {
     return []
   }
@@ -1833,7 +1845,7 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return record_label_ops(layout)
   }
   let ops : Array[@render.DrawOp] = []
-  let text = label_text(node.get_attr("label"), node.name())
+  let text = label_text(node_attr(node, "label"), node.name())
   match @html_label.parse_html_label(text) {
     Some(_) => return html_label_ops(layout)
     None => ()
@@ -1842,10 +1854,10 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return ops
   }
   let font = @render.Font::{
-    name: @attrs.font_name(node.get_attr("fontname")),
-    size: @attrs.font_size(node.get_attr("fontsize")),
+    name: @attrs.font_name(node_attr(node, "fontname")),
+    size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
   let (lines, max_width, total_height) = label_metrics(
     text,
