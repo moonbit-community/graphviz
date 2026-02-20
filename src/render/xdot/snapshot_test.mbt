@@ -747,6 +747,10 @@ test "xdot snapshot parity" {
     ),
     ("refs/graphviz/graphs/directed/mike.gv", "tests/render/xdot/mike.xdot"),
     ("refs/graphviz/graphs/directed/nhg.gv", "tests/render/xdot/nhg.xdot"),
+    (
+      "refs/graphviz/graphs/directed/proc3d.gv",
+      "tests/render/xdot/proc3d.xdot",
+    ),
     ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]
   let tolerance = 0.01
