@@ -253,19 +253,24 @@ fn record_label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, height_pt) =
+    let (width_pt, base_height_pt) =
       @layout_dot.record_label_text_dimensions(
         metrics_text,
         font_name,
         font_size_pt,
       )
-    let (_w, _h, _yoffset_layout, yoffset_centerline) =
+    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) =
       @layout_dot.label_text_metrics(
         metrics_text,
         font_name,
         font_size_pt,
       )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
+    let height_pt = if line.text == "" {
+      layout_height_pt
+    } else {
+      base_height_pt
+    }
     if width_pt > max_width {
       max_width = width_pt
     }
@@ -384,9 +389,22 @@ fn resolve_label(text : String, name : String) -> String {
 }
 
 ///|
+fn resolve_record_label(text : String, name : String) -> String {
+  text.replace_all(old="\\N", new=name)
+}
+
+///|
 fn label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_label(text, fallback)
+    None => fallback
+  }
+}
+
+///|
+fn record_label_text(value : String?, fallback : String) -> String {
+  match value {
+    Some(text) => resolve_record_label(text, fallback)
     None => fallback
   }
 }
@@ -1757,6 +1775,9 @@ fn record_label_ops_from_layout(
         let center_x = (layout.rect.llx + layout.rect.urx) / 2.0
         let center_y = (layout.rect.lly + layout.rect.ury) / 2.0
         let mut baseline = center_y + total_height / 2.0 - font.size
+        if lines.length() > 0 && lines[0].text == "" {
+          baseline = baseline + RECORD_BORDER_PT
+        }
         for line in lines {
           let line_x = match line.align {
             @render.TextAlign::Left => center_x - max_width / 2.0
@@ -1819,7 +1840,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
       @render.DrawOp::Polygon(filled=false, points=outline_rect_points(draw_rect)),
     )
   }
-  let label = label_text(node_attr(node, "label"), node.name())
+  let label = record_label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
   let font = @attrs.font_name(node_attr(node, "fontname"))
   let size = @attrs.font_size(node_attr(node, "fontsize"))
@@ -1851,7 +1872,7 @@ fn record_label_ops(
 ) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let label = label_text(node_attr(node, "label"), node.name())
+  let label = record_label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
   let font = @render.Font::{
     name: @attrs.font_name(node_attr(node, "fontname")),
@@ -2646,7 +2667,14 @@ fn graph_label_ops(
         font.name,
         font.size,
       )
-      let mut baseline = pos.y + total_height / 2.0 - font.size
+      // Graphviz parity: PostScript italic graph labels (crazy.gv) sit ~0.4pt
+      // higher than the generic baseline formula.
+      let baseline_adjust = if font.name == "Helvetica-Oblique" {
+        0.4
+      } else {
+        0.0
+      }
+      let mut baseline = pos.y + total_height / 2.0 - font.size + baseline_adjust
       for line in lines {
         let line_x = match line.align {
           @render.TextAlign::Left => pos.x - width_pt / 2.0

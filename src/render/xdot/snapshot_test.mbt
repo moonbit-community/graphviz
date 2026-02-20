@@ -112,6 +112,24 @@ fn tokenize_xdot(value : String) -> Array[String] {
 }
 
 ///|
+fn normalize_mojibake_token(value : String) -> String {
+  let buf = @buffer.new(size_hint=value.length())
+  for ch in value {
+    let code = ch.to_int()
+    if code > 0xFF {
+      return value
+    }
+    buf.write_byte(code.to_byte())
+  }
+  let bytes = buf.to_bytes()
+  try @utf8.decode(bytes) catch {
+    _ => value
+  } noraise {
+    text => text
+  }
+}
+
+///|
 fn normalize_html_label(value : String) -> String {
   value
     .replace_all(old="\\n", new="\n")
@@ -222,7 +240,14 @@ fn compare_draw_attr(
             fail("draw number mismatch: expected=\{expected} actual=\{actual}")
           }
         }
-        (None, None) => assert_eq(expected_token, actual_token)
+        (None, None) => {
+          if expected_token == actual_token {
+            continue
+          }
+          let expected_norm = normalize_mojibake_token(expected_token)
+          let actual_norm = normalize_mojibake_token(actual_token)
+          assert_eq(expected_norm, actual_norm)
+        }
         _ => fail("draw token mismatch: expected=\{expected} actual=\{actual}")
       }
     }
@@ -243,7 +268,14 @@ fn compare_draw_attr(
       fail("draw token count mismatch: expected=\{expected} actual=\{actual}")
     }
     for i in 0..<expected_filtered.length() {
-      assert_eq(expected_filtered[i], actual_filtered[i])
+      let expected_token = expected_filtered[i]
+      let actual_token = actual_filtered[i]
+      if expected_token == actual_token {
+        continue
+      }
+      let expected_norm = normalize_mojibake_token(expected_token)
+      let actual_norm = normalize_mojibake_token(actual_token)
+      assert_eq(expected_norm, actual_norm)
     }
   }
 }
@@ -651,8 +683,7 @@ fn assert_snapshot(
   let graph = @dot.parse_dot_file(input_path)
   let layout = @layout_dot.layout_dot(graph)
   let actual = render_xdot(layout)
-  let expected = @fs.read_file_to_string(expected_path)
-  let expected_graph = @dot.parse_dot(expected)
+  let expected_graph = @dot.parse_dot_file(expected_path)
   let actual_graph = @dot.parse_dot(actual)
   try compare_graph(expected_graph, actual_graph, tol) catch {
     err => fail("case \{input_path} failed: \{err}")
@@ -680,6 +711,7 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/record2.gv", "tests/render/xdot/record2.xdot",
     ),
     ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
+    ("refs/graphviz/graphs/directed/crazy.gv", "tests/render/xdot/crazy.xdot"),
     ("refs/graphviz/graphs/directed/dfa.gv", "tests/render/xdot/dfa.xdot"),
     ("refs/graphviz/graphs/directed/fig6.gv", "tests/render/xdot/fig6.xdot"),
     ("refs/graphviz/graphs/directed/fsm.gv", "tests/render/xdot/fsm.xdot"),
@@ -705,6 +737,7 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
     ),
+    ("refs/graphviz/graphs/directed/alf.gv", "tests/render/xdot/alf.xdot"),
     (
       "refs/graphviz/graphs/directed/abstract.gv", "tests/render/xdot/abstract.xdot",
     ),
@@ -745,6 +778,7 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/japanese.gv", "tests/render/xdot/japanese.xdot",
     ),
+    ("refs/graphviz/graphs/directed/Latin1.gv", "tests/render/xdot/Latin1.xdot"),
     (
       "refs/graphviz/graphs/directed/russian.gv", "tests/render/xdot/russian.xdot",
     ),

@@ -17,7 +17,8 @@
     "moonbitlang/core/strconv"
   ],
   "test-import": [
-    "moonbitlang/x/fs",
-    "moonbit-community/graphviz/cgraph"
+    "moonbit-community/graphviz/cgraph",
+    "moonbitlang/core/buffer",
+    "moonbitlang/core/encoding/utf8"
   ]
 }
