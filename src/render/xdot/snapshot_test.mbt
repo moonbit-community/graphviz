@@ -750,6 +750,10 @@ test "xdot snapshot parity" {
       "tests/render/xdot/jcctree.xdot",
     ),
     ("refs/graphviz/graphs/directed/jsort.gv", "tests/render/xdot/jsort.xdot"),
+    (
+      "refs/graphviz/graphs/directed/ldbxtried.gv",
+      "tests/render/xdot/ldbxtried.xdot",
+    ),
     ("refs/graphviz/graphs/directed/mike.gv", "tests/render/xdot/mike.xdot"),
     ("refs/graphviz/graphs/directed/nhg.gv", "tests/render/xdot/nhg.xdot"),
     (
