@@ -181,7 +181,6 @@ fn complex_resample_polyline(
 }
 
 ///|
-#skip
 test "dot layout handles complex sample" {
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = layout_dot(graph)
@@ -223,7 +222,6 @@ test "dot layout handles complex sample" {
 }
 
 ///|
-#skip
 test "dot layout matches graphviz node positions for complex sample" {
   let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
@@ -249,7 +247,6 @@ test "dot layout matches graphviz node positions for complex sample" {
 }
 
 ///|
-#skip
 test "dot layout matches graphviz edge control points for complex sample" {
   let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")
@@ -302,7 +299,6 @@ test "dot layout matches graphviz edge control points for complex sample" {
 }
 
 ///|
-#skip
 test "dot layout matches graphviz edge label positions for complex sample" {
   let reference = @dot_parser.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let graph = @dot_parser.parse_dot_file("tests/layout/dot/complex.dot")

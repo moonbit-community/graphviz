@@ -72,7 +72,6 @@ fn assert_edge_label_parity(
 }
 
 ///|
-#skip
 test "render_xdot matches graphviz edge label positions" {
   let cases : Array[(String, String, Array[String])] = [
     (

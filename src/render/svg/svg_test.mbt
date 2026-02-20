@@ -700,7 +700,6 @@ test "render_svg honors size attribute" {
 }
 
 ///|
-#skip
 test "svg spot-check outputs" {
   let out_dir = "target/render/svg"
   ensure_dir("target")
@@ -788,7 +787,6 @@ test "svg spot-check outputs" {
 }
 
 ///|
-#skip
 test "render_svg cluster boxes match graphviz" {
   let graph = @dot.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = @layout_dot.layout_dot(graph)

@@ -643,7 +643,6 @@ fn assert_snapshot(
 }
 
 ///|
-#skip
 test "xdot snapshot parity" {
   let cases : Array[(String, String)] = [
     ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),

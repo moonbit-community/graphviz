@@ -109,7 +109,11 @@ fn compare_attr_value(
     let tol_with_eps = value_tol + 0.000001
     let expected_nums = extract_numbers(expected)
     let actual_nums = extract_numbers(actual)
-    assert_eq(expected_nums.length(), actual_nums.length())
+    if expected_nums.length() != actual_nums.length() {
+      fail(
+        "\{name} count mismatch: expected=\{expected} actual=\{actual}",
+      )
+    }
     for i in 0..<expected_nums.length() {
       let ok = Double::is_close(
         expected_nums[i],
@@ -324,7 +328,6 @@ fn assert_snapshot_nodes_only(
 }
 
 ///|
-#skip
 test "dot layout tier2 snapshots" {
   assert_snapshot(
     "refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot", 0.01,

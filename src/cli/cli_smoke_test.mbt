@@ -11,7 +11,6 @@ fn write_input(path : String, contents : String) -> Unit raise {
 }
 
 ///|
-#skip("integration test: re-enable after base-function parity")
 test "cli smoke dot/xdot/svg" {
   ensure_dir("target")
   ensure_dir("target/cli")
@@ -27,7 +26,6 @@ test "cli smoke dot/xdot/svg" {
 }
 
 ///|
-#skip("integration test: re-enable after base-function parity")
 test "cli smoke writes output file" {
   ensure_dir("target")
   ensure_dir("target/cli")

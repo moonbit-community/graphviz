@@ -313,6 +313,11 @@ fn add_local_default_resets_for_node(
     if value == "" || seen.contains(key) {
       continue
     }
+    if key == "label" && value == "\\N" {
+      // Graphviz parity: built-in node label default (\N) does not trigger
+      // per-node empty reset attrs even when observed as a local default.
+      continue
+    }
     if node.get_attr(key) is Some(_) {
       continue
     }
