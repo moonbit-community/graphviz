@@ -602,6 +602,190 @@ fn self_edge_group_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
+fn clip_polygon_attr_int(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Int,
+) -> Int {
+  match node.get_attr(key) {
+    Some(value) => parse_double(value, fallback.to_double()).round().to_int()
+    None => fallback
+  }
+}
+
+///|
+fn clip_polygon_attr_double(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Double,
+) -> Double {
+  match node.get_attr(key) {
+    Some(value) => parse_double(value, fallback)
+    None => fallback
+  }
+}
+
+///|
+fn clip_polygon_shape_params(
+  node : @cgraph.Node,
+  shape : String,
+) -> (Int, Double, Double, Double)? {
+  match shape {
+    "triangle" => Some((3, 0.0, 0.0, 0.0))
+    "invtriangle" => Some((3, 180.0, 0.0, 0.0))
+    "trapezium" => Some((4, 0.0, -0.4, 0.0))
+    "invtrapezium" => Some((4, 180.0, -0.4, 0.0))
+    "parallelogram" => Some((4, 0.0, 0.0, 0.6))
+    "house" => Some((5, 0.0, -0.64, 0.0))
+    "invhouse" => Some((5, 180.0, -0.64, 0.0))
+    "pentagon" => Some((5, 0.0, 0.0, 0.0))
+    "hexagon" => Some((6, 0.0, 0.0, 0.0))
+    "septagon" => Some((7, 0.0, 0.0, 0.0))
+    "octagon" | "doubleoctagon" | "tripleoctagon" => Some((8, 0.0, 0.0, 0.0))
+    "polygon" => {
+      let mut sides = clip_polygon_attr_int(node, "sides", 4)
+      if sides < 0 {
+        sides = 0
+      }
+      let orientation = clip_polygon_attr_double(node, "orientation", 0.0)
+      let distortion = clip_polygon_attr_double(node, "distortion", 0.0)
+      let skew = clip_polygon_attr_double(node, "skew", 0.0)
+      if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+        sides = 120
+      }
+      if sides >= 3 {
+        Some((sides, orientation, distortion, skew))
+      } else {
+        None
+      }
+    }
+    _ => None
+  }
+}
+
+///|
+fn clip_polygon_vertices_for_shape(
+  size : NodeSize,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  if sides < 3 {
+    return []
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return []
+  }
+  let sector = 2.0 * @math.PI / sides.to_double()
+  let side_len = @math.sin(sector / 2.0)
+  let abs_mix = Double::abs(distortion) + Double::abs(skew)
+  let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
+  let cos_half = @math.cos(sector / 2.0)
+  if Double::abs(cos_half) <= 0.0000001 {
+    return []
+  }
+  let g_distortion = distortion * Double::sqrt(2.0) / cos_half
+  let g_skew = skew / 2.0
+  let mut angle = (sector - @math.PI) / 2.0
+  let mut sinx = @math.sin(angle)
+  let mut cosx = @math.cos(angle)
+  let mut r = point(0.5 * cosx, 0.5 * sinx)
+  let mut xmax = 0.0
+  let mut ymax = 0.0
+  angle = angle + (@math.PI - sector) / 2.0
+  let base : Array[@geom.Point] = []
+  for _ in 0..<sides {
+    angle = angle + sector
+    sinx = @math.sin(angle)
+    cosx = @math.cos(angle)
+    r = point(r.x + side_len * cosx, r.y + side_len * sinx)
+    let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
+    let mut py = r.y
+    let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
+    let radius = Double::sqrt(px * px + py * py)
+    px = radius * @math.cos(alpha)
+    py = radius * @math.sin(alpha)
+    if Double::abs(px) > xmax {
+      xmax = Double::abs(px)
+    }
+    if Double::abs(py) > ymax {
+      ymax = Double::abs(py)
+    }
+    base.push(point(px, py))
+  }
+  if xmax <= 0.0 || ymax <= 0.0 {
+    return []
+  }
+  let scale_x = half_w / xmax
+  let scale_y = half_h / ymax
+  let out : Array[@geom.Point] = []
+  for vertex in base {
+    out.push(point(vertex.x * scale_x, vertex.y * scale_y))
+  }
+  out
+}
+
+///|
+fn clip_to_polygon_shape(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> @geom.Point {
+  let vertices =
+    clip_polygon_vertices_for_shape(
+      size,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+  if vertices.length() < 3 {
+    return clip_to_rect(center, size, target)
+  }
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if Double::abs(dx) <= 0.0000001 && Double::abs(dy) <= 0.0000001 {
+    return center
+  }
+  let mut best_t = 0.0
+  let mut found = false
+  for i in 0..<vertices.length() {
+    let a = vertices[i]
+    let b = vertices[(i + 1) % vertices.length()]
+    let sx = b.x - a.x
+    let sy = b.y - a.y
+    let denom = dx * sy - dy * sx
+    if Double::abs(denom) <= 0.0000001 {
+      continue
+    }
+    let t = (a.x * sy - a.y * sx) / denom
+    let u = (a.x * dy - a.y * dx) / denom
+    if t < 0.0 {
+      continue
+    }
+    if u < -0.000001 || u > 1.000001 {
+      continue
+    }
+    if !found || t < best_t {
+      best_t = t
+      found = true
+    }
+  }
+  if found {
+    point(center.x + dx * best_t, center.y + dy * best_t)
+  } else {
+    clip_to_rect(center, size, target)
+  }
+}
+
+///|
 /// Graphviz parity: route anchor clipping uses node shape bounds.
 fn clip_to_node_shape(
   node : @cgraph.Node,
@@ -617,7 +801,20 @@ fn clip_to_node_shape(
     "" | "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
       clip_to_ellipse(center, size, target)
     "diamond" | "mdiamond" => clip_to_diamond(center, size, target)
-    _ => clip_to_rect(center, size, target)
+    _ =>
+      match clip_polygon_shape_params(node, shape) {
+        Some((sides, orientation, distortion, skew)) =>
+          clip_to_polygon_shape(
+            center,
+            size,
+            target,
+            sides,
+            orientation,
+            distortion,
+            skew,
+          )
+        None => clip_to_rect(center, size, target)
+      }
   }
 }
 
@@ -977,6 +1174,141 @@ fn collect_sameport_anchor_overrides(
     samehead_group_sizes,
     sametail_group_sizes,
   )
+}
+
+///|
+fn flat_parallel_group_key(edge : @cgraph.Edge) -> String {
+  "\{edge.tail().name()}|\{port_key(edge.tail_port())}|\{edge.head().name()}|\{port_key(edge.head_port())}"
+}
+
+///|
+fn collect_flat_adjacent_simple_beziers(
+  edges : Array[@cgraph.Edge],
+  base_cache : Map[Int, EdgeRouteBase],
+  ranks : Map[String, Int],
+  order_index : Map[String, Int],
+) -> Map[Int, Array[@geom.Point]] {
+  let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in edges {
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    if edge_has_label(edge) {
+      continue
+    }
+    if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+      continue
+    }
+    match edge.get_attr("samehead") {
+      Some(value) => if value != "" { continue }
+      None => ()
+    }
+    match edge.get_attr("sametail") {
+      Some(value) => if value != "" { continue }
+      None => ()
+    }
+    let tail_rank = match ranks.get(edge.tail().name()) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(edge.head().name()) {
+      Some(value) => value
+      None => continue
+    }
+    if tail_rank != head_rank {
+      continue
+    }
+    let tail_order = match order_index.get(edge.tail().name()) {
+      Some(value) => value
+      None => continue
+    }
+    let head_order = match order_index.get(edge.head().name()) {
+      Some(value) => value
+      None => continue
+    }
+    let order_delta = tail_order - head_order
+    if !(order_delta == 1 || order_delta == -1) {
+      continue
+    }
+    let base = match base_cache.get(edge.id()) {
+      Some(value) => value
+      None => continue
+    }
+    if base.has_side_anchor || base.has_vnodes ||
+      !base.tail_clip_enabled || !base.head_clip_enabled {
+      continue
+    }
+    let key = flat_parallel_group_key(edge)
+    match groups.get(key) {
+      Some(list) => list.push(edge)
+      None => groups[key] = [edge]
+    }
+  }
+  let out : Map[Int, Array[@geom.Point]] = Map::new()
+  for _key, group_edges in groups {
+    if group_edges.length() <= 1 {
+      continue
+    }
+    let rep = match base_cache.get(group_edges[0].id()) {
+      Some(value) => value
+      None => continue
+    }
+    let tx = rep.tail_anchor.x
+    let ty = rep.tail_anchor.y
+    let hx = rep.head_anchor.x
+    let hy = rep.head_anchor.y
+    let vx = hx - tx
+    let vy = hy - ty
+    let vlen = Double::sqrt(vx * vx + vy * vy)
+    if vlen <= 0.0 {
+      continue
+    }
+    let dir_x = vx / vlen
+    let dir_y = vy / vlen
+    let perp_x = -dir_y
+    let perp_y = dir_x
+    let base_span =
+      if Double::abs(perp_x) >= Double::abs(perp_y) {
+        rep.tail_size.width_pt
+      } else {
+        rep.tail_size.height_pt
+      }
+    let span = base_span
+    if span <= 0.0 {
+      continue
+    }
+    group_edges.sort_by((a, b) => cmp_int(a.id(), b.id()))
+    let count = group_edges.length()
+    let base_one_third = point(
+      tx + (hx - tx) / 3.0,
+      ty + (hy - ty) / 3.0,
+    )
+    let base_two_third = point(
+      tx + (hx - tx) * 2.0 / 3.0,
+      ty + (hy - ty) * 2.0 / 3.0,
+    )
+    let denom =
+      if count > 1 { Double::from_int(count - 1) } else { 1.0 }
+    for i in 0..<count {
+      let frac = Double::from_int(i) / denom
+      let offset = -span / 2.0 + span * frac
+      let shift = point(perp_x * offset, perp_y * offset)
+      let edge = group_edges[i]
+      let edge_base = match base_cache.get(edge.id()) {
+        Some(value) => value
+        None => continue
+      }
+      let c1 = point_add(base_one_third, shift)
+      let c2 = point_add(base_two_third, shift)
+      out[edge.id()] = [
+        edge_base.tail_anchor,
+        c1,
+        c2,
+        edge_base.head_anchor,
+      ]
+    }
+  }
+  out
 }
 
 ///|
@@ -3209,6 +3541,65 @@ fn build_self_edge_layout(
 }
 
 ///|
+/// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
+/// makeSimpleFlat spindle path (dotsplines.c).
+/// Do not change behavior without updating fixtures/tests.
+fn build_flat_adjacent_simple_edge_layout(
+  base : EdgeRouteBase,
+  bezier : Array[@geom.Point],
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_info : EdgeVnodeInfo,
+  vnode_positions : Map[String, @geom.Point],
+  nodesep_pt : Double,
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+) -> DotLayoutEdge {
+  let spline =
+    edge_spline_for_bezier_points(
+      base.edge,
+      bezier,
+      base.tail_clip_center,
+      base.head_clip_center,
+      base.tail_clip_size,
+      base.head_clip_size,
+      base.route_include_tail,
+      base.route_include_head,
+      tail_clip_enabled=base.tail_clip_enabled,
+      head_clip_enabled=base.head_clip_enabled,
+      arrow_len_override=base.arrow_len_override,
+      tail_cluster_bbox=base.tail_cluster_bbox,
+      head_cluster_bbox=base.head_cluster_bbox,
+      parallel_offset=base.parallel_offset,
+      clip_swapped=base.swap_ends,
+      arrow_swapped=base.swap_ends,
+    )
+  let spline_result : EdgeSplineResult = {
+    spline,
+    label_pad_boost: 0.0,
+    using_pathplan: false,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier: bezier,
+    pathplan_segments: [],
+    apply_dotted_adjustment: false,
+  }
+  let final_spline = finalize_edge_spline(base, spline_result)
+  build_edge_layout(
+    base,
+    final_spline,
+    spline_result,
+    ranks,
+    rank_y,
+    vnode_info,
+    vnode_positions,
+    nodesep_pt,
+    has_clusters,
+    flat_label_edge_vnodes,
+  )
+}
+
+///|
 /// Graphviz parity: self-edge groups share generated loop routes in the same pass.
 /// Do not change behavior without updating fixtures/tests.
 fn ensure_self_edge_routes(
@@ -3753,6 +4144,17 @@ fn route_edges(
       samehead_group_sizes,
       sametail_group_sizes,
     )
+  let flat_adjacent_simple_beziers =
+    if splines == SplinesMode::Spline {
+      collect_flat_adjacent_simple_beziers(
+        edges,
+        base_cache,
+        ranks,
+        routing_context.order_index,
+      )
+    } else {
+      Map::new()
+    }
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   let recovered_slack_keys : Map[String, Bool] = Map::new()
@@ -3777,6 +4179,25 @@ fn route_edges(
     let base = match base_cache.get(edge_id) {
       Some(value) => value
       None => continue
+    }
+    match flat_adjacent_simple_beziers.get(edge_id) {
+      Some(bezier) => {
+        let edge_layout =
+          build_flat_adjacent_simple_edge_layout(
+            base,
+            bezier,
+            ranks,
+            rank_y,
+            vnode_info,
+            vnode_positions,
+            nodesep_pt,
+            has_clusters,
+            flat_label_edge_vnodes,
+          )
+        edges_out_by_id[edge_id] = edge_layout
+        continue
+      }
+      None => ()
     }
     if maybe_build_self_edge_layout(
       graph,

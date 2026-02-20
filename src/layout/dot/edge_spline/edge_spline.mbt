@@ -1016,6 +1016,8 @@ priv enum ClipShape {
   Ellipse
   Diamond
   Polygon(Int, Double, Double, Double)
+  DoubleOctagon
+  TripleOctagon
   Trapezium
   InvTrapezium
   Parallelogram
@@ -1151,6 +1153,35 @@ fn polygon_clip_params(node : @cgraph.Node) -> (Int, Double, Double, Double) {
 }
 
 ///|
+fn builtin_polygon_clip_params(
+  node : @cgraph.Node,
+  shape : String,
+) -> (Int, Double, Double, Double)? {
+  let (sides, default_orientation, default_distortion, default_skew) = match shape {
+    "triangle" => (3, 0.0, 0.0, 0.0)
+    "invtriangle" => (3, 180.0, 0.0, 0.0)
+    "pentagon" => (5, 0.0, 0.0, 0.0)
+    "hexagon" => (6, 0.0, 0.0, 0.0)
+    "septagon" => (7, 0.0, 0.0, 0.0)
+    "octagon" => (8, 0.0, 0.0, 0.0)
+    _ => return None
+  }
+  let orientation = match node.get_attr("orientation") {
+    Some(value) => parse_double(value, default_orientation)
+    None => default_orientation
+  }
+  let distortion = match node.get_attr("distortion") {
+    Some(value) => parse_double(value, default_distortion)
+    None => default_distortion
+  }
+  let skew = match node.get_attr("skew") {
+    Some(value) => parse_double(value, default_skew)
+    None => default_skew
+  }
+  Some((sides, orientation, distortion, skew))
+}
+
+///|
 ///|
 ///|
 ///|
@@ -1187,12 +1218,25 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
         ClipShape::Polygon(sides, orientation, distortion, skew)
       }
     }
+    "triangle"
+    | "invtriangle"
+    | "pentagon"
+    | "hexagon"
+    | "septagon"
+    | "octagon" =>
+      match builtin_polygon_clip_params(node, shape) {
+        Some((sides, orientation, distortion, skew)) =>
+          ClipShape::Polygon(sides, orientation, distortion, skew)
+        None => ClipShape::None
+      }
+    "doubleoctagon" => ClipShape::DoubleOctagon
+    "tripleoctagon" => ClipShape::TripleOctagon
     "trapezium" => ClipShape::Trapezium
     "invtrapezium" => ClipShape::InvTrapezium
     "parallelogram" => ClipShape::Parallelogram
     "house" => ClipShape::House
     "invhouse" => ClipShape::InvHouse
-    "none" => ClipShape::None
+    "none" => ClipShape::Rect
     "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
       ClipShape::Ellipse
     _ => ClipShape::None
@@ -1258,15 +1302,17 @@ fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
 ///|
 fn polygon_shape_params(
   shape : ClipShape,
-) -> (Int, Double, Double, Double)? {
+) -> (Int, Double, Double, Double, Int)? {
   match shape {
     ClipShape::Polygon(sides, orientation, distortion, skew) =>
-      Some((sides, orientation, distortion, skew))
-    ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0))
-    ClipShape::InvTrapezium => Some((4, 180.0, -0.4, 0.0))
-    ClipShape::Parallelogram => Some((4, 0.0, 0.0, 0.6))
-    ClipShape::House => Some((5, 0.0, -0.64, 0.0))
-    ClipShape::InvHouse => Some((5, 180.0, -0.64, 0.0))
+      Some((sides, orientation, distortion, skew, 1))
+    ClipShape::DoubleOctagon => Some((8, 0.0, 0.0, 0.0, 2))
+    ClipShape::TripleOctagon => Some((8, 0.0, 0.0, 0.0, 3))
+    ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0, 1))
+    ClipShape::InvTrapezium => Some((4, 180.0, -0.4, 0.0, 1))
+    ClipShape::Parallelogram => Some((4, 0.0, 0.0, 0.6, 1))
+    ClipShape::House => Some((5, 0.0, -0.64, 0.0, 1))
+    ClipShape::InvHouse => Some((5, 180.0, -0.64, 0.0, 1))
     _ => None
   }
 }
@@ -1400,6 +1446,92 @@ fn polygon_outline_vertices(
 }
 
 ///|
+fn polygon_outline_vertices_for_shape(
+  size : NodeSize,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+  peripheries : Int,
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  let base_outline_pad =
+    if peripheries > 1 {
+      POLY_GAP_PT * Double::from_int(peripheries - 1)
+    } else {
+      0.0
+    }
+  if size.width_pt <= 0.0 || size.height_pt <= 0.0 {
+    return []
+  }
+  if base_outline_pad <= 0.0 {
+    let base = polygon_vertices_for_shape(size, sides, orientation_deg, distortion, skew)
+    return polygon_outline_vertices(base, outline_pad_pt)
+  }
+  let target_w = size.width_pt
+  let target_h = size.height_pt
+  let mut inner_w = target_w
+  let mut inner_h = target_h
+  let shrink = base_outline_pad * 2.0
+  if inner_w > shrink {
+    inner_w = inner_w - shrink
+  } else {
+    inner_w = target_w * 0.5
+  }
+  if inner_h > shrink {
+    inner_h = inner_h - shrink
+  } else {
+    inner_h = target_h * 0.5
+  }
+  for _ in 0..<8 {
+    if inner_w <= 0.0 || inner_h <= 0.0 {
+      break
+    }
+    let inner_size = @dot_shared.node_size_from_points(inner_w, inner_h)
+    let base =
+      polygon_vertices_for_shape(
+        inner_size,
+        sides,
+        orientation_deg,
+        distortion,
+        skew,
+      )
+    if base.length() < 3 {
+      break
+    }
+    let expanded = polygon_outline_vertices(base, base_outline_pad)
+    let mut max_x = 0.0
+    let mut max_y = 0.0
+    for vertex in expanded {
+      if Double::abs(vertex.x) > max_x {
+        max_x = Double::abs(vertex.x)
+      }
+      if Double::abs(vertex.y) > max_y {
+        max_y = Double::abs(vertex.y)
+      }
+    }
+    if max_x <= 0.0 || max_y <= 0.0 {
+      break
+    }
+    inner_w = inner_w * (target_w / (max_x * 2.0))
+    inner_h = inner_h * (target_h / (max_y * 2.0))
+  }
+  let final_size = @dot_shared.node_size_from_points(inner_w, inner_h)
+  let final_base =
+    polygon_vertices_for_shape(
+      final_size,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+  if final_base.length() < 3 {
+    return final_base
+  }
+  polygon_outline_vertices(final_base, base_outline_pad + outline_pad_pt)
+}
+
+///|
 fn point_in_convex_polygon(
   point : @geom.Point,
   vertices : Array[@geom.Point],
@@ -1437,7 +1569,7 @@ fn point_inside_polygon(
   outline_pad_pt : Double,
 ) -> Bool {
   match polygon_shape_params(shape) {
-    Some((sides, orientation_deg, distortion, skew)) => {
+    Some((sides, orientation_deg, distortion, skew, peripheries)) => {
       let rel = point(pt.x - center.x, pt.y - center.y)
       let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
       let polygon_size =
@@ -1447,14 +1579,15 @@ fn point_inside_polygon(
         } else {
           size
         }
-      let base_vertices = polygon_vertices_for_shape(
+      let vertices = polygon_outline_vertices_for_shape(
         polygon_size,
         sides,
         orientation_deg,
         distortion,
         skew,
+        peripheries,
+        outline_pad_pt,
       )
-      let vertices = polygon_outline_vertices(base_vertices, outline_pad_pt)
       point_in_convex_polygon(probe, vertices)
     }
     None => false
@@ -1479,6 +1612,8 @@ fn point_inside_shape(
     | ClipShape::Parallelogram
     | ClipShape::House
     | ClipShape::InvHouse
+    | ClipShape::DoubleOctagon
+    | ClipShape::TripleOctagon
     | ClipShape::Polygon(_, _, _, _) =>
       point_inside_polygon(
         point,
@@ -1836,6 +1971,8 @@ fn clip_spline_to_nodes(
       | ClipShape::Parallelogram
       | ClipShape::House
       | ClipShape::InvHouse
+      | ClipShape::DoubleOctagon
+      | ClipShape::TripleOctagon
       | ClipShape::Polygon(_, _, _, _) =>
         // Graphviz parity guard: poly_inside clips against bisector-expanded
         // polygon outline + penwidth/2 (shapes.c poly_init outp path).
@@ -1849,6 +1986,8 @@ fn clip_spline_to_nodes(
       | ClipShape::Parallelogram
       | ClipShape::House
       | ClipShape::InvHouse
+      | ClipShape::DoubleOctagon
+      | ClipShape::TripleOctagon
       | ClipShape::Polygon(_, _, _, _) =>
         if head_penwidth > 0.0 { head_penwidth / 2.0 } else { 0.0 }
       _ => 0.0
@@ -1869,6 +2008,8 @@ fn clip_spline_to_nodes(
     | ClipShape::Parallelogram
     | ClipShape::House
     | ClipShape::InvHouse
+    | ClipShape::DoubleOctagon
+    | ClipShape::TripleOctagon
     | ClipShape::Polygon(_, _, _, _)
     | ClipShape::None => tail_shape_size
   }
@@ -1886,6 +2027,8 @@ fn clip_spline_to_nodes(
     | ClipShape::Parallelogram
     | ClipShape::House
     | ClipShape::InvHouse
+    | ClipShape::DoubleOctagon
+    | ClipShape::TripleOctagon
     | ClipShape::Polygon(_, _, _, _)
     | ClipShape::None => head_shape_size
   }

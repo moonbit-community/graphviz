@@ -1641,6 +1641,21 @@ fn polygon_shape_attrs(
 }
 
 ///|
+/// Graphviz parity: built-in polygon shape defaults mirror shapes.c polygon_t.
+fn builtin_polygon_shape_attrs(
+  shape : String,
+) -> (Int, Int, Double, Double, Double, Bool)? {
+  match shape {
+    "triangle" => Some((3, 1, 0.0, 0.0, 0.0, false))
+    "invtriangle" => Some((3, 1, 180.0, 0.0, 0.0, false))
+    "octagon" => Some((8, 1, 0.0, 0.0, 0.0, false))
+    "doubleoctagon" => Some((8, 2, 0.0, 0.0, 0.0, false))
+    "tripleoctagon" => Some((8, 3, 0.0, 0.0, 0.0, false))
+    _ => None
+  }
+}
+
+///|
 fn polygon_is_box_like(
   sides : Int,
   orientation : Double,
@@ -1950,11 +1965,13 @@ fn node_size(
     } else {
       (0.0, 0.0)
     }
-  let polygon_shape =
-    if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
+  let polygon_shape = match builtin_polygon_shape_attrs(shape) {
+    Some(attrs) => Some(attrs)
+    None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
+  }
   let mut scaled_label_width_pt = label_width_pt
   let mut scaled_label_height_pt = label_height_pt
-  if shape == "polygon" && has_label {
+  if polygon_shape is Some(_) && has_label {
     let (sides, _peripheries, orientation, distortion, skew, _regular) =
       match polygon_shape {
         Some(values) => values
@@ -2040,59 +2057,57 @@ fn node_size(
     width_in = size_in
     height_in = size_in
   }
-  if shape == "polygon" {
-    let (sides, peripheries, orientation, distortion, skew, regular_polygon) =
-      match polygon_shape {
-        Some(values) => values
-        None => (4, 1, 0.0, 0.0, 0.0, false)
+  match polygon_shape {
+    Some((sides, peripheries, orientation, distortion, skew, regular_polygon)) => {
+      if regular_polygon {
+        let size_in = if width_in > height_in { width_in } else { height_in }
+        width_in = size_in
+        height_in = size_in
       }
-    if regular_polygon {
-      let size_in = if width_in > height_in { width_in } else { height_in }
-      width_in = size_in
-      height_in = size_in
-    }
-    let mut polygon_width_pt = width_in * 72.0
-    let mut polygon_height_pt = height_in * 72.0
-    if sides < 3 {
-      if peripheries > 1 {
-        let extra =
-          PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1)
-        polygon_width_pt = polygon_width_pt + extra
-        polygon_height_pt = polygon_height_pt + extra
-      }
-    } else {
-      let (distorted_width_pt, distorted_height_pt, base_vertices) =
-        polygon_vertices_for_size(
-          polygon_width_pt,
-          polygon_height_pt,
-          sides,
-          orientation,
-          distortion,
-          skew,
-        )
-      polygon_width_pt = distorted_width_pt
-      polygon_height_pt = distorted_height_pt
-      if peripheries > 1 && base_vertices.length() > 0 {
-        let outline_pad_pt =
-          PERIPHERY_GAP_PT * Double::from_int(peripheries - 1)
-        let expanded_vertices =
-          polygon_outline_vertices_for_size(base_vertices, outline_pad_pt)
-        let mut max_x = polygon_width_pt / 2.0
-        let mut max_y = polygon_height_pt / 2.0
-        for vertex in expanded_vertices {
-          if Double::abs(vertex.x) > max_x {
-            max_x = Double::abs(vertex.x)
-          }
-          if Double::abs(vertex.y) > max_y {
-            max_y = Double::abs(vertex.y)
-          }
+      let mut polygon_width_pt = width_in * 72.0
+      let mut polygon_height_pt = height_in * 72.0
+      if sides < 3 {
+        if peripheries > 1 {
+          let extra =
+            PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1)
+          polygon_width_pt = polygon_width_pt + extra
+          polygon_height_pt = polygon_height_pt + extra
         }
-        polygon_width_pt = max_x * 2.0
-        polygon_height_pt = max_y * 2.0
+      } else {
+        let (distorted_width_pt, distorted_height_pt, base_vertices) =
+          polygon_vertices_for_size(
+            polygon_width_pt,
+            polygon_height_pt,
+            sides,
+            orientation,
+            distortion,
+            skew,
+          )
+        polygon_width_pt = distorted_width_pt
+        polygon_height_pt = distorted_height_pt
+        if peripheries > 1 && base_vertices.length() > 0 {
+          let outline_pad_pt =
+            PERIPHERY_GAP_PT * Double::from_int(peripheries - 1)
+          let expanded_vertices =
+            polygon_outline_vertices_for_size(base_vertices, outline_pad_pt)
+          let mut max_x = polygon_width_pt / 2.0
+          let mut max_y = polygon_height_pt / 2.0
+          for vertex in expanded_vertices {
+            if Double::abs(vertex.x) > max_x {
+              max_x = Double::abs(vertex.x)
+            }
+            if Double::abs(vertex.y) > max_y {
+              max_y = Double::abs(vertex.y)
+            }
+          }
+          polygon_width_pt = max_x * 2.0
+          polygon_height_pt = max_y * 2.0
+        }
       }
+      width_in = polygon_width_pt / 72.0
+      height_in = polygon_height_pt / 72.0
     }
-    width_in = polygon_width_pt / 72.0
-    height_in = polygon_height_pt / 72.0
+    None => ()
   }
   if shape == "parallelogram" {
     // Graphviz parity: skewed quad bbox in shapes.c poly_init widens by a
