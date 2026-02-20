@@ -35,6 +35,8 @@ pairs=(
   "refs/graphviz/graphs/directed/tree.gv tests/render/xdot/tree.xdot"
   "refs/graphviz/graphs/directed/try.gv tests/render/xdot/try.xdot"
   "refs/graphviz/graphs/directed/grammar.gv tests/render/xdot/grammar.xdot"
+  "refs/graphviz/graphs/directed/japanese.gv tests/render/xdot/japanese.xdot"
+  "refs/graphviz/graphs/directed/russian.gv tests/render/xdot/russian.xdot"
 )
 
 for pair in "${pairs[@]}"; do

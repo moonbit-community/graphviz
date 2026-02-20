@@ -684,6 +684,12 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
     ),
+    (
+      "refs/graphviz/graphs/directed/japanese.gv", "tests/render/xdot/japanese.xdot",
+    ),
+    (
+      "refs/graphviz/graphs/directed/russian.gv", "tests/render/xdot/russian.xdot",
+    ),
   ]
   let tolerance = 0.01
   for pair in cases {
