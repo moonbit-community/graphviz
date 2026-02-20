@@ -321,7 +321,7 @@ fn parser_should_attach_existing_node_to_graph(
 ) -> Bool {
   let target_cluster = match parser_nearest_cluster_ancestor(graph) {
     Some(cluster) => cluster
-    None => return false
+    None => return true
   }
   let root = root_graph_for_graph(target_cluster)
   let innermost = parser_innermost_cluster_names_for_node(root, node)

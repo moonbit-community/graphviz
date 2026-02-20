@@ -22,7 +22,7 @@ const ROUNDED_CORNER_RADIUS_PT : Double = 6.0
 const ROUNDED_CORNER_KAPPA : Double = 0.5522847498
 
 ///|
-const GRAPH_LABEL_WIDTH_SCALE : Double = 0.9965
+const GRAPH_LABEL_WIDTH_SCALE : Double = 1.0
 
 ///|
 const MCIRCLE_X : Double = 0.6614
@@ -556,6 +556,21 @@ fn xdot_style_tokens(raw : String) -> Array[String] {
     tokens.push(current.to_string())
   }
   tokens
+}
+
+///|
+fn style_has_token(style : @attrs.StyleFlags, name : String) -> Bool {
+  for token in xdot_style_tokens(style.raw) {
+    if token == name {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn style_is_invisible(style : @attrs.StyleFlags) -> Bool {
+  style_has_token(style, "invis")
 }
 
 ///|
@@ -2166,6 +2181,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let pen = node_color(node, "color", "black")
   let normalized_pen = @attrs.normalize_color(pen)
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  if style_is_invisible(style) {
+    return ops
+  }
   let raw_shape = match node_attr(node, "shape") {
     Some(value) => value.to_lower()
     None => ""
@@ -2178,7 +2197,6 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   if shape == "plaintext" {
     return ops
   }
-  let style = @attrs.parse_style(node_attr(node, "style"))
   push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = if shape == "point" { true } else { style.filled }
@@ -2282,6 +2300,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 ///|
 fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  if style_is_invisible(style) {
+    return []
+  }
   let shape = shape_kind(node_attr(node, "shape"))
   if shape == "point" {
     return []
@@ -2366,6 +2388,9 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
   let style = @attrs.parse_style(edge.get_attr("style"))
+  if style_is_invisible(style) {
+    return ops
+  }
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let pen_colors = edge_pen_colors(edge)
   for pen_color in pen_colors {
@@ -2381,6 +2406,10 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
 fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
+  let style = @attrs.parse_style(edge.get_attr("style"))
+  if style_is_invisible(style) {
+    return ops
+  }
   let text = match edge.get_attr("label") {
     Some(value) => value
     None => ""
@@ -2440,6 +2469,10 @@ fn edge_side_label_ops(
 ) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
+  let style = @attrs.parse_style(edge.get_attr("style"))
+  if style_is_invisible(style) {
+    return ops
+  }
   let text = match edge.get_attr(label_attr) {
     Some(value) => value
     None => ""
@@ -2906,7 +2939,9 @@ pub fn attach_xdot_attrs(
   let kind = graph.kind()
   for node_layout in layout.nodes {
     let draw_ops = node_draw_ops(node_layout)
-    node_layout.node.set_attr("_draw_", encode_xdot_ops(draw_ops))
+    if draw_ops.length() > 0 {
+      node_layout.node.set_attr("_draw_", encode_xdot_ops(draw_ops))
+    }
     let label_ops = node_label_ops(node_layout)
     if label_ops.length() > 0 {
       node_layout.node.set_attr("_ldraw_", encode_xdot_ops(label_ops))
@@ -2914,7 +2949,9 @@ pub fn attach_xdot_attrs(
   }
   for edge_layout in layout.edges {
     let draw_ops = edge_draw_ops(edge_layout)
-    edge_layout.edge.set_attr("_draw_", encode_xdot_ops(draw_ops))
+    if draw_ops.length() > 0 {
+      edge_layout.edge.set_attr("_draw_", encode_xdot_ops(draw_ops))
+    }
     let label_ops = edge_label_ops(edge_layout)
     if label_ops.length() > 0 {
       edge_layout.edge.set_attr("_ldraw_", encode_xdot_ops(label_ops))

@@ -187,27 +187,30 @@ fn graph_attr_rank(name : String) -> Int {
     "bb" => 2
     "bgcolor" => 3
     "color" => 4
-    "fontcolor" => 5
-    "fontname" => 6
-    "fontsize" => 7
-    "label" => 8
-    "labelloc" => 9
-    "lheight" => 10
-    "lp" => 11
-    "lwidth" => 12
-    "nodesep" => 13
-    "rank" => 14
-    "rankdir" => 15
-    "size" => 16
-    "xdotversion" => 17
+    "colorscheme" => 5
+    "fontcolor" => 6
+    "fontname" => 7
+    "fontsize" => 8
+    "label" => 9
+    "labelloc" => 10
+    "lheight" => 11
+    "lp" => 12
+    "lwidth" => 13
+    "center" => 14
+    "ordering" => 15
+    "orientation" => 16
+    "page" => 17
     "margin" => 18
-    "page" => 19
-    "ratio" => 20
-    "splines" => 21
-    "overlap" => 22
-    "ordering" => 23
-    "charset" => 24
-    "ranksep" => 25
+    "nodesep" => 19
+    "rank" => 20
+    "rankdir" => 21
+    "ranksep" => 22
+    "ratio" => 23
+    "size" => 24
+    "splines" => 25
+    "overlap" => 26
+    "charset" => 27
+    "xdotversion" => 120
     _ => 200
   }
 }
@@ -218,27 +221,29 @@ fn node_attr_rank(name : String) -> Int {
     "_draw_" => 0
     "_ldraw_" => 1
     "color" => 2
-    "fillcolor" => 3
-    "fontcolor" => 4
-    "fontname" => 5
-    "fontsize" => 6
-    "distortion" => 7
-    "height" => 8
-    "kind" => 9
-    "label" => 10
-    "orientation" => 11
-    "peripheries" => 12
-    "pname" => 13
-    "pos" => 14
-    "rects" => 15
-    "regular" => 16
-    "shape" => 17
-    "sides" => 18
-    "skew" => 19
-    "style" => 20
-    "subkind" => 21
-    "width" => 22
-    "id" => 23
+    "colorscheme" => 3
+    "fillcolor" => 4
+    "fontcolor" => 5
+    "fontname" => 6
+    "fontsize" => 7
+    "distortion" => 8
+    "fname" => 9
+    "height" => 10
+    "kind" => 11
+    "label" => 12
+    "orientation" => 13
+    "peripheries" => 14
+    "pname" => 15
+    "pos" => 16
+    "rects" => 17
+    "regular" => 18
+    "shape" => 19
+    "sides" => 20
+    "skew" => 21
+    "style" => 22
+    "subkind" => 23
+    "width" => 24
+    "id" => 25
     _ => 200
   }
 }
@@ -492,13 +497,16 @@ fn write_node_stmt(
   node : @cgraph.Node,
   sb : StringBuilder,
   indent : Int,
+  emit_attrs : Bool,
 ) -> Unit {
   write_tabs(sb, indent)
   sb.write_string(write_id(node.name()))
-  let attrs = filter_nondefault_node_attrs(graph, node)
-  if attrs.length() > 0 {
-    sb.write_char('\t')
-    write_attr_block(sb, attrs, AttrGroup::Node, indent, false)
+  if emit_attrs {
+    let attrs = filter_nondefault_node_attrs(graph, node)
+    if attrs.length() > 0 {
+      sb.write_char('\t')
+      write_attr_block(sb, attrs, AttrGroup::Node, indent, false)
+    }
   }
   sb.write_string(";\n")
 }
@@ -507,7 +515,15 @@ fn write_node_stmt(
 fn edge_stmt_attrs(
   graph : @cgraph.Graph,
   edge : @cgraph.Edge,
+  emit_attrs : Bool,
 ) -> Array[(String, String)] {
+  if !emit_attrs {
+    match edge.name() {
+      Some(name) => if name != "" { return [("key", name)] }
+      None => ()
+    }
+    return []
+  }
   let attrs = filter_nondefault_edge_attrs(graph, edge)
   match edge.name() {
     Some(name) =>
@@ -532,6 +548,7 @@ fn write_edge_stmt(
   edge : @cgraph.Edge,
   sb : StringBuilder,
   indent : Int,
+  emit_attrs : Bool,
 ) -> Unit {
   write_tabs(sb, indent)
   sb.write_string(write_id(edge.tail().name()))
@@ -542,7 +559,7 @@ fn write_edge_stmt(
   })
   sb.write_string(write_id(edge.head().name()))
   sb.write_string(write_port(edge.head_port()))
-  let attrs = edge_stmt_attrs(graph, edge)
+  let attrs = edge_stmt_attrs(graph, edge, emit_attrs)
   if attrs.length() > 0 {
     sb.write_char('\t')
     write_attr_block(sb, attrs, AttrGroup::Edge, indent, false)
@@ -571,6 +588,8 @@ priv struct WriteContext {
   mut preorder_next : Int
   node_last_written : Map[String, Int]
   edge_last_written : Map[Int, Int]
+  node_attrs_written : Map[String, Bool]
+  edge_attrs_written : Map[Int, Bool]
 }
 
 ///|
@@ -600,6 +619,16 @@ fn should_write_edge(
 }
 
 ///|
+fn attrs_already_written_for_node(ctx : WriteContext, node_name : String) -> Bool {
+  ctx.node_attrs_written.get(node_name) is Some(_)
+}
+
+///|
+fn attrs_already_written_for_edge(ctx : WriteContext, edge_id : Int) -> Bool {
+  ctx.edge_attrs_written.get(edge_id) is Some(_)
+}
+
+///|
 fn write_body(
   graph : @cgraph.Graph,
   sb : StringBuilder,
@@ -612,6 +641,16 @@ fn write_body(
   let graph_nodes = graph.nodes()
   if !is_layout_output {
     graph_nodes.sort_by_key(node => node.name())
+  } else {
+    let root_nodes = root_graph(graph).nodes()
+    let root_order : Map[String, Int] = Map::new()
+    for i, node in root_nodes {
+      root_order[node.name()] = i
+    }
+    graph_nodes.sort_by_key(node => match root_order.get(node.name()) {
+      Some(value) => value
+      None => 100000
+    })
   }
   let node_order : Map[String, Int] = Map::new()
   for i, node in graph_nodes {
@@ -619,8 +658,15 @@ fn write_body(
   }
   for node in graph_nodes {
     if should_write_node(graph, node, graph_edges, preorder, ctx) {
-      write_node_stmt(graph, node, sb, indent)
+      write_node_stmt(
+        graph,
+        node,
+        sb,
+        indent,
+        !attrs_already_written_for_node(ctx, node.name()),
+      )
       ctx.node_last_written[node.name()] = preorder
+      ctx.node_attrs_written[node.name()] = true
     }
     let mut prev_head = node.name()
     let out_edges : Array[@cgraph.Edge] = []
@@ -644,13 +690,27 @@ fn write_body(
       let head_name = head.name()
       if prev_head != head_name &&
         should_write_node(graph, head, graph_edges, preorder, ctx) {
-        write_node_stmt(graph, head, sb, indent)
+        write_node_stmt(
+          graph,
+          head,
+          sb,
+          indent,
+          !attrs_already_written_for_node(ctx, head_name),
+        )
         ctx.node_last_written[head_name] = preorder
+        ctx.node_attrs_written[head_name] = true
         prev_head = head_name
       }
       if should_write_edge(edge, preorder, ctx) {
-        write_edge_stmt(graph, edge, sb, indent)
+        write_edge_stmt(
+          graph,
+          edge,
+          sb,
+          indent,
+          !attrs_already_written_for_edge(ctx, edge.id()),
+        )
         ctx.edge_last_written[edge.id()] = preorder
+        ctx.edge_attrs_written[edge.id()] = true
       }
     }
   }
@@ -783,6 +843,8 @@ pub fn write_dot(graph : @cgraph.Graph) -> String {
     preorder_next: 1,
     node_last_written: Map::new(),
     edge_last_written: Map::new(),
+    node_attrs_written: Map::new(),
+    edge_attrs_written: Map::new(),
   }
   write_graph_recursive(graph, sb, 0, true, is_layout_output, ctx)
   sb.to_string()
