@@ -745,6 +745,7 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/jcctree.gv",
       "tests/render/xdot/jcctree.xdot",
     ),
+    ("refs/graphviz/graphs/directed/mike.gv", "tests/render/xdot/mike.xdot"),
     ("refs/graphviz/graphs/directed/nhg.gv", "tests/render/xdot/nhg.xdot"),
     ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]
