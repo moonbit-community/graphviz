@@ -1718,33 +1718,7 @@ fn record_separator_ops(
   rect : @geom.Rect,
   color : String,
 ) -> Unit {
-  if layouts.length() > 1 {
-    match orientation {
-      RecordOrientation::Vertical => {
-        let x1 = rect.llx
-        let x2 = rect.urx
-        for i in 1..<layouts.length() {
-          let y = layouts[i].rect.ury
-          ops.push(@render.DrawOp::PenColor(color~))
-          ops.push(
-            @render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]),
-          )
-        }
-      }
-      RecordOrientation::Horizontal => {
-        let y1 = rect.lly
-        let y2 = rect.ury
-        for i in 1..<layouts.length() {
-          let x = layouts[i].rect.llx
-          ops.push(@render.DrawOp::PenColor(color~))
-          ops.push(
-            @render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]),
-          )
-        }
-      }
-    }
-  }
-  for layout in layouts {
+  for i, layout in layouts {
     match layout.node {
       RecordNode::Group(_) =>
         record_separator_ops(
@@ -1755,6 +1729,29 @@ fn record_separator_ops(
           color,
         )
       _ => ()
+    }
+    if i + 1 >= layouts.length() {
+      continue
+    }
+    match orientation {
+      RecordOrientation::Vertical => {
+        let x1 = rect.llx
+        let x2 = rect.urx
+        let y = layouts[i + 1].rect.ury
+        ops.push(@render.DrawOp::PenColor(color~))
+        ops.push(
+          @render.DrawOp::Polyline(points=[{ x: x1, y }, { x: x2, y }]),
+        )
+      }
+      RecordOrientation::Horizontal => {
+        let y1 = rect.lly
+        let y2 = rect.ury
+        let x = layouts[i + 1].rect.llx
+        ops.push(@render.DrawOp::PenColor(color~))
+        ops.push(
+          @render.DrawOp::Polyline(points=[{ x, y: y1 }, { x, y: y2 }]),
+        )
+      }
     }
   }
 }
@@ -2543,9 +2540,27 @@ fn append_uint(sb : StringBuilder, value : UInt) -> Unit {
 }
 
 ///|
+fn utf8_byte_length(value : String) -> Int {
+  let mut length = 0
+  for ch in value {
+    let code = ch.to_int()
+    if code <= 0x7F {
+      length = length + 1
+    } else if code <= 0x7FF {
+      length = length + 2
+    } else if code <= 0xFFFF {
+      length = length + 3
+    } else {
+      length = length + 4
+    }
+  }
+  length
+}
+
+///|
 fn append_string(sb : StringBuilder, value : String) -> Unit {
   sb.write_char(' ')
-  sb.write_string(value.length().to_string())
+  sb.write_string(utf8_byte_length(value).to_string())
   sb.write_string(" -")
   sb.write_string(value)
 }
