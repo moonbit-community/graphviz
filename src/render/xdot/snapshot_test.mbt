@@ -696,6 +696,10 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/train11.gv", "tests/render/xdot/train11.xdot",
     ),
+    (
+      "refs/graphviz/graphs/directed/trapeziumlr.gv",
+      "tests/render/xdot/trapeziumlr.xdot",
+    ),
     ("refs/graphviz/graphs/directed/tree.gv", "tests/render/xdot/tree.xdot"),
     ("refs/graphviz/graphs/directed/try.gv", "tests/render/xdot/try.xdot"),
     (
@@ -705,10 +709,19 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/abstract.gv", "tests/render/xdot/abstract.xdot",
     ),
     (
+      "refs/graphviz/graphs/directed/biological.gv",
+      "tests/render/xdot/biological.xdot",
+    ),
+    (
       "refs/graphviz/graphs/directed/switch.gv", "tests/render/xdot/switch.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/pmpipe.gv", "tests/render/xdot/pmpipe.xdot",
+    ),
+    ("refs/graphviz/graphs/directed/pgram.gv", "tests/render/xdot/pgram.xdot"),
+    (
+      "refs/graphviz/graphs/directed/polypoly.gv",
+      "tests/render/xdot/polypoly.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/pm2way.gv", "tests/render/xdot/pm2way.xdot",
@@ -765,6 +778,7 @@ test "xdot snapshot parity" {
       "tests/render/xdot/psfonttest.xdot",
     ),
     ("refs/graphviz/graphs/directed/rowe.gv", "tests/render/xdot/rowe.xdot"),
+    ("refs/graphviz/graphs/directed/sdh.gv", "tests/render/xdot/sdh.xdot"),
     ("refs/graphviz/graphs/directed/shells.gv", "tests/render/xdot/shells.xdot"),
     ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]

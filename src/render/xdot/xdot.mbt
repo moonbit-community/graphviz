@@ -13,6 +13,9 @@ const RECORD_BORDER_PT : Double = 0.5
 const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
 
 ///|
+const POLY_GAP_PT : Double = 4.0
+
+///|
 const ROUNDED_CORNER_RADIUS_PT : Double = 6.0
 
 ///|
@@ -34,6 +37,11 @@ fn parse_double(value : String, fallback : Double) -> Double {
   } noraise {
     parsed => parsed
   }
+}
+
+///|
+fn parse_int(value : String, fallback : Int) -> Int {
+  parse_double(value, fallback.to_double()).round().to_int()
 }
 
 ///|
@@ -392,6 +400,65 @@ fn node_attr(node : @cgraph.Node, name : String) -> String? {
 }
 
 ///|
+fn parse_palette_index(value : String) -> Int? {
+  let trimmed = value.trim().to_string()
+  if trimmed == "" {
+    return None
+  }
+  for ch in trimmed {
+    if !ch.is_ascii_digit() {
+      return None
+    }
+  }
+  let index = parse_int(trimmed, 0)
+  if index <= 0 { None } else { Some(index) }
+}
+
+///|
+fn colorscheme_index_color(scheme : String, index : Int) -> String? {
+  match scheme.to_lower() {
+    // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
+    "rdbu5" =>
+      match index {
+        1 => Some("#ca0020")
+        2 => Some("#f4a582")
+        3 => Some("#f7f7f7")
+        4 => Some("#92c5de")
+        5 => Some("#0571b0")
+        _ => None
+      }
+    _ => None
+  }
+}
+
+///|
+fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
+  let trimmed = value.trim().to_string()
+  match (colorscheme, parse_palette_index(trimmed)) {
+    (Some(scheme), Some(index)) =>
+      match colorscheme_index_color(scheme, index) {
+        Some(mapped) => mapped
+        None => trimmed
+      }
+    _ => trimmed
+  }
+}
+
+///|
+fn node_color(node : @cgraph.Node, name : String, default : String) -> String {
+  let raw = @attrs.color(node_attr(node, name), default=default)
+  resolve_colorscheme_color(raw, node_attr(node, "colorscheme"))
+}
+
+///|
+fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
+  match node_attr(node, "fillcolor") {
+    Some(value) => resolve_colorscheme_color(value, node_attr(node, "colorscheme"))
+    None => node_color(node, "color", fallback)
+  }
+}
+
+///|
 fn shape_kind(value : String?) -> String {
   let shape = match value {
     Some(text) => text.to_lower()
@@ -403,8 +470,22 @@ fn shape_kind(value : String?) -> String {
     "diamond" => "diamond"
     "triangle" => "triangle"
     "invtriangle" | "invtri" => "invtriangle"
+    "pentagon" => "pentagon"
     "hexagon" => "hexagon"
+    "septagon" => "septagon"
     "octagon" => "octagon"
+    "doubleoctagon" => "doubleoctagon"
+    "tripleoctagon" => "tripleoctagon"
+    "polygon" => "polygon"
+    "trapezium" => "trapezium"
+    "invtrapezium" => "invtrapezium"
+    "parallelogram" => "parallelogram"
+    "house" => "house"
+    "invhouse" => "invhouse"
+    "rpromoter" => "rpromoter"
+    "lpromoter" => "lpromoter"
+    "rarrow" => "rarrow"
+    "larrow" => "larrow"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -703,6 +784,16 @@ fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
 }
 
 ///|
+fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
+  {
+    llx: rect.llx - gap,
+    lly: rect.lly - gap,
+    urx: rect.urx + gap,
+    ury: rect.ury + gap,
+  }
+}
+
+///|
 fn rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.urx, y: rect.ury },
@@ -793,19 +884,6 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
   ]
 }
 
-///|
-fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: rect.ury },
-    { x: rect.urx, y: cy },
-    { x: cx, y: rect.lly },
-    { x: rect.llx, y: cy },
-  ]
-}
-
-///|
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
 }
@@ -869,57 +947,381 @@ fn mcircle_segments(rect : @geom.Rect) -> Array[(@geom.Point, @geom.Point)] {
   ]
 }
 
-///|
-fn triangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  [
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
-    { x: cx, y: rect.ury },
-  ]
+fn node_attr_double(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Double,
+) -> Double {
+  match node.get_attr(key) {
+    Some(value) => parse_double(value, fallback)
+    None => fallback
+  }
 }
 
 ///|
-fn invtriangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  [
-    { x: rect.llx, y: rect.ury },
-    { x: rect.urx, y: rect.ury },
-    { x: cx, y: rect.lly },
-  ]
+fn node_attr_int(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Int,
+) -> Int {
+  match node.get_attr(key) {
+    Some(value) => parse_int(value, fallback)
+    None => fallback
+  }
 }
 
 ///|
-fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  let cy = (rect.lly + rect.ury) / 2.0
+fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
+  let raw = node_attr_int(node, "peripheries", fallback)
+  if raw < 1 { 1 } else { raw }
+}
+
+///|
+fn polygon_params_with_defaults(
+  node : @cgraph.Node,
+  sides : Int,
+  default_orientation : Double,
+  default_distortion : Double,
+  default_skew : Double,
+  default_peripheries : Int,
+) -> (Int, Double, Double, Double, Int) {
+  let orientation = node_attr_double(node, "orientation", default_orientation)
+  let distortion = node_attr_double(node, "distortion", default_distortion)
+  let skew = node_attr_double(node, "skew", default_skew)
+  let peripheries = node_peripheries(node, default_peripheries)
+  (sides, orientation, distortion, skew, peripheries)
+}
+
+///|
+// Graphviz parity: rebuild polygon vertices from shapes.c (poly_init)
+// using sides/orientation/distortion/skew and fit into node bbox.
+fn polygon_vertices_for_rect(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  if sides < 3 {
+    return []
+  }
   let half_w = (rect.urx - rect.llx) / 2.0
   let half_h = (rect.ury - rect.lly) / 2.0
-  let radius = if half_w < half_h { half_w } else { half_h }
-  let step = 2.0 * @math.PI / sides.to_double()
-  let points : Array[@geom.Point] = []
-  for i in 0..<sides {
-    let angle = step * i.to_double()
-    points.push({
-      x: cx + radius * @math.cos(angle),
-      y: cy + radius * @math.sin(angle),
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return []
+  }
+  let sector = 2.0 * @math.PI / sides.to_double()
+  let side_len = @math.sin(sector / 2.0)
+  let abs_mix = Double::abs(distortion) + Double::abs(skew)
+  let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
+  let cos_half = @math.cos(sector / 2.0)
+  if Double::abs(cos_half) <= 0.0000001 {
+    return []
+  }
+  let g_distortion = distortion * Double::sqrt(2.0) / cos_half
+  let g_skew = skew / 2.0
+  let mut angle = (sector - @math.PI) / 2.0
+  let mut sinx = @math.sin(angle)
+  let mut cosx = @math.cos(angle)
+  let mut r : @geom.Point = { x: 0.5 * cosx, y: 0.5 * sinx }
+  let mut xmax = 0.0
+  let mut ymax = 0.0
+  angle = angle + (@math.PI - sector) / 2.0
+  let base : Array[@geom.Point] = []
+  for _ in 0..<sides {
+    angle = angle + sector
+    sinx = @math.sin(angle)
+    cosx = @math.cos(angle)
+    r = { x: r.x + side_len * cosx, y: r.y + side_len * sinx }
+    let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
+    let mut py = r.y
+    let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
+    let radius = Double::sqrt(px * px + py * py)
+    px = radius * @math.cos(alpha)
+    py = radius * @math.sin(alpha)
+    if Double::abs(px) > xmax {
+      xmax = Double::abs(px)
+    }
+    if Double::abs(py) > ymax {
+      ymax = Double::abs(py)
+    }
+    base.push({ x: px, y: py })
+  }
+  if xmax <= 0.0 || ymax <= 0.0 {
+    return []
+  }
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let scale_x = half_w / xmax
+  let scale_y = half_h / ymax
+  let out : Array[@geom.Point] = []
+  for vertex in base {
+    out.push({
+      x: cx + vertex.x * scale_x,
+      y: cy + vertex.y * scale_y,
     })
   }
-  points
+  out
 }
 
 ///|
-fn shape_polygon_points(
+fn point_nearly_equal(a : @geom.Point, b : @geom.Point) -> Bool {
+  Double::abs(a.x - b.x) <= 0.0000001 && Double::abs(a.y - b.y) <= 0.0000001
+}
+
+///|
+fn polygon_outline_vertices(
+  base : Array[@geom.Point],
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  if outline_pad_pt <= 0.0 || base.length() < 3 {
+    return base
+  }
+  let sides = base.length()
+  let mut prev = base[sides - 1]
+  for j in 1..=sides {
+    let candidate = base[(sides - j) % sides]
+    if !point_nearly_equal(candidate, base[0]) {
+      prev = candidate
+      break
+    }
+  }
+  let mut beta = @math.atan2(base[0].y - prev.y, base[0].x - prev.x)
+  let mut prev_vertex = prev
+  let mut offset_x = 0.0
+  let mut offset_y = 0.0
+  let out : Array[@geom.Point] = []
+  for i in 0..<sides {
+    let q = base[i]
+    if !point_nearly_equal(q, prev_vertex) {
+      let mut next = base[(i + 1) % sides]
+      for j in 1..<sides {
+        let candidate = base[(i + j) % sides]
+        if !point_nearly_equal(candidate, q) {
+          next = candidate
+          break
+        }
+      }
+      let alpha = beta
+      beta = @math.atan2(next.y - q.y, next.x - q.x)
+      let gamma = (alpha + @math.PI - beta) / 2.0
+      let sin_gamma = @math.sin(gamma)
+      if Double::abs(sin_gamma) > 0.0000001 {
+        let temp = POLY_GAP_PT / sin_gamma
+        offset_y = @math.sin(alpha - gamma) * temp
+        offset_x = @math.cos(alpha - gamma) * temp
+      }
+    }
+    prev_vertex = q
+    out.push({
+      x: q.x + offset_x * outline_pad_pt / POLY_GAP_PT,
+      y: q.y + offset_y * outline_pad_pt / POLY_GAP_PT,
+    })
+  }
+  out
+}
+
+///|
+fn polygon_paths_from_base(
+  base : Array[@geom.Point],
+  peripheries : Int,
+) -> Array[Array[@geom.Point]] {
+  if base.length() < 3 {
+    return []
+  }
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let paths : Array[Array[@geom.Point]] = [base]
+  for i in 1..<count {
+    let pad = POLY_GAP_PT * i.to_double()
+    paths.push(polygon_outline_vertices(base, pad))
+  }
+  paths
+}
+
+///|
+fn polygon_paths_for_shape(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+  peripheries : Int,
+) -> Array[Array[@geom.Point]] {
+  let base =
+    polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
+  polygon_paths_from_base(base, peripheries)
+}
+
+///|
+fn arrow_tip_width(rect : @geom.Rect) -> Double {
+  let width = rect.urx - rect.llx
+  if width <= 0.0 {
+    return 0.0
+  }
+  let max_tip = width / 2.0
+  if max_tip < 18.0 { max_tip } else { 18.0 }
+}
+
+///|
+fn rarrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_right = rect.urx - tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_right, y: y_top },
+    { x: rect.llx, y: y_top },
+    { x: rect.llx, y: y_mid },
+    { x: body_right, y: y_mid },
+    { x: body_right, y: rect.lly },
+    { x: rect.urx, y: cy },
+    { x: body_right, y: rect.ury },
+  ]
+}
+
+///|
+fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_left = rect.llx + tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_left, y: y_top },
+    { x: rect.urx, y: y_top },
+    { x: rect.urx, y: y_mid },
+    { x: body_left, y: y_mid },
+    { x: body_left, y: rect.lly },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.ury },
+  ]
+}
+
+///|
+fn rpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_right = rect.urx - tip
+  let notch = rect.llx + tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_right, y: y_top },
+    { x: rect.llx, y: y_top },
+    { x: rect.llx, y: rect.lly },
+    { x: notch, y: rect.lly },
+    { x: notch, y: y_mid },
+    { x: body_right, y: y_mid },
+    { x: body_right, y: rect.lly },
+    { x: rect.urx, y: cy },
+    { x: body_right, y: rect.ury },
+  ]
+}
+
+///|
+fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_left = rect.llx + tip
+  let notch = rect.urx - tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_left, y: y_top },
+    { x: rect.urx, y: y_top },
+    { x: rect.urx, y: rect.lly },
+    { x: notch, y: rect.lly },
+    { x: notch, y: y_mid },
+    { x: body_left, y: y_mid },
+    { x: body_left, y: rect.lly },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.ury },
+  ]
+}
+
+///|
+fn shape_polygon_paths(
+  node : @cgraph.Node,
   kind : String,
   rect : @geom.Rect,
-) -> Array[@geom.Point]? {
-  match kind {
-    "diamond" => Some(diamond_points(rect))
-    "triangle" => Some(triangle_points(rect))
-    "invtriangle" => Some(invtriangle_points(rect))
-    "hexagon" => Some(regular_polygon_points(rect, 6))
-    "octagon" => Some(regular_polygon_points(rect, 8))
+) -> Array[Array[@geom.Point]]? {
+  let params : (Int, Double, Double, Double, Int)? = match kind {
+    "diamond" => Some((4, 45.0, 0.0, 0.0, 1))
+    "triangle" => Some(polygon_params_with_defaults(node, 3, 0.0, 0.0, 0.0, 1))
+    "invtriangle" =>
+      Some(polygon_params_with_defaults(node, 3, 180.0, 0.0, 0.0, 1))
+    "pentagon" => Some(polygon_params_with_defaults(node, 5, 0.0, 0.0, 0.0, 1))
+    "hexagon" => Some(polygon_params_with_defaults(node, 6, 0.0, 0.0, 0.0, 1))
+    "septagon" => Some(polygon_params_with_defaults(node, 7, 0.0, 0.0, 0.0, 1))
+    "octagon" => Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 1))
+    "doubleoctagon" =>
+      Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 2))
+    "tripleoctagon" =>
+      Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 3))
+    "trapezium" =>
+      Some(polygon_params_with_defaults(node, 4, 0.0, -0.4, 0.0, 1))
+    "invtrapezium" =>
+      Some(polygon_params_with_defaults(node, 4, 180.0, -0.4, 0.0, 1))
+    "parallelogram" =>
+      Some(polygon_params_with_defaults(node, 4, 0.0, 0.0, 0.6, 1))
+    "house" => Some(polygon_params_with_defaults(node, 5, 0.0, -0.64, 0.0, 1))
+    "invhouse" =>
+      Some(polygon_params_with_defaults(node, 5, 180.0, -0.64, 0.0, 1))
+    "polygon" => {
+      // Graphviz parity: polygon sides=0/1/2 remain ellipse unless skew/distort
+      // forces high-sided polygon fallback.
+      let mut sides = node_attr_int(node, "sides", 4)
+      if sides < 0 {
+        sides = 0
+      }
+      let orientation = node_attr_double(node, "orientation", 0.0)
+      let distortion = node_attr_double(node, "distortion", 0.0)
+      let skew = node_attr_double(node, "skew", 0.0)
+      if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+        sides = 120
+      }
+      let peripheries = node_peripheries(node, 1)
+      if sides < 3 {
+        None
+      } else {
+        Some((sides, orientation, distortion, skew, peripheries))
+      }
+    }
+    "rpromoter" =>
+      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "lpromoter" =>
+      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
+  }
+  match params {
+    Some((sides, orientation, distortion, skew, peripheries)) =>
+      match kind {
+        "rpromoter" =>
+          Some(polygon_paths_from_base(rpromoter_points(rect), peripheries))
+        "lpromoter" =>
+          Some(polygon_paths_from_base(lpromoter_points(rect), peripheries))
+        "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
+        "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
+        _ =>
+          Some(
+            polygon_paths_for_shape(
+              rect,
+              sides,
+              orientation,
+              distortion,
+              skew,
+              peripheries,
+            ),
+          )
+      }
+    None => None
   }
 }
 
@@ -1387,10 +1789,7 @@ fn record_label_ops_from_layout(
 fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
-  let pen = match node_attr(node, "color") {
-    Some(value) => value
-    None => "black"
-  }
+  let pen = node_color(node, "color", "black")
   let style = @attrs.parse_style(node_attr(node, "style"))
   let is_mrecord = match node_attr(node, "shape") {
     Some(value) => value.to_lower() == "mrecord"
@@ -1458,7 +1857,7 @@ fn record_label_ops(
     name: @attrs.font_name(node_attr(node, "fontname")),
     size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
+  let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
   let rect = node_rect(layout)
   let inner_rect : @geom.Rect = {
@@ -1707,10 +2106,10 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     name: @attrs.font_name(node_attr(node, "fontname")),
     size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
+  let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
   let stroke = @attrs.normalize_color(
-    @attrs.color(node_attr(node, "color"), default="black"),
+    node_color(node, "color", "black"),
   )
   match @html_label.parse_html_label(label) {
     Some(@html_label.HtmlLabel::Table(table)) =>
@@ -1752,7 +2151,7 @@ fn spline_midpoint(spline : @geom.Spline) -> @geom.Point {
 fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let node = layout.node
   let ops : Array[@render.DrawOp] = []
-  let pen = @attrs.color(node_attr(node, "color"), default="black")
+  let pen = node_color(node, "color", "black")
   let normalized_pen = @attrs.normalize_color(pen)
   let raw_shape = match node_attr(node, "shape") {
     Some(value) => value.to_lower()
@@ -1771,14 +2170,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = if shape == "point" { true } else { style.filled }
   if filled {
-    let fill = match node_attr(node, "fillcolor") {
-      Some(value) => value
-      None =>
-        if shape == "point" {
-          pen
-        } else {
-          @attrs.color(node_attr(node, "color"), default="lightgrey")
-        }
+    let fill = if shape == "point" {
+      pen
+    } else {
+      node_fill_color(node, "lightgrey")
     }
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
   }
@@ -1823,13 +2218,50 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
         ops.push(@render.DrawOp::Polyline(points=[start, end]))
       }
     }
-    "box" =>
+    "box" => {
+      let peripheries = node_peripheries(node, 1)
       ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(rect)))
-    _ =>
-      match shape_polygon_points(shape, rect) {
-        Some(points) => ops.push(@render.DrawOp::Polygon(filled~, points~))
-        None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
+      for i in 1..<peripheries {
+        let expanded = expand_rect(rect, POLY_GAP_PT * i.to_double())
+        ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+        ops.push(
+          @render.DrawOp::Polygon(
+            filled=false,
+            points=rect_points(expanded),
+          ),
+        )
       }
+    }
+    _ => {
+      match shape_polygon_paths(node, shape, rect) {
+        Some(paths) if paths.length() > 0 => {
+          ops.push(
+            @render.DrawOp::Polygon(
+              filled~,
+              points=paths[0],
+            ),
+          )
+          for i in 1..<paths.length() {
+            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+            ops.push(
+              @render.DrawOp::Polygon(
+                filled=false,
+                points=paths[i],
+              ),
+            )
+          }
+        }
+        _ => {
+          let peripheries = node_peripheries(node, 1)
+          ops.push(@render.DrawOp::Ellipse(filled~, rect~))
+          for i in 1..<peripheries {
+            let expanded = expand_rect(rect, POLY_GAP_PT * i.to_double())
+            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+            ops.push(@render.DrawOp::Ellipse(filled=false, rect=expanded))
+          }
+        }
+      }
+    }
   }
   ops
 }
@@ -1857,7 +2289,7 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     name: @attrs.font_name(node_attr(node, "fontname")),
     size: @attrs.font_size(node_attr(node, "fontsize")),
   }
-  let color = @attrs.color(node_attr(node, "fontcolor"), default="black")
+  let color = node_color(node, "fontcolor", "black")
   let pen_color = @attrs.normalize_color(color)
   let (lines, max_width, total_height) = label_metrics(
     text,
@@ -2105,6 +2537,17 @@ fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
 }
 
 ///|
+fn graph_colorscheme(graph : @cgraph.Graph) -> String? {
+  inherited_graph_attr(graph, "colorscheme")
+}
+
+///|
+fn graph_color(graph : @cgraph.Graph, name : String, default : String) -> String {
+  let raw = @attrs.color(graph.get_attr(name), default=default)
+  resolve_colorscheme_color(raw, graph_colorscheme(graph))
+}
+
+///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
@@ -2130,7 +2573,7 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
   let graph = layout.graph
   let bbox = layout.bbox
   if graph.is_root() {
-    let fill = @attrs.color(graph.get_attr("bgcolor"), default="white")
+    let fill = graph_color(graph, "bgcolor", "white")
     ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
     ops.push(
@@ -2143,12 +2586,15 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
     let stroke_style = @attrs.parse_style(inherited_graph_attr(graph, "style"))
     let stroke_penwidth = inherited_graph_attr(graph, "penwidth")
     push_stroke_style_ops(ops, stroke_style, stroke_penwidth)
-    let color = @attrs.color(graph.get_attr("color"), default="black")
+    let color = graph_color(graph, "color", "black")
     ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(color)))
     let fill = if style.filled {
-      Some(@attrs.color(graph.get_attr("fillcolor"), default=color))
+      Some(graph_color(graph, "fillcolor", color))
     } else {
-      graph.get_attr("bgcolor")
+      match graph.get_attr("bgcolor") {
+        Some(value) => Some(resolve_colorscheme_color(value, graph_colorscheme(graph)))
+        None => None
+      }
     }
     match fill {
       Some(value) => {
@@ -2189,7 +2635,7 @@ fn graph_label_ops(
         name: @attrs.font_name(graph.get_attr("fontname")),
         size: @attrs.font_size(graph.get_attr("fontsize")),
       }
-      let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
+      let color = graph_color(graph, "fontcolor", "black")
       let pen_color = @attrs.normalize_color(color)
       let pos = match layout.label_pos {
         Some(value) => value
