@@ -37,6 +37,7 @@ pairs=(
   "refs/graphviz/graphs/directed/grammar.gv tests/render/xdot/grammar.xdot"
   "refs/graphviz/graphs/directed/abstract.gv tests/render/xdot/abstract.xdot"
   "refs/graphviz/graphs/directed/switch.gv tests/render/xdot/switch.xdot"
+  "refs/graphviz/graphs/directed/unix.gv tests/render/xdot/unix.xdot"
   "refs/graphviz/graphs/directed/world.gv tests/render/xdot/world.xdot"
   "refs/graphviz/graphs/directed/japanese.gv tests/render/xdot/japanese.xdot"
   "refs/graphviz/graphs/directed/russian.gv tests/render/xdot/russian.xdot"
