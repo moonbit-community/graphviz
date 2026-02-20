@@ -37,6 +37,7 @@ pairs=(
   "refs/graphviz/graphs/directed/grammar.gv tests/render/xdot/grammar.xdot"
   "refs/graphviz/graphs/directed/japanese.gv tests/render/xdot/japanese.xdot"
   "refs/graphviz/graphs/directed/russian.gv tests/render/xdot/russian.xdot"
+  "refs/graphviz/graphs/directed/unix2.gv tests/render/xdot/unix2.xdot"
 )
 
 for pair in "${pairs[@]}"; do

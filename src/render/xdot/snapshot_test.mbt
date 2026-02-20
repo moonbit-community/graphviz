@@ -129,6 +129,14 @@ fn normalize_color_tokens(tokens : Array[String]) -> Array[String] {
       let merged = "-#\{tokens[index + 1]}"
       normalized.push(merged)
       index = index + 2
+    } else if token.has_prefix("-") && token.length() > 1 {
+      let color = token.unsafe_substring(start=1, end=token.length())
+      if color.has_prefix("[") || color.has_prefix("(") {
+        normalized.push(token)
+      } else {
+        normalized.push("-\{@attrs.normalize_color(color)}")
+      }
+      index = index + 1
     } else {
       normalized.push(token)
       index = index + 1
@@ -690,6 +698,7 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/russian.gv", "tests/render/xdot/russian.xdot",
     ),
+    ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]
   let tolerance = 0.01
   for pair in cases {
