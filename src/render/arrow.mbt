@@ -814,6 +814,7 @@ fn arrow_type_curve(
   penwidth : Double,
   flag : Int,
 ) -> (@geom.Point, Array[DrawOp]) {
+  let line_start = p_in
   let mut p = p_in
   let mut arrowwidth = 0.5
   if penwidth > 4.0 {
@@ -860,7 +861,9 @@ fn arrow_type_curve(
     af = bezier_split_half(af, true)
   }
   let ops : Array[DrawOp] = []
-  ops.push(DrawOp::Polyline(points=[p, q]))
+  // Graphviz emits the line start from the original tip before optional
+  // penwidth offset in arrow_type_curve.
+  ops.push(DrawOp::Polyline(points=[line_start, q]))
   ops.push(DrawOp::Bezier(filled=false, points=af))
   (q, ops)
 }
