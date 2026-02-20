@@ -1630,15 +1630,9 @@ fn record_nodes(label : String) -> Array[RecordNode] {
     chars.push(ch)
   }
   let parser = RecordParser::{ chars, index: 0 }
-  let nodes = parse_record_nodes(parser)
-  if nodes.length() == 1 {
-    match nodes[0] {
-      RecordNode::Group(children) => children
-      _ => nodes
-    }
-  } else {
-    nodes
-  }
+  // Graphviz parity: preserve outer braces as an explicit group.
+  // Flattening a single top-level group flips field orientation.
+  parse_record_nodes(parser)
 }
 
 ///|
