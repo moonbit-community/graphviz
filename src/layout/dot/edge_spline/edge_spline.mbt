@@ -1209,7 +1209,8 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "plaintext"
     | "plain" =>
       ClipShape::Rect
-    "diamond" | "mdiamond" => ClipShape::Diamond
+    "diamond" => ClipShape::Polygon(4, 45.0, 0.0, 0.0)
+    "mdiamond" => ClipShape::Diamond
     "polygon" => {
       let (sides, orientation, distortion, skew) = polygon_clip_params(node)
       if sides < 3 {

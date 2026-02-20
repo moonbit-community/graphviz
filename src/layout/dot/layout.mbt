@@ -88,7 +88,13 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     node.set_attr("pos", format_point(node_layout.pos))
     node.set_attr("width", format_dim(node_layout.width_in))
     node.set_attr("height", format_dim(node_layout.height_in))
-    if is_record_shape(node) && !@html_label.is_html_label_text(label_text(node)) {
+    let is_mrecord = match node.get_attr("shape") {
+      Some(value) => value.to_lower() == "mrecord"
+      None => false
+    }
+    if is_record_shape(node) &&
+      !is_mrecord &&
+      !@html_label.is_html_label_text(label_text(node)) {
       let size = node_size_from_points(
         node_layout.width_in * 72.0,
         node_layout.height_in * 72.0,

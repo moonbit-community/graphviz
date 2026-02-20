@@ -282,10 +282,11 @@ fn edge_attr_rank(name : String) -> Int {
     "samearrowtail" => 27
     "samehead" => 28
     "sametail" => 29
-    "tail_lp" => 30
-    "taillabel" => 31
-    "weight" => 32
-    "wt" => 33
+    "style" => 30
+    "tail_lp" => 31
+    "taillabel" => 32
+    "weight" => 33
+    "wt" => 34
     _ => 200
   }
 }

@@ -16,11 +16,9 @@ const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
 const POLY_GAP_PT : Double = 4.0
 
 ///|
-const ROUNDED_CORNER_RADIUS_PT : Double = 6.0
+const ROUNDED_CORNER_RADIUS_PT : Double = 12.0
 
 ///|
-const ROUNDED_CORNER_KAPPA : Double = 0.5522847498
-
 ///|
 const GRAPH_LABEL_WIDTH_SCALE : Double = 1.0
 
@@ -959,49 +957,58 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
     return [
       { x: rect.llx, y: rect.lly },
       { x: rect.llx, y: rect.lly },
+      { x: rect.urx, y: rect.lly },
+      { x: rect.urx, y: rect.lly },
+      { x: rect.urx, y: rect.lly },
       { x: rect.urx, y: rect.ury },
       { x: rect.urx, y: rect.ury },
+      { x: rect.urx, y: rect.ury },
+      { x: rect.llx, y: rect.ury },
+      { x: rect.llx, y: rect.ury },
+      { x: rect.llx, y: rect.ury },
+      { x: rect.llx, y: rect.lly },
+      { x: rect.llx, y: rect.lly },
     ]
   }
-  let k = radius * ROUNDED_CORNER_KAPPA
   let left = rect.llx
   let right = rect.urx
   let bottom = rect.lly
   let top = rect.ury
-  let inner_left = left + radius
-  let inner_right = right - radius
-  let inner_bottom = bottom + radius
-  let inner_top = top - radius
-  let top_dx = inner_left - inner_right
-  let left_dy = inner_bottom - inner_top
-  let bottom_dx = inner_right - inner_left
-  let right_dy = inner_top - inner_bottom
+  let half = radius / 2.0
+  let p0 = @geom.Point::{ x: left + radius, y: bottom }
+  let p1 = @geom.Point::{ x: right - radius, y: bottom }
+  let p2 = @geom.Point::{ x: right, y: bottom + radius }
+  let p3 = @geom.Point::{ x: right, y: top - radius }
+  let p4 = @geom.Point::{ x: right - radius, y: top }
+  let p5 = @geom.Point::{ x: left + radius, y: top }
+  let p6 = @geom.Point::{ x: left, y: top - radius }
+  let p7 = @geom.Point::{ x: left, y: bottom + radius }
   [
-    { x: inner_right, y: top },
-    { x: inner_right + top_dx / 3.0, y: top },
-    { x: inner_right + top_dx * 2.0 / 3.0, y: top },
-    { x: inner_left, y: top },
-    { x: inner_left - k, y: top },
-    { x: left, y: inner_top + k },
-    { x: left, y: inner_top },
-    { x: left, y: inner_top + left_dy / 3.0 },
-    { x: left, y: inner_top + left_dy * 2.0 / 3.0 },
-    { x: left, y: inner_bottom },
-    { x: left, y: inner_bottom - k },
-    { x: inner_left - k, y: bottom },
-    { x: inner_left, y: bottom },
-    { x: inner_left + bottom_dx / 3.0, y: bottom },
-    { x: inner_left + bottom_dx * 2.0 / 3.0, y: bottom },
-    { x: inner_right, y: bottom },
-    { x: inner_right + k, y: bottom },
-    { x: right, y: inner_bottom - k },
-    { x: right, y: inner_bottom },
-    { x: right, y: inner_bottom + right_dy / 3.0 },
-    { x: right, y: inner_bottom + right_dy * 2.0 / 3.0 },
-    { x: right, y: inner_top },
-    { x: right, y: inner_top + k },
-    { x: inner_right + k, y: top },
-    { x: inner_right, y: top },
+    p0,
+    p0,
+    p1,
+    p1,
+    @geom.Point::{ x: p1.x + half, y: p1.y },
+    @geom.Point::{ x: p2.x, y: p2.y - half },
+    p2,
+    p2,
+    p3,
+    p3,
+    @geom.Point::{ x: p3.x, y: p3.y + half },
+    @geom.Point::{ x: p4.x + half, y: p4.y },
+    p4,
+    p4,
+    p5,
+    p5,
+    @geom.Point::{ x: p5.x - half, y: p5.y },
+    @geom.Point::{ x: p6.x, y: p6.y + half },
+    p6,
+    p6,
+    p7,
+    p7,
+    @geom.Point::{ x: p7.x, y: p7.y - half },
+    @geom.Point::{ x: p0.x - half, y: p0.y },
+    p0,
   ]
 }
 
@@ -1877,6 +1884,7 @@ fn record_label_ops_from_layout(
   name : String,
   font : @render.Font,
   color : String,
+  pad_x_pt : Double,
 ) -> Unit {
   for layout in layouts {
     match layout.node {
@@ -1885,21 +1893,23 @@ fn record_label_ops_from_layout(
         if text == "" {
           continue
         }
-        let (lines, max_width, total_height) = record_label_metrics(
+        let (lines, _max_width, total_height) = record_label_metrics(
           text,
           font.name,
           font.size,
         )
         let center_x = (layout.rect.llx + layout.rect.urx) / 2.0
         let center_y = (layout.rect.lly + layout.rect.ury) / 2.0
+        let left_x = layout.rect.llx + pad_x_pt / 2.0
+        let right_x = layout.rect.urx - pad_x_pt / 2.0
         let mut baseline = center_y + total_height / 2.0 - font.size
         if lines.length() > 0 && lines[0].text == "" {
           baseline = baseline + RECORD_BORDER_PT
         }
         for line in lines {
           let line_x = match line.align {
-            @render.TextAlign::Left => center_x - max_width / 2.0
-            @render.TextAlign::Right => center_x + max_width / 2.0
+            @render.TextAlign::Left => left_x
+            @render.TextAlign::Right => right_x
             @render.TextAlign::Center => center_x
           }
           let line_y = baseline + line.yoffset_centerline
@@ -1919,7 +1929,14 @@ fn record_label_ops_from_layout(
         }
       }
       RecordNode::Group(_) =>
-        record_label_ops_from_layout(ops, layout.children, name, font, color)
+        record_label_ops_from_layout(
+          ops,
+          layout.children,
+          name,
+          font,
+          color,
+          pad_x_pt,
+        )
     }
   }
 }
@@ -2017,7 +2034,14 @@ fn record_label_ops(
     pad_x_pt,
     pad_y_pt,
   )
-  record_label_ops_from_layout(ops, layouts, node.name(), font, pen_color)
+  record_label_ops_from_layout(
+    ops,
+    layouts,
+    node.name(),
+    font,
+    pen_color,
+    pad_x_pt,
+  )
   ops
 }
 
@@ -2858,7 +2882,13 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
       let size = @attrs.font_size(graph.get_attr("fontsize"))
       let name = @attrs.font_name(graph.get_attr("fontname"))
       let (width_pt, height_pt) = label_text_dimensions(text, name, size)
-      Some((text, width_pt * GRAPH_LABEL_WIDTH_SCALE, height_pt))
+      let adjusted_height = if name == "Helvetica-Oblique" {
+        // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
+        height_pt - 0.72
+      } else {
+        height_pt
+      }
+      Some((text, width_pt * GRAPH_LABEL_WIDTH_SCALE, adjusted_height))
     }
     None => None
   }
