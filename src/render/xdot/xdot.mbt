@@ -1260,6 +1260,18 @@ fn polygon_paths_from_base(
 }
 
 ///|
+fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rect {
+  if peripheries <= 1 {
+    return rect
+  }
+  let inset = POLY_GAP_PT * (peripheries - 1).to_double()
+  match inset_rect(rect, inset) {
+    Some(inner) => inner
+    None => rect
+  }
+}
+
+///|
 fn polygon_paths_for_shape(
   rect : @geom.Rect,
   sides : Int,
@@ -1268,8 +1280,14 @@ fn polygon_paths_for_shape(
   skew : Double,
   peripheries : Int,
 ) -> Array[Array[@geom.Point]] {
-  let base =
-    polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
+  let base_rect = inner_rect_for_peripheries(rect, peripheries)
+  let base = polygon_vertices_for_rect(
+    base_rect,
+    sides,
+    orientation_deg,
+    distortion,
+    skew,
+  )
   polygon_paths_from_base(base, peripheries)
 }
 
@@ -2344,9 +2362,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     }
     "box" => {
       let peripheries = node_peripheries(node, 1)
-      ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(rect)))
+      let base_rect = inner_rect_for_peripheries(rect, peripheries)
+      ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
       for i in 1..<peripheries {
-        let expanded = expand_rect(rect, POLY_GAP_PT * i.to_double())
+        let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
         ops.push(@render.DrawOp::PenColor(color=normalized_pen))
         ops.push(
           @render.DrawOp::Polygon(
@@ -2377,9 +2396,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
         }
         _ => {
           let peripheries = node_peripheries(node, 1)
-          ops.push(@render.DrawOp::Ellipse(filled~, rect~))
+          let base_rect = inner_rect_for_peripheries(rect, peripheries)
+          ops.push(@render.DrawOp::Ellipse(filled~, rect=base_rect))
           for i in 1..<peripheries {
-            let expanded = expand_rect(rect, POLY_GAP_PT * i.to_double())
+            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
             ops.push(@render.DrawOp::PenColor(color=normalized_pen))
             ops.push(@render.DrawOp::Ellipse(filled=false, rect=expanded))
           }
