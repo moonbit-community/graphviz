@@ -39,6 +39,7 @@ pairs=(
   "refs/graphviz/graphs/directed/switch.gv tests/render/xdot/switch.xdot"
   "refs/graphviz/graphs/directed/pmpipe.gv tests/render/xdot/pmpipe.xdot"
   "refs/graphviz/graphs/directed/viewfile.gv tests/render/xdot/viewfile.xdot"
+  "refs/graphviz/graphs/directed/triedds.gv tests/render/xdot/triedds.xdot"
   "refs/graphviz/graphs/directed/unix.gv tests/render/xdot/unix.xdot"
   "refs/graphviz/graphs/directed/world.gv tests/render/xdot/world.xdot"
   "refs/graphviz/graphs/directed/japanese.gv tests/render/xdot/japanese.xdot"
