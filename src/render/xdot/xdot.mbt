@@ -341,11 +341,10 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
   if decimals <= 0 {
     let floored = value.floor()
     let frac = value - floored
-    let eps = 0.000000000001
-    if frac < 0.5 - eps {
+    if frac < 0.5 {
       return floored
     }
-    if frac > 0.5 + eps {
+    if frac > 0.5 {
       return floored + 1.0
     }
     let int_floor = floored.to_int()
@@ -359,10 +358,9 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
   let scaled = value * scale
   let floored = scaled.floor()
   let frac = scaled - floored
-  let eps = 0.000000000001
-  let rounded = if frac < 0.5 - eps {
+  let rounded = if frac < 0.5 {
     floored
-  } else if frac > 0.5 + eps {
+  } else if frac > 0.5 {
     floored + 1.0
   } else {
     let int_floor = floored.to_int()
@@ -2195,6 +2193,90 @@ fn html_cell_content_size(
 }
 
 ///|
+fn html_table_border_pt(table : @html_label.HtmlTable) -> Double {
+  if table.border_pt >= 0.0 {
+    table.border_pt
+  } else {
+    1.0
+  }
+}
+
+///|
+/// Graphviz parity: html cell border defaults to table border when cellborder is unset.
+fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
+  if table.cell_border_pt >= 0.0 {
+    table.cell_border_pt
+  } else {
+    html_table_border_pt(table)
+  }
+}
+
+///|
+fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
+  if border_pt > 1.0 {
+    let delta = border_pt / 2.0
+    {
+      llx: rect.llx + delta,
+      lly: rect.lly + delta,
+      urx: rect.urx - delta,
+      ury: rect.ury - delta,
+    }
+  } else {
+    rect
+  }
+}
+
+///|
+fn same_linewidth(a : Double, b : Double) -> Bool {
+  Double::is_close(a, b, absolute_tolerance=0.000000001)
+}
+
+///|
+fn html_fill_rect_ops(
+  ops : Array[@render.DrawOp],
+  color : String,
+  rect : @geom.Rect,
+) -> Unit {
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
+  ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(color)))
+  ops.push(
+    @render.DrawOp::Polygon(filled=true, points=outline_rect_points(rect)),
+  )
+}
+
+///|
+fn html_stroke_rect_ops(
+  ops : Array[@render.DrawOp],
+  rect : @geom.Rect,
+  border_pt : Double,
+  stroke : String,
+  current_linewidth : Double,
+) -> Double {
+  if border_pt <= 0.0 {
+    return current_linewidth
+  }
+  let mut line_width = current_linewidth
+  if !same_linewidth(line_width, border_pt) {
+    ops.push(
+      @render.DrawOp::Style(
+        name="setlinewidth(\{format_double(border_pt)})",
+      ),
+    )
+    line_width = border_pt
+  }
+  ops.push(@render.DrawOp::Style(name="solid"))
+  ops.push(@render.DrawOp::PenColor(color=stroke))
+  ops.push(
+    @render.DrawOp::Polygon(
+      filled=false,
+      points=outline_rect_points(border_rect(rect, border_pt)),
+    ),
+  )
+  line_width
+}
+
+///|
 fn html_cell_size(
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
@@ -2208,8 +2290,11 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let mut width = content_width
-  let mut height = content_height
+  let cell_border_pt = html_table_cell_border_pt(table)
+  let mut width = content_width + table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
+  let mut height = content_height + table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
     None => ()
@@ -2218,8 +2303,6 @@ fn html_cell_size(
     Some(value) => if value > height { height = value }
     None => ()
   }
-  width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
-  height = height + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
   (width, height)
 }
 
@@ -2259,7 +2342,7 @@ fn html_text_ops(
   font : @render.Font,
   color : String,
 ) -> Unit {
-  let (lines, max_width, total_height) = html_text_metrics(
+  let (lines, _max_width, total_height) = html_text_metrics(
     text,
     name,
     font.name,
@@ -2274,17 +2357,13 @@ fn html_text_ops(
     @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
   }
   let mut baseline = center_y + total_height / 2.0 - font.size
-  let line_x = match align {
-    @html_label.HtmlAlign::Left => rect.llx
-    @html_label.HtmlAlign::Right => rect.urx
-    @html_label.HtmlAlign::Center => (rect.llx + rect.urx) / 2.0
-  }
-  let line_align = match align {
-    @html_label.HtmlAlign::Left => @render.TextAlign::Left
-    @html_label.HtmlAlign::Right => @render.TextAlign::Right
-    @html_label.HtmlAlign::Center => @render.TextAlign::Center
-  }
   for line in lines {
+    let line_x = match align {
+      @html_label.HtmlAlign::Left => rect.llx
+      @html_label.HtmlAlign::Right => rect.urx - line.width_pt
+      @html_label.HtmlAlign::Center =>
+        (rect.llx + rect.urx - line.width_pt) / 2.0
+    }
     let line_y = baseline + line.yoffset_centerline
     if line.text != "" {
       ops.push(@render.DrawOp::Font(font~))
@@ -2292,8 +2371,8 @@ fn html_text_ops(
       ops.push(
         @render.DrawOp::Text(
           pos={ x: line_x, y: line_y },
-          align=line_align,
-          width=if line.width_pt > max_width { line.width_pt } else { max_width },
+          align=@render.TextAlign::Left,
+          width=line.width_pt,
           text=line.text,
         ),
       )
@@ -2311,43 +2390,33 @@ fn html_table_ops(
   font : @render.Font,
   text_color : String,
   stroke : String,
-) -> Unit {
+  current_linewidth : Double,
+) -> Double {
+  let mut line_width = current_linewidth
   let layout = html_table_layout(table, rect, name, font.name, font.size)
+  let border_pt = html_table_border_pt(table)
+  let cell_border_pt = html_table_cell_border_pt(table)
   match table.bg_color {
-    Some(color) => {
-      ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(color)))
-      ops.push(@render.DrawOp::Polygon(filled=true, points=rect_points(rect)))
-    }
+    Some(color) => html_fill_rect_ops(ops, color, rect)
     None => ()
   }
-  if table.border_pt > 0.0 {
-    ops.push(@render.DrawOp::PenColor(color=stroke))
-    ops.push(
-      @render.DrawOp::Polygon(filled=false, points=outline_rect_points(rect)),
-    )
-  }
   let pad_x = table.cell_padding_pt * layout.scale_x +
-    table.cell_border_pt * layout.scale_x
+    cell_border_pt * layout.scale_x
   let pad_y = table.cell_padding_pt * layout.scale_y +
-    table.cell_border_pt * layout.scale_y
+    cell_border_pt * layout.scale_y
   for cell_layout in layout.cells {
     let cell_rect = cell_layout.rect
     match cell_layout.cell.bg_color {
-      Some(color) => {
-        ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(color)))
-        ops.push(
-          @render.DrawOp::Polygon(filled=true, points=rect_points(cell_rect)),
-        )
-      }
+      Some(color) => html_fill_rect_ops(ops, color, cell_rect)
       None => ()
     }
-    if table.cell_border_pt > 0.0 {
-      ops.push(@render.DrawOp::PenColor(color=stroke))
-      ops.push(
-        @render.DrawOp::Polygon(
-          filled=false,
-          points=outline_rect_points(cell_rect),
-        ),
+    if cell_border_pt > 0.0 {
+      line_width = html_stroke_rect_ops(
+        ops,
+        cell_rect,
+        cell_border_pt,
+        stroke,
+        line_width,
       )
     }
     let content_rect : @geom.Rect = {
@@ -2358,8 +2427,15 @@ fn html_table_ops(
     }
     match cell_layout.cell.content {
       @html_label.HtmlCellContent::Table(nested) =>
-        html_table_ops(
-          ops, nested, content_rect, name, font, text_color, stroke,
+        line_width = html_table_ops(
+          ops,
+          nested,
+          content_rect,
+          name,
+          font,
+          text_color,
+          stroke,
+          line_width,
         )
       @html_label.HtmlCellContent::Text(text) =>
         if text != "" {
@@ -2376,6 +2452,16 @@ fn html_table_ops(
         }
     }
   }
+  if border_pt > 0.0 {
+    line_width = html_stroke_rect_ops(
+      ops,
+      rect,
+      border_pt,
+      stroke,
+      line_width,
+    )
+  }
+  line_width
 }
 
 ///|
@@ -2383,7 +2469,21 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let ops : Array[@render.DrawOp] = []
   let node = layout.node
   let label = label_text(node_attr(node, "label"), node.name())
-  let rect = node_rect(layout)
+  let outer_rect = node_rect(layout)
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let inset_x = pad_x_pt / 2.0
+  let inset_y = pad_y_pt / 2.0
+  let inset_rect : @geom.Rect = if outer_rect.urx - outer_rect.llx > inset_x * 2.0 &&
+    outer_rect.ury - outer_rect.lly > inset_y * 2.0 {
+    {
+      llx: outer_rect.llx + inset_x,
+      lly: outer_rect.lly + inset_y,
+      urx: outer_rect.urx - inset_x,
+      ury: outer_rect.ury - inset_y,
+    }
+  } else {
+    outer_rect
+  }
   let font = @render.Font::{
     name: @attrs.font_name(node_attr(node, "fontname")),
     size: @attrs.font_size(node_attr(node, "fontsize")),
@@ -2394,8 +2494,19 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     node_color(node, "color", "black"),
   )
   match @html_label.parse_html_label(label) {
-    Some(@html_label.HtmlLabel::Table(table)) =>
-      html_table_ops(ops, table, rect, node.name(), font, pen_color, stroke)
+    Some(@html_label.HtmlLabel::Table(table)) => {
+      let rect = inset_rect
+      let _ = html_table_ops(
+        ops,
+        table,
+        rect,
+        node.name(),
+        font,
+        pen_color,
+        stroke,
+        1.0,
+      )
+    }
     Some(@html_label.HtmlLabel::Text(text)) =>
       if text != "" {
         html_text_ops(
@@ -2403,7 +2514,7 @@ fn html_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
           text,
           @html_label.HtmlAlign::Center,
           @html_label.HtmlVAlign::Middle,
-          rect,
+          inset_rect,
           node.name(),
           font,
           pen_color,

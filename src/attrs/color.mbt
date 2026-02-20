@@ -163,6 +163,8 @@ pub fn normalize_color(value : String) -> String {
     "lemonchiffon2" => "#eee9bf"
     "goldenrod3" => "#cd9b1d"
     "firebrick" => "#b22222"
+    "grey" => "#c0c0c0"
+    "gray" => "#c0c0c0"
     "chartreuse4" => "#458b00"
     "bisque4" => "#8b7d6b"
     "mistyrose2" => "#eed5d2"

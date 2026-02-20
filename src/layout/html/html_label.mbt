@@ -583,67 +583,87 @@ pub fn html_table_metrics(
   for _ in 0..<row_count {
     row_heights.push(0.0)
   }
-  let _ = table.bg_color
+  let cell_sizes : Array[(Double, Double)] = []
   for placement in placements {
     let cell = placement.cell
     let _ = cell.align
     let _ = cell.valign
     let _ = cell.bg_color
     let _ = cell.port
-    let (cell_width, cell_height) = cell_size(cell)
-    if cell.col_span <= 1 {
+    cell_sizes.push(cell_size(cell))
+  }
+  // Graphviz parity: set single-column widths before processing colspans.
+  for i in 0..<placements.length() {
+    let placement = placements[i]
+    let (cell_width, _cell_height) = cell_sizes[i]
+    if placement.cell.col_span <= 1 {
       let col = placement.col
       if col < col_widths.length() && cell_width > col_widths[col] {
         col_widths[col] = cell_width
       }
-    } else {
-      let start = placement.col
-      let end = placement.col + cell.col_span
-      let mut current = 0.0
-      for i in start..<end {
-        if i < col_widths.length() {
-          current = current + col_widths[i]
-        }
+    }
+  }
+  // Graphviz parity: widen spanned columns after base widths are known.
+  for i in 0..<placements.length() {
+    let placement = placements[i]
+    let (cell_width, _cell_height) = cell_sizes[i]
+    let cell = placement.cell
+    if cell.col_span <= 1 {
+      continue
+    }
+    let start = placement.col
+    let end = placement.col + cell.col_span
+    let mut current = 0.0
+    for j in start..<end {
+      if j < col_widths.length() {
+        current = current + col_widths[j]
       }
-      // Graphviz parity: colspan sizing accounts for inter-cell spacing when
-      // comparing against span width, but distributes only the remaining width.
-      let spacing =
-        table.cell_spacing_pt * (cell.col_span - 1).to_double()
-      if cell_width > current + spacing && cell.col_span > 0 {
-        let extra =
-          (cell_width - spacing - current) / cell.col_span.to_double()
-        for i in start..<end {
-          if i < col_widths.length() {
-            col_widths[i] = col_widths[i] + extra
-          }
+    }
+    let spacing = table.cell_spacing_pt * (cell.col_span - 1).to_double()
+    if cell_width > current + spacing && cell.col_span > 0 {
+      let extra =
+        (cell_width - spacing - current) / cell.col_span.to_double()
+      for j in start..<end {
+        if j < col_widths.length() {
+          col_widths[j] = col_widths[j] + extra
         }
       }
     }
-    if cell.row_span <= 1 {
+  }
+  // Graphviz parity: set single-row heights before processing rowspans.
+  for i in 0..<placements.length() {
+    let placement = placements[i]
+    let (_cell_width, cell_height) = cell_sizes[i]
+    if placement.cell.row_span <= 1 {
       let row = placement.row
       if row < row_heights.length() && cell_height > row_heights[row] {
         row_heights[row] = cell_height
       }
-    } else {
-      let start = placement.row
-      let end = placement.row + cell.row_span
-      let mut current = 0.0
-      for i in start..<end {
-        if i < row_heights.length() {
-          current = current + row_heights[i]
-        }
+    }
+  }
+  // Graphviz parity: heighten spanned rows after base heights are known.
+  for i in 0..<placements.length() {
+    let placement = placements[i]
+    let (_cell_width, cell_height) = cell_sizes[i]
+    let cell = placement.cell
+    if cell.row_span <= 1 {
+      continue
+    }
+    let start = placement.row
+    let end = placement.row + cell.row_span
+    let mut current = 0.0
+    for j in start..<end {
+      if j < row_heights.length() {
+        current = current + row_heights[j]
       }
-      // Graphviz parity: rowspan sizing accounts for inter-cell spacing when
-      // comparing against span height, but distributes only the remaining height.
-      let spacing =
-        table.cell_spacing_pt * (cell.row_span - 1).to_double()
-      if cell_height > current + spacing && cell.row_span > 0 {
-        let extra =
-          (cell_height - spacing - current) / cell.row_span.to_double()
-        for i in start..<end {
-          if i < row_heights.length() {
-            row_heights[i] = row_heights[i] + extra
-          }
+    }
+    let spacing = table.cell_spacing_pt * (cell.row_span - 1).to_double()
+    if cell_height > current + spacing && cell.row_span > 0 {
+      let extra =
+        (cell_height - spacing - current) / cell.row_span.to_double()
+      for j in start..<end {
+        if j < row_heights.length() {
+          row_heights[j] = row_heights[j] + extra
         }
       }
     }
@@ -678,6 +698,15 @@ pub fn html_table_size(
 }
 
 ///|
+fn round_half_up(value : Double) -> Int {
+  if value >= 0.0 {
+    (value + 0.5).floor().to_int()
+  } else {
+    (value - 0.5).ceil().to_int()
+  }
+}
+
+///|
 pub fn html_table_layout(
   table : HtmlTable,
   rect : @geom.Rect,
@@ -687,30 +716,57 @@ pub fn html_table_layout(
   if metrics.total_width <= 0.0 || metrics.total_height <= 0.0 {
     return { cells: [], scale_x: 1.0, scale_y: 1.0 }
   }
-  let scale_x = (rect.urx - rect.llx) / metrics.total_width
-  let scale_y = (rect.ury - rect.lly) / metrics.total_height
   let border_pt = table_border_pt(table)
-  let border_x = border_pt * scale_x
-  let border_y = border_pt * scale_y
-  let spacing_x = table.cell_spacing_pt * scale_x
-  let spacing_y = table.cell_spacing_pt * scale_y
+  let spacing = table.cell_spacing_pt
+  let mut delx = rect.urx - rect.llx - metrics.total_width
+  if delx < 0.0 {
+    delx = 0.0
+  }
+  let mut dely = rect.ury - rect.lly - metrics.total_height
+  if dely < 0.0 {
+    dely = 0.0
+  }
+  let col_count = metrics.col_widths.length()
+  let row_count = metrics.row_heights.length()
+  let extra_x = if col_count > 0 {
+    delx / col_count.to_double()
+  } else {
+    0.0
+  }
+  let plus_x = if col_count > 0 {
+    round_half_up(delx - extra_x * col_count.to_double())
+  } else {
+    0
+  }
+  let extra_y = if row_count > 0 {
+    dely / row_count.to_double()
+  } else {
+    0.0
+  }
+  let plus_y = if row_count > 0 {
+    round_half_up(dely - extra_y * row_count.to_double())
+  } else {
+    0
+  }
   let col_positions : Array[(Double, Double)] = []
-  let mut cursor_x = rect.llx + border_x + spacing_x
-  for width in metrics.col_widths {
-    let scaled = width * scale_x
+  let mut cursor_x = rect.llx + border_pt + spacing
+  for i in 0..<metrics.col_widths.length() {
+    let width = metrics.col_widths[i]
+    let sized = width + extra_x + (if i < plus_x { 1.0 } else { 0.0 })
     let start = cursor_x
-    let end = start + scaled
+    let end = start + sized
     col_positions.push((start, end))
-    cursor_x = end + spacing_x
+    cursor_x = end + spacing
   }
   let row_positions : Array[(Double, Double)] = []
-  let mut cursor_y = rect.ury - border_y - spacing_y
-  for height in metrics.row_heights {
-    let scaled = height * scale_y
+  let mut cursor_y = rect.ury - border_pt - spacing
+  for i in 0..<metrics.row_heights.length() {
+    let height = metrics.row_heights[i]
+    let sized = height + extra_y + (if i < plus_y { 1.0 } else { 0.0 })
     let top = cursor_y
-    let bottom = top - scaled
+    let bottom = top - sized
     row_positions.push((top, bottom))
-    cursor_y = bottom - spacing_y
+    cursor_y = bottom - spacing
   }
   let cells : Array[HtmlCellLayout] = []
   for placement in metrics.placements {
@@ -730,5 +786,5 @@ pub fn html_table_layout(
     let lly = row_positions[end_row].1
     cells.push({ rect: { llx, lly, urx, ury }, cell: placement.cell })
   }
-  { cells, scale_x, scale_y }
+  { cells, scale_x: 1.0, scale_y: 1.0 }
 }
