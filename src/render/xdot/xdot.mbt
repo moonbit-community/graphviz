@@ -341,20 +341,44 @@ priv struct ArrowFlags {
 ///|
 fn round_half_even(value : Double, decimals : Int) -> Double {
   if decimals <= 0 {
-    return value.round()
+    let floored = value.floor()
+    let frac = value - floored
+    let eps = 0.000000000001
+    if frac < 0.5 - eps {
+      return floored
+    }
+    if frac > 0.5 + eps {
+      return floored + 1.0
+    }
+    let int_floor = floored.to_int()
+    if int_floor % 2 == 0 {
+      return floored
+    } else {
+      return floored + 1.0
+    }
   }
   let scale = @math.pow(10.0, decimals.to_double())
   let scaled = value * scale
-  let rounded = if scaled >= 0.0 {
-    (scaled + 0.5).floor()
+  let floored = scaled.floor()
+  let frac = scaled - floored
+  let eps = 0.000000000001
+  let rounded = if frac < 0.5 - eps {
+    floored
+  } else if frac > 0.5 + eps {
+    floored + 1.0
   } else {
-    (scaled - 0.5).ceil()
+    let int_floor = floored.to_int()
+    if int_floor % 2 == 0 {
+      floored
+    } else {
+      floored + 1.0
+    }
   }
   rounded / scale
 }
 
-fn format_double(value : Double) -> String {
-  let rounded = round_half_even(value, 2)
+fn format_double_with_decimals(value : Double, decimals : Int) -> String {
+  let rounded = round_half_even(value, decimals)
   if rounded == 0.0 {
     return "0"
   }
@@ -372,6 +396,45 @@ fn format_double(value : Double) -> String {
     result = result.unsafe_substring(start=0, end=next_len)
   }
   result
+}
+
+fn format_double_significant(value : Double, digits : Int) -> String {
+  if value == 0.0 {
+    return "0"
+  }
+  let sign = if value < 0.0 {
+    "-"
+  } else {
+    ""
+  }
+  let abs = if value < 0.0 {
+    -value
+  } else {
+    value
+  }
+  let exp = @math.log10(abs).floor().to_int()
+  let mut decimals = digits - exp - 1
+  if decimals < 0 {
+    decimals = 0
+  }
+  let rounded = round_half_even(abs, decimals)
+  if rounded == 0.0 {
+    return "0"
+  }
+  let mut text = rounded.to_string()
+  if text.contains(".") {
+    while text.length() > 0 && text.has_suffix("0") {
+      text = text.unsafe_substring(start=0, end=text.length() - 1)
+    }
+    if text.has_suffix(".") {
+      text = text.unsafe_substring(start=0, end=text.length() - 1)
+    }
+  }
+  "\{sign}\{text}"
+}
+
+fn format_double(value : Double) -> String {
+  format_double_with_decimals(value, 2)
 }
 
 ///|
@@ -2678,7 +2741,9 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
 
 ///|
 fn format_point(point : @geom.Point) -> String {
-  "\{format_double(point.x)},\{format_double(point.y)}"
+  let x = format_double_significant(point.x, 5)
+  let y = format_double_significant(point.y, 5)
+  "\{x},\{y}"
 }
 
 ///|
