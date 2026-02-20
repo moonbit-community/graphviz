@@ -188,29 +188,29 @@ fn graph_attr_rank(name : String) -> Int {
     "bgcolor" => 3
     "color" => 4
     "colorscheme" => 5
-    "fontcolor" => 6
-    "fontname" => 7
-    "fontsize" => 8
-    "label" => 9
-    "labelloc" => 10
-    "lheight" => 11
-    "lp" => 12
-    "lwidth" => 13
-    "center" => 14
+    "center" => 6
+    "fontcolor" => 7
+    "fontname" => 8
+    "fontsize" => 9
+    "label" => 10
+    "labelloc" => 11
+    "lheight" => 12
+    "lp" => 13
+    "lwidth" => 14
     "ordering" => 15
     "orientation" => 16
     "page" => 17
     "margin" => 18
     "nodesep" => 19
-    "rank" => 20
-    "rankdir" => 21
-    "ranksep" => 22
-    "ratio" => 23
-    "size" => 24
-    "splines" => 25
-    "overlap" => 26
+    "overlap" => 20
+    "rank" => 21
+    "rankdir" => 22
+    "ranksep" => 23
+    "ratio" => 24
+    "size" => 25
+    "splines" => 26
     "charset" => 27
-    "xdotversion" => 120
+    "xdotversion" => 1000
     _ => 200
   }
 }
@@ -223,11 +223,11 @@ fn node_attr_rank(name : String) -> Int {
     "color" => 2
     "colorscheme" => 3
     "fillcolor" => 4
-    "fontcolor" => 5
-    "fontname" => 6
-    "fontsize" => 7
-    "distortion" => 8
-    "fname" => 9
+    "distortion" => 5
+    "fontcolor" => 6
+    "fontname" => 7
+    "fname" => 8
+    "fontsize" => 9
     "height" => 10
     "kind" => 11
     "label" => 12
@@ -237,13 +237,14 @@ fn node_attr_rank(name : String) -> Int {
     "pos" => 16
     "rects" => 17
     "regular" => 18
-    "shape" => 19
-    "sides" => 20
-    "skew" => 21
-    "style" => 22
-    "subkind" => 23
-    "width" => 24
-    "id" => 25
+    "margin" => 19
+    "shape" => 20
+    "sides" => 21
+    "skew" => 22
+    "style" => 23
+    "subkind" => 24
+    "width" => 25
+    "id" => 26
     _ => 200
   }
 }
@@ -254,8 +255,8 @@ fn edge_attr_rank(name : String) -> Int {
     "_draw_" => 0
     "_hdraw_" => 1
     "_ldraw_" => 2
-    "_tdraw_" => 3
-    "_hldraw_" => 4
+    "_hldraw_" => 3
+    "_tdraw_" => 4
     "_tldraw_" => 5
     "arrowhead" => 6
     "arrowtail" => 7
@@ -375,7 +376,7 @@ fn write_attr_block(
     let value = if (
       (key == "_draw_" || key == "_hdraw_" || key == "_tdraw_" ||
         key == "_ldraw_" || key == "_hldraw_" || key == "_tldraw_") &&
-      value != "" && !value.has_suffix(" ")
+      value != ""
     ) {
       value + " "
     } else {
@@ -425,7 +426,7 @@ fn filter_nondefault_node_attrs(
         }
       }
       None =>
-        if value != "" {
+        if value != "" || key == "distortion" || key == "style" {
           filtered.push((key, value))
         }
     }
@@ -448,7 +449,7 @@ fn filter_nondefault_edge_attrs(
         }
       }
       None =>
-        if value != "" {
+        if value != "" || key == "style" {
           filtered.push((key, value))
         }
     }
@@ -483,7 +484,7 @@ fn node_has_nondefault_attrs(
           return true
         }
       None =>
-        if value != "" {
+        if value != "" || key == "distortion" || key == "style" {
           return true
         }
     }
@@ -590,6 +591,7 @@ priv struct WriteContext {
   edge_last_written : Map[Int, Int]
   node_attrs_written : Map[String, Bool]
   edge_attrs_written : Map[Int, Bool]
+  edge_target_paths : Map[Int, String]
 }
 
 ///|
@@ -629,15 +631,141 @@ fn attrs_already_written_for_edge(ctx : WriteContext, edge_id : Int) -> Bool {
 }
 
 ///|
+fn child_graph_path(path : String, index : Int) -> String {
+  if path == "" {
+    "\{index}"
+  } else {
+    "\{path}/\{index}"
+  }
+}
+
+///|
+fn graph_contains_node_name(graph : @cgraph.Graph, name : String) -> Bool {
+  for node in graph.nodes() {
+    if node.name() == name {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn is_cluster_subgraph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn graph_contains_edge_id(graph : @cgraph.Graph, edge_id : Int) -> Bool {
+  for edge in graph.edges() {
+    if edge.id() == edge_id {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn edge_home_path_recursive(
+  graph : @cgraph.Graph,
+  path : String,
+  edge_id : Int,
+) -> String {
+  for i, subgraph in graph.subgraphs() {
+    if should_skip_layout_subgraph(graph, subgraph, true) {
+      continue
+    }
+    if !graph_contains_edge_id(subgraph, edge_id) {
+      continue
+    }
+    let child_path = child_graph_path(path, i)
+    return edge_home_path_recursive(subgraph, child_path, edge_id)
+  }
+  path
+}
+
+///|
+fn cluster_lca_path_recursive(
+  graph : @cgraph.Graph,
+  path : String,
+  tail_name : String,
+  head_name : String,
+) -> String {
+  for i, subgraph in graph.subgraphs() {
+    if should_skip_layout_subgraph(graph, subgraph, true) {
+      continue
+    }
+    if !is_cluster_subgraph(subgraph) {
+      continue
+    }
+    if !graph_contains_node_name(subgraph, tail_name) {
+      continue
+    }
+    if !graph_contains_node_name(subgraph, head_name) {
+      continue
+    }
+    let child_path = child_graph_path(path, i)
+    return cluster_lca_path_recursive(
+      subgraph,
+      child_path,
+      tail_name,
+      head_name,
+    )
+  }
+  path
+}
+
+///|
+fn edge_target_path(
+  edge : @cgraph.Edge,
+  root : @cgraph.Graph,
+  ctx : WriteContext,
+) -> String {
+  let id = edge.id()
+  match ctx.edge_target_paths.get(id) {
+    Some(path) => path
+    None => {
+      let home_path = edge_home_path_recursive(root, "", id)
+      let path = if home_path != "" {
+        home_path
+      } else {
+        cluster_lca_path_recursive(
+          root,
+          "",
+          edge.tail().name(),
+          edge.head().name(),
+        )
+      }
+      ctx.edge_target_paths[id] = path
+      path
+    }
+  }
+}
+
+///|
 fn write_body(
   graph : @cgraph.Graph,
   sb : StringBuilder,
   indent : Int,
   preorder : Int,
+  graph_path : String,
   is_layout_output : Bool,
   ctx : WriteContext,
 ) -> Unit {
-  let graph_edges = graph.edges()
+  let graph_edges = if is_layout_output {
+    let root = root_graph(graph)
+    let edges : Array[@cgraph.Edge] = []
+    for edge in root.edges() {
+      if edge_target_path(edge, root, ctx) == graph_path {
+        edges.push(edge)
+      }
+    }
+    edges
+  } else {
+    graph.edges()
+  }
   let graph_nodes = graph.nodes()
   if !is_layout_output {
     graph_nodes.sort_by_key(node => node.name())
@@ -777,6 +905,7 @@ fn write_graph_recursive(
   graph : @cgraph.Graph,
   sb : StringBuilder,
   indent : Int,
+  path : String,
   is_root : Bool,
   is_layout_output : Bool,
   ctx : WriteContext,
@@ -817,20 +946,22 @@ fn write_graph_recursive(
   write_default_stmt(sb, inner, "node", node_defaults, AttrGroup::Node)
   let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
   write_default_stmt(sb, inner, "edge", edge_defaults, AttrGroup::Edge)
-  for subgraph in graph.subgraphs() {
+  for i, subgraph in graph.subgraphs() {
     if should_skip_layout_subgraph(graph, subgraph, is_layout_output) {
       continue
     }
+    let child_path = child_graph_path(path, i)
     write_graph_recursive(
       subgraph,
       sb,
       inner,
+      child_path,
       false,
       is_layout_output,
       ctx,
     )
   }
-  write_body(graph, sb, inner, preorder, is_layout_output, ctx)
+  write_body(graph, sb, inner, preorder, path, is_layout_output, ctx)
   write_tabs(sb, indent)
   sb.write_string("}\n")
 }
@@ -845,7 +976,8 @@ pub fn write_dot(graph : @cgraph.Graph) -> String {
     edge_last_written: Map::new(),
     node_attrs_written: Map::new(),
     edge_attrs_written: Map::new(),
+    edge_target_paths: Map::new(),
   }
-  write_graph_recursive(graph, sb, 0, true, is_layout_output, ctx)
+  write_graph_recursive(graph, sb, 0, "", true, is_layout_output, ctx)
   sb.to_string()
 }

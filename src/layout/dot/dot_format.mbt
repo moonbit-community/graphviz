@@ -33,12 +33,51 @@ fn trim_trailing_zeros(text : String) -> String {
 }
 
 ///|
+fn round_half_even(value : Double, decimals : Int) -> Double {
+  if decimals <= 0 {
+    let floored = value.floor()
+    let frac = value - floored
+    let eps = 0.000000000001
+    if frac < 0.5 - eps {
+      return floored
+    }
+    if frac > 0.5 + eps {
+      return floored + 1.0
+    }
+    let int_floor = floored.to_int()
+    if int_floor % 2 == 0 {
+      return floored
+    } else {
+      return floored + 1.0
+    }
+  }
+  let scale = pow10_double(decimals)
+  let scaled = value * scale
+  let floored = scaled.floor()
+  let frac = scaled - floored
+  let eps = 0.000000000001
+  let rounded = if frac < 0.5 - eps {
+    floored
+  } else if frac > 0.5 + eps {
+    floored + 1.0
+  } else {
+    let int_floor = floored.to_int()
+    if int_floor % 2 == 0 {
+      floored
+    } else {
+      floored + 1.0
+    }
+  }
+  rounded / scale
+}
+
+///|
 fn format_fixed(value : Double, decimals : Int) -> String {
   if decimals <= 0 {
-    return "\{value.round().to_int()}"
+    return "\{round_half_even(value, 0).to_int()}"
   }
   let scale = pow10_int(decimals)
-  let scaled = (value * scale.to_double()).round().to_int()
+  let scaled = round_half_even(value * scale.to_double(), 0).to_int()
   let int_part = scaled / scale
   let mut frac = scaled % scale
   if frac < 0 {
@@ -58,11 +97,7 @@ fn format_fixed_trim(value : Double, decimals : Int) -> String {
 
 ///|
 fn round_to(value : Double, decimals : Int) -> Double {
-  if decimals <= 0 {
-    return value.round()
-  }
-  let scale = pow10_double(decimals)
-  (value * scale).round() / scale
+  round_half_even(value, decimals)
 }
 
 ///|

@@ -398,6 +398,39 @@ fn format_double_with_decimals(value : Double, decimals : Int) -> String {
   result
 }
 
+fn pow10_int(value : Int) -> Int {
+  let mut out = 1
+  for _ in 0..<value {
+    out = out * 10
+  }
+  out
+}
+
+fn format_double_fixed(value : Double, decimals : Int) -> String {
+  if decimals <= 0 {
+    return "\{round_half_even(value, 0).to_int()}"
+  }
+  let scale = pow10_int(decimals)
+  let scaled = round_half_even(value * scale.to_double(), 0).to_int()
+  let negative = scaled < 0
+  let abs_scaled = if negative { -scaled } else { scaled }
+  let int_part = abs_scaled / scale
+  let frac_part = abs_scaled % scale
+  let frac_text_raw = frac_part.to_string()
+  let frac_text = if frac_text_raw.length() >= decimals {
+    frac_text_raw
+  } else {
+    let pad = StringBuilder::new()
+    for _ in 0..<(decimals - frac_text_raw.length()) {
+      pad.write_char('0')
+    }
+    pad.write_string(frac_text_raw)
+    pad.to_string()
+  }
+  let sign = if negative && abs_scaled != 0 { "-" } else { "" }
+  "\{sign}\{int_part}.\{frac_text}"
+}
+
 fn format_double_significant(value : Double, digits : Int) -> String {
   if value == 0.0 {
     return "0"
@@ -2444,6 +2477,39 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
 }
 
 ///|
+fn offset_spline_points(
+  points : Array[@geom.Point],
+  distance : Double,
+) -> Array[@geom.Point] {
+  if points.length() <= 1 || distance == 0.0 {
+    return points
+  }
+  let out : Array[@geom.Point] = []
+  for i in 0..<points.length() {
+    let prev = if i == 0 { points[0] } else { points[i - 1] }
+    let next = if i + 1 >= points.length() {
+      points[points.length() - 1]
+    } else {
+      points[i + 1]
+    }
+    let dx = next.x - prev.x
+    let dy = next.y - prev.y
+    let len = @math.hypot(dx, dy)
+    if len <= 0.000001 {
+      out.push(points[i])
+      continue
+    }
+    let nx = -dy / len
+    let ny = dx / len
+    out.push({
+      x: points[i].x + nx * distance,
+      y: points[i].y + ny * distance,
+    })
+  }
+  out
+}
+
+///|
 fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
@@ -2453,10 +2519,22 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let pen_colors = edge_pen_colors(edge)
-  for pen_color in pen_colors {
+  let color_count = pen_colors.length()
+  for i, pen_color in pen_colors {
+    let offset =
+      if color_count <= 1 {
+        0.0
+      } else {
+        (i * 2 - (color_count - 1)).to_double()
+      }
     ops.push(@render.DrawOp::PenColor(color=pen_color))
     for spline in layout.splines {
-      ops.push(@render.DrawOp::Bezier(filled=false, points=spline.points))
+      ops.push(
+        @render.DrawOp::Bezier(
+          filled=false,
+          points=offset_spline_points(spline.points, offset),
+        ),
+      )
     }
   }
   ops
@@ -2661,6 +2739,88 @@ fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
 }
 
 ///|
+fn graph_uses_latin1_charset(graph : @cgraph.Graph) -> Bool {
+  match inherited_graph_attr(graph, "charset") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower == "latin1" || lower == "latin-1"
+    }
+    None => false
+  }
+}
+
+///|
+fn append_loose_utf8_codepoint(sb : StringBuilder, codepoint : Int) -> Unit {
+  if codepoint <= 0xFFFF {
+    sb.write_char(codepoint.unsafe_to_char())
+  } else {
+    let value = codepoint - 0x10000
+    let high = 0xD800 + (value >> 10)
+    let low = 0xDC00 + (value & 0x3FF)
+    sb.write_char(high.unsafe_to_char())
+    sb.write_char(low.unsafe_to_char())
+  }
+}
+
+///|
+fn latin1_to_loose_utf8_text(value : String) -> String {
+  let bytes : Array[Int] = []
+  for ch in value {
+    bytes.push(ch.to_int() & 0xFF)
+  }
+  let sb = StringBuilder::new()
+  let mut index = 0
+  while index < bytes.length() {
+    let b0 = bytes[index]
+    let mut len = if b0 < 0x80 {
+      1
+    } else if b0 < 0xE0 {
+      2
+    } else if b0 < 0xF0 {
+      3
+    } else if b0 < 0xF8 {
+      4
+    } else if b0 < 0xFC {
+      5
+    } else {
+      6
+    }
+    if index + len > bytes.length() {
+      len = bytes.length() - index
+    }
+    let codepoint = match len {
+      1 => b0
+      2 => ((b0 & 0x1F) << 6) | (bytes[index + 1] & 0x3F)
+      3 =>
+        ((b0 & 0x0F) << 12) |
+        ((bytes[index + 1] & 0x3F) << 6) |
+        (bytes[index + 2] & 0x3F)
+      4 =>
+        ((b0 & 0x07) << 18) |
+        ((bytes[index + 1] & 0x3F) << 12) |
+        ((bytes[index + 2] & 0x3F) << 6) |
+        (bytes[index + 3] & 0x3F)
+      5 =>
+        ((b0 & 0x03) << 24) |
+        ((bytes[index + 1] & 0x3F) << 18) |
+        ((bytes[index + 2] & 0x3F) << 12) |
+        ((bytes[index + 3] & 0x3F) << 6) |
+        (bytes[index + 4] & 0x3F)
+      _ =>
+        ((b0 & 0x01) << 30) |
+        ((bytes[index + 1] & 0x3F) << 24) |
+        ((bytes[index + 2] & 0x3F) << 18) |
+        ((bytes[index + 3] & 0x3F) << 12) |
+        ((bytes[index + 4] & 0x3F) << 6) |
+        (bytes[index + 5] & 0x3F)
+    }
+    append_loose_utf8_codepoint(sb, codepoint)
+    index = index + len
+  }
+  sb.to_string()
+}
+
+///|
 fn graph_colorscheme(graph : @cgraph.Graph) -> String? {
   inherited_graph_attr(graph, "colorscheme")
 }
@@ -2821,8 +2981,8 @@ fn attach_graph_attrs(layout : @layout_dot.DotLayoutGraph) -> Unit {
           Some(value) => value
           None => graph_label_pos(layout.bbox, height_pt)
         }
-        graph.set_attr("lwidth", format_double(width_pt / 72.0))
-        graph.set_attr("lheight", format_double(height_pt / 72.0))
+        graph.set_attr("lwidth", format_double_fixed(width_pt / 72.0, 2))
+        graph.set_attr("lheight", format_double_fixed(height_pt / 72.0, 2))
         graph.set_attr("lp", format_point(pos))
       }
       None => ()
@@ -3016,6 +3176,13 @@ pub fn attach_xdot_attrs(
     }
   }
   attach_graph_attrs(layout)
+  let use_latin1_replacement = graph_uses_latin1_charset(graph)
+  if use_latin1_replacement {
+    match graph.get_attr("label") {
+      Some(value) => graph.set_attr("label", latin1_to_loose_utf8_text(value))
+      None => ()
+    }
+  }
   let kind = graph.kind()
   for node_layout in layout.nodes {
     let draw_ops = node_draw_ops(node_layout)
@@ -3025,6 +3192,15 @@ pub fn attach_xdot_attrs(
     let label_ops = node_label_ops(node_layout)
     if label_ops.length() > 0 {
       node_layout.node.set_attr("_ldraw_", encode_xdot_ops(label_ops))
+    }
+    if use_latin1_replacement {
+      match node_layout.node.get_attr("label") {
+        Some(value) => node_layout.node.set_attr(
+          "label",
+          latin1_to_loose_utf8_text(value),
+        )
+        None => ()
+      }
     }
   }
   for edge_layout in layout.edges {
