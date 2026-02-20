@@ -415,27 +415,15 @@ fn compute_dot_routing_stage(
 ) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
     build_routing_spatial_data_for_stage(graph, prep, rank_data.ranks, positions_state)
-  let empty_edges : Array[DotLayoutEdge] = []
-  let ratio_bbox_nodes : Array[DotLayoutNode] =
-    if prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL {
-      let swapped : Array[DotLayoutNode] = []
-      for node_layout in nodes_out {
-        swapped.push({
-          node: node_layout.node,
-          pos: node_layout.pos,
-          // Graphviz parity: set_aspect rec_bb runs before rankdir flip,
-          // so ratio bbox for LR/RL uses unflipped node extents.
-          width_in: node_layout.height_in,
-          height_in: node_layout.width_in,
-          label_pos: node_layout.label_pos,
-          xlabel_pos: node_layout.xlabel_pos,
-        })
-      }
-      swapped
-    } else {
-      nodes_out
-    }
-  let routing_bbox = compute_bbox(ratio_bbox_nodes, empty_edges)
+  let routing_bbox =
+    compute_dot_bbox(
+      nodes_out,
+      rank_data.all_ranks,
+      prep.sizes,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
+    )
   let (ratio_sx, ratio_sy) =
     match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
       Some((sx, sy)) =>
@@ -566,4 +554,3 @@ fn compute_dot_routing_stage(
   dot_trace("layout_dot: edges routed")
   (nodes_out, edges_out, port_pad_below, port_pad_above)
 }
-

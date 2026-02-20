@@ -245,6 +245,171 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> (Int, Int) {
 }
 
 ///|
+fn flat_no_arrow_detour_points_if_blocked(
+  tail_name : String,
+  head_name : String,
+  rank : Int,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  ranksep_pt : Double,
+  rankdir : RankDir,
+) -> (Array[@geom.Point], Double, Double, Double, Double)? {
+  match rankdir {
+    RankDir::TB | RankDir::BT => {
+      let min_x = min_double(line_start.x, line_end.x)
+      let max_x = max_double(line_start.x, line_end.x)
+      let line_y = (line_start.y + line_end.y) / 2.0
+      let mut found = false
+      let mut max_top = max_double(line_start.y, line_end.y)
+      let mut blocker_min_left = max_x
+      let mut blocker_max_right = min_x
+      let mut first_right = max_x
+      let mut last_left = min_x
+      for name, pos in positions {
+        if name == tail_name || name == head_name {
+          continue
+        }
+        let node_rank = match ranks.get(name) {
+          Some(value) => value
+          None => continue
+        }
+        if node_rank != rank {
+          continue
+        }
+        let size = match sizes.get(name) {
+          Some(value) => value
+          None => continue
+        }
+        let half_h = size.height_pt / 2.0
+        if line_y < pos.y - half_h - 0.01 || line_y > pos.y + half_h + 0.01 {
+          continue
+        }
+        let half_w = size.width_pt / 2.0
+        let left = pos.x - half_w
+        let right = pos.x + half_w
+        if right <= min_x + 0.01 || left >= max_x - 0.01 {
+          continue
+        }
+        let top = pos.y + size.height_pt / 2.0
+        if top > max_top {
+          max_top = top
+        }
+        if left < blocker_min_left {
+          blocker_min_left = left
+          first_right = right
+        }
+        if right > blocker_max_right {
+          blocker_max_right = right
+          last_left = left
+        }
+        found = true
+      }
+      if !found {
+        None
+      } else {
+        let vspace =
+          if rank > 0 {
+            match (
+              rank_y.get(rank),
+              rank_ht2.get(rank),
+              rank_y.get(rank - 1),
+              rank_ht1.get(rank - 1),
+            ) {
+              (Some(cur_y), Some(cur_ht2), Some(prev_y), Some(prev_ht1)) => {
+                let gap = prev_y - prev_ht1 - cur_y - cur_ht2
+                if gap > 0.0 { gap } else { ranksep_pt }
+              }
+              _ => ranksep_pt
+            }
+          } else {
+            ranksep_pt
+          }
+        let detour_y = max_top + vspace / 2.0
+        let bend1_x =
+          if line_start.x <= line_end.x {
+            blocker_min_left
+          } else {
+            blocker_max_right
+          }
+        let bend2_x =
+          if line_start.x <= line_end.x {
+            blocker_max_right
+          } else {
+            blocker_min_left
+          }
+        Some((
+          [
+          line_start,
+          point(bend1_x, detour_y),
+          point(bend2_x, detour_y),
+          line_end,
+        ],
+          first_right,
+          last_left,
+          detour_y,
+          vspace,
+        ))
+      }
+    }
+    RankDir::LR | RankDir::RL => {
+      let min_y = min_double(line_start.y, line_end.y)
+      let max_y = max_double(line_start.y, line_end.y)
+      let line_x = (line_start.x + line_end.x) / 2.0
+      let mut found = false
+      let mut max_right = max_double(line_start.x, line_end.x)
+      for name, pos in positions {
+        if name == tail_name || name == head_name {
+          continue
+        }
+        let node_rank = match ranks.get(name) {
+          Some(value) => value
+          None => continue
+        }
+        if node_rank != rank {
+          continue
+        }
+        let size = match sizes.get(name) {
+          Some(value) => value
+          None => continue
+        }
+        let half_w = size.width_pt / 2.0
+        if line_x < pos.x - half_w - 0.01 || line_x > pos.x + half_w + 0.01 {
+          continue
+        }
+        let half_h = size.height_pt / 2.0
+        let bottom = pos.y - half_h
+        let top = pos.y + half_h
+        if top <= min_y + 0.01 || bottom >= max_y - 0.01 {
+          continue
+        }
+        let right = pos.x + size.width_pt / 2.0
+        if right > max_right {
+          max_right = right
+        }
+        found = true
+      }
+      if !found {
+        None
+      } else {
+        let detour_x = max_right + ranksep_pt / 2.0
+        Some(([
+          line_start,
+          point(detour_x, line_start.y),
+          point(detour_x, line_end.y),
+          line_end,
+        ], 0.0, 0.0, 0.0, 0.0))
+      }
+    }
+  }
+}
+
+///|
 fn self_edge_rank_spacing(
   rank : Int,
   rank_y : Map[Int, Double],
@@ -2171,6 +2336,7 @@ fn build_edge_spline(
   let force_segmented = base.force_segmented
   let tail_cluster_bbox = base.tail_cluster_bbox
   let head_cluster_bbox = base.head_cluster_bbox
+  let tail_rank = base.tail_rank
   let is_flat_edge = base.is_flat_edge
   let has_vnodes = base.has_vnodes
   let route_include_tail = base.route_include_tail
@@ -2384,6 +2550,33 @@ fn build_edge_spline(
                 Double::abs(tail_slope_line.y) > 0.01 ||
                   Double::abs(head_slope_line.y) > 0.01
             })
+          let flat_no_arrow_candidate =
+            !using_pathplan &&
+            is_flat_edge &&
+            !has_explicit_port &&
+            label_width_pt <= 0.0 &&
+            !route_include_tail &&
+            !route_include_head
+          let flat_detour =
+            if flat_no_arrow_candidate {
+              flat_no_arrow_detour_points_if_blocked(
+                tail_name,
+                head_name,
+                tail_rank,
+                adjusted[0],
+                adjusted[adjusted.length() - 1],
+                positions,
+                sizes,
+                ranks,
+                rank_y,
+                rank_ht1,
+                rank_ht2,
+                ranksep_pt,
+                layout_rankdir,
+              )
+            } else {
+              None
+            }
           if needs_record_detour {
             let tail_rect = port_side_rect(tail_clip_center, tail_clip_size)
             let head_rect = port_side_rect(head_clip_center, head_clip_size)
@@ -2467,6 +2660,65 @@ fn build_edge_spline(
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,
             )
+          } else if flat_detour is Some(
+            (detour_points, first_right, last_left, detour_y, vspace),
+          ) {
+            if using_pathplan {
+              raw_bezier =
+                edge_spline_raw_for_points(
+                  detour_points,
+                  tail_slope_line,
+                  head_slope_line,
+                  true,
+                  route_barriers=route_barriers,
+                )
+            }
+            let mut detour_spline =
+              edge_spline_for_points(
+              edge,
+              detour_points,
+              tail_clip_center,
+              head_clip_center,
+              tail_clip_size,
+              head_clip_size,
+              tail_slope_line,
+              head_slope_line,
+              true,
+              route_include_tail,
+              route_include_head,
+              tail_clip_enabled=tail_clip_enabled,
+              head_clip_enabled=head_clip_enabled,
+              tail_port_side=base.tail_port_side,
+              head_port_side=base.head_port_side,
+              route_barriers=route_barriers,
+              arrow_len_override=arrow_len_override,
+              tail_cluster_bbox=tail_cluster_bbox,
+              head_cluster_bbox=head_cluster_bbox,
+              parallel_offset=parallel_offset,
+              clip_swapped=swap_clip_shapes,
+              arrow_swapped=swap_arrow_attrs,
+            )
+            if detour_spline.points.length() == 10 &&
+              (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) {
+              let gap = last_left - first_right
+              if gap > 200.0 {
+                let points = detour_spline.points.copy()
+                points[4] = {
+                  x: first_right + 1.0,
+                  y: detour_y + vspace * 0.35,
+                }
+                points[5] = {
+                  x: last_left + 0.5,
+                  y: detour_y + vspace * 0.40,
+                }
+                detour_spline = {
+                  start: detour_spline.start,
+                  end: detour_spline.end,
+                  points,
+                }
+              }
+            }
+            detour_spline
           } else {
             if using_pathplan {
               let line_points = adjusted
@@ -2521,7 +2773,8 @@ fn build_edge_spline(
                 arrow_len_override=arrow_len_override,
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
-                prefer_linear=prefer_linear_flat_invis,
+                prefer_linear=prefer_linear_flat_invis ||
+                  (flat_no_arrow_candidate && flat_detour is None),
                 parallel_offset=parallel_offset,
                 clip_swapped=swap_clip_shapes,
                 arrow_swapped=swap_arrow_attrs,
@@ -2674,6 +2927,33 @@ fn build_edge_spline(
               Double::abs(tail_slope_line.y) > 0.01 ||
                 Double::abs(head_slope_line.y) > 0.01
           })
+        let flat_no_arrow_candidate =
+          !using_pathplan &&
+          is_flat_edge &&
+          !has_explicit_port &&
+          label_width_pt <= 0.0 &&
+          !route_include_tail &&
+          !route_include_head
+        let flat_detour =
+          if flat_no_arrow_candidate {
+            flat_no_arrow_detour_points_if_blocked(
+              tail_name,
+              head_name,
+              tail_rank,
+              tail_anchor,
+              head_anchor,
+              positions,
+              sizes,
+              ranks,
+              rank_y,
+              rank_ht1,
+              rank_ht2,
+              ranksep_pt,
+              layout_rankdir,
+            )
+          } else {
+            None
+          }
         if needs_record_detour {
           let tail_rect = port_side_rect(tail_clip_center, tail_clip_size)
           let head_rect = port_side_rect(head_clip_center, head_clip_size)
@@ -2757,6 +3037,65 @@ fn build_edge_spline(
             clip_swapped=swap_clip_shapes,
             arrow_swapped=swap_arrow_attrs,
           )
+        } else if flat_detour is Some(
+          (detour_points, first_right, last_left, detour_y, vspace),
+        ) {
+          if using_pathplan {
+            raw_bezier =
+              edge_spline_raw_for_points(
+                detour_points,
+                tail_slope_line,
+                head_slope_line,
+                true,
+                route_barriers=route_barriers,
+              )
+          }
+          let mut detour_spline =
+            edge_spline_for_points(
+              edge,
+              detour_points,
+              tail_clip_center,
+              head_clip_center,
+              tail_clip_size,
+              head_clip_size,
+              tail_slope_line,
+              head_slope_line,
+              true,
+              route_include_tail,
+              route_include_head,
+              tail_clip_enabled=tail_clip_enabled,
+              head_clip_enabled=head_clip_enabled,
+              tail_port_side=base.tail_port_side,
+              head_port_side=base.head_port_side,
+              route_barriers=route_barriers,
+              arrow_len_override=arrow_len_override,
+              tail_cluster_bbox=tail_cluster_bbox,
+              head_cluster_bbox=head_cluster_bbox,
+              parallel_offset=parallel_offset,
+              clip_swapped=swap_clip_shapes,
+              arrow_swapped=swap_arrow_attrs,
+            )
+          if detour_spline.points.length() == 10 &&
+            (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) {
+            let gap = last_left - first_right
+            if gap > 200.0 {
+              let points = detour_spline.points.copy()
+              points[4] = {
+                x: first_right + 1.0,
+                y: detour_y + vspace * 0.35,
+              }
+              points[5] = {
+                x: last_left + 0.5,
+                y: detour_y + vspace * 0.40,
+              }
+              detour_spline = {
+                start: detour_spline.start,
+                end: detour_spline.end,
+                points,
+              }
+            }
+          }
+          detour_spline
         } else {
           let line_start =
             if using_pathplan && points.length() >= 2 {
@@ -2826,7 +3165,8 @@ fn build_edge_spline(
               arrow_len_override=arrow_len_override,
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
-              prefer_linear=prefer_linear_flat_invis,
+              prefer_linear=prefer_linear_flat_invis ||
+                (flat_no_arrow_candidate && flat_detour is None),
               parallel_offset=parallel_offset,
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,

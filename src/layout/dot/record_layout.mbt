@@ -2114,6 +2114,20 @@ fn node_size(
     // constant factor for the built-in skew=0.6 parallelogram polygon.
     width_in = width_in * 1.0367531594794965
   }
+  if shape == "box" || shape == "rect" || shape == "rectangle" {
+    let mut peripheries = polygon_attr_int(node, "peripheries", 1)
+    if peripheries < 0 {
+      peripheries = 0
+    }
+    if peripheries > 1 {
+      // Graphviz parity: extra box peripheries expand the node bbox by GAP on
+      // both axes for each additional periphery (shapes.c poly_init).
+      let gap_in =
+        PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1) / 72.0
+      width_in = width_in + gap_in
+      height_in = height_in + gap_in
+    }
+  }
   if shape == "doublecircle" {
     let gap_in = PERIPHERY_GAP_PT * 2.0 / 72.0
     width_in = width_in + gap_in

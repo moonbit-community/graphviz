@@ -1026,6 +1026,15 @@ fn scale_layout_point(point : @geom.Point, sx : Double, sy : Double) -> @geom.Po
 }
 
 ///|
+fn scale_layout_point_rounded(
+  point : @geom.Point,
+  sx : Double,
+  sy : Double,
+) -> @geom.Point {
+  { x: (point.x * sx).round(), y: (point.y * sy).round() }
+}
+
+///|
 fn scale_layout_optional_point(
   point : @geom.Point?,
   sx : Double,
@@ -1059,12 +1068,19 @@ fn scale_layout_graph(
   layout : DotLayoutGraph,
   sx : Double,
   sy : Double,
+  round_node_pos : Bool,
 ) -> DotLayoutGraph {
   let nodes : Array[DotLayoutNode] = []
   for node_layout in layout.nodes {
+    let scaled_pos =
+      if round_node_pos {
+        scale_layout_point_rounded(node_layout.pos, sx, sy)
+      } else {
+        scale_layout_point(node_layout.pos, sx, sy)
+      }
     nodes.push({
       node: node_layout.node,
-      pos: scale_layout_point(node_layout.pos, sx, sy),
+      pos: scaled_pos,
       width_in: node_layout.width_in,
       height_in: node_layout.height_in,
       label_pos: scale_layout_optional_point(node_layout.label_pos, sx, sy),
@@ -1096,7 +1112,7 @@ fn scale_layout_graph(
   }
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(scale_layout_graph(subgraph, sx, sy))
+    subgraphs.push(scale_layout_graph(subgraph, sx, sy, round_node_pos))
   }
   {
     graph: layout.graph,
@@ -1118,16 +1134,18 @@ fn apply_ratio_fill_scale_if_needed(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
   rankdir : RankDir,
+  ratio_bbox : @geom.Rect,
 ) -> DotLayoutGraph {
   if !graph.is_root() {
     return layout
   }
-  match ratio_fill_scale_factors(graph, layout.bbox, rankdir) {
+  match ratio_fill_scale_factors(graph, ratio_bbox, rankdir) {
     Some((sx, sy)) => {
       if sx == 1.0 && sy == 1.0 {
         layout
       } else {
-        scale_layout_graph(layout, sx, sy)
+        // Graphviz parity: set_aspect rounds ND_coord after scaling.
+        scale_layout_graph(layout, sx, sy, true)
       }
     }
     None => layout
@@ -1262,6 +1280,9 @@ fn finalize_layout_graph(
       rank_ht1,
       rank_ht2,
     )
+  // Graphviz parity: ratio=fill uses rec_bb result from set_aspect
+  // before edge/label bbox expansion in postprocess.
+  let ratio_bbox = base_bbox
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
   // Graphviz parity: rankdir=BT flips top/bottom cluster padding (ranks are inverted).
@@ -1304,7 +1325,8 @@ fn finalize_layout_graph(
     edges: layout_with_root_pad.edges,
     subgraphs: layout_with_root_pad.subgraphs,
   }
-  let layout = apply_ratio_fill_scale_if_needed(graph, layout, rankdir)
+  let layout =
+    apply_ratio_fill_scale_if_needed(graph, layout, rankdir, ratio_bbox)
   let adjusted = adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
   let labeled =
     expand_bbox_for_edge_labels(
