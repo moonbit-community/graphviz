@@ -1,5 +1,4 @@
 ///|
-#skip
 test "ldbx debug snapshot" {
   let input_path = "refs/graphviz/graphs/directed/ldbxtried.gv"
   let expected_path = "tests/layout/dot/ldbxtried.gv.dot"

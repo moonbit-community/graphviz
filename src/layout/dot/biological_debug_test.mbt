@@ -1,4 +1,3 @@
-#skip
 test "biological debug snapshot" {
   let input_path = "refs/graphviz/graphs/directed/biological.gv"
   let expected_path = "tests/layout/dot/biological.gv.dot"

@@ -1,5 +1,4 @@
 ///|
-#skip
 test "clust2 debug snapshot" {
   let input_path = "refs/graphviz/graphs/directed/clust2.gv"
   let expected_path = "tests/layout/dot/clust2.gv.dot"

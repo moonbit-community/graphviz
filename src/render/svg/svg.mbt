@@ -338,8 +338,15 @@ fn shape_kind(value : String?) -> String {
     "diamond" => "diamond"
     "triangle" => "triangle"
     "invtriangle" | "invtri" => "invtriangle"
+    "pentagon" => "pentagon"
     "hexagon" => "hexagon"
+    "septagon" => "septagon"
     "octagon" => "octagon"
+    "trapezium" => "trapezium"
+    "invtrapezium" => "invtrapezium"
+    "parallelogram" => "parallelogram"
+    "house" => "house"
+    "invhouse" => "invhouse"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -648,6 +655,76 @@ fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] 
 }
 
 ///|
+fn polygon_vertices_for_rect(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  if sides < 3 {
+    return []
+  }
+  let half_w = (rect.urx - rect.llx) / 2.0
+  let half_h = (rect.ury - rect.lly) / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return []
+  }
+  let sector = 2.0 * @math.PI / sides.to_double()
+  let side_len = @math.sin(sector / 2.0)
+  let abs_mix = Double::abs(distortion) + Double::abs(skew)
+  let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
+  let cos_half = @math.cos(sector / 2.0)
+  if Double::abs(cos_half) <= 0.0000001 {
+    return []
+  }
+  let g_distortion = distortion * Double::sqrt(2.0) / cos_half
+  let g_skew = skew / 2.0
+  let mut angle = (sector - @math.PI) / 2.0
+  let mut sinx = @math.sin(angle)
+  let mut cosx = @math.cos(angle)
+  let mut r : @geom.Point = { x: 0.5 * cosx, y: 0.5 * sinx }
+  let mut xmax = 0.0
+  let mut ymax = 0.0
+  angle = angle + (@math.PI - sector) / 2.0
+  let base : Array[@geom.Point] = []
+  for _ in 0..<sides {
+    angle = angle + sector
+    sinx = @math.sin(angle)
+    cosx = @math.cos(angle)
+    r = { x: r.x + side_len * cosx, y: r.y + side_len * sinx }
+    let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
+    let mut py = r.y
+    let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
+    let radius = Double::sqrt(px * px + py * py)
+    px = radius * @math.cos(alpha)
+    py = radius * @math.sin(alpha)
+    if Double::abs(px) > xmax {
+      xmax = Double::abs(px)
+    }
+    if Double::abs(py) > ymax {
+      ymax = Double::abs(py)
+    }
+    base.push({ x: px, y: py })
+  }
+  if xmax <= 0.0 || ymax <= 0.0 {
+    return []
+  }
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let scale_x = half_w / xmax
+  let scale_y = half_h / ymax
+  let out : Array[@geom.Point] = []
+  for vertex in base {
+    out.push({
+      x: cx + vertex.x * scale_x,
+      y: cy + vertex.y * scale_y,
+    })
+  }
+  out
+}
+
+///|
 fn shape_polygon_points(
   kind : String,
   rect : @geom.Rect,
@@ -656,8 +733,16 @@ fn shape_polygon_points(
     "diamond" => Some(diamond_points(rect))
     "triangle" => Some(triangle_points(rect))
     "invtriangle" => Some(invtriangle_points(rect))
+    "pentagon" => Some(polygon_vertices_for_rect(rect, 5, 0.0, 0.0, 0.0))
     "hexagon" => Some(regular_polygon_points(rect, 6))
+    "septagon" => Some(polygon_vertices_for_rect(rect, 7, 0.0, 0.0, 0.0))
     "octagon" => Some(regular_polygon_points(rect, 8))
+    "trapezium" => Some(polygon_vertices_for_rect(rect, 4, 0.0, -0.4, 0.0))
+    "invtrapezium" =>
+      Some(polygon_vertices_for_rect(rect, 4, 180.0, -0.4, 0.0))
+    "parallelogram" => Some(polygon_vertices_for_rect(rect, 4, 0.0, 0.0, 0.6))
+    "house" => Some(polygon_vertices_for_rect(rect, 5, 0.0, -0.64, 0.0))
+    "invhouse" => Some(polygon_vertices_for_rect(rect, 5, 180.0, -0.64, 0.0))
     _ => None
   }
 }
