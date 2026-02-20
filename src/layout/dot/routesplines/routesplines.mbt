@@ -1869,6 +1869,7 @@ pub fn edge_pathplan_polyline(
     }
   }
   if first_split_for(ordered) is Some(_) {
+    // Graphviz parity: straight_path can split repeatedly on the remaining chain.
     let segments : Array[PathplanSegment] = []
     let mut current_tail_name = path_tail_name
     let mut current_tail_anchor = path_tail_anchor
