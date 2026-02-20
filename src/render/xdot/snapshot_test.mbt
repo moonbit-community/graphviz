@@ -741,6 +741,10 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/awilliams.gv",
       "tests/render/xdot/awilliams.xdot",
     ),
+    (
+      "refs/graphviz/graphs/directed/jcctree.gv",
+      "tests/render/xdot/jcctree.xdot",
+    ),
     ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
   ]
   let tolerance = 0.01

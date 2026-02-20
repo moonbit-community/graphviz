@@ -50,6 +50,7 @@ pairs=(
   "refs/graphviz/graphs/directed/KW91.gv tests/render/xdot/KW91.xdot"
   "refs/graphviz/graphs/directed/NaN.gv tests/render/xdot/NaN.xdot"
   "refs/graphviz/graphs/directed/awilliams.gv tests/render/xdot/awilliams.xdot"
+  "refs/graphviz/graphs/directed/jcctree.gv tests/render/xdot/jcctree.xdot"
   "refs/graphviz/graphs/directed/unix2.gv tests/render/xdot/unix2.xdot"
 )
 
