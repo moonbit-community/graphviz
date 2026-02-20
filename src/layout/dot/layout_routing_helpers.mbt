@@ -118,6 +118,7 @@ fn prepare_routing_context(
       order_index,
       nodesep_pt,
       edge_reversed_by_id,
+      path_cluster_keys,
     )
   {
     order_index,

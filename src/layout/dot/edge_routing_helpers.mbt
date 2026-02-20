@@ -236,6 +236,7 @@ fn edge_parallel_offsets(
   _order_index : Map[String, Int],
   nodesep_pt : Double,
   edge_reversed_by_id : Map[Int, Bool],
+  cluster_keys : Map[String, String],
 ) -> Map[Int, Double] {
   let groups : Map[String, Array[Int]] = Map::new()
   let group_first_dir_attr : Map[String, String] = Map::new()
@@ -354,19 +355,17 @@ fn edge_parallel_offsets(
           let b_tail = b.tail().name()
           let b_head = b.head().name()
           if a_tail == b_head && a_head == b_tail {
-            let a_reversed = match edge_reversed_by_id.get(ids[0]) {
+            let a_tail_cluster = match cluster_keys.get(a_tail) {
               Some(value) => value
-              None => false
+              None => ""
             }
-            let b_reversed = match edge_reversed_by_id.get(ids[1]) {
+            let a_head_cluster = match cluster_keys.get(a_head) {
               Some(value) => value
-              None => false
+              None => ""
             }
-            if !a_reversed && b_reversed {
-              let tmp = ids[0]
-              ids[0] = ids[1]
-              ids[1] = tmp
-            }
+            let intercluster =
+              a_tail_cluster != a_head_cluster &&
+              (a_tail_cluster != "" || a_head_cluster != "")
             let a_tail_has_self = match has_self_edge.get(a_tail) {
               Some(value) => value
               None => false
@@ -374,6 +373,24 @@ fn edge_parallel_offsets(
             let b_tail_has_self = match has_self_edge.get(b_tail) {
               Some(value) => value
               None => false
+            }
+            // Graphviz parity: reverse-pair slot ordering applies to regular
+            // intra-cluster pairs (rowe), but cluster-crossing pairs (clust2)
+            // keep cluster-constrained ordering.
+            if !intercluster && a_tail_has_self == b_tail_has_self {
+              let a_reversed = match edge_reversed_by_id.get(ids[0]) {
+                Some(value) => value
+                None => false
+              }
+              let b_reversed = match edge_reversed_by_id.get(ids[1]) {
+                Some(value) => value
+                None => false
+              }
+              if !a_reversed && b_reversed {
+                let tmp = ids[0]
+                ids[0] = ids[1]
+                ids[1] = tmp
+              }
             }
             if a_tail_has_self && !b_tail_has_self {
               let tmp = ids[0]
