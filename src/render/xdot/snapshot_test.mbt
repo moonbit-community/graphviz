@@ -715,6 +715,10 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/triedds.gv", "tests/render/xdot/triedds.xdot",
     ),
+    (
+      "refs/graphviz/graphs/directed/hashtable.gv",
+      "tests/render/xdot/hashtable.xdot",
+    ),
     ("refs/graphviz/graphs/directed/unix.gv", "tests/render/xdot/unix.xdot"),
     ("refs/graphviz/graphs/directed/world.gv", "tests/render/xdot/world.xdot"),
     (
