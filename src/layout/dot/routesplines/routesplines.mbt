@@ -1812,16 +1812,17 @@ pub fn edge_pathplan_polyline(
     println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
   }
   let straight_eps = 0.01
-  let straight_len_from = (start_idx : Int) => {
-    if start_idx + 1 >= ordered.length() {
+  let label_threshold = if has_edge_label { 5 } else { 3 }
+  let straight_len_from = (names : Array[String], start_idx : Int) => {
+    if start_idx + 1 >= names.length() {
       0
     } else {
-      match vnode_positions.get(ordered[start_idx]) {
+      match vnode_positions.get(names[start_idx]) {
         Some(base) => {
           let mut count = 0
           let mut idx = start_idx + 1
-          while idx < ordered.length() {
-            let pos = match vnode_positions.get(ordered[idx]) {
+          while idx < names.length() {
+            let pos = match vnode_positions.get(names[idx]) {
               Some(value) => value
               None => break
             }
@@ -1839,173 +1840,212 @@ pub fn edge_pathplan_polyline(
       }
     }
   }
-  let label_threshold = if has_edge_label { 5 } else { 3 }
-  let mut split_head_idx = -1
-  let mut split_tail_idx = -1
-  // Graphviz parity: straight-mode detection is evaluated while walking
-  // the chain; a split can start at an interior vnode, not only the first.
-  let mut start_idx = 0
-  while start_idx + 1 < ordered.length() {
-    let straight_len = straight_len_from(start_idx)
-    if straight_len >= label_threshold {
-      let sl = straight_len - 2
-      if sl >= 1 {
-        let head_idx = start_idx + 1
-        let tail_idx = head_idx + sl
-        if tail_idx < ordered.length() {
-          split_head_idx = head_idx
-          split_tail_idx = tail_idx
+  let first_split_for = (names : Array[String]) => {
+    let mut split_head_idx = -1
+    let mut split_tail_idx = -1
+    // Graphviz parity: straight-mode detection is evaluated while walking
+    // the chain; a split can start at an interior vnode, not only the first.
+    let mut start_idx = 0
+    while start_idx + 1 < names.length() {
+      let straight_len = straight_len_from(names, start_idx)
+      if straight_len >= label_threshold {
+        let sl = straight_len - 2
+        if sl >= 1 {
+          let head_idx = start_idx + 1
+          let tail_idx = head_idx + sl
+          if tail_idx < names.length() {
+            split_head_idx = head_idx
+            split_tail_idx = tail_idx
+          }
+        }
+        break
+      }
+      start_idx = start_idx + 1
+    }
+    if split_head_idx >= 0 && split_tail_idx >= split_head_idx {
+      Some((split_head_idx, split_tail_idx))
+    } else {
+      None
+    }
+  }
+  if first_split_for(ordered) is Some(_) {
+    let segments : Array[PathplanSegment] = []
+    let mut current_tail_name = path_tail_name
+    let mut current_tail_anchor = path_tail_anchor
+    let mut current_tail_side = path_tail_side
+    let mut current_tail_port_box = path_tail_port_box
+    let mut current_tail_rank = path_tail_rank
+    let mut current_vnodes = ordered
+    let mut split_failed = false
+    while true {
+      match first_split_for(current_vnodes) {
+        Some((split_head_idx, split_tail_idx)) => {
+          let seg1_head = current_vnodes[split_head_idx]
+          let seg2_tail = current_vnodes[split_tail_idx]
+          let seg1_vnodes : Array[String] = []
+          let mut idx = 0
+          while idx < split_head_idx {
+            seg1_vnodes.push(current_vnodes[idx])
+            idx = idx + 1
+          }
+          let next_vnodes : Array[String] = []
+          idx = split_tail_idx + 1
+          while idx < current_vnodes.length() {
+            next_vnodes.push(current_vnodes[idx])
+            idx = idx + 1
+          }
+          let seg1_head_pos = match merged_positions.get(seg1_head) {
+            Some(value) => value
+            None => path_head_anchor
+          }
+          let seg2_tail_pos = match merged_positions.get(seg2_tail) {
+            Some(value) => value
+            None => current_tail_anchor
+          }
+          let seg1_head_rank = match vnode_ranks.get(seg1_head) {
+            Some(value) => value
+            None => path_head_rank
+          }
+          let seg2_tail_rank = match vnode_ranks.get(seg2_tail) {
+            Some(value) => value
+            None => current_tail_rank
+          }
+          // Graphviz parity: straight-chain split leaves virtual endpoints
+          // unconstrained (beginpath/endpath ignore sides for virtual nodes).
+          let seg1_head_side = 0
+          match edge_pathplan_polyline_core(
+            current_tail_name,
+            seg1_head,
+            current_tail_anchor,
+            seg1_head_pos,
+            current_tail_side,
+            seg1_head_side,
+            current_tail_port_box,
+            None,
+            current_tail_rank,
+            seg1_head_rank,
+            seg1_vnodes,
+            positions,
+            vnode_ranks,
+            vnode_positions,
+            sizes,
+            mval_sizes,
+            vnode_sizes,
+            cluster_keys,
+            vnode_clusters,
+            cluster_bboxes,
+            x_groups,
+            order_index,
+            path_out_edges,
+            path_in_edges,
+            rank_y,
+            rank_ht1,
+            rank_ht2,
+            nodesep_pt,
+            ranksep_pt,
+            rankdir,
+            merged_positions,
+            route_sizes,
+            mval_route_sizes,
+            splinesep_pt,
+            left_bound,
+            right_bound,
+          ) {
+            Some((points, barriers, boxes)) => {
+              segments.push({
+                points,
+                barriers,
+                boxes,
+                vnodes: seg1_vnodes,
+              })
+            }
+            None => {
+              split_failed = true
+              break
+            }
+          }
+          current_tail_name = seg2_tail
+          current_tail_anchor = seg2_tail_pos
+          current_tail_side = 0
+          current_tail_port_box = None
+          current_tail_rank = seg2_tail_rank
+          current_vnodes = next_vnodes
+        }
+        None => {
+          match edge_pathplan_polyline_core(
+            current_tail_name,
+            path_head_name,
+            current_tail_anchor,
+            path_head_anchor,
+            current_tail_side,
+            path_head_side,
+            current_tail_port_box,
+            path_head_port_box,
+            current_tail_rank,
+            path_head_rank,
+            current_vnodes,
+            positions,
+            vnode_ranks,
+            vnode_positions,
+            sizes,
+            mval_sizes,
+            vnode_sizes,
+            cluster_keys,
+            vnode_clusters,
+            cluster_bboxes,
+            x_groups,
+            order_index,
+            path_out_edges,
+            path_in_edges,
+            rank_y,
+            rank_ht1,
+            rank_ht2,
+            nodesep_pt,
+            ranksep_pt,
+            rankdir,
+            merged_positions,
+            route_sizes,
+            mval_route_sizes,
+            splinesep_pt,
+            left_bound,
+            right_bound,
+          ) {
+            Some((points, barriers, boxes)) => {
+              segments.push({
+                points,
+                barriers,
+                boxes,
+                vnodes: current_vnodes,
+              })
+            }
+            None => split_failed = true
+          }
+          break
         }
       }
-      break
     }
-    start_idx = start_idx + 1
-  }
-  if split_head_idx >= 0 && split_tail_idx >= split_head_idx {
-    let seg1_head = ordered[split_head_idx]
-    let seg2_tail = ordered[split_tail_idx]
-    let seg1_vnodes : Array[String] = []
-    let mut idx = 0
-    while idx < split_head_idx {
-      seg1_vnodes.push(ordered[idx])
-      idx = idx + 1
-    }
-    let seg2_vnodes : Array[String] = []
-    idx = split_tail_idx + 1
-    while idx < ordered.length() {
-      seg2_vnodes.push(ordered[idx])
-      idx = idx + 1
-    }
-    let seg1_head_pos = match merged_positions.get(seg1_head) {
-      Some(value) => value
-      None => path_head_pos
-    }
-    let seg2_tail_pos = match merged_positions.get(seg2_tail) {
-      Some(value) => value
-      None => path_tail_pos
-    }
-    let seg1_head_rank = match vnode_ranks.get(seg1_head) {
-      Some(value) => value
-      None => path_head_rank
-    }
-    let seg2_tail_rank = match vnode_ranks.get(seg2_tail) {
-      Some(value) => value
-      None => path_tail_rank
-    }
-    let seg1_head_anchor = seg1_head_pos
-    let seg2_tail_anchor = seg2_tail_pos
-    // Graphviz parity: straight-chain split leaves virtual endpoints
-    // unconstrained (beginpath/endpath ignore sides for virtual nodes).
-    let seg1_head_side = 0
-    let seg2_tail_side = 0
-    let seg1 = edge_pathplan_polyline_core(
-      path_tail_name,
-      seg1_head,
-      path_tail_anchor,
-      seg1_head_anchor,
-      path_tail_side,
-      seg1_head_side,
-      path_tail_port_box,
-      None,
-      path_tail_rank,
-      seg1_head_rank,
-      seg1_vnodes,
-      positions,
-      vnode_ranks,
-      vnode_positions,
-      sizes,
-      mval_sizes,
-      vnode_sizes,
-      cluster_keys,
-      vnode_clusters,
-      cluster_bboxes,
-      x_groups,
-      order_index,
-      path_out_edges,
-      path_in_edges,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      nodesep_pt,
-      ranksep_pt,
-      rankdir,
-      merged_positions,
-      route_sizes,
-      mval_route_sizes,
-      splinesep_pt,
-      left_bound,
-      right_bound,
-    )
-    let seg2 = edge_pathplan_polyline_core(
-      seg2_tail,
-      path_head_name,
-      seg2_tail_anchor,
-      path_head_anchor,
-      seg2_tail_side,
-      path_head_side,
-      None,
-      path_head_port_box,
-      seg2_tail_rank,
-      path_head_rank,
-      seg2_vnodes,
-      positions,
-      vnode_ranks,
-      vnode_positions,
-      sizes,
-      mval_sizes,
-      vnode_sizes,
-      cluster_keys,
-      vnode_clusters,
-      cluster_bboxes,
-      x_groups,
-      order_index,
-      path_out_edges,
-      path_in_edges,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      nodesep_pt,
-      ranksep_pt,
-      rankdir,
-      merged_positions,
-      route_sizes,
-      mval_route_sizes,
-      splinesep_pt,
-      left_bound,
-      right_bound,
-    )
-    match (seg1, seg2) {
-      (Some((points1, barriers1, boxes1)), Some((points2, barriers2, boxes2))) => {
+    if !split_failed && segments.length() > 0 {
         let combined : Array[@geom.Point] = []
-        for p in points1 {
-          combined.push(p)
-        }
-        if points2.length() > 0 {
-          if combined.length() > 0 {
-            // Graphviz parity: straight_path duplicates the last point twice.
-            let last = combined[combined.length() - 1]
-            combined.push(last)
-            combined.push(last)
-          }
-          let mut pi = 0
-          while pi < points2.length() {
-            combined.push(points2[pi])
-            pi = pi + 1
-          }
-        }
         let all_barriers : Array[(@geom.Point, @geom.Point)] = []
-        for entry in barriers1 {
-          all_barriers.push(entry)
-        }
-        for entry in barriers2 {
-          all_barriers.push(entry)
-        }
         let all_boxes : Array[@geom.Rect] = []
-        for box in boxes1 {
-          all_boxes.push(box)
-        }
-        for box in boxes2 {
-          all_boxes.push(box)
+        for segment in segments {
+          if segment.points.length() > 0 {
+            if combined.length() > 0 {
+              // Graphviz parity: straight_path duplicates the last point twice.
+              let last = combined[combined.length() - 1]
+              combined.push(last)
+              combined.push(last)
+            }
+            for point in segment.points {
+              combined.push(point)
+            }
+          }
+          for barrier in segment.barriers {
+            all_barriers.push(barrier)
+          }
+          for box in segment.boxes {
+            all_boxes.push(box)
+          }
         }
         let out_points =
           if swap_path {
@@ -2019,20 +2059,6 @@ pub fn edge_pathplan_polyline(
           } else {
             combined
           }
-        let segments : Array[PathplanSegment] = [
-          {
-            points: points1,
-            barriers: barriers1,
-            boxes: boxes1,
-            vnodes: seg1_vnodes,
-          },
-          {
-            points: points2,
-            barriers: barriers2,
-            boxes: boxes2,
-            vnodes: seg2_vnodes,
-          },
-        ]
         return Some({
           points: out_points,
           barriers: all_barriers,
@@ -2040,9 +2066,7 @@ pub fn edge_pathplan_polyline(
           segments,
         })
       }
-      _ => ()
     }
-  }
   match edge_pathplan_polyline_core(
     path_tail_name,
     path_head_name,

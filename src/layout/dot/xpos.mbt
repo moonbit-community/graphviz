@@ -1417,8 +1417,10 @@ fn build_constraint_graph(
     if gdnlist_order.length() > 0 { gdnlist_order } else { nlist_order }
   for name in base_order {
     if real_by_name.get(name) is Some(_) || extra_rank.get(name) is Some(_) {
-      ordered_names.push(name)
-      seen[name] = true
+      if seen.get(name) is None {
+        ordered_names.push(name)
+        seen[name] = true
+      }
     }
   }
   for node in nodes {
@@ -1497,6 +1499,128 @@ fn build_constraint_graph(
   }
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
   let flat_minlen_constraints : Map[String, (String, String, Int, Int)] = Map::new()
+  let merged_edge_weight_bonus : Map[Int, Int] = Map::new()
+  let merged_edge_skip : Map[Int, Bool] = Map::new()
+  let port_merge_key = (port : @cgraph.Port?) => {
+    match port {
+      None => ""
+      Some(value) => {
+        let mut out = ""
+        match value.name {
+          Some(name) => out = name
+          None => ()
+        }
+        match value.compass {
+          Some(compass) => {
+            let side = match compass {
+              @cgraph.Compass::N => "n"
+              @cgraph.Compass::NE => "ne"
+              @cgraph.Compass::E => "e"
+              @cgraph.Compass::SE => "se"
+              @cgraph.Compass::S => "s"
+              @cgraph.Compass::SW => "sw"
+              @cgraph.Compass::W => "w"
+              @cgraph.Compass::NW => "nw"
+              @cgraph.Compass::C => "c"
+            }
+            if out == "" {
+              out = side
+            } else {
+              out = "\{out}:\{side}"
+            }
+          }
+          None => ()
+        }
+        out
+      }
+    }
+  }
+  let merge_key = (
+    tail : String,
+    head : String,
+    tail_port : @cgraph.Port?,
+    head_port : @cgraph.Port?,
+  ) => {
+    "\{tail}|\{head}|\{port_merge_key(tail_port)}|\{port_merge_key(head_port)}"
+  }
+  let forward_rep_by_key : Map[String, Int] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    if edge_mid_label_metrics(edge) is Some(_) {
+      continue
+    }
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    let oriented_tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let oriented_head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edge.head().name()
+      }
+    let is_reversed =
+      oriented_tail == edge.head().name() &&
+      oriented_head == edge.tail().name()
+    if is_reversed {
+      continue
+    }
+    let key =
+      merge_key(
+        edge.tail().name(),
+        edge.head().name(),
+        edge.tail_port(),
+        edge.head_port(),
+      )
+    if forward_rep_by_key.get(key) is None {
+      forward_rep_by_key[key] = edge_idx
+    }
+  }
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    if edge_mid_label_metrics(edge) is Some(_) {
+      continue
+    }
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    let oriented_tail =
+      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+        edge.tail().name()
+      }
+    let oriented_head =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+        edge.head().name()
+      }
+    let is_reversed =
+      oriented_tail == edge.head().name() &&
+      oriented_head == edge.tail().name()
+    if !is_reversed {
+      continue
+    }
+    let key =
+      merge_key(
+        edge.head().name(),
+        edge.tail().name(),
+        edge.tail_port(),
+        edge.head_port(),
+      )
+    match forward_rep_by_key.get(key) {
+      Some(rep_idx) => {
+        if rep_idx == edge_idx {
+          continue
+        }
+        merged_edge_skip[edge_idx] = true
+        let prev_bonus = match merged_edge_weight_bonus.get(rep_idx) {
+          Some(value) => value
+          None => 0
+        }
+        merged_edge_weight_bonus[rep_idx] = prev_bonus + edge_weight(edge)
+      }
+      None => ()
+    }
+  }
   let add_segment = (
     seg_tail : String,
     seg_head : String,
@@ -1511,6 +1635,9 @@ fn build_constraint_graph(
     }
   }
   let record_edge_segments = (edge_idx : Int, edge : @cgraph.Edge) => {
+    if merged_edge_skip.get(edge_idx) is Some(_) {
+      return ()
+    }
     let tail_name =
       if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
         edge.tail().name()
@@ -1537,6 +1664,10 @@ fn build_constraint_graph(
             // Graphviz parity: make_edge_pairs skips self-edges (handled via ND_other).
             ()
           } else {
+            let weight_bonus = match merged_edge_weight_bonus.get(edge_idx) {
+              Some(value) => value
+              None => 0
+            }
             if tail_rank == head_rank && edge_is_constraint(edge) &&
               edge_mid_label_metrics(edge) is None {
               let (left, right) =
@@ -1554,13 +1685,13 @@ fn build_constraint_graph(
                       (head_name, tail_name)
                     }
                 }
-              let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
-              let minlen =
-                trunc_int(Double::from_int(edge_minlen(edge)) * nodesep_pt + width)
-              let weight = edge_weight(edge)
-              let flat_key = "\{left}|\{right}"
-              match rank_adj_constraints.get(flat_key) {
-                Some(entry) => {
+                let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
+                let minlen =
+                  trunc_int(Double::from_int(edge_minlen(edge)) * nodesep_pt + width)
+                let weight = edge_weight(edge)
+                let flat_key = "\{left}|\{right}"
+                match rank_adj_constraints.get(flat_key) {
+                  Some(entry) => {
                   let (tail, head, prev_minlen, prev_weight) = entry
                   let next_minlen = if minlen > prev_minlen { minlen } else { prev_minlen }
                   let next_weight = if weight > prev_weight { weight } else { prev_weight }
@@ -1601,12 +1732,12 @@ fn build_constraint_graph(
               for vnode in ordered_vnodes {
                 chain.push(vnode)
               }
-              if tail_name != head_name || ordered_vnodes.length() == 0 {
-                chain.push(head_name)
-              }
-              let base_weight = edge_weight(edge)
-              let orig_tail = edge.tail().name()
-              let orig_head = edge.head().name()
+                if tail_name != head_name || ordered_vnodes.length() == 0 {
+                  chain.push(head_name)
+                }
+                let base_weight = edge_weight(edge) + weight_bonus
+                let orig_tail = edge.tail().name()
+                let orig_head = edge.head().name()
               let mut idx = 0
               while idx + 1 < chain.length() {
                 let seg_tail = chain[idx]

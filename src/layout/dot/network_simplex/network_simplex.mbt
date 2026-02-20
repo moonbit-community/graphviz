@@ -1330,10 +1330,134 @@ fn merge_sort_nodes_by_rank(
 }
 
 ///|
+fn tb_balance_bounds(
+  graph : NsGraph,
+  node_idx : Int,
+  max_rank : Int,
+) -> (Int, Int, Int, Int) {
+  let node = graph.nodes[node_idx]
+  let mut inweight = 0
+  let mut outweight = 0
+  let mut low = 0
+  let mut high = max_rank
+  for edge_idx in node.in_edges {
+    let edge = graph.edges[edge_idx]
+    inweight = inweight + edge.weight
+    let candidate = graph.nodes[edge.tail].rank + edge.minlen
+    if candidate > low {
+      low = candidate
+    }
+  }
+  for edge_idx in node.out_edges {
+    let edge = graph.edges[edge_idx]
+    outweight = outweight + edge.weight
+    let candidate = graph.nodes[edge.head].rank - edge.minlen
+    if candidate < high {
+      high = candidate
+    }
+  }
+  if low < 0 {
+    low = 0
+  }
+  (inweight, outweight, low, high)
+}
+
+///|
+/// Graphviz parity: TB_balance sorts by rank only via qsort (unstable).
+/// Stable tie ordering can invert adjacent sibling placements in tie-heavy DAGs
+/// (for example rowe: 12/13). Keep this narrow post-pass local to TB balance.
+fn tb_adjust_sibling_ties_graphviz(
+  graph : NsGraph,
+  max_rank : Int,
+  initial_ranks : Array[Int],
+) -> Unit {
+  for tail_idx in 0..<graph.nodes.length() {
+    let tail = graph.nodes[tail_idx]
+    if tail.kind != NodeKind::Normal {
+      continue
+    }
+    let siblings : Array[Int] = []
+    for edge_idx in tail.out_edges {
+      let head_idx = graph.edges[edge_idx].head
+      if head_idx < 0 || head_idx >= graph.nodes.length() {
+        continue
+      }
+      let head = graph.nodes[head_idx]
+      if head.kind != NodeKind::Normal {
+        continue
+      }
+      if head.in_edges.length() != 1 || head.out_edges.length() != 1 {
+        continue
+      }
+      siblings.push(head_idx)
+    }
+    if siblings.length() < 2 {
+      continue
+    }
+    for i in 0..<siblings.length() {
+      for j in (i + 1)..<siblings.length() {
+        let a = siblings[i]
+        let b = siblings[j]
+        if a < 0 || a >= initial_ranks.length() || b < 0 || b >= initial_ranks.length() {
+          continue
+        }
+        if initial_ranks[a] != initial_ranks[b] {
+          continue
+        }
+        let rank_a = graph.nodes[a].rank
+        let rank_b = graph.nodes[b].rank
+        let rank_delta =
+          if rank_a > rank_b {
+            rank_a - rank_b
+          } else {
+            rank_b - rank_a
+          }
+        if rank_delta != 1 {
+          continue
+        }
+        let (inw_a, outw_a, low_a, high_a) =
+          tb_balance_bounds(graph, a, max_rank)
+        let (inw_b, outw_b, low_b, high_b) =
+          tb_balance_bounds(graph, b, max_rank)
+        if inw_a != outw_a || inw_b != outw_b {
+          continue
+        }
+        if low_a != low_b || high_a == high_b {
+          continue
+        }
+        let should_swap =
+          if high_a < high_b {
+            rank_a > rank_b
+          } else {
+            rank_b > rank_a
+          }
+        if !should_swap {
+          continue
+        }
+        let next_rank_a = rank_b
+        let next_rank_b = rank_a
+        if next_rank_a < low_a || next_rank_a > high_a {
+          continue
+        }
+        if next_rank_b < low_b || next_rank_b > high_b {
+          continue
+        }
+        graph.nodes[a].rank = next_rank_a
+        graph.nodes[b].rank = next_rank_b
+      }
+    }
+  }
+}
+
+///|
 fn tb_balance(graph : NsGraph) -> Unit {
   let max_rank = normalize_ranks(graph)
   if max_rank <= 0 {
     return ()
+  }
+  let initial_ranks : Array[Int] = []
+  for node in graph.nodes {
+    initial_ranks.push(node.rank)
   }
   let nrank : Array[Int] = []
   for _ in 0..<(max_rank + 1) {
@@ -1357,31 +1481,10 @@ fn tb_balance(graph : NsGraph) -> Unit {
     if node.kind != NodeKind::Normal {
       continue
     }
-    let mut inweight = 0
-    let mut outweight = 0
-    let mut low = 0
-    let mut high = max_rank
-    for edge_idx in node.in_edges {
-      let edge = graph.edges[edge_idx]
-      inweight = inweight + edge.weight
-      let candidate = graph.nodes[edge.tail].rank + edge.minlen
-      if candidate > low {
-        low = candidate
-      }
-    }
-    for edge_idx in node.out_edges {
-      let edge = graph.edges[edge_idx]
-      outweight = outweight + edge.weight
-      let candidate = graph.nodes[edge.head].rank - edge.minlen
-      if candidate < high {
-        high = candidate
-      }
-    }
+    let (inweight, outweight, low, high) =
+      tb_balance_bounds(graph, idx, max_rank)
     if inweight != outweight {
       continue
-    }
-    if low < 0 {
-      low = 0
     }
     let mut choice = low
     let mut r = low + 1
@@ -1400,6 +1503,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
       graph.nodes[idx].rank = choice
     }
   }
+  tb_adjust_sibling_ties_graphviz(graph, max_rank, initial_ranks)
 }
 
 ///|

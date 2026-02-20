@@ -99,8 +99,26 @@ fn prepare_routing_context(
       path_vnode_clusters[vnode] = vnode_cluster
     }
   }
+  let edge_reversed_by_id : Map[Int, Bool] = Map::new()
+  for i in 0..<edges.length() {
+    let edge = edges[i]
+    let oriented_tail =
+      if i < edge_tail.length() { edge_tail[i] } else { edge.tail().name() }
+    let oriented_head =
+      if i < edge_head.length() { edge_head[i] } else { edge.head().name() }
+    let reversed =
+      oriented_tail == edge.head().name() &&
+      oriented_head == edge.tail().name()
+    edge_reversed_by_id[edge.id()] = reversed
+  }
   let parallel_offsets =
-    edge_parallel_offsets(edges, ranks, order_index, nodesep_pt)
+    edge_parallel_offsets(
+      edges,
+      ranks,
+      order_index,
+      nodesep_pt,
+      edge_reversed_by_id,
+    )
   {
     order_index,
     path_order_index,

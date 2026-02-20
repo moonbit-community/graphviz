@@ -235,6 +235,7 @@ fn edge_parallel_offsets(
   ranks : Map[String, Int],
   _order_index : Map[String, Int],
   nodesep_pt : Double,
+  edge_reversed_by_id : Map[Int, Bool],
 ) -> Map[Int, Double] {
   let groups : Map[String, Array[Int]] = Map::new()
   let group_first_dir_attr : Map[String, String] = Map::new()
@@ -353,6 +354,19 @@ fn edge_parallel_offsets(
           let b_tail = b.tail().name()
           let b_head = b.head().name()
           if a_tail == b_head && a_head == b_tail {
+            let a_reversed = match edge_reversed_by_id.get(ids[0]) {
+              Some(value) => value
+              None => false
+            }
+            let b_reversed = match edge_reversed_by_id.get(ids[1]) {
+              Some(value) => value
+              None => false
+            }
+            if !a_reversed && b_reversed {
+              let tmp = ids[0]
+              ids[0] = ids[1]
+              ids[1] = tmp
+            }
             let a_tail_has_self = match has_self_edge.get(a_tail) {
               Some(value) => value
               None => false
