@@ -437,6 +437,96 @@ fn dash_style_name(style : @attrs.StyleFlags) -> String? {
 }
 
 ///|
+fn xdot_style_tokens(raw : String) -> Array[String] {
+  let tokens : Array[String] = []
+  let mut current = StringBuilder::new()
+  let mut seen = false
+  for ch in raw {
+    if ch == ',' || ch.is_whitespace() {
+      if seen {
+        tokens.push(current.to_string())
+        current = StringBuilder::new()
+        seen = false
+      }
+    } else {
+      current.write_char(ch)
+      seen = true
+    }
+  }
+  if seen {
+    tokens.push(current.to_string())
+  }
+  tokens
+}
+
+///|
+fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
+  let mut is_bold = false
+  for token in xdot_style_tokens(style.raw) {
+    if token == "bold" {
+      is_bold = true
+      continue
+    }
+    if token.has_prefix("setlinewidth(") && token.has_suffix(")") {
+      let width_text =
+        token.unsafe_substring(start=13, end=token.length() - 1)
+      let width = @attrs.parse_double(Some(width_text), 1.0)
+      if width > 0.0 {
+        return Some(width)
+      }
+    }
+  }
+  if is_bold {
+    Some(2.0)
+  } else {
+    None
+  }
+}
+
+///|
+fn is_default_linewidth(width : Double) -> Bool {
+  width >= 0.999999 && width <= 1.000001
+}
+
+///|
+fn stroke_width_style_name(
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+) -> String? {
+  let parsed = @attrs.parse_double(penwidth, 1.0)
+  let width =
+    if parsed > 0.0 && !is_default_linewidth(parsed) {
+      parsed
+    } else {
+      match style_linewidth(style) {
+        Some(value) => if value > 0.0 { value } else { 1.0 }
+        None => 1.0
+      }
+    }
+  if is_default_linewidth(width) {
+    None
+  } else {
+    Some("setlinewidth(\{format_double(width)})")
+  }
+}
+
+///|
+fn push_stroke_style_ops(
+  ops : Array[@render.DrawOp],
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+) -> Unit {
+  match stroke_width_style_name(style, penwidth) {
+    Some(name) => ops.push(@render.DrawOp::Style(name~))
+    None => ()
+  }
+  match dash_style_name(style) {
+    Some(name) => ops.push(@render.DrawOp::Style(name~))
+    None => ()
+  }
+}
+
+///|
 
 ///|
 fn arrow_flags(edge : @cgraph.Edge, kind : @cgraph.GraphKind) -> ArrowFlags {
@@ -541,11 +631,16 @@ fn arrow_ops(
   if primitives.length() == 0 {
     return ops
   }
-  let style = "solid"
+  let style = @attrs.parse_style(layout.edge.get_attr("style"))
+  let stroke_style = stroke_width_style_name(style, layout.edge.get_attr("penwidth"))
   let color = @attrs.color(layout.edge.get_attr("color"), default="black")
   let normalized = @attrs.normalize_color(color)
   for primitive in primitives {
-    ops.push(@render.DrawOp::Style(name=style))
+    match stroke_style {
+      Some(name) => ops.push(@render.DrawOp::Style(name~))
+      None => ()
+    }
+    ops.push(@render.DrawOp::Style(name="solid"))
     ops.push(@render.DrawOp::PenColor(color=normalized))
     match primitive {
       @render.DrawOp::Polygon(filled~, points~) => {
@@ -1289,19 +1384,11 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     None => "black"
   }
   let style = @attrs.parse_style(node.get_attr("style"))
-  let mut style_name = ""
   let is_mrecord = match node.get_attr("shape") {
     Some(value) => value.to_lower() == "mrecord"
     None => false
   }
-  match dash_style_name(style) {
-    Some(name) =>
-      style_name = if style_name == "" { name } else { "\{style_name},\{name}" }
-    None => ()
-  }
-  if style_name != "" {
-    ops.push(@render.DrawOp::Style(name=style_name))
-  }
+  push_stroke_style_ops(ops, style, node.get_attr("penwidth"))
   let color = @attrs.normalize_color(pen)
   let rect = node_rect(layout)
   let inner_rect : @geom.Rect = {
@@ -1672,10 +1759,7 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return ops
   }
   let style = @attrs.parse_style(node.get_attr("style"))
-  match dash_style_name(style) {
-    Some(name) => ops.push(@render.DrawOp::Style(name~))
-    None => ()
-  }
+  push_stroke_style_ops(ops, style, node.get_attr("penwidth"))
   ops.push(@render.DrawOp::PenColor(color=normalized_pen))
   let filled = if shape == "point" { true } else { style.filled }
   if filled {
@@ -1825,10 +1909,7 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
   let style = @attrs.parse_style(edge.get_attr("style"))
-  match dash_style_name(style) {
-    Some(name) => ops.push(@render.DrawOp::Style(name~))
-    None => ()
-  }
+  push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let pen_colors = edge_pen_colors(edge)
   for pen_color in pen_colors {
     ops.push(@render.DrawOp::PenColor(color=pen_color))
@@ -1996,6 +2077,22 @@ fn graph_label_text(graph : @cgraph.Graph) -> String? {
 }
 
 ///|
+fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
+  let mut current = graph
+  while true {
+    match current.get_attr(name) {
+      Some(value) => return Some(value)
+      None => ()
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  None
+}
+
+///|
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
@@ -2031,10 +2128,9 @@ fn graph_draw_ops(layout : @layout_dot.DotLayoutGraph) -> Array[@render.DrawOp] 
   }
   if is_cluster_graph(graph) {
     let style = @attrs.parse_style(graph.get_attr("style"))
-    match dash_style_name(style) {
-      Some(name) => ops.push(@render.DrawOp::Style(name~))
-      None => ()
-    }
+    let stroke_style = @attrs.parse_style(inherited_graph_attr(graph, "style"))
+    let stroke_penwidth = inherited_graph_attr(graph, "penwidth")
+    push_stroke_style_ops(ops, stroke_style, stroke_penwidth)
     let color = @attrs.color(graph.get_attr("color"), default="black")
     ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(color)))
     let fill = if style.filled {
