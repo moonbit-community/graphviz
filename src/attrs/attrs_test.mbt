@@ -28,6 +28,7 @@ test "attrs font size fallback on invalid or non-positive" {
 test "attrs color defaults and normalization" {
   assert_eq(color(None), "black")
   assert_eq(normalize_color("pink"), "#ffc0cb")
+  assert_eq(normalize_color("0.650 0.200 1.000"), "#ccd1ff")
   assert_eq(normalize_color("HotPink"), "#ff69b4")
   assert_eq(normalize_color("#ABCDEF"), "#abcdef")
 }
