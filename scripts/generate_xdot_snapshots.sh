@@ -56,6 +56,7 @@ pairs=(
   "refs/graphviz/graphs/directed/nhg.gv tests/render/xdot/nhg.xdot"
   "refs/graphviz/graphs/directed/proc3d.gv tests/render/xdot/proc3d.xdot"
   "refs/graphviz/graphs/directed/psfonttest.gv tests/render/xdot/psfonttest.xdot"
+  "refs/graphviz/graphs/directed/rowe.gv tests/render/xdot/rowe.xdot"
   "refs/graphviz/graphs/directed/shells.gv tests/render/xdot/shells.xdot"
   "refs/graphviz/graphs/directed/unix2.gv tests/render/xdot/unix2.xdot"
 )
