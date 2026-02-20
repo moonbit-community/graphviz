@@ -710,6 +710,9 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/pmpipe.gv", "tests/render/xdot/pmpipe.xdot",
     ),
     (
+      "refs/graphviz/graphs/directed/pm2way.gv", "tests/render/xdot/pm2way.xdot",
+    ),
+    (
       "refs/graphviz/graphs/directed/viewfile.gv", "tests/render/xdot/viewfile.xdot",
     ),
     (
