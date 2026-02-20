@@ -22,6 +22,7 @@ pub fn normalize_color(value : String) -> String {
     "orange" => "#ffa500"
     "cyan" => "#00ffff"
     "magenta" => "#ff00ff"
+    "pink" => "#ffc0cb"
     "hotpink" => "#ff69b4"
     "lightgrey" => "#d3d3d3"
     "lightgray" => "#d3d3d3"
