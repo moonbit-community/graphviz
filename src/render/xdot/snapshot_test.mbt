@@ -124,22 +124,30 @@ fn normalize_color_tokens(tokens : Array[String]) -> Array[String] {
   let normalized : Array[String] = []
   let mut index = 0
   while index < tokens.length() {
-    let token = tokens[index]
-    if token == "-#\\" && index + 1 < tokens.length() {
-      let merged = "-#\{tokens[index + 1]}"
-      normalized.push(merged)
-      index = index + 2
-    } else if token.has_prefix("-") && token.length() > 1 {
+    let mut token =
+      tokens[index]
+        .replace_all(old="\\\r\n", new="")
+        .replace_all(old="\\\n", new="")
+        .replace_all(old="\\\r", new="")
+    index = index + 1
+    if token.has_suffix("\\") && index < tokens.length() {
+      let next =
+        tokens[index]
+          .replace_all(old="\\\r\n", new="")
+          .replace_all(old="\\\n", new="")
+          .replace_all(old="\\\r", new="")
+      token = token.unsafe_substring(start=0, end=token.length() - 1) + next
+      index = index + 1
+    }
+    if token.has_prefix("-") && token.length() > 1 {
       let color = token.unsafe_substring(start=1, end=token.length())
       if color.has_prefix("[") || color.has_prefix("(") {
         normalized.push(token)
       } else {
         normalized.push("-\{@attrs.normalize_color(color)}")
       }
-      index = index + 1
     } else {
       normalized.push(token)
-      index = index + 1
     }
   }
   normalized
@@ -697,6 +705,9 @@ test "xdot snapshot parity" {
     ),
     (
       "refs/graphviz/graphs/directed/switch.gv", "tests/render/xdot/switch.xdot",
+    ),
+    (
+      "refs/graphviz/graphs/directed/pmpipe.gv", "tests/render/xdot/pmpipe.xdot",
     ),
     ("refs/graphviz/graphs/directed/unix.gv", "tests/render/xdot/unix.xdot"),
     ("refs/graphviz/graphs/directed/world.gv", "tests/render/xdot/world.xdot"),
