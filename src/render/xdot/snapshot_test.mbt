@@ -693,6 +693,9 @@ test "xdot snapshot parity" {
       "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
     ),
     (
+      "refs/graphviz/graphs/directed/abstract.gv", "tests/render/xdot/abstract.xdot",
+    ),
+    (
       "refs/graphviz/graphs/directed/japanese.gv", "tests/render/xdot/japanese.xdot",
     ),
     (
