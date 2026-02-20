@@ -76,7 +76,8 @@ fn is_layout_attr(name : String) -> Bool {
 ///|
 fn is_draw_attr(name : String) -> Bool {
   match name {
-    "_draw_" | "_hdraw_" | "_tdraw_" | "_ldraw_" => true
+    "_draw_" | "_hdraw_" | "_tdraw_" | "_ldraw_" | "_hldraw_" | "_tldraw_" =>
+      true
     _ => false
   }
 }
@@ -721,6 +722,10 @@ test "xdot snapshot parity" {
     (
       "refs/graphviz/graphs/directed/hashtable.gv",
       "tests/render/xdot/hashtable.xdot",
+    ),
+    (
+      "refs/graphviz/graphs/directed/oldarrows.gv",
+      "tests/render/xdot/oldarrows.xdot",
     ),
     ("refs/graphviz/graphs/directed/unix.gv", "tests/render/xdot/unix.xdot"),
     ("refs/graphviz/graphs/directed/world.gv", "tests/render/xdot/world.xdot"),

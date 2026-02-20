@@ -1895,6 +1895,65 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
 }
 
 ///|
+fn edge_side_label_ops(
+  layout : @layout_dot.DotLayoutEdge,
+  label_attr : String,
+  pos : @geom.Point?,
+) -> Array[@render.DrawOp] {
+  let edge = layout.edge
+  let ops : Array[@render.DrawOp] = []
+  let text = match edge.get_attr(label_attr) {
+    Some(value) => value
+    None => ""
+  }
+  if text == "" {
+    return ops
+  }
+  let pos = match pos {
+    Some(value) => value
+    None => return ops
+  }
+  let default_name = @attrs.font_name(edge.get_attr("fontname"))
+  let default_size = @attrs.font_size(edge.get_attr("fontsize"))
+  let default_color = @attrs.color(edge.get_attr("fontcolor"), default="black")
+  let font = @render.Font::{
+    name: @attrs.font_name(edge.get_attr("labelfontname"), default=default_name),
+    size: @attrs.font_size(edge.get_attr("labelfontsize"), default=default_size),
+  }
+  let color =
+    @attrs.color(edge.get_attr("labelfontcolor"), default=default_color)
+  let pen_color = @attrs.normalize_color(color)
+  let (lines, max_width, total_height) = label_metrics(
+    text,
+    font.name,
+    font.size,
+  )
+  let mut baseline = pos.y + total_height / 2.0 - font.size
+  for line in lines {
+    let line_x = match line.align {
+      @render.TextAlign::Left => pos.x - max_width / 2.0
+      @render.TextAlign::Right => pos.x + max_width / 2.0
+      @render.TextAlign::Center => pos.x
+    }
+    let line_y = baseline + line.yoffset_centerline
+    if line.text != "" {
+      ops.push(@render.DrawOp::Font(font~))
+      ops.push(@render.DrawOp::PenColor(color=pen_color))
+      ops.push(
+        @render.DrawOp::Text(
+          pos={ x: line_x, y: line_y },
+          align=line.align,
+          width=line.width_pt,
+          text=line.text,
+        ),
+      )
+    }
+    baseline = baseline - line.height_pt
+  }
+  ops
+}
+
+///|
 fn append_double(sb : StringBuilder, value : Double) -> Unit {
   sb.write_char(' ')
   sb.write_string(format_double(value))
@@ -2285,6 +2344,24 @@ pub fn attach_xdot_attrs(
     let label_ops = edge_label_ops(edge_layout)
     if label_ops.length() > 0 {
       edge_layout.edge.set_attr("_ldraw_", encode_xdot_ops(label_ops))
+    }
+    let head_label_ops =
+      edge_side_label_ops(
+        edge_layout,
+        "headlabel",
+        edge_layout.head_label_pos,
+      )
+    if head_label_ops.length() > 0 {
+      edge_layout.edge.set_attr("_hldraw_", encode_xdot_ops(head_label_ops))
+    }
+    let tail_label_ops =
+      edge_side_label_ops(
+        edge_layout,
+        "taillabel",
+        edge_layout.tail_label_pos,
+      )
+    if tail_label_ops.length() > 0 {
+      edge_layout.edge.set_attr("_tldraw_", encode_xdot_ops(tail_label_ops))
     }
     let flags = arrow_flags(edge_layout.edge, kind)
     if flags.head {
