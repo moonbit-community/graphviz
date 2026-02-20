@@ -343,22 +343,14 @@ fn round_half_even(value : Double, decimals : Int) -> Double {
   if decimals <= 0 {
     return value.round()
   }
-  let sign = if value < 0.0 { -1.0 } else { 1.0 }
-  let abs = if value < 0.0 { -value } else { value }
   let scale = @math.pow(10.0, decimals.to_double())
-  let scaled = abs * scale
-  let floored = scaled.floor()
-  let frac = scaled - floored
-  let eps = 1.0e-9
-  let rounded =
-    if frac > 0.5 + eps {
-      floored + 1.0
-    } else if frac < 0.5 - eps {
-      floored
-    } else {
-      if (floored.to_int() % 2) == 0 { floored } else { floored + 1.0 }
-    }
-  sign * rounded / scale
+  let scaled = value * scale
+  let rounded = if scaled >= 0.0 {
+    (scaled + 0.5).floor()
+  } else {
+    (scaled - 0.5).ceil()
+  }
+  rounded / scale
 }
 
 fn format_double(value : Double) -> String {

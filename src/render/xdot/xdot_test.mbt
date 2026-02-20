@@ -234,13 +234,18 @@ test "render_xdot renders html label colors and nested tables" {
     Some(value) => value
     None => fail("missing node _ldraw_")
   }
-  assert_true(label_draw.contains(" -left"))
-  assert_true(label_draw.contains(" -right"))
-  assert_true(label_draw.contains(" -inner"))
-  assert_true(label_draw.contains("-#ffff00"))
-  assert_true(label_draw.contains("-#ff0000"))
-  assert_true(label_draw.contains("P "))
-  assert_true(label_draw.contains("p "))
+  let normalized =
+    label_draw
+      .replace_all(old="\\\r\n", new="")
+      .replace_all(old="\\\n", new="")
+      .replace_all(old="\\\r", new="")
+  assert_true(normalized.contains(" -left"))
+  assert_true(normalized.contains(" -right"))
+  assert_true(normalized.contains(" -inner"))
+  assert_true(normalized.contains("-#ffff00"))
+  assert_true(normalized.contains("-#ff0000"))
+  assert_true(normalized.contains("P "))
+  assert_true(normalized.contains("p "))
 }
 
 ///|
