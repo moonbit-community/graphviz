@@ -706,15 +706,27 @@ fn port_label_params(edge : @cgraph.Edge) -> (Double, Double)? {
 fn port_label_points(
   spline : @geom.Spline,
   head_p : Bool,
+  marker_present : Bool,
 ) -> (@geom.Point, @geom.Point)? {
+  // Graphviz parity: place_portlabel uses eflag/sflag to choose marker tangent
+  // (marker present => use marker+endpoint tangent, absent => use Bezier sample).
   let points = spline.points
-  let distinct_eps2 = 0.0001
   if points.length() < 4 {
     return None
   }
   if head_p {
     match spline.end {
-      Some(end_point) => Some((end_point, points[points.length() - 1]))
+      Some(end_point) =>
+        if marker_present {
+          Some((end_point, points[points.length() - 1]))
+        } else {
+          let start = points.length() - 4
+          let p0 = points[start]
+          let p1 = points[start + 1]
+          let p2 = points[start + 2]
+          let p3 = points[start + 3]
+          Some((p3, bezier_point_graphviz(p0, p1, p2, p3, 0.9)))
+        }
       None => {
         let start = points.length() - 4
         let p0 = points[start]
@@ -726,18 +738,16 @@ fn port_label_points(
     }
   } else {
     match spline.start {
-      Some(start_point) => {
-        let mut tangent = points[0]
-        for candidate in points {
-          let dx = candidate.x - start_point.x
-          let dy = candidate.y - start_point.y
-          if dx * dx + dy * dy > distinct_eps2 {
-            tangent = candidate
-            break
-          }
+      Some(start_point) =>
+        if marker_present {
+          Some((start_point, points[0]))
+        } else {
+          let p0 = points[0]
+          let p1 = points[1]
+          let p2 = points[2]
+          let p3 = points[3]
+          Some((p0, bezier_point_graphviz(p0, p1, p2, p3, 0.1)))
         }
-        Some((start_point, tangent))
-      }
       None => {
         let p0 = points[0]
         let p1 = points[1]
@@ -775,9 +785,31 @@ fn edge_port_label_pos(
   spline : @geom.Spline,
   head_p : Bool,
 ) -> @geom.Point? {
+  let arrow_is_none = (value : String?) => {
+    match value {
+      Some(v) => v.trim().to_lower() == "none"
+      None => false
+    }
+  }
+  let dir = edge_dir_for(edge, edge.tail().graph().kind())
+  // Graphviz parity: map edge dir + arrow attrs to place_portlabel eflag/sflag.
+  let marker_present =
+    if head_p {
+      match dir {
+        EdgeDir::Forward | EdgeDir::Both =>
+          !arrow_is_none(edge.get_attr("arrowhead"))
+        _ => false
+      }
+    } else {
+      match dir {
+        EdgeDir::Back | EdgeDir::Both =>
+          !arrow_is_none(edge.get_attr("arrowtail"))
+        _ => false
+      }
+    }
   match port_label_params(edge) {
     Some((angle_deg, distance_scale)) =>
-      match port_label_points(spline, head_p) {
+      match port_label_points(spline, head_p, marker_present) {
         Some((pe, pf)) =>
           Some(port_label_pos_from_points(pe, pf, angle_deg, distance_scale))
         None => None

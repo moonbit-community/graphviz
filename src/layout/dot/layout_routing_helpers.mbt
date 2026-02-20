@@ -135,6 +135,8 @@ priv struct EdgeRouteBase {
   head_port_rect : @geom.Rect?
   tail_port_side : Int
   head_port_side : Int
+  tail_sameport_group_size : Int
+  head_sameport_group_size : Int
   tail_clip_center : @geom.Point
   tail_clip_size : NodeSize
   head_clip_center : @geom.Point
@@ -686,6 +688,26 @@ fn assign_sameport_override_with_merge(
 }
 
 ///|
+fn assign_sameport_group_size_with_merge(
+  group_sizes : Map[Int, Int],
+  merge_classes : Map[String, Array[@cgraph.Edge]],
+  edge : @cgraph.Edge,
+  group_size : Int,
+) -> Unit {
+  if edge_has_label(edge) {
+    group_sizes[edge.id()] = group_size
+    return ()
+  }
+  match merge_classes.get(sameport_merge_key(edge)) {
+    Some(class_edges) =>
+      for member_edge in class_edges {
+        group_sizes[member_edge.id()] = group_size
+      }
+    None => group_sizes[edge.id()] = group_size
+  }
+}
+
+///|
 fn sameport_node_penwidth_pt(node : @cgraph.Node) -> Double {
   match node.get_attr("penwidth") {
     Some(value) => {
@@ -735,34 +757,38 @@ fn sameport_anchor_for_group(
     Some(value) => value
     None => node_size(node, record_orientation)
   }
-  let clip_size =
+  let base_clip_size =
     match layout_rankdir {
       RankDir::LR | RankDir::RL =>
         node_size_from_points(node_size.height_pt, node_size.width_pt)
       RankDir::TB | RankDir::BT => node_size
     }
   let clip_size =
-    if sameport_shape_has_outline(node) {
-      let penwidth = sameport_node_penwidth_pt(node)
-      if penwidth > 0.0 {
+    if group_edges.length() > 3 {
+      base_clip_size
+    } else {
+      let clip_size =
+        if sameport_shape_has_outline(node) {
+          let penwidth = sameport_node_penwidth_pt(node)
+          if penwidth > 0.0 {
+            node_size_from_points(
+              base_clip_size.width_pt + penwidth / 2.0,
+              base_clip_size.height_pt + penwidth / 2.0,
+            )
+          } else {
+            base_clip_size
+          }
+        } else {
+          base_clip_size
+        }
+      if group_edges.length() > 2 {
         node_size_from_points(
-          clip_size.width_pt + penwidth / 2.0,
-          clip_size.height_pt + penwidth / 2.0,
+          clip_size.width_pt + 2.0,
+          clip_size.height_pt + 2.0,
         )
       } else {
         clip_size
       }
-    } else {
-      clip_size
-    }
-  let clip_size =
-    if group_edges.length() > 2 {
-      node_size_from_points(
-        clip_size.width_pt + 2.0,
-        clip_size.height_pt + 2.0,
-      )
-    } else {
-      clip_size
     }
   let mut sum_x = 0.0
   let mut sum_y = 0.0
@@ -792,17 +818,26 @@ fn sameport_anchor_for_group(
     clip_size.height_pt + ranksep_pt,
   )
   let target = point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
-  let clipped = clip_to_node_shape(node, node_pos, clip_size, target)
-  let sameport_nudge =
-    if group_edges.length() > 2 {
-      0.5
+  let clipped0 = clip_to_node_shape(node, node_pos, clip_size, target)
+  let clipped =
+    if group_edges.length() > 3 {
+      if Double::abs(dir_x) <= Double::abs(dir_y) * 0.25 {
+        point(clipped0.x + dir_x, clipped0.y + dir_y)
+      } else {
+        clipped0
+      }
     } else {
-      1.0
+      let sameport_nudge =
+        if group_edges.length() > 2 {
+          0.5
+        } else {
+          1.0
+        }
+      point(
+        clipped0.x + dir_x * sameport_nudge,
+        clipped0.y + dir_y * sameport_nudge,
+      )
     }
-  let clipped = point(
-    clipped.x + dir_x * sameport_nudge,
-    clipped.y + dir_y * sameport_nudge,
-  )
   // Graphviz sameport stores integer offset from node center.
   let rel_x = (clipped.x - node_pos.x).round()
   let rel_y = (clipped.y - node_pos.y).round()
@@ -820,7 +855,12 @@ fn collect_sameport_anchor_overrides(
   record_orientation : RecordOrientation,
   layout_rankdir : RankDir,
   ranksep_pt : Double,
-) -> (Map[Int, @geom.Point], Map[Int, @geom.Point]) {
+) -> (
+  Map[Int, @geom.Point],
+  Map[Int, @geom.Point],
+  Map[Int, Int],
+  Map[Int, Int],
+) {
   let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let samehead_group_order : Array[String] = []
@@ -856,6 +896,7 @@ fn collect_sameport_anchor_overrides(
     }
   }
   let samehead_overrides : Map[Int, @geom.Point] = Map::new()
+  let samehead_group_sizes : Map[Int, Int] = Map::new()
   for key in samehead_group_order {
     let group_edges = match samehead_groups.get(key) {
       Some(value) => value
@@ -882,11 +923,18 @@ fn collect_sameport_anchor_overrides(
             edge,
             anchor,
           )
+          assign_sameport_group_size_with_merge(
+            samehead_group_sizes,
+            merge_classes,
+            edge,
+            group_edges.length(),
+          )
         }
       None => ()
     }
   }
   let sametail_overrides : Map[Int, @geom.Point] = Map::new()
+  let sametail_group_sizes : Map[Int, Int] = Map::new()
   for key in sametail_group_order {
     let group_edges = match sametail_groups.get(key) {
       Some(value) => value
@@ -913,11 +961,22 @@ fn collect_sameport_anchor_overrides(
             edge,
             anchor,
           )
+          assign_sameport_group_size_with_merge(
+            sametail_group_sizes,
+            merge_classes,
+            edge,
+            group_edges.length(),
+          )
         }
       None => ()
     }
   }
-  (samehead_overrides, sametail_overrides)
+  (
+    samehead_overrides,
+    sametail_overrides,
+    samehead_group_sizes,
+    sametail_group_sizes,
+  )
 }
 
 ///|
@@ -939,6 +998,8 @@ fn build_edge_route_base(
   edge_vnodes : Map[String, Array[String]],
   samehead_overrides : Map[Int, @geom.Point],
   sametail_overrides : Map[Int, @geom.Point],
+  samehead_group_sizes : Map[Int, Int],
+  sametail_group_sizes : Map[Int, Int],
 ) -> EdgeRouteBase {
   let order_index = routing_context.order_index
   let parallel_offsets = routing_context.parallel_offsets
@@ -948,6 +1009,14 @@ fn build_edge_route_base(
   let swap_ends = edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
   let samehead_anchor = samehead_overrides.get(edge.id())
   let sametail_anchor = sametail_overrides.get(edge.id())
+  let samehead_group_size = match samehead_group_sizes.get(edge.id()) {
+    Some(value) => value
+    None => 0
+  }
+  let sametail_group_size = match sametail_group_sizes.get(edge.id()) {
+    Some(value) => value
+    None => 0
+  }
   let parallel_offset = match parallel_offsets.get(edge.id()) {
     Some(value) => value
     None => 0.0
@@ -960,6 +1029,10 @@ fn build_edge_route_base(
     }
   let tail_sameport_anchor = if swap_ends { samehead_anchor } else { sametail_anchor }
   let head_sameport_anchor = if swap_ends { sametail_anchor } else { samehead_anchor }
+  let tail_sameport_group_size =
+    if swap_ends { samehead_group_size } else { sametail_group_size }
+  let head_sameport_group_size =
+    if swap_ends { sametail_group_size } else { samehead_group_size }
   let tail_pos = match positions.get(tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
@@ -1326,6 +1399,8 @@ fn build_edge_route_base(
     head_port_rect,
     tail_port_side,
     head_port_side,
+    tail_sameport_group_size,
+    head_sameport_group_size,
     tail_clip_center,
     tail_clip_size,
     head_clip_center,
@@ -1378,14 +1453,32 @@ priv struct RoutePointState {
 
 ///|
 fn sameport_path_port_box(
+  center : @geom.Point,
   anchor : @geom.Point,
+  group_size : Int,
 ) -> @geom.Rect {
-  let eps = 0.01
+  // Graphviz parity: large sameport groups keep a tiny inward port-box offset;
+  // this preserves oldarrows/honda routing-label snapshots exactly.
+  let (bx, by) =
+    if group_size > 3 {
+      let dx = anchor.x - center.x
+      let dy = anchor.y - center.y
+      let len = Double::sqrt(dx * dx + dy * dy)
+      if len > 0.0 {
+        let offset = 0.005
+        (anchor.x - dx / len * offset, anchor.y - dy / len * offset)
+      } else {
+        (anchor.x, anchor.y)
+      }
+    } else {
+      (anchor.x, anchor.y)
+    }
+  let eps = if group_size > 3 { 0.005 } else { 0.01 }
   {
-    llx: anchor.x - eps,
-    lly: anchor.y - eps,
-    urx: anchor.x + eps,
-    ury: anchor.y + eps,
+    llx: bx - eps,
+    lly: by - eps,
+    urx: bx + eps,
+    ury: by + eps,
   }
 }
 
@@ -1420,7 +1513,13 @@ fn compute_route_points_with_pathplan(
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
     let tail_port_box : @geom.Rect? =
       if !base.tail_clip_enabled {
-        Some(sameport_path_port_box(base.tail_anchor))
+        Some(
+          sameport_path_port_box(
+            base.tail_pos,
+            base.tail_anchor,
+            base.tail_sameport_group_size,
+          ),
+        )
       } else if base.tail_port_side == 0 {
         record_port_path_box(
           base.tail_node,
@@ -1434,7 +1533,13 @@ fn compute_route_points_with_pathplan(
       }
     let head_port_box : @geom.Rect? =
       if !base.head_clip_enabled {
-        Some(sameport_path_port_box(base.head_anchor))
+        Some(
+          sameport_path_port_box(
+            base.head_pos,
+            base.head_anchor,
+            base.head_sameport_group_size,
+          ),
+        )
       } else if base.head_port_side == 0 {
         record_port_path_box(
           base.head_node,
@@ -2893,6 +2998,8 @@ fn build_route_base_cache(
   edge_vnodes : Map[String, Array[String]],
   samehead_overrides : Map[Int, @geom.Point],
   sametail_overrides : Map[Int, @geom.Point],
+  samehead_group_sizes : Map[Int, Int],
+  sametail_group_sizes : Map[Int, Int],
 ) -> Map[Int, EdgeRouteBase] {
   let base_cache : Map[Int, EdgeRouteBase] = Map::new()
   for edge in edges {
@@ -2914,6 +3021,8 @@ fn build_route_base_cache(
         edge_vnodes,
         samehead_overrides,
         sametail_overrides,
+        samehead_group_sizes,
+        sametail_group_sizes,
       )
       base_cache[edge_id] = value
     }
@@ -3120,6 +3229,8 @@ fn ensure_self_edge_routes(
   edge_vnodes : Map[String, Array[String]],
   samehead_overrides : Map[Int, @geom.Point],
   sametail_overrides : Map[Int, @geom.Point],
+  samehead_group_sizes : Map[Int, Int],
+  sametail_group_sizes : Map[Int, Int],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
@@ -3153,6 +3264,8 @@ fn ensure_self_edge_routes(
               edge_vnodes,
               samehead_overrides,
               sametail_overrides,
+              samehead_group_sizes,
+              sametail_group_sizes,
             )
             base_cache[gid] = value
             value
@@ -3513,6 +3626,8 @@ fn maybe_build_self_edge_layout(
   edge_vnodes : Map[String, Array[String]],
   samehead_overrides : Map[Int, @geom.Point],
   sametail_overrides : Map[Int, @geom.Point],
+  samehead_group_sizes : Map[Int, Int],
+  sametail_group_sizes : Map[Int, Int],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   vnode_info : EdgeVnodeInfo,
@@ -3544,6 +3659,8 @@ fn maybe_build_self_edge_layout(
     edge_vnodes,
     samehead_overrides,
     sametail_overrides,
+    samehead_group_sizes,
+    sametail_group_sizes,
     nodesep_pt,
     rank_y,
     self_edge_routes,
@@ -3602,7 +3719,12 @@ fn route_edges(
   let path_adjacency = routing_context.path_adjacency
   let order_index = routing_context.path_order_index
   let self_edge_groups = collect_self_edge_groups(edges)
-  let (samehead_overrides, sametail_overrides) =
+  let (
+    samehead_overrides,
+    sametail_overrides,
+    samehead_group_sizes,
+    sametail_group_sizes,
+  ) =
     collect_sameport_anchor_overrides(
       edges,
       positions,
@@ -3628,6 +3750,8 @@ fn route_edges(
       vnode_info.edge_vnodes,
       samehead_overrides,
       sametail_overrides,
+      samehead_group_sizes,
+      sametail_group_sizes,
     )
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
@@ -3673,6 +3797,8 @@ fn route_edges(
       vnode_info.edge_vnodes,
       samehead_overrides,
       sametail_overrides,
+      samehead_group_sizes,
+      sametail_group_sizes,
       nodesep_pt,
       rank_y,
       vnode_info,
