@@ -1798,18 +1798,43 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 }
 
 ///|
+fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
+  let raw = @attrs.color(edge.get_attr("color"), default="black")
+  let colors : Array[String] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_string()
+    if token == "" {
+      continue
+    }
+    let color = match token.find(";") {
+      Some(index) => token.unsafe_substring(start=0, end=index)
+      None => token
+    }
+    if color != "" {
+      colors.push(@attrs.normalize_color(color))
+    }
+  }
+  if colors.length() == 0 {
+    colors.push(@attrs.normalize_color(raw))
+  }
+  colors
+}
+
+///|
 fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   let edge = layout.edge
   let ops : Array[@render.DrawOp] = []
-  let pen = @attrs.color(edge.get_attr("color"), default="black")
   let style = @attrs.parse_style(edge.get_attr("style"))
   match dash_style_name(style) {
     Some(name) => ops.push(@render.DrawOp::Style(name~))
     None => ()
   }
-  ops.push(@render.DrawOp::PenColor(color=@attrs.normalize_color(pen)))
-  for spline in layout.splines {
-    ops.push(@render.DrawOp::Bezier(filled=false, points=spline.points))
+  let pen_colors = edge_pen_colors(edge)
+  for pen_color in pen_colors {
+    ops.push(@render.DrawOp::PenColor(color=pen_color))
+    for spline in layout.splines {
+      ops.push(@render.DrawOp::Bezier(filled=false, points=spline.points))
+    }
   }
   ops
 }
