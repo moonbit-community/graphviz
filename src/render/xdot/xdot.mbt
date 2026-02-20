@@ -1202,7 +1202,7 @@ fn polygon_outline_vertices(
   base : Array[@geom.Point],
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
-  if outline_pad_pt <= 0.0 || base.length() < 3 {
+  if Double::abs(outline_pad_pt) <= 0.0000001 || base.length() < 3 {
     return base
   }
   let sides = base.length()
@@ -1266,6 +1266,122 @@ fn polygon_paths_from_base(
   paths
 }
 
+fn polygon_vertices_for_size(
+  width_pt : Double,
+  height_pt : Double,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  let rect = @geom.Rect::{
+    llx: -width_pt / 2.0,
+    lly: -height_pt / 2.0,
+    urx: width_pt / 2.0,
+    ury: height_pt / 2.0,
+  }
+  polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
+}
+
+fn polygon_outline_vertices_for_rect(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+  peripheries : Int,
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  let target_w = rect.urx - rect.llx
+  let target_h = rect.ury - rect.lly
+  if target_w <= 0.0 || target_h <= 0.0 {
+    return []
+  }
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let base_outline_pad =
+    if count > 1 {
+      POLY_GAP_PT * (count - 1).to_double()
+    } else {
+      0.0
+    }
+  let centered = if base_outline_pad <= 0.0 {
+    polygon_vertices_for_size(
+      target_w,
+      target_h,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+  } else {
+    let mut inner_w = if target_w > base_outline_pad * 2.0 {
+      target_w - base_outline_pad * 2.0
+    } else {
+      target_w * 0.5
+    }
+    let mut inner_h = if target_h > base_outline_pad * 2.0 {
+      target_h - base_outline_pad * 2.0
+    } else {
+      target_h * 0.5
+    }
+    for _ in 0..<8 {
+      if inner_w <= 0.0 || inner_h <= 0.0 {
+        break
+      }
+      let base = polygon_vertices_for_size(
+        inner_w,
+        inner_h,
+        sides,
+        orientation_deg,
+        distortion,
+        skew,
+      )
+      if base.length() < 3 {
+        break
+      }
+      let expanded = polygon_outline_vertices(base, base_outline_pad)
+      let mut max_x = 0.0
+      let mut max_y = 0.0
+      for vertex in expanded {
+        if Double::abs(vertex.x) > max_x {
+          max_x = Double::abs(vertex.x)
+        }
+        if Double::abs(vertex.y) > max_y {
+          max_y = Double::abs(vertex.y)
+        }
+      }
+      if max_x <= 0.0 || max_y <= 0.0 {
+        break
+      }
+      inner_w = inner_w * (target_w / (max_x * 2.0))
+      inner_h = inner_h * (target_h / (max_y * 2.0))
+    }
+    let final_base = polygon_vertices_for_size(
+      inner_w,
+      inner_h,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+    if final_base.length() < 3 {
+      final_base
+    } else {
+      polygon_outline_vertices(final_base, base_outline_pad + outline_pad_pt)
+    }
+  }
+  if centered.length() < 3 {
+    return centered
+  }
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let out : Array[@geom.Point] = []
+  for vertex in centered {
+    out.push({ x: vertex.x + cx, y: vertex.y + cy })
+  }
+  out
+}
+
 ///|
 fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rect {
   if peripheries <= 1 {
@@ -1287,15 +1403,24 @@ fn polygon_paths_for_shape(
   skew : Double,
   peripheries : Int,
 ) -> Array[Array[@geom.Point]] {
-  let base_rect = inner_rect_for_peripheries(rect, peripheries)
-  let base = polygon_vertices_for_rect(
-    base_rect,
-    sides,
-    orientation_deg,
-    distortion,
-    skew,
-  )
-  polygon_paths_from_base(base, peripheries)
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let paths : Array[Array[@geom.Point]] = []
+  for i in 0..<count {
+    let inset = -POLY_GAP_PT * (count - i - 1).to_double()
+    let poly = polygon_outline_vertices_for_rect(
+      rect,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+      count,
+      inset,
+    )
+    if poly.length() > 0 {
+      paths.push(poly)
+    }
+  }
+  paths
 }
 
 ///|
