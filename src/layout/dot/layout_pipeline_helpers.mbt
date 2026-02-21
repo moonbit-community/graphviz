@@ -8459,15 +8459,6 @@ fn build_remincross_vnode_order_keys(
     edge_vnodes,
     vnode_ranks,
   )
-  let cluster_set : Map[String, Bool] = Map::new()
-  for _name, key in intercluster_keys {
-    if key != "" {
-      cluster_set[key] = true
-    }
-  }
-  if cluster_set.length() > 5 {
-    return keys
-  }
   apply_intercluster_vnode_order_key_floor(
     keys,
     intercluster_vnodes,
@@ -8545,20 +8536,14 @@ fn build_remincross_nlist_order(
   }
   let rem_order_creation =
     build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
-  // Graphviz parity: GD_nlist seeding uses agfstnode order for the
-  // fast graph (reverse creation insertion).
-  let rem_order_creation_rev : Array[String] = []
-  let mut rem_rev_idx = rem_order_creation.length()
-  while rem_rev_idx > 0 {
-    rem_rev_idx = rem_rev_idx - 1
-    rem_order_creation_rev.push(rem_order_creation[rem_rev_idx])
-  }
-  build_graphviz_nlist_order_from_edges(
-    rem_order_creation_rev,
-    rem_order_creation,
-    rem_edge_creation_order,
-    rem_flat_constraints,
-  )
+  let rem_nlist_order =
+    build_graphviz_nlist_order_from_edges(
+      rem_order_creation,
+      rem_order_creation,
+      rem_edge_creation_order,
+      rem_flat_constraints,
+    )
+  rem_nlist_order
 }
 
 ///|
@@ -11209,6 +11194,7 @@ fn build_clustered_remincross_pass_groups(
   ordered_with_vnodes : Map[Int, Array[String]],
   base_groups : Map[Int, Array[String]],
   order_with_vnodes : Bool,
+  prefer_seeded_from_ordered_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -11217,7 +11203,8 @@ fn build_clustered_remincross_pass_groups(
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
 ) -> Map[Int, Array[String]] {
-  if order_with_vnodes && cluster_meta.cluster_order.length() == 1 {
+  if order_with_vnodes &&
+    (cluster_meta.cluster_order.length() == 1 || prefer_seeded_from_ordered_with_vnodes) {
     let seeded =
       build_remincross_groups_from_ordered_with_vnodes(
         base_groups,
@@ -11365,11 +11352,17 @@ fn build_clustered_remincross_pass_groups_output_from_rem_groups(
 fn run_clustered_remincross_pass(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let prefer_seeded_from_ordered_with_vnodes =
+    match dispatch_context.graph.get_attr("ratio") {
+      Some(value) => value == "fill"
+      None => false
+    }
   let rem_groups =
     build_clustered_remincross_pass_groups(
       dispatch_context.ordered_with_vnodes,
       dispatch_context.base_groups,
       dispatch_context.order_with_vnodes,
+      prefer_seeded_from_ordered_with_vnodes,
       dispatch_context.edges,
       dispatch_context.edge_tail,
       dispatch_context.edge_head,
