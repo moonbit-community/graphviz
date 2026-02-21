@@ -677,68 +677,18 @@ fn assert_rect_close(
   }
 }
 
-///|
-fn snapshot_case_name(input_path : String) -> String {
-  let mut name = input_path
-  for part in input_path.split("/") {
-    name = part.to_string()
-  }
-  if name.has_suffix(".gv") {
-    name.unsafe_substring(start=0, end=name.length() - 3)
-  } else if name.has_suffix(".dot") {
-    name.unsafe_substring(start=0, end=name.length() - 4)
-  } else {
-    name
-  }
-}
-
-///|
-fn assert_snapshot_fixture_coverage(
-  cases : Array[String],
-  fixture_dir : String,
-  suffix : String,
-) -> Unit raise {
-  let expected_to_input : Map[String, String] = Map::new()
-  let duplicates : Array[String] = []
-  let missing : Array[String] = []
-  let extras : Array[String] = []
-  for input_path in cases {
-    let expected_path =
-      "\{fixture_dir}/\{snapshot_case_name(input_path)}\{suffix}"
-    match expected_to_input.get(expected_path) {
-      Some(_) => duplicates.push(expected_path)
-      None => expected_to_input[expected_path] = input_path
+fn snapshot_input_path(case_name : String) -> String raise {
+  let candidates : Array[String] = [
+    "refs/graphviz/graphs/directed/\{case_name}.gv",
+    "tests/layout/dot/\{case_name}.dot",
+    "refs/graphviz/doc/dotguide/\{case_name}.dot",
+  ]
+  for path in candidates {
+    if @fs.path_exists(path) {
+      return path
     }
   }
-  if duplicates.length() > 0 {
-    duplicates.sort_by_key(path => path)
-    let details = duplicates.join(", ")
-    fail("duplicate snapshot cases: \{details}")
-  }
-  for path, _ in expected_to_input {
-    if !@fs.path_exists(path) {
-      missing.push(path)
-    }
-  }
-  if missing.length() > 0 {
-    missing.sort_by_key(path => path)
-    let details = missing.join(", ")
-    fail("missing snapshot fixtures: \{details}")
-  }
-  for entry in @fs.read_dir(fixture_dir) {
-    if !entry.has_suffix(suffix) {
-      continue
-    }
-    let path = "\{fixture_dir}/\{entry}"
-    if expected_to_input.get(path) is None {
-      extras.push(path)
-    }
-  }
-  if extras.length() > 0 {
-    extras.sort_by_key(path => path)
-    let details = extras.join(", ")
-    fail("uncovered snapshot fixtures: \{details}")
-  }
+  fail("missing snapshot input for case \{case_name}")
 }
 
 ///|
@@ -773,77 +723,25 @@ test "svg snapshot parity" {
   ensure_dir("target/render")
   ensure_dir(out_dir)
   let mismatches : Array[String] = []
-  let cases : Array[String] = [
-    "refs/graphviz/doc/dotguide/graph1.dot",
-    "tests/layout/dot/compound.dot",
-    "tests/layout/dot/complex.dot",
-    "tests/layout/dot/edge_vnode_spacing.dot",
-    "tests/layout/dot/edge_label_spacing.dot",
-    "refs/graphviz/graphs/directed/grammar.gv",
-    "refs/graphviz/graphs/directed/clust1.gv",
-    "refs/graphviz/graphs/directed/clust2.gv",
-    "refs/graphviz/graphs/directed/clust3.gv",
-    "refs/graphviz/graphs/directed/clust4.gv",
-    "refs/graphviz/graphs/directed/clust5.gv",
-    "refs/graphviz/graphs/directed/try.gv",
-    "refs/graphviz/graphs/directed/fsm.gv",
-    "refs/graphviz/graphs/directed/dfa.gv",
-    "refs/graphviz/graphs/directed/longflat.gv",
-    "refs/graphviz/graphs/directed/states.gv",
-    "refs/graphviz/graphs/directed/record2.gv",
-    "refs/graphviz/graphs/directed/structs.gv",
-    "refs/graphviz/graphs/directed/arr_none.gv",
-    "refs/graphviz/graphs/directed/table.gv",
-    "refs/graphviz/graphs/directed/train11.gv",
-    "refs/graphviz/graphs/directed/tree.gv",
-    "refs/graphviz/graphs/directed/abstract.gv",
-    "refs/graphviz/graphs/directed/arrows.gv",
-    "refs/graphviz/graphs/directed/biological.gv",
-    "refs/graphviz/graphs/directed/ctext.gv",
-    "refs/graphviz/graphs/directed/fig6.gv",
-    "refs/graphviz/graphs/directed/hashtable.gv",
-    "refs/graphviz/graphs/directed/records.gv",
-    "refs/graphviz/graphs/directed/switch.gv",
-    "refs/graphviz/graphs/directed/trapeziumlr.gv",
-    "refs/graphviz/graphs/directed/triedds.gv",
-    "refs/graphviz/graphs/directed/unix.gv",
-    "refs/graphviz/graphs/directed/viewfile.gv",
-    "refs/graphviz/graphs/directed/ldbxtried.gv",
-    "refs/graphviz/graphs/directed/proc3d.gv",
-    "refs/graphviz/graphs/directed/world.gv",
-    "refs/graphviz/graphs/directed/pmpipe.gv",
-    "refs/graphviz/graphs/directed/polypoly.gv",
-    "refs/graphviz/graphs/directed/alf.gv",
-    "refs/graphviz/graphs/directed/clust.gv",
-    "refs/graphviz/graphs/directed/japanese.gv",
-    "refs/graphviz/graphs/directed/jcctree.gv",
-    "refs/graphviz/graphs/directed/jsort.gv",
-    "refs/graphviz/graphs/directed/shells.gv",
-    "refs/graphviz/graphs/directed/awilliams.gv",
-    "refs/graphviz/graphs/directed/crazy.gv",
-    "refs/graphviz/graphs/directed/honda-tokoro.gv",
-    "refs/graphviz/graphs/directed/KW91.gv",
-    "refs/graphviz/graphs/directed/Latin1.gv",
-    "refs/graphviz/graphs/directed/mike.gv",
-    "refs/graphviz/graphs/directed/NaN.gv",
-    "refs/graphviz/graphs/directed/nhg.gv",
-    "refs/graphviz/graphs/directed/oldarrows.gv",
-    "refs/graphviz/graphs/directed/pgram.gv",
-    "refs/graphviz/graphs/directed/pm2way.gv",
-    "refs/graphviz/graphs/directed/psfonttest.gv",
-    "refs/graphviz/graphs/directed/russian.gv",
-    "refs/graphviz/graphs/directed/rowe.gv",
-    "refs/graphviz/graphs/directed/sdh.gv",
-    "refs/graphviz/graphs/directed/unix2.gv",
-  ]
-  assert_snapshot_fixture_coverage(cases, fixture_dir, ".svg")
-  for input_path in cases {
-    let name = snapshot_case_name(input_path)
-    let fixture_path = "\{fixture_dir}/\{name}.svg"
+  let entries = @fs.read_dir(fixture_dir)
+  entries.sort_by_key(name => name)
+  let fixture_names : Array[String] = []
+  for entry in entries {
+    if entry.has_suffix(".svg") {
+      fixture_names.push(entry)
+    }
+  }
+  if fixture_names.length() == 0 {
+    fail("no svg fixtures under \{fixture_dir}")
+  }
+  for entry in fixture_names {
+    let case_name = entry.unsafe_substring(start=0, end=entry.length() - 4)
+    let input_path = snapshot_input_path(case_name)
+    let fixture_path = "\{fixture_dir}/\{entry}"
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
-    let out_path = "\{out_dir}/\{name}.svg"
+    let out_path = "\{out_dir}/\{entry}"
     @fs.write_string_to_file(out_path, svg)
     let fixture = @fs.read_file_to_string(fixture_path)
     if svg != fixture {
