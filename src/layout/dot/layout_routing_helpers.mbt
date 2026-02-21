@@ -4279,7 +4279,7 @@ fn recover_edge_selection_for_regular_edges(
 ///|
 /// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_regular_edge_layout(
+fn build_regular_edge_layout_with_spline_result(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   splines : SplinesMode,
@@ -4305,7 +4305,7 @@ fn build_regular_edge_layout(
   path_adjacency : @routesplines.PathAdjacency,
   recover_edge_id_by_key : Map[String, Int],
   recovered_slack_keys : Map[String, Bool],
-) -> DotLayoutEdge {
+) -> (DotLayoutEdge, EdgeSplineResult) {
   let spline_result = build_edge_spline(
     base,
     splines,
@@ -4340,10 +4340,69 @@ fn build_regular_edge_layout(
     recover_edge_id_by_key,
     recovered_slack_keys,
   )
+  let layout =
+    build_edge_layout(
+      base,
+      spline,
+      spline_result,
+      ranks,
+      rank_y,
+      vnode_info,
+      vnode_positions,
+      nodesep_pt,
+      has_clusters,
+      flat_label_edge_vnodes,
+    )
+  (layout, spline_result)
+}
+
+///|
+/// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
+fn build_regular_edge_layout_from_shared_raw_bezier(
+  base : EdgeRouteBase,
+  shared_spline_result : EdgeSplineResult,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_info : EdgeVnodeInfo,
+  vnode_positions : Map[String, @geom.Point],
+  nodesep_pt : Double,
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+) -> DotLayoutEdge {
+  let spline =
+    edge_spline_for_bezier_points(
+      base.edge,
+      shared_spline_result.raw_bezier,
+      base.tail_clip_center,
+      base.head_clip_center,
+      base.tail_clip_size,
+      base.head_clip_size,
+      base.route_include_tail,
+      base.route_include_head,
+      tail_clip_enabled=base.tail_clip_enabled,
+      head_clip_enabled=base.head_clip_enabled,
+      arrow_len_override=base.arrow_len_override,
+      tail_cluster_bbox=base.tail_cluster_bbox,
+      head_cluster_bbox=base.head_cluster_bbox,
+      parallel_offset=base.parallel_offset,
+      clip_swapped=base.swap_ends,
+      arrow_swapped=base.swap_ends,
+    )
+  let sibling_spline_result : EdgeSplineResult = {
+    spline,
+    label_pad_boost: shared_spline_result.label_pad_boost,
+    using_pathplan: false,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier: shared_spline_result.raw_bezier,
+    pathplan_segments: [],
+    apply_dotted_adjustment: shared_spline_result.apply_dotted_adjustment,
+  }
+  let final_spline = finalize_edge_spline(base, sibling_spline_result)
   build_edge_layout(
     base,
-    spline,
-    spline_result,
+    final_spline,
+    sibling_spline_result,
     ranks,
     rank_y,
     vnode_info,
@@ -4434,6 +4493,35 @@ fn maybe_build_self_edge_layout(
     }
     None => false
   }
+}
+
+///|
+fn collect_regular_parallel_groups_for_graphviz(
+  ordered_edges : Array[@cgraph.Edge],
+  base_cache : Map[Int, EdgeRouteBase],
+) -> Map[String, Array[@cgraph.Edge]] {
+  let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
+  for edge in ordered_edges {
+    if edge_has_label(edge) {
+      continue
+    }
+    if edge.tail().name() == edge.head().name() {
+      continue
+    }
+    let base = match base_cache.get(edge.id()) {
+      Some(value) => value
+      None => continue
+    }
+    if base.is_flat_edge {
+      continue
+    }
+    let key = edge_vnode_key(edge)
+    match groups.get(key) {
+      Some(list) => list.push(edge)
+      None => groups[key] = [edge]
+    }
+  }
+  groups
 }
 
 ///|
@@ -4530,6 +4618,17 @@ fn route_edges(
     sorted_edges_for_routing(edges, base_cache, order_index)
   let recover_edge_id_by_key =
     recover_edge_selection_for_regular_edges(ordered_edges, base_cache)
+  let regular_parallel_groups =
+    collect_regular_parallel_groups_for_graphviz(ordered_edges, base_cache)
+  let recover_edge_id_for_routing : Map[String, Int] = Map::new()
+  for key, edge_id in recover_edge_id_by_key {
+    recover_edge_id_for_routing[key] = edge_id
+  }
+  for key, group_edges in regular_parallel_groups {
+    if group_edges.length() > 1 {
+      recover_edge_id_for_routing[key] = group_edges[0].id()
+    }
+  }
   for edge in ordered_edges {
     let edge_id = edge.id()
     if edges_out_by_id.get(edge_id) is Some(_) {
@@ -4590,8 +4689,8 @@ fn route_edges(
     ) {
       continue
     }
-    let edge_layout =
-      build_regular_edge_layout(
+    let (edge_layout, edge_spline_result) =
+      build_regular_edge_layout_with_spline_result(
         edge,
         base,
         splines,
@@ -4615,10 +4714,43 @@ fn route_edges(
         has_clusters,
         flat_label_edge_vnodes,
         path_adjacency,
-        recover_edge_id_by_key,
+        recover_edge_id_for_routing,
         recovered_slack_keys,
       )
     edges_out_by_id[edge_id] = edge_layout
+    let regular_key = edge_vnode_key(edge)
+    let group_edges = match regular_parallel_groups.get(regular_key) {
+      Some(value) => value
+      None => continue
+    }
+    if group_edges.length() <= 1 ||
+      group_edges[0].id() != edge_id ||
+      edge_spline_result.raw_bezier.length() == 0 {
+      continue
+    }
+    for group_edge in group_edges {
+      let group_edge_id = group_edge.id()
+      if group_edge_id == edge_id {
+        continue
+      }
+      let group_base = match base_cache.get(group_edge_id) {
+        Some(value) => value
+        None => continue
+      }
+      let group_layout =
+        build_regular_edge_layout_from_shared_raw_bezier(
+          group_base,
+          edge_spline_result,
+          ranks,
+          rank_y,
+          vnode_info,
+          vnode_positions,
+          nodesep_pt,
+          has_clusters,
+          flat_label_edge_vnodes,
+        )
+      edges_out_by_id[group_edge_id] = group_layout
+    }
   }
   remap_parallel_edge_layouts_for_graphviz(edges, ranks, edges_out_by_id)
   collect_edges_in_input_order(edges, edges_out_by_id)
