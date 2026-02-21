@@ -1274,11 +1274,25 @@ fn sort_nodes_by_rank(graph : NsGraph, nodes : Array[Int]) -> Unit {
   if nodes.length() <= 1 {
     return ()
   }
-  let tmp : Array[Int] = []
-  for _ in 0..<nodes.length() {
-    tmp.push(0)
+  if nodes.length() <= 100 {
+    let tmp : Array[Int] = []
+    for _ in 0..<nodes.length() {
+      tmp.push(0)
+    }
+    merge_sort_nodes_by_rank(graph, nodes, tmp, 0, nodes.length())
+  } else {
+    nodes.sort_by((left, right) => {
+      let left_rank = graph.nodes[left].rank
+      let right_rank = graph.nodes[right].rank
+      if left_rank < right_rank {
+        -1
+      } else if left_rank > right_rank {
+        1
+      } else {
+        0
+      }
+    })
   }
-  merge_sort_nodes_by_rank(graph, nodes, tmp, 0, nodes.length())
 }
 
 ///|
