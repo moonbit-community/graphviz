@@ -1662,18 +1662,29 @@ fn clip_spline_start(
   if start + 3 >= points.length() {
     return points
   }
+  let out =
+    if start == 0 {
+      points.copy()
+    } else {
+      let trimmed : Array[@geom.Point] = []
+      let mut idx = start
+      while idx < points.length() {
+        trimmed.push(points[idx])
+        idx = idx + 1
+      }
+      trimmed
+    }
   let segment : Array[@geom.Point] = [
-    points[start],
-    points[start + 1],
-    points[start + 2],
-    points[start + 3],
+    out[0],
+    out[1],
+    out[2],
+    out[3],
   ]
   let clipped = bezier_clip(segment, inside, true)
-  let out = points.copy()
-  out[start] = clipped[0]
-  out[start + 1] = clipped[1]
-  out[start + 2] = clipped[2]
-  out[start + 3] = clipped[3]
+  out[0] = clipped[0]
+  out[1] = clipped[1]
+  out[2] = clipped[2]
+  out[3] = clipped[3]
   out
 }
 
@@ -1711,18 +1722,31 @@ fn clip_spline_end(
   if end + 3 >= points.length() {
     return points
   }
+  let keep_len = end + 4
+  let out =
+    if keep_len == points.length() {
+      points.copy()
+    } else {
+      let trimmed : Array[@geom.Point] = []
+      let mut idx = 0
+      while idx < keep_len {
+        trimmed.push(points[idx])
+        idx = idx + 1
+      }
+      trimmed
+    }
+  let last = out.length() - 4
   let segment : Array[@geom.Point] = [
-    points[end],
-    points[end + 1],
-    points[end + 2],
-    points[end + 3],
+    out[last],
+    out[last + 1],
+    out[last + 2],
+    out[last + 3],
   ]
   let clipped = bezier_clip(segment, inside, false)
-  let out = points.copy()
-  out[end] = clipped[0]
-  out[end + 1] = clipped[1]
-  out[end + 2] = clipped[2]
-  out[end + 3] = clipped[3]
+  out[last] = clipped[0]
+  out[last + 1] = clipped[1]
+  out[last + 2] = clipped[2]
+  out[last + 3] = clipped[3]
   out
 }
 
