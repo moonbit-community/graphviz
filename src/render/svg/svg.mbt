@@ -417,10 +417,11 @@ fn svg_text_font_attrs(font_name : String) -> String {
 fn is_svg_named_color(color : String) -> Bool {
   match color {
     "black" | "white" | "none" | "red" | "green" | "blue" | "yellow" |
-    "orange" | "cyan" | "magenta" | "pink" | "hotpink" | "purple" |
-    "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
+    "orange" | "gold" | "cyan" | "magenta" | "pink" | "hotpink" |
+    "purple" | "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
     "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
     "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
+    "steelblue" | "aquamarine" | "limegreen" |
     "lemonchiffon" | "firebrick" | "orangered" | "indigo" | "indianred" => true
     _ => false
   }
