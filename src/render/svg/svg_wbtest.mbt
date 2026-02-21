@@ -31,7 +31,6 @@ fn parse_attr_double(tag : String, name : String) -> Double? {
 fn extract_label_entries(
   svg : String,
   label : String,
-  bbox : @geom.Rect,
 ) -> Array[SvgLabelEntry] {
   let entries : Array[SvgLabelEntry] = []
   let mut skip_first = true
@@ -58,8 +57,8 @@ fn extract_label_entries(
               parse_attr_double(tag, "font-size"),
             ) {
               (Some(x), Some(y), Some(font), Some(size)) => {
-                let line_x = x + bbox.llx
-                let line_y = bbox.lly - y
+                let line_x = x
+                let line_y = -y
                 let (lines, width, height) = label_metrics(label, font, size)
                 let yoffset = match lines.get(0) {
                   Some(line) => line.yoffset_centerline
@@ -263,12 +262,12 @@ fn svg_with_bbox(graph_path : String) -> (String, @geom.Rect) raise {
 ///|
 fn assert_edge_label_parity(
   svg : String,
-  bbox : @geom.Rect,
+  _bbox : @geom.Rect,
   reference : @cgraph.Graph,
   label : String,
   eps : Double,
 ) -> Unit raise {
-  let entries = extract_label_entries(svg, label, bbox)
+  let entries = extract_label_entries(svg, label)
   let expected = edge_label_positions(reference, label)
   assert_eq(entries.length(), expected.length())
   if entries.length() > 1 {
@@ -283,12 +282,12 @@ fn assert_edge_label_parity(
 ///|
 fn assert_cluster_label_parity(
   svg : String,
-  bbox : @geom.Rect,
+  _bbox : @geom.Rect,
   reference : @cgraph.Graph,
   label : String,
   eps : Double,
 ) -> Unit raise {
-  let entries = extract_label_entries(svg, label, bbox)
+  let entries = extract_label_entries(svg, label)
   assert_eq(entries.length(), 1)
   let expected = match find_subgraph_label_pos(reference, label) {
     Some(pos) => pos
@@ -309,12 +308,12 @@ test "render_svg matches graphviz label positions in complex" {
 
 ///|
 test "render_svg matches graphviz node label positions in complex" {
-  let (svg, padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
+  let (svg, _padded_bbox) = svg_with_bbox("tests/layout/dot/complex.dot")
   let reference = @dot.parse_dot_file("tests/layout/dot/complex.gv.dot")
   let labels = unique_simple_node_labels(reference)
   let eps = 3.0
   for label in labels {
-    let entries = extract_label_entries(svg, label, padded_bbox)
+    let entries = extract_label_entries(svg, label)
     let expected = node_label_positions(reference, label)
     if entries.length() != 1 || expected.length() != 1 {
       fail("unexpected label count for \{label}")
