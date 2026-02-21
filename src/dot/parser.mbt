@@ -438,6 +438,16 @@ fn Parser::parse_stmt(
     self.advance()
     let attrs = self.parse_attr_list()
     for key, value in attrs {
+      let previous = graph.get_default_attr(@cgraph.AttrKind::Node, key)
+      for node in graph.nodes() {
+        if node.get_attr(key) is None {
+          let frozen = match previous {
+            Some(current) => current
+            None => ""
+          }
+          node.set_attr(key, frozen)
+        }
+      }
       graph.set_default_attr(@cgraph.AttrKind::Node, key, value)
     }
     return
@@ -446,6 +456,16 @@ fn Parser::parse_stmt(
     self.advance()
     let attrs = self.parse_attr_list()
     for key, value in attrs {
+      let previous = graph.get_default_attr(@cgraph.AttrKind::Edge, key)
+      for edge in graph.edges() {
+        if edge.get_attr(key) is None {
+          let frozen = match previous {
+            Some(current) => current
+            None => ""
+          }
+          edge.set_attr(key, frozen)
+        }
+      }
       graph.set_default_attr(@cgraph.AttrKind::Edge, key, value)
     }
     return

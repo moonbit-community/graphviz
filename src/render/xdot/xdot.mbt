@@ -505,10 +505,7 @@ fn record_label_text(value : String?, fallback : String) -> String {
 
 ///|
 fn node_attr(node : @cgraph.Node, name : String) -> String? {
-  match node.get_attr(name) {
-    Some(value) => Some(value)
-    None => node.graph().get_default_attr(@cgraph.AttrKind::Node, name)
-  }
+  node.get_attr(name)
 }
 
 ///|
