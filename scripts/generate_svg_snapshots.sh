@@ -33,7 +33,10 @@ if [[ ! -d "${fixture_dir}" ]]; then
   exit 1
 fi
 
-mapfile -t fixtures < <(
+fixtures=()
+while IFS= read -r fixture; do
+  fixtures+=("${fixture}")
+done < <(
   find "${fixture_dir}" -maxdepth 1 -type f -name "*.svg" -exec basename {} \; |
     LC_ALL=C sort
 )

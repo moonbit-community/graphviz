@@ -30,7 +30,10 @@ resolve_input_for_case() {
 
 mkdir -p "${fixture_dir}"
 
-mapfile -t fixtures < <(
+fixtures=()
+while IFS= read -r fixture; do
+  fixtures+=("${fixture}")
+done < <(
   find "${fixture_dir}" -maxdepth 1 -type f -name "*.svg" -exec basename {} \; |
     LC_ALL=C sort
 )
