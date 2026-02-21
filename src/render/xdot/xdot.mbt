@@ -337,94 +337,112 @@ priv struct ArrowFlags {
 }
 
 ///|
-fn round_half_even(value : Double, decimals : Int) -> Double {
-  if decimals <= 0 {
-    let floored = value.floor()
-    let frac = value - floored
-    if frac < 0.5 {
-      return floored
-    }
-    if frac > 0.5 {
-      return floored + 1.0
-    }
-    let int_floor = floored.to_int()
-    if int_floor % 2 == 0 {
-      return floored
-    } else {
-      return floored + 1.0
-    }
-  }
-  let scale = @math.pow(10.0, decimals.to_double())
-  let scaled = value * scale
-  let floored = scaled.floor()
-  let frac = scaled - floored
-  let rounded = if frac < 0.5 {
-    floored
-  } else if frac > 0.5 {
-    floored + 1.0
-  } else {
-    let int_floor = floored.to_int()
-    if int_floor % 2 == 0 {
-      floored
-    } else {
-      floored + 1.0
-    }
-  }
-  rounded / scale
-}
-
-fn format_double_with_decimals(value : Double, decimals : Int) -> String {
-  let rounded = round_half_even(value, decimals)
-  if rounded == 0.0 {
-    return "0"
-  }
-  let text = rounded.to_string()
-  if !text.contains(".") {
-    return text
-  }
-  let mut result = text
-  while result.length() > 0 && result.has_suffix("0") {
-    let next_len = result.length() - 1
-    result = result.unsafe_substring(start=0, end=next_len)
-  }
-  if result.has_suffix(".") {
-    let next_len = result.length() - 1
-    result = result.unsafe_substring(start=0, end=next_len)
-  }
-  result
-}
-
-fn pow10_int(value : Int) -> Int {
-  let mut out = 1
-  for _ in 0..<value {
-    out = out * 10
+fn pow10_bigint(exp : Int) -> @bigint.BigInt {
+  let mut out = @bigint.BigInt::from_int(1)
+  for _ in 0..<exp {
+    out = out * @bigint.BigInt::from_int(10)
   }
   out
 }
 
-fn format_double_fixed(value : Double, decimals : Int) -> String {
-  if decimals <= 0 {
-    return "\{round_half_even(value, 0).to_int()}"
+fn round_abs_scaled_half_even(
+  abs_value : Double,
+  decimals : Int,
+) -> @bigint.BigInt {
+  if abs_value == 0.0 {
+    return @bigint.BigInt::from_int(0)
   }
-  let scale = pow10_int(decimals)
-  let scaled = round_half_even(value * scale.to_double(), 0).to_int()
-  let negative = scaled < 0
-  let abs_scaled = if negative { -scaled } else { scaled }
-  let int_part = abs_scaled / scale
-  let frac_part = abs_scaled % scale
-  let frac_text_raw = frac_part.to_string()
-  let frac_text = if frac_text_raw.length() >= decimals {
-    frac_text_raw
-  } else {
-    let pad = StringBuilder::new()
-    for _ in 0..<(decimals - frac_text_raw.length()) {
-      pad.write_char('0')
+  let bits = abs_value.reinterpret_as_uint64()
+  let exp_bits = ((bits >> 52) & 0x7ffUL).to_int()
+  let frac_mask = 0x000fffffffffffffUL
+  let mantissa = bits & frac_mask
+  let hidden = 0x0010000000000000UL
+  let (significand, exp2) =
+    if exp_bits == 0 {
+      (mantissa, -1074)
+    } else {
+      (mantissa | hidden, exp_bits - 1075)
     }
-    pad.write_string(frac_text_raw)
-    pad.to_string()
+  let mut numerator = @bigint.BigInt::from_uint64(significand)
+  if decimals > 0 {
+    numerator = numerator * pow10_bigint(decimals)
   }
-  let sign = if negative && abs_scaled != 0 { "-" } else { "" }
-  "\{sign}\{int_part}.\{frac_text}"
+  if exp2 >= 0 {
+    return numerator << exp2
+  }
+  let denominator = @bigint.BigInt::from_int(1) << (-exp2)
+  let quotient = numerator / denominator
+  let remainder = numerator % denominator
+  let doubled = remainder + remainder
+  if doubled < denominator {
+    return quotient
+  }
+  if doubled > denominator {
+    return quotient + @bigint.BigInt::from_int(1)
+  }
+  let parity = quotient % @bigint.BigInt::from_int(2)
+  if parity.is_zero() {
+    quotient
+  } else {
+    quotient + @bigint.BigInt::from_int(1)
+  }
+}
+
+fn format_scaled_integer(
+  scaled_abs : @bigint.BigInt,
+  decimals : Int,
+  negative : Bool,
+  trim_trailing_zeros : Bool,
+) -> String {
+  if decimals <= 0 {
+    let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
+    return sign + scaled_abs.to_string()
+  }
+  let mut digits = scaled_abs.to_string()
+  if digits.length() <= decimals {
+    let padding = StringBuilder::new()
+    for _ in 0..<(decimals - digits.length() + 1) {
+      padding.write_char('0')
+    }
+    padding.write_string(digits)
+    digits = padding.to_string()
+  }
+  let split = digits.length() - decimals
+  let int_part = digits.unsafe_substring(start=0, end=split)
+  let mut frac_part = digits.unsafe_substring(start=split, end=digits.length())
+  if trim_trailing_zeros {
+    while frac_part.length() > 0 && frac_part.has_suffix("0") {
+      frac_part = frac_part.unsafe_substring(start=0, end=frac_part.length() - 1)
+    }
+  }
+  let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
+  if frac_part == "" {
+    sign + int_part
+  } else {
+    sign + int_part + "." + frac_part
+  }
+}
+
+fn format_double_with_decimals(value : Double, decimals : Int) -> String {
+  if Double::is_nan(value) || Double::is_inf(value) {
+    return value.to_string()
+  }
+  let digits = if decimals < 0 { 0 } else { decimals }
+  let negative = value < 0.0
+  let abs = if negative { -value } else { value }
+  let rounded = round_abs_scaled_half_even(abs, digits)
+  format_scaled_integer(rounded, digits, negative, true)
+}
+
+fn format_double_fixed(value : Double, decimals : Int) -> String {
+  if Double::is_nan(value) || Double::is_inf(value) {
+    return value.to_string()
+  }
+  let digits = if decimals < 0 { 0 } else { decimals }
+  let negative = value < 0.0
+  let abs = if negative { -value } else { value }
+  let rounded = round_abs_scaled_half_even(abs, digits)
+  format_scaled_integer(rounded, digits, negative, false)
 }
 
 fn format_double_significant(value : Double, digits : Int) -> String {
@@ -446,19 +464,11 @@ fn format_double_significant(value : Double, digits : Int) -> String {
   if decimals < 0 {
     decimals = 0
   }
-  let rounded = round_half_even(abs, decimals)
-  if rounded == 0.0 {
+  let rounded = round_abs_scaled_half_even(abs, decimals)
+  if rounded.is_zero() {
     return "0"
   }
-  let mut text = rounded.to_string()
-  if text.contains(".") {
-    while text.length() > 0 && text.has_suffix("0") {
-      text = text.unsafe_substring(start=0, end=text.length() - 1)
-    }
-    if text.has_suffix(".") {
-      text = text.unsafe_substring(start=0, end=text.length() - 1)
-    }
-  }
+  let text = format_scaled_integer(rounded, decimals, false, true)
   "\{sign}\{text}"
 }
 
@@ -944,70 +954,70 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 
 ///|
 fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let width = rect.urx - rect.llx
-  let height = rect.ury - rect.lly
-  let mut radius = ROUNDED_CORNER_RADIUS_PT
-  let max_radius = if width < height { width / 2.0 } else { height / 2.0 }
-  if max_radius < radius {
-    radius = max_radius
+  let af : Array[@geom.Point] = [
+    @geom.Point::{ x: rect.llx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.ury },
+    @geom.Point::{ x: rect.llx, y: rect.ury },
+  ]
+  let mut rbconst = ROUNDED_CORNER_RADIUS_PT
+  for seg in 0..<4 {
+    let p0 = af[seg]
+    let p1 = af[(seg + 1) % 4]
+    let dx = p1.x - p0.x
+    let dy = p1.y - p0.y
+    let d = Double::sqrt(dx * dx + dy * dy)
+    let candidate = d / 3.0
+    if candidate < rbconst {
+      rbconst = candidate
+    }
   }
-  if radius <= 0.0 {
+  if rbconst <= 0.0 {
     return [
-      { x: rect.llx, y: rect.lly },
-      { x: rect.llx, y: rect.lly },
-      { x: rect.urx, y: rect.lly },
-      { x: rect.urx, y: rect.lly },
-      { x: rect.urx, y: rect.lly },
-      { x: rect.urx, y: rect.ury },
-      { x: rect.urx, y: rect.ury },
-      { x: rect.urx, y: rect.ury },
-      { x: rect.llx, y: rect.ury },
-      { x: rect.llx, y: rect.ury },
-      { x: rect.llx, y: rect.ury },
-      { x: rect.llx, y: rect.lly },
-      { x: rect.llx, y: rect.lly },
+      af[0],
+      af[0],
+      af[1],
+      af[1],
+      af[1],
+      af[2],
+      af[2],
+      af[2],
+      af[3],
+      af[3],
+      af[3],
+      af[0],
+      af[0],
     ]
   }
-  let left = rect.llx
-  let right = rect.urx
-  let bottom = rect.lly
-  let top = rect.ury
-  let half = radius / 2.0
-  let p0 = @geom.Point::{ x: left + radius, y: bottom }
-  let p1 = @geom.Point::{ x: right - radius, y: bottom }
-  let p2 = @geom.Point::{ x: right, y: bottom + radius }
-  let p3 = @geom.Point::{ x: right, y: top - radius }
-  let p4 = @geom.Point::{ x: right - radius, y: top }
-  let p5 = @geom.Point::{ x: left + radius, y: top }
-  let p6 = @geom.Point::{ x: left, y: top - radius }
-  let p7 = @geom.Point::{ x: left, y: bottom + radius }
-  [
-    p0,
-    p0,
-    p1,
-    p1,
-    @geom.Point::{ x: p1.x + half, y: p1.y },
-    @geom.Point::{ x: p2.x, y: p2.y - half },
-    p2,
-    p2,
-    p3,
-    p3,
-    @geom.Point::{ x: p3.x, y: p3.y + half },
-    @geom.Point::{ x: p4.x + half, y: p4.y },
-    p4,
-    p4,
-    p5,
-    p5,
-    @geom.Point::{ x: p5.x - half, y: p5.y },
-    @geom.Point::{ x: p6.x, y: p6.y + half },
-    p6,
-    p6,
-    p7,
-    p7,
-    @geom.Point::{ x: p7.x, y: p7.y - half },
-    @geom.Point::{ x: p0.x - half, y: p0.y },
-    p0,
-  ]
+  let b : Array[@geom.Point] = []
+  for seg in 0..<4 {
+    let p0 = af[seg]
+    let p1 = af[(seg + 1) % 4]
+    let dx = p1.x - p0.x
+    let dy = p1.y - p0.y
+    let d = Double::sqrt(dx * dx + dy * dy)
+    let t = rbconst / d
+    b.push(point_at(p0, p1, 0.5 * t))
+    b.push(point_at(p0, p1, t))
+    b.push(point_at(p0, p1, 1.0 - t))
+    b.push(point_at(p0, p1, 1.0 - 0.5 * t))
+  }
+  let pts : Array[@geom.Point] = []
+  for seg in 0..<4 {
+    pts.push(b[4 * seg])
+    pts.push(b[4 * seg + 1])
+    pts.push(b[4 * seg + 1])
+    pts.push(b[4 * seg + 2])
+    pts.push(b[4 * seg + 2])
+    pts.push(b[4 * seg + 3])
+  }
+  pts.push(pts[0])
+  pts.push(pts[1])
+  let out : Array[@geom.Point] = []
+  for i in 1..<pts.length() {
+    out.push(pts[i])
+  }
+  out
 }
 
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
