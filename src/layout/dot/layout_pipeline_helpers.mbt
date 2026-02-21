@@ -5760,8 +5760,8 @@ fn build_gdnlist_order_index_for_real_nodes(
   for name in gdnlist_order {
     if real_nodes.get(name) is Some(_) {
       gdnlist_order_index[name] = gdnlist_idx
-      gdnlist_idx = gdnlist_idx + 1
     }
+    gdnlist_idx = gdnlist_idx + 1
   }
   gdnlist_order_index
 }
