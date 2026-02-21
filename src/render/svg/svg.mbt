@@ -3754,7 +3754,15 @@ fn write_svg_node_group(
     return
   }
   if kind == "plaintext" {
-    // No outline for plaintext/none nodes.
+    if filled {
+      let attrs = polygon_points(rect_points(rect), bbox.llx, bbox.lly)
+      write_line(
+        sb,
+        "<polygon fill=\"\{fill}\" stroke=\"none\" points=\"\{attrs}\"/>",
+        "",
+        pretty,
+      )
+    }
   } else if kind == "msquare" {
     let points = rect_points(rect)
     let attrs = polygon_points(points, bbox.llx, bbox.lly)

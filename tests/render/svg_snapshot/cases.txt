@@ -58,6 +58,7 @@ Mrecord
 Msquare
 NaN
 nhg
+none
 no_arrow
 normal
 octagon
@@ -68,6 +69,8 @@ parallelogram
 pgram
 pm2way
 pmpipe
+plaintext
+point
 polygon
 polypoly
 proc3d
