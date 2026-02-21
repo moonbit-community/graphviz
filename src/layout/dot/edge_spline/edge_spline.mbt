@@ -4069,6 +4069,16 @@ pub fn edge_spline_for_line(
       head_cluster_bbox,
       prefer_linear,
     )
+  let has_mid_label = match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+  if !has_mid_label &&
+    points.length() == 4 &&
+    points[0] == points[1] &&
+    points[2] == points[3] {
+    points = linear_bezier(points[0], points[3])
+  }
   points = apply_parallel_offset(points, parallel_offset)
   points =
     clip_spline_to_nodes(
