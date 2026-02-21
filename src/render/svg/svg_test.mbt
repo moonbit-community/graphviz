@@ -154,7 +154,15 @@ test "render_svg renders html label alignment and colors" {
   assert_true(svg.contains("fill=\"yellow\""))
   assert_true(svg.contains("fill=\"red\""))
   assert_true(svg.contains("text-anchor=\"start\""))
-  assert_true(svg.contains(">right</text>"))
+  let left_x = match first_text_x(svg, "left") {
+    Some(value) => value
+    None => fail("missing left text x")
+  }
+  let right_x = match first_text_x(svg, "right") {
+    Some(value) => value
+    None => fail("missing right text x")
+  }
+  assert_true(left_x < right_x)
 }
 
 ///|
@@ -286,6 +294,36 @@ fn parse_attr_double(tag : String, name : String) -> Double? {
     Some(value) => Some(parse_double(value, 0.0))
     None => None
   }
+}
+
+///|
+fn first_text_x(svg : String, expected_text : String) -> Double? {
+  let mut cursor = 0
+  while true {
+    let start = match find_from(svg, "<text", cursor) {
+      Some(value) => value
+      None => return None
+    }
+    let tag_end = match find_from(svg, ">", start) {
+      Some(value) => value
+      None => return None
+    }
+    let tag = svg.unsafe_substring(start=start, end=tag_end + 1)
+    let x = parse_attr_double(tag, "x")
+    let text_rest = svg.unsafe_substring(start=tag_end + 1, end=svg.length())
+    let close_pos = match text_rest.find("</text>") {
+      Some(value) => value
+      None => return None
+    }
+    let text = normalize_text(
+      text_rest.unsafe_substring(start=0, end=close_pos),
+    )
+    if text == expected_text {
+      return x
+    }
+    cursor = tag_end + close_pos + "</text>".length()
+  }
+  None
 }
 
 ///|
