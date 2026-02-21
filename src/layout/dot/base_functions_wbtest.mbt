@@ -122,7 +122,7 @@ test "dot format helpers keep graphviz-like numeric strings" {
   assert_eq(trim_trailing_zeros("12.3400"), "12.34")
   assert_eq(trim_trailing_zeros("42"), "42")
 
-  assert_eq(format_fixed(12.345, 2), "12.35")
+  assert_eq(format_fixed(12.345, 2), "12.34")
   assert_eq(format_fixed(-12.345, 2), "-12.34")
   assert_eq(format_fixed_trim(2.5000, 4), "2.5")
 

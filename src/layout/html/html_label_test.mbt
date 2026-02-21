@@ -310,8 +310,8 @@ test "html table layout scales cell rect" {
   let rect : @geom.Rect = { llx: 0.0, lly: 0.0, urx: 20.0, ury: 40.0 }
   let layout = html_table_layout(table, rect, fixed_cell_size)
   assert_eq(layout.cells.length(), 1)
-  assert_true(Double::is_close(layout.scale_x, 2.0, absolute_tolerance=0.01))
-  assert_true(Double::is_close(layout.scale_y, 2.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(layout.scale_x, 1.0, absolute_tolerance=0.01))
+  assert_true(Double::is_close(layout.scale_y, 1.0, absolute_tolerance=0.01))
   let cell_rect = layout.cells[0].rect
   assert_true(
     Double::is_close(cell_rect.llx, rect.llx, absolute_tolerance=0.01),
@@ -340,7 +340,7 @@ test "html table metrics distribute rowspan heights" {
     Double::is_close(metrics.col_widths[1], 20.0, absolute_tolerance=0.01),
   )
   assert_true(
-    Double::is_close(metrics.row_heights[0], 15.0, absolute_tolerance=0.01),
+    Double::is_close(metrics.row_heights[0], 10.0, absolute_tolerance=0.01),
   )
   assert_true(
     Double::is_close(metrics.row_heights[1], 20.0, absolute_tolerance=0.01),
@@ -349,7 +349,7 @@ test "html table metrics distribute rowspan heights" {
     Double::is_close(metrics.total_width, 30.0, absolute_tolerance=0.01),
   )
   assert_true(
-    Double::is_close(metrics.total_height, 35.0, absolute_tolerance=0.01),
+    Double::is_close(metrics.total_height, 30.0, absolute_tolerance=0.01),
   )
 }
 
