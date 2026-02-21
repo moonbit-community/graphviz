@@ -657,7 +657,7 @@ fn build_cluster_constraints(
       }
     }
     match (min_left, max_right) {
-      (Some(_), Some(_)) => {
+      (Some(left), Some(right)) => {
         let ln_name = unique_cluster_node_name(
           CLUSTER_LN_PREFIX,
           name,
@@ -669,8 +669,20 @@ fn build_cluster_constraints(
           existing_names,
         )
         cluster_nodes[name] = (ln_name, rn_name)
-        extra_nodes.push((ln_name, 0))
-        extra_nodes.push((rn_name, 0))
+        let margin = match cluster_margins.get(name) {
+          Some(value) => value
+          None => CLUSTER_MARGIN_PT
+        }
+        let left_border = match cluster_border_left.get(name) {
+          Some(value) => value
+          None => 0.0
+        }
+        let right_border = match cluster_border_right.get(name) {
+          Some(value) => value
+          None => 0.0
+        }
+        extra_nodes.push((ln_name, trunc_int(left - margin - left_border)))
+        extra_nodes.push((rn_name, trunc_int(right + margin + right_border)))
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
           None => ()

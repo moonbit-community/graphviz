@@ -1883,10 +1883,10 @@ pub fn edge_pathplan_polyline(
         Some((split_head_idx, split_tail_idx)) => {
           let seg1_head = current_vnodes[split_head_idx]
           let seg2_tail = current_vnodes[split_tail_idx]
-          let seg1_vnodes : Array[String] = []
+          let seg1_core_vnodes : Array[String] = []
           let mut idx = 0
           while idx < split_head_idx {
-            seg1_vnodes.push(current_vnodes[idx])
+            seg1_core_vnodes.push(current_vnodes[idx])
             idx = idx + 1
           }
           let next_vnodes : Array[String] = []
@@ -1925,7 +1925,7 @@ pub fn edge_pathplan_polyline(
             None,
             current_tail_rank,
             seg1_head_rank,
-            seg1_vnodes,
+            seg1_core_vnodes,
             positions,
             vnode_ranks,
             vnode_positions,
@@ -1953,11 +1953,21 @@ pub fn edge_pathplan_polyline(
             right_bound,
           ) {
             Some((points, barriers, boxes)) => {
+              let seg1_recover_vnodes : Array[String] = []
+              if is_virtual_node(current_tail_name, vnode_sizes) {
+                seg1_recover_vnodes.push(current_tail_name)
+              }
+              for vnode in seg1_core_vnodes {
+                seg1_recover_vnodes.push(vnode)
+              }
+              // Graphviz parity: recover_slack starts at aghead(segfirst), so
+              // straight split segment endpoints are still recover candidates.
+              seg1_recover_vnodes.push(seg1_head)
               segments.push({
                 points,
                 barriers,
                 boxes,
-                vnodes: seg1_vnodes,
+                vnodes: seg1_recover_vnodes,
               })
             }
             None => {
@@ -2012,11 +2022,18 @@ pub fn edge_pathplan_polyline(
             right_bound,
           ) {
             Some((points, barriers, boxes)) => {
+              let final_recover_vnodes : Array[String] = []
+              if is_virtual_node(current_tail_name, vnode_sizes) {
+                final_recover_vnodes.push(current_tail_name)
+              }
+              for vnode in current_vnodes {
+                final_recover_vnodes.push(vnode)
+              }
               segments.push({
                 points,
                 barriers,
                 boxes,
-                vnodes: current_vnodes,
+                vnodes: final_recover_vnodes,
               })
             }
             None => split_failed = true

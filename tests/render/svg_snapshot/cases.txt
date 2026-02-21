@@ -16,6 +16,7 @@ clust4
 clust5
 complex
 compound
+constraint
 crazy
 crow
 ctext
@@ -74,6 +75,7 @@ pm2way
 pmpipe
 plaintext
 point
+poly
 polygon
 polypoly
 proc3d
@@ -86,6 +88,7 @@ rowe
 russian
 sdh
 shells
+smlred
 states
 structs
 switch
