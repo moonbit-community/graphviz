@@ -3284,6 +3284,89 @@ fn finalize_edge_spline(
 }
 
 ///|
+fn edge_sameport_direct_flags(
+  edge : @cgraph.Edge,
+  swap_ends : Bool,
+) -> (Bool, Bool) {
+  let samehead_direct = match edge.get_attr("samehead") {
+    Some(value) => value != ""
+    None => false
+  }
+  let sametail_direct = match edge.get_attr("sametail") {
+    Some(value) => value != ""
+    None => false
+  }
+  if swap_ends {
+    (samehead_direct, sametail_direct)
+  } else {
+    (sametail_direct, samehead_direct)
+  }
+}
+
+///|
+fn edge_render_clip_flags(base : EdgeRouteBase) -> (Bool, Bool) {
+  let (tail_direct, head_direct) =
+    edge_sameport_direct_flags(base.edge, base.swap_ends)
+  let tail_clip_enabled =
+    if !base.tail_clip_enabled && !tail_direct {
+      true
+    } else {
+      base.tail_clip_enabled
+    }
+  let head_clip_enabled =
+    if !base.head_clip_enabled && !head_direct {
+      true
+    } else {
+      base.head_clip_enabled
+    }
+  (tail_clip_enabled, head_clip_enabled)
+}
+
+///|
+fn rebuild_spline_for_render(
+  base : EdgeRouteBase,
+  spline_result : EdgeSplineResult,
+) -> EdgeSplineResult {
+  let (tail_clip_enabled, head_clip_enabled) = edge_render_clip_flags(base)
+  if tail_clip_enabled == base.tail_clip_enabled &&
+    head_clip_enabled == base.head_clip_enabled {
+    return spline_result
+  }
+  if spline_result.raw_bezier.length() < 4 {
+    return spline_result
+  }
+  let rebuilt =
+    edge_spline_for_bezier_points(
+      base.edge,
+      spline_result.raw_bezier,
+      base.tail_clip_center,
+      base.head_clip_center,
+      base.tail_clip_size,
+      base.head_clip_size,
+      base.route_include_tail,
+      base.route_include_head,
+      tail_clip_enabled=tail_clip_enabled,
+      head_clip_enabled=head_clip_enabled,
+      arrow_len_override=base.arrow_len_override,
+      tail_cluster_bbox=base.tail_cluster_bbox,
+      head_cluster_bbox=base.head_cluster_bbox,
+      parallel_offset=base.parallel_offset,
+      clip_swapped=base.swap_ends,
+      arrow_swapped=base.swap_ends,
+    )
+  {
+    spline: rebuilt,
+    label_pad_boost: spline_result.label_pad_boost,
+    using_pathplan: spline_result.using_pathplan,
+    pathplan_boxes: spline_result.pathplan_boxes,
+    pathplan_points: spline_result.pathplan_points,
+    raw_bezier: spline_result.raw_bezier,
+    pathplan_segments: spline_result.pathplan_segments,
+    apply_dotted_adjustment: spline_result.apply_dotted_adjustment,
+  }
+}
+
+///|
 /// Graphviz parity: edge label placement aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/labels.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_layout(
@@ -3870,12 +3953,13 @@ fn build_self_edge_layout(
     pathplan_segments: [],
     apply_dotted_adjustment: false,
   }
-  let final_spline = finalize_edge_spline(base, spline_result)
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let final_spline = finalize_edge_spline(base, layout_spline_result)
   let mut edge_layout =
     build_edge_layout(
       base,
       final_spline,
-      spline_result,
+      layout_spline_result,
       ranks,
       rank_y,
       vnode_info,
@@ -3943,11 +4027,12 @@ fn build_flat_adjacent_simple_edge_layout(
     pathplan_segments: [],
     apply_dotted_adjustment: false,
   }
-  let final_spline = finalize_edge_spline(base, spline_result)
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let final_spline = finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
     final_spline,
-    spline_result,
+    layout_spline_result,
     ranks,
     rank_y,
     vnode_info,
@@ -4327,7 +4412,8 @@ fn build_regular_edge_layout_with_spline_result(
     routing_context,
     enable_complex_tuning,
   )
-  let spline = finalize_edge_spline(base, spline_result)
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let spline = finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack_for_edge(
     edge,
     base,
@@ -4344,7 +4430,7 @@ fn build_regular_edge_layout_with_spline_result(
     build_edge_layout(
       base,
       spline,
-      spline_result,
+      layout_spline_result,
       ranks,
       rank_y,
       vnode_info,
@@ -4398,11 +4484,13 @@ fn build_regular_edge_layout_from_shared_raw_bezier(
     pathplan_segments: [],
     apply_dotted_adjustment: shared_spline_result.apply_dotted_adjustment,
   }
-  let final_spline = finalize_edge_spline(base, sibling_spline_result)
+  let layout_spline_result =
+    rebuild_spline_for_render(base, sibling_spline_result)
+  let final_spline = finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
     final_spline,
-    sibling_spline_result,
+    layout_spline_result,
     ranks,
     rank_y,
     vnode_info,
