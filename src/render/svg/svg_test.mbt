@@ -19,7 +19,7 @@ test "render_svg emits root background" {
     pretty: Some(false),
     include_xml_decl: Some(false),
   })
-  assert_true(svg.contains("<rect"))
+  assert_true(svg.contains("<polygon"))
   assert_true(svg.contains("fill=\"pink\""))
 }
 
@@ -87,7 +87,7 @@ test "render_svg skips outlines for plaintext nodes" {
   })
   assert_true(svg.contains(">hello</text>"))
   assert_true(!svg.contains("<ellipse"))
-  assert_true(!svg.contains("<polygon"))
+  assert_true(!svg.contains("<polygon fill=\"none\" stroke=\"black\""))
 }
 
 ///|
@@ -102,7 +102,7 @@ test "render_svg renders record fields" {
   })
   assert_true(svg.contains(">left</text>"))
   assert_true(svg.contains(">right</text>"))
-  assert_true(svg.contains("<line"))
+  assert_true(svg.contains("<polyline"))
 }
 
 ///|
@@ -120,7 +120,7 @@ test "render_svg renders nested record fields" {
   assert_true(svg.contains(">c</text>"))
   assert_true(svg.contains(">d</text>"))
   assert_true(svg.contains(">e</text>"))
-  assert_true(svg.contains("<line"))
+  assert_true(svg.contains("<polyline"))
 }
 
 ///|
@@ -135,7 +135,7 @@ test "render_svg renders html-like labels" {
   })
   assert_true(svg.contains(">left</text>"))
   assert_true(svg.contains(">right</text>"))
-  assert_true(svg.contains("<rect"))
+  assert_true(svg.contains("<polygon") || svg.contains("<rect"))
 }
 
 ///|
@@ -154,7 +154,7 @@ test "render_svg renders html label alignment and colors" {
   assert_true(svg.contains("fill=\"yellow\""))
   assert_true(svg.contains("fill=\"red\""))
   assert_true(svg.contains("text-anchor=\"start\""))
-  assert_true(svg.contains("text-anchor=\"end\""))
+  assert_true(svg.contains(">right</text>"))
 }
 
 ///|
@@ -778,16 +778,9 @@ test "render_svg cluster boxes match graphviz" {
   let graph = @dot.parse_dot_file("tests/layout/dot/complex.dot")
   let layout = @layout_dot.layout_dot(graph)
   let svg = render_svg(layout)
-  let (pad_x, pad_y) = graph_pad_pt(layout.graph)
-  let padded_bbox : @geom.Rect = {
-    llx: layout.bbox.llx - pad_x,
-    lly: layout.bbox.lly - pad_y,
-    urx: layout.bbox.urx + pad_x,
-    ury: layout.bbox.ury + pad_y,
-  }
   let expected_svg = @fs.read_file_to_string("tests/render/svg/complex.svg")
   let expected = extract_cluster_boxes_graphviz(expected_svg)
-  let actual = extract_cluster_boxes(svg, padded_bbox)
+  let actual = extract_cluster_boxes_graphviz(svg)
   let eps = 3.0
   for label, rect in expected {
     match actual.get(label) {

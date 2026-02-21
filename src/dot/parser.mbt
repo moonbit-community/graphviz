@@ -351,7 +351,19 @@ fn Parser::endpoint_nodes(
       }
       ([node], node_id.port)
     }
-    Subgraph(sub) => (sub.nodes(), None)
+    Subgraph(sub) => {
+      let nodes = sub.nodes()
+      let root = root_graph_for_graph(graph)
+      let root_order : Map[String, Int] = Map::new()
+      for i, node in root.nodes() {
+        root_order[node.name()] = i
+      }
+      nodes.sort_by_key(node => match root_order.get(node.name()) {
+        Some(value) => value
+        None => 100000
+      })
+      (nodes, None)
+    }
   }
 }
 

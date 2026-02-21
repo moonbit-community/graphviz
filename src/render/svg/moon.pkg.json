@@ -5,6 +5,10 @@
       "alias": "layout_dot"
     },
     {
+      "path": "moonbit-community/graphviz/layout/dot/edge_spline",
+      "alias": "edge_spline"
+    },
+    {
       "path": "moonbit-community/graphviz/layout/html",
       "alias": "html_label"
     },
@@ -12,6 +16,7 @@
     "moonbit-community/graphviz/render",
     "moonbit-community/graphviz/cgraph",
     "moonbit-community/graphviz/geom",
+    "moonbitlang/core/bigint",
     "moonbitlang/core/math",
     "moonbitlang/core/strconv"
   ],

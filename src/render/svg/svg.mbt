@@ -7,6 +7,141 @@ fn parse_double(value : String, fallback : Double) -> Double {
   }
 }
 
+fn parse_int(value : String, fallback : Int) -> Int {
+  parse_double(value, fallback.to_double()).round().to_int()
+}
+
+fn pow10_bigint(exp : Int) -> @bigint.BigInt {
+  let mut out = @bigint.BigInt::from_int(1)
+  for _ in 0..<exp {
+    out = out * @bigint.BigInt::from_int(10)
+  }
+  out
+}
+
+fn round_abs_scaled_half_even(
+  abs_value : Double,
+  decimals : Int,
+) -> @bigint.BigInt {
+  if abs_value == 0.0 {
+    return @bigint.BigInt::from_int(0)
+  }
+  let bits = abs_value.reinterpret_as_uint64()
+  let exp_bits = ((bits >> 52) & 0x7ffUL).to_int()
+  let frac_mask = 0x000fffffffffffffUL
+  let mantissa = bits & frac_mask
+  let hidden = 0x0010000000000000UL
+  let (significand, exp2) =
+    if exp_bits == 0 {
+      (mantissa, -1074)
+    } else {
+      (mantissa | hidden, exp_bits - 1075)
+    }
+  let mut numerator = @bigint.BigInt::from_uint64(significand)
+  if decimals > 0 {
+    numerator = numerator * pow10_bigint(decimals)
+  }
+  if exp2 >= 0 {
+    return numerator << exp2
+  }
+  let denominator = @bigint.BigInt::from_int(1) << (-exp2)
+  let quotient = numerator / denominator
+  let remainder = numerator % denominator
+  let doubled = remainder + remainder
+  if doubled < denominator {
+    return quotient
+  }
+  if doubled > denominator {
+    return quotient + @bigint.BigInt::from_int(1)
+  }
+  let parity = quotient % @bigint.BigInt::from_int(2)
+  if parity.is_zero() {
+    quotient
+  } else {
+    quotient + @bigint.BigInt::from_int(1)
+  }
+}
+
+fn format_scaled_integer(
+  scaled_abs : @bigint.BigInt,
+  decimals : Int,
+  negative : Bool,
+  trim_trailing_zeros : Bool,
+) -> String {
+  if decimals <= 0 {
+    let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
+    return sign + scaled_abs.to_string()
+  }
+  let mut digits = scaled_abs.to_string()
+  if digits.length() <= decimals {
+    let padding = StringBuilder::new()
+    for _ in 0..<(decimals - digits.length() + 1) {
+      padding.write_char('0')
+    }
+    padding.write_string(digits)
+    digits = padding.to_string()
+  }
+  let split = digits.length() - decimals
+  let int_part = digits.unsafe_substring(start=0, end=split)
+  let mut frac_part = digits.unsafe_substring(start=split, end=digits.length())
+  if trim_trailing_zeros {
+    while frac_part.length() > 0 && frac_part.has_suffix("0") {
+      frac_part = frac_part.unsafe_substring(start=0, end=frac_part.length() - 1)
+    }
+  }
+  let sign = if negative && !scaled_abs.is_zero() { "-" } else { "" }
+  if frac_part == "" {
+    sign + int_part
+  } else {
+    sign + int_part + "." + frac_part
+  }
+}
+
+fn format_double_with_decimals(value : Double, decimals : Int) -> String {
+  if Double::is_nan(value) || Double::is_inf(value) {
+    return value.to_string()
+  }
+  let digits = if decimals < 0 { 0 } else { decimals }
+  let negative = value < 0.0
+  let abs = if negative { -value } else { value }
+  let rounded = round_abs_scaled_half_even(abs, digits)
+  format_scaled_integer(rounded, digits, negative, true)
+}
+
+fn format_double_fixed(value : Double, decimals : Int) -> String {
+  if Double::is_nan(value) || Double::is_inf(value) {
+    return value.to_string()
+  }
+  let digits = if decimals < 0 { 0 } else { decimals }
+  let negative = value < 0.0
+  let abs = if negative { -value } else { value }
+  let rounded = round_abs_scaled_half_even(abs, digits)
+  format_scaled_integer(rounded, digits, negative, false)
+}
+
+fn format_double_significant(value : Double, digits : Int) -> String {
+  if value == 0.0 {
+    return "0"
+  }
+  let sign = if value < 0.0 { "-" } else { "" }
+  let abs = if value < 0.0 { -value } else { value }
+  let exp = @math.log10(abs).floor().to_int()
+  let mut decimals = digits - exp - 1
+  if decimals < 0 {
+    decimals = 0
+  }
+  let rounded = round_abs_scaled_half_even(abs, decimals)
+  if rounded.is_zero() {
+    return "0"
+  }
+  let text = format_scaled_integer(rounded, decimals, false, true)
+  "\{sign}\{text}"
+}
+
+fn format_double(value : Double) -> String {
+  format_double_with_decimals(value, 2)
+}
+
 ///|
 priv struct ArrowFlags {
   head : Bool
@@ -27,6 +162,10 @@ const RECORD_BORDER_PT : Double = 0.5
 
 const DOUBLE_CIRCLE_GAP_PT : Double = 4.0
 
+const POLY_GAP_PT : Double = 4.0
+
+const ROUNDED_CORNER_RADIUS_PT : Double = 12.0
+
 ///|
 const DIAGONAL_RBCONST : Double = 12.0
 
@@ -37,12 +176,265 @@ const MCIRCLE_X : Double = 0.6614
 const MCIRCLE_Y : Double = 0.75
 
 ///|
-fn svg_font_family(font_name : String) -> String {
-  let lower = font_name.to_lower()
-  if lower == "times-roman" || lower == "times" {
-    "Times,serif"
+fn node_attr(node : @cgraph.Node, name : String) -> String? {
+  node.get_attr(name)
+}
+
+fn edge_attr(edge : @cgraph.Edge, name : String) -> String? {
+  edge.get_attr(name)
+}
+
+fn parse_palette_index(value : String) -> Int? {
+  let trimmed = value.trim().to_string()
+  if trimmed == "" {
+    return None
+  }
+  for ch in trimmed {
+    if !ch.is_ascii_digit() {
+      return None
+    }
+  }
+  let index = parse_int(trimmed, 0)
+  if index <= 0 { None } else { Some(index) }
+}
+
+fn colorscheme_index_color(scheme : String, index : Int) -> String? {
+  match scheme.to_lower() {
+    // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
+    "rdbu5" =>
+      match index {
+        1 => Some("#ca0020")
+        2 => Some("#f4a582")
+        3 => Some("#f7f7f7")
+        4 => Some("#92c5de")
+        5 => Some("#0571b0")
+        _ => None
+      }
+    _ => None
+  }
+}
+
+fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
+  let trimmed = value.trim().to_string()
+  match (colorscheme, parse_palette_index(trimmed)) {
+    (Some(scheme), Some(index)) =>
+      match colorscheme_index_color(scheme, index) {
+        Some(mapped) => mapped
+        None => trimmed
+      }
+    _ => trimmed
+  }
+}
+
+fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
+  let mut current = graph
+  while true {
+    match current.get_attr(name) {
+      Some(value) => return Some(value)
+      None => ()
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  None
+}
+
+fn graph_colorscheme(graph : @cgraph.Graph) -> String? {
+  inherited_graph_attr(graph, "colorscheme")
+}
+
+fn graph_color(graph : @cgraph.Graph, name : String, default : String) -> String {
+  let raw = @attrs.color(graph.get_attr(name), default=default)
+  resolve_colorscheme_color(raw, graph_colorscheme(graph))
+}
+
+fn node_colorscheme(node : @cgraph.Node) -> String? {
+  match node_attr(node, "colorscheme") {
+    Some(value) => Some(value)
+    None => node.graph().get_attr("colorscheme")
+  }
+}
+
+fn edge_colorscheme(edge : @cgraph.Edge) -> String? {
+  match edge_attr(edge, "colorscheme") {
+    Some(value) => Some(value)
+    None => edge.tail().graph().get_attr("colorscheme")
+  }
+}
+
+fn node_color(node : @cgraph.Node, name : String, default : String) -> String {
+  let raw = @attrs.color(node_attr(node, name), default=default)
+  resolve_colorscheme_color(raw, node_colorscheme(node))
+}
+
+fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
+  match node_attr(node, "fillcolor") {
+    Some(value) => resolve_colorscheme_color(value, node_colorscheme(node))
+    None => node_color(node, "color", fallback)
+  }
+}
+
+fn edge_color(edge : @cgraph.Edge, name : String, default : String) -> String {
+  let raw = @attrs.color(edge_attr(edge, name), default=default)
+  resolve_colorscheme_color(raw, edge_colorscheme(edge))
+}
+
+priv struct SvgFontAttrs {
+  family : String
+  weight : String?
+  stretch : String?
+  style : String?
+}
+
+fn mapped_svg_font_family(base_lower : String) -> String? {
+  match base_lower {
+    "times" => Some("Times,serif")
+    "palatino" => Some("Palatino Linotype,serif")
+    "newcenturyschlbk" => Some("Century Schoolbook L,serif")
+    "helvetica" => Some("Helvetica,sans-Serif")
+    "courier" => Some("Courier,monospace")
+    "bookman" => Some("URW Bookman L,serif")
+    "avantgarde" => Some("URW Gothic L,sans-Serif")
+    "zapfchancery" => Some("URW Chancery L,serif")
+    "zapfdingbats" => Some("Dingbats,fantasy")
+    "symbol" => Some("Symbol,fantasy")
+    _ => None
+  }
+}
+
+fn svg_font_attrs(font_name : String) -> SvgFontAttrs {
+  let parts : Array[String] = []
+  for part in font_name.split("-") {
+    parts.push(part.to_string())
+  }
+  if parts.length() == 0 {
+    return { family: font_name, weight: None, stretch: None, style: None }
+  }
+  let base_lower = parts[0].to_lower()
+  let family = match mapped_svg_font_family(base_lower) {
+    Some(mapped) => mapped
+    None => {
+      let lower = font_name.to_lower()
+      if lower == "times-roman" || lower == "times" {
+        "Times,serif"
+      } else {
+        return { family: font_name, weight: None, stretch: None, style: None }
+      }
+    }
+  }
+  let mut weight : String? = None
+  let mut stretch : String? = None
+  let mut style : String? = None
+  let mut has_unknown = false
+  for i in 1..<parts.length() {
+    let token = parts[i].to_lower()
+    match token {
+      "bold" => weight = Some("bold")
+      "demi" => weight = Some("demi")
+      "light" => weight = Some("light")
+      "book" => weight = Some("book")
+      "medium" => weight = Some("medium")
+      "roman" =>
+        if base_lower != "times" {
+          weight = Some("roman")
+        }
+      "italic" => style = Some("italic")
+      "oblique" => style = Some("oblique")
+      "narrow" => stretch = Some("condensed")
+      "bolditalic" => {
+        weight = Some("bold")
+        style = Some("italic")
+      }
+      "boldoblique" => {
+        weight = Some("bold")
+        style = Some("oblique")
+      }
+      "lightitalic" => {
+        weight = Some("light")
+        style = Some("italic")
+      }
+      "bookoblique" => {
+        weight = Some("book")
+        style = Some("oblique")
+      }
+      "demiitalic" => {
+        weight = Some("demi")
+        style = Some("italic")
+      }
+      "demioblique" => {
+        weight = Some("demi")
+        style = Some("oblique")
+      }
+      "mediumitalic" => {
+        weight = Some("medium")
+        style = Some("italic")
+      }
+      _ => has_unknown = true
+    }
+  }
+  if has_unknown {
+    return { family: font_name, weight: None, stretch: None, style: None }
+  }
+  { family, weight, stretch, style }
+}
+
+fn svg_text_font_attrs(font_name : String) -> String {
+  let attrs = svg_font_attrs(font_name)
+  let sb = StringBuilder::new()
+  sb.write_string(" font-family=\"")
+  sb.write_string(attrs.family)
+  sb.write_char('"')
+  match attrs.weight {
+    Some(value) => {
+      sb.write_string(" font-weight=\"")
+      sb.write_string(value)
+      sb.write_char('"')
+    }
+    None => ()
+  }
+  match attrs.stretch {
+    Some(value) => {
+      sb.write_string(" font-stretch=\"")
+      sb.write_string(value)
+      sb.write_char('"')
+    }
+    None => ()
+  }
+  match attrs.style {
+    Some(value) => {
+      sb.write_string(" font-style=\"")
+      sb.write_string(value)
+      sb.write_char('"')
+    }
+    None => ()
+  }
+  sb.to_string()
+}
+
+///|
+fn is_svg_named_color(color : String) -> Bool {
+  match color {
+    "black" | "white" | "none" | "red" | "green" | "blue" | "yellow" |
+    "orange" | "cyan" | "magenta" | "pink" | "hotpink" | "purple" |
+    "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
+    "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
+    "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
+    "lemonchiffon" | "firebrick" | "orangered" => true
+    _ => false
+  }
+}
+
+///|
+fn svg_color(color : String) -> String {
+  let lower = color.to_lower()
+  if lower.has_prefix("#") {
+    lower
+  } else if is_svg_named_color(lower) {
+    lower
   } else {
-    font_name
+    @attrs.normalize_color(lower)
   }
 }
 
@@ -181,7 +573,64 @@ fn label_metrics(
 
 ///|
 fn record_label_lines(label : String) -> Array[RawLabelLine] {
-  label_lines(label)
+  let lines : Array[RawLabelLine] = []
+  let mut sb = StringBuilder::new()
+  let mut escaping = false
+  let mut has_chars = false
+  for ch in label {
+    if escaping {
+      escaping = false
+      match ch {
+        'n' | 'l' | 'r' => {
+          let align = match ch {
+            'l' => @render.TextAlign::Left
+            'r' => @render.TextAlign::Right
+            _ => @render.TextAlign::Center
+          }
+          push_label_line(
+            lines,
+            sb.to_string(),
+            align,
+          )
+          sb = StringBuilder::new()
+          has_chars = false
+        }
+        _ => {
+          sb.write_char(ch)
+          has_chars = true
+        }
+      }
+      continue
+    }
+    if ch == '\\' {
+      escaping = true
+      continue
+    }
+    if ch == '\n' || ch == '\r' {
+      push_label_line(
+        lines,
+        sb.to_string(),
+        @render.TextAlign::Center,
+      )
+      sb = StringBuilder::new()
+      has_chars = false
+      continue
+    }
+    sb.write_char(ch)
+    has_chars = true
+  }
+  if escaping {
+    sb.write_char('\\')
+    has_chars = true
+  }
+  if has_chars || lines.length() == 0 {
+    push_label_line(
+      lines,
+      sb.to_string(),
+      @render.TextAlign::Center,
+    )
+  }
+  lines
 }
 
 ///|
@@ -196,19 +645,24 @@ fn record_label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, height_pt) =
+    let (width_pt, base_height_pt) =
       @layout_dot.record_label_text_dimensions(
         metrics_text,
         font_name,
         font_size_pt,
       )
-    let (_w, _h, _yoffset_layout, yoffset_centerline) =
+    let (_w, layout_height_pt, _yoffset_layout, yoffset_centerline) =
       @layout_dot.label_text_metrics(
         metrics_text,
         font_name,
         font_size_pt,
       )
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
+    let height_pt = if line.text == "" {
+      layout_height_pt
+    } else {
+      base_height_pt
+    }
     if width_pt > max_width {
       max_width = width_pt
     }
@@ -271,16 +725,116 @@ fn stroke_dash_attr(style : @attrs.StyleFlags) -> String {
   }
 }
 
+fn svg_style_tokens(raw : String) -> Array[String] {
+  let tokens : Array[String] = []
+  let mut current = StringBuilder::new()
+  let mut seen = false
+  for ch in raw {
+    if ch == ',' || ch.is_whitespace() {
+      if seen {
+        tokens.push(current.to_string())
+        current = StringBuilder::new()
+        seen = false
+      }
+    } else {
+      current.write_char(ch)
+      seen = true
+    }
+  }
+  if seen {
+    tokens.push(current.to_string())
+  }
+  tokens
+}
+
+fn style_has_token(style : @attrs.StyleFlags, name : String) -> Bool {
+  for token in svg_style_tokens(style.raw) {
+    if token == name {
+      return true
+    }
+  }
+  false
+}
+
+fn style_is_invisible(style : @attrs.StyleFlags) -> Bool {
+  style_has_token(style, "invis")
+}
+
+fn style_linewidth(style : @attrs.StyleFlags) -> Double? {
+  let mut is_bold = false
+  for token in svg_style_tokens(style.raw) {
+    if token == "bold" {
+      is_bold = true
+      continue
+    }
+    if token.has_prefix("setlinewidth(") && token.has_suffix(")") {
+      let width_text =
+        token.unsafe_substring(start=13, end=token.length() - 1)
+      let width = @attrs.parse_double(Some(width_text), 1.0)
+      if width > 0.0 {
+        return Some(width)
+      }
+    }
+  }
+  if is_bold {
+    Some(2.0)
+  } else {
+    None
+  }
+}
+
+fn is_default_linewidth(width : Double) -> Bool {
+  width >= 0.999999 && width <= 1.000001
+}
+
+fn stroke_width_value(
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+) -> Double? {
+  let parsed = @attrs.parse_double(penwidth, 1.0)
+  let width =
+    if parsed > 0.0 && !is_default_linewidth(parsed) {
+      parsed
+    } else {
+      match style_linewidth(style) {
+        Some(value) => if value > 0.0 { value } else { 1.0 }
+        None => 1.0
+      }
+    }
+  if is_default_linewidth(width) { None } else { Some(width) }
+}
+
+fn stroke_width_attr(
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+) -> String {
+  match stroke_width_value(style, penwidth) {
+    Some(value) => " stroke-width=\"\{format_double(value)}\""
+    None => ""
+  }
+}
+
 ///|
 fn resolve_label(text : String, name : String) -> String {
   let with_name = text.replace_all(old="\\N", new=name)
   with_name.replace_all(old="\\n", new="\n")
 }
 
+fn resolve_record_label(text : String, name : String) -> String {
+  text.replace_all(old="\\N", new=name)
+}
+
 ///|
 fn label_text(value : String?, fallback : String) -> String {
   match value {
     Some(text) => resolve_label(text, fallback)
+    None => fallback
+  }
+}
+
+fn record_label_text(value : String?, fallback : String) -> String {
+  match value {
+    Some(text) => resolve_record_label(text, fallback)
     None => fallback
   }
 }
@@ -313,7 +867,13 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
       let size = @attrs.font_size(graph.get_attr("fontsize"))
       let name = @attrs.font_name(graph.get_attr("fontname"))
       let (_, width_pt, height_pt) = label_metrics(text, name, size)
-      Some((text, width_pt, height_pt))
+      let adjusted_height = if name == "Helvetica-Oblique" {
+        // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
+        height_pt - 0.72
+      } else {
+        height_pt
+      }
+      Some((text, width_pt, adjusted_height))
     }
     None => None
   }
@@ -342,11 +902,18 @@ fn shape_kind(value : String?) -> String {
     "hexagon" => "hexagon"
     "septagon" => "septagon"
     "octagon" => "octagon"
+    "doubleoctagon" => "doubleoctagon"
+    "tripleoctagon" => "tripleoctagon"
+    "polygon" => "polygon"
     "trapezium" => "trapezium"
     "invtrapezium" => "invtrapezium"
     "parallelogram" => "parallelogram"
     "house" => "house"
     "invhouse" => "invhouse"
+    "rpromoter" => "rpromoter"
+    "lpromoter" => "lpromoter"
+    "rarrow" => "rarrow"
+    "larrow" => "larrow"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -361,13 +928,20 @@ fn shape_kind(value : String?) -> String {
 fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
   let style = @attrs.parse_style(graph.get_attr("style"))
   if style.filled {
-    let fill = @attrs.color(
-      graph.get_attr("fillcolor"),
-      default=@attrs.color(graph.get_attr("color"), default="black"),
-    )
+    let fill = svg_color(resolve_colorscheme_color(
+      @attrs.color(
+        graph.get_attr("fillcolor"),
+        default=@attrs.color(graph.get_attr("color"), default="black"),
+      ),
+      graph.get_attr("colorscheme"),
+    ))
     Some(fill)
   } else {
-    graph.get_attr("bgcolor")
+    match graph.get_attr("bgcolor") {
+      Some(value) =>
+        Some(svg_color(resolve_colorscheme_color(value, graph.get_attr("colorscheme"))))
+      None => None
+    }
   }
 }
 
@@ -375,7 +949,7 @@ fn cluster_fill_color(graph : @cgraph.Graph) -> String? {
 fn node_padding(node : @cgraph.Node) -> (Double, Double) {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
-  match node.get_attr("margin") {
+  match node_attr(node, "margin") {
     Some(value) =>
       match parse_margin(value) {
         Some((margin_x, margin_y)) => {
@@ -506,6 +1080,85 @@ fn escape_xml(text : String) -> String {
 }
 
 ///|
+fn escape_xml_with_dash(text : String) -> String {
+  escape_xml(text).replace_all(old="-", new="&#45;")
+}
+
+fn escape_xml_text_with_dash(text : String) -> String {
+  let sb = StringBuilder::new()
+  let mut space_run = 0
+  for ch in text {
+    if ch == ' ' {
+      space_run = space_run + 1
+      continue
+    }
+    if space_run > 0 {
+      sb.write_char(' ')
+      for _ in 1..<space_run {
+        sb.write_string("&#160;")
+      }
+      space_run = 0
+    }
+    space_run = 0
+    match ch {
+      '&' => sb.write_string("&amp;")
+      '<' => sb.write_string("&lt;")
+      '>' => sb.write_string("&gt;")
+      '"' => sb.write_string("&quot;")
+      '\'' => sb.write_string("&apos;")
+      '-' => sb.write_string("&#45;")
+      _ => sb.write_char(ch)
+    }
+  }
+  if space_run > 0 {
+    sb.write_char(' ')
+    for _ in 1..<space_run {
+      sb.write_string("&#160;")
+    }
+  }
+  sb.to_string()
+}
+
+///|
+fn port_title_suffix(port : @cgraph.Port?) -> String {
+  match port {
+    None => ""
+    Some(value) => {
+      let mut suffix = ""
+      match value.name {
+        Some(name) =>
+          if name != "" {
+            suffix = ":\{name}"
+          }
+        None => ()
+      }
+      match value.compass {
+        Some(compass) => {
+          let compass_text = match compass {
+            @cgraph.Compass::N => "n"
+            @cgraph.Compass::NE => "ne"
+            @cgraph.Compass::E => "e"
+            @cgraph.Compass::SE => "se"
+            @cgraph.Compass::S => "s"
+            @cgraph.Compass::SW => "sw"
+            @cgraph.Compass::W => "w"
+            @cgraph.Compass::NW => "nw"
+            @cgraph.Compass::C => "c"
+          }
+          if suffix == "" {
+            suffix = ":\{compass_text}"
+          } else {
+            suffix = "\{suffix}:\{compass_text}"
+          }
+        }
+        None => ()
+      }
+      suffix
+    }
+  }
+}
+
+///|
 fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
   let half_w = layout.width_in * 72.0 / 2.0
   let half_h = layout.height_in * 72.0 / 2.0
@@ -552,8 +1205,89 @@ fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
+fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.lly },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.urx, y: rect.ury },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+///|
+fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let af : Array[@geom.Point] = [
+    @geom.Point::{ x: rect.llx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.ury },
+    @geom.Point::{ x: rect.llx, y: rect.ury },
+  ]
+  let mut rbconst = ROUNDED_CORNER_RADIUS_PT
+  for seg in 0..<4 {
+    let p0 = af[seg]
+    let p1 = af[(seg + 1) % 4]
+    let dx = p1.x - p0.x
+    let dy = p1.y - p0.y
+    let d = @math.hypot(dx, dy)
+    let candidate = d / 3.0
+    if candidate < rbconst {
+      rbconst = candidate
+    }
+  }
+  if rbconst <= 0.0 {
+    return [
+      af[0],
+      af[0],
+      af[1],
+      af[1],
+      af[1],
+      af[2],
+      af[2],
+      af[2],
+      af[3],
+      af[3],
+      af[3],
+      af[0],
+      af[0],
+    ]
+  }
+  let b : Array[@geom.Point] = []
+  for seg in 0..<4 {
+    let p0 = af[seg]
+    let p1 = af[(seg + 1) % 4]
+    let dx = p1.x - p0.x
+    let dy = p1.y - p0.y
+    let d = @math.hypot(dx, dy)
+    let t = rbconst / d
+    b.push(point_at(p0, p1, 0.5 * t))
+    b.push(point_at(p0, p1, t))
+    b.push(point_at(p0, p1, 1.0 - t))
+    b.push(point_at(p0, p1, 1.0 - 0.5 * t))
+  }
+  let pts : Array[@geom.Point] = []
+  for seg in 0..<4 {
+    pts.push(b[4 * seg])
+    pts.push(b[4 * seg + 1])
+    pts.push(b[4 * seg + 1])
+    pts.push(b[4 * seg + 2])
+    pts.push(b[4 * seg + 2])
+    pts.push(b[4 * seg + 3])
+  }
+  pts.push(pts[0])
+  pts.push(pts[1])
+  let out : Array[@geom.Point] = []
+  for i in 1..<pts.length() {
+    out.push(pts[i])
+  }
+  out
+}
+
+///|
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
-  { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+  {
+    x: @edge_spline.libm_fma(t, b.x - a.x, a.x),
+    y: @edge_spline.libm_fma(t, b.y - a.y, a.y),
+  }
 }
 
 ///|
@@ -616,42 +1350,52 @@ fn mcircle_segments(rect : @geom.Rect) -> Array[(@geom.Point, @geom.Point)] {
 }
 
 ///|
-fn triangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  [
-    { x: rect.llx, y: rect.lly },
-    { x: rect.urx, y: rect.lly },
-    { x: cx, y: rect.ury },
-  ]
-}
-
-///|
-fn invtriangle_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  [
-    { x: rect.llx, y: rect.ury },
-    { x: rect.urx, y: rect.ury },
-    { x: cx, y: rect.lly },
-  ]
-}
-
-///|
-fn regular_polygon_points(rect : @geom.Rect, sides : Int) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  let cy = (rect.lly + rect.ury) / 2.0
-  let half_w = (rect.urx - rect.llx) / 2.0
-  let half_h = (rect.ury - rect.lly) / 2.0
-  let radius = if half_w < half_h { half_w } else { half_h }
-  let step = 2.0 * @math.PI / sides.to_double()
-  let points : Array[@geom.Point] = []
-  for i in 0..<sides {
-    let angle = step * i.to_double()
-    points.push({
-      x: cx + radius * @math.cos(angle),
-      y: cy + radius * @math.sin(angle),
-    })
+fn node_attr_double(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Double,
+) -> Double {
+  match node_attr(node, key) {
+    Some(value) => parse_double(value, fallback)
+    None => fallback
   }
-  points
+}
+
+///|
+fn node_attr_int(
+  node : @cgraph.Node,
+  key : String,
+  fallback : Int,
+) -> Int {
+  match node_attr(node, key) {
+    Some(value) => parse_int(value, fallback)
+    None => fallback
+  }
+}
+
+fn node_peripheries(node : @cgraph.Node, fallback : Int) -> Int {
+  let raw = node_attr_int(node, "peripheries", fallback)
+  if raw < 1 { 1 } else { raw }
+}
+
+fn polygon_params_with_defaults(
+  node : @cgraph.Node,
+  sides : Int,
+  default_orientation : Double,
+  default_distortion : Double,
+  default_skew : Double,
+  default_peripheries : Int,
+) -> (Int, Double, Double, Double, Int) {
+  let orientation = node_attr_double(node, "orientation", default_orientation)
+  let distortion = node_attr_double(node, "distortion", default_distortion)
+  let skew = node_attr_double(node, "skew", default_skew)
+  let peripheries = node_peripheries(node, default_peripheries)
+  (sides, orientation, distortion, skew, peripheries)
+}
+
+///|
+fn point_nearly_equal(a : @geom.Point, b : @geom.Point) -> Bool {
+  Double::abs(a.x - b.x) <= 0.0000001 && Double::abs(a.y - b.y) <= 0.0000001
 }
 
 ///|
@@ -725,25 +1469,400 @@ fn polygon_vertices_for_rect(
 }
 
 ///|
-fn shape_polygon_points(
+fn polygon_outline_vertices(
+  base : Array[@geom.Point],
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  if Double::abs(outline_pad_pt) <= 0.0000001 || base.length() < 3 {
+    return base
+  }
+  let sides = base.length()
+  let mut prev = base[sides - 1]
+  for j in 1..=sides {
+    let candidate = base[(sides - j) % sides]
+    if !point_nearly_equal(candidate, base[0]) {
+      prev = candidate
+      break
+    }
+  }
+  let mut beta = @math.atan2(base[0].y - prev.y, base[0].x - prev.x)
+  let mut prev_vertex = prev
+  let mut offset_x = 0.0
+  let mut offset_y = 0.0
+  let out : Array[@geom.Point] = []
+  for i in 0..<sides {
+    let q = base[i]
+    if !point_nearly_equal(q, prev_vertex) {
+      let mut next = base[(i + 1) % sides]
+      for j in 1..<sides {
+        let candidate = base[(i + j) % sides]
+        if !point_nearly_equal(candidate, q) {
+          next = candidate
+          break
+        }
+      }
+      let alpha = beta
+      beta = @math.atan2(next.y - q.y, next.x - q.x)
+      let gamma = (alpha + @math.PI - beta) / 2.0
+      let sin_gamma = @math.sin(gamma)
+      if Double::abs(sin_gamma) > 0.0000001 {
+        let temp = POLY_GAP_PT / sin_gamma
+        offset_y = @math.sin(alpha - gamma) * temp
+        offset_x = @math.cos(alpha - gamma) * temp
+      }
+    }
+    prev_vertex = q
+    out.push({
+      x: q.x + offset_x * outline_pad_pt / POLY_GAP_PT,
+      y: q.y + offset_y * outline_pad_pt / POLY_GAP_PT,
+    })
+  }
+  out
+}
+
+fn polygon_paths_from_base(
+  base : Array[@geom.Point],
+  peripheries : Int,
+) -> Array[Array[@geom.Point]] {
+  if base.length() < 3 {
+    return []
+  }
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let paths : Array[Array[@geom.Point]] = [base]
+  for i in 1..<count {
+    let pad = POLY_GAP_PT * i.to_double()
+    paths.push(polygon_outline_vertices(base, pad))
+  }
+  paths
+}
+
+fn polygon_vertices_for_size(
+  width_pt : Double,
+  height_pt : Double,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+) -> Array[@geom.Point] {
+  let rect = @geom.Rect::{
+    llx: -width_pt / 2.0,
+    lly: -height_pt / 2.0,
+    urx: width_pt / 2.0,
+    ury: height_pt / 2.0,
+  }
+  polygon_vertices_for_rect(rect, sides, orientation_deg, distortion, skew)
+}
+
+fn polygon_outline_vertices_for_rect(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+  peripheries : Int,
+  outline_pad_pt : Double,
+) -> Array[@geom.Point] {
+  let target_w = rect.urx - rect.llx
+  let target_h = rect.ury - rect.lly
+  if target_w <= 0.0 || target_h <= 0.0 {
+    return []
+  }
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let base_outline_pad =
+    if count > 1 {
+      POLY_GAP_PT * (count - 1).to_double()
+    } else {
+      0.0
+    }
+  let centered = if base_outline_pad <= 0.0 {
+    polygon_vertices_for_size(
+      target_w,
+      target_h,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+  } else {
+    let mut inner_w = if target_w > base_outline_pad * 2.0 {
+      target_w - base_outline_pad * 2.0
+    } else {
+      target_w * 0.5
+    }
+    let mut inner_h = if target_h > base_outline_pad * 2.0 {
+      target_h - base_outline_pad * 2.0
+    } else {
+      target_h * 0.5
+    }
+    for _ in 0..<8 {
+      if inner_w <= 0.0 || inner_h <= 0.0 {
+        break
+      }
+      let base = polygon_vertices_for_size(
+        inner_w,
+        inner_h,
+        sides,
+        orientation_deg,
+        distortion,
+        skew,
+      )
+      if base.length() < 3 {
+        break
+      }
+      let expanded = polygon_outline_vertices(base, base_outline_pad)
+      let mut max_x = 0.0
+      let mut max_y = 0.0
+      for vertex in expanded {
+        if Double::abs(vertex.x) > max_x {
+          max_x = Double::abs(vertex.x)
+        }
+        if Double::abs(vertex.y) > max_y {
+          max_y = Double::abs(vertex.y)
+        }
+      }
+      if max_x <= 0.0 || max_y <= 0.0 {
+        break
+      }
+      inner_w = inner_w * (target_w / (max_x * 2.0))
+      inner_h = inner_h * (target_h / (max_y * 2.0))
+    }
+    let final_base = polygon_vertices_for_size(
+      inner_w,
+      inner_h,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+    )
+    if final_base.length() < 3 {
+      final_base
+    } else {
+      polygon_outline_vertices(final_base, base_outline_pad + outline_pad_pt)
+    }
+  }
+  if centered.length() < 3 {
+    return centered
+  }
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  let out : Array[@geom.Point] = []
+  for vertex in centered {
+    out.push({ x: vertex.x + cx, y: vertex.y + cy })
+  }
+  out
+}
+
+fn inner_rect_for_peripheries(rect : @geom.Rect, peripheries : Int) -> @geom.Rect {
+  if peripheries <= 1 {
+    return rect
+  }
+  let inset = POLY_GAP_PT * (peripheries - 1).to_double()
+  match inset_rect(rect, inset) {
+    Some(inner) => inner
+    None => rect
+  }
+}
+
+fn expand_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect {
+  {
+    llx: rect.llx - gap,
+    lly: rect.lly - gap,
+    urx: rect.urx + gap,
+    ury: rect.ury + gap,
+  }
+}
+
+fn polygon_paths_for_shape(
+  rect : @geom.Rect,
+  sides : Int,
+  orientation_deg : Double,
+  distortion : Double,
+  skew : Double,
+  peripheries : Int,
+) -> Array[Array[@geom.Point]] {
+  let count = if peripheries < 1 { 1 } else { peripheries }
+  let paths : Array[Array[@geom.Point]] = []
+  for i in 0..<count {
+    let inset = -POLY_GAP_PT * (count - i - 1).to_double()
+    let poly = polygon_outline_vertices_for_rect(
+      rect,
+      sides,
+      orientation_deg,
+      distortion,
+      skew,
+      count,
+      inset,
+    )
+    if poly.length() > 0 {
+      paths.push(poly)
+    }
+  }
+  paths
+}
+
+fn arrow_tip_width(rect : @geom.Rect) -> Double {
+  let width = rect.urx - rect.llx
+  if width <= 0.0 {
+    return 0.0
+  }
+  let max_tip = width / 2.0
+  if max_tip < 18.0 { max_tip } else { 18.0 }
+}
+
+fn rarrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_right = rect.urx - tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_right, y: y_top },
+    { x: rect.llx, y: y_top },
+    { x: rect.llx, y: y_mid },
+    { x: body_right, y: y_mid },
+    { x: body_right, y: rect.lly },
+    { x: rect.urx, y: cy },
+    { x: body_right, y: rect.ury },
+  ]
+}
+
+fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_left = rect.llx + tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_left, y: y_top },
+    { x: rect.urx, y: y_top },
+    { x: rect.urx, y: y_mid },
+    { x: body_left, y: y_mid },
+    { x: body_left, y: rect.lly },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.ury },
+  ]
+}
+
+fn rpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_right = rect.urx - tip
+  let notch = rect.llx + tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_right, y: y_top },
+    { x: rect.llx, y: y_top },
+    { x: rect.llx, y: rect.lly },
+    { x: notch, y: rect.lly },
+    { x: notch, y: y_mid },
+    { x: body_right, y: y_mid },
+    { x: body_right, y: rect.lly },
+    { x: rect.urx, y: cy },
+    { x: body_right, y: rect.ury },
+  ]
+}
+
+fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = arrow_tip_width(rect)
+  let body_left = rect.llx + tip
+  let notch = rect.urx - tip
+  let band = (rect.ury - rect.lly) / 6.0
+  let y_top = rect.ury - band
+  let y_mid = rect.lly + band
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_left, y: y_top },
+    { x: rect.urx, y: y_top },
+    { x: rect.urx, y: rect.lly },
+    { x: notch, y: rect.lly },
+    { x: notch, y: y_mid },
+    { x: body_left, y: y_mid },
+    { x: body_left, y: rect.lly },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.ury },
+  ]
+}
+
+fn shape_polygon_paths(
+  node : @cgraph.Node,
   kind : String,
   rect : @geom.Rect,
-) -> Array[@geom.Point]? {
-  match kind {
-    "diamond" => Some(diamond_points(rect))
-    "triangle" => Some(triangle_points(rect))
-    "invtriangle" => Some(invtriangle_points(rect))
-    "pentagon" => Some(polygon_vertices_for_rect(rect, 5, 0.0, 0.0, 0.0))
-    "hexagon" => Some(regular_polygon_points(rect, 6))
-    "septagon" => Some(polygon_vertices_for_rect(rect, 7, 0.0, 0.0, 0.0))
-    "octagon" => Some(regular_polygon_points(rect, 8))
-    "trapezium" => Some(polygon_vertices_for_rect(rect, 4, 0.0, -0.4, 0.0))
+) -> Array[Array[@geom.Point]]? {
+  let params : (Int, Double, Double, Double, Int)? = match kind {
+    "diamond" => Some((4, 45.0, 0.0, 0.0, 1))
+    "triangle" => Some(polygon_params_with_defaults(node, 3, 0.0, 0.0, 0.0, 1))
+    "invtriangle" =>
+      Some(polygon_params_with_defaults(node, 3, 180.0, 0.0, 0.0, 1))
+    "pentagon" => Some(polygon_params_with_defaults(node, 5, 0.0, 0.0, 0.0, 1))
+    "hexagon" => Some(polygon_params_with_defaults(node, 6, 0.0, 0.0, 0.0, 1))
+    "septagon" => Some(polygon_params_with_defaults(node, 7, 0.0, 0.0, 0.0, 1))
+    "octagon" => Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 1))
+    "doubleoctagon" =>
+      Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 2))
+    "tripleoctagon" =>
+      Some(polygon_params_with_defaults(node, 8, 0.0, 0.0, 0.0, 3))
+    "trapezium" =>
+      Some(polygon_params_with_defaults(node, 4, 0.0, -0.4, 0.0, 1))
     "invtrapezium" =>
-      Some(polygon_vertices_for_rect(rect, 4, 180.0, -0.4, 0.0))
-    "parallelogram" => Some(polygon_vertices_for_rect(rect, 4, 0.0, 0.0, 0.6))
-    "house" => Some(polygon_vertices_for_rect(rect, 5, 0.0, -0.64, 0.0))
-    "invhouse" => Some(polygon_vertices_for_rect(rect, 5, 180.0, -0.64, 0.0))
+      Some(polygon_params_with_defaults(node, 4, 180.0, -0.4, 0.0, 1))
+    "parallelogram" =>
+      Some(polygon_params_with_defaults(node, 4, 0.0, 0.0, 0.6, 1))
+    "house" => Some(polygon_params_with_defaults(node, 5, 0.0, -0.64, 0.0, 1))
+    "invhouse" =>
+      Some(polygon_params_with_defaults(node, 5, 180.0, -0.64, 0.0, 1))
+    "polygon" => {
+      let mut sides = node_attr_int(node, "sides", 4)
+      if sides < 0 {
+        sides = 0
+      }
+      let orientation = node_attr_double(node, "orientation", 0.0)
+      let distortion = node_attr_double(node, "distortion", 0.0)
+      let skew = node_attr_double(node, "skew", 0.0)
+      if sides <= 2 &&
+        (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
+        sides = 120
+      }
+      let peripheries = node_peripheries(node, 1)
+      if sides < 3 {
+        None
+      } else {
+        Some((sides, orientation, distortion, skew, peripheries))
+      }
+    }
+    "rpromoter" =>
+      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "lpromoter" =>
+      Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
+  }
+  match params {
+    Some((sides, orientation, distortion, skew, peripheries)) =>
+      match kind {
+        "rpromoter" =>
+          Some(polygon_paths_from_base(rpromoter_points(rect), peripheries))
+        "lpromoter" =>
+          Some(polygon_paths_from_base(lpromoter_points(rect), peripheries))
+        "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
+        "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
+        _ =>
+          Some(
+            polygon_paths_for_shape(
+              rect,
+              sides,
+              orientation,
+              distortion,
+              skew,
+              peripheries,
+            ),
+          )
+      }
+    None => None
   }
 }
 
@@ -906,15 +2025,9 @@ fn record_nodes(label : String) -> Array[RecordNode] {
     chars.push(ch)
   }
   let parser = RecordParser::{ chars, index: 0 }
-  let nodes = parse_record_nodes(parser)
-  if nodes.length() == 1 {
-    match nodes[0] {
-      RecordNode::Group(children) => children
-      _ => nodes
-    }
-  } else {
-    nodes
-  }
+  // Graphviz parity: preserve outer braces as an explicit group.
+  // Flattening a single top-level group flips field orientation.
+  parse_record_nodes(parser)
 }
 
 ///|
@@ -1124,11 +2237,14 @@ fn write_record_separators(
       RecordOrientation::Vertical => {
         let x1 = svg_x(rect.llx, bbox.llx)
         let x2 = svg_x(rect.urx, bbox.llx)
+        let x1_text = format_double(x1)
+        let x2_text = format_double(x2)
         for i in 1..<layouts.length() {
           let line_y = svg_y(layouts[i].rect.ury, bbox.lly)
+          let line_y_text = format_double(line_y)
           write_line(
             sb,
-            "<line x1=\"\{x1}\" y1=\"\{line_y}\" x2=\"\{x2}\" y2=\"\{line_y}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{x1_text},\{line_y_text} \{x2_text},\{line_y_text}\"/>",
             indent,
             pretty,
           )
@@ -1137,11 +2253,14 @@ fn write_record_separators(
       RecordOrientation::Horizontal => {
         let y1 = svg_y(rect.lly, bbox.lly)
         let y2 = svg_y(rect.ury, bbox.lly)
+        let y1_text = format_double(y1)
+        let y2_text = format_double(y2)
         for i in 1..<layouts.length() {
           let line_x = svg_x(layouts[i].rect.llx, bbox.llx)
+          let line_x_text = format_double(line_x)
           write_line(
             sb,
-            "<line x1=\"\{line_x}\" y1=\"\{y1}\" x2=\"\{line_x}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{line_x_text},\{y1_text} \{line_x_text},\{y2_text}\"/>",
             indent,
             pretty,
           )
@@ -1211,6 +2330,151 @@ fn write_record_labels(
 }
 
 ///|
+fn write_record_field_lines(
+  sb : StringBuilder,
+  text : String,
+  field_rect : @geom.Rect,
+  font : String,
+  size : Double,
+  color : String,
+  pad_x_pt : Double,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  if text == "" {
+    return ()
+  }
+  let font_attrs = svg_text_font_attrs(font)
+  let (lines, _max_width, total_height) = record_label_metrics(text, font, size)
+  let center_x = (field_rect.llx + field_rect.urx) / 2.0
+  let center_y = (field_rect.lly + field_rect.ury) / 2.0
+  let left_x = field_rect.llx + pad_x_pt / 2.0
+  let right_x = field_rect.urx - pad_x_pt / 2.0
+  let mut baseline = center_y + total_height / 2.0 - size
+  if lines.length() > 0 && lines[0].text == "" {
+    baseline = baseline + RECORD_BORDER_PT
+  }
+  for line in lines {
+    let line_x = match line.align {
+      @render.TextAlign::Left => left_x
+      @render.TextAlign::Right => right_x
+      @render.TextAlign::Center => center_x
+    }
+    let line_y = baseline + line.yoffset_centerline
+    if line.text != "" {
+      let anchor = match line.align {
+        @render.TextAlign::Left => "start"
+        @render.TextAlign::Right => "end"
+        @render.TextAlign::Center => "middle"
+      }
+      let x = svg_x(line_x, bbox.llx)
+      let y = svg_y(line_y, bbox.lly)
+      let x_text = format_double(x)
+      let y_text = format_double(y)
+      let size_text = format_double_fixed(size, 2)
+      let escaped = escape_xml_text_with_dash(line.text)
+      let fill_attr = if color == "black" {
+        ""
+      } else {
+        " fill=\"\{color}\""
+      }
+      write_line(
+        sb,
+        "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
+        indent,
+        pretty,
+      )
+    }
+    baseline = baseline - line.height_pt
+  }
+}
+
+///|
+fn write_record_contents(
+  sb : StringBuilder,
+  layouts : Array[RecordLayout],
+  orientation : RecordOrientation,
+  rect : @geom.Rect,
+  name : String,
+  font : String,
+  size : Double,
+  pad_x_pt : Double,
+  color : String,
+  stroke : String,
+  stroke_dash : String,
+  bbox : @geom.Rect,
+  indent : String,
+  pretty : Bool,
+) -> Unit {
+  for i in 0..<layouts.length() {
+    let layout = layouts[i]
+    match layout.node {
+      RecordNode::Field(field) => {
+        let text = resolve_label(field.text, name)
+        if text != "" {
+          write_record_field_lines(
+            sb,
+            text,
+            layout.rect,
+            font,
+            size,
+            color,
+            pad_x_pt,
+            bbox,
+            indent,
+            pretty,
+          )
+        }
+      }
+      RecordNode::Group(_) =>
+        write_record_contents(
+          sb,
+          layout.children,
+          toggle_record_orientation(orientation),
+          layout.rect,
+          name,
+          font,
+          size,
+          pad_x_pt,
+          color,
+          stroke,
+          stroke_dash,
+          bbox,
+          indent,
+          pretty,
+        )
+    }
+    if i + 1 < layouts.length() {
+      match orientation {
+        RecordOrientation::Vertical => {
+          let x1 = format_double(svg_x(rect.llx, bbox.llx))
+          let x2 = format_double(svg_x(rect.urx, bbox.llx))
+          let y = format_double(svg_y(layouts[i + 1].rect.ury, bbox.lly))
+          write_line(
+            sb,
+            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{x1},\{y} \{x2},\{y}\"/>",
+            indent,
+            pretty,
+          )
+        }
+        RecordOrientation::Horizontal => {
+          let x = format_double(svg_x(layouts[i + 1].rect.llx, bbox.llx))
+          let y1 = format_double(svg_y(rect.lly, bbox.lly))
+          let y2 = format_double(svg_y(rect.ury, bbox.lly))
+          write_line(
+            sb,
+            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{x},\{y1} \{x},\{y2}\"/>",
+            indent,
+            pretty,
+          )
+        }
+      }
+    }
+  }
+}
+
+///|
 fn write_record_node(
   sb : StringBuilder,
   layout : @layout_dot.DotLayoutNode,
@@ -1223,9 +2487,9 @@ fn write_record_node(
   pretty : Bool,
 ) -> Unit {
   let node = layout.node
-  let label = label_text(node.get_attr("label"), node.name())
+  let label = record_label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
-  let rounded = match node.get_attr("shape") {
+  let rounded = match node_attr(node, "shape") {
     Some(value) => value.to_lower() == "mrecord"
     None => false
   }
@@ -1237,23 +2501,29 @@ fn write_record_node(
   }
   // Graphviz parity: record outline uses field bbox (height without +1 kluge).
   let draw_rect = inner_rect
-  let x = svg_x(draw_rect.llx, bbox.llx)
-  let y = svg_y(draw_rect.ury, bbox.lly)
-  let w = draw_rect.urx - draw_rect.llx
-  let h = draw_rect.ury - draw_rect.lly
+  let record_points = polygon_points(outline_rect_points(draw_rect), bbox.llx, bbox.lly)
   write_line(
     sb,
     if rounded {
-      "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" rx=\"6\" ry=\"6\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>"
+      let path = spline_path(
+        @geom.Spline::{
+          start: None,
+          end: None,
+          points: rounded_rect_bezier_points(draw_rect),
+        },
+        bbox.llx,
+        bbox.lly,
+      )
+      "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash} d=\"\{path}\"/>"
     } else {
-      "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash}/>"
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{record_points}\"/>"
     },
     indent,
     pretty,
   )
-  let font = @attrs.font_name(node.get_attr("fontname"))
-  let size = @attrs.font_size(node.get_attr("fontsize"))
-  let color = @attrs.color(node.get_attr("fontcolor"), default="black")
+  let font = @attrs.font_name(node_attr(node, "fontname"))
+  let size = @attrs.font_size(node_attr(node, "fontsize"))
+  let color = svg_color(node_color(node, "fontcolor", "black"))
   let (pad_x_pt, pad_y_pt) = node_padding(node)
   let orientation = record_layout_orientation(node.graph())
   let layouts = record_layout_nodes(
@@ -1266,24 +2536,18 @@ fn write_record_node(
     pad_x_pt,
     pad_y_pt,
   )
-  write_record_separators(
+  write_record_contents(
     sb,
     layouts,
     orientation,
     inner_rect,
-    stroke,
-    stroke_dash,
-    bbox,
-    indent,
-    pretty,
-  )
-  write_record_labels(
-    sb,
-    layouts,
     node.name(),
     font,
     size,
+    pad_x_pt,
     color,
+    stroke,
+    stroke_dash,
     bbox,
     indent,
     pretty,
@@ -1321,6 +2585,39 @@ fn html_cell_content_size(
 }
 
 ///|
+fn html_table_border_pt(table : @html_label.HtmlTable) -> Double {
+  if table.border_pt >= 0.0 {
+    table.border_pt
+  } else {
+    1.0
+  }
+}
+
+///|
+fn html_table_cell_border_pt(table : @html_label.HtmlTable) -> Double {
+  if table.cell_border_pt >= 0.0 {
+    table.cell_border_pt
+  } else {
+    html_table_border_pt(table)
+  }
+}
+
+///|
+fn border_rect(rect : @geom.Rect, border_pt : Double) -> @geom.Rect {
+  if border_pt > 1.0 {
+    let delta = border_pt / 2.0
+    {
+      llx: rect.llx + delta,
+      lly: rect.lly + delta,
+      urx: rect.urx - delta,
+      ury: rect.ury - delta,
+    }
+  } else {
+    rect
+  }
+}
+
+///|
 fn html_cell_size(
   table : @html_label.HtmlTable,
   cell : @html_label.HtmlCell,
@@ -1334,8 +2631,11 @@ fn html_cell_size(
     font_name,
     font_size_pt,
   )
-  let mut width = content_width
-  let mut height = content_height
+  let cell_border_pt = html_table_cell_border_pt(table)
+  let mut width = content_width + table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
+  let mut height = content_height + table.cell_padding_pt * 2.0 +
+    cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
     None => ()
@@ -1344,8 +2644,6 @@ fn html_cell_size(
     Some(value) => if value > height { height = value }
     None => ()
   }
-  width = width + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
-  height = height + table.cell_padding_pt * 2.0 + table.cell_border_pt * 2.0
   (width, height)
 }
 
@@ -1395,31 +2693,36 @@ fn write_html_text_lines(
   if lines.length() == 0 {
     return ()
   }
+  let font_attrs = svg_text_font_attrs(font)
   let center_y = match valign {
     @html_label.HtmlVAlign::Top => rect.ury - total_height / 2.0
     @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
     @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
   }
   let mut baseline = center_y + total_height / 2.0 - size
-  let line_x = match align {
-    @html_label.HtmlAlign::Left => rect.llx
-    @html_label.HtmlAlign::Right => rect.urx
-    @html_label.HtmlAlign::Center => (rect.llx + rect.urx) / 2.0
-  }
-  let anchor = match align {
-    @html_label.HtmlAlign::Left => "start"
-    @html_label.HtmlAlign::Right => "end"
-    @html_label.HtmlAlign::Center => "middle"
-  }
   for line in lines {
+    let line_x = match align {
+      @html_label.HtmlAlign::Left => rect.llx
+      @html_label.HtmlAlign::Right => rect.urx - line.width_pt
+      @html_label.HtmlAlign::Center =>
+        (rect.llx + rect.urx - line.width_pt) / 2.0
+    }
     let line_y = baseline + line.yoffset_centerline
     if line.text != "" {
       let x = svg_x(line_x, bbox.llx)
       let y = svg_y(line_y, bbox.lly)
-      let escaped = escape_xml(line.text)
+      let x_text = format_double(x)
+      let y_text = format_double(y)
+      let size_text = format_double_fixed(size, 2)
+      let escaped = escape_xml_text_with_dash(line.text)
+      let fill_attr = if color == "black" {
+        ""
+      } else {
+        " fill=\"\{color}\""
+      }
       write_line(
         sb,
-        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        "<text xml:space=\"preserve\" text-anchor=\"start\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
         indent,
         pretty,
       )
@@ -1443,63 +2746,63 @@ fn write_html_table(
   indent : String,
   pretty : Bool,
 ) -> Unit {
+  let _ = stroke_dash
   let layout = html_table_layout(table, rect, name, font, size)
+  let border_pt = html_table_border_pt(table)
+  let cell_border_pt = html_table_cell_border_pt(table)
   match table.bg_color {
     Some(color) => {
-      let x = svg_x(rect.llx, bbox.llx)
-      let y = svg_y(rect.ury, bbox.lly)
-      let w = rect.urx - rect.llx
-      let h = rect.ury - rect.lly
+      let attrs = polygon_points(
+        outline_rect_points(rect),
+        bbox.llx,
+        bbox.lly,
+      )
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{color}\" stroke=\"none\"/>",
+        "<polygon fill=\"\{svg_color(color)}\" stroke=\"none\" points=\"\{attrs}\"/>",
         indent,
         pretty,
       )
     }
     None => ()
   }
-  if table.border_pt > 0.0 {
-    let x = svg_x(rect.llx, bbox.llx)
-    let y = svg_y(rect.ury, bbox.lly)
-    let w = rect.urx - rect.llx
-    let h = rect.ury - rect.lly
-    write_line(
-      sb,
-      "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash}/>",
-      indent,
-      pretty,
-    )
-  }
   let pad_x = table.cell_padding_pt * layout.scale_x +
-    table.cell_border_pt * layout.scale_x
+    cell_border_pt * layout.scale_x
   let pad_y = table.cell_padding_pt * layout.scale_y +
-    table.cell_border_pt * layout.scale_y
+    cell_border_pt * layout.scale_y
   for cell_layout in layout.cells {
     let cell_rect = cell_layout.rect
     match cell_layout.cell.bg_color {
       Some(color) => {
-        let x = svg_x(cell_rect.llx, bbox.llx)
-        let y = svg_y(cell_rect.ury, bbox.lly)
-        let w = cell_rect.urx - cell_rect.llx
-        let h = cell_rect.ury - cell_rect.lly
+        let attrs = polygon_points(
+          outline_rect_points(cell_rect),
+          bbox.llx,
+          bbox.lly,
+        )
         write_line(
           sb,
-          "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{color}\" stroke=\"none\"/>",
+          "<polygon fill=\"\{svg_color(color)}\" stroke=\"none\" points=\"\{attrs}\"/>",
           indent,
           pretty,
         )
       }
       None => ()
     }
-    if table.cell_border_pt > 0.0 {
-      let x = svg_x(cell_rect.llx, bbox.llx)
-      let y = svg_y(cell_rect.ury, bbox.lly)
-      let w = cell_rect.urx - cell_rect.llx
-      let h = cell_rect.ury - cell_rect.lly
+    if cell_border_pt > 0.0 {
+      let border = border_rect(cell_rect, cell_border_pt)
+      let attrs = polygon_points(
+        outline_rect_points(border),
+        bbox.llx,
+        bbox.lly,
+      )
+      let width_attr = if cell_border_pt > 1.0 {
+        " stroke-width=\"\{format_double(cell_border_pt)}\""
+      } else {
+        ""
+      }
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+        "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
         indent,
         pretty,
       )
@@ -1534,6 +2837,25 @@ fn write_html_table(
           )
         }
     }
+  }
+  if border_pt > 0.0 {
+    let border = border_rect(rect, border_pt)
+    let attrs = polygon_points(
+      outline_rect_points(border),
+      bbox.llx,
+      bbox.lly,
+    )
+    let width_attr = if border_pt > 1.0 {
+      " stroke-width=\"\{format_double(border_pt)}\""
+    } else {
+      ""
+    }
+    write_line(
+      sb,
+      "<polygon fill=\"none\" stroke=\"\{stroke}\"\{width_attr} points=\"\{attrs}\"/>",
+      indent,
+      pretty,
+    )
   }
 }
 
@@ -1656,28 +2978,54 @@ fn spline_path(spline : @geom.Spline, llx : Double, lly : Double) -> String {
     return ""
   }
   let first = shift_point(points[0], llx, lly)
-  sb.write_string("M ")
-  sb.write_string(first.x.to_string())
-  sb.write_char(' ')
-  sb.write_string(first.y.to_string())
-  let mut index = 1
-  while index + 2 < points.length() {
-    let p1 = shift_point(points[index], llx, lly)
-    let p2 = shift_point(points[index + 1], llx, lly)
-    let p3 = shift_point(points[index + 2], llx, lly)
-    sb.write_string(" C ")
-    sb.write_string(p1.x.to_string())
-    sb.write_char(' ')
-    sb.write_string(p1.y.to_string())
-    sb.write_char(' ')
-    sb.write_string(p2.x.to_string())
-    sb.write_char(' ')
-    sb.write_string(p2.y.to_string())
-    sb.write_char(' ')
-    sb.write_string(p3.x.to_string())
-    sb.write_char(' ')
-    sb.write_string(p3.y.to_string())
-    index = index + 3
+  sb.write_string("M")
+  sb.write_string(format_double(first.x))
+  sb.write_char(',')
+  sb.write_string(format_double(first.y))
+  if points.length() >= 4 {
+    sb.write_char('C')
+    let mut index = 1
+    let mut first_segment = true
+    while index + 2 < points.length() {
+      let p1 = shift_point(points[index], llx, lly)
+      let p2 = shift_point(points[index + 1], llx, lly)
+      let p3 = shift_point(points[index + 2], llx, lly)
+      if !first_segment {
+        sb.write_char(' ')
+      }
+      sb.write_string(format_double(p1.x))
+      sb.write_char(',')
+      sb.write_string(format_double(p1.y))
+      sb.write_char(' ')
+      sb.write_string(format_double(p2.x))
+      sb.write_char(',')
+      sb.write_string(format_double(p2.y))
+      sb.write_char(' ')
+      sb.write_string(format_double(p3.x))
+      sb.write_char(',')
+      sb.write_string(format_double(p3.y))
+      first_segment = false
+      index = index + 3
+    }
+  }
+  sb.to_string()
+}
+
+///|
+fn polyline_points(
+  points : Array[@geom.Point],
+  llx : Double,
+  lly : Double,
+) -> String {
+  let sb = StringBuilder::new()
+  for i in 0..<points.length() {
+    let point = shift_point(points[i], llx, lly)
+    if i > 0 {
+      sb.write_char(' ')
+    }
+    sb.write_string(format_double(point.x))
+    sb.write_char(',')
+    sb.write_string(format_double(point.y))
   }
   sb.to_string()
 }
@@ -1694,9 +3042,16 @@ fn polygon_points(
     if i > 0 {
       sb.write_char(' ')
     }
-    sb.write_string(point.x.to_string())
+    sb.write_string(format_double(point.x))
     sb.write_char(',')
-    sb.write_string(point.y.to_string())
+    sb.write_string(format_double(point.y))
+  }
+  if points.length() > 0 {
+    let first = shift_point(points[0], llx, lly)
+    sb.write_char(' ')
+    sb.write_string(format_double(first.x))
+    sb.write_char(',')
+    sb.write_string(format_double(first.y))
   }
   sb.to_string()
 }
@@ -1717,9 +3072,13 @@ fn write_line_segment(
   let y1 = svg_y(start.y, lly)
   let x2 = svg_x(end.x, llx)
   let y2 = svg_y(end.y, lly)
+  let x1_text = format_double(x1)
+  let y1_text = format_double(y1)
+  let x2_text = format_double(x2)
+  let y2_text = format_double(y2)
   write_line(
     sb,
-    "<line x1=\"\{x1}\" y1=\"\{y1}\" x2=\"\{x2}\" y2=\"\{y2}\" stroke=\"\{stroke}\"\{stroke_dash}/>",
+    "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{x1_text},\{y1_text} \{x2_text},\{y2_text}\"/>",
     indent,
     pretty,
   )
@@ -1731,6 +3090,7 @@ fn write_arrow_ops(
   ops : Array[@render.DrawOp],
   color : String,
   stroke_dash : String,
+  stroke_width : String,
   llx : Double,
   lly : Double,
   indent : String,
@@ -1743,29 +3103,33 @@ fn write_arrow_ops(
         let fill = if filled { color } else { "none" }
         write_line(
           sb,
-          "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}/>",
+          "<polygon fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}\{stroke_width} points=\"\{attrs}\"/>",
           indent,
           pretty,
         )
       }
       @render.DrawOp::Ellipse(filled~, rect~) => {
         let center_x = (rect.llx + rect.urx) / 2.0 - llx
-        let center_y = (rect.lly + rect.ury) / 2.0 - lly
+        let center_y = svg_y((rect.lly + rect.ury) / 2.0, lly)
         let radius_x = (rect.urx - rect.llx) / 2.0
         let radius_y = (rect.ury - rect.lly) / 2.0
+        let center_x_text = format_double(center_x)
+        let center_y_text = format_double(center_y)
+        let radius_x_text = format_double(radius_x)
+        let radius_y_text = format_double(radius_y)
         let fill = if filled { color } else { "none" }
         write_line(
           sb,
-          "<ellipse cx=\"\{center_x}\" cy=\"\{center_y}\" rx=\"\{radius_x}\" ry=\"\{radius_y}\" fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}/>",
+          "<ellipse fill=\"\{fill}\" stroke=\"\{color}\"\{stroke_dash}\{stroke_width} cx=\"\{center_x_text}\" cy=\"\{center_y_text}\" rx=\"\{radius_x_text}\" ry=\"\{radius_y_text}\"/>",
           indent,
           pretty,
         )
       }
       @render.DrawOp::Polyline(points~) => {
-        let attrs = polygon_points(points, llx, lly)
+        let attrs = polyline_points(points, llx, lly)
         write_line(
           sb,
-          "<polyline points=\"\{attrs}\" fill=\"none\" stroke=\"\{color}\"\{stroke_dash}/>",
+          "<polyline fill=\"none\" stroke=\"\{color}\"\{stroke_dash}\{stroke_width} points=\"\{attrs}\"/>",
           indent,
           pretty,
         )
@@ -1780,7 +3144,7 @@ fn write_arrow_ops(
         if path != "" {
           write_line(
             sb,
-            "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"\{stroke_dash}/>",
+            "<path fill=\"none\" stroke=\"\{color}\"\{stroke_dash}\{stroke_width} d=\"\{path}\"/>",
             indent,
             pretty,
           )
@@ -1820,7 +3184,7 @@ fn write_label_lines(
   if text == "" {
     return ()
   }
-  let font_family = svg_font_family(font)
+  let font_attrs = svg_text_font_attrs(font)
   let (lines, max_width, total_height) = label_metrics(text, font, size)
   let mut baseline = pos.y + total_height / 2.0 - size
   for line in lines {
@@ -1838,10 +3202,18 @@ fn write_label_lines(
       }
       let x = svg_x(line_x, bbox.llx)
       let y = svg_y(line_y, bbox.lly)
-      let escaped = escape_xml(line.text)
+      let x_text = format_double(x)
+      let y_text = format_double(y)
+      let size_text = format_double_fixed(size, 2)
+      let escaped = escape_xml_text_with_dash(line.text)
+      let fill_attr = if color == "black" {
+        ""
+      } else {
+        " fill=\"\{color}\""
+      }
       write_line(
         sb,
-        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
         indent,
         pretty,
       )
@@ -1865,7 +3237,7 @@ fn write_record_label_lines(
   if text == "" {
     return ()
   }
-  let font_family = svg_font_family(font)
+  let font_attrs = svg_text_font_attrs(font)
   let (lines, max_width, total_height) = record_label_metrics(text, font, size)
   let mut baseline = pos.y + total_height / 2.0 - size
   for line in lines {
@@ -1883,10 +3255,18 @@ fn write_record_label_lines(
       }
       let x = svg_x(line_x, bbox.llx)
       let y = svg_y(line_y, bbox.lly)
-      let escaped = escape_xml(line.text)
+      let x_text = format_double(x)
+      let y_text = format_double(y)
+      let size_text = format_double_fixed(size, 2)
+      let escaped = escape_xml_text_with_dash(line.text)
+      let fill_attr = if color == "black" {
+        ""
+      } else {
+        " fill=\"\{color}\""
+      }
       write_line(
         sb,
-        "<text x=\"\{x}\" y=\"\{y}\" text-anchor=\"\{anchor}\" font-family=\"\{font_family}\" font-size=\"\{size}\" fill=\"\{color}\">\{escaped}</text>",
+        "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
         indent,
         pretty,
       )
@@ -1917,25 +3297,51 @@ fn write_cluster_graphs(
   bbox : @geom.Rect,
   indent : String,
   pretty : Bool,
-) -> Unit {
+  next_cluster_id : Int,
+) -> Int {
+  let mut cluster_id = next_cluster_id
   for subgraph in layout.subgraphs {
+    let current_id = cluster_id
+    cluster_id = cluster_id + 1
     let graph = subgraph.graph
     if is_cluster_graph(graph) {
       let rect = subgraph.bbox
-      let x = svg_x(rect.llx, bbox.llx)
-      let y = svg_y(rect.ury, bbox.lly)
-      let w = rect.urx - rect.llx
-      let h = rect.ury - rect.lly
-      let stroke = @attrs.color(graph.get_attr("color"), default="black")
+      let x1 = svg_x(rect.llx, bbox.llx)
+      let x2 = svg_x(rect.urx, bbox.llx)
+      let y1 = svg_y(rect.lly, bbox.lly)
+      let y2 = svg_y(rect.ury, bbox.lly)
+      let x1_text = format_double(x1)
+      let x2_text = format_double(x2)
+      let y1_text = format_double(y1)
+      let y2_text = format_double(y2)
+      let points =
+        "\{x1_text},\{y1_text} \{x1_text},\{y2_text} \{x2_text},\{y2_text} \{x2_text},\{y1_text} \{x1_text},\{y1_text}"
+      let graph_title = match graph.name() {
+        Some(value) => escape_xml_with_dash(value)
+        None => ""
+      }
+      let stroke_style = @attrs.parse_style(inherited_graph_attr(graph, "style"))
+      if style_is_invisible(stroke_style) {
+        continue
+      }
+      let stroke = svg_color(graph_color(graph, "color", "black"))
       let fill = match cluster_fill_color(graph) {
         Some(value) => value
         None => "none"
       }
-      let style = @attrs.parse_style(graph.get_attr("style"))
-      let dash = stroke_dash_attr(style)
+      let dash = stroke_dash_attr(stroke_style)
+      let width_attr =
+        stroke_width_attr(stroke_style, inherited_graph_attr(graph, "penwidth"))
       write_line(
         sb,
-        "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
+        "<g id=\"clust\{current_id}\" class=\"cluster\">",
+        indent,
+        pretty,
+      )
+      write_line(sb, "<title>\{graph_title}</title>", indent, pretty)
+      write_line(
+        sb,
+        "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{points}\"/>",
         indent,
         pretty,
       )
@@ -1943,7 +3349,8 @@ fn write_cluster_graphs(
         Some((text, _width_pt, height_pt)) => {
           let font = @attrs.font_name(graph.get_attr("fontname"))
           let size = @attrs.font_size(graph.get_attr("fontsize"))
-          let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
+          let color =
+            svg_color(graph_color(graph, "fontcolor", "black"))
           let pos = match subgraph.label_pos {
             Some(value) => value
             None => graph_label_pos(rect, height_pt)
@@ -1954,9 +3361,673 @@ fn write_cluster_graphs(
         }
         None => ()
       }
+      write_line(sb, "</g>", indent, pretty)
     }
-    write_cluster_graphs(sb, subgraph, bbox, indent, pretty)
+    cluster_id = write_cluster_graphs(
+      sb,
+      subgraph,
+      bbox,
+      indent,
+      pretty,
+      cluster_id,
+    )
   }
+  cluster_id
+}
+
+///|
+fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
+  let raw = @attrs.color(edge.get_attr("color"), default="black")
+  let colors : Array[String] = []
+  for part in raw.split(":") {
+    let token = part.trim().to_string()
+    if token == "" {
+      continue
+    }
+    let color = match token.find(";") {
+      Some(index) => token.unsafe_substring(start=0, end=index)
+      None => token
+    }
+    if color != "" {
+      colors.push(svg_color(color))
+    }
+  }
+  if colors.length() == 0 {
+    colors.push(svg_color(raw))
+  }
+  colors
+}
+
+const COLOR_SPLINE_EPSILON : Double = 0.0001
+const COLOR_SPLINE_SEP_PT : Double = 2.0
+
+fn color_spline_offset_p(
+  p : @geom.Point,
+  q : @geom.Point,
+  distance : Double,
+) -> @geom.Point {
+  let x = p.x - q.x
+  let y = p.y - q.y
+  let scale =
+    distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  {
+    x: y * scale,
+    y: -x * scale,
+  }
+}
+
+fn color_spline_offset_qr(
+  p : @geom.Point,
+  q : @geom.Point,
+  r : @geom.Point,
+  s : @geom.Point,
+  distance : Double,
+) -> @geom.Point {
+  let mut x = q.x - r.x
+  let mut y = q.y - r.y
+  let mut len = @math.hypot(x, y)
+  if len < COLOR_SPLINE_EPSILON {
+    x = p.x - s.x
+    y = p.y - s.y
+    len = Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  }
+  let scale = distance / len
+  {
+    x: y * scale,
+    y: -x * scale,
+  }
+}
+
+fn edge_multicolor_spline_points(
+  points : Array[@geom.Point],
+  color_count : Int,
+) -> Array[Array[@geom.Point]] {
+  if color_count <= 1 {
+    return [points]
+  }
+  if points.length() < 4 {
+    let numc2 = (1.0 + color_count.to_double()) / 2.0
+    let out : Array[Array[@geom.Point]] = []
+    for i in 0..<color_count {
+      let distance = ((i + 1).to_double() - numc2) * COLOR_SPLINE_SEP_PT
+      if distance == 0.0 {
+        out.push(points)
+      } else {
+        let shifted : Array[@geom.Point] = []
+        for point in points {
+          shifted.push({ x: point.x, y: point.y + distance })
+        }
+        out.push(shifted)
+      }
+    }
+    return out
+  }
+  let size = points.length()
+  let offset : Array[@geom.Point] = []
+  let tmp : Array[@geom.Point] = []
+  for _ in 0..<size {
+    offset.push({ x: 0.0, y: 0.0 })
+    tmp.push({ x: 0.0, y: 0.0 })
+  }
+  let numc2 = (1.0 + color_count.to_double()) / 2.0
+  let mut pf3 = points[0]
+  let mut pf2 = points[0]
+  let mut j = 0
+  while j < size - 1 {
+    let pf0 = pf3
+    let pf1 = points[j + 1]
+    if j == 0 {
+      offset[j] = color_spline_offset_p(pf0, pf1, COLOR_SPLINE_SEP_PT)
+    } else {
+      offset[j] = color_spline_offset_p(pf2, pf1, COLOR_SPLINE_SEP_PT)
+    }
+    pf2 = points[j + 2]
+    pf3 = points[j + 3]
+    let offset_qr =
+      color_spline_offset_qr(
+        pf0,
+        pf1,
+        pf2,
+        pf3,
+        COLOR_SPLINE_SEP_PT,
+      )
+    offset[j + 1] = offset_qr
+    offset[j + 2] = offset_qr
+    tmp[j] = {
+      x: pf0.x - numc2 * offset[j].x,
+      y: pf0.y - numc2 * offset[j].y,
+    }
+    tmp[j + 1] = {
+      x: pf1.x - numc2 * offset[j + 1].x,
+      y: pf1.y - numc2 * offset[j + 1].y,
+    }
+    tmp[j + 2] = {
+      x: pf2.x - numc2 * offset[j + 2].x,
+      y: pf2.y - numc2 * offset[j + 2].y,
+    }
+    j = j + 3
+  }
+  offset[j] = color_spline_offset_p(pf2, pf3, COLOR_SPLINE_SEP_PT)
+  tmp[j] = {
+    x: pf3.x - numc2 * offset[j].x,
+    y: pf3.y - numc2 * offset[j].y,
+  }
+  let out : Array[Array[@geom.Point]] = []
+  for _ in 0..<color_count {
+    for idx in 0..<size {
+      tmp[idx] = {
+        x: tmp[idx].x + offset[idx].x,
+        y: tmp[idx].y + offset[idx].y,
+      }
+    }
+    out.push(tmp.copy())
+  }
+  out
+}
+
+///|
+fn write_svg_edge_group(
+  sb : StringBuilder,
+  edge_layout : @layout_dot.DotLayoutEdge,
+  kind : @cgraph.GraphKind,
+  bbox : @geom.Rect,
+  edge_id : String,
+  pretty : Bool,
+) -> Unit {
+  let edge = edge_layout.edge
+  let edge_arrow = if kind == @cgraph.GraphKind::Directed { "->" } else { "--" }
+  let edge_comment = escape_xml_with_dash(
+    "\{edge.tail().name()}\{edge_arrow}\{edge.head().name()}",
+  )
+  let tail_label = edge.tail().name() + port_title_suffix(edge.tail_port())
+  let head_label = edge.head().name() + port_title_suffix(edge.head_port())
+  let edge_title = escape_xml_with_dash(
+    "\{tail_label}\{edge_arrow}\{head_label}",
+  )
+  write_line(sb, "<!-- \{edge_comment} -->", "", pretty)
+  let style = @attrs.parse_style(edge_attr(edge, "style"))
+  if style_is_invisible(style) {
+    return
+  }
+  write_line(
+    sb,
+    "<g id=\"\{escape_xml_with_dash(edge_id)}\" class=\"edge\">",
+    "",
+    pretty,
+  )
+  write_line(sb, "<title>\{edge_title}</title>", "", pretty)
+  let pen_colors = edge_pen_colors(edge)
+  let color_count = pen_colors.length()
+  let spline_sets : Array[Array[Array[@geom.Point]]] = []
+  for spline in edge_layout.splines {
+    spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
+  }
+  let dash = stroke_dash_attr(style)
+  let width_attr = stroke_width_attr(style, edge.get_attr("penwidth"))
+  for i, pen_color in pen_colors {
+    for spline_index in 0..<edge_layout.splines.length() {
+      let points = if color_count <= 1 {
+        edge_layout.splines[spline_index].points
+      } else {
+        spline_sets[spline_index][i]
+      }
+      let path = spline_path(
+        @geom.Spline::{ start: None, end: None, points },
+        bbox.llx,
+        bbox.lly,
+      )
+      if path != "" {
+        write_line(
+          sb,
+          "<path fill=\"none\" stroke=\"\{pen_color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+          "",
+          pretty,
+        )
+      }
+    }
+  }
+  let flags = arrow_flags(edge, kind)
+  let primary_color = pen_colors[0]
+  if flags.tail {
+    let ops = arrow_primitives(edge_layout, false)
+    write_arrow_ops(
+      sb,
+      ops,
+      primary_color,
+      "",
+      width_attr,
+      bbox.llx,
+      bbox.lly,
+      "",
+      pretty,
+    )
+  }
+  if flags.head {
+    let ops = arrow_primitives(edge_layout, true)
+    write_arrow_ops(
+      sb,
+      ops,
+      primary_color,
+      "",
+      width_attr,
+      bbox.llx,
+      bbox.lly,
+      "",
+      pretty,
+    )
+  }
+  let label_text = match edge_attr(edge, "label") {
+    Some(value) => resolve_label(value, "")
+    None => ""
+  }
+  match edge_layout.label_pos {
+    Some(pos) => {
+      let font = @attrs.font_name(edge_attr(edge, "fontname"))
+      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let font_color =
+        svg_color(edge_color(edge, "fontcolor", "black"))
+      if label_text != "" {
+        write_label_lines(
+          sb,
+          label_text,
+          font,
+          size,
+          font_color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
+      }
+    }
+    None => ()
+  }
+  let head_label_text = match edge_attr(edge, "headlabel") {
+    Some(value) => resolve_label(value, "")
+    None => ""
+  }
+  match edge_layout.head_label_pos {
+    Some(pos) => {
+      let font = @attrs.font_name(edge_attr(edge, "fontname"))
+      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let font_color =
+        svg_color(edge_color(edge, "fontcolor", "black"))
+      write_label_lines(
+        sb,
+        head_label_text,
+        font,
+        size,
+        font_color,
+        pos,
+        bbox,
+        "",
+        pretty,
+      )
+    }
+    None => ()
+  }
+  let tail_label_text = match edge_attr(edge, "taillabel") {
+    Some(value) => resolve_label(value, "")
+    None => ""
+  }
+  match edge_layout.tail_label_pos {
+    Some(pos) => {
+      let font = @attrs.font_name(edge_attr(edge, "fontname"))
+      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let font_color =
+        svg_color(edge_color(edge, "fontcolor", "black"))
+      write_label_lines(
+        sb,
+        tail_label_text,
+        font,
+        size,
+        font_color,
+        pos,
+        bbox,
+        "",
+        pretty,
+      )
+    }
+    None => ()
+  }
+  write_line(sb, "</g>", "", pretty)
+}
+
+///|
+fn write_svg_node_group(
+  sb : StringBuilder,
+  node_layout : @layout_dot.DotLayoutNode,
+  bbox : @geom.Rect,
+  node_index : Int,
+  pretty : Bool,
+) -> Unit {
+  let node = node_layout.node
+  let node_title = escape_xml_with_dash(node.name())
+  write_line(sb, "<!-- \{node_title} -->", "", pretty)
+  let rect = node_rect(node_layout)
+  let raw_shape = match node_attr(node, "shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  let kind = shape_kind(node_attr(node, "shape"))
+  let is_doublecircle = raw_shape == "doublecircle"
+  let stroke = svg_color(node_color(node, "color", "black"))
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  if style_is_invisible(style) {
+    return
+  }
+  write_line(
+    sb,
+    "<g id=\"node\{node_index}\" class=\"node\">",
+    "",
+    pretty,
+  )
+  write_line(sb, "<title>\{node_title}</title>", "", pretty)
+  let filled = if kind == "point" { true } else { style.filled }
+  let dash = stroke_dash_attr(style)
+  let fill = if filled {
+    match node_attr(node, "fillcolor") {
+        Some(value) => svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
+        None =>
+          if kind == "point" {
+            stroke
+          } else {
+            svg_color(node_fill_color(node, "lightgrey"))
+          }
+    }
+  } else {
+    "none"
+  }
+  if kind == "record" {
+    write_record_node(
+      sb,
+      node_layout,
+      rect,
+      stroke,
+      fill,
+      dash,
+      bbox,
+      "",
+      pretty,
+    )
+    write_line(sb, "</g>", "", pretty)
+    return
+  }
+  if kind == "plaintext" {
+    // No outline for plaintext/none nodes.
+  } else if kind == "msquare" {
+    let points = rect_points(rect)
+    let attrs = polygon_points(points, bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+      "",
+      pretty,
+    )
+    for segment in diagonal_segments(points) {
+      let (start, end) = segment
+      write_line_segment(
+        sb,
+        start,
+        end,
+        stroke,
+        dash,
+        bbox.llx,
+        bbox.lly,
+        "",
+        pretty,
+      )
+    }
+  } else if kind == "mdiamond" {
+    let points = mdiamond_points(rect)
+    let attrs = polygon_points(points, bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+      "",
+      pretty,
+    )
+    for segment in diagonal_segments(points) {
+      let (start, end) = segment
+      write_line_segment(
+        sb,
+        start,
+        end,
+        stroke,
+        dash,
+        bbox.llx,
+        bbox.lly,
+        "",
+        pretty,
+      )
+    }
+  } else if is_doublecircle {
+    match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
+      Some(inner) => {
+        let inner_cx = svg_x((inner.llx + inner.urx) / 2.0, bbox.llx)
+        let inner_cy = svg_y((inner.lly + inner.ury) / 2.0, bbox.lly)
+        let inner_rx = (inner.urx - inner.llx) / 2.0
+        let inner_ry = (inner.ury - inner.lly) / 2.0
+        let inner_cx_text = format_double(inner_cx)
+        let inner_cy_text = format_double(inner_cy)
+        let inner_rx_text = format_double(inner_rx)
+        let inner_ry_text = format_double(inner_ry)
+        write_line(
+          sb,
+          "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{inner_cx_text}\" cy=\"\{inner_cy_text}\" rx=\"\{inner_rx_text}\" ry=\"\{inner_ry_text}\"/>",
+          "",
+          pretty,
+        )
+        let cx = svg_x(node_layout.pos.x, bbox.llx)
+        let cy = svg_y(node_layout.pos.y, bbox.lly)
+        let rx = (rect.urx - rect.llx) / 2.0
+        let ry = (rect.ury - rect.lly) / 2.0
+        let cx_text = format_double(cx)
+        let cy_text = format_double(cy)
+        let rx_text = format_double(rx)
+        let ry_text = format_double(ry)
+        write_line(
+          sb,
+          "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+          "",
+          pretty,
+        )
+      }
+      None => {
+        let cx = svg_x(node_layout.pos.x, bbox.llx)
+        let cy = svg_y(node_layout.pos.y, bbox.lly)
+        let rx = (rect.urx - rect.llx) / 2.0
+        let ry = (rect.ury - rect.lly) / 2.0
+        let cx_text = format_double(cx)
+        let cy_text = format_double(cy)
+        let rx_text = format_double(rx)
+        let ry_text = format_double(ry)
+        write_line(
+          sb,
+          "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+          "",
+          pretty,
+        )
+      }
+    }
+  } else if kind == "mcircle" {
+    let cx = svg_x(node_layout.pos.x, bbox.llx)
+    let cy = svg_y(node_layout.pos.y, bbox.lly)
+    let rx = (rect.urx - rect.llx) / 2.0
+    let ry = (rect.ury - rect.lly) / 2.0
+    let cx_text = format_double(cx)
+    let cy_text = format_double(cy)
+    let rx_text = format_double(rx)
+    let ry_text = format_double(ry)
+    write_line(
+      sb,
+      "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+      "",
+      pretty,
+    )
+    for segment in mcircle_segments(rect) {
+      let (start, end) = segment
+      write_line_segment(
+        sb,
+        start,
+        end,
+        stroke,
+        dash,
+        bbox.llx,
+        bbox.lly,
+        "",
+        pretty,
+      )
+    }
+  } else {
+    match shape_polygon_paths(node, kind, rect) {
+      Some(paths) if paths.length() > 0 => {
+        let attrs = polygon_points(paths[0], bbox.llx, bbox.lly)
+        write_line(
+          sb,
+          "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+          "",
+          pretty,
+        )
+        for i in 1..<paths.length() {
+          let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
+          write_line(
+            sb,
+            "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+            "",
+            pretty,
+          )
+        }
+      }
+      _ =>
+        if kind == "box" {
+          let peripheries = node_peripheries(node, 1)
+          let base_rect = inner_rect_for_peripheries(rect, peripheries)
+          let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
+          write_line(
+            sb,
+            "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+            "",
+            pretty,
+          )
+          for i in 1..<peripheries {
+            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+            let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+            write_line(
+              sb,
+              "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+              "",
+              pretty,
+            )
+          }
+        } else {
+          let peripheries = node_peripheries(node, 1)
+          let base_rect = inner_rect_for_peripheries(rect, peripheries)
+          let cx = svg_x((base_rect.llx + base_rect.urx) / 2.0, bbox.llx)
+          let cy = svg_y((base_rect.lly + base_rect.ury) / 2.0, bbox.lly)
+          let rx = (base_rect.urx - base_rect.llx) / 2.0
+          let ry = (base_rect.ury - base_rect.lly) / 2.0
+          let cx_text = format_double(cx)
+          let cy_text = format_double(cy)
+          let rx_text = format_double(rx)
+          let ry_text = format_double(ry)
+          write_line(
+            sb,
+            "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+            "",
+            pretty,
+          )
+          for i in 1..<peripheries {
+            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+            let outer_cx = svg_x((expanded.llx + expanded.urx) / 2.0, bbox.llx)
+            let outer_cy = svg_y((expanded.lly + expanded.ury) / 2.0, bbox.lly)
+            let outer_rx = (expanded.urx - expanded.llx) / 2.0
+            let outer_ry = (expanded.ury - expanded.lly) / 2.0
+            write_line(
+              sb,
+              "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{format_double(outer_cx)}\" cy=\"\{format_double(outer_cy)}\" rx=\"\{format_double(outer_rx)}\" ry=\"\{format_double(outer_ry)}\"/>",
+              "",
+              pretty,
+            )
+          }
+        }
+    }
+  }
+  if kind == "point" {
+    write_line(sb, "</g>", "", pretty)
+    return
+  }
+  let text = label_text(node_attr(node, "label"), node.name())
+  let font = @attrs.font_name(node_attr(node, "fontname"))
+  let size = @attrs.font_size(node_attr(node, "fontsize"))
+  let color = svg_color(node_color(node, "fontcolor", "black"))
+  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let inset_x = pad_x_pt / 2.0
+  let inset_y = pad_y_pt / 2.0
+  let label_rect : @geom.Rect = if rect.urx - rect.llx > inset_x * 2.0 &&
+    rect.ury - rect.lly > inset_y * 2.0 {
+    {
+      llx: rect.llx + inset_x,
+      lly: rect.lly + inset_y,
+      urx: rect.urx - inset_x,
+      ury: rect.ury - inset_y,
+    }
+  } else {
+    rect
+  }
+  match @html_label.parse_html_label(text) {
+    Some(@html_label.HtmlLabel::Table(table)) =>
+      write_html_table(
+        sb,
+        table,
+        label_rect,
+        node.name(),
+        font,
+        size,
+        color,
+        stroke,
+        dash,
+        bbox,
+        "",
+        pretty,
+      )
+    Some(@html_label.HtmlLabel::Text(html_text)) =>
+      if html_text != "" {
+        write_html_text_lines(
+          sb,
+          html_text,
+          @html_label.HtmlAlign::Center,
+          @html_label.HtmlVAlign::Middle,
+          label_rect,
+          node.name(),
+          font,
+          size,
+          color,
+          bbox,
+          "",
+          pretty,
+        )
+      }
+    None =>
+      if text != "" {
+        let pos = match node_layout.label_pos {
+          Some(value) => value
+          None => node_layout.pos
+        }
+        write_label_lines(
+          sb,
+          text,
+          font,
+          size,
+          color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
+      }
+  }
+  write_line(sb, "</g>", "", pretty)
 }
 
 ///|
@@ -1969,6 +4040,7 @@ pub fn render_svg(
   layout : @layout_dot.DotLayoutGraph,
   options? : SvgOptions = SvgOptions::default(),
 ) -> String {
+  layout.apply()
   let opts = options
   let pretty = match opts.pretty {
     Some(value) => value
@@ -1993,387 +4065,242 @@ pub fn render_svg(
     width,
     height,
   )
+  let landscape = match layout.graph.get_attr("orientation") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower == "landscape" || lower == "land"
+    }
+    None => false
+  }
+  let display_width = if landscape {
+    out_height.round().to_int()
+  } else {
+    out_width.round().to_int()
+  }
+  let display_height = if landscape {
+    out_width.round().to_int()
+  } else {
+    out_height.round().to_int()
+  }
+  let graph_title = layout.graph.name()
+  let rotate = if landscape { "-90" } else { "0" }
+  let translate_x = if landscape {
+    -(bbox.urx + pad_x)
+  } else {
+    pad_x - bbox.llx
+  }
+  let translate_y = bbox.ury + pad_y
+  let scale_x_text = format_double_significant(scale_x, 6)
+  let scale_y_text = format_double_significant(scale_y, 6)
+  let translate_x_text = format_double(translate_x)
+  let translate_y_text = format_double(translate_y)
+  let transform =
+    "scale(\{scale_x_text} \{scale_y_text}) rotate(\{rotate}) translate(\{translate_x_text} \{translate_y_text})"
+  let viewbox_w = format_double_fixed(display_width.to_double(), 2)
+  let viewbox_h = format_double_fixed(display_height.to_double(), 2)
+  let bg_fill = match layout.graph.get_attr("bgcolor") {
+    Some(value) =>
+      svg_color(resolve_colorscheme_color(value, graph_colorscheme(layout.graph)))
+    None => "white"
+  }
+  let left = format_double(bbox.llx - pad_x)
+  let right = format_double(bbox.urx + pad_x)
+  let top = format_double(pad_y)
+  let bottom = format_double(-(bbox.ury - bbox.lly + pad_y))
+  let bg_points = "\{left},\{top} \{left},\{bottom} \{right},\{bottom} \{right},\{top} \{left},\{top}"
   let sb = StringBuilder::new()
   if include_xml_decl {
-    write_line(sb, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "", pretty)
-  }
-  write_line(
-    sb,
-    "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\{out_width}pt\" height=\"\{out_height}pt\" viewBox=\"0 0 \{out_width} \{out_height}\">",
-    "",
-    pretty,
-  )
-  if layout.graph.is_root() {
-    let fill = match layout.graph.get_attr("bgcolor") {
-      Some(value) => value
-      None => "white"
-    }
-    let rect_indent = if pretty { "  " } else { "" }
     write_line(
       sb,
-      "<rect x=\"0\" y=\"0\" width=\"\{out_width}\" height=\"\{out_height}\" fill=\"\{fill}\"/>",
-      rect_indent,
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      " \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<!-- Generated by graphviz version 14.1.1 (20251213.1925)",
+      "",
+      pretty,
+    )
+    write_line(sb, " -->", "", pretty)
+    write_line(
+      sb,
+      match graph_title {
+        Some(value) => "<!-- Title: \{escape_xml_with_dash(value)} Pages: 1 -->"
+        None => "<!-- Pages: 1 -->"
+      },
+      "",
       pretty,
     )
   }
-  let transform = if scale_x == 1.0 && scale_y == 1.0 {
-    "translate(0 \{height})"
-  } else {
-    "scale(\{scale_x} \{scale_y}) translate(0 \{height})"
-  }
-  write_line(sb, "<g transform=\"\{transform}\">", "  ", pretty)
-  let cluster_indent = if pretty { "    " } else { "" }
-  write_cluster_graphs(sb, layout, padded_bbox, cluster_indent, pretty)
-  let edge_indent = if pretty { "    " } else { "" }
-  let kind = layout.graph.kind()
-  for edge_layout in layout.edges {
-    let edge = edge_layout.edge
-    let color = @attrs.color(edge.get_attr("color"), default="black")
-    let style = @attrs.parse_style(edge.get_attr("style"))
-    let dash = stroke_dash_attr(style)
-    for spline in edge_layout.splines {
-      let path = spline_path(spline, padded_bbox.llx, padded_bbox.lly)
-      if path != "" {
-        write_line(
-          sb,
-          "<path d=\"\{path}\" fill=\"none\" stroke=\"\{color}\"\{dash}/>",
-          edge_indent,
-          pretty,
-        )
-      }
-    }
-    let flags = arrow_flags(edge, kind)
-    if flags.head {
-      let ops = arrow_primitives(edge_layout, true)
-      write_arrow_ops(
-        sb,
-        ops,
-        color,
-        "",
-        padded_bbox.llx,
-        padded_bbox.lly,
-        edge_indent,
-        pretty,
-      )
-    }
-    if flags.tail {
-      let ops = arrow_primitives(edge_layout, false)
-      write_arrow_ops(
-        sb,
-        ops,
-        color,
-        "",
-        padded_bbox.llx,
-        padded_bbox.lly,
-        edge_indent,
-        pretty,
-      )
-    }
-    let label_text = match edge.get_attr("label") {
-      Some(value) => resolve_label(value, "")
-      None => ""
-    }
-    match edge_layout.label_pos {
-      Some(pos) => {
-        let font = @attrs.font_name(edge.get_attr("fontname"))
-        let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(
-          edge.get_attr("fontcolor"),
-          default="black",
-        )
-        if label_text != "" {
-          write_label_lines(
-            sb,
-            label_text,
-            font,
-            size,
-            font_color,
-            pos,
-            padded_bbox,
-            edge_indent,
-            pretty,
-          )
-        }
-      }
-      None => ()
-    }
-    let head_label_text = match edge.get_attr("headlabel") {
-      Some(value) => resolve_label(value, "")
-      None => ""
-    }
-    match edge_layout.head_label_pos {
-      Some(pos) => {
-        let font = @attrs.font_name(edge.get_attr("fontname"))
-        let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(
-          edge.get_attr("fontcolor"),
-          default="black",
-        )
-        write_label_lines(
-          sb, head_label_text, font, size, font_color, pos, padded_bbox, edge_indent,
-          pretty,
-        )
-      }
-      None => ()
-    }
-    let tail_label_text = match edge.get_attr("taillabel") {
-      Some(value) => resolve_label(value, "")
-      None => ""
-    }
-    match edge_layout.tail_label_pos {
-      Some(pos) => {
-        let font = @attrs.font_name(edge.get_attr("fontname"))
-        let size = @attrs.font_size(edge.get_attr("fontsize"))
-        let font_color = @attrs.color(
-          edge.get_attr("fontcolor"),
-          default="black",
-        )
-        write_label_lines(
-          sb, tail_label_text, font, size, font_color, pos, padded_bbox, edge_indent,
-          pretty,
-        )
-      }
-      None => ()
-    }
-  }
-  let node_indent = if pretty { "    " } else { "" }
-  for node_layout in layout.nodes {
-    let node = node_layout.node
-    let rect = node_rect(node_layout)
-    let raw_shape = match node.get_attr("shape") {
-      Some(value) => value.to_lower()
-      None => ""
-    }
-    let kind = shape_kind(node.get_attr("shape"))
-    let is_doublecircle = raw_shape == "doublecircle"
-    let stroke = @attrs.color(node.get_attr("color"), default="black")
-    let style = @attrs.parse_style(node.get_attr("style"))
-    let filled = if kind == "point" { true } else { style.filled }
-    let dash = stroke_dash_attr(style)
-    let fill = if filled {
-      match node.get_attr("fillcolor") {
-        Some(value) => value
-        None =>
-          if kind == "point" {
-            stroke
-          } else {
-            @attrs.color(node.get_attr("color"), default="lightgrey")
-          }
-      }
-    } else {
-      "none"
-    }
-    if kind == "record" {
-      write_record_node(
-        sb, node_layout, rect, stroke, fill, dash, padded_bbox, node_indent, pretty,
-      )
-      continue
-    }
-    if kind == "plaintext" {
-      // No outline for plaintext/none nodes.
-    } else if kind == "msquare" {
-      let points = rect_points(rect)
-      let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
-      write_line(
-        sb,
-        "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
-      for segment in diagonal_segments(points) {
-        let (start, end) = segment
-        write_line_segment(
-          sb,
-          start,
-          end,
-          stroke,
-          dash,
-          padded_bbox.llx,
-          padded_bbox.lly,
-          node_indent,
-          pretty,
-        )
-      }
-    } else if kind == "mdiamond" {
-      let points = mdiamond_points(rect)
-      let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
-      write_line(
-        sb,
-        "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
-      for segment in diagonal_segments(points) {
-        let (start, end) = segment
-        write_line_segment(
-          sb,
-          start,
-          end,
-          stroke,
-          dash,
-          padded_bbox.llx,
-          padded_bbox.lly,
-          node_indent,
-          pretty,
-        )
-      }
-    } else if is_doublecircle {
-      let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
-      let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
-      let rx = (rect.urx - rect.llx) / 2.0
-      let ry = (rect.ury - rect.lly) / 2.0
-      write_line(
-        sb,
-        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
-      match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
-        Some(inner) => {
-          let inner_cx = svg_x((inner.llx + inner.urx) / 2.0, padded_bbox.llx)
-          let inner_cy = svg_y((inner.lly + inner.ury) / 2.0, padded_bbox.lly)
-          let inner_rx = (inner.urx - inner.llx) / 2.0
-          let inner_ry = (inner.ury - inner.lly) / 2.0
-          write_line(
-            sb,
-            "<ellipse cx=\"\{inner_cx}\" cy=\"\{inner_cy}\" rx=\"\{inner_rx}\" ry=\"\{inner_ry}\" fill=\"none\" stroke=\"\{stroke}\"\{dash}/>",
-            node_indent,
-            pretty,
-          )
-        }
-        None => ()
-      }
-    } else if kind == "mcircle" {
-      let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
-      let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
-      let rx = (rect.urx - rect.llx) / 2.0
-      let ry = (rect.ury - rect.lly) / 2.0
-      write_line(
-        sb,
-        "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-        node_indent,
-        pretty,
-      )
-      for segment in mcircle_segments(rect) {
-        let (start, end) = segment
-        write_line_segment(
-          sb,
-          start,
-          end,
-          stroke,
-          dash,
-          padded_bbox.llx,
-          padded_bbox.lly,
-          node_indent,
-          pretty,
-        )
-      }
-    } else {
-      match shape_polygon_points(kind, rect) {
-        Some(points) => {
-          let attrs = polygon_points(points, padded_bbox.llx, padded_bbox.lly)
-          write_line(
-            sb,
-            "<polygon points=\"\{attrs}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-            node_indent,
-            pretty,
-          )
-        }
-        None =>
-          if kind == "box" {
-            let x = svg_x(rect.llx, padded_bbox.llx)
-            let y = svg_y(rect.ury, padded_bbox.lly)
-            let w = rect.urx - rect.llx
-            let h = rect.ury - rect.lly
-            write_line(
-              sb,
-              "<rect x=\"\{x}\" y=\"\{y}\" width=\"\{w}\" height=\"\{h}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-              node_indent,
-              pretty,
-            )
-          } else {
-            let cx = svg_x(node_layout.pos.x, padded_bbox.llx)
-            let cy = svg_y(node_layout.pos.y, padded_bbox.lly)
-            let rx = (rect.urx - rect.llx) / 2.0
-            let ry = (rect.ury - rect.lly) / 2.0
-            write_line(
-              sb,
-              "<ellipse cx=\"\{cx}\" cy=\"\{cy}\" rx=\"\{rx}\" ry=\"\{ry}\" fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}/>",
-              node_indent,
-              pretty,
-            )
-          }
-      }
-    }
-    if kind == "point" {
-      continue
-    }
-    let text = label_text(node.get_attr("label"), node.name())
-    let font = @attrs.font_name(node.get_attr("fontname"))
-    let size = @attrs.font_size(node.get_attr("fontsize"))
-    let color = @attrs.color(node.get_attr("fontcolor"), default="black")
-    match @html_label.parse_html_label(text) {
-      Some(@html_label.HtmlLabel::Table(table)) =>
-        write_html_table(
-          sb,
-          table,
-          rect,
-          node.name(),
-          font,
-          size,
-          color,
-          stroke,
-          dash,
-          padded_bbox,
-          node_indent,
-          pretty,
-        )
-      Some(@html_label.HtmlLabel::Text(html_text)) =>
-        if html_text != "" {
-          write_html_text_lines(
-            sb,
-            html_text,
-            @html_label.HtmlAlign::Center,
-            @html_label.HtmlVAlign::Middle,
-            rect,
-            node.name(),
-            font,
-            size,
-            color,
-            padded_bbox,
-            node_indent,
-            pretty,
-          )
-        }
-      None =>
-        if text != "" {
-          let pos = match node_layout.label_pos {
-            Some(value) => value
-            None => node_layout.pos
-          }
-          write_label_lines(
-            sb, text, font, size, color, pos, padded_bbox, node_indent, pretty,
-          )
-        }
-    }
-  }
-  match graph_label_metrics(layout.graph) {
-    Some((text, _width_pt, _height_pt)) =>
-      match layout.label_pos {
-        Some(pos) => {
-          let graph = layout.graph
-          let font = @attrs.font_name(graph.get_attr("fontname"))
-          let size = @attrs.font_size(graph.get_attr("fontsize"))
-          let color = @attrs.color(graph.get_attr("fontcolor"), default="black")
-          write_label_lines(
-            sb, text, font, size, color, pos, padded_bbox, node_indent, pretty,
-          )
-        }
-        None => ()
-      }
+  write_line(
+    sb,
+    "<svg width=\"\{display_width}pt\" height=\"\{display_height}pt\"",
+    "",
+    pretty,
+  )
+  write_line(
+    sb,
+    " viewBox=\"0.00 0.00 \{viewbox_w} \{viewbox_h}\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">",
+    "",
+    pretty,
+  )
+  write_line(
+    sb,
+    "<g id=\"graph0\" class=\"graph\" transform=\"\{transform}\">",
+    "",
+    pretty,
+  )
+  match graph_title {
+    Some(value) => write_line(
+      sb,
+      "<title>\{escape_xml_with_dash(value)}</title>",
+      "",
+      pretty,
+    )
     None => ()
   }
-  write_line(sb, "</g>", "  ", pretty)
+  if layout.graph.is_root() {
+    write_line(
+      sb,
+      "<polygon fill=\"\{bg_fill}\" stroke=\"none\" points=\"\{bg_points}\"/>",
+      "",
+      pretty,
+    )
+  }
+  match graph_label_metrics(layout.graph) {
+    Some((text, _width_pt, height_pt)) => {
+      let graph = layout.graph
+      let font = @attrs.font_name(graph.get_attr("fontname"))
+      let size = @attrs.font_size(graph.get_attr("fontsize"))
+      let color = svg_color(graph_color(graph, "fontcolor", "black"))
+      let pos = match layout.label_pos {
+        Some(value) => value
+        None => graph_label_pos(bbox, height_pt)
+      }
+      let adjusted_pos = if font == "Helvetica-Oblique" {
+        @geom.Point::{ x: pos.x, y: pos.y + 0.4 }
+      } else {
+        pos
+      }
+      write_label_lines(
+        sb, text, font, size, color, adjusted_pos, bbox, "", pretty,
+      )
+    }
+    None => ()
+  }
+  let cluster_indent = ""
+  let _ = write_cluster_graphs(sb, layout, bbox, cluster_indent, pretty, 1)
+  let kind = layout.graph.kind()
+  let root_nodes = layout.graph.nodes()
+  let root_edges = layout.graph.edges()
+  let node_order : Map[String, Int] = Map::new()
+  for i, node in root_nodes {
+    node_order[node.name()] = i
+  }
+  let edge_order : Map[Int, Int] = Map::new()
+  for i, edge in root_edges {
+    edge_order[edge.id()] = i
+  }
+  let layout_node_by_name : Map[String, @layout_dot.DotLayoutNode] = Map::new()
+  for node_layout in layout.nodes {
+    layout_node_by_name[node_layout.node.name()] = node_layout
+  }
+  let layout_edge_by_id : Map[Int, @layout_dot.DotLayoutEdge] = Map::new()
+  for edge_layout in layout.edges {
+    layout_edge_by_id[edge_layout.edge.id()] = edge_layout
+  }
+  let written_nodes : Map[String, Bool] = Map::new()
+  let written_edges : Map[Int, Bool] = Map::new()
+  for node in root_nodes {
+    let node_name = node.name()
+    if written_nodes.get(node_name) != Some(true) {
+      match layout_node_by_name.get(node_name) {
+        Some(node_layout) => {
+          let node_id = match node_order.get(node_name) {
+            Some(value) => value + 1
+            None => 1
+          }
+          write_svg_node_group(sb, node_layout, bbox, node_id, pretty)
+          written_nodes[node_name] = true
+        }
+        None => ()
+      }
+    }
+    let out_edges : Array[@cgraph.Edge] = []
+    for edge in root_edges {
+      if edge.tail().name() == node_name {
+        out_edges.push(edge)
+      }
+    }
+    out_edges.sort_by_key(edge => {
+      let head_order = match node_order.get(edge.head().name()) {
+        Some(value) => value
+        None => 100000
+      }
+      head_order * 100000 + edge.id()
+    })
+    let mut prev_head = node_name
+    for edge in out_edges {
+      let head_name = edge.head().name()
+      if prev_head != head_name && written_nodes.get(head_name) != Some(true) {
+        match layout_node_by_name.get(head_name) {
+          Some(node_layout) => {
+            let node_id = match node_order.get(head_name) {
+              Some(value) => value + 1
+              None => 1
+            }
+            write_svg_node_group(sb, node_layout, bbox, node_id, pretty)
+            written_nodes[head_name] = true
+          }
+          None => ()
+        }
+        prev_head = head_name
+      }
+      if written_edges.get(edge.id()) != Some(true) {
+        match layout_edge_by_id.get(edge.id()) {
+          Some(edge_layout) => {
+            let edge_id = match edge_attr(edge, "id") {
+              Some(value) => if value != "" { value } else {
+                match edge_order.get(edge.id()) {
+                  Some(order) => "edge\{order + 1}"
+                  None => "edge1"
+                }
+              }
+              None =>
+                match edge_order.get(edge.id()) {
+                  Some(order) => "edge\{order + 1}"
+                  None => "edge1"
+                }
+            }
+            write_svg_edge_group(
+              sb,
+              edge_layout,
+              kind,
+              bbox,
+              edge_id,
+              pretty,
+            )
+            written_edges[edge.id()] = true
+          }
+          None => ()
+        }
+      }
+    }
+  }
+  write_line(sb, "</g>", "", pretty)
   write_line(sb, "</svg>", "", pretty)
   sb.to_string()
 }
