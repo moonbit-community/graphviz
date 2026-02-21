@@ -427,7 +427,8 @@ fn filter_nondefault_node_attrs(
         }
       }
       None =>
-        if value != "" || key == "distortion" || key == "style" {
+        if value != "" || key == "distortion" || key == "style" ||
+          key == "label" {
           filtered.push((key, value))
         }
     }
@@ -459,7 +460,7 @@ fn filter_nondefault_edge_attrs(
         }
       }
       None =>
-        if value != "" || key == "style" {
+        if value != "" || key == "style" || key == "label" {
           filtered.push((key, value))
         }
     }
@@ -467,7 +468,7 @@ fn filter_nondefault_edge_attrs(
   if edge.get_attr("style") is None {
     match graph.get_default_attr(@cgraph.AttrKind::Edge, "style") {
       Some(default_value) =>
-        if default_value != "" && edge.get_attr("_draw_") is Some(_) {
+        if default_value != "" {
           filtered.push(("style", ""))
         }
       None => ()
@@ -501,9 +502,10 @@ fn node_has_nondefault_attrs(
       Some(default_value) =>
         if default_value != value {
           return true
-        }
+      }
       None =>
-        if value != "" || key == "distortion" || key == "style" {
+        if value != "" || key == "distortion" || key == "style" ||
+          key == "label" {
           return true
         }
     }
@@ -712,6 +714,45 @@ fn edge_home_path_recursive(
 }
 
 ///|
+fn parse_non_negative_int(text : String) -> Int? {
+  if text == "" {
+    return None
+  }
+  let mut value = 0
+  for ch in text {
+    if !ch.is_ascii_digit() {
+      return None
+    }
+    value = value * 10 + (ch.to_int() - '0'.to_int())
+  }
+  Some(value)
+}
+
+///|
+fn graph_at_path(root : @cgraph.Graph, path : String) -> @cgraph.Graph? {
+  if path == "" {
+    return Some(root)
+  }
+  let mut current = root
+  for part in path.split("/") {
+    let segment = part.to_string()
+    if segment == "" {
+      continue
+    }
+    let index = match parse_non_negative_int(segment) {
+      Some(value) => value
+      None => return None
+    }
+    let subgraphs = current.subgraphs()
+    if index >= subgraphs.length() {
+      return None
+    }
+    current = subgraphs[index]
+  }
+  Some(current)
+}
+
+///|
 fn cluster_lca_path_recursive(
   graph : @cgraph.Graph,
   path : String,
@@ -753,15 +794,25 @@ fn edge_target_path(
     Some(path) => path
     None => {
       let home_path = edge_home_path_recursive(root, "", id)
-      let path = if home_path != "" {
-        home_path
+      let cluster_path = cluster_lca_path_recursive(
+        root,
+        "",
+        edge.tail().name(),
+        edge.head().name(),
+      )
+      let path = if home_path == "" {
+        cluster_path
       } else {
-        cluster_lca_path_recursive(
-          root,
-          "",
-          edge.tail().name(),
-          edge.head().name(),
-        )
+        match graph_at_path(root, home_path) {
+          Some(home_graph) =>
+            if graph_contains_node_name(home_graph, edge.tail().name()) &&
+              graph_contains_node_name(home_graph, edge.head().name()) {
+              home_path
+            } else {
+              cluster_path
+            }
+          None => cluster_path
+        }
       }
       ctx.edge_target_paths[id] = path
       path
@@ -968,6 +1019,29 @@ fn write_graph_recursive(
   )
   write_default_stmt(sb, inner, "graph", graph_dict_attrs, AttrGroup::Graph)
   let node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
+  let node_defaults =
+    if is_root && is_layout_output {
+      let mut has_label = false
+      for pair in node_defaults {
+        let (key, _) = pair
+        if key == "label" {
+          has_label = true
+          break
+        }
+      }
+      if has_label {
+        node_defaults
+      } else {
+        let out : Array[(String, String)] = []
+        for pair in node_defaults {
+          out.push(pair)
+        }
+        out.push(("label", "\\N"))
+        out
+      }
+    } else {
+      node_defaults
+    }
   write_default_stmt(sb, inner, "node", node_defaults, AttrGroup::Node)
   let edge_defaults = graph.default_attrs(@cgraph.AttrKind::Edge)
   write_default_stmt(sb, inner, "edge", edge_defaults, AttrGroup::Edge)
