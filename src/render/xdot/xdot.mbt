@@ -2751,34 +2751,132 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
 }
 
 ///|
-fn offset_spline_points(
-  points : Array[@geom.Point],
+const COLOR_SPLINE_EPSILON : Double = 0.0001
+const COLOR_SPLINE_SEP_PT : Double = 2.0
+
+///|
+fn color_spline_offset_p(
+  p : @geom.Point,
+  q : @geom.Point,
   distance : Double,
-) -> Array[@geom.Point] {
-  if points.length() <= 1 || distance == 0.0 {
-    return points
+) -> @geom.Point {
+  let x = p.x - q.x
+  let y = p.y - q.y
+  let scale =
+    distance / Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  {
+    x: y * scale,
+    y: -x * scale,
   }
-  let out : Array[@geom.Point] = []
-  for i in 0..<points.length() {
-    let prev = if i == 0 { points[0] } else { points[i - 1] }
-    let next = if i + 1 >= points.length() {
-      points[points.length() - 1]
+}
+
+///|
+fn color_spline_offset_qr(
+  p : @geom.Point,
+  q : @geom.Point,
+  r : @geom.Point,
+  s : @geom.Point,
+  distance : Double,
+) -> @geom.Point {
+  let mut x = q.x - r.x
+  let mut y = q.y - r.y
+  let mut len = @math.hypot(x, y)
+  if len < COLOR_SPLINE_EPSILON {
+    x = p.x - s.x
+    y = p.y - s.y
+    len = Double::sqrt(x * x + y * y + COLOR_SPLINE_EPSILON)
+  }
+  let scale = distance / len
+  {
+    x: y * scale,
+    y: -x * scale,
+  }
+}
+
+///|
+fn edge_multicolor_spline_points(
+  points : Array[@geom.Point],
+  color_count : Int,
+) -> Array[Array[@geom.Point]] {
+  if color_count <= 1 {
+    return [points]
+  }
+  if points.length() < 4 {
+    let numc2 = (1.0 + color_count.to_double()) / 2.0
+    let out : Array[Array[@geom.Point]] = []
+    for i in 0..<color_count {
+      let distance = ((i + 1).to_double() - numc2) * COLOR_SPLINE_SEP_PT
+      if distance == 0.0 {
+        out.push(points)
+      } else {
+        let shifted : Array[@geom.Point] = []
+        for point in points {
+          shifted.push({ x: point.x, y: point.y + distance })
+        }
+        out.push(shifted)
+      }
+    }
+    return out
+  }
+  let size = points.length()
+  let offset : Array[@geom.Point] = []
+  let tmp : Array[@geom.Point] = []
+  for _ in 0..<size {
+    offset.push({ x: 0.0, y: 0.0 })
+    tmp.push({ x: 0.0, y: 0.0 })
+  }
+  let numc2 = (1.0 + color_count.to_double()) / 2.0
+  let mut pf3 = points[0]
+  let mut pf2 = points[0]
+  let mut j = 0
+  while j < size - 1 {
+    let pf0 = pf3
+    let pf1 = points[j + 1]
+    if j == 0 {
+      offset[j] = color_spline_offset_p(pf0, pf1, COLOR_SPLINE_SEP_PT)
     } else {
-      points[i + 1]
+      offset[j] = color_spline_offset_p(pf2, pf1, COLOR_SPLINE_SEP_PT)
     }
-    let dx = next.x - prev.x
-    let dy = next.y - prev.y
-    let len = @math.hypot(dx, dy)
-    if len <= 0.000001 {
-      out.push(points[i])
-      continue
+    pf2 = points[j + 2]
+    pf3 = points[j + 3]
+    let offset_qr =
+      color_spline_offset_qr(
+        pf0,
+        pf1,
+        pf2,
+        pf3,
+        COLOR_SPLINE_SEP_PT,
+      )
+    offset[j + 1] = offset_qr
+    offset[j + 2] = offset_qr
+    tmp[j] = {
+      x: pf0.x - numc2 * offset[j].x,
+      y: pf0.y - numc2 * offset[j].y,
     }
-    let nx = -dy / len
-    let ny = dx / len
-    out.push({
-      x: points[i].x + nx * distance,
-      y: points[i].y + ny * distance,
-    })
+    tmp[j + 1] = {
+      x: pf1.x - numc2 * offset[j + 1].x,
+      y: pf1.y - numc2 * offset[j + 1].y,
+    }
+    tmp[j + 2] = {
+      x: pf2.x - numc2 * offset[j + 2].x,
+      y: pf2.y - numc2 * offset[j + 2].y,
+    }
+    j = j + 3
+  }
+  offset[j] = color_spline_offset_p(pf2, pf3, COLOR_SPLINE_SEP_PT)
+  tmp[j] = {
+    x: pf3.x - numc2 * offset[j].x,
+    y: pf3.y - numc2 * offset[j].y,
+  }
+  let out : Array[Array[@geom.Point]] = []
+  for _ in 0..<color_count {
+    for idx in 0..<size {
+      tmp[idx] = {
+        x: tmp[idx].x + offset[idx].x,
+        y: tmp[idx].y + offset[idx].y,
+      }
+    }
+    out.push(tmp.copy())
   }
   out
 }
@@ -2794,19 +2892,22 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   push_stroke_style_ops(ops, style, edge.get_attr("penwidth"))
   let pen_colors = edge_pen_colors(edge)
   let color_count = pen_colors.length()
+  let spline_sets : Array[Array[Array[@geom.Point]]] = []
+  for spline in layout.splines {
+    spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
+  }
   for i, pen_color in pen_colors {
-    let offset =
-      if color_count <= 1 {
-        0.0
-      } else {
-        (i * 2 - (color_count - 1)).to_double()
-      }
     ops.push(@render.DrawOp::PenColor(color=pen_color))
-    for spline in layout.splines {
+    for spline_index in 0..<layout.splines.length() {
+      let points = if color_count <= 1 {
+        layout.splines[spline_index].points
+      } else {
+        spline_sets[spline_index][i]
+      }
       ops.push(
         @render.DrawOp::Bezier(
           filled=false,
-          points=offset_spline_points(spline.points, offset),
+          points=points,
         ),
       )
     }
