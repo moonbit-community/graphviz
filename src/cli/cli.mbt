@@ -413,6 +413,29 @@ pub fn render_job(job : CliJob) -> String raise {
 }
 
 ///|
+fn render_job_bytes(job : CliJob) -> Bytes raise {
+  cli_trace("cli: parse start")
+  let graph = read_dot_input(job.input)
+  cli_trace("cli: parse done")
+  apply_attrs(graph, job)
+  cli_trace("cli: layout start")
+  let layout = layout_for_job(job, graph)
+  cli_trace("cli: layout done")
+  match job.format.format {
+    OutputFormat::Dot => {
+      layout.apply()
+      @utf8.encode(@dot.write_dot(layout.graph), bom=false)
+    }
+    OutputFormat::XDot => @xdot.render_xdot_bytes(layout)
+    OutputFormat::Svg => @utf8.encode(@svg.render_svg(layout), bom=false)
+    OutputFormat::Other(_) => {
+      layout.apply()
+      @utf8.encode(@dot.write_dot(layout.graph), bom=false)
+    }
+  }
+}
+
+///|
 fn read_dot_input(input : String?) -> @cgraph.Graph raise {
   let path = match input {
     None => "/dev/stdin"
@@ -435,13 +458,12 @@ fn version_text() -> String {
 pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise {
   match parse_cli_args(args, program~) {
     CliAction::Render(job) => {
-      let output = render_job(job)
       match job.output {
         Some(path) => {
-          @fs.write_string_to_file(path, output)
+          @fs.write_bytes_to_file(path, render_job_bytes(job))
           ""
         }
-        None => output
+        None => render_job(job)
       }
     }
     CliAction::ListFormats => formats_list()

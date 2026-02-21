@@ -800,10 +800,11 @@ test "svg snapshot parity" {
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
+    let svg_bytes = @utf8.encode(svg, bom=false)
     let out_path = "\{out_dir}/\{case_name}.svg"
-    @fs.write_string_to_file(out_path, svg)
-    let fixture = @fs.read_file_to_string(fixture_path)
-    if svg != fixture {
+    @fs.write_bytes_to_file(out_path, svg_bytes)
+    let fixture = @fs.read_file_to_bytes(fixture_path)
+    if svg_bytes != fixture {
       mismatches.push(input_path)
     }
   }

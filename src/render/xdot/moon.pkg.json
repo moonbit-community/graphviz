@@ -17,7 +17,9 @@
     "moonbit-community/graphviz/geom",
     "moonbit-community/graphviz/dot",
     "moonbit-community/graphviz/cgraph",
+    "moonbitlang/core/buffer",
     "moonbitlang/core/bigint",
+    "moonbitlang/core/encoding/utf8",
     "moonbitlang/core/math",
     "moonbitlang/core/strconv"
   ],

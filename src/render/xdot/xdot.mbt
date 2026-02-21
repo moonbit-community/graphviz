@@ -3321,74 +3321,109 @@ fn graph_uses_latin1_charset(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn append_loose_utf8_codepoint(sb : StringBuilder, codepoint : Int) -> Unit {
-  if codepoint <= 0xFFFF {
-    sb.write_char(codepoint.unsafe_to_char())
-  } else {
-    let value = codepoint - 0x10000
-    let high = 0xD800 + (value >> 10)
-    let low = 0xDC00 + (value & 0x3FF)
-    sb.write_char(high.unsafe_to_char())
-    sb.write_char(low.unsafe_to_char())
-  }
+fn is_attr_name_byte(ch : Byte) -> Bool {
+  (ch >= b'a' && ch <= b'z') ||
+  (ch >= b'A' && ch <= b'Z') ||
+  (ch >= b'0' && ch <= b'9') ||
+  ch == b'_'
 }
 
 ///|
-fn latin1_to_loose_utf8_text(value : String) -> String {
-  let bytes : Array[Int] = []
-  for ch in value {
-    bytes.push(ch.to_int() & 0xFF)
+fn latin1_token_bytes(token : BytesView) -> Bytes {
+  let text = try @utf8.decode(token) catch {
+    _ => return token.to_bytes()
+  } noraise {
+    value => value
   }
-  let sb = StringBuilder::new()
+  let bytes : Array[Byte] = []
+  for ch in text {
+    let code = ch.to_int()
+    if code > 0xFF {
+      return token.to_bytes()
+    }
+    bytes.push(code.to_byte())
+  }
+  Bytes::from_array(bytes)
+}
+
+///|
+fn xdot_latin1_label_bytes(text : String) -> Bytes {
+  let input = @utf8.encode(text, bom=false)
+  let out = @buffer.new(size_hint=input.length())
   let mut index = 0
-  while index < bytes.length() {
-    let b0 = bytes[index]
-    let mut len = if b0 < 0x80 {
-      1
-    } else if b0 < 0xE0 {
-      2
-    } else if b0 < 0xF0 {
-      3
-    } else if b0 < 0xF8 {
-      4
-    } else if b0 < 0xFC {
-      5
-    } else {
-      6
+  let mut in_quotes = false
+  let mut escaped = false
+  while index < input.length() {
+    let byte = input[index]
+    if in_quotes {
+      out.write_byte(byte)
+      if escaped {
+        escaped = false
+      } else if byte == b'\\' {
+        escaped = true
+      } else if byte == b'"' {
+        in_quotes = false
+      }
+      index = index + 1
+      continue
     }
-    if index + len > bytes.length() {
-      len = bytes.length() - index
+    if byte == b'"' {
+      in_quotes = true
+      escaped = false
+      out.write_byte(byte)
+      index = index + 1
+      continue
     }
-    let codepoint = match len {
-      1 => b0
-      2 => ((b0 & 0x1F) << 6) | (bytes[index + 1] & 0x3F)
-      3 =>
-        ((b0 & 0x0F) << 12) |
-        ((bytes[index + 1] & 0x3F) << 6) |
-        (bytes[index + 2] & 0x3F)
-      4 =>
-        ((b0 & 0x07) << 18) |
-        ((bytes[index + 1] & 0x3F) << 12) |
-        ((bytes[index + 2] & 0x3F) << 6) |
-        (bytes[index + 3] & 0x3F)
-      5 =>
-        ((b0 & 0x03) << 24) |
-        ((bytes[index + 1] & 0x3F) << 18) |
-        ((bytes[index + 2] & 0x3F) << 12) |
-        ((bytes[index + 3] & 0x3F) << 6) |
-        (bytes[index + 4] & 0x3F)
-      _ =>
-        ((b0 & 0x01) << 30) |
-        ((bytes[index + 1] & 0x3F) << 24) |
-        ((bytes[index + 2] & 0x3F) << 18) |
-        ((bytes[index + 3] & 0x3F) << 12) |
-        ((bytes[index + 4] & 0x3F) << 6) |
-        (bytes[index + 5] & 0x3F)
+    if index + 6 <= input.length() &&
+      input[index] == b'l' &&
+      input[index + 1] == b'a' &&
+      input[index + 2] == b'b' &&
+      input[index + 3] == b'e' &&
+      input[index + 4] == b'l' &&
+      input[index + 5] == b'=' {
+      let prev_is_name = index > 0 && is_attr_name_byte(input[index - 1])
+      if !prev_is_name {
+        out.write_bytesview(input.view(start=index, end=index + 6))
+        index = index + 6
+        if index >= input.length() {
+          continue
+        }
+        let next = input[index]
+        if next == b'"' || next == b'<' {
+          continue
+        }
+        let mut end = index
+        while end < input.length() {
+          let current = input[end]
+          if current == b',' ||
+            current == b']' ||
+            current == b' ' ||
+            current == b'\t' ||
+            current == b'\n' ||
+            current == b'\r' {
+            break
+          }
+          end = end + 1
+        }
+        let token = input.view(start=index, end=end)
+        out.write_bytes(latin1_token_bytes(token))
+        index = end
+        continue
+      }
     }
-    append_loose_utf8_codepoint(sb, codepoint)
-    index = index + len
+    out.write_byte(byte)
+    index = index + 1
   }
-  sb.to_string()
+  out.to_bytes()
+}
+
+///|
+fn encode_xdot_output_bytes(graph : @cgraph.Graph, output : String) -> Bytes {
+  if graph_uses_latin1_charset(graph) {
+    xdot_latin1_label_bytes(output)
+  } else {
+    @utf8.encode(output, bom=false)
+  }
 }
 
 ///|
@@ -3753,13 +3788,6 @@ pub fn attach_xdot_attrs(
     }
   }
   attach_graph_attrs(layout)
-  let use_latin1_replacement = graph_uses_latin1_charset(graph)
-  if use_latin1_replacement {
-    match graph.get_attr("label") {
-      Some(value) => graph.set_attr("label", latin1_to_loose_utf8_text(value))
-      None => ()
-    }
-  }
   let kind = graph.kind()
   for node_layout in layout.nodes {
     let draw_ops = node_draw_ops(node_layout)
@@ -3769,15 +3797,6 @@ pub fn attach_xdot_attrs(
     let label_ops = node_label_ops(node_layout)
     if label_ops.length() > 0 {
       node_layout.node.set_attr("_ldraw_", encode_xdot_ops(label_ops))
-    }
-    if use_latin1_replacement {
-      match node_layout.node.get_attr("label") {
-        Some(value) => node_layout.node.set_attr(
-          "label",
-          latin1_to_loose_utf8_text(value),
-        )
-        None => ()
-      }
     }
   }
   for edge_layout in layout.edges {
@@ -3835,4 +3854,13 @@ pub fn render_xdot(
   layout.apply()
   attach_xdot_attrs(layout, options~)
   @dot.write_dot(layout.graph)
+}
+
+///|
+pub fn render_xdot_bytes(
+  layout : @layout_dot.DotLayoutGraph,
+  options? : XDotOptions = XDotOptions::default(),
+) -> Bytes {
+  let output = render_xdot(layout, options~)
+  encode_xdot_output_bytes(layout.graph, output)
 }

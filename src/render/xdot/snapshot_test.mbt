@@ -777,10 +777,10 @@ fn snapshot_matches(
 ) -> Bool raise {
   let graph = @dot.parse_dot_file(input_path)
   let layout = @layout_dot.layout_dot(graph)
-  let actual = render_xdot(layout)
+  let actual = render_xdot_bytes(layout)
   let out_path = "target/render/xdot/\{snapshot_case_name(input_path)}.xdot"
-  @fs.write_string_to_file(out_path, actual)
-  let expected = @fs.read_file_to_string(expected_path)
+  @fs.write_bytes_to_file(out_path, actual)
+  let expected = @fs.read_file_to_bytes(expected_path)
   actual == expected
 }
 

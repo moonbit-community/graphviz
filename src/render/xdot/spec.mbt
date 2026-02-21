@@ -36,3 +36,13 @@ pub fn render_xdot(
 ) -> String {
   ...
 }
+
+///|
+/// Render DOT with xdot attributes and return encoded output bytes.
+#declaration_only
+pub fn render_xdot_bytes(
+  layout : @layout_dot.DotLayoutGraph,
+  options? : XDotOptions = XDotOptions::default(),
+) -> Bytes {
+  ...
+}
