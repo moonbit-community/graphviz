@@ -91,6 +91,23 @@ fn expand_bbox_for_edge_labels(
         adjust_metrics(edge_mid_label_metrics(edge))
       },
     )
+    if !flip && is_flat && has_flat_label_vnode && tail != head {
+      match edge_layout.label_pos {
+        Some(center) => {
+          let orientation = record_layout_orientation(rankdir)
+          let tail_size = node_size(edge.tail(), orientation)
+          let head_size = node_size(edge.head(), orientation)
+          let tail_half = tail_size.height_pt / 2.0
+          let head_half = head_size.height_pt / 2.0
+          let half_height = if tail_half > head_half { tail_half } else { head_half }
+          let top = center.y + half_height
+          if top > bbox.ury {
+            bbox = { llx: bbox.llx, lly: bbox.lly, urx: bbox.urx, ury: top }
+          }
+        }
+        None => ()
+      }
+    }
     bbox = expand_bbox_for_label_pos(
       bbox,
       edge_layout.head_label_pos,

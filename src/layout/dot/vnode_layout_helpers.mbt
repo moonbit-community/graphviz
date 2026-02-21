@@ -361,7 +361,23 @@ fn add_flat_label_vnodes(
       place,
     }
     flat_label_edges[edge_key(edge)] = name
-    let m0 = Double::from_int(edge_minlen(edge)) * nodesep_pt / 2.0
+    let vnode_edge_key = edge_vnode_key(edge)
+    match vnode_info.edge_vnodes.get(vnode_edge_key) {
+      Some(list) => list.push(name)
+      None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
+    }
+    let graph_ordering =
+      match root_graph_for_node(edge.tail()).get_attr("ordering") {
+      Some(value) => value.to_lower()
+      None => ""
+    }
+    let m0_scale =
+      if graph_ordering == "out" || graph_ordering == "in" {
+      1.0
+    } else {
+      0.5
+    }
+    let m0 = Double::from_int(edge_minlen(edge)) * nodesep_pt * m0_scale
     let minlen_left = round_int(m0 + left_right + half_width)
     let minlen_right = round_int(m0 + half_width + right_left)
     extra_edges.push({

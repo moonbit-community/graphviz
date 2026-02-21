@@ -1619,7 +1619,7 @@ fn build_edge_route_base(
   let tail_label_port = port_is_label_port(tail_name, tail_port, label_ports_raw)
   let head_label_port = port_is_label_port(head_name, head_port, label_ports_raw)
   // Graphviz parity: label ports should not force segmented edge splines.
-  let force_segmented =
+  let force_segmented_base =
     (!tail_label_port && tail_port_sides >= 3) ||
     (!head_label_port && head_port_sides >= 3)
   let tail_cluster_name = match edge.get_attr("ltail") {
@@ -1659,6 +1659,9 @@ fn build_edge_route_base(
     None => []
   }
   let has_vnodes = vnodes.length() > 0
+  let force_segmented =
+    force_segmented_base ||
+    (is_flat_edge && has_vnodes && edge_mid_label_width_pt(edge) > 0.0)
   let use_pathplan = match @sys.get_env_var("DOT_USE_PATHPLAN") {
     Some(value) => {
       let lower = value.to_lower()

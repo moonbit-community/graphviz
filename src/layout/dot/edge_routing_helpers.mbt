@@ -31,7 +31,54 @@ fn edge_polyline_points(
     match (tail_rank_opt, head_rank_opt) {
       (Some(tail_rank), Some(head_rank)) => {
         let span = head_rank - tail_rank
-        if span != 0 {
+        if span == 0 {
+          let push_flat_point = (name : String) => {
+            match vnode_positions.get(name) {
+              Some(pos) =>
+                if label_width_pt > 0.0 {
+                  let half = label_width_pt / 2.0
+                  let bend_y =
+                    match edge_mid_label_metrics(edge) {
+                      Some((_label_width, label_height)) => {
+                        let label_top = pos.y + label_height / 2.0
+                        let source_y =
+                          if tail_anchor.x <= head_anchor.x {
+                            tail_anchor.y
+                          } else {
+                            head_anchor.y
+                          }
+                        let ydelta = (pos.y - source_y) / 6.0
+                        let lift = if ydelta > 5.0 { ydelta } else { 5.0 }
+                        label_top - lift
+                      }
+                      None => pos.y
+                    }
+                  if tail_anchor.x <= head_anchor.x {
+                    points.push({ x: pos.x - half, y: bend_y })
+                    points.push({ x: pos.x + half, y: bend_y })
+                  } else {
+                    points.push({ x: pos.x + half, y: bend_y })
+                    points.push({ x: pos.x - half, y: bend_y })
+                  }
+                } else {
+                  points.push(pos)
+                }
+              None => ()
+            }
+          }
+          if tail_anchor.x <= head_anchor.x {
+            for name in vnodes {
+              push_flat_point(name)
+            }
+          } else {
+            let mut idx = vnodes.length()
+            while idx > 0 {
+              idx = idx - 1
+              let name = vnodes[idx]
+              push_flat_point(name)
+            }
+          }
+        } else {
           let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
           let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
           let label_rank = if label_width_pt > 0.0 {

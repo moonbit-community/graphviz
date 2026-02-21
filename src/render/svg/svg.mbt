@@ -421,7 +421,7 @@ fn is_svg_named_color(color : String) -> Bool {
     "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
     "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
     "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
-    "lemonchiffon" | "firebrick" | "orangered" => true
+    "lemonchiffon" | "firebrick" | "orangered" | "indigo" | "indianred" => true
     _ => false
   }
 }

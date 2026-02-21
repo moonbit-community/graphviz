@@ -1015,7 +1015,7 @@ priv enum ClipShape {
   Rect
   Ellipse
   Diamond
-  Polygon(Int, Double, Double, Double)
+  Polygon(Int, Double, Double, Double, Int)
   DoubleOctagon
   TripleOctagon
   Trapezium
@@ -1153,6 +1153,18 @@ fn polygon_clip_params(node : @cgraph.Node) -> (Int, Double, Double, Double) {
 }
 
 ///|
+fn polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
+  let mut peripheries = match node.get_attr("peripheries") {
+    Some(value) => parse_double(value, default.to_double()).round().to_int()
+    None => default
+  }
+  if peripheries < 0 {
+    peripheries = 0
+  }
+  peripheries
+}
+
+///|
 fn builtin_polygon_clip_params(
   node : @cgraph.Node,
   shape : String,
@@ -1210,14 +1222,26 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "plaintext"
     | "plain" =>
       ClipShape::Rect
-    "diamond" => ClipShape::Polygon(4, 45.0, 0.0, 0.0)
+    "diamond" => ClipShape::Polygon(
+      4,
+      45.0,
+      0.0,
+      0.0,
+      polygon_peripheries(node, 1),
+    )
     "mdiamond" => ClipShape::Diamond
     "polygon" => {
       let (sides, orientation, distortion, skew) = polygon_clip_params(node)
       if sides < 3 {
         ClipShape::Ellipse
       } else {
-        ClipShape::Polygon(sides, orientation, distortion, skew)
+        ClipShape::Polygon(
+          sides,
+          orientation,
+          distortion,
+          skew,
+          polygon_peripheries(node, 1),
+        )
       }
     }
     "triangle"
@@ -1229,7 +1253,13 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "egg" =>
       match builtin_polygon_clip_params(node, shape) {
         Some((sides, orientation, distortion, skew)) =>
-          ClipShape::Polygon(sides, orientation, distortion, skew)
+          ClipShape::Polygon(
+            sides,
+            orientation,
+            distortion,
+            skew,
+            polygon_peripheries(node, 1),
+          )
         None => ClipShape::None
       }
     "doubleoctagon" => ClipShape::DoubleOctagon
@@ -1307,8 +1337,8 @@ fn polygon_shape_params(
   shape : ClipShape,
 ) -> (Int, Double, Double, Double, Int)? {
   match shape {
-    ClipShape::Polygon(sides, orientation, distortion, skew) =>
-      Some((sides, orientation, distortion, skew, 1))
+    ClipShape::Polygon(sides, orientation, distortion, skew, peripheries) =>
+      Some((sides, orientation, distortion, skew, peripheries))
     ClipShape::DoubleOctagon => Some((8, 0.0, 0.0, 0.0, 2))
     ClipShape::TripleOctagon => Some((8, 0.0, 0.0, 0.0, 3))
     ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0, 1))
@@ -1617,7 +1647,7 @@ fn point_inside_shape(
     | ClipShape::InvHouse
     | ClipShape::DoubleOctagon
     | ClipShape::TripleOctagon
-    | ClipShape::Polygon(_, _, _, _) =>
+    | ClipShape::Polygon(_, _, _, _, _) =>
       point_inside_polygon(
         point,
         center,
@@ -2111,7 +2141,7 @@ fn clip_spline_to_nodes(
       | ClipShape::InvHouse
       | ClipShape::DoubleOctagon
       | ClipShape::TripleOctagon
-      | ClipShape::Polygon(_, _, _, _) =>
+      | ClipShape::Polygon(_, _, _, _, _) =>
         // Graphviz parity guard: poly_inside clips against bisector-expanded
         // polygon outline + penwidth/2 (shapes.c poly_init outp path).
         if tail_penwidth > 0.0 { tail_penwidth / 2.0 } else { 0.0 }
@@ -2126,7 +2156,7 @@ fn clip_spline_to_nodes(
       | ClipShape::InvHouse
       | ClipShape::DoubleOctagon
       | ClipShape::TripleOctagon
-      | ClipShape::Polygon(_, _, _, _) =>
+      | ClipShape::Polygon(_, _, _, _, _) =>
         if head_penwidth > 0.0 { head_penwidth / 2.0 } else { 0.0 }
       _ => 0.0
     }
@@ -2148,7 +2178,7 @@ fn clip_spline_to_nodes(
     | ClipShape::InvHouse
     | ClipShape::DoubleOctagon
     | ClipShape::TripleOctagon
-    | ClipShape::Polygon(_, _, _, _)
+    | ClipShape::Polygon(_, _, _, _, _)
     | ClipShape::None => tail_shape_size
   }
   let head_clip_size = match head_shape {
@@ -2167,7 +2197,7 @@ fn clip_spline_to_nodes(
     | ClipShape::InvHouse
     | ClipShape::DoubleOctagon
     | ClipShape::TripleOctagon
-    | ClipShape::Polygon(_, _, _, _)
+    | ClipShape::Polygon(_, _, _, _, _)
     | ClipShape::None => head_shape_size
   }
   // Graphviz parity: compass/dynamic ports disable clipping after resolvePort

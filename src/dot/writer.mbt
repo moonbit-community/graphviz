@@ -208,7 +208,7 @@ fn graph_attr_rank(name : String) -> Int {
     "lheight" => 13
     "lp" => 14
     "lwidth" => 15
-    "ordering" => 16
+    "ordering" => 20
     "orientation" => 17
     "page" => 18
     "margin" => 19

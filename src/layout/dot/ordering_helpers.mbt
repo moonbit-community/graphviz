@@ -672,7 +672,9 @@ fn left2right_constraint(
   }
   if remincross_mode {
     // Graphviz parity: in ReMincross, nodes in different buckets are pinned.
-    if left_cluster != right_cluster {
+    if left_cluster != right_cluster &&
+      !is_edge_vnode_name(left) &&
+      !is_edge_vnode_name(right) {
       return true
     }
   }

@@ -497,13 +497,6 @@ fn in_cross_graphviz(
     if cnt <= 0 {
       continue
     }
-    let tail_rank = match ranks.get(edge_tail[edge_idx]) {
-      Some(value) => value
-      None => rank - 1
-    }
-    if tail_rank != rank - 1 {
-      continue
-    }
     let inv = match order.get(edge_tail[edge_idx]) {
       Some(value) => value
       None =>
@@ -519,13 +512,6 @@ fn in_cross_graphviz(
     for edge_idx2 in left_in {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
-        continue
-      }
-      let tail_rank2 = match ranks.get(edge_tail[edge_idx2]) {
-        Some(value) => value
-        None => rank - 1
-      }
-      if tail_rank2 != rank - 1 {
         continue
       }
       let tail_order = match order.get(edge_tail[edge_idx2]) {
@@ -577,13 +563,6 @@ fn out_cross_graphviz(
     if cnt <= 0 {
       continue
     }
-    let head_rank = match ranks.get(edge_head[edge_idx]) {
-      Some(value) => value
-      None => rank + 1
-    }
-    if head_rank != rank + 1 {
-      continue
-    }
     let inv = match order.get(edge_head[edge_idx]) {
       Some(value) => value
       None =>
@@ -599,13 +578,6 @@ fn out_cross_graphviz(
     for edge_idx2 in left_out {
       let weight = edge_penalty[edge_idx2]
       if weight <= 0 {
-        continue
-      }
-      let head_rank2 = match ranks.get(edge_head[edge_idx2]) {
-        Some(value) => value
-        None => rank + 1
-      }
-      if head_rank2 != rank + 1 {
         continue
       }
       let head_order = match order.get(edge_head[edge_idx2]) {
@@ -627,6 +599,94 @@ fn out_cross_graphviz(
     }
   }
   cross
+}
+
+///|
+fn count_single_rank_crossings_graphviz(
+  rank : Int,
+  names : Array[String],
+  ranks : Map[String, Int],
+  fixed_order : Map[String, Int],
+  edge_in : Map[String, Array[Int]],
+  edge_out : Map[String, Array[Int]],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_penalty : Array[Int],
+) -> Int {
+  let order : Map[String, Int] = Map::new()
+  for i, name in names {
+    order[name] = i
+  }
+  let mut cross = 0
+  let mut left_idx = 0
+  while left_idx + 1 < names.length() {
+    let left = names[left_idx]
+    let mut right_idx = left_idx + 1
+    while right_idx < names.length() {
+      let right = names[right_idx]
+      cross = cross + in_cross_graphviz(
+        left,
+        right,
+        rank,
+        ranks,
+        order,
+        fixed_order,
+        edge_in,
+        edge_tail,
+        edge_tail_port_x,
+        edge_penalty,
+      )
+      cross = cross + out_cross_graphviz(
+        left,
+        right,
+        rank,
+        ranks,
+        order,
+        fixed_order,
+        edge_out,
+        edge_head,
+        edge_head_port_x,
+        edge_penalty,
+      )
+      right_idx = right_idx + 1
+    }
+    left_idx = left_idx + 1
+  }
+  cross
+}
+
+///|
+fn has_single_rank_real_incident_edges(
+  names : Array[String],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_penalty : Array[Int],
+) -> Bool {
+  let rank_nodes : Map[String, Bool] = Map::new()
+  for name in names {
+    rank_nodes[name] = true
+  }
+  for edge_idx in 0..<edge_tail.length() {
+    let penalty =
+      if edge_idx < edge_penalty.length() { edge_penalty[edge_idx] } else { 0 }
+    if penalty <= 0 {
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    let tail_in = rank_nodes.get(tail) is Some(_)
+    let head_in = rank_nodes.get(head) is Some(_)
+    if tail_in == head_in {
+      continue
+    }
+    let other = if tail_in { head } else { tail }
+    if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
+      return true
+    }
+  }
+  false
 }
 
 ///|
@@ -1165,6 +1225,7 @@ fn reorder_rank_groups(
   graphviz_flip? : Bool = false,
   coalesce_parallel_edges? : Bool = false,
   startpass? : Int = 0,
+  startpass_init_infinite? : Bool = false,
   remincross_mode? : Bool = false,
 ) -> Map[Int, Array[String]] {
   let startpass =
@@ -1358,7 +1419,9 @@ fn reorder_rank_groups(
   // Graphviz parity: initial passes should always allow acceptance of
   // improved orderings before final crossing baseline is established.
   let mut best_cross =
-    if graphviz_style && startpass <= 1 {
+    if graphviz_style && startpass > 1 && startpass_init_infinite {
+    2147483647
+  } else if graphviz_style && startpass <= 1 {
     2147483647
   } else if graphviz_style {
     count_crossings_graphviz(
@@ -1373,9 +1436,6 @@ fn reorder_rank_groups(
     )
   } else {
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
-  }
-  if graphviz_style && startpass > 1 && @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    println("remincross start crossings=\{best_cross}")
   }
   if !graphviz_style && rank_keys.length() > 1 {
     ordered = build_rank_groups_graphviz_components(
@@ -1438,6 +1498,242 @@ fn reorder_rank_groups(
     }
     best_ordered = clone_rank_groups(ordered)
     best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+  }
+  if graphviz_style && rank_keys.length() == 1 {
+    let max_iter = 24
+    let min_quit = 8
+    let convergence = 0.995
+    let rank = rank_keys[0]
+    let single_names = match ordered.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if !has_single_rank_real_incident_edges(
+      single_names,
+      edge_tail,
+      edge_head,
+      edge_penalty,
+    ) {
+      return ordered
+    }
+    let compute_single_cross = () => {
+      let names = match ordered.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      count_single_rank_crossings_graphviz(
+        rank,
+        names,
+        node_ranks,
+        fixed_order,
+        edge_in,
+        edge_out,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_penalty,
+      )
+    }
+    if startpass > 1 {
+      best_cross = compute_single_cross()
+      best_ordered = clone_rank_groups(ordered)
+    } else {
+      best_cross = 2147483647
+    }
+    let mut cur_cross = best_cross
+    let mut pass = startpass
+    while pass <= 2 {
+      let max_this_pass =
+        if pass <= 1 {
+        if max_iter < 4 { max_iter } else { 4 }
+      } else {
+        max_iter
+      }
+      if pass <= 1 {
+        ordered = build_rank_groups_graphviz_components(
+          rank_keys,
+          groups,
+          edge_tail,
+          edge_head,
+          node_ranks,
+          node_order,
+          cluster_keys,
+          cluster_skeleton,
+          pass,
+          flat_constraints,
+          flip=graphviz_flip,
+          graphviz_out_neighbors=graphviz_out_neighbors,
+          graphviz_in_neighbors=graphviz_in_neighbors,
+        )
+        let seed_cross = compute_single_cross()
+        if seed_cross > 0 {
+          let _ = transpose_rank_groups_graphviz(
+            rank_keys,
+            ordered,
+            node_ranks,
+            fixed_order=fixed_order,
+            edge_in,
+            edge_out,
+            edge_tail,
+            edge_head,
+            edge_tail_port_x,
+            edge_head_port_x,
+            edge_penalty,
+            cluster_keys,
+            cluster_skeleton,
+            flat_constraints,
+            false,
+            0,
+            remincross_mode=remincross_mode,
+          )
+        }
+        ordered = flat_reorder_rank_groups_graphviz(
+          rank_keys,
+          ordered,
+          node_ranks,
+          flat_constraints,
+          graphviz_flip,
+        )
+        order_positions = order_positions_from_groups(ordered)
+        merge_fixed_positions()
+        cur_cross = compute_single_cross()
+        if cur_cross <= best_cross {
+          best_cross = cur_cross
+          best_ordered = clone_rank_groups(ordered)
+        }
+      } else {
+        if cur_cross > best_cross {
+          for rank in rank_keys {
+            let names = match best_ordered.get(rank) {
+              Some(list) => list.copy()
+              None => []
+            }
+            ordered[rank] = names
+          }
+          order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
+        }
+        cur_cross = best_cross
+      }
+      let mut trying = 0
+      let mut iter = 0
+      while iter < max_this_pass {
+        if trying >= min_quit || cur_cross == 0 {
+          break
+        }
+        trying = trying + 1
+        let reverse = iter % 4 < 2
+        let names = match ordered.get(rank) {
+          Some(list) => list
+          None => []
+        }
+        if names.length() > 1 {
+          let desired =
+            if iter % 2 == 0 {
+              compute_desired_positions_graphviz(
+                names,
+                median_parents,
+                order_positions,
+              )
+            } else {
+              compute_desired_positions_graphviz(
+                names,
+                median_children,
+                order_positions,
+              )
+            }
+          let hasfixed = apply_flat_mvals_graphviz(
+            names,
+            desired,
+            edge_in,
+            edge_out,
+            flat_constraints,
+          )
+          ordered[rank] = reorder_by_medians(
+            names,
+            desired,
+            reverse,
+            hasfixed,
+            cluster_keys,
+            cluster_skeleton,
+            flat_constraints,
+            remincross_mode=remincross_mode,
+          )
+          order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
+        }
+        let _ = transpose_rank_groups_graphviz(
+          rank_keys,
+          ordered,
+          node_ranks,
+          fixed_order=fixed_order,
+          edge_in,
+          edge_out,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x,
+          edge_head_port_x,
+          edge_penalty,
+          cluster_keys,
+          cluster_skeleton,
+          flat_constraints,
+          !reverse,
+          0,
+          remincross_mode=remincross_mode,
+        )
+        order_positions = order_positions_from_groups(ordered)
+        merge_fixed_positions()
+        cur_cross = compute_single_cross()
+        if cur_cross <= best_cross {
+          let prev_best = best_cross
+          best_cross = cur_cross
+          best_ordered = clone_rank_groups(ordered)
+          if prev_best > 0 &&
+            cur_cross.to_double() < convergence * prev_best.to_double() {
+            trying = 0
+          }
+        }
+        iter = iter + 1
+      }
+      if cur_cross == 0 {
+        break
+      }
+      pass = pass + 1
+    }
+    if cur_cross > best_cross {
+      for rank in rank_keys {
+        let names = match best_ordered.get(rank) {
+          Some(list) => list.copy()
+          None => []
+        }
+        ordered[rank] = names
+      }
+      order_positions = order_positions_from_groups(ordered)
+      merge_fixed_positions()
+    }
+    if best_cross > 0 {
+      let _ = transpose_rank_groups_graphviz(
+        rank_keys,
+        ordered,
+        node_ranks,
+        fixed_order=fixed_order,
+        edge_in,
+        edge_out,
+        edge_tail,
+        edge_head,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_penalty,
+        cluster_keys,
+        cluster_skeleton,
+        flat_constraints,
+        false,
+        0,
+        remincross_mode=remincross_mode,
+      )
+    }
+    return ordered
   }
   if graphviz_style && rank_keys.length() > 1 {
     let max_iter = 24

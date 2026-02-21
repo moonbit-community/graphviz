@@ -1686,8 +1686,24 @@ fn build_constraint_graph(
                     }
                 }
                 let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
-                let minlen =
-                  trunc_int(Double::from_int(edge_minlen(edge)) * nodesep_pt + width)
+                let mut minlen_value =
+                  Double::from_int(edge_minlen(edge)) * nodesep_pt + width
+                let is_invis = match edge.get_attr("style") {
+                  Some(style) => style.to_lower().contains("invis")
+                  None => false
+                }
+                let has_ordering =
+                  match root_graph_for_node(edge.tail()).get_attr("ordering") {
+                  Some(value) => {
+                    let lower = value.to_lower()
+                    lower == "out" || lower == "in"
+                  }
+                  None => false
+                }
+                if is_invis && has_ordering {
+                  minlen_value = minlen_value + nodesep_pt
+                }
+                let minlen = trunc_int(minlen_value)
                 let weight = edge_weight(edge)
                 let flat_key = "\{left}|\{right}"
                 match rank_adj_constraints.get(flat_key) {
@@ -1751,7 +1767,7 @@ fn build_constraint_graph(
                 } else {
                   base_weight
                 }
-                let tail_port =
+                let mut tail_port =
                   if seg_tail == orig_tail {
                   edge.tail_port()
                 } else if seg_tail == orig_head {
@@ -1759,13 +1775,39 @@ fn build_constraint_graph(
                 } else {
                   None
                 }
-                let head_port =
+                let mut head_port =
                   if seg_head == orig_head {
                   edge.head_port()
                 } else if seg_head == orig_tail {
                   edge.tail_port()
                 } else {
                   None
+                }
+                if tail_rank == head_rank &&
+                  edge_mid_label_metrics(edge) is Some(_) &&
+                  !port_is_explicit(edge.tail_port()) &&
+                  !port_is_explicit(edge.head_port()) &&
+                  (match root_graph_for_node(edge.tail()).get_attr("ordering") {
+                    Some(value) => {
+                      let lower = value.to_lower()
+                      lower == "out" || lower == "in"
+                    }
+                    None => false
+                  }) &&
+                  seg_tail == orig_tail &&
+                  is_edge_vnode_name(seg_head) {
+                  let forward =
+                    match (order_in_rank.get(seg_tail), order_in_rank.get(seg_head)) {
+                      (Some(tail_order), Some(head_order)) => tail_order <= head_order
+                      _ => seg_tail <= seg_head
+                    }
+                  if forward {
+                    tail_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
+                    head_port = Some({ name: None, compass: Some(@cgraph.Compass::W) })
+                  } else {
+                    tail_port = Some({ name: None, compass: Some(@cgraph.Compass::W) })
+                    head_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
+                  }
                 }
                 add_segment(seg_tail, seg_head, weight, tail_port, head_port)
               }

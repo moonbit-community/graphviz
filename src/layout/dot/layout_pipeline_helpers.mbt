@@ -2817,8 +2817,9 @@ fn build_cluster_local_rank_groups_and_order(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder keeps only edges whose endpoints
-/// are both inside the expanded cluster graph.
+/// Graphviz parity: cluster-local reorder keeps internal edges and incoming
+/// crossing edges into the cluster; outgoing crossings are handled by root
+/// passes and should not perturb local rank order.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_internal_cluster_edges_for_local_bundle(
   order_edges : Array[@cgraph.Edge],
@@ -2829,6 +2830,7 @@ fn collect_internal_cluster_edges_for_local_bundle(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
+  include_external_incoming : Bool,
 ) -> (
   Array[@cgraph.Edge],
   Array[String],
@@ -2849,9 +2851,8 @@ fn collect_internal_cluster_edges_for_local_bundle(
     let tail = order_edge_tail[i]
     let head = order_edge_head[i]
     let tail_in = cluster_node_set.get(tail) is Some(_)
-    // Graphviz parity: ND_out/transpose for expanded-cluster nodes still sees
-    // their outgoing edges to out-of-cluster nodes.
-    if !tail_in {
+    let head_in = cluster_node_set.get(head) is Some(_)
+    if !tail_in && !(include_external_incoming && head_in) {
       continue
     }
     cluster_edges.push(order_edges[i])
@@ -2911,6 +2912,7 @@ fn build_cluster_local_edge_bundle(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
+  include_external_incoming : Bool,
   cluster_nodes : Array[String],
   fixed_ranks : Map[String, Int],
 ) -> (
@@ -2943,6 +2945,7 @@ fn build_cluster_local_edge_bundle(
       order_edge_tail_port_order,
       order_edge_head_port_order,
       cluster_node_set,
+      include_external_incoming,
     )
   let (parents, children, edge_order) =
     build_cluster_local_edge_index_and_order(
@@ -3176,6 +3179,7 @@ fn run_cluster_local_rank_reorder(
       // parallel edge segments by endpoint+port order and sums xpenalty.
       coalesce_parallel_edges=true,
       startpass=2,
+      startpass_init_infinite=false,
     )
   dot_trace_groups("cluster_local_mincross_output", ordered_cluster)
   (true, ordered_cluster)
@@ -3402,6 +3406,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
+  cluster_rank_keys : Array[Int],
   cluster_nodes : Array[String],
   fixed_ranks : Map[String, Int],
 ) -> (
@@ -3416,6 +3421,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Array[String]],
   Map[String, Int],
 ) {
+  let include_external_incoming = cluster_rank_keys.length() <= 2
   build_cluster_local_edge_bundle(
     order_edges,
     order_edge_tail,
@@ -3425,6 +3431,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
     order_edge_tail_port_order,
     order_edge_head_port_order,
     cluster_node_set,
+    include_external_incoming,
     cluster_nodes,
     fixed_ranks,
   )
@@ -3532,6 +3539,7 @@ priv struct ClusterLocalReorderRunInputsContext {
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
   cluster_node_set : Map[String, Bool]
+  cluster_rank_keys : Array[Int]
   cluster_nodes : Array[String]
   fixed_ranks : Map[String, Int]
   order_sizes : Map[String, NodeSize]
@@ -3590,6 +3598,7 @@ fn build_cluster_local_reorder_run_inputs(
       context.order_edge_tail_port_order,
       context.order_edge_head_port_order,
       context.cluster_node_set,
+      context.cluster_rank_keys,
       context.cluster_nodes,
       context.fixed_ranks,
     )
@@ -3706,6 +3715,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
+  cluster_rank_keys : Array[Int],
   cluster_nodes : Array[String],
   fixed_ranks : Map[String, Int],
   order_sizes : Map[String, NodeSize],
@@ -3721,6 +3731,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
     order_edge_tail_port_order,
     order_edge_head_port_order,
     cluster_node_set,
+    cluster_rank_keys,
     cluster_nodes,
     fixed_ranks,
     order_sizes,
@@ -3826,6 +3837,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
       order_edge_tail_port_order,
       order_edge_head_port_order,
       cluster_node_set,
+      cluster_rank_keys,
       cluster_nodes,
       fixed_ranks,
       order_sizes,
@@ -6895,6 +6907,7 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
     order_cluster_skeleton,
     flat_constraints,
     graphviz_flip=graphviz_flip,
+    coalesce_parallel_edges=true,
   )
   dot_trace_groups("order_root", ordered_root)
   ordered_root
@@ -8422,15 +8435,6 @@ fn build_remincross_vnode_order_keys(
   for name, key in intercluster_keys {
     remincross_cluster_keys[name] = key
   }
-  for name, _ in rem_base_order_index {
-    match remincross_cluster_keys.get(name) {
-      Some(value) =>
-        if value == "" {
-          remincross_cluster_keys[name] = "g"
-        }
-      None => remincross_cluster_keys[name] = "g"
-    }
-  }
   let intercluster_vnodes =
     collect_intercluster_trailing_vnodes(
       order_with_vnodes,
@@ -8455,6 +8459,15 @@ fn build_remincross_vnode_order_keys(
     edge_vnodes,
     vnode_ranks,
   )
+  let cluster_set : Map[String, Bool] = Map::new()
+  for _name, key in intercluster_keys {
+    if key != "" {
+      cluster_set[key] = true
+    }
+  }
+  if cluster_set.length() > 5 {
+    return keys
+  }
   apply_intercluster_vnode_order_key_floor(
     keys,
     intercluster_vnodes,
@@ -8584,12 +8597,7 @@ fn build_remincross_materialized_order_graph(
       rem_edge_creation,
       rem_flat_constraints,
     )
-  let rem_node_order =
-    build_order_node_order_from_nlist_and_groups(
-      rem_nlist_order,
-      rem_node_map,
-      rem_groups,
-    )
+  let rem_node_order = build_order_index(rem_groups)
   let (
     rem_edges_out,
     rem_edge_tail_out,
@@ -8869,17 +8877,10 @@ fn build_remincross_flat_constraints(
     }
     return rem_flat_constraints
   }
-  // Graphviz parity: keep relative order of real nodes that are
-  // internal to a cluster; allow nodes with intercluster edges to reorder.
-  for _rank, names in rem_groups {
-    apply_cluster_local_flat_constraints_for_remincross_rank(
-      rem_flat_constraints,
-      names,
-      real_nodes,
-      rem_cluster_keys,
-      intercluster_nodes,
-    )
-  }
+  ignore(rem_groups)
+  ignore(real_nodes)
+  ignore(rem_cluster_keys)
+  ignore(intercluster_nodes)
   rem_flat_constraints
 }
 
