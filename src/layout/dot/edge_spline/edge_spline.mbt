@@ -1942,6 +1942,117 @@ fn clip_spline_start_to_bbox(
 }
 
 ///|
+fn point_in_rect(point : @geom.Point, rect : @geom.Rect) -> Bool {
+  point.x >= rect.llx && point.x <= rect.urx &&
+  point.y >= rect.lly && point.y <= rect.ury
+}
+
+///|
+fn line_rect_intersection_from_inside(
+  inside : @geom.Point,
+  outside : @geom.Point,
+  rect : @geom.Rect,
+) -> @geom.Point {
+  let c_round =
+    (value : Double) =>
+      if value >= 0.0 {
+        (value + 0.5).floor()
+      } else {
+        (value - 0.5).ceil()
+      }
+  if outside.x < rect.llx {
+    let x = rect.llx
+    let y =
+      inside.y +
+      c_round(
+        (x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x),
+      )
+    if y >= rect.lly && y <= rect.ury {
+      return @geom.Point::{ x, y }
+    }
+  }
+  if outside.x > rect.urx {
+    let x = rect.urx
+    let y =
+      inside.y +
+      c_round(
+        (x - inside.x) * (inside.y - outside.y) / (inside.x - outside.x),
+      )
+    if y >= rect.lly && y <= rect.ury {
+      return @geom.Point::{ x, y }
+    }
+  }
+  if outside.y < rect.lly {
+    let y = rect.lly
+    let x =
+      inside.x +
+      c_round(
+        (y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y),
+      )
+    if x >= rect.llx && x <= rect.urx {
+      return @geom.Point::{ x, y }
+    }
+  }
+  if outside.y > rect.ury {
+    let y = rect.ury
+    let x =
+      inside.x +
+      c_round(
+        (y - inside.y) * (inside.x - outside.x) / (inside.y - outside.y),
+      )
+    if x >= rect.llx && x <= rect.urx {
+      return @geom.Point::{ x, y }
+    }
+  }
+  inside
+}
+
+///|
+fn adjust_tail_cluster_compound_segment(
+  points : Array[@geom.Point],
+  end_point : @geom.Point?,
+  include_tail : Bool,
+  include_head : Bool,
+  tail_cluster_bbox : @geom.Rect?,
+) -> Array[@geom.Point] {
+  if include_tail || !include_head || points.length() != 4 {
+    return points
+  }
+  let tail_rect = match tail_cluster_bbox {
+    Some(rect) => rect
+    None => return points
+  }
+  let ep = match end_point {
+    Some(point) => point
+    None => return points
+  }
+  let p0 = points[0]
+  if !point_in_rect(p0, tail_rect) || point_in_rect(ep, tail_rect) {
+    return points
+  }
+  let p3 = points[3]
+  let p =
+    if point_in_rect(p3, tail_rect) {
+      line_rect_intersection_from_inside(p3, ep, tail_rect)
+    } else {
+      p0
+    }
+  let c2 : @geom.Point = {
+    x: (p.x + ep.x) / 2.0,
+    y: (p.y + ep.y) / 2.0,
+  }
+  let c3 : @geom.Point = {
+    x: (c2.x + ep.x) / 2.0,
+    y: (c2.y + ep.y) / 2.0,
+  }
+  let c1 : @geom.Point = {
+    x: (c2.x + p.x) / 2.0,
+    y: (c2.y + p.y) / 2.0,
+  }
+  [p, c1, c2, c3]
+}
+
+///|
 fn clip_spline_to_nodes(
   edge : @cgraph.Edge,
   points : Array[@geom.Point],
@@ -3682,6 +3793,14 @@ pub fn edge_spline_for_polyline(
   } else {
     (trimmed, None, None)
   }
+  let points =
+    adjust_tail_cluster_compound_segment(
+      points,
+      end_point,
+      include_tail,
+      include_head,
+      tail_cluster_bbox,
+    )
   { start: start_point, end: end_point, points }
 }
 
@@ -3770,6 +3889,14 @@ pub fn edge_spline_for_points(
   } else {
     (trimmed, None, None)
   }
+  let clipped =
+    adjust_tail_cluster_compound_segment(
+      clipped,
+      end_point,
+      include_tail,
+      include_head,
+      tail_cluster_bbox,
+    )
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -3854,6 +3981,14 @@ pub fn edge_spline_for_bezier_points(
   } else {
     (trimmed, None, None)
   }
+  let clipped =
+    adjust_tail_cluster_compound_segment(
+      clipped,
+      end_point,
+      include_tail,
+      include_head,
+      tail_cluster_bbox,
+    )
   let mut has_dupes = false
   for i in 1..<clipped.length() {
     if clipped[i] == clipped[i - 1] {
@@ -4110,6 +4245,13 @@ pub fn edge_spline_for_line(
     } else {
       (points, None, None)
     }
-  points = clipped
+  points =
+    adjust_tail_cluster_compound_segment(
+      clipped,
+      end_point,
+      include_tail,
+      include_head,
+      tail_cluster_bbox,
+    )
   { start: start_point, end: end_point, points }
 }
