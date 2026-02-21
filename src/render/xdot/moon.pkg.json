@@ -5,6 +5,10 @@
       "alias": "layout_dot"
     },
     {
+      "path": "moonbit-community/graphviz/layout/dot/edge_spline",
+      "alias": "edge_spline"
+    },
+    {
       "path": "moonbit-community/graphviz/layout/html",
       "alias": "html_label"
     },

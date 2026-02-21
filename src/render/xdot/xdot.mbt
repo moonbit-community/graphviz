@@ -966,7 +966,7 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
     let p1 = af[(seg + 1) % 4]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
-    let d = Double::sqrt(dx * dx + dy * dy)
+    let d = @math.hypot(dx, dy)
     let candidate = d / 3.0
     if candidate < rbconst {
       rbconst = candidate
@@ -995,7 +995,7 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
     let p1 = af[(seg + 1) % 4]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
-    let d = Double::sqrt(dx * dx + dy * dy)
+    let d = @math.hypot(dx, dy)
     let t = rbconst / d
     b.push(point_at(p0, p1, 0.5 * t))
     b.push(point_at(p0, p1, t))
@@ -1021,7 +1021,10 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
-  { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }
+  {
+    x: @edge_spline.libm_fma(t, b.x - a.x, a.x),
+    y: @edge_spline.libm_fma(t, b.y - a.y, a.y),
+  }
 }
 
 ///|

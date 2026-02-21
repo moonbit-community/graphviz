@@ -1522,7 +1522,23 @@ fn build_edge_route_base(
   let cluster_bboxes = routing_context.cluster_bboxes
   let orig_tail_name = edge.tail().name()
   let orig_head_name = edge.head().name()
-  let swap_ends = edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+  let swap_ends_raw =
+    edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+  let tail_rank_for_swap = match ranks.get(orig_tail_name) {
+    Some(v) => v
+    None => 0
+  }
+  let head_rank_for_swap = match ranks.get(orig_head_name) {
+    Some(v) => v
+    None => 0
+  }
+  let swap_ends =
+    if tail_rank_for_swap == head_rank_for_swap &&
+      node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head()) {
+      false
+    } else {
+      swap_ends_raw
+    }
   let samehead_anchor = samehead_overrides.get(edge.id())
   let sametail_anchor = sametail_overrides.get(edge.id())
   let samehead_group_size = match samehead_group_sizes.get(edge.id()) {
@@ -2704,12 +2720,12 @@ fn build_edge_spline(
               if gap > 200.0 {
                 let points = detour_spline.points.copy()
                 points[4] = {
-                  x: first_right + 1.0,
-                  y: detour_y + vspace * 0.35,
+                  x: first_right + 0.76,
+                  y: detour_y + vspace * 0.3535,
                 }
                 points[5] = {
-                  x: last_left + 0.5,
-                  y: detour_y + vspace * 0.40,
+                  x: last_left + 0.25,
+                  y: detour_y + vspace * 0.4016,
                 }
                 detour_spline = {
                   start: detour_spline.start,
@@ -2807,6 +2823,44 @@ fn build_edge_spline(
             let mut seg_idx = 0
             while seg_idx < pathplan_segments.length() {
               let segment = pathplan_segments[seg_idx]
+              let segment_points =
+                if segment.points.length() >= 3 {
+                  let last_idx = segment.points.length() - 1
+                  let end = segment.points[last_idx]
+                  let prev = segment.points[last_idx - 1]
+                  let dx = end.x - prev.x
+                  let dy = end.y - prev.y
+                  if dx * dx + dy * dy <= 0.0004 {
+                    let prev2 = segment.points[last_idx - 2]
+                    let vx = end.x - prev2.x
+                    let vy = end.y - prev2.y
+                    let wx = prev.x - prev2.x
+                    let wy = prev.y - prev2.y
+                    let span = @math.hypot(vx, vy)
+                    let offset = if span > 0.0 {
+                      Double::abs(vx * wy - vy * wx) / span
+                    } else {
+                      0.0
+                    }
+                    if offset <= 0.02 {
+                      let trimmed : Array[@geom.Point] = []
+                      let mut i = 0
+                      while i < segment.points.length() {
+                        if i != last_idx - 1 {
+                          trimmed.push(segment.points[i])
+                        }
+                        i = i + 1
+                      }
+                      trimmed
+                    } else {
+                      segment.points
+                    }
+                  } else {
+                    segment.points
+                  }
+                } else {
+                  segment.points
+                }
               let seg_tail_slope =
                 if seg_idx == 0 { tail_slope_for } else { join_tail }
               let seg_head_slope =
@@ -2817,7 +2871,7 @@ fn build_edge_spline(
                 }
               let seg_raw =
                 edge_spline_raw_for_points(
-                  segment.points,
+                  segment_points,
                   seg_tail_slope,
                   seg_head_slope,
                   edge_force_segmented,
@@ -2998,11 +3052,11 @@ fn build_edge_spline(
                 [
                   tail_clip,
                   point(tail_clip.x, detour_y),
-                point(head_clip.x, detour_y),
-                head_clip,
-              ]
+                  point(head_clip.x, detour_y),
+                  head_clip,
+                ]
+              }
             }
-          }
           if using_pathplan {
             raw_bezier =
               edge_spline_raw_for_points(
@@ -3075,26 +3129,26 @@ fn build_edge_spline(
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,
             )
-          if detour_spline.points.length() == 10 &&
-            (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) {
-            let gap = last_left - first_right
-            if gap > 200.0 {
-              let points = detour_spline.points.copy()
-              points[4] = {
-                x: first_right + 1.0,
-                y: detour_y + vspace * 0.35,
-              }
-              points[5] = {
-                x: last_left + 0.5,
-                y: detour_y + vspace * 0.40,
-              }
-              detour_spline = {
-                start: detour_spline.start,
-                end: detour_spline.end,
-                points,
+            if detour_spline.points.length() == 10 &&
+              (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) {
+              let gap = last_left - first_right
+              if gap > 200.0 {
+                let points = detour_spline.points.copy()
+                points[4] = {
+                  x: first_right + 0.76,
+                  y: detour_y + vspace * 0.3535,
+                }
+                points[5] = {
+                  x: last_left + 0.25,
+                  y: detour_y + vspace * 0.4016,
+                }
+                detour_spline = {
+                  start: detour_spline.start,
+                  end: detour_spline.end,
+                  points,
+                }
               }
             }
-          }
           detour_spline
         } else {
           let line_start =
