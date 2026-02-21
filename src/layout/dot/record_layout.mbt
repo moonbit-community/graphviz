@@ -971,6 +971,13 @@ fn html_cell_content_size(
   match content {
     @html_label.HtmlCellContent::Text(text) =>
       label_text_dimensions(text, font_name, font_size_pt)
+    @html_label.HtmlCellContent::StyledText(spans) => {
+      let text = StringBuilder::new()
+      for span in spans {
+        text.write_string(span.text)
+      }
+      label_text_dimensions(text.to_string(), font_name, font_size_pt)
+    }
     @html_label.HtmlCellContent::Table(table) =>
       html_table_size(table, font_name, font_size_pt)
   }
@@ -1648,6 +1655,7 @@ fn builtin_polygon_shape_attrs(
   match shape {
     "triangle" => Some((3, 1, 0.0, 0.0, 0.0, false))
     "invtriangle" => Some((3, 1, 180.0, 0.0, 0.0, false))
+    "egg" => Some((120, 1, 0.0, -0.3, 0.0, false))
     "octagon" => Some((8, 1, 0.0, 0.0, 0.0, false))
     "doubleoctagon" => Some((8, 2, 0.0, 0.0, 0.0, false))
     "tripleoctagon" => Some((8, 3, 0.0, 0.0, 0.0, false))

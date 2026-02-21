@@ -15,9 +15,17 @@ pub(all) enum HtmlVAlign {
 } derive(Show, Eq)
 
 ///|
+/// Text span for HTML-like labels.
+pub(all) struct HtmlTextSpan {
+  text : String
+  color : String?
+} derive(Show, Eq)
+
+///|
 /// Cell content for HTML-like labels.
 pub(all) enum HtmlCellContent {
   Text(String)
+  StyledText(Array[HtmlTextSpan])
   Table(HtmlTable)
 } derive(Show, Eq)
 

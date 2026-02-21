@@ -820,6 +820,7 @@ fn clip_polygon_shape_params(
     "trapezium" => Some((4, 0.0, -0.4, 0.0))
     "invtrapezium" => Some((4, 180.0, -0.4, 0.0))
     "parallelogram" => Some((4, 0.0, 0.0, 0.6))
+    "egg" => Some((120, 0.0, -0.3, 0.0))
     "house" => Some((5, 0.0, -0.64, 0.0))
     "invhouse" => Some((5, 180.0, -0.64, 0.0))
     "pentagon" => Some((5, 0.0, 0.0, 0.0))

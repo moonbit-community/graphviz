@@ -193,6 +193,27 @@ test "html label br creates newline" {
 }
 
 ///|
+test "html label keeps font color spans" {
+  let label = "<<table><tr><td><font color=\"red\">hello</font><br/>world</td></tr></table>>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let cell = table.rows[0].cells[0]
+      match cell.content {
+        HtmlCellContent::StyledText(spans) => {
+          assert_eq(spans.length(), 2)
+          assert_eq(spans[0].text, "hello")
+          assert_eq(spans[0].color, Some("red"))
+          assert_eq(spans[1].text, "\nworld")
+          assert_eq(spans[1].color, None)
+        }
+        _ => fail("expected styled text cell")
+      }
+    }
+    _ => fail("expected table label")
+  }
+}
+
+///|
 test "html label parses nested table" {
   let label = "<<table><tr><td><table><tr><td>Inner</td></tr></table></td></tr></table>>"
   match parse_html_label(label) {

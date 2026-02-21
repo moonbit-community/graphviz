@@ -1,0 +1,35 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 79.5 123.75 79.5 123.75 0 ",
+		bb="0,0,123.75,79.5",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	abc	[_ldraw_="S 5 -solid c 7 -#000000 p 4 0 0 0 79.5 41.5 79.5 41.5 0 F 14 11 -Times-Roman c 7 -#ff0000 T 7.25 42.95 -1 27 5 -hello F 14 11 -Times-Roman \
+c 7 -#000000 T 5 26.45 -1 31.5 5 -world S 5 -solid c 7 -#000000 p 4 41.5 53 41.5 79.5 90.25 79.5 90.25 53 F 14 11 -Times-Roman c \
+7 -#000000 T 62.5 61.2 -1 6.75 1 -b S 5 -solid c 9 -#fffffe00 C 7 -#d3d3d3 P 4 90.25 0 90.25 79.5 107 79.5 107 0 S 5 -solid c 7 \
+-#000000 p 4 90.25 0 90.25 79.5 107 79.5 107 0 F 14 11 -Times-Roman c 7 -#000000 T 95.25 34.7 -1 6.75 1 -g S 5 -solid c 7 -#000000 \
+p 4 107 0 107 79.5 123.75 79.5 123.75 0 F 14 11 -Times-Roman c 7 -#000000 T 112 34.7 -1 6.75 1 -h S 5 -solid c 7 -#000000 p 4 41.5 \
+26.5 41.5 53 57.5 53 57.5 26.5 F 14 11 -Times-Roman c 7 -#000000 T 46.5 34.7 -1 6 1 -c S 5 -solid c 7 -#000000 p 4 57.5 26.5 57.5 \
+53 74.25 53 74.25 26.5 F 14 11 -Times-Roman c 7 -#000000 T 62.5 34.7 -1 6.75 1 -d S 5 -solid c 7 -#000000 p 4 74.25 26.5 74.25 53 \
+90.25 53 90.25 26.5 F 14 11 -Times-Roman c 7 -#000000 T 79.25 34.7 -1 6 1 -e S 5 -solid c 7 -#000000 p 4 41.5 0 41.5 26.5 90.25 \
+26.5 90.25 0 F 14 11 -Times-Roman c 7 -#000000 T 63.62 8.2 -1 4.5 1 -f ",
+		height=1.1042,
+		label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR><TD ROWSPAN="3"><FONT COLOR="red">hello</FONT><BR/>world</TD>
+      <TD COLSPAN="3">b</TD>
+      <TD ROWSPAN="3" BGCOLOR="lightgrey">g</TD>
+      <TD ROWSPAN="3">h</TD>
+  </TR>
+  <TR><TD>c</TD>
+      <TD PORT="here">d</TD>
+      <TD>e</TD>
+  </TR>
+  <TR><TD COLSPAN="3">f</TD>
+  </TR> 
+</TABLE>>,
+		margin=0,
+		pos="61.875,39.75",
+		shape=none,
+		width=1.7188];
+}

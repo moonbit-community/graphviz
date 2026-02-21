@@ -589,6 +589,7 @@ fn shape_kind(value : String?) -> String {
     "trapezium" => "trapezium"
     "invtrapezium" => "invtrapezium"
     "parallelogram" => "parallelogram"
+    "egg" => "egg"
     "house" => "house"
     "invhouse" => "invhouse"
     "rpromoter" => "rpromoter"
@@ -1556,6 +1557,7 @@ fn shape_polygon_paths(
       Some(polygon_params_with_defaults(node, 4, 180.0, -0.4, 0.0, 1))
     "parallelogram" =>
       Some(polygon_params_with_defaults(node, 4, 0.0, 0.0, 0.6, 1))
+    "egg" => Some(polygon_params_with_defaults(node, 120, 0.0, -0.3, 0.0, 1))
     "house" => Some(polygon_params_with_defaults(node, 5, 0.0, -0.64, 0.0, 1))
     "invhouse" =>
       Some(polygon_params_with_defaults(node, 5, 180.0, -0.64, 0.0, 1))
@@ -2192,6 +2194,74 @@ fn html_text_metrics(
 }
 
 ///|
+fn html_text_spans_plain_text(
+  spans : Array[@html_label.HtmlTextSpan],
+) -> String {
+  let text = StringBuilder::new()
+  for span in spans {
+    text.write_string(span.text)
+  }
+  text.to_string()
+}
+
+///|
+fn html_text_spans_by_line(
+  spans : Array[@html_label.HtmlTextSpan],
+) -> Array[Array[@html_label.HtmlTextSpan]] {
+  let append_span = fn(
+    line : Array[@html_label.HtmlTextSpan],
+    text : String,
+    color : String?,
+  ) -> Unit {
+    if text == "" {
+      return
+    }
+    if line.length() > 0 {
+      let last_index = line.length() - 1
+      let last = line[last_index]
+      if last.color == color {
+        line[last_index] = { text: last.text + text, color }
+        return
+      }
+    }
+    line.push({ text, color })
+  }
+  let lines : Array[Array[@html_label.HtmlTextSpan]] = [[]]
+  for span in spans {
+    let mut part = StringBuilder::new()
+    for ch in span.text {
+      if ch == '\n' {
+        let line = lines[lines.length() - 1]
+        append_span(line, part.to_string(), span.color)
+        part = StringBuilder::new()
+        lines.push([])
+      } else {
+        part.write_char(ch)
+      }
+    }
+    let line = lines[lines.length() - 1]
+    append_span(line, part.to_string(), span.color)
+  }
+  lines
+}
+
+///|
+fn html_text_width(
+  text : String,
+  name : String,
+  font_name : String,
+  font_size_pt : Double,
+) -> Double {
+  let (_lines, width_pt, _height_pt) = html_text_metrics(
+    text,
+    name,
+    font_name,
+    font_size_pt,
+  )
+  width_pt
+}
+
+///|
 fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
   name : String,
@@ -2200,6 +2270,13 @@ fn html_cell_content_size(
 ) -> (Double, Double) {
   match content {
     @html_label.HtmlCellContent::Text(text) => {
+      let (_lines, width_pt, height_pt) = html_text_metrics(
+        text, name, font_name, font_size_pt,
+      )
+      (width_pt, height_pt)
+    }
+    @html_label.HtmlCellContent::StyledText(spans) => {
+      let text = html_text_spans_plain_text(spans)
       let (_lines, width_pt, height_pt) = html_text_metrics(
         text, name, font_name, font_size_pt,
       )
@@ -2400,6 +2477,82 @@ fn html_text_ops(
 }
 
 ///|
+fn html_styled_text_ops(
+  ops : Array[@render.DrawOp],
+  spans : Array[@html_label.HtmlTextSpan],
+  align : @html_label.HtmlAlign,
+  valign : @html_label.HtmlVAlign,
+  rect : @geom.Rect,
+  name : String,
+  font : @render.Font,
+  default_color : String,
+) -> Unit {
+  let text = html_text_spans_plain_text(spans)
+  let (lines, _max_width, total_height) = html_text_metrics(
+    text,
+    name,
+    font.name,
+    font.size,
+  )
+  if lines.length() == 0 {
+    return ()
+  }
+  let runs_by_line = html_text_spans_by_line(spans)
+  let center_y = match valign {
+    @html_label.HtmlVAlign::Top => rect.ury - total_height / 2.0
+    @html_label.HtmlVAlign::Bottom => rect.lly + total_height / 2.0
+    @html_label.HtmlVAlign::Middle => (rect.lly + rect.ury) / 2.0
+  }
+  let mut baseline = center_y + total_height / 2.0 - font.size
+  for i, line in lines {
+    let line_x = match align {
+      @html_label.HtmlAlign::Left => rect.llx
+      @html_label.HtmlAlign::Right => rect.urx - line.width_pt
+      @html_label.HtmlAlign::Center =>
+        (rect.llx + rect.urx - line.width_pt) / 2.0
+    }
+    let line_y = baseline + line.yoffset_centerline
+    let runs = if i < runs_by_line.length() { runs_by_line[i] } else { [] }
+    if runs.length() > 0 {
+      let mut cursor_x = line_x
+      for run in runs {
+        if run.text == "" {
+          continue
+        }
+        let width_pt = html_text_width(run.text, name, font.name, font.size)
+        let color = match run.color {
+          Some(value) => @attrs.normalize_color(value)
+          None => default_color
+        }
+        ops.push(@render.DrawOp::Font(font~))
+        ops.push(@render.DrawOp::PenColor(color~))
+        ops.push(
+          @render.DrawOp::Text(
+            pos={ x: cursor_x, y: line_y },
+            align=@render.TextAlign::Left,
+            width=width_pt,
+            text=run.text,
+          ),
+        )
+        cursor_x = cursor_x + width_pt
+      }
+    } else if line.text != "" {
+      ops.push(@render.DrawOp::Font(font~))
+      ops.push(@render.DrawOp::PenColor(color=default_color))
+      ops.push(
+        @render.DrawOp::Text(
+          pos={ x: line_x, y: line_y },
+          align=@render.TextAlign::Left,
+          width=line.width_pt,
+          text=line.text,
+        ),
+      )
+    }
+    baseline = baseline - line.height_pt
+  }
+}
+
+///|
 fn html_table_ops(
   ops : Array[@render.DrawOp],
   table : @html_label.HtmlTable,
@@ -2455,6 +2608,19 @@ fn html_table_ops(
           stroke,
           line_width,
         )
+      @html_label.HtmlCellContent::StyledText(spans) =>
+        if spans.length() > 0 {
+          html_styled_text_ops(
+            ops,
+            spans,
+            cell_layout.cell.align,
+            cell_layout.cell.valign,
+            content_rect,
+            name,
+            font,
+            text_color,
+          )
+        }
       @html_label.HtmlCellContent::Text(text) =>
         if text != "" {
           html_text_ops(

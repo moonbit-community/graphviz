@@ -244,10 +244,10 @@ fn node_attr_rank(name : String) -> Int {
     "orientation" => 13
     "peripheries" => 14
     "pname" => 15
-    "pos" => 16
-    "rects" => 17
-    "regular" => 18
-    "margin" => 19
+    "margin" => 16
+    "pos" => 17
+    "rects" => 18
+    "regular" => 19
     "shape" => 20
     "sides" => 21
     "skew" => 22

@@ -1164,6 +1164,7 @@ fn builtin_polygon_clip_params(
     "hexagon" => (6, 0.0, 0.0, 0.0)
     "septagon" => (7, 0.0, 0.0, 0.0)
     "octagon" => (8, 0.0, 0.0, 0.0)
+    "egg" => (120, 0.0, -0.3, 0.0)
     _ => return None
   }
   let orientation = match node.get_attr("orientation") {
@@ -1224,7 +1225,8 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "pentagon"
     | "hexagon"
     | "septagon"
-    | "octagon" =>
+    | "octagon"
+    | "egg" =>
       match builtin_polygon_clip_params(node, shape) {
         Some((sides, orientation, distortion, skew)) =>
           ClipShape::Polygon(sides, orientation, distortion, skew)

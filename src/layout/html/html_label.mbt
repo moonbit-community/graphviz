@@ -337,18 +337,55 @@ fn html_parse_double(value : String?, fallback : Double) -> Double {
 }
 
 ///|
+fn append_html_text_span(
+  spans : Array[HtmlTextSpan],
+  text : String,
+  color : String?,
+) -> Unit {
+  if text == "" {
+    return
+  }
+  if spans.length() > 0 {
+    let last_index = spans.length() - 1
+    let last = spans[last_index]
+    if last.color == color {
+      spans[last_index] = { text: last.text + text, color }
+      return
+    }
+  }
+  spans.push({ text, color })
+}
+
+///|
 fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
-  let sb = StringBuilder::new()
+  let spans : Array[HtmlTextSpan] = []
+  let color_stack : Array[String?] = [None]
   let mut nested : HtmlTable? = None
   while parser.index < parser.chars.length() {
     html_parser_skip_whitespace(parser)
     match html_parser_peek(parser) {
       Some('<') =>
         match html_parse_tag(parser) {
-          Some(HtmlTag::End(name)) => if name == "td" || name == "th" { break }
+          Some(HtmlTag::End(name)) =>
+            if name == "td" || name == "th" {
+              break
+            } else if name == "font" && color_stack.length() > 1 {
+              let _ = color_stack.pop()
+            }
           Some(HtmlTag::Start(name, attrs, _self_closing)) =>
             if name == "br" {
-              sb.write_char('\n')
+              append_html_text_span(
+                spans,
+                "\n",
+                color_stack[color_stack.length() - 1],
+              )
+            } else if name == "font" {
+              let inherited = color_stack[color_stack.length() - 1]
+              let color = match attrs.get("color") {
+                Some(value) => if value == "" { inherited } else { Some(value) }
+                None => inherited
+              }
+              color_stack.push(color)
             } else if name == "table" {
               nested = Some(parse_html_table_from_attrs(parser, attrs))
             } else {
@@ -357,7 +394,11 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
           None => {
             let text = html_parse_text(parser)
             if !html_is_whitespace_only(text) {
-              sb.write_string(html_collapse_whitespace(text))
+              append_html_text_span(
+                spans,
+                html_collapse_whitespace(text),
+                color_stack[color_stack.length() - 1],
+              )
             }
           }
         }
@@ -365,14 +406,32 @@ fn parse_html_cell_content(parser : HtmlParser) -> HtmlCellContent {
       _ => {
         let text = html_parse_text(parser)
         if !html_is_whitespace_only(text) {
-          sb.write_string(html_collapse_whitespace(text))
+          append_html_text_span(
+            spans,
+            html_collapse_whitespace(text),
+            color_stack[color_stack.length() - 1],
+          )
         }
       }
     }
   }
   match nested {
     Some(table) => HtmlCellContent::Table(table)
-    None => HtmlCellContent::Text(sb.to_string())
+    None => {
+      let text_builder = StringBuilder::new()
+      let mut has_color = false
+      for span in spans {
+        text_builder.write_string(span.text)
+        if span.color is Some(_) {
+          has_color = true
+        }
+      }
+      if has_color {
+        HtmlCellContent::StyledText(spans)
+      } else {
+        HtmlCellContent::Text(text_builder.to_string())
+      }
+    }
   }
 }
 
