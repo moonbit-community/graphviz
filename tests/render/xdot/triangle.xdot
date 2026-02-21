@@ -1,0 +1,14 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 54 36 54 0 ",
+		bb="0,0,54,36",
+		xdotversion=1.7
+	];
+	node [label="",
+		shape=triangle,
+		style=filled
+	];
+	triangle	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 27 36 0 9 54 9 ",
+		height=0.5,
+		pos="27,18",
+		width=0.75];
+}
