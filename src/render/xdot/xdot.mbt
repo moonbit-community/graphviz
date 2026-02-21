@@ -2861,43 +2861,25 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
 }
 
 ///|
-fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
-  let node = layout.node
-  let style = @attrs.parse_style(node_attr(node, "style"))
-  if style_is_invisible(style) {
-    return []
-  }
-  let shape = shape_kind(node_attr(node, "shape"))
-  if shape == "point" {
-    return []
-  }
-  if shape == "record" {
-    return record_label_ops(layout)
-  }
-  let ops : Array[@render.DrawOp] = []
-  let text = label_text(node_attr(node, "label"), node.name())
-  match @html_label.parse_html_label(text) {
-    Some(_) => return html_label_ops(layout)
-    None => ()
-  }
+fn append_text_label_ops(
+  ops : Array[@render.DrawOp],
+  text : String,
+  pos : @geom.Point?,
+  font : @render.Font,
+  pen_color : String,
+) -> Unit {
   if text == "" {
-    return ops
+    return
   }
-  let font = @render.Font::{
-    name: @attrs.font_name(node_attr(node, "fontname")),
-    size: @attrs.font_size(node_attr(node, "fontsize")),
+  let pos = match pos {
+    Some(value) => value
+    None => return
   }
-  let color = node_color(node, "fontcolor", "black")
-  let pen_color = @attrs.normalize_color(color)
   let (lines, max_width, total_height) = label_metrics(
     text,
     font.name,
     font.size,
   )
-  let pos = match layout.label_pos {
-    Some(value) => value
-    None => layout.pos
-  }
   let mut baseline = pos.y + total_height / 2.0 - font.size
   for line in lines {
     let line_x = match line.align {
@@ -2920,6 +2902,51 @@ fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     }
     baseline = baseline - line.height_pt
   }
+}
+
+///|
+fn node_label_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
+  let node = layout.node
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  if style_is_invisible(style) {
+    return []
+  }
+  let font = @render.Font::{
+    name: @attrs.font_name(node_attr(node, "fontname")),
+    size: @attrs.font_size(node_attr(node, "fontsize")),
+  }
+  let color = node_color(node, "fontcolor", "black")
+  let pen_color = @attrs.normalize_color(color)
+  let xlabel = match node_attr(node, "xlabel") {
+    Some(value) => value
+    None => ""
+  }
+  let shape = shape_kind(node_attr(node, "shape"))
+  let ops : Array[@render.DrawOp] = []
+  if shape != "point" {
+    if shape == "record" {
+      for op in record_label_ops(layout) {
+        ops.push(op)
+      }
+    } else {
+      let text = label_text(node_attr(node, "label"), node.name())
+      match @html_label.parse_html_label(text) {
+        Some(_) => {
+          for op in html_label_ops(layout) {
+            ops.push(op)
+          }
+        }
+        None => {
+          let label_pos = match layout.label_pos {
+            Some(value) => Some(value)
+            None => Some(layout.pos)
+          }
+          append_text_label_ops(ops, text, label_pos, font, pen_color)
+        }
+      }
+    }
+  }
+  append_text_label_ops(ops, xlabel, layout.xlabel_pos, font, pen_color)
   ops
 }
 
@@ -3119,54 +3146,30 @@ fn edge_label_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   if style_is_invisible(style) {
     return ops
   }
-  let text = match edge.get_attr("label") {
-    Some(value) => value
-    None => ""
-  }
-  if text == "" {
-    return ops
-  }
   let font = @render.Font::{
     name: @attrs.font_name(edge.get_attr("fontname")),
     size: @attrs.font_size(edge.get_attr("fontsize")),
   }
   let color = @attrs.color(edge.get_attr("fontcolor"), default="black")
   let pen_color = @attrs.normalize_color(color)
-  let (lines, max_width, total_height) = label_metrics(
-    text,
-    font.name,
-    font.size,
-  )
-  let pos = match layout.label_pos {
+  let text = match edge.get_attr("label") {
     Some(value) => value
+    None => ""
+  }
+  let label_pos = match layout.label_pos {
+    Some(value) => Some(value)
     None =>
       match layout.splines.get(0) {
-        Some(spline) => spline_midpoint(spline)
-        None => { x: 0.0, y: 0.0 }
+        Some(spline) => Some(spline_midpoint(spline))
+        None => None
       }
   }
-  let mut baseline = pos.y + total_height / 2.0 - font.size
-  for line in lines {
-    let line_x = match line.align {
-      @render.TextAlign::Left => pos.x - max_width / 2.0
-      @render.TextAlign::Right => pos.x + max_width / 2.0
-      @render.TextAlign::Center => pos.x
-    }
-    let line_y = baseline + line.yoffset_centerline
-    if line.text != "" {
-      ops.push(@render.DrawOp::Font(font~))
-      ops.push(@render.DrawOp::PenColor(color=pen_color))
-      ops.push(
-        @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
-          align=line.align,
-          width=line.width_pt,
-          text=line.text,
-        ),
-      )
-    }
-    baseline = baseline - line.height_pt
+  append_text_label_ops(ops, text, label_pos, font, pen_color)
+  let xlabel = match edge.get_attr("xlabel") {
+    Some(value) => value
+    None => ""
   }
+  append_text_label_ops(ops, xlabel, layout.xlabel_pos, font, pen_color)
   ops
 }
 
@@ -3203,33 +3206,7 @@ fn edge_side_label_ops(
   let color =
     @attrs.color(edge.get_attr("labelfontcolor"), default=default_color)
   let pen_color = @attrs.normalize_color(color)
-  let (lines, max_width, total_height) = label_metrics(
-    text,
-    font.name,
-    font.size,
-  )
-  let mut baseline = pos.y + total_height / 2.0 - font.size
-  for line in lines {
-    let line_x = match line.align {
-      @render.TextAlign::Left => pos.x - max_width / 2.0
-      @render.TextAlign::Right => pos.x + max_width / 2.0
-      @render.TextAlign::Center => pos.x
-    }
-    let line_y = baseline + line.yoffset_centerline
-    if line.text != "" {
-      ops.push(@render.DrawOp::Font(font~))
-      ops.push(@render.DrawOp::PenColor(color=pen_color))
-      ops.push(
-        @render.DrawOp::Text(
-          pos={ x: line_x, y: line_y },
-          align=line.align,
-          width=line.width_pt,
-          text=line.text,
-        ),
-      )
-    }
-    baseline = baseline - line.height_pt
-  }
+  append_text_label_ops(ops, text, Some(pos), font, pen_color)
   ops
 }
 

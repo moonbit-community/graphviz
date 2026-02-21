@@ -2021,6 +2021,7 @@ fn build_cluster_skeleton_for_metadata(
 /// constraints for clustered metadata reorder paths.
 /// Do not change behavior without updating fixtures/tests.
 fn append_same_rank_flat_constraints_for_metadata(
+  edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
@@ -2028,6 +2029,10 @@ fn append_same_rank_flat_constraints_for_metadata(
 ) -> Unit {
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
+    if edge_idx < edges.length() && !edge_is_constraint(edges[edge_idx]) {
+      edge_idx = edge_idx + 1
+      continue
+    }
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     if tail != head {
@@ -2261,6 +2266,7 @@ fn build_flat_constraints_for_cluster_metadata(
     cluster_keys,
   )
   append_same_rank_flat_constraints_for_metadata(
+    edges,
     edge_tail,
     edge_head,
     ranks,
