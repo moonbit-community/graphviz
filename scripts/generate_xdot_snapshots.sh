@@ -9,6 +9,7 @@ fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 fixture_dir="${repo_root}/tests/render/xdot"
+manifest_path="${fixture_dir}/cases.txt"
 
 resolve_input_for_case() {
   local case_name="$1"
@@ -33,20 +34,27 @@ if [[ ! -d "${fixture_dir}" ]]; then
   exit 1
 fi
 
-fixtures=()
-while IFS= read -r fixture; do
-  fixtures+=("${fixture}")
-done < <(
-  find "${fixture_dir}" -maxdepth 1 -type f -name "*.xdot" -exec basename {} \; |
-    LC_ALL=C sort
-)
-if [[ ${#fixtures[@]} -eq 0 ]]; then
-  echo "no xdot fixtures found under ${fixture_dir}" >&2
+if [[ ! -f "${manifest_path}" ]]; then
+  echo "case manifest not found: ${manifest_path}" >&2
   exit 1
 fi
 
-for fixture in "${fixtures[@]}"; do
-  case_name="${fixture%.xdot}"
+case_names=()
+while IFS= read -r case_name; do
+  case_names+=("${case_name}")
+done < <(
+  sed -e 's/[[:space:]]*$//' \
+      -e '/^[[:space:]]*#/d' \
+      -e '/^[[:space:]]*$/d' \
+      "${manifest_path}"
+)
+if [[ ${#case_names[@]} -eq 0 ]]; then
+  echo "no xdot cases listed in ${manifest_path}" >&2
+  exit 1
+fi
+
+for case_name in "${case_names[@]}"; do
+  fixture="${case_name}.xdot"
   input_path="$(resolve_input_for_case "${case_name}")"
   output_path="${fixture_dir}/${fixture}"
   "${dot_bin}" -Txdot "${input_path}" -o "${output_path}"

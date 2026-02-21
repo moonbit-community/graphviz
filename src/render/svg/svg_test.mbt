@@ -692,6 +692,23 @@ fn snapshot_input_path(case_name : String) -> String raise {
 }
 
 ///|
+fn load_case_names(manifest_path : String) -> Array[String] raise {
+  let lines = @fs.read_file_to_string(manifest_path).split("\n")
+  let names : Array[String] = []
+  for raw in lines {
+    let line = raw.trim(chars=" \t\r").to_string()
+    if line == "" || line.has_prefix("#") {
+      continue
+    }
+    names.push(line)
+  }
+  if names.length() == 0 {
+    fail("empty snapshot case manifest: \{manifest_path}")
+  }
+  names
+}
+
+///|
 test "render_svg honors size attribute" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
@@ -718,30 +735,45 @@ test "render_svg honors size attribute" {
 ///|
 test "svg snapshot parity" {
   let out_dir = "target/render/svg"
+  let manifest_path = "tests/render/svg_snapshot/cases.txt"
   let fixture_dir = "tests/render/svg_snapshot"
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir(out_dir)
   let mismatches : Array[String] = []
-  let entries = @fs.read_dir(fixture_dir)
-  entries.sort_by_key(name => name)
-  let fixture_names : Array[String] = []
-  for entry in entries {
-    if entry.has_suffix(".svg") {
-      fixture_names.push(entry)
+  let case_names = load_case_names(manifest_path)
+  let seen : Map[String, Bool] = Map::new()
+  for case_name in case_names {
+    if seen.get(case_name) is Some(_) {
+      fail("duplicate snapshot case in manifest: \{case_name}")
+    }
+    seen[case_name] = true
+  }
+  let extras : Array[String] = []
+  for entry in @fs.read_dir(fixture_dir) {
+    if !entry.has_suffix(".svg") {
+      continue
+    }
+    let case_name = entry.unsafe_substring(start=0, end=entry.length() - 4)
+    if seen.get(case_name) is None {
+      extras.push("\{fixture_dir}/\{entry}")
     }
   }
-  if fixture_names.length() == 0 {
-    fail("no svg fixtures under \{fixture_dir}")
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
   }
-  for entry in fixture_names {
-    let case_name = entry.unsafe_substring(start=0, end=entry.length() - 4)
+  for case_name in case_names {
     let input_path = snapshot_input_path(case_name)
-    let fixture_path = "\{fixture_dir}/\{entry}"
+    let fixture_path = "\{fixture_dir}/\{case_name}.svg"
+    if !@fs.path_exists(fixture_path) {
+      fail("missing snapshot fixture: \{fixture_path}")
+    }
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
-    let out_path = "\{out_dir}/\{entry}"
+    let out_path = "\{out_dir}/\{case_name}.svg"
     @fs.write_string_to_file(out_path, svg)
     let fixture = @fs.read_file_to_string(fixture_path)
     if svg != fixture {

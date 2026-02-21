@@ -712,14 +712,45 @@ fn snapshot_input_path(case_name : String) -> String raise {
 }
 
 ///|
-fn snapshot_cases_from_fixtures(
+fn load_case_names(manifest_path : String) -> Array[String] raise {
+  let lines = @fs.read_file_to_string(manifest_path).split("\n")
+  let names : Array[String] = []
+  for raw in lines {
+    let line = raw.trim(chars=" \t\r").to_string()
+    if line == "" || line.has_prefix("#") {
+      continue
+    }
+    names.push(line)
+  }
+  if names.length() == 0 {
+    fail("empty snapshot case manifest: \{manifest_path}")
+  }
+  names
+}
+
+///|
+fn snapshot_cases_from_manifest(
+  manifest_path : String,
   fixture_dir : String,
   suffix : String,
 ) -> Array[(String, String)] raise {
-  let entries = @fs.read_dir(fixture_dir)
-  entries.sort_by_key(name => name)
+  let names = load_case_names(manifest_path)
+  let seen : Map[String, Bool] = Map::new()
   let cases : Array[(String, String)] = []
-  for entry in entries {
+  for case_name in names {
+    if seen.get(case_name) is Some(_) {
+      fail("duplicate snapshot case in manifest: \{case_name}")
+    }
+    seen[case_name] = true
+    let fixture_path = "\{fixture_dir}/\{case_name}\{suffix}"
+    if !@fs.path_exists(fixture_path) {
+      fail("missing snapshot fixture: \{fixture_path}")
+    }
+    let input_path = snapshot_input_path(case_name)
+    cases.push((input_path, fixture_path))
+  }
+  let extras : Array[String] = []
+  for entry in @fs.read_dir(fixture_dir) {
     if !entry.has_suffix(suffix) {
       continue
     }
@@ -727,8 +758,14 @@ fn snapshot_cases_from_fixtures(
       start=0,
       end=entry.length() - suffix.length(),
     )
-    let input_path = snapshot_input_path(case_name)
-    cases.push((input_path, "\{fixture_dir}/\{entry}"))
+    if seen.get(case_name) is None {
+      extras.push("\{fixture_dir}/\{entry}")
+    }
+  }
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
   }
   cases
 }
@@ -752,9 +789,10 @@ test "xdot snapshot parity" {
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir("target/render/xdot")
+  let manifest_path = "tests/render/xdot/cases.txt"
   let fixture_dir = "tests/render/xdot"
   let mismatches : Array[String] = []
-  let cases = snapshot_cases_from_fixtures(fixture_dir, ".xdot")
+  let cases = snapshot_cases_from_manifest(manifest_path, fixture_dir, ".xdot")
   if cases.length() == 0 {
     fail("no xdot fixtures under \{fixture_dir}")
   }
