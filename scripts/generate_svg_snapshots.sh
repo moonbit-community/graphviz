@@ -8,43 +8,44 @@ if ! command -v "${dot_bin}" >/dev/null 2>&1; then
 fi
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+fixture_dir="${repo_root}/tests/render/svg"
 
-pairs=(
-  "refs/graphviz/doc/dotguide/graph1.dot tests/render/svg/graph1.svg"
-  "refs/graphviz/graphs/directed/arrows.gv tests/render/svg/arrows.svg"
-  "refs/graphviz/graphs/directed/arr_none.gv tests/render/svg/arr_none.svg"
-  "refs/graphviz/graphs/directed/records.gv tests/render/svg/records.svg"
-  "refs/graphviz/graphs/directed/record2.gv tests/render/svg/record2.svg"
-  "refs/graphviz/graphs/directed/clust.gv tests/render/svg/clust.svg"
-  "refs/graphviz/graphs/directed/clust1.gv tests/render/svg/clust1.svg"
-  "refs/graphviz/graphs/directed/clust2.gv tests/render/svg/clust2.svg"
-  "refs/graphviz/graphs/directed/clust3.gv tests/render/svg/clust3.svg"
-  "refs/graphviz/graphs/directed/clust4.gv tests/render/svg/clust4.svg"
-  "refs/graphviz/graphs/directed/clust5.gv tests/render/svg/clust5.svg"
-  "refs/graphviz/graphs/directed/ctext.gv tests/render/svg/ctext.svg"
-  "refs/graphviz/graphs/directed/dfa.gv tests/render/svg/dfa.svg"
-  "refs/graphviz/graphs/directed/fig6.gv tests/render/svg/fig6.svg"
-  "refs/graphviz/graphs/directed/fsm.gv tests/render/svg/fsm.svg"
-  "refs/graphviz/graphs/directed/grammar.gv tests/render/svg/grammar.svg"
-  "refs/graphviz/graphs/directed/longflat.gv tests/render/svg/longflat.svg"
-  "refs/graphviz/graphs/directed/states.gv tests/render/svg/states.svg"
-  "refs/graphviz/graphs/directed/structs.gv tests/render/svg/structs.svg"
-  "refs/graphviz/graphs/directed/table.gv tests/render/svg/table.svg"
-  "refs/graphviz/graphs/directed/train11.gv tests/render/svg/train11.svg"
-  "refs/graphviz/graphs/directed/tree.gv tests/render/svg/tree.svg"
-  "refs/graphviz/graphs/directed/try.gv tests/render/svg/try.svg"
-  "tests/layout/dot/compound.dot tests/render/svg/compound.svg"
-  "tests/layout/dot/complex.dot tests/render/svg/complex.svg"
+resolve_input_for_case() {
+  local case_name="$1"
+  local candidates=(
+    "refs/graphviz/graphs/directed/${case_name}.gv"
+    "tests/layout/dot/${case_name}.dot"
+    "refs/graphviz/doc/dotguide/${case_name}.dot"
+  )
+  local rel
+  for rel in "${candidates[@]}"; do
+    if [[ -f "${repo_root}/${rel}" ]]; then
+      echo "${repo_root}/${rel}"
+      return 0
+    fi
+  done
+  echo "missing input for fixture case: ${case_name}" >&2
+  return 1
+}
+
+if [[ ! -d "${fixture_dir}" ]]; then
+  echo "fixture dir not found: ${fixture_dir}" >&2
+  exit 1
+fi
+
+mapfile -t fixtures < <(
+  find "${fixture_dir}" -maxdepth 1 -type f -name "*.svg" -exec basename {} \; |
+    LC_ALL=C sort
 )
+if [[ ${#fixtures[@]} -eq 0 ]]; then
+  echo "no svg fixtures found under ${fixture_dir}" >&2
+  exit 1
+fi
 
-for pair in "${pairs[@]}"; do
-  read -r input output <<<"${pair}"
-  input_path="${repo_root}/${input}"
-  output_path="${repo_root}/${output}"
-  if [[ ! -f "${input_path}" ]]; then
-    echo "missing input: ${input}" >&2
-    exit 1
-  fi
-  mkdir -p "$(dirname "${output_path}")"
+for fixture in "${fixtures[@]}"; do
+  case_name="${fixture%.svg}"
+  input_path="$(resolve_input_for_case "${case_name}")"
+  output_path="${fixture_dir}/${fixture}"
   "${dot_bin}" -Tsvg "${input_path}" -o "${output_path}"
+  echo "wrote ${output_path#${repo_root}/}"
 done

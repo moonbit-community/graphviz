@@ -6,7 +6,7 @@ Manual regeneration:
 - `bash scripts/generate_textspan_overrides.sh` (updates `src/layout/dot/font_metrics/textspan_overrides.generated.mbt` from `tests/fixtures/graphviz/textspan.jsonl`).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_dot_snapshots.sh` (refreshes `tests/layout/dot/*.gv.dot`; requires Graphviz build or `dot` on PATH).
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_xdot_snapshots.sh` (refreshes `tests/render/xdot/*.xdot`; requires Graphviz build or `dot` on PATH).
-- `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_svg_snapshots.sh` (refreshes `tests/render/svg/*.svg`; requires Graphviz build or `dot` on PATH).
+- `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_svg_snapshots.sh` (refreshes `tests/render/svg/*.svg` from fixture filenames; requires Graphviz build or `dot` on PATH).
 - `bash scripts/capture_graphviz_label_vnodes.sh` (updates `tests/fixtures/graphviz/label_vnode.jsonl`; requires Graphviz build).
 - `bash scripts/capture_graphviz_edge_label_pos.sh` (updates `tests/fixtures/graphviz/edge_label_pos.jsonl`; requires Graphviz build).
 - `bash scripts/capture_graphviz_port_label_pos.sh` (updates `tests/fixtures/graphviz/port_label_pos.jsonl`; requires Graphviz build).
