@@ -791,7 +791,15 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 
 ///|
 fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
-  @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
+  let style = @attrs.parse_style(edge.get_attr("style"))
+  let parsed = @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
+  if parsed > 0.0 && !is_default_linewidth(parsed) {
+    return parsed
+  }
+  match style_linewidth(style) {
+    Some(value) => if value > 0.0 { value } else { 1.0 }
+    None => 1.0
+  }
 }
 
 ///|

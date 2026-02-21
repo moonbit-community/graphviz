@@ -138,6 +138,21 @@ test "html label unescapes quotes" {
 }
 
 ///|
+test "html label parses wrappers with inner whitespace" {
+  let label = "<\n<table><tr><td>ok</td></tr></table>\n>"
+  match parse_html_label(label) {
+    Some(HtmlLabel::Table(table)) => {
+      let cell = table.rows[0].cells[0]
+      match cell.content {
+        HtmlCellContent::Text(text) => assert_eq(text, "ok")
+        _ => fail("expected text cell")
+      }
+    }
+    _ => fail("expected table label")
+  }
+}
+
+///|
 test "html label parses table cell" {
   let label = "<<table><tr><td port=\"p1\">Hello</td></tr></table>>"
   match parse_html_label(label) {

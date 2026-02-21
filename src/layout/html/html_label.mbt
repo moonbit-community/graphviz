@@ -38,7 +38,17 @@ fn table_border_pt(table : HtmlTable) -> Double {
 ///|
 pub fn is_html_label_text(label : String) -> Bool {
   let trimmed = label.trim(chars=" \n\r\t").to_string()
-  trimmed.length() >= 3 && trimmed.has_prefix("<<") && trimmed.has_suffix(">")
+  if trimmed.length() < 3 || !trimmed.has_prefix("<") || !trimmed.has_suffix(">") {
+    return false
+  }
+  let inner = trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  for ch in inner {
+    if ch.is_whitespace() {
+      continue
+    }
+    return ch == '<'
+  }
+  false
 }
 
 ///|

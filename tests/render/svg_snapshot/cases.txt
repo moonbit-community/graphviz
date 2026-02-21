@@ -33,6 +33,7 @@ fig6
 fsm
 grammar
 graph1
+graph2
 hashtable
 hexagon
 honda-tokoro

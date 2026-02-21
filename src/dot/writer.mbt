@@ -4,7 +4,17 @@ const MAX_OUTPUT_LINE : Int = 128
 ///|
 fn is_html_label_value(value : String) -> Bool {
   let trimmed = value.trim(chars=" \n\r\t").to_string()
-  trimmed.length() >= 3 && trimmed.has_prefix("<<") && trimmed.has_suffix(">")
+  if trimmed.length() < 3 || !trimmed.has_prefix("<") || !trimmed.has_suffix(">") {
+    return false
+  }
+  let inner = trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  for ch in inner {
+    if ch.is_whitespace() {
+      continue
+    }
+    return ch == '<'
+  }
+  false
 }
 
 ///|

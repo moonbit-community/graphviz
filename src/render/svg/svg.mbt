@@ -1013,7 +1013,11 @@ fn arrow_size(edge : @cgraph.Edge) -> Double {
 
 ///|
 fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
-  @attrs.parse_double(edge.get_attr("penwidth"), 1.0)
+  let style = @attrs.parse_style(edge_attr(edge, "style"))
+  match stroke_width_value(style, edge_attr(edge, "penwidth")) {
+    Some(value) => value
+    None => 1.0
+  }
 }
 
 fn arrow_primitives(
