@@ -1297,9 +1297,6 @@ fn finalize_layout_graph(
       rank_ht1,
       rank_ht2,
     )
-  // Graphviz parity: ratio=fill uses rec_bb result from set_aspect
-  // before edge/label bbox expansion in postprocess.
-  let ratio_bbox = base_bbox
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
   // Graphviz parity: rankdir=BT flips top/bottom cluster padding (ranks are inverted).
@@ -1331,6 +1328,9 @@ fn finalize_layout_graph(
       root_cluster_pad_top,
       root_cluster_pad_bottom,
     )
+  // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
+  // padding that is part of set_ycoords before final edge bbox expansion.
+  let ratio_bbox = layout_with_root_pad.bbox
   // Graphviz parity: edge splines update bbox after dot_compute_bb (dotsplines.c).
   let bbox =
     expand_bbox_with_edges(layout_with_root_pad.bbox, layout_with_root_pad.edges)
