@@ -682,6 +682,60 @@ fn ensure_dir(path : String) -> Unit raise {
 }
 
 ///|
+fn assert_snapshot_fixture_coverage(
+  cases : Array[(String, String)],
+  fixture_dir : String,
+  suffix : String,
+) -> Unit raise {
+  let expected_to_input : Map[String, String] = Map::new()
+  let duplicates : Array[String] = []
+  let missing : Array[String] = []
+  let extras : Array[String] = []
+  for pair in cases {
+    let (input_path, expected_path) = pair
+    let expected_name = snapshot_case_name(input_path) + suffix
+    if !expected_path.has_suffix(expected_name) {
+      fail(
+        "snapshot case name mismatch: input=\{input_path} expected=\{expected_path}",
+      )
+    }
+    match expected_to_input.get(expected_path) {
+      Some(_) => duplicates.push(expected_path)
+      None => expected_to_input[expected_path] = input_path
+    }
+  }
+  if duplicates.length() > 0 {
+    duplicates.sort_by_key(path => path)
+    let details = duplicates.join(", ")
+    fail("duplicate snapshot cases: \{details}")
+  }
+  for path, _ in expected_to_input {
+    if !@fs.path_exists(path) {
+      missing.push(path)
+    }
+  }
+  if missing.length() > 0 {
+    missing.sort_by_key(path => path)
+    let details = missing.join(", ")
+    fail("missing snapshot fixtures: \{details}")
+  }
+  for entry in @fs.read_dir(fixture_dir) {
+    if !entry.has_suffix(suffix) {
+      continue
+    }
+    let path = "\{fixture_dir}/\{entry}"
+    if expected_to_input.get(path) is None {
+      extras.push(path)
+    }
+  }
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
+  }
+}
+
+///|
 fn snapshot_case_name(input_path : String) -> String {
   let mut name = input_path
   for part in input_path.split("/") {
@@ -715,131 +769,133 @@ test "xdot snapshot parity" {
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir("target/render/xdot")
+  let fixture_dir = "tests/render/xdot"
   let mismatches : Array[String] = []
   let cases : Array[(String, String)] = [
-    ("refs/graphviz/doc/dotguide/graph1.dot", "tests/render/xdot/graph1.xdot"),
+    ("refs/graphviz/doc/dotguide/graph1.dot", "\{fixture_dir}/graph1.xdot"),
     (
-      "refs/graphviz/graphs/directed/arr_none.gv", "tests/render/xdot/arr_none.xdot",
+      "refs/graphviz/graphs/directed/arr_none.gv", "\{fixture_dir}/arr_none.xdot",
     ),
-    ("refs/graphviz/graphs/directed/arrows.gv", "tests/render/xdot/arrows.xdot"),
-    ("refs/graphviz/graphs/directed/clust.gv", "tests/render/xdot/clust.xdot"),
-    ("refs/graphviz/graphs/directed/clust1.gv", "tests/render/xdot/clust1.xdot"),
-    ("refs/graphviz/graphs/directed/clust2.gv", "tests/render/xdot/clust2.xdot"),
-    ("refs/graphviz/graphs/directed/clust3.gv", "tests/render/xdot/clust3.xdot"),
-    ("refs/graphviz/graphs/directed/clust4.gv", "tests/render/xdot/clust4.xdot"),
-    ("refs/graphviz/graphs/directed/clust5.gv", "tests/render/xdot/clust5.xdot"),
+    ("refs/graphviz/graphs/directed/arrows.gv", "\{fixture_dir}/arrows.xdot"),
+    ("refs/graphviz/graphs/directed/clust.gv", "\{fixture_dir}/clust.xdot"),
+    ("refs/graphviz/graphs/directed/clust1.gv", "\{fixture_dir}/clust1.xdot"),
+    ("refs/graphviz/graphs/directed/clust2.gv", "\{fixture_dir}/clust2.xdot"),
+    ("refs/graphviz/graphs/directed/clust3.gv", "\{fixture_dir}/clust3.xdot"),
+    ("refs/graphviz/graphs/directed/clust4.gv", "\{fixture_dir}/clust4.xdot"),
+    ("refs/graphviz/graphs/directed/clust5.gv", "\{fixture_dir}/clust5.xdot"),
     (
-      "refs/graphviz/graphs/directed/records.gv", "tests/render/xdot/records.xdot",
+      "refs/graphviz/graphs/directed/records.gv", "\{fixture_dir}/records.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/record2.gv", "tests/render/xdot/record2.xdot",
+      "refs/graphviz/graphs/directed/record2.gv", "\{fixture_dir}/record2.xdot",
     ),
-    ("refs/graphviz/graphs/directed/ctext.gv", "tests/render/xdot/ctext.xdot"),
-    ("refs/graphviz/graphs/directed/crazy.gv", "tests/render/xdot/crazy.xdot"),
-    ("refs/graphviz/graphs/directed/dfa.gv", "tests/render/xdot/dfa.xdot"),
-    ("refs/graphviz/graphs/directed/fig6.gv", "tests/render/xdot/fig6.xdot"),
-    ("refs/graphviz/graphs/directed/fsm.gv", "tests/render/xdot/fsm.xdot"),
+    ("refs/graphviz/graphs/directed/ctext.gv", "\{fixture_dir}/ctext.xdot"),
+    ("refs/graphviz/graphs/directed/crazy.gv", "\{fixture_dir}/crazy.xdot"),
+    ("refs/graphviz/graphs/directed/dfa.gv", "\{fixture_dir}/dfa.xdot"),
+    ("refs/graphviz/graphs/directed/fig6.gv", "\{fixture_dir}/fig6.xdot"),
+    ("refs/graphviz/graphs/directed/fsm.gv", "\{fixture_dir}/fsm.xdot"),
     (
-      "refs/graphviz/graphs/directed/longflat.gv", "tests/render/xdot/longflat.xdot",
+      "refs/graphviz/graphs/directed/longflat.gv", "\{fixture_dir}/longflat.xdot",
     ),
-    ("refs/graphviz/graphs/directed/states.gv", "tests/render/xdot/states.xdot"),
+    ("refs/graphviz/graphs/directed/states.gv", "\{fixture_dir}/states.xdot"),
     (
-      "refs/graphviz/graphs/directed/structs.gv", "tests/render/xdot/structs.xdot",
+      "refs/graphviz/graphs/directed/structs.gv", "\{fixture_dir}/structs.xdot",
     ),
-    ("tests/layout/dot/compound.dot", "tests/render/xdot/compound.xdot"),
-    ("tests/layout/dot/complex.dot", "tests/render/xdot/complex.xdot"),
-    ("refs/graphviz/graphs/directed/table.gv", "tests/render/xdot/table.xdot"),
+    ("tests/layout/dot/compound.dot", "\{fixture_dir}/compound.xdot"),
+    ("tests/layout/dot/complex.dot", "\{fixture_dir}/complex.xdot"),
+    ("refs/graphviz/graphs/directed/table.gv", "\{fixture_dir}/table.xdot"),
     (
-      "refs/graphviz/graphs/directed/train11.gv", "tests/render/xdot/train11.xdot",
+      "refs/graphviz/graphs/directed/train11.gv", "\{fixture_dir}/train11.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/trapeziumlr.gv",
-      "tests/render/xdot/trapeziumlr.xdot",
+      "\{fixture_dir}/trapeziumlr.xdot",
     ),
-    ("refs/graphviz/graphs/directed/tree.gv", "tests/render/xdot/tree.xdot"),
-    ("refs/graphviz/graphs/directed/try.gv", "tests/render/xdot/try.xdot"),
+    ("refs/graphviz/graphs/directed/tree.gv", "\{fixture_dir}/tree.xdot"),
+    ("refs/graphviz/graphs/directed/try.gv", "\{fixture_dir}/try.xdot"),
     (
-      "refs/graphviz/graphs/directed/grammar.gv", "tests/render/xdot/grammar.xdot",
+      "refs/graphviz/graphs/directed/grammar.gv", "\{fixture_dir}/grammar.xdot",
     ),
-    ("refs/graphviz/graphs/directed/alf.gv", "tests/render/xdot/alf.xdot"),
+    ("refs/graphviz/graphs/directed/alf.gv", "\{fixture_dir}/alf.xdot"),
     (
-      "refs/graphviz/graphs/directed/abstract.gv", "tests/render/xdot/abstract.xdot",
+      "refs/graphviz/graphs/directed/abstract.gv", "\{fixture_dir}/abstract.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/biological.gv",
-      "tests/render/xdot/biological.xdot",
+      "\{fixture_dir}/biological.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/switch.gv", "tests/render/xdot/switch.xdot",
+      "refs/graphviz/graphs/directed/switch.gv", "\{fixture_dir}/switch.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/pmpipe.gv", "tests/render/xdot/pmpipe.xdot",
+      "refs/graphviz/graphs/directed/pmpipe.gv", "\{fixture_dir}/pmpipe.xdot",
     ),
-    ("refs/graphviz/graphs/directed/pgram.gv", "tests/render/xdot/pgram.xdot"),
+    ("refs/graphviz/graphs/directed/pgram.gv", "\{fixture_dir}/pgram.xdot"),
     (
       "refs/graphviz/graphs/directed/polypoly.gv",
-      "tests/render/xdot/polypoly.xdot",
+      "\{fixture_dir}/polypoly.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/pm2way.gv", "tests/render/xdot/pm2way.xdot",
+      "refs/graphviz/graphs/directed/pm2way.gv", "\{fixture_dir}/pm2way.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/viewfile.gv", "tests/render/xdot/viewfile.xdot",
+      "refs/graphviz/graphs/directed/viewfile.gv", "\{fixture_dir}/viewfile.xdot",
     ),
     (
-      "refs/graphviz/graphs/directed/triedds.gv", "tests/render/xdot/triedds.xdot",
+      "refs/graphviz/graphs/directed/triedds.gv", "\{fixture_dir}/triedds.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/hashtable.gv",
-      "tests/render/xdot/hashtable.xdot",
+      "\{fixture_dir}/hashtable.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/oldarrows.gv",
-      "tests/render/xdot/oldarrows.xdot",
+      "\{fixture_dir}/oldarrows.xdot",
     ),
-    ("refs/graphviz/graphs/directed/unix.gv", "tests/render/xdot/unix.xdot"),
-    ("refs/graphviz/graphs/directed/world.gv", "tests/render/xdot/world.xdot"),
+    ("refs/graphviz/graphs/directed/unix.gv", "\{fixture_dir}/unix.xdot"),
+    ("refs/graphviz/graphs/directed/world.gv", "\{fixture_dir}/world.xdot"),
     (
-      "refs/graphviz/graphs/directed/japanese.gv", "tests/render/xdot/japanese.xdot",
+      "refs/graphviz/graphs/directed/japanese.gv", "\{fixture_dir}/japanese.xdot",
     ),
-    ("refs/graphviz/graphs/directed/Latin1.gv", "tests/render/xdot/Latin1.xdot"),
+    ("refs/graphviz/graphs/directed/Latin1.gv", "\{fixture_dir}/Latin1.xdot"),
     (
-      "refs/graphviz/graphs/directed/russian.gv", "tests/render/xdot/russian.xdot",
+      "refs/graphviz/graphs/directed/russian.gv", "\{fixture_dir}/russian.xdot",
     ),
-    ("refs/graphviz/graphs/directed/KW91.gv", "tests/render/xdot/KW91.xdot"),
-    ("refs/graphviz/graphs/directed/NaN.gv", "tests/render/xdot/NaN.xdot"),
+    ("refs/graphviz/graphs/directed/KW91.gv", "\{fixture_dir}/KW91.xdot"),
+    ("refs/graphviz/graphs/directed/NaN.gv", "\{fixture_dir}/NaN.xdot"),
     (
       "refs/graphviz/graphs/directed/awilliams.gv",
-      "tests/render/xdot/awilliams.xdot",
+      "\{fixture_dir}/awilliams.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/honda-tokoro.gv",
-      "tests/render/xdot/honda-tokoro.xdot",
+      "\{fixture_dir}/honda-tokoro.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/jcctree.gv",
-      "tests/render/xdot/jcctree.xdot",
+      "\{fixture_dir}/jcctree.xdot",
     ),
-    ("refs/graphviz/graphs/directed/jsort.gv", "tests/render/xdot/jsort.xdot"),
+    ("refs/graphviz/graphs/directed/jsort.gv", "\{fixture_dir}/jsort.xdot"),
     (
       "refs/graphviz/graphs/directed/ldbxtried.gv",
-      "tests/render/xdot/ldbxtried.xdot",
+      "\{fixture_dir}/ldbxtried.xdot",
     ),
-    ("refs/graphviz/graphs/directed/mike.gv", "tests/render/xdot/mike.xdot"),
-    ("refs/graphviz/graphs/directed/nhg.gv", "tests/render/xdot/nhg.xdot"),
+    ("refs/graphviz/graphs/directed/mike.gv", "\{fixture_dir}/mike.xdot"),
+    ("refs/graphviz/graphs/directed/nhg.gv", "\{fixture_dir}/nhg.xdot"),
     (
       "refs/graphviz/graphs/directed/proc3d.gv",
-      "tests/render/xdot/proc3d.xdot",
+      "\{fixture_dir}/proc3d.xdot",
     ),
     (
       "refs/graphviz/graphs/directed/psfonttest.gv",
-      "tests/render/xdot/psfonttest.xdot",
+      "\{fixture_dir}/psfonttest.xdot",
     ),
-    ("refs/graphviz/graphs/directed/rowe.gv", "tests/render/xdot/rowe.xdot"),
-    ("refs/graphviz/graphs/directed/sdh.gv", "tests/render/xdot/sdh.xdot"),
-    ("refs/graphviz/graphs/directed/shells.gv", "tests/render/xdot/shells.xdot"),
-    ("refs/graphviz/graphs/directed/unix2.gv", "tests/render/xdot/unix2.xdot"),
+    ("refs/graphviz/graphs/directed/rowe.gv", "\{fixture_dir}/rowe.xdot"),
+    ("refs/graphviz/graphs/directed/sdh.gv", "\{fixture_dir}/sdh.xdot"),
+    ("refs/graphviz/graphs/directed/shells.gv", "\{fixture_dir}/shells.xdot"),
+    ("refs/graphviz/graphs/directed/unix2.gv", "\{fixture_dir}/unix2.xdot"),
   ]
+  assert_snapshot_fixture_coverage(cases, fixture_dir, ".xdot")
   for pair in cases {
     let (input_path, expected_path) = pair
     if !snapshot_matches(input_path, expected_path) {

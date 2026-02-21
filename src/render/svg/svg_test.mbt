@@ -693,6 +693,55 @@ fn snapshot_case_name(input_path : String) -> String {
 }
 
 ///|
+fn assert_snapshot_fixture_coverage(
+  cases : Array[String],
+  fixture_dir : String,
+  suffix : String,
+) -> Unit raise {
+  let expected_to_input : Map[String, String] = Map::new()
+  let duplicates : Array[String] = []
+  let missing : Array[String] = []
+  let extras : Array[String] = []
+  for input_path in cases {
+    let expected_path =
+      "\{fixture_dir}/\{snapshot_case_name(input_path)}\{suffix}"
+    match expected_to_input.get(expected_path) {
+      Some(_) => duplicates.push(expected_path)
+      None => expected_to_input[expected_path] = input_path
+    }
+  }
+  if duplicates.length() > 0 {
+    duplicates.sort_by_key(path => path)
+    let details = duplicates.join(", ")
+    fail("duplicate snapshot cases: \{details}")
+  }
+  for path, _ in expected_to_input {
+    if !@fs.path_exists(path) {
+      missing.push(path)
+    }
+  }
+  if missing.length() > 0 {
+    missing.sort_by_key(path => path)
+    let details = missing.join(", ")
+    fail("missing snapshot fixtures: \{details}")
+  }
+  for entry in @fs.read_dir(fixture_dir) {
+    if !entry.has_suffix(suffix) {
+      continue
+    }
+    let path = "\{fixture_dir}/\{entry}"
+    if expected_to_input.get(path) is None {
+      extras.push(path)
+    }
+  }
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
+  }
+}
+
+///|
 test "render_svg honors size attribute" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
@@ -787,12 +836,10 @@ test "svg snapshot parity" {
     "refs/graphviz/graphs/directed/sdh.gv",
     "refs/graphviz/graphs/directed/unix2.gv",
   ]
+  assert_snapshot_fixture_coverage(cases, fixture_dir, ".svg")
   for input_path in cases {
     let name = snapshot_case_name(input_path)
     let fixture_path = "\{fixture_dir}/\{name}.svg"
-    if !@fs.path_exists(fixture_path) {
-      fail("missing svg fixture: \{fixture_path}")
-    }
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
