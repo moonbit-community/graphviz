@@ -3835,6 +3835,32 @@ fn write_svg_edge_group(
     }
     None => ()
   }
+  let xlabel_text = match edge_attr(edge, "xlabel") {
+    Some(value) => resolve_label(value, "")
+    None => ""
+  }
+  match edge_layout.xlabel_pos {
+    Some(pos) => {
+      let font = @attrs.font_name(edge_attr(edge, "fontname"))
+      let size = @attrs.font_size(edge_attr(edge, "fontsize"))
+      let font_color =
+        svg_color(edge_color(edge, "fontcolor", "black"))
+      if xlabel_text != "" {
+        write_label_lines(
+          sb,
+          xlabel_text,
+          font,
+          size,
+          font_color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
+      }
+    }
+    None => ()
+  }
   let head_label_text = match edge_attr(edge, "headlabel") {
     Some(value) => resolve_label(value, "")
     None => ""
@@ -4227,6 +4253,27 @@ fn write_svg_node_group(
           pretty,
         )
       }
+  }
+  let xlabel = match node_attr(node, "xlabel") {
+    Some(value) => resolve_label(value, "")
+    None => ""
+  }
+  if xlabel != "" {
+    match node_layout.xlabel_pos {
+      Some(pos) =>
+        write_label_lines(
+          sb,
+          xlabel,
+          font,
+          size,
+          color,
+          pos,
+          bbox,
+          "",
+          pretty,
+        )
+      None => ()
+    }
   }
   write_line(sb, "</g>", "", pretty)
 }
