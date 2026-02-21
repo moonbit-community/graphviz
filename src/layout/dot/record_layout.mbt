@@ -1894,7 +1894,15 @@ fn node_size(
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
   if shape == "point" || shape == "dot" {
-    return node_size_from_points(base_width_pt, base_height_pt)
+    let point_size_in = match node.get_attr("width") {
+      Some(value) => parse_double(value, fallback_width)
+      None =>
+        match node.get_attr("height") {
+          Some(value) => parse_double(value, fallback_height)
+          None => fallback_width
+        }
+    }
+    return node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
   }
   let label = label_text(node)
   if @html_label.is_html_label_text(label) {

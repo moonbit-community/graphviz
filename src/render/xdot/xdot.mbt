@@ -2573,6 +2573,18 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     return record_draw_ops(layout)
   }
   if shape == "plaintext" {
+    if style.filled {
+      let fill = node_fill_color(node, "lightgrey")
+      let rect = node_rect(layout)
+      ops.push(@render.DrawOp::PenColor(color="#fffffe00"))
+      ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
+      ops.push(
+        @render.DrawOp::Polygon(
+          filled=true,
+          points=rect_points(rect),
+        ),
+      )
+    }
     return ops
   }
   push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
