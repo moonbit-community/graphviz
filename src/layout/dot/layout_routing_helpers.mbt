@@ -1888,7 +1888,7 @@ fn build_edge_route_base(
         arrow_length_for_edge(edge, include_tail, include_head, None)
       let base = if tail_len > head_len { tail_len } else { head_len }
       let span = point_dist(tail_clip, head_clip)
-      let max_len = span * 0.25
+      let max_len = if span < 12.0 { span * 0.25 } else { span }
       if max_len > 0.0 && max_len < base {
         Some(max_len)
       } else {

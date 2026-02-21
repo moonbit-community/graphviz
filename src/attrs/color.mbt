@@ -131,6 +131,7 @@ pub fn normalize_color(value : String) -> String {
     "green" => "#00ff00"
     "blue" => "#0000ff"
     "yellow" => "#ffff00"
+    "gold" => "#ffd700"
     "orange" => "#ffa500"
     "cyan" => "#00ffff"
     "magenta" => "#ff00ff"
@@ -148,6 +149,7 @@ pub fn normalize_color(value : String) -> String {
     "darkolivegreen3" => "#a2cd5a"
     "chocolate" => "#d2691e"
     "turquoise3" => "#00c5cd"
+    "steelblue" => "#4682b4"
     "steelblue3" => "#4f94cd"
     "navy" => "#000080"
     "darkseagreen4" => "#698b69"
@@ -155,6 +157,7 @@ pub fn normalize_color(value : String) -> String {
     "coral3" => "#cd5b45"
     "blanchedalmond" => "#ffebcd"
     "lightskyblue1" => "#b0e2ff"
+    "aquamarine" => "#7fffd4"
     "aquamarine2" => "#76eec6"
     "lemonchiffon" => "#fffacd"
     "darkorange1" => "#ff7f00"
@@ -183,6 +186,7 @@ pub fn normalize_color(value : String) -> String {
     "lightblue2" => "#b2dfee"
     "indigo" => "#4b0082"
     "indianred" => "#cd5c5c"
+    "limegreen" => "#32cd32"
     _ =>
       match normalize_hsv_color(lower) {
         Some(hex) => hex

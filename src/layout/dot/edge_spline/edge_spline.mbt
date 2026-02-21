@@ -2063,6 +2063,11 @@ fn adjust_tail_cluster_compound_segment(
     return points
   }
   let p3 = points[3]
+  // Keep longer compound exits unchanged to match Graphviz's bezier control
+  // points; only retune very short exits that collapse near the tail cluster.
+  if point_dist(p0, p3) > 7.0 {
+    return points
+  }
   let p =
     if point_in_rect(p3, tail_rect) {
       line_rect_intersection_from_inside(p3, ep, tail_rect)
