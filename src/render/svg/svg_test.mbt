@@ -709,6 +709,58 @@ fn load_case_names(manifest_path : String) -> Array[String] raise {
 }
 
 ///|
+fn validate_snapshot_manifest(
+  manifest_path : String,
+  fixture_dir : String,
+  suffix : String,
+) -> Array[String] raise {
+  let case_names = load_case_names(manifest_path)
+  let seen : Map[String, Bool] = Map::new()
+  for case_name in case_names {
+    if seen.get(case_name) is Some(_) {
+      fail("duplicate snapshot case in manifest: \{case_name}")
+    }
+    seen[case_name] = true
+  }
+  let extras : Array[String] = []
+  for entry in @fs.read_dir(fixture_dir) {
+    if !entry.has_suffix(suffix) {
+      continue
+    }
+    let case_name = entry.unsafe_substring(
+      start=0,
+      end=entry.length() - suffix.length(),
+    )
+    if seen.get(case_name) is None {
+      extras.push("\{fixture_dir}/\{entry}")
+    }
+  }
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
+  }
+  for case_name in case_names {
+    let fixture_path = "\{fixture_dir}/\{case_name}\{suffix}"
+    if !@fs.path_exists(fixture_path) {
+      fail("missing snapshot fixture: \{fixture_path}")
+    }
+    ignore(snapshot_input_path(case_name))
+  }
+  case_names
+}
+
+///|
+test "svg baseline fixture manifest coverage" {
+  let case_names = validate_snapshot_manifest(
+    "tests/render/svg/cases.txt",
+    "tests/render/svg",
+    ".svg",
+  )
+  ignore(case_names)
+}
+
+///|
 test "render_svg honors size attribute" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/fig6.gv")
   let layout = @layout_dot.layout_dot(graph)
@@ -741,35 +793,10 @@ test "svg snapshot parity" {
   ensure_dir("target/render")
   ensure_dir(out_dir)
   let mismatches : Array[String] = []
-  let case_names = load_case_names(manifest_path)
-  let seen : Map[String, Bool] = Map::new()
-  for case_name in case_names {
-    if seen.get(case_name) is Some(_) {
-      fail("duplicate snapshot case in manifest: \{case_name}")
-    }
-    seen[case_name] = true
-  }
-  let extras : Array[String] = []
-  for entry in @fs.read_dir(fixture_dir) {
-    if !entry.has_suffix(".svg") {
-      continue
-    }
-    let case_name = entry.unsafe_substring(start=0, end=entry.length() - 4)
-    if seen.get(case_name) is None {
-      extras.push("\{fixture_dir}/\{entry}")
-    }
-  }
-  if extras.length() > 0 {
-    extras.sort_by_key(path => path)
-    let details = extras.join(", ")
-    fail("uncovered snapshot fixtures: \{details}")
-  }
+  let case_names = validate_snapshot_manifest(manifest_path, fixture_dir, ".svg")
   for case_name in case_names {
     let input_path = snapshot_input_path(case_name)
     let fixture_path = "\{fixture_dir}/\{case_name}.svg"
-    if !@fs.path_exists(fixture_path) {
-      fail("missing snapshot fixture: \{fixture_path}")
-    }
     let graph = @dot.parse_dot_file(input_path)
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
