@@ -3599,6 +3599,236 @@ fn edge_pen_colors(edge : @cgraph.Edge) -> Array[String] {
   colors
 }
 
+priv struct ColorSegment {
+  color : String
+  mut t : Double
+}
+
+const COLOR_SEG_EPSILON : Double = 0.00001
+
+fn color_is_zero(value : Double) -> Bool {
+  value < COLOR_SEG_EPSILON && value > -COLOR_SEG_EPSILON
+}
+
+fn parse_color_fraction(value : String) -> Double? {
+  if value == "" {
+    return None
+  }
+  try {
+    let parsed = @strconv.parse_double(value)
+    if parsed < 0.0 {
+      None
+    } else {
+      Some(parsed)
+    }
+  } catch {
+    _ => None
+  }
+}
+
+fn parse_color_segments(raw : String) -> Array[ColorSegment] {
+  let segs : Array[ColorSegment] = []
+  let mut left = 1.0
+  for part in raw.split(":") {
+    let token = part.trim().to_string()
+    if token == "" {
+      continue
+    }
+    let mut color_token = token
+    let mut t = 0.0
+    let mut has_fraction = false
+    match token.find(";") {
+      Some(index) => {
+        color_token = token.unsafe_substring(start=0, end=index)
+        let frac_text = token.unsafe_substring(start=index + 1, end=token.length())
+          .trim()
+          .to_string()
+        match parse_color_fraction(frac_text) {
+          Some(value) => {
+            t = value
+            has_fraction = value > 0.0
+          }
+          None => ()
+        }
+      }
+      None => ()
+    }
+    if has_fraction {
+      let delta = t - left
+      if delta > 0.0 && !color_is_zero(delta) {
+        t = left
+      }
+      left = left - t
+      if left < 0.0 {
+        left = 0.0
+      }
+    }
+    let color = svg_color(color_token.trim().to_string())
+    segs.push({ color, t })
+    if color_is_zero(left) {
+      left = 0.0
+      break
+    }
+  }
+  if segs.length() == 0 {
+    return segs
+  }
+  if left > 0.0 {
+    let mut unassigned = 0
+    for seg in segs {
+      if seg.t <= 0.0 {
+        unassigned = unassigned + 1
+      }
+    }
+    if unassigned > 0 {
+      let delta = left / unassigned.to_double()
+      for i in 0..<segs.length() {
+        if segs[i].t <= 0.0 {
+          segs[i].t = delta
+        }
+      }
+    } else {
+      let last = segs.length() - 1
+      segs[last].t = segs[last].t + left
+    }
+  }
+  while segs.length() > 0 && segs[segs.length() - 1].t <= 0.0 {
+    let _ = segs.pop()
+  }
+  segs
+}
+
+fn approx_cubic_length(
+  p0 : @geom.Point,
+  p1 : @geom.Point,
+  p2 : @geom.Point,
+  p3 : @geom.Point,
+) -> Double {
+  @math.hypot(p1.x - p0.x, p1.y - p0.y) +
+  @math.hypot(p2.x - p1.x, p2.y - p1.y) +
+  @math.hypot(p3.x - p2.x, p3.y - p2.y)
+}
+
+fn split_cubic_points(
+  p0 : @geom.Point,
+  p1 : @geom.Point,
+  p2 : @geom.Point,
+  p3 : @geom.Point,
+  t : Double,
+) -> (
+  (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
+  (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
+) {
+  let p01 = point_at(p0, p1, t)
+  let p12 = point_at(p1, p2, t)
+  let p23 = point_at(p2, p3, t)
+  let p012 = point_at(p01, p12, t)
+  let p123 = point_at(p12, p23, t)
+  let p0123 = point_at(p012, p123, t)
+  ((p0, p01, p012, p0123), (p0123, p123, p23, p3))
+}
+
+fn split_spline_points(
+  points : Array[@geom.Point],
+  t : Double,
+) -> (Array[@geom.Point], Array[@geom.Point]) {
+  let count = (points.length() - 1) / 3
+  if count <= 1 {
+    let tt = if t < 0.0 { 0.0 } else if t > 1.0 { 1.0 } else { t }
+    let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
+      split_cubic_points(points[0], points[1], points[2], points[3], tt)
+    return ([l0, l1, l2, l3], [r0, r1, r2, r3])
+  }
+  let lengths : Array[Double] = []
+  let mut total = 0.0
+  for i in 0..<count {
+    let idx = i * 3
+    let seg_len = approx_cubic_length(
+      points[idx],
+      points[idx + 1],
+      points[idx + 2],
+      points[idx + 3],
+    )
+    lengths.push(seg_len)
+    total = total + seg_len
+  }
+  let target = t * total
+  let mut running = 0.0
+  let mut segment_index = count - 1
+  for i in 0..<count {
+    running = running + lengths[i]
+    if running >= target {
+      segment_index = i
+      break
+    }
+  }
+  let left_size = 3 * (segment_index + 1) + 1
+  let right_size = 3 * (count - segment_index) + 1
+  let left_points : Array[@geom.Point] = []
+  for i in 0..<left_size {
+    left_points.push(points[i])
+  }
+  let right_points : Array[@geom.Point] = []
+  let mut k = left_size - 4
+  for _ in 0..<right_size {
+    right_points.push(points[k])
+    k = k + 1
+  }
+  let last = lengths[segment_index]
+  let mut ratio = if last <= 0.0 {
+    0.0
+  } else {
+    (target - (running - last)) / last
+  }
+  if ratio < 0.0 {
+    ratio = 0.0
+  } else if ratio > 1.0 {
+    ratio = 1.0
+  }
+  let idx = segment_index * 3
+  let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
+    split_cubic_points(
+      points[idx],
+      points[idx + 1],
+      points[idx + 2],
+      points[idx + 3],
+      ratio,
+    )
+  left_points[idx] = l0
+  left_points[idx + 1] = l1
+  left_points[idx + 2] = l2
+  left_points[idx + 3] = l3
+  right_points[0] = r0
+  right_points[1] = r1
+  right_points[2] = r2
+  right_points[3] = r3
+  (left_points, right_points)
+}
+
+fn edge_arrow_colors(edge : @cgraph.Edge) -> (String, String) {
+  let raw = @attrs.color(edge.get_attr("color"), default="black")
+  if raw.find(":") is Some(_) {
+    if raw.find(";") is Some(_) {
+      let segs = parse_color_segments(raw)
+      if segs.length() > 0 {
+        let tail = segs[0].color
+        let head = segs[segs.length() - 1].color
+        return (head, tail)
+      }
+    } else {
+      let colors = edge_pen_colors(edge)
+      if colors.length() > 1 {
+        return (colors[0], colors[1])
+      }
+      if colors.length() == 1 {
+        return (colors[0], colors[0])
+      }
+    }
+  }
+  let color = svg_color(raw)
+  (color, color)
+}
+
 const COLOR_SPLINE_EPSILON : Double = 0.0001
 const COLOR_SPLINE_SEP_PT : Double = 2.0
 
@@ -3757,44 +3987,123 @@ fn write_svg_edge_group(
     pretty,
   )
   write_line(sb, "<title>\{edge_title}</title>", "", pretty)
-  let pen_colors = edge_pen_colors(edge)
-  let color_count = pen_colors.length()
-  let spline_sets : Array[Array[Array[@geom.Point]]] = []
-  for spline in edge_layout.splines {
-    spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
-  }
   let dash = stroke_dash_attr(style)
   let width_attr = stroke_width_attr(style, edge.get_attr("penwidth"))
-  for i, pen_color in pen_colors {
-    for spline_index in 0..<edge_layout.splines.length() {
-      let points = if color_count <= 1 {
-        edge_layout.splines[spline_index].points
-      } else {
-        spline_sets[spline_index][i]
+  let raw_color = @attrs.color(edge.get_attr("color"), default="black")
+  let has_colon = raw_color.find(":") is Some(_)
+  let has_semicolon = raw_color.find(";") is Some(_)
+  if has_colon && has_semicolon {
+    let segments = parse_color_segments(raw_color)
+    if segments.length() > 0 {
+      for spline in edge_layout.splines {
+        let mut left = 1.0
+        let mut first = true
+        let mut right_points = spline.points
+        for segment in segments {
+          if color_is_zero(segment.t) {
+            continue
+          }
+          left = left - segment.t
+          if first {
+            first = false
+            let (left_points, rest_points) = split_spline_points(
+              spline.points,
+              segment.t,
+            )
+            right_points = rest_points
+            let path = spline_path(
+              @geom.Spline::{ start: None, end: None, points: left_points },
+              bbox.llx,
+              bbox.lly,
+            )
+            if path != "" {
+              write_line(
+                sb,
+                "<path fill=\"none\" stroke=\"\{segment.color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+                "",
+                pretty,
+              )
+            }
+            if color_is_zero(left) {
+              break
+            }
+          } else if color_is_zero(left) {
+            let path = spline_path(
+              @geom.Spline::{ start: None, end: None, points: right_points },
+              bbox.llx,
+              bbox.lly,
+            )
+            if path != "" {
+              write_line(
+                sb,
+                "<path fill=\"none\" stroke=\"\{segment.color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+                "",
+                pretty,
+              )
+            }
+            break
+          } else {
+            let split_t = segment.t / (left + segment.t)
+            let (left_points, rest_points) = split_spline_points(
+              right_points,
+              split_t,
+            )
+            right_points = rest_points
+            let path = spline_path(
+              @geom.Spline::{ start: None, end: None, points: left_points },
+              bbox.llx,
+              bbox.lly,
+            )
+            if path != "" {
+              write_line(
+                sb,
+                "<path fill=\"none\" stroke=\"\{segment.color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+                "",
+                pretty,
+              )
+            }
+          }
+        }
       }
-      let path = spline_path(
-        @geom.Spline::{ start: None, end: None, points },
-        bbox.llx,
-        bbox.lly,
-      )
-      if path != "" {
-        write_line(
-          sb,
-          "<path fill=\"none\" stroke=\"\{pen_color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
-          "",
-          pretty,
+    }
+  } else {
+    let pen_colors = edge_pen_colors(edge)
+    let color_count = pen_colors.length()
+    let spline_sets : Array[Array[Array[@geom.Point]]] = []
+    for spline in edge_layout.splines {
+      spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
+    }
+    for i, pen_color in pen_colors {
+      for spline_index in 0..<edge_layout.splines.length() {
+        let points = if color_count <= 1 {
+          edge_layout.splines[spline_index].points
+        } else {
+          spline_sets[spline_index][i]
+        }
+        let path = spline_path(
+          @geom.Spline::{ start: None, end: None, points },
+          bbox.llx,
+          bbox.lly,
         )
+        if path != "" {
+          write_line(
+            sb,
+            "<path fill=\"none\" stroke=\"\{pen_color}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+            "",
+            pretty,
+          )
+        }
       }
     }
   }
   let flags = arrow_flags(edge, kind)
-  let primary_color = pen_colors[0]
+  let (head_color, tail_color) = edge_arrow_colors(edge)
   if flags.tail {
     let ops = arrow_primitives(edge_layout, false)
     write_arrow_ops(
       sb,
       ops,
-      primary_color,
+      tail_color,
       "",
       width_attr,
       bbox.llx,
@@ -3808,7 +4117,7 @@ fn write_svg_edge_group(
     write_arrow_ops(
       sb,
       ops,
-      primary_color,
+      head_color,
       "",
       width_attr,
       bbox.llx,

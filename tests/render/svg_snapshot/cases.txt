@@ -13,6 +13,7 @@ bsdkernel
 box
 boxarrow
 circle
+colorlist
 clust
 clust1
 clust2
