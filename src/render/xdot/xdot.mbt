@@ -3610,12 +3610,13 @@ fn encode_gradient(gradient : @render.Gradient) -> String {
       sb.write_char(' ')
       sb.write_string(value.stops.length().to_string())
       for stop in value.stops {
+        let stop_color = xdot_encode_color(stop.color)
         sb.write_char(' ')
         sb.write_string(format_double(stop.offset))
         sb.write_char(' ')
-        sb.write_string(stop.color.length().to_string())
+        sb.write_string(stop_color.length().to_string())
         sb.write_string(" -")
-        sb.write_string(stop.color)
+        sb.write_string(stop_color)
       }
       sb.write_char(']')
     }
@@ -3635,17 +3636,28 @@ fn encode_gradient(gradient : @render.Gradient) -> String {
       sb.write_char(' ')
       sb.write_string(value.stops.length().to_string())
       for stop in value.stops {
+        let stop_color = xdot_encode_color(stop.color)
         sb.write_char(' ')
         sb.write_string(format_double(stop.offset))
         sb.write_char(' ')
-        sb.write_string(stop.color.length().to_string())
+        sb.write_string(stop_color.length().to_string())
         sb.write_string(" -")
-        sb.write_string(stop.color)
+        sb.write_string(stop_color)
       }
       sb.write_char(')')
     }
   }
   sb.to_string()
+}
+
+///|
+fn xdot_encode_color(color : String) -> String {
+  let lower = color.to_lower()
+  match lower {
+    "skyblue" => "#87ceeb"
+    "green4" => "#008b00"
+    _ => @attrs.normalize_color(lower)
+  }
 }
 
 ///|
@@ -3710,11 +3722,11 @@ fn encode_op(op : @render.DrawOp) -> String {
     }
     @render.DrawOp::FillColor(color~) => {
       sb.write_char('C')
-      append_string(sb, color)
+      append_string(sb, xdot_encode_color(color))
     }
     @render.DrawOp::PenColor(color~) => {
       sb.write_char('c')
-      append_string(sb, color)
+      append_string(sb, xdot_encode_color(color))
     }
     @render.DrawOp::GradFill(gradient~) => {
       sb.write_char('C')

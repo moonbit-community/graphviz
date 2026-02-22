@@ -17,7 +17,7 @@ test "encode xdot ops basic" {
   ]
   inspect(
     encode_xdot_ops(ops),
-    content="c 5 -black E 5 10 5 10 T 5 6 0 12 2 -Hi",
+    content="c 7 -#000000 E 5 10 5 10 T 5 6 0 12 2 -Hi",
   )
 }
 

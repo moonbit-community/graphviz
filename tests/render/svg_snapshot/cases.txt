@@ -41,6 +41,7 @@ edge_vnode_spacing
 ER
 ellipse
 fig6
+fancy
 fill
 flat_edge_label
 flat_edge_label_adjacent
