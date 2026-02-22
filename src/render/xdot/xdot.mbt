@@ -579,7 +579,10 @@ fn node_fill_color(node : @cgraph.Node, fallback : String) -> String {
 fn shape_kind(value : String?) -> String {
   let shape = match value {
     Some(text) => text.to_lower()
-    None => "ellipse"
+    None => ""
+  }
+  if shape == "" {
+    return "ellipse"
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
@@ -609,8 +612,8 @@ fn shape_kind(value : String?) -> String {
     "mdiamond" => "mdiamond"
     "msquare" => "msquare"
     "mcircle" => "mcircle"
-    "ellipse" | "oval" | "circle" => "ellipse"
-    _ => "ellipse"
+    "ellipse" | "oval" | "circle" | "doublecircle" => "ellipse"
+    _ => "unknown"
   }
 }
 
@@ -2853,6 +2856,9 @@ fn node_draw_ops(
   }
   let shape = shape_kind(node_attr(node, "shape"))
   let is_doublecircle = raw_shape == "doublecircle"
+  if shape == "unknown" {
+    return ops
+  }
   if shape == "record" {
     return record_draw_ops(layout)
   }

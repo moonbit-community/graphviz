@@ -1106,10 +1106,10 @@ fn shape_has_outline(node : @cgraph.Node) -> Bool {
     Some(value) => value.to_lower()
     None => ""
   }
-  match shape {
-    "none" | "plaintext" | "plain" => false
-    _ => true
+  if shape == "none" || shape == "plaintext" || shape == "plain" {
+    return false
   }
+  polygon_peripheries(node, 1) > 0
 }
 
 ///|
@@ -1338,7 +1338,8 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     "none" => ClipShape::Rect
     "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
       ClipShape::Ellipse
-    _ => ClipShape::None
+    // Graphviz fallback for unrecognized shapes is box-like clipping.
+    _ => ClipShape::Rect
   }
 }
 

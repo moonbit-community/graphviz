@@ -900,7 +900,10 @@ fn graph_label_pos(bbox : @geom.Rect, height_pt : Double) -> @geom.Point {
 fn shape_kind(value : String?) -> String {
   let shape = match value {
     Some(text) => text.to_lower()
-    None => "ellipse"
+    None => ""
+  }
+  if shape == "" {
+    return "ellipse"
   }
   match shape {
     "box" | "rect" | "rectangle" => "box"
@@ -930,8 +933,8 @@ fn shape_kind(value : String?) -> String {
     "mdiamond" => "mdiamond"
     "msquare" => "msquare"
     "mcircle" => "mcircle"
-    "ellipse" | "oval" | "circle" => "ellipse"
-    _ => "ellipse"
+    "ellipse" | "oval" | "circle" | "doublecircle" => "ellipse"
+    _ => "unknown"
   }
 }
 
@@ -4384,7 +4387,9 @@ fn write_svg_node_group(
   } else {
     "none"
   }
-  if kind == "record" {
+  if kind == "unknown" {
+    ()
+  } else if kind == "record" {
     write_record_node(
       sb,
       node_layout,
@@ -4398,8 +4403,7 @@ fn write_svg_node_group(
     )
     write_line(sb, "</g>", "", pretty)
     return
-  }
-  if kind == "plaintext" {
+  } else if kind == "plaintext" {
     if filled {
       let attrs = polygon_points(rect_points(rect), bbox.llx, bbox.lly)
       write_line(
