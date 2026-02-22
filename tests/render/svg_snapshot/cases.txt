@@ -4,7 +4,9 @@ arr_none
 arrows
 asde91
 awilliams
+back
 biological
+both
 box
 boxarrow
 circle
@@ -38,6 +40,7 @@ ellipse
 fig6
 flat_edge_label
 flat_edge_label_adjacent
+forward
 fsm
 grammar
 graph1
@@ -72,6 +75,7 @@ nhg
 ngk10_4
 none
 no_arrow
+nohead
 normal
 octagon
 odot
@@ -107,6 +111,7 @@ states
 structs
 switch
 table
+test
 tee
 train11
 trapezium

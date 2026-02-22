@@ -683,6 +683,9 @@ fn snapshot_input_path(case_name : String) -> String raise {
     "refs/graphviz/graphs/undirected/\{case_name}.gv",
     "tests/layout/dot/\{case_name}.dot",
     "refs/graphviz/doc/dotguide/\{case_name}.dot",
+    "refs/graphviz/doc/infosrc/\{case_name}.dot",
+    "refs/graphviz/doc/infosrc/\{case_name}.gv",
+    "refs/graphviz/contrib/prune/\{case_name}.gv",
   ]
   for path in candidates {
     if @fs.path_exists(path) {
