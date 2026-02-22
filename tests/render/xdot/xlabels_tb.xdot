@@ -1,0 +1,71 @@
+digraph xlabels_tb {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 173 161.5 173 161.5 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 36.5 155.7 0 57 9 -RootLabel ",
+		bb="0,0,161.5,173",
+		label=RootLabel,
+		labeljust=l,
+		labelloc=t,
+		lheight=0.23,
+		lp="36.5,160.75",
+		lwidth=0.79,
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=box
+	];
+	subgraph cluster_0 {
+		graph [_draw_="c 7 -#000000 p 4 11.5 64 11.5 140.5 153.5 140.5 153.5 64 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 51.75 123.2 0 64.5 11 -ClusterZero ",
+			bb="11.5,64,153.5,140.5",
+			label=ClusterZero,
+			lheight=0.23,
+			lp="51.75,128.25",
+			lwidth=0.90
+		];
+		a	[_draw_="c 7 -#000000 p 4 73.5 108 19.5 108 19.5 72 73.5 72 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 46.5 84.95 0 6 1 -a F 14 11 -Times-Roman c 7 -#000000 T 9.75 111.2 0 19.5 2 -XA ",
+			height=0.5,
+			pos="46.5,90",
+			width=0.75,
+			xlabel=XA,
+			xlp="9.75,116.25"];
+		b	[_draw_="c 7 -#000000 p 4 145.5 108 91.5 108 91.5 72 145.5 72 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 118.5 84.95 0 6.75 1 -b F 14 11 -Times-Roman c 7 -#000000 T 100.88 111.2 0 18.75 2 -XB ",
+			height=0.5,
+			pos="118.5,90",
+			width=0.75,
+			xlabel=XB,
+			xlp="100.88,116.25"];
+	}
+	c	[_draw_="c 7 -#000000 p 4 109.5 36 55.5 36 55.5 0 109.5 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 82.5 12.95 0 6 1 -c F 14 11 -Times-Roman c 7 -#000000 T 46.12 3.2 0 18.75 2 -XC ",
+		height=0.5,
+		pos="82.5,18",
+		width=0.75,
+		xlabel=XC,
+		xlp="46.125,8.25"];
+	a -> c	[_draw_="c 7 -#000000 B 4 55.4 71.7 59.37 63.98 64.13 54.71 68.56 46.11 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 71.55 47.94 73.01 37.45 65.33 44.74 ",
+		_hldraw_="F 14 11 -Times-Roman c 7 -#000000 T 59.45 39.3 0 28.5 3 -HAC ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 78.81 57.09 0 28.5 3 -XAC ",
+		_tldraw_="F 14 11 -Times-Roman c 7 -#000000 T 41.9 58.4 0 27 3 -TAC ",
+		head_lp="59.453,44.354",
+		headlabel=HAC,
+		pos="e,73.703,36.104 55.399,71.697 59.366,63.983 64.134,54.712 68.556,46.112",
+		tail_lp="41.899,63.447",
+		taillabel=TAC,
+		xlabel=XAC,
+		xlp="78.806,62.141"];
+	b -> c	[_draw_="c 7 -#000000 B 4 109.6 71.7 105.63 63.98 100.87 54.71 96.44 46.11 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 99.67 44.74 91.99 37.45 93.45 47.94 ",
+		_hldraw_="F 14 11 -Times-Roman c 7 -#000000 T 105.17 39.3 0 27.75 3 -HBC ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 86.57 40.59 0 27.75 3 -XBC ",
+		_tldraw_="F 14 11 -Times-Roman c 7 -#000000 T 122.73 58.4 0 26.25 3 -TBC ",
+		head_lp="105.17,44.354",
+		headlabel=HBC,
+		pos="e,91.297,36.104 109.6,71.697 105.63,63.983 100.87,54.712 96.444,46.112",
+		tail_lp="122.73,63.447",
+		taillabel=TBC,
+		xlabel=XBC,
+		xlp="86.569,45.641"];
+}

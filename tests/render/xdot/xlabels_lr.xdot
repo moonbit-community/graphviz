@@ -1,0 +1,36 @@
+digraph xlabels_lr {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 52.5 171.75 52.5 171.75 0 ",
+		bb="0,0,171.75,52.5",
+		rankdir=LR,
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=box
+	];
+	a	[_draw_="c 7 -#000000 p 4 81.75 52.5 27.75 52.5 27.75 16.5 81.75 16.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 54.75 29.45 0 6 1 -a F 14 11 -Times-Roman c 7 -#000000 T 13.88 3.2 0 27.75 3 -XLA ",
+		height=0.5,
+		pos="54.75,34.5",
+		width=0.75,
+		xlabel=XLA,
+		xlp="13.875,8.25"];
+	b	[_draw_="c 7 -#000000 p 4 171.75 52.5 117.75 52.5 117.75 16.5 171.75 16.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 144.75 29.45 0 6.75 1 -b F 14 11 -Times-Roman c 7 -#000000 T 104.25 3.2 0 27 3 -XLB ",
+		height=0.5,
+		pos="144.75,34.5",
+		width=0.75,
+		xlabel=XLB,
+		xlp="104.25,8.25"];
+	a -> b	[_draw_="c 7 -#000000 B 4 82.15 34.5 89.64 34.5 97.93 34.5 105.95 34.5 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 105.85 38 115.85 34.5 105.85 31 ",
+		_hldraw_="F 14 11 -Times-Roman c 7 -#000000 T 103.12 37.7 0 28.5 3 -HAB ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 113.77 21.2 0 28.5 3 -XAB ",
+		_tldraw_="F 14 11 -Times-Roman c 7 -#000000 T 95.65 21.2 0 27 3 -TAB ",
+		head_lp="103.12,42.75",
+		headlabel=HAB,
+		pos="e,117.37,34.5 82.153,34.5 89.636,34.5 97.933,34.5 105.95,34.5",
+		tail_lp="95.653,26.25",
+		taillabel=TAB,
+		xlabel=XAB,
+		xlp="113.77,26.25"];
+}

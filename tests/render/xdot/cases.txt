@@ -28,11 +28,16 @@ dot
 doublecircle
 doubleoctagon
 egg
+edge_label_bt
+edge_label_lr
+edge_label_rl
 edge_label_spacing
 edge_vnode_spacing
 ER
 ellipse
 fig6
+flat_edge_label
+flat_edge_label_adjacent
 fsm
 grammar
 graph1
@@ -76,6 +81,10 @@ parallelogram
 pgram
 pm2way
 pmpipe
+port_label
+port_label_bt
+port_label_lr
+port_label_rl
 Petersen
 plaintext
 point
@@ -112,3 +121,5 @@ unix2
 vee
 viewfile
 world
+xlabels_lr
+xlabels_tb

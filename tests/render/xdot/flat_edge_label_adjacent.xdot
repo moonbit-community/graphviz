@@ -1,0 +1,31 @@
+digraph flat_label_adjacent {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 182 36 182 0 ",
+		bb="0,0,182,36",
+		margin=0,
+		nodesep=0.25,
+		ranksep=0.5,
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=box
+	];
+	{
+		graph [rank=same];
+		a	[_draw_="c 7 -#000000 p 4 54 36 0 36 0 0 54 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 27 12.95 0 6 1 -a ",
+			height=0.5,
+			pos="27,18",
+			width=0.75];
+		b	[_draw_="c 7 -#000000 p 4 182 36 128 36 128 0 182 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 155 12.95 0 6.75 1 -b ",
+			height=0.5,
+			pos="155,18",
+			width=0.75];
+	}
+	a -> b	[_draw_="c 7 -#000000 B 4 54.46 18 72.43 18 96.18 18 116.08 18 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 116.07 21.5 126.07 18 116.07 14.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 91 24.2 0 55.5 10 -Flat Label ",
+		label="Flat Label",
+		lp="91,29.25",
+		pos="e,127.59,18 54.459,18 72.428,18 96.177,18 116.08,18"];
+}
