@@ -18110,8 +18110,10 @@ fn build_ordering_reorder_flags_and_constraints(
   let order_with_vnodes = vnode_count > 0
   let order_with_clusters =
     cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  // Graphviz parity: GD_flip is true for horizontal rankdir (LR/RL).
-  let graphviz_flip = rankdir == RankDir::LR || rankdir == RankDir::RL
+  // Graphviz parity: LR keeps flip only for single-cluster ordering;
+  // multi-cluster LR roots follow non-flipped seed traversal.
+  let graphviz_flip = rankdir == RankDir::RL ||
+    (rankdir == RankDir::LR && cluster_meta.cluster_min_rank.length() <= 1)
   let flat_rank_constraints =
     build_flat_rank_constraints(
       edge_tail,
