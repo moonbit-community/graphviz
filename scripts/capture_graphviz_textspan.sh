@@ -73,6 +73,10 @@ mkdir -p "$OUT_DIR"
 inputs=(
   "$ROOT"/tests/layout/dot/*.dot
   "$ROOT"/refs/graphviz/doc/dotguide/*.dot
+  "$ROOT"/refs/graphviz/doc/infosrc/*.dot
+  "$ROOT"/refs/graphviz/doc/infosrc/*.gv
+  "$ROOT"/refs/graphviz/doc/neato/*.dot
+  "$ROOT"/refs/graphviz/doc/neato/*.gv
   "$ROOT"/refs/graphviz/graphs/directed/*.gv
   "$ROOT"/refs/graphviz/graphs/directed/*.dot
   "$ROOT"/refs/graphviz/graphs/undirected/*.gv

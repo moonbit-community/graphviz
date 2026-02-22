@@ -38,10 +38,14 @@ edge_vnode_spacing
 ER
 ellipse
 fig6
+fill
 flat_edge_label
 flat_edge_label_adjacent
 forward
 fsm
+G4_lenwt
+G4_orig
+G4_pinned
 grammar
 graph1
 graph2
