@@ -81,6 +81,7 @@ longflat
 Mcircle
 Mdiamond
 mike
+mrecord
 Mrecord
 Msquare
 NaN
