@@ -258,240 +258,111 @@ fn assert_snapshot(
 }
 
 ///|
+fn snapshot_input_path(case_name : String) -> String raise {
+  let candidates : Array[String] = [
+    "refs/graphviz/graphs/directed/\{case_name}.gv",
+    "refs/graphviz/graphs/undirected/\{case_name}.gv",
+    "tests/layout/dot/\{case_name}.dot",
+    "refs/graphviz/doc/dotguide/\{case_name}.dot",
+    "refs/graphviz/doc/infosrc/\{case_name}.dot",
+    "refs/graphviz/doc/infosrc/\{case_name}.gv",
+    "refs/graphviz/doc/neato/\{case_name}.dot",
+    "refs/graphviz/contrib/prune/\{case_name}.gv",
+    "refs/graphviz/contrib/dirgraph/\{case_name}.dot",
+    "refs/graphviz/contrib/java-dot/\{case_name}.dot",
+  ]
+  for path in candidates {
+    if @fs.path_exists(path) {
+      return path
+    }
+  }
+  fail("missing snapshot input for case \{case_name}")
+}
+
+///|
+fn dot_fixture_path(fixture_dir : String, case_name : String) -> String {
+  if case_name == "grammar" {
+    "\{fixture_dir}/grammar.dot"
+  } else {
+    "\{fixture_dir}/\{case_name}.gv.dot"
+  }
+}
+
+///|
+fn load_case_names(manifest_path : String) -> Array[String] raise {
+  let lines = @fs.read_file_to_string(manifest_path).split("\n")
+  let names : Array[String] = []
+  for raw in lines {
+    let line = raw.trim(chars=" \t\r").to_string()
+    if line == "" || line.has_prefix("#") {
+      continue
+    }
+    names.push(line)
+  }
+  if names.length() == 0 {
+    fail("empty snapshot case manifest: \{manifest_path}")
+  }
+  names
+}
+
+///|
+fn dot_snapshot_cases(
+  manifest_path : String,
+  fixture_dir : String,
+) -> Array[(String, String)] raise {
+  let case_names = load_case_names(manifest_path)
+  let seen : Map[String, Bool] = Map::new()
+  let cases : Array[(String, String)] = []
+  for case_name in case_names {
+    if seen.get(case_name) is Some(_) {
+      fail("duplicate snapshot case in manifest: \{case_name}")
+    }
+    seen[case_name] = true
+    let fixture_path = dot_fixture_path(fixture_dir, case_name)
+    if !@fs.path_exists(fixture_path) {
+      fail("missing snapshot fixture: \{fixture_path}")
+    }
+    let input_path = snapshot_input_path(case_name)
+    cases.push((input_path, fixture_path))
+  }
+  let extras : Array[String] = []
+  for entry in @fs.read_dir(fixture_dir) {
+    let case_name = if entry == "grammar.dot" {
+      Some("grammar")
+    } else if entry.has_suffix(".gv.dot") {
+      Some(
+        entry.unsafe_substring(
+          start=0,
+          end=entry.length() - ".gv.dot".length(),
+        ),
+      )
+    } else {
+      None
+    }
+    match case_name {
+      Some(name) =>
+        if seen.get(name) is None {
+          extras.push("\{fixture_dir}/\{entry}")
+        }
+      None => ()
+    }
+  }
+  if extras.length() > 0 {
+    extras.sort_by_key(path => path)
+    let details = extras.join(", ")
+    fail("uncovered snapshot fixtures: \{details}")
+  }
+  cases
+}
+
+///|
 test "dot layout tier2 snapshots" {
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/grammar.gv", "tests/layout/dot/grammar.dot", 0.01,
-  )
-  assert_snapshot(
-    "tests/layout/dot/compound.dot", "tests/layout/dot/compound.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust1.gv", "tests/layout/dot/clust1.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust2.gv", "tests/layout/dot/clust2.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust3.gv", "tests/layout/dot/clust3.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust4.gv", "tests/layout/dot/clust4.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust5.gv", "tests/layout/dot/clust5.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/try.gv", "tests/layout/dot/try.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/fsm.gv", "tests/layout/dot/fsm.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/dfa.gv", "tests/layout/dot/dfa.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/longflat.gv", "tests/layout/dot/longflat.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/states.gv", "tests/layout/dot/states.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/record2.gv", "tests/layout/dot/record2.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/structs.gv", "tests/layout/dot/structs.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/arr_none.gv", "tests/layout/dot/arr_none.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/table.gv", "tests/layout/dot/table.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/train11.gv", "tests/layout/dot/train11.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/tree.gv", "tests/layout/dot/tree.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/abstract.gv", "tests/layout/dot/abstract.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/arrows.gv", "tests/layout/dot/arrows.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/biological.gv",
-    "tests/layout/dot/biological.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/ctext.gv", "tests/layout/dot/ctext.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/fig6.gv", "tests/layout/dot/fig6.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/hashtable.gv",
-    "tests/layout/dot/hashtable.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/records.gv", "tests/layout/dot/records.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/switch.gv", "tests/layout/dot/switch.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/trapeziumlr.gv",
-    "tests/layout/dot/trapeziumlr.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/triedds.gv", "tests/layout/dot/triedds.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/unix.gv", "tests/layout/dot/unix.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/viewfile.gv",
-    "tests/layout/dot/viewfile.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/ldbxtried.gv",
-    "tests/layout/dot/ldbxtried.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/proc3d.gv", "tests/layout/dot/proc3d.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/world.gv", "tests/layout/dot/world.gv.dot", 0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/pmpipe.gv", "tests/layout/dot/pmpipe.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/polypoly.gv",
-    "tests/layout/dot/polypoly.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/alf.gv",
-    "tests/layout/dot/alf.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/clust.gv",
-    "tests/layout/dot/clust.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/jcctree.gv",
-    "tests/layout/dot/jcctree.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/jsort.gv",
-    "tests/layout/dot/jsort.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/shells.gv",
-    "tests/layout/dot/shells.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/awilliams.gv",
-    "tests/layout/dot/awilliams.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/crazy.gv",
-    "tests/layout/dot/crazy.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/honda-tokoro.gv",
-    "tests/layout/dot/honda-tokoro.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/KW91.gv",
-    "tests/layout/dot/KW91.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/Latin1.gv",
-    "tests/layout/dot/Latin1.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/mike.gv",
-    "tests/layout/dot/mike.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/NaN.gv",
-    "tests/layout/dot/NaN.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/nhg.gv",
-    "tests/layout/dot/nhg.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/oldarrows.gv",
-    "tests/layout/dot/oldarrows.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/pgram.gv",
-    "tests/layout/dot/pgram.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/pm2way.gv",
-    "tests/layout/dot/pm2way.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/psfonttest.gv",
-    "tests/layout/dot/psfonttest.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/rowe.gv",
-    "tests/layout/dot/rowe.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/sdh.gv",
-    "tests/layout/dot/sdh.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "refs/graphviz/graphs/directed/unix2.gv",
-    "tests/layout/dot/unix2.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "tests/layout/dot/edge_vnode_spacing.dot",
-    "tests/layout/dot/edge_vnode_spacing.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
-    0.01,
-  )
-  assert_snapshot(
-    "tests/layout/dot/complex.dot", "tests/layout/dot/complex.gv.dot", 0.01,
-  )
+  let cases = dot_snapshot_cases("tests/layout/dot/cases.txt", "tests/layout/dot")
+  if cases.length() == 0 {
+    fail("no dot fixtures under tests/layout/dot")
+  }
+  for pair in cases {
+    let (input_path, expected_path) = pair
+    assert_snapshot(input_path, expected_path, 0.01)
+  }
 }
