@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,57.487,36"];
+	node [label="",
+		shape=egg,
+		style=filled
+	];
+	egg	[height=0.5,
+		pos="28.743,18",
+		width=0.79843];
+}

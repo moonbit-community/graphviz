@@ -1,0 +1,40 @@
+digraph G {
+	graph [bb="0,0,330,108.75"];
+	node [label="\N"];
+	{
+		node [fontcolor=blue,
+			fontsize=32,
+			margin=0,
+			shape=circle,
+			style=filled,
+			width=0.5
+		];
+		b	[fillcolor=yellow,
+			fixedsize=true,
+			height=0.5,
+			label="a very long label",
+			pos="157,90.75"];
+		d	[fixedsize=shape,
+			height=0.51042,
+			label="an even longer label",
+			pos="129,18.375",
+			width=3.5833];
+	}
+	{
+		d;
+		c	[height=0.5,
+			pos="303,18.375",
+			width=0.75];
+	}
+	{
+		d;
+		c;
+	}
+	b -> d	[pos="e,135.27,35.125 150.51,73.428 147.24,65.229 143.21,55.091 139.52,45.818"];
+	b -> c	[pos="e,281.68,29.667 173.03,82.029 194.45,71.714 233.59,52.864 267,36.75 268.48,36.034 270,35.301 271.54,34.561"];
+	a	[height=0.5,
+		pos="275,90.75",
+		width=0.75];
+	a -> d	[pos="e,144.78,26.984 253.46,79.366 227.27,66.742 183.1,45.452 155.03,31.923"];
+	a -> c	[pos="e,296.41,35.933 281.64,73.072 284.81,65.097 288.69,55.347 292.27,46.356"];
+}

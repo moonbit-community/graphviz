@@ -1,0 +1,50 @@
+digraph xlabels_tb {
+	graph [bb="0,0,161.5,173",
+		label=RootLabel,
+		labeljust=l,
+		labelloc=t,
+		lheight=0.23,
+		lp="36.5,160.75",
+		lwidth=0.79
+	];
+	node [label="\N",
+		shape=box
+	];
+	subgraph cluster_0 {
+		graph [bb="11.5,64,153.5,140.5",
+			label=ClusterZero,
+			lheight=0.23,
+			lp="51.75,128.25",
+			lwidth=0.90
+		];
+		a	[height=0.5,
+			pos="46.5,90",
+			width=0.75,
+			xlabel=XA,
+			xlp="9.75,116.25"];
+		b	[height=0.5,
+			pos="118.5,90",
+			width=0.75,
+			xlabel=XB,
+			xlp="100.88,116.25"];
+	}
+	c	[height=0.5,
+		pos="82.5,18",
+		width=0.75,
+		xlabel=XC,
+		xlp="46.125,8.25"];
+	a -> c	[head_lp="59.453,44.354",
+		headlabel=HAC,
+		pos="e,73.703,36.104 55.399,71.697 59.366,63.983 64.134,54.712 68.556,46.112",
+		tail_lp="41.899,63.447",
+		taillabel=TAC,
+		xlabel=XAC,
+		xlp="78.806,62.141"];
+	b -> c	[head_lp="105.17,44.354",
+		headlabel=HBC,
+		pos="e,91.297,36.104 109.6,71.697 105.63,63.983 100.87,54.712 96.444,46.112",
+		tail_lp="122.73,63.447",
+		taillabel=TBC,
+		xlabel=XBC,
+		xlp="86.569,45.641"];
+}

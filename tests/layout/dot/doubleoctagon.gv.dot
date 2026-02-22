@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,62,44"];
+	node [label="",
+		shape=doubleoctagon,
+		style=filled
+	];
+	doubleoctagon	[height=0.61111,
+		pos="31,22",
+		width=0.86111];
+}

@@ -1,0 +1,48 @@
+digraph port_label_lr {
+	graph [bb="0,0,144,144",
+		margin=0,
+		nodesep=0.25,
+		rankdir=LR,
+		ranksep=0.5
+	];
+	node [label="\N",
+		shape=box
+	];
+	a	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	b	[height=0.5,
+		pos="117,18",
+		width=0.75];
+	a -> b	[head_lp="77.491,11",
+		headlabel=H1,
+		labelangle=30,
+		labeldistance=1.4,
+		pos="e,89.616,18 54.403,18 61.886,18 70.183,18 78.199,18",
+		tail_lp="66.527,25",
+		taillabel=T1];
+	c	[height=0.5,
+		pos="27,72",
+		width=0.75];
+	d	[height=0.5,
+		pos="117,72",
+		width=0.75];
+	c -> d	[head_lp="82.545,79.071",
+		headlabel=H2,
+		labelangle=-45,
+		pos="e,89.616,72 54.403,72 61.886,72 70.183,72 78.199,72",
+		tail_lp="61.474,64.929",
+		taillabel=T2];
+	e	[height=0.5,
+		pos="27,126",
+		width=0.75];
+	f	[height=0.5,
+		pos="117,126",
+		width=0.75];
+	e -> f	[head_lp="82.365,129.38",
+		headlabel=H3,
+		labeldistance=0.8,
+		pos="e,89.616,126 54.403,126 61.886,126 70.183,126 78.199,126",
+		tail_lp="61.653,122.62",
+		taillabel=T3];
+}

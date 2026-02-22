@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,63.25,36"];
+	node [label="\N",
+		shape=plaintext,
+		style=filled
+	];
+	plaintext	[height=0.5,
+		pos="31.625,18",
+		width=0.87847];
+}

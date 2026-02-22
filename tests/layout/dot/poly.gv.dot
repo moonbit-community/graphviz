@@ -1,0 +1,35 @@
+digraph G {
+	graph [bb="0,0,259.27,210.62"];
+	node [label="\N"];
+	a	[color=indigo,
+		height=0.74467,
+		peripheries=3,
+		pos="137.52,183.81",
+		shape=polygon,
+		sides=5,
+		style=filled,
+		width=1.0535];
+	b	[height=0.5,
+		pos="137.52,103",
+		width=0.75];
+	a -> b	[pos="e,137.52,121.35 137.52,160.86 137.52,152.18 137.52,142.09 137.52,132.83"];
+	c	[height=0.5,
+		label="hello world",
+		pos="75.517,24.5",
+		shape=polygon,
+		sides=4,
+		skew=.4,
+		width=2.0977];
+	b -> c	[pos="e,89.694,42.992 125.27,86.886 117.19,76.922 106.4,63.603 96.928,51.918"];
+	d	[height=0.68056,
+		pos="200.52,24.5",
+		shape=invtriangle,
+		width=0.86249];
+	b -> d	[pos="e,190.97,37.088 149.96,86.886 159.66,75.113 173.21,58.656 183.85,45.744"];
+	e	[distortion=.7,
+		height=0.5,
+		pos="226.52,183.81",
+		shape=polygon,
+		sides=4,
+		width=0.90985];
+}

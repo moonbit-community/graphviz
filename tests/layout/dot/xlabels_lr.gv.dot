@@ -1,0 +1,25 @@
+digraph xlabels_lr {
+	graph [bb="0,0,171.75,52.5",
+		rankdir=LR
+	];
+	node [label="\N",
+		shape=box
+	];
+	a	[height=0.5,
+		pos="54.75,34.5",
+		width=0.75,
+		xlabel=XLA,
+		xlp="13.875,8.25"];
+	b	[height=0.5,
+		pos="144.75,34.5",
+		width=0.75,
+		xlabel=XLB,
+		xlp="104.25,8.25"];
+	a -> b	[head_lp="103.12,42.75",
+		headlabel=HAB,
+		pos="e,117.37,34.5 82.153,34.5 89.636,34.5 97.933,34.5 105.95,34.5",
+		tail_lp="95.653,26.25",
+		taillabel=TAB,
+		xlabel=XAB,
+		xlp="113.77,26.25"];
+}

@@ -1,0 +1,26 @@
+digraph R {
+	graph [bb="0,0,287.33,37",
+		rankdir=LR
+	];
+	node [label="\N",
+		style=rounded
+	];
+	node1	[height=0.5,
+		pos="27,18.5",
+		shape=box,
+		width=0.75];
+	node2	[fillcolor=yellow,
+		height=0.5,
+		pos="137.29,18.5",
+		shape=diamond,
+		style="rounded,filled",
+		width=1.3136];
+	node1 -> node2	[pos="e,88.95,18.5 54.49,18.5 61.555,18.5 69.478,18.5 77.539,18.5"];
+	node3	[height=0.51389,
+		label="{ a | b | c }",
+		pos="253.95,18.5",
+		rects="220.58,1,242.58,36.5 242.58,1,265.33,36.5 265.33,1,287.33,36.5",
+		shape=record,
+		width=0.92708];
+	node2 -> node3	[pos="e,220.29,18.5 185.92,18.5 193.51,18.5 201.34,18.5 208.84,18.5"];
+}
