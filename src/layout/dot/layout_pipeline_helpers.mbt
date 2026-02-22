@@ -12825,14 +12825,21 @@ fn run_finalize_order_groups_cluster_enabled_phase(
   dispatch_context : FinalizeOrderGroupsDispatchContext,
   cleaned_groups : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let rankdir = graph_rankdir(dispatch_context.graph)
+  let skip_cluster_rank_order_for_lr =
+    rankdir == RankDir::LR || rankdir == RankDir::RL
   let final_groups =
-    reorder_final_groups_for_cluster_remincross(
-      cleaned_groups,
-      dispatch_context.cluster_rank_order,
-      dispatch_context.cluster_meta.cluster_keys,
-      dispatch_context.cluster_meta.intercluster_keys,
-      dispatch_context.local_cluster_order,
-    )
+    if skip_cluster_rank_order_for_lr {
+      cleaned_groups
+    } else {
+      reorder_final_groups_for_cluster_remincross(
+        cleaned_groups,
+        dispatch_context.cluster_rank_order,
+        dispatch_context.cluster_meta.cluster_keys,
+        dispatch_context.cluster_meta.intercluster_keys,
+        dispatch_context.local_cluster_order,
+      )
+    }
   run_finalize_order_groups_cluster_remincross_phase(
     dispatch_context.graph,
     dispatch_context.edges,
