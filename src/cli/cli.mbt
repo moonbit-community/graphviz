@@ -470,3 +470,23 @@ pub fn run_cli(args : Array[String], program? : String = "dot") -> String raise 
     CliAction::ShowVersion => version_text()
   }
 }
+
+///|
+pub fn run_cli_bytes(
+  args : Array[String],
+  program? : String = "dot",
+) -> Bytes raise {
+  match parse_cli_args(args, program~) {
+    CliAction::Render(job) => {
+      match job.output {
+        Some(path) => {
+          @fs.write_bytes_to_file(path, render_job_bytes(job))
+          @utf8.encode("", bom=false)
+        }
+        None => render_job_bytes(job)
+      }
+    }
+    CliAction::ListFormats => @utf8.encode(formats_list(), bom=false)
+    CliAction::ShowVersion => @utf8.encode(version_text(), bom=false)
+  }
+}

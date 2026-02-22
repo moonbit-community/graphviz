@@ -2,6 +2,8 @@
   "is_main": true,
   "import": [
     "moonbit-community/graphviz/cli",
+    "moonbitlang/core/encoding/utf8",
+    "moonbitlang/x/fs",
     "moonbitlang/x/sys"
   ]
 }
