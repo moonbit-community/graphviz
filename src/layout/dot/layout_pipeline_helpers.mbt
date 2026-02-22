@@ -9376,6 +9376,7 @@ fn build_clustered_remincross_order_edges_by_tail(
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
+  cluster_order_index : Map[String, Int],
 ) -> (
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   Map[String, Array[String]],
@@ -9400,6 +9401,7 @@ fn build_clustered_remincross_order_edges_by_tail(
       false,
       false,
       rem_edges_by_tail,
+      cluster_order_index=cluster_order_index,
     )
   let rem_order_edges_by_tail_coalesced =
     coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
@@ -9451,6 +9453,7 @@ fn build_clustered_remincross_order_edges_by_tail_with_trace(
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
+  cluster_order_index : Map[String, Int],
 ) -> (
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   Map[String, Array[String]],
@@ -9472,6 +9475,7 @@ fn build_clustered_remincross_order_edges_by_tail_with_trace(
       cluster_keys,
       order_with_clusters,
       edges_by_tail,
+      cluster_order_index,
     )
   trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
   (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation)
@@ -9647,6 +9651,7 @@ fn build_clustered_remincross_materialized_edges(
   cluster_keys : Map[String, String],
   order_with_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
+  cluster_order_index : Map[String, Int],
   flat_rank_constraints : Map[String, Bool],
   rem_graph : @cgraph.Graph,
   rem_node_map : Map[String, @cgraph.Node],
@@ -9677,6 +9682,7 @@ fn build_clustered_remincross_materialized_edges(
       cluster_keys,
       order_with_clusters,
       edges_by_tail,
+      cluster_order_index,
     )
   build_clustered_remincross_materialized_edges_output_phase(
     flat_rank_constraints,
@@ -10378,6 +10384,8 @@ fn build_clustered_remincross_multi_rank_materialized_edges(
   Array[Double],
   Array[Double],
 ) {
+  let cluster_order_index =
+    build_cluster_index_for_local_reorder(cluster_meta.cluster_order)
   build_clustered_remincross_materialized_edges(
     creation_order,
     edges,
@@ -10393,6 +10401,7 @@ fn build_clustered_remincross_multi_rank_materialized_edges(
     cluster_meta.cluster_keys,
     order_with_clusters,
     edges_by_tail,
+    cluster_order_index,
     flat_rank_constraints,
     rem_graph,
     rem_node_map,
@@ -18246,10 +18255,7 @@ fn build_ordering_reorder_flags_and_constraints(
   let order_with_vnodes = vnode_count > 0
   let order_with_clusters =
     cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  // Graphviz parity: LR keeps flip only for single-cluster ordering;
-  // multi-cluster LR roots follow non-flipped seed traversal.
-  let graphviz_flip = rankdir == RankDir::RL ||
-    (rankdir == RankDir::LR && cluster_meta.cluster_min_rank.length() <= 1)
+  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
   let flat_rank_constraints =
     build_flat_rank_constraints(
       edge_tail,

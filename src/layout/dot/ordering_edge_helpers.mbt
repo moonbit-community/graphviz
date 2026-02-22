@@ -493,6 +493,7 @@ fn build_order_edges_by_tail_graphviz(
   map_clusters : Bool,
   map_intercluster : Bool,
   edges_by_tail : Map[String, Array[Int]],
+  cluster_order_index? : Map[String, Int] = Map::new(),
 ) -> (
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   Map[String, Array[String]],
@@ -504,12 +505,160 @@ fn build_order_edges_by_tail_graphviz(
   let vnode_creation_by_tail : Map[String, Array[String]] = Map::new()
   let edge_creation : Array[(String, String)] = []
   let use_mapping = order_with_clusters && map_clusters
+  let cluster_order_index_local : Map[String, Int] = Map::new()
+  if order_with_clusters && cluster_order_index.length() > 0 {
+    for cluster, idx in cluster_order_index {
+      cluster_order_index_local[cluster] = idx
+    }
+  }
   for tail_name in tail_order {
     let created_for_tail : Array[String] = []
-    let indices = match edges_by_tail.get(tail_name) {
+    let indices_raw = match edges_by_tail.get(tail_name) {
       Some(list) => list
       None => []
     }
+    let indices =
+      if !order_with_clusters || cluster_order_index_local.length() == 0 ||
+        indices_raw.length() <= 1 {
+        indices_raw
+      } else {
+        let tail_cluster_name = match cluster_keys.get(tail_name) {
+          Some(value) => value
+          None => ""
+        }
+        let tail_cluster_rank = match cluster_order_index_local.get(tail_cluster_name) {
+          Some(value) => value
+          None => -1
+        }
+        let head_cluster_default = cluster_order_index_local.length() + 1
+        let keyed : Array[(Int, Int, Int, Int, String)] = []
+        let mut original_pos = 0
+        for idx in indices_raw {
+          let tail =
+            if idx < edge_tail.length() { edge_tail[idx] } else { edges[idx].tail().name() }
+          let head =
+            if idx < edge_head.length() { edge_head[idx] } else { edges[idx].head().name() }
+          let tail_cluster = match cluster_keys.get(tail) {
+            Some(value) => value
+            None => ""
+          }
+          let head_cluster = match cluster_keys.get(head) {
+            Some(value) => value
+            None => ""
+          }
+          let same_cluster =
+            tail_cluster != "" && head_cluster != "" && tail_cluster == head_cluster
+          let cluster_rank = match cluster_order_index_local.get(head_cluster) {
+            Some(value) => value
+            None => head_cluster_default
+          }
+          keyed.push(
+            (
+              idx,
+              if same_cluster { 0 } else { 1 },
+              cluster_rank,
+              original_pos,
+              head_cluster,
+            ),
+          )
+          original_pos = original_pos + 1
+        }
+        if keyed.length() > 1 {
+          keyed.sort_by((a, b) => {
+            let (_idx_a, same_a, rank_a, pos_a, _cluster_a) = a
+            let (_idx_b, same_b, rank_b, pos_b, _cluster_b) = b
+            if same_a < same_b {
+              -1
+            } else if same_a > same_b {
+              1
+            } else if rank_a < rank_b {
+              -1
+            } else if rank_a > rank_b {
+              1
+            } else if pos_a < pos_b {
+              -1
+            } else if pos_a > pos_b {
+              1
+            } else {
+              0
+            }
+          })
+        }
+        // Graphviz parity: when a tail points into later clusters, agfstout
+        // starts each cluster bucket from its rankleader edge, then walks the
+        // remaining edges in original order.
+        let keyed_rotated : Array[(Int, Int, Int, Int, String)] = []
+        if tail_cluster_name != "" && tail_cluster_rank >= 0 && keyed.length() > 1 {
+          let leader_entries : Array[(Int, Int, Int, Int, String)] = []
+          let body_entries : Array[(Int, Int, Int, Int, String)] = []
+          let mut insert_pos = -1
+          let mut i = 0
+          while i < keyed.length() {
+            let (_idx_i, same_i, rank_i, _pos_i, cluster_i) = keyed[i]
+            let mut j = i + 1
+            while j < keyed.length() {
+              let (_idx_j, same_j, rank_j, _pos_j, cluster_j) = keyed[j]
+              if same_j != same_i || rank_j != rank_i || cluster_j != cluster_i {
+                break
+              }
+              j = j + 1
+            }
+            let segment_len = j - i
+            let use_right_cluster_leader =
+              same_i == 1 && cluster_i != "" && rank_i > tail_cluster_rank &&
+              segment_len > 1
+            if use_right_cluster_leader {
+              if insert_pos < 0 {
+                insert_pos = body_entries.length()
+              }
+              let mut k = i
+              while k + 1 < j {
+                body_entries.push(keyed[k])
+                k = k + 1
+              }
+              leader_entries.push(keyed[j - 1])
+            } else {
+              let mut k = i
+              while k < j {
+                body_entries.push(keyed[k])
+                k = k + 1
+              }
+            }
+            i = j
+          }
+          if leader_entries.length() > 0 {
+            let split =
+              if insert_pos >= 0 { insert_pos } else { body_entries.length() }
+            let mut i = 0
+            while i < split {
+              keyed_rotated.push(body_entries[i])
+              i = i + 1
+            }
+            for entry in leader_entries {
+              keyed_rotated.push(entry)
+            }
+            i = split
+            while i < body_entries.length() {
+              keyed_rotated.push(body_entries[i])
+              i = i + 1
+            }
+          } else {
+            for entry in keyed {
+              keyed_rotated.push(entry)
+            }
+          }
+        } else {
+          for entry in keyed {
+            keyed_rotated.push(entry)
+          }
+        }
+        let sorted_indices : Array[Int] = []
+        for entry in keyed_rotated {
+          let (idx, _same, _rank, _pos, _cluster) = entry
+          sorted_indices.push(idx)
+        }
+        sorted_indices
+      }
     for idx in indices {
       let edge = edges[idx]
       let tail =
