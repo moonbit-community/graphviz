@@ -2097,6 +2097,9 @@ fn x_positions_from_simplex(
   let xpos_nlist_order : Array[String] = []
   let cluster_order : Array[String] = []
   let cluster_seen : Map[String, Bool] = Map::new()
+  let rankdir = graph_rankdir(graph_root)
+  let prefer_source_for_lr =
+    rankdir == RankDir::LR || rankdir == RankDir::RL
   for name in nlist_reversed {
     let cluster = match cluster_keys.get(name) {
       Some(value) => value
@@ -2107,7 +2110,7 @@ fn x_positions_from_simplex(
       cluster_order.push(cluster)
     }
   }
-  if cluster_order.length() == 0 {
+  if prefer_source_for_lr || cluster_order.length() == 0 {
     for name in nlist_source {
       xpos_nlist_order.push(name)
     }
