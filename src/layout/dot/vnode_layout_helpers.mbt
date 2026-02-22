@@ -63,6 +63,7 @@ fn build_edge_vnodes(
     }
   }
   let plain_width = 1.0 + nodesep_pt / 2.0
+  let seen_pairs : Map[String, Bool] = Map::new()
   for idx in edge_indices {
     let edge = edges[idx]
     let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
@@ -70,6 +71,13 @@ fn build_edge_vnodes(
     }
     let head = if idx < edge_head.length() { edge_head[idx] } else {
       edge.head().name()
+    }
+    if edge.tail().graph().kind() == @cgraph.GraphKind::Undirected {
+      let pair_key = if tail < head { "\{tail}|\{head}" } else { "\{head}|\{tail}" }
+      if seen_pairs.get(pair_key) is Some(_) {
+        continue
+      }
+      seen_pairs[pair_key] = true
     }
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
