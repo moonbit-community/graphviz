@@ -685,6 +685,7 @@ fn snapshot_input_path(case_name : String) -> String raise {
     "refs/graphviz/doc/dotguide/\{case_name}.dot",
     "refs/graphviz/doc/infosrc/\{case_name}.dot",
     "refs/graphviz/doc/infosrc/\{case_name}.gv",
+    "refs/graphviz/doc/neato/\{case_name}.dot",
     "refs/graphviz/contrib/prune/\{case_name}.gv",
   ]
   for path in candidates {

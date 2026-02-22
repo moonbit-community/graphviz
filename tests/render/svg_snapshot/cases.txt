@@ -60,6 +60,7 @@ invtrapezium
 invtriangle
 japanese
 jcctree
+jho
 jsort
 KW91
 Latin1

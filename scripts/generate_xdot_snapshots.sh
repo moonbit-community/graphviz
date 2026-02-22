@@ -20,6 +20,7 @@ resolve_input_for_case() {
     "refs/graphviz/doc/dotguide/${case_name}.dot"
     "refs/graphviz/doc/infosrc/${case_name}.dot"
     "refs/graphviz/doc/infosrc/${case_name}.gv"
+    "refs/graphviz/doc/neato/${case_name}.dot"
     "refs/graphviz/contrib/prune/${case_name}.gv"
   )
   local rel
