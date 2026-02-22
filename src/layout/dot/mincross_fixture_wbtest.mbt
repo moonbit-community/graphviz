@@ -524,3 +524,199 @@ test "mincross fixtures match reorder_rank_groups" {
     run_mincross_case(input, output)
   }
 }
+
+///|
+test "mincross fixed case preserves initial tie order" {
+  let input : MincrossInput = {
+    case_id: 1001,
+    graph: "fixed_case",
+    startpass: 0,
+    minrank: 0,
+    maxrank: 1,
+    nodes: [
+      {
+        id: 0,
+        rank: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [1, 3],
+        in_neighbors: [],
+      },
+      {
+        id: 1,
+        rank: 1,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0, 2],
+      },
+      {
+        id: 2,
+        rank: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [1, 3],
+        in_neighbors: [],
+      },
+      {
+        id: 3,
+        rank: 1,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0, 2],
+      },
+    ],
+    edges: [
+      {
+        tail: 0,
+        head: 1,
+        xpenalty: 1,
+        seq: 3,
+        order: 0,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 0,
+        head: 3,
+        xpenalty: 1,
+        seq: 4,
+        order: 1,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 2,
+        head: 1,
+        xpenalty: 1,
+        seq: 1,
+        order: 2,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 2,
+        head: 3,
+        xpenalty: 1,
+        seq: 2,
+        order: 3,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+    ],
+    flat_edges: [],
+    ranks: [[0, 2], [1, 3]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1001,
+    ranks: [[0, 2], [1, 3]],
+  }
+  run_mincross_case(input, output)
+}
+
+///|
+test "mincross fixed case recovers nlist tie order from reversed seed" {
+  let input : MincrossInput = {
+    case_id: 1002,
+    graph: "fixed_case_reversed_seed",
+    startpass: 0,
+    minrank: 0,
+    maxrank: 1,
+    nodes: [
+      {
+        id: 0,
+        rank: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [1, 3],
+        in_neighbors: [],
+      },
+      {
+        id: 1,
+        rank: 1,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0, 2],
+      },
+      {
+        id: 2,
+        rank: 0,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [1, 3],
+        in_neighbors: [],
+      },
+      {
+        id: 3,
+        rank: 1,
+        cluster: None,
+        cluster_skeleton: false,
+        out_neighbors: [],
+        in_neighbors: [0, 2],
+      },
+    ],
+    edges: [
+      {
+        tail: 0,
+        head: 1,
+        xpenalty: 1,
+        seq: 3,
+        order: 0,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 0,
+        head: 3,
+        xpenalty: 1,
+        seq: 4,
+        order: 1,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 2,
+        head: 1,
+        xpenalty: 1,
+        seq: 1,
+        order: 2,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+      {
+        tail: 2,
+        head: 3,
+        xpenalty: 1,
+        seq: 2,
+        order: 3,
+        tail_port_x: 0.0,
+        head_port_x: 0.0,
+        tail_port_order: 0.0,
+        head_port_order: 0.0,
+      },
+    ],
+    flat_edges: [],
+    ranks: [[2, 0], [1, 3]],
+  }
+  let output : MincrossOutput = {
+    case_id: 1002,
+    ranks: [[0, 2], [1, 3]],
+  }
+  run_mincross_case(input, output)
+}

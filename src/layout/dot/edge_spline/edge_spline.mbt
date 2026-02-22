@@ -2239,7 +2239,7 @@ fn clip_spline_to_nodes(
     | ClipShape::Diamond =>
       // Graphviz parity guard: shape_clip(record_inside) extends both node
       // and port boxes by penwidth/2 before Bézier clipping.
-      if tail_penwidth > 0.0 {
+      if tail_penwidth > 0.0 && fixedsize_mode(tail_node) != "shape" {
         inflate_node_size(tail_shape_size, tail_penwidth / 2.0)
       } else {
         tail_shape_size
@@ -2258,7 +2258,7 @@ fn clip_spline_to_nodes(
     ClipShape::Rect
     | ClipShape::Ellipse
     | ClipShape::Diamond =>
-      if head_penwidth > 0.0 {
+      if head_penwidth > 0.0 && fixedsize_mode(head_node) != "shape" {
         inflate_node_size(head_shape_size, head_penwidth / 2.0)
       } else {
         head_shape_size

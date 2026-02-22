@@ -234,6 +234,7 @@ fn node_attr_rank(name : String) -> Int {
     "color" => 2
     "colorscheme" => 3
     "fillcolor" => 4
+    "fixedsize" => 5
     "distortion" => 5
     "fontcolor" => 6
     "fontname" => 7
