@@ -251,8 +251,8 @@ fn parse_optional_flat_edges(
 }
 
 ///|
-fn load_mincross_fixtures() -> MincrossFixtures raise {
-  let data = @fs.read_file_to_string("tests/fixtures/graphviz/mincross.jsonl")
+fn load_mincross_fixtures_from(path : String) -> MincrossFixtures raise {
+  let data = @fs.read_file_to_string(path)
   let cases : Array[(MincrossInput, MincrossOutput)] = []
   let known_name_order : Map[String, Int] = Map::new()
   let ambiguous_name_order : Map[String, Bool] = Map::new()
@@ -318,6 +318,11 @@ fn load_mincross_fixtures() -> MincrossFixtures raise {
     }
   }
   { cases, name_order: stable_name_order }
+}
+
+///|
+fn load_mincross_fixtures() -> MincrossFixtures raise {
+  load_mincross_fixtures_from("tests/fixtures/graphviz/mincross.jsonl")
 }
 
 ///|
@@ -670,6 +675,17 @@ test "mincross fixtures load" {
 ///|
 test "mincross fixtures match reorder_rank_groups" {
   let fixtures = load_mincross_fixtures()
+  for pair in fixtures.cases {
+    let (input, output) = pair
+    run_mincross_case_with_name_order(input, output, fixtures.name_order)
+  }
+}
+
+///|
+test "mincross plugins fixtures match reorder_rank_groups" {
+  let fixtures = load_mincross_fixtures_from(
+    "tests/fixtures/graphviz/mincross.plugins.jsonl",
+  )
   for pair in fixtures.cases {
     let (input, output) = pair
     run_mincross_case_with_name_order(input, output, fixtures.name_order)

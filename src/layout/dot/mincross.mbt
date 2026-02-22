@@ -1969,7 +1969,7 @@ fn reorder_rank_groups(
         trying = trying + 1
         let reverse = iter % 4 < 2
         let use_sweep_snapshot = startpass > 1 && pass > 1 &&
-          has_graphviz_neighbor_hints
+          has_graphviz_neighbor_hints && iter % 2 == 0
         let sweep_positions =
           if use_sweep_snapshot { order_positions.copy() } else { order_positions }
         if iter % 2 == 0 {
