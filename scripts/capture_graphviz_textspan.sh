@@ -77,6 +77,8 @@ inputs=(
   "$ROOT"/refs/graphviz/doc/infosrc/*.gv
   "$ROOT"/refs/graphviz/doc/neato/*.dot
   "$ROOT"/refs/graphviz/doc/neato/*.gv
+  "$ROOT"/refs/graphviz/contrib/dirgraph/*.dot
+  "$ROOT"/refs/graphviz/contrib/java-dot/*.dot
   "$ROOT"/refs/graphviz/graphs/directed/*.gv
   "$ROOT"/refs/graphviz/graphs/directed/*.dot
   "$ROOT"/refs/graphviz/graphs/undirected/*.gv

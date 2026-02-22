@@ -1,5 +1,6 @@
 abstract
 alf
+apache
 arr_none
 arrows
 asde91
@@ -7,6 +8,8 @@ awilliams
 back
 biological
 both
+bsdarch
+bsdkernel
 box
 boxarrow
 circle
@@ -69,6 +72,7 @@ jsort
 KW91
 Latin1
 ldbxtried
+linux
 longflat
 Mcircle
 Mdiamond
@@ -76,6 +80,7 @@ mike
 Mrecord
 Msquare
 NaN
+named
 nhg
 ngk10_4
 none
