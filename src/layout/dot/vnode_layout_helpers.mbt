@@ -63,7 +63,6 @@ fn build_edge_vnodes(
     }
   }
   let plain_width = 1.0 + nodesep_pt / 2.0
-  let seen_pairs : Map[String, Bool] = Map::new()
   for idx in edge_indices {
     let edge = edges[idx]
     let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
@@ -72,22 +71,15 @@ fn build_edge_vnodes(
     let head = if idx < edge_head.length() { edge_head[idx] } else {
       edge.head().name()
     }
-    if edge.tail().graph().kind() == @cgraph.GraphKind::Undirected {
-      let pair_key = if tail < head { "\{tail}|\{head}" } else { "\{head}|\{tail}" }
-      if seen_pairs.get(pair_key) is Some(_) {
-        continue
-      }
-      seen_pairs[pair_key] = true
-    }
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
     // Graphviz parity: cluster-local parallel chains do not widen class2 vnodes.
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
+    let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
     let key = edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
-        let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
         for name in list {
           match vnode_sizes.get(name) {
             Some(size) => {
@@ -102,6 +94,34 @@ fn build_edge_vnodes(
         continue
       }
       None => ()
+    }
+    let label = match edge.get_attr("label") {
+      Some(value) => value
+      None => ""
+    }
+    if label == "" {
+      // Graphviz parity: reverse-direction duplicate edges reuse the
+      // existing virtual chain and only widen shared virtual nodes.
+      let reverse_key =
+        "\{edge.head().name()}|\{edge.tail().name()}|\{port_key(edge.head_port())}|\{port_key(edge.tail_port())}"
+      match edge_vnodes.get(reverse_key) {
+        Some(list) => {
+          for name in list {
+            match vnode_sizes.get(name) {
+              Some(size) => {
+                let left = size.left_pt + delta
+                let right = size.right_pt + delta
+                vnode_sizes[name] =
+                  vnode_size_from_widths_with_height(left, right, size.height_pt)
+              }
+              None => ()
+            }
+          }
+          edge_vnodes[key] = list
+          continue
+        }
+        None => ()
+      }
     }
     // Graphviz parity: cluster-local vnodes use the virtual_node default width.
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
