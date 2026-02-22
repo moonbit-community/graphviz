@@ -3897,7 +3897,7 @@ fn recover_pathplan_slack_for_edge(
   if !spline_result.using_pathplan {
     return ()
   }
-  let recover_key = edge_vnode_key(edge)
+  let recover_key = recover_slack_key_for_edge(edge)
   match recover_edge_id_by_key.get(recover_key) {
     Some(recover_edge_id) =>
       if recover_edge_id != edge.id() {
@@ -4377,6 +4377,18 @@ fn sorted_edges_for_routing(
 }
 
 ///|
+/// Graphviz parity: recover_slack class keys collapse reverse-direction
+/// unlabeled edges that share a class2 vnode chain.
+fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
+  let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
+  if edge_has_label(edge) || !undirected {
+    "vnode|\{edge_vnode_key(edge)}"
+  } else {
+    "parallel|\{edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
+  }
+}
+
+///|
 /// Graphviz parity: recover_slack for regular-edge classes uses the
 /// center-most parallel member (tie: later edge id).
 fn recover_edge_selection_for_regular_edges(
@@ -4396,7 +4408,7 @@ fn recover_edge_selection_for_regular_edges(
     if base.is_flat_edge {
       continue
     }
-    let key = edge_vnode_key(edge)
+    let key = recover_slack_key_for_edge(edge)
     let score = Double::abs(base.parallel_offset)
     match selected_ids.get(key) {
       Some(current_id) => {
@@ -4770,9 +4782,10 @@ fn route_edges(
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id
   }
-  for key, group_edges in regular_parallel_groups {
+  for _key, group_edges in regular_parallel_groups {
     if group_edges.length() > 1 {
-      recover_edge_id_for_routing[key] = group_edges[0].id()
+      let recover_key = recover_slack_key_for_edge(group_edges[0])
+      recover_edge_id_for_routing[recover_key] = group_edges[0].id()
     }
   }
   for edge in ordered_edges {

@@ -137,6 +137,7 @@ tree
 triangle
 triedds
 tripleoctagon
+typeshar
 try
 unix
 unix2

@@ -301,6 +301,7 @@ fn edge_attr_rank(name : String) -> Int {
     "taillabel" => 32
     "xlabel" => 33
     "xlp" => 34
+    "w" => 35
     "weight" => 35
     "wt" => 36
     // Graphviz emits unknown/custom edge attrs (for example, `len`/`f`)
