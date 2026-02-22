@@ -60,6 +60,7 @@ honda-tokoro
 house
 html
 icurve
+inet
 inv
 invdot
 invhouse

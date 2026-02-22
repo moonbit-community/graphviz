@@ -374,6 +374,14 @@ fn Parser::parse_edge_stmt(
   left : Endpoint,
 ) -> Unit raise DotParseError {
   let endpoints : Array[Endpoint] = [left]
+  // Graphviz parity: create the left endpoint node before parsing RHS
+  // endpoint subgraphs so node ids follow statement order.
+  match endpoints[0] {
+    Node(_) => {
+      let _ = Parser::endpoint_nodes(graph, endpoints[0])
+    }
+    _ => ()
+  }
   while self.current.token == EdgeDirected ||
         self.current.token == EdgeUndirected {
     let op = self.current.token
