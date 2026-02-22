@@ -3244,122 +3244,6 @@ fn apply_cluster_local_rank_order_to_groups(
   }
 }
 
-///|
-/// Graphviz parity: cluster-local seed order propagates previous-rank parent
-/// order first, then falls back to cluster node-order for disconnected nodes.
-/// Do not change behavior without updating fixtures/tests.
-fn seed_cluster_local_groups_by_parent_rank_order(
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  parents : Map[String, Array[String]],
-  cluster_node_order : Map[String, Int],
-) -> Map[Int, Array[String]] {
-  let seeded : Map[Int, Array[String]] = Map::new()
-  if cluster_rank_keys.length() == 0 {
-    return seeded
-  }
-  for idx in 0..<cluster_rank_keys.length() {
-    let rank = cluster_rank_keys[idx]
-    let names = match cluster_groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    if idx == 0 || names.length() <= 1 {
-      if names.length() > 0 {
-        seeded[rank] = names.copy()
-      }
-      continue
-    }
-    let prev_rank = cluster_rank_keys[idx - 1]
-    let prev_names = match seeded.get(prev_rank) {
-      Some(list) => list
-      None =>
-        match cluster_groups.get(prev_rank) {
-          Some(list) => list
-          None => []
-        }
-    }
-    let prev_order : Map[String, Int] = Map::new()
-    for pos, name in prev_names {
-      prev_order[name] = pos
-    }
-    let keyed : Array[(Int, Int, Int, Int, String)] = []
-    let default_order = cluster_node_order.length() + names.length() + 1
-    for pos, name in names {
-      let mut has_prev = false
-      let mut min_prev = 1_000_000
-      match parents.get(name) {
-        Some(list) => {
-          for parent in list {
-            let parent_rank = match ranks.get(parent) {
-              Some(value) => value
-              None => prev_rank - 1
-            }
-            if parent_rank != prev_rank {
-              continue
-            }
-            match prev_order.get(parent) {
-              Some(order) => {
-                has_prev = true
-                if order < min_prev {
-                  min_prev = order
-                }
-              }
-              None => ()
-            }
-          }
-        }
-        None => ()
-      }
-      let local_order = match cluster_node_order.get(name) {
-        Some(value) => value
-        None => default_order + pos
-      }
-      keyed.push(
-        (
-          if has_prev { 0 } else { 1 },
-          min_prev,
-          local_order,
-          pos,
-          name,
-        ),
-      )
-    }
-    keyed.sort_by((a, b) => {
-      let (has_a, prev_a, local_a, pos_a, _name_a) = a
-      let (has_b, prev_b, local_b, pos_b, _name_b) = b
-      if has_a < has_b {
-        -1
-      } else if has_a > has_b {
-        1
-      } else if prev_a < prev_b {
-        -1
-      } else if prev_a > prev_b {
-        1
-      } else if local_a < local_b {
-        -1
-      } else if local_a > local_b {
-        1
-      } else if pos_a < pos_b {
-        -1
-      } else if pos_a > pos_b {
-        1
-      } else {
-        0
-      }
-    })
-    let ordered : Array[String] = []
-    for entry in keyed {
-      let (_has_prev, _prev_order, _local_order, _pos, name) = entry
-      ordered.push(name)
-    }
-    seeded[rank] = ordered
-  }
-  seeded
-}
-
-///|
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
@@ -3421,18 +3305,10 @@ fn run_cluster_local_rank_reorder(
       }
     }
   }
-  let parent_seeded_groups =
-    seed_cluster_local_groups_by_parent_rank_order(
-      cluster_rank_keys,
-      cluster_groups,
-      fixed_ranks,
-      parents,
-      cluster_node_order,
-    )
   let seeded_by_vnode_interp =
     seed_cluster_local_groups_by_vnode_interpolation(
       cluster_rank_keys,
-      parent_seeded_groups,
+      cluster_groups,
       fixed_ranks,
       parents,
       children,
@@ -3725,7 +3601,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Array[String]],
   Map[String, Int],
 ) {
-  let include_external_crossing = cluster_rank_keys.length() <= 2
+  let include_external_crossing = true
   build_cluster_local_edge_bundle(
     order_edges,
     order_edge_tail,
