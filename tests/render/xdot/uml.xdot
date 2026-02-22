@@ -1,0 +1,541 @@
+digraph "UML Graph" {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 2268.5 1487.14 2268.5 1487.14 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 743.57 7.2 0 67.5 9 -UML Graph ",
+		bb="0,0,1487.1,2268.5",
+		label="UML Graph",
+		lheight=0.23,
+		lp="743.57,12.25",
+		lwidth=0.94,
+		rankdir=TD,
+		xdotversion=1.7
+	];
+	node [fontname=Helvetica,
+		label="\N",
+		shape=record,
+		style=filled
+	];
+	edge [color=black,
+		dir=back
+	];
+	class_dot_DotStringAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 619.39 226 619.39 333 819.14 333 819.14 226 c 7 -#008b00 L 2 619.39 310 819.14 310 c 7 -#008b00 L \
+2 619.39 287 819.14 287 c 7 -#008b00 L 2 619.39 264 819.14 264 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 719.26 315.7 0 123 19 -class DotStringAttr F 14 14 -Helvetica-Bold c 7 -#000000 T 627.39 \
+292.7 -1 183.75 30 -DotStringAttr (String, String) F 14 14 -Helvetica-Bold c 7 -#000000 T 627.39 269.7 -1 155.25 25 -void write (\
+StringBuffer) F 14 14 -Helvetica-Bold c 7 -#000000 T 627.39 246.7 -1 72.75 11 -String _key F 14 14 -Helvetica-Bold c 7 -#000000 \
+T 627.39 231.7 -1 84.75 13 -String _value ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.5,
+		label="{class DotStringAttr\n|DotStringAttr (String, String)\l|void write (StringBuffer)\l|String _key\lString _value\l}",
+		pos="719.26,279.5",
+		rects="619.39,310,819.14,333 619.39,287,819.14,310 619.39,264,819.14,287 619.39,226,819.14,264",
+		width=2.7743];
+	tri_class_dot_DotStringAttr	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 719.26 189.5 692.26 162.5 746.26 162.5 ",
+		height=0.5,
+		label="",
+		pos="719.26,171.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotStringAttr -> tri_class_dot_DotStringAttr	[_draw_="c 7 -#000000 B 4 719.26 214.15 719.26 205.31 719.26 196.91 719.26 190 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 715.76 213.99 719.26 223.99 722.76 213.99 ",
+		pos="s,719.26,225.5 719.26,214.15 719.26,205.31 719.26,196.91 719.26,190"];
+	class_dot_DotColorAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 560.51 25 560.51 117 710.01 117 710.01 25 c 7 -#008b00 L 2 560.51 94 710.01 94 c 7 -#008b00 L 2 560.51 \
+71 710.01 71 c 7 -#008b00 L 2 560.51 48 710.01 48 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 635.26 99.7 0 119.25 18 -class DotColorAttr F 14 14 -Helvetica-Bold c 7 -#000000 T 568.51 \
+76.7 -1 133.5 21 -DotColorAttr (String) F 14 14 -Helvetica-Bold c 7 -#000000 T 635.26 53.7 0 3.75 1 -  F 14 14 -Helvetica-Bold c \
+7 -#000000 T 635.26 30.7 0 3.75 1 -  ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.2917,
+		label="{class DotColorAttr\n|DotColorAttr (String)\l||}",
+		pos="635.26,71",
+		rects="560.51,94,710.01,117 560.51,71,710.01,94 560.51,48,710.01,71 560.51,25,710.01,48",
+		width=2.0764];
+	tri_class_dot_DotStringAttr -> class_dot_DotColorAttr	[_draw_="c 7 -#000000 B 4 704.84 153.59 696.29 143.56 685.01 130.33 674.02 117.45 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 701.97 155.61 711.12 160.95 707.29 151.07 ",
+		pos="s,712.1,162.1 704.84,153.59 696.29,143.56 685.01,130.33 674.02,117.45"];
+	class_dot_DotLabelAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 728.51 25 728.51 117 878.01 117 878.01 25 c 7 -#008b00 L 2 728.51 94 878.01 94 c 7 -#008b00 L 2 728.51 \
+71 878.01 71 c 7 -#008b00 L 2 728.51 48 878.01 48 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 803.26 99.7 0 119.25 18 -class DotLabelAttr F 14 14 -Helvetica-Bold c 7 -#000000 T 736.51 \
+76.7 -1 133.5 21 -DotLabelAttr (String) F 14 14 -Helvetica-Bold c 7 -#000000 T 803.26 53.7 0 3.75 1 -  F 14 14 -Helvetica-Bold c \
+7 -#000000 T 803.26 30.7 0 3.75 1 -  ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.2917,
+		label="{class DotLabelAttr\n|DotLabelAttr (String)\l||}",
+		pos="803.26,71",
+		rects="728.51,94,878.01,117 728.51,71,878.01,94 728.51,48,878.01,71 728.51,25,878.01,48",
+		width=2.0764];
+	tri_class_dot_DotStringAttr -> class_dot_DotLabelAttr	[_draw_="c 7 -#000000 B 4 733.69 153.59 742.24 143.56 753.52 130.33 764.51 117.45 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 731.23 151.07 727.41 160.95 736.56 155.61 ",
+		pos="s,726.43,162.1 733.69,153.59 742.24,143.56 753.52,130.33 764.51,117.45"];
+	class_dot_DotGraphRotateAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 837.01 233.5 837.01 325.5 1019.51 325.5 1019.51 233.5 c 7 -#008b00 L 2 837.01 302.5 1019.51 302.5 \
+c 7 -#008b00 L 2 837.01 279.5 1019.51 279.5 c 7 -#008b00 L 2 837.01 256.5 1019.51 256.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 928.26 308.2 0 166.5 24 -class DotGraphRotateAttr F 14 14 -Helvetica-Bold c 7 -#000000 T \
+845.01 285.2 -1 158.25 24 -DotGraphRotateAttr (int) F 14 14 -Helvetica-Bold c 7 -#000000 T 845.01 262.2 -1 155.25 25 -void write (\
+StringBuffer) F 14 14 -Helvetica-Bold c 7 -#000000 T 845.01 239.2 -1 132 20 -DotStringAttr _angle ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.2917,
+		label="{class DotGraphRotateAttr\n|DotGraphRotateAttr (int)\l|void write (StringBuffer)\l|DotStringAttr _angle\l}",
+		pos="928.26,279.5",
+		rects="837.01,302.5,1019.5,325.5 837.01,279.5,1019.5,302.5 837.01,256.5,1019.5,279.5 837.01,233.5,1019.5,256.5",
+		width=2.5347];
+	class_dot_DotNode	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 611.64 1994.5 611.64 2131.5 878.89 2131.5 878.89 1994.5 c 7 -#008b00 L 2 611.64 2108.5 878.89 2108.5 \
+c 7 -#008b00 L 2 611.64 2070.5 878.89 2070.5 c 7 -#008b00 L 2 611.64 2047.5 878.89 2047.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 745.26 2114.2 0 93.75 13 -class DotNode F 14 14 -Helvetica-Bold c 7 -#000000 T 619.64 2091.2 \
+-1 251.25 39 -DotNode (String, String, DotNodeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 619.64 2076.2 -1 204.75 31 -DotNode (\
+String, DotNodeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 619.64 2053.2 -1 155.25 25 -void write (StringBuffer) F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 619.64 2030.2 -1 86.25 12 -String _name F 14 14 -Helvetica-Bold c 7 -#000000 T 619.64 2015.2 -1 81 13 -String _label \
+F 14 14 -Helvetica-Bold c 7 -#000000 T 619.64 2000.2 -1 129.75 20 -DotNodeAttr[] _attrs ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.9167,
+		label="{class DotNode\n|DotNode (String, String, DotNodeAttr[])\lDotNode (String, DotNodeAttr[])\l|void write (StringBuffer)\l|String _\
+name\lString _label\lDotNodeAttr[] _attrs\l}",
+		pos="745.26,2063",
+		rects="611.64,2108.5,878.89,2131.5 611.64,2070.5,878.89,2108.5 611.64,2047.5,878.89,2070.5 611.64,1994.5,878.89,2047.5",
+		width=3.7118];
+	class_dot_DotEdgeAttr	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 618.76 476 618.76 545 763.76 545 763.76 476 c 7 -#cdcd00 L 2 618.76 522 763.76 522 c 7 -#cdcd00 L \
+2 618.76 499 763.76 499 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 691.26 527.7 0 129 21 -interface DotEdgeAttr F 14 9 -Helvetica c 7 -#000000 T 691.26 504.7 0 3.75 \
+1 -  F 14 9 -Helvetica c 7 -#000000 T 691.26 481.7 0 3.75 1 -  ",
+		color=yellow3,
+		height=0.97222,
+		label="{interface DotEdgeAttr\n||}",
+		pos="691.26,510.5",
+		rects="618.76,522,763.76,545 618.76,499,763.76,522 618.76,476,763.76,499",
+		width=2.0139];
+	tri_class_dot_DotEdgeAttr	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 691.26 405.5 664.26 378.5 718.26 378.5 ",
+		height=0.5,
+		label="",
+		pos="691.26,387.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotEdgeAttr -> tri_class_dot_DotEdgeAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 691.26 464.5 691.26 444.14 691.26 421.28 691.26 406 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 687.76 464.28 691.26 474.28 694.76 464.28 ",
+		pos="s,691.26,475.79 691.26,464.5 691.26,444.14 691.26,421.28 691.26,406",
+		style=dotted];
+	tri_class_dot_DotEdgeAttr -> class_dot_DotStringAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 696.35 367.25 698.88 357.67 702.08 345.57 705.27 333.47 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 693.02 366.16 693.85 376.72 699.79 367.94 ",
+		pos="s,693.46,378.18 696.35,367.25 698.88,357.67 702.08,345.57 705.27,333.47",
+		style=dotted];
+	class_dot_DotCommentedAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 399.64 233.5 399.64 325.5 600.89 325.5 600.89 233.5 c 7 -#008b00 L 2 399.64 302.5 600.89 302.5 c 7 \
+-#008b00 L 2 399.64 279.5 600.89 279.5 c 7 -#008b00 L 2 399.64 256.5 600.89 256.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 500.26 308.2 0 163.5 22 -class DotCommentedAttr F 14 14 -Helvetica-Bold c 7 -#000000 T 407.64 \
+285.2 -1 185.25 26 -DotCommentedAttr (DotAttr) F 14 14 -Helvetica-Bold c 7 -#000000 T 407.64 262.2 -1 155.25 25 -void write (StringBuffer) \
+F 14 14 -Helvetica-Bold c 7 -#000000 T 407.64 239.2 -1 79.5 13 -DotAttr _attr ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.2917,
+		label="{class DotCommentedAttr\n|DotCommentedAttr (DotAttr)\l|void write (StringBuffer)\l|DotAttr _attr\l}",
+		pos="500.26,279.5",
+		rects="399.64,302.5,600.89,325.5 399.64,279.5,600.89,302.5 399.64,256.5,600.89,279.5 399.64,233.5,600.89,256.5",
+		width=2.7951];
+	tri_class_dot_DotEdgeAttr -> class_dot_DotCommentedAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 666.02 372.49 644.49 360.54 612.3 342.68 582 325.86 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 664.19 375.48 674.63 377.27 667.59 369.36 ",
+		pos="s,675.96,378 666.02,372.49 644.49,360.54 612.3,342.68 582,325.86",
+		style=dotted];
+	class_dot_DotAttrNames	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 416.64 1938.5 416.64 2187.5 593.89 2187.5 593.89 1938.5 c 7 -#cdcd00 L 2 416.64 2164.5 593.89 2164.5 \
+c 7 -#cdcd00 L 2 416.64 2141.5 593.89 2141.5 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 505.26 2170.2 0 141 22 -interface DotAttrNames F 14 9 -Helvetica c 7 -#000000 T 505.26 2147.2 0 \
+3.75 1 -  F 14 9 -Helvetica c 7 -#000000 T 424.64 2124.2 -1 135 21 -static String RANKDIR F 14 9 -Helvetica c 7 -#000000 T 424.64 \
+2109.2 -1 116.25 19 -static String RATIO F 14 9 -Helvetica c 7 -#000000 T 424.64 2094.2 -1 104.25 18 -static String SIZE F 14 9 \
+-Helvetica c 7 -#000000 T 424.64 2079.2 -1 129 20 -static String ROTATE F 14 9 -Helvetica c 7 -#000000 T 424.64 2064.2 -1 123.75 \
+19 -static String COLOR F 14 9 -Helvetica c 7 -#000000 T 424.64 2049.2 -1 161.25 23 -static String FONTCOLOR F 14 9 -Helvetica c \
+7 -#000000 T 424.64 2034.2 -1 151.5 22 -static String FONTNAME F 14 9 -Helvetica c 7 -#000000 T 424.64 2019.2 -1 141.75 22 -static \
+String FONTSIZE F 14 9 -Helvetica c 7 -#000000 T 424.64 2004.2 -1 116.25 19 -static String LABEL F 14 9 -Helvetica c 7 -#000000 \
+T 424.64 1989.2 -1 120 19 -static String SHAPE F 14 9 -Helvetica c 7 -#000000 T 424.64 1974.2 -1 117 19 -static String STYLE F 14 \
+9 -Helvetica c 7 -#000000 T 424.64 1959.2 -1 97.5 17 -static String DIR F 14 9 -Helvetica c 7 -#000000 T 424.64 1944.2 -1 129.75 \
+20 -static String WEIGHT ",
+		color=yellow3,
+		height=3.4722,
+		label="{interface DotAttrNames\n||static String RANKDIR\lstatic String RATIO\lstatic String SIZE\lstatic String ROTATE\lstatic String COLOR\lstatic \
+String FONTCOLOR\lstatic String FONTNAME\lstatic String FONTSIZE\lstatic String LABEL\lstatic String SHAPE\lstatic String STYLE\lstatic \
+String DIR\lstatic String WEIGHT\l}",
+		pos="505.26,2063",
+		rects="416.64,2164.5,593.89,2187.5 416.64,2141.5,593.89,2164.5 416.64,1938.5,593.89,2141.5",
+		width=2.4618];
+	tri_class_dot_DotAttrNames	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 508.26 1894.5 481.26 1867.5 535.26 1867.5 ",
+		height=0.5,
+		label="",
+		pos="508.26,1876.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotAttrNames -> tri_class_dot_DotAttrNames	[_draw_="S 6 -dotted c 7 -#000000 B 4 507.46 1926.89 507.66 1914.42 507.85 1903.28 507.98 1894.76 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 503.97 1926.6 507.3 1936.65 510.96 1926.71 ",
+		pos="s,507.28,1938.2 507.46,1926.9 507.66,1914.4 507.85,1903.3 507.98,1894.8",
+		style=dotted];
+	class_dot_DotAttributes	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 100.64 688 100.64 1822 397.89 1822 397.89 688 c 7 -#cdcd00 L 2 100.64 1799 397.89 1799 c 7 -#cdcd00 \
+L 2 100.64 1776 397.89 1776 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 249.26 1804.7 0 133.5 23 -interface DotAttributes F 14 9 -Helvetica c 7 -#000000 T 249.26 1781.7 \
+0 3.75 1 -  F 14 9 -Helvetica c 7 -#000000 T 108.64 1758.7 -1 193.5 28 -static DotGraphAttr GRAPH_TD F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 1743.7 -1 192.75 28 -static DotGraphAttr GRAPH_LR F 14 9 -Helvetica c 7 -#000000 T 108.64 1728.7 -1 202.5 30 -static DotGraphAttr \
+GRAPH_FILL F 14 9 -Helvetica c 7 -#000000 T 108.64 1713.7 -1 281.25 38 -static DotGraphAttr GRAPH_A4_LANDSCAPE F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 1698.7 -1 268.5 37 -static DotGraphAttr GRAPH_A4_PORTRAIT F 14 9 -Helvetica c 7 -#000000 T 108.64 1683.7 -1 \
+252.75 35 -static DotGraphAttr GRAPH_ROTATE_90 F 14 9 -Helvetica c 7 -#000000 T 108.64 1668.7 -1 260.25 36 -static DotGraphAttr \
+GRAPH_ROTATE_180 F 14 9 -Helvetica c 7 -#000000 T 108.64 1653.7 -1 195.75 28 -static DotNodeAttr NODE_BLUE F 14 9 -Helvetica c 7 \
+-#000000 T 108.64 1638.7 -1 203.25 29 -static DotNodeAttr NODE_BLUE1 F 14 9 -Helvetica c 7 -#000000 T 108.64 1623.7 -1 203.25 29 \
+-static DotNodeAttr NODE_BLUE2 F 14 9 -Helvetica c 7 -#000000 T 108.64 1608.7 -1 203.25 29 -static DotNodeAttr NODE_BLUE3 F 14 9 \
+-Helvetica c 7 -#000000 T 108.64 1593.7 -1 203.25 29 -static DotNodeAttr NODE_BLUE4 F 14 9 -Helvetica c 7 -#000000 T 108.64 1578.7 \
+-1 209.25 29 -static DotNodeAttr NODE_GREEN F 14 9 -Helvetica c 7 -#000000 T 108.64 1563.7 -1 216.75 30 -static DotNodeAttr NODE_\
+GREEN1 F 14 9 -Helvetica c 7 -#000000 T 108.64 1548.7 -1 216.75 30 -static DotNodeAttr NODE_GREEN2 F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 1533.7 -1 216.75 30 -static DotNodeAttr NODE_GREEN3 F 14 9 -Helvetica c 7 -#000000 T 108.64 1518.7 -1 216.75 30 -static \
+DotNodeAttr NODE_GREEN4 F 14 9 -Helvetica c 7 -#000000 T 108.64 1503.7 -1 189 27 -static DotNodeAttr NODE_RED F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 1488.7 -1 196.5 28 -static DotNodeAttr NODE_RED1 F 14 9 -Helvetica c 7 -#000000 T 108.64 1473.7 -1 196.5 28 \
+-static DotNodeAttr NODE_RED2 F 14 9 -Helvetica c 7 -#000000 T 108.64 1458.7 -1 196.5 28 -static DotNodeAttr NODE_RED3 F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 1443.7 -1 196.5 28 -static DotNodeAttr NODE_RED4 F 14 9 -Helvetica c 7 -#000000 T 108.64 1428.7 -1 218.25 \
+30 -static DotNodeAttr NODE_YELLOW F 14 9 -Helvetica c 7 -#000000 T 108.64 1413.7 -1 225.75 31 -static DotNodeAttr NODE_YELLOW1 \
+F 14 9 -Helvetica c 7 -#000000 T 108.64 1398.7 -1 225.75 31 -static DotNodeAttr NODE_YELLOW2 F 14 9 -Helvetica c 7 -#000000 T 108.64 \
+1383.7 -1 225.75 31 -static DotNodeAttr NODE_YELLOW3 F 14 9 -Helvetica c 7 -#000000 T 108.64 1368.7 -1 225.75 31 -static DotNodeAttr \
+NODE_YELLOW4 F 14 9 -Helvetica c 7 -#000000 T 108.64 1353.7 -1 204.75 29 -static DotNodeAttr NODE_WHITE F 14 9 -Helvetica c 7 -#\
+000000 T 108.64 1338.7 -1 220.5 30 -static DotNodeAttr NODE_ORANGE F 14 9 -Helvetica c 7 -#000000 T 108.64 1323.7 -1 204.75 29 -static \
+DotNodeAttr NODE_BLACK F 14 9 -Helvetica c 7 -#000000 T 108.64 1308.7 -1 199.5 28 -static DotNodeAttr NODE_GREY F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 1293.7 -1 203.25 29 -static DotNodeAttr NODE_LBLUE F 14 9 -Helvetica c 7 -#000000 T 108.64 1278.7 -1 225.75 \
+31 -static DotNodeAttr NODE_LYELLOW F 14 9 -Helvetica c 7 -#000000 T 108.64 1263.7 -1 207 29 -static DotNodeAttr NODE_LGREY F 14 \
+9 -Helvetica c 7 -#000000 T 108.64 1248.7 -1 198 28 -static DotNodeAttr NODE_BOLD F 14 9 -Helvetica c 7 -#000000 T 108.64 1233.7 \
+-1 219.75 30 -static DotNodeAttr NODE_NORMAL F 14 9 -Helvetica c 7 -#000000 T 108.64 1218.7 -1 219.75 30 -static DotNodeAttr NODE_\
+RECORD F 14 9 -Helvetica c 7 -#000000 T 108.64 1203.7 -1 228.75 32 -static DotNodeAttr NODE_TRIANGLE F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 1188.7 -1 210 30 -static DotNodeAttr NODE_CIRCLE F 14 9 -Helvetica c 7 -#000000 T 108.64 1173.7 -1 215.25 31 -static DotNodeAttr \
+NODE_ELLIPSE F 14 9 -Helvetica c 7 -#000000 T 108.64 1158.7 -1 206.25 30 -static DotNodeAttr NODE_FILLED F 14 9 -Helvetica c 7 -#\
+000000 T 108.64 1143.7 -1 218.25 30 -static DotEdgeAttr EDGE_NORMAL F 14 9 -Helvetica c 7 -#000000 T 108.64 1128.7 -1 196.5 28 -static \
+DotEdgeAttr EDGE_BOLD F 14 9 -Helvetica c 7 -#000000 T 108.64 1113.7 -1 215.25 30 -static DotEdgeAttr EDGE_DOTTED F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 1098.7 -1 194.25 28 -static DotEdgeAttr EDGE_BLUE F 14 9 -Helvetica c 7 -#000000 T 108.64 1083.7 -1 201.75 \
+29 -static DotEdgeAttr EDGE_BLUE1 F 14 9 -Helvetica c 7 -#000000 T 108.64 1068.7 -1 201.75 29 -static DotEdgeAttr EDGE_BLUE2 F 14 \
+9 -Helvetica c 7 -#000000 T 108.64 1053.7 -1 201.75 29 -static DotEdgeAttr EDGE_BLUE3 F 14 9 -Helvetica c 7 -#000000 T 108.64 1038.7 \
+-1 201.75 29 -static DotEdgeAttr EDGE_BLUE4 F 14 9 -Helvetica c 7 -#000000 T 108.64 1023.7 -1 215.25 30 -static DotEdgeAttr EDGE_\
+GREEN1 F 14 9 -Helvetica c 7 -#000000 T 108.64 1008.7 -1 215.25 30 -static DotEdgeAttr EDGE_GREEN2 F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 993.7 -1 215.25 30 -static DotEdgeAttr EDGE_GREEN3 F 14 9 -Helvetica c 7 -#000000 T 108.64 978.7 -1 215.25 30 -static DotEdgeAttr \
+EDGE_GREEN4 F 14 9 -Helvetica c 7 -#000000 T 108.64 963.7 -1 207.75 29 -static DotEdgeAttr EDGE_GREEN F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 948.7 -1 187.5 27 -static DotEdgeAttr EDGE_RED F 14 9 -Helvetica c 7 -#000000 T 108.64 933.7 -1 195 28 -static DotEdgeAttr \
+EDGE_RED1 F 14 9 -Helvetica c 7 -#000000 T 108.64 918.7 -1 195 28 -static DotEdgeAttr EDGE_RED2 F 14 9 -Helvetica c 7 -#000000 T \
+108.64 903.7 -1 195 28 -static DotEdgeAttr EDGE_RED3 F 14 9 -Helvetica c 7 -#000000 T 108.64 888.7 -1 195 28 -static DotEdgeAttr \
+EDGE_RED4 F 14 9 -Helvetica c 7 -#000000 T 108.64 873.7 -1 216.75 30 -static DotEdgeAttr EDGE_YELLOW F 14 9 -Helvetica c 7 -#000000 \
+T 108.64 858.7 -1 224.25 31 -static DotEdgeAttr EDGE_YELLOW1 F 14 9 -Helvetica c 7 -#000000 T 108.64 843.7 -1 224.25 31 -static \
+DotEdgeAttr EDGE_YELLOW2 F 14 9 -Helvetica c 7 -#000000 T 108.64 828.7 -1 224.25 31 -static DotEdgeAttr EDGE_YELLOW3 F 14 9 -Helvetica \
+c 7 -#000000 T 108.64 813.7 -1 224.25 31 -static DotEdgeAttr EDGE_YELLOW4 F 14 9 -Helvetica c 7 -#000000 T 108.64 798.7 -1 203.25 \
+29 -static DotEdgeAttr EDGE_WHITE F 14 9 -Helvetica c 7 -#000000 T 108.64 783.7 -1 219 30 -static DotEdgeAttr EDGE_ORANGE F 14 9 \
+-Helvetica c 7 -#000000 T 108.64 768.7 -1 203.25 29 -static DotEdgeAttr EDGE_BLACK F 14 9 -Helvetica c 7 -#000000 T 108.64 753.7 \
+-1 198 28 -static DotEdgeAttr EDGE_GREY F 14 9 -Helvetica c 7 -#000000 T 108.64 738.7 -1 205.5 29 -static DotEdgeAttr EDGE_LGREY \
+F 14 9 -Helvetica c 7 -#000000 T 108.64 723.7 -1 195.75 28 -static DotEdgeAttr EDGE_BACK F 14 9 -Helvetica c 7 -#000000 T 108.64 \
+708.7 -1 198.75 28 -static DotEdgeAttr EDGE_NONE F 14 9 -Helvetica c 7 -#000000 T 108.64 693.7 -1 197.25 28 -static DotEdgeAttr \
+EDGE_BOTH ",
+		color=yellow3,
+		height=15.764,
+		label="{interface DotAttributes\n||static DotGraphAttr GRAPH_TD\lstatic DotGraphAttr GRAPH_LR\lstatic DotGraphAttr GRAPH_FILL\lstatic DotGraphAttr \
+GRAPH_A4_LANDSCAPE\lstatic DotGraphAttr GRAPH_A4_PORTRAIT\lstatic DotGraphAttr GRAPH_ROTATE_90\lstatic DotGraphAttr GRAPH_ROTATE_\
+180\lstatic DotNodeAttr NODE_BLUE\lstatic DotNodeAttr NODE_BLUE1\lstatic DotNodeAttr NODE_BLUE2\lstatic DotNodeAttr NODE_BLUE3\lstatic \
+DotNodeAttr NODE_BLUE4\lstatic DotNodeAttr NODE_GREEN\lstatic DotNodeAttr NODE_GREEN1\lstatic DotNodeAttr NODE_GREEN2\lstatic DotNodeAttr \
+NODE_GREEN3\lstatic DotNodeAttr NODE_GREEN4\lstatic DotNodeAttr NODE_RED\lstatic DotNodeAttr NODE_RED1\lstatic DotNodeAttr NODE_\
+RED2\lstatic DotNodeAttr NODE_RED3\lstatic DotNodeAttr NODE_RED4\lstatic DotNodeAttr NODE_YELLOW\lstatic DotNodeAttr NODE_YELLOW1\lstatic \
+DotNodeAttr NODE_YELLOW2\lstatic DotNodeAttr NODE_YELLOW3\lstatic DotNodeAttr NODE_YELLOW4\lstatic DotNodeAttr NODE_WHITE\lstatic \
+DotNodeAttr NODE_ORANGE\lstatic DotNodeAttr NODE_BLACK\lstatic DotNodeAttr NODE_GREY\lstatic DotNodeAttr NODE_LBLUE\lstatic DotNodeAttr \
+NODE_LYELLOW\lstatic DotNodeAttr NODE_LGREY\lstatic DotNodeAttr NODE_BOLD\lstatic DotNodeAttr NODE_NORMAL\lstatic DotNodeAttr NODE_\
+RECORD\lstatic DotNodeAttr NODE_TRIANGLE\lstatic DotNodeAttr NODE_CIRCLE\lstatic DotNodeAttr NODE_ELLIPSE\lstatic DotNodeAttr NODE_\
+FILLED\lstatic DotEdgeAttr EDGE_NORMAL\lstatic DotEdgeAttr EDGE_BOLD\lstatic DotEdgeAttr EDGE_DOTTED\lstatic DotEdgeAttr EDGE_BLUE\lstatic \
+DotEdgeAttr EDGE_BLUE1\lstatic DotEdgeAttr EDGE_BLUE2\lstatic DotEdgeAttr EDGE_BLUE3\lstatic DotEdgeAttr EDGE_BLUE4\lstatic DotEdgeAttr \
+EDGE_GREEN1\lstatic DotEdgeAttr EDGE_GREEN2\lstatic DotEdgeAttr EDGE_GREEN3\lstatic DotEdgeAttr EDGE_GREEN4\lstatic DotEdgeAttr \
+EDGE_GREEN\lstatic DotEdgeAttr EDGE_RED\lstatic DotEdgeAttr EDGE_RED1\lstatic DotEdgeAttr EDGE_RED2\lstatic DotEdgeAttr EDGE_RED3\lstatic \
+DotEdgeAttr EDGE_RED4\lstatic DotEdgeAttr EDGE_YELLOW\lstatic DotEdgeAttr EDGE_YELLOW1\lstatic DotEdgeAttr EDGE_YELLOW2\lstatic \
+DotEdgeAttr EDGE_YELLOW3\lstatic DotEdgeAttr EDGE_YELLOW4\lstatic DotEdgeAttr EDGE_WHITE\lstatic DotEdgeAttr EDGE_ORANGE\lstatic \
+DotEdgeAttr EDGE_BLACK\lstatic DotEdgeAttr EDGE_GREY\lstatic DotEdgeAttr EDGE_LGREY\lstatic DotEdgeAttr EDGE_BACK\lstatic DotEdgeAttr \
+EDGE_NONE\lstatic DotEdgeAttr EDGE_BOTH\l}",
+		pos="249.26,1255",
+		rects="100.64,1799,397.89,1822 100.64,1776,397.89,1799 100.64,688,397.89,1776",
+		width=4.1285];
+	tri_class_dot_DotAttrNames -> class_dot_DotAttributes	[_draw_="S 6 -dotted c 7 -#000000 B 7 470.43 1864.06 449.02 1855.76 423.38 1842.43 407.26 1822.5 404.22 1818.73 401.23 1814.9 398.29 1811.02 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 469.15 1867.32 479.75 1867.44 471.54 1860.74 ",
+		pos="s,481.17,1868 470.43,1864.1 449.02,1855.8 423.38,1842.4 407.26,1822.5 404.22,1818.7 401.23,1814.9 398.29,1811",
+		style=dotted];
+	class_example_SimpleGraph	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 111.89 442 111.89 579 386.64 579 386.64 442 c 7 -#008b00 L 2 111.89 556 386.64 556 c 7 -#008b00 L \
+2 111.89 533 386.64 533 c 7 -#008b00 L 2 111.89 510 386.64 510 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 249.26 561.7 0 123 17 -class SimpleGraph F 14 14 -Helvetica-Bold c 7 -#000000 T 119.89 538.7 \
+-1 98.25 14 -SimpleGraph () F 14 14 -Helvetica-Bold c 7 -#000000 T 119.89 515.7 -1 163.5 27 -static void main (String[]) F 14 14 \
+-Helvetica-Bold c 7 -#000000 T 119.89 492.7 -1 258.75 35 -static DotGraphAttr[] GRAPH_DEFAULT F 14 14 -Helvetica-Bold c 7 -#000000 \
+T 119.89 477.7 -1 242.25 33 -static DotNodeAttr[] NODE_DEFAULT F 14 14 -Helvetica-Bold c 7 -#000000 T 119.89 462.7 -1 207.75 29 \
+-static DotNodeAttr[] RED_NODE F 14 14 -Helvetica-Bold c 7 -#000000 T 119.89 447.7 -1 240.75 33 -static DotEdgeAttr[] EDGE_DEFAULT ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.9167,
+		label="{class SimpleGraph\n|SimpleGraph ()\l|static void main (String[])\l|static DotGraphAttr[] GRAPH_DEFAULT\lstatic DotNodeAttr[] NODE_\
+DEFAULT\lstatic DotNodeAttr[] RED_NODE\lstatic DotEdgeAttr[] EDGE_DEFAULT\l}",
+		pos="249.26,510.5",
+		rects="111.89,556,386.64,579 111.89,533,386.64,556 111.89,510,386.64,533 111.89,442,386.64,510",
+		width=3.816];
+	tri_class_dot_DotAttrNames -> class_example_SimpleGraph	[_draw_="S 6 -dotted c 7 -#000000 B 10 542.94 1868.81 568.34 1861.9 601.1 1848.33 617.26 1822.5 751.05 1608.68 751.74 900.88 617.26 687.5 \
+590.41 644.89 479.77 595.29 386.76 559.63 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 542.21 1865.39 533.34 1871.18 543.89 1872.18 ",
+		pos="s,531.87,1871.5 542.94,1868.8 568.34,1861.9 601.1,1848.3 617.26,1822.5 751.05,1608.7 751.74,900.88 617.26,687.5 590.41,644.89 479.77,\
+595.29 386.76,559.63",
+		style=dotted];
+	class_dot_DotAttr	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 416.14 1220.5 416.14 1289.5 608.39 1289.5 608.39 1220.5 c 7 -#cdcd00 L 2 416.14 1266.5 608.39 1266.5 \
+c 7 -#cdcd00 L 2 416.14 1243.5 608.39 1243.5 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 512.26 1272.2 0 97.5 17 -interface DotAttr F 14 9 -Helvetica c 7 -#000000 T 424.14 1249.2 -1 176.25 \
+32 -static void write (StringBuffer) F 14 9 -Helvetica c 7 -#000000 T 512.26 1226.2 0 3.75 1 -  ",
+		color=yellow3,
+		height=0.97222,
+		label="{interface DotAttr\n|static void write (StringBuffer)\l|}",
+		pos="512.26,1255",
+		rects="416.14,1266.5,608.39,1289.5 416.14,1243.5,608.39,1266.5 416.14,1220.5,608.39,1243.5",
+		width=2.6701];
+	tri_class_dot_DotAttrNames -> class_dot_DotAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 508.39 1855.77 508.97 1766.9 511.31 1403.24 512.05 1289.9 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 504.89 1855.68 508.33 1865.7 511.89 1855.72 ",
+		pos="s,508.32,1867.2 508.39,1855.8 508.97,1766.9 511.31,1403.2 512.05,1289.9",
+		style=dotted];
+	class_dot_DotGraph	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 813.51 1081.5 813.51 1428.5 1287.01 1428.5 1287.01 1081.5 c 7 -#008b00 L 2 813.51 1405.5 1287.01 1405.5 \
+c 7 -#008b00 L 2 813.51 1352.5 1287.01 1352.5 c 7 -#008b00 L 2 813.51 1179.5 1287.01 1179.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 1050.26 1411.2 0 100.5 14 -class DotGraph F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1388.2 \
+-1 457.5 71 -DotGraph (String, String, DotGraphAttr[], DotNodeAttr[], DotEdgeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 \
+1373.2 -1 354 55 -DotGraph (String, String, DotNodeAttr[], DotEdgeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1358.2 -1 \
+161.25 25 -DotGraph (String, String) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1335.2 -1 243 39 -DotCluster get_cluster (String, \
+String) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1320.2 -1 196.5 31 -DotCluster get_cluster (String) F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 821.51 1305.2 -1 157.5 25 -DotCluster get_cluster () F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1290.2 -1 189 \
+29 -void add_cluster (DotCluster) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1275.2 -1 192.75 30 -void add_edge (String, String) \
+F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1260.2 -1 288.75 45 -void add_edge (String, String, DotEdgeAttr[]) F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 821.51 1245.2 -1 76.5 13 -void write () F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1230.2 -1 205.5 33 -void write_\
+clusters (PrintWriter) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1215.2 -1 183.75 30 -void write_intro (PrintWriter) F 14 14 \
+-Helvetica-Bold c 7 -#000000 T 821.51 1200.2 -1 192.75 30 -void write_edges (PrintWriter) F 14 14 -Helvetica-Bold c 7 -#000000 T \
+821.51 1185.2 -1 225.75 37 -static void write_extro (PrintWriter) F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1162.2 -1 74.25 \
+13 -String _title F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1147.2 -1 105.75 16 -String _filename F 14 14 -Helvetica-Bold c \
+7 -#000000 T 821.51 1132.2 -1 190.5 28 -DotEdgeAttr[] _edge_defaults F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1117.2 -1 204 \
+30 -DotGraphAttr[] _graph_defaults F 14 14 -Helvetica-Bold c 7 -#000000 T 821.51 1102.2 -1 105 16 -Vector _clusters F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 821.51 1087.2 -1 92.25 13 -Vector _edges ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=4.8333,
+		label="{class DotGraph\n|DotGraph (String, String, DotGraphAttr[], DotNodeAttr[], DotEdgeAttr[])\lDotGraph (String, String, DotNodeAttr[], \
+DotEdgeAttr[])\lDotGraph (String, String)\l|DotCluster get_cluster (String, String)\lDotCluster get_cluster (String)\lDotCluster \
+get_cluster ()\lvoid add_cluster (DotCluster)\lvoid add_edge (String, String)\lvoid add_edge (String, String, DotEdgeAttr[])\lvoid \
+write ()\lvoid write_clusters (PrintWriter)\lvoid write_intro (PrintWriter)\lvoid write_edges (PrintWriter)\lstatic void write_extro (\
+PrintWriter)\l|String _title\lString _filename\lDotEdgeAttr[] _edge_defaults\lDotGraphAttr[] _graph_defaults\lVector _clusters\lVector _\
+edges\l}",
+		pos="1050.3,1255",
+		rects="813.51,1405.5,1287,1428.5 813.51,1352.5,1287,1405.5 813.51,1179.5,1287,1352.5 813.51,1081.5,1287,1179.5",
+		width=6.5764];
+	tri_class_dot_DotAttributes	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 249.26 651.5 222.26 624.5 276.26 624.5 ",
+		height=0.5,
+		label="",
+		pos="249.26,633.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotAttributes -> tri_class_dot_DotAttributes	[_draw_="S 6 -dotted c 7 -#000000 B 4 249.26 676.13 249.26 666.51 249.26 658.32 249.26 651.83 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 245.76 676.07 249.26 686.07 252.76 676.07 ",
+		pos="s,249.26,687.59 249.26,676.13 249.26,666.51 249.26,658.32 249.26,651.83",
+		style=dotted];
+	tri_class_dot_DotAttributes -> class_example_SimpleGraph	[_draw_="S 6 -dotted c 7 -#000000 B 4 249.26 612.8 249.26 603.45 249.26 591.67 249.26 579.48 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 245.76 612.67 249.26 622.67 252.76 612.67 ",
+		pos="s,249.26,624.18 249.26,612.8 249.26,603.45 249.26,591.67 249.26,579.48",
+		style=dotted];
+	class_dot_DotCluster	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 897.14 1949.5 897.14 2176.5 1203.39 2176.5 1203.39 1949.5 c 7 -#008b00 L 2 897.14 2153.5 1203.39 2153.5 \
+c 7 -#008b00 L 2 897.14 2100.5 1203.39 2100.5 c 7 -#008b00 L 2 897.14 2017.5 1203.39 2017.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 1050.26 2159.2 0 106.5 16 -class DotCluster F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 \
+2136.2 -1 264 42 -DotCluster (DotNodeAttr[], String, String) F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 2121.2 -1 217.5 34 -DotCluster (\
+DotNodeAttr[], String) F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 2106.2 -1 171 26 -DotCluster (DotNodeAttr[]) F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 905.14 2083.2 -1 193.5 30 -void add_node (String, String) F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 2068.2 -1 \
+290.25 45 -void add_node (String, String, DotNodeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 2053.2 -1 243.75 37 -void \
+add_node (String, DotNodeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 2038.2 -1 146.25 24 -void write (PrintWriter) F 14 \
+14 -Helvetica-Bold c 7 -#000000 T 905.14 2023.2 -1 193.5 30 -void write_nodes (PrintWriter) F 14 14 -Helvetica-Bold c 7 -#000000 \
+T 905.14 2000.2 -1 86.25 12 -String _name F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 1985.2 -1 81 13 -String _label F 14 14 -Helvetica-Bold \
+c 7 -#000000 T 905.14 1970.2 -1 93 13 -Vector _nodes F 14 14 -Helvetica-Bold c 7 -#000000 T 905.14 1955.2 -1 192 28 -DotNodeAttr[] _\
+node_defaults ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=3.1667,
+		label="{class DotCluster\n|DotCluster (DotNodeAttr[], String, String)\lDotCluster (DotNodeAttr[], String)\lDotCluster (DotNodeAttr[])\l|\
+void add_node (String, String)\lvoid add_node (String, String, DotNodeAttr[])\lvoid add_node (String, DotNodeAttr[])\lvoid write (\
+PrintWriter)\lvoid write_nodes (PrintWriter)\l|String _name\lString _label\lVector _nodes\lDotNodeAttr[] _node_defaults\l}",
+		pos="1050.3,2063",
+		rects="897.14,2153.5,1203.4,2176.5 897.14,2100.5,1203.4,2153.5 897.14,2017.5,1203.4,2100.5 897.14,1949.5,1203.4,2017.5",
+		width=4.2535];
+	tri_class_dot_DotCluster	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 1050.26 1894.5 1023.26 1867.5 1077.26 1867.5 ",
+		height=0.5,
+		label="",
+		pos="1050.3,1876.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotCluster -> tri_class_dot_DotCluster	[_draw_="c 7 -#000000 B 4 1050.26 1937.9 1050.26 1921.17 1050.26 1906.03 1050.26 1895.09 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 1046.76 1937.58 1050.26 1947.58 1053.76 1937.58 ",
+		pos="s,1050.3,1949.1 1050.3,1937.9 1050.3,1921.2 1050.3,1906 1050.3,1895.1"];
+	tri_class_dot_DotCluster -> class_dot_DotGraph	[_draw_="c 7 -#000000 B 4 1050.26 1855.7 1050.26 1791.13 1050.26 1582.04 1050.26 1428.86 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 1046.76 1855.7 1050.26 1865.7 1053.76 1855.7 ",
+		pos="s,1050.3,1867.2 1050.3,1855.7 1050.3,1791.1 1050.3,1582 1050.3,1428.9"];
+	class_dot_DotGraphSizeAttr	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 1037.64 233.5 1037.64 325.5 1220.89 325.5 1220.89 233.5 c 7 -#008b00 L 2 1037.64 302.5 1220.89 302.5 \
+c 7 -#008b00 L 2 1037.64 279.5 1220.89 279.5 c 7 -#008b00 L 2 1037.64 256.5 1220.89 256.5 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 1129.26 308.2 0 151.5 22 -class DotGraphSizeAttr F 14 14 -Helvetica-Bold c 7 -#000000 T 1045.64 \
+285.2 -1 167.25 27 -DotGraphSizeAttr (int, int) F 14 14 -Helvetica-Bold c 7 -#000000 T 1045.64 262.2 -1 155.25 25 -void write (StringBuffer) \
+F 14 14 -Helvetica-Bold c 7 -#000000 T 1045.64 239.2 -1 122.25 19 -DotStringAttr _size ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.2917,
+		label="{class DotGraphSizeAttr\n|DotGraphSizeAttr (int, int)\l|void write (StringBuffer)\l|DotStringAttr _size\l}",
+		pos="1129.3,279.5",
+		rects="1037.6,302.5,1220.9,325.5 1037.6,279.5,1220.9,302.5 1037.6,256.5,1220.9,279.5 1037.6,233.5,1220.9,256.5",
+		width=2.5451];
+	class_dot_DotEdge	[_draw_="c 7 -#008b00 C 7 -#008b00 P 4 1221.39 2002 1221.39 2124 1487.14 2124 1487.14 2002 c 7 -#008b00 L 2 1221.39 2101 1487.14 2101 c 7 \
+-#008b00 L 2 1221.39 2078 1487.14 2078 c 7 -#008b00 L 2 1221.39 2055 1487.14 2055 ",
+		_ldraw_="F 14 14 -Helvetica-Bold c 7 -#000000 T 1354.26 2106.7 0 93 13 -class DotEdge F 14 14 -Helvetica-Bold c 7 -#000000 T 1229.39 2083.7 \
+-1 249.75 39 -DotEdge (String, String, DotEdgeAttr[]) F 14 14 -Helvetica-Bold c 7 -#000000 T 1229.39 2060.7 -1 155.25 25 -void write (\
+StringBuffer) F 14 14 -Helvetica-Bold c 7 -#000000 T 1229.39 2037.7 -1 81 12 -String _from F 14 14 -Helvetica-Bold c 7 -#000000 \
+T 1229.39 2022.7 -1 63 10 -String _to F 14 14 -Helvetica-Bold c 7 -#000000 T 1229.39 2007.7 -1 129 20 -DotEdgeAttr[] _attrs ",
+		color=green4,
+		fontname="Helvetica-Bold",
+		height=1.7083,
+		label="{class DotEdge\n|DotEdge (String, String, DotEdgeAttr[])\l|void write (StringBuffer)\l|String _from\lString _to\lDotEdgeAttr[] _\
+attrs\l}",
+		pos="1354.3,2063",
+		rects="1221.4,2101,1487.1,2124 1221.4,2078,1487.1,2101 1221.4,2055,1487.1,2078 1221.4,2002,1487.1,2055",
+		width=3.691];
+	class_dot_DotGraphAttr	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 781.39 476 781.39 545 933.14 545 933.14 476 c 7 -#cdcd00 L 2 781.39 522 933.14 522 c 7 -#cdcd00 L \
+2 781.39 499 933.14 499 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 857.26 527.7 0 135.75 22 -interface DotGraphAttr F 14 9 -Helvetica c 7 -#000000 T 857.26 504.7 \
+0 3.75 1 -  F 14 9 -Helvetica c 7 -#000000 T 857.26 481.7 0 3.75 1 -  ",
+		color=yellow3,
+		height=0.97222,
+		label="{interface DotGraphAttr\n||}",
+		pos="857.26,510.5",
+		rects="781.39,522,933.14,545 781.39,499,933.14,522 781.39,476,933.14,499",
+		width=2.1076];
+	tri_class_dot_DotGraphAttr	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 857.26 405.5 830.26 378.5 884.26 378.5 ",
+		height=0.5,
+		label="",
+		pos="857.26,387.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotGraphAttr -> tri_class_dot_DotGraphAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 857.26 464.5 857.26 444.14 857.26 421.28 857.26 406 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 853.76 464.28 857.26 474.28 860.76 464.28 ",
+		pos="s,857.26,475.79 857.26,464.5 857.26,444.14 857.26,421.28 857.26,406",
+		style=dotted];
+	tri_class_dot_DotGraphAttr -> class_dot_DotStringAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 837.45 371.28 824.33 361.2 806.27 347.33 788.22 333.47 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 835.17 373.94 845.24 377.26 839.44 368.39 ",
+		pos="s,846.44,378.18 837.45,371.28 824.33,361.2 806.27,347.33 788.22,333.47",
+		style=dotted];
+	tri_class_dot_DotGraphAttr -> class_dot_DotGraphRotateAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 869.18 368.7 877.07 356.93 887.79 340.92 897.94 325.78 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 866.34 366.67 863.68 376.92 872.15 370.56 ",
+		pos="s,862.84,378.18 869.18,368.7 877.07,356.93 887.79,340.92 897.94,325.78",
+		style=dotted];
+	tri_class_dot_DotGraphAttr -> class_dot_DotCommentedAttr	[_draw_="S 6 -dotted c 7 -#000000 B 7 823.33 381.83 775.07 374.61 684.27 358.87 610.26 333.5 603.65 331.23 596.91 328.67 590.19 325.92 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 822.74 385.29 833.14 383.27 823.75 378.36 ",
+		pos="s,834.64,383.49 823.33,381.83 775.07,374.61 684.27,358.87 610.26,333.5 603.65,331.23 596.91,328.67 590.19,325.92",
+		style=dotted];
+	tri_class_dot_DotGraphAttr -> class_dot_DotGraphSizeAttr	[_draw_="S 6 -dotted c 7 -#000000 B 7 893.97 377.22 929.06 367.85 983.17 352.14 1028.26 333.5 1033.94 331.16 1039.72 328.6 1045.5 325.92 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 893.52 373.71 884.74 379.64 895.3 380.48 ",
+		pos="s,883.27,380.03 893.97,377.22 929.06,367.85 983.17,352.14 1028.3,333.5 1033.9,331.16 1039.7,328.6 1045.5,325.92",
+		style=dotted];
+	class_dot_DotAttrValues	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 180.39 1931 180.39 2195 392.14 2195 392.14 1931 c 7 -#cdcd00 L 2 180.39 2172 392.14 2172 c 7 -#cdcd00 \
+L 2 180.39 2149 392.14 2149 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 286.26 2177.7 0 138.75 23 -interface DotAttrValues F 14 9 -Helvetica c 7 -#000000 T 286.26 2154.7 \
+0 3.75 1 -  F 14 9 -Helvetica c 7 -#000000 T 188.39 2131.7 -1 153.75 22 -static String TOP_DOWN F 14 9 -Helvetica c 7 -#000000 T \
+188.39 2116.7 -1 157.5 24 -static String LEFT_RIGHT F 14 9 -Helvetica c 7 -#000000 T 188.39 2101.7 -1 101.25 18 -static String FILL \
+F 14 9 -Helvetica c 7 -#000000 T 188.39 2086.7 -1 183.75 26 -static String STYLE_NORMAL F 14 9 -Helvetica c 7 -#000000 T 188.39 \
+2071.7 -1 162 24 -static String STYLE_BOLD F 14 9 -Helvetica c 7 -#000000 T 188.39 2056.7 -1 180.75 26 -static String STYLE_DOTTED \
+F 14 9 -Helvetica c 7 -#000000 T 188.39 2041.7 -1 170.25 26 -static String STYLE_FILLED F 14 9 -Helvetica c 7 -#000000 T 188.39 \
+2026.7 -1 186.75 26 -static String SHAPE_RECORD F 14 9 -Helvetica c 7 -#000000 T 188.39 2011.7 -1 182.25 27 -static String SHAPE_\
+ELLIPSE F 14 9 -Helvetica c 7 -#000000 T 188.39 1996.7 -1 177 26 -static String SHAPE_CIRCLE F 14 9 -Helvetica c 7 -#000000 T 188.39 \
+1981.7 -1 195.75 28 -static String SHAPE_TRIANGLE F 14 9 -Helvetica c 7 -#000000 T 188.39 1966.7 -1 141.75 22 -static String DIR_\
+BACK F 14 9 -Helvetica c 7 -#000000 T 188.39 1951.7 -1 144.75 22 -static String DIR_NONE F 14 9 -Helvetica c 7 -#000000 T 188.39 \
+1936.7 -1 143.25 22 -static String DIR_BOTH ",
+		color=yellow3,
+		height=3.6806,
+		label="{interface DotAttrValues\n||static String TOP_DOWN\lstatic String LEFT_RIGHT\lstatic String FILL\lstatic String STYLE_NORMAL\lstatic \
+String STYLE_BOLD\lstatic String STYLE_DOTTED\lstatic String STYLE_FILLED\lstatic String SHAPE_RECORD\lstatic String SHAPE_ELLIPSE\lstatic \
+String SHAPE_CIRCLE\lstatic String SHAPE_TRIANGLE\lstatic String DIR_BACK\lstatic String DIR_NONE\lstatic String DIR_BOTH\l}",
+		pos="286.26,2063",
+		rects="180.39,2172,392.14,2195 180.39,2149,392.14,2172 180.39,1931,392.14,2149",
+		width=2.941];
+	tri_class_dot_DotAttrValues	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 261.26 1894.5 234.26 1867.5 288.26 1867.5 ",
+		height=0.5,
+		label="",
+		pos="261.26,1876.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotAttrValues -> tri_class_dot_DotAttrValues	[_draw_="S 6 -dotted c 7 -#000000 B 4 266.97 1919.61 265.56 1909.21 264.32 1900.03 263.35 1892.91 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 263.48 1919.93 268.29 1929.37 270.42 1918.99 ",
+		pos="s,268.5,1930.9 266.97,1919.6 265.56,1909.2 264.32,1900 263.35,1892.9",
+		style=dotted];
+	tri_class_dot_DotAttrValues -> class_dot_DotAttributes	[_draw_="S 6 -dotted c 7 -#000000 B 4 260.88 1855.8 260.71 1847.12 260.5 1835.81 260.24 1822.36 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 257.38 1855.77 261.07 1865.7 264.38 1855.63 ",
+		pos="s,261.1,1867.2 260.88,1855.8 260.71,1847.1 260.5,1835.8 260.24,1822.4",
+		style=dotted];
+	tri_class_dot_DotAttrValues -> class_example_SimpleGraph	[_draw_="S 6 -dotted c 7 -#000000 B 10 231.16 1876.04 191.62 1874.92 123.47 1866.28 91.26 1822.5 -58.2 1619.34 1.05 923.04 91.26 687.5 106.98 \
+646.47 137.16 608.99 166.97 579.26 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 230.88 1879.54 240.92 1876.16 230.96 1872.54 ",
+		pos="s,242.43,1876.2 231.16,1876 191.62,1874.9 123.47,1866.3 91.265,1822.5 -58.204,1619.3 1.0505,923.04 91.265,687.5 106.98,646.47 137.16,\
+608.99 166.97,579.26",
+		style=dotted];
+	tri_class_dot_DotAttrValues -> class_dot_DotAttr	[_draw_="S 6 -dotted c 7 -#000000 B 7 293.11 1872.97 326.71 1868.52 378.65 1856.27 407.26 1822.5 542.57 1662.81 526.83 1385.69 516.58 1289.8 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 293.1 1869.45 283.57 1874.07 293.9 1876.4 ",
+		pos="s,282.06,1874.2 293.11,1873 326.71,1868.5 378.65,1856.3 407.26,1822.5 542.57,1662.8 526.83,1385.7 516.58,1289.8",
+		style=dotted];
+	class_dot_DotNodeAttr	[_draw_="c 7 -#cdcd00 C 7 -#cdcd00 P 4 455.39 476 455.39 545 601.14 545 601.14 476 c 7 -#cdcd00 L 2 455.39 522 601.14 522 c 7 -#cdcd00 L \
+2 455.39 499 601.14 499 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 528.26 527.7 0 129.75 21 -interface DotNodeAttr F 14 9 -Helvetica c 7 -#000000 T 528.26 504.7 0 \
+3.75 1 -  F 14 9 -Helvetica c 7 -#000000 T 528.26 481.7 0 3.75 1 -  ",
+		color=yellow3,
+		height=0.97222,
+		label="{interface DotNodeAttr\n||}",
+		pos="528.26,510.5",
+		rects="455.39,522,601.14,545 455.39,499,601.14,522 455.39,476,601.14,499",
+		width=2.0243];
+	tri_class_dot_DotNodeAttr	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 528.26 405.5 501.26 378.5 555.26 378.5 ",
+		height=0.5,
+		label="",
+		pos="528.26,387.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotNodeAttr -> tri_class_dot_DotNodeAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 528.26 464.5 528.26 444.14 528.26 421.28 528.26 406 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 524.76 464.28 528.26 474.28 531.76 464.28 ",
+		pos="s,528.26,475.79 528.26,464.5 528.26,444.14 528.26,421.28 528.26,406",
+		style=dotted];
+	tri_class_dot_DotNodeAttr -> class_dot_DotStringAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 553.44 372.53 571.82 362.33 598.01 347.79 624.16 333.28 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 551.94 369.36 544.9 377.27 555.34 375.48 ",
+		pos="s,543.57,378 553.44,372.53 571.82,362.33 598.01,347.79 624.16,333.28",
+		style=dotted];
+	tri_class_dot_DotNodeAttr -> class_dot_DotCommentedAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 523.18 367.24 520.11 355.62 516.06 340.3 512.22 325.78 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 519.74 367.94 525.68 376.72 526.51 366.16 ",
+		pos="s,526.07,378.18 523.18,367.24 520.11,355.62 516.06,340.3 512.22,325.78",
+		style=dotted];
+	tri_class_dot_DotAttr	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 3 691.26 651.5 664.26 624.5 718.26 624.5 ",
+		height=0.5,
+		label="",
+		pos="691.26,633.5",
+		shape=triangle,
+		width=0.75];
+	class_dot_DotAttr -> tri_class_dot_DotAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 525.15 1209.39 561.89 1082.25 665.86 722.43 687.35 648.05 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 521.85 1208.22 522.44 1218.8 528.57 1210.16 ",
+		pos="s,522.02,1220.3 525.15,1209.4 561.89,1082.3 665.86,722.43 687.35,648.05",
+		style=dotted];
+	tri_class_dot_DotAttr -> class_dot_DotEdgeAttr	[_draw_="S 6 -dotted c 7 -#000000 B 4 691.26 612.78 691.26 594.59 691.26 567.2 691.26 545.49 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 687.76 612.67 691.26 622.67 694.76 612.67 ",
+		pos="s,691.26,624.18 691.26,612.78 691.26,594.59 691.26,567.2 691.26,545.49",
+		style=dotted];
+	tri_class_dot_DotAttr -> class_dot_DotGraphAttr	[_draw_="S 6 -dotted c 7 -#000000 B 7 714.37 618.21 730.79 607.85 753.22 593.3 772.26 579.5 787.11 568.74 802.91 556.38 816.81 545.16 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 712.9 615 706.29 623.27 716.62 620.93 ",
+		pos="s,705,624.07 714.37,618.21 730.79,607.85 753.22,593.3 772.26,579.5 787.11,568.74 802.91,556.38 816.81,545.16",
+		style=dotted];
+	tri_class_dot_DotAttr -> class_dot_DotNodeAttr	[_draw_="S 6 -dotted c 7 -#000000 B 7 667.46 618.21 650.8 607.95 628.24 593.51 609.26 579.5 594.94 568.92 579.84 556.59 566.61 545.37 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 665.33 621.01 675.69 623.23 668.97 615.03 ",
+		pos="s,676.98,624.01 667.46,618.21 650.8,607.95 628.24,593.51 609.26,579.5 594.94,568.92 579.84,556.59 566.61,545.37",
+		style=dotted];
+	tri_class_java_lang_Object	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 4 688.51 2232 688.51 2268 802.01 2268 802.01 2232 ",
+		_ldraw_="F 14 9 -Helvetica c 7 -#000000 T 745.26 2244.2 0 97.5 16 -java.lang.Object ",
+		height=0.51389,
+		label="java.lang.Object",
+		pos="745.26,2250",
+		rects="688.51,2232,802.01,2268",
+		width=1.5764];
+	tri_class_java_lang_Object -> class_dot_DotNode	[_draw_="c 7 -#000000 B 4 745.26 2220.32 745.26 2196.73 745.26 2162.33 745.26 2131.8 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 741.76 2220.08 745.26 2230.08 748.76 2220.08 ",
+		pos="s,745.26,2231.6 745.26,2220.3 745.26,2196.7 745.26,2162.3 745.26,2131.8"];
+	tri_class_java_lang_Object -> class_dot_DotAttrNames	[_draw_="c 7 -#000000 B 7 677.57 2232.52 652.29 2224.18 624.39 2212.2 602.26 2195.5 599.09 2193.11 595.98 2190.58 592.93 2187.95 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 676.18 2235.75 686.77 2235.41 678.28 2229.07 ",
+		pos="s,688.22,2235.9 677.57,2232.5 652.29,2224.2 624.39,2212.2 602.26,2195.5 599.09,2193.1 595.98,2190.6 592.93,2187.9"];
+	tri_class_java_lang_Object -> class_dot_DotCluster	[_draw_="c 7 -#000000 B 7 813.15 2228.66 837.61 2220.04 864.92 2208.86 888.26 2195.5 898.17 2189.83 908.09 2183.57 917.87 2176.94 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 812.25 2225.27 803.93 2231.83 814.53 2231.89 ",
+		pos="s,802.5,2232.3 813.15,2228.7 837.61,2220 864.92,2208.9 888.26,2195.5 898.17,2189.8 908.09,2183.6 917.87,2176.9"];
+	tri_class_java_lang_Object -> class_dot_DotEdge	[_draw_="c 7 -#000000 B 7 813.85 2246.37 925.97 2241.2 1142.97 2227.33 1212.26 2195.5 1247.68 2179.23 1280.16 2150.71 1305.09 2124.37 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 813.69 2242.87 803.86 2246.82 814.01 2249.86 ",
+		pos="s,802.35,2246.9 813.85,2246.4 925.97,2241.2 1143,2227.3 1212.3,2195.5 1247.7,2179.2 1280.2,2150.7 1305.1,2124.4"];
+	tri_class_java_lang_Object -> class_dot_DotAttrValues	[_draw_="c 7 -#000000 B 7 676.77 2243.5 591.83 2235.77 452.7 2219.85 407.26 2195.5 402.21 2192.79 397.25 2189.78 392.4 2186.54 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 676.34 2246.98 686.62 2244.38 676.97 2240 ",
+		pos="s,688.12,2244.5 676.77,2243.5 591.83,2235.8 452.7,2219.8 407.26,2195.5 402.21,2192.8 397.25,2189.8 392.4,2186.5"];
+}

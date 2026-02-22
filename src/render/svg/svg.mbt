@@ -423,6 +423,7 @@ fn is_svg_named_color(color : String) -> Bool {
     "orange" | "gold" | "cyan" | "magenta" | "pink" | "hotpink" |
     "purple" | "lightblue" | "lightgrey" | "lightgray" | "grey" | "gray" |
     "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
+    "skyblue" |
     "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
     "steelblue" | "aquamarine" | "limegreen" |
     "lemonchiffon" | "firebrick" | "orangered" | "indigo" | "indianred" => true

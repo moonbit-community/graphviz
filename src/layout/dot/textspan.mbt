@@ -296,9 +296,14 @@ fn try_multiline_textspan_override(
   font_size_pt : Double,
   trim_trailing_break~ : Bool,
 ) -> (Double, Double)? {
-  let lines = split_label_lines(label, trim_trailing_break~)
-  if lines.length() <= 1 {
+  let raw_lines = split_label_lines(label, trim_trailing_break=false)
+  if raw_lines.length() <= 1 {
     return None
+  }
+  let lines = if trim_trailing_break {
+    split_label_lines(label, trim_trailing_break=true)
+  } else {
+    raw_lines
   }
   let mut max_width = 0.0
   let mut total_height = 0.0

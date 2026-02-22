@@ -2194,6 +2194,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
   }
   push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
   let color = @attrs.normalize_color(pen)
+  let filled = style.filled
   let rect = node_rect(layout)
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
@@ -2202,18 +2203,22 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
     ury: rect.ury - RECORD_BORDER_PT,
   }
   ops.push(@render.DrawOp::PenColor(color~))
+  if filled {
+    let fill = node_fill_color(node, "lightgrey")
+    ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
+  }
   // Graphviz parity: record outline uses field bbox (height without +1 kluge).
   let draw_rect = inner_rect
   if is_mrecord || rounded {
     ops.push(
       @render.DrawOp::Bezier(
-        filled=false,
+        filled~,
         points=rounded_rect_bezier_points(draw_rect),
       ),
     )
   } else {
     ops.push(
-      @render.DrawOp::Polygon(filled=false, points=outline_rect_points(draw_rect)),
+      @render.DrawOp::Polygon(filled~, points=outline_rect_points(draw_rect)),
     )
   }
   let label = record_label_text(node_attr(node, "label"), node.name())
