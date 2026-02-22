@@ -803,9 +803,9 @@ fn build_cluster_constraints(
           while j >= 0 {
             let outside = names[j]
             if related.get(outside) is None {
-              let minlen = round_int(
-                node_right_pt(outside, sizes) + margin + left_border,
-              )
+              // Graphviz parity (keepout_othernodes): outside-node separation
+              // from cluster ln/rn uses only cluster margin, not label border.
+              let minlen = round_int(node_right_pt(outside, sizes) + margin)
               extra_edges.push({
                 tail: outside,
                 head: ln_name,
@@ -822,9 +822,9 @@ fn build_cluster_constraints(
           while j < names.length() {
             let outside = names[j]
             if related.get(outside) is None {
-              let minlen = round_int(
-                node_left_pt(outside, sizes) + margin + right_border,
-              )
+              // Graphviz parity (keepout_othernodes): outside-node separation
+              // from cluster ln/rn uses only cluster margin, not label border.
+              let minlen = round_int(node_left_pt(outside, sizes) + margin)
               extra_edges.push({
                 tail: rn_name,
                 head: outside,
