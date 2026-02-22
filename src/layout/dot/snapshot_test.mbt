@@ -238,55 +238,6 @@ fn compare_graph(
 }
 
 ///|
-fn filter_attrs_for_nodes_only(
-  attrs : Array[(String, String)],
-) -> Array[(String, String)] {
-  let filtered : Array[(String, String)] = []
-  for pair in attrs {
-    let (name, value) = pair
-    if name != "bb" {
-      filtered.push((name, value))
-    }
-  }
-  filtered
-}
-
-///|
-fn compare_graph_nodes_only(
-  expected : @cgraph.Graph,
-  actual : @cgraph.Graph,
-  tol : Double,
-) -> Unit raise {
-  compare_attrs(
-    filter_attrs_for_nodes_only(expected.attrs()),
-    filter_attrs_for_nodes_only(actual.attrs()),
-    tol,
-  )
-  compare_attrs(
-    filter_attrs_for_nodes_only(expected.default_attrs(@cgraph.AttrKind::Graph)),
-    filter_attrs_for_nodes_only(actual.default_attrs(@cgraph.AttrKind::Graph)),
-    tol,
-  )
-  compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Node),
-    actual.default_attrs(@cgraph.AttrKind::Node),
-    tol,
-  )
-  compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Edge),
-    actual.default_attrs(@cgraph.AttrKind::Edge),
-    tol,
-  )
-  compare_nodes(expected, actual, tol)
-  let expected_subgraphs = expected.subgraphs()
-  let actual_subgraphs = actual.subgraphs()
-  assert_eq(expected_subgraphs.length(), actual_subgraphs.length())
-  for i in 0..<expected_subgraphs.length() {
-    compare_graph_nodes_only(expected_subgraphs[i], actual_subgraphs[i], tol)
-  }
-}
-
-///|
 fn assert_snapshot(
   input_path : String,
   expected_path : String,
@@ -304,25 +255,6 @@ fn assert_snapshot(
   if actual != expected {
     fail("dot snapshot mismatch: \{input_path}")
   }
-}
-
-///|
-fn assert_snapshot_nodes_only(
-  input_path : String,
-  expected_path : String,
-  tol : Double,
-) -> Unit raise {
-  if @sys.get_env_var("DOT_SNAPSHOT_TRACE") is Some(_) {
-    println("snapshot \{input_path}")
-  }
-  let graph = @dot_parser.parse_dot_file(input_path)
-  let layout = layout_dot(graph)
-  layout.apply()
-  let actual = @dot_parser.write_dot(graph)
-  // Keep fixture decoding consistent with parse_dot_file fallback logic.
-  let expected_graph = @dot_parser.parse_dot_file(expected_path)
-  let actual_graph = @dot_parser.parse_dot(actual)
-  compare_graph_nodes_only(expected_graph, actual_graph, tol)
 }
 
 ///|

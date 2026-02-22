@@ -11,7 +11,7 @@ test "ldbx debug snapshot" {
     "/tmp/mbt-ldbx-expected.dot",
     @fs.read_file_to_string(expected_path),
   )
-  assert_snapshot_nodes_only(
+  assert_snapshot(
     input_path,
     expected_path,
     0.01,

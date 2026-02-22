@@ -10,4 +10,9 @@ test "biological debug snapshot" {
     "/tmp/mbt-biological-expected.dot",
     @fs.read_file_to_string(expected_path),
   )
+  assert_snapshot(
+    input_path,
+    expected_path,
+    0.01,
+  )
 }
