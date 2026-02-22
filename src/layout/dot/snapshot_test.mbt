@@ -292,17 +292,18 @@ fn assert_snapshot(
   expected_path : String,
   tol : Double,
 ) -> Unit raise {
+  ignore(tol)
   if @sys.get_env_var("DOT_SNAPSHOT_TRACE") is Some(_) {
     println("snapshot \{input_path}")
   }
   let graph = @dot_parser.parse_dot_file(input_path)
   let layout = layout_dot(graph)
   layout.apply()
-  let actual = @dot_parser.write_dot(graph)
-  // Some Graphviz fixtures (e.g. Latin1.gv.dot) contain non-UTF8 bytes.
-  let expected_graph = @dot_parser.parse_dot_file(expected_path)
-  let actual_graph = @dot_parser.parse_dot(actual)
-  compare_graph(expected_graph, actual_graph, tol)
+  let actual = @dot_parser.write_dot_bytes(graph)
+  let expected = @fs.read_file_to_bytes(expected_path)
+  if actual != expected {
+    fail("dot snapshot mismatch: \{input_path}")
+  }
 }
 
 ///|

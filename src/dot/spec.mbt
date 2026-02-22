@@ -34,3 +34,10 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
 pub fn write_dot(graph : @cgraph.Graph) -> String {
   ...
 }
+
+///|
+/// Serialize a cgraph Graph to DOT bytes (Latin1 when charset=latin1).
+#declaration_only
+pub fn write_dot_bytes(graph : @cgraph.Graph) -> Bytes {
+  ...
+}

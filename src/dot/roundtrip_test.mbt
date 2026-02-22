@@ -80,3 +80,25 @@ test "dot roundtrip tier1" {
     roundtrip_file(path)
   }
 }
+
+///|
+test "write_dot_bytes keeps latin1 output bytes" {
+  let graph = try @dot.parse_dot_file("refs/graphviz/graphs/directed/Latin1.gv") catch {
+    err => fail("parse_dot_file failed: \{err}")
+  } noraise {
+    value => value
+  }
+  let bytes = @dot.write_dot_bytes(graph)
+  let mut has_high_byte = false
+  for b in bytes {
+    if b.to_int() >= 0x80 {
+      has_high_byte = true
+      break
+    }
+  }
+  assert_true(has_high_byte)
+  let decoded : Result[String, Error] = try? @utf8.decode(bytes)
+  guard decoded is Err(_) else {
+    fail("expected latin1 byte stream")
+  }
+}

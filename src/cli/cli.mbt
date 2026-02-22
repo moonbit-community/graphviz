@@ -424,13 +424,13 @@ fn render_job_bytes(job : CliJob) -> Bytes raise {
   match job.format.format {
     OutputFormat::Dot => {
       layout.apply()
-      @utf8.encode(@dot.write_dot(layout.graph), bom=false)
+      @dot.write_dot_bytes(layout.graph)
     }
     OutputFormat::XDot => @xdot.render_xdot_bytes(layout)
     OutputFormat::Svg => @utf8.encode(@svg.render_svg(layout), bom=false)
     OutputFormat::Other(_) => {
       layout.apply()
-      @utf8.encode(@dot.write_dot(layout.graph), bom=false)
+      @dot.write_dot_bytes(layout.graph)
     }
   }
 }

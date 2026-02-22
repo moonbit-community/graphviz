@@ -1099,3 +1099,54 @@ pub fn write_dot(graph : @cgraph.Graph) -> String {
   write_graph_recursive(graph, sb, 0, "", true, is_layout_output, ctx)
   sb.to_string()
 }
+
+///|
+fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
+  let mut current = graph
+  while true {
+    match current.get_attr(name) {
+      Some(value) => return Some(value)
+      None => ()
+    }
+    match current.parent() {
+      Some(parent) => current = parent
+      None => break
+    }
+  }
+  None
+}
+
+///|
+fn graph_uses_latin1_charset(graph : @cgraph.Graph) -> Bool {
+  match inherited_graph_attr(graph, "charset") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower == "latin1" || lower == "latin-1"
+    }
+    None => false
+  }
+}
+
+///|
+fn latin1_output_bytes(output : String) -> Bytes {
+  let bytes : Array[Byte] = []
+  for ch in output {
+    let code = ch.to_int()
+    if code <= 0xFF {
+      bytes.push(code.to_byte())
+    } else {
+      bytes.push(b'?')
+    }
+  }
+  Bytes::from_array(bytes)
+}
+
+///|
+pub fn write_dot_bytes(graph : @cgraph.Graph) -> Bytes {
+  let output = write_dot(graph)
+  if graph_uses_latin1_charset(graph) {
+    latin1_output_bytes(output)
+  } else {
+    @utf8.encode(output, bom=false)
+  }
+}
