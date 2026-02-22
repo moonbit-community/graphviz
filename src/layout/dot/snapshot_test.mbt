@@ -550,16 +550,16 @@ test "dot layout tier2 snapshots" {
     "tests/layout/dot/unix2.gv.dot",
     0.01,
   )
-  assert_snapshot_nodes_only(
+  assert_snapshot(
     "tests/layout/dot/edge_vnode_spacing.dot",
     "tests/layout/dot/edge_vnode_spacing.gv.dot",
-    18.0,
+    0.01,
   )
-  assert_snapshot_nodes_only(
+  assert_snapshot(
     "tests/layout/dot/edge_label_spacing.dot", "tests/layout/dot/edge_label_spacing.gv.dot",
-    30.0,
+    0.01,
   )
-  assert_snapshot_nodes_only(
-    "tests/layout/dot/complex.dot", "tests/layout/dot/complex.gv.dot", 80.0,
+  assert_snapshot(
+    "tests/layout/dot/complex.dot", "tests/layout/dot/complex.gv.dot", 0.01,
   )
 }
