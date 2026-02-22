@@ -79,6 +79,15 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   if write_bb {
     self.graph.set_attr("bb", format_rect(self.bbox))
   }
+  if write_bb {
+    match graph_label_metrics(self.graph) {
+      Some((width_pt, height_pt)) => {
+        self.graph.set_attr("lwidth", format_fixed(width_pt / 72.0, 2))
+        self.graph.set_attr("lheight", format_fixed(height_pt / 72.0, 2))
+      }
+      None => ()
+    }
+  }
   match self.label_pos {
     Some(pos) => self.graph.set_attr("lp", format_point(pos))
     None => ()

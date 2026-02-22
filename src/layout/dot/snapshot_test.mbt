@@ -3,9 +3,6 @@ fn attr_map(attrs : Array[(String, String)]) -> Map[String, String] {
   let map : Map[String, String] = Map::new()
   for pair in attrs {
     let (key, value) = pair
-    if key == "lheight" || key == "lwidth" {
-      continue
-    }
     map[key] = value
   }
   map
@@ -63,7 +60,7 @@ fn edge_key(edge : @cgraph.Edge) -> String {
 ///|
 fn is_numeric_attr(name : String) -> Bool {
   match name {
-    "bb" | "pos" | "lp" | "width" | "height" | "rects" => true
+    "bb" | "pos" | "lp" | "width" | "height" | "lwidth" | "lheight" | "rects" => true
     _ => false
   }
 }
