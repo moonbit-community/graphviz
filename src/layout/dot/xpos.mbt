@@ -1763,7 +1763,7 @@ fn build_constraint_graph(
                 if tail_name != head_name || ordered_vnodes.length() == 0 {
                   chain.push(head_name)
                 }
-                let base_weight = edge_weight(edge) + weight_bonus
+                let base_weight = edge_weight(edge)
                 let orig_tail = edge.tail().name()
                 let orig_head = edge.head().name()
               let mut idx = 0
@@ -1771,7 +1771,7 @@ fn build_constraint_graph(
                 let seg_tail = chain[idx]
                 let seg_head = chain[idx + 1]
                 idx = idx + 1
-                let weight =
+                let seg_base_weight =
                   if is_edge_vnode_name(seg_tail) || is_edge_vnode_name(seg_head) {
                   let tail_class = endpoint_class(seg_tail, node_degrees, cluster_keys)
                   let head_class = endpoint_class(seg_head, node_degrees, cluster_keys)
@@ -1779,6 +1779,7 @@ fn build_constraint_graph(
                 } else {
                   base_weight
                 }
+                let weight = seg_base_weight + weight_bonus
                 let mut tail_port =
                   if seg_tail == orig_tail {
                   edge.tail_port()
