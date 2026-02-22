@@ -422,6 +422,43 @@ fn Parser::parse_edge_stmt(
 }
 
 ///|
+fn graph_has_local_attr(graph : @cgraph.Graph, key : String) -> Bool {
+  for pair in graph.attrs() {
+    if pair.0 == key {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn graph_has_local_default_attr(graph : @cgraph.Graph, key : String) -> Bool {
+  for pair in graph.default_attrs(@cgraph.AttrKind::Graph) {
+    if pair.0 == key {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn freeze_existing_subgraph_graph_attr(
+  graph : @cgraph.Graph,
+  key : String,
+  frozen : String,
+) -> Unit {
+  // Graphviz snapshots graph attrs into already-open subgraphs when later
+  // root-level `key=value` assignments are canonicalized to `graph [...]`.
+  for subgraph in graph.subgraphs() {
+    if graph_has_local_attr(subgraph, key) ||
+      graph_has_local_default_attr(subgraph, key) {
+      continue
+    }
+    subgraph.set_default_attr(@cgraph.AttrKind::Graph, key, frozen)
+  }
+}
+
+///|
 fn Parser::parse_stmt(
   self : Parser,
   graph : @cgraph.Graph,
@@ -482,6 +519,11 @@ fn Parser::parse_stmt(
   if self.current.token == Eq {
     self.advance()
     let value = self.parse_id()
+    let previous = match graph.get_attr(node_id.name) {
+      Some(current) => current
+      None => ""
+    }
+    freeze_existing_subgraph_graph_attr(graph, node_id.name, previous)
     graph.set_attr(node_id.name, value)
     return
   }

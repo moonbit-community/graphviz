@@ -27,6 +27,34 @@ test "write_dot omits implicit node label defaults" {
 }
 
 ///|
+test "write_dot preserves graph attr scope for earlier subgraphs" {
+  let graph = try @dot.parse_dot(
+    "graph G { { a; } label=\"root\"; fontsize=20; }",
+  ) catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  assert_true(output.contains("graph [fontsize=\"\""))
+  assert_true(output.contains("label=\"\""))
+}
+
+///|
+test "write_dot skips graph attr resets for later subgraphs" {
+  let graph = try @dot.parse_dot(
+    "graph G { label=\"root\"; fontsize=20; { a; } }",
+  ) catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  assert_true(!output.contains("graph [fontsize=\"\""))
+  assert_true(!output.contains("graph [label=\"\""))
+}
+
+///|
 test "dot roundtrip tier0" {
   let paths : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",

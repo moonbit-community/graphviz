@@ -75,6 +75,8 @@ inputs=(
   "$ROOT"/refs/graphviz/doc/dotguide/*.dot
   "$ROOT"/refs/graphviz/graphs/directed/*.gv
   "$ROOT"/refs/graphviz/graphs/directed/*.dot
+  "$ROOT"/refs/graphviz/graphs/undirected/*.gv
+  "$ROOT"/refs/graphviz/graphs/undirected/*.dot
 )
 for input in "${inputs[@]}"; do
   if [[ "$input" == *.gv.dot ]]; then

@@ -1653,6 +1653,7 @@ fn builtin_polygon_shape_attrs(
   shape : String,
 ) -> (Int, Int, Double, Double, Double, Bool)? {
   match shape {
+    "diamond" => Some((4, 1, 0.0, 0.0, 0.0, false))
     "triangle" => Some((3, 1, 0.0, 0.0, 0.0, false))
     "invtriangle" => Some((3, 1, 180.0, 0.0, 0.0, false))
     "egg" => Some((120, 1, 0.0, -0.3, 0.0, false))
@@ -1993,7 +1994,8 @@ fn node_size(
         Some(values) => values
         None => (4, 1, 0.0, 0.0, 0.0, false)
       }
-    let is_box = polygon_is_box_like(sides, orientation, distortion, skew)
+    let is_box = shape != "diamond" &&
+      polygon_is_box_like(sides, orientation, distortion, skew)
     let (scaled_width_pt, scaled_height_pt) =
       polygon_scaled_label_bbox(
         label_width_pt,

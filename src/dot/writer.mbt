@@ -284,6 +284,7 @@ fn edge_attr_rank(name : String) -> Int {
     "label" => 18
     "labelangle" => 19
     "labeldistance" => 20
+    "len" => 20
     "lp" => 21
     "lhead" => 22
     "ltail" => 23
@@ -298,7 +299,9 @@ fn edge_attr_rank(name : String) -> Int {
     "taillabel" => 32
     "weight" => 33
     "wt" => 34
-    _ => 200
+    // Graphviz emits unknown/custom edge attrs (for example, `len`/`f`)
+    // ahead of generated `pos`, while still keeping them after label/minlen.
+    _ => 24
   }
 }
 

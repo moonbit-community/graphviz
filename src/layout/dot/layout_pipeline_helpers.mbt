@@ -1517,8 +1517,8 @@ fn build_undirected_edge_order_maps_for_rank_data(
 }
 
 ///|
-/// Graphviz parity: directed edge direction/order comes from acyclic.c,
-/// while undirected graphs seed in/out orders by original edge endpoints.
+/// Graphviz parity: edge direction/order comes from acyclic.c for both
+/// directed and undirected inputs (dot rank preprocessing orients edges first).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_direction_and_order_maps_for_rank_data(
   graph : @cgraph.Graph,
@@ -1531,23 +1531,16 @@ fn build_edge_direction_and_order_maps_for_rank_data(
   Map[String, Array[Int]],
   Map[String, Array[Int]],
 ) {
-  if graph.kind() == @cgraph.GraphKind::Directed {
-    let edge_out_order : Map[String, Array[Int]] = Map::new()
-    let edge_in_order : Map[String, Array[Int]] = Map::new()
-    let (tail, head, reversed, out_edges, in_edges) =
-      acyclic_edge_directions_with_order(graph, nodes, edges)
-    for i in 0..<nodes.length() {
-      let name = nodes[i].name()
-      edge_out_order[name] = out_edges[i].copy()
-      edge_in_order[name] = in_edges[i].copy()
-    }
-    (tail, head, reversed, edge_out_order, edge_in_order)
-  } else {
-    let (tail, head, reversed) = edge_endpoints_from_edges(edges)
-    let (edge_out_order, edge_in_order) =
-      build_undirected_edge_order_maps_for_rank_data(nodes, tail, head)
-    (tail, head, reversed, edge_out_order, edge_in_order)
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let edge_in_order : Map[String, Array[Int]] = Map::new()
+  let (tail, head, reversed, out_edges, in_edges) =
+    acyclic_edge_directions_with_order(graph, nodes, edges)
+  for i in 0..<nodes.length() {
+    let name = nodes[i].name()
+    edge_out_order[name] = out_edges[i].copy()
+    edge_in_order[name] = in_edges[i].copy()
   }
+  (tail, head, reversed, edge_out_order, edge_in_order)
 }
 
 
@@ -1567,8 +1560,8 @@ fn build_undirected_zero_ranks_for_rank_data(
 }
 
 ///|
-/// Graphviz parity: directed graphs run rank.c flow, while undirected
-/// graphs stay on a single rank as in Graphviz dot preprocessing.
+/// Graphviz parity: rank.c flow applies to both directed and undirected inputs
+/// after acyclic orientation.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ranks_for_rank_data(
   graph : @cgraph.Graph,
@@ -1579,19 +1572,15 @@ fn compute_ranks_for_rank_data(
   edge_head : Array[String],
   edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
-  if graph.kind() == @cgraph.GraphKind::Directed {
-    compute_ranks_directed(
-      graph,
-      nodes,
-      edges,
-      has_edge_labels,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-    )
-  } else {
-    build_undirected_zero_ranks_for_rank_data(nodes)
-  }
+  compute_ranks_directed(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+  )
 }
 
 

@@ -23,6 +23,9 @@ const ROUNDED_CORNER_RADIUS_PT : Double = 12.0
 const GRAPH_LABEL_WIDTH_SCALE : Double = 1.0
 
 ///|
+const EMPTY_LABEL_LINE_HEIGHT_SCALE : Double = 1.2
+
+///|
 const MCIRCLE_X : Double = 0.6614
 
 ///|
@@ -153,12 +156,17 @@ fn label_metrics(
   let mut total_height = 0.0
   for line in raw_lines {
     let metrics_text = if line.text == "" { " " } else { line.text }
-    let (width_pt, height_pt, _yoffset_layout, yoffset_centerline) =
+    let (width_pt, raw_height_pt, _yoffset_layout, yoffset_centerline) =
       @layout_dot.label_text_metrics(
         metrics_text,
         font_name,
         font_size_pt,
       )
+    let height_pt = if line.text == "" {
+      font_size_pt * EMPTY_LABEL_LINE_HEIGHT_SCALE
+    } else {
+      raw_height_pt
+    }
     let width_pt = if line.text == "" { 0.0 } else { width_pt }
     if width_pt > max_width {
       max_width = width_pt

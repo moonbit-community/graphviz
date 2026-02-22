@@ -30,6 +30,7 @@ doubleoctagon
 egg
 edge_label_spacing
 edge_vnode_spacing
+ER
 ellipse
 fig6
 fsm
@@ -37,6 +38,7 @@ grammar
 graph1
 graph2
 hashtable
+Heawood
 hexagon
 honda-tokoro
 house
@@ -62,6 +64,7 @@ Mrecord
 Msquare
 NaN
 nhg
+ngk10_4
 none
 no_arrow
 normal
@@ -73,11 +76,13 @@ parallelogram
 pgram
 pm2way
 pmpipe
+Petersen
 plaintext
 point
 poly
 polygon
 polypoly
+process
 proc3d
 psfonttest
 record

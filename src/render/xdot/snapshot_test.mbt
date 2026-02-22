@@ -700,6 +700,7 @@ fn snapshot_case_name(input_path : String) -> String {
 fn snapshot_input_path(case_name : String) -> String raise {
   let candidates : Array[String] = [
     "refs/graphviz/graphs/directed/\{case_name}.gv",
+    "refs/graphviz/graphs/undirected/\{case_name}.gv",
     "tests/layout/dot/\{case_name}.dot",
     "refs/graphviz/doc/dotguide/\{case_name}.dot",
   ]
