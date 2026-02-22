@@ -967,17 +967,16 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
-fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let af : Array[@geom.Point] = [
-    @geom.Point::{ x: rect.llx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.ury },
-    @geom.Point::{ x: rect.llx, y: rect.ury },
-  ]
+fn rounded_polygon_bezier_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let sides = points.length()
+  if sides == 0 {
+    return []
+  }
+  let b : Array[@geom.Point] = []
   let mut rbconst = ROUNDED_CORNER_RADIUS_PT
-  for seg in 0..<4 {
-    let p0 = af[seg]
-    let p1 = af[(seg + 1) % 4]
+  for seg in 0..<sides {
+    let p0 = points[seg]
+    let p1 = points[(seg + 1) % sides]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
     let d = @math.hypot(dx, dy)
@@ -986,38 +985,26 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
       rbconst = candidate
     }
   }
-  if rbconst <= 0.0 {
-    return [
-      af[0],
-      af[0],
-      af[1],
-      af[1],
-      af[1],
-      af[2],
-      af[2],
-      af[2],
-      af[3],
-      af[3],
-      af[3],
-      af[0],
-      af[0],
-    ]
-  }
-  let b : Array[@geom.Point] = []
-  for seg in 0..<4 {
-    let p0 = af[seg]
-    let p1 = af[(seg + 1) % 4]
+  for seg in 0..<sides {
+    let p0 = points[seg]
+    let p1 = points[(seg + 1) % sides]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
     let d = @math.hypot(dx, dy)
-    let t = rbconst / d
+    let t = if d <= 0.0 { 0.0 } else { rbconst / d }
     b.push(point_at(p0, p1, 0.5 * t))
     b.push(point_at(p0, p1, t))
     b.push(point_at(p0, p1, 1.0 - t))
     b.push(point_at(p0, p1, 1.0 - 0.5 * t))
   }
+  if b.length() < 3 {
+    return points
+  }
+  b.push(b[0])
+  b.push(b[1])
+  b.push(b[2])
   let pts : Array[@geom.Point] = []
-  for seg in 0..<4 {
+  for seg in 0..<sides {
     pts.push(b[4 * seg])
     pts.push(b[4 * seg + 1])
     pts.push(b[4 * seg + 1])
@@ -1032,6 +1019,16 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
     out.push(pts[i])
   }
   out
+}
+
+///|
+fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  rounded_polygon_bezier_points([
+    @geom.Point::{ x: rect.llx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.ury },
+    @geom.Point::{ x: rect.llx, y: rect.ury },
+  ])
 }
 
 fn point_at(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
@@ -2092,6 +2089,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
   let node = layout.node
   let pen = node_color(node, "color", "black")
   let style = @attrs.parse_style(node_attr(node, "style"))
+  let rounded = style_has_token(style, "rounded")
   let is_mrecord = match node_attr(node, "shape") {
     Some(value) => value.to_lower() == "mrecord"
     None => false
@@ -2108,7 +2106,7 @@ fn record_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] 
   ops.push(@render.DrawOp::PenColor(color~))
   // Graphviz parity: record outline uses field bbox (height without +1 kluge).
   let draw_rect = inner_rect
-  if is_mrecord {
+  if is_mrecord || rounded {
     ops.push(
       @render.DrawOp::Bezier(
         filled=false,
@@ -2739,6 +2737,7 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
   let pen = node_color(node, "color", "black")
   let normalized_pen = @attrs.normalize_color(pen)
   let style = @attrs.parse_style(node_attr(node, "style"))
+  let rounded = style_has_token(style, "rounded")
   if style_is_invisible(style) {
     return ops
   }
@@ -2821,35 +2820,71 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     "box" => {
       let peripheries = node_peripheries(node, 1)
       let base_rect = inner_rect_for_peripheries(rect, peripheries)
-      ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
+      if rounded {
+        ops.push(
+          @render.DrawOp::Bezier(
+            filled~,
+            points=rounded_polygon_bezier_points(rect_points(base_rect)),
+          ),
+        )
+      } else {
+        ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
+      }
       for i in 1..<peripheries {
         let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
         ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-        ops.push(
-          @render.DrawOp::Polygon(
-            filled=false,
-            points=rect_points(expanded),
-          ),
-        )
+        if rounded {
+          ops.push(
+            @render.DrawOp::Bezier(
+              filled=false,
+              points=rounded_polygon_bezier_points(rect_points(expanded)),
+            ),
+          )
+        } else {
+          ops.push(
+            @render.DrawOp::Polygon(
+              filled=false,
+              points=rect_points(expanded),
+            ),
+          )
+        }
       }
     }
     _ => {
       match shape_polygon_paths(node, shape, rect) {
         Some(paths) if paths.length() > 0 => {
-          ops.push(
-            @render.DrawOp::Polygon(
-              filled~,
-              points=paths[0],
-            ),
-          )
-          for i in 1..<paths.length() {
-            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+          if rounded {
             ops.push(
-              @render.DrawOp::Polygon(
-                filled=false,
-                points=paths[i],
+              @render.DrawOp::Bezier(
+                filled~,
+                points=rounded_polygon_bezier_points(paths[0]),
               ),
             )
+          } else {
+            ops.push(
+              @render.DrawOp::Polygon(
+                filled~,
+                points=paths[0],
+              ),
+            )
+          }
+          for i in 1..<paths.length() {
+            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+            if rounded {
+              ops.push(
+                @render.DrawOp::Bezier(
+                  filled=false,
+                  points=rounded_polygon_bezier_points(paths[i]),
+                ),
+              )
+            } else {
+              ops.push(
+                @render.DrawOp::Polygon(
+                  filled=false,
+                  points=paths[i],
+                ),
+              )
+            }
           }
         }
         _ => {

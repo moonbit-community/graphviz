@@ -1229,17 +1229,16 @@ fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
-fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let af : Array[@geom.Point] = [
-    @geom.Point::{ x: rect.llx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.lly },
-    @geom.Point::{ x: rect.urx, y: rect.ury },
-    @geom.Point::{ x: rect.llx, y: rect.ury },
-  ]
+fn rounded_polygon_bezier_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let sides = points.length()
+  if sides == 0 {
+    return []
+  }
+  let b : Array[@geom.Point] = []
   let mut rbconst = ROUNDED_CORNER_RADIUS_PT
-  for seg in 0..<4 {
-    let p0 = af[seg]
-    let p1 = af[(seg + 1) % 4]
+  for seg in 0..<sides {
+    let p0 = points[seg]
+    let p1 = points[(seg + 1) % sides]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
     let d = @math.hypot(dx, dy)
@@ -1248,38 +1247,26 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
       rbconst = candidate
     }
   }
-  if rbconst <= 0.0 {
-    return [
-      af[0],
-      af[0],
-      af[1],
-      af[1],
-      af[1],
-      af[2],
-      af[2],
-      af[2],
-      af[3],
-      af[3],
-      af[3],
-      af[0],
-      af[0],
-    ]
-  }
-  let b : Array[@geom.Point] = []
-  for seg in 0..<4 {
-    let p0 = af[seg]
-    let p1 = af[(seg + 1) % 4]
+  for seg in 0..<sides {
+    let p0 = points[seg]
+    let p1 = points[(seg + 1) % sides]
     let dx = p1.x - p0.x
     let dy = p1.y - p0.y
     let d = @math.hypot(dx, dy)
-    let t = rbconst / d
+    let t = if d <= 0.0 { 0.0 } else { rbconst / d }
     b.push(point_at(p0, p1, 0.5 * t))
     b.push(point_at(p0, p1, t))
     b.push(point_at(p0, p1, 1.0 - t))
     b.push(point_at(p0, p1, 1.0 - 0.5 * t))
   }
+  if b.length() < 3 {
+    return points
+  }
+  b.push(b[0])
+  b.push(b[1])
+  b.push(b[2])
   let pts : Array[@geom.Point] = []
-  for seg in 0..<4 {
+  for seg in 0..<sides {
     pts.push(b[4 * seg])
     pts.push(b[4 * seg + 1])
     pts.push(b[4 * seg + 1])
@@ -1294,6 +1281,16 @@ fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
     out.push(pts[i])
   }
   out
+}
+
+///|
+fn rounded_rect_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  rounded_polygon_bezier_points([
+    @geom.Point::{ x: rect.llx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.lly },
+    @geom.Point::{ x: rect.urx, y: rect.ury },
+    @geom.Point::{ x: rect.llx, y: rect.ury },
+  ])
 }
 
 ///|
@@ -2504,9 +2501,11 @@ fn write_record_node(
   let node = layout.node
   let label = record_label_text(node_attr(node, "label"), node.name())
   let nodes = record_nodes(label)
+  let style = @attrs.parse_style(node_attr(node, "style"))
+  let rounded_style = style_has_token(style, "rounded")
   let rounded = match node_attr(node, "shape") {
-    Some(value) => value.to_lower() == "mrecord"
-    None => false
+    Some(value) => value.to_lower() == "mrecord" || rounded_style
+    None => rounded_style
   }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
@@ -3941,6 +3940,7 @@ fn write_svg_node_group(
   let is_doublecircle = raw_shape == "doublecircle"
   let stroke = svg_color(node_color(node, "color", "black"))
   let style = @attrs.parse_style(node_attr(node, "style"))
+  let rounded = style_has_token(style, "rounded")
   if style_is_invisible(style) {
     return
   }
@@ -4118,43 +4118,115 @@ fn write_svg_node_group(
   } else {
     match shape_polygon_paths(node, kind, rect) {
       Some(paths) if paths.length() > 0 => {
-        let attrs = polygon_points(paths[0], bbox.llx, bbox.lly)
-        write_line(
-          sb,
-          "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
-          "",
-          pretty,
-        )
-        for i in 1..<paths.length() {
-          let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
+        if rounded {
+          let path = spline_path(
+            @geom.Spline::{
+              start: None,
+              end: None,
+              points: rounded_polygon_bezier_points(paths[0]),
+            },
+            bbox.llx,
+            bbox.lly,
+          )
           write_line(
             sb,
-            "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+            "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
             "",
             pretty,
           )
-        }
-      }
-      _ =>
-        if kind == "box" {
-          let peripheries = node_peripheries(node, 1)
-          let base_rect = inner_rect_for_peripheries(rect, peripheries)
-          let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
+        } else {
+          let attrs = polygon_points(paths[0], bbox.llx, bbox.lly)
           write_line(
             sb,
             "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
             "",
             pretty,
           )
-          for i in 1..<peripheries {
-            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
-            let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+        }
+        for i in 1..<paths.length() {
+          if rounded {
+            let path = spline_path(
+              @geom.Spline::{
+                start: None,
+                end: None,
+                points: rounded_polygon_bezier_points(paths[i]),
+              },
+              bbox.llx,
+              bbox.lly,
+            )
+            write_line(
+              sb,
+              "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+              "",
+              pretty,
+            )
+          } else {
+            let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
             write_line(
               sb,
               "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
               "",
               pretty,
             )
+          }
+        }
+      }
+      _ =>
+        if kind == "box" {
+          let peripheries = node_peripheries(node, 1)
+          let base_rect = inner_rect_for_peripheries(rect, peripheries)
+          if rounded {
+            let path = spline_path(
+              @geom.Spline::{
+                start: None,
+                end: None,
+                  points: rounded_polygon_bezier_points(rect_points(base_rect)),
+              },
+              bbox.llx,
+              bbox.lly,
+            )
+            write_line(
+              sb,
+              "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+              "",
+              pretty,
+            )
+          } else {
+            let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
+            write_line(
+              sb,
+              "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+              "",
+              pretty,
+            )
+          }
+          for i in 1..<peripheries {
+            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+            if rounded {
+              let path = spline_path(
+                @geom.Spline::{
+                  start: None,
+                  end: None,
+                  points: rounded_polygon_bezier_points(rect_points(expanded)),
+                },
+                bbox.llx,
+                bbox.lly,
+              )
+              write_line(
+                sb,
+                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+                "",
+                pretty,
+              )
+            } else {
+              let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+              write_line(
+                sb,
+                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+                "",
+                pretty,
+              )
+            }
           }
         } else {
           let peripheries = node_peripheries(node, 1)
