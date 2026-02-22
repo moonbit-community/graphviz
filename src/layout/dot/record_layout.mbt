@@ -89,6 +89,26 @@ fn node_padding(node : @cgraph.Node) -> (Double, Double) {
 }
 
 ///|
+priv enum NodeFixedSizeMode {
+  None
+  True
+  Shape
+} derive(Eq)
+
+///|
+fn node_fixedsize_mode(node : @cgraph.Node) -> NodeFixedSizeMode {
+  match node.get_attr("fixedsize") {
+    Some(value) =>
+      match value.trim(chars=" \n\r\t").to_string().to_lower() {
+        "true" | "yes" | "1" => NodeFixedSizeMode::True
+        "shape" => NodeFixedSizeMode::Shape
+        _ => NodeFixedSizeMode::None
+      }
+    None => NodeFixedSizeMode::None
+  }
+}
+
+///|
 /// Graphviz parity: apply PAD to label dimensions for non-plain shapes
 /// (macros.h PAD + shapes.c poly_init).
 fn apply_label_padding_for_shape(
@@ -1852,6 +1872,7 @@ fn node_size(
   node : @cgraph.Node,
   record_orientation : RecordOrientation,
 ) -> NodeSize {
+  let fixedsize_mode = node_fixedsize_mode(node)
   let shape = match node.get_attr("shape") {
     Some(value) => value.to_lower()
     None => ""
@@ -1928,15 +1949,24 @@ fn node_size(
             pad_x_pt,
             pad_y_pt,
           )
-        let width_pt = if padded_width_pt > base_width_pt {
-          padded_width_pt
-        } else {
-          base_width_pt
-        }
-        let height_pt = if padded_height_pt > base_height_pt {
-          padded_height_pt
-        } else {
-          base_height_pt
+        let (width_pt, height_pt) = match fixedsize_mode {
+          NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
+          NodeFixedSizeMode::Shape => (
+            if padded_width_pt > base_width_pt { padded_width_pt } else { base_width_pt },
+            if padded_height_pt > base_height_pt {
+              padded_height_pt
+            } else {
+              base_height_pt
+            },
+          )
+          NodeFixedSizeMode::None => (
+            if padded_width_pt > base_width_pt { padded_width_pt } else { base_width_pt },
+            if padded_height_pt > base_height_pt {
+              padded_height_pt
+            } else {
+              base_height_pt
+            },
+          )
         }
         return node_size_from_points(width_pt, height_pt)
       }
@@ -1953,15 +1983,32 @@ fn node_size(
       pad_x_pt,
       pad_y_pt,
     )
-    let width_pt = if record_size.width_pt > base_width_pt {
-      record_size.width_pt
-    } else {
-      base_width_pt
-    }
-    let height_pt = if record_size.height_pt > base_height_pt {
-      record_size.height_pt
-    } else {
-      base_height_pt
+    let (width_pt, height_pt) = match fixedsize_mode {
+      NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
+      NodeFixedSizeMode::Shape => (
+        if record_size.width_pt > base_width_pt {
+          record_size.width_pt
+        } else {
+          base_width_pt
+        },
+        if record_size.height_pt > base_height_pt {
+          record_size.height_pt
+        } else {
+          base_height_pt
+        },
+      )
+      NodeFixedSizeMode::None => (
+        if record_size.width_pt > base_width_pt {
+          record_size.width_pt
+        } else {
+          base_width_pt
+        },
+        if record_size.height_pt > base_height_pt {
+          record_size.height_pt
+        } else {
+          base_height_pt
+        },
+      )
     }
     let bordered_height = height_pt + RECORD_BORDER_PT * 2.0
     return node_size_from_points(width_pt, bordered_height)
@@ -1981,80 +2028,82 @@ fn node_size(
       )
     } else {
       (0.0, 0.0)
-    }
+  }
   let polygon_shape = match builtin_polygon_shape_attrs(shape) {
     Some(attrs) => Some(attrs)
     None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
   }
   let mut scaled_label_width_pt = label_width_pt
   let mut scaled_label_height_pt = label_height_pt
-  if polygon_shape is Some(_) && has_label {
-    let (sides, _peripheries, orientation, distortion, skew, _regular) =
-      match polygon_shape {
-        Some(values) => values
-        None => (4, 1, 0.0, 0.0, 0.0, false)
-      }
-    let is_box = shape != "diamond" &&
-      polygon_is_box_like(sides, orientation, distortion, skew)
-    let (scaled_width_pt, scaled_height_pt) =
-      polygon_scaled_label_bbox(
-        label_width_pt,
-        label_height_pt,
-        base_height_pt,
-        sides,
-        is_box,
-      )
-    scaled_label_width_pt = scaled_width_pt
-    scaled_label_height_pt = scaled_height_pt
-  } else if shape == "mdiamond" && has_label {
-    let sqrt2 = Double::sqrt(2.0)
-    let temp = label_height_pt * sqrt2
-    if base_height_pt > temp {
-      let ratio = label_height_pt / base_height_pt
-      let denom = 1.0 - ratio * ratio
-      if denom > 0.0 {
-        let scale = Double::sqrt(1.0 / denom)
-        scaled_label_width_pt = label_width_pt * scale
+  if fixedsize_mode == NodeFixedSizeMode::None {
+    if polygon_shape is Some(_) && has_label {
+      let (sides, _peripheries, orientation, distortion, skew, _regular) =
+        match polygon_shape {
+          Some(values) => values
+          None => (4, 1, 0.0, 0.0, 0.0, false)
+        }
+      let is_box = shape != "diamond" &&
+        polygon_is_box_like(sides, orientation, distortion, skew)
+      let (scaled_width_pt, scaled_height_pt) =
+        polygon_scaled_label_bbox(
+          label_width_pt,
+          label_height_pt,
+          base_height_pt,
+          sides,
+          is_box,
+        )
+      scaled_label_width_pt = scaled_width_pt
+      scaled_label_height_pt = scaled_height_pt
+    } else if shape == "mdiamond" && has_label {
+      let sqrt2 = Double::sqrt(2.0)
+      let temp = label_height_pt * sqrt2
+      if base_height_pt > temp {
+        let ratio = label_height_pt / base_height_pt
+        let denom = 1.0 - ratio * ratio
+        if denom > 0.0 {
+          let scale = Double::sqrt(1.0 / denom)
+          scaled_label_width_pt = label_width_pt * scale
+        } else {
+          scaled_label_width_pt = label_width_pt * sqrt2
+          scaled_label_height_pt = temp
+        }
       } else {
         scaled_label_width_pt = label_width_pt * sqrt2
         scaled_label_height_pt = temp
       }
-    } else {
-      scaled_label_width_pt = label_width_pt * sqrt2
-      scaled_label_height_pt = temp
-    }
-    let cos_val = sqrt2 / 2.0
-    scaled_label_width_pt = scaled_label_width_pt / cos_val
-    scaled_label_height_pt = scaled_label_height_pt / cos_val
-  } else if scale_ellipse && has_label {
-    let sqrt2 = Double::sqrt(2.0)
-    let temp = label_height_pt * sqrt2
-    if base_height_pt > temp {
-      let ratio = label_height_pt / base_height_pt
-      let denom = 1.0 - ratio * ratio
-      if denom > 0.0 {
-        let scale = Double::sqrt(1.0 / denom)
-        scaled_label_width_pt = label_width_pt * scale
+      let cos_val = sqrt2 / 2.0
+      scaled_label_width_pt = scaled_label_width_pt / cos_val
+      scaled_label_height_pt = scaled_label_height_pt / cos_val
+    } else if scale_ellipse && has_label {
+      let sqrt2 = Double::sqrt(2.0)
+      let temp = label_height_pt * sqrt2
+      if base_height_pt > temp {
+        let ratio = label_height_pt / base_height_pt
+        let denom = 1.0 - ratio * ratio
+        if denom > 0.0 {
+          let scale = Double::sqrt(1.0 / denom)
+          scaled_label_width_pt = label_width_pt * scale
+        } else {
+          scaled_label_width_pt = label_width_pt * sqrt2
+          scaled_label_height_pt = temp
+        }
       } else {
         scaled_label_width_pt = label_width_pt * sqrt2
         scaled_label_height_pt = temp
       }
-    } else {
-      scaled_label_width_pt = label_width_pt * sqrt2
-      scaled_label_height_pt = temp
-    }
-    scaled_label_width_pt = scaled_label_width_pt * ELLIPSE_LABEL_SCALE
-    // Graphviz parity: skew/distortion polygon labels (e.g. trapezium/parallelogram)
-    // expand by polygon cosine factor in shapes.c poly_init.
-    let polygon_sides = match shape {
-      "trapezium" | "invtrapezium" | "parallelogram" => 4
-      _ => 0
-    }
-    if polygon_sides > 2 {
-      let cos_val = @math.cos(@math.PI / polygon_sides.to_double())
-      if cos_val > 0.0 {
-        scaled_label_width_pt = scaled_label_width_pt / cos_val
-        scaled_label_height_pt = scaled_label_height_pt / cos_val
+      scaled_label_width_pt = scaled_label_width_pt * ELLIPSE_LABEL_SCALE
+      // Graphviz parity: skew/distortion polygon labels (e.g. trapezium/parallelogram)
+      // expand by polygon cosine factor in shapes.c poly_init.
+      let polygon_sides = match shape {
+        "trapezium" | "invtrapezium" | "parallelogram" => 4
+        _ => 0
+      }
+      if polygon_sides > 2 {
+        let cos_val = @math.cos(@math.PI / polygon_sides.to_double())
+        if cos_val > 0.0 {
+          scaled_label_width_pt = scaled_label_width_pt / cos_val
+          scaled_label_height_pt = scaled_label_height_pt / cos_val
+        }
       }
     }
   }
@@ -2070,12 +2119,20 @@ fn node_size(
   } else {
     base_height_in
   }
-  if regular_shape {
+  match fixedsize_mode {
+    NodeFixedSizeMode::True => {
+      width_in = base_width_in
+      height_in = base_height_in
+    }
+    NodeFixedSizeMode::Shape | NodeFixedSizeMode::None => ()
+  }
+  if regular_shape && fixedsize_mode != NodeFixedSizeMode::Shape {
     let size_in = if width_in > height_in { width_in } else { height_in }
     width_in = size_in
     height_in = size_in
   }
-  match polygon_shape {
+  if fixedsize_mode != NodeFixedSizeMode::Shape {
+    match polygon_shape {
     Some((sides, peripheries, orientation, distortion, skew, regular_polygon)) => {
       if regular_polygon {
         let size_in = if width_in > height_in { width_in } else { height_in }
@@ -2127,7 +2184,8 @@ fn node_size(
     }
     None => ()
   }
-  if shape == "parallelogram" {
+  }
+  if shape == "parallelogram" && fixedsize_mode != NodeFixedSizeMode::Shape {
     // Graphviz parity: skewed quad bbox in shapes.c poly_init widens by a
     // constant factor for the built-in skew=0.6 parallelogram polygon.
     width_in = width_in * 1.0367531594794965

@@ -910,6 +910,104 @@ fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
 }
 
 ///|
+fn node_rect_with_size(
+  layout : @layout_dot.DotLayoutNode,
+  width_in : Double,
+  height_in : Double,
+) -> @geom.Rect {
+  let half_w = width_in * 72.0 / 2.0
+  let half_h = height_in * 72.0 / 2.0
+  {
+    llx: layout.pos.x - half_w,
+    lly: layout.pos.y - half_h,
+    urx: layout.pos.x + half_w,
+    ury: layout.pos.y + half_h,
+  }
+}
+
+///|
+fn fixedsize_mode(node : @cgraph.Node) -> String {
+  match node_attr(node, "fixedsize") {
+    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    None => ""
+  }
+}
+
+///|
+fn fixedshape_draw_size_in(
+  node : @cgraph.Node,
+  fallback_width_in : Double,
+  fallback_height_in : Double,
+) -> (Double, Double) {
+  if fixedsize_mode(node) != "shape" {
+    return (fallback_width_in, fallback_height_in)
+  }
+  let shape = match node_attr(node, "shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  let regular_shape =
+    shape == "msquare" ||
+    shape == "mcircle" ||
+    shape == "circle" ||
+    shape == "doublecircle"
+  let default_node_width_in = 0.75
+  let default_node_height_in = 0.5
+  let default_point_size_in = 0.05
+  let default_width_in = if shape == "point" || shape == "dot" {
+    default_point_size_in
+  } else if regular_shape {
+    default_node_height_in
+  } else {
+    default_node_width_in
+  }
+  let default_height_in = if shape == "point" || shape == "dot" {
+    default_point_size_in
+  } else if regular_shape {
+    default_node_height_in
+  } else {
+    default_node_height_in
+  }
+  let mut width_in = @attrs.parse_double(node_attr(node, "width"), default_width_in)
+  let mut height_in = @attrs.parse_double(
+    node_attr(node, "height"),
+    default_height_in,
+  )
+  if shape == "point" || shape == "dot" {
+    let point_size_in = @attrs.parse_double(node_attr(node, "width"), width_in)
+    width_in = point_size_in
+    height_in = point_size_in
+  }
+  if regular_shape {
+    let size_in = if width_in > height_in { width_in } else { height_in }
+    width_in = size_in
+    height_in = size_in
+  }
+  if shape == "doublecircle" {
+    let gap_in = DOUBLE_CIRCLE_GAP_PT * 2.0 / 72.0
+    width_in = width_in + gap_in
+    height_in = height_in + gap_in
+  }
+  (width_in, height_in)
+}
+
+///|
+fn capture_fixedshape_draw_sizes(
+  nodes : Array[@layout_dot.DotLayoutNode],
+) -> Map[String, (Double, Double)] {
+  let sizes : Map[String, (Double, Double)] = Map::new()
+  for node_layout in nodes {
+    let node = node_layout.node
+    if fixedsize_mode(node) == "shape" {
+      let (width_in, height_in) =
+        fixedshape_draw_size_in(node, node_layout.width_in, node_layout.height_in)
+      sizes[node.name()] = (width_in, height_in)
+    }
+  }
+  sizes
+}
+
+///|
 fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
   let width = rect.urx - rect.llx
   let height = rect.ury - rect.lly
@@ -2731,7 +2829,10 @@ fn spline_midpoint(spline : @geom.Spline) -> @geom.Point {
 }
 
 ///|
-fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
+fn node_draw_ops(
+  layout : @layout_dot.DotLayoutNode,
+  draw_rect : @geom.Rect?,
+) -> Array[@render.DrawOp] {
   let node = layout.node
   let ops : Array[@render.DrawOp] = []
   let pen = node_color(node, "color", "black")
@@ -2776,7 +2877,10 @@ fn node_draw_ops(layout : @layout_dot.DotLayoutNode) -> Array[@render.DrawOp] {
     }
     ops.push(@render.DrawOp::FillColor(color=@attrs.normalize_color(fill)))
   }
-  let rect = node_rect(layout)
+  let rect = match draw_rect {
+    Some(value) => value
+    None => node_rect(layout)
+  }
   match shape {
     _ if is_doublecircle =>
       match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
@@ -4096,6 +4200,15 @@ pub fn attach_xdot_attrs(
   layout : @layout_dot.DotLayoutGraph,
   options? : XDotOptions = XDotOptions::default(),
 ) -> Unit {
+  attach_xdot_attrs_internal(layout, Map::new(), options~)
+}
+
+///|
+fn attach_xdot_attrs_internal(
+  layout : @layout_dot.DotLayoutGraph,
+  fixedshape_draw_sizes : Map[String, (Double, Double)],
+  options? : XDotOptions = XDotOptions::default(),
+) -> Unit {
   let version = match options.version {
     Some(value) => value
     None => "1.7"
@@ -4111,7 +4224,12 @@ pub fn attach_xdot_attrs(
   attach_graph_attrs(layout)
   let kind = graph.kind()
   for node_layout in layout.nodes {
-    let draw_ops = node_draw_ops(node_layout)
+    let draw_rect = match fixedshape_draw_sizes.get(node_layout.node.name()) {
+      Some((width_in, height_in)) =>
+        Some(node_rect_with_size(node_layout, width_in, height_in))
+      None => None
+    }
+    let draw_ops = node_draw_ops(node_layout, draw_rect)
     if draw_ops.length() > 0 {
       node_layout.node.set_attr("_draw_", encode_xdot_ops(draw_ops))
     }
@@ -4172,8 +4290,9 @@ pub fn render_xdot(
   layout : @layout_dot.DotLayoutGraph,
   options? : XDotOptions = XDotOptions::default(),
 ) -> String {
+  let fixedshape_draw_sizes = capture_fixedshape_draw_sizes(layout.nodes)
   layout.apply()
-  attach_xdot_attrs(layout, options~)
+  attach_xdot_attrs_internal(layout, fixedshape_draw_sizes, options~)
   @dot.write_dot(layout.graph)
 }
 

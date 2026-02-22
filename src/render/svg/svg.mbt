@@ -1185,6 +1185,109 @@ fn node_rect(layout : @layout_dot.DotLayoutNode) -> @geom.Rect {
 }
 
 ///|
+fn node_rect_with_size(
+  layout : @layout_dot.DotLayoutNode,
+  width_in : Double,
+  height_in : Double,
+) -> @geom.Rect {
+  let half_w = width_in * 72.0 / 2.0
+  let half_h = height_in * 72.0 / 2.0
+  {
+    llx: layout.pos.x - half_w,
+    lly: layout.pos.y - half_h,
+    urx: layout.pos.x + half_w,
+    ury: layout.pos.y + half_h,
+  }
+}
+
+///|
+fn fixedsize_mode(node : @cgraph.Node) -> String {
+  match node_attr(node, "fixedsize") {
+    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    None => ""
+  }
+}
+
+///|
+fn fixedshape_draw_size_in(
+  node : @cgraph.Node,
+  fallback_width_in : Double,
+  fallback_height_in : Double,
+) -> (Double, Double) {
+  if fixedsize_mode(node) != "shape" {
+    return (fallback_width_in, fallback_height_in)
+  }
+  let shape = match node_attr(node, "shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  let regular_shape =
+    shape == "msquare" ||
+    shape == "mcircle" ||
+    shape == "circle" ||
+    shape == "doublecircle"
+  let default_node_width_in = 0.75
+  let default_node_height_in = 0.5
+  let default_point_size_in = 0.05
+  let default_width_in = if shape == "point" || shape == "dot" {
+    default_point_size_in
+  } else if regular_shape {
+    default_node_height_in
+  } else {
+    default_node_width_in
+  }
+  let default_height_in = if shape == "point" || shape == "dot" {
+    default_point_size_in
+  } else if regular_shape {
+    default_node_height_in
+  } else {
+    default_node_height_in
+  }
+  let width_text = match node_attr(node, "width") {
+    Some(value) => value
+    None => ""
+  }
+  let height_text = match node_attr(node, "height") {
+    Some(value) => value
+    None => ""
+  }
+  let mut width_in = parse_double(width_text, default_width_in)
+  let mut height_in = parse_double(height_text, default_height_in)
+  if shape == "point" || shape == "dot" {
+    let point_size_in = parse_double(width_text, width_in)
+    width_in = point_size_in
+    height_in = point_size_in
+  }
+  if regular_shape {
+    let size_in = if width_in > height_in { width_in } else { height_in }
+    width_in = size_in
+    height_in = size_in
+  }
+  if shape == "doublecircle" {
+    let gap_in = DOUBLE_CIRCLE_GAP_PT * 2.0 / 72.0
+    width_in = width_in + gap_in
+    height_in = height_in + gap_in
+  }
+  (width_in, height_in)
+}
+
+///|
+fn capture_fixedshape_draw_sizes(
+  nodes : Array[@layout_dot.DotLayoutNode],
+) -> Map[String, (Double, Double)] {
+  let sizes : Map[String, (Double, Double)] = Map::new()
+  for node_layout in nodes {
+    let node = node_layout.node
+    if fixedsize_mode(node) == "shape" {
+      let (width_in, height_in) =
+        fixedshape_draw_size_in(node, node_layout.width_in, node_layout.height_in)
+      sizes[node.name()] = (width_in, height_in)
+    }
+  }
+  sizes
+}
+
+///|
 fn rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.urx, y: rect.ury },
@@ -4233,6 +4336,7 @@ fn write_svg_edge_group(
 fn write_svg_node_group(
   sb : StringBuilder,
   node_layout : @layout_dot.DotLayoutNode,
+  fixedshape_draw_sizes : Map[String, (Double, Double)],
   bbox : @geom.Rect,
   node_index : Int,
   pretty : Bool,
@@ -4240,7 +4344,11 @@ fn write_svg_node_group(
   let node = node_layout.node
   let node_title = escape_xml_with_dash(node.name())
   write_line(sb, "<!-- \{node_title} -->", "", pretty)
-  let rect = node_rect(node_layout)
+  let rect = match fixedshape_draw_sizes.get(node.name()) {
+    Some((width_in, height_in)) =>
+      node_rect_with_size(node_layout, width_in, height_in)
+    None => node_rect(node_layout)
+  }
   let raw_shape = match node_attr(node, "shape") {
     Some(value) => value.to_lower()
     None => ""
@@ -4678,6 +4786,7 @@ pub fn render_svg(
   layout : @layout_dot.DotLayoutGraph,
   options? : SvgOptions = SvgOptions::default(),
 ) -> String {
+  let fixedshape_draw_sizes = capture_fixedshape_draw_sizes(layout.nodes)
   layout.apply()
   let opts = options
   let pretty = match opts.pretty {
@@ -4871,7 +4980,14 @@ pub fn render_svg(
             Some(value) => value + 1
             None => 1
           }
-          write_svg_node_group(sb, node_layout, bbox, node_id, pretty)
+          write_svg_node_group(
+            sb,
+            node_layout,
+            fixedshape_draw_sizes,
+            bbox,
+            node_id,
+            pretty,
+          )
           written_nodes[node_name] = true
         }
         None => ()
@@ -4900,7 +5016,14 @@ pub fn render_svg(
               Some(value) => value + 1
               None => 1
             }
-            write_svg_node_group(sb, node_layout, bbox, node_id, pretty)
+            write_svg_node_group(
+              sb,
+              node_layout,
+              fixedshape_draw_sizes,
+              bbox,
+              node_id,
+              pretty,
+            )
             written_nodes[head_name] = true
           }
           None => ()

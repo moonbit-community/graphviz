@@ -46,6 +46,72 @@ fn is_record_shape(node : @cgraph.Node) -> Bool {
 }
 
 ///|
+fn fixedsize_mode(node : @cgraph.Node) -> String {
+  match node.get_attr("fixedsize") {
+    Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
+    None => ""
+  }
+}
+
+///|
+fn fixedshape_clip_size(
+  node : @cgraph.Node,
+  fallback : NodeSize,
+) -> NodeSize {
+  if fixedsize_mode(node) != "shape" {
+    return fallback
+  }
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  let regular_shape =
+    shape == "msquare" ||
+    shape == "mcircle" ||
+    shape == "circle" ||
+    shape == "doublecircle"
+  let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
+    let point = @dot_shared.default_node_width_in()
+    (point, point)
+  } else if regular_shape {
+    let height = @dot_shared.default_node_height_in()
+    (height, height)
+  } else {
+    (@dot_shared.default_node_width_in(), @dot_shared.default_node_height_in())
+  }
+  let mut width_in = match node.get_attr("width") {
+    Some(value) => parse_double(value, fallback_width)
+    None => fallback_width
+  }
+  let mut height_in = match node.get_attr("height") {
+    Some(value) => parse_double(value, fallback_height)
+    None => fallback_height
+  }
+  if shape == "point" || shape == "dot" {
+    let point_size_in = match node.get_attr("width") {
+      Some(value) => parse_double(value, fallback_width)
+      None =>
+        match node.get_attr("height") {
+          Some(value) => parse_double(value, fallback_height)
+          None => fallback_width
+        }
+    }
+    return @dot_shared.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
+  }
+  if regular_shape {
+    let size_in = if width_in > height_in { width_in } else { height_in }
+    width_in = size_in
+    height_in = size_in
+  }
+  if shape == "doublecircle" {
+    let gap_in = POLY_GAP_PT * 2.0 / 72.0
+    width_in = width_in + gap_in
+    height_in = height_in + gap_in
+  }
+  @dot_shared.node_size_from_points(width_in * 72.0, height_in * 72.0)
+}
+
+///|
 const ARROW_LENGTH : Double = 10.0
 
 ///|
@@ -2125,17 +2191,19 @@ fn clip_spline_to_nodes(
     if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
   let rankdir_quadrant = graph_rankdir_quadrant(edge)
   let rankdir_lr_rl = rankdir_quadrant == 1 || rankdir_quadrant == 3
+  let tail_base_size = fixedshape_clip_size(tail_node, tail_size)
+  let head_base_size = fixedshape_clip_size(head_node, head_size)
   let tail_shape_size =
     if is_record_shape(tail_node) && !port_is_explicit(tail_port) {
-      trim_record_border_for_clip(tail_size, rankdir_lr_rl)
+      trim_record_border_for_clip(tail_base_size, rankdir_lr_rl)
     } else {
-      tail_size
+      tail_base_size
     }
   let head_shape_size =
     if is_record_shape(head_node) && !port_is_explicit(head_port) {
-      trim_record_border_for_clip(head_size, rankdir_lr_rl)
+      trim_record_border_for_clip(head_base_size, rankdir_lr_rl)
     } else {
-      head_size
+      head_base_size
     }
   let tail_polygon_outline_pad =
     match tail_shape {
