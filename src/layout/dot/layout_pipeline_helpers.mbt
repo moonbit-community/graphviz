@@ -2959,6 +2959,32 @@ fn build_cluster_local_edge_bundle(
 }
 
 ///|
+/// Graphviz parity: cluster-local ND_out/ND_in maps keep local tails/heads but
+/// preserve external anchors in AGSEQ order for startpass=2 medians.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_graphviz_neighbor_maps(
+  cluster_nodes : Array[String],
+  source_graphviz_out_neighbors : Map[String, Array[String]],
+  source_graphviz_in_neighbors : Map[String, Array[String]],
+) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for name in cluster_nodes {
+    let out_neighbors = match source_graphviz_out_neighbors.get(name) {
+      Some(list) => list.copy()
+      None => []
+    }
+    let in_neighbors = match source_graphviz_in_neighbors.get(name) {
+      Some(list) => list.copy()
+      None => []
+    }
+    graphviz_out_neighbors[name] = out_neighbors
+    graphviz_in_neighbors[name] = in_neighbors
+  }
+  (graphviz_out_neighbors, graphviz_in_neighbors)
+}
+
+///|
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled). Do not change behavior without updating fixtures/tests.
@@ -3098,6 +3124,8 @@ fn run_cluster_local_rank_reorder(
   cluster_edge_head_port_order : Array[Double],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   cluster_keys : Map[String, String],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
@@ -3160,8 +3188,8 @@ fn run_cluster_local_rank_reorder(
       Map::new(),
       empty_cluster_skeleton,
       cluster_flat_constraints,
-      graphviz_out_neighbors=children,
-      graphviz_in_neighbors=parents,
+      graphviz_out_neighbors=graphviz_out_neighbors,
+      graphviz_in_neighbors=graphviz_in_neighbors,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
       fixed_positions=fixed_positions,
       fixed_ranks=fixed_ranks,
@@ -3466,6 +3494,8 @@ priv struct ClusterLocalReorderRunInputsOutputContext {
   cluster_edge_head_port_order : Array[Double]
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
   edge_order : Map[String, Int]
   cluster_sizes : Map[String, NodeSize]
   cluster_keys : Map[String, String]
@@ -3484,6 +3514,8 @@ type ClusterLocalReorderRunInputsOutput = (
   Array[Double],
   Array[Double],
   Array[Double],
+  Map[String, Array[String]],
+  Map[String, Array[String]],
   Map[String, Array[String]],
   Map[String, Array[String]],
   Map[String, Int],
@@ -3509,6 +3541,8 @@ fn build_cluster_local_reorder_run_inputs_output(
     context.cluster_edge_head_port_order,
     context.parents,
     context.children,
+    context.graphviz_out_neighbors,
+    context.graphviz_in_neighbors,
     context.edge_order,
     context.cluster_sizes,
     context.cluster_keys,
@@ -3529,6 +3563,8 @@ priv struct ClusterLocalReorderRunInputsContext {
   order_edge_head_port_x : Array[Double]
   order_edge_tail_port_order : Array[Double]
   order_edge_head_port_order : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
   cluster_node_set : Map[String, Bool]
   cluster_rank_keys : Array[Int]
   cluster_nodes : Array[String]
@@ -3602,6 +3638,12 @@ fn build_cluster_local_reorder_run_inputs(
       context.vnode_clusters,
       context.flat_constraints,
     )
+  let (graphviz_out_neighbors, graphviz_in_neighbors) =
+    build_cluster_local_graphviz_neighbor_maps(
+      context.cluster_nodes,
+      context.graphviz_out_neighbors,
+      context.graphviz_in_neighbors,
+    )
   let output_context : ClusterLocalReorderRunInputsOutputContext = {
     cluster_edges,
     cluster_edge_tail,
@@ -3612,6 +3654,8 @@ fn build_cluster_local_reorder_run_inputs(
     cluster_edge_head_port_order,
     parents,
     children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     edge_order,
     cluster_sizes,
     cluster_keys,
@@ -3636,6 +3680,8 @@ fn reorder_single_cluster_rank_groups(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -3675,6 +3721,8 @@ fn reorder_single_cluster_rank_groups(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     order_sizes,
     nodesep_pt,
     has_edge_labels,
@@ -3705,6 +3753,8 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   cluster_node_set : Map[String, Bool],
   cluster_rank_keys : Array[Int],
   cluster_nodes : Array[String],
@@ -3721,6 +3771,8 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     cluster_node_set,
     cluster_rank_keys,
     cluster_nodes,
@@ -3753,6 +3805,8 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
     cluster_edge_head_port_order,
     parents,
     children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     edge_order,
     cluster_sizes,
     cluster_keys,
@@ -3771,6 +3825,8 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
     cluster_edge_head_port_order,
     parents,
     children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     cluster_keys,
     dispatch_context.cluster_meta,
     edge_order,
@@ -3802,6 +3858,8 @@ fn run_cluster_local_rank_reorder_execution_phase(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -3827,6 +3885,8 @@ fn run_cluster_local_rank_reorder_execution_phase(
       order_edge_head_port_x,
       order_edge_tail_port_order,
       order_edge_head_port_order,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
       cluster_node_set,
       cluster_rank_keys,
       cluster_nodes,
@@ -3874,6 +3934,8 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase(
   cluster_edge_head_port_order : Array[Double],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   cluster_keys : Map[String, String],
   cluster_meta : ClusterMetadata,
   edge_order : Map[String, Int],
@@ -3902,6 +3964,8 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase(
     cluster_edge_head_port_order,
     parents,
     children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     cluster_keys,
     cluster_meta,
     edge_order,
@@ -3937,6 +4001,8 @@ fn run_and_apply_cluster_local_rank_reorder(
   cluster_edge_head_port_order : Array[Double],
   parents : Map[String, Array[String]],
   children : Map[String, Array[String]],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   cluster_keys : Map[String, String],
   cluster_meta : ClusterMetadata,
   edge_order : Map[String, Int],
@@ -3965,6 +4031,8 @@ fn run_and_apply_cluster_local_rank_reorder(
       cluster_edge_head_port_order,
       parents,
       children,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
       cluster_keys,
       cluster_meta.rank_same_groups,
       cluster_meta.rank_same_order,
@@ -4007,6 +4075,8 @@ fn reorder_cluster_rank_groups_for_cluster_names(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -4036,6 +4106,8 @@ fn reorder_cluster_rank_groups_for_cluster_names(
       order_edge_head_port_x,
       order_edge_tail_port_order,
       order_edge_head_port_order,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
       order_sizes,
       nodesep_pt,
       has_edge_labels,
@@ -4110,6 +4182,8 @@ fn reorder_groups_by_cluster_build_ranks(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -4147,6 +4221,8 @@ fn reorder_groups_by_cluster_build_ranks(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     order_sizes,
     nodesep_pt,
     has_edge_labels,
@@ -8566,13 +8642,14 @@ fn build_remincross_materialized_order_graph(
       flat_rank_constraints,
       rem_node_map,
     )
-  let rem_nlist_order =
-    build_remincross_nlist_order(
-      creation_order,
-      rem_vnode_creation,
-      rem_edge_creation,
-      rem_flat_constraints,
-    )
+  let rem_order_creation =
+    build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
+  let rem_nlist_order : Array[String] = []
+  let mut rem_nlist_idx = rem_order_creation.length()
+  while rem_nlist_idx > 0 {
+    rem_nlist_idx = rem_nlist_idx - 1
+    rem_nlist_order.push(rem_order_creation[rem_nlist_idx])
+  }
   let rem_node_order = build_order_index(rem_groups)
   let (
     rem_edges_out,
@@ -12491,6 +12568,8 @@ fn build_seeded_groups_for_order_reorder(
   // Graphviz parity: seed build_ranks from component-scoped walk,
   // matching decompose/install traversal used by remincross with
   // cluster-expanded flat constraints.
+  let seed_pass =
+    if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
   let seeded_groups = build_rank_groups_graphviz_components(
     order_rank_keys,
     order_groups,
@@ -12500,7 +12579,7 @@ fn build_seeded_groups_for_order_reorder(
     order_node_order,
     order_cluster_keys,
     order_cluster_skeleton,
-    0,
+    seed_pass,
     order_flat_constraints,
     flip=graphviz_flip,
     graphviz_out_neighbors=graphviz_out_neighbors,
@@ -12541,6 +12620,8 @@ fn apply_cluster_build_ranks_and_track_vnodes(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -12564,6 +12645,8 @@ fn apply_cluster_build_ranks_and_track_vnodes(
       order_edge_head_port_x_unmapped,
       order_edge_tail_port_order_unmapped,
       order_edge_head_port_order_unmapped,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
       ranks,
       order_sizes_out,
       nodesep_pt,
@@ -13384,6 +13467,8 @@ fn run_root_mincross_rank_reorder(
         order_flat_constraints,
       )
     }
+  let coalesce_parallel =
+    @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   if components.length() <= 1 {
     return reorder_rank_groups(
       order_rank_keys_for_mincross,
@@ -13415,7 +13500,7 @@ fn run_root_mincross_rank_reorder(
       graphviz_flip=graphviz_flip,
       // Graphviz parity: root ReMincross coalesces parallel edge segments
       // into a single crossing edge with summed xpenalty.
-      coalesce_parallel_edges=true,
+      coalesce_parallel_edges=coalesce_parallel,
     )
   }
 
@@ -13525,7 +13610,7 @@ fn run_root_mincross_rank_reorder(
         graphviz_flip=graphviz_flip,
         // Graphviz parity: component root reorder uses the same
         // parallel-edge xpenalty coalescing as init_mccomp.
-        coalesce_parallel_edges=true,
+        coalesce_parallel_edges=coalesce_parallel,
       )
     for rank in order_rank_keys_for_mincross {
       let names = match ordered_component.get(rank) {
@@ -13991,7 +14076,21 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
       let tail = order_edge_tail_out_mincross[edge_idx]
       let head = order_edge_head_out_mincross[edge_idx]
       let pen = edge_xpenalty(order_edges_out_mincross[edge_idx])
-      println("root_input_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
+      let tail_port_order =
+        if edge_idx < order_edge_tail_port_order_mincross.length() {
+          order_edge_tail_port_order_mincross[edge_idx]
+        } else {
+          -1.0
+        }
+      let head_port_order =
+        if edge_idx < order_edge_head_port_order_mincross.length() {
+          order_edge_head_port_order_mincross[edge_idx]
+        } else {
+          -1.0
+        }
+      println(
+        "root_input_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen} tpo=\{tail_port_order} hpo=\{head_port_order}",
+      )
       edge_idx = edge_idx + 1
     }
   }
@@ -15991,6 +16090,8 @@ fn build_root_and_cluster_ordered_with_vnodes(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16015,6 +16116,8 @@ fn build_root_and_cluster_ordered_with_vnodes(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16243,6 +16346,8 @@ fn build_root_and_cluster_next_ordered_with_vnodes(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16267,6 +16372,8 @@ fn build_root_and_cluster_next_ordered_with_vnodes(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16364,6 +16471,8 @@ fn build_root_and_cluster_stage_output_after_root_reorder(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16391,6 +16500,8 @@ fn build_root_and_cluster_stage_output_after_root_reorder(
       order_edge_head_port_x_unmapped,
       order_edge_tail_port_order_unmapped,
       order_edge_head_port_order_unmapped,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
       ranks,
       order_sizes_out,
       nodesep_pt,
@@ -16428,6 +16539,8 @@ fn run_root_and_cluster_build_ranks_stage_from_root_reorder_result(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16453,6 +16566,8 @@ fn run_root_and_cluster_build_ranks_stage_from_root_reorder_result(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16550,6 +16665,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16575,6 +16692,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16606,6 +16725,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase_from_root_reorder_outpu
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16632,6 +16753,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase_from_root_reorder_outpu
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16728,6 +16851,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase_output(
   order_edge_head_port_x_unmapped : Array[Double],
   order_edge_tail_port_order_unmapped : Array[Double],
   order_edge_head_port_order_unmapped : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -16752,6 +16877,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase_output(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
     ranks,
     order_sizes_out,
     nodesep_pt,
@@ -16865,6 +16992,8 @@ fn run_root_and_cluster_build_ranks_stage_finalize_phase_output_from_context(
     stage_inputs.order_edge_head_port_x_unmapped,
     stage_inputs.order_edge_tail_port_order_unmapped,
     stage_inputs.order_edge_head_port_order_unmapped,
+    stage_inputs.graphviz_out_neighbors,
+    stage_inputs.graphviz_in_neighbors,
     stage_context.ranks,
     stage_inputs.order_sizes_out,
     stage_context.nodesep_pt,

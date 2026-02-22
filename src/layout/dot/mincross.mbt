@@ -663,6 +663,8 @@ fn has_single_rank_real_incident_edges(
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_penalty : Array[Int],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
 ) -> Bool {
   let rank_nodes : Map[String, Bool] = Map::new()
   for name in names {
@@ -684,6 +686,32 @@ fn has_single_rank_real_incident_edges(
     let other = if tail_in { head } else { tail }
     if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
       return true
+    }
+  }
+  for name in names {
+    let out_neighbors = match graphviz_out_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    for other in out_neighbors {
+      if rank_nodes.get(other) is Some(_) {
+        continue
+      }
+      if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
+        return true
+      }
+    }
+    let in_neighbors = match graphviz_in_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    for other in in_neighbors {
+      if rank_nodes.get(other) is Some(_) {
+        continue
+      }
+      if !is_edge_vnode_name(other) && !other.has_prefix("_mbt_cluster_skel_") {
+        return true
+      }
     }
   }
   false
@@ -1299,12 +1327,19 @@ fn reorder_rank_groups(
     fixed_order[name] = pos.to_int()
   }
   let merge_fixed_positions = () => {
-    if fixed_positions.length() == 0 {
-      return ()
-    }
+    // Graphviz parity: current ND_order snapshot (fixed_positions) must win.
     for name, pos in fixed_positions {
       if order_positions.get(name) is None {
         order_positions[name] = pos
+      }
+    }
+    // Graphviz parity: startpass=2 median lookups may still reference names
+    // missing from fixed_positions (e.g. fixture-only anchors).
+    if startpass > 1 {
+      for name, idx in node_order {
+        if order_positions.get(name) is None {
+          order_positions[name] = idx.to_double()
+        }
       }
     }
   }
@@ -1331,6 +1366,9 @@ fn reorder_rank_groups(
   let edge_penalty : Array[Int] = []
   let edge_in : Map[String, Array[Int]] = Map::new()
   let edge_out : Map[String, Array[Int]] = Map::new()
+  let mut has_graphviz_neighbor_hints = false
+  let mut has_external_in_anchor = false
+  let mut has_external_out_anchor = false
   for rank in rank_keys {
     let names = match ordered.get(rank) {
       Some(list) => list
@@ -1414,6 +1452,70 @@ fn reorder_rank_groups(
     match edge_in.get(head) {
       Some(list) => list.push(edge_idx)
       None => edge_in[head] = [edge_idx]
+    }
+  }
+  if graphviz_style && startpass > 1 && rank_keys.length() <= 3 {
+    for rank in rank_keys {
+      let names = match ordered.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      for name in names {
+        let in_neighbors = match graphviz_in_neighbors.get(name) {
+          Some(list) => list
+          None => []
+        }
+        if in_neighbors.length() > 0 {
+          has_graphviz_neighbor_hints = true
+          for other in in_neighbors {
+            if node_ranks.get(other) is None {
+              has_external_in_anchor = true
+              break
+            }
+          }
+          match median_parents.get(name) {
+            Some(list) =>
+              for other in in_neighbors {
+                list.push((other, 0.0))
+              }
+            None =>
+              if in_neighbors.length() > 0 {
+                let list : Array[(String, Double)] = []
+                for other in in_neighbors {
+                  list.push((other, 0.0))
+                }
+                median_parents[name] = list
+              }
+          }
+        }
+        let out_neighbors = match graphviz_out_neighbors.get(name) {
+          Some(list) => list
+          None => []
+        }
+        if out_neighbors.length() > 0 {
+          has_graphviz_neighbor_hints = true
+          for other in out_neighbors {
+            if node_ranks.get(other) is None {
+              has_external_out_anchor = true
+              break
+            }
+          }
+          match median_children.get(name) {
+            Some(list) =>
+              for other in out_neighbors {
+                list.push((other, 0.0))
+              }
+            None =>
+              if out_neighbors.length() > 0 {
+                let list : Array[(String, Double)] = []
+                for other in out_neighbors {
+                  list.push((other, 0.0))
+                }
+                median_children[name] = list
+              }
+          }
+        }
+      }
     }
   }
   // Graphviz parity: initial passes should always allow acceptance of
@@ -1513,6 +1615,8 @@ fn reorder_rank_groups(
       edge_tail,
       edge_head,
       edge_penalty,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
     ) {
       return ordered
     }
@@ -1535,9 +1639,16 @@ fn reorder_rank_groups(
         edge_penalty,
       )
     }
+    let mut force_single_rank_probe = false
     if startpass > 1 {
       best_cross = compute_single_cross()
       best_ordered = clone_rank_groups(ordered)
+      if best_cross == 0 && has_graphviz_neighbor_hints {
+        // Graphviz parity: ND_in/ND_out driven medians can still reorder even
+        // when local crossing count is zero.
+        force_single_rank_probe = true
+        best_cross = 1
+      }
     } else {
       best_cross = 2147483647
     }
@@ -1618,8 +1729,9 @@ fn reorder_rank_groups(
       }
       let mut trying = 0
       let mut iter = 0
+      let min_probe_iters = if force_single_rank_probe { 2 } else { 0 }
       while iter < max_this_pass {
-        if trying >= min_quit || cur_cross == 0 {
+        if trying >= min_quit || (cur_cross == 0 && iter >= min_probe_iters) {
           break
         }
         trying = trying + 1
@@ -1739,6 +1851,14 @@ fn reorder_rank_groups(
     let max_iter = 24
     let min_quit = 8
     let convergence = 0.995
+    let mut force_graphviz_probe = false
+    if startpass > 1 && rank_keys.length() <= 3 && best_cross == 0 &&
+      has_graphviz_neighbor_hints {
+      // Graphviz parity: ND_in/ND_out medians may drive reorder despite a
+      // zero local crossing baseline.
+      force_graphviz_probe = true
+      best_cross = 1
+    }
     let mut cur_cross = best_cross
     let mut pass = startpass
     while pass <= 2 {
@@ -1838,14 +1958,22 @@ fn reorder_rank_groups(
       }
       let mut trying = 0
       let mut iter = 0
+      let min_probe_iters = if force_graphviz_probe { 2 } else { 0 }
+      let use_full_rank_sweeps = force_graphviz_probe
+      let include_min_rank = use_full_rank_sweeps || has_external_in_anchor
+      let include_max_rank = use_full_rank_sweeps || has_external_out_anchor
       while iter < max_this_pass {
-        if trying >= min_quit || cur_cross == 0 {
+        if trying >= min_quit || (cur_cross == 0 && iter >= min_probe_iters) {
           break
         }
         trying = trying + 1
         let reverse = iter % 4 < 2
+        let use_sweep_snapshot = startpass > 1 && pass > 1 &&
+          has_graphviz_neighbor_hints
+        let sweep_positions =
+          if use_sweep_snapshot { order_positions.copy() } else { order_positions }
         if iter % 2 == 0 {
-          let mut idx = 1
+          let mut idx = if include_min_rank { 0 } else { 1 }
           while idx < rank_keys.length() {
             let rank = rank_keys[idx]
             let names = match ordered.get(rank) {
@@ -1853,10 +1981,12 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
+              let desired_positions =
+                if use_sweep_snapshot { sweep_positions } else { order_positions }
               let desired = compute_desired_positions_graphviz(
                 names,
                 median_parents,
-                order_positions,
+                desired_positions,
               )
               let hasfixed = apply_flat_mvals_graphviz(
                 names,
@@ -1875,13 +2005,20 @@ fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode=remincross_mode,
               )
-              order_positions = order_positions_from_groups(ordered)
-              merge_fixed_positions()
+              if !use_sweep_snapshot {
+                order_positions = order_positions_from_groups(ordered)
+                merge_fixed_positions()
+              }
             }
             idx = idx + 1
           }
         } else {
-          let mut idx = rank_keys.length() - 2
+          let mut idx =
+            if include_max_rank {
+              rank_keys.length() - 1
+            } else {
+              rank_keys.length() - 2
+            }
           while true {
             let rank = rank_keys[idx]
             let names = match ordered.get(rank) {
@@ -1889,10 +2026,12 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
+              let desired_positions =
+                if use_sweep_snapshot { sweep_positions } else { order_positions }
               let desired = compute_desired_positions_graphviz(
                 names,
                 median_children,
-                order_positions,
+                desired_positions,
               )
               let hasfixed = apply_flat_mvals_graphviz(
                 names,
@@ -1911,14 +2050,20 @@ fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode=remincross_mode,
               )
-              order_positions = order_positions_from_groups(ordered)
-              merge_fixed_positions()
+              if !use_sweep_snapshot {
+                order_positions = order_positions_from_groups(ordered)
+                merge_fixed_positions()
+              }
             }
             if idx == 0 {
               break
             }
             idx = idx - 1
           }
+        }
+        if use_sweep_snapshot {
+          order_positions = order_positions_from_groups(ordered)
+          merge_fixed_positions()
         }
         // Graphviz parity: transpose remains active with port-order hints;
         // ties are resolved by in/out port x during crossing checks.

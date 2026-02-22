@@ -1,11 +1,15 @@
 ///|
 struct MincrossNode {
   id : Int
+  name : String?
   rank : Int
+  order : Int
   cluster : String?
   cluster_skeleton : Bool
   out_neighbors : Array[Int]
   in_neighbors : Array[Int]
+  out_all_neighbors : Array[String]
+  in_all_neighbors : Array[String]
 }
 
 ///|
@@ -32,6 +36,7 @@ struct MincrossInput {
   case_id : Int
   graph : String
   startpass : Int
+  flip : Bool
   minrank : Int
   maxrank : Int
   nodes : Array[MincrossNode]
@@ -47,16 +52,28 @@ struct MincrossOutput {
 }
 
 ///|
+struct MincrossFixtures {
+  cases : Array[(MincrossInput, MincrossOutput)]
+  name_order : Map[String, Int]
+}
+
+///|
 fn parse_mincross_input(obj : Map[String, Json]) -> MincrossInput raise {
   let startpass =
     match obj.get("startpass") {
       Some(value) => @json.from_json(value)
       None => 0
     }
+  let flip =
+    match obj.get("flip") {
+      Some(value) => @json.from_json(value)
+      None => false
+    }
   {
     case_id: @json.from_json(obj["case"]),
     graph: @json.from_json(obj["graph"]),
     startpass,
+    flip,
     minrank: @json.from_json(obj["minrank"]),
     maxrank: @json.from_json(obj["maxrank"]),
     nodes: parse_mincross_nodes(obj["nodes"]),
@@ -81,7 +98,22 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
   for item in items {
     let obj = require_object(item)
     let id : Int = @json.from_json(obj["id"])
+    let name =
+      match obj.get("name") {
+        Some(value) =>
+          match value {
+            Json::Null => (None : String?)
+            Json::String(text) => Some(text)
+            _ => fail("unexpected node name payload")
+          }
+        None => (None : String?)
+      }
     let rank : Int = @json.from_json(obj["rank"])
+    let order =
+      match obj.get("order") {
+        Some(value) => @json.from_json(value)
+        None => id
+      }
     let cluster =
       match obj.get("cluster") {
         Some(value) =>
@@ -98,16 +130,47 @@ fn parse_mincross_nodes(value : Json) -> Array[MincrossNode] raise {
         None => false
       }
     let out_neighbors =
-      match obj.get("out") {
+      match obj.get("out_neighbors") {
         Some(value) => @json.from_json(value)
-        None => []
+        None =>
+          match obj.get("out") {
+            Some(value) => @json.from_json(value)
+            None => []
+          }
       }
     let in_neighbors =
-      match obj.get("in") {
+      match obj.get("in_neighbors") {
+        Some(value) => @json.from_json(value)
+        None =>
+          match obj.get("in") {
+            Some(value) => @json.from_json(value)
+            None => []
+          }
+      }
+    let out_all_neighbors =
+      match obj.get("out_all") {
         Some(value) => @json.from_json(value)
         None => []
       }
-    nodes.push({ id, rank, cluster, cluster_skeleton, out_neighbors, in_neighbors })
+    let in_all_neighbors =
+      match obj.get("in_all") {
+        Some(value) => @json.from_json(value)
+        None => []
+      }
+    nodes.push(
+      {
+        id,
+        name,
+        rank,
+        order,
+        cluster,
+        cluster_skeleton,
+        out_neighbors,
+        in_neighbors,
+        out_all_neighbors,
+        in_all_neighbors,
+      },
+    )
   }
   nodes
 }
@@ -188,9 +251,11 @@ fn parse_optional_flat_edges(
 }
 
 ///|
-fn load_mincross_fixtures() -> Array[(MincrossInput, MincrossOutput)] raise {
+fn load_mincross_fixtures() -> MincrossFixtures raise {
   let data = @fs.read_file_to_string("tests/fixtures/graphviz/mincross.jsonl")
   let cases : Array[(MincrossInput, MincrossOutput)] = []
+  let known_name_order : Map[String, Int] = Map::new()
+  let ambiguous_name_order : Map[String, Bool] = Map::new()
   let mut pending : MincrossInput? = None
   for line in data.split("\n") {
     if line.length() == 0 {
@@ -204,7 +269,23 @@ fn load_mincross_fixtures() -> Array[(MincrossInput, MincrossOutput)] raise {
         if pending is Some(_) {
           fail("unexpected mincross_input while pending")
         }
-        pending = Some(parse_mincross_input(obj))
+        let input = parse_mincross_input(obj)
+        for node in input.nodes {
+          match node.name {
+            Some(name) =>
+              if name.length() > 0 && ambiguous_name_order.get(name) is None {
+                match known_name_order.get(name) {
+                  Some(prev_order) =>
+                    if prev_order != node.order {
+                      ambiguous_name_order[name] = true
+                    }
+                  None => known_name_order[name] = node.order
+                }
+              }
+            None => ()
+          }
+        }
+        pending = Some(input)
       }
       "mincross_output" => {
         let output = parse_mincross_output(obj)
@@ -230,7 +311,13 @@ fn load_mincross_fixtures() -> Array[(MincrossInput, MincrossOutput)] raise {
     Some(_) => fail("missing mincross_output for last case")
     None => ()
   }
-  cases
+  let stable_name_order : Map[String, Int] = Map::new()
+  for name, order in known_name_order {
+    if ambiguous_name_order.get(name) is None {
+      stable_name_order[name] = order
+    }
+  }
+  { cases, name_order: stable_name_order }
 }
 
 ///|
@@ -271,7 +358,11 @@ fn assert_rank_groups(
 }
 
 ///|
-fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit raise {
+fn run_mincross_case_with_name_order(
+  input : MincrossInput,
+  output : MincrossOutput,
+  fixture_name_order : Map[String, Int],
+) -> Unit raise {
   let graph =
     @cgraph.Graph::new(@cgraph.GraphKind::Directed, name=input.graph, strict=false)
   let id_to_name : Map[Int, String] = Map::new()
@@ -279,6 +370,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
   let name_to_rank : Map[String, Int] = Map::new()
   let name_to_node : Map[String, @cgraph.Node] = Map::new()
   let name_to_order : Map[String, Int] = Map::new()
+  let local_name_to_key : Map[String, String] = Map::new()
+  let ambiguous_local_names : Map[String, Bool] = Map::new()
   let sizes : Map[String, NodeSize] = Map::new()
   let nodes : Array[@cgraph.Node] = []
   let default_size = node_size_from_points(
@@ -291,10 +384,25 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     name_to_id[name] = node.id
     name_to_rank[name] = node.rank
     name_to_order[name] = i
+    match node.name {
+      Some(local_name) =>
+        if local_name.length() > 0 {
+          match local_name_to_key.get(local_name) {
+            Some(_) => ambiguous_local_names[local_name] = true
+            None => local_name_to_key[local_name] = name
+          }
+        }
+      None => ()
+    }
     let cnode = graph.node(name)
     name_to_node[name] = cnode
     nodes.push(cnode)
     sizes[name] = default_size
+  }
+  for name, order in fixture_name_order {
+    if name_to_order.get(name) is None {
+      name_to_order[name] = order
+    }
   }
   let edges : Array[@cgraph.Edge] = []
   let edge_tail : Array[String] = []
@@ -305,6 +413,36 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
   let edge_head_port_order : Array[Double] = []
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let append_named_neighbor = (
+    neighbors : Array[String],
+    raw_name : String,
+  ) => {
+    if raw_name.length() == 0 {
+      return ()
+    }
+    let push_unique = (name : String) => {
+      let mut exists = false
+      for existing in neighbors {
+        if existing == name {
+          exists = true
+          break
+        }
+      }
+      if !exists {
+        neighbors.push(name)
+      }
+    }
+    if ambiguous_local_names.get(raw_name) is Some(_) {
+      if name_to_order.get(raw_name) is Some(_) {
+        push_unique(raw_name)
+      }
+      return ()
+    }
+    match local_name_to_key.get(raw_name) {
+      Some(local_name) => push_unique(local_name)
+      None => push_unique(raw_name)
+    }
+  }
   for node in input.nodes {
     let name = node_key(node.id)
     let out_names : Array[String] = []
@@ -322,6 +460,12 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
         None => fail("case \{input.case_id} missing in neighbor id \{neighbor_id}")
       }
       in_names.push(neighbor)
+    }
+    for raw_name in node.out_all_neighbors {
+      append_named_neighbor(out_names, raw_name)
+    }
+    for raw_name in node.in_all_neighbors {
+      append_named_neighbor(in_names, raw_name)
     }
     graphviz_out_neighbors[name] = out_names
     graphviz_in_neighbors[name] = in_names
@@ -480,6 +624,8 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
     flat_constraints,
     graphviz_out_neighbors=graphviz_out_neighbors,
     graphviz_in_neighbors=graphviz_in_neighbors,
+    graphviz_flip=input.flip,
+    coalesce_parallel_edges=input.startpass > 1,
     startpass=input.startpass,
   )
   let actual : Array[Array[Int]] = []
@@ -511,17 +657,22 @@ fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit rai
 }
 
 ///|
+fn run_mincross_case(input : MincrossInput, output : MincrossOutput) -> Unit raise {
+  run_mincross_case_with_name_order(input, output, Map::new())
+}
+
+///|
 test "mincross fixtures load" {
-  let cases = load_mincross_fixtures()
-  assert_true(cases.length() > 0)
+  let fixtures = load_mincross_fixtures()
+  assert_true(fixtures.cases.length() > 0)
 }
 
 ///|
 test "mincross fixtures match reorder_rank_groups" {
-  let cases = load_mincross_fixtures()
-  for pair in cases {
+  let fixtures = load_mincross_fixtures()
+  for pair in fixtures.cases {
     let (input, output) = pair
-    run_mincross_case(input, output)
+    run_mincross_case_with_name_order(input, output, fixtures.name_order)
   }
 }
 
@@ -531,40 +682,57 @@ test "mincross fixed case preserves initial tie order" {
     case_id: 1001,
     graph: "fixed_case",
     startpass: 0,
+    flip: false,
     minrank: 0,
     maxrank: 1,
     nodes: [
       {
         id: 0,
+        name: None,
         rank: 0,
+        order: 0,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [1, 3],
         in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 1,
+        name: None,
         rank: 1,
+        order: 1,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [],
         in_neighbors: [0, 2],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 2,
+        name: None,
         rank: 0,
+        order: 2,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [1, 3],
         in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 3,
+        name: None,
         rank: 1,
+        order: 3,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [],
         in_neighbors: [0, 2],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
     ],
     edges: [
@@ -629,40 +797,57 @@ test "mincross fixed case recovers nlist tie order from reversed seed" {
     case_id: 1002,
     graph: "fixed_case_reversed_seed",
     startpass: 0,
+    flip: false,
     minrank: 0,
     maxrank: 1,
     nodes: [
       {
         id: 0,
+        name: None,
         rank: 0,
+        order: 0,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [1, 3],
         in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 1,
+        name: None,
         rank: 1,
+        order: 1,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [],
         in_neighbors: [0, 2],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 2,
+        name: None,
         rank: 0,
+        order: 2,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [1, 3],
         in_neighbors: [],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
       {
         id: 3,
+        name: None,
         rank: 1,
+        order: 3,
         cluster: None,
         cluster_skeleton: false,
         out_neighbors: [],
         in_neighbors: [0, 2],
+        out_all_neighbors: [],
+        in_all_neighbors: [],
       },
     ],
     edges: [
