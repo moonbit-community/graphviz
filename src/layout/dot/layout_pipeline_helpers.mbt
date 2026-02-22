@@ -2806,9 +2806,8 @@ fn build_cluster_local_rank_groups_and_order(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder keeps internal edges and incoming
-/// crossing edges into the cluster; outgoing crossings are handled by root
-/// passes and should not perturb local rank order.
+/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) needs both
+/// incoming and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_internal_cluster_edges_for_local_bundle(
   order_edges : Array[@cgraph.Edge],
@@ -2819,7 +2818,7 @@ fn collect_internal_cluster_edges_for_local_bundle(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
-  include_external_incoming : Bool,
+  include_external_crossing : Bool,
 ) -> (
   Array[@cgraph.Edge],
   Array[String],
@@ -2841,7 +2840,8 @@ fn collect_internal_cluster_edges_for_local_bundle(
     let head = order_edge_head[i]
     let tail_in = cluster_node_set.get(tail) is Some(_)
     let head_in = cluster_node_set.get(head) is Some(_)
-    if !tail_in && !(include_external_incoming && head_in) {
+    let keep = tail_in || (include_external_crossing && (tail_in || head_in))
+    if !keep {
       continue
     }
     cluster_edges.push(order_edges[i])
@@ -2889,8 +2889,8 @@ fn build_cluster_local_edge_index_and_order(
 
 
 ///|
-/// Graphviz parity: cluster-local edge bundle keeps only internal expanded
-/// cluster edges, preserving per-edge port hints and edge-order indexing.
+/// Graphviz parity: cluster-local edge bundle keeps internal edges and,
+/// for shallow clusters, crossing edges needed by median anchors.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_edge_bundle(
   order_edges : Array[@cgraph.Edge],
@@ -2901,7 +2901,7 @@ fn build_cluster_local_edge_bundle(
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
   cluster_node_set : Map[String, Bool],
-  include_external_incoming : Bool,
+  include_external_crossing : Bool,
   cluster_nodes : Array[String],
   fixed_ranks : Map[String, Int],
 ) -> (
@@ -2934,7 +2934,7 @@ fn build_cluster_local_edge_bundle(
       order_edge_tail_port_order,
       order_edge_head_port_order,
       cluster_node_set,
-      include_external_incoming,
+      include_external_crossing,
     )
   let (parents, children, edge_order) =
     build_cluster_local_edge_index_and_order(
@@ -3160,6 +3160,8 @@ fn run_cluster_local_rank_reorder(
       Map::new(),
       empty_cluster_skeleton,
       cluster_flat_constraints,
+      graphviz_out_neighbors=children,
+      graphviz_in_neighbors=parents,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
       fixed_positions=fixed_positions,
       fixed_ranks=fixed_ranks,
@@ -3410,7 +3412,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Array[String]],
   Map[String, Int],
 ) {
-  let include_external_incoming = cluster_rank_keys.length() <= 2
+  let include_external_crossing = cluster_rank_keys.length() <= 2
   build_cluster_local_edge_bundle(
     order_edges,
     order_edge_tail,
@@ -3420,7 +3422,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
     order_edge_tail_port_order,
     order_edge_head_port_order,
     cluster_node_set,
-    include_external_incoming,
+    include_external_crossing,
     cluster_nodes,
     fixed_ranks,
   )
