@@ -1219,6 +1219,35 @@ fn flat_reorder_rank_groups_graphviz(
 }
 
 ///|
+let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
+
+///|
+let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(None)
+
+///|
+fn maybe_capture_pass0_flat_seed_groups(
+  pass : Int,
+  rank_keys : Array[Int],
+  ordered : Map[Int, Array[String]],
+) -> Unit {
+  if !capture_pass0_flat_seed_groups_enabled.val || pass != 0 {
+    return
+  }
+  if capture_pass0_flat_seed_groups_value.val is Some(_) {
+    return
+  }
+  let snapshot : Map[Int, Array[String]] = Map::new()
+  for rank in rank_keys {
+    let names = match ordered.get(rank) {
+      Some(list) => list.copy()
+      None => []
+    }
+    snapshot[rank] = names
+  }
+  capture_pass0_flat_seed_groups_value.val = Some(snapshot)
+}
+
+///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/mincross.c and flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_rank_groups(
@@ -1706,6 +1735,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
+        maybe_capture_pass0_flat_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross = compute_single_cross()
@@ -1925,6 +1955,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
+        maybe_capture_pass0_flat_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =

@@ -74,6 +74,43 @@ priv struct OrderingResult {
 }
 
 ///|
+priv struct OrderingInputEdgeSnapshot {
+  tail : String
+  head : String
+  xpenalty : Int
+  tail_port_x : Double
+  head_port_x : Double
+  tail_port_order : Double
+  head_port_order : Double
+}
+
+///|
+priv struct RootMincrossInputSnapshot {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges : Array[OrderingInputEdgeSnapshot]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+}
+
+///|
+priv struct RemincrossInputSnapshot {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges : Array[OrderingInputEdgeSnapshot]
+  cluster_keys : Map[String, String]
+}
+
+///|
+let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
+
+///|
+let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
+
+///|
+let root_mincross_groups_override : Ref[Map[Int, Array[String]]?] = Ref::new(None)
+
+///|
 priv struct OrderingEdgePortData {
   edge_order : Map[String, Int]
   edge_tail_port_x : Array[Double]
@@ -243,6 +280,7 @@ priv struct OrderingDispatchSetup {
 priv struct ClusteredOrderingPreRootAndRootPhaseContext {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
   ranks : Map[String, Int]
@@ -5344,15 +5382,14 @@ fn order_edge_merge_key(
 }
 
 ///|
-/// Graphviz parity: class2 merges adjacent mergeable chain segments by adding
-/// xpenalty into the first representative segment and suppressing duplicates.
+/// Graphviz parity: class2 merge_chain coalesces mergeable segments per tail,
+/// preserving first-seen sequence while summing xpenalty for duplicate keys.
 /// Do not change behavior without updating fixtures/tests.
 fn coalesce_order_edges_for_tail(
   entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
 ) -> Array[(String, String, Int, Bool, Double, Double, Double, Double)] {
   let coalesced : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
-  let mut prev_key = ""
-  let mut prev_index = -1
+  let key_index : Map[String, Int] = Map::new()
   for entry in entries {
     let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
       entry
@@ -5364,26 +5401,34 @@ fn coalesce_order_edges_for_tail(
         tail_port_order,
         head_port_order,
       )
-    if penalty > 0 && prev_index >= 0 && key == prev_key {
-      let (rep_tail, rep_head, rep_penalty, rep_constraint, rep_tail_port_x, rep_head_port_x, rep_tail_port_order, rep_head_port_order) =
-        coalesced[prev_index]
-      coalesced[prev_index] = (
-        rep_tail,
-        rep_head,
-        rep_penalty + penalty,
-        rep_constraint,
-        rep_tail_port_x,
-        rep_head_port_x,
-        rep_tail_port_order,
-        rep_head_port_order,
-      )
-      continue
+    match key_index.get(key) {
+      Some(rep_index) => {
+        if penalty > 0 {
+          let (rep_tail, rep_head, rep_penalty, rep_constraint, rep_tail_port_x, rep_head_port_x, rep_tail_port_order, rep_head_port_order) =
+            coalesced[rep_index]
+          coalesced[rep_index] = (
+            rep_tail,
+            rep_head,
+            rep_penalty + penalty,
+            rep_constraint,
+            rep_tail_port_x,
+            rep_head_port_x,
+            rep_tail_port_order,
+            rep_head_port_order,
+          )
+        } else {
+          coalesced.push(
+            (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+          )
+        }
+      }
+      None => {
+        coalesced.push(
+          (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+        )
+        key_index[key] = coalesced.length() - 1
+      }
     }
-    coalesced.push(
-      (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
-    )
-    prev_key = key
-    prev_index = coalesced.length() - 1
   }
   coalesced
 }
@@ -8852,14 +8897,8 @@ fn build_remincross_materialized_order_graph(
       flat_rank_constraints,
       rem_node_map,
     )
-  let rem_order_creation =
+  let rem_nlist_order =
     build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
-  let rem_nlist_order : Array[String] = []
-  let mut rem_nlist_idx = rem_order_creation.length()
-  while rem_nlist_idx > 0 {
-    rem_nlist_idx = rem_nlist_idx - 1
-    rem_nlist_order.push(rem_order_creation[rem_nlist_idx])
-  }
   let rem_node_order = build_order_index(rem_groups)
   let (
     rem_edges_out,
@@ -9117,6 +9156,155 @@ fn apply_cluster_local_flat_constraints_for_remincross_rank(
 }
 
 ///|
+fn should_capture_ordering_inputs() -> Bool {
+  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
+}
+
+///|
+fn clone_groups_for_ordering_input_snapshot(
+  groups : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  clone_rank_groups(groups)
+}
+
+///|
+fn clone_string_map_for_ordering_input_snapshot(
+  values : Map[String, String],
+) -> Map[String, String] {
+  let out : Map[String, String] = Map::new()
+  for key, value in values {
+    out[key] = value
+  }
+  out
+}
+
+///|
+fn clone_bool_map_for_ordering_input_snapshot(
+  values : Map[String, Bool],
+) -> Map[String, Bool] {
+  let out : Map[String, Bool] = Map::new()
+  for key, value in values {
+    out[key] = value
+  }
+  out
+}
+
+///|
+fn build_ordering_input_edges_snapshot(
+  edges_out : Array[@cgraph.Edge],
+  edge_tail_out : Array[String],
+  edge_head_out : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+) -> Array[OrderingInputEdgeSnapshot] {
+  let edges : Array[OrderingInputEdgeSnapshot] = []
+  let mut idx = 0
+  while idx < edges_out.length() {
+    let tail = edge_tail_out[idx]
+    let head = edge_head_out[idx]
+    let tail_port_x =
+      if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else { 0.0 }
+    let head_port_x =
+      if idx < edge_head_port_x.length() { edge_head_port_x[idx] } else { 0.0 }
+    let tail_port_order =
+      if idx < edge_tail_port_order.length() {
+        edge_tail_port_order[idx]
+      } else {
+        0.0
+      }
+    let head_port_order =
+      if idx < edge_head_port_order.length() {
+        edge_head_port_order[idx]
+      } else {
+        0.0
+      }
+    edges.push({
+      tail,
+      head,
+      xpenalty: edge_xpenalty(edges_out[idx]),
+      tail_port_x,
+      head_port_x,
+      tail_port_order,
+      head_port_order,
+    })
+    idx = idx + 1
+  }
+  edges
+}
+
+///|
+fn capture_root_mincross_input_snapshot(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  edges_out : Array[@cgraph.Edge],
+  edge_tail_out : Array[String],
+  edge_head_out : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  cluster_keys : Map[String, String],
+  cluster_skeleton : Map[String, Bool],
+) -> Unit {
+  if !should_capture_ordering_inputs() {
+    return
+  }
+  let snapshot : RootMincrossInputSnapshot = {
+    rank_keys: rank_keys.copy(),
+    groups: clone_groups_for_ordering_input_snapshot(groups),
+    edges: build_ordering_input_edges_snapshot(
+      edges_out,
+      edge_tail_out,
+      edge_head_out,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+    ),
+    cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
+    cluster_skeleton: clone_bool_map_for_ordering_input_snapshot(
+      cluster_skeleton,
+    ),
+  }
+  root_mincross_input_snapshot.val = Some(snapshot)
+}
+
+///|
+fn capture_remincross_input_snapshot(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  edges_out : Array[@cgraph.Edge],
+  edge_tail_out : Array[String],
+  edge_head_out : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  cluster_keys : Map[String, String],
+) -> Unit {
+  if !should_capture_ordering_inputs() {
+    return
+  }
+  let snapshot : RemincrossInputSnapshot = {
+    rank_keys: rank_keys.copy(),
+    groups: clone_groups_for_ordering_input_snapshot(groups),
+    edges: build_ordering_input_edges_snapshot(
+      edges_out,
+      edge_tail_out,
+      edge_head_out,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+    ),
+    cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
+  }
+  remincross_input_snapshot.val = Some(snapshot)
+}
+
+///|
 /// Graphviz parity: ReMincross flat constraints combine existing same-rank
 /// constraints with local intra-cluster adjacency locks for non-intercluster
 /// real-node pairs (flat.c cluster-local reorder guard).
@@ -9176,6 +9364,18 @@ fn run_remincross_rank_reorder_startpass2(
   rem_flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
+  capture_remincross_input_snapshot(
+    rem_rank_keys,
+    rem_groups,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_cluster_keys,
+  )
   if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
     for rank in rem_rank_keys {
       let names = match rem_groups.get(rank) {
@@ -12379,7 +12579,6 @@ fn materialize_mapped_order_edges_for_tail_sequence(
   )
 }
 
-
 ///|
 /// Graphviz parity: unmapped order-edge arrays are materialized from GD_nlist
 /// tail order against the non-remapped order graph.
@@ -12428,7 +12627,6 @@ fn materialize_unmapped_order_edges_for_tail_sequence(
     order_edge_head_port_order_unmapped,
   )
 }
-
 
 ///|
 /// Graphviz parity: order-graph edge arrays are materialized from GD_nlist
@@ -14289,6 +14487,11 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
   graphviz_flip : Bool,
   mincross_nodes : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[String, Bool]) {
+  let capture_root_input = should_capture_ordering_inputs()
+  if capture_root_input {
+    capture_pass0_flat_seed_groups_value.val = None
+    capture_pass0_flat_seed_groups_enabled.val = true
+  }
   if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
     let mut edge_idx = 0
     while edge_idx < order_edges_out_mincross.length() {
@@ -14342,6 +14545,30 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
       graphviz_in_neighbors,
       graphviz_flip,
     )
+  if capture_root_input {
+    capture_pass0_flat_seed_groups_enabled.val = false
+  }
+  let root_input_groups =
+    match root_mincross_groups_override.val {
+      Some(value) => clone_rank_groups(value)
+      None => ordered_mincross
+    }
+  capture_root_mincross_input_snapshot(
+    order_rank_keys_for_mincross,
+    root_input_groups,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+  if capture_root_input {
+    capture_pass0_flat_seed_groups_value.val = None
+  }
   build_root_mincross_rank_reorder_pass_output(
     ordered_mincross,
     mincross_nodes,
@@ -15021,7 +15248,7 @@ fn build_ordering_class2_base_edge_chains(
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
   let edges_by_tail =
     build_edges_by_tail_from_out_order(nodes, edge_out_order)
-  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
+  let (order_edges_by_tail_raw, vnode_creation_by_tail, _order_edge_creation_raw) =
     build_order_edges_by_tail_graphviz(
       creation_order,
       edges,
@@ -15039,6 +15266,13 @@ fn build_ordering_class2_base_edge_chains(
       false,
       true,
       edges_by_tail,
+    )
+  let order_edges_by_tail =
+    coalesce_order_edges_by_tail(order_edges_by_tail_raw)
+  let order_edge_creation =
+    rebuild_edge_creation_from_tail_order(
+      creation_order,
+      order_edges_by_tail,
     )
   (
     creation_order,
@@ -18761,6 +18995,168 @@ fn build_root_and_cluster_build_ranks_stage_inputs_from_pre_root_payload(
   }
 }
 
+///|
+/// Graphviz parity: root-phase tail override preserves first-seen tail order
+/// while suppressing duplicate tail names in root-edge replay sequences.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_unique_tail_order_from_edge_tail_sequence(
+  edge_tail_out : Array[String],
+) -> Array[String] {
+  let tail_order : Array[String] = []
+  let seen : Map[String, Bool] = Map::new()
+  for tail in edge_tail_out {
+    append_order_creation_name_if_absent(tail_order, seen, tail)
+  }
+  tail_order
+}
+
+///|
+/// Graphviz parity: root-phase mapped-edge arrays are replayed in root-only
+/// tail order while preserving each tail bucket's internal edge sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_root_phase_edge_arrays_by_tail_order(
+  desired_tail_order : Array[String],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+) -> (
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  if desired_tail_order.length() == 0 {
+    return (
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    )
+  }
+  let indices_by_tail : Map[String, Array[Int]] = Map::new()
+  let original_tail_order : Array[String] = []
+  let original_seen : Map[String, Bool] = Map::new()
+  let mut idx = 0
+  while idx < order_edge_tail_out.length() {
+    let tail = order_edge_tail_out[idx]
+    match indices_by_tail.get(tail) {
+      Some(list) => list.push(idx)
+      None => indices_by_tail[tail] = [idx]
+    }
+    append_order_creation_name_if_absent(
+      original_tail_order,
+      original_seen,
+      tail,
+    )
+    idx = idx + 1
+  }
+  let replay_tail_order : Array[String] = []
+  let replay_seen : Map[String, Bool] = Map::new()
+  for tail in desired_tail_order {
+    append_order_creation_name_if_absent(replay_tail_order, replay_seen, tail)
+  }
+  for tail in original_tail_order {
+    append_order_creation_name_if_absent(replay_tail_order, replay_seen, tail)
+  }
+  let reordered_edges_out : Array[@cgraph.Edge] = []
+  let reordered_edge_tail_out : Array[String] = []
+  let reordered_edge_head_out : Array[String] = []
+  let reordered_edge_tail_port_x : Array[Double] = []
+  let reordered_edge_head_port_x : Array[Double] = []
+  let reordered_edge_tail_port_order : Array[Double] = []
+  let reordered_edge_head_port_order : Array[Double] = []
+  for tail in replay_tail_order {
+    let indices = match indices_by_tail.get(tail) {
+      Some(list) => list
+      None => []
+    }
+    for edge_idx in indices {
+      reordered_edges_out.push(order_edges_out[edge_idx])
+      reordered_edge_tail_out.push(order_edge_tail_out[edge_idx])
+      reordered_edge_head_out.push(order_edge_head_out[edge_idx])
+      reordered_edge_tail_port_x.push(order_edge_tail_port_x[edge_idx])
+      reordered_edge_head_port_x.push(order_edge_head_port_x[edge_idx])
+      reordered_edge_tail_port_order.push(order_edge_tail_port_order[edge_idx])
+      reordered_edge_head_port_order.push(order_edge_head_port_order[edge_idx])
+    }
+  }
+  (
+    reordered_edges_out,
+    reordered_edge_tail_out,
+    reordered_edge_head_out,
+    reordered_edge_tail_port_x,
+    reordered_edge_head_port_x,
+    reordered_edge_tail_port_order,
+    reordered_edge_head_port_order,
+  )
+}
+
+///|
+/// Graphviz parity: root-phase stage inputs may override mapped edge replay
+/// order with root-only tail sequencing while leaving unmapped payload intact.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_root_tail_order_override_to_stage_inputs(
+  stage_inputs : RootClusterBuildRanksStageInputs,
+  root_tail_order_override : Array[String],
+) -> RootClusterBuildRanksStageInputs {
+  let (
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+  ) =
+    reorder_root_phase_edge_arrays_by_tail_order(
+      root_tail_order_override,
+      stage_inputs.order_edges_out,
+      stage_inputs.order_edge_tail_out,
+      stage_inputs.order_edge_head_out,
+      stage_inputs.order_edge_tail_port_x,
+      stage_inputs.order_edge_head_port_x,
+      stage_inputs.order_edge_tail_port_order,
+      stage_inputs.order_edge_head_port_order,
+    )
+  {
+    order_node_order: stage_inputs.order_node_order,
+    order_sizes_out: stage_inputs.order_sizes_out,
+    order_rank_keys: stage_inputs.order_rank_keys,
+    order_groups: stage_inputs.order_groups,
+    order_ranks: stage_inputs.order_ranks,
+    order_cluster_keys: stage_inputs.order_cluster_keys,
+    order_cluster_skeleton: stage_inputs.order_cluster_skeleton,
+    order_flat_constraints: stage_inputs.order_flat_constraints,
+    graphviz_out_neighbors: stage_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors: stage_inputs.graphviz_in_neighbors,
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    order_edges_out_unmapped: stage_inputs.order_edges_out_unmapped,
+    order_edge_tail_out_unmapped: stage_inputs.order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped: stage_inputs.order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped: stage_inputs.order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped: stage_inputs.order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped: stage_inputs.order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped: stage_inputs.order_edge_head_port_order_unmapped,
+    ordered_with_vnodes: stage_inputs.ordered_with_vnodes,
+  }
+}
+
 
 ///|
 /// Graphviz parity: pre-root payload forwarding into root+cluster build_ranks
@@ -18783,14 +19179,20 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
   pre_root_stage : OrderClusteredPreRootStageData,
   reorder_context : OrderReorderContext,
   materialized : OrderMaterializationData,
+  root_tail_order_override : Array[String],
 ) -> OrderRootClusterStageData {
   let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  let stage_inputs =
+  let stage_inputs_base =
     build_root_and_cluster_build_ranks_stage_inputs_from_pre_root_payload(
       pre_root_stage,
       reorder_context,
       materialized,
       ordered_with_vnodes,
+    )
+  let stage_inputs =
+    apply_root_tail_order_override_to_stage_inputs(
+      stage_inputs_base,
+      root_tail_order_override,
     )
   run_root_and_cluster_build_ranks_stage(
     order_with_clusters,
@@ -18830,6 +19232,7 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root(
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   pre_root_stage : OrderClusteredPreRootStageData,
+  root_tail_order_override : Array[String],
 ) -> OrderRootClusterStageData {
   let reorder_context = pre_root_stage.reorder_context
   let materialized = pre_root_stage.materialized
@@ -18850,6 +19253,7 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root(
     pre_root_stage,
     reorder_context,
     materialized,
+    root_tail_order_override,
   )
 }
 
@@ -19018,6 +19422,7 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
   pre_root_stage : OrderClusteredPreRootStageData,
+  root_tail_order_override : Array[String],
 ) -> OrderRootClusterStageData {
   run_root_and_cluster_build_ranks_stage_from_pre_root(
     order_with_clusters,
@@ -19034,6 +19439,7 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
     ranks,
     vnode_info,
     pre_root_stage,
+    root_tail_order_override,
   )
 }
 
@@ -19132,6 +19538,74 @@ fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase_from_context(
 }
 
 ///|
+/// Graphviz parity: clustered root phase reuses root-only reorder input
+/// assembly to derive the root-tail replay order for mapped edge materialize.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_tail_order_override_for_clustered_root_phase(
+  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
+  pre_root_stage : OrderClusteredPreRootStageData,
+) -> (Array[String], Map[Int, Array[String]]) {
+  let reorder_context = pre_root_stage.reorder_context
+  let root_reorder_output : RootClusterReorderInputsForRankOrderOutput =
+    build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
+      phase_context.reorder_setup.order_with_vnodes,
+      reorder_context.order_rank_keys,
+      pre_root_stage.order_groups,
+      pre_root_stage.order_cluster_keys,
+      pre_root_stage.order_cluster_skeleton,
+      phase_context.edges,
+      phase_context.edge_tail,
+      phase_context.edge_head,
+      phase_context.class2_data.nlist_order,
+      phase_context.ranks,
+      phase_context.class2_data.skeleton_edge_creation,
+      phase_context.class2_data.root_edge_creation,
+      phase_context.reorder_setup.flat_rank_constraints,
+      phase_context.class2_data.order_edges_by_tail_root,
+      phase_context.cluster_meta,
+      phase_context.runtime_context.vnode_info,
+      phase_context.reorder_setup.vnode_order_keys_for_ordering,
+    )
+  let (
+    _root_groups,
+    _root_rank_keys,
+    _root_edges_out,
+    root_edge_tail_out,
+    _root_edge_head_out,
+    _root_edge_tail_port_x,
+    _root_edge_head_port_x,
+    _root_edge_tail_port_order,
+    _root_edge_head_port_order,
+    _root_parents,
+    _root_children,
+    _root_edge_order,
+    _root_node_order,
+  ) = root_reorder_output
+  let root_tail_order_override =
+    collect_unique_tail_order_from_edge_tail_sequence(root_edge_tail_out)
+  let dispatch_context : ClusterRankOrderFromRootReorderContext = {
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    rank_same_groups: phase_context.cluster_meta.rank_same_groups,
+    rank_same_order: phase_context.cluster_meta.rank_same_order,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    nodesep_pt: phase_context.nodesep_pt,
+    has_edge_labels: phase_context.has_edge_labels,
+    port_order_positions: phase_context.port_order_positions,
+    port_order_contrib: phase_context.port_order_contrib,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    flat_constraints: phase_context.cluster_meta.flat_constraints,
+    graphviz_flip: phase_context.reorder_setup.graphviz_flip,
+    real_nodes: phase_context.runtime_context.real_nodes,
+  }
+  let (_root_rank_keys, ordered_root) =
+    run_root_cluster_rank_order_phase_from_root_reorder_output(
+      dispatch_context,
+      root_reorder_output,
+    )
+  (root_tail_order_override, ordered_root)
+}
+
+///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -19139,22 +19613,32 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
   phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
   pre_root_stage : OrderClusteredPreRootStageData,
 ) -> OrderRootClusterStageData {
-  run_clustered_ordering_pre_root_and_root_stage_root_phase(
-    phase_context.reorder_setup.order_with_clusters,
-    phase_context.reorder_setup.order_with_vnodes,
-    phase_context.graph,
-    phase_context.cluster_meta,
-    phase_context.reorder_setup.vnode_order_keys_for_ordering,
-    phase_context.nodesep_pt,
-    phase_context.has_edge_labels,
-    phase_context.port_order_positions,
-    phase_context.port_order_contrib,
-    phase_context.reorder_setup.graphviz_flip,
-    phase_context.reorder_setup.flat_rank_constraints,
-    phase_context.ranks,
-    phase_context.runtime_context.vnode_info,
-    pre_root_stage,
-  )
+  let (root_tail_order_override, root_groups_override) =
+    build_root_tail_order_override_for_clustered_root_phase(
+      phase_context,
+      pre_root_stage,
+    )
+  root_mincross_groups_override.val = Some(clone_rank_groups(root_groups_override))
+  let output =
+    run_clustered_ordering_pre_root_and_root_stage_root_phase(
+      phase_context.reorder_setup.order_with_clusters,
+      phase_context.reorder_setup.order_with_vnodes,
+      phase_context.graph,
+      phase_context.cluster_meta,
+      phase_context.reorder_setup.vnode_order_keys_for_ordering,
+      phase_context.nodesep_pt,
+      phase_context.has_edge_labels,
+      phase_context.port_order_positions,
+      phase_context.port_order_contrib,
+      phase_context.reorder_setup.graphviz_flip,
+      phase_context.reorder_setup.flat_rank_constraints,
+      phase_context.ranks,
+      phase_context.runtime_context.vnode_info,
+      pre_root_stage,
+      root_tail_order_override,
+    )
+  root_mincross_groups_override.val = None
+  output
 }
 
 ///|
@@ -19321,6 +19805,7 @@ fn run_clustered_ordering_stage_from_phase_context(
 fn build_clustered_ordering_stage_pre_root_and_root_phase_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
@@ -19338,6 +19823,7 @@ fn build_clustered_ordering_stage_pre_root_and_root_phase_context(
   {
     graph,
     nodes,
+    edges,
     edge_tail,
     edge_head,
     ranks,
@@ -19538,6 +20024,7 @@ fn build_clustered_ordering_stage_pre_root_and_root_phase_context_from_dispatch_
   build_clustered_ordering_stage_pre_root_and_root_phase_context(
     stage_dispatch_context.graph,
     stage_dispatch_context.nodes,
+    stage_dispatch_context.edges,
     stage_dispatch_context.edge_tail,
     stage_dispatch_context.edge_head,
     stage_dispatch_context.ranks,
