@@ -262,13 +262,16 @@ fn build_constraint_reorder(
     order.push(node_idx)
     seen[node_idx] = true
   }
-  for name in nlist_order {
+  let mut nlist_idx = nlist_order.length()
+  while nlist_idx > 0 {
+    nlist_idx = nlist_idx - 1
+    let name = nlist_order[nlist_idx]
     match index.get(name) {
       Some(node_idx) =>
         if !seen[node_idx] {
-        order.push(node_idx)
-        seen[node_idx] = true
-      }
+          order.push(node_idx)
+          seen[node_idx] = true
+        }
       None => ()
     }
   }
