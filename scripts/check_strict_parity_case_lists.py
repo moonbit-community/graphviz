@@ -8,6 +8,17 @@ from pathlib import Path
 
 
 DEFAULT_REQUIRED_SENTINEL = ["ldbxtried", "typeshar", "trapeziumlr", "unix2"]
+INPUT_CANDIDATE_PATTERNS = [
+    "refs/graphviz/graphs/directed/*.gv",
+    "refs/graphviz/graphs/undirected/*.gv",
+    "refs/graphviz/doc/dotguide/*.dot",
+    "refs/graphviz/doc/infosrc/*.dot",
+    "refs/graphviz/doc/infosrc/*.gv",
+    "refs/graphviz/doc/neato/*.dot",
+    "refs/graphviz/contrib/prune/*.gv",
+    "refs/graphviz/contrib/dirgraph/*.dot",
+    "refs/graphviz/contrib/java-dot/*.dot",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,6 +55,12 @@ def parse_args() -> argparse.Namespace:
         default=Path("tests/strict_parity_known_regression_cases_f9bfd00.txt"),
         help="Known full-corpus regression case list that history focus must cover.",
     )
+    parser.add_argument(
+        "--allowed-uncovered-file",
+        type=Path,
+        default=Path("tests/strict_parity_uncovered_input_cases.txt"),
+        help="Case list allowed to exist in input corpus but not strict manifests.",
+    )
     return parser.parse_args()
 
 
@@ -72,6 +89,15 @@ def load_manifest_case_names(repo_root: Path) -> tuple[list[str], list[str], lis
     xdot_cases = load_case_names(repo_root / "tests/render/xdot/cases.txt")
     svg_cases = load_case_names(repo_root / "tests/render/svg_snapshot/cases.txt")
     return dot_cases, xdot_cases, svg_cases
+
+
+def load_input_candidate_case_names(repo_root: Path) -> set[str]:
+    names: set[str] = set()
+    for pattern in INPUT_CANDIDATE_PATTERNS:
+        for path in repo_root.glob(pattern):
+            if path.is_file():
+                names.add(path.stem)
+    return names
 
 
 def validate_manifest_alignment(
@@ -104,16 +130,20 @@ def main() -> int:
     sentinel_path = resolve_path(repo_root, args.sentinel_file)
     history_path = resolve_path(repo_root, args.history_file)
     known_regression_path = resolve_path(repo_root, args.known_regression_file)
+    allowed_uncovered_path = resolve_path(repo_root, args.allowed_uncovered_file)
 
     dot_cases, xdot_cases, svg_cases = load_manifest_case_names(repo_root)
     manifest_set = validate_manifest_alignment(dot_cases, xdot_cases, svg_cases)
+    input_candidate_set = load_input_candidate_case_names(repo_root)
 
     sentinel_cases = load_case_names(sentinel_path)
     history_cases = load_case_names(history_path)
     known_regression_cases = load_case_names(known_regression_path)
+    allowed_uncovered_cases = load_case_names(allowed_uncovered_path)
     sentinel_set = set(sentinel_cases)
     history_set = set(history_cases)
     known_regression_set = set(known_regression_cases)
+    allowed_uncovered_set = set(allowed_uncovered_cases)
 
     required_sentinel = set(args.required_sentinel or [])
     validate_subset(
@@ -152,12 +182,35 @@ def main() -> int:
         superset_name="strict parity manifests",
         superset_values=manifest_set,
     )
+    validate_subset(
+        subset_name="allowed uncovered list",
+        subset_values=allowed_uncovered_set,
+        superset_name="input candidate corpus",
+        superset_values=input_candidate_set,
+    )
+
+    uncovered_candidates = input_candidate_set - manifest_set
+    if uncovered_candidates != allowed_uncovered_set:
+        extra_uncovered = sorted(uncovered_candidates - allowed_uncovered_set)
+        missing_allowed = sorted(allowed_uncovered_set - uncovered_candidates)
+        details: list[str] = []
+        if extra_uncovered:
+            details.append(
+                "new uncovered cases not listed: " + ", ".join(extra_uncovered),
+            )
+        if missing_allowed:
+            details.append(
+                "listed uncovered cases no longer uncovered: " + ", ".join(missing_allowed),
+            )
+        raise ValueError("strict parity uncovered-input set changed: " + "; ".join(details))
 
     print(
         "strict parity case lists valid: "
         "sentinel="
         f"{len(sentinel_cases)} history={len(history_cases)} "
-        f"known_regression={len(known_regression_cases)} manifests={len(manifest_set)}",
+        f"known_regression={len(known_regression_cases)} "
+        f"allowed_uncovered={len(allowed_uncovered_cases)} "
+        f"manifests={len(manifest_set)} candidates={len(input_candidate_set)}",
     )
     return 0
 

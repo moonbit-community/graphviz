@@ -1,0 +1,3 @@
+# Input corpus cases intentionally excluded from strict parity manifests.
+# Keep this list minimal and shrink it as alignment improves.
+plugins
