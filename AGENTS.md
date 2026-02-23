@@ -12,6 +12,8 @@ scripts/run_local_guard.sh
 
 `scripts/run_local_guard.sh` validates:
 
+- ordering-input fixture parity (`plugins` root/remincross capture path)
+- trapezium SVG shape invariant (polygon-only node families)
 - strict parity sentinel (`ldbxtried`, `typeshar`)
 - strict parity full corpus (`dot` / `xdot` / `svg`)
 
