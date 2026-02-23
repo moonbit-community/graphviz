@@ -112,6 +112,46 @@ def load_case_names(manifest_path: Path) -> list[str]:
     return names
 
 
+def load_manifest_case_names(repo_root: Path, fmt: str) -> list[str]:
+    config = FORMAT_CONFIG[fmt]
+    manifest_path = repo_root / config.manifest
+    return load_case_names(manifest_path)
+
+
+def validate_manifest_alignment(repo_root: Path, formats: list[str]) -> None:
+    if len(formats) <= 1:
+        return
+    baseline_fmt = formats[0]
+    baseline = load_manifest_case_names(repo_root, baseline_fmt)
+    for fmt in formats[1:]:
+        current = load_manifest_case_names(repo_root, fmt)
+        if current == baseline:
+            continue
+        base_set = set(baseline)
+        current_set = set(current)
+        missing = sorted(base_set - current_set)
+        extra = sorted(current_set - base_set)
+        details: list[str] = []
+        if missing:
+            details.append(f"missing in {fmt}: {' '.join(missing)}")
+        if extra:
+            details.append(f"extra in {fmt}: {' '.join(extra)}")
+        if not details and len(current) == len(baseline):
+            first_diff = next(
+                idx
+                for idx, (left, right) in enumerate(zip(baseline, current))
+                if left != right
+            )
+            details.append(
+                "different order at index "
+                f"{first_diff}: {baseline[first_diff]} != {current[first_diff]}",
+            )
+        raise ValueError(
+            "manifest case lists diverge between formats "
+            f"{baseline_fmt} and {fmt}: " + "; ".join(details),
+        )
+
+
 def resolve_input_path(repo_root: Path, case_name: str) -> Path:
     for rel in INPUT_CANDIDATES:
         path = repo_root / rel.format(case=case_name)
@@ -214,6 +254,8 @@ def main() -> int:
     repo_root = args.repo_root.resolve()
     dot_bin = ensure_dot_bin(args)
     focus_set = set(args.focus or [])
+    if not focus_set:
+        validate_manifest_alignment(repo_root, args.formats)
 
     had_mismatch = False
     for fmt in args.formats:
