@@ -3755,6 +3755,8 @@ fn build_cluster_local_rank_reorder_seed(
 /// edges/ports and parent-child maps from the cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
+  cluster : String,
+  cluster_graph_edge_count : Int,
   order_edges : Array[@cgraph.Edge],
   order_edge_tail : Array[String],
   order_edge_head : Array[String],
@@ -3778,12 +3780,46 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Array[String]],
   Map[String, Int],
 ) {
+  let mut vnode_count = 0
+  for name in cluster_nodes {
+    if is_edge_vnode_name(name) {
+      vnode_count = vnode_count + 1
+    }
+  }
   let include_external_crossing =
     if should_capture_ordering_fixture_mode() {
       cluster_rank_keys.length() <= 2
+    } else if cluster_rank_keys.length() > 2 &&
+      cluster_graph_edge_count == 0 &&
+      vnode_count == 0 {
+      false
     } else {
       true
     }
+  if @sys.get_env_var("DOT_DEBUG_CLUSTER_EDGE_BUNDLE") is Some(_) {
+    let mut fixed_rank_count = 0
+    for name in cluster_nodes {
+      if fixed_ranks.get(name) is Some(_) {
+        fixed_rank_count = fixed_rank_count + 1
+      }
+    }
+    let mut internal = 0
+    let mut crossing = 0
+    for i in 0..<order_edges.length() {
+      let tail = order_edge_tail[i]
+      let head = order_edge_head[i]
+      let tail_in = cluster_node_set.get(tail) is Some(_)
+      let head_in = cluster_node_set.get(head) is Some(_)
+      if tail_in && head_in {
+        internal = internal + 1
+      } else if tail_in || head_in {
+        crossing = crossing + 1
+      }
+    }
+    println(
+      "cluster_edge_bundle \{cluster} ranks=\{cluster_rank_keys.length()} nodes=\{cluster_nodes.length()} vnodes=\{vnode_count} fixed=\{fixed_rank_count} include_external=\{include_external_crossing} internal=\{internal} crossing=\{crossing}",
+    )
+  }
   build_cluster_local_edge_bundle(
     order_edges,
     order_edge_tail,
@@ -3900,6 +3936,7 @@ fn build_cluster_local_reorder_run_inputs_output(
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusterLocalReorderRunInputsContext {
   cluster : String
+  cluster_graph_edge_count : Int
   expanded_clusters : Map[String, Bool]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
@@ -3964,6 +4001,8 @@ fn build_cluster_local_reorder_run_inputs(
     edge_order,
   ) =
     build_cluster_local_reorder_run_inputs_edge_bundle_phase(
+      context.cluster,
+      context.cluster_graph_edge_count,
       context.order_edges,
       context.order_edge_tail,
       context.order_edge_head,
@@ -4080,6 +4119,7 @@ fn reorder_single_cluster_rank_groups(
   }
   run_cluster_local_rank_reorder_execution_phase(
     cluster,
+    cluster_graph.edges().length(),
     expanded_clusters,
     groups,
     order_edges,
@@ -4117,6 +4157,7 @@ fn reorder_single_cluster_rank_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_reorder_execution_phase_input_phase(
   cluster : String,
+  cluster_graph_edge_count : Int,
   expanded_clusters : Map[String, Bool],
   order_edges : Array[@cgraph.Edge],
   order_edge_tail : Array[String],
@@ -4139,6 +4180,7 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
 ) -> ClusterLocalReorderRunInputsOutput {
   let input_context : ClusterLocalReorderRunInputsContext = {
     cluster,
+    cluster_graph_edge_count,
     expanded_clusters,
     order_edges,
     order_edge_tail,
@@ -4229,6 +4271,7 @@ fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_local_rank_reorder_execution_phase(
   cluster : String,
+  cluster_graph_edge_count : Int,
   expanded_clusters : Map[String, Bool],
   groups : Map[Int, Array[String]],
   order_edges : Array[@cgraph.Edge],
@@ -4261,6 +4304,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
   let input_phase_output =
     run_cluster_local_rank_reorder_execution_phase_input_phase(
       cluster,
+      cluster_graph_edge_count,
       expanded_clusters,
       order_edges,
       order_edge_tail,

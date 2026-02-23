@@ -344,7 +344,7 @@ fn transform_point(
 ) -> @geom.Point {
   match rankdir {
     RankDir::TB => point
-    RankDir::BT => { x: point.x, y: bbox.ury - point.y }
+    RankDir::BT => { x: point.x, y: bbox.lly + bbox.ury - point.y }
     RankDir::LR => { x: bbox.lly + bbox.ury - point.y, y: point.x }
     RankDir::RL => { x: point.y, y: point.x }
   }
