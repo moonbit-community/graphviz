@@ -53,6 +53,7 @@ scripts/scan_strict_parity_history.py \
   - sentinel strict checks (`ldbxtried`, `typeshar`)
   - full strict corpus checks (`dot`/`xdot`/`svg`)
   - uploads a parity report artifact (and mismatch outputs when present)
+  - updates a sticky PR comment with per-format mismatch summary
 - `.github/workflows/strict-parity-history.yml` is manual (`workflow_dispatch`)
   and runs commit-range scans using `scripts/scan_strict_parity_history.py`.
 - `.github/workflows/strict-parity-bisect.yml` is manual (`workflow_dispatch`)

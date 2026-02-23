@@ -27,6 +27,10 @@ jobs:
   strict-parity:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     concurrency:
       group: strict-parity-${{ github.ref }}
       cancel-in-progress: true
@@ -73,3 +77,47 @@ jobs:
             target/render/dot
             target/render/xdot
             target/render/svg
+
+      - name: Build strict parity PR comment
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p target/strict-parity
+          scripts/build_strict_parity_comment.py \
+            --report target/strict-parity/report.json \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --artifact-name "strict-parity-report-${{ github.run_id }}" \
+            > target/strict-parity/comment.md
+
+      - name: Update strict parity PR comment
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- strict-parity-report -->';
+            const body = fs.readFileSync('target/strict-parity/comment.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 }
+            );
+            const existing = comments.find(
+              (c) => c.user && c.user.type === 'Bot' && c.body && c.body.includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
