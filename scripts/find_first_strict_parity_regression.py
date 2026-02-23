@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -109,14 +110,35 @@ def run(
     cwd: Path,
     *,
     check: bool = True,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
+    proc_env = None
+    if env:
+        proc_env = os.environ.copy()
+        proc_env.update(env)
     return subprocess.run(
         args,
         cwd=cwd,
         text=True,
         capture_output=True,
         check=check,
+        env=proc_env,
     )
+
+
+def submodule_update_args(repo_root: Path) -> list[str]:
+    repo_submodule = repo_root / "refs" / "graphviz"
+    if (repo_submodule / ".git").exists() or (repo_submodule / "objects").is_dir():
+        return [
+            "git",
+            "submodule",
+            "update",
+            "--init",
+            "--reference",
+            str(repo_submodule),
+            "refs/graphviz",
+        ]
+    return ["git", "submodule", "update", "--init", "refs/graphviz"]
 
 
 def commit_chain(repo_root: Path, good: str, bad: str) -> list[str]:
@@ -227,7 +249,11 @@ class CommitEvaluator:
             self.repo_root,
         )
         try:
-            run(["git", "submodule", "update", "--init", "refs/graphviz"], worktree)
+            run(
+                submodule_update_args(self.repo_root),
+                worktree,
+                env={"GIT_TERMINAL_PROMPT": "0"},
+            )
             run(["moon", "build", "src/cmd/dot", "--target", "native"], worktree)
             cmd = [
                 sys.executable,
