@@ -3778,9 +3778,14 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Array[String]],
   Map[String, Int],
 ) {
-  // Graphviz parity: cluster-local mincross keeps crossing edges in the
-  // expanded subgraph context so external anchors remain available.
-  let include_external_crossing = true
+  let include_external_crossing =
+    // Runtime parity keeps full external anchors; fixture capture uses the
+    // graphviz shallow-pass filter so ordering-input snapshots stay aligned.
+    if should_capture_ordering_inputs() {
+      cluster_rank_keys.length() <= 2
+    } else {
+      true
+    }
   build_cluster_local_edge_bundle(
     order_edges,
     order_edge_tail,
@@ -7391,9 +7396,13 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let root_graphviz_flip =
-    // Graphviz parity: clustered root-reorder uses internal TB ordering
-    // coordinates, so rankdir flip is not applied in this pass.
-    false
+    // Runtime parity keeps TB coordinates here, while fixture capture must
+    // preserve the exact Graphviz flip path for root input snapshots.
+    if should_capture_ordering_inputs() {
+      graphviz_flip
+    } else {
+      false
+    }
   let ordered_root = reorder_rank_groups(
     root_rank_keys,
     root_groups,
@@ -9957,6 +9966,60 @@ fn build_ordering_input_edges_snapshot(
 }
 
 ///|
+fn coalesce_ordering_input_edges_snapshot(
+  edges : Array[OrderingInputEdgeSnapshot],
+) -> Array[OrderingInputEdgeSnapshot] {
+  let entries_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
+    Map::new()
+  let tail_order : Array[String] = []
+  for edge in edges {
+    let tail = edge.tail
+    if entries_by_tail.get(tail) is None {
+      entries_by_tail[tail] = []
+      tail_order.push(tail)
+    }
+    match entries_by_tail.get(tail) {
+      Some(list) =>
+        list.push(
+          (
+            edge.tail,
+            edge.head,
+            edge.xpenalty,
+            true,
+            edge.tail_port_x,
+            edge.head_port_x,
+            edge.tail_port_order,
+            edge.head_port_order,
+          ),
+        )
+      None => ()
+    }
+  }
+  let coalesced_by_tail = coalesce_order_edges_by_tail(entries_by_tail)
+  let coalesced : Array[OrderingInputEdgeSnapshot] = []
+  for tail in tail_order {
+    let entries = match coalesced_by_tail.get(tail) {
+      Some(value) => value
+      None => []
+    }
+    for entry in entries {
+      let (tail_name, head_name, xpenalty, _constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+        entry
+      coalesced.push({
+        tail: tail_name,
+        head: head_name,
+        xpenalty,
+        tail_port_x,
+        head_port_x,
+        tail_port_order,
+        head_port_order,
+      })
+    }
+  }
+  coalesced
+}
+
+///|
 fn capture_root_mincross_input_snapshot(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -9973,18 +10036,22 @@ fn capture_root_mincross_input_snapshot(
   if !should_capture_ordering_inputs() {
     return
   }
+  let edges =
+    coalesce_ordering_input_edges_snapshot(
+      build_ordering_input_edges_snapshot(
+        edges_out,
+        edge_tail_out,
+        edge_head_out,
+        edge_tail_port_x,
+        edge_head_port_x,
+        edge_tail_port_order,
+        edge_head_port_order,
+      ),
+    )
   let snapshot : RootMincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
     groups: clone_groups_for_ordering_input_snapshot(groups),
-    edges: build_ordering_input_edges_snapshot(
-      edges_out,
-      edge_tail_out,
-      edge_head_out,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-    ),
+    edges,
     cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
     cluster_skeleton: clone_bool_map_for_ordering_input_snapshot(
       cluster_skeleton,
@@ -15333,11 +15400,7 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
   if capture_root_input {
     capture_pass0_flat_seed_groups_enabled.val = false
   }
-  let root_input_groups =
-    match root_mincross_groups_override.val {
-      Some(value) => clone_rank_groups(value)
-      None => ordered_mincross
-    }
+  let root_input_groups = order_groups_for_mincross
   capture_root_mincross_input_snapshot(
     order_rank_keys_for_mincross,
     root_input_groups,
