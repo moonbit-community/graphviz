@@ -7393,11 +7393,13 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
+  let has_multi_cluster_roots =
+    has_multiple_nonempty_cluster_keys_for_root_reorder(order_cluster_keys)
   let root_graphviz_flip =
     if should_capture_ordering_fixture_mode() {
       graphviz_flip
     } else {
-      false
+      graphviz_flip && has_multi_cluster_roots
     }
   let ordered_root = reorder_rank_groups(
     root_rank_keys,
@@ -7429,6 +7431,23 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   )
   dot_trace_groups("order_root", ordered_root)
   ordered_root
+}
+
+///|
+fn has_multiple_nonempty_cluster_keys_for_root_reorder(
+  cluster_keys : Map[String, String],
+) -> Bool {
+  let seen : Map[String, Bool] = Map::new()
+  for _name, key in cluster_keys {
+    if key == "" || seen.get(key) is Some(_) {
+      continue
+    }
+    seen[key] = true
+    if seen.length() > 1 {
+      return true
+    }
+  }
+  false
 }
 
 ///|
@@ -22197,6 +22216,17 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
     rank_data.ranks,
     x_groups,
   )
+  if graphviz_flip && cluster_meta.cluster_order.length() > 1 {
+    for rank, names in x_groups {
+      let reversed : Array[String] = []
+      let mut idx = names.length()
+      while idx > 0 {
+        idx = idx - 1
+        reversed.push(names[idx])
+      }
+      x_groups[rank] = reversed
+    }
+  }
   x_groups
 }
 
