@@ -1,0 +1,52 @@
+name: strict-parity
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "moon.mod.json"
+      - "**/moon.pkg.json"
+      - ".github/workflows/strict-parity.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "moon.mod.json"
+      - "**/moon.pkg.json"
+      - ".github/workflows/strict-parity.yml"
+  workflow_dispatch:
+
+jobs:
+  strict-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MoonBit toolchain
+        run: curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+
+      - name: Add MoonBit to PATH
+        run: echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show MoonBit version
+        run: moon version --all
+
+      - name: Build dot CLI
+        run: moon build src/cmd/dot --target native
+
+      - name: Strict parity sentinel cases
+        run: scripts/check_strict_parity.py --formats dot xdot svg --focus ldbxtried typeshar
+
+      - name: Strict parity full corpus
+        run: scripts/check_strict_parity.py --formats dot xdot svg

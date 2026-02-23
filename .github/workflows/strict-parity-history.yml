@@ -1,0 +1,52 @@
+name: strict-parity-history
+
+on:
+  workflow_dispatch:
+    inputs:
+      good_commit:
+        description: "Known-good commit (inclusive)"
+        required: true
+        type: string
+      bad_commit:
+        description: "Range end commit (inclusive)"
+        required: true
+        type: string
+      focus_cases:
+        description: "Optional focused cases, space-separated (e.g. ldbxtried typeshar)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  strict-parity-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MoonBit toolchain
+        run: curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+
+      - name: Add MoonBit to PATH
+        run: echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Show MoonBit version
+        run: moon version --all
+
+      - name: Scan strict parity history
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --good "${{ inputs.good_commit }}"
+            --bad "${{ inputs.bad_commit }}"
+            --formats dot xdot svg
+          )
+          if [[ -n "${{ inputs.focus_cases }}" ]]; then
+            read -r -a focus <<< "${{ inputs.focus_cases }}"
+            args+=(--focus "${focus[@]}")
+          fi
+          scripts/scan_strict_parity_history.py "${args[@]}"

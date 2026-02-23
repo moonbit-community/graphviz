@@ -45,3 +45,11 @@ scripts/scan_strict_parity_history.py \
   --formats dot xdot svg \
   --focus ldbxtried typeshar
 ```
+
+## 4) CI guard
+
+- `.github/workflows/strict-parity.yml` runs on PR/push and enforces:
+  - sentinel strict checks (`ldbxtried`, `typeshar`)
+  - full strict corpus checks (`dot`/`xdot`/`svg`)
+- `.github/workflows/strict-parity-history.yml` is manual (`workflow_dispatch`)
+  and runs commit-range scans using `scripts/scan_strict_parity_history.py`.
