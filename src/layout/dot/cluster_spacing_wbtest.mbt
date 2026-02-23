@@ -188,6 +188,23 @@ test "nested clusters include parent margin" {
 }
 
 ///|
+test "empty clusters do not receive layout bbox attrs" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
+  )
+  let layout = layout_dot(graph)
+  layout.apply()
+  let empty = spacing_find_subgraph(graph, "cluster_empty")
+  let full = spacing_find_subgraph(graph, "cluster_full")
+  guard empty.get_attr("bb") is None else {
+    fail("empty cluster should not receive bb")
+  }
+  guard full.get_attr("bb") is Some(_) else {
+    fail("non-empty cluster should receive bb")
+  }
+}
+
+///|
 test "edge labels expand rank spacing" {
   let with_label = @dot_parser.parse_dot(
     "digraph { node [shape=box,width=1,height=1,label=\"\"]; a -> b [label=\"EdgeLabel\"]; }",

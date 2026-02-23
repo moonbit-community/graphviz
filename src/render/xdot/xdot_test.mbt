@@ -125,6 +125,20 @@ test "render_xdot fills cluster background" {
 }
 
 ///|
+test "render_xdot skips empty cluster draw ops" {
+  let graph = @dot.parse_dot(
+    "digraph { subgraph cluster_empty { label=\"empty\"; } subgraph cluster_full { label=\"full\"; a; } }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  guard !output.contains("subgraph cluster_empty {\n\t\tgraph [_draw_=") else {
+    fail("empty cluster should not have _draw_")
+  }
+  guard output.contains("subgraph cluster_full {\n\t\tgraph [_draw_=") else {
+    fail("non-empty cluster should have _draw_")
+  }
+}
+
+///|
 test "render_xdot encodes dashed and dotted styles" {
   let graph = @dot.parse_dot(
     "digraph { node [style=dashed]; a; b; a -> b [style=dotted]; }",
