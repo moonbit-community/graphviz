@@ -26,3 +26,8 @@ If the guard fails:
 ## Guard Changes
 
 When changing guard scripts/workflows (`scripts/check_strict_parity.py`, `scripts/scan_strict_parity_history.py`, `scripts/find_first_strict_parity_regression.py`, `.github/workflows/*strict-parity*`), also run at least one local smoke command for the changed path.
+
+History/bisect workflow defaults:
+
+- `tests/strict_parity_history_focus_cases.txt` is the default focus file for strict parity history and bisect workflows.
+- keep this list aligned with known high-signal regression clusters.
