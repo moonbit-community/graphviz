@@ -21,6 +21,9 @@ jobs:
   strict-parity-history:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    concurrency:
+      group: strict-parity-history-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,16 +40,77 @@ jobs:
         run: moon version --all
 
       - name: Scan strict parity history
+        id: run_history
+        continue-on-error: true
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
+          mkdir -p target/strict-parity-history
           args=(
             --good "${{ inputs.good_commit }}"
             --bad "${{ inputs.bad_commit }}"
             --formats dot xdot svg
+            --report-json target/strict-parity-history/report.json
           )
           if [[ -n "${{ inputs.focus_cases }}" ]]; then
             read -r -a focus <<< "${{ inputs.focus_cases }}"
             args+=(--focus "${focus[@]}")
           fi
-          scripts/scan_strict_parity_history.py "${args[@]}"
+          scripts/scan_strict_parity_history.py "${args[@]}" \
+            | tee target/strict-parity-history/scan.log
+          rc=${PIPESTATUS[0]}
+          echo "exit_code=${rc}" >> "$GITHUB_OUTPUT"
+          exit ${rc}
+
+      - name: Upload strict parity history artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-parity-history-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            target/strict-parity-history/report.json
+            target/strict-parity-history/scan.log
+
+      - name: Add strict parity history summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary_path = Path("target/strict-parity-history/report.json")
+          step_summary = Path(__import__("os").environ["GITHUB_STEP_SUMMARY"])
+          if not summary_path.exists():
+            step_summary.write_text(
+              "## Strict Parity History\n\nNo JSON report generated.\n",
+              encoding="utf-8",
+            )
+            raise SystemExit(0)
+          data = json.loads(summary_path.read_text(encoding="utf-8"))
+          lines = [
+            "## Strict Parity History",
+            "",
+            f"- any_bad: `{data.get('any_bad')}`",
+            "",
+            "| Commit | Status | dot | xdot | svg |",
+            "| --- | --- | ---: | ---: | ---: |",
+          ]
+          for entry in data.get("entries", []):
+            counts = entry.get("counts", {})
+            lines.append(
+              f"| `{entry.get('short','?')}` | {entry.get('status','?')} | "
+              f"{counts.get('dot','?')} | {counts.get('xdot','?')} | {counts.get('svg','?')} |"
+            )
+          step_summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Fail workflow on history regressions
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.run_history.outputs.exit_code }}" != "0" ]]; then
+            echo "strict parity history detected regressions"
+            exit 1
+          fi

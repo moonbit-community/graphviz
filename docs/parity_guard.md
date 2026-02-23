@@ -56,10 +56,12 @@ scripts/scan_strict_parity_history.py \
   - uploads a parity report artifact (mismatch outputs + unified diffs when present)
   - updates a sticky PR comment with per-format mismatch summary and diff file hints
 - `.github/workflows/strict-parity-history.yml` is manual (`workflow_dispatch`)
-  and runs commit-range scans using `scripts/scan_strict_parity_history.py`.
+  and runs commit-range scans using `scripts/scan_strict_parity_history.py`
+  (uploads JSON/log artifacts and writes a step summary table).
 - `.github/workflows/strict-parity-bisect.yml` is manual (`workflow_dispatch`)
   and finds the first bad commit using
-  `scripts/find_first_strict_parity_regression.py`.
+  `scripts/find_first_strict_parity_regression.py`
+  (uploads JSON/log artifacts and writes a first-bad summary).
 
 ## 5) First bad commit bisect (local)
 

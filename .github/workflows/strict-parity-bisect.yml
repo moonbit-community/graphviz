@@ -21,6 +21,9 @@ jobs:
   strict-parity-bisect:
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    concurrency:
+      group: strict-parity-bisect-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,16 +40,98 @@ jobs:
         run: moon version --all
 
       - name: Bisect first strict parity regression
+        id: run_bisect
+        continue-on-error: true
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
+          mkdir -p target/strict-parity-bisect
           args=(
             --good "${{ inputs.good_commit }}"
             --bad "${{ inputs.bad_commit }}"
             --formats dot xdot svg
+            --report-json target/strict-parity-bisect/report.json
           )
           if [[ -n "${{ inputs.focus_cases }}" ]]; then
             read -r -a focus <<< "${{ inputs.focus_cases }}"
             args+=(--focus "${focus[@]}")
           fi
-          scripts/find_first_strict_parity_regression.py "${args[@]}"
+          scripts/find_first_strict_parity_regression.py "${args[@]}" \
+            | tee target/strict-parity-bisect/bisect.log
+          rc=${PIPESTATUS[0]}
+          echo "exit_code=${rc}" >> "$GITHUB_OUTPUT"
+          exit ${rc}
+
+      - name: Upload strict parity bisect artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-parity-bisect-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            target/strict-parity-bisect/report.json
+            target/strict-parity-bisect/bisect.log
+
+      - name: Add strict parity bisect summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import os
+
+          report_path = Path("target/strict-parity-bisect/report.json")
+          summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          if not report_path.exists():
+            summary_path.write_text(
+              "## Strict Parity Bisect\n\nNo JSON report generated.\n",
+              encoding="utf-8",
+            )
+            raise SystemExit(0)
+          data = json.loads(report_path.read_text(encoding="utf-8"))
+          first_bad = data.get("first_bad")
+          last_good = data.get("last_good")
+          lines = [
+            "## Strict Parity Bisect",
+            "",
+            f"- exit_code: `{data.get('exit_code')}`",
+          ]
+          if first_bad:
+            lines.append(
+              f"- first_bad: `{first_bad.get('short')}` ({first_bad.get('commit')})"
+            )
+          if last_good:
+            lines.append(
+              f"- last_good: `{last_good.get('short')}` ({last_good.get('commit')})"
+            )
+          error = data.get("error")
+          if error:
+            lines.extend(["", f"- error: `{error}`"])
+          probes = data.get("probes", [])
+          if probes:
+            lines.extend(
+              [
+                "",
+                "| Probe | Commit | Status | dot | xdot | svg |",
+                "| ---: | --- | --- | ---: | ---: | ---: |",
+              ]
+            )
+            for probe in probes:
+              counts = probe.get("counts", {})
+              status = "PASS" if probe.get("passed") else "FAIL"
+              lines.append(
+                f"| {probe.get('index')} | `{probe.get('short')}` | {status} | "
+                f"{counts.get('dot','?')} | {counts.get('xdot','?')} | {counts.get('svg','?')} |"
+              )
+          summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Fail workflow on bisect errors
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.run_bisect.outputs.exit_code }}" != "0" ]]; then
+            echo "strict parity bisect failed"
+            exit 1
+          fi

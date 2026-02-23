@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -48,6 +49,12 @@ def parse_args() -> argparse.Namespace:
         "--keep-temp",
         action="store_true",
         help="Keep temporary worktrees for debugging.",
+    )
+    parser.add_argument(
+        "--report-json",
+        type=Path,
+        default=None,
+        help="Optional JSON report path for CI/debugging.",
     )
     return parser.parse_args()
 
@@ -94,6 +101,10 @@ def parse_counts(stdout: str) -> dict[str, int]:
         mismatches = int(parts[2].split("=", 1)[1])
         counts[fmt] = mismatches
     return counts
+
+
+def counts_summary(formats: list[str], counts: dict[str, int]) -> str:
+    return " ".join(f"{fmt}={counts.get(fmt, -1)}" for fmt in formats)
 
 
 class CommitEvaluator:
@@ -162,6 +173,19 @@ def main() -> int:
 
     temp_root = Path(tempfile.mkdtemp(prefix="strict_parity_bisect."))
     print(f"bisect temp dir: {temp_root}")
+    report: dict[str, object] = {
+        "repo_root": str(repo_root),
+        "good": args.good,
+        "bad": args.bad,
+        "formats": args.formats,
+        "focus_cases": sorted(set(args.focus or [])),
+        "good_result": None,
+        "bad_result": None,
+        "probes": [],
+        "first_bad": None,
+        "last_good": None,
+    }
+    exit_code = 0
     try:
         evaluator = CommitEvaluator(
             repo_root,
@@ -173,20 +197,34 @@ def main() -> int:
 
         good_ok, good_counts, _ = evaluator.evaluate(chain[0])
         bad_ok, bad_counts, _ = evaluator.evaluate(chain[-1])
+        report["good_result"] = {
+            "commit": chain[0],
+            "short": short_hash(repo_root, chain[0]),
+            "passed": good_ok,
+            "counts": good_counts,
+        }
+        report["bad_result"] = {
+            "commit": chain[-1],
+            "short": short_hash(repo_root, chain[-1]),
+            "passed": bad_ok,
+            "counts": bad_counts,
+        }
         print(
             f"{short_hash(repo_root, chain[0])} "
-            f"{'PASS' if good_ok else 'FAIL'} "
-            + " ".join(f"{fmt}={good_counts.get(fmt, -1)}" for fmt in args.formats)
+            f"{'PASS' if good_ok else 'FAIL'} {counts_summary(args.formats, good_counts)}"
         )
         print(
             f"{short_hash(repo_root, chain[-1])} "
-            f"{'PASS' if bad_ok else 'FAIL'} "
-            + " ".join(f"{fmt}={bad_counts.get(fmt, -1)}" for fmt in args.formats)
+            f"{'PASS' if bad_ok else 'FAIL'} {counts_summary(args.formats, bad_counts)}"
         )
         if not good_ok:
-            raise RuntimeError("known-good commit does not pass strict parity")
+            raise RuntimeError(
+                "known-good commit does not pass strict parity",
+            )
         if bad_ok:
-            raise RuntimeError("known-bad commit does not fail strict parity")
+            raise RuntimeError(
+                "known-bad commit does not fail strict parity",
+            )
 
         low = 0
         high = len(chain) - 1
@@ -199,8 +237,18 @@ def main() -> int:
             status = "PASS" if ok else "FAIL"
             print(
                 f"probe {probes}: {short_hash(repo_root, commit)} {status} "
-                + " ".join(f"{fmt}={counts.get(fmt, -1)}" for fmt in args.formats)
+                + counts_summary(args.formats, counts)
             )
+            probe_entry: dict[str, object] = {
+                "index": probes,
+                "commit": commit,
+                "short": short_hash(repo_root, commit),
+                "passed": ok,
+                "counts": counts,
+            }
+            report_probes = report.get("probes")
+            if isinstance(report_probes, list):
+                report_probes.append(probe_entry)
             if ok:
                 low = mid
             else:
@@ -210,14 +258,38 @@ def main() -> int:
         first_bad_short = short_hash(repo_root, first_bad)
         prev_good = chain[high - 1]
         prev_good_short = short_hash(repo_root, prev_good)
+        report["first_bad"] = {
+            "commit": first_bad,
+            "short": first_bad_short,
+        }
+        report["last_good"] = {
+            "commit": prev_good,
+            "short": prev_good_short,
+        }
         print(f"first bad commit: {first_bad_short} ({first_bad})")
         print(f"last good commit:  {prev_good_short} ({prev_good})")
-        return 0
+    except Exception as exc:
+        exit_code = 1
+        report["error"] = str(exc)
+        print(f"error: {exc}", file=sys.stderr)
     finally:
         if args.keep_temp:
             print(f"kept temp dir: {temp_root}")
         else:
             shutil.rmtree(temp_root, ignore_errors=True)
+
+        if args.report_json is not None:
+            report_path = args.report_json
+            if not report_path.is_absolute():
+                report_path = repo_root / report_path
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report["exit_code"] = exit_code
+            report_path.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+    return exit_code
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -48,6 +49,12 @@ def parse_args() -> argparse.Namespace:
         "--keep-temp",
         action="store_true",
         help="Keep temporary worktrees for debugging.",
+    )
+    parser.add_argument(
+        "--report-json",
+        type=Path,
+        default=None,
+        help="Optional JSON report path for CI/debugging.",
     )
     return parser.parse_args()
 
@@ -96,6 +103,14 @@ def parse_mismatch_counts(output: str) -> dict[str, int]:
     return result
 
 
+def mismatch_lines(output: str) -> list[str]:
+    lines: list[str] = []
+    for line in output.splitlines():
+        if line.startswith("  "):
+            lines.append(line.strip())
+    return lines
+
+
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
@@ -110,6 +125,7 @@ def main() -> int:
     temp_root = Path(tempfile.mkdtemp(prefix="strict_parity_scan."))
     print(f"scan temp dir: {temp_root}")
     any_bad = False
+    entries: list[dict[str, object]] = []
     try:
         for commit in commits:
             short = short_hash(repo_root, commit)
@@ -139,16 +155,26 @@ def main() -> int:
                     cmd.extend(["--focus", *args.focus])
                 parity = run(cmd, worktree, check=False)
                 counts = parse_mismatch_counts(parity.stdout)
+                mismatch_details = mismatch_lines(parity.stdout)
                 summary = " ".join(
                     f"{fmt}={counts.get(fmt, -1)}" for fmt in args.formats
                 )
                 status = "PASS" if parity.returncode == 0 else "FAIL"
                 print(f"{short} {status} {summary}")
+                entries.append(
+                    {
+                        "commit": commit,
+                        "short": short,
+                        "status": status,
+                        "passed": parity.returncode == 0,
+                        "counts": counts,
+                        "mismatch_details": mismatch_details,
+                    }
+                )
                 if parity.returncode != 0:
                     any_bad = True
-                    for line in parity.stdout.splitlines():
-                        if line.startswith("  "):
-                            print(f"  {line.strip()}")
+                    for line in mismatch_details:
+                        print(f"  {line}")
             finally:
                 run(
                     ["git", "worktree", "remove", "--force", str(worktree)],
@@ -159,6 +185,25 @@ def main() -> int:
             print(f"kept temp dir: {temp_root}")
         else:
             shutil.rmtree(temp_root, ignore_errors=True)
+
+    if args.report_json is not None:
+        report_path = args.report_json
+        if not report_path.is_absolute():
+            report_path = repo_root / report_path
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report = {
+            "repo_root": str(repo_root),
+            "good": args.good,
+            "bad": args.bad,
+            "formats": args.formats,
+            "focus_cases": sorted(set(args.focus or [])),
+            "any_bad": any_bad,
+            "entries": entries,
+        }
+        report_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     return 1 if any_bad else 0
 
