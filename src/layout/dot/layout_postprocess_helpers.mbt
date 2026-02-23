@@ -207,6 +207,14 @@ fn layout_subgraphs(
         rank_ht1,
         rank_ht2,
       )
+    if is_cluster_graph(subgraph) {
+      // Graphviz parity: empty clusters (no descendant nodes) are omitted.
+      let cluster_nodes : Map[String, Bool] = Map::new()
+      collect_graph_nodes(subgraph, cluster_nodes)
+      if cluster_nodes.length() == 0 {
+        continue
+      }
+    }
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
