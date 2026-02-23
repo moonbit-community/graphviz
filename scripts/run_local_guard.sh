@@ -51,5 +51,6 @@ GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/nul
   moon test src/layout/dot/order_pipeline_fixture_wbtest.mbt --target native --filter "plugins root/remincross mincross inputs match graphviz fixtures"
   moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
   scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_sentinel_cases.txt
+  scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_history_focus_cases.txt
   scripts/check_strict_parity.py --formats dot xdot svg
 )

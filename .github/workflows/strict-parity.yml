@@ -61,6 +61,9 @@ jobs:
       - name: Strict parity sentinel cases
         run: scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_sentinel_cases.txt
 
+      - name: Strict parity history focus cases
+        run: scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_history_focus_cases.txt
+
       - name: Strict parity full corpus
         shell: bash
         run: |
