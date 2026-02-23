@@ -46,6 +46,12 @@ def parse_args() -> argparse.Namespace:
         help="Optional case-name allowlist forwarded to strict parity checker.",
     )
     parser.add_argument(
+        "--focus-file",
+        type=Path,
+        default=None,
+        help="Optional newline-delimited case allowlist file (supports comments).",
+    )
+    parser.add_argument(
         "--keep-temp",
         action="store_true",
         help="Keep temporary worktrees for debugging.",
@@ -57,6 +63,45 @@ def parse_args() -> argparse.Namespace:
         help="Optional JSON report path for CI/debugging.",
     )
     return parser.parse_args()
+
+
+def load_case_names(manifest_path: Path) -> list[str]:
+    names: list[str] = []
+    seen: set[str] = set()
+    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line in seen:
+            continue
+        seen.add(line)
+        names.append(line)
+    if not names:
+        raise ValueError(f"empty case allowlist: {manifest_path}")
+    return names
+
+
+def resolve_focus_cases(
+    repo_root: Path,
+    focus: list[str] | None,
+    focus_file: Path | None,
+) -> list[str] | None:
+    merged: list[str] = []
+    if focus:
+        merged.extend(focus)
+    if focus_file is not None:
+        path = focus_file if focus_file.is_absolute() else repo_root / focus_file
+        merged.extend(load_case_names(path))
+    if not merged:
+        return None
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for name in merged:
+        if name in seen:
+            continue
+        seen.add(name)
+        deduped.append(name)
+    return deduped
 
 
 def run(
@@ -154,13 +199,13 @@ class CommitEvaluator:
         repo_root: Path,
         checker: Path,
         formats: list[str],
-        focus: list[str] | None,
+        focus_cases: list[str] | None,
         temp_root: Path,
     ) -> None:
         self.repo_root = repo_root
         self.checker = checker
         self.formats = formats
-        self.focus = focus
+        self.focus_cases = focus_cases
         self.temp_root = temp_root
         self.cache: dict[
             str,
@@ -192,8 +237,8 @@ class CommitEvaluator:
                 "--formats",
                 *self.formats,
             ]
-            if self.focus:
-                cmd.extend(["--focus", *self.focus])
+            if self.focus_cases:
+                cmd.extend(["--focus", *self.focus_cases])
             report_file = worktree / "target" / "strict-parity" / "check-report.json"
             cmd.extend(["--report-json", str(report_file)])
             parity = run(cmd, worktree, check=False)
@@ -219,6 +264,7 @@ def main() -> int:
     checker = repo_root / "scripts" / "check_strict_parity.py"
     if not checker.exists():
         raise FileNotFoundError(f"strict parity checker not found: {checker}")
+    focus_cases = resolve_focus_cases(repo_root, args.focus, args.focus_file)
 
     chain = commit_chain(repo_root, args.good, args.bad)
     if len(chain) < 2:
@@ -231,7 +277,7 @@ def main() -> int:
         "good": args.good,
         "bad": args.bad,
         "formats": args.formats,
-        "focus_cases": sorted(set(args.focus or [])),
+        "focus_cases": sorted(focus_cases or []),
         "good_result": None,
         "bad_result": None,
         "probes": [],
@@ -244,7 +290,7 @@ def main() -> int:
             repo_root,
             checker,
             args.formats,
-            args.focus,
+            focus_cases,
             temp_root,
         )
 
