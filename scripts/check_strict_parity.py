@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import subprocess
 import sys
@@ -93,6 +94,11 @@ def parse_args() -> argparse.Namespace:
         "--write-actual",
         action="store_true",
         help="Write actual outputs to target/render/<format>/ for mismatched cases.",
+    )
+    parser.add_argument(
+        "--write-diff",
+        action="store_true",
+        help="Write unified diffs for mismatched cases under target/strict-parity/diff.",
     )
     parser.add_argument(
         "--report-json",
@@ -248,12 +254,62 @@ def maybe_write_actual(
     fmt: str,
     case_name: str,
     data: bytes,
-) -> None:
+) -> Path:
     config = FORMAT_CONFIG[fmt]
     out_dir = repo_root / "target" / "render" / fmt
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{case_name}{config.out_ext}"
     out_path.write_bytes(data)
+    return out_path
+
+
+def decode_bytes_for_diff(data: bytes) -> str:
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        # latin-1 keeps a 1:1 byte mapping, useful for binary-stable diffs.
+        return data.decode("latin-1")
+
+
+def maybe_write_diff(
+    repo_root: Path,
+    fmt: str,
+    case_name: str,
+    expected: bytes,
+    actual: bytes,
+) -> Path:
+    config = FORMAT_CONFIG[fmt]
+    out_dir = repo_root / "target" / "strict-parity" / "diff" / fmt
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{case_name}.diff"
+    expected_text = decode_bytes_for_diff(expected)
+    actual_text = decode_bytes_for_diff(actual)
+    expected_lines = expected_text.splitlines(keepends=True)
+    actual_lines = actual_text.splitlines(keepends=True)
+    diff_lines = list(
+        difflib.unified_diff(
+            expected_lines,
+            actual_lines,
+            fromfile=f"expected/{fmt}/{case_name}{config.out_ext}",
+            tofile=f"actual/{fmt}/{case_name}{config.out_ext}",
+            lineterm="",
+        )
+    )
+    if diff_lines:
+        out_path.write_text("".join(diff_lines), encoding="utf-8")
+    else:
+        out_path.write_text(
+            "bytes differ but unified diff produced no lines\n",
+            encoding="utf-8",
+        )
+    return out_path
+
+
+def display_path(path: Path, repo_root: Path) -> str:
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return str(path)
 
 
 def main() -> int:
@@ -283,6 +339,7 @@ def main() -> int:
             validate_fixture_coverage(repo_root, fmt, case_names)
 
         mismatches: list[str] = []
+        mismatch_artifacts: list[dict[str, object]] = []
         for case_name in case_names:
             input_path = resolve_input_path(repo_root, case_name)
             expected_path = fixture_path(repo_root, fmt, case_name)
@@ -290,8 +347,20 @@ def main() -> int:
             actual = run_case(dot_bin, fmt, input_path, repo_root)
             if actual != expected:
                 mismatches.append(case_name)
+                artifact_entry: dict[str, object] = {"case": case_name}
                 if args.write_actual:
-                    maybe_write_actual(repo_root, fmt, case_name, actual)
+                    actual_path = maybe_write_actual(repo_root, fmt, case_name, actual)
+                    artifact_entry["actual_path"] = display_path(actual_path, repo_root)
+                if args.write_diff:
+                    diff_path = maybe_write_diff(
+                        repo_root,
+                        fmt,
+                        case_name,
+                        expected,
+                        actual,
+                    )
+                    artifact_entry["diff_path"] = display_path(diff_path, repo_root)
+                mismatch_artifacts.append(artifact_entry)
 
         print(f"format={fmt} total={len(case_names)} mismatches={len(mismatches)}")
         if mismatches:
@@ -303,6 +372,7 @@ def main() -> int:
                 "total": len(case_names),
                 "mismatch_count": len(mismatches),
                 "mismatches": mismatches,
+                "mismatch_artifacts": mismatch_artifacts,
             }
         )
 

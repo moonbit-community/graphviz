@@ -62,6 +62,7 @@ jobs:
           scripts/check_strict_parity.py \
             --formats dot xdot svg \
             --write-actual \
+            --write-diff \
             --report-json target/strict-parity/report.json
           rc=$?
           exit ${rc}
@@ -74,6 +75,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             target/strict-parity/report.json
+            target/strict-parity/diff
             target/render/dot
             target/render/xdot
             target/render/svg

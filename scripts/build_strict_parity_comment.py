@@ -100,6 +100,16 @@ def build_comment(
             continue
         fmt = str(entry.get("format", "unknown"))
         mismatches = [str(x) for x in entry.get("mismatches", [])]
+        artifact_entries = entry.get("mismatch_artifacts", [])
+        diff_paths: list[str] = []
+        if isinstance(artifact_entries, list):
+            for artifact in artifact_entries:
+                if not isinstance(artifact, dict):
+                    continue
+                diff_path = artifact.get("diff_path")
+                if diff_path is None:
+                    continue
+                diff_paths.append(str(diff_path))
         listed = mismatches[:max_list]
         hidden_count = max(0, len(mismatches) - len(listed))
         lines.append(f"<details><summary>{fmt} mismatches ({mismatch_count})</summary>")
@@ -112,6 +122,16 @@ def build_comment(
         if hidden_count > 0:
             lines.append(f"... and {hidden_count} more")
         lines.append("```")
+        if diff_paths:
+            path_listed = diff_paths[:5]
+            hidden_path_count = max(0, len(diff_paths) - len(path_listed))
+            lines.append("")
+            lines.append("diff files:")
+            lines.append("```text")
+            lines.extend(path_listed)
+            if hidden_path_count > 0:
+                lines.append(f"... and {hidden_path_count} more")
+            lines.append("```")
         lines.append("</details>")
         lines.append("")
 
