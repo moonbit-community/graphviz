@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: ""
+      focus_file:
+        description: "Optional focused case list file path (default sentinel list)"
+        required: false
+        type: string
+        default: "tests/strict_parity_sentinel_cases.txt"
 
 jobs:
   strict-parity-bisect:
@@ -52,6 +57,9 @@ jobs:
             --formats dot xdot svg
             --report-json target/strict-parity-bisect/report.json
           )
+          if [[ -n "${{ inputs.focus_file }}" ]]; then
+            args+=(--focus-file "${{ inputs.focus_file }}")
+          fi
           if [[ -n "${{ inputs.focus_cases }}" ]]; then
             read -r -a focus <<< "${{ inputs.focus_cases }}"
             args+=(--focus "${focus[@]}")
