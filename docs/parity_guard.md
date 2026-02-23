@@ -16,6 +16,7 @@ What it enforces:
 - strict whole-file byte comparison (no fuzzy matching)
 - fixture manifest coverage (no extra/missing fixture files)
 - manifest alignment between `dot` / `xdot` / `svg`
+- optional JSON report output via `--report-json`
 
 ## 2) Fast sentinel check
 
@@ -51,6 +52,7 @@ scripts/scan_strict_parity_history.py \
 - `.github/workflows/strict-parity.yml` runs on PR/push and enforces:
   - sentinel strict checks (`ldbxtried`, `typeshar`)
   - full strict corpus checks (`dot`/`xdot`/`svg`)
+  - uploads a parity report artifact (and mismatch outputs when present)
 - `.github/workflows/strict-parity-history.yml` is manual (`workflow_dispatch`)
   and runs commit-range scans using `scripts/scan_strict_parity_history.py`.
 - `.github/workflows/strict-parity-bisect.yml` is manual (`workflow_dispatch`)

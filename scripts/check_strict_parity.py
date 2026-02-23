@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -92,6 +93,12 @@ def parse_args() -> argparse.Namespace:
         "--write-actual",
         action="store_true",
         help="Write actual outputs to target/render/<format>/ for mismatched cases.",
+    )
+    parser.add_argument(
+        "--report-json",
+        type=Path,
+        default=None,
+        help="Optional JSON report path for CI/debugging.",
     )
     return parser.parse_args()
 
@@ -258,6 +265,7 @@ def main() -> int:
         validate_manifest_alignment(repo_root, args.formats)
 
     had_mismatch = False
+    report_entries: list[dict[str, object]] = []
     for fmt in args.formats:
         config = FORMAT_CONFIG[fmt]
         manifest_path = repo_root / config.manifest
@@ -289,6 +297,32 @@ def main() -> int:
         if mismatches:
             had_mismatch = True
             print("  " + " ".join(mismatches))
+        report_entries.append(
+            {
+                "format": fmt,
+                "total": len(case_names),
+                "mismatch_count": len(mismatches),
+                "mismatches": mismatches,
+            }
+        )
+
+    if args.report_json is not None:
+        report_path = args.report_json
+        if not report_path.is_absolute():
+            report_path = repo_root / report_path
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "repo_root": str(repo_root),
+            "dot_bin": str(dot_bin),
+            "formats": args.formats,
+            "focus_cases": sorted(focus_set),
+            "had_mismatch": had_mismatch,
+            "results": report_entries,
+        }
+        report_path.write_text(
+            json.dumps(report_payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     return 1 if had_mismatch else 0
 

@@ -27,6 +27,9 @@ jobs:
   strict-parity:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    concurrency:
+      group: strict-parity-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,4 +52,24 @@ jobs:
         run: scripts/check_strict_parity.py --formats dot xdot svg --focus ldbxtried typeshar
 
       - name: Strict parity full corpus
-        run: scripts/check_strict_parity.py --formats dot xdot svg
+        shell: bash
+        run: |
+          set +e
+          scripts/check_strict_parity.py \
+            --formats dot xdot svg \
+            --write-actual \
+            --report-json target/strict-parity/report.json
+          rc=$?
+          exit ${rc}
+
+      - name: Upload strict parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-parity-report-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            target/strict-parity/report.json
+            target/render/dot
+            target/render/xdot
+            target/render/svg
