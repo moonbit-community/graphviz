@@ -1973,14 +1973,12 @@ fn build_constraint_graph(
     }
   }
   for pair in late_extra_nodes {
-    let (name, rank) = pair
+    let (name, _rank) = pair
     let idx = add_node(graph, name, kind=extra_node_kind(name))
     index[name] = idx
-    let pos = match base_positions.get(name) {
-      Some(value) => value
-      None => rank.to_double()
-    }
-    set_node_rank(graph, idx, trunc_int(pos))
+    // Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
+    // and are later positioned by constraints, not by seed x ranks.
+    set_node_rank(graph, idx, 0)
   }
   if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
     let root_ln = add_node(graph, "", kind=NodeKind::Slack)
