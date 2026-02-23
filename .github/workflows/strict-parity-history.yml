@@ -89,6 +89,7 @@ jobs:
             )
             raise SystemExit(0)
           data = json.loads(summary_path.read_text(encoding="utf-8"))
+          entries = data.get("entries", [])
           lines = [
             "## Strict Parity History",
             "",
@@ -97,12 +98,32 @@ jobs:
             "| Commit | Status | dot | xdot | svg |",
             "| --- | --- | ---: | ---: | ---: |",
           ]
-          for entry in data.get("entries", []):
+          for entry in entries:
             counts = entry.get("counts", {})
             lines.append(
               f"| `{entry.get('short','?')}` | {entry.get('status','?')} | "
               f"{counts.get('dot','?')} | {counts.get('xdot','?')} | {counts.get('svg','?')} |"
             )
+          failing = [entry for entry in entries if not entry.get("passed", False)]
+          if failing:
+            first = failing[0]
+            lines.extend(
+              [
+                "",
+                f"first failing commit: `{first.get('short','?')}`",
+              ]
+            )
+            by_format = first.get("mismatches_by_format", {})
+            if isinstance(by_format, dict):
+              for fmt in ("dot", "xdot", "svg"):
+                names = by_format.get(fmt, [])
+                if not names:
+                  continue
+                if not isinstance(names, list):
+                  continue
+                listed = [str(name) for name in names[:20]]
+                suffix = "" if len(names) <= 20 else f" ... (+{len(names) - 20})"
+                lines.append(f"- {fmt}: `{' '.join(listed)}{suffix}`")
           step_summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
 

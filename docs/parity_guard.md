@@ -19,6 +19,19 @@ What it enforces:
 - optional JSON report output via `--report-json`
 - optional unified diff output via `--write-diff`
 
+## 1.5) Local pre-commit guard (recommended)
+
+Run the staged-snapshot guard before committing:
+
+```bash
+scripts/run_local_guard.sh
+```
+
+This command runs:
+
+- strict parity sentinel checks
+- strict parity full-corpus checks
+
 ## 2) Fast sentinel check
 
 For quick iteration on known fragile cases:

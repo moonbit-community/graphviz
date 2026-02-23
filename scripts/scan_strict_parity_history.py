@@ -111,6 +111,53 @@ def mismatch_lines(output: str) -> list[str]:
     return lines
 
 
+def parse_checker_report(
+    report_path: Path,
+    formats: list[str],
+    stdout: str,
+) -> tuple[dict[str, int], dict[str, list[str]], list[str]]:
+    if report_path.exists():
+        try:
+            payload = json.loads(report_path.read_text(encoding="utf-8"))
+            results = payload.get("results", [])
+            if isinstance(results, list):
+                counts: dict[str, int] = {}
+                mismatches_by_format: dict[str, list[str]] = {}
+                for entry in results:
+                    if not isinstance(entry, dict):
+                        continue
+                    fmt = entry.get("format")
+                    if not isinstance(fmt, str):
+                        continue
+                    mismatch_count = entry.get("mismatch_count", 0)
+                    mismatches = entry.get("mismatches", [])
+                    if not isinstance(mismatch_count, int):
+                        mismatch_count = 0
+                    if not isinstance(mismatches, list):
+                        mismatches = []
+                    counts[fmt] = mismatch_count
+                    mismatches_by_format[fmt] = [
+                        str(name) for name in mismatches if isinstance(name, str)
+                    ]
+                if counts:
+                    for fmt in formats:
+                        counts.setdefault(fmt, -1)
+                        mismatches_by_format.setdefault(fmt, [])
+                    detail_lines: list[str] = []
+                    for fmt in formats:
+                        names = mismatches_by_format.get(fmt, [])
+                        if names:
+                            detail_lines.append(f"{fmt}: {' '.join(names)}")
+                    return counts, mismatches_by_format, detail_lines
+        except Exception:
+            pass
+
+    counts = parse_mismatch_counts(stdout)
+    details = mismatch_lines(stdout)
+    mismatches_by_format = {fmt: [] for fmt in formats}
+    return counts, mismatches_by_format, details
+
+
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
@@ -153,9 +200,14 @@ def main() -> int:
                 ]
                 if args.focus:
                     cmd.extend(["--focus", *args.focus])
+                report_file = worktree / "target" / "strict-parity" / "check-report.json"
+                cmd.extend(["--report-json", str(report_file)])
                 parity = run(cmd, worktree, check=False)
-                counts = parse_mismatch_counts(parity.stdout)
-                mismatch_details = mismatch_lines(parity.stdout)
+                counts, mismatches_by_format, mismatch_details = parse_checker_report(
+                    report_file,
+                    args.formats,
+                    parity.stdout,
+                )
                 summary = " ".join(
                     f"{fmt}={counts.get(fmt, -1)}" for fmt in args.formats
                 )
@@ -168,6 +220,7 @@ def main() -> int:
                         "status": status,
                         "passed": parity.returncode == 0,
                         "counts": counts,
+                        "mismatches_by_format": mismatches_by_format,
                         "mismatch_details": mismatch_details,
                     }
                 )
