@@ -38,6 +38,12 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_REQUIRED_SENTINEL,
         help="Required case names that must appear in sentinel list.",
     )
+    parser.add_argument(
+        "--known-regression-file",
+        type=Path,
+        default=Path("tests/strict_parity_known_regression_cases_f9bfd00.txt"),
+        help="Known full-corpus regression case list that history focus must cover.",
+    )
     return parser.parse_args()
 
 
@@ -97,14 +103,17 @@ def main() -> int:
     repo_root = args.repo_root.resolve()
     sentinel_path = resolve_path(repo_root, args.sentinel_file)
     history_path = resolve_path(repo_root, args.history_file)
+    known_regression_path = resolve_path(repo_root, args.known_regression_file)
 
     dot_cases, xdot_cases, svg_cases = load_manifest_case_names(repo_root)
     manifest_set = validate_manifest_alignment(dot_cases, xdot_cases, svg_cases)
 
     sentinel_cases = load_case_names(sentinel_path)
     history_cases = load_case_names(history_path)
+    known_regression_cases = load_case_names(known_regression_path)
     sentinel_set = set(sentinel_cases)
     history_set = set(history_cases)
+    known_regression_set = set(known_regression_cases)
 
     required_sentinel = set(args.required_sentinel or [])
     validate_subset(
@@ -131,10 +140,24 @@ def main() -> int:
         superset_name="strict parity manifests",
         superset_values=manifest_set,
     )
+    validate_subset(
+        subset_name="known regression list",
+        subset_values=known_regression_set,
+        superset_name="history list",
+        superset_values=history_set,
+    )
+    validate_subset(
+        subset_name="known regression list",
+        subset_values=known_regression_set,
+        superset_name="strict parity manifests",
+        superset_values=manifest_set,
+    )
 
     print(
         "strict parity case lists valid: "
-        f"sentinel={len(sentinel_cases)} history={len(history_cases)} manifests={len(manifest_set)}",
+        "sentinel="
+        f"{len(sentinel_cases)} history={len(history_cases)} "
+        f"known_regression={len(known_regression_cases)} manifests={len(manifest_set)}",
     )
     return 0
 

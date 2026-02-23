@@ -1,0 +1,33 @@
+# Known high-signal full-corpus regression cluster from commit f9bfd00.
+# Keep this list stable so case-list guard can prevent accidental coverage drops.
+abstract
+arrows
+asde91
+biological
+complex
+crazy
+dfa
+edge_label_bt
+edge_label_lr
+edge_label_rl
+ER
+fig6
+fancy
+graph2
+Heawood
+honda-tokoro
+inet
+ldbxtried
+mike
+NaN
+ngk10_4
+rowe
+sdh
+shells
+smlred
+train11
+typeshar
+unix
+unix2
+uml
+world

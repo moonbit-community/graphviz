@@ -32,4 +32,5 @@ When changing guard scripts/workflows (`scripts/check_strict_parity.py`, `script
 History/bisect workflow defaults:
 
 - `tests/strict_parity_history_focus_cases.txt` is the default focus file for strict parity history and bisect workflows.
+- `tests/strict_parity_known_regression_cases_f9bfd00.txt` is the required known-regression cluster; history focus list must cover it.
 - keep this list aligned with known high-signal regression clusters.
