@@ -44,6 +44,9 @@ jobs:
       - name: Show MoonBit version
         run: moon version --all
 
+      - name: Validate strict parity case lists
+        run: scripts/check_strict_parity_case_lists.py
+
       - name: Scan strict parity history
         id: run_history
         continue-on-error: true
