@@ -14,6 +14,7 @@ scripts/run_local_guard.sh
 
 - ordering-input fixture parity (`plugins` root/remincross capture path)
 - trapezium SVG shape invariant (polygon-only node families)
+- strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)
 - strict parity sentinel list (`tests/strict_parity_sentinel_cases.txt`)
 - strict parity history focus list (`tests/strict_parity_history_focus_cases.txt`)
 - strict parity full corpus (`dot` / `xdot` / `svg`)
@@ -26,7 +27,7 @@ If the guard fails:
 
 ## Guard Changes
 
-When changing guard scripts/workflows (`scripts/check_strict_parity.py`, `scripts/scan_strict_parity_history.py`, `scripts/find_first_strict_parity_regression.py`, `.github/workflows/*strict-parity*`), also run at least one local smoke command for the changed path.
+When changing guard scripts/workflows (`scripts/check_strict_parity.py`, `scripts/check_strict_parity_case_lists.py`, `scripts/scan_strict_parity_history.py`, `scripts/find_first_strict_parity_regression.py`, `.github/workflows/*strict-parity*`), also run at least one local smoke command for the changed path.
 
 History/bisect workflow defaults:
 

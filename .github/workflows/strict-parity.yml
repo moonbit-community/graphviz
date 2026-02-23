@@ -58,6 +58,9 @@ jobs:
       - name: Trapezium SVG polygon invariant
         run: moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
 
+      - name: Validate strict parity case lists
+        run: scripts/check_strict_parity_case_lists.py
+
       - name: Strict parity sentinel cases
         run: scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_sentinel_cases.txt
 
