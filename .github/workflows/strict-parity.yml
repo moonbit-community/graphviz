@@ -52,6 +52,12 @@ jobs:
       - name: Build dot CLI
         run: moon build src/cmd/dot --target native
 
+      - name: Ordering-input capture parity fixture
+        run: moon test src/layout/dot/order_pipeline_fixture_wbtest.mbt --target native --filter "plugins root/remincross mincross inputs match graphviz fixtures"
+
+      - name: Trapezium SVG polygon invariant
+        run: moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
+
       - name: Strict parity sentinel cases
         run: scripts/check_strict_parity.py --formats dot xdot svg --focus ldbxtried typeshar
 
