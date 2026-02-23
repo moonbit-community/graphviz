@@ -1,0 +1,8 @@
+# Cases with high historical sensitivity in ordering/remincross paths.
+plugins
+ldbxtried
+typeshar
+complex
+biological
+proc3d
+trapeziumlr

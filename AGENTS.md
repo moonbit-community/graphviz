@@ -12,6 +12,7 @@ scripts/run_local_guard.sh
 
 `scripts/run_local_guard.sh` validates:
 
+- `DOT_CAPTURE_ORDERING_INPUTS` env-invariance (`dot` / `xdot` / `svg`) on `tests/capture_env_invariant_cases.txt`
 - ordering-input fixture parity (`plugins` root/remincross capture path)
 - trapezium SVG shape invariant (polygon-only node families)
 - strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)

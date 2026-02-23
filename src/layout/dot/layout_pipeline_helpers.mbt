@@ -3779,9 +3779,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
   Map[String, Int],
 ) {
   let include_external_crossing =
-    // Runtime parity keeps full external anchors; fixture capture uses the
-    // graphviz shallow-pass filter so ordering-input snapshots stay aligned.
-    if should_capture_ordering_inputs() {
+    if should_capture_ordering_fixture_mode() {
       cluster_rank_keys.length() <= 2
     } else {
       true
@@ -7396,9 +7394,7 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let root_graphviz_flip =
-    // Runtime parity keeps TB coordinates here, while fixture capture must
-    // preserve the exact Graphviz flip path for root input snapshots.
-    if should_capture_ordering_inputs() {
+    if should_capture_ordering_fixture_mode() {
       graphviz_flip
     } else {
       false
@@ -9889,6 +9885,11 @@ fn apply_cluster_local_flat_constraints_for_remincross_rank(
 ///|
 fn should_capture_ordering_inputs() -> Bool {
   @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
+}
+
+///|
+fn should_capture_ordering_fixture_mode() -> Bool {
+  @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_)
 }
 
 ///|
@@ -15339,11 +15340,8 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
   graphviz_flip : Bool,
   mincross_nodes : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[String, Bool]) {
-  let capture_root_input = should_capture_ordering_inputs()
-  if capture_root_input {
-    capture_pass0_flat_seed_groups_value.val = None
-    capture_pass0_flat_seed_groups_enabled.val = true
-  }
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
   if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
     let mut edge_idx = 0
     while edge_idx < order_edges_out_mincross.length() {
@@ -15397,9 +15395,7 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
       graphviz_in_neighbors,
       graphviz_flip,
     )
-  if capture_root_input {
-    capture_pass0_flat_seed_groups_enabled.val = false
-  }
+  capture_pass0_flat_seed_groups_enabled.val = false
   let root_input_groups = order_groups_for_mincross
   capture_root_mincross_input_snapshot(
     order_rank_keys_for_mincross,
@@ -15414,9 +15410,7 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
     order_cluster_keys,
     order_cluster_skeleton,
   )
-  if capture_root_input {
-    capture_pass0_flat_seed_groups_value.val = None
-  }
+  capture_pass0_flat_seed_groups_value.val = None
   build_root_mincross_rank_reorder_pass_output(
     ordered_mincross,
     mincross_nodes,

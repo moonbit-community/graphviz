@@ -228,9 +228,11 @@ test "plugins root/remincross mincross inputs match graphviz fixtures" {
   remincross_input_snapshot.val = None
 
   @sys.set_env_var("DOT_CAPTURE_ORDERING_INPUTS", "1")
+  @sys.set_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE", "1")
   let graph = @dot_parser.parse_dot_file("refs/graphviz/doc/infosrc/plugins.gv")
   ignore(layout_dot(graph))
   @sys.unset_env_var("DOT_CAPTURE_ORDERING_INPUTS")
+  @sys.unset_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE")
 
   let root_actual = match root_mincross_input_snapshot.val {
     Some(value) => value
