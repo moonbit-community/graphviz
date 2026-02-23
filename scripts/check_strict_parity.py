@@ -91,6 +91,12 @@ def parse_args() -> argparse.Namespace:
         help="Optional case-name allowlist (e.g. --focus ldbxtried typeshar).",
     )
     parser.add_argument(
+        "--focus-file",
+        type=Path,
+        default=None,
+        help="Optional newline-delimited case allowlist file (supports comments).",
+    )
+    parser.add_argument(
         "--write-actual",
         action="store_true",
         help="Write actual outputs to target/render/<format>/ for mismatched cases.",
@@ -316,7 +322,15 @@ def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
     dot_bin = ensure_dot_bin(args)
-    focus_set = set(args.focus or [])
+    focus_items: list[str] = []
+    if args.focus:
+        focus_items.extend(args.focus)
+    if args.focus_file is not None:
+        focus_file = args.focus_file
+        if not focus_file.is_absolute():
+            focus_file = repo_root / focus_file
+        focus_items.extend(load_case_names(focus_file))
+    focus_set = set(focus_items)
     if not focus_set:
         validate_manifest_alignment(repo_root, args.formats)
 

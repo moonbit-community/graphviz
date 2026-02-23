@@ -59,7 +59,7 @@ jobs:
         run: moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
 
       - name: Strict parity sentinel cases
-        run: scripts/check_strict_parity.py --formats dot xdot svg --focus ldbxtried typeshar
+        run: scripts/check_strict_parity.py --formats dot xdot svg --focus-file tests/strict_parity_sentinel_cases.txt
 
       - name: Strict parity full corpus
         shell: bash

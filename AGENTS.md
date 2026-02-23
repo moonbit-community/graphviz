@@ -14,7 +14,7 @@ scripts/run_local_guard.sh
 
 - ordering-input fixture parity (`plugins` root/remincross capture path)
 - trapezium SVG shape invariant (polygon-only node families)
-- strict parity sentinel (`ldbxtried`, `typeshar`)
+- strict parity sentinel list (`tests/strict_parity_sentinel_cases.txt`)
 - strict parity full corpus (`dot` / `xdot` / `svg`)
 
 If the guard fails:
