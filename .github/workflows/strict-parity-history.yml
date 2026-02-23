@@ -17,10 +17,10 @@ on:
         type: string
         default: ""
       focus_file:
-        description: "Optional focused case list file path (default sentinel list)"
+        description: "Optional focused case list file path (default history focus list)"
         required: false
         type: string
-        default: "tests/strict_parity_sentinel_cases.txt"
+        default: "tests/strict_parity_history_focus_cases.txt"
 
 jobs:
   strict-parity-history:

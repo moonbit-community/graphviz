@@ -1,0 +1,34 @@
+# Expanded strict-parity history focus list.
+# Derived from the full-corpus mismatch set of commit f9bfd00.
+abstract
+arrows
+asde91
+biological
+complex
+crazy
+dfa
+edge_label_bt
+edge_label_lr
+edge_label_rl
+ER
+fig6
+fancy
+graph2
+Heawood
+honda-tokoro
+inet
+ldbxtried
+mike
+NaN
+ngk10_4
+rowe
+sdh
+shells
+smlred
+train11
+trapeziumlr
+typeshar
+unix
+unix2
+uml
+world
