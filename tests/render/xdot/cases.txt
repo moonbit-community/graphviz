@@ -230,6 +230,7 @@ psfonttest
 larrow
 lpromoter
 rarrow
+radius
 radius_dot
 record
 record2
