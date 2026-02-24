@@ -679,15 +679,14 @@ fn build_self_edge_routes(
   let sizey_param = sizey / 2.0
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
-  let tail_tb = tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
-  let head_tb = head_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
-  let shared_tb = tail_tb != 0 && tail_tb == head_tb
+  let same_side = tail_side == head_side
+  let tail_tb = (tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
   let go_right =
     (!tail_defined && !head_defined) ||
       (
         (tail_side & PORT_SIDE_LEFT) == 0 &&
           (head_side & PORT_SIDE_LEFT) == 0 &&
-          !shared_tb
+          (!same_side || !tail_tb)
       )
   let uses_left =
     (tail_side & PORT_SIDE_LEFT) != 0 || (head_side & PORT_SIDE_LEFT) != 0
@@ -1798,10 +1797,62 @@ fn build_edge_route_base(
   }
   let tail_anchor0 = point_add(tail_anchor_base, tail_offset)
   let head_anchor0 = point_add(head_anchor_base, head_offset)
+  let self_edge = orig_tail_name == orig_head_name
+  let adjust_self_edge_compass_clip_size =
+    (node : @cgraph.Node, port : @cgraph.Port?, size : NodeSize) => {
+      if !self_edge || is_record_shape(node) {
+        return size
+      }
+      match port {
+        Some(value) =>
+          match value.compass {
+            Some(@cgraph.Compass::C) => size
+            Some(compass) =>
+              if sameport_shape_has_outline(node) {
+                let penwidth = sameport_node_penwidth_pt(node)
+                if penwidth > 0.0 {
+                  let pad = penwidth * 0.33055
+                  let width_pt =
+                    match compass {
+                      @cgraph.Compass::NE
+                      | @cgraph.Compass::NW
+                      | @cgraph.Compass::SE
+                      | @cgraph.Compass::SW =>
+                        max_double(
+                          size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
+                          size.height_pt,
+                        )
+                      _ => size.width_pt
+                    }
+                  node_size_from_points(
+                    width_pt,
+                    size.height_pt + pad * 2.0,
+                  )
+                } else {
+                  size
+                }
+              } else {
+                size
+              }
+            None => size
+          }
+        None => size
+      }
+    }
   let tail_clip_center = raw_tail_anchor
-  let tail_clip_size = raw_tail_anchor_size
+  let tail_clip_size =
+    adjust_self_edge_compass_clip_size(
+      tail_node,
+      tail_port,
+      raw_tail_anchor_size,
+    )
   let head_clip_center = raw_head_anchor
-  let head_clip_size = raw_head_anchor_size
+  let head_clip_size =
+    adjust_self_edge_compass_clip_size(
+      head_node,
+      head_port,
+      raw_head_anchor_size,
+    )
   let tail_clip_enabled = tail_sameport_anchor is None
   let head_clip_enabled = head_sameport_anchor is None
   let tail_target = match tail_port_rect {

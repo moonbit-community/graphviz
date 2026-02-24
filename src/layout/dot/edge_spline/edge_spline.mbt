@@ -2306,7 +2306,7 @@ fn clip_spline_to_nodes(
       Some(value) =>
         match value.compass {
           Some(@cgraph.Compass::C) => true
-          Some(_) => !is_record_shape(tail_node)
+          Some(_) => false
           None => tail_port_side == 0
         }
       None => true
@@ -2321,7 +2321,7 @@ fn clip_spline_to_nodes(
       Some(value) =>
         match value.compass {
           Some(@cgraph.Compass::C) => true
-          Some(_) => !is_record_shape(head_node)
+          Some(_) => false
           None => head_port_side == 0
         }
       None => true
@@ -4100,13 +4100,7 @@ pub fn edge_spline_for_polyline(
     )
   let trimmed = trim_degenerate_spline_segments(clipped)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps =
-    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
-      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
-      0.0
-    } else {
-      ARROW_CLIP_EPS
-    }
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (points, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -4203,13 +4197,7 @@ pub fn edge_spline_for_points(
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps =
-    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
-      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
-      0.0
-    } else {
-      ARROW_CLIP_EPS
-    }
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -4301,13 +4289,7 @@ pub fn edge_spline_for_bezier_points(
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps =
-    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
-      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
-      0.0
-    } else {
-      ARROW_CLIP_EPS
-    }
+  let arrow_clip_eps = ARROW_CLIP_EPS
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
