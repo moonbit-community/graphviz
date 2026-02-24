@@ -26,6 +26,7 @@ arr_none
 arrows
 arrows_dot
 arrowsize
+assembly
 asde91
 awilliams
 b
@@ -41,6 +42,7 @@ both
 bsdarch
 bsdkernel
 box
+box3d
 boxarrow
 center
 cds
@@ -56,6 +58,7 @@ clust3
 clust4
 clust5
 complex
+component
 compound
 constraint
 crazy
@@ -78,6 +81,7 @@ edge_vnode_spacing
 ER
 ellipse
 fig6
+fivepoverhang
 fixed
 fancy
 fill

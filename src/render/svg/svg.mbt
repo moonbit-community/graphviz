@@ -1134,6 +1134,10 @@ fn shape_kind(value : String?) -> String {
     "larrow" => "larrow"
     "folder" => "folder"
     "cds" => "cds"
+    "assembly" => "assembly"
+    "box3d" => "box3d"
+    "component" => "component"
+    "fivepoverhang" => "fivepoverhang"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -2154,6 +2158,94 @@ fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
     { x: rect.llx, y: bottom },
     { x: body_right, y: bottom },
     { x: rect.urx, y: cy },
+  ]
+}
+
+fn assembly_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 12.0, y: cy + 1.5 },
+    { x: cx + 12.0, y: cy + 1.5 },
+    { x: cx + 12.0, y: cy + 7.5 },
+    { x: cx - 12.0, y: cy + 7.5 },
+  ]
+}
+
+fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 12.0, y: cy - 7.5 },
+    { x: cx + 12.0, y: cy - 7.5 },
+    { x: cx + 12.0, y: cy - 1.5 },
+    { x: cx - 12.0, y: cy - 1.5 },
+  ]
+}
+
+fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy + 1.5 },
+    { x: rect.llx + 24.0, y: cy + 1.5 },
+    { x: rect.llx + 24.0, y: cy + 7.5 },
+    { x: rect.llx, y: cy + 7.5 },
+  ]
+}
+
+fn fivepoverhang_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx + 12.0, y: cy - 7.5 },
+    { x: rect.llx + 24.0, y: cy - 7.5 },
+    { x: rect.llx + 24.0, y: cy - 1.5 },
+    { x: rect.llx + 12.0, y: cy - 1.5 },
+  ]
+}
+
+fn box3d_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx + 4.0, y: rect.ury },
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx - 4.0, y: rect.lly },
+    { x: rect.urx, y: rect.lly + 4.0 },
+  ]
+}
+
+fn component_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx - 4.0, y: rect.ury - 4.0 },
+    { x: rect.llx - 4.0, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.lly + 8.0 },
+    { x: rect.llx - 4.0, y: rect.lly + 8.0 },
+    { x: rect.llx - 4.0, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+fn component_top_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx + 4.0, y: rect.ury - 4.0 },
+    { x: rect.llx + 4.0, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.ury - 8.0 },
+  ]
+}
+
+fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.lly + 8.0 },
+    { x: rect.llx + 4.0, y: rect.lly + 8.0 },
+    { x: rect.llx + 4.0, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly + 4.0 },
   ]
 }
 
@@ -4831,6 +4923,160 @@ fn write_svg_node_group(
         pretty,
       )
     }
+  } else if kind == "assembly" {
+    let top = assembly_top_bar_points(rect)
+    let bottom = assembly_bottom_bar_points(rect)
+    let top_attrs = polygon_points(top, bbox.llx, bbox.lly)
+    let bottom_attrs = polygon_points(bottom, bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top_attrs}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom_attrs}\"/>",
+      "",
+      pretty,
+    )
+    let cy = (rect.lly + rect.ury) / 2.0
+    let right = top[1].x
+    let left = top[0].x
+    let right_line = polyline_points(
+      [
+        { x: right, y: cy },
+        { x: rect.urx, y: cy },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    let left_line = polyline_points(
+      [
+        { x: rect.llx, y: cy },
+        { x: left, y: cy },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{right_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{left_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "fivepoverhang" {
+    let top = fivepoverhang_top_bar_points(rect)
+    let bottom = fivepoverhang_bottom_bar_points(rect)
+    let top_attrs = polygon_points(top, bbox.llx, bbox.lly)
+    let bottom_attrs = polygon_points(bottom, bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top_attrs}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom_attrs}\"/>",
+      "",
+      pretty,
+    )
+    let cy = (rect.lly + rect.ury) / 2.0
+    let right = top[1].x
+    let right_line = polyline_points(
+      [
+        { x: right, y: cy },
+        { x: rect.urx, y: cy },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{right_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "box3d" {
+    let outline = polygon_points(box3d_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    let corner : @geom.Point = { x: rect.urx - 4.0, y: rect.ury - 4.0 }
+    let top_line = polyline_points(
+      [
+        corner,
+        { x: rect.llx, y: corner.y },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    let side_line = polyline_points(
+      [
+        corner,
+        { x: corner.x, y: rect.lly },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    let diag_line = polyline_points(
+      [
+        corner,
+        { x: rect.urx, y: rect.ury },
+      ],
+      bbox.llx,
+      bbox.lly,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{top_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{side_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{diag_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "component" {
+    let outline = polygon_points(component_points(rect), bbox.llx, bbox.lly)
+    let top_tab = polyline_points(component_top_tab_points(rect), bbox.llx, bbox.lly)
+    let bottom_tab = polyline_points(component_bottom_tab_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{top_tab}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom_tab}\"/>",
+      "",
+      pretty,
+    )
   } else {
     match shape_polygon_paths(node, kind, rect) {
       Some(paths) if paths.length() > 0 => {

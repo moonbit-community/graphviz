@@ -704,6 +704,10 @@ fn shape_kind(value : String?) -> String {
     "larrow" => "larrow"
     "folder" => "folder"
     "cds" => "cds"
+    "assembly" => "assembly"
+    "box3d" => "box3d"
+    "component" => "component"
+    "fivepoverhang" => "fivepoverhang"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -1780,6 +1784,102 @@ fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
     { x: rect.llx, y: bottom },
     { x: body_right, y: bottom },
     { x: rect.urx, y: cy },
+  ]
+}
+
+///|
+fn assembly_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 12.0, y: cy + 1.5 },
+    { x: cx + 12.0, y: cy + 1.5 },
+    { x: cx + 12.0, y: cy + 7.5 },
+    { x: cx - 12.0, y: cy + 7.5 },
+  ]
+}
+
+///|
+fn assembly_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 12.0, y: cy - 7.5 },
+    { x: cx + 12.0, y: cy - 7.5 },
+    { x: cx + 12.0, y: cy - 1.5 },
+    { x: cx - 12.0, y: cy - 1.5 },
+  ]
+}
+
+///|
+fn fivepoverhang_top_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy + 1.5 },
+    { x: rect.llx + 24.0, y: cy + 1.5 },
+    { x: rect.llx + 24.0, y: cy + 7.5 },
+    { x: rect.llx, y: cy + 7.5 },
+  ]
+}
+
+///|
+fn fivepoverhang_bottom_bar_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx + 12.0, y: cy - 7.5 },
+    { x: rect.llx + 24.0, y: cy - 7.5 },
+    { x: rect.llx + 24.0, y: cy - 1.5 },
+    { x: rect.llx + 12.0, y: cy - 1.5 },
+  ]
+}
+
+///|
+fn box3d_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx + 4.0, y: rect.ury },
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx - 4.0, y: rect.lly },
+    { x: rect.urx, y: rect.lly + 4.0 },
+  ]
+}
+
+///|
+fn component_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx - 4.0, y: rect.ury - 4.0 },
+    { x: rect.llx - 4.0, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.lly + 8.0 },
+    { x: rect.llx - 4.0, y: rect.lly + 8.0 },
+    { x: rect.llx - 4.0, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+///|
+fn component_top_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.ury - 4.0 },
+    { x: rect.llx + 4.0, y: rect.ury - 4.0 },
+    { x: rect.llx + 4.0, y: rect.ury - 8.0 },
+    { x: rect.llx, y: rect.ury - 8.0 },
+  ]
+}
+
+///|
+fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.lly + 8.0 },
+    { x: rect.llx + 4.0, y: rect.lly + 8.0 },
+    { x: rect.llx + 4.0, y: rect.lly + 4.0 },
+    { x: rect.llx, y: rect.lly + 4.0 },
   ]
 }
 
@@ -3080,6 +3180,79 @@ fn node_draw_ops(
         ops.push(@render.DrawOp::PenColor(color=normalized_pen))
         ops.push(@render.DrawOp::Polyline(points=[start, end]))
       }
+    }
+    "assembly" => {
+      let cy = (rect.lly + rect.ury) / 2.0
+      let top = assembly_top_bar_points(rect)
+      let bottom = assembly_bottom_bar_points(rect)
+      let left = top[0].x
+      let right = top[1].x
+      ops.push(@render.DrawOp::Polygon(filled~, points=top))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Polygon(filled~, points=bottom))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          { x: right, y: cy },
+          { x: rect.urx, y: cy },
+        ]),
+      )
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          { x: rect.llx, y: cy },
+          { x: left, y: cy },
+        ]),
+      )
+    }
+    "fivepoverhang" => {
+      let cy = (rect.lly + rect.ury) / 2.0
+      let top = fivepoverhang_top_bar_points(rect)
+      let bottom = fivepoverhang_bottom_bar_points(rect)
+      let right = top[1].x
+      ops.push(@render.DrawOp::Polygon(filled~, points=top))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Polygon(filled~, points=bottom))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          { x: right, y: cy },
+          { x: rect.urx, y: cy },
+        ]),
+      )
+    }
+    "box3d" => {
+      let points = box3d_points(rect)
+      let corner : @geom.Point = { x: rect.urx - 4.0, y: rect.ury - 4.0 }
+      ops.push(@render.DrawOp::Polygon(filled~, points~))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          corner,
+          { x: rect.llx, y: corner.y },
+        ]),
+      )
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          corner,
+          { x: corner.x, y: rect.lly },
+        ]),
+      )
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(
+        @render.DrawOp::Polyline(points=[
+          corner,
+          { x: rect.urx, y: rect.ury },
+        ]),
+      )
+    }
+    "component" => {
+      ops.push(@render.DrawOp::Polygon(filled~, points=component_points(rect)))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Polyline(points=component_top_tab_points(rect)))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Polyline(points=component_bottom_tab_points(rect)))
     }
     "box" => {
       let peripheries = node_peripheries(node, 1)
