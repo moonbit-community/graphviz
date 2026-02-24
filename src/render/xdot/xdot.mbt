@@ -31,6 +31,10 @@ const MCIRCLE_X : Double = 0.6614
 ///|
 const MCIRCLE_Y : Double = 0.75
 
+const CYLINDER_RY_DIVISOR : Double = 11.0
+
+const CYLINDER_KAPPA : Double = 0.5518
+
 ///|
 fn parse_double(value : String, fallback : Double) -> Double {
   try @strconv.parse_double(value) catch {
@@ -708,6 +712,7 @@ fn shape_kind(value : String?) -> String {
     "box3d" => "box3d"
     "component" => "component"
     "fivepoverhang" => "fivepoverhang"
+    "cylinder" => "cylinder"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -1880,6 +1885,58 @@ fn component_bottom_tab_points(rect : @geom.Rect) -> Array[@geom.Point] {
     { x: rect.llx + 4.0, y: rect.lly + 8.0 },
     { x: rect.llx + 4.0, y: rect.lly + 4.0 },
     { x: rect.llx, y: rect.lly + 4.0 },
+  ]
+}
+
+///|
+fn cylinder_outer_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let rx = (rect.urx - rect.llx) / 2.0
+  let ry = (rect.ury - rect.lly) / CYLINDER_RY_DIVISOR
+  let dx = rx * CYLINDER_KAPPA
+  let dy = ry * CYLINDER_KAPPA
+  let top = rect.ury - ry
+  let bottom = rect.lly + ry
+  [
+    { x: rect.urx, y: top },
+    { x: rect.urx, y: top + dy },
+    { x: cx + dx, y: rect.ury },
+    { x: cx, y: rect.ury },
+    { x: cx - dx, y: rect.ury },
+    { x: rect.llx, y: top + dy },
+    { x: rect.llx, y: top },
+    { x: rect.llx, y: top },
+    { x: rect.llx, y: bottom },
+    { x: rect.llx, y: bottom },
+    { x: rect.llx, y: bottom - dy },
+    { x: cx - dx, y: rect.lly },
+    { x: cx, y: rect.lly },
+    { x: cx + dx, y: rect.lly },
+    { x: rect.urx, y: bottom - dy },
+    { x: rect.urx, y: bottom },
+    { x: rect.urx, y: bottom },
+    { x: rect.urx, y: top },
+    { x: rect.urx, y: top },
+  ]
+}
+
+///|
+fn cylinder_top_inner_bezier_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let rx = (rect.urx - rect.llx) / 2.0
+  let ry = (rect.ury - rect.lly) / CYLINDER_RY_DIVISOR
+  let dx = rx * CYLINDER_KAPPA
+  let dy = ry * CYLINDER_KAPPA
+  let top = rect.ury - ry
+  let inner = top - ry
+  [
+    { x: rect.urx, y: top },
+    { x: rect.urx, y: top - dy },
+    { x: cx + dx, y: inner },
+    { x: cx, y: inner },
+    { x: cx - dx, y: inner },
+    { x: rect.llx, y: top - dy },
+    { x: rect.llx, y: top },
   ]
 }
 
@@ -3253,6 +3310,17 @@ fn node_draw_ops(
       ops.push(@render.DrawOp::Polyline(points=component_top_tab_points(rect)))
       ops.push(@render.DrawOp::PenColor(color=normalized_pen))
       ops.push(@render.DrawOp::Polyline(points=component_bottom_tab_points(rect)))
+    }
+    "cylinder" => {
+      ops.push(@render.DrawOp::Bezier(
+        filled~,
+        points=cylinder_outer_bezier_points(rect),
+      ))
+      ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      ops.push(@render.DrawOp::Bezier(
+        filled=false,
+        points=cylinder_top_inner_bezier_points(rect),
+      ))
     }
     "box" => {
       let peripheries = node_peripheries(node, 1)

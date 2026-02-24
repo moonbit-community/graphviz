@@ -65,6 +65,7 @@ crazy
 crow
 ctext
 curve
+cylinder
 dfa
 diamond
 diamondarrow
