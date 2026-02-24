@@ -4850,29 +4850,7 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
   let input = @utf8.encode(text, bom=false)
   let out = @buffer.new(size_hint=input.length())
   let mut index = 0
-  let mut in_quotes = false
-  let mut escaped = false
   while index < input.length() {
-    let byte = input[index]
-    if in_quotes {
-      out.write_byte(byte)
-      if escaped {
-        escaped = false
-      } else if byte == b'\\' {
-        escaped = true
-      } else if byte == b'"' {
-        in_quotes = false
-      }
-      index = index + 1
-      continue
-    }
-    if byte == b'"' {
-      in_quotes = true
-      escaped = false
-      out.write_byte(byte)
-      index = index + 1
-      continue
-    }
     if index + 6 <= input.length() &&
       input[index] == b'l' &&
       input[index + 1] == b'a' &&
@@ -4888,7 +4866,40 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
           continue
         }
         let next = input[index]
-        if next == b'"' || next == b'<' {
+        if next == b'"' {
+          out.write_byte(next)
+          index = index + 1
+          let start = index
+          let mut end = index
+          let mut escaped = false
+          while end < input.length() {
+            let current = input[end]
+            if escaped {
+              escaped = false
+              end = end + 1
+              continue
+            }
+            if current == b'\\' {
+              escaped = true
+              end = end + 1
+              continue
+            }
+            if current == b'"' {
+              break
+            }
+            end = end + 1
+          }
+          let token = input.view(start~, end~)
+          out.write_bytes(latin1_token_bytes(token))
+          if end < input.length() && input[end] == b'"' {
+            out.write_byte(b'"')
+            index = end + 1
+          } else {
+            index = end
+          }
+          continue
+        }
+        if next == b'<' {
           continue
         }
         let mut end = index
@@ -4909,6 +4920,25 @@ fn xdot_latin1_label_bytes(text : String) -> Bytes {
         index = end
         continue
       }
+    }
+    let byte = input[index]
+    if byte == b'"' {
+      out.write_byte(byte)
+      index = index + 1
+      let mut escaped = false
+      while index < input.length() {
+        let current = input[index]
+        out.write_byte(current)
+        index = index + 1
+        if escaped {
+          escaped = false
+        } else if current == b'\\' {
+          escaped = true
+        } else if current == b'"' {
+          break
+        }
+      }
+      continue
     }
     out.write_byte(byte)
     index = index + 1

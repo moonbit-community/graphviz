@@ -278,8 +278,10 @@ fn graph_attr_rank(name : String) -> Int {
     "_draw_" => 0
     "_ldraw_" => 1
     "bb" => 2
+    "charset" => 3
     "bgcolor" => 3
     "color" => 4
+    "concentrate" => 5
     "colorscheme" => 5
     "center" => 6
     "fontcolor" => 7
@@ -303,7 +305,6 @@ fn graph_attr_rank(name : String) -> Int {
     "ratio" => 25
     "size" => 26
     "splines" => 27
-    "charset" => 28
     "xdotversion" => 1000
     _ => 200
   }
