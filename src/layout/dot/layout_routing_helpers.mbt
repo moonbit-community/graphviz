@@ -634,8 +634,36 @@ fn build_self_edge_routes(
   let np = base0.tail_pos
   let tp = base0.tail_anchor
   let hp = base0.head_anchor
-  let tail_side = base0.tail_port_side
-  let head_side = base0.head_port_side
+  let all_sides =
+    PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
+  let tail_side = if base0.tail_port_side == 0 {
+    match base0.tail_port {
+      Some(value) =>
+        if value.compass is None {
+          // Graphviz parity: side-less label ports on self-edges still behave
+          // like fully-open sides when dynamic side resolution is unavailable.
+          all_sides
+        } else {
+          0
+        }
+      None => 0
+    }
+  } else {
+    base0.tail_port_side
+  }
+  let head_side = if base0.head_port_side == 0 {
+    match base0.head_port {
+      Some(value) =>
+        if value.compass is None {
+          all_sides
+        } else {
+          0
+        }
+      None => 0
+    }
+  } else {
+    base0.head_port_side
+  }
   let tail_defined = port_is_explicit(base0.tail_port)
   let head_defined = port_is_explicit(base0.head_port)
   let (min_rank, max_rank) = rank_bounds(rank_y)
@@ -651,13 +679,15 @@ fn build_self_edge_routes(
   let sizey_param = sizey / 2.0
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
+  let tail_tb = tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
+  let head_tb = head_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)
+  let shared_tb = tail_tb != 0 && tail_tb == head_tb
   let go_right =
     (!tail_defined && !head_defined) ||
       (
         (tail_side & PORT_SIDE_LEFT) == 0 &&
           (head_side & PORT_SIDE_LEFT) == 0 &&
-          (tail_side != head_side ||
-            (tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) == 0)
+          !shared_tb
       )
   let uses_left =
     (tail_side & PORT_SIDE_LEFT) != 0 || (head_side & PORT_SIDE_LEFT) != 0
