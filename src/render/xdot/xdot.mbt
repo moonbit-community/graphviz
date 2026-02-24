@@ -702,6 +702,7 @@ fn shape_kind(value : String?) -> String {
     "lpromoter" => "lpromoter"
     "rarrow" => "rarrow"
     "larrow" => "larrow"
+    "folder" => "folder"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -1734,6 +1735,28 @@ fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
+fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let fold = 3.0
+  let tab_height = 4.0
+  let tab_width = 21.0
+  let notch_right_raw = rect.urx - fold
+  let notch_right = if notch_right_raw < rect.llx { rect.llx } else { notch_right_raw }
+  let tab_left_raw = notch_right - tab_width
+  let tab_left = if tab_left_raw < rect.llx { rect.llx } else { tab_left_raw }
+  let join_raw = tab_left - fold
+  let join = if join_raw < rect.llx { rect.llx } else { join_raw }
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: notch_right, y: rect.ury + tab_height },
+    { x: tab_left, y: rect.ury + tab_height },
+    { x: join, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+///|
 fn shape_polygon_paths(
   node : @cgraph.Node,
   kind : String,
@@ -1788,6 +1811,7 @@ fn shape_polygon_paths(
       Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
   }
   match params {
@@ -1799,6 +1823,7 @@ fn shape_polygon_paths(
           Some(polygon_paths_from_base(lpromoter_points(rect), peripheries))
         "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
         "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
+        "folder" => Some(polygon_paths_from_base(folder_points(rect), peripheries))
         _ =>
           Some(
             polygon_paths_for_shape(

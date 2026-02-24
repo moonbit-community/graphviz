@@ -83,6 +83,7 @@ fill
 flat_edge_label
 flat_edge_label_adjacent
 forward
+folder
 fsm
 G4_lenwt
 G4_orig
