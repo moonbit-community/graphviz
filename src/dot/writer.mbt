@@ -340,6 +340,7 @@ fn node_attr_rank(name : String) -> Int {
     "skew" => 22
     "style" => 23
     "subkind" => 24
+    "root" => 24
     "width" => 25
     "id" => 26
     _ => 200
