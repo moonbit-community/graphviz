@@ -140,6 +140,7 @@ none
 no_arrow
 nohead
 normal
+note
 octagon
 odot
 oinvdot
@@ -174,6 +175,8 @@ process
 proc3d
 ps_user_shapes
 psfonttest
+larrow
+lpromoter
 rarrow
 record
 record2
@@ -195,9 +198,11 @@ septagon
 shells
 size
 smlred
+square
 states
 structs
 switch
+tab
 table
 test
 tee

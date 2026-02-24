@@ -1143,6 +1143,9 @@ fn shape_kind(value : String?) -> String {
     "component" => "component"
     "fivepoverhang" => "fivepoverhang"
     "cylinder" => "cylinder"
+    "note" => "note"
+    "tab" => "tab"
+    "square" => "square"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -1442,6 +1445,7 @@ fn fixedshape_draw_size_in(
   }
   let regular_shape =
     shape == "msquare" ||
+    shape == "square" ||
     shape == "mcircle" ||
     shape == "circle" ||
     shape == "doublecircle"
@@ -2068,13 +2072,13 @@ fn larrow_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: body_left, y: y_top },
     { x: rect.urx, y: y_top },
-    { x: rect.urx, y: y_mid },
-    { x: body_left, y: y_mid },
-    { x: body_left, y: rect.lly },
-    { x: rect.llx, y: cy },
+    { x: body_left, y: y_top },
     { x: body_left, y: rect.ury },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.lly },
+    { x: body_left, y: y_mid },
+    { x: rect.urx, y: y_mid },
   ]
 }
 
@@ -2108,15 +2112,63 @@ fn lpromoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
   let y_mid = rect.lly + band
   let cy = (rect.lly + rect.ury) / 2.0
   [
-    { x: body_left, y: y_top },
     { x: rect.urx, y: y_top },
-    { x: rect.urx, y: rect.lly },
-    { x: notch, y: rect.lly },
-    { x: notch, y: y_mid },
-    { x: body_left, y: y_mid },
-    { x: body_left, y: rect.lly },
-    { x: rect.llx, y: cy },
+    { x: body_left, y: y_top },
     { x: body_left, y: rect.ury },
+    { x: rect.llx, y: cy },
+    { x: body_left, y: rect.lly },
+    { x: body_left, y: y_mid },
+    { x: notch, y: y_mid },
+    { x: notch, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+fn note_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let fold = 6.0
+  [
+    { x: rect.urx - fold, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+    { x: rect.urx, y: rect.ury - fold },
+  ]
+}
+
+fn note_fold_vertical_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let fold = 6.0
+  [
+    { x: rect.urx - fold, y: rect.ury },
+    { x: rect.urx - fold, y: rect.ury - fold },
+  ]
+}
+
+fn note_fold_horizontal_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let fold = 6.0
+  [
+    { x: rect.urx, y: rect.ury - fold },
+    { x: rect.urx - fold, y: rect.ury - fold },
+  ]
+}
+
+fn tab_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tab_width = 12.0
+  let tab_height = 4.0
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx + tab_width, y: rect.ury },
+    { x: rect.llx + tab_width, y: rect.ury + tab_height },
+    { x: rect.llx, y: rect.ury + tab_height },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+fn tab_top_join_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tab_width = 12.0
+  [
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx + tab_width, y: rect.ury },
   ]
 }
 
@@ -2359,6 +2411,7 @@ fn shape_polygon_paths(
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "cds" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "square" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
   }
   match params {
@@ -2372,6 +2425,7 @@ fn shape_polygon_paths(
         "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
         "folder" => Some(polygon_paths_from_base(folder_points(rect), peripheries))
         "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
+        "square" => Some(polygon_paths_from_base(rect_points(rect), peripheries))
         _ =>
           Some(
             polygon_paths_for_shape(
@@ -4978,6 +5032,47 @@ fn write_svg_node_group(
         pretty,
       )
     }
+  } else if kind == "note" {
+    let outline = polygon_points(note_outline_points(rect), bbox.llx, bbox.lly)
+    let fold_vertical = polyline_points(note_fold_vertical_points(rect), bbox.llx, bbox.lly)
+    let fold_horizontal = polyline_points(
+      note_fold_horizontal_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{fold_vertical}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{fold_horizontal}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "tab" {
+    let outline = polygon_points(tab_outline_points(rect), bbox.llx, bbox.lly)
+    let top_join = polyline_points(tab_top_join_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{top_join}\"/>",
+      "",
+      pretty,
+    )
   } else if kind == "assembly" {
     let top = assembly_top_bar_points(rect)
     let bottom = assembly_bottom_bar_points(rect)
