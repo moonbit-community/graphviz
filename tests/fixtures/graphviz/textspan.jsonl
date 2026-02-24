@@ -4129,3 +4129,4 @@
 {"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "task34", "width": 35.25, "height": 16.5, "yoffset_layout": 12.75, "yoffset_centerline": 0.7}
 {"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "task95", "width": 35.25, "height": 16.5, "yoffset_layout": 12.75, "yoffset_centerline": 0.7}
 {"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "622", "width": 20.25, "height": 16.5, "yoffset_layout": 12.75, "yoffset_centerline": 0.7}
+{"font": "Times-Roman", "size": 14.0, "flags": 0, "text": "some other node that is not attached", "width": 197.25, "height": 16.5, "yoffset_layout": 12.75, "yoffset_centerline": 0.7}
