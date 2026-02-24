@@ -191,6 +191,60 @@ fn edge_attr(edge : @cgraph.Edge, name : String) -> String? {
   edge.get_attr(name)
 }
 
+fn nonempty_attr_value(value : String?) -> String? {
+  match value {
+    Some(text) => {
+      let trimmed = text.trim(chars=" \n\r\t").to_string()
+      if trimmed == "" { None } else { Some(trimmed) }
+    }
+    None => None
+  }
+}
+
+fn node_attr_case_insensitive(node : @cgraph.Node, name : String) -> String? {
+  let lower = name.to_lower()
+  for pair in node.attrs() {
+    let (key, value) = pair
+    if key.to_lower() == lower {
+      return Some(value)
+    }
+  }
+  None
+}
+
+fn node_link_href(node : @cgraph.Node) -> String? {
+  match nonempty_attr_value(node_attr(node, "URL")) {
+    Some(value) => Some(value)
+    None =>
+      match nonempty_attr_value(node_attr(node, "href")) {
+        Some(value) => Some(value)
+        None =>
+          match nonempty_attr_value(node_attr_case_insensitive(node, "url")) {
+            Some(value) => Some(value)
+            None => nonempty_attr_value(node_attr_case_insensitive(node, "href"))
+          }
+      }
+  }
+}
+
+fn node_link_target(node : @cgraph.Node) -> String? {
+  match nonempty_attr_value(node_attr(node, "target")) {
+    Some(value) => Some(value)
+    None => nonempty_attr_value(node_attr_case_insensitive(node, "target"))
+  }
+}
+
+fn node_link_title(node : @cgraph.Node, fallback : String) -> String {
+  match nonempty_attr_value(node_attr(node, "tooltip")) {
+    Some(value) => value
+    None =>
+      match nonempty_attr_value(node_attr_case_insensitive(node, "tooltip")) {
+        Some(value) => value
+        None => fallback
+      }
+  }
+}
+
 fn parse_palette_index(value : String) -> Int? {
   let trimmed = value.trim().to_string()
   if trimmed == "" {
@@ -5254,6 +5308,24 @@ fn write_svg_node_group(
     pretty,
   )
   write_line(sb, "<title>\{node_title}</title>", "", pretty)
+  let text = label_text(node_attr(node, "label"), node.name())
+  let link_href = node_link_href(node)
+  let mut has_link = false
+  match link_href {
+    Some(href) => {
+      has_link = true
+      let link_title = node_link_title(node, text)
+      let link_target = node_link_target(node)
+      let anchor_open = match link_target {
+        Some(target) =>
+          "<g id=\"a_node\{node_index}\"><a xlink:href=\"\{escape_xml(href)}\" xlink:title=\"\{escape_xml_with_dash(link_title)}\" target=\"\{escape_xml(target)}\">"
+        None =>
+          "<g id=\"a_node\{node_index}\"><a xlink:href=\"\{escape_xml(href)}\" xlink:title=\"\{escape_xml_with_dash(link_title)}\">"
+      }
+      write_line(sb, anchor_open, "", pretty)
+    }
+    None => ()
+  }
   let filled = if kind == "point" { true } else { style.filled }
   let dash = stroke_dash_attr(style)
   let fill = if filled {
@@ -5283,6 +5355,10 @@ fn write_svg_node_group(
       "",
       pretty,
     )
+    if has_link {
+      write_line(sb, "</a>", "", pretty)
+      write_line(sb, "</g>", "", pretty)
+    }
     write_line(sb, "</g>", "", pretty)
     return
   } else if kind == "plaintext" {
@@ -6134,10 +6210,13 @@ fn write_svg_node_group(
     }
   }
   if kind == "point" {
+    if has_link {
+      write_line(sb, "</a>", "", pretty)
+      write_line(sb, "</g>", "", pretty)
+    }
     write_line(sb, "</g>", "", pretty)
     return
   }
-  let text = label_text(node_attr(node, "label"), node.name())
   let font = @attrs.font_name(node_attr(node, "fontname"))
   let size = @attrs.font_size(node_attr(node, "fontsize"))
   let color = svg_color(node_color(node, "fontcolor", "black"))
@@ -6227,6 +6306,10 @@ fn write_svg_node_group(
         )
       None => ()
     }
+  }
+  if has_link {
+    write_line(sb, "</a>", "", pretty)
+    write_line(sb, "</g>", "", pretty)
   }
   write_line(sb, "</g>", "", pretty)
 }
