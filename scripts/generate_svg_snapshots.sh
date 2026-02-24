@@ -17,6 +17,7 @@ resolve_input_for_case() {
     "refs/graphviz/graphs/directed/${case_name}.gv"
     "tests/layout/dot/${case_name}.dot"
     "refs/graphviz/doc/dotguide/${case_name}.dot"
+    "refs/graphviz/tests/${case_name}.dot"
   )
   local rel
   for rel in "${candidates[@]}"; do

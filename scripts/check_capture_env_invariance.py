@@ -22,6 +22,7 @@ INPUT_CANDIDATES = (
     "refs/graphviz/contrib/prune/{case}.gv",
     "refs/graphviz/contrib/dirgraph/{case}.dot",
     "refs/graphviz/contrib/java-dot/{case}.dot",
+    "refs/graphviz/tests/{case}.dot",
 )
 
 

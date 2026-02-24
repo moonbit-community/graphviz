@@ -1,0 +1,15 @@
+graph {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 68 86 68 86 0 ",
+		bb="0,0,86,68",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	a	[_draw_="c 7 -#000000 p 4 70 52 16 52 16 16 70 16 c 7 -#000000 p 4 74 56 12 56 12 12 74 12 c 7 -#000000 p 4 78 60 8 60 8 8 78 8 c 7 -#000000 \
+p 4 82 64 4 64 4 4 82 4 c 7 -#000000 p 4 86 68 0 68 0 0 86 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 28.95 0 6 1 -a ",
+		height=0.94444,
+		peripheries=5,
+		pos="43,34",
+		shape=box,
+		width=1.1944];
+}

@@ -24,6 +24,7 @@ resolve_input_for_case() {
     "refs/graphviz/contrib/prune/${case_name}.gv"
     "refs/graphviz/contrib/dirgraph/${case_name}.dot"
     "refs/graphviz/contrib/java-dot/${case_name}.dot"
+    "refs/graphviz/tests/${case_name}.dot"
   )
   local rel
   for rel in "${candidates[@]}"; do
