@@ -1,0 +1,17 @@
+strict digraph "FTC/BTC" {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 68 202 68 202 0 ",
+		bb="0,0,202,68",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_Inputs {
+		graph [_draw_="c 7 -#000000 p 4 8 8 8 60 194 60 194 8 ",
+			bb="8,8,194,60"
+		];
+		"Base (FTC) holding"	[_draw_="c 7 -#000000 e 101 34 85.13 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 101 28.95 0 108.75 18 -Base (FTC) holding ",
+			height=0.5,
+			pos="101,34",
+			width=2.3647];
+	}
+}
