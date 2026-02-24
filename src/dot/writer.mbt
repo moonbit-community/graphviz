@@ -794,13 +794,96 @@ fn child_graph_path(path : String, index : Int) -> String {
 }
 
 ///|
-fn graph_contains_node_name(graph : @cgraph.Graph, name : String) -> Bool {
+fn graph_contains_node_name_raw(graph : @cgraph.Graph, name : String) -> Bool {
   for node in graph.nodes() {
     if node.name() == name {
       return true
     }
   }
   false
+}
+
+fn is_rankset_graph(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("rank") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower == "same" ||
+        lower == "min" ||
+        lower == "max" ||
+        lower == "source" ||
+        lower == "sink"
+    }
+    None => false
+  }
+}
+
+fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) -> Bool {
+  if cluster_name == "" {
+    return false
+  }
+  let mut current : @cgraph.Graph? = Some(graph)
+  while true {
+    match current {
+      Some(value) => {
+        match value.name() {
+          Some(name) =>
+            if name == cluster_name {
+              return true
+            }
+          None => ()
+        }
+        current = value.parent()
+      }
+      None => break
+    }
+  }
+  false
+}
+
+fn node_in_rankset_outside_cluster(
+  root : @cgraph.Graph,
+  node_name : String,
+  cluster_name : String,
+) -> Bool {
+  if cluster_name == "" {
+    return false
+  }
+  let stack : Array[@cgraph.Graph] = [root]
+  while stack.length() > 0 {
+    let current = stack[stack.length() - 1]
+    let _ = stack.pop()
+    if !graph_contains_node_name_raw(current, node_name) {
+      continue
+    }
+    if is_rankset_graph(current) &&
+      !graph_is_within_cluster_name(current, cluster_name) {
+      return true
+    }
+    for child in current.subgraphs() {
+      stack.push(child)
+    }
+  }
+  false
+}
+
+///|
+fn graph_contains_node_name(graph : @cgraph.Graph, name : String) -> Bool {
+  if !graph_contains_node_name_raw(graph, name) {
+    return false
+  }
+  // Graphviz parity: nodes merged into an external rankset are deleted from
+  // cluster membership before final dot emission (dotgen/node_induce).
+  if is_cluster_subgraph(graph) {
+    let root = root_graph(graph)
+    let cluster_name = match graph.name() {
+      Some(value) => value
+      None => ""
+    }
+    if node_in_rankset_outside_cluster(root, name, cluster_name) {
+      return false
+    }
+  }
+  true
 }
 
 ///|
@@ -969,7 +1052,18 @@ fn write_body(
   } else {
     graph.edges()
   }
-  let graph_nodes = graph.nodes()
+  let graph_nodes =
+    if is_layout_output {
+      let nodes : Array[@cgraph.Node] = []
+      for node in graph.nodes() {
+        if graph_contains_node_name(graph, node.name()) {
+          nodes.push(node)
+        }
+      }
+      nodes
+    } else {
+      graph.nodes()
+    }
   if !is_layout_output {
     graph_nodes.sort_by_key(node => node.name())
   } else {

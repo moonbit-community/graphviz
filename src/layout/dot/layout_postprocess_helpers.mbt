@@ -179,7 +179,9 @@ fn layout_subgraphs(
   for subgraph in graph.subgraphs() {
     let node_set : Map[String, Bool] = Map::new()
     for node in subgraph.nodes() {
-      node_set[node.name()] = true
+      if graph_contains_node(subgraph, node) {
+        node_set[node.name()] = true
+      }
     }
     let edge_set : Map[String, Bool] = Map::new()
     for edge in subgraph.edges() {

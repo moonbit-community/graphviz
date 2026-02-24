@@ -254,8 +254,8 @@ fn collect_cluster_bbox_heights(
     Some(value) => value
     None => 0.0
   }
-  let mut ht1 = base_top + margin
-  let mut ht2 = base_bottom + margin
+  let mut ht1 = add_cluster_margin_if_nonzero(base_top, margin)
+  let mut ht2 = add_cluster_margin_if_nonzero(base_bottom, margin)
   for child in children {
     match
       collect_cluster_bbox_heights(
@@ -268,13 +268,13 @@ fn collect_cluster_bbox_heights(
       ) {
       Some(info) => {
         if info.max_rank == max_rank_value {
-          let candidate = info.ht1 + margin
+          let candidate = add_cluster_margin_if_nonzero(info.ht1, margin)
           if candidate > ht1 {
             ht1 = candidate
           }
         }
         if info.min_rank == min_rank_value {
-          let candidate = info.ht2 + margin
+          let candidate = add_cluster_margin_if_nonzero(info.ht2, margin)
           if candidate > ht2 {
             ht2 = candidate
           }
@@ -338,13 +338,18 @@ fn collect_cluster_rank_heights(
     seen[name] = true
     match ranks.get(name) {
       Some(rank) => {
-        let half_height = node_half_height_pt(name, sizes, self_edge_labels)
-        let current = match rank_heights.get(rank) {
-          Some(value) => value
-          None => 0.0
-        }
-        if half_height > current {
-          rank_heights[rank] = half_height
+        // Graphviz parity: external ranksets can delete cluster membership
+        // for a node while the cluster rank span still reflects subgraph
+        // structure (node_induce + mark_clusters behavior).
+        if graph_contains_node(graph, node) {
+          let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+          let current = match rank_heights.get(rank) {
+            Some(value) => value
+            None => 0.0
+          }
+          if half_height > current {
+            rank_heights[rank] = half_height
+          }
         }
         match next_min {
           Some(value) => if rank < value { next_min = Some(rank) }
@@ -366,6 +371,14 @@ fn collect_cluster_rank_heights(
     next_max = child_max
   }
   (next_min, next_max)
+}
+
+fn add_cluster_margin_if_nonzero(height : Double, margin : Double) -> Double {
+  if height > 0.0 {
+    height + margin
+  } else {
+    0.0
+  }
 }
 
 ///|
@@ -434,8 +447,8 @@ fn apply_cluster_rank_heights(
     Some(value) => value
     None => 0.0
   }
-  let mut ht1 = base_top + margin
-  let mut ht2 = base_bottom + margin
+  let mut ht1 = add_cluster_margin_if_nonzero(base_top, margin)
+  let mut ht2 = add_cluster_margin_if_nonzero(base_bottom, margin)
   for child in children {
     match
       apply_cluster_rank_heights(
@@ -443,13 +456,13 @@ fn apply_cluster_rank_heights(
       ) {
       Some(info) => {
         if info.max_rank == max_rank_value {
-          let candidate = info.ht1 + margin
+          let candidate = add_cluster_margin_if_nonzero(info.ht1, margin)
           if candidate > ht1 {
             ht1 = candidate
           }
         }
         if info.min_rank == min_rank_value {
-          let candidate = info.ht2 + margin
+          let candidate = add_cluster_margin_if_nonzero(info.ht2, margin)
           if candidate > ht2 {
             ht2 = candidate
           }
