@@ -55,6 +55,32 @@ test "write_dot skips graph attr resets for later subgraphs" {
 }
 
 ///|
+test "write_dot keeps image before generated node geometry attrs" {
+  let graph = try @dot.parse_dot(
+    "digraph { a [height=0.5, pos=\"1,2\", width=0.75, image=\"usershape.svg\"]; }",
+  ) catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  let image_index = match output.find("image=\"usershape.svg\"") {
+    Some(value) => value
+    None => fail("missing image attr: \{output}")
+  }
+  let pos_index = match output.find("pos=\"1,2\"") {
+    Some(value) => value
+    None => fail("missing pos attr: \{output}")
+  }
+  let width_index = match output.find("width=0.75") {
+    Some(value) => value
+    None => fail("missing width attr: \{output}")
+  }
+  assert_true(image_index < pos_index)
+  assert_true(image_index < width_index)
+}
+
+///|
 test "dot roundtrip tier0" {
   let paths : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",

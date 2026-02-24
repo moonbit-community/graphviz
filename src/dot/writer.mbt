@@ -326,6 +326,7 @@ fn node_attr_rank(name : String) -> Int {
     "fontsize" => 9
     "height" => 10
     "hight" => 11
+    "image" => 11
     "kind" => 11
     "label" => 12
     "orientation" => 13
