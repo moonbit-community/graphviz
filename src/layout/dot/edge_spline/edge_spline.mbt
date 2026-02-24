@@ -46,6 +46,25 @@ fn is_record_shape(node : @cgraph.Node) -> Bool {
 }
 
 ///|
+fn has_compass_port_on_non_record(
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+) -> Bool {
+  if is_record_shape(node) {
+    return false
+  }
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => false
+        Some(_) => true
+        None => false
+      }
+    None => false
+  }
+}
+
+///|
 fn fixedsize_mode(node : @cgraph.Node) -> String {
   match node.get_attr("fixedsize") {
     Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()
@@ -2281,7 +2300,7 @@ fn clip_spline_to_nodes(
       Some(value) =>
         match value.compass {
           Some(@cgraph.Compass::C) => true
-          Some(_) => false
+          Some(_) => !is_record_shape(tail_node)
           None => tail_port_side == 0
         }
       None => true
@@ -2296,7 +2315,7 @@ fn clip_spline_to_nodes(
       Some(value) =>
         match value.compass {
           Some(@cgraph.Compass::C) => true
-          Some(_) => false
+          Some(_) => !is_record_shape(head_node)
           None => head_port_side == 0
         }
       None => true
@@ -4075,7 +4094,13 @@ pub fn edge_spline_for_polyline(
     )
   let trimmed = trim_degenerate_spline_segments(clipped)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps = ARROW_CLIP_EPS
+  let arrow_clip_eps =
+    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
+      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
+      0.0
+    } else {
+      ARROW_CLIP_EPS
+    }
   let (points, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -4172,7 +4197,13 @@ pub fn edge_spline_for_points(
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps = ARROW_CLIP_EPS
+  let arrow_clip_eps =
+    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
+      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
+      0.0
+    } else {
+      ARROW_CLIP_EPS
+    }
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(
@@ -4264,7 +4295,13 @@ pub fn edge_spline_for_bezier_points(
     )
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
-  let arrow_clip_eps = ARROW_CLIP_EPS
+  let arrow_clip_eps =
+    if has_compass_port_on_non_record(edge.tail(), edge.tail_port()) ||
+      has_compass_port_on_non_record(edge.head(), edge.head_port()) {
+      0.0
+    } else {
+      ARROW_CLIP_EPS
+    }
   let (clipped, start_point, end_point) =
     if include_tail || include_head {
     clip_spline_arrows(

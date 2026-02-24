@@ -356,6 +356,39 @@ fn dot_snapshot_cases(
 }
 
 ///|
+test "compass ports on plain nodes clip away from node centers" {
+  let graph = try @dot_parser.parse_dot(
+    "digraph { foo:s -> bar:n [dir=both arrowhead=crow arrowtail=crow] }",
+  ) catch {
+    err => fail("parse failed: \{err}")
+  } noraise {
+    value => value
+  }
+  let layout = layout_dot(graph)
+  layout.apply()
+  let edges = graph.edges()
+  assert_eq(edges.length(), 1)
+  let pos = match edges[0].get_attr("pos") {
+    Some(value) => value
+    None => fail("missing edge pos")
+  }
+  let numbers = try extract_numbers(pos) catch {
+    err => fail("extract_numbers failed: \{err}")
+  } noraise {
+    value => value
+  }
+  if numbers.length() < 4 {
+    fail("unexpected pos attr: \{pos}")
+  }
+  let tail_y = numbers[1]
+  let head_y = numbers[3]
+  // Centers for default nodes are near y=90 and y=18; port clipping should
+  // move anchors toward boundaries around y=72 and y=36.
+  assert_true(tail_y < 80.0)
+  assert_true(head_y > 30.0)
+}
+
+///|
 test "dot layout tier2 snapshots" {
   let cases = dot_snapshot_cases("tests/layout/dot/cases.txt", "tests/layout/dot")
   if cases.length() == 0 {

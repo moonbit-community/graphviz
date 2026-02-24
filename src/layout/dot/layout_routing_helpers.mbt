@@ -1796,8 +1796,8 @@ fn build_edge_route_base(
       None,
     )
   }
-  let tail_anchor = point_add(tail_anchor_base, tail_offset)
-  let head_anchor = point_add(head_anchor_base, head_offset)
+  let tail_anchor0 = point_add(tail_anchor_base, tail_offset)
+  let head_anchor0 = point_add(head_anchor_base, head_offset)
   let tail_clip_center = raw_tail_anchor
   let tail_clip_size = raw_tail_anchor_size
   let head_clip_center = raw_head_anchor
@@ -1806,16 +1806,16 @@ fn build_edge_route_base(
   let head_clip_enabled = head_sameport_anchor is None
   let tail_target = match tail_port_rect {
     Some(_) => head_pos
-    None => tail_anchor
+    None => tail_anchor0
   }
   let head_target = match head_port_rect {
     Some(_) => tail_pos
-    None => head_anchor
+    None => head_anchor0
   }
   let tail_slope = endpoint_slope_for_anchor(
     tail_port,
     tail_port_side,
-    tail_anchor,
+    tail_anchor0,
     tail_pos,
     tail_size,
     tail_target,
@@ -1826,7 +1826,7 @@ fn build_edge_route_base(
   let head_slope = endpoint_slope_for_anchor(
     head_port,
     head_port_side,
-    head_anchor,
+    head_anchor0,
     head_pos,
     head_size,
     head_target,
@@ -1836,24 +1836,24 @@ fn build_edge_route_base(
   )
   let tail_clip_target =
     if tail_sameport_anchor is Some(_) {
-      tail_anchor
+      tail_anchor0
     } else if port_is_explicit(tail_port) &&
       (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
       point_add(tail_clip_center, tail_slope)
     } else {
-      head_anchor
+      head_anchor0
     }
   let head_clip_target =
     if head_sameport_anchor is Some(_) {
-      head_anchor
+      head_anchor0
     } else if port_is_explicit(head_port) &&
       (head_slope.x != 0.0 || head_slope.y != 0.0) {
-      point_add(head_clip_center, head_slope)
+      point_sub(head_clip_center, head_slope)
     } else {
-      tail_anchor
+      tail_anchor0
     }
   let tail_clip = match tail_cluster_bbox {
-    Some(rect) => clip_to_bbox(tail_anchor, rect, head_anchor)
+    Some(rect) => clip_to_bbox(tail_anchor0, rect, head_anchor0)
     None =>
       match tail_side_anchor {
         Some(pos) => pos
@@ -1867,7 +1867,7 @@ fn build_edge_route_base(
       }
   }
   let head_clip = match head_cluster_bbox {
-    Some(rect) => clip_to_bbox(head_anchor, rect, tail_anchor)
+    Some(rect) => clip_to_bbox(head_anchor0, rect, tail_anchor0)
     None =>
       match head_side_anchor {
         Some(pos) => pos
@@ -1880,6 +1880,38 @@ fn build_edge_route_base(
           )
       }
   }
+  let compass_tail_on_non_record = match tail_port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => false
+        Some(_) => !is_record_shape(tail_node)
+        None => false
+      }
+    None => false
+  }
+  let compass_head_on_non_record = match head_port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => false
+        Some(_) => !is_record_shape(head_node)
+        None => false
+      }
+    None => false
+  }
+  let tail_anchor =
+    if tail_sameport_anchor is None && tail_side_anchor is None &&
+      compass_tail_on_non_record {
+      tail_clip
+    } else {
+      tail_anchor0
+    }
+  let head_anchor =
+    if head_sameport_anchor is None && head_side_anchor is None &&
+      compass_head_on_non_record {
+      head_clip
+    } else {
+      head_anchor0
+    }
   let out_tail_anchor = if swap_ends { head_anchor } else { tail_anchor }
   let out_head_anchor = if swap_ends { tail_anchor } else { head_anchor }
   let out_tail_clip = if swap_ends { head_clip } else { tail_clip }
