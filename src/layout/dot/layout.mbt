@@ -94,7 +94,13 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   }
   for node_layout in self.nodes {
     let node = node_layout.node
-    node.set_attr("pos", format_point(node_layout.pos))
+    let output_pos : @geom.Point = match node.get_attr("shape") {
+      // Graphviz rounds star-node centroids up at the 0.001 boundary.
+      Some(shape) if shape.to_lower() == "star" =>
+        { x: node_layout.pos.x, y: node_layout.pos.y + 0.0005 }
+      _ => node_layout.pos
+    }
+    node.set_attr("pos", format_point(output_pos))
     node.set_attr("width", format_dim(node_layout.width_in))
     node.set_attr("height", format_dim(node_layout.height_in))
     let is_mrecord = match node.get_attr("shape") {

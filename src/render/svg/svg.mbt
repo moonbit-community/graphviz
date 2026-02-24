@@ -1146,6 +1146,21 @@ fn shape_kind(value : String?) -> String {
     "note" => "note"
     "tab" => "tab"
     "square" => "square"
+    "insulator" => "insulator"
+    "noverhang" => "noverhang"
+    "primersite" => "primersite"
+    "promoter" => "promoter"
+    "proteasesite" => "proteasesite"
+    "proteinstab" => "proteinstab"
+    "restrictionsite" => "restrictionsite"
+    "ribosite" => "ribosite"
+    "rnastab" => "rnastab"
+    "signature" => "signature"
+    "star" => "star"
+    "terminator" => "terminator"
+    "threepoverhang" => "threepoverhang"
+    "underline" => "underline"
+    "utr" => "utr"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -2169,6 +2184,378 @@ fn tab_top_join_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.llx, y: rect.ury },
     { x: rect.llx + tab_width, y: rect.ury },
+  ]
+}
+
+fn baseline_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+fn insulator_inner_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 6.0, y: cy + 6.0 },
+    { x: cx + 6.0, y: cy - 6.0 },
+    { x: cx - 6.0, y: cy - 6.0 },
+    { x: cx - 6.0, y: cy + 6.0 },
+  ]
+}
+
+fn insulator_outer_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 9.0, y: cy + 9.0 },
+    { x: cx + 9.0, y: cy - 9.0 },
+    { x: cx - 9.0, y: cy - 9.0 },
+    { x: cx - 9.0, y: cy + 9.0 },
+    { x: cx + 9.0, y: cy + 9.0 },
+  ]
+}
+
+fn insulator_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 9.0, y: cy },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+fn insulator_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy },
+    { x: cx - 9.0, y: cy },
+  ]
+}
+
+fn noverhang_top_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 13.5, y: cy + 1.5 },
+    { x: cx - 1.5, y: cy + 1.5 },
+    { x: cx - 1.5, y: cy + 7.5 },
+    { x: cx - 13.5, y: cy + 7.5 },
+  ]
+}
+
+fn noverhang_bottom_left_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 13.5, y: cy - 7.5 },
+    { x: cx - 1.5, y: cy - 7.5 },
+    { x: cx - 1.5, y: cy - 1.5 },
+    { x: cx - 13.5, y: cy - 1.5 },
+  ]
+}
+
+fn noverhang_bottom_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 1.5, y: cy - 7.5 },
+    { x: cx + 13.5, y: cy - 7.5 },
+    { x: cx + 13.5, y: cy - 1.5 },
+    { x: cx + 1.5, y: cy - 1.5 },
+  ]
+}
+
+fn noverhang_top_right_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 1.5, y: cy + 1.5 },
+    { x: cx + 13.5, y: cy + 1.5 },
+    { x: cx + 13.5, y: cy + 7.5 },
+    { x: cx + 1.5, y: cy + 7.5 },
+  ]
+}
+
+fn noverhang_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 13.5, y: cy },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+fn noverhang_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx - 13.5, y: cy },
+    { x: rect.llx, y: cy },
+  ]
+}
+
+fn primersite_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 12.0, y: cy + 3.0 },
+    { x: cx, y: cy + 15.0 },
+    { x: cx, y: cy + 9.0 },
+    { x: cx - 13.5, y: cy + 9.0 },
+    { x: cx - 13.5, y: cy + 3.0 },
+  ]
+}
+
+fn promoter_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 6.75, y: rect.ury },
+    { x: cx - 13.5, y: rect.ury },
+    { x: cx - 13.5, y: cy },
+    { x: cx - 7.5, y: cy },
+    { x: cx - 7.5, y: cy + 12.0 },
+    { x: cx + 6.75, y: cy + 12.0 },
+    { x: cx + 6.75, y: cy + 9.0 },
+    { x: cx + 18.75, y: cy + 15.0 },
+    { x: cx + 6.75, y: cy + 21.0 },
+  ]
+}
+
+fn proteasesite_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 3.0, y: cy + 6.0 },
+    { x: cx + 3.0, y: cy + 7.5 },
+    { x: cx + 1.5, y: cy + 9.0 },
+    { x: cx + 3.0, y: cy + 10.5 },
+    { x: cx + 3.0, y: cy + 12.0 },
+    { x: cx + 1.5, y: cy + 12.0 },
+    { x: cx, y: cy + 10.5 },
+    { x: cx - 1.5, y: cy + 12.0 },
+    { x: cx - 3.0, y: cy + 12.0 },
+    { x: cx - 3.0, y: cy + 10.5 },
+    { x: cx - 1.5, y: cy + 9.0 },
+    { x: cx - 3.0, y: cy + 7.5 },
+    { x: cx - 3.0, y: cy + 6.0 },
+    { x: cx - 1.5, y: cy + 6.0 },
+    { x: cx, y: cy + 7.5 },
+    { x: cx + 1.5, y: cy + 6.0 },
+  ]
+}
+
+fn proteinstab_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 1.5, y: cy + 6.0 },
+    { x: cx + 3.0, y: cy + 7.5 },
+    { x: cx + 3.0, y: cy + 10.5 },
+    { x: cx + 1.5, y: cy + 12.0 },
+    { x: cx - 1.5, y: cy + 12.0 },
+    { x: cx - 3.0, y: cy + 10.5 },
+    { x: cx - 3.0, y: cy + 7.5 },
+    { x: cx - 1.5, y: cy + 6.0 },
+  ]
+}
+
+fn proteasesite_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: cy + 7.5 },
+    { x: cx, y: cy },
+  ]
+}
+
+fn proteinstab_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: cy + 6.0 },
+    { x: cx, y: cy },
+  ]
+}
+
+fn restrictionsite_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 12.75, y: cy + 3.0 },
+    { x: cx - 6.75, y: cy + 3.0 },
+    { x: cx - 6.75, y: cy + 9.0 },
+    { x: cx - 12.75, y: cy + 9.0 },
+    { x: cx - 12.75, y: cy - 3.0 },
+    { x: cx + 6.75, y: cy - 3.0 },
+    { x: cx + 6.75, y: cy - 9.0 },
+    { x: cx + 12.75, y: cy - 9.0 },
+  ]
+}
+
+fn restrictionsite_left_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy },
+    { x: cx - 12.75, y: cy },
+  ]
+}
+
+fn restrictionsite_right_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 12.75, y: cy },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+fn ribosite_segment1_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: cy },
+    { x: cx, y: cy + 1.5 },
+  ]
+}
+
+fn ribosite_segment2_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx, y: cy + 3.0 },
+    { x: cx, y: cy + 4.5 },
+  ]
+}
+
+fn signature_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.urx, y: cy + 12.0 },
+    { x: rect.llx, y: cy + 12.0 },
+    { x: rect.llx, y: cy - 12.0 },
+    { x: rect.urx, y: cy - 12.0 },
+  ]
+}
+
+fn signature_cross_up_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx + 3.0, y: cy + 1.5 },
+    { x: rect.llx + 6.0, y: cy - 1.5 },
+  ]
+}
+
+fn signature_cross_down_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx + 3.0, y: cy - 1.5 },
+    { x: rect.llx + 6.0, y: cy + 1.5 },
+  ]
+}
+
+fn signature_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx + 3.0, y: cy - 9.0 },
+    { x: rect.urx - 3.0, y: cy - 9.0 },
+  ]
+}
+
+fn star_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let width = rect.urx - rect.llx
+  let height = rect.ury - rect.lly
+  [
+    { x: rect.llx + width, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx + width * 0.61795974583, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx + width * 0.5, y: rect.lly + height },
+    { x: rect.llx + width * 0.38204025417, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx, y: rect.lly + height * 0.61803398875 },
+    { x: rect.llx + width * 0.30907407407, y: rect.lly + height * 0.38196601125 },
+    { x: rect.llx + width * 0.19092592593, y: rect.lly },
+    { x: rect.llx + width * 0.5, y: rect.lly + height * 0.2360679775 },
+    { x: rect.llx + width * 0.80907407407, y: rect.lly },
+    { x: rect.llx + width * 0.69092592593, y: rect.lly + height * 0.38196601125 },
+  ]
+}
+
+fn terminator_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 3.0, y: cy },
+    { x: cx + 3.0, y: cy + 6.0 },
+    { x: cx + 9.0, y: cy + 6.0 },
+    { x: cx + 9.0, y: cy + 12.0 },
+    { x: cx - 9.0, y: cy + 12.0 },
+    { x: cx - 9.0, y: cy + 6.0 },
+    { x: cx - 3.0, y: cy + 6.0 },
+    { x: cx - 3.0, y: cy },
+  ]
+}
+
+fn threepoverhang_top_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.urx, y: cy + 1.5 },
+    { x: rect.urx, y: cy + 7.5 },
+    { x: cx + 3.0, y: cy + 7.5 },
+    { x: cx + 3.0, y: cy + 1.5 },
+  ]
+}
+
+fn threepoverhang_bottom_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 15.0, y: cy - 7.5 },
+    { x: cx + 15.0, y: cy - 1.5 },
+    { x: cx + 3.0, y: cy - 1.5 },
+    { x: cx + 3.0, y: cy - 7.5 },
+  ]
+}
+
+fn threepoverhang_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: rect.llx, y: cy },
+    { x: cx + 3.0, y: cy },
+  ]
+}
+
+fn underline_outline_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.urx, y: rect.ury },
+    { x: rect.llx, y: rect.ury },
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+fn underline_line_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  [
+    { x: rect.llx, y: rect.lly },
+    { x: rect.urx, y: rect.lly },
+  ]
+}
+
+fn utr_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let cx = (rect.llx + rect.urx) / 2.0
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: cx + 9.0, y: cy },
+    { x: cx + 9.0, y: cy + 3.0 },
+    { x: cx + 3.0, y: cy + 9.0 },
+    { x: cx - 3.0, y: cy + 9.0 },
+    { x: cx - 9.0, y: cy + 3.0 },
+    { x: cx - 9.0, y: cy },
   ]
 }
 
@@ -5070,6 +5457,348 @@ fn write_svg_node_group(
     write_line(
       sb,
       "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{top_join}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "insulator" {
+    let inner = polygon_points(insulator_inner_points(rect), bbox.llx, bbox.lly)
+    let outer = polyline_points(insulator_outer_points(rect), bbox.llx, bbox.lly)
+    let right_line = polyline_points(insulator_right_line_points(rect), bbox.llx, bbox.lly)
+    let left_line = polyline_points(insulator_left_line_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{inner}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outer}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{right_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{left_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "noverhang" {
+    let top_left = polygon_points(noverhang_top_left_points(rect), bbox.llx, bbox.lly)
+    let bottom_left = polygon_points(noverhang_bottom_left_points(rect), bbox.llx, bbox.lly)
+    let bottom_right = polygon_points(
+      noverhang_bottom_right_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let top_right = polygon_points(noverhang_top_right_points(rect), bbox.llx, bbox.lly)
+    let right_line = polyline_points(noverhang_right_line_points(rect), bbox.llx, bbox.lly)
+    let left_line = polyline_points(noverhang_left_line_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top_left}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom_left}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom_right}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top_right}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{right_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{left_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "primersite" {
+    let outline = polygon_points(primersite_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "promoter" {
+    let outline = polygon_points(promoter_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "proteasesite" {
+    let outline = polygon_points(proteasesite_points(rect), bbox.llx, bbox.lly)
+    let stem = polyline_points(proteasesite_line_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{stem}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "proteinstab" {
+    let outline = polygon_points(proteinstab_points(rect), bbox.llx, bbox.lly)
+    let stem = polyline_points(proteinstab_line_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{stem}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "restrictionsite" {
+    let outline = polygon_points(restrictionsite_points(rect), bbox.llx, bbox.lly)
+    let left_line = polyline_points(
+      restrictionsite_left_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    let right_line = polyline_points(
+      restrictionsite_right_line_points(rect),
+      bbox.llx,
+      bbox.lly,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{left_line}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{right_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "ribosite" {
+    let outline = polygon_points(proteasesite_points(rect), bbox.llx, bbox.lly)
+    let seg1 = polyline_points(ribosite_segment1_points(rect), bbox.llx, bbox.lly)
+    let seg2 = polyline_points(ribosite_segment2_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{seg1}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{seg2}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "rnastab" {
+    let outline = polygon_points(proteinstab_points(rect), bbox.llx, bbox.lly)
+    let seg1 = polyline_points(ribosite_segment1_points(rect), bbox.llx, bbox.lly)
+    let seg2 = polyline_points(ribosite_segment2_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{seg1}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{seg2}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "signature" {
+    let outline = polygon_points(signature_outline_points(rect), bbox.llx, bbox.lly)
+    let cross_up = polyline_points(signature_cross_up_points(rect), bbox.llx, bbox.lly)
+    let cross_down = polyline_points(signature_cross_down_points(rect), bbox.llx, bbox.lly)
+    let sign_line = polyline_points(signature_line_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{cross_up}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{cross_down}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{sign_line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "star" {
+    let outline = polygon_points(star_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "terminator" {
+    let outline = polygon_points(terminator_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "threepoverhang" {
+    let top = polygon_points(threepoverhang_top_points(rect), bbox.llx, bbox.lly)
+    let bottom = polygon_points(threepoverhang_bottom_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(threepoverhang_line_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{top}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{bottom}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "underline" {
+    let outline = polygon_points(underline_outline_points(rect), bbox.llx, bbox.lly)
+    let line = polyline_points(underline_line_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"none\" stroke=\"none\" points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{line}\"/>",
+      "",
+      pretty,
+    )
+  } else if kind == "utr" {
+    let outline = polygon_points(utr_points(rect), bbox.llx, bbox.lly)
+    let baseline = polyline_points(baseline_points(rect), bbox.llx, bbox.lly)
+    write_line(
+      sb,
+      "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+      "",
+      pretty,
+    )
+    write_line(
+      sb,
+      "<polyline fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{baseline}\"/>",
       "",
       pretty,
     )
