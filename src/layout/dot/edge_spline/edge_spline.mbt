@@ -2454,6 +2454,91 @@ fn arrow_clip_end_segment(
 }
 
 ///|
+fn clip_spline_arrows_ortho(
+  points : Array[@geom.Point],
+  tail_len : Double,
+  head_len : Double,
+  include_tail : Bool,
+  include_head : Bool,
+) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
+  let out = points.copy()
+  let start_idx = 0
+  let end_idx = out.length() - 4
+  let mut start_point : @geom.Point? = None
+  let mut end_point : @geom.Point? = None
+  if include_tail {
+    start_point = Some(out[start_idx])
+  }
+  if include_head {
+    end_point = Some(out[end_idx + 3])
+  }
+  if include_tail && include_head && end_idx == start_idx {
+    let p = out[end_idx]
+    let q = out[end_idx + 3]
+    let mut tlen = tail_len
+    let mut hlen = head_len
+    let d = point_dist(p, q)
+    if hlen + tlen >= d {
+      hlen = d / 3.0
+      tlen = d / 3.0
+    }
+    let mut s = p
+    let mut t = q
+    if p.y == q.y {
+      let y = p.y
+      s = point(if p.x < q.x { p.x + tlen } else { p.x - tlen }, y)
+      t = point(if p.x < q.x { q.x - hlen } else { q.x + hlen }, y)
+    } else {
+      let x = p.x
+      s = point(x, if p.y < q.y { p.y + tlen } else { p.y - tlen })
+      t = point(x, if p.y < q.y { q.y - hlen } else { q.y + hlen })
+    }
+    out[end_idx] = s
+    out[end_idx + 1] = s
+    out[end_idx + 2] = t
+    out[end_idx + 3] = t
+    return (out, start_point, end_point)
+  }
+  if include_head {
+    let p = out[end_idx]
+    let q = out[end_idx + 3]
+    let d = point_dist(p, q)
+    let maxd = 0.9 * d
+    let mut hlen = head_len
+    if hlen >= maxd {
+      hlen = maxd
+    }
+    let r = if p.y == q.y {
+      point(if p.x < q.x { q.x - hlen } else { q.x + hlen }, p.y)
+    } else {
+      point(p.x, if p.y < q.y { q.y - hlen } else { q.y + hlen })
+    }
+    out[end_idx + 1] = p
+    out[end_idx + 2] = r
+    out[end_idx + 3] = r
+  }
+  if include_tail {
+    let p = out[start_idx]
+    let q = out[start_idx + 3]
+    let d = point_dist(p, q)
+    let maxd = 0.9 * d
+    let mut tlen = tail_len
+    if tlen >= maxd {
+      tlen = maxd
+    }
+    let r = if p.y == q.y {
+      point(if p.x < q.x { p.x + tlen } else { p.x - tlen }, p.y)
+    } else {
+      point(p.x, if p.y < q.y { p.y + tlen } else { p.y - tlen })
+    }
+    out[start_idx] = r
+    out[start_idx + 1] = r
+    out[start_idx + 2] = q
+  }
+  (out, start_point, end_point)
+}
+
+///|
 fn clip_spline_arrows(
   points : Array[@geom.Point],
   tail_len : Double,
@@ -2461,7 +2546,17 @@ fn clip_spline_arrows(
   include_tail : Bool,
   include_head : Bool,
   eps : Double,
+  orthogonal? : Bool = false,
 ) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
+  if orthogonal {
+    return clip_spline_arrows_ortho(
+      points,
+      tail_len,
+      head_len,
+      include_tail,
+      include_head,
+    )
+  }
   let mut out = points
   let mut start_idx = 0
   let mut end_idx = out.length() - 4
@@ -2722,6 +2817,29 @@ fn polyline_to_bezier(points : Array[@geom.Point]) -> Array[@geom.Point] {
     out.push(c2)
     out.push(p1)
   }
+  out
+}
+
+///|
+/// Graphviz parity: make_polyline duplication in refs/graphviz/lib/pathplan/util.c.
+fn polyline_to_bezier_make_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  let out : Array[@geom.Point] = []
+  if points.length() < 2 {
+    return out
+  }
+  out.push(points[0])
+  out.push(points[0])
+  if points.length() > 2 {
+    for i in 1..<(points.length() - 1) {
+      let point = points[i]
+      out.push(point)
+      out.push(point)
+      out.push(point)
+    }
+  }
+  let last = points[points.length() - 1]
+  out.push(last)
+  out.push(last)
   out
 }
 
@@ -3934,11 +4052,13 @@ pub fn edge_spline_for_polyline(
       (0.0, 0.0)
     }
   let polyline = compact_polyline(raw_points)
-  let bezier =
-    apply_parallel_offset(
-      polyline_to_bezier(compact_polyline(polyline)),
-      parallel_offset,
-    )
+  let bezier_points =
+    if orthogonal {
+      polyline_to_bezier_make_polyline(compact_polyline(polyline))
+    } else {
+      polyline_to_bezier(compact_polyline(polyline))
+    }
+  let bezier = apply_parallel_offset(bezier_points, parallel_offset)
   let clipped =
     clip_spline_to_nodes(
       edge,
@@ -3965,6 +4085,7 @@ pub fn edge_spline_for_polyline(
       include_tail,
       include_head,
       arrow_clip_eps,
+      orthogonal=orthogonal,
     )
   } else {
     (trimmed, None, None)

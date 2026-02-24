@@ -939,6 +939,45 @@ fn arrow_penwidth(edge : @cgraph.Edge) -> Double {
 }
 
 ///|
+fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
+  let mut graph = node.graph()
+  while !graph.is_root() {
+    graph = match graph.parent() {
+      Some(parent) => parent
+      None => break
+    }
+  }
+  graph
+}
+
+///|
+fn edge_ortho_rounding_radius(edge : @cgraph.Edge, penwidth : Double) -> Double? {
+  let splines = match root_graph_for_node(edge.head()).get_attr("splines") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if splines != "ortho" {
+    return None
+  }
+  let style = @attrs.parse_style(edge.get_attr("style"))
+  let mut want_rounded = style_has_token(style, "rounded")
+  let mut radius = 0.0
+  match edge.get_attr("radius") {
+    Some(value) =>
+      if value != "" {
+        radius = @attrs.parse_double(Some(value), 0.0)
+        want_rounded = radius > 0.0
+      }
+    None => ()
+  }
+  if want_rounded && radius == 0.0 {
+    let default_radius = penwidth * 8.0
+    radius = if 12.0 > default_radius { 12.0 } else { default_radius }
+  }
+  if want_rounded && radius > 0.0 { Some(radius) } else { None }
+}
+
+///|
 fn arrow_ops(
   layout : @layout_dot.DotLayoutEdge,
   at_head : Bool,
@@ -4556,24 +4595,58 @@ fn edge_draw_ops(layout : @layout_dot.DotLayoutEdge) -> Array[@render.DrawOp] {
   }
   let pen_colors = edge_pen_colors(edge)
   let color_count = pen_colors.length()
+  let rounded_radius = if color_count <= 1 {
+    edge_ortho_rounding_radius(edge, arrow_penwidth(edge))
+  } else {
+    None
+  }
   let spline_sets : Array[Array[Array[@geom.Point]]] = []
   for spline in layout.splines {
     spline_sets.push(edge_multicolor_spline_points(spline.points, color_count))
   }
   for i, pen_color in pen_colors {
-    ops.push(@render.DrawOp::PenColor(color=pen_color))
+    let mut wrote_pen_color = false
     for spline_index in 0..<layout.splines.length() {
       let points = if color_count <= 1 {
         layout.splines[spline_index].points
       } else {
         spline_sets[spline_index][i]
       }
-      ops.push(
-        @render.DrawOp::Bezier(
-          filled=false,
-          points=points,
-        ),
-      )
+      match rounded_radius {
+        Some(radius) => {
+          let polylines = @render.rounded_ortho_polylines(points, radius)
+          if polylines.length() > 0 {
+            for polyline in polylines {
+              ops.push(@render.DrawOp::PenColor(color=pen_color))
+              ops.push(@render.DrawOp::Polyline(points=polyline))
+            }
+          } else {
+            if !wrote_pen_color {
+              ops.push(@render.DrawOp::PenColor(color=pen_color))
+              wrote_pen_color = true
+            }
+            ops.push(
+              @render.DrawOp::Bezier(
+                filled=false,
+                points=points,
+              ),
+            )
+          }
+        }
+        None =>
+          {
+            if !wrote_pen_color {
+              ops.push(@render.DrawOp::PenColor(color=pen_color))
+              wrote_pen_color = true
+            }
+            ops.push(
+              @render.DrawOp::Bezier(
+                filled=false,
+                points=points,
+              ),
+            )
+          }
+      }
     }
   }
   ops

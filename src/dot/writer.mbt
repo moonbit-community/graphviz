@@ -302,6 +302,7 @@ fn edge_attr_rank(name : String) -> Int {
     "ltail" => 23
     "minlen" => 24
     "pos" => 25
+    "radius" => 26
     "samearrowhead" => 26
     "samearrowtail" => 27
     "samehead" => 28
