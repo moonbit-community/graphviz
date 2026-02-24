@@ -68,7 +68,7 @@ def resolve_path(repo_root: Path, path: Path) -> Path:
     return path if path.is_absolute() else repo_root / path
 
 
-def load_case_names(path: Path) -> list[str]:
+def load_case_names(path: Path, *, allow_empty: bool = False) -> list[str]:
     names: list[str] = []
     seen: set[str] = set()
     for raw in path.read_text(encoding="utf-8").splitlines():
@@ -79,7 +79,7 @@ def load_case_names(path: Path) -> list[str]:
             raise ValueError(f"duplicate case in {path}: {line}")
         seen.add(line)
         names.append(line)
-    if not names:
+    if not names and not allow_empty:
         raise ValueError(f"empty case list: {path}")
     return names
 
@@ -139,7 +139,7 @@ def main() -> int:
     sentinel_cases = load_case_names(sentinel_path)
     history_cases = load_case_names(history_path)
     known_regression_cases = load_case_names(known_regression_path)
-    allowed_uncovered_cases = load_case_names(allowed_uncovered_path)
+    allowed_uncovered_cases = load_case_names(allowed_uncovered_path, allow_empty=True)
     sentinel_set = set(sentinel_cases)
     history_set = set(history_cases)
     known_regression_set = set(known_regression_cases)

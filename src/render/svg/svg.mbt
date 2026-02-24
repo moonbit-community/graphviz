@@ -3599,6 +3599,25 @@ fn inset_rect(rect : @geom.Rect, gap : Double) -> @geom.Rect? {
 }
 
 ///|
+fn same_subgraph_name(a : @cgraph.Graph, b : @cgraph.Graph) -> Bool {
+  match (a.name(), b.name()) {
+    (Some(x), Some(y)) => x == y
+    (None, None) => true
+    _ => false
+  }
+}
+
+///|
+fn advance_cluster_graph_ids(graph : @cgraph.Graph, next_cluster_id : Int) -> Int {
+  let mut cluster_id = next_cluster_id
+  for subgraph in graph.subgraphs() {
+    cluster_id = cluster_id + 1
+    cluster_id = advance_cluster_graph_ids(subgraph, cluster_id)
+  }
+  cluster_id
+}
+
+///|
 fn write_cluster_graphs(
   sb : StringBuilder,
   layout : @layout_dot.DotLayoutGraph,
@@ -3608,10 +3627,27 @@ fn write_cluster_graphs(
   next_cluster_id : Int,
 ) -> Int {
   let mut cluster_id = next_cluster_id
-  for subgraph in layout.subgraphs {
+  let rendered_subgraphs = layout.subgraphs
+  let mut rendered_idx = 0
+  for source_subgraph in layout.graph.subgraphs() {
     let current_id = cluster_id
     cluster_id = cluster_id + 1
-    let graph = subgraph.graph
+    let subgraph =
+      if rendered_idx < rendered_subgraphs.length() &&
+        same_subgraph_name(rendered_subgraphs[rendered_idx].graph, source_subgraph) {
+        let value = Some(rendered_subgraphs[rendered_idx])
+        rendered_idx = rendered_idx + 1
+        value
+      } else {
+        None
+      }
+    let graph = source_subgraph
+    match subgraph {
+      None => {
+        cluster_id = advance_cluster_graph_ids(source_subgraph, cluster_id)
+        continue
+      }
+      Some(subgraph) => {
     if is_cluster_graph(graph) {
       let rect = subgraph.bbox
       let x1 = svg_x(rect.llx, bbox.llx)
@@ -3679,6 +3715,8 @@ fn write_cluster_graphs(
       pretty,
       cluster_id,
     )
+      }
+    }
   }
   cluster_id
 }

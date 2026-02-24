@@ -110,6 +110,7 @@ point
 poly
 polygon
 polypoly
+plugins
 process
 proc3d
 psfonttest

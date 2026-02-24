@@ -11,6 +11,18 @@ priv struct HeadPortMetrics {
   head_port_max_dist : Map[String, Double]
 }
 
+///|
+fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
+  let mut count = 0
+  for subgraph in graph.subgraphs() {
+    if is_cluster_graph(subgraph) {
+      count = count + 1
+    }
+    count = count + count_cluster_subgraphs(subgraph)
+  }
+  count
+}
+
 fn expand_bbox_for_label_pos(
   bbox : @geom.Rect,
   pos : @geom.Point?,
@@ -1494,10 +1506,14 @@ fn finalize_layout_graph(
     base_bbox.urx > rank_bbox.urx &&
     (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
     graph_has_cluster(graph)
+  let use_lr_multi_cluster_creation_order_mode =
+    (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    count_cluster_subgraphs(graph) > 1
   // Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
   // rotation (dotgen cluster decompose + postproc map_point ordering).
   let rotated = if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    graph_has_cluster(graph) {
+    graph_has_cluster(graph) &&
+    !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       refresh_cluster_label_positions_from_bbox(
         mirror_layout_points_with_bbox(

@@ -139,6 +139,7 @@ priv struct OrderingClass2Data {
   root_edge_creation : Array[(String, String)]
   skeleton_edge_creation : Array[(String, String)]
   edge_creation_order : Array[(String, String)]
+  creation_order : Array[String]
   nlist_order : Array[String]
   vnode_creation_order : Array[String]
 }
@@ -15930,6 +15931,7 @@ fn build_ordering_class2_data_output(
   root_edge_creation : Array[(String, String)],
   skeleton_edge_creation : Array[(String, String)],
   edge_creation_order : Array[(String, String)],
+  creation_order : Array[String],
   nlist_order : Array[String],
   vnode_creation_order : Array[String],
 ) -> OrderingClass2Data {
@@ -15941,6 +15943,7 @@ fn build_ordering_class2_data_output(
     root_edge_creation,
     skeleton_edge_creation,
     edge_creation_order,
+    creation_order,
     nlist_order,
     vnode_creation_order,
   }
@@ -16503,6 +16506,7 @@ fn build_ordering_class2_data_from_edge_chain_data(
     root_edge_creation,
     skeleton_edge_creation,
     edge_creation_order,
+    creation_order,
     nlist_order,
     vnode_creation_order,
   )
@@ -19518,6 +19522,15 @@ fn build_ordering_reorder_setup_output(
 
 
 ///|
+fn use_lr_multi_cluster_creation_order_mode(
+  graphviz_flip : Bool,
+  cluster_meta : ClusterMetadata,
+) -> Bool {
+  graphviz_flip && cluster_meta.cluster_order.length() > 1
+}
+
+
+///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -19564,7 +19577,13 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
     )
   // Graphviz parity: GD_nlist follows decompose DFS order over fast graph edges.
   // Do not change behavior without updating fixtures/tests.
-  let gdnlist_order = class2_data.nlist_order
+  let gdnlist_order =
+    if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
+      use_lr_multi_cluster_creation_order_mode(graphviz_flip, cluster_meta) {
+      build_reverse_creation_order_from_nlist(class2_data.creation_order)
+    } else {
+      class2_data.nlist_order
+    }
   let nlist_order_index = build_nlist_order_index(class2_data.nlist_order)
   let vnode_order_keys_for_ordering =
     build_vnode_order_keys_for_ordering_stage(
@@ -22260,7 +22279,10 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
     rank_data.ranks,
     x_groups,
   )
-  if graphviz_flip && cluster_meta.cluster_order.length() > 1 {
+  let skip_multi_cluster_flip_reverse =
+    use_lr_multi_cluster_creation_order_mode(graphviz_flip, cluster_meta)
+  if graphviz_flip && cluster_meta.cluster_order.length() > 1 &&
+    !skip_multi_cluster_flip_reverse {
     for rank, names in x_groups {
       let reversed : Array[String] = []
       let mut idx = names.length()
