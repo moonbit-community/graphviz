@@ -590,7 +590,12 @@ fn svg_color(color : String) -> String {
   } else if is_svg_named_color(lower) {
     lower
   } else {
-    @attrs.normalize_color(lower)
+    let normalized = @attrs.normalize_color(lower)
+    if normalized.has_prefix("#") || is_svg_named_color(normalized) {
+      normalized
+    } else {
+      "#000000"
+    }
   }
 }
 

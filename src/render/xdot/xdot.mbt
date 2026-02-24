@@ -5095,7 +5095,14 @@ fn xdot_encode_color(color : String) -> String {
   match lower {
     "skyblue" => "#87ceeb"
     "green4" => "#008b00"
-    _ => @attrs.normalize_color(lower)
+    _ => {
+      let normalized = @attrs.normalize_color(lower)
+      if normalized.has_prefix("#") || normalized == "none" {
+        normalized
+      } else {
+        "#000000"
+      }
+    }
   }
 }
 
