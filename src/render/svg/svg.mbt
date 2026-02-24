@@ -1141,8 +1141,8 @@ fn graph_label_text(graph : @cgraph.Graph) -> String? {
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
-      let size = @attrs.font_size(graph.get_attr("fontsize"))
-      let name = @attrs.font_name(graph.get_attr("fontname"))
+      let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
+      let name = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
       let (_, width_pt, height_pt) = label_metrics(text, name, size)
       let adjusted_height = if name == "Helvetica-Oblique" {
         // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
@@ -4734,8 +4734,8 @@ fn write_cluster_graphs(
       )
       match graph_label_metrics(graph) {
         Some((text, _width_pt, height_pt)) => {
-          let font = @attrs.font_name(graph.get_attr("fontname"))
-          let size = @attrs.font_size(graph.get_attr("fontsize"))
+          let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
+          let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
           let color =
             svg_color(graph_color(graph, "fontcolor", "black"))
           let pos = match subgraph.label_pos {
@@ -6656,8 +6656,8 @@ pub fn render_svg(
   match graph_label_metrics(layout.graph) {
     Some((text, _width_pt, height_pt)) => {
       let graph = layout.graph
-      let font = @attrs.font_name(graph.get_attr("fontname"))
-      let size = @attrs.font_size(graph.get_attr("fontsize"))
+      let font = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
+      let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
       let color = svg_color(graph_color(graph, "fontcolor", "black"))
       let pos = match layout.label_pos {
         Some(value) => value

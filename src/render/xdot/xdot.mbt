@@ -4940,8 +4940,8 @@ fn graph_color(graph : @cgraph.Graph, name : String, default : String) -> String
 fn graph_label_metrics(graph : @cgraph.Graph) -> (String, Double, Double)? {
   match graph_label_text(graph) {
     Some(text) => {
-      let size = @attrs.font_size(graph.get_attr("fontsize"))
-      let name = @attrs.font_name(graph.get_attr("fontname"))
+      let size = @attrs.font_size(inherited_graph_attr(graph, "fontsize"))
+      let name = @attrs.font_name(inherited_graph_attr(graph, "fontname"))
       let (width_pt, height_pt) = label_text_dimensions(text, name, size)
       let adjusted_height = if name == "Helvetica-Oblique" {
         // Graphviz parity: PostScript metrics for crazy.gv produce 3.41in.
@@ -5029,8 +5029,8 @@ fn graph_label_ops(
   match graph_label_metrics(graph) {
     Some((text, width_pt, height_pt)) => {
       let font = @render.Font::{
-        name: @attrs.font_name(graph.get_attr("fontname")),
-        size: @attrs.font_size(graph.get_attr("fontsize")),
+        name: @attrs.font_name(inherited_graph_attr(graph, "fontname")),
+        size: @attrs.font_size(inherited_graph_attr(graph, "fontsize")),
       }
       let color = graph_color(graph, "fontcolor", "black")
       let pen_color = @attrs.normalize_color(color)

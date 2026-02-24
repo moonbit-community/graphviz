@@ -1,0 +1,25 @@
+digraph JAAS {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 99.25 98 99.25 98 0 ",
+		bb="0,0,98,99.25",
+		fontname=arial,
+		fontsize=20,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster0 {
+		graph [_draw_="c 7 -#000000 p 4 8 8 8 91.25 90 91.25 90 8 ",
+			_ldraw_="F 20 5 -arial c 7 -#000000 T 49 68.25 0 34.5 3 -Foo ",
+			bb="8,8,90,91.25",
+			label=Foo,
+			lheight=0.32,
+			lp="49,75.625",
+			lwidth=0.48
+		];
+		JOC	[_draw_="c 7 -#000000 e 49 34 32.93 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 49 28.95 0 32.25 4 -JAAS ",
+			height=0.5,
+			label=JAAS,
+			pos="49,34",
+			width=0.91462];
+	}
+}

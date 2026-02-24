@@ -86,8 +86,10 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
       if value == "" {
         None
       } else {
-        let font_size_pt = @attrs.font_size(graph.get_attr("fontsize"))
-        let font = @attrs.font_name(graph.get_attr("fontname"))
+        let font_size_pt = @attrs.font_size(
+          graph_attr_inherited(graph, "fontsize"),
+        )
+        let font = @attrs.font_name(graph_attr_inherited(graph, "fontname"))
         let (width_pt, height_pt) = label_text_dimensions(
           value, font, font_size_pt,
         )
