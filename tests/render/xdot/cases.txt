@@ -43,6 +43,7 @@ bsdkernel
 box
 boxarrow
 center
+cds
 circle
 clover
 clusters

@@ -703,6 +703,7 @@ fn shape_kind(value : String?) -> String {
     "rarrow" => "rarrow"
     "larrow" => "larrow"
     "folder" => "folder"
+    "cds" => "cds"
     "record" | "mrecord" => "record"
     "point" | "dot" => "point"
     "mdiamond" => "mdiamond"
@@ -1757,6 +1758,32 @@ fn folder_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
+fn cds_points(rect : @geom.Rect) -> Array[@geom.Point] {
+  let tip = 12.0
+  let inset = 6.0
+  let body_right_raw = rect.urx - tip
+  let body_right = if body_right_raw < rect.llx { rect.llx } else { body_right_raw }
+  let top_raw = rect.ury - inset
+  let bottom_raw = rect.lly + inset
+  let top_bound = if top_raw < rect.lly { rect.lly } else { top_raw }
+  let bottom_bound = if bottom_raw > rect.ury { rect.ury } else { bottom_raw }
+  let (top, bottom) = if top_bound < bottom_bound {
+    let mid = (rect.lly + rect.ury) / 2.0
+    (mid, mid)
+  } else {
+    (top_bound, bottom_bound)
+  }
+  let cy = (rect.lly + rect.ury) / 2.0
+  [
+    { x: body_right, y: top },
+    { x: rect.llx, y: top },
+    { x: rect.llx, y: bottom },
+    { x: body_right, y: bottom },
+    { x: rect.urx, y: cy },
+  ]
+}
+
+///|
 fn shape_polygon_paths(
   node : @cgraph.Node,
   kind : String,
@@ -1812,6 +1839,7 @@ fn shape_polygon_paths(
     "rarrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "larrow" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     "folder" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
+    "cds" => Some((0, 0.0, 0.0, 0.0, node_peripheries(node, 1)))
     _ => None
   }
   match params {
@@ -1824,6 +1852,7 @@ fn shape_polygon_paths(
         "rarrow" => Some(polygon_paths_from_base(rarrow_points(rect), peripheries))
         "larrow" => Some(polygon_paths_from_base(larrow_points(rect), peripheries))
         "folder" => Some(polygon_paths_from_base(folder_points(rect), peripheries))
+        "cds" => Some(polygon_paths_from_base(cds_points(rect), peripheries))
         _ =>
           Some(
             polygon_paths_for_shape(
