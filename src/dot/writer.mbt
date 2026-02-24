@@ -190,6 +190,11 @@ priv enum AttrGroup {
 }
 
 ///|
+fn is_internal_graph_attr(name : String) -> Bool {
+  name == INPUT_LATIN1_FALLBACK_ATTR
+}
+
+///|
 fn graph_attr_rank(name : String) -> Int {
   match name {
     "_draw_" => 0
@@ -336,6 +341,21 @@ fn sort_attrs(
   let out : Array[(String, String)] = []
   for entry in indexed {
     out.push(entry.1)
+  }
+  out
+}
+
+///|
+fn filter_internal_graph_attrs(
+  attrs : Array[(String, String)],
+) -> Array[(String, String)] {
+  let out : Array[(String, String)] = []
+  for pair in attrs {
+    let (name, _value) = pair
+    if is_internal_graph_attr(name) {
+      continue
+    }
+    out.push(pair)
   }
   out
 }
@@ -1032,9 +1052,13 @@ fn write_graph_recursive(
   }
   sb.write_string("{\n")
   let inner = indent + 1
-  let graph_dict_attrs = merge_attrs_keep_order(
+  let graph_defaults = filter_internal_graph_attrs(
     graph.default_attrs(@cgraph.AttrKind::Graph),
-    graph.attrs(),
+  )
+  let graph_attrs = filter_internal_graph_attrs(graph.attrs())
+  let graph_dict_attrs = merge_attrs_keep_order(
+    graph_defaults,
+    graph_attrs,
   )
   write_default_stmt(sb, inner, "graph", graph_dict_attrs, AttrGroup::Graph)
   let node_defaults = graph.default_attrs(@cgraph.AttrKind::Node)
@@ -1118,6 +1142,9 @@ fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
 
 ///|
 fn graph_uses_latin1_charset(graph : @cgraph.Graph) -> Bool {
+  if inherited_graph_attr(graph, INPUT_LATIN1_FALLBACK_ATTR) is Some(_) {
+    return true
+  }
   match inherited_graph_attr(graph, "charset") {
     Some(value) => {
       let lower = value.to_lower()

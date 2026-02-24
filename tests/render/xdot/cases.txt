@@ -121,6 +121,7 @@ jho
 jsort
 KW91
 Latin1
+Latin1_windows
 labelclust-fbc
 labelclust-fbd
 labelclust-fbl

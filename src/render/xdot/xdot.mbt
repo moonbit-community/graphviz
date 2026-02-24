@@ -4728,7 +4728,13 @@ fn inherited_graph_attr(graph : @cgraph.Graph, name : String) -> String? {
 }
 
 ///|
+const INPUT_LATIN1_FALLBACK_ATTR = "_mbt_input_latin1_fallback"
+
+///|
 fn graph_uses_latin1_charset(graph : @cgraph.Graph) -> Bool {
+  if inherited_graph_attr(graph, INPUT_LATIN1_FALLBACK_ATTR) is Some(_) {
+    return true
+  }
   match inherited_graph_attr(graph, "charset") {
     Some(value) => {
       let lower = value.to_lower()

@@ -102,3 +102,27 @@ test "write_dot_bytes keeps latin1 output bytes" {
     fail("expected latin1 byte stream")
   }
 }
+
+///|
+test "write_dot_bytes keeps latin1 output bytes for non-utf8 input" {
+  let graph = try @dot.parse_dot_file("refs/graphviz/tests/windows/Latin1.gv") catch {
+    err => fail("parse_dot_file failed: \{err}")
+  } noraise {
+    value => value
+  }
+  let output = @dot.write_dot(graph)
+  assert_true(!output.contains("_mbt_input_latin1_fallback"))
+  let bytes = @dot.write_dot_bytes(graph)
+  let mut has_high_byte = false
+  for b in bytes {
+    if b.to_int() >= 0x80 {
+      has_high_byte = true
+      break
+    }
+  }
+  assert_true(has_high_byte)
+  let decoded : Result[String, Error] = try? @utf8.decode(bytes)
+  guard decoded is Err(_) else {
+    fail("expected latin1 byte stream")
+  }
+}

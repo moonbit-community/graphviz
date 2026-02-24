@@ -35,6 +35,9 @@ fn Parser::new(src : String) -> Parser raise DotParseError {
 }
 
 ///|
+const INPUT_LATIN1_FALLBACK_ATTR = "_mbt_input_latin1_fallback"
+
+///|
 fn Parser::advance(self : Parser) -> Unit raise DotParseError {
   self.current = self.next
   self.next = self.lexer.next_token()
@@ -617,8 +620,10 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
   } noraise {
     data => data
   }
+  let mut used_latin1_fallback = false
   let src = try @utf8.decode(bytes) catch {
     _ => {
+      used_latin1_fallback = true
       let buf = @buffer.new(size_hint=bytes.length() * 2)
       for b in bytes {
         let value = b.to_int()
@@ -645,5 +650,9 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
   } noraise {
     text => text
   }
-  parse_dot(src)
+  let graph = parse_dot(src)
+  if used_latin1_fallback {
+    graph.set_attr(INPUT_LATIN1_FALLBACK_ATTR, "true")
+  }
+  graph
 }

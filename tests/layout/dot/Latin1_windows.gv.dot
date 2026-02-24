@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,168.93,36"];
+	node [fontsize=10,
+		label="\N"
+	];
+	a	[height=0.5,
+		label=בגדהוזחטיךכלםמןנסעףפץצרשתûü,
+		pos="84.465,18",
+		width=2.3462];
+}
