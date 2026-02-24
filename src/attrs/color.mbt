@@ -190,6 +190,7 @@ pub fn normalize_color(value : String) -> String {
     "indigo" => "#4b0082"
     "indianred" => "#cd5c5c"
     "limegreen" => "#32cd32"
+    "invis" => "#fffffe00"
     _ =>
       match normalize_hsv_color(lower) {
         Some(hex) => hex

@@ -1,0 +1,27 @@
+digraph D {
+	graph [bb="0,0,180,108"];
+	node [label="\N"];
+	A	[height=0.5,
+		pos="90,90",
+		shape=diamond,
+		width=0.75];
+	B	[height=0.5,
+		pos="27,18",
+		shape=box,
+		width=0.75];
+	A -> B	[color=grey,
+		pos="e,42.654,36.393 80.156,78.062 72.159,69.176 60.552,56.28 50.223,44.803",
+		style=dashed];
+	C	[height=0.5,
+		pos="90,18",
+		shape=circle,
+		width=0.5];
+	A -> C	[color="black:invis:black",
+		pos="e,90,36.104 90,71.697 90,64.407 90,55.726 90,47.536"];
+	D	[height=0.5,
+		pos="153,18",
+		width=0.75];
+	A -> D	[arrowhead=none,
+		penwidth=5,
+		pos="99.844,78.062 110.5,66.219 127.57,47.252 139.48,34.017"];
+}

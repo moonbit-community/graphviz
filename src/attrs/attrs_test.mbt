@@ -47,6 +47,7 @@ test "attrs color defaults and normalization" {
   assert_eq(normalize_color("0.650 0.200 1.000"), "#ccd1ff")
   assert_eq(normalize_color("HotPink"), "#ff69b4")
   assert_eq(normalize_color("#ABCDEF"), "#abcdef")
+  assert_eq(normalize_color("invis"), "#fffffe00")
 }
 
 ///|
@@ -59,4 +60,16 @@ test "attrs parse_style flags" {
   let default_style = parse_style(None)
   assert_eq(default_style.raw, "solid")
   assert_true(!default_style.filled)
+}
+
+///|
+test "attrs parse_style drops overlong style lists" {
+  let pieces : Array[String] = []
+  for _ in 0..<65 {
+    pieces.push("filled")
+  }
+  let style = parse_style(Some(pieces.join(",")))
+  assert_true(!style.filled)
+  assert_true(!style.dashed)
+  assert_true(!style.dotted)
 }
