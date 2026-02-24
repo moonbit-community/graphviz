@@ -6350,15 +6350,16 @@ fn collect_unconstrained_order_nodes(
 }
 
 ///|
-/// Graphviz parity: incoming-only unconstrained handling uses non-self edges
-/// to mark ND_out/ND_in presence, matching class2 neighbor detection.
+/// Graphviz parity: incoming-only unconstrained handling uses non-self edge
+/// presence and first incoming edge order from the unmapped order graph.
 /// Do not change behavior without updating fixtures/tests.
-fn build_node_in_out_presence_maps(
+fn build_node_in_out_presence_and_first_in_order(
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> (Map[String, Bool], Map[String, Bool]) {
+) -> (Map[String, Bool], Map[String, Bool], Map[String, Int]) {
   let node_has_out : Map[String, Bool] = Map::new()
   let node_has_in : Map[String, Bool] = Map::new()
+  let first_in_order : Map[String, Int] = Map::new()
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
     let tail = edge_tail[edge_idx]
@@ -6366,10 +6367,13 @@ fn build_node_in_out_presence_maps(
     if tail != head {
       node_has_out[tail] = true
       node_has_in[head] = true
+      if first_in_order.get(head) is None {
+        first_in_order[head] = edge_idx
+      }
     }
     edge_idx = edge_idx + 1
   }
-  (node_has_out, node_has_in)
+  (node_has_out, node_has_in, first_in_order)
 }
 
 ///|
@@ -6399,8 +6403,8 @@ fn build_local_cluster_creation_order(
 }
 
 ///|
-/// Graphviz parity: incoming-only unconstrained local nodes are reassigned in
-/// reverse creation order while preserving their sorted order slots.
+/// Graphviz parity: incoming-only unconstrained local nodes are reassigned by
+/// first incoming edge order while preserving their sorted order slots.
 /// Do not change behavior without updating fixtures/tests.
 fn reorder_incoming_only_unconstrained_local_nodes(
   local_creation : Map[String, Array[String]],
@@ -6408,6 +6412,7 @@ fn reorder_incoming_only_unconstrained_local_nodes(
   rank_same_groups : Map[String, Int],
   node_has_out : Map[String, Bool],
   node_has_in : Map[String, Bool],
+  first_in_order : Map[String, Int],
   order_node_order : Map[String, Int],
 ) -> Unit {
   for _cluster, names in local_creation {
@@ -6423,11 +6428,43 @@ fn reorder_incoming_only_unconstrained_local_nodes(
     if unconstrained_local.length() <= 1 {
       continue
     }
-    let desired : Array[String] = []
-    let mut rev_idx = unconstrained_local.length()
-    while rev_idx > 0 {
-      rev_idx = rev_idx - 1
-      desired.push(unconstrained_local[rev_idx])
+    let desired = unconstrained_local.copy()
+    if desired.length() > 1 {
+      let local_index : Map[String, Int] = Map::new()
+      for idx, name in unconstrained_local {
+        local_index[name] = idx
+      }
+      desired.sort_by((a, b) => {
+        let a_in = match first_in_order.get(a) {
+          Some(value) => value
+          None => 0x7fffffff
+        }
+        let b_in = match first_in_order.get(b) {
+          Some(value) => value
+          None => 0x7fffffff
+        }
+        if a_in < b_in {
+          -1
+        } else if a_in > b_in {
+          1
+        } else {
+          let a_idx = match local_index.get(a) {
+            Some(value) => value
+            None => 0
+          }
+          let b_idx = match local_index.get(b) {
+            Some(value) => value
+            None => 0
+          }
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else {
+            0
+          }
+        }
+      })
     }
     let orders : Array[Int] = []
     let mut all_present = true
@@ -13769,10 +13806,10 @@ fn apply_unconstrained_order_node_overrides(
       order_node_order[name] = idx
     }
   }
-  // Graphviz parity: incoming-only unconstrained nodes inside local
-  // clusters follow reverse input order (fast_node inserts at head).
-  let (node_has_out, node_has_in) =
-    build_node_in_out_presence_maps(edge_tail, edge_head)
+  // Graphviz parity: incoming-only unconstrained nodes inside local clusters
+  // follow first incoming-edge order from unmapped class2 edge lists.
+  let (node_has_out, node_has_in, first_in_order) =
+    build_node_in_out_presence_and_first_in_order(edge_tail, edge_head)
   let local_creation =
     build_local_cluster_creation_order(nodes, intercluster_keys)
   reorder_incoming_only_unconstrained_local_nodes(
@@ -13781,6 +13818,7 @@ fn apply_unconstrained_order_node_overrides(
     rank_same_groups,
     node_has_out,
     node_has_in,
+    first_in_order,
     order_node_order,
   )
 }
