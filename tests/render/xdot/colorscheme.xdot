@@ -1,0 +1,61 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 566.25 36 566.25 0 ",
+		bb="0,0,566.25,36",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=box,
+		style=filled
+	];
+	{
+		node [colorscheme=spectral11];
+		1	[_draw_="c 7 -#9e0142 C 7 -#9e0142 P 4 54 36 0 36 0 0 54 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 27 12.95 0 6.75 1 -1 ",
+			color=1,
+			height=0.5,
+			pos="27,18",
+			width=0.75];
+		4	[_draw_="c 7 -#fdae61 C 7 -#fdae61 P 4 126 36 72 36 72 0 126 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 99 12.95 0 6.75 1 -4 ",
+			color=4,
+			height=0.5,
+			pos="99,18",
+			width=0.75];
+		8	[_draw_="c 7 -#abdda4 C 7 -#abdda4 P 4 198 36 144 36 144 0 198 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 171 12.95 0 6.75 1 -8 ",
+			color=8,
+			height=0.5,
+			pos="171,18",
+			width=0.75];
+		11	[_draw_="c 7 -#5e4fa2 C 7 -#5e4fa2 P 4 270 36 216 36 216 0 270 0 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 243 12.95 0 13.5 2 -11 ",
+			color="//11",
+			height=0.5,
+			pos="243,18",
+			width=0.75];
+	}
+	ylgn7	[_draw_="c 7 -#41ab5d C 7 -#41ab5d P 4 342 36 288 36 288 0 342 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 315 12.95 0 30.75 5 -ylgn7 ",
+		color="/ylgn7/5",
+		height=0.5,
+		pos="315,18",
+		width=0.75];
+	X11	[_draw_="c 7 -#d8bfd8 C 7 -#d8bfd8 P 4 414 36 360 36 360 0 414 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 387 12.95 0 23.25 3 -X11 ",
+		color="/X11/thistle",
+		height=0.5,
+		pos="387,18",
+		width=0.75];
+	indigo	[_draw_="c 7 -#4b0082 C 7 -#4b0082 P 4 486 36 432 36 432 0 486 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 459 12.95 0 34.5 6 -indigo ",
+		color="/X11/indigo",
+		height=0.5,
+		pos="459,18",
+		width=0.75];
+	magenta	[_draw_="c 7 -#ff00ff C 7 -#ff00ff P 4 566.25 36 503.75 36 503.75 0 566.25 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 535 12.95 0 46.5 7 -magenta ",
+		color=magenta,
+		height=0.5,
+		pos="535,18",
+		width=0.86806];
+}

@@ -47,6 +47,7 @@ circle
 clover
 clusters
 colorlist
+colorscheme
 clust
 clust1
 clust2

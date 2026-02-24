@@ -33,6 +33,7 @@ test "attrs color defaults and normalization" {
   assert_eq(normalize_color("deepskyblue"), "#00bfff")
   assert_eq(normalize_color("darkorchid4"), "#68228b")
   assert_eq(normalize_color("lightblue"), "#add8e6")
+  assert_eq(normalize_color("thistle"), "#d8bfd8")
   assert_eq(normalize_color("indigo"), "#4b0082")
   assert_eq(normalize_color("indianred"), "#cd5c5c")
   assert_eq(normalize_color("steelblue"), "#4682b4")

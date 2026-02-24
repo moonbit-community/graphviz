@@ -1,0 +1,42 @@
+digraph G {
+	graph [bb="0,0,566.25,36"];
+	node [label="\N",
+		shape=box,
+		style=filled
+	];
+	{
+		node [colorscheme=spectral11];
+		1	[color=1,
+			height=0.5,
+			pos="27,18",
+			width=0.75];
+		4	[color=4,
+			height=0.5,
+			pos="99,18",
+			width=0.75];
+		8	[color=8,
+			height=0.5,
+			pos="171,18",
+			width=0.75];
+		11	[color="//11",
+			height=0.5,
+			pos="243,18",
+			width=0.75];
+	}
+	ylgn7	[color="/ylgn7/5",
+		height=0.5,
+		pos="315,18",
+		width=0.75];
+	X11	[color="/X11/thistle",
+		height=0.5,
+		pos="387,18",
+		width=0.75];
+	indigo	[color="/X11/indigo",
+		height=0.5,
+		pos="459,18",
+		width=0.75];
+	magenta	[color=magenta,
+		height=0.5,
+		pos="535,18",
+		width=0.86806];
+}

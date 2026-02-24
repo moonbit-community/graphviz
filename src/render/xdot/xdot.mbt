@@ -532,6 +532,53 @@ fn parse_palette_index(value : String) -> Int? {
 }
 
 ///|
+fn slash_color_ref(value : String, colorscheme : String?) -> (String, String)? {
+  if !value.has_prefix("/") {
+    return None
+  }
+  let parts : Array[String] = []
+  let mut part = StringBuilder::new()
+  for ch in value {
+    if ch == '/' {
+      parts.push(part.to_string())
+      part = StringBuilder::new()
+    } else {
+      part.write_char(ch)
+    }
+  }
+  parts.push(part.to_string())
+  if parts.length() < 2 || parts[0] != "" {
+    return None
+  }
+  if parts.length() == 2 {
+    let token = parts[1].trim().to_string()
+    if token == "" {
+      return None
+    }
+    return match colorscheme {
+      Some(scheme) => Some((scheme.to_lower(), token))
+      None => None
+    }
+  }
+  let scheme = parts[1].trim().to_string()
+  let token_parts : Array[String] = []
+  for i in 2..<parts.length() {
+    token_parts.push(parts[i])
+  }
+  let token = token_parts.join("/").trim().to_string()
+  if token == "" {
+    return None
+  }
+  if scheme == "" {
+    return match colorscheme {
+      Some(inherited) => Some((inherited.to_lower(), token))
+      None => None
+    }
+  }
+  Some((scheme.to_lower(), token))
+}
+
+///|
 fn colorscheme_index_color(scheme : String, index : Int) -> String? {
   match scheme.to_lower() {
     // Graphviz palette used by refs/graphviz/graphs/directed/biological.gv.
@@ -544,13 +591,61 @@ fn colorscheme_index_color(scheme : String, index : Int) -> String? {
         5 => Some("#0571b0")
         _ => None
       }
+    // Graphviz palette used by refs/graphviz/tests/graphs/colorscheme.gv.
+    "spectral11" =>
+      match index {
+        1 => Some("#9e0142")
+        2 => Some("#d53e4f")
+        3 => Some("#f46d43")
+        4 => Some("#fdae61")
+        5 => Some("#fee08b")
+        6 => Some("#ffffbf")
+        7 => Some("#e6f598")
+        8 => Some("#abdda4")
+        9 => Some("#66c2a5")
+        10 => Some("#3288bd")
+        11 => Some("#5e4fa2")
+        _ => None
+      }
+    // Graphviz palette used by refs/graphviz/tests/graphs/colorscheme.gv.
+    "ylgn7" =>
+      match index {
+        1 => Some("#ffffcc")
+        2 => Some("#d9f0a3")
+        3 => Some("#addd8e")
+        4 => Some("#78c679")
+        5 => Some("#41ab5d")
+        6 => Some("#238443")
+        7 => Some("#005a32")
+        _ => None
+      }
     _ => None
+  }
+}
+
+///|
+fn resolve_prefixed_colorscheme_color(value : String, colorscheme : String?) -> String? {
+  match slash_color_ref(value, colorscheme) {
+    Some((scheme, token)) =>
+      match parse_palette_index(token) {
+        Some(index) => colorscheme_index_color(scheme, index)
+        None =>
+          match scheme {
+            "x11" | "svg" => Some(@attrs.normalize_color(token))
+            _ => None
+          }
+      }
+    None => None
   }
 }
 
 ///|
 fn resolve_colorscheme_color(value : String, colorscheme : String?) -> String {
   let trimmed = value.trim().to_string()
+  match resolve_prefixed_colorscheme_color(trimmed, colorscheme) {
+    Some(mapped) => return mapped
+    None => ()
+  }
   match (colorscheme, parse_palette_index(trimmed)) {
     (Some(scheme), Some(index)) =>
       match colorscheme_index_color(scheme, index) {

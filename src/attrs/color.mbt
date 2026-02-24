@@ -187,6 +187,7 @@ pub fn normalize_color(value : String) -> String {
     "purple" => "#a020f0"
     "slateblue" => "#6a5acd"
     "lightblue2" => "#b2dfee"
+    "thistle" => "#d8bfd8"
     "indigo" => "#4b0082"
     "indianred" => "#cd5c5c"
     "limegreen" => "#32cd32"
