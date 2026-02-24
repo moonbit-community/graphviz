@@ -197,6 +197,7 @@ fn is_internal_graph_attr(name : String) -> Bool {
 ///|
 fn graph_attr_rank(name : String) -> Int {
   match name {
+    "URL" | "url" | "href" => -1
     "_draw_" => 0
     "_ldraw_" => 1
     "bb" => 2
@@ -234,6 +235,7 @@ fn graph_attr_rank(name : String) -> Int {
 ///|
 fn node_attr_rank(name : String) -> Int {
   match name {
+    "URL" | "url" | "href" => -1
     "_draw_" => 0
     "_ldraw_" => 1
     "color" => 2
@@ -270,6 +272,9 @@ fn node_attr_rank(name : String) -> Int {
 ///|
 fn edge_attr_rank(name : String) -> Int {
   match name {
+    "URL" | "url" | "href" | "edgeURL" | "edgeurl" | "edgehref"
+    | "headURL" | "headurl" | "headhref" | "tailURL" | "tailurl"
+    | "tailhref" | "labelURL" | "labelurl" | "labelhref" => -1
     "_draw_" => 0
     "_hdraw_" => 1
     "_hldraw_" => 2
