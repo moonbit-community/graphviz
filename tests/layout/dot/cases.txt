@@ -192,6 +192,7 @@ newarrows
 nestedclust_dot
 nhg
 ngk10_4
+negative-dpi
 none
 no_arrow
 nohead

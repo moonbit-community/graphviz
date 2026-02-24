@@ -4264,6 +4264,21 @@ fn parse_size_attr(graph : @cgraph.Graph) -> (Double, Double, Bool)? {
 }
 
 ///|
+fn svg_dpi_scale(graph : @cgraph.Graph) -> Double {
+  match graph.get_attr("dpi") {
+    Some(value) => {
+      let dpi = parse_double(value, 72.0)
+      if Double::is_close(dpi, 0.0, absolute_tolerance=0.000001) {
+        1.0
+      } else {
+        dpi / 72.0
+      }
+    }
+    None => 1.0
+  }
+}
+
+///|
 fn svg_output_scale(
   graph : @cgraph.Graph,
   width_pt : Double,
@@ -4298,6 +4313,11 @@ fn svg_output_scale(
       }
     None => ()
   }
+  let dpi_scale = svg_dpi_scale(graph)
+  scale_x = scale_x * dpi_scale
+  scale_y = scale_y * dpi_scale
+  out_width = out_width * dpi_scale
+  out_height = out_height * dpi_scale
   (scale_x, scale_y, out_width, out_height)
 }
 
