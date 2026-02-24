@@ -1,0 +1,13 @@
+strict graph {
+	graph [bb="0,0,54,108",
+		overlap=scale
+	];
+	node [label="\N"];
+	1	[height=0.5,
+		pos="27,90",
+		width=0.75];
+	2	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	1 -- 2	[pos="27,71.697 27,60.846 27,46.917 27,36.104"];
+}
