@@ -140,6 +140,8 @@ oval
 p2
 p3
 p4
+pack
+pack_neato
 parallelogram
 pentagon
 pgram
@@ -169,6 +171,9 @@ recordex
 records
 rect
 rectangle
+rowcolsep
+rowcolsep_dot
+rowcolsep_dot1
 rowe
 round
 rpromoter
