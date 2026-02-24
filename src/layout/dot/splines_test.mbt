@@ -87,3 +87,24 @@ test "layout_dot ortho adds more control points than polyline" {
     )
   }
 }
+
+///|
+test "layout_dot ortho routes multi-input edge heads on cardinal sides" {
+  let graph = @dot_parser.parse_dot(
+    "digraph { graph [nodesep=1.0, splines=ortho]; x -> y [radius=8]; z -> y; }",
+  )
+  let layout = layout_dot(graph)
+  layout.apply()
+  let xy = match find_edge(graph, "x", "y") {
+    Some(edge) => edge
+    None => fail("missing edge x -> y")
+  }
+  let zy = match find_edge(graph, "z", "y") {
+    Some(edge) => edge
+    None => fail("missing edge z -> y")
+  }
+  let xy_pos = edge_pos(xy)
+  let zy_pos = edge_pos(zy)
+  assert_true(xy_pos.contains("27,18"))
+  assert_true(zy_pos.contains("90,90"))
+}

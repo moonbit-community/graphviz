@@ -2598,6 +2598,68 @@ fn orthogonal_polyline_points(
 }
 
 ///|
+fn orthogonal_tb_endpoint_dirs(
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+) -> (@geom.Point, @geom.Point) {
+  let dx = head_center.x - tail_center.x
+  let dy = head_center.y - tail_center.y
+  let abs_dx = Double::abs(dx)
+  let abs_dy = Double::abs(dy)
+  if abs_dx <= 0.000001 {
+    if dy >= 0.0 {
+      return (point(0.0, 1.0), point(0.0, -1.0))
+    } else {
+      return (point(0.0, -1.0), point(0.0, 1.0))
+    }
+  }
+  if abs_dy <= 0.000001 {
+    if dx >= 0.0 {
+      return (point(1.0, 0.0), point(-1.0, 0.0))
+    } else {
+      return (point(-1.0, 0.0), point(1.0, 0.0))
+    }
+  }
+  if dx >= 0.0 && dy < 0.0 {
+    return (point(0.0, -1.0), point(-1.0, 0.0))
+  }
+  if dx < 0.0 && dy < 0.0 {
+    return (point(-1.0, 0.0), point(0.0, 1.0))
+  }
+  if dx < 0.0 && dy >= 0.0 {
+    return (point(0.0, 1.0), point(1.0, 0.0))
+  }
+  (point(1.0, 0.0), point(0.0, -1.0))
+}
+
+///|
+fn orthogonal_polyline_points_cardinal(
+  edge : @cgraph.Edge,
+  tail_center : @geom.Point,
+  head_center : @geom.Point,
+  rankdir : RankDir,
+) -> Array[@geom.Point]? {
+  if rankdir != RankDir::TB {
+    return None
+  }
+  if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+    return None
+  }
+  let (tail_dir, head_dir) = orthogonal_tb_endpoint_dirs(tail_center, head_center)
+  let tail_vertical = Double::abs(tail_dir.y) > 0.5
+  let head_vertical = Double::abs(head_dir.y) > 0.5
+  if tail_vertical && !head_vertical {
+    let corner = point(tail_center.x, head_center.y)
+    return Some(compact_polyline([tail_center, corner, head_center]))
+  }
+  if !tail_vertical && head_vertical {
+    let corner = point(head_center.x, tail_center.y)
+    return Some(compact_polyline([tail_center, corner, head_center]))
+  }
+  Some(orthogonal_polyline_points(tail_center, head_center, rankdir))
+}
+
+///|
 fn compact_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let result : Array[@geom.Point] = []
   for point in points {
@@ -3847,7 +3909,15 @@ pub fn edge_spline_for_polyline(
     (tail_clip, head_clip)
   }
   let raw_points = if orthogonal {
-    orthogonal_polyline_points(tail, head, rankdir)
+    match orthogonal_polyline_points_cardinal(
+      edge,
+      tail_clip_center,
+      head_clip_center,
+      rankdir,
+    ) {
+      Some(points) => points
+      None => orthogonal_polyline_points(tail, head, rankdir)
+    }
   } else {
     [tail, head]
   }
