@@ -1467,6 +1467,89 @@ fn escape_xml_text_with_dash(text : String) -> String {
 }
 
 ///|
+fn compass_from_port_label(value : String) -> @cgraph.Compass? {
+  match value.to_lower() {
+    "n" => Some(@cgraph.Compass::N)
+    "ne" => Some(@cgraph.Compass::NE)
+    "e" => Some(@cgraph.Compass::E)
+    "se" => Some(@cgraph.Compass::SE)
+    "s" => Some(@cgraph.Compass::S)
+    "sw" => Some(@cgraph.Compass::SW)
+    "w" => Some(@cgraph.Compass::W)
+    "nw" => Some(@cgraph.Compass::NW)
+    "c" => Some(@cgraph.Compass::C)
+    _ => None
+  }
+}
+
+///|
+fn split_once_colon(value : String) -> (String, String)? {
+  match value.find(":") {
+    Some(index) =>
+      Some((
+        value.unsafe_substring(start=0, end=index),
+        value.unsafe_substring(start=index + 1, end=value.length()),
+      ))
+    None => None
+  }
+}
+
+///|
+fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
+  let value = raw.trim().to_string()
+  if value == "" {
+    return None
+  }
+  if value.has_prefix(":") {
+    let rest = value.unsafe_substring(start=1, end=value.length())
+    if rest == "" {
+      return Some({ name: Some(""), compass: None })
+    }
+    match split_once_colon(rest) {
+      Some((name_part, compass_part)) =>
+        Some({
+          name: Some(name_part),
+          compass: compass_from_port_label(compass_part),
+        })
+      None =>
+        match compass_from_port_label(rest) {
+          Some(compass) => Some({ name: Some(""), compass: Some(compass) })
+          None => Some({ name: Some(rest), compass: None })
+        }
+    }
+  } else {
+    match split_once_colon(value) {
+      Some((name_part, compass_part)) =>
+        Some({
+          name: Some(name_part),
+          compass: compass_from_port_label(compass_part),
+        })
+      None =>
+        match compass_from_port_label(value) {
+          Some(compass) => Some({ name: None, compass: Some(compass) })
+          None => Some({ name: Some(value), compass: None })
+        }
+    }
+  }
+}
+
+///|
+fn effective_edge_port(
+  edge : @cgraph.Edge,
+  explicit : @cgraph.Port?,
+  attr_name : String,
+) -> @cgraph.Port? {
+  match explicit {
+    Some(port) => Some(port)
+    None =>
+      match edge.get_attr(attr_name) {
+        Some(raw) => parse_port_attr_value(raw)
+        None => None
+      }
+  }
+}
+
+///|
 fn port_title_suffix(port : @cgraph.Port?) -> String {
   match port {
     None => ""
@@ -5051,12 +5134,14 @@ fn write_svg_edge_group(
   pretty : Bool,
 ) -> Unit {
   let edge = edge_layout.edge
+  let tail_port = effective_edge_port(edge, edge.tail_port(), "tailport")
+  let head_port = effective_edge_port(edge, edge.head_port(), "headport")
   let edge_arrow = if kind == @cgraph.GraphKind::Directed { "->" } else { "--" }
   let edge_comment = escape_xml_with_dash(
     "\{edge.tail().name()}\{edge_arrow}\{edge.head().name()}",
   )
-  let tail_label = edge.tail().name() + port_title_suffix(edge.tail_port())
-  let head_label = edge.head().name() + port_title_suffix(edge.head_port())
+  let tail_label = edge.tail().name() + port_title_suffix(tail_port)
+  let head_label = edge.head().name() + port_title_suffix(head_port)
   let edge_title = escape_xml_with_dash(
     "\{tail_label}\{edge_arrow}\{head_label}",
   )

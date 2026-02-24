@@ -158,6 +158,83 @@ fn compass_label(compass : @cgraph.Compass) -> String {
 }
 
 ///|
+fn compass_from_label(value : String) -> @cgraph.Compass? {
+  match value.to_lower() {
+    "n" => Some(@cgraph.Compass::N)
+    "ne" => Some(@cgraph.Compass::NE)
+    "e" => Some(@cgraph.Compass::E)
+    "se" => Some(@cgraph.Compass::SE)
+    "s" => Some(@cgraph.Compass::S)
+    "sw" => Some(@cgraph.Compass::SW)
+    "w" => Some(@cgraph.Compass::W)
+    "nw" => Some(@cgraph.Compass::NW)
+    "c" => Some(@cgraph.Compass::C)
+    _ => None
+  }
+}
+
+///|
+fn split_once_colon(value : String) -> (String, String)? {
+  match value.find(":") {
+    Some(index) =>
+      Some((
+        value.unsafe_substring(start=0, end=index),
+        value.unsafe_substring(start=index + 1, end=value.length()),
+      ))
+    None => None
+  }
+}
+
+///|
+fn parse_port_attr_value(raw : String) -> @cgraph.Port? {
+  let value = raw.trim().to_string()
+  if value == "" {
+    return None
+  }
+  if value.has_prefix(":") {
+    let rest = value.unsafe_substring(start=1, end=value.length())
+    if rest == "" {
+      return Some({ name: Some(""), compass: None })
+    }
+    match split_once_colon(rest) {
+      Some((name_part, compass_part)) =>
+        Some({ name: Some(name_part), compass: compass_from_label(compass_part) })
+      None =>
+        match compass_from_label(rest) {
+          Some(compass) => Some({ name: Some(""), compass: Some(compass) })
+          None => Some({ name: Some(rest), compass: None })
+        }
+    }
+  } else {
+    match split_once_colon(value) {
+      Some((name_part, compass_part)) =>
+        Some({ name: Some(name_part), compass: compass_from_label(compass_part) })
+      None =>
+        match compass_from_label(value) {
+          Some(compass) => Some({ name: None, compass: Some(compass) })
+          None => Some({ name: Some(value), compass: None })
+        }
+    }
+  }
+}
+
+///|
+fn effective_edge_port(
+  edge : @cgraph.Edge,
+  explicit : @cgraph.Port?,
+  attr_name : String,
+) -> @cgraph.Port? {
+  match explicit {
+    Some(port) => Some(port)
+    None =>
+      match edge.get_attr(attr_name) {
+        Some(raw) => parse_port_attr_value(raw)
+        None => None
+      }
+  }
+}
+
+///|
 fn write_port(port : @cgraph.Port?) -> String {
   match port {
     None => ""
@@ -623,15 +700,17 @@ fn write_edge_stmt(
   indent : Int,
   emit_attrs : Bool,
 ) -> Unit {
+  let tail_port = effective_edge_port(edge, edge.tail_port(), "tailport")
+  let head_port = effective_edge_port(edge, edge.head_port(), "headport")
   write_tabs(sb, indent)
   sb.write_string(write_id(edge.tail().name()))
-  sb.write_string(write_port(edge.tail_port()))
+  sb.write_string(write_port(tail_port))
   sb.write_string(match graph.kind() {
     @cgraph.GraphKind::Directed => " -> "
     @cgraph.GraphKind::Undirected => " -- "
   })
   sb.write_string(write_id(edge.head().name()))
-  sb.write_string(write_port(edge.head_port()))
+  sb.write_string(write_port(head_port))
   let attrs = edge_stmt_attrs(graph, edge, emit_attrs)
   if attrs.length() > 0 {
     sb.write_char('\t')
