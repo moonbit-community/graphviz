@@ -1,0 +1,62 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 202.5 176 202.5 176 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 88 7.2 0 60.75 10 -label demo ",
+		bb="0,0,176,202.5",
+		label="label demo",
+		labelloc=bottom,
+		lheight=0.23,
+		lp="88,12.25",
+		lwidth=0.84,
+		rankdir=LR,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster0 {
+		graph [_draw_="c 7 -#000000 p 4 8 32.5 8 109.5 168 109.5 168 32.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 88 39.7 0 42.75 8 -cluster0 ",
+			bb="8,32.5,168,109.5",
+			label=cluster0,
+			labelloc=bottom,
+			lheight=0.23,
+			lp="88,44.75",
+			lwidth=0.59
+		];
+		a	[_draw_="c 7 -#000000 e 43 83.5 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 78.45 0 6 1 -a ",
+			height=0.5,
+			pos="43,83.5",
+			width=0.75];
+		b	[_draw_="c 7 -#000000 e 133 83.5 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 133 78.45 0 6.75 1 -b ",
+			height=0.5,
+			pos="133,83.5",
+			width=0.75];
+		a -> b	[_draw_="c 7 -#000000 B 4 70.4 83.5 77.89 83.5 86.18 83.5 94.2 83.5 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 94.1 87 104.1 83.5 94.1 80 ",
+			pos="e,105.62,83.5 70.403,83.5 77.886,83.5 86.183,83.5 94.199,83.5"];
+	}
+	subgraph cluster1 {
+		graph [_draw_="c 7 -#000000 p 4 8 117.5 8 194.5 168 194.5 168 117.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 88 177.2 0 42.75 8 -cluster1 ",
+			bb="8,117.5,168,194.5",
+			label=cluster1,
+			labelloc=top,
+			lheight=0.23,
+			lp="88,182.25",
+			lwidth=0.59
+		];
+		c	[_draw_="c 7 -#000000 e 43 143.5 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 138.45 0 6 1 -c ",
+			height=0.5,
+			pos="43,143.5",
+			width=0.75];
+		d	[_draw_="c 7 -#000000 e 133 143.5 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 133 138.45 0 6.75 1 -d ",
+			height=0.5,
+			pos="133,143.5",
+			width=0.75];
+		c -> d	[_draw_="c 7 -#000000 B 4 70.4 143.5 77.89 143.5 86.18 143.5 94.2 143.5 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 94.1 147 104.1 143.5 94.1 140 ",
+			pos="e,105.62,143.5 70.403,143.5 77.886,143.5 86.183,143.5 94.199,143.5"];
+	}
+}

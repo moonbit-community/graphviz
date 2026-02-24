@@ -1380,6 +1380,29 @@ fn apply_root_cluster_padding_if_needed(
 }
 
 ///|
+fn refresh_root_label_position_from_bbox(
+  layout : DotLayoutGraph,
+) -> DotLayoutGraph {
+  if layout.graph.is_root() {
+    let label_pos =
+      match root_label_pos_for_bbox(layout.graph, layout.bbox) {
+        Some(pos) => Some(pos)
+        None => layout.label_pos
+      }
+    {
+      graph: layout.graph,
+      bbox: layout.bbox,
+      label_pos,
+      nodes: layout.nodes,
+      edges: layout.edges,
+      subgraphs: layout.subgraphs,
+    }
+  } else {
+    layout
+  }
+}
+
+///|
 /// Graphviz parity: postprocess pipeline aligned to refs/graphviz/lib/common/postproc.c
 /// (gv_postprocess) + dotgen/position.c (cluster/label spacing).
 /// Do not change behavior without updating fixtures/tests.
@@ -1536,5 +1559,7 @@ fn finalize_layout_graph(
     edges: rotated.edges,
     subgraphs: rotated.subgraphs,
   }
-  shift_layout_to_origin_if_root(graph, rotated_with_margin)
+  refresh_root_label_position_from_bbox(
+    shift_layout_to_origin_if_root(graph, rotated_with_margin),
+  )
 }

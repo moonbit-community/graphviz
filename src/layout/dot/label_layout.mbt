@@ -56,8 +56,27 @@ fn graph_label_loc(graph : @cgraph.Graph) -> LabelLoc {
 }
 
 ///|
+fn graph_attr_inherited(
+  graph : @cgraph.Graph,
+  key : String,
+) -> String? {
+  let mut current = Some(graph)
+  while current is Some(_) {
+    match current {
+      Some(value) =>
+        match value.get_attr(key) {
+          Some(found) => return Some(found)
+          None => current = value.parent()
+        }
+      None => ()
+    }
+  }
+  None
+}
+
+///|
 fn graph_label_just(graph : @cgraph.Graph) -> LabelJust {
-  parse_label_just(graph.get_attr("labeljust"))
+  parse_label_just(graph_attr_inherited(graph, "labeljust"))
 }
 
 ///|
