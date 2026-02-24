@@ -57,6 +57,7 @@ clust2
 clust3
 clust4
 clust5
+clustlabel
 complex
 component
 compound
@@ -238,6 +239,7 @@ rowcolsep_dot
 rowcolsep_dot1
 rowe
 round
+rootlabel
 rpromoter
 russian
 sdh
