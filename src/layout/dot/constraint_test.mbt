@@ -47,6 +47,38 @@ test "constraint false keeps nodes on same rank" {
 }
 
 ///|
+test "constraint none keeps nodes on same rank" {
+  let graph = @dot_parser.parse_dot("digraph { a -> b [constraint=none]; }")
+  let layout = layout_dot(graph)
+  layout.apply()
+  let a_pos = match node_pos(graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let b_pos = match node_pos(graph, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  assert_true(Double::is_close(a_pos.y, b_pos.y, absolute_tolerance=0.01))
+}
+
+///|
+test "constraint unknown token keeps nodes on same rank" {
+  let graph = @dot_parser.parse_dot("digraph { a -> b [constraint=abc]; }")
+  let layout = layout_dot(graph)
+  layout.apply()
+  let a_pos = match node_pos(graph, "a") {
+    Some(value) => value
+    None => fail("missing pos for node a")
+  }
+  let b_pos = match node_pos(graph, "b") {
+    Some(value) => value
+    None => fail("missing pos for node b")
+  }
+  assert_true(Double::is_close(a_pos.y, b_pos.y, absolute_tolerance=0.01))
+}
+
+///|
 test "constraint true separates ranks" {
   let graph = @dot_parser.parse_dot("digraph { a -> b; }")
   let layout = layout_dot(graph)

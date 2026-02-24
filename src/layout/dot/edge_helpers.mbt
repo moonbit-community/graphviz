@@ -2,8 +2,40 @@
 fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
   match edge.get_attr("constraint") {
     Some(value) => {
-      let lower = value.to_lower()
-      lower != "false" && lower != "0" && lower != "no"
+      // Graphviz mapbool() parity:
+      // - empty string keeps default (constraint=true)
+      // - unknown non-empty tokens map to false
+      let trimmed = value.trim()
+      if trimmed == "" {
+        true
+      } else {
+        let lower = trimmed.to_lower()
+        if lower == "false" || lower == "no" {
+          false
+        } else if lower == "true" || lower == "yes" {
+          true
+        } else {
+          match lower.get_char(0) {
+            Some(c) =>
+              if c.is_ascii_digit() {
+                let mut acc = 0
+                let mut seen = false
+                for ch in lower {
+                  if ch.is_ascii_digit() {
+                    seen = true
+                    acc = acc * 10 + (ch.to_int() - '0'.to_int())
+                  } else {
+                    break
+                  }
+                }
+                seen && acc != 0
+              } else {
+                false
+              }
+            None => true
+          }
+        }
+      }
     }
     None => true
   }
