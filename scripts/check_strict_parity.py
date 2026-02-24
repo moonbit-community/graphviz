@@ -24,6 +24,15 @@ INPUT_CANDIDATES = (
     "refs/graphviz/contrib/dirgraph/{case}.dot",
     "refs/graphviz/contrib/java-dot/{case}.dot",
     "refs/graphviz/tests/{case}.dot",
+    "refs/graphviz/tests/graphs/{case}.gv",
+    "refs/graphviz/tests/share/{case}.gv",
+    "refs/graphviz/tests/windows/{case}.gv",
+    "refs/graphviz/tests/regression_tests/{case}.gv",
+    "refs/graphviz/tests/regression_tests/shapes/reference/{case}.gv",
+    "refs/graphviz/tests/linux.x86/{case}.gv",
+    "refs/graphviz/tests/nshare/{case}.gv",
+    "refs/graphviz/tests/linux.i386/{case}.gv",
+    "refs/graphviz/tests/macosx/{case}.gv",
 )
 
 
