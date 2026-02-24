@@ -1,0 +1,45 @@
+digraph G {
+	graph [bb="0,0,308,220"];
+	node [color="#00ff005f",
+		fillcolor="#00ff005f",
+		label="\N",
+		style=filled
+	];
+	{
+		subgraph cluster_ss81 {
+			graph [bb="8,8,78,204"];
+			a	[height=0.5,
+				pos="43,178",
+				width=0.75];
+			b	[height=0.5,
+				pos="43,106",
+				width=0.75];
+			a -> b	[pos="e,43,124.1 43,159.7 43,152.41 43,143.73 43,135.54"];
+			c	[height=0.5,
+				pos="43,34",
+				width=0.75];
+			b -> c	[pos="e,43,52.104 43,87.697 43,80.407 43,71.726 43,63.536"];
+		}
+		e	[height=0.5,
+			pos="115,178",
+			width=0.75];
+		f	[height=0.5,
+			pos="115,106",
+			width=0.75];
+		e -> f	[pos="e,115,124.1 115,159.7 115,152.41 115,143.73 115,135.54"];
+	}
+	{
+		subgraph cluster_x {
+			graph [bb="150,144,300,212"];
+			subgraph cluster_y {
+				graph [bb="158,152,228,204"];
+				y	[height=0.5,
+					pos="193,178",
+					width=0.75];
+			}
+			x	[height=0.5,
+				pos="265,178",
+				width=0.75];
+		}
+	}
+}

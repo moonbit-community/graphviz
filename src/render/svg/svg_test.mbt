@@ -49,6 +49,23 @@ test "render_svg honors dashed and dotted styles" {
 }
 
 ///|
+test "render_svg expands rgba hex colors to opacity attrs" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=filled,color=\"#00ff005f\"]; }",
+  )
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("fill=\"#00ff00\""))
+  assert_true(svg.contains("fill-opacity=\"0.372549\""))
+  assert_true(svg.contains("stroke=\"#00ff00\""))
+  assert_true(svg.contains("stroke-opacity=\"0.372549\""))
+  assert_true(!svg.contains("#00ff005f"))
+}
+
+///|
 test "render_svg draws polygon node shapes" {
   let graph = @dot.parse_dot(
     "digraph { a [shape=diamond]; b [shape=triangle]; }",

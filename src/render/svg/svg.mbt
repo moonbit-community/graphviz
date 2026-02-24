@@ -444,6 +444,117 @@ fn svg_color(color : String) -> String {
 }
 
 ///|
+fn hex_nibble(ch : Char) -> Int {
+  match ch {
+    '0'..='9' => ch.to_int() - '0'.to_int()
+    'a'..='f' => ch.to_int() - 'a'.to_int() + 10
+    'A'..='F' => ch.to_int() - 'A'.to_int() + 10
+    _ => -1
+  }
+}
+
+///|
+fn parse_hex8_color(color : String) -> (String, Int)? {
+  if color.length() != 9 || !color.has_prefix("#") {
+    return None
+  }
+  let chars : Array[Char] = []
+  for ch in color {
+    chars.push(ch)
+  }
+  if chars.length() != 9 {
+    return None
+  }
+  for i in 1..<9 {
+    if hex_nibble(chars[i]) < 0 {
+      return None
+    }
+  }
+  let alpha = hex_nibble(chars[7]) * 16 + hex_nibble(chars[8])
+  Some((color.unsafe_substring(start=0, end=7), alpha))
+}
+
+///|
+fn alpha_opacity_text(alpha_byte : Int) -> String {
+  format_double_fixed(alpha_byte.to_double() / 255.0, 6)
+}
+
+///|
+fn rewrite_svg_alpha_attr(
+  svg : String,
+  attr_name : String,
+  opacity_attr_name : String,
+) -> String {
+  let attr_prefix = "\{attr_name}=\""
+  let mut remaining = svg
+  let out = StringBuilder::new()
+  while true {
+    match remaining.find(attr_prefix) {
+      None => {
+        out.write_string(remaining)
+        break
+      }
+      Some(pos) => {
+        if pos > 0 {
+          out.write_string(remaining.unsafe_substring(start=0, end=pos))
+        }
+        let value_start = pos + attr_prefix.length()
+        if value_start >= remaining.length() {
+          out.write_string(remaining.unsafe_substring(start=pos, end=remaining.length()))
+          break
+        }
+        let tail =
+          remaining.unsafe_substring(start=value_start, end=remaining.length())
+        match tail.find("\"") {
+          None => {
+            out.write_string(remaining.unsafe_substring(start=pos, end=remaining.length()))
+            break
+          }
+          Some(value_end) => {
+            let value = tail.unsafe_substring(start=0, end=value_end)
+            let segment_end = value_start + value_end + 1
+            match parse_hex8_color(value) {
+              Some((base_color, alpha_byte)) => {
+                out.write_string(attr_prefix)
+                if alpha_byte <= 0 {
+                  out.write_string("none\"")
+                } else if alpha_byte >= 255 {
+                  out.write_string(base_color)
+                  out.write_char('"')
+                } else {
+                  out.write_string(base_color)
+                  out.write_char('"')
+                  out.write_string(
+                    " \{opacity_attr_name}=\"\{alpha_opacity_text(alpha_byte)}\"",
+                  )
+                }
+              }
+              None => {
+                out.write_string(
+                  remaining.unsafe_substring(start=pos, end=segment_end),
+                )
+              }
+            }
+            remaining = if segment_end < remaining.length() {
+              remaining.unsafe_substring(start=segment_end, end=remaining.length())
+            } else {
+              ""
+            }
+          }
+        }
+      }
+    }
+  }
+  out.to_string()
+}
+
+///|
+fn normalize_svg_alpha_attrs(svg : String) -> String {
+  let with_fill = rewrite_svg_alpha_attr(svg, "fill", "fill-opacity")
+  rewrite_svg_alpha_attr(with_fill, "stroke", "stroke-opacity")
+}
+
+///|
 priv struct LabelLine {
   text : String
   align : @render.TextAlign
@@ -5106,5 +5217,5 @@ pub fn render_svg(
   }
   write_line(sb, "</g>", "", pretty)
   write_line(sb, "</svg>", "", pretty)
-  sb.to_string()
+  normalize_svg_alpha_attrs(sb.to_string())
 }
