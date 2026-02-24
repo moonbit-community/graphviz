@@ -576,7 +576,7 @@ fn is_svg_named_color(color : String) -> Bool {
     "slateblue" | "greenyellow" | "darkseagreen" | "deepskyblue" |
     "skyblue" |
     "blanchedalmond" | "chocolate" | "crimson" | "navy" | "coral" |
-    "steelblue" | "aquamarine" | "limegreen" |
+    "steelblue" | "aquamarine" | "forestgreen" | "limegreen" |
     "lemonchiffon" | "firebrick" | "orangered" | "indigo" | "indianred" => true
     _ => false
   }
@@ -5457,7 +5457,11 @@ fn write_svg_node_group(
     Some(value) => value.to_lower()
     None => ""
   }
-  let kind = shape_kind(node_attr(node, "shape"))
+  let raw_kind = shape_kind(node_attr(node, "shape"))
+  let skip_unknown_shape_outline =
+    raw_kind == "unknown" && node_attr_int(node, "peripheries", 1) <= 0
+  // Graphviz falls back to box geometry for unknown node shapes.
+  let kind = if raw_kind == "unknown" { "box" } else { raw_kind }
   let is_doublecircle = raw_shape == "doublecircle"
   let stroke = svg_color(node_color(node, "color", "black"))
   let style = @attrs.parse_style(node_attr(node, "style"))
@@ -5505,7 +5509,7 @@ fn write_svg_node_group(
   } else {
     "none"
   }
-  if kind == "unknown" {
+  if skip_unknown_shape_outline {
     ()
   } else if kind == "record" {
     write_record_node(

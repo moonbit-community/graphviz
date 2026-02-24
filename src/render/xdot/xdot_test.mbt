@@ -193,6 +193,41 @@ test "render_xdot draws polygon node shapes" {
 }
 
 ///|
+test "render_xdot falls back unknown node shapes to box draw ops" {
+  let graph = @dot.parse_dot(
+    "digraph { a [style=filled shape=DFDbox]; }",
+  )
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let draw = match node_a.get_attr("_draw_") {
+    Some(value) => value
+    None => fail("missing node _draw_")
+  }
+  assert_true(draw.contains("P 4 "))
+  assert_true(draw.contains("-#d3d3d3"))
+}
+
+///|
+test "render_xdot resolves forestgreen label color" {
+  let graph = @dot.parse_dot("digraph { a [fontcolor=forestgreen]; }")
+  let output = render_xdot(@layout_dot.layout_dot(graph))
+  let output_graph = @dot.parse_dot(output)
+  let node_a = match output_graph.find_node("a") {
+    Some(node) => node
+    None => fail("missing node a")
+  }
+  let ldraw = match node_a.get_attr("_ldraw_") {
+    Some(value) => value
+    None => fail("missing node _ldraw_")
+  }
+  assert_true(ldraw.contains("-#228b22"))
+}
+
+///|
 test "render_xdot renders nested record labels" {
   let graph = @dot.parse_dot(
     "digraph { node [shape=record]; a [label=\"{a|{b|<here>c|d}|e}\"]; }",

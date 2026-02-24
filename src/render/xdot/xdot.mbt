@@ -3679,11 +3679,13 @@ fn node_draw_ops(
     Some(value) => value.to_lower()
     None => ""
   }
-  let shape = shape_kind(node_attr(node, "shape"))
-  let is_doublecircle = raw_shape == "doublecircle"
-  if shape == "unknown" {
+  let kind = shape_kind(node_attr(node, "shape"))
+  if kind == "unknown" && node_attr_int(node, "peripheries", 1) <= 0 {
     return ops
   }
+  // Graphviz falls back to box geometry for unknown node shapes.
+  let shape = if kind == "unknown" { "box" } else { kind }
+  let is_doublecircle = raw_shape == "doublecircle"
   if shape == "record" {
     return record_draw_ops(layout)
   }

@@ -229,6 +229,7 @@ polypoly
 plugins
 process
 proc3d
+ps
 ps_user_shapes
 psfonttest
 larrow

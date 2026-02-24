@@ -80,6 +80,28 @@ test "render_svg draws polygon node shapes" {
 }
 
 ///|
+test "render_svg falls back unknown node shapes to box polygons" {
+  let graph = @dot.parse_dot("digraph { a [style=filled shape=DFDbox]; }")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("<polygon fill=\"lightgrey\" stroke=\"black\""))
+}
+
+///|
+test "render_svg preserves forestgreen label color" {
+  let graph = @dot.parse_dot("digraph { a [fontcolor=forestgreen]; }")
+  let layout = @layout_dot.layout_dot(graph)
+  let svg = render_svg(layout, options={
+    pretty: Some(false),
+    include_xml_decl: Some(false),
+  })
+  assert_true(svg.contains("fill=\"forestgreen\""))
+}
+
+///|
 test "render_svg keeps trapeziumlr node families as polygons" {
   let graph = @dot.parse_dot_file("refs/graphviz/graphs/directed/trapeziumlr.gv")
   let layout = @layout_dot.layout_dot(graph)
