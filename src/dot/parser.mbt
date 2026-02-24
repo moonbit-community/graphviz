@@ -335,23 +335,30 @@ fn parser_should_attach_existing_node_to_graph(
 }
 
 ///|
+fn parser_resolve_node_for_graph(
+  graph : @cgraph.Graph,
+  node_name : String,
+) -> @cgraph.Node {
+  let root = root_graph_for_graph(graph)
+  match root.find_node(node_name) {
+    Some(existing) =>
+      if parser_should_attach_existing_node_to_graph(graph, existing) {
+        graph.node(node_name)
+      } else {
+        existing
+      }
+    None => graph.node(node_name)
+  }
+}
+
+///|
 fn Parser::endpoint_nodes(
   graph : @cgraph.Graph,
   endpoint : Endpoint,
 ) -> (Array[@cgraph.Node], @cgraph.Port?) {
   match endpoint {
     Node(node_id) => {
-      let root = root_graph_for_graph(graph)
-      let node = match root.find_node(node_id.name) {
-        Some(existing) => {
-          if parser_should_attach_existing_node_to_graph(graph, existing) {
-            graph.node(node_id.name)
-          } else {
-            existing
-          }
-        }
-        None => graph.node(node_id.name)
-      }
+      let node = parser_resolve_node_for_graph(graph, node_id.name)
       ([node], node_id.port)
     }
     Subgraph(sub) => {
@@ -542,7 +549,7 @@ fn Parser::parse_stmt(
     self.parse_edge_stmt(graph, Endpoint::Node(node_id))
     return
   }
-  let node = graph.node(node_id.name)
+  let node = parser_resolve_node_for_graph(graph, node_id.name)
   let attrs = self.parse_attr_list()
   for key, value in attrs {
     node.set_attr(key, value)

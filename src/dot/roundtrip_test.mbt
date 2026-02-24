@@ -81,6 +81,29 @@ test "write_dot keeps image before generated node geometry attrs" {
 }
 
 ///|
+test "parser keeps duplicate cluster node membership on first cluster only" {
+  let graph = try @dot.parse_dot(
+    "digraph { subgraph cluster_1 { 1; } subgraph cluster_2 { 1 } }",
+  ) catch {
+    err => fail("parse_dot failed: \{err}")
+  } noraise {
+    graph => graph
+  }
+  let output = @dot.write_dot(graph)
+  let start = match output.find("subgraph cluster_2 {") {
+    Some(value) => value
+    None => fail("missing cluster_2: \{output}")
+  }
+  let tail = output.unsafe_substring(start=start, end=output.length())
+  let close = match tail.find("}") {
+    Some(value) => value
+    None => fail("unterminated cluster_2 block: \{output}")
+  }
+  let cluster_block = tail.unsafe_substring(start=0, end=close + 1)
+  assert_true(!cluster_block.contains("1;"))
+}
+
+///|
 test "dot roundtrip tier0" {
   let paths : Array[String] = [
     "refs/graphviz/doc/dotguide/graph1.dot", "refs/graphviz/doc/dotguide/graph2.dot",
