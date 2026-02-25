@@ -10,29 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-INPUT_CANDIDATES = (
-    "refs/graphviz/graphs/directed/{case}.gv",
-    "refs/graphviz/graphs/undirected/{case}.gv",
-    "tests/layout/dot/{case}.dot",
-    "refs/graphviz/doc/dotguide/{case}.dot",
-    "refs/graphviz/doc/infosrc/{case}.dot",
-    "refs/graphviz/doc/infosrc/{case}.gv",
-    "refs/graphviz/doc/neato/{case}.dot",
-    "refs/graphviz/contrib/prune/{case}.gv",
-    "refs/graphviz/contrib/dirgraph/{case}.dot",
-    "refs/graphviz/contrib/java-dot/{case}.dot",
-    "refs/graphviz/tests/{case}.dot",
-    "refs/graphviz/tests/graphs/{case}.gv",
-    "refs/graphviz/tests/share/{case}.gv",
-    "refs/graphviz/tests/windows/{case}.gv",
-    "refs/graphviz/tests/regression_tests/{case}.gv",
-    "refs/graphviz/tests/regression_tests/shapes/reference/{case}.gv",
-    "refs/graphviz/tests/linux.x86/{case}.gv",
-    "refs/graphviz/tests/nshare/{case}.gv",
-    "refs/graphviz/tests/linux.i386/{case}.gv",
-    "refs/graphviz/tests/macosx/{case}.gv",
-)
+from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -76,14 +54,6 @@ def parse_args() -> argparse.Namespace:
         help="Write mismatched outputs/diffs under target/capture-env-invariance.",
     )
     return parser.parse_args()
-
-
-def resolve_input_path(repo_root: Path, case_name: str) -> Path:
-    for rel in INPUT_CANDIDATES:
-        path = repo_root / rel.format(case=case_name)
-        if path.exists():
-            return path
-    raise FileNotFoundError(f"missing input for case: {case_name}")
 
 
 def load_case_names(repo_root: Path, args: argparse.Namespace) -> list[str]:

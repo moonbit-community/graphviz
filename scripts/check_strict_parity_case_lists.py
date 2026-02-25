@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES
+from snapshot_inputs import resolve_input_path as resolve_snapshot_input_path
 
 DEFAULT_REQUIRED_SENTINEL = ["ldbxtried", "typeshar", "trapeziumlr", "unix2"]
 INPUT_CANDIDATE_PATTERNS = [
@@ -18,28 +20,6 @@ INPUT_CANDIDATE_PATTERNS = [
     "refs/graphviz/contrib/prune/*.gv",
     "refs/graphviz/contrib/dirgraph/*.dot",
     "refs/graphviz/contrib/java-dot/*.dot",
-]
-STRICT_PARITY_INPUT_CANDIDATES = [
-    "refs/graphviz/graphs/directed/{case}.gv",
-    "refs/graphviz/graphs/undirected/{case}.gv",
-    "tests/layout/dot/{case}.dot",
-    "refs/graphviz/doc/dotguide/{case}.dot",
-    "refs/graphviz/doc/infosrc/{case}.dot",
-    "refs/graphviz/doc/infosrc/{case}.gv",
-    "refs/graphviz/doc/neato/{case}.dot",
-    "refs/graphviz/contrib/prune/{case}.gv",
-    "refs/graphviz/contrib/dirgraph/{case}.dot",
-    "refs/graphviz/contrib/java-dot/{case}.dot",
-    "refs/graphviz/tests/{case}.dot",
-    "refs/graphviz/tests/graphs/{case}.gv",
-    "refs/graphviz/tests/share/{case}.gv",
-    "refs/graphviz/tests/windows/{case}.gv",
-    "refs/graphviz/tests/regression_tests/{case}.gv",
-    "refs/graphviz/tests/regression_tests/shapes/reference/{case}.gv",
-    "refs/graphviz/tests/linux.x86/{case}.gv",
-    "refs/graphviz/tests/nshare/{case}.gv",
-    "refs/graphviz/tests/linux.i386/{case}.gv",
-    "refs/graphviz/tests/macosx/{case}.gv",
 ]
 
 
@@ -147,11 +127,7 @@ def validate_subset(
 
 
 def resolve_strict_parity_input_path(repo_root: Path, case_name: str) -> Path:
-    for pattern in STRICT_PARITY_INPUT_CANDIDATES:
-        path = repo_root / pattern.format(case=case_name)
-        if path.exists():
-            return path
-    raise FileNotFoundError(f"missing snapshot input for case: {case_name}")
+    return resolve_snapshot_input_path(repo_root, case_name)
 
 
 def validate_gv_suffix_variants(repo_root: Path, manifest_set: set[str]) -> int:

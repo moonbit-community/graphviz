@@ -97,6 +97,12 @@ def parse_bash_candidates(path: Path) -> list[str]:
     raise ValueError(f"{path}: unterminated candidates list")
 
 
+def ensure_file_contains(path: Path, snippet: str) -> None:
+    content = path.read_text(encoding="utf-8")
+    if snippet not in content:
+        raise ValueError(f"{path}: missing required snippet: {snippet}")
+
+
 def format_mismatch(reference: list[str], current: list[str]) -> str:
     ref_set = set(reference)
     cur_set = set(current)
@@ -123,28 +129,23 @@ def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
 
-    canonical_path = repo_root / "scripts/check_strict_parity.py"
+    canonical_path = repo_root / "scripts/snapshot_inputs.py"
     canonical = parse_python_string_list(canonical_path, "INPUT_CANDIDATES")
 
+    ensure_file_contains(
+        repo_root / "scripts/check_strict_parity.py",
+        "from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path",
+    )
+    ensure_file_contains(
+        repo_root / "scripts/check_capture_env_invariance.py",
+        "from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path",
+    )
+    ensure_file_contains(
+        repo_root / "scripts/check_strict_parity_case_lists.py",
+        "from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES",
+    )
+
     targets: list[tuple[str, list[str]]] = []
-    targets.append(
-        (
-            "scripts/check_capture_env_invariance.py:INPUT_CANDIDATES",
-            parse_python_string_list(
-                repo_root / "scripts/check_capture_env_invariance.py",
-                "INPUT_CANDIDATES",
-            ),
-        )
-    )
-    targets.append(
-        (
-            "scripts/check_strict_parity_case_lists.py:STRICT_PARITY_INPUT_CANDIDATES",
-            parse_python_string_list(
-                repo_root / "scripts/check_strict_parity_case_lists.py",
-                "STRICT_PARITY_INPUT_CANDIDATES",
-            ),
-        )
-    )
     targets.append(
         (
             "src/layout/dot/snapshot_test.mbt:candidates",
