@@ -2675,6 +2675,7 @@ fn build_edge_spline(
         style_value.contains("invis")
       let prefer_linear_flat_bottom_single_arrow =
         is_flat_edge &&
+        !base.swap_ends &&
         has_explicit_port &&
         label_width_pt <= 0.0 &&
         (base.tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
