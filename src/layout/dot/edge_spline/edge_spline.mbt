@@ -2782,10 +2782,31 @@ fn orthogonal_polyline_points_cardinal(
 ///|
 fn compact_polyline(points : Array[@geom.Point]) -> Array[@geom.Point] {
   let result : Array[@geom.Point] = []
+  let collinear_eps = 0.000001
   for point in points {
-    if result.length() == 0 || result[result.length() - 1] != point {
+    if result.length() == 0 {
       result.push(point)
+      continue
     }
+    if result[result.length() - 1] == point {
+      continue
+    }
+    if result.length() >= 2 {
+      let a = result[result.length() - 2]
+      let b = result[result.length() - 1]
+      let abx = b.x - a.x
+      let aby = b.y - a.y
+      let bcx = point.x - b.x
+      let bcy = point.y - b.y
+      let cross = abx * bcy - aby * bcx
+      let same_dir =
+        (abx * bcx >= 0.0 || Double::abs(abx) <= collinear_eps || Double::abs(bcx) <= collinear_eps) &&
+        (aby * bcy >= 0.0 || Double::abs(aby) <= collinear_eps || Double::abs(bcy) <= collinear_eps)
+      if Double::abs(cross) <= collinear_eps && same_dir {
+        ignore(result.pop())
+      }
+    }
+    result.push(point)
   }
   result
 }

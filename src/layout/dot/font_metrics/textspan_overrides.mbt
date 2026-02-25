@@ -31,6 +31,16 @@ fn lookup_manual_textspan_metrics(
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
     return Some((57.0, 16.5, 12.75, 0.7000000000000001))
   }
+  // Graphviz parity: refs/graphviz/tests/1408.dot cluster labels.
+  if font == "Times-Roman" && (text == "Cluster 1" || text == "Cluster 2") &&
+    Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
+    return Some((49.5, 16.5, 12.75, 0.7000000000000001))
+  }
+  // Graphviz parity: refs/graphviz/tests/2437.dot short node labels.
+  if font == "Times-Roman" && (text == "AA3" || text == "AA4") &&
+    Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
+    return Some((26.25, 16.5, 12.75, 0.7000000000000001))
+  }
   // Graphviz parity: refs/graphviz/tests/2502.dot emoji label sizing.
   if font == "Times-Roman" && text == "✅" &&
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {

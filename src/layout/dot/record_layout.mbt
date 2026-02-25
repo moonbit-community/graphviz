@@ -1680,6 +1680,8 @@ fn builtin_polygon_shape_attrs(
     "octagon" => Some((8, 1, 0.0, 0.0, 0.0, false))
     "doubleoctagon" => Some((8, 2, 0.0, 0.0, 0.0, false))
     "tripleoctagon" => Some((8, 3, 0.0, 0.0, 0.0, false))
+    "house" => Some((5, 1, 0.0, -0.64, 0.0, false))
+    "invhouse" => Some((5, 1, 180.0, -0.64, 0.0, false))
     _ => None
   }
 }
@@ -1895,6 +1897,7 @@ fn node_size(
     | "lpromoter"
     | "rarrow"
     | "larrow"
+    | "box3d"
     | "point"
     | "dot"
     | "plaintext"

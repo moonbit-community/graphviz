@@ -1,0 +1,43 @@
+digraph map {
+	graph [bb="0,0,204.66,93",
+		layout=dot,
+		rankdir=LR,
+		splines=ortho
+	];
+	node [label="\N"];
+	subgraph cluster_1 {
+		graph [bb="98,8,196.66,85",
+			color=pink,
+			label="Cluster 1",
+			lheight=0.23,
+			lp="147.33,72.75",
+			lwidth=0.69,
+			style=filled
+		];
+		node [style=filled];
+		node1	[fillcolor=red,
+			height=0.5,
+			pos="147.33,34",
+			shape=house,
+			width=1.1481];
+	}
+	subgraph cluster_2 {
+		graph [bb="8,8,78,85",
+			color=lightblue,
+			label="Cluster 2",
+			lheight=0.23,
+			lp="43,72.75",
+			lwidth=0.69,
+			style=filled
+		];
+		node [style=filled];
+		node2	[fillcolor=red,
+			height=0.5,
+			pos="43,34",
+			shape=box3d,
+			width=0.75];
+	}
+	node2 -> node1	[arrowhead=dot,
+		color=red,
+		pos="e,105.56,34 70.412,34 70.412,34 96.558,34 96.558,34"];
+}
