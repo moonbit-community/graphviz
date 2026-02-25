@@ -1942,7 +1942,7 @@ fn build_edge_route_base(
     } else {
       tail_anchor0
     }
-  let tail_clip = match tail_cluster_bbox {
+  let mut tail_clip = match tail_cluster_bbox {
     Some(rect) => clip_to_bbox(tail_anchor0, rect, head_anchor0)
     None =>
       match tail_side_anchor {
@@ -1960,7 +1960,7 @@ fn build_edge_route_base(
           }
       }
   }
-  let head_clip = match head_cluster_bbox {
+  let mut head_clip = match head_cluster_bbox {
     Some(rect) => clip_to_bbox(head_anchor0, rect, tail_anchor0)
     None =>
       match head_side_anchor {
@@ -1995,6 +1995,39 @@ fn build_edge_route_base(
         None => false
       }
     None => false
+  }
+  let flat_bottom_dirboth_x_nudge =
+    match edge_dir_for(edge, graph_kind) {
+      EdgeDir::Both =>
+        is_flat_edge &&
+        !has_vnodes &&
+        edge_mid_label_width_pt(edge) <= 0.0 &&
+        tail_sameport_anchor is None &&
+        head_sameport_anchor is None &&
+        tail_side_anchor is None &&
+        head_side_anchor is None &&
+        compass_tail_on_non_record &&
+        compass_head_on_non_record &&
+        port_is_explicit(tail_port) &&
+        port_is_explicit(head_port) &&
+        (tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
+        (head_port_side & PORT_SIDE_BOTTOM) != 0 &&
+        (tail_port_side & PORT_SIDE_TOP) == 0 &&
+        (head_port_side & PORT_SIDE_TOP) == 0 &&
+        (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT)
+      _ => false
+    }
+  if flat_bottom_dirboth_x_nudge {
+    let delta =
+      max_double(
+        sameport_node_penwidth_pt(tail_node),
+        sameport_node_penwidth_pt(head_node),
+      )
+    if delta != 0.0 {
+      let x_dir = if head_anchor0.x >= tail_anchor0.x { 1.0 } else { -1.0 }
+      tail_clip = point(tail_clip.x + x_dir * delta, tail_clip.y)
+      head_clip = point(head_clip.x + x_dir * delta, head_clip.y)
+    }
   }
   let tail_anchor =
     if tail_sameport_anchor is None && tail_side_anchor is None &&
