@@ -1203,75 +1203,6 @@ fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
   }
 }
 
-///|
-fn compass_node_penwidth_pt(node : @cgraph.Node) -> Double {
-  match node.get_attr("penwidth") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-}
-
-///|
-fn compass_polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
-  let mut peripheries = match node.get_attr("peripheries") {
-    Some(value) => parse_double(value, default.to_double()).round().to_int()
-    None => default
-  }
-  if peripheries < 0 {
-    peripheries = 0
-  }
-  peripheries
-}
-
-///|
-fn compass_shape_has_outline(node : @cgraph.Node) -> Bool {
-  let shape = match node.get_attr("shape") {
-    Some(value) => value.to_lower()
-    None => ""
-  }
-  if shape == "none" || shape == "plaintext" || shape == "plain" {
-    return false
-  }
-  compass_polygon_peripheries(node, 1) > 0
-}
-
-///|
-fn compass_inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
-  if pad_pt <= 0.0 {
-    return size
-  }
-  let width_pt = size.width_pt + pad_pt * 2.0
-  let height_pt = size.height_pt + pad_pt * 2.0
-  let half = width_pt / 2.0
-  {
-    width_in: width_pt / 72.0,
-    height_in: height_pt / 72.0,
-    width_pt,
-    height_pt,
-    left_pt: half,
-    right_pt: half,
-  }
-}
-
-///|
-fn compass_outline_size(
-  node : @cgraph.Node,
-  base_size : NodeSize,
-) -> NodeSize {
-  if !compass_shape_has_outline(node) {
-    return base_size
-  }
-  let peripheries = compass_polygon_peripheries(node, 1)
-  if peripheries >= 1 {
-    let penwidth = compass_node_penwidth_pt(node)
-    if penwidth > 0.0 {
-      return compass_inflate_node_size(base_size, penwidth / 2.0)
-    }
-  }
-  base_size
-}
-
-///|
 fn compass_port_point(
   node_name : String,
   node : @cgraph.Node?,
@@ -1291,26 +1222,12 @@ fn compass_port_point(
       match node {
         Some(value) =>
           if compass_uses_shape_clipping(value) {
-            let clip_size = compass_outline_size(value, base_size)
-            let half_w = clip_size.width_pt / 2.0
-            let half_h = clip_size.height_pt / 2.0
-            let maxv = max_double(half_w, half_h) * 4.0
-            let target = match compass {
-              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: maxv }
-              @cgraph.Compass::NE => @geom.Point::{ x: maxv, y: maxv }
-              @cgraph.Compass::E => @geom.Point::{ x: maxv, y: 0.0 }
-              @cgraph.Compass::SE => @geom.Point::{ x: maxv, y: -maxv }
-              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: -maxv }
-              @cgraph.Compass::SW => @geom.Point::{ x: -maxv, y: -maxv }
-              @cgraph.Compass::W => @geom.Point::{ x: -maxv, y: 0.0 }
-              @cgraph.Compass::NW => @geom.Point::{ x: -maxv, y: maxv }
-              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
-            }
-            clip_to_node_shape(
+            compass_port_point_on_shape(
               value,
-              @geom.Point::{ x: 0.0, y: 0.0 },
-              clip_size,
-              target,
+              point(0.0, 0.0),
+              base_size,
+              compass,
+              rankdir,
             )
           } else {
             match compass {

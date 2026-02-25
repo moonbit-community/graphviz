@@ -1856,7 +1856,7 @@ fn build_edge_route_base(
   let resolve_compass_clip_point :
     (@cgraph.Node, @cgraph.Port?, @geom.Point, NodeSize) -> @geom.Point? =
     (node, port, center, size) => {
-      if self_edge || is_flat_edge || is_record_shape(node) {
+      if self_edge || is_record_shape(node) {
         return None
       }
       match port {

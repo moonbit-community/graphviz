@@ -3844,6 +3844,39 @@ fn rankdir_to_quadrant(rankdir : RankDir) -> Int {
 }
 
 ///|
+fn rotate_cw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
+  match quadrant {
+    1 => point(pt.y, -pt.x)
+    2 => point(-pt.x, -pt.y)
+    3 => point(-pt.y, pt.x)
+    _ => pt
+  }
+}
+
+///|
+fn compass_target_offset(
+  compass : @cgraph.Compass,
+  maxv : Double,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  let raw = match compass {
+    @cgraph.Compass::N => Some(point(0.0, maxv))
+    @cgraph.Compass::NE => Some(point(maxv, maxv))
+    @cgraph.Compass::E => Some(point(maxv, 0.0))
+    @cgraph.Compass::SE => Some(point(maxv, -maxv))
+    @cgraph.Compass::S => Some(point(0.0, -maxv))
+    @cgraph.Compass::SW => Some(point(-maxv, -maxv))
+    @cgraph.Compass::W => Some(point(-maxv, 0.0))
+    @cgraph.Compass::NW => Some(point(-maxv, maxv))
+    @cgraph.Compass::C => None
+  }
+  match raw {
+    Some(value) => Some(rotate_cw_quadrant(value, rankdir_to_quadrant(rankdir)))
+    None => None
+  }
+}
+
+///|
 fn clip_line_to_rect(
   center : @geom.Point,
   size : NodeSize,
@@ -3910,14 +3943,16 @@ pub fn compass_port_point_on_shape(
       if penwidth > 0.0 { penwidth / 2.0 } else { 0.0 }
     _ => 0.0
   }
-  let ray = match compass_vector(compass, rankdir) {
+  // Graphviz parity: compassPort scales the ray using the pre-outline
+  // port box extent (b.UR), while insidefn still clips against outline data.
+  let half_w = base_size.width_pt / 2.0
+  let half_h = base_size.height_pt / 2.0
+  let maxv = if half_w > half_h { half_w } else { half_h }
+  let target_offset = match compass_target_offset(compass, maxv * 4.0, rankdir) {
     Some(value) => value
     None => return center
   }
-  let half_w = clip_size.width_pt / 2.0
-  let half_h = clip_size.height_pt / 2.0
-  let maxv = if half_w > half_h { half_w } else { half_h }
-  let target = point_add(center, point_scale(ray, maxv * 4.0))
+  let target = point_add(center, target_offset)
   match shape {
     // Graphviz box-ish compass ports are direct, not insidefn-clipped.
     ClipShape::Rect => clip_line_to_rect(center, clip_size, target)
