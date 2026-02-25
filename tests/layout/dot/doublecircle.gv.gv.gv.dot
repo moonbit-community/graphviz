@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,60,60"];
+	node [label="",
+		shape=doublecircle,
+		style=filled
+	];
+	doublecircle	[height=0.83333,
+		pos="30,30",
+		width=0.83333];
+}
