@@ -1,0 +1,34 @@
+digraph g {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 34.65 237.6 34.65 237.6 0 ",
+		bb="0,0,237.6,34.648",
+		color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14,
+		xdotversion=1.7
+	];
+	node [color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14,
+		label="\N",
+		shape=ellipse
+	];
+	edge [color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14
+	];
+	n0	[_draw_="c 7 -#000000 e 51.62 17.32 51.62 17.32 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 51.62 12.27 0 57 10 -(balanced) ",
+		height=0.48123,
+		label="(balanced)",
+		pos="51.619,17.324",
+		width=1.4339];
+	n1	[_draw_="c 7 -#000000 e 179.62 17.32 57.98 17.32 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 179.62 12.27 0 66 11 -(unbalanced ",
+		height=0.48123,
+		label="(unbalanced",
+		pos="179.62,17.324",
+		width=1.6106];
+}

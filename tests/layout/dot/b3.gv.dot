@@ -1,0 +1,28 @@
+digraph g {
+	graph [bb="0,0,237.6,34.648",
+		color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14
+	];
+	node [color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14,
+		label="\N",
+		shape=ellipse
+	];
+	edge [color=black,
+		fontcolor=black,
+		fontname="Times-Roman",
+		fontsize=14
+	];
+	n0	[height=0.48123,
+		label="(balanced)",
+		pos="51.619,17.324",
+		width=1.4339];
+	n1	[height=0.48123,
+		label="(unbalanced",
+		pos="179.62,17.324",
+		width=1.6106];
+}

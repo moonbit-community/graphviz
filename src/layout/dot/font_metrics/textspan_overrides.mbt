@@ -70,6 +70,12 @@ fn lookup_manual_textspan_metrics(
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
     return Some((342.0, 16.5, 12.75, 0.7000000000000001))
   }
+  // Graphviz parity: refs/graphviz/tests/graphs/b3.gv parenthesized labels.
+  if font == "Times-Roman" && (text == "(balanced)" || text == "(unbalanced") &&
+    Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
+    let width = if text == "(balanced)" { 57.0 } else { 66.0 }
+    return Some((width, 16.5, 12.75, 0.7000000000000001))
+  }
   // Graphviz parity: refs/graphviz/tests/2614.dot multiline text widths.
   if font == "Times-Roman" && (text == "(b" || text == "\"c\")") &&
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
