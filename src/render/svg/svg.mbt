@@ -5153,6 +5153,19 @@ fn write_svg_edge_group(
   edge_id : String,
   pretty : Bool,
 ) -> Unit {
+  let svg_group_class = (base : String, extra : String?) => {
+    match extra {
+      Some(value) => {
+        let trimmed = value.trim(chars=" \n\r\t").to_string()
+        if trimmed == "" {
+          escape_xml(base)
+        } else {
+          escape_xml(base + " " + trimmed)
+        }
+      }
+      None => escape_xml(base)
+    }
+  }
   let edge = edge_layout.edge
   let tail_port = effective_edge_port(edge, edge.tail_port(), "tailport")
   let head_port = effective_edge_port(edge, edge.head_port(), "headport")
@@ -5170,9 +5183,10 @@ fn write_svg_edge_group(
   if style_is_invisible(style) {
     return
   }
+  let edge_group_class = svg_group_class("edge", edge_attr(edge, "class"))
   write_line(
     sb,
-    "<g id=\"\{escape_xml_with_dash(edge_id)}\" class=\"edge\">",
+    "<g id=\"\{escape_xml_with_dash(edge_id)}\" class=\"\{edge_group_class}\">",
     "",
     pretty,
   )
@@ -5489,9 +5503,20 @@ fn write_svg_node_group(
   if style_is_invisible(style) {
     return
   }
+  let node_group_class = match node_attr(node, "class") {
+    Some(value) => {
+      let trimmed = value.trim(chars=" \n\r\t").to_string()
+      if trimmed == "" {
+        "node"
+      } else {
+        escape_xml("node " + trimmed)
+      }
+    }
+    None => "node"
+  }
   write_line(
     sb,
-    "<g id=\"node\{node_index}\" class=\"node\">",
+    "<g id=\"node\{node_index}\" class=\"\{node_group_class}\">",
     "",
     pretty,
   )

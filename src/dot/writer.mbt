@@ -314,6 +314,7 @@ fn graph_attr_rank(name : String) -> Int {
 fn node_attr_rank(name : String) -> Int {
   match name {
     "URL" | "url" | "href" => -1
+    "class" => 0
     "_draw_" => 0
     "_ldraw_" => 1
     "color" => 2
@@ -355,6 +356,7 @@ fn edge_attr_rank(name : String) -> Int {
     "URL" | "url" | "href" | "edgeURL" | "edgeurl" | "edgehref"
     | "headURL" | "headurl" | "headhref" | "tailURL" | "tailurl"
     | "tailhref" | "labelURL" | "labelurl" | "labelhref" => -1
+    "class" => 0
     "_draw_" => 0
     "_hdraw_" => 1
     "_hldraw_" => 2
