@@ -1853,6 +1853,45 @@ fn build_edge_route_base(
       head_port,
       raw_head_anchor_size,
     )
+  let resolve_compass_clip_point :
+    (@cgraph.Node, @cgraph.Port?, @geom.Point, NodeSize) -> @geom.Point? =
+    (node, port, center, size) => {
+      if self_edge || is_flat_edge || is_record_shape(node) {
+        return None
+      }
+      match port {
+        Some(value) =>
+          match value.compass {
+            Some(@cgraph.Compass::C) => None
+            Some(compass) =>
+              Some(
+                compass_port_point_on_shape(
+                  node,
+                  center,
+                  size,
+                  compass,
+                  layout_rankdir,
+                ),
+              )
+            None => None
+          }
+        None => None
+      }
+    }
+  let tail_compass_clip =
+    resolve_compass_clip_point(
+      tail_node,
+      tail_port,
+      tail_clip_center,
+      tail_clip_size,
+    )
+  let head_compass_clip =
+    resolve_compass_clip_point(
+      head_node,
+      head_port,
+      head_clip_center,
+      head_clip_size,
+    )
   let tail_clip_enabled = tail_sameport_anchor is None
   let head_clip_enabled = head_sameport_anchor is None
   let tail_target = match tail_port_rect {
@@ -1909,12 +1948,16 @@ fn build_edge_route_base(
       match tail_side_anchor {
         Some(pos) => pos
         None =>
-          clip_to_node_shape(
-            tail_node,
-            tail_clip_center,
-            tail_clip_size,
-            tail_clip_target,
-          )
+          match tail_compass_clip {
+            Some(pos) => pos
+            None =>
+              clip_to_node_shape(
+                tail_node,
+                tail_clip_center,
+                tail_clip_size,
+                tail_clip_target,
+              )
+          }
       }
   }
   let head_clip = match head_cluster_bbox {
@@ -1923,12 +1966,16 @@ fn build_edge_route_base(
       match head_side_anchor {
         Some(pos) => pos
         None =>
-          clip_to_node_shape(
-            head_node,
-            head_clip_center,
-            head_clip_size,
-            head_clip_target,
-          )
+          match head_compass_clip {
+            Some(pos) => pos
+            None =>
+              clip_to_node_shape(
+                head_node,
+                head_clip_center,
+                head_clip_size,
+                head_clip_target,
+              )
+          }
       }
   }
   let compass_tail_on_non_record = match tail_port {

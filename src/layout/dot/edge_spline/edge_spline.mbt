@@ -3834,6 +3834,113 @@ fn compass_vector(compass : @cgraph.Compass, rankdir : RankDir) -> @geom.Point? 
 }
 
 ///|
+fn rankdir_to_quadrant(rankdir : RankDir) -> Int {
+  match rankdir {
+    RankDir::TB => 0
+    RankDir::LR => 1
+    RankDir::BT => 2
+    RankDir::RL => 3
+  }
+}
+
+///|
+fn clip_line_to_rect(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
+  let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
+  let t = if tx < ty { tx } else { ty }
+  point(center.x + dx * t, center.y + dy * t)
+}
+
+///|
+fn compass_penwidth_applies(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  shape != "none" && shape != "plaintext" && shape != "plain"
+}
+
+///|
+/// Graphviz parity: resolve compass ports via the same bezier-clip + insidefn
+/// flow used by shapes.c compassPoint, including penwidth/periphery outline.
+pub fn compass_port_point_on_shape(
+  node : @cgraph.Node,
+  center : @geom.Point,
+  size : NodeSize,
+  compass : @cgraph.Compass,
+  rankdir : RankDir,
+) -> @geom.Point {
+  if compass == @cgraph.Compass::C {
+    return center
+  }
+  let base_size = fixedshape_clip_size(node, size)
+  let shape = clip_shape_kind(node, None)
+  let penwidth = if compass_penwidth_applies(node) { node_penwidth_pt(node) } else { 0.0 }
+  let clip_size = match shape {
+    ClipShape::Rect
+    | ClipShape::Ellipse
+    | ClipShape::Diamond =>
+      if penwidth > 0.0 && fixedsize_mode(node) != "shape" {
+        inflate_node_size(base_size, penwidth / 2.0)
+      } else {
+        base_size
+      }
+    _ => base_size
+  }
+  let outline_pad = match shape {
+    ClipShape::Trapezium
+    | ClipShape::InvTrapezium
+    | ClipShape::Parallelogram
+    | ClipShape::House
+    | ClipShape::InvHouse
+    | ClipShape::DoubleOctagon
+    | ClipShape::TripleOctagon
+    | ClipShape::Polygon(_, _, _, _, _) =>
+      if penwidth > 0.0 { penwidth / 2.0 } else { 0.0 }
+    _ => 0.0
+  }
+  let ray = match compass_vector(compass, rankdir) {
+    Some(value) => value
+    None => return center
+  }
+  let half_w = clip_size.width_pt / 2.0
+  let half_h = clip_size.height_pt / 2.0
+  let maxv = if half_w > half_h { half_w } else { half_h }
+  let target = point_add(center, point_scale(ray, maxv * 4.0))
+  match shape {
+    // Graphviz box-ish compass ports are direct, not insidefn-clipped.
+    ClipShape::Rect => clip_line_to_rect(center, clip_size, target)
+    ClipShape::None => center
+    _ => {
+      let inside =
+        (p : @geom.Point) =>
+          point_inside_shape(
+            p,
+            center,
+            clip_size,
+            shape,
+            rankdir_to_quadrant(rankdir),
+            outline_pad,
+          )
+      let curve : Array[@geom.Point] = [center, center, target, target]
+      let clipped = bezier_clip(curve, inside, true)
+      clipped[0]
+    }
+  }
+}
+
+///|
 fn axis_direction(dir : @geom.Point) -> @geom.Point {
   let abs_dx = Double::abs(dir.x)
   let abs_dy = Double::abs(dir.y)

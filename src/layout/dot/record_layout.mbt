@@ -1687,6 +1687,29 @@ fn builtin_polygon_shape_attrs(
 }
 
 ///|
+/// Graphviz parity: built-in polygon shapes honor peripheries/orientation attrs
+/// and regular=true override (poly_init late_* flow for non-generic polygons).
+fn builtin_polygon_shape_attrs_for_node(
+  node : @cgraph.Node,
+  shape : String,
+) -> (Int, Int, Double, Double, Double, Bool)? {
+  match builtin_polygon_shape_attrs(shape) {
+    Some((sides, default_peripheries, default_orientation, distortion, skew, regular_base)) => {
+      let mut peripheries =
+        polygon_attr_int(node, "peripheries", default_peripheries)
+      if peripheries < 0 {
+        peripheries = 0
+      }
+      let orientation =
+        default_orientation + polygon_attr_double(node, "orientation", 0.0)
+      let regular = regular_base || attr_bool_true(node.get_attr("regular"))
+      Some((sides, peripheries, orientation, distortion, skew, regular))
+    }
+    None => None
+  }
+}
+
+///|
 fn polygon_is_box_like(
   sides : Int,
   orientation : Double,
@@ -2032,7 +2055,7 @@ fn node_size(
     } else {
       (0.0, 0.0)
   }
-  let polygon_shape = match builtin_polygon_shape_attrs(shape) {
+  let polygon_shape = match builtin_polygon_shape_attrs_for_node(node, shape) {
     Some(attrs) => Some(attrs)
     None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
   }
@@ -2207,10 +2230,23 @@ fn node_size(
       height_in = height_in + gap_in
     }
   }
-  if shape == "doublecircle" {
-    let gap_in = PERIPHERY_GAP_PT * 2.0 / 72.0
-    width_in = width_in + gap_in
-    height_in = height_in + gap_in
+  if shape == "" ||
+    shape == "ellipse" ||
+    shape == "oval" ||
+    shape == "circle" ||
+    shape == "mcircle" ||
+    shape == "doublecircle" {
+    let default_peripheries = if shape == "doublecircle" { 2 } else { 1 }
+    let mut peripheries = polygon_attr_int(node, "peripheries", default_peripheries)
+    if peripheries < 0 {
+      peripheries = 0
+    }
+    if peripheries > 1 {
+      let gap_in =
+        PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1) / 72.0
+      width_in = width_in + gap_in
+      height_in = height_in + gap_in
+    }
   }
   let width_pt = width_in * 72.0
   let half = width_pt / 2.0

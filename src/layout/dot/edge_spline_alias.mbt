@@ -116,6 +116,23 @@ fn endpoint_slope_for_anchor(
   )
 }
 
+///|
+fn compass_port_point_on_shape(
+  node : @cgraph.Node,
+  center : @geom.Point,
+  size : NodeSize,
+  compass : @cgraph.Compass,
+  rankdir : RankDir,
+) -> @geom.Point {
+  @edge_spline.compass_port_point_on_shape(
+    node,
+    center,
+    size,
+    compass,
+    rankdir,
+  )
+}
+
 fn edge_spline_for_polyline(
   edge : @cgraph.Edge,
   tail_clip_center : @geom.Point,

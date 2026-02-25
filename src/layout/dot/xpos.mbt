@@ -1139,20 +1139,222 @@ fn port_offsets_for_nodes(
 }
 
 ///|
+fn fallback_compass_size() -> NodeSize {
+  let width_pt = default_node_width_in() * 72.0
+  let height_pt = default_node_height_in() * 72.0
+  let half = width_pt / 2.0
+  {
+    width_in: width_pt / 72.0,
+    height_in: height_pt / 72.0,
+    width_pt,
+    height_pt,
+    left_pt: half,
+    right_pt: half,
+  }
+}
+
+///|
+fn node_size_for_compass(
+  node_name : String,
+  sizes : Map[String, NodeSize],
+) -> NodeSize {
+  match sizes.get(node_name) {
+    Some(value) => value
+    None => fallback_compass_size()
+  }
+}
+
+///|
+fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  match shape {
+    "" | "ellipse" | "oval" | "circle" | "doublecircle" | "point" | "dot" =>
+      true
+    "diamond"
+    | "mdiamond"
+    | "triangle"
+    | "invtriangle"
+    | "trapezium"
+    | "invtrapezium"
+    | "parallelogram"
+    | "egg"
+    | "house"
+    | "invhouse"
+    | "pentagon"
+    | "hexagon"
+    | "septagon"
+    | "octagon"
+    | "doubleoctagon"
+    | "tripleoctagon" =>
+      true
+    "polygon" => {
+      let (sides, _peripheries, orientation, distortion, skew, _regular) =
+        polygon_shape_attrs(node)
+      if sides < 3 {
+        true
+      } else {
+        !polygon_is_box_like(sides, orientation, distortion, skew)
+      }
+    }
+    _ => false
+  }
+}
+
+///|
+fn compass_node_penwidth_pt(node : @cgraph.Node) -> Double {
+  match node.get_attr("penwidth") {
+    Some(value) => parse_double(value, 1.0)
+    None => 1.0
+  }
+}
+
+///|
+fn compass_polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
+  let mut peripheries = match node.get_attr("peripheries") {
+    Some(value) => parse_double(value, default.to_double()).round().to_int()
+    None => default
+  }
+  if peripheries < 0 {
+    peripheries = 0
+  }
+  peripheries
+}
+
+///|
+fn compass_shape_has_outline(node : @cgraph.Node) -> Bool {
+  let shape = match node.get_attr("shape") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  if shape == "none" || shape == "plaintext" || shape == "plain" {
+    return false
+  }
+  compass_polygon_peripheries(node, 1) > 0
+}
+
+///|
+fn compass_inflate_node_size(size : NodeSize, pad_pt : Double) -> NodeSize {
+  if pad_pt <= 0.0 {
+    return size
+  }
+  let width_pt = size.width_pt + pad_pt * 2.0
+  let height_pt = size.height_pt + pad_pt * 2.0
+  let half = width_pt / 2.0
+  {
+    width_in: width_pt / 72.0,
+    height_in: height_pt / 72.0,
+    width_pt,
+    height_pt,
+    left_pt: half,
+    right_pt: half,
+  }
+}
+
+///|
+fn compass_outline_size(
+  node : @cgraph.Node,
+  base_size : NodeSize,
+) -> NodeSize {
+  if !compass_shape_has_outline(node) {
+    return base_size
+  }
+  let peripheries = compass_polygon_peripheries(node, 1)
+  if peripheries >= 1 {
+    let penwidth = compass_node_penwidth_pt(node)
+    if penwidth > 0.0 {
+      return compass_inflate_node_size(base_size, penwidth / 2.0)
+    }
+  }
+  base_size
+}
+
+///|
+fn compass_port_point(
+  node_name : String,
+  node : @cgraph.Node?,
+  compass : @cgraph.Compass,
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+) -> @geom.Point {
+  let base_size = node_size_for_compass(node_name, sizes)
+  let half_height = base_size.height_pt / 2.0
+  let left = -base_size.left_pt
+  let right = base_size.right_pt
+  let top = half_height
+  let bottom = -half_height
+  let base_point = match compass {
+    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+    _ =>
+      match node {
+        Some(value) =>
+          if compass_uses_shape_clipping(value) {
+            let clip_size = compass_outline_size(value, base_size)
+            let half_w = clip_size.width_pt / 2.0
+            let half_h = clip_size.height_pt / 2.0
+            let maxv = max_double(half_w, half_h) * 4.0
+            let target = match compass {
+              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: maxv }
+              @cgraph.Compass::NE => @geom.Point::{ x: maxv, y: maxv }
+              @cgraph.Compass::E => @geom.Point::{ x: maxv, y: 0.0 }
+              @cgraph.Compass::SE => @geom.Point::{ x: maxv, y: -maxv }
+              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: -maxv }
+              @cgraph.Compass::SW => @geom.Point::{ x: -maxv, y: -maxv }
+              @cgraph.Compass::W => @geom.Point::{ x: -maxv, y: 0.0 }
+              @cgraph.Compass::NW => @geom.Point::{ x: -maxv, y: maxv }
+              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+            }
+            clip_to_node_shape(
+              value,
+              @geom.Point::{ x: 0.0, y: 0.0 },
+              clip_size,
+              target,
+            )
+          } else {
+            match compass {
+              @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
+              @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
+              @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
+              @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
+              @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
+              @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
+              @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
+              @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
+              @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+            }
+          }
+        None =>
+          match compass {
+            @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
+            @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
+            @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
+            @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
+            @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
+            @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
+            @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
+            @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
+            @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
+          }
+      }
+  }
+  layout_port_offset(base_point, rankdir)
+}
+
+///|
 fn compass_port_offset(
   compass : @cgraph.Compass,
   node_name : String,
   sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  match compass {
-    @cgraph.Compass::E
-    | @cgraph.Compass::NE
-    | @cgraph.Compass::SE => node_right_pt(node_name, sizes)
-    @cgraph.Compass::W
-    | @cgraph.Compass::NW
-    | @cgraph.Compass::SW => -node_left_pt(node_name, sizes)
-    _ => 0.0
-  }
+  let _ = rankdir
+  let node = nodes_by_name.get(node_name)
+  // Graphviz parity: x-constraint offsets consume unrotated port p.x values
+  // from position.c make_edge_pairs.
+  compass_port_point(node_name, node, compass, sizes, RankDir::TB).x
 }
 
 ///|
@@ -1161,6 +1363,8 @@ fn edge_port_offset(
   port : @cgraph.Port?,
   offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
   match port {
     Some(value) =>
@@ -1191,19 +1395,40 @@ fn edge_port_offset(
                   }
                 None =>
                   match value.compass {
-                    Some(compass) => compass_port_offset(compass, node_name, sizes)
+                    Some(compass) =>
+                      compass_port_offset(
+                        compass,
+                        node_name,
+                        sizes,
+                        rankdir,
+                        nodes_by_name,
+                      )
                     None => 0.0
                   }
               }
             None =>
               match value.compass {
-                Some(compass) => compass_port_offset(compass, node_name, sizes)
+                Some(compass) =>
+                  compass_port_offset(
+                    compass,
+                    node_name,
+                    sizes,
+                    rankdir,
+                    nodes_by_name,
+                  )
                 None => 0.0
               }
           }
         None =>
           match value.compass {
-            Some(compass) => compass_port_offset(compass, node_name, sizes)
+            Some(compass) =>
+              compass_port_offset(
+                compass,
+                node_name,
+                sizes,
+                rankdir,
+                nodes_by_name,
+              )
             None => 0.0
           }
       }
@@ -1254,41 +1479,13 @@ fn record_port_point(
 }
 
 ///|
-fn compass_port_point(
-  node_name : String,
-  compass : @cgraph.Compass,
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-) -> @geom.Point {
-  let half_height = match sizes.get(node_name) {
-    Some(value) => value.height_pt / 2.0
-    None => default_node_height_in() * 72.0 / 2.0
-  }
-  let left = -node_left_pt(node_name, sizes)
-  let right = node_right_pt(node_name, sizes)
-  let top = half_height
-  let bottom = -half_height
-  let base = match compass {
-    @cgraph.Compass::N => @geom.Point::{ x: 0.0, y: top }
-    @cgraph.Compass::NE => @geom.Point::{ x: right, y: top }
-    @cgraph.Compass::E => @geom.Point::{ x: right, y: 0.0 }
-    @cgraph.Compass::SE => @geom.Point::{ x: right, y: bottom }
-    @cgraph.Compass::S => @geom.Point::{ x: 0.0, y: bottom }
-    @cgraph.Compass::SW => @geom.Point::{ x: left, y: bottom }
-    @cgraph.Compass::W => @geom.Point::{ x: left, y: 0.0 }
-    @cgraph.Compass::NW => @geom.Point::{ x: left, y: top }
-    @cgraph.Compass::C => @geom.Point::{ x: 0.0, y: 0.0 }
-  }
-  layout_port_offset(base, rankdir)
-}
-
-///|
 fn edge_port_order(
   node_name : String,
   port : @cgraph.Port?,
   offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
   if !port_is_explicit(port) {
     // Graphviz parity: absent ports contribute neutral 0.0 offset/order.
@@ -1307,7 +1504,13 @@ fn edge_port_order(
                   match value.compass {
                     Some(compass) =>
                       port_order_fraction(
-                        compass_port_point(node_name, compass, sizes, rankdir),
+                        compass_port_point(
+                          node_name,
+                          nodes_by_name.get(node_name),
+                          compass,
+                          sizes,
+                          rankdir,
+                        ),
                       )
                     None => 0.5
                   }
@@ -1316,7 +1519,13 @@ fn edge_port_order(
               match value.compass {
                 Some(compass) =>
                   port_order_fraction(
-                    compass_port_point(node_name, compass, sizes, rankdir),
+                    compass_port_point(
+                      node_name,
+                      nodes_by_name.get(node_name),
+                      compass,
+                      sizes,
+                      rankdir,
+                    ),
                   )
                 None => 0.5
               }
@@ -1325,7 +1534,13 @@ fn edge_port_order(
           match value.compass {
             Some(compass) =>
               port_order_fraction(
-                compass_port_point(node_name, compass, sizes, rankdir),
+                compass_port_point(
+                  node_name,
+                  nodes_by_name.get(node_name),
+                  compass,
+                  sizes,
+                  rankdir,
+                ),
               )
             None => 0.5
           }
@@ -1413,6 +1628,8 @@ fn build_constraint_graph(
     } else {
       Map::new()
     }
+  let rankdir =
+    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
   let node_degrees : Map[String, Int] = Map::new()
   for edge in edges {
     let tail_name = edge.tail().name()
@@ -1933,12 +2150,16 @@ fn build_constraint_graph(
         seg.tail_port,
         port_offsets,
         sizes,
+        rankdir,
+        real_by_name,
       )
       let head_offset = edge_port_offset(
         seg.head,
         seg.head_port,
         port_offsets,
         sizes,
+        rankdir,
+        real_by_name,
       )
       let delta = head_offset - tail_offset
       let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
@@ -1975,12 +2196,16 @@ fn build_constraint_graph(
           seg.tail_port,
           port_offsets,
           sizes,
+          rankdir,
+          real_by_name,
         )
         let head_offset = edge_port_offset(
           seg.head,
           seg.head_port,
           port_offsets,
           sizes,
+          rankdir,
+          real_by_name,
         )
         let delta = head_offset - tail_offset
         let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }

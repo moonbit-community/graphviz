@@ -4809,6 +4809,8 @@ fn build_edge_port_offsets_from_endpoint_ports(
   head_ports : Array[@cgraph.Port?],
   port_offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
 ) -> (Array[Double], Array[Double]) {
   let tail_offsets : Array[Double] = []
   let head_offsets : Array[Double] = []
@@ -4820,6 +4822,8 @@ fn build_edge_port_offsets_from_endpoint_ports(
         tail_ports[idx],
         port_offsets,
         sizes,
+        rankdir,
+        nodes_by_name,
       )
     let head_x =
       edge_port_offset(
@@ -4827,6 +4831,8 @@ fn build_edge_port_offsets_from_endpoint_ports(
         head_ports[idx],
         port_offsets,
         sizes,
+        rankdir,
+        nodes_by_name,
       )
     tail_offsets.push(tail_x)
     head_offsets.push(head_x)
@@ -4875,6 +4881,12 @@ fn compute_edge_port_positions(
   if edges.length() == 0 {
     return ([], [])
   }
+  let rankdir =
+    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+  let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
+  for node in nodes {
+    nodes_by_name[node.name()] = node
+  }
   let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
     build_edge_port_sampling_inputs(
       nodes,
@@ -4891,6 +4903,8 @@ fn compute_edge_port_positions(
     head_ports,
     port_offsets,
     sizes,
+    rankdir,
+    nodes_by_name,
   )
 }
 
@@ -4907,6 +4921,7 @@ fn build_edge_port_orders_from_endpoint_ports(
   port_offsets : Map[String, Map[String, RecordPort]],
   sizes : Map[String, NodeSize],
   rankdir : RankDir,
+  nodes_by_name : Map[String, @cgraph.Node],
 ) -> (Array[Double], Array[Double]) {
   let tail_orders : Array[Double] = []
   let head_orders : Array[Double] = []
@@ -4919,6 +4934,7 @@ fn build_edge_port_orders_from_endpoint_ports(
         port_offsets,
         sizes,
         rankdir,
+        nodes_by_name,
       )
     let head_order =
       edge_port_order(
@@ -4927,6 +4943,7 @@ fn build_edge_port_orders_from_endpoint_ports(
         port_offsets,
         sizes,
         rankdir,
+        nodes_by_name,
       )
     tail_orders.push(tail_order)
     head_orders.push(head_order)
@@ -4951,6 +4968,10 @@ fn compute_edge_port_orders(
   }
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
+  let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
+  for node in nodes {
+    nodes_by_name[node.name()] = node
+  }
   let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
     build_edge_port_sampling_inputs(
       nodes,
@@ -4968,6 +4989,7 @@ fn compute_edge_port_orders(
     port_offsets,
     sizes,
     rankdir,
+    nodes_by_name,
   )
 }
 
