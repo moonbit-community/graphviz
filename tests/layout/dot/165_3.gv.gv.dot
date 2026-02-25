@@ -1,0 +1,12 @@
+digraph {
+	graph [bb="0,0,91.75,60.5",
+		label="hello \\\" world",
+		lheight=0.23,
+		lp="45.875,12.25",
+		lwidth=1.05
+	];
+	node [label="\N"];
+	a	[height=0.5,
+		pos="45.875,42.5",
+		width=0.75];
+}
