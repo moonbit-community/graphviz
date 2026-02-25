@@ -1,0 +1,43 @@
+digraph compound_clusters {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 177 98 177 98 0 ",
+		bb="0,0,98,177",
+		compound=true,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_1 {
+		graph [_draw_="c 7 -#000000 p 4 8 92.5 8 169 90 169 90 92.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 49 151.7 0 49.5 9 -cluster_1 ",
+			bb="8,92.5,90,169",
+			label=cluster_1,
+			lheight=0.23,
+			lp="49,156.75",
+			lwidth=0.69
+		];
+		C1N1	[_draw_="c 7 -#000000 e 49 118.5 32.93 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 49 113.45 0 32.25 4 -C1N1 ",
+			height=0.5,
+			pos="49,118.5",
+			width=0.91462];
+	}
+	subgraph cluster_2 {
+		graph [_draw_="c 7 -#000000 p 4 8 8 8 84.5 90 84.5 90 8 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 49 67.2 0 49.5 9 -cluster_2 ",
+			bb="8,8,90,84.5",
+			label=cluster_2,
+			lheight=0.23,
+			lp="49,72.25",
+			lwidth=0.69
+		];
+		C2N1	[_draw_="c 7 -#000000 e 49 34 32.93 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 49 28.95 0 32.25 4 -C2N1 ",
+			height=0.5,
+			pos="49,34",
+			width=0.91462];
+	}
+	C1N1 -> C2N1	[_draw_="c 7 -#000000 B 4 49 92.5 49 90.5 49 88.5 49 86.5 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 52.5 96.01 49 86.01 45.5 96.01 ",
+		lhead=cluster_2,
+		ltail=cluster_1,
+		pos="e,49,84.499 49,92.5 49,90.5 49,88.5 49,86.5"];
+}

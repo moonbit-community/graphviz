@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,36,36"];
+	node [label="",
+		shape=circle,
+		style=filled
+	];
+	circle	[height=0.5,
+		pos="18,18",
+		width=0.5];
+}

@@ -1,0 +1,31 @@
+digraph compound_clusters {
+	graph [bb="0,0,98,177",
+		compound=true
+	];
+	node [label="\N"];
+	subgraph cluster_1 {
+		graph [bb="8,92.5,90,169",
+			label=cluster_1,
+			lheight=0.23,
+			lp="49,156.75",
+			lwidth=0.69
+		];
+		C1N1	[height=0.5,
+			pos="49,118.5",
+			width=0.91462];
+	}
+	subgraph cluster_2 {
+		graph [bb="8,8,90,84.5",
+			label=cluster_2,
+			lheight=0.23,
+			lp="49,72.25",
+			lwidth=0.69
+		];
+		C2N1	[height=0.5,
+			pos="49,34",
+			width=0.91462];
+	}
+	C1N1 -> C2N1	[lhead=cluster_2,
+		ltail=cluster_1,
+		pos="e,49,84.499 49,92.5 49,90.5 49,88.5 49,86.5"];
+}
