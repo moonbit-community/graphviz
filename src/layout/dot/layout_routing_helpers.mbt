@@ -172,6 +172,7 @@ priv struct EdgeRouteBase {
   tail_rank : Int
   head_rank : Int
   is_flat_edge : Bool
+  is_flat_adjacent : Bool
   vnodes : Array[String]
   has_vnodes : Bool
   use_pathplan : Bool
@@ -1682,6 +1683,21 @@ fn build_edge_route_base(
     None => 0
   }
   let is_flat_edge = tail_rank == head_rank
+  let is_flat_adjacent =
+    if is_flat_edge {
+      let tail_order = match order_index.get(orig_tail_name) {
+        Some(value) => value
+        None => 0
+      }
+      let head_order = match order_index.get(orig_head_name) {
+        Some(value) => value
+        None => 0
+      }
+      let delta = tail_order - head_order
+      delta == 1 || delta == -1
+    } else {
+      false
+    }
   let has_cluster = tail_cluster_name != "" || head_cluster_name != ""
   let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
     Some(list) => list
@@ -2146,6 +2162,7 @@ fn build_edge_route_base(
     tail_rank,
     head_rank,
     is_flat_edge,
+    is_flat_adjacent,
     vnodes,
     has_vnodes,
     use_pathplan,
@@ -2631,7 +2648,7 @@ fn build_edge_spline(
         label_pad_boost = nodesep_pt * 1.2
       }
       let dotted_weight = if enable_complex_tuning { 1.0 } else { 0.8 }
-      let guide_points = edge_polyline_points(
+      let base_guide_points = edge_polyline_points(
         edge,
         tail_name,
         head_name,
@@ -2652,6 +2669,17 @@ fn build_edge_spline(
         split_label,
         same_local_cluster,
       )
+      // Graphviz parity: make_flat_adj_edges ignores intermediate flat vnodes
+      // for adjacent explicit-port edges and rebuilds the route from endpoints.
+      let guide_points =
+        if base.is_flat_adjacent &&
+          has_explicit_port &&
+          label_width_pt <= 0.0 &&
+          base_guide_points.length() > 2 {
+          [tail_anchor, head_anchor]
+        } else {
+          base_guide_points
+        }
       let route_state =
         compute_route_points_with_pathplan(
           base,
