@@ -2669,17 +2669,7 @@ fn build_edge_spline(
         split_label,
         same_local_cluster,
       )
-      // Graphviz parity: make_flat_adj_edges ignores intermediate flat vnodes
-      // for adjacent explicit-port edges and rebuilds the route from endpoints.
-      let guide_points =
-        if base.is_flat_adjacent &&
-          has_explicit_port &&
-          label_width_pt <= 0.0 &&
-          base_guide_points.length() > 2 {
-          [tail_anchor, head_anchor]
-        } else {
-          base_guide_points
-        }
+      let guide_points = base_guide_points
       let route_state =
         compute_route_points_with_pathplan(
           base,
