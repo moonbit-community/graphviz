@@ -6344,7 +6344,7 @@ fn write_svg_node_group(
           )
           write_line(
             sb,
-            "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+            "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
             "",
             pretty,
           )
@@ -6353,7 +6353,7 @@ fn write_svg_node_group(
           if !no_outline || filled {
             write_line(
               sb,
-              "<polygon fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash} points=\"\{attrs}\"/>",
+              "<polygon fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} points=\"\{attrs}\"/>",
               "",
               pretty,
             )
@@ -6373,7 +6373,7 @@ fn write_svg_node_group(
               )
               write_line(
                 sb,
-                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
                 "",
                 pretty,
               )
@@ -6381,7 +6381,7 @@ fn write_svg_node_group(
               let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
               write_line(
                 sb,
-                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{outline}\"/>",
                 "",
                 pretty,
               )
