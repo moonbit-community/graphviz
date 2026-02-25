@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 
@@ -60,7 +61,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
-    path = resolve_input_path(repo_root, args.case)
+    try:
+        path = resolve_input_path(repo_root, args.case)
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
     print(path)
     return 0
 

@@ -76,27 +76,6 @@ def parse_mbt_candidates(path: Path) -> list[str]:
     raise ValueError(f"{path}: unterminated candidates list")
 
 
-def parse_bash_candidates(path: Path) -> list[str]:
-    lines = path.read_text(encoding="utf-8").splitlines()
-    in_block = False
-    items: list[str] = []
-    for raw in lines:
-        stripped = raw.strip()
-        if not in_block:
-            if stripped == "local candidates=(":
-                in_block = True
-            continue
-        if stripped == ")":
-            if not items:
-                raise ValueError(f"{path}: empty candidates list")
-            return items
-        match = re.fullmatch(r'"([^"]+)"', stripped)
-        if match is None:
-            raise ValueError(f"{path}: unexpected candidates entry: {stripped}")
-        items.append(normalize_candidate_template(match.group(1)))
-    raise ValueError(f"{path}: unterminated candidates list")
-
-
 def ensure_file_contains(path: Path, snippet: str) -> None:
     content = path.read_text(encoding="utf-8")
     if snippet not in content:
@@ -144,6 +123,16 @@ def main() -> int:
         repo_root / "scripts/check_strict_parity_case_lists.py",
         "from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES",
     )
+    for script_name in (
+        "generate_dot_snapshots.sh",
+        "generate_xdot_snapshots.sh",
+        "generate_svg_renderer_snapshots.sh",
+        "generate_svg_snapshots.sh",
+    ):
+        ensure_file_contains(
+            repo_root / "scripts" / script_name,
+            'python3 "${repo_root}/scripts/snapshot_inputs.py" --repo-root "${repo_root}" --case "${case_name}"',
+        )
 
     targets: list[tuple[str, list[str]]] = []
     targets.append(
@@ -164,31 +153,6 @@ def main() -> int:
             parse_mbt_candidates(repo_root / "src/render/svg/svg_test.mbt"),
         )
     )
-    targets.append(
-        (
-            "scripts/generate_dot_snapshots.sh:candidates",
-            parse_bash_candidates(repo_root / "scripts/generate_dot_snapshots.sh"),
-        )
-    )
-    targets.append(
-        (
-            "scripts/generate_xdot_snapshots.sh:candidates",
-            parse_bash_candidates(repo_root / "scripts/generate_xdot_snapshots.sh"),
-        )
-    )
-    targets.append(
-        (
-            "scripts/generate_svg_renderer_snapshots.sh:candidates",
-            parse_bash_candidates(repo_root / "scripts/generate_svg_renderer_snapshots.sh"),
-        )
-    )
-    targets.append(
-        (
-            "scripts/generate_svg_snapshots.sh:candidates",
-            parse_bash_candidates(repo_root / "scripts/generate_svg_snapshots.sh"),
-        )
-    )
-
     mismatches: list[str] = []
     for name, current in targets:
         if current != canonical:
