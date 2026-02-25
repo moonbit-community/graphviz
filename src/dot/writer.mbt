@@ -1058,6 +1058,36 @@ fn cluster_lca_path_recursive(
   path
 }
 
+fn nonrank_lca_path_recursive(
+  graph : @cgraph.Graph,
+  path : String,
+  tail_name : String,
+  head_name : String,
+) -> String {
+  for i, subgraph in graph.subgraphs() {
+    if should_skip_layout_subgraph(graph, subgraph, true) {
+      continue
+    }
+    if is_rankset_graph(subgraph) {
+      continue
+    }
+    if !graph_contains_node_name(subgraph, tail_name) {
+      continue
+    }
+    if !graph_contains_node_name(subgraph, head_name) {
+      continue
+    }
+    let child_path = child_graph_path(path, i)
+    return nonrank_lca_path_recursive(
+      subgraph,
+      child_path,
+      tail_name,
+      head_name,
+    )
+  }
+  path
+}
+
 ///|
 fn edge_target_path(
   edge : @cgraph.Edge,
@@ -1084,7 +1114,25 @@ fn edge_target_path(
           Some(home_graph) =>
             if graph_contains_node_name(home_graph, tail_name) &&
               graph_contains_node_name(home_graph, head_name) {
-              home_path
+              if is_rankset_graph(home_graph) {
+                let is_root_rankset = match parent_graph_path(home_path) {
+                  Some(path) => path == ""
+                  None => false
+                }
+                if !is_root_rankset {
+                  home_path
+                } else {
+                  let candidate_path =
+                    nonrank_lca_path_recursive(root, "", tail_name, head_name)
+                  if candidate_path == "" || candidate_path == home_path {
+                    home_path
+                  } else {
+                    candidate_path
+                  }
+                }
+              } else {
+                home_path
+              }
             } else {
               match nearest_ancestor_path_with_edge_endpoints(
                 root,
@@ -1212,6 +1260,41 @@ fn write_body(
         ctx.edge_last_written[edge.id()] = preorder
         ctx.edge_attrs_written[edge.id()] = true
       }
+    }
+  }
+  if is_layout_output && is_rankset_graph(graph) {
+    let root = root_graph(graph)
+    let supplemental_edges : Array[@cgraph.Edge] = []
+    for edge in graph.edges() {
+      if edge_target_path(edge, root, ctx) == graph_path {
+        continue
+      }
+      if !attrs_already_written_for_edge(ctx, edge.id()) {
+        continue
+      }
+      let tail_name = edge.tail().name()
+      let head_name = edge.head().name()
+      if !graph_contains_node_name(graph, tail_name) {
+        continue
+      }
+      if !graph_contains_node_name(graph, head_name) {
+        continue
+      }
+      supplemental_edges.push(edge)
+    }
+    supplemental_edges.sort_by_key(edge => edge.id())
+    for edge in supplemental_edges {
+      if map_get_or_zero_int(ctx.edge_last_written, edge.id()) == preorder {
+        continue
+      }
+      write_edge_stmt(
+        graph,
+        edge,
+        sb,
+        indent,
+        false,
+      )
+      ctx.edge_last_written[edge.id()] = preorder
     }
   }
 }
