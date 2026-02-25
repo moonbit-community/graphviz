@@ -1,0 +1,9 @@
+digraph G {
+	graph [bb="0,0,75.002,75.498"];
+	node [label="{1|2|3}|2|{31|32}",
+		shape=Mrecord
+	];
+	Mrecord	[height=1.0486,
+		pos="37.501,37.749",
+		width=1.0417];
+}
