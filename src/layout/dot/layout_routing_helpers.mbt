@@ -2780,8 +2780,20 @@ fn build_edge_spline(
             label_width_pt <= 0.0 &&
             !route_include_tail &&
             !route_include_head
+          let flat_top_compass_single_arrow_candidate =
+            !using_pathplan &&
+            is_flat_edge &&
+            has_explicit_port &&
+            label_width_pt <= 0.0 &&
+            (base.tail_port_side & PORT_SIDE_TOP) != 0 &&
+            (base.head_port_side & PORT_SIDE_TOP) != 0 &&
+            (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
+            (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
+            (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
+            route_include_tail != route_include_head
           let flat_detour =
-            if flat_no_arrow_candidate {
+            if flat_no_arrow_candidate ||
+              flat_top_compass_single_arrow_candidate {
               flat_no_arrow_detour_points_if_blocked(
                 tail_name,
                 head_name,
@@ -3213,8 +3225,20 @@ fn build_edge_spline(
           label_width_pt <= 0.0 &&
           !route_include_tail &&
           !route_include_head
+        let flat_top_compass_single_arrow_candidate =
+          !using_pathplan &&
+          is_flat_edge &&
+          has_explicit_port &&
+          label_width_pt <= 0.0 &&
+          (base.tail_port_side & PORT_SIDE_TOP) != 0 &&
+          (base.head_port_side & PORT_SIDE_TOP) != 0 &&
+          (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
+          (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
+          (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
+          route_include_tail != route_include_head
         let flat_detour =
-          if flat_no_arrow_candidate {
+          if flat_no_arrow_candidate ||
+            flat_top_compass_single_arrow_candidate {
             flat_no_arrow_detour_points_if_blocked(
               tail_name,
               head_name,
