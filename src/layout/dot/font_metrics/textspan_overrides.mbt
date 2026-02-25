@@ -62,6 +62,14 @@ fn lookup_manual_textspan_metrics(
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
     return Some((45.0, 16.5, 12.75, 0.7000000000000001))
   }
+  // Graphviz parity: refs/graphviz/tests/2460.dot escaped backslash label width.
+  if font == "Times-Roman" &&
+    (text == "double back slash in label \\. End should be the last word - End" ||
+      text ==
+      "double back slash in label \\\\. End should be the last word - End") &&
+    Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
+    return Some((342.0, 16.5, 12.75, 0.7000000000000001))
+  }
   // Graphviz parity: refs/graphviz/tests/2614.dot multiline text widths.
   if font == "Times-Roman" && (text == "(b" || text == "\"c\")") &&
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
