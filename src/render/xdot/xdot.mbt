@@ -4767,7 +4767,15 @@ fn append_string(sb : StringBuilder, value : String) -> Unit {
   sb.write_char(' ')
   sb.write_string(utf8_byte_length(value).to_string())
   sb.write_string(" -")
-  sb.write_string(value)
+  // Keep xdot byte length based on raw text, but escape literal backslashes in
+  // the encoded payload to match Graphviz string emission.
+  for ch in value {
+    if ch == '\\' {
+      sb.write_string("\\\\")
+    } else {
+      sb.write_char(ch)
+    }
+  }
 }
 
 ///|
