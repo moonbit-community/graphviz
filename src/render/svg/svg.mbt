@@ -4292,6 +4292,10 @@ fn svg_output_scale(
   let mut scale_y = 1.0
   let mut out_width = width_pt
   let mut out_height = height_pt
+  let ratio_compress = match graph.get_attr("ratio") {
+    Some(value) => value.trim(chars=" \n\r\t").to_lower() == "compress"
+    None => false
+  }
   match parse_size_attr(graph) {
     Some((width_in, height_in, force)) =>
       if width_pt > 0.0 && height_pt > 0.0 {
@@ -4300,10 +4304,18 @@ fn svg_output_scale(
         let sx = max_width / width_pt
         let sy = max_height / height_pt
         if force {
-          scale_x = sx
-          scale_y = sy
-          out_width = max_width
-          out_height = max_height
+          if ratio_compress {
+            let scale = if sx < sy { sx } else { sy }
+            scale_x = scale
+            scale_y = scale
+            out_width = width_pt * scale
+            out_height = height_pt * scale
+          } else {
+            scale_x = sx
+            scale_y = sy
+            out_width = max_width
+            out_height = max_height
+          }
         } else {
           let mut scale = if sx < sy { sx } else { sy }
           if scale > 1.0 {
@@ -5520,9 +5532,13 @@ fn write_svg_node_group(
     }
     None => "node"
   }
+  let node_group_id = match nonempty_attr_value(node_attr(node, "id")) {
+    Some(value) => escape_xml_with_dash(value)
+    None => "node\{node_index}"
+  }
   write_line(
     sb,
-    "<g id=\"node\{node_index}\" class=\"\{node_group_class}\">",
+    "<g id=\"\{node_group_id}\" class=\"\{node_group_class}\">",
     "",
     pretty,
   )
@@ -6429,6 +6445,30 @@ fn write_svg_node_group(
     }
   }
   if kind == "point" {
+    let font = @attrs.font_name(node_attr(node, "fontname"))
+    let size = @attrs.font_size(node_attr(node, "fontsize"))
+    let color = svg_color(node_color(node, "fontcolor", "black"))
+    let xlabel = match node_attr(node, "xlabel") {
+      Some(value) => resolve_label(value, "")
+      None => ""
+    }
+    if xlabel != "" {
+      match node_layout.xlabel_pos {
+        Some(pos) =>
+          write_label_lines(
+            sb,
+            xlabel,
+            font,
+            size,
+            color,
+            pos,
+            bbox,
+            "",
+            pretty,
+          )
+        None => ()
+      }
+    }
     if has_link {
       write_line(sb, "</a>", "", pretty)
       write_line(sb, "</g>", "", pretty)

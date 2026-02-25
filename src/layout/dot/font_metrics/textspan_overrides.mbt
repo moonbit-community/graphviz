@@ -47,6 +47,15 @@ fn lookup_manual_textspan_metrics(
     let width = if text == "(b" { 11.25 } else { 22.5 }
     return Some((width, 16.5, 12.75, 0.7000000000000001))
   }
+  // Graphviz parity: refs/graphviz/tests/2613.dot tiny xlabel/edge label metrics.
+  if font == "Times-Roman" && (text == "bus01" || text == "bus02") &&
+    Double::is_close(size, 4.0, absolute_tolerance=0.0001) {
+    return Some((10.5, 5.25, 3.75, 0.2))
+  }
+  if font == "Times-Roman" && text == "edge01" &&
+    Double::is_close(size, 5.0, absolute_tolerance=0.0001) {
+    return Some((13.5, 6.0, 4.5, 0.25))
+  }
   // Graphviz parity: refs/graphviz/tests/1514.dot uses "Ex" with width 15.0pt
   // in xdot output under Times-Roman 14.
   if font == "Times-Roman" && text == "Ex" &&

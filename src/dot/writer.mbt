@@ -293,9 +293,11 @@ fn graph_attr_rank(name : String) -> Int {
     "lheight" => 13
     "lp" => 14
     "lwidth" => 15
+    "layout" => 16
+    "mode" => 17
     "ordering" => 20
-    "orientation" => 17
-    "page" => 18
+    "orientation" => 18
+    "page" => 19
     "margin" => 19
     "nodesep" => 20
     "overlap" => 21
@@ -327,6 +329,7 @@ fn node_attr_rank(name : String) -> Int {
     "fname" => 8
     "fontsize" => 9
     "height" => 10
+    "id" => 11
     "hight" => 11
     "image" => 11
     "imagescale" => 11
@@ -346,7 +349,6 @@ fn node_attr_rank(name : String) -> Int {
     "subkind" => 24
     "root" => 24
     "width" => 25
-    "id" => 26
     _ => 200
   }
 }
