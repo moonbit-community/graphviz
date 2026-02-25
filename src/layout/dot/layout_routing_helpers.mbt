@@ -2673,6 +2673,15 @@ fn build_edge_spline(
         !has_explicit_port &&
         label_width_pt <= 0.0 &&
         style_value.contains("invis")
+      let prefer_linear_flat_bottom_single_arrow =
+        is_flat_edge &&
+        has_explicit_port &&
+        label_width_pt <= 0.0 &&
+        (base.tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
+        (base.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
+        (base.tail_port_side & PORT_SIDE_TOP) == 0 &&
+        (base.head_port_side & PORT_SIDE_TOP) == 0 &&
+        route_include_tail != route_include_head
       let routed_spline = if points.length() > 2 {
         let clipped = points
         let simplify_tol = nodesep_pt * 0.8
@@ -2935,10 +2944,27 @@ fn build_edge_spline(
                 arrow_swapped=swap_arrow_attrs,
               )
             } else {
+              let (line_start, line_end) =
+                if prefer_linear_flat_bottom_single_arrow {
+                  let tail_bottom =
+                    base.tail_clip_center.y - base.tail_clip_size.height_pt / 2.0
+                  let head_bottom =
+                    base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
+                  let line_y = min_double(tail_bottom, head_bottom)
+                  (
+                    point(adjusted[0].x, line_y),
+                    point(adjusted[adjusted.length() - 1].x, line_y),
+                  )
+                } else {
+                  (
+                    adjusted[0],
+                    adjusted[adjusted.length() - 1],
+                  )
+                }
               edge_spline_for_line(
                 edge,
-                adjusted[0],
-                adjusted[adjusted.length() - 1],
+                line_start,
+                line_end,
                 tail_clip_center,
                 head_clip_center,
                 tail_clip_size,
@@ -2954,7 +2980,8 @@ fn build_edge_spline(
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
                 prefer_linear=prefer_linear_flat_invis ||
-                  (flat_no_arrow_candidate && flat_detour is None),
+                  (flat_no_arrow_candidate && flat_detour is None) ||
+                  prefer_linear_flat_bottom_single_arrow,
                 parallel_offset=parallel_offset,
                 clip_swapped=swap_clip_shapes,
                 arrow_swapped=swap_arrow_attrs,
@@ -3327,6 +3354,17 @@ fn build_edge_spline(
             } else {
               head_anchor
             }
+          let (line_start, line_end) =
+            if prefer_linear_flat_bottom_single_arrow {
+              let tail_bottom =
+                base.tail_clip_center.y - base.tail_clip_size.height_pt / 2.0
+              let head_bottom =
+                base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
+              let line_y = min_double(tail_bottom, head_bottom)
+              (point(line_start.x, line_y), point(line_end.x, line_y))
+            } else {
+              (line_start, line_end)
+            }
           if using_pathplan {
             let line_points : Array[@geom.Point] =
               if points.length() >= 2 { points } else { [line_start, line_end] }
@@ -3384,7 +3422,8 @@ fn build_edge_spline(
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
               prefer_linear=prefer_linear_flat_invis ||
-                (flat_no_arrow_candidate && flat_detour is None),
+                (flat_no_arrow_candidate && flat_detour is None) ||
+                prefer_linear_flat_bottom_single_arrow,
               parallel_offset=parallel_offset,
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,
