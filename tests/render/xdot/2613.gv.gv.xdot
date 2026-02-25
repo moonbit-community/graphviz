@@ -1,0 +1,46 @@
+graph {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 12.15 63.6 12.15 63.6 0 ",
+		bb="0,0,63.6,12.15",
+		layout=dot,
+		mode=sgd,
+		overlap=false,
+		rankdir=LR,
+		ratio=compress,
+		size="16,9!",
+		splines=TRUE,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	0	[_draw_="c 7 -#000000 C 7 -#000000 E 11.4 6.15 0.9 0.9 ",
+		_ldraw_="F 4 11 -Times-Roman c 7 -#000000 T 5.25 1.45 0 10.5 5 -bus01 ",
+		fontsize=4,
+		height=0.025,
+		id=bus01,
+		label=bus01,
+		pos="11.4,6.15",
+		shape=point,
+		width=0.025,
+		xlabel=bus01,
+		xlp="5.25,2.625"];
+	1	[_draw_="c 7 -#000000 C 7 -#000000 E 62.7 6.15 0.9 0.9 ",
+		_ldraw_="F 4 11 -Times-Roman c 7 -#000000 T 56.55 1.45 0 10.5 5 -bus02 ",
+		fontsize=4,
+		height=0.025,
+		id=bus02,
+		label=bus02,
+		pos="62.7,6.15",
+		shape=point,
+		width=0.025,
+		xlabel=bus02,
+		xlp="56.55,2.625"];
+	0 -- 1	[_draw_="S 17 -setlinewidth(1.5) c 7 -#00ff00 B 4 12.44 6.15 15.25 6.15 58.94 6.15 61.67 6.15 ",
+		_ldraw_="F 5 11 -Times-Roman c 7 -#000000 T 37.05 7.4 0 13.5 6 -edge01 ",
+		color=green,
+		fontsize=5,
+		id=edge01,
+		label=edge01,
+		lp="37.05,9.15",
+		penwidth=1.5,
+		pos="12.442,6.15 15.255,6.15 58.939,6.15 61.667,6.15",
+		style=filled];
+}

@@ -1,0 +1,9 @@
+graph {
+	graph [bb="0,0,118,100"];
+	node [label="\N"];
+	a	[height=1.3889,
+		peripheries=5,
+		pos="58.998,50",
+		shape=box,
+		width=1.6388];
+}
