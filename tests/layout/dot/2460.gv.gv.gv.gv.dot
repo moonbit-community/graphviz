@@ -1,0 +1,8 @@
+graph {
+	graph [bb="0,0,488.61,36"];
+	node [label="\N"];
+	node01	[height=0.5,
+		label="double back slash in label \\. End should be the last word - End",
+		pos="244.3,18",
+		width=6.7862];
+}
