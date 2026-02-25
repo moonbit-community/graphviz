@@ -357,7 +357,22 @@ fn layout_for_job(
   job : CliJob,
   graph : @cgraph.Graph,
 ) -> @layout_dot.DotLayoutGraph raise {
-  match job.engine {
+  let engine = match graph.get_attr("layout") {
+    Some(value) => {
+      let layout_name = value.trim(chars=" \n\r\t").to_string()
+      if layout_name == "" {
+        job.engine
+      } else {
+        match parse_engine_name(layout_name) {
+          LayoutEngine::Dot as parsed => parsed
+          LayoutEngine::Neato as parsed => parsed
+          _ => job.engine
+        }
+      }
+    }
+    None => job.engine
+  }
+  match engine {
     LayoutEngine::Dot => @layout_dot.layout_dot(graph)
     LayoutEngine::Neato => {
       let scale = match job.scale {

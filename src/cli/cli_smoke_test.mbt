@@ -37,3 +37,14 @@ test "cli smoke writes output file" {
   let svg_out = @fs.read_file_to_string(out_path)
   assert_true(svg_out.contains("<svg"))
 }
+
+///|
+test "cli layout=neato overrides -Kdot" {
+  ensure_dir("target")
+  ensure_dir("target/cli")
+  let input_path = "target/cli/layout_neato.dot"
+  write_input(input_path, "graph { layout=neato; a -- b; }")
+  let dot_frontend_output = run_cli(["-Kdot", "-Tdot", input_path])
+  let neato_frontend_output = run_cli(["-Tdot", input_path], program="neato")
+  assert_eq(dot_frontend_output, neato_frontend_output)
+}
