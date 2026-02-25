@@ -4,3 +4,6 @@
 /target
 .mooncakes
 /.waylog
+
+# Local throwaway debug tests should not be committed or picked up accidentally.
+src/layout/dot/tmp_*.mbt
