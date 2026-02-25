@@ -2545,13 +2545,22 @@ fn resolve_cluster_parent_for_order(
   parents : Map[String, String?],
   fallback_parents : Map[String, String?],
 ) -> String? {
-  match parents.get(cluster) {
+  let candidate = match parents.get(cluster) {
     Some(value) => value
     None =>
       match fallback_parents.get(cluster) {
         Some(value) => value
         None => None
       }
+  }
+  match candidate {
+    Some(value) =>
+      if value == "" || value == cluster {
+        None
+      } else {
+        Some(value)
+      }
+    None => None
   }
 }
 
@@ -2564,13 +2573,40 @@ fn cluster_depth_for_order(
   fallback_parents : Map[String, String?],
   memo : Map[String, Int],
 ) -> Int {
+  cluster_depth_for_order_inner(
+    cluster,
+    parents,
+    fallback_parents,
+    memo,
+    Map::new(),
+  )
+}
+
+fn cluster_depth_for_order_inner(
+  cluster : String,
+  parents : Map[String, String?],
+  fallback_parents : Map[String, String?],
+  memo : Map[String, Int],
+  visiting : Map[String, Bool],
+) -> Int {
   match memo.get(cluster) {
     Some(value) => value
     None => {
+      if visiting.get(cluster) is Some(_) {
+        return 0
+      }
+      visiting[cluster] = true
       let parent_opt =
         resolve_cluster_parent_for_order(cluster, parents, fallback_parents)
       let depth = match parent_opt {
-        Some(parent) => cluster_depth_for_order(parent, parents, fallback_parents, memo) + 1
+        Some(parent) =>
+          cluster_depth_for_order_inner(
+            parent,
+            parents,
+            fallback_parents,
+            memo,
+            visiting,
+          ) + 1
         None => 0
       }
       memo[cluster] = depth

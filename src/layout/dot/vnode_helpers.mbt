@@ -49,7 +49,12 @@ fn cluster_contains(
     return false
   }
   let mut current : String? = Some(target)
+  let seen : Map[String, Bool] = Map::new()
   while current is Some(name) {
+    if seen.get(name) is Some(_) {
+      return false
+    }
+    seen[name] = true
     if name == ancestor {
       return true
     }

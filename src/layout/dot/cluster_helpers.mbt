@@ -103,21 +103,35 @@ fn node_in_rankset_outside_cluster(
   false
 }
 
+fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
+  let mut current : @cgraph.Graph? = Some(graph)
+  while true {
+    match current {
+      Some(value) => {
+        if is_cluster_graph(value) {
+          match value.name() {
+            Some(name) => return name
+            None => return ""
+          }
+        }
+        current = value.parent()
+      }
+      None => break
+    }
+  }
+  ""
+}
+
 fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   if !graph_contains_node_raw(graph, node) {
     return false
   }
-  if is_cluster_graph(graph) {
-    let root = root_graph_for_node(node)
-    let cluster_name = match graph.name() {
-      Some(value) => value
-      None => ""
-    }
-    // Graphviz parity: nodes merged into an external rankset are removed
-    // from clusters (dotgen/node_induce + mark_clusters).
-    if node_in_rankset_outside_cluster(root, node, cluster_name) {
-      return false
-    }
+  let cluster_name = nearest_cluster_ancestor_name(graph)
+  // Graphviz parity: nodes merged into an external rankset are removed
+  // from clusters (dotgen/node_induce + mark_clusters).
+  if cluster_name != "" &&
+    node_in_rankset_outside_cluster(root_graph_for_node(node), node, cluster_name) {
+    return false
   }
   true
 }
@@ -247,8 +261,13 @@ fn cluster_lowest_common_ancestor(
     return left
   }
   let seen : Map[String, Bool] = Map::new()
+  let walk_seen : Map[String, Bool] = Map::new()
   let mut current = left
   while current != "" {
+    if walk_seen.get(current) is Some(_) {
+      break
+    }
+    walk_seen[current] = true
     seen[current] = true
     let parent = match cluster_parents.get(current) {
       Some(value) => value
@@ -260,7 +279,12 @@ fn cluster_lowest_common_ancestor(
     }
   }
   let mut probe = right
+  let probe_seen : Map[String, Bool] = Map::new()
   while probe != "" {
+    if probe_seen.get(probe) is Some(_) {
+      break
+    }
+    probe_seen[probe] = true
     if seen.get(probe) is Some(_) {
       return probe
     }

@@ -469,6 +469,20 @@ fn collect_graph_nodes(
   }
 }
 
+fn collect_graph_nodes_for_cluster_members(
+  graph : @cgraph.Graph,
+  nodes_out : Map[String, Bool],
+) -> Unit {
+  for node in graph.nodes() {
+    if graph_contains_node(graph, node) {
+      nodes_out[node.name()] = true
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_graph_nodes_for_cluster_members(child, nodes_out)
+  }
+}
+
 ///|
 fn collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
@@ -477,6 +491,20 @@ fn collect_cluster_members(
   for name, cluster_graph in cluster_graphs {
     let set : Map[String, Bool] = Map::new()
     collect_graph_nodes(cluster_graph, set)
+    if set.length() > 0 {
+      members[name] = set
+    }
+  }
+  members
+}
+
+fn collect_cluster_members_for_xpos(
+  cluster_graphs : Map[String, @cgraph.Graph],
+) -> Map[String, Map[String, Bool]] {
+  let members : Map[String, Map[String, Bool]] = Map::new()
+  for name, cluster_graph in cluster_graphs {
+    let set : Map[String, Bool] = Map::new()
+    collect_graph_nodes_for_cluster_members(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
     }
@@ -508,7 +536,7 @@ fn build_cluster_constraints(
   if cluster_graphs.length() == 0 {
     return ([], [], [], [])
   }
-  let cluster_members = collect_cluster_members(cluster_graphs)
+  let cluster_members = collect_cluster_members_for_xpos(cluster_graphs)
   if cluster_members.length() == 0 {
     return ([], [], [], [])
   }

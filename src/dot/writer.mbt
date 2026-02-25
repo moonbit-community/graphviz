@@ -866,6 +866,25 @@ fn node_in_rankset_outside_cluster(
   false
 }
 
+fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
+  let mut current : @cgraph.Graph? = Some(graph)
+  while true {
+    match current {
+      Some(value) => {
+        if is_cluster_subgraph(value) {
+          match value.name() {
+            Some(name) => return name
+            None => return ""
+          }
+        }
+        current = value.parent()
+      }
+      None => break
+    }
+  }
+  ""
+}
+
 ///|
 fn graph_contains_node_name(graph : @cgraph.Graph, name : String) -> Bool {
   if !graph_contains_node_name_raw(graph, name) {
@@ -873,15 +892,10 @@ fn graph_contains_node_name(graph : @cgraph.Graph, name : String) -> Bool {
   }
   // Graphviz parity: nodes merged into an external rankset are deleted from
   // cluster membership before final dot emission (dotgen/node_induce).
-  if is_cluster_subgraph(graph) {
-    let root = root_graph(graph)
-    let cluster_name = match graph.name() {
-      Some(value) => value
-      None => ""
-    }
-    if node_in_rankset_outside_cluster(root, name, cluster_name) {
-      return false
-    }
+  let cluster_name = nearest_cluster_ancestor_name(graph)
+  if cluster_name != "" &&
+    node_in_rankset_outside_cluster(root_graph(graph), name, cluster_name) {
+    return false
   }
   true
 }
@@ -962,6 +976,57 @@ fn graph_at_path(root : @cgraph.Graph, path : String) -> @cgraph.Graph? {
   Some(current)
 }
 
+fn parent_graph_path(path : String) -> String? {
+  if path == "" {
+    return None
+  }
+  let segments : Array[String] = []
+  for part in path.split("/") {
+    let value = part.to_string()
+    if value != "" {
+      segments.push(value)
+    }
+  }
+  if segments.length() == 0 {
+    return None
+  }
+  if segments.length() == 1 {
+    return Some("")
+  }
+  let mut parent = ""
+  let mut i = 0
+  while i < segments.length() - 1 {
+    if parent == "" {
+      parent = segments[i]
+    } else {
+      parent = "\{parent}/\{segments[i]}"
+    }
+    i = i + 1
+  }
+  Some(parent)
+}
+
+fn nearest_ancestor_path_with_edge_endpoints(
+  root : @cgraph.Graph,
+  start_path : String?,
+  tail_name : String,
+  head_name : String,
+) -> String? {
+  let mut current_path = start_path
+  while current_path is Some(path) {
+    match graph_at_path(root, path) {
+      Some(graph) =>
+        if graph_contains_node_name(graph, tail_name) &&
+          graph_contains_node_name(graph, head_name) {
+          return Some(path)
+        }
+      None => ()
+    }
+    current_path = parent_graph_path(path)
+  }
+  None
+}
+
 ///|
 fn cluster_lca_path_recursive(
   graph : @cgraph.Graph,
@@ -999,6 +1064,8 @@ fn edge_target_path(
   root : @cgraph.Graph,
   ctx : WriteContext,
 ) -> String {
+  let tail_name = edge.tail().name()
+  let head_name = edge.head().name()
   let id = edge.id()
   match ctx.edge_target_paths.get(id) {
     Some(path) => path
@@ -1007,19 +1074,27 @@ fn edge_target_path(
       let cluster_path = cluster_lca_path_recursive(
         root,
         "",
-        edge.tail().name(),
-        edge.head().name(),
+        tail_name,
+        head_name,
       )
       let path = if home_path == "" {
         cluster_path
       } else {
         match graph_at_path(root, home_path) {
           Some(home_graph) =>
-            if graph_contains_node_name(home_graph, edge.tail().name()) &&
-              graph_contains_node_name(home_graph, edge.head().name()) {
+            if graph_contains_node_name(home_graph, tail_name) &&
+              graph_contains_node_name(home_graph, head_name) {
               home_path
             } else {
-              cluster_path
+              match nearest_ancestor_path_with_edge_endpoints(
+                root,
+                parent_graph_path(home_path),
+                tail_name,
+                head_name,
+              ) {
+                Some(value) => value
+                None => cluster_path
+              }
             }
           None => cluster_path
         }
