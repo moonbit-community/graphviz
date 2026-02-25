@@ -5563,6 +5563,7 @@ fn write_svg_node_group(
   }
   let filled = if kind == "point" { true } else { style.filled }
   let dash = stroke_dash_attr(style)
+  let width_attr = stroke_width_attr(style, node_attr(node, "penwidth"))
   let fill = if filled {
     match node_attr(node, "fillcolor") {
         Some(value) => svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
@@ -6370,7 +6371,7 @@ fn write_svg_node_group(
             )
             write_line(
               sb,
-              "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+              "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
               "",
               pretty,
             )
@@ -6378,7 +6379,7 @@ fn write_svg_node_group(
             let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
             write_line(
               sb,
-              "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
+              "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{attrs}\"/>",
               "",
               pretty,
             )
@@ -6397,7 +6398,7 @@ fn write_svg_node_group(
               )
               write_line(
                 sb,
-                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
                 "",
                 pretty,
               )
@@ -6405,7 +6406,7 @@ fn write_svg_node_group(
               let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
               write_line(
                 sb,
-                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{outline}\"/>",
                 "",
                 pretty,
               )

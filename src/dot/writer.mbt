@@ -341,6 +341,7 @@ fn node_attr_rank(name : String) -> Int {
     "margin" => 16
     "pos" => 17
     "rects" => 18
+    "penwidth" => 19
     "regular" => 19
     "shape" => 20
     "sides" => 21
