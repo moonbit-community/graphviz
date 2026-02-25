@@ -19,6 +19,28 @@ INPUT_CANDIDATE_PATTERNS = [
     "refs/graphviz/contrib/dirgraph/*.dot",
     "refs/graphviz/contrib/java-dot/*.dot",
 ]
+STRICT_PARITY_INPUT_CANDIDATES = [
+    "refs/graphviz/graphs/directed/{case}.gv",
+    "refs/graphviz/graphs/undirected/{case}.gv",
+    "tests/layout/dot/{case}.dot",
+    "refs/graphviz/doc/dotguide/{case}.dot",
+    "refs/graphviz/doc/infosrc/{case}.dot",
+    "refs/graphviz/doc/infosrc/{case}.gv",
+    "refs/graphviz/doc/neato/{case}.dot",
+    "refs/graphviz/contrib/prune/{case}.gv",
+    "refs/graphviz/contrib/dirgraph/{case}.dot",
+    "refs/graphviz/contrib/java-dot/{case}.dot",
+    "refs/graphviz/tests/{case}.dot",
+    "refs/graphviz/tests/graphs/{case}.gv",
+    "refs/graphviz/tests/share/{case}.gv",
+    "refs/graphviz/tests/windows/{case}.gv",
+    "refs/graphviz/tests/regression_tests/{case}.gv",
+    "refs/graphviz/tests/regression_tests/shapes/reference/{case}.gv",
+    "refs/graphviz/tests/linux.x86/{case}.gv",
+    "refs/graphviz/tests/nshare/{case}.gv",
+    "refs/graphviz/tests/linux.i386/{case}.gv",
+    "refs/graphviz/tests/macosx/{case}.gv",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -124,6 +146,33 @@ def validate_subset(
         )
 
 
+def resolve_strict_parity_input_path(repo_root: Path, case_name: str) -> Path:
+    for pattern in STRICT_PARITY_INPUT_CANDIDATES:
+        path = repo_root / pattern.format(case=case_name)
+        if path.exists():
+            return path
+    raise FileNotFoundError(f"missing snapshot input for case: {case_name}")
+
+
+def validate_gv_suffix_variants(repo_root: Path, manifest_set: set[str]) -> int:
+    pair_count = 0
+    for case_name in sorted(manifest_set):
+        if not case_name.endswith(".gv"):
+            continue
+        base_name = case_name[: -len(".gv")]
+        if base_name not in manifest_set:
+            continue
+        pair_count += 1
+        base_input = resolve_strict_parity_input_path(repo_root, base_name)
+        gv_input = resolve_strict_parity_input_path(repo_root, case_name)
+        if base_input == gv_input:
+            raise ValueError(
+                "strict parity manifest has redundant .gv suffix pair resolving to same input: "
+                f"{base_name} / {case_name} -> {base_input.relative_to(repo_root)}",
+            )
+    return pair_count
+
+
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
@@ -204,13 +253,16 @@ def main() -> int:
             )
         raise ValueError("strict parity uncovered-input set changed: " + "; ".join(details))
 
+    gv_suffix_pairs = validate_gv_suffix_variants(repo_root, manifest_set)
+
     print(
         "strict parity case lists valid: "
         "sentinel="
         f"{len(sentinel_cases)} history={len(history_cases)} "
         f"known_regression={len(known_regression_cases)} "
         f"allowed_uncovered={len(allowed_uncovered_cases)} "
-        f"manifests={len(manifest_set)} candidates={len(input_candidate_set)}",
+        f"manifests={len(manifest_set)} candidates={len(input_candidate_set)} "
+        f"gv_suffix_pairs={gv_suffix_pairs}",
     )
     return 0
 
