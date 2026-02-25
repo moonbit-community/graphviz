@@ -1,0 +1,21 @@
+digraph G {
+	graph [bb="0,0,186.04,124"];
+	node [label="\N"];
+	subgraph cluster_inner {
+		graph [bb="8,64,100,116"];
+		Act_22	[height=0.5,
+			pos="54,90",
+			width=1.0568];
+	}
+	{
+		graph [rank=same];
+		Act_23	[height=0.5,
+			pos="54,18",
+			width=1.0568];
+		Act_24	[height=0.5,
+			pos="148,18",
+			width=1.0568];
+		Act_23 -> Act_24	[pos="e,109.63,18 92.188,18 94.186,18 96.184,18 98.183,18"];
+	}
+	Act_22 -> Act_23	[pos="e,54,36.104 54,71.697 54,64.407 54,55.726 54,47.536"];
+}

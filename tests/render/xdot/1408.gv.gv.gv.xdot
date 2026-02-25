@@ -1,0 +1,56 @@
+digraph map {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 93 204.66 93 204.66 0 ",
+		bb="0,0,204.66,93",
+		layout=dot,
+		rankdir=LR,
+		splines=ortho,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_1 {
+		graph [_draw_="c 7 -#ffc0cb C 7 -#ffc0cb P 4 98 8 98 85 196.66 85 196.66 8 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 147.33 67.7 0 49.5 9 -Cluster 1 ",
+			bb="98,8,196.66,85",
+			color=pink,
+			label="Cluster 1",
+			lheight=0.23,
+			lp="147.33,72.75",
+			lwidth=0.69,
+			style=filled
+		];
+		node [style=filled];
+		node1	[_draw_="c 7 -#000000 C 7 -#ff0000 P 5 188.66 39.56 147.33 52 106 39.56 106.04 19.44 188.63 19.44 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 147.33 28.95 0 33 5 -node1 ",
+			fillcolor=red,
+			height=0.5,
+			pos="147.33,34",
+			shape=house,
+			width=1.1481];
+	}
+	subgraph cluster_2 {
+		graph [_draw_="c 7 -#add8e6 C 7 -#add8e6 P 4 8 8 8 85 78 85 78 8 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 67.7 0 49.5 9 -Cluster 2 ",
+			bb="8,8,78,85",
+			color=lightblue,
+			label="Cluster 2",
+			lheight=0.23,
+			lp="43,72.75",
+			lwidth=0.69,
+			style=filled
+		];
+		node [style=filled];
+		node2	[_draw_="c 7 -#000000 C 7 -#ff0000 P 6 70 52 20 52 16 48 16 16 66 16 70 20 c 7 -#000000 L 2 66 48 16 48 c 7 -#000000 L 2 66 48 66 16 c 7 \
+-#000000 L 2 66 48 70 52 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 28.95 0 33 5 -node2 ",
+			fillcolor=red,
+			height=0.5,
+			pos="43,34",
+			shape=box3d,
+			width=0.75];
+	}
+	node2 -> node1	[_draw_="c 7 -#ff0000 B 4 70.41 34 70.41 34 96.56 34 96.56 34 ",
+		_hdraw_="S 5 -solid c 7 -#ff0000 C 7 -#ff0000 E 101.06 34 4 4 ",
+		arrowhead=dot,
+		color=red,
+		pos="e,105.56,34 70.412,34 70.412,34 96.558,34 96.558,34"];
+}

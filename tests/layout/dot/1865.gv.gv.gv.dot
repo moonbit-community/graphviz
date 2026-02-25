@@ -1,0 +1,10 @@
+strict digraph "FTC/BTC" {
+	graph [bb="0,0,202,68"];
+	node [label="\N"];
+	subgraph cluster_Inputs {
+		graph [bb="8,8,194,60"];
+		"Base (FTC) holding"	[height=0.5,
+			pos="101,34",
+			width=2.3647];
+	}
+}
