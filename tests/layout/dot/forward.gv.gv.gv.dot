@@ -1,0 +1,13 @@
+digraph {
+	graph [bb="0,0,144,36",
+		rankdir=LR
+	];
+	node [label="\N"];
+	T	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	H	[height=0.5,
+		pos="117,18",
+		width=0.75];
+	T -> H	[pos="e,89.616,18 54.403,18 61.886,18 70.183,18 78.199,18"];
+}

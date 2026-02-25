@@ -1,0 +1,23 @@
+digraph G {
+	graph [bb="0,0,234,36",
+		rankdir=LR
+	];
+	node [color=blue,
+		label="\N",
+		shape=box
+	];
+	node1	[height=0.5,
+		pos="117,18",
+		style=filled,
+		width=0.75];
+	node2	[fillcolor=red,
+		height=0.5,
+		pos="207,18",
+		style=filled,
+		width=0.75];
+	node1 -> node2	[pos="e,179.62,18 144.4,18 151.89,18 160.18,18 168.2,18"];
+	node0	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	node0 -> node1	[pos="e,89.616,18 54.403,18 61.886,18 70.183,18 78.199,18"];
+}

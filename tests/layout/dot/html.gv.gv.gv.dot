@@ -1,0 +1,23 @@
+digraph G {
+	graph [bb="0,0,123.75,79.502"];
+	node [label="\N"];
+	abc	[height=1.1042,
+		label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+  <TR><TD ROWSPAN="3"><FONT COLOR="red">hello</FONT><BR/>world</TD>
+      <TD COLSPAN="3">b</TD>
+      <TD ROWSPAN="3" BGCOLOR="lightgrey">g</TD>
+      <TD ROWSPAN="3">h</TD>
+  </TR>
+  <TR><TD>c</TD>
+      <TD PORT="here">d</TD>
+      <TD>e</TD>
+  </TR>
+  <TR><TD COLSPAN="3">f</TD>
+  </TR> 
+</TABLE>>,
+		margin=0,
+		pos="61.877,39.751",
+		shape=none,
+		width=1.7188];
+}
