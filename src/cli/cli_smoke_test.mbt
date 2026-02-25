@@ -48,3 +48,17 @@ test "cli layout=neato overrides -Kdot" {
   let neato_frontend_output = run_cli(["-Tdot", input_path], program="neato")
   assert_eq(dot_frontend_output, neato_frontend_output)
 }
+
+///|
+test "cli renders multiple graphs from one file" {
+  ensure_dir("target")
+  ensure_dir("target/cli")
+  let input_path = "target/cli/multi_graphs.dot"
+  write_input(input_path, "digraph { fear -> anger; }\n\ndigraph { anger -> hate; }\n")
+  let dot_out = run_cli(["-Tdot", input_path])
+  assert_true(dot_out.contains("fear -> anger"))
+  assert_true(dot_out.contains("anger -> hate"))
+  let svg_out = run_cli(["-Tsvg", input_path])
+  assert_true(svg_out.contains("<g id=\"graph0\" class=\"graph\""))
+  assert_true(svg_out.contains("<g id=\"page0,1_graph0\" class=\"graph\""))
+}

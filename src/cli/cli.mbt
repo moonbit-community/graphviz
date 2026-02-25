@@ -405,11 +405,27 @@ fn layout_for_job(
 }
 
 ///|
-pub fn render_job(job : CliJob) -> String raise {
-  cli_trace("cli: parse start")
-  let graph = read_dot_input(job.input)
-  cli_trace("cli: parse done")
-  apply_attrs(graph, job)
+fn patch_svg_graph_group_id(svg : String, page_index : Int) -> String {
+  if page_index <= 0 {
+    return svg
+  }
+  let needle = "<g id=\"graph0\""
+  match svg.find(needle) {
+    Some(start) => {
+      let prefix = svg.unsafe_substring(start=0, end=start)
+      let suffix = svg.unsafe_substring(
+        start=start + needle.length(),
+        end=svg.length(),
+      )
+      let replacement = "<g id=\"page0,\{page_index}_graph0\""
+      prefix + replacement + suffix
+    }
+    None => svg
+  }
+}
+
+///|
+fn render_graph(job : CliJob, graph : @cgraph.Graph, page_index : Int) -> String raise {
   cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
   cli_trace("cli: layout done")
@@ -419,7 +435,7 @@ pub fn render_job(job : CliJob) -> String raise {
       @dot.write_dot(layout.graph)
     }
     OutputFormat::XDot => @xdot.render_xdot(layout)
-    OutputFormat::Svg => @svg.render_svg(layout)
+    OutputFormat::Svg => patch_svg_graph_group_id(@svg.render_svg(layout), page_index)
     OutputFormat::Other(_) => {
       layout.apply()
       @dot.write_dot(layout.graph)
@@ -428,11 +444,11 @@ pub fn render_job(job : CliJob) -> String raise {
 }
 
 ///|
-fn render_job_bytes(job : CliJob) -> Bytes raise {
-  cli_trace("cli: parse start")
-  let graph = read_dot_input(job.input)
-  cli_trace("cli: parse done")
-  apply_attrs(graph, job)
+fn render_graph_bytes(
+  job : CliJob,
+  graph : @cgraph.Graph,
+  page_index : Int,
+) -> Bytes raise {
   cli_trace("cli: layout start")
   let layout = layout_for_job(job, graph)
   cli_trace("cli: layout done")
@@ -442,7 +458,8 @@ fn render_job_bytes(job : CliJob) -> Bytes raise {
       @dot.write_dot_bytes(layout.graph)
     }
     OutputFormat::XDot => @xdot.render_xdot_bytes(layout)
-    OutputFormat::Svg => @utf8.encode(@svg.render_svg(layout), bom=false)
+    OutputFormat::Svg =>
+      @utf8.encode(patch_svg_graph_group_id(@svg.render_svg(layout), page_index), bom=false)
     OutputFormat::Other(_) => {
       layout.apply()
       @dot.write_dot_bytes(layout.graph)
@@ -451,12 +468,40 @@ fn render_job_bytes(job : CliJob) -> Bytes raise {
 }
 
 ///|
-fn read_dot_input(input : String?) -> @cgraph.Graph raise {
+pub fn render_job(job : CliJob) -> String raise {
+  cli_trace("cli: parse start")
+  let graphs = read_dot_input(job.input)
+  cli_trace("cli: parse done")
+  let out = StringBuilder::new()
+  for i in 0..<graphs.length() {
+    let graph = graphs[i]
+    apply_attrs(graph, job)
+    out.write_string(render_graph(job, graph, i))
+  }
+  out.to_string()
+}
+
+///|
+fn render_job_bytes(job : CliJob) -> Bytes raise {
+  cli_trace("cli: parse start")
+  let graphs = read_dot_input(job.input)
+  cli_trace("cli: parse done")
+  let out = @buffer.new()
+  for i in 0..<graphs.length() {
+    let graph = graphs[i]
+    apply_attrs(graph, job)
+    out.write_bytes(render_graph_bytes(job, graph, i))
+  }
+  out.to_bytes()
+}
+
+///|
+fn read_dot_input(input : String?) -> Array[@cgraph.Graph] raise {
   let path = match input {
     None => "/dev/stdin"
     Some(path) => if path == "-" { "/dev/stdin" } else { path }
   }
-  @dot.parse_dot_file(path)
+  @dot.parse_dot_file_all(path)
 }
 
 ///|

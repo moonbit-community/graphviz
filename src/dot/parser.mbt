@@ -617,7 +617,26 @@ pub fn parse_dot(src : String) -> @cgraph.Graph raise DotParseError {
 }
 
 ///|
-pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
+pub fn parse_dot_all(src : String) -> Array[@cgraph.Graph] raise DotParseError {
+  let parser = Parser::new(src)
+  let graphs : Array[@cgraph.Graph] = []
+  while parser.current.token != Eof {
+    graphs.push(parser.parse_graph())
+    while parser.current.token == Semi {
+      parser.advance()
+    }
+  }
+  if graphs.length() == 0 {
+    raise DotParseError::InvalidSyntax(
+      pos=parser.current.pos,
+      message="expected graph or digraph",
+    )
+  }
+  graphs
+}
+
+///|
+fn decode_dot_file(path : String) -> (String, Bool) raise DotParseError {
   let bytes = try @fs.read_file_to_bytes(path) catch {
     err =>
       raise DotParseError::InvalidSyntax(
@@ -657,9 +676,27 @@ pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
   } noraise {
     text => text
   }
+  (src, used_latin1_fallback)
+}
+
+///|
+pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
+  let (src, used_latin1_fallback) = decode_dot_file(path)
   let graph = parse_dot(src)
   if used_latin1_fallback {
     graph.set_attr(INPUT_LATIN1_FALLBACK_ATTR, "true")
   }
   graph
+}
+
+///|
+pub fn parse_dot_file_all(path : String) -> Array[@cgraph.Graph] raise DotParseError {
+  let (src, used_latin1_fallback) = decode_dot_file(path)
+  let graphs = parse_dot_all(src)
+  if used_latin1_fallback {
+    for graph in graphs {
+      graph.set_attr(INPUT_LATIN1_FALLBACK_ATTR, "true")
+    }
+  }
+  graphs
 }

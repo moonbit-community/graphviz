@@ -22,9 +22,23 @@ pub fn parse_dot(src : String) -> @cgraph.Graph raise DotParseError {
 }
 
 ///|
+/// Parse DOT source containing one or more graphs.
+#declaration_only
+pub fn parse_dot_all(src : String) -> Array[@cgraph.Graph] raise DotParseError {
+  ...
+}
+
+///|
 /// Parse DOT from a file.
 #declaration_only
 pub fn parse_dot_file(path : String) -> @cgraph.Graph raise DotParseError {
+  ...
+}
+
+///|
+/// Parse DOT file containing one or more graphs.
+#declaration_only
+pub fn parse_dot_file_all(path : String) -> Array[@cgraph.Graph] raise DotParseError {
   ...
 }
 
