@@ -1,0 +1,38 @@
+graph {
+	graph [bb="0,0,63.6,12.15",
+		layout=dot,
+		mode=sgd,
+		overlap=false,
+		rankdir=LR,
+		ratio=compress,
+		size="16,9!",
+		splines=TRUE
+	];
+	node [label="\N"];
+	0	[fontsize=4,
+		height=0.025,
+		id=bus01,
+		label=bus01,
+		pos="11.4,6.15",
+		shape=point,
+		width=0.025,
+		xlabel=bus01,
+		xlp="5.25,2.625"];
+	1	[fontsize=4,
+		height=0.025,
+		id=bus02,
+		label=bus02,
+		pos="62.7,6.15",
+		shape=point,
+		width=0.025,
+		xlabel=bus02,
+		xlp="56.55,2.625"];
+	0 -- 1	[color=green,
+		fontsize=5,
+		id=edge01,
+		label=edge01,
+		lp="37.05,9.15",
+		penwidth=1.5,
+		pos="12.442,6.15 15.255,6.15 58.939,6.15 61.667,6.15",
+		style=filled];
+}
