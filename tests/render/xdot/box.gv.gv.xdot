@@ -1,0 +1,14 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 54 36 54 0 ",
+		bb="0,0,54,36",
+		xdotversion=1.7
+	];
+	node [label="",
+		shape=box,
+		style=filled
+	];
+	box	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 4 54 36 0 36 0 0 54 0 ",
+		height=0.5,
+		pos="27,18",
+		width=0.75];
+}
