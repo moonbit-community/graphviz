@@ -2210,11 +2210,27 @@ fn clip_spline_to_nodes(
   let head_shape = clip_shape_kind(head_node, head_port)
   let tail_center = tail_clip_center
   let head_center = head_clip_center
-  // Graphviz parity: penwidth inflates only shapes with peripheries.
+  // Graphviz parity: ellipse clipping uses penwidth even when peripheries=0.
   let tail_penwidth =
-    if shape_has_outline(tail_node) { node_penwidth_pt(tail_node) } else { 0.0 }
+    if shape_has_outline(tail_node) ||
+      (match tail_shape {
+        ClipShape::Ellipse => true
+        _ => false
+      }) {
+      node_penwidth_pt(tail_node)
+    } else {
+      0.0
+    }
   let head_penwidth =
-    if shape_has_outline(head_node) { node_penwidth_pt(head_node) } else { 0.0 }
+    if shape_has_outline(head_node) ||
+      (match head_shape {
+        ClipShape::Ellipse => true
+        _ => false
+      }) {
+      node_penwidth_pt(head_node)
+    } else {
+      0.0
+    }
   let rankdir_quadrant = graph_rankdir_quadrant(edge)
   let rankdir_lr_rl = rankdir_quadrant == 1 || rankdir_quadrant == 3
   let tail_base_size = fixedshape_clip_size(tail_node, tail_size)
