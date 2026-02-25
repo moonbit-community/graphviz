@@ -1,0 +1,53 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 108 345.81 108 345.81 0 ",
+		bb="0,0,345.81,108",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		style=filled
+	];
+	abc	[_draw_="c 7 -#00ff00 C 7 -#00ff00 E 27 90 27 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 27 84.95 0 18.75 3 -abc ",
+		color=green,
+		height=0.5,
+		pos="27,90",
+		width=0.75];
+	def	[_draw_="c 7 -#abcc28 C 7 -#abcc28 E 27 18 27 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 27 12.95 0 17.25 3 -def ",
+		color="0.2,0.8,0.8",
+		height=0.5,
+		pos="27,18",
+		width=0.75];
+	abc -> def	[_draw_="c 7 -#ff0000 B 4 25 71.7 25 64.41 25 55.73 25 47.54 c 7 -#0000ff B 4 27 71.7 27 64.41 27 55.73 27 47.54 c 7 -#00ff00 B 4 29 71.7 \
+29 64.41 29 55.73 29 47.54 ",
+		_hdraw_="S 5 -solid c 7 -#ff0000 C 7 -#ff0000 P 3 30.5 47.62 27 37.62 23.5 47.62 ",
+		color="red:blue:#00FF00",
+		pos="e,27,36.104 27,71.697 27,64.407 27,55.726 27,47.536"];
+	ghi	[_draw_="c 7 -#ff0000 C 7 -#ff0000 E 99 90 27 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 99 84.95 0 17.25 3 -ghi ",
+		color="#FF0000",
+		height=0.5,
+		pos="99,90",
+		width=0.75];
+	kl	[_draw_="c 9 -#ff00007f C 9 -#ff00007f E 171 90 27 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 171 84.95 0 10.5 2 -kl ",
+		color="#FF00007F",
+		height=0.5,
+		pos="171,90",
+		width=0.75];
+	mno	[_draw_="c 7 -#ffff00 C 7 -#ffff00 E 244 90 27.81 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 9 -#ff00007f T 244 84.95 0 24.75 3 -mno ",
+		color=yellow,
+		fontcolor="#FF00007F",
+		height=0.5,
+		pos="244,90",
+		width=0.77245];
+	pqr	[_draw_="c 7 -#ffff00 C 7 -#ffff00 E 318 90 27.81 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#ff0000 T 318 84.95 0 24.75 3 -mno ",
+		color=yellow,
+		fontcolor="#FF0000",
+		height=0.5,
+		label=mno,
+		pos="318,90",
+		width=0.77245];
+}

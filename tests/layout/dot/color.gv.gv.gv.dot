@@ -1,0 +1,35 @@
+digraph G {
+	graph [bb="0,0,345.81,108"];
+	node [label="\N",
+		style=filled
+	];
+	abc	[color=green,
+		height=0.5,
+		pos="27,90",
+		width=0.75];
+	def	[color="0.2,0.8,0.8",
+		height=0.5,
+		pos="27,18",
+		width=0.75];
+	abc -> def	[color="red:blue:#00FF00",
+		pos="e,27,36.104 27,71.697 27,64.407 27,55.726 27,47.536"];
+	ghi	[color="#FF0000",
+		height=0.5,
+		pos="99,90",
+		width=0.75];
+	kl	[color="#FF00007F",
+		height=0.5,
+		pos="171,90",
+		width=0.75];
+	mno	[color=yellow,
+		fontcolor="#FF00007F",
+		height=0.5,
+		pos="244,90",
+		width=0.77245];
+	pqr	[color=yellow,
+		fontcolor="#FF0000",
+		height=0.5,
+		label=mno,
+		pos="318,90",
+		width=0.77245];
+}
