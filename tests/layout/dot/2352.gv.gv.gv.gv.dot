@@ -1,0 +1,15 @@
+digraph g {
+	graph [bb="0,0,83.254,108"];
+	node [label="\N"];
+	node1	[height=0.5,
+		image="EDA.svg",
+		label="",
+		pos="41.627,90",
+		shape=box,
+		width=0.75];
+	node2	[height=0.5,
+		label="fuck me",
+		pos="41.627,18",
+		width=1.1563];
+	node1 -> node2	[pos="e,41.627,36.104 41.627,71.697 41.627,64.407 41.627,55.726 41.627,47.536"];
+}

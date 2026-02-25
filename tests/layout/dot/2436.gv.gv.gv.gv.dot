@@ -1,0 +1,16 @@
+digraph G {
+	graph [bb="0,0,288,216"];
+	node [label="\N"];
+	myNodeImg	[height=2,
+		image="img.png",
+		imagescale=true,
+		label="",
+		pos="144,72",
+		shape=none,
+		width=4];
+	myNode	[height=0.5,
+		label=something,
+		pos="144,198",
+		width=1.3838];
+	myNode -> myNodeImg	[pos="e,144,143.77 144,179.76 144,172.85 144,164.36 144,155.2"];
+}

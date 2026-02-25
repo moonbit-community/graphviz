@@ -1,0 +1,14 @@
+digraph {
+	graph [bb="0,0,54,108"];
+	node [label="\N"];
+	foo	[height=0.5,
+		pos="27,90",
+		width=0.75];
+	bar	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	foo:s -> bar:n	[arrowhead=crow,
+		arrowtail=crow,
+		dir=both,
+		pos="s,27,72 e,27,36 27,61.607 27,56.05 27,51.873 27,46.301"];
+}
