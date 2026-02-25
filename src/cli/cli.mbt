@@ -210,6 +210,7 @@ pub fn parse_cli_args(
   program? : String = "dot",
 ) -> CliAction raise CliError {
   let mut engine = default_engine(program~)
+  let mut engine_explicit = false
   let mut format = default_format(engine)
   let mut format_set = false
   let mut input : String? = None
@@ -254,6 +255,7 @@ pub fn parse_cli_args(
     if arg.has_prefix("-K") {
       let (value, next) = required_flag_value(args, i, "-K", 2)
       engine = parse_engine_name(value)
+      engine_explicit = true
       if !format_set {
         format = default_format(engine)
       }
@@ -328,6 +330,7 @@ pub fn parse_cli_args(
     input,
     output,
     engine,
+    engine_explicit,
     format,
     graph_attrs,
     node_attrs,
@@ -357,20 +360,24 @@ fn layout_for_job(
   job : CliJob,
   graph : @cgraph.Graph,
 ) -> @layout_dot.DotLayoutGraph raise {
-  let engine = match graph.get_attr("layout") {
-    Some(value) => {
-      let layout_name = value.trim(chars=" \n\r\t").to_string()
-      if layout_name == "" {
-        job.engine
-      } else {
-        match parse_engine_name(layout_name) {
-          LayoutEngine::Dot as parsed => parsed
-          LayoutEngine::Neato as parsed => parsed
-          _ => job.engine
+  let engine = if job.engine_explicit {
+    job.engine
+  } else {
+    match graph.get_attr("layout") {
+      Some(value) => {
+        let layout_name = value.trim(chars=" \n\r\t").to_string()
+        if layout_name == "" {
+          job.engine
+        } else {
+          match parse_engine_name(layout_name) {
+            LayoutEngine::Dot as parsed => parsed
+            LayoutEngine::Neato as parsed => parsed
+            _ => job.engine
+          }
         }
       }
+      None => job.engine
     }
-    None => job.engine
   }
   match engine {
     LayoutEngine::Dot => @layout_dot.layout_dot(graph)

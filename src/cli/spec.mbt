@@ -42,6 +42,7 @@ pub(all) struct CliJob {
   input : String?
   output : String?
   engine : LayoutEngine
+  engine_explicit : Bool
   format : FormatSpec
   graph_attrs : Array[AttrAssignment]
   node_attrs : Array[AttrAssignment]

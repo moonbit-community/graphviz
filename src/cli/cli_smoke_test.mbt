@@ -39,14 +39,16 @@ test "cli smoke writes output file" {
 }
 
 ///|
-test "cli layout=neato overrides -Kdot" {
+test "cli -Kdot overrides layout=neato" {
   ensure_dir("target")
   ensure_dir("target/cli")
   let input_path = "target/cli/layout_neato.dot"
   write_input(input_path, "graph { layout=neato; a -- b; }")
+  let default_dot_output = run_cli(["-Tdot", input_path])
   let dot_frontend_output = run_cli(["-Kdot", "-Tdot", input_path])
   let neato_frontend_output = run_cli(["-Tdot", input_path], program="neato")
-  assert_eq(dot_frontend_output, neato_frontend_output)
+  assert_eq(default_dot_output, neato_frontend_output)
+  assert_true(dot_frontend_output != neato_frontend_output)
 }
 
 ///|
