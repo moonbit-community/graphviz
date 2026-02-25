@@ -11,7 +11,9 @@ from pathlib import Path
 
 def normalize_candidate_template(candidate: str) -> str:
     return (
-        candidate.replace(r"\{case_name}", "{case}")
+        candidate.replace("${case_name}", "{case}")
+        .replace("${case}", "{case}")
+        .replace(r"\{case_name}", "{case}")
         .replace("{case_name}", "{case}")
         .replace(r"\{case}", "{case}")
     )
@@ -68,6 +70,27 @@ def parse_mbt_candidates(path: Path) -> list[str]:
                 raise ValueError(f"{path}: empty candidates list")
             return items
         match = re.fullmatch(r'"([^"]+)",?', stripped)
+        if match is None:
+            raise ValueError(f"{path}: unexpected candidates entry: {stripped}")
+        items.append(normalize_candidate_template(match.group(1)))
+    raise ValueError(f"{path}: unterminated candidates list")
+
+
+def parse_bash_candidates(path: Path) -> list[str]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    in_block = False
+    items: list[str] = []
+    for raw in lines:
+        stripped = raw.strip()
+        if not in_block:
+            if stripped == "local candidates=(":
+                in_block = True
+            continue
+        if stripped == ")":
+            if not items:
+                raise ValueError(f"{path}: empty candidates list")
+            return items
+        match = re.fullmatch(r'"([^"]+)"', stripped)
         if match is None:
             raise ValueError(f"{path}: unexpected candidates entry: {stripped}")
         items.append(normalize_candidate_template(match.group(1)))
@@ -138,6 +161,30 @@ def main() -> int:
         (
             "src/render/svg/svg_test.mbt:candidates",
             parse_mbt_candidates(repo_root / "src/render/svg/svg_test.mbt"),
+        )
+    )
+    targets.append(
+        (
+            "scripts/generate_dot_snapshots.sh:candidates",
+            parse_bash_candidates(repo_root / "scripts/generate_dot_snapshots.sh"),
+        )
+    )
+    targets.append(
+        (
+            "scripts/generate_xdot_snapshots.sh:candidates",
+            parse_bash_candidates(repo_root / "scripts/generate_xdot_snapshots.sh"),
+        )
+    )
+    targets.append(
+        (
+            "scripts/generate_svg_renderer_snapshots.sh:candidates",
+            parse_bash_candidates(repo_root / "scripts/generate_svg_renderer_snapshots.sh"),
+        )
+    )
+    targets.append(
+        (
+            "scripts/generate_svg_snapshots.sh:candidates",
+            parse_bash_candidates(repo_root / "scripts/generate_svg_snapshots.sh"),
         )
     )
 
