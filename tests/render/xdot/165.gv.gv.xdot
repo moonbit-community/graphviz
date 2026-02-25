@@ -1,0 +1,13 @@
+digraph {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 125.22 36 125.22 0 ",
+		bb="0,0,125.22,36",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	a	[_draw_="c 7 -#000000 e 62.61 18 62.61 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 62.61 12.95 0 75.75 14 -hello \\\" world ",
+		height=0.5,
+		label="hello \\\" world",
+		pos="62.611,18",
+		width=1.7392];
+}
