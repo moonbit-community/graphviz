@@ -1431,6 +1431,10 @@ fn escape_xml_with_dash(text : String) -> String {
   escape_xml(text).replace_all(old="-", new="&#45;")
 }
 
+fn normalize_svg_title_text(text : String) -> String {
+  text.replace_all(old="\\\"", new="\"")
+}
+
 fn escape_xml_text_with_dash(text : String) -> String {
   let sb = StringBuilder::new()
   let mut space_run = 0
@@ -5171,12 +5175,14 @@ fn write_svg_edge_group(
   let head_port = effective_edge_port(edge, edge.head_port(), "headport")
   let edge_arrow = if kind == @cgraph.GraphKind::Directed { "->" } else { "--" }
   let edge_comment = escape_xml_with_dash(
-    "\{edge.tail().name()}\{edge_arrow}\{edge.head().name()}",
+    normalize_svg_title_text(
+      "\{edge.tail().name()}\{edge_arrow}\{edge.head().name()}",
+    ),
   )
   let tail_label = edge.tail().name() + port_title_suffix(tail_port)
   let head_label = edge.head().name() + port_title_suffix(head_port)
   let edge_title = escape_xml_with_dash(
-    "\{tail_label}\{edge_arrow}\{head_label}",
+    normalize_svg_title_text("\{tail_label}\{edge_arrow}\{head_label}"),
   )
   write_line(sb, "<!-- \{edge_comment} -->", "", pretty)
   let style = @attrs.parse_style(edge_attr(edge, "style"))
@@ -5480,7 +5486,7 @@ fn write_svg_node_group(
   pretty : Bool,
 ) -> Unit {
   let node = node_layout.node
-  let node_title = escape_xml_with_dash(node.name())
+  let node_title = escape_xml_with_dash(normalize_svg_title_text(node.name()))
   write_line(sb, "<!-- \{node_title} -->", "", pretty)
   let rect = match fixedshape_draw_sizes.get(node.name()) {
     Some((width_in, height_in)) =>
