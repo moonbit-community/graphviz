@@ -1,0 +1,22 @@
+digraph flat_label_adjacent {
+	graph [bb="0,0,182,36",
+		margin=0,
+		nodesep=0.25,
+		ranksep=0.5
+	];
+	node [label="\N",
+		shape=box
+	];
+	{
+		graph [rank=same];
+		a	[height=0.5,
+			pos="27,18",
+			width=0.75];
+		b	[height=0.5,
+			pos="155,18",
+			width=0.75];
+	}
+	a -> b	[label="Flat Label",
+		lp="91,29.25",
+		pos="e,127.59,18 54.459,18 72.428,18 96.177,18 116.08,18"];
+}

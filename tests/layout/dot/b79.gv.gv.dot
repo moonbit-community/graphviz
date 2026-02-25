@@ -1,0 +1,16 @@
+digraph G {
+	graph [bb="0,0,144,36",
+		rankdir=LR,
+		size="2,2"
+	];
+	node [label="\N"];
+	T	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	H	[height=0.5,
+		pos="117,18",
+		width=0.75];
+	T -> H	[arrowhead=dot,
+		arrowsize=2.2,
+		pos="e,89.616,18 54.403,18 59.711,18 65.428,18 71.164,18"];
+}
