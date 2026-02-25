@@ -1,0 +1,36 @@
+digraph edge_labels {
+	graph [bb="0,0,242.75,124.5",
+		margin=0,
+		nodesep=0.25,
+		ranksep=0.5
+	];
+	node [label="\N"];
+	{
+		graph [rank=same];
+		a	[height=0.5,
+			pos="27,106.5",
+			shape=box,
+			width=0.75];
+		b	[height=0.5,
+			pos="125,106.5",
+			shape=box,
+			width=0.75];
+	}
+	{
+		graph [rank=same];
+		c	[height=0.5,
+			pos="27,18",
+			shape=box,
+			width=0.75];
+		d	[height=0.5,
+			pos="125,18",
+			shape=box,
+			width=0.75];
+	}
+	a -> c	[label="Edge Label A",
+		lp="64.5,62.25",
+		pos="e,27,36.35 27,88.41 27,76.758 27,61.047 27,47.519"];
+	b -> d	[label="Edge Label B Longer",
+		lp="183.88,62.25",
+		pos="e,125,36.35 125,88.41 125,76.758 125,61.047 125,47.519"];
+}
