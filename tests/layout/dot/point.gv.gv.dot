@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,7.2,7.2"];
+	node [label="",
+		shape=point,
+		style=filled,
+		width=0.1
+	];
+	point	[height=0.1,
+		pos="3.6,3.6"];
+}

@@ -1,0 +1,10 @@
+digraph G {
+	graph [bb="0,0,58.042,36"];
+	node [label="",
+		shape=parallelogram,
+		style=filled
+	];
+	parallelogram	[height=0.5,
+		pos="29.021,18",
+		width=0.80614];
+}

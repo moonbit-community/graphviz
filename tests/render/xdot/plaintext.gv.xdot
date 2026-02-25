@@ -1,0 +1,15 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 63.25 36 63.25 0 ",
+		bb="0,0,63.25,36",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=plaintext,
+		style=filled
+	];
+	plaintext	[_draw_="c 9 -#fffffe00 C 7 -#d3d3d3 P 4 63.25 36 0 36 0 0 63.25 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 31.62 12.95 0 47.25 9 -plaintext ",
+		height=0.5,
+		pos="31.625,18",
+		width=0.87847];
+}

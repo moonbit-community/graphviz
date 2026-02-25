@@ -1,0 +1,14 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 36 58.04 36 58.04 0 ",
+		bb="0,0,58.042,36",
+		xdotversion=1.7
+	];
+	node [label="",
+		shape=parallelogram,
+		style=filled
+	];
+	parallelogram	[_draw_="c 7 -#000000 C 7 -#d3d3d3 P 4 58.04 36 11.88 36 0 0 46.17 0 ",
+		height=0.5,
+		pos="29.021,18",
+		width=0.80614];
+}
