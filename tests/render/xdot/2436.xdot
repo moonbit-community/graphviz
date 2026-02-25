@@ -1,0 +1,23 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 216 288 216 288 0 ",
+		bb="0,0,288,216",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	myNodeImg	[height=2,
+		image="img.png",
+		imagescale=true,
+		label="",
+		pos="144,72",
+		shape=none,
+		width=4];
+	myNode	[_draw_="c 7 -#000000 e 144 198 49.82 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 144 192.95 0 57 9 -something ",
+		height=0.5,
+		label=something,
+		pos="144,198",
+		width=1.3838];
+	myNode -> myNodeImg	[_draw_="c 7 -#000000 B 4 144 179.76 144 172.85 144 164.36 144 155.2 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 147.5 155.29 144 145.29 140.5 155.29 ",
+		pos="e,144,143.77 144,179.76 144,172.85 144,164.36 144,155.2"];
+}
