@@ -1,0 +1,63 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 202.5 176 202.5 176 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 137.62 185.2 0 60.75 10 -label demo ",
+		bb="0,0,176,202.5",
+		label="label demo",
+		labeljust=right,
+		labelloc=top,
+		lheight=0.23,
+		lp="137.62,190.25",
+		lwidth=0.84,
+		rankdir=LR,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster0 {
+		graph [_draw_="c 7 -#000000 p 4 8 8 8 85 168 85 168 8 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 138.62 15.2 0 42.75 8 -cluster0 ",
+			bb="8,8,168,85",
+			label=cluster0,
+			labelloc=bottom,
+			lheight=0.23,
+			lp="138.62,20.25",
+			lwidth=0.59
+		];
+		a	[_draw_="c 7 -#000000 e 43 59 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 53.95 0 6 1 -a ",
+			height=0.5,
+			pos="43,59",
+			width=0.75];
+		b	[_draw_="c 7 -#000000 e 133 59 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 133 53.95 0 6.75 1 -b ",
+			height=0.5,
+			pos="133,59",
+			width=0.75];
+		a -> b	[_draw_="c 7 -#000000 B 4 70.4 59 77.89 59 86.18 59 94.2 59 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 94.1 62.5 104.1 59 94.1 55.5 ",
+			pos="e,105.62,59 70.403,59 77.886,59 86.183,59 94.199,59"];
+	}
+	subgraph cluster1 {
+		graph [_draw_="c 7 -#000000 p 4 8 93 8 170 168 170 168 93 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 138.62 152.7 0 42.75 8 -cluster1 ",
+			bb="8,93,168,170",
+			label=cluster1,
+			labelloc=top,
+			lheight=0.23,
+			lp="138.62,157.75",
+			lwidth=0.59
+		];
+		c	[_draw_="c 7 -#000000 e 43 119 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 113.95 0 6 1 -c ",
+			height=0.5,
+			pos="43,119",
+			width=0.75];
+		d	[_draw_="c 7 -#000000 e 133 119 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 133 113.95 0 6.75 1 -d ",
+			height=0.5,
+			pos="133,119",
+			width=0.75];
+		c -> d	[_draw_="c 7 -#000000 B 4 70.4 119 77.89 119 86.18 119 94.2 119 ",
+			_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 94.1 122.5 104.1 119 94.1 115.5 ",
+			pos="e,105.62,119 70.403,119 77.886,119 86.183,119 94.199,119"];
+	}
+}

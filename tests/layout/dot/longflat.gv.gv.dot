@@ -1,0 +1,22 @@
+digraph if {
+	graph [bb="0,0,145,108",
+		rankdir=LR
+	];
+	node [label="\N"];
+	{
+		graph [rank=same];
+		b	[height=0.5,
+			pos="118,18",
+			width=0.75];
+		c	[height=0.5,
+			pos="118,90",
+			width=0.75];
+	}
+	c -> b	[label="long long long",
+		lp="106.75,54",
+		pos="e,118,36.169 118,71.587 118,64.281 118,55.693 118,47.559"];
+	a	[height=0.5,
+		pos="27,18",
+		width=0.75];
+	a -> b	[pos="e,90.658,18 54.222,18 62.118,18 70.944,18 79.425,18"];
+}
