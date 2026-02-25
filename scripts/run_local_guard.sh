@@ -48,6 +48,7 @@ GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/nul
 (
   cd "${worktree_path}"
   moon build src/cmd/dot --target native
+  scripts/check_snapshot_input_candidates.py
   scripts/check_capture_env_invariance.py --formats dot xdot svg --cases-file tests/capture_env_invariant_cases.txt
   moon test src/layout/dot/order_pipeline_fixture_wbtest.mbt --target native --filter "plugins root/remincross mincross inputs match graphviz fixtures"
   moon test src/render/svg/svg_test.mbt --target native --filter "render_svg keeps trapeziumlr node families as polygons"
