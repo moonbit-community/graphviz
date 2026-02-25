@@ -1886,7 +1886,7 @@ fn build_edge_route_base(
                   center,
                   size,
                   compass,
-                  layout_rankdir,
+                  rankdir,
                 ),
               )
             None => None
@@ -1918,6 +1918,20 @@ fn build_edge_route_base(
     Some(_) => tail_pos
     None => head_anchor0
   }
+  let slope_rankdir_for_endpoint =
+    (node : @cgraph.Node, port : @cgraph.Port?) => {
+      match port {
+        Some(value) =>
+          match value.compass {
+            Some(@cgraph.Compass::C) => layout_rankdir
+            Some(_) => if is_record_shape(node) { layout_rankdir } else { rankdir }
+            None => layout_rankdir
+          }
+        None => layout_rankdir
+      }
+    }
+  let tail_slope_rankdir = slope_rankdir_for_endpoint(tail_node, tail_port)
+  let head_slope_rankdir = slope_rankdir_for_endpoint(head_node, head_port)
   let tail_slope = endpoint_slope_for_anchor(
     tail_port,
     tail_port_side,
@@ -1925,7 +1939,7 @@ fn build_edge_route_base(
     tail_pos,
     tail_size,
     tail_target,
-    layout_rankdir,
+    tail_slope_rankdir,
     true,
     tail_port_rect,
   )
@@ -1936,7 +1950,7 @@ fn build_edge_route_base(
     head_pos,
     head_size,
     head_target,
-    layout_rankdir,
+    head_slope_rankdir,
     false,
     head_port_rect,
   )
