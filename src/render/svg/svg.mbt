@@ -5564,6 +5564,16 @@ fn write_svg_node_group(
   let filled = if kind == "point" { true } else { style.filled }
   let dash = stroke_dash_attr(style)
   let width_attr = stroke_width_attr(style, node_attr(node, "penwidth"))
+  let no_outline =
+    node_attr_int(node, "peripheries", 1) <= 0 &&
+    kind != "record" &&
+    kind != "plaintext" &&
+    kind != "point"
+  let shape_stroke = if no_outline { "none" } else { stroke }
+  let stroke_width_pt = match stroke_width_value(style, node_attr(node, "penwidth")) {
+    Some(value) => value
+    None => 1.0
+  }
   let fill = if filled {
     match node_attr(node, "fillcolor") {
         Some(value) => svg_color(resolve_colorscheme_color(value, node_colorscheme(node)))
@@ -5654,52 +5664,72 @@ fn write_svg_node_group(
       )
     }
   } else if is_doublecircle {
-    match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
-      Some(inner) => {
-        let inner_cx = svg_x((inner.llx + inner.urx) / 2.0, bbox.llx)
-        let inner_cy = svg_y((inner.lly + inner.ury) / 2.0, bbox.lly)
-        let inner_rx = (inner.urx - inner.llx) / 2.0
-        let inner_ry = (inner.ury - inner.lly) / 2.0
-        let inner_cx_text = format_double(inner_cx)
-        let inner_cy_text = format_double(inner_cy)
-        let inner_rx_text = format_double(inner_rx)
-        let inner_ry_text = format_double(inner_ry)
-        write_line(
-          sb,
-          "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{inner_cx_text}\" cy=\"\{inner_cy_text}\" rx=\"\{inner_rx_text}\" ry=\"\{inner_ry_text}\"/>",
-          "",
-          pretty,
-        )
+    if no_outline {
+      if filled {
+        let expanded = expand_rect(rect, stroke_width_pt / 2.0)
         let cx = svg_x(node_layout.pos.x, bbox.llx)
         let cy = svg_y(node_layout.pos.y, bbox.lly)
-        let rx = (rect.urx - rect.llx) / 2.0
-        let ry = (rect.ury - rect.lly) / 2.0
+        let rx = (expanded.urx - expanded.llx) / 2.0
+        let ry = (expanded.ury - expanded.lly) / 2.0
         let cx_text = format_double(cx)
         let cy_text = format_double(cy)
         let rx_text = format_double(rx)
         let ry_text = format_double(ry)
         write_line(
           sb,
-          "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+          "<ellipse fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
           "",
           pretty,
         )
       }
-      None => {
-        let cx = svg_x(node_layout.pos.x, bbox.llx)
-        let cy = svg_y(node_layout.pos.y, bbox.lly)
-        let rx = (rect.urx - rect.llx) / 2.0
-        let ry = (rect.ury - rect.lly) / 2.0
-        let cx_text = format_double(cx)
-        let cy_text = format_double(cy)
-        let rx_text = format_double(rx)
-        let ry_text = format_double(ry)
-        write_line(
-          sb,
-          "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
-          "",
-          pretty,
-        )
+    } else {
+      match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
+        Some(inner) => {
+          let inner_cx = svg_x((inner.llx + inner.urx) / 2.0, bbox.llx)
+          let inner_cy = svg_y((inner.lly + inner.ury) / 2.0, bbox.lly)
+          let inner_rx = (inner.urx - inner.llx) / 2.0
+          let inner_ry = (inner.ury - inner.lly) / 2.0
+          let inner_cx_text = format_double(inner_cx)
+          let inner_cy_text = format_double(inner_cy)
+          let inner_rx_text = format_double(inner_rx)
+          let inner_ry_text = format_double(inner_ry)
+          write_line(
+            sb,
+            "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{inner_cx_text}\" cy=\"\{inner_cy_text}\" rx=\"\{inner_rx_text}\" ry=\"\{inner_ry_text}\"/>",
+            "",
+            pretty,
+          )
+          let cx = svg_x(node_layout.pos.x, bbox.llx)
+          let cy = svg_y(node_layout.pos.y, bbox.lly)
+          let rx = (rect.urx - rect.llx) / 2.0
+          let ry = (rect.ury - rect.lly) / 2.0
+          let cx_text = format_double(cx)
+          let cy_text = format_double(cy)
+          let rx_text = format_double(rx)
+          let ry_text = format_double(ry)
+          write_line(
+            sb,
+            "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+            "",
+            pretty,
+          )
+        }
+        None => {
+          let cx = svg_x(node_layout.pos.x, bbox.llx)
+          let cy = svg_y(node_layout.pos.y, bbox.lly)
+          let rx = (rect.urx - rect.llx) / 2.0
+          let ry = (rect.ury - rect.lly) / 2.0
+          let cx_text = format_double(cx)
+          let cy_text = format_double(cy)
+          let rx_text = format_double(rx)
+          let ry_text = format_double(ry)
+          write_line(
+            sb,
+            "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
+            "",
+            pretty,
+          )
+        }
       }
     }
   } else if kind == "mcircle" {
@@ -6320,38 +6350,42 @@ fn write_svg_node_group(
           )
         } else {
           let attrs = polygon_points(paths[0], bbox.llx, bbox.lly)
-          write_line(
-            sb,
-            "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} points=\"\{attrs}\"/>",
-            "",
-            pretty,
-          )
+          if !no_outline || filled {
+            write_line(
+              sb,
+              "<polygon fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash} points=\"\{attrs}\"/>",
+              "",
+              pretty,
+            )
+          }
         }
-        for i in 1..<paths.length() {
-          if rounded {
-            let path = spline_path(
-              @geom.Spline::{
-                start: None,
-                end: None,
-                points: rounded_polygon_bezier_points(paths[i]),
-              },
-              bbox.llx,
-              bbox.lly,
-            )
-            write_line(
-              sb,
-              "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
-              "",
-              pretty,
-            )
-          } else {
-            let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
-            write_line(
-              sb,
-              "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
-              "",
-              pretty,
-            )
+        if !no_outline {
+          for i in 1..<paths.length() {
+            if rounded {
+              let path = spline_path(
+                @geom.Spline::{
+                  start: None,
+                  end: None,
+                  points: rounded_polygon_bezier_points(paths[i]),
+                },
+                bbox.llx,
+                bbox.lly,
+              )
+              write_line(
+                sb,
+                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash} d=\"\{path}\"/>",
+                "",
+                pretty,
+              )
+            } else {
+              let outline = polygon_points(paths[i], bbox.llx, bbox.lly)
+              write_line(
+                sb,
+                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash} points=\"\{outline}\"/>",
+                "",
+                pretty,
+              )
+            }
           }
         }
       }
@@ -6359,62 +6393,69 @@ fn write_svg_node_group(
         if kind == "box" {
           let peripheries = node_peripheries(node, 1)
           let base_rect = inner_rect_for_peripheries(rect, peripheries)
-          if rounded {
-            let path = spline_path(
-              @geom.Spline::{
-                start: None,
-                end: None,
-                  points: rounded_polygon_bezier_points(rect_points(base_rect)),
-              },
-              bbox.llx,
-              bbox.lly,
-            )
-            write_line(
-              sb,
-              "<path fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
-              "",
-              pretty,
-            )
-          } else {
-            let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
-            write_line(
-              sb,
-              "<polygon fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{attrs}\"/>",
-              "",
-              pretty,
-            )
-          }
-          for i in 1..<peripheries {
-            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+          if !no_outline || filled {
             if rounded {
               let path = spline_path(
                 @geom.Spline::{
                   start: None,
                   end: None,
-                  points: rounded_polygon_bezier_points(rect_points(expanded)),
+                    points: rounded_polygon_bezier_points(rect_points(base_rect)),
                 },
                 bbox.llx,
                 bbox.lly,
               )
               write_line(
                 sb,
-                "<path fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+                "<path fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
                 "",
                 pretty,
               )
             } else {
-              let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+              let attrs = polygon_points(rect_points(base_rect), bbox.llx, bbox.lly)
               write_line(
                 sb,
-                "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{outline}\"/>",
+                "<polygon fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} points=\"\{attrs}\"/>",
                 "",
                 pretty,
               )
             }
           }
+          if !no_outline {
+            for i in 1..<peripheries {
+              let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+              if rounded {
+                let path = spline_path(
+                  @geom.Spline::{
+                    start: None,
+                    end: None,
+                    points: rounded_polygon_bezier_points(rect_points(expanded)),
+                  },
+                  bbox.llx,
+                  bbox.lly,
+                )
+                write_line(
+                  sb,
+                  "<path fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} d=\"\{path}\"/>",
+                  "",
+                  pretty,
+                )
+              } else {
+                let outline = polygon_points(rect_points(expanded), bbox.llx, bbox.lly)
+                write_line(
+                  sb,
+                  "<polygon fill=\"none\" stroke=\"\{stroke}\"\{dash}\{width_attr} points=\"\{outline}\"/>",
+                  "",
+                  pretty,
+                )
+              }
+            }
+          }
         } else {
           let peripheries = node_peripheries(node, 1)
-          let base_rect = inner_rect_for_peripheries(rect, peripheries)
+          let mut base_rect = inner_rect_for_peripheries(rect, peripheries)
+          if no_outline && filled {
+            base_rect = expand_rect(base_rect, stroke_width_pt / 2.0)
+          }
           let cx = svg_x((base_rect.llx + base_rect.urx) / 2.0, bbox.llx)
           let cy = svg_y((base_rect.lly + base_rect.ury) / 2.0, bbox.lly)
           let rx = (base_rect.urx - base_rect.llx) / 2.0
@@ -6423,24 +6464,28 @@ fn write_svg_node_group(
           let cy_text = format_double(cy)
           let rx_text = format_double(rx)
           let ry_text = format_double(ry)
-          write_line(
-            sb,
-            "<ellipse fill=\"\{fill}\" stroke=\"\{stroke}\"\{dash} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
-            "",
-            pretty,
-          )
-          for i in 1..<peripheries {
-            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
-            let outer_cx = svg_x((expanded.llx + expanded.urx) / 2.0, bbox.llx)
-            let outer_cy = svg_y((expanded.lly + expanded.ury) / 2.0, bbox.lly)
-            let outer_rx = (expanded.urx - expanded.llx) / 2.0
-            let outer_ry = (expanded.ury - expanded.lly) / 2.0
+          if !no_outline || filled {
             write_line(
               sb,
-              "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{format_double(outer_cx)}\" cy=\"\{format_double(outer_cy)}\" rx=\"\{format_double(outer_rx)}\" ry=\"\{format_double(outer_ry)}\"/>",
+              "<ellipse fill=\"\{fill}\" stroke=\"\{shape_stroke}\"\{dash}\{width_attr} cx=\"\{cx_text}\" cy=\"\{cy_text}\" rx=\"\{rx_text}\" ry=\"\{ry_text}\"/>",
               "",
               pretty,
             )
+          }
+          if !no_outline {
+            for i in 1..<peripheries {
+              let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+              let outer_cx = svg_x((expanded.llx + expanded.urx) / 2.0, bbox.llx)
+              let outer_cy = svg_y((expanded.lly + expanded.ury) / 2.0, bbox.lly)
+              let outer_rx = (expanded.urx - expanded.llx) / 2.0
+              let outer_ry = (expanded.ury - expanded.lly) / 2.0
+              write_line(
+                sb,
+                "<ellipse fill=\"none\" stroke=\"\{stroke}\"\{dash} cx=\"\{format_double(outer_cx)}\" cy=\"\{format_double(outer_cy)}\" rx=\"\{format_double(outer_rx)}\" ry=\"\{format_double(outer_ry)}\"/>",
+                "",
+                pretty,
+              )
+            }
           }
         }
     }

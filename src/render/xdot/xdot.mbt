@@ -838,20 +838,27 @@ fn is_default_linewidth(width : Double) -> Bool {
 }
 
 ///|
+fn stroke_width_value(
+  style : @attrs.StyleFlags,
+  penwidth : String?,
+) -> Double {
+  let parsed = @attrs.parse_double(penwidth, 1.0)
+  if parsed > 0.0 && !is_default_linewidth(parsed) {
+    parsed
+  } else {
+    match style_linewidth(style) {
+      Some(value) => if value > 0.0 { value } else { 1.0 }
+      None => 1.0
+    }
+  }
+}
+
+///|
 fn stroke_width_style_name(
   style : @attrs.StyleFlags,
   penwidth : String?,
 ) -> String? {
-  let parsed = @attrs.parse_double(penwidth, 1.0)
-  let width =
-    if parsed > 0.0 && !is_default_linewidth(parsed) {
-      parsed
-    } else {
-      match style_linewidth(style) {
-        Some(value) => if value > 0.0 { value } else { 1.0 }
-        None => 1.0
-      }
-    }
+  let width = stroke_width_value(style, penwidth)
   if is_default_linewidth(width) {
     None
   } else {
@@ -3686,6 +3693,12 @@ fn node_draw_ops(
   // Graphviz falls back to box geometry for unknown node shapes.
   let shape = if kind == "unknown" { "box" } else { kind }
   let is_doublecircle = raw_shape == "doublecircle"
+  let filled = if shape == "point" { true } else { style.filled }
+  let no_outline =
+    node_attr_int(node, "peripheries", 1) <= 0 &&
+    shape != "record" &&
+    shape != "plaintext" &&
+    shape != "point"
   if shape == "record" {
     return record_draw_ops(layout)
   }
@@ -3704,11 +3717,14 @@ fn node_draw_ops(
     }
     return ops
   }
-  push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
-  if shape != "underline" {
-    ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+  if no_outline && !filled {
+    return ops
   }
-  let filled = if shape == "point" { true } else { style.filled }
+  push_stroke_style_ops(ops, style, node_attr(node, "penwidth"))
+  let outline_pen = if no_outline { "#fffffe00" } else { normalized_pen }
+  if shape != "underline" {
+    ops.push(@render.DrawOp::PenColor(color=outline_pen))
+  }
   if filled {
     let fill = if shape == "point" {
       pen
@@ -3722,19 +3738,28 @@ fn node_draw_ops(
     None => node_rect(layout)
   }
   match shape {
-    _ if is_doublecircle =>
-      match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
-        Some(inner) => {
-          if filled {
-            ops.push(@render.DrawOp::Ellipse(filled=true, rect=inner))
-          } else {
-            ops.push(@render.DrawOp::Ellipse(filled=false, rect=inner))
+    _ if is_doublecircle => {
+      if no_outline {
+        let rect = expand_rect(
+          rect,
+          stroke_width_value(style, node_attr(node, "penwidth")) / 2.0,
+        )
+        ops.push(@render.DrawOp::Ellipse(filled~, rect~))
+      } else {
+        match inset_rect(rect, DOUBLE_CIRCLE_GAP_PT) {
+          Some(inner) => {
+            if filled {
+              ops.push(@render.DrawOp::Ellipse(filled=true, rect=inner))
+            } else {
+              ops.push(@render.DrawOp::Ellipse(filled=false, rect=inner))
+            }
+            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+            ops.push(@render.DrawOp::Ellipse(filled=false, rect~))
           }
-          ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-          ops.push(@render.DrawOp::Ellipse(filled=false, rect~))
+          None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
         }
-        None => ops.push(@render.DrawOp::Ellipse(filled~, rect~))
       }
+    }
     "msquare" => {
       let points = rect_points(rect)
       ops.push(@render.DrawOp::Polygon(filled~, points~))
@@ -3970,81 +3995,99 @@ fn node_draw_ops(
     "box" => {
       let peripheries = node_peripheries(node, 1)
       let base_rect = inner_rect_for_peripheries(rect, peripheries)
-      if rounded {
-        ops.push(
-          @render.DrawOp::Bezier(
-            filled~,
-            points=rounded_polygon_bezier_points(rect_points(base_rect)),
-          ),
-        )
-      } else {
-        ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
-      }
-      for i in 1..<peripheries {
-        let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
-        ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+      if !no_outline || filled {
         if rounded {
           ops.push(
             @render.DrawOp::Bezier(
-              filled=false,
-              points=rounded_polygon_bezier_points(rect_points(expanded)),
+              filled~,
+              points=rounded_polygon_bezier_points(rect_points(base_rect)),
             ),
           )
         } else {
-          ops.push(
-            @render.DrawOp::Polygon(
-              filled=false,
-              points=rect_points(expanded),
-            ),
-          )
+          ops.push(@render.DrawOp::Polygon(filled~, points=rect_points(base_rect)))
+        }
+      }
+      if !no_outline {
+        for i in 1..<peripheries {
+          let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+          ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+          if rounded {
+            ops.push(
+              @render.DrawOp::Bezier(
+                filled=false,
+                points=rounded_polygon_bezier_points(rect_points(expanded)),
+              ),
+            )
+          } else {
+            ops.push(
+              @render.DrawOp::Polygon(
+                filled=false,
+                points=rect_points(expanded),
+              ),
+            )
+          }
         }
       }
     }
     _ => {
       match shape_polygon_paths(node, shape, rect) {
         Some(paths) if paths.length() > 0 => {
-          if rounded {
-            ops.push(
-              @render.DrawOp::Bezier(
-                filled~,
-                points=rounded_polygon_bezier_points(paths[0]),
-              ),
-            )
-          } else {
-            ops.push(
-              @render.DrawOp::Polygon(
-                filled~,
-                points=paths[0],
-              ),
-            )
-          }
-          for i in 1..<paths.length() {
-            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+          if !no_outline || filled {
             if rounded {
               ops.push(
                 @render.DrawOp::Bezier(
-                  filled=false,
-                  points=rounded_polygon_bezier_points(paths[i]),
+                  filled~,
+                  points=rounded_polygon_bezier_points(paths[0]),
                 ),
               )
             } else {
               ops.push(
                 @render.DrawOp::Polygon(
-                  filled=false,
-                  points=paths[i],
+                  filled~,
+                  points=paths[0],
                 ),
               )
+            }
+          }
+          if !no_outline {
+            for i in 1..<paths.length() {
+              ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+              if rounded {
+                ops.push(
+                  @render.DrawOp::Bezier(
+                    filled=false,
+                    points=rounded_polygon_bezier_points(paths[i]),
+                  ),
+                )
+              } else {
+                ops.push(
+                  @render.DrawOp::Polygon(
+                    filled=false,
+                    points=paths[i],
+                  ),
+                )
+              }
             }
           }
         }
         _ => {
           let peripheries = node_peripheries(node, 1)
-          let base_rect = inner_rect_for_peripheries(rect, peripheries)
-          ops.push(@render.DrawOp::Ellipse(filled~, rect=base_rect))
-          for i in 1..<peripheries {
-            let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
-            ops.push(@render.DrawOp::PenColor(color=normalized_pen))
-            ops.push(@render.DrawOp::Ellipse(filled=false, rect=expanded))
+          let mut base_rect = inner_rect_for_peripheries(rect, peripheries)
+          if no_outline && filled {
+            base_rect = expand_rect(
+              base_rect,
+              stroke_width_value(style, node_attr(node, "penwidth")) / 2.0,
+            )
+          }
+          if !no_outline || filled {
+            ops.push(@render.DrawOp::Ellipse(filled~, rect=base_rect))
+          }
+          if !no_outline {
+            for i in 1..<peripheries {
+              let expanded = expand_rect(base_rect, POLY_GAP_PT * i.to_double())
+              ops.push(@render.DrawOp::PenColor(color=normalized_pen))
+              ops.push(@render.DrawOp::Ellipse(filled=false, rect=expanded))
+            }
           }
         }
       }

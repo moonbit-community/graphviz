@@ -1,0 +1,26 @@
+digraph {
+	graph [bb="0,0,270,36"];
+	node [label="\N"];
+	a	[height=0.5,
+		peripheries=0,
+		pos="27,18",
+		width=0.75];
+	b	[fillcolor=red,
+		height=0.5,
+		peripheries=0,
+		pos="99,18",
+		style=filled,
+		width=0.75];
+	c	[height=0.5,
+		peripheries=0,
+		pos="171,18",
+		shape=box,
+		width=0.75];
+	d	[fillcolor=red,
+		height=0.5,
+		peripheries=0,
+		pos="243,18",
+		shape=box,
+		style=filled,
+		width=0.75];
+}

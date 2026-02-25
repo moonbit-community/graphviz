@@ -1,0 +1,6 @@
+digraph {
+  a [peripheries=0]
+  b [peripheries=0 style=filled fillcolor=red]
+  c [shape=box peripheries=0]
+  d [shape=box peripheries=0 style=filled fillcolor=red]
+}
