@@ -306,6 +306,7 @@ fn graph_attr_rank(name : String) -> Int {
     "ranksep" => 24
     "ratio" => 25
     "size" => 26
+    "root" => 26
     "splines" => 27
     "xdotversion" => 1000
     _ => 200

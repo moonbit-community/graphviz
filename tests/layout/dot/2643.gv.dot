@@ -1,0 +1,19 @@
+digraph {
+	graph [bb="0,0,66.876,540",
+		ranksep=3,
+		root=null,
+		splines=ortho
+	];
+	node [label="\N"];
+	l_stop	[height=0.5,
+		pos="33.438,270",
+		width=0.92884];
+	l_run	[height=0.5,
+		pos="33.438,18",
+		width=0.84354];
+	l_stop -> l_run	[pos="e,33.438,36.298 33.438,251.88 33.438,251.88 33.438,47.811 33.438,47.811"];
+	null	[height=0.5,
+		pos="33.438,522",
+		width=0.75];
+	null -> l_stop	[pos="e,33.438,288.3 33.438,503.88 33.438,503.88 33.438,299.81 33.438,299.81"];
+}

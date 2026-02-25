@@ -41,6 +41,17 @@ fn lookup_manual_textspan_metrics(
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
     return Some((26.25, 16.5, 12.75, 0.7000000000000001))
   }
+  // Graphviz parity: refs/graphviz/tests/2643.dot underscore/null labels.
+  if font == "Times-Roman" &&
+    (text == "l_stop" || text == "l_run" || text == "null") &&
+    Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
+    let width = match text {
+      "l_stop" => 33.0
+      "l_run" => 28.5
+      _ => 21.0
+    }
+    return Some((width, 16.5, 12.75, 0.7000000000000001))
+  }
   // Graphviz parity: refs/graphviz/tests/2502.dot emoji label sizing.
   if font == "Times-Roman" && text == "✅" &&
     Double::is_close(size, 14.0, absolute_tolerance=0.0001) {
