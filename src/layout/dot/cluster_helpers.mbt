@@ -230,17 +230,6 @@ fn collect_edge_cluster_keys(
   }
 }
 
-///|
-fn intercluster_edge_key(
-  tail_cluster : String,
-  head_cluster : String,
-  tail_rank : Int,
-  head_rank : Int,
-) -> String {
-  "\{tail_cluster}@\{tail_rank}->\{head_cluster}@\{head_rank}"
-}
-
-///|
 fn cluster_rank_key(cluster : String, rank : Int) -> String {
   "\{cluster}@\{rank}"
 }

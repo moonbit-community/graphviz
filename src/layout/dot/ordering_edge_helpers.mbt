@@ -293,67 +293,6 @@ fn add_order_edge(
   }
 }
 
-///|
-fn collect_edge_indices_by_tail(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-) -> Map[String, Array[Int]] {
-  let out : Map[String, Array[Int]] = Map::new()
-  for i in 0..<edges.length() {
-    let tail =
-      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
-    match out.get(tail) {
-      Some(list) => list.push(i)
-      None => out[tail] = [i]
-    }
-  }
-  out
-}
-
-///|
-/// Graphviz parity: GD_nlist order is reverse creation order in class2.
-/// Do not change behavior without updating fixtures/tests.
-fn build_graphviz_nlist_order(
-  tail_order : Array[String],
-  _cluster_keys : Map[String, String],
-  cluster_skeleton_creation : Array[String],
-  vnode_creation_by_tail : Map[String, Array[String]],
-) -> Array[String] {
-  let creation : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
-  for name in cluster_skeleton_creation {
-    if seen.get(name) is None {
-      seen[name] = true
-      creation.push(name)
-    }
-  }
-  for tail_name in tail_order {
-    if seen.get(tail_name) is None {
-      seen[tail_name] = true
-      creation.push(tail_name)
-    }
-    let vnodes = match vnode_creation_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for vnode in vnodes {
-      if seen.get(vnode) is None {
-        seen[vnode] = true
-        creation.push(vnode)
-      }
-    }
-  }
-  // GD_nlist is reverse of creation order (fast_node inserts at head).
-  let out : Array[String] = []
-  let mut idx = creation.length()
-  while idx > 0 {
-    idx = idx - 1
-    out.push(creation[idx])
-  }
-  out
-}
-
-///|
 /// Graphviz parity: approximate decompose DFS order over fast graph edges.
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_nlist_order_from_edges(

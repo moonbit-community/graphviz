@@ -831,73 +831,6 @@ fn clone_rank_groups(
   cloned
 }
 
-///|
-/// Graphviz parity: seed rank groups with rank=same subgraph order (class2/build_ranks).
-/// Do not change behavior without updating fixtures/tests.
-fn apply_rank_same_order(
-  groups : Map[Int, Array[String]],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-) -> Map[Int, Array[String]] {
-  if rank_same_groups.length() == 0 {
-    return clone_rank_groups(groups)
-  }
-  let adjusted : Map[Int, Array[String]] = Map::new()
-  for rank, names in groups {
-    let positions_by_group : Map[Int, Array[Int]] = Map::new()
-    let nodes_by_group : Map[Int, Array[String]] = Map::new()
-    for i in 0..<names.length() {
-      let name = names[i]
-      match rank_same_groups.get(name) {
-        Some(group) => {
-          match positions_by_group.get(group) {
-            Some(list) => list.push(i)
-            None => positions_by_group[group] = [i]
-          }
-          match nodes_by_group.get(group) {
-            Some(list) => list.push(name)
-            None => nodes_by_group[group] = [name]
-          }
-        }
-        None => ()
-      }
-    }
-    let out = names.copy()
-    for group, list in nodes_by_group {
-      let positions = match positions_by_group.get(group) {
-        Some(value) => value
-        None => []
-      }
-      let sorted = list.copy()
-      sorted.sort_by((a, b) => {
-        let a_idx = match rank_same_order.get(a) {
-          Some(value) => value
-          None => 0
-        }
-        let b_idx = match rank_same_order.get(b) {
-          Some(value) => value
-          None => 0
-        }
-        if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else {
-          0
-        }
-      })
-      let mut idx = 0
-      while idx < positions.length() && idx < sorted.length() {
-        out[positions[idx]] = sorted[idx]
-        idx = idx + 1
-      }
-    }
-    adjusted[rank] = out
-  }
-  adjusted
-}
-
-///|
 /// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
 fn apply_rank_same_order_with_port_override(
@@ -907,6 +840,7 @@ fn apply_rank_same_order_with_port_override(
   node_order : Map[String, Int],
   port_edge_nodes : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
+  let _ = node_order
   let adjusted : Map[Int, Array[String]] = Map::new()
   for rank, names in groups {
     adjusted[rank] = names.copy()
@@ -914,7 +848,7 @@ fn apply_rank_same_order_with_port_override(
   if rank_same_groups.length() == 0 {
     return adjusted
   }
-  for rank, names in adjusted {
+  for _rank, names in adjusted {
     if names.length() <= 1 {
       continue
     }

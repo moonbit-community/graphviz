@@ -334,7 +334,7 @@ fn assert_tree_edges(
 fn run_feasible_tree_case(case_info : SimplexCase) -> Unit raise {
   let input = case_info.input
   let graph = build_fixture_graph(input)
-  if !build_feasible_tree(graph) {
+  if !@network_simplex.build_feasible_tree(graph) {
     fail("case \{input.case_id} feasible_tree failed")
   }
   assert_tree_edges(input.case_id, graph.tree_edges, case_info.tree_edges)

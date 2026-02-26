@@ -61,58 +61,6 @@ fn apply_rank_extremes(
   }
 }
 
-///|
-fn add_rank_same_constraints(
-  rank_graph : NsGraph,
-  index : Map[String, Int],
-  subgraph : @cgraph.Graph,
-) -> Unit {
-  match subgraph.get_attr("rank") {
-    Some(value) =>
-      if value.to_lower() == "same" {
-        let nodes = subgraph.nodes()
-        if nodes.length() > 1 {
-          // Graphviz parity: rank=same collapses nodes into a single set;
-          // a star of zero-length constraints preserves equality without
-          // quadratic edge blowup.
-          let mut leader_idx = -1
-          let mut leader_pos = 0
-          while leader_pos < nodes.length() {
-            let name = nodes[leader_pos].name()
-            match index.get(name) {
-              Some(value) => {
-                leader_idx = value
-                break
-              }
-              None => ()
-            }
-            leader_pos = leader_pos + 1
-          }
-          if leader_idx >= 0 {
-            let mut i = 0
-            while i < nodes.length() {
-              let name_i = nodes[i].name()
-              let idx_i = match index.get(name_i) {
-                Some(value) => value
-                None => -1
-              }
-              if idx_i >= 0 && idx_i != leader_idx {
-                let _ = add_edge(rank_graph, leader_idx, idx_i, 0, 1000)
-                let _ = add_edge(rank_graph, idx_i, leader_idx, 0, 1000)
-              }
-              i = i + 1
-            }
-          }
-        }
-      }
-    None => ()
-  }
-  for child in subgraph.subgraphs() {
-    add_rank_same_constraints(rank_graph, index, child)
-  }
-}
-
-///|
 /// Graphviz parity: rank=same merges nodes into a single union set (rank.c).
 /// Do not change behavior without updating fixtures/tests.
 fn build_rank_same_reps(

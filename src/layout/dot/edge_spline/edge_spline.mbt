@@ -45,26 +45,6 @@ fn is_record_shape(node : @cgraph.Node) -> Bool {
   }
 }
 
-///|
-fn has_compass_port_on_non_record(
-  node : @cgraph.Node,
-  port : @cgraph.Port?,
-) -> Bool {
-  if is_record_shape(node) {
-    return false
-  }
-  match port {
-    Some(value) =>
-      match value.compass {
-        Some(@cgraph.Compass::C) => false
-        Some(_) => true
-        None => false
-      }
-    None => false
-  }
-}
-
-///|
 fn fixedsize_mode(node : @cgraph.Node) -> String {
   match node.get_attr("fixedsize") {
     Some(value) => value.trim(chars=" \n\r\t").to_string().to_lower()

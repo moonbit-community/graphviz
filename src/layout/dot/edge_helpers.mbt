@@ -230,18 +230,3 @@ fn endpoint_port_name(
     None
   }
 }
-
-///|
-fn edge_endpoints_from_edges(
-  edges : Array[@cgraph.Edge],
-) -> (Array[String], Array[String], Array[Bool]) {
-  let edge_tail : Array[String] = []
-  let edge_head : Array[String] = []
-  let edge_reversed : Array[Bool] = []
-  for edge in edges {
-    edge_tail.push(edge.tail().name())
-    edge_head.push(edge.head().name())
-    edge_reversed.push(false)
-  }
-  (edge_tail, edge_head, edge_reversed)
-}

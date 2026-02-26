@@ -513,6 +513,7 @@ fn build_virtual_slack_edges(
   node_singletons : Map[String, Bool],
   cluster_keys : Map[String, String],
 ) -> Array[ConstraintEdge] {
+  let _ = cluster_keys
   let extra : Array[ConstraintEdge] = []
   let mut edge_idx = 0
   for edge in edges {
@@ -544,14 +545,6 @@ fn build_virtual_slack_edges(
       edge_port_name(edge.head_port())
     } else {
       edge_port_name(edge.tail_port())
-    }
-    let tail_cluster = match cluster_keys.get(tail) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head) {
-      Some(value) => value
-      None => ""
     }
     let tail_rank = match ranks.get(tail) {
       Some(value) => value

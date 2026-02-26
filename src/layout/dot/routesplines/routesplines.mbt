@@ -1456,6 +1456,10 @@ fn edge_pathplan_polyline_core(
   left_bound : Double,
   right_bound : Double,
 ) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
+  let _ = positions
+  let _ = vnode_positions
+  let _ = sizes
+  let _ = mval_sizes
   let tail_cluster =
     cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
   let head_cluster =
@@ -1793,6 +1797,8 @@ pub fn edge_pathplan_polyline(
   }
   let path_tail_size = size_for_name(path_tail_name, sizes)
   let path_head_size = size_for_name(path_head_name, sizes)
+  let _ = path_tail_size
+  let _ = path_head_size
   if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
     println(
       "pathplan edge \{path_tail_name} -> \{path_head_name} tail_pos=\{path_tail_pos.x},\{path_tail_pos.y} head_pos=\{path_head_pos.x},\{path_head_pos.y} tail_anchor=\{path_tail_anchor.x},\{path_tail_anchor.y} head_anchor=\{path_head_anchor.x},\{path_head_anchor.y}",
@@ -1802,6 +1808,8 @@ pub fn edge_pathplan_polyline(
     cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
   let head_cluster =
     cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
+  let _ = tail_cluster
+  let _ = head_cluster
   let ordered = vnodes
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)

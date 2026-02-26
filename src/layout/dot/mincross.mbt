@@ -296,105 +296,6 @@ fn compute_desired_positions_graphviz(
   desired
 }
 
-///|
-fn compute_desired_positions_with_rank_fallback(
-  names : Array[String],
-  children : Map[String, Array[String]],
-  parents : Map[String, Array[String]],
-  x_positions : Map[String, Double],
-  ranks : Map[String, Int],
-  rank_sizes : Map[Int, Int],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  preferred_positions : Map[String, Double],
-) -> Map[String, Double] {
-  let desired : Map[String, Double] = Map::new()
-  for name in names {
-    match preferred_positions.get(name) {
-      Some(value) => {
-        desired[name] = value
-        continue
-      }
-      None => ()
-    }
-    match port_order_contrib.get(name) {
-      Some(list) => {
-        let mut sum = 0.0
-        let mut count = 0
-        for entry in list {
-          let (anchor, offset) = entry
-          match x_positions.get(anchor) {
-            Some(anchor_pos) => {
-              sum = sum + anchor_pos + offset
-              count = count + 1
-            }
-            None => ()
-          }
-        }
-        if count > 0 {
-          desired[name] = sum / count.to_double()
-          continue
-        }
-      }
-      None => ()
-    }
-    let child_list = match children.get(name) {
-      Some(value) => value
-      None => []
-    }
-    let mut use_children = false
-    for child in child_list {
-      match ranks.get(child) {
-        Some(rank) =>
-          match rank_sizes.get(rank) {
-            Some(size) =>
-              if size > 1 {
-                use_children = true
-                break
-              }
-            None => ()
-          }
-        None => ()
-      }
-    }
-    let primary = if use_children { children } else { parents }
-    let fallback = if use_children { parents } else { children }
-    let list = match primary.get(name) {
-      Some(value) => value
-      None => []
-    }
-    let values : Array[Double] = []
-    for neighbor in list {
-      match x_positions.get(neighbor) {
-        Some(value) => values.push(value)
-        None => ()
-      }
-    }
-    match median_value(values) {
-      Some(value) => desired[name] = value
-      None => ()
-    }
-    if desired.get(name) is None {
-      let fallback_list = match fallback.get(name) {
-        Some(value) => value
-        None => []
-      }
-      let fallback_values : Array[Double] = []
-      for neighbor in fallback_list {
-        match x_positions.get(neighbor) {
-          Some(value) => fallback_values.push(value)
-          None => ()
-        }
-      }
-      match median_value(fallback_values) {
-        Some(value) => desired[name] = value
-        None => ()
-      }
-    }
-  }
-  desired
-}
-
-///|
 fn transpose_rank(
   rank : Int,
   names : Array[String],
@@ -483,6 +384,8 @@ fn in_cross_graphviz(
   edge_tail_port_x : Array[Double],
   edge_penalty : Array[Int],
 ) -> Int {
+  let _ = rank
+  let _ = ranks
   let right_in = match edge_in.get(right) {
     Some(value) => value
     None => []
@@ -549,6 +452,8 @@ fn out_cross_graphviz(
   edge_head_port_x : Array[Double],
   edge_penalty : Array[Int],
 ) -> Int {
+  let _ = rank
+  let _ = ranks
   let right_out = match edge_out.get(right) {
     Some(value) => value
     None => []
@@ -1285,6 +1190,9 @@ fn reorder_rank_groups(
   startpass_init_infinite? : Bool = false,
   remincross_mode? : Bool = false,
 ) -> Map[Int, Array[String]] {
+  let _ = sizes
+  let _ = nodesep_pt
+  let _ = has_edge_labels
   let startpass =
     if startpass < 0 { 0 } else if startpass > 2 { 2 } else { startpass }
   let mut ordered : Map[Int, Array[String]] = Map::new()

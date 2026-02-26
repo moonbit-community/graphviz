@@ -158,6 +158,7 @@ fn build_vnode_order_keys(
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
 ) -> Map[String, Double] {
+  let _ = edge_reversed
   let keys : Map[String, Double] = Map::new()
   let max_order_by_rank : Map[Int, Int] = Map::new()
   for name, order in order_index {

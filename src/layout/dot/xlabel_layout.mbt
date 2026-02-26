@@ -14,7 +14,6 @@ const XLPXPY : Int = 0
 const XLCXPY : Int = 1
 const XLNXPY : Int = 2
 const XLPXCY : Int = 3
-const XLCXCY : Int = 4
 const XLNXCY : Int = 5
 const XLPXNY : Int = 6
 const XLCXNY : Int = 7

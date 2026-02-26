@@ -203,20 +203,6 @@ fn scale_node_size_value(
   }
 }
 
-///|
-fn scale_node_size_map(
-  sizes : Map[String, NodeSize],
-  sx : Double,
-  sy : Double,
-) -> Map[String, NodeSize] {
-  let scaled : Map[String, NodeSize] = Map::new()
-  for name, size in sizes {
-    scaled[name] = scale_node_size_value(size, sx, sy)
-  }
-  scaled
-}
-
-///|
 fn scale_double_map_rounded(
   values : Map[Int, Double],
   scale : Double,

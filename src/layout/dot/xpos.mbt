@@ -1475,27 +1475,6 @@ fn edge_port_order(
   }
 }
 
-///|
-fn edge_port_offset_by_name(
-  node_name : String,
-  port_name : String?,
-  offsets : Map[String, Map[String, RecordPort]],
-) -> Double {
-  match port_name {
-    Some(name) =>
-      match offsets.get(node_name) {
-        Some(node_offsets) =>
-          match node_offsets.get(name) {
-            Some(port_info) => port_info.center.x
-            None => 0.0
-          }
-        None => 0.0
-      }
-    None => 0.0
-  }
-}
-
-///|
 fn extra_node_kind(name : String) -> NodeKind {
   if name.has_prefix(EDGE_VNODE_PREFIX) {
     NodeKind::Virtual
@@ -1539,6 +1518,7 @@ fn build_constraint_graph(
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
 ) -> (NsGraph, Map[String, Int]) {
+  let _ = extra_slack_edges
   let graph = new_graph()
   let ordered_nodes = nodes
   let mut has_port_edges = false

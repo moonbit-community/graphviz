@@ -336,28 +336,3 @@ fn edge_spline_for_line(
     arrow_swapped=arrow_swapped,
   )
 }
-
-///|
-fn edge_spline_raw_for_line(
-  tail_center : @geom.Point,
-  head_center : @geom.Point,
-  tail_slope : @geom.Point,
-  head_slope : @geom.Point,
-  rankdir : RankDir,
-  curve_offset : Double,
-  curve_skew : Double,
-  tail_cluster_bbox~ : @geom.Rect?,
-  head_cluster_bbox~ : @geom.Rect?,
-) -> Array[@geom.Point] {
-  @edge_spline.edge_spline_raw_for_line(
-    tail_center,
-    head_center,
-    tail_slope,
-    head_slope,
-    rankdir,
-    curve_offset,
-    curve_skew,
-    tail_cluster_bbox=tail_cluster_bbox,
-    head_cluster_bbox=head_cluster_bbox,
-  )
-}
