@@ -32,36 +32,32 @@ run_step() {
   fi
 }
 
-run_moon_test_command() {
-  local cmd=(moon test --target native --release --deny-warn -j "${moon_jobs}")
-  if [[ "${use_frozen}" == "1" && "${has_cached_modules}" == "1" ]]; then
-    if [[ ${#script_args[@]} -gt 0 ]]; then
-      if "${cmd[@]}" --frozen "${script_args[@]}"; then
-        return
-      fi
-    else
-      if "${cmd[@]}" --frozen; then
-        return
-      fi
-    fi
-    echo "[local-guard] moon test fallback: retry without --frozen" >&2
-  fi
-  if [[ ${#script_args[@]} -gt 0 ]]; then
-    "${cmd[@]}" "${script_args[@]}"
-  else
-    "${cmd[@]}"
-  fi
-}
-
-run_moon_build_dot_command() {
-  local cmd=(moon build src/cmd/dot --target native --release -j "${moon_jobs}")
+run_moon_command_with_optional_frozen() {
+  local fallback_label="$1"
+  shift
+  local cmd=("$@")
   if [[ "${use_frozen}" == "1" && "${has_cached_modules}" == "1" ]]; then
     if "${cmd[@]}" --frozen; then
       return
     fi
-    echo "[local-guard] moon build fallback: retry without --frozen" >&2
+    echo "[local-guard] ${fallback_label}: retry without --frozen" >&2
   fi
   "${cmd[@]}"
+}
+
+run_moon_test_command() {
+  local cmd=(moon test --target native --release --deny-warn -j "${moon_jobs}")
+  if [[ ${#script_args[@]} -gt 0 ]]; then
+    run_moon_command_with_optional_frozen "moon test fallback" "${cmd[@]}" "${script_args[@]}"
+  else
+    run_moon_command_with_optional_frozen "moon test fallback" "${cmd[@]}"
+  fi
+}
+
+run_moon_build_dot_command() {
+  run_moon_command_with_optional_frozen \
+    "moon build fallback" \
+    moon build src/cmd/dot --target native --release -j "${moon_jobs}"
 }
 
 sanitize_dot_runtime_env() {
