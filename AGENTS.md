@@ -14,6 +14,7 @@ scripts/run_local_guard.sh
 
 - full release MoonBit test suite via `scripts/run_moon_test_full.sh`
   - runs `moon test --target native --release --deny-warn` with `DOT_RUN_FULL_PARITY_TESTS=1`
+  - default parallelism auto-detects CPU count (override via `MOON_TEST_JOBS`)
   - includes full snapshot/parity coverage for `dot` / `xdot` / `svg`
 - snapshot-input candidate alignment (`scripts/check_snapshot_input_candidates.py`)
 - strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)
