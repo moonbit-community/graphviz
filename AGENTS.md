@@ -27,6 +27,7 @@ Performance/reliability mode:
 - set `LOCAL_GUARD_TIMING=1` to print per-step guard timing breakdown
 - guard caches last successful result by staged tree hash + `moon --version`; use `LOCAL_GUARD_FORCE=1` to bypass cache
 - guard skips `git submodule update` when worktree `refs/graphviz` already matches staged gitlink (set `LOCAL_GUARD_SUBMODULE_CHECK=0` to always sync)
+- guard defaults to `--frozen` for moon commands and auto-falls back to non-frozen on failure (set `LOCAL_GUARD_FROZEN=0` to disable)
 - set `CAPTURE_ENV_INVARIANCE_JOBS` to tune env-invariance checker parallelism (defaults to `MOON_TEST_JOBS`)
 - guard uses `git -c core.hooksPath=/dev/null` for worktree sync to avoid local hook noise/interference
 - guard defaults to `scripts/moon_cc_wrapper.sh` to suppress known generated-C `exit` redeclaration noise (disable via `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING=0`)

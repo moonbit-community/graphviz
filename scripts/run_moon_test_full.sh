@@ -11,6 +11,8 @@ moon_jobs="${MOON_TEST_JOBS:-${default_jobs}}"
 capture_jobs="${CAPTURE_ENV_INVARIANCE_JOBS:-${moon_jobs}}"
 cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
 emit_timing="${LOCAL_GUARD_TIMING:-0}"
+use_frozen="${LOCAL_GUARD_FROZEN:-1}"
+script_args=("$@")
 
 run_step() {
   local label="$1"
@@ -23,6 +25,38 @@ run_step() {
   else
     "$@"
   fi
+}
+
+run_moon_test_command() {
+  local cmd=(moon test --target native --release --deny-warn -j "${moon_jobs}")
+  if [[ "${use_frozen}" == "1" ]]; then
+    if [[ ${#script_args[@]} -gt 0 ]]; then
+      if "${cmd[@]}" --frozen "${script_args[@]}"; then
+        return
+      fi
+    else
+      if "${cmd[@]}" --frozen; then
+        return
+      fi
+    fi
+    echo "[local-guard] moon test fallback: retry without --frozen" >&2
+  fi
+  if [[ ${#script_args[@]} -gt 0 ]]; then
+    "${cmd[@]}" "${script_args[@]}"
+  else
+    "${cmd[@]}"
+  fi
+}
+
+run_moon_build_dot_command() {
+  local cmd=(moon build src/cmd/dot --target native --release -j "${moon_jobs}")
+  if [[ "${use_frozen}" == "1" ]]; then
+    if "${cmd[@]}" --frozen; then
+      return
+    fi
+    echo "[local-guard] moon build fallback: retry without --frozen" >&2
+  fi
+  "${cmd[@]}"
 }
 
 if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
@@ -40,13 +74,12 @@ if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
 fi
 
 cd "${repo_root}"
-run_step "moon test" env DOT_RUN_FULL_PARITY_TESTS=1 \
-  moon test --target native --release --deny-warn -j "${moon_jobs}" "$@"
+DOT_RUN_FULL_PARITY_TESTS=1 run_step "moon test" run_moon_test_command
 
 run_step "check snapshot inputs" scripts/check_snapshot_input_candidates.py
 run_step "check strict parity lists" scripts/check_strict_parity_case_lists.py
 
-run_step "moon build dot" moon build src/cmd/dot --target native --release -j "${moon_jobs}"
+run_step "moon build dot" run_moon_build_dot_command
 dot_bin="_build/native/release/build/cmd/dot/dot.exe"
 
 run_step "capture env invariance" scripts/check_capture_env_invariance.py \
