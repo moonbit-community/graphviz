@@ -7,6 +7,7 @@ emit_timing="${LOCAL_GUARD_TIMING:-0}"
 guard_started_at=${SECONDS}
 guard_cache_dir="${repo_root}/_build/local_guard"
 guard_cache_key_file="${guard_cache_dir}/last_success_key.txt"
+cache_enabled="${LOCAL_GUARD_CACHE:-1}"
 
 run_guard_step() {
   local label="$1"
@@ -39,7 +40,11 @@ tree_hash=$(git -C "${repo_root}" write-tree)
 moon_version=$(moon --version 2>/dev/null || echo "unknown")
 guard_cache_key="${tree_hash}|${moon_version}"
 
-if [[ "${LOCAL_GUARD_FORCE:-0}" != "1" && -f "${guard_cache_key_file}" ]]; then
+if [[ "${cache_enabled}" == "1" &&
+  "${LOCAL_GUARD_FORCE:-0}" != "1" &&
+  "${LOCAL_GUARD_PRISTINE:-0}" != "1" &&
+  "${emit_timing}" != "1" &&
+  -f "${guard_cache_key_file}" ]]; then
   cached_key=$(cat "${guard_cache_key_file}")
   if [[ "${cached_key}" == "${guard_cache_key}" ]]; then
     echo "[local-guard] cache hit (same tree + moon version); skipping rerun"
