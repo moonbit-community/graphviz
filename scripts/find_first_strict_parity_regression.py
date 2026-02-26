@@ -12,6 +12,10 @@ import sys
 import tempfile
 from pathlib import Path
 
+from case_list_utils import dedupe_case_names
+from case_list_utils import load_case_names
+from case_list_utils import resolve_repo_path
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -66,22 +70,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_case_names(manifest_path: Path) -> list[str]:
-    names: list[str] = []
-    seen: set[str] = set()
-    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line in seen:
-            continue
-        seen.add(line)
-        names.append(line)
-    if not names:
-        raise ValueError(f"empty case allowlist: {manifest_path}")
-    return names
-
-
 def resolve_focus_cases(
     repo_root: Path,
     focus: list[str] | None,
@@ -91,18 +79,11 @@ def resolve_focus_cases(
     if focus:
         merged.extend(focus)
     if focus_file is not None:
-        path = focus_file if focus_file.is_absolute() else repo_root / focus_file
-        merged.extend(load_case_names(path))
+        path = resolve_repo_path(repo_root, focus_file)
+        merged.extend(load_case_names(path, dedupe=True))
     if not merged:
         return None
-    deduped: list[str] = []
-    seen: set[str] = set()
-    for name in merged:
-        if name in seen:
-            continue
-        seen.add(name)
-        deduped.append(name)
-    return deduped
+    return dedupe_case_names(merged)
 
 
 def run(
