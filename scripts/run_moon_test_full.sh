@@ -8,6 +8,21 @@ default_jobs=$(
     echo 8
 )
 moon_jobs="${MOON_TEST_JOBS:-${default_jobs}}"
+cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
+
+if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
+  -z "${MOON_CC:-}" &&
+  -x "${cc_wrapper}" ]]; then
+  host_cc=$(command -v clang 2>/dev/null || command -v cc 2>/dev/null || true)
+  host_ar=$(command -v ar 2>/dev/null || true)
+  if [[ -n "${host_cc}" ]]; then
+    export MOON_CC="${cc_wrapper}"
+    export MOON_CC_REAL="${host_cc}"
+    if [[ -z "${MOON_AR:-}" && -n "${host_ar}" ]]; then
+      export MOON_AR="${host_ar}"
+    fi
+  fi
+fi
 
 cd "${repo_root}"
 DOT_RUN_FULL_PARITY_TESTS=1 \
