@@ -373,6 +373,11 @@ fn dot_snapshot_cases(
 }
 
 ///|
+fn full_parity_tests_enabled() -> Bool {
+  @sys.get_env_var("DOT_RUN_FULL_PARITY_TESTS") is Some(_)
+}
+
+///|
 test "compass ports on plain nodes clip away from node centers" {
   let graph = try @dot_parser.parse_dot(
     "digraph { foo:s -> bar:n [dir=both arrowhead=crow arrowtail=crow] }",
@@ -407,6 +412,9 @@ test "compass ports on plain nodes clip away from node centers" {
 
 ///|
 test "dot layout tier2 snapshots" {
+  if !full_parity_tests_enabled() {
+    return
+  }
   let cases = dot_snapshot_cases("tests/layout/dot/cases.txt", "tests/layout/dot")
   if cases.length() == 0 {
     fail("no dot fixtures under tests/layout/dot")

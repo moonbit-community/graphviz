@@ -855,7 +855,15 @@ test "render_svg honors size attribute" {
 }
 
 ///|
+fn full_parity_tests_enabled() -> Bool {
+  @sys.get_env_var("DOT_RUN_FULL_PARITY_TESTS") is Some(_)
+}
+
+///|
 test "svg snapshot parity" {
+  if !full_parity_tests_enabled() {
+    return
+  }
   let out_dir = "target/render/svg"
   let manifest_path = "tests/render/svg_snapshot/cases.txt"
   let fixture_dir = "tests/render/svg_snapshot"

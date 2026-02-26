@@ -22,6 +22,7 @@
   ],
   "test-import": [
     "moonbitlang/x/fs",
+    "moonbitlang/x/sys",
     "moonbitlang/core/encoding/utf8",
     "moonbit-community/graphviz/dot"
   ],

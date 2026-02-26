@@ -47,5 +47,5 @@ GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/nul
 
 (
   cd "${worktree_path}"
-  moon test --target native --release -j "${MOON_TEST_JOBS:-8}"
+  scripts/run_moon_test_full.sh
 )

@@ -802,7 +802,15 @@ fn snapshot_matches(
 }
 
 ///|
+fn full_parity_tests_enabled() -> Bool {
+  @sys.get_env_var("DOT_RUN_FULL_PARITY_TESTS") is Some(_)
+}
+
+///|
 test "xdot snapshot parity" {
+  if !full_parity_tests_enabled() {
+    return
+  }
   ensure_dir("target")
   ensure_dir("target/render")
   ensure_dir("target/render/xdot")
