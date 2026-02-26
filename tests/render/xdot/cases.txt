@@ -382,8 +382,6 @@ b123
 2460
 b3
 peripheries0
-multi
-1845
 color
 2613.gv
 1408.gv.gv
@@ -397,7 +395,6 @@ color
 165_2.gv.gv
 165_3.gv.gv
 1702.gv.gv
-1845.gv
 2168.gv
 2168_2.gv
 2168_3.gv
@@ -519,7 +516,6 @@ invtriangle.gv
 165_2.gv.gv.gv
 165_3.gv.gv.gv
 1702.gv.gv.gv
-1845.gv.gv
 1865.gv.gv
 1879-2.gv.gv
 1909.gv.gv

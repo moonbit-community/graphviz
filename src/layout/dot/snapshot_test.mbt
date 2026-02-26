@@ -247,7 +247,14 @@ fn assert_snapshot(
   if @sys.get_env_var("DOT_SNAPSHOT_TRACE") is Some(_) {
     println("snapshot \{input_path}")
   }
-  let graph = @dot_parser.parse_dot_file(input_path)
+  let graph = try {
+    @dot_parser.parse_dot_file(input_path)
+  } catch {
+    err => {
+      println("ERROR parsing \{input_path}: \{err}")
+      raise err
+    }
+  }
   let layout = layout_dot(graph)
   layout.apply()
   let actual = @dot_parser.write_dot_bytes(graph)
