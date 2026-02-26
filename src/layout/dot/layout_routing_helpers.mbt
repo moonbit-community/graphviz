@@ -4489,6 +4489,32 @@ fn collect_edges_in_input_order(
 }
 
 ///|
+fn remap_port_label_pos(
+  edge : @cgraph.Edge,
+  splines : Array[@geom.Spline],
+  label_attr : String,
+  is_head : Bool,
+  fallback : @geom.Point?,
+) -> @geom.Point? {
+  if !edge_attr_non_empty(edge, label_attr) {
+    return None
+  }
+  if splines.length() == 0 {
+    return fallback
+  }
+  let spline =
+    if is_head {
+      splines[splines.length() - 1]
+    } else {
+      splines[0]
+    }
+  match edge_port_label_pos(edge, spline, is_head) {
+    Some(pos) => Some(pos)
+    None => fallback
+  }
+}
+
+///|
 fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
@@ -4499,34 +4525,20 @@ fn remap_edge_layout_edge(
     } else {
       None
     }
-  let head_label_pos =
-    if edge_attr_non_empty(edge, "headlabel") {
-      if layout.splines.length() == 0 {
-        layout.head_label_pos
-      } else {
-        let head_spline = layout.splines[layout.splines.length() - 1]
-        match edge_port_label_pos(edge, head_spline, true) {
-          Some(pos) => Some(pos)
-          None => layout.head_label_pos
-        }
-      }
-    } else {
-      None
-    }
-  let tail_label_pos =
-    if edge_attr_non_empty(edge, "taillabel") {
-      if layout.splines.length() == 0 {
-        layout.tail_label_pos
-      } else {
-        let tail_spline = layout.splines[0]
-        match edge_port_label_pos(edge, tail_spline, false) {
-          Some(pos) => Some(pos)
-          None => layout.tail_label_pos
-        }
-      }
-    } else {
-      None
-    }
+  let head_label_pos = remap_port_label_pos(
+    edge,
+    layout.splines,
+    "headlabel",
+    true,
+    layout.head_label_pos,
+  )
+  let tail_label_pos = remap_port_label_pos(
+    edge,
+    layout.splines,
+    "taillabel",
+    false,
+    layout.tail_label_pos,
+  )
   let xlabel_pos =
     if edge_attr_non_empty(edge, "xlabel") {
       layout.xlabel_pos
