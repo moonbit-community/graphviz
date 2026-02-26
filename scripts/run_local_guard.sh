@@ -3,7 +3,6 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 worktree_path="${repo_root}/_build/local_guard/worktree"
-beads_no_daemon="${BEADS_NO_DAEMON:-1}"
 
 # Guard checks run against the staged index snapshot so local untracked/debug
 # files do not pollute test discovery.
@@ -32,25 +31,21 @@ while IFS= read -r path; do
 done <<< "${registered_worktrees}"
 
 if [[ "${has_registered_worktree}" == "true" && ! -e "${worktree_path}/.git" ]]; then
-  git -C "${repo_root}" worktree remove --force "${worktree_path}" >/dev/null 2>&1 || true
+  git -c core.hooksPath=/dev/null -C "${repo_root}" worktree remove --force "${worktree_path}" >/dev/null 2>&1 || true
   has_registered_worktree=false
 fi
 
 if [[ "${has_registered_worktree}" == "false" ]]; then
   rm -rf "${worktree_path}"
   mkdir -p "$(dirname "${worktree_path}")"
-  BEADS_NO_DAEMON="${beads_no_daemon}" \
-    git -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
+  git -c core.hooksPath=/dev/null -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
 else
-  BEADS_NO_DAEMON="${beads_no_daemon}" \
-    git -C "${worktree_path}" reset --hard "${guard_commit}" >/dev/null
+  git -c core.hooksPath=/dev/null -C "${worktree_path}" reset --hard "${guard_commit}" >/dev/null
   if [[ "${LOCAL_GUARD_PRISTINE:-0}" == "1" ]]; then
-    BEADS_NO_DAEMON="${beads_no_daemon}" \
-      git -C "${worktree_path}" clean -ffd >/dev/null
+    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd >/dev/null
   else
     # Keep _build cache between guard runs for faster iterative refactors.
-    BEADS_NO_DAEMON="${beads_no_daemon}" \
-      git -C "${worktree_path}" clean -ffd -e _build/ >/dev/null
+    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd -e _build/ >/dev/null
   fi
 fi
 

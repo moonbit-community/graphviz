@@ -13,7 +13,7 @@ scripts/run_local_guard.sh
 `scripts/run_local_guard.sh` validates:
 
 - full release MoonBit test suite via `scripts/run_moon_test_full.sh`
-  - runs `moon test --target native --release` with `DOT_RUN_FULL_PARITY_TESTS=1`
+  - runs `moon test --target native --release --deny-warn` with `DOT_RUN_FULL_PARITY_TESTS=1`
   - includes full snapshot/parity coverage for `dot` / `xdot` / `svg`
 - snapshot-input candidate alignment (`scripts/check_snapshot_input_candidates.py`)
 - strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)
@@ -23,6 +23,7 @@ Performance/reliability mode:
 
 - guard reuses `_build/local_guard/worktree/_build` between runs for faster iterative refactors
 - set `LOCAL_GUARD_PRISTINE=1` to force a fully clean worktree build when needed
+- guard uses `git -c core.hooksPath=/dev/null` for worktree sync to avoid local hook noise/interference
 
 If the guard fails:
 
