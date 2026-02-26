@@ -918,7 +918,3 @@ val_nul
 val_val
 viewport
 xlabels
-b102
-b29
-badvoro
-xx
