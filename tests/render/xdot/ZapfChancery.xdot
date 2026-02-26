@@ -1,0 +1,25 @@
+graph {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 108 268.66 108 268.66 0 ",
+		bb="0,0,268.66,108",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	34	[_draw_="c 7 -#000000 p 4 268.66 108 0 108 0 0 268.66 0 ",
+		_ldraw_="S 5 -solid c 7 -#000000 p 4 0 81 0 108 443.23 108 443.23 81 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 135.44 89.6 -1 172.36 \
+27 -\"ZapfChancery-MediumItalic\" S 5 -solid c 7 -#000000 p 4 0 54 0 81 443.23 81 443.23 54 F 14 25 -ZapfChancery-MediumItalic c 7 \
+-#000000 T 90.29 62.6 -1 262.66 29 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\" S 5 -solid c 7 -#000000 p 4 0 27 0 54 443.23 54 443.23 27 F 14 \
+25 -ZapfChancery-MediumItalic c 7 -#000000 T 130.36 35.6 -1 182.51 29 -\"abcdefghijlklmnopqrstuvwxyz\" S 5 -solid c 7 -#000000 p 4 \
+0 0 0 27 443.23 27 443.23 0 F 14 25 -ZapfChancery-MediumItalic c 7 -#000000 T 3 8.6 -1 437.23 57 -\"ABCDEFGHIJLKLMNOPQRSTUVWXYZ abcdefghijlklmnopqrstuvwxyz\" ",
+		fontname="ZapfChancery-MediumItalic",
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"ZapfChancery-MediumItalic"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,54",
+		shape=box,
+		width=3.7314];
+}

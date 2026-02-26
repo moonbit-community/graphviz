@@ -1,0 +1,30 @@
+graph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 62 782.14 62 782.14 0 ",
+		bb="0,0,782.14,62",
+		imagepath="",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	a	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 16 36.7 -1 118.96 22 -image attribute (null) F 14 11 -Times-Roman c 7 -#000000 T 16 15.2 -1 \
+143.06 26 -imagepath attribute (null) ",
+		height=0.86111,
+		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
+CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
+CELLBORDER="0">
+<TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (null)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (null)</FONT></TD></TR>
+</TABLE></TD></TR></TABLE>>,
+		pos="87.531,31",
+		shape=plaintext,
+		width=2.4314];
+	b	[_draw_="c 7 -#000000 p 4 782.14 53 192.93 53 192.93 9 782.14 9 ",
+		_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 487.53 22 0 573.21 46 -image in working directory should be displayed ",
+		fontname="Helvetica-Bold",
+		fontsize=30,
+		height=0.61111,
+		image="image.jpg",
+		label="image in working directory should be displayed",
+		pos="487.53,31",
+		shape=box,
+		width=8.1834,
+		labelloc=b];
+}

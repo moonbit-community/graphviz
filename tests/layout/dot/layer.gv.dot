@@ -1,0 +1,25 @@
+digraph G {
+	graph [bb="0,0,195.7,108",
+		layers="local:pvt:test:new:ofc"
+	];
+	node [label="\N"];
+	node1	[height=0.5,
+		pos="33.438,90",
+		width=0.92884,
+		layer=pvt];
+	node2	[height=0.5,
+		pos="118.44,90",
+		width=0.92884,
+		layer=all];
+	node3	[height=0.5,
+		pos="74.438,18",
+		width=0.95185,
+		layer="pvt:ofc"];
+	node2 -> node3	[layer="pvt:all",
+		pos="e,84.791,35.47 108.01,72.411 102.86,64.216 96.526,54.14 90.753,44.955"];
+	node4	[height=0.5,
+		pos="161.44,18",
+		width=0.95185];
+	node2 -> node4	[layer=3,
+		pos="e,151.32,35.47 128.63,72.411 133.61,64.304 139.72,54.354 145.31,45.248"];
+}

@@ -1,0 +1,241 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#000000 P 4 0 0 0 668.5 654 668.5 654 0 ",
+		bb="0,0,654,668.5",
+		bgcolor="purple:pink",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster1 {
+		graph [_draw_="c 7 -#000000 C 7 -#000000 P 4 8 8 8 660.5 646 660.5 646 8 ",
+			bb="8,8,646,660.5",
+			bgcolor="blue:green"
+		];
+		a0	[_draw_="c 7 -#000000 C 7 -#000000 E 327 334.25 311 318.25 ",
+			_ldraw_="S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 24 20 24 648.5 630 648.5 630 20 S 5 -solid c 9 -#fffffe00 C 7 -#ffff00 P 4 44 572 44 \
+628.5 98 628.5 98 572 S 16 -setlinewidth(10) S 5 -solid c 7 -#000000 p 4 49 577 49 623.5 93 623.5 93 577 F 14 11 -Times-Roman c \
+7 -#000000 T 64 595.2 -1 14 2 -00 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 572 108 628.5 162 628.5 162 572 S 5 -solid c 7 \
+-#000000 p 4 113 577 113 623.5 157 623.5 157 577 F 14 11 -Times-Roman c 7 -#000000 T 128 595.2 -1 14 2 -01 S 5 -solid c 9 -#fffffe00 \
+C 7 -#00ff00 P 4 172 572 172 628.5 226 628.5 226 572 S 5 -solid c 7 -#000000 p 4 177 577 177 623.5 221 623.5 221 577 F 14 11 -Times-Roman \
+c 7 -#000000 T 192 595.2 -1 14 2 -02 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 572 236 628.5 290 628.5 290 572 S 5 -solid c \
+7 -#000000 p 4 241 577 241 623.5 285 623.5 285 577 F 14 11 -Times-Roman c 7 -#000000 T 256 595.2 -1 14 2 -03 S 5 -solid c 9 -#fffffe00 \
+C 7 -#0000ff P 4 300 572 300 628.5 354 628.5 354 572 S 5 -solid c 7 -#000000 p 4 305 577 305 623.5 349 623.5 349 577 F 14 11 -Times-Roman \
+c 7 -#000000 T 320 595.2 -1 14 2 -04 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 572 364 628.5 418 628.5 418 572 S 5 -solid c \
+7 -#000000 p 4 369 577 369 623.5 413 623.5 413 577 F 14 11 -Times-Roman c 7 -#000000 T 384 595.2 -1 14 2 -05 S 5 -solid c 9 -#fffffe00 \
+C 7 -#a020f0 P 4 428 572 428 628.5 482 628.5 482 572 S 5 -solid c 7 -#000000 p 4 433 577 433 623.5 477 623.5 477 577 F 14 11 -Times-Roman \
+c 7 -#000000 T 448 595.2 -1 14 2 -06 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 492 572 492 628.5 546 628.5 546 572 S 5 -solid c \
+7 -#000000 p 4 497 577 497 623.5 541 623.5 541 577 F 14 11 -Times-Roman c 7 -#000000 T 512 595.2 -1 14 2 -07 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 556 572 556 628.5 610 628.5 610 572 S 5 -solid c 7 -#000000 p 4 561 577 561 623.5 605 623.5 605 577 F 14 11 -Times-Roman \
+c 7 -#000000 T 576 595.2 -1 14 2 -08 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 44 505.5 44 562 98 562 98 505.5 S 5 -solid c 7 -#\
+000000 p 4 49 510.5 49 557 93 557 93 510.5 F 14 11 -Times-Roman c 7 -#000000 T 64.25 528.7 -1 13.5 2 -10 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 108 505.5 108 562 162 562 162 505.5 S 5 -solid c 7 -#000000 p 4 113 510.5 113 557 157 557 157 510.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 128.25 528.7 -1 13.5 2 -11 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 172 505.5 172 562 226 562 226 505.5 S 5 -solid \
+c 7 -#000000 p 4 177 510.5 177 557 221 557 221 510.5 F 14 11 -Times-Roman c 7 -#000000 T 192.25 528.7 -1 13.5 2 -12 S 5 -solid c \
+9 -#fffffe00 C 7 -#000000 P 4 236 505.5 236 562 290 562 290 505.5 S 5 -solid c 7 -#000000 p 4 241 510.5 241 557 285 557 285 510.5 \
+F 14 11 -Times-Roman c 7 -#000000 T 256.25 528.7 -1 13.5 2 -13 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 300 505.5 300 562 354 \
+562 354 505.5 S 5 -solid c 7 -#000000 p 4 305 510.5 305 557 349 557 349 510.5 F 14 11 -Times-Roman c 7 -#000000 T 320.25 528.7 -1 \
+13.5 2 -14 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 505.5 364 562 418 562 418 505.5 S 5 -solid c 7 -#000000 p 4 369 510.5 \
+369 557 413 557 413 510.5 F 14 11 -Times-Roman c 7 -#000000 T 384.25 528.7 -1 13.5 2 -15 S 5 -solid c 9 -#fffffe00 C 7 -#000000 \
+P 4 428 505.5 428 562 482 562 482 505.5 S 5 -solid c 7 -#000000 p 4 433 510.5 433 557 477 557 477 510.5 F 14 11 -Times-Roman c 7 \
+-#000000 T 448.25 528.7 -1 13.5 2 -16 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 492 505.5 492 562 546 562 546 505.5 S 5 -solid \
+c 7 -#000000 p 4 497 510.5 497 557 541 557 541 510.5 F 14 11 -Times-Roman c 7 -#000000 T 512.25 528.7 -1 13.5 2 -17 S 5 -solid c \
+9 -#fffffe00 C 7 -#000000 P 4 556 505.5 556 562 610 562 610 505.5 S 5 -solid c 7 -#000000 p 4 561 510.5 561 557 605 557 605 510.5 \
+F 14 11 -Times-Roman c 7 -#000000 T 576.25 528.7 -1 13.5 2 -18 S 5 -solid c 9 -#fffffe00 C 7 -#ffd700 P 4 44 439 44 495.5 98 495.5 \
+98 439 S 5 -solid c 7 -#000000 p 4 49 444 49 490.5 93 490.5 93 444 F 14 11 -Times-Roman c 7 -#000000 T 64.25 462.2 -1 13.5 2 -20 \
+S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 439 108 495.5 162 495.5 162 439 S 5 -solid c 7 -#000000 p 4 113 444 113 490.5 157 \
+490.5 157 444 F 14 11 -Times-Roman c 7 -#000000 T 128.25 462.2 -1 13.5 2 -21 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 172 439 \
+172 495.5 226 495.5 226 439 S 5 -solid c 7 -#000000 p 4 177 444 177 490.5 221 490.5 221 444 F 14 11 -Times-Roman c 7 -#000000 T \
+192.25 462.2 -1 13.5 2 -22 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 439 236 495.5 290 495.5 290 439 S 5 -solid c 7 -#000000 \
+p 4 241 444 241 490.5 285 490.5 285 444 F 14 11 -Times-Roman c 7 -#000000 T 256.25 462.2 -1 13.5 2 -23 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 300 439 300 495.5 354 495.5 354 439 S 5 -solid c 7 -#000000 p 4 305 444 305 490.5 349 490.5 349 444 F 14 11 -Times-Roman \
+c 7 -#000000 T 320.25 462.2 -1 13.5 2 -24 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 439 364 495.5 418 495.5 418 439 S 5 -solid \
+c 7 -#000000 p 4 369 444 369 490.5 413 490.5 413 444 F 14 11 -Times-Roman c 7 -#000000 T 384.25 462.2 -1 13.5 2 -25 S 5 -solid c \
+9 -#fffffe00 C 7 -#000000 P 4 428 439 428 495.5 482 495.5 482 439 S 5 -solid c 7 -#000000 p 4 433 444 433 490.5 477 490.5 477 444 \
+F 14 11 -Times-Roman c 7 -#000000 T 448.25 462.2 -1 13.5 2 -26 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 492 439 492 495.5 546 \
+495.5 546 439 S 5 -solid c 7 -#000000 p 4 497 444 497 490.5 541 490.5 541 444 F 14 11 -Times-Roman c 7 -#000000 T 512.25 462.2 -1 \
+13.5 2 -27 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 556 439 556 495.5 610 495.5 610 439 S 5 -solid c 7 -#000000 p 4 561 444 561 \
+490.5 605 490.5 605 444 F 14 11 -Times-Roman c 7 -#000000 T 576.25 462.2 -1 13.5 2 -28 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P \
+4 44 372.5 44 429 98 429 98 372.5 S 5 -solid c 7 -#000000 p 4 49 377.5 49 424 93 424 93 377.5 F 14 11 -Times-Roman c 7 -#000000 \
+T 64.25 395.7 -1 13.5 2 -30 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 372.5 108 429 162 429 162 372.5 S 5 -solid c 7 -#000000 \
+p 4 113 377.5 113 424 157 424 157 377.5 F 14 11 -Times-Roman c 7 -#000000 T 128.25 395.7 -1 13.5 2 -31 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 172 372.5 172 429 226 429 226 372.5 S 5 -solid c 7 -#000000 p 4 177 377.5 177 424 221 424 221 377.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 192.25 395.7 -1 13.5 2 -32 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 372.5 236 429 290 429 290 372.5 S 5 -solid \
+c 7 -#000000 p 4 241 377.5 241 424 285 424 285 377.5 F 14 11 -Times-Roman c 7 -#000000 T 256.25 395.7 -1 13.5 2 -33 S 5 -solid c \
+9 -#fffffe00 C 7 -#000000 P 4 300 372.5 300 429 354 429 354 372.5 S 5 -solid c 7 -#000000 p 4 305 377.5 305 424 349 424 349 377.5 \
+F 14 11 -Times-Roman c 7 -#000000 T 320.25 395.7 -1 13.5 2 -34 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 372.5 364 429 418 \
+429 418 372.5 S 5 -solid c 7 -#000000 p 4 369 377.5 369 424 413 424 413 377.5 F 14 11 -Times-Roman c 7 -#000000 T 384.25 395.7 -1 \
+13.5 2 -35 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 428 372.5 428 429 482 429 482 372.5 S 5 -solid c 7 -#000000 p 4 433 377.5 \
+433 424 477 424 477 377.5 F 14 11 -Times-Roman c 7 -#000000 T 448.25 395.7 -1 13.5 2 -36 S 5 -solid c 9 -#fffffe00 C 7 -#000000 \
+P 4 492 372.5 492 429 546 429 546 372.5 S 5 -solid c 7 -#000000 p 4 497 377.5 497 424 541 424 541 377.5 F 14 11 -Times-Roman c 7 \
+-#000000 T 512.25 395.7 -1 13.5 2 -37 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 556 372.5 556 429 610 429 610 372.5 S 5 -solid \
+c 7 -#000000 p 4 561 377.5 561 424 605 424 605 377.5 F 14 11 -Times-Roman c 7 -#000000 T 576.25 395.7 -1 13.5 2 -38 S 5 -solid c \
+9 -#fffffe00 C 7 -#ffa500 P 4 44 306 44 362.5 98 362.5 98 306 S 5 -solid c 7 -#000000 p 4 49 311 49 357.5 93 357.5 93 311 F 14 11 \
+-Times-Roman c 7 -#000000 T 64.25 329.2 -1 13.5 2 -40 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 306 108 362.5 162 362.5 162 \
+306 S 5 -solid c 7 -#000000 p 4 113 311 113 357.5 157 357.5 157 311 F 14 11 -Times-Roman c 7 -#000000 T 128.25 329.2 -1 13.5 2 -41 \
+S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 172 306 172 362.5 226 362.5 226 306 S 5 -solid c 7 -#000000 p 4 177 311 177 357.5 221 \
+357.5 221 311 F 14 11 -Times-Roman c 7 -#000000 T 192.25 329.2 -1 13.5 2 -42 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 306 \
+236 362.5 290 362.5 290 306 S 5 -solid c 7 -#000000 p 4 241 311 241 357.5 285 357.5 285 311 F 14 11 -Times-Roman c 7 -#000000 T \
+256.25 329.2 -1 13.5 2 -43 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 300 306 300 362.5 354 362.5 354 306 S 5 -solid c 7 -#000000 \
+p 4 305 311 305 357.5 349 357.5 349 311 F 14 11 -Times-Roman c 7 -#000000 T 320.25 329.2 -1 13.5 2 -44 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 364 306 364 362.5 418 362.5 418 306 S 5 -solid c 7 -#000000 p 4 369 311 369 357.5 413 357.5 413 311 F 14 11 -Times-Roman \
+c 7 -#000000 T 384.25 329.2 -1 13.5 2 -45 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 428 306 428 362.5 482 362.5 482 306 S 5 -solid \
+c 7 -#000000 p 4 433 311 433 357.5 477 357.5 477 311 F 14 11 -Times-Roman c 7 -#000000 T 448.25 329.2 -1 13.5 2 -46 S 5 -solid c \
+9 -#fffffe00 C 7 -#000000 P 4 492 306 492 362.5 546 362.5 546 306 S 5 -solid c 7 -#000000 p 4 497 311 497 357.5 541 357.5 541 311 \
+F 14 11 -Times-Roman c 7 -#000000 T 512.25 329.2 -1 13.5 2 -47 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 556 306 556 362.5 610 \
+362.5 610 306 S 5 -solid c 7 -#000000 p 4 561 311 561 357.5 605 357.5 605 311 F 14 11 -Times-Roman c 7 -#000000 T 576.25 329.2 -1 \
+13.5 2 -48 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 44 239.5 44 296 98 296 98 239.5 S 5 -solid c 7 -#000000 p 4 49 244.5 49 291 \
+93 291 93 244.5 F 14 11 -Times-Roman c 7 -#000000 T 64.25 262.7 -1 13.5 2 -50 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 239.5 \
+108 296 162 296 162 239.5 S 5 -solid c 7 -#000000 p 4 113 244.5 113 291 157 291 157 244.5 F 14 11 -Times-Roman c 7 -#000000 T 128 \
+262.7 -1 14 2 -51 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 172 239.5 172 296 226 296 226 239.5 S 5 -solid c 7 -#000000 p 4 177 \
+244.5 177 291 221 291 221 244.5 F 14 11 -Times-Roman c 7 -#000000 T 192 262.7 -1 14 2 -52 S 5 -solid c 9 -#fffffe00 C 7 -#000000 \
+P 4 236 239.5 236 296 290 296 290 239.5 S 5 -solid c 7 -#000000 p 4 241 244.5 241 291 285 291 285 244.5 F 14 11 -Times-Roman c 7 \
+-#000000 T 256 262.7 -1 14 2 -53 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 300 239.5 300 296 354 296 354 239.5 S 5 -solid c 7 -#\
+000000 p 4 305 244.5 305 291 349 291 349 244.5 F 14 11 -Times-Roman c 7 -#000000 T 320 262.7 -1 14 2 -54 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 364 239.5 364 296 418 296 418 239.5 S 5 -solid c 7 -#000000 p 4 369 244.5 369 291 413 291 413 244.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 384 262.7 -1 14 2 -55 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 428 239.5 428 296 482 296 482 239.5 S 5 -solid c \
+7 -#000000 p 4 433 244.5 433 291 477 291 477 244.5 F 14 11 -Times-Roman c 7 -#000000 T 448 262.7 -1 14 2 -56 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 492 239.5 492 296 546 296 546 239.5 S 5 -solid c 7 -#000000 p 4 497 244.5 497 291 541 291 541 244.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 512 262.7 -1 14 2 -57 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 556 239.5 556 296 610 296 610 239.5 S 5 -solid c \
+7 -#000000 p 4 561 244.5 561 291 605 291 605 244.5 F 14 11 -Times-Roman c 7 -#000000 T 576 262.7 -1 14 2 -58 S 5 -solid c 9 -#fffffe00 \
+C 7 -#ff0000 P 4 44 173 44 229.5 98 229.5 98 173 S 5 -solid c 7 -#000000 p 4 49 178 49 224.5 93 224.5 93 178 F 14 11 -Times-Roman \
+c 7 -#000000 T 64 196.2 -1 14 2 -60 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 173 108 229.5 162 229.5 162 173 S 5 -solid c \
+7 -#000000 p 4 113 178 113 224.5 157 224.5 157 178 F 14 11 -Times-Roman c 7 -#000000 T 128 196.2 -1 14 2 -61 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 172 173 172 229.5 226 229.5 226 173 S 5 -solid c 7 -#000000 p 4 177 178 177 224.5 221 224.5 221 178 F 14 11 -Times-Roman \
+c 7 -#000000 T 192 196.2 -1 14 2 -62 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 173 236 229.5 290 229.5 290 173 S 5 -solid c \
+7 -#000000 p 4 241 178 241 224.5 285 224.5 285 178 F 14 11 -Times-Roman c 7 -#000000 T 256 196.2 -1 14 2 -63 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 300 173 300 229.5 354 229.5 354 173 S 5 -solid c 7 -#000000 p 4 305 178 305 224.5 349 224.5 349 178 F 14 11 -Times-Roman \
+c 7 -#000000 T 320 196.2 -1 14 2 -64 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 173 364 229.5 418 229.5 418 173 S 5 -solid c \
+7 -#000000 p 4 369 178 369 224.5 413 224.5 413 178 F 14 11 -Times-Roman c 7 -#000000 T 384 196.2 -1 14 2 -65 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 428 173 428 229.5 482 229.5 482 173 S 5 -solid c 7 -#000000 p 4 433 178 433 224.5 477 224.5 477 178 F 14 11 -Times-Roman \
+c 7 -#000000 T 448 196.2 -1 14 2 -66 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 492 173 492 229.5 546 229.5 546 173 S 5 -solid c \
+7 -#000000 p 4 497 178 497 224.5 541 224.5 541 178 F 14 11 -Times-Roman c 7 -#000000 T 512 196.2 -1 14 2 -67 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 556 173 556 229.5 610 229.5 610 173 S 5 -solid c 7 -#000000 p 4 561 178 561 224.5 605 224.5 605 178 F 14 11 -Times-Roman \
+c 7 -#000000 T 576 196.2 -1 14 2 -68 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 44 106.5 44 163 98 163 98 106.5 S 5 -solid c 7 -#\
+000000 p 4 49 111.5 49 158 93 158 93 111.5 F 14 11 -Times-Roman c 7 -#000000 T 64 129.7 -1 14 2 -70 S 5 -solid c 9 -#fffffe00 C \
+7 -#000000 P 4 108 106.5 108 163 162 163 162 106.5 S 5 -solid c 7 -#000000 p 4 113 111.5 113 158 157 158 157 111.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 128 129.7 -1 14 2 -71 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 172 106.5 172 163 226 163 226 106.5 S 5 -solid c \
+7 -#000000 p 4 177 111.5 177 158 221 158 221 111.5 F 14 11 -Times-Roman c 7 -#000000 T 192 129.7 -1 14 2 -72 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 236 106.5 236 163 290 163 290 106.5 S 5 -solid c 7 -#000000 p 4 241 111.5 241 158 285 158 285 111.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 256 129.7 -1 14 2 -73 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 300 106.5 300 163 354 163 354 106.5 S 5 -solid c \
+7 -#000000 p 4 305 111.5 305 158 349 158 349 111.5 F 14 11 -Times-Roman c 7 -#000000 T 320 129.7 -1 14 2 -74 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 364 106.5 364 163 418 163 418 106.5 S 5 -solid c 7 -#000000 p 4 369 111.5 369 158 413 158 413 111.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 384 129.7 -1 14 2 -75 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 428 106.5 428 163 482 163 482 106.5 S 5 -solid c \
+7 -#000000 p 4 433 111.5 433 158 477 158 477 111.5 F 14 11 -Times-Roman c 7 -#000000 T 448 129.7 -1 14 2 -76 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 492 106.5 492 163 546 163 546 106.5 S 5 -solid c 7 -#000000 p 4 497 111.5 497 158 541 158 541 111.5 F 14 11 -Times-Roman \
+c 7 -#000000 T 512 129.7 -1 14 2 -77 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 556 106.5 556 163 610 163 610 106.5 S 5 -solid c \
+7 -#000000 p 4 561 111.5 561 158 605 158 605 111.5 F 14 11 -Times-Roman c 7 -#000000 T 576 129.7 -1 14 2 -78 S 5 -solid c 9 -#fffffe00 \
+C 7 -#000000 P 4 44 40 44 96.5 98 96.5 98 40 S 5 -solid c 7 -#000000 p 4 49 45 49 91.5 93 91.5 93 45 F 14 11 -Times-Roman c 7 -#\
+000000 T 64 63.2 -1 14 2 -80 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 108 40 108 96.5 162 96.5 162 40 S 5 -solid c 7 -#000000 \
+p 4 113 45 113 91.5 157 91.5 157 45 F 14 11 -Times-Roman c 7 -#000000 T 128 63.2 -1 14 2 -81 S 5 -solid c 9 -#fffffe00 C 7 -#000000 \
+P 4 172 40 172 96.5 226 96.5 226 40 S 5 -solid c 7 -#000000 p 4 177 45 177 91.5 221 91.5 221 45 F 14 11 -Times-Roman c 7 -#000000 \
+T 192 63.2 -1 14 2 -82 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 236 40 236 96.5 290 96.5 290 40 S 5 -solid c 7 -#000000 p 4 241 \
+45 241 91.5 285 91.5 285 45 F 14 11 -Times-Roman c 7 -#000000 T 256 63.2 -1 14 2 -83 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 \
+300 40 300 96.5 354 96.5 354 40 S 5 -solid c 7 -#000000 p 4 305 45 305 91.5 349 91.5 349 45 F 14 11 -Times-Roman c 7 -#000000 T \
+320 63.2 -1 14 2 -84 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 364 40 364 96.5 418 96.5 418 40 S 5 -solid c 7 -#000000 p 4 369 \
+45 369 91.5 413 91.5 413 45 F 14 11 -Times-Roman c 7 -#000000 T 384 63.2 -1 14 2 -85 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 \
+428 40 428 96.5 482 96.5 482 40 S 5 -solid c 7 -#000000 p 4 433 45 433 91.5 477 91.5 477 45 F 14 11 -Times-Roman c 7 -#000000 T \
+448 63.2 -1 14 2 -86 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 492 40 492 96.5 546 96.5 546 40 S 5 -solid c 7 -#000000 p 4 497 \
+45 497 91.5 541 91.5 541 45 F 14 11 -Times-Roman c 7 -#000000 T 512 63.2 -1 14 2 -87 S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 \
+556 40 556 96.5 610 96.5 610 40 S 5 -solid c 7 -#000000 p 4 561 45 561 91.5 605 91.5 605 45 F 14 11 -Times-Roman c 7 -#000000 T \
+576 63.2 -1 14 2 -88 S 5 -solid c 7 -#000000 p 4 29 25 29 643.5 625 643.5 625 25 ",
+			fillcolor="gold:brown",
+			height=8.8403,
+			label=<
+ <TABLE border="10" cellspacing="10" cellpadding="10" style="rounded"  bgcolor="yellow:violet" gradientangle="315">
+<TR><TD border="3"  bgcolor="yellow">00</TD>
+<TD border="3"  bgcolor="yellow:green">01</TD>
+<TD border="3"  bgcolor="green">02</TD>
+<TD border="3"  bgcolor="green:blue">03</TD>
+<TD border="3"  bgcolor="blue">04</TD>
+<TD border="3"  bgcolor="blue:purple">05</TD>
+<TD border="3"  bgcolor="purple">06</TD>
+<TD border="3"  bgcolor="purple:violet">07</TD>
+<TD border="3"  bgcolor="violet">08</TD></TR>
+  
+<TR><TD border="3"  bgcolor="yellow:gold">10</TD>
+<TD border="3"  bgcolor="yellow:green">11</TD>
+<TD border="3"  bgcolor="yellow:green">12</TD>
+<TD border="3"  bgcolor="yellow:blue">13</TD>
+<TD border="3"  bgcolor="yellow:blue">14</TD>
+<TD border="3"  bgcolor="yellow:purple">15</TD>
+<TD border="3"  bgcolor="yellow:purple">16</TD>
+<TD border="3"  bgcolor="yellow:violet">17</TD>
+<TD border="3"  bgcolor="yellow:violet">18</TD></TR>
+  
+<TR><TD border="3"  bgcolor="gold">20</TD>
+<TD border="3"  bgcolor="gold:green">21</TD>
+<TD border="3"  bgcolor="gold:green">22</TD>
+<TD border="3"  bgcolor="gold:blue">23</TD>
+<TD border="3"  bgcolor="gold:blue">24</TD>
+<TD border="3"  bgcolor="gold:purple">25</TD>
+<TD border="3"  bgcolor="gold:purple">26</TD>
+<TD border="3"  bgcolor="gold:violet">27</TD>
+<TD border="3"  bgcolor="gold:violet">28</TD></TR>
+  
+<TR><TD border="3"  bgcolor="gold:orange">30</TD>
+<TD border="3"  bgcolor="orange:green">31</TD>
+<TD border="3"  bgcolor="orange:green">32</TD>
+<TD border="3"  bgcolor="orange:blue">33</TD>
+<TD border="3"  bgcolor="orange:blue">34</TD>
+<TD border="3"  bgcolor="orange:purple">35</TD>
+<TD border="3"  bgcolor="orange:purple">36</TD>
+<TD border="3"  bgcolor="orange:violet">37</TD>
+<TD border="3"  bgcolor="orange:violet">38</TD></TR>
+  
+<TR><TD border="3"  bgcolor="orange">40</TD>
+<TD border="3"  bgcolor="orange:green">41</TD>
+<TD border="3"  bgcolor="orange:green">42</TD>
+<TD border="3"  bgcolor="orange:blue">43</TD>
+<TD border="3"  bgcolor="orange:blue">44</TD>
+<TD border="3"  bgcolor="orange:purple">45</TD>
+<TD border="3"  bgcolor="orange:purple">46</TD>
+<TD border="3"  bgcolor="orange:violet">47</TD>
+<TD border="3"  bgcolor="orange:violet">48</TD></TR>
+  
+<TR><TD border="3"  bgcolor="orange:red">50</TD>
+<TD border="3"  bgcolor="red:green">51</TD>
+<TD border="3"  bgcolor="red:green">52</TD>
+<TD border="3"  bgcolor="red:blue">53</TD>
+<TD border="3"  bgcolor="red:blue">54</TD>
+<TD border="3"  bgcolor="red:purple">55</TD>
+<TD border="3"  bgcolor="red:purple">56</TD>
+<TD border="3"  bgcolor="red:violet">57</TD>
+<TD border="3"  bgcolor="red:violet">58</TD></TR>
+  
+<TR><TD border="3"  bgcolor="red">60</TD>
+<TD border="3"  bgcolor="red:green">61</TD>
+<TD border="3"  bgcolor="red:green">62</TD>
+<TD border="3"  bgcolor="red:blue">63</TD>
+<TD border="3"  bgcolor="red:blue">64</TD>
+<TD border="3"  bgcolor="red:purple">65</TD>
+<TD border="3"  bgcolor="red:purple">66</TD>
+<TD border="3"  bgcolor="red:violet">67</TD>
+<TD border="3"  bgcolor="red:violet">68</TD></TR>
+  
+<TR><TD border="3"  bgcolor="red:brown">70</TD>
+<TD border="3"  bgcolor="brown:green">71</TD>
+<TD border="3"  bgcolor="brown:green">72</TD>
+<TD border="3"  bgcolor="brown:blue">73</TD>
+<TD border="3"  bgcolor="brown:blue">74</TD>
+<TD border="3"  bgcolor="brown:purple">75</TD>
+<TD border="3"  bgcolor="brown:purple">76</TD>
+<TD border="3"  bgcolor="brown:violet">77</TD>
+<TD border="3"  bgcolor="brown:violet">78</TD></TR>
+  
+<TR><TD border="3"  bgcolor="brown">80</TD>
+<TD border="3"  bgcolor="brown:green">81</TD>
+<TD border="3"  bgcolor="brown:green">82</TD>
+<TD border="3"  bgcolor="brown:blue">83</TD>
+<TD border="3"  bgcolor="brown:blue">84</TD>
+<TD border="3"  bgcolor="brown:purple">85</TD>
+<TD border="3"  bgcolor="brown:purple">86</TD>
+<TD border="3"  bgcolor="brown:violet">87</TD>
+<TD border="3"  bgcolor="brown:violet">88</TD></TR>
+  
+</TABLE>>,
+			pos="327,334.25",
+			shape=circle,
+			style=filled,
+			width=8.6389,
+			gradientangle=180];
+	}
+}

@@ -1,0 +1,295 @@
+digraph structs {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 2996.24 642.36 2996.24 642.36 0 ",
+		bb="0,0,642.36,2996.2",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=record
+	];
+	struct1	[_draw_="c 7 -#000000 p 4 205 2735 205 2771 334.75 2771 334.75 2735 c 7 -#000000 L 2 239 2735 239 2771 c 7 -#000000 L 2 293.25 2735 293.25 \
+2771 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 222 2747.95 0 18 4 -left F 14 11 -Times-Roman c 7 -#000000 T 266.12 2747.95 0 38.25 6 -middle \
+F 14 11 -Times-Roman c 7 -#000000 T 314 2747.95 0 25.5 5 -right ",
+		height=0.51389,
+		label="<f0> left|<f1> middle|<f2> right",
+		pos="269.88,2753",
+		rects="205,2735,239,2771 239,2735,293.25,2771 293.25,2735,334.75,2771",
+		width=1.8021];
+	struct2	[_draw_="c 7 -#000000 p 4 0 1331.25 0 1367.25 71.75 1367.25 71.75 1331.25 c 7 -#000000 L 2 35.5 1331.25 35.5 1367.25 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 17.75 1344.2 0 19.5 3 -one F 14 11 -Times-Roman c 7 -#000000 T 53.62 1344.2 0 20.25 3 -two ",
+		height=0.51389,
+		label="<f0> one|<f1> two",
+		pos="35.875,1349.2",
+		rects="0,1331.2,35.5,1367.2 35.5,1331.2,71.75,1367.2",
+		width=0.99653];
+	struct1:f1 -> struct2:f0	[_draw_="c 7 -#000000 B 7 266.12 2734.5 266.12 2650.63 135.75 2761.93 80.88 2698.5 -13.76 2589.1 16.3 1563.82 17.7 1379.6 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 21.2 1379.78 17.74 1369.76 14.2 1379.75 ",
+		pos="e,17.75,1368.2 266.12,2734.5 266.12,2650.6 135.75,2761.9 80.875,2698.5 -13.755,2589.1 16.303,1563.8 17.701,1379.6"];
+	struct3	[_draw_="c 7 -#000000 p 4 89.39 0.5 89.39 2698 642.36 2698 642.36 0.5 c 7 -#000000 L 2 136.89 0.5 136.89 2698 c 7 -#000000 L 2 136.89 1799.5 \
+247.76 1799.5 c 7 -#000000 L 2 136.89 900 247.76 900 c 7 -#000000 L 2 247.76 0.5 247.76 2698 c 7 -#000000 L 2 528.94 0.5 528.94 \
+2698 c 7 -#000000 L 2 528.94 1799.5 595.69 1799.5 c 7 -#000000 L 2 550.94 900 550.94 1799.5 c 7 -#000000 L 2 573.69 900 573.69 1799.5 \
+c 7 -#000000 L 2 528.94 900 595.69 900 c 7 -#000000 L 2 595.69 0.5 595.69 2698 c 7 -#000000 L 2 618.44 0.5 618.44 2698 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 113.14 1368.95 0 27 5 -hello F 14 11 -Times-Roman c 7 -#000000 T 113.14 1352.45 0 31.5 5 -world \
+F 14 11 -Times-Roman c 7 -#000000 T 113.14 1335.95 0 20.21 4 -
+and F 14 11 -Times-Roman c 7 -#000000 T 192.33 2243.7 0 91.75 16 \
+-Thats the reason F 14 11 -Times-Roman c 7 -#000000 T 192.33 1344.7 0 94.87 15 -post-menopausal F 14 11 -Times-Roman c 7 -#000000 \
+T 192.33 445.2 0 47.43 8 -estrogen F 14 11 -Times-Roman c 7 -#000000 T 388.35 2587.2 0 9.34 2 -is F 14 11 -Times-Roman c 7 -#000000 \
+T 388.35 2570.7 0 244.53 43 -
+given together with another hormone called F 14 11 -Times-Roman c 7 -#000000 T 388.35 2537.7 0 255.59 \
+46 -
+progestin: The combination lowers the risk of F 14 11 -Times-Roman c 7 -#000000 T 388.35 2504.7 0 109.61 20 -
+endometrial cancer. \
+F 14 11 -Times-Roman c 7 -#000000 T 388.35 2471.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 2455.7 0 206.36 38 -
+But the \
+NTP advisers said putting all F 14 11 -Times-Roman c 7 -#000000 T 388.35 2422.7 0 220.06 41 -
+estrogens on the federal list would \
+help F 14 11 -Times-Roman c 7 -#000000 T 388.35 2389.7 0 230.16 41 -
+women trying to balance the benefits and F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 2356.7 0 215.66 37 -
+risks when choosing hormone therapy. F 14 11 -Times-Roman c 7 -#000000 T 388.35 2323.7 \
+0 239.52 44 -
+Physicians never discuss any of these risks F 14 11 -Times-Roman c 7 -#000000 T 388.35 2290.7 0 246.33 43 -
+when they \
+are prescribing hormone therapy. F 14 11 -Times-Roman c 7 -#000000 T 388.35 2257.7 0 230.99 42 -
+They only discuss benefits. Listing \
+might F 14 11 -Times-Roman c 7 -#000000 T 388.35 2224.7 0 237.41 44 -
+force it on the table, Michelle Medinsky, a F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 2191.7 0 248.45 44 -
+toxicologist from Durham, N.C., said before F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+2158.7 0 48.21 10 -
+the vote. F 14 11 -Times-Roman c 7 -#000000 T 388.35 2125.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+2109.7 0 251.56 45 -
+The committee of scientists advises the NTP, F 14 11 -Times-Roman c 7 -#000000 T 388.35 2076.7 0 246.09 46 \
+-
+a branch of the National Institutes of Health F 14 11 -Times-Roman c 7 -#000000 T 388.35 2043.7 0 242.96 46 -
+that every two years \
+updates the federal list F 14 11 -Times-Roman c 7 -#000000 T 388.35 2010.7 0 222.85 39 -
+of proven and suspected cancer-causing \
+F 14 11 -Times-Roman c 7 -#000000 T 388.35 1977.7 0 63.38 12 -
+substances. F 14 11 -Times-Roman c 7 -#000000 T 388.35 1944.7 0 0 \
+1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 1928.7 0 215.29 39 -
+The NTP typically follows its advisers F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 1895.7 0 242.74 43 -
+recommendations, but an officially updated F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+1862.7 0 223.17 42 -
+carcinogen list isnt expected until 2002. F 14 11 -Times-Roman c 7 -#000000 T 388.35 1829.7 0 0 1 -
+ F 14 11 \
+-Times-Roman c 7 -#000000 T 388.35 1813.7 0 240.88 44 -
+Thursday, after a daylong debate, the panel F 14 11 -Times-Roman c 7 -#000000 \
+T 388.35 1780.7 0 213.83 41 -
+declined to add talc powder to the list, F 14 11 -Times-Roman c 7 -#000000 T 388.35 1747.7 0 245.32 \
+43 -
+saying there wasnt enough evidence linking F 14 11 -Times-Roman c 7 -#000000 T 388.35 1714.7 0 216.96 40 -
+its use in feminine \
+hygiene products to F 14 11 -Times-Roman c 7 -#000000 T 388.35 1681.7 0 239.19 42 -
+ovarian cancer. The panel deadlocked over F \
+14 11 -Times-Roman c 7 -#000000 T 388.35 1648.7 0 223.94 42 -
+whether to a second type of talc, fibrous F 14 11 -Times-Roman c 7 \
+-#000000 T 388.35 1615.7 0 231.34 43 -
+talc that some studies have linked to lung F 14 11 -Times-Roman c 7 -#000000 T 388.35 1582.7 \
+0 119.72 23 -
+cancer in talc miners. F 14 11 -Times-Roman c 7 -#000000 T 388.35 1549.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 \
+T 388.35 1533.7 0 214.27 37 -
+On Wednesday, the panel voted to add F 14 11 -Times-Roman c 7 -#000000 T 388.35 1500.7 0 156.67 31 \
+-
+ultraviolet radiation -- those F 14 11 -Times-Roman c 7 -#000000 T 388.35 1467.7 0 265.18 46 -
+sunburn-causing rays long known \
+to cause skin F 14 11 -Times-Roman c 7 -#000000 T 388.35 1434.7 0 216.27 43 -
+cancer -- to the official carcinogen list. F 14 11 \
+-Times-Roman c 7 -#000000 T 388.35 1401.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 1385.7 0 240.26 42 -
+The panel on \
+Friday continued debating an F 14 11 -Times-Roman c 7 -#000000 T 388.35 1352.7 0 246.46 44 -
+association between cancers of the \
+nose and F 14 11 -Times-Roman c 7 -#000000 T 388.35 1319.7 0 228.26 41 -
+sinuses with industrial exposure to wood F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 1286.7 0 26.84 6 -
+dust. F 14 11 -Times-Roman c 7 -#000000 T 388.35 1253.7 0 0 1 -
+ F 14 11 -Times-Roman c \
+7 -#000000 T 388.35 1237.7 0 221.14 39 -
+Talc has long been controversial. When F 14 11 -Times-Roman c 7 -#000000 T 388.35 1204.7 \
+0 246.12 46 -
+studies first appeared suggesting it migrated F 14 11 -Times-Roman c 7 -#000000 T 388.35 1171.7 0 215.78 39 -
+into \
+the ovaries to cause tumors, many F 14 11 -Times-Roman c 7 -#000000 T 388.35 1138.7 0 252.29 45 -
+feminine hygiene products replaced \
+talc with F 14 11 -Times-Roman c 7 -#000000 T 388.35 1105.7 0 61.8 12 -
+cornstarch. F 14 11 -Times-Roman c 7 -#000000 T 388.35 1072.7 \
+0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 1056.7 0 258.15 45 -
+Panelist Medinsky said she had been prepared F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 1023.7 0 230.92 43 -
+to list talc powder as reasonably believed F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+990.7 0 207.21 40 -
+to cause cancer. But after listening to F 14 11 -Times-Roman c 7 -#000000 T 388.35 957.7 0 224.33 42 -
+hours \
+of industry attacks on the science, F 14 11 -Times-Roman c 7 -#000000 T 388.35 924.7 0 221.2 39 -
+the evidence has knocked me out \
+of the F 14 11 -Times-Roman c 7 -#000000 T 388.35 891.7 0 205.28 39 -
+reasonably category into not list, she F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 858.7 0 216.15 40 -
+said before the panel voted 7-3 against F 14 11 -Times-Roman c 7 -#000000 T 388.35 825.7 \
+0 62.21 14 -
+listing talc. F 14 11 -Times-Roman c 7 -#000000 T 388.35 792.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+776.7 0 221.14 39 -
+Talc has long been controversial. When F 14 11 -Times-Roman c 7 -#000000 T 388.35 743.7 0 246.12 46 -
+studies \
+first appeared suggesting it migrated F 14 11 -Times-Roman c 7 -#000000 T 388.35 710.7 0 215.78 39 -
+into the ovaries to cause tumors, \
+many F 14 11 -Times-Roman c 7 -#000000 T 388.35 677.7 0 252.29 45 -
+feminine hygiene products replaced talc with F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 644.7 0 61.8 12 -
+cornstarch. F 14 11 -Times-Roman c 7 -#000000 T 388.35 611.7 0 0 1 -
+ F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 595.7 0 258.15 45 -
+Panelist Medinsky said she had been prepared F 14 11 -Times-Roman c 7 -#000000 T 388.35 \
+562.7 0 230.92 43 -
+to list talc powder as reasonably believed F 14 11 -Times-Roman c 7 -#000000 T 388.35 529.7 0 207.21 40 -
+to \
+cause cancer. But after listening to F 14 11 -Times-Roman c 7 -#000000 T 388.35 496.7 0 224.33 42 -
+hours of industry attacks on \
+the science, F 14 11 -Times-Roman c 7 -#000000 T 388.35 463.7 0 221.2 39 -
+the evidence has knocked me out of the F 14 11 -Times-Roman \
+c 7 -#000000 T 388.35 430.7 0 205.28 39 -
+reasonably category into not list, she F 14 11 -Times-Roman c 7 -#000000 T 388.35 397.7 \
+0 216.15 40 -
+said before the panel voted 7-3 against F 14 11 -Times-Roman c 7 -#000000 T 388.35 364.7 0 62.21 14 -
+listing talc. \
+F 14 11 -Times-Roman c 7 -#000000 T 388.35 331.7 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 388.35 315.7 0 250.93 46 -
+Talc in \
+one form or the other can be found in F 14 11 -Times-Roman c 7 -#000000 T 388.35 282.7 0 259.3 46 -
+many papers, paints, ceramics, \
+food wrappers, F 14 11 -Times-Roman c 7 -#000000 T 388.35 249.7 0 260.75 46 -
+hard candy, chewing gum, cosmetics and pills. F 14 \
+11 -Times-Roman c 7 -#000000 T 388.35 216.7 0 248.03 46 -
+Most people are familiar with talc as a loose F 14 11 -Times-Roman c 7 \
+-#000000 T 388.35 183.7 0 232.89 41 -
+powder used in cosmetics and as a drying F 14 11 -Times-Roman c 7 -#000000 T 388.35 150.7 \
+0 44.72 8 -
+powder. F 14 11 -Times-Roman c 7 -#000000 T 388.35 117.7 0 30.32 6 -
+abde\\ F 14 11 -Times-Roman c 7 -#000000 T 562.32 \
+2243.7 0 6.75 1 -b F 14 11 -Times-Roman c 7 -#000000 T 539.94 1344.7 0 6 1 -c F 14 11 -Times-Roman c 7 -#000000 T 562.32 1344.7 \
+0 6.75 1 -d F 14 11 -Times-Roman c 7 -#000000 T 584.69 1344.7 0 6 1 -e F 14 11 -Times-Roman c 7 -#000000 T 562.32 445.2 0 4.5 1 \
+-f F 14 11 -Times-Roman c 7 -#000000 T 607.07 1344.2 0 6.75 1 -g F 14 11 -Times-Roman c 7 -#000000 T 630.32 1344.2 0 6.75 1 -h ",
+		height=37.479,
+		label="hello\nworld\n\
+and  | { Thats the reason | post-menopausal | estrogen } | is\n\
+given together with another hormone called\n\
+progestin: \
+The combination lowers the risk of\n\
+endometrial cancer.\n\
+\n\
+But the NTP advisers said putting all\n\
+estrogens on the federal \
+list would help\n\
+women trying to balance the benefits and\n\
+risks when choosing hormone therapy.\n\
+Physicians never discuss \
+any of these risks\n\
+when they are prescribing hormone therapy.\n\
+They only discuss benefits. Listing might\n\
+force it on the \
+table, Michelle Medinsky, a\n\
+toxicologist from Durham, N.C., said before\n\
+the vote.\n\
+\n\
+The committee of scientists advises \
+the NTP,\n\
+a branch of the National Institutes of Health\n\
+that every two years updates the federal list\n\
+of proven and suspected \
+cancer-causing\n\
+substances.\n\
+\n\
+The NTP typically follows its advisers\n\
+recommendations, but an officially updated\n\
+carcinogen \
+list isnt expected until 2002.\n\
+\n\
+Thursday, after a daylong debate, the panel\n\
+declined to add talc powder to the list,\n\
+\
+saying there wasnt enough evidence linking\n\
+its use in feminine hygiene products to\n\
+ovarian cancer. The panel deadlocked over\n\
+\
+whether to a second type of talc, fibrous\n\
+talc that some studies have linked to lung\n\
+cancer in talc miners.\n\
+\n\
+On Wednesday, \
+the panel voted to add\n\
+ultraviolet radiation -- those\n\
+sunburn-causing rays long known to cause skin\n\
+cancer -- to the official \
+carcinogen list.\n\
+\n\
+The panel on Friday continued debating an\n\
+association between cancers of the nose and\n\
+sinuses with \
+industrial exposure to wood\n\
+dust.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc in one form or the other can be found in\n\
+many papers, paints, ceramics, food wrappers,\n\
+\
+hard candy, chewing gum, cosmetics and pills.\n\
+Most people are familiar with talc as a loose\n\
+powder used in cosmetics and as \
+a drying\n\
+powder.\n\
+abde\
+ |{ b |{c|<here> d|e}| f}| g | h",
+		pos="365.88,1349.2",
+		rects="89.395,0.5,138.06,2698 138.06,1799.5,248.93,2698 138.06,900,248.93,1799.5 138.06,0.5,248.93,900 248.93,0.5,530.11,2698 530.11,1799.5,\
+596.86,2698 530.11,900,552.11,1799.5 552.11,900,574.86,1799.5 574.86,900,596.86,1799.5 530.11,0.5,596.86,900 596.86,0.5,619.61,2698 \
+619.61,0.5,642.36,2698",
+		width=7.68];
+	struct1:f2 -> struct3:here	[_draw_="c 7 -#000000 B 7 314 2734.5 314 2685.81 498.18 2735.25 530.11 2698.5 597.35 2621.09 588.22 2018.55 575.73 1645.48 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 579.24 1645.63 575.4 1635.75 572.24 1645.86 ",
+		pos="e,575.35,1634.2 314,2734.5 314,2685.8 498.18,2735.3 530.11,2698.5 597.35,2621.1 588.22,2018.6 575.73,1645.5"];
+}

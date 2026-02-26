@@ -1,0 +1,30 @@
+graph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 62 1023.6 62 1023.6 0 ",
+		bb="0,0,1023.6,62",
+		imagepath="/inv_dir/",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	a	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 16 36.7 -1 233.25 41 -image attribute (valid absolute pathname) F 14 11 -Times-Roman c 7 -#000000 \
+T 16 15.2 -1 268.24 47 -imagepath attribute (invalid absolute pathname) ",
+		height=0.86111,
+		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
+CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
+CELLBORDER="0">
+<TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (valid absolute pathname)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (invalid absolute pathname)</FONT></TD></TR>
+</TABLE></TD></TR></TABLE>>,
+		pos="150.12,31",
+		shape=plaintext,
+		width=4.17];
+	b	[_draw_="c 7 -#000000 p 4 1023.6 53 318.64 53 318.64 9 1023.6 9 ",
+		_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 671.12 22 0 688.96 56 -image from image attribute directory should be displayed ",
+		fontname="Helvetica-Bold",
+		fontsize=30,
+		height=0.61111,
+		image="imagepath_test/image_dir/image.jpg",
+		label="image from image attribute directory should be displayed",
+		pos="671.12,31",
+		shape=box,
+		width=9.7911,
+		labelloc=b];
+}

@@ -1,0 +1,35 @@
+digraph TopLevel {
+	graph [bb="0,0,92,103.2",
+		bgcolor=lightcyan1,
+		fontname=Arial,
+		fontsize=8,
+		label="test.rb",
+		lheight=0.13,
+		lp="46,8.8",
+		lwidth=0.27
+	];
+	node [color=black,
+		fontname=Arial,
+		fontsize=8,
+		label="\N"
+	];
+	subgraph cluster_1 {
+		graph [bb="8,25.6,84,95.2",
+			bgcolor=palegreen1,
+			color=blue,
+			fontname=Arial,
+			label=ModuleName,
+			lheight=0.13,
+			lp="46,86.4",
+			lwidth=0.61
+		];
+		ClassName	[URL="classes/ModuleName/ClassName.html",
+			color=palegoldenrod,
+			fontcolor=black,
+			height=0.5,
+			label=ClassName,
+			pos="46,51.6",
+			style=filled,
+			width=0.83487];
+	}
+}

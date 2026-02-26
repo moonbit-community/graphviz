@@ -1,0 +1,95 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 234.5 922.82 234.5 922.82 0 ",
+		bb="0,0,922.82,234.5",
+		rankdir=LR,
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=plaintext
+	];
+	{
+		graph [rank=same];
+		b	[href="http://www.graphviz.org/content/node-shapes",
+			_draw_="c 7 -#000000 C 7 -#d3d3d3 E 684.25 173.5 73.11 61 ",
+			_ldraw_="S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 619.13 116.5 619.13 230.5 749.36 230.5 749.36 116.5 S 5 -solid c 9 -#fffffe00 C 7 -#000000 \
+P 4 622.13 205 622.13 227.5 718.11 227.5 718.11 205 S 5 -solid c 7 -#000000 p 4 622.13 205 622.13 227.5 718.11 227.5 718.11 205 \
+F 14 11 -Times-Roman c 7 -#000000 T 646.41 211.2 -1 47.42 8 -elephant S 5 -solid c 9 -#fffffe00 C 7 -#000000 P 4 720.11 162.25 720.11 \
+227.5 746.36 227.5 746.36 162.25 S 5 -solid c 7 -#000000 p 4 720.11 162.25 720.11 227.5 746.36 227.5 746.36 162.25 F 14 11 -Times-Roman \
+c 7 -#000000 T 723.11 168.45 -1 20.25 3 -two S 5 -solid c 7 -#000000 p 4 622.13 119.5 622.13 203 665.01 203 665.01 119.5 S 5 -solid \
+c 9 -#fffffe00 C 7 -#c0c0c0 P 4 625.13 122.5 625.13 200 662.01 200 662.01 122.5 S 5 -solid c 7 -#000000 p 4 628.13 174.5 628.13 \
+197 659.01 197 659.01 174.5 F 14 11 -Times-Roman c 7 -#000000 T 631.13 180.7 -1 24.88 4 -corn S 5 -solid c 9 -#fffffe00 C 7 -#ffff00 \
+P 4 628.13 150 628.13 172.5 659.01 172.5 659.01 150 S 5 -solid c 7 -#000000 p 4 628.13 150 628.13 172.5 659.01 172.5 659.01 150 \
+F 14 11 -Times-Roman c 7 -#000000 T 640.57 156.2 -1 6 1 -c S 5 -solid c 7 -#000000 p 4 628.13 125.5 628.13 148 659.01 148 659.01 \
+125.5 F 14 11 -Times-Roman c 7 -#000000 T 641.32 131.7 -1 4.5 1 -f S 5 -solid c 7 -#000000 p 4 625.13 122.5 625.13 200 662.01 200 \
+662.01 122.5 S 5 -solid c 9 -#fffffe00 C 7 -#ffffff P 4 667.01 162.25 667.01 203 718.11 203 718.11 162.25 S 5 -solid c 7 -#000000 \
+p 4 667.01 162.25 667.01 203 718.11 203 718.11 162.25 F 14 11 -Times-Roman c 7 -#000000 T 670.01 177.57 -1 45.1 7 -penguin S 5 -solid \
+c 7 -#000000 p 4 667.01 119.5 667.01 160.25 746.36 160.25 746.36 119.5 F 14 11 -Times-Roman c 7 -#000000 T 736.61 134.82 -1 6.75 \
+1 -4 S 5 -solid c 7 -#000000 p 4 619.13 116.5 619.13 230.5 749.36 230.5 749.36 116.5 ",
+			height=1.6944,
+			label=<
+<TABLE BGCOLOR="bisque" href="http://www.graphviz.org/content/node-shapes#html">
+  <TR><TD COLSPAN="3" BGCOLOR="bisque" href="http://go/wiki/Elephant">elephant</TD> 
+      <TD ROWSPAN="2" BGCOLOR="chartreuse" 
+          VALIGN="bottom" ALIGN="right">two</TD> </TR>
+  <TR><TD COLSPAN="2" ROWSPAN="2">
+        <TABLE BGCOLOR="grey" href="http://go/wiki/Grey">
+          <TR> <TD href="http://go/wiki/Sweet_corn">corn</TD> </TR> 
+          <TR> <TD BGCOLOR="yellow">c</TD> </TR> 
+          <TR> <TD href="http://go/wiki/F">f</TD> </TR> 
+        </TABLE> </TD>
+      <TD BGCOLOR="white">penguin</TD> 
+  </TR> 
+  <TR> <TD COLSPAN="2" BORDER="4" ALIGN="right" PORT="there">4</TD> </TR>
+</TABLE>>,
+			pos="684.25,173.5",
+			shape=ellipse,
+			style=filled,
+			width=2.031];
+		c	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 684.25 54.45 0 461.15 67 -<long line 1<BR/>line 2<BR ALIGN=\"LEFT\"/>line 3<BR ALIGN=\"RIGHT\"/>> ",
+			height=0.5,
+			label="<long line 1<BR/>line 2<BR ALIGN=\"LEFT\"/>line 3<BR ALIGN=\"RIGHT\"/>>",
+			pos="684.25,59.5",
+			width=6.6271];
+	}
+	a	[_ldraw_="S 5 -solid c 9 -#fffffe00 C 7 -#add8e6 P 4 41.21 144.5 41.21 169.75 93.87 169.75 93.87 144.5 S 5 -solid c 7 -#000000 p 4 41.21 144.5 \
+41.21 169.75 93.87 169.75 93.87 144.5 F 14 11 -Times-Roman c 7 -#000000 T 44.21 152.07 -1 46.66 9 -qualifier ",
+		height=0.5,
+		label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD ROWSPAN="3" BGCOLOR="yellow">class</TD></TR>
+  <TR><TD PORT="here" BGCOLOR="lightblue">qualifier</TD></TR>
+</TABLE>>,
+		pos="50.935,158.5",
+		width=1.4148];
+	a:here -> b:there	[_draw_="c 7 -#000000 B 4 114.66 155.11 316.38 154.7 551.56 144.76 655.53 139.88 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 655.62 143.38 665.45 139.41 655.29 136.38 ",
+		_tdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 4 114.77 155.11 108.77 159.12 102.77 155.12 108.77 151.12 ",
+		arrowtail=diamond,
+		dir=both,
+		pos="s,101.87,155.12 e,666.96,139.33 114.66,155.11 316.38,154.7 551.56,144.76 655.53,139.88"];
+	c -> b	[_draw_="c 7 -#000000 B 4 684.25 77.31 684.25 85.14 684.25 92.96 684.25 100.79 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 680.75 100.74 684.25 110.74 687.75 100.74 ",
+		pos="e,684.25,112.26 684.25,77.312 684.25,85.138 684.25,92.964 684.25,100.79"];
+	d	[_draw_="c 7 -#000000 p 3 50.93 49 19.88 12.25 81.98 12.25 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 50.93 19.45 0 6.75 1 -d ",
+		height=0.68056,
+		pos="50.935,24.5",
+		shape=triangle,
+		width=0.86249];
+	d -> c	[_draw_="c 7 -#000000 B 7 72.33 24.08 128.85 23.08 292.26 21.22 427.67 30 463.62 32.33 502.29 36.12 538.39 40.22 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 537.67 43.66 548 41.33 538.47 36.71 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 273.77 132.2 0 7.9 1 -< F 14 11 -Times-Roman c 7 -#000000 T 273.77 115.7 0 59.78 7 -<TABLE> \
+F 14 11 -Times-Roman c 7 -#000000 T 273.77 99.2 0 307.8 41 -  <TR><TD BGCOLOR=\"red\" WIDTH=\"10\"> </TD> F 14 11 -Times-Roman c 7 -#\
+000000 T 273.77 82.7 0 219.62 35 -      <TD>Edge labels<BR/>also</TD> F 14 11 -Times-Roman c 7 -#000000 T 273.77 66.2 0 294.35 42 \
+-      <TD BGCOLOR=\"blue\" WIDTH=\"10\"> </TD> F 14 11 -Times-Roman c 7 -#000000 T 273.77 49.7 0 44.57 7 -  </TR> F 14 11 -Times-Roman \
+c 7 -#000000 T 273.77 33.2 0 71.57 9 -</TABLE>> ",
+		label=<
+<TABLE>
+  <TR><TD BGCOLOR="red" WIDTH="10"> </TD>
+      <TD>Edge labels<BR/>also</TD>
+      <TD BGCOLOR="blue" WIDTH="10"> </TD>
+  </TR>
+</TABLE>>,
+		lp="273.77,87.75",
+		pos="e,549.51,41.503 72.328,24.081 128.85,23.075 292.26,21.216 427.67,30 463.62,32.332 502.29,36.123 538.39,40.222"];
+}

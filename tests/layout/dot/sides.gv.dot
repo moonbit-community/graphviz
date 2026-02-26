@@ -1,0 +1,24 @@
+graph {
+	graph [bb="0,0,128.77,475"];
+	node [label="\N"];
+	abc	[height=6.5972,
+		label=<<TABLE CELLSPACING="10">
+    <TR><TD SIDES="B">bottom</TD></TR>
+    <TR><TD SIDES="R">right</TD></TR>
+    <TR><TD SIDES="T">top</TD></TR>
+    <TR><TD SIDES="L">left</TD></TR>
+    <TR><TD SIDES="BR">bottomright</TD></TR>
+    <TR><TD SIDES="RT">righttop</TD></TR>
+    <TR><TD SIDES="TL">topleft</TD></TR>
+    <TR><TD SIDES="LB">leftbottom</TD></TR>
+    <TR><TD SIDES="BRT">bottomrighttop</TD></TR>
+    <TR><TD SIDES="RTL">righttopleft</TD></TR>
+    <TR><TD SIDES="TLB">topleftbottom</TD></TR>
+    <TR><TD SIDES="LBR">leftbottomright</TD></TR>
+    <TR><TD SIDES="TB">topbottom</TD></TR>
+    <TR><TD SIDES="LR">leftright</TD></TR>
+  </TABLE>>,
+		pos="64.383,237.5",
+		shape=none,
+		width=1.7884];
+}

@@ -1,0 +1,29 @@
+digraph bla {
+	graph [bb="0,0,362.57,108",
+		rankdir=LR,
+		compound=true
+	];
+	node [label="\N"];
+	subgraph cluster_foo {
+		graph [bb="251.87,8,321.87,62"];
+		label_foo	[height=0.51389,
+			label="<foo>foo",
+			pos="286.87,18.5",
+			rects="259.87,1,313.87,36.5",
+			shape=record,
+			width=0.75];
+	}
+	cluster_foo	[height=0.5,
+		pos="91.584,73.5",
+		width=1.4971];
+	label_xxxxxxx	[height=0.5,
+		pos="286.87,73.5",
+		width=1.8806];
+	cluster_foo -> label_xxxxxxx	[lhead=cluster_foo,
+		pos="e,218.9,73.5 145.91,73.5 164.96,73.5 186.83,73.5 207.54,73.5"];
+	columns_foo_insider	[height=0.5,
+		pos="91.584,18.5",
+		width=2.544];
+	columns_foo_insider:foo -> label_foo	[lhead=cluster_foo,
+		pos="e,251.87,18.5 183.57,18.5 203.36,18.5 223.47,18.5 240.56,18.5"];
+}

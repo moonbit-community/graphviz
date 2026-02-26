@@ -1,0 +1,43 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 720 540 720 540 0 ",
+		bb="0,0,540,720",
+		center=1,
+		rankdir=LR,
+		ratio=fill,
+		size="7.5,10.0",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=box
+	];
+	{
+		graph [rank=same];
+		dc1	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 270 60.4 0 29.95 4 -DC 1 ",
+			height=0.5,
+			label="DC 1",
+			pos="270,65.455",
+			shape=plaintext,
+			width=0.75];
+		dc10	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 270 256.4 0 36.95 5 -DC 10 ",
+			height=0.5,
+			label="DC 10",
+			pos="270,261.45",
+			shape=plaintext,
+			width=0.75];
+		dc100	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 270 453.4 0 43.95 6 -DC 100 ",
+			height=0.5,
+			label="DC 100",
+			pos="270,458.45",
+			shape=plaintext,
+			width=0.83261];
+	}
+	{
+		graph [rank=min];
+		no_dc	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 270 649.4 0 63.77 7 -NOTHING ",
+			height=0.5,
+			label=NOTHING,
+			pos="270,654.45",
+			shape=plaintext,
+			width=1.1079];
+	}
+}

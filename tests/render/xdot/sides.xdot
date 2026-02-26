@@ -1,0 +1,43 @@
+graph {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 475 128.77 475 128.77 0 ",
+		bb="0,0,128.77,475",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	abc	[_ldraw_="S 5 -solid c 7 -#000000 p 4 19 437.5 19 460 109.77 460 109.77 437.5 F 14 11 -Times-Roman c 7 -#000000 T 44.55 443.7 -1 39.67 6 -bottom \
+S 5 -solid c 7 -#000000 p 4 19 405 19 427.5 109.77 427.5 109.77 405 F 14 11 -Times-Roman c 7 -#000000 T 51.63 411.2 -1 25.5 5 -right \
+S 5 -solid c 7 -#000000 p 4 19 372.5 19 395 109.77 395 109.77 372.5 F 14 11 -Times-Roman c 7 -#000000 T 55.76 378.7 -1 17.25 3 -top \
+S 5 -solid c 7 -#000000 p 4 19 340 19 362.5 109.77 362.5 109.77 340 F 14 11 -Times-Roman c 7 -#000000 T 55.38 346.2 -1 18 4 -left \
+S 5 -solid c 7 -#000000 p 4 19 307.5 19 330 109.77 330 109.77 307.5 F 14 11 -Times-Roman c 7 -#000000 T 31.33 313.7 -1 66.11 11 \
+-bottomright S 5 -solid c 7 -#000000 p 4 19 275 19 297.5 109.77 297.5 109.77 275 F 14 11 -Times-Roman c 7 -#000000 T 42.22 281.2 \
+-1 44.33 8 -righttop S 5 -solid c 7 -#000000 p 4 19 242.5 19 265 109.77 265 109.77 242.5 F 14 11 -Times-Roman c 7 -#000000 T 46.11 \
+248.7 -1 36.54 7 -topleft S 5 -solid c 7 -#000000 p 4 19 210 19 232.5 109.77 232.5 109.77 210 F 14 11 -Times-Roman c 7 -#000000 \
+T 35.22 216.2 -1 58.32 10 -leftbottom S 5 -solid c 7 -#000000 p 4 19 177.5 19 200 109.77 200 109.77 177.5 F 14 11 -Times-Roman c \
+7 -#000000 T 22.38 183.7 -1 84 14 -bottomrighttop S 5 -solid c 7 -#000000 p 4 19 145 19 167.5 109.77 167.5 109.77 145 F 14 11 -Times-Roman \
+c 7 -#000000 T 32.89 151.2 -1 62.99 12 -righttopleft S 5 -solid c 7 -#000000 p 4 19 112.5 19 135 109.77 135 109.77 112.5 F 14 11 \
+-Times-Roman c 7 -#000000 T 26.28 118.7 -1 76.21 13 -topleftbottom S 5 -solid c 7 -#000000 p 4 19 80 19 102.5 109.77 102.5 109.77 \
+80 F 14 11 -Times-Roman c 7 -#000000 T 22 86.2 -1 84.77 15 -leftbottomright S 5 -solid c 7 -#000000 p 4 19 47.5 19 70 109.77 70 \
+109.77 47.5 F 14 11 -Times-Roman c 7 -#000000 T 35.6 53.7 -1 57.56 9 -topbottom S 5 -solid c 7 -#000000 p 4 19 15 19 37.5 109.77 \
+37.5 109.77 15 F 14 11 -Times-Roman c 7 -#000000 T 41.83 21.2 -1 45.1 9 -leftright S 5 -solid c 7 -#000000 p 4 8 4 8 471 120.77 \
+471 120.77 4 ",
+		height=6.5972,
+		label=<<TABLE CELLSPACING="10">
+    <TR><TD SIDES="B">bottom</TD></TR>
+    <TR><TD SIDES="R">right</TD></TR>
+    <TR><TD SIDES="T">top</TD></TR>
+    <TR><TD SIDES="L">left</TD></TR>
+    <TR><TD SIDES="BR">bottomright</TD></TR>
+    <TR><TD SIDES="RT">righttop</TD></TR>
+    <TR><TD SIDES="TL">topleft</TD></TR>
+    <TR><TD SIDES="LB">leftbottom</TD></TR>
+    <TR><TD SIDES="BRT">bottomrighttop</TD></TR>
+    <TR><TD SIDES="RTL">righttopleft</TD></TR>
+    <TR><TD SIDES="TLB">topleftbottom</TD></TR>
+    <TR><TD SIDES="LBR">leftbottomright</TD></TR>
+    <TR><TD SIDES="TB">topbottom</TD></TR>
+    <TR><TD SIDES="LR">leftright</TD></TR>
+  </TABLE>>,
+		pos="64.383,237.5",
+		shape=none,
+		width=1.7884];
+}

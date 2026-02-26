@@ -1,0 +1,61 @@
+digraph G {
+	graph [bb="0,0,922.82,234.5",
+		rankdir=LR
+	];
+	node [label="\N",
+		shape=plaintext
+	];
+	{
+		graph [rank=same];
+		b	[href="http://www.graphviz.org/content/node-shapes",
+			height=1.6944,
+			label=<
+<TABLE BGCOLOR="bisque" href="http://www.graphviz.org/content/node-shapes#html">
+  <TR><TD COLSPAN="3" BGCOLOR="bisque" href="http://go/wiki/Elephant">elephant</TD> 
+      <TD ROWSPAN="2" BGCOLOR="chartreuse" 
+          VALIGN="bottom" ALIGN="right">two</TD> </TR>
+  <TR><TD COLSPAN="2" ROWSPAN="2">
+        <TABLE BGCOLOR="grey" href="http://go/wiki/Grey">
+          <TR> <TD href="http://go/wiki/Sweet_corn">corn</TD> </TR> 
+          <TR> <TD BGCOLOR="yellow">c</TD> </TR> 
+          <TR> <TD href="http://go/wiki/F">f</TD> </TR> 
+        </TABLE> </TD>
+      <TD BGCOLOR="white">penguin</TD> 
+  </TR> 
+  <TR> <TD COLSPAN="2" BORDER="4" ALIGN="right" PORT="there">4</TD> </TR>
+</TABLE>>,
+			pos="684.25,173.5",
+			shape=ellipse,
+			style=filled,
+			width=2.031];
+		c	[height=0.5,
+			label="<long line 1<BR/>line 2<BR ALIGN=\"LEFT\"/>line 3<BR ALIGN=\"RIGHT\"/>>",
+			pos="684.25,59.5",
+			width=6.6271];
+	}
+	a	[height=0.5,
+		label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD ROWSPAN="3" BGCOLOR="yellow">class</TD></TR>
+  <TR><TD PORT="here" BGCOLOR="lightblue">qualifier</TD></TR>
+</TABLE>>,
+		pos="50.935,158.5",
+		width=1.4148];
+	a:here -> b:there	[arrowtail=diamond,
+		dir=both,
+		pos="s,101.87,155.12 e,666.96,139.33 114.66,155.11 316.38,154.7 551.56,144.76 655.53,139.88"];
+	c -> b	[pos="e,684.25,112.26 684.25,77.312 684.25,85.138 684.25,92.964 684.25,100.79"];
+	d	[height=0.68056,
+		pos="50.935,24.5",
+		shape=triangle,
+		width=0.86249];
+	d -> c	[label=<
+<TABLE>
+  <TR><TD BGCOLOR="red" WIDTH="10"> </TD>
+      <TD>Edge labels<BR/>also</TD>
+      <TD BGCOLOR="blue" WIDTH="10"> </TD>
+  </TR>
+</TABLE>>,
+		lp="273.77,87.75",
+		pos="e,549.51,41.503 72.328,24.081 128.85,23.075 292.26,21.216 427.67,30 463.62,32.332 502.29,36.123 538.39,40.222"];
+}

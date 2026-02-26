@@ -1,0 +1,19 @@
+digraph G {
+	graph [bb="0,0,216,360"];
+	node [label="\N"];
+	n	[height=0.5,
+		label="",
+		pos="108,270",
+		width=0.75,
+		shapefile="graphs/jcr.gif"];
+	x	[height=3,
+		label="",
+		pos="108,108",
+		width=3,
+		shapefile="graphs/jcr.gif"];
+	n -> x	[pos="e,108,216.43 108,251.57 108,244.95 108,236.81 108,227.8"];
+	m	[height=0.5,
+		pos="108,342",
+		width=0.75];
+	m -> n	[pos="e,108,288.1 108,323.7 108,316.41 108,307.73 108,299.54"];
+}

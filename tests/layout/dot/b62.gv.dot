@@ -1,0 +1,14 @@
+digraph G {
+	graph [bb="0,0,85.513,108",
+		concentrate=true
+	];
+	node [label="\N"];
+	routine1	[height=0.5,
+		pos="42.757,90",
+		width=1.1877];
+	routine2	[height=0.5,
+		pos="42.757,18",
+		width=1.1877];
+	routine1 -> routine2	[pos="e,36.862,36.104 36.841,71.697 36.089,64.407 35.845,55.726 36.11,47.536"];
+	routine1 -> routine2	[pos="e,48.652,36.104 48.672,71.697 49.424,64.407 49.668,55.726 49.403,47.536"];
+}

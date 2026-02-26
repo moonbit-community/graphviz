@@ -1,0 +1,821 @@
+digraph structs {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 9324 699.36 9324 699.36 0 ",
+		bb="0,0,699.36,9324",
+		xdotversion=1.7
+	];
+	node [label="\N",
+		shape=record
+	];
+	struct1	[_draw_="c 7 -#000000 p 4 238.1 8576 238.1 8612 367.85 8612 367.85 8576 c 7 -#000000 L 2 272.1 8576 272.1 8612 c 7 -#000000 L 2 326.35 8576 \
+326.35 8612 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 255.1 8588.95 0 18 4 -left F 14 11 -Times-Roman c 7 -#000000 T 299.22 8588.95 0 38.25 6 -middle \
+F 14 11 -Times-Roman c 7 -#000000 T 347.1 8588.95 0 25.5 5 -right ",
+		height=0.51389,
+		label="<f0> left|<f1> middle|<f2> right",
+		pos="302.97,8594",
+		rects="238.1,8576,272.1,8612 272.1,8576,326.35,8612 326.35,8576,367.85,8612",
+		width=1.8021];
+	struct2	[_draw_="c 7 -#000000 p 4 9.1 4251.75 9.1 4287.75 80.85 4287.75 80.85 4251.75 c 7 -#000000 L 2 44.6 4251.75 44.6 4287.75 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 26.85 4264.7 0 19.5 3 -one F 14 11 -Times-Roman c 7 -#000000 T 62.72 4264.7 0 20.25 3 -two ",
+		height=0.51389,
+		label="<f0> one|<f1> two",
+		pos="44.974,4269.8",
+		rects="9.0987,4251.8,44.599,4287.8 44.599,4251.8,80.849,4287.8",
+		width=0.99653];
+	struct1:f1 -> struct2:f0	[_draw_="c 7 -#000000 B 7 299.22 8575.5 299.22 8481.13 151.32 8611.21 89.97 8539.5 -61.53 8362.39 24.51 4625.41 26.8 4299.95 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 30.3 4300.28 26.84 4290.26 23.3 4300.25 ",
+		pos="e,26.849,4288.8 299.22,8575.5 299.22,8481.1 151.32,8611.2 89.974,8539.5 -61.528,8362.4 24.508,4625.4 26.802,4300"];
+	struct3	[_draw_="c 7 -#000000 p 4 98.59 0.5 98.59 8539 699.36 8539 699.36 0.5 c 7 -#000000 L 2 146.09 0.5 146.09 8539 c 7 -#000000 L 2 146.09 5693.5 \
+256.96 5693.5 c 7 -#000000 L 2 146.09 2847 256.96 2847 c 7 -#000000 L 2 256.96 0.5 256.96 8539 c 7 -#000000 L 2 585.94 0.5 585.94 \
+8539 c 7 -#000000 L 2 585.94 5693.5 652.69 5693.5 c 7 -#000000 L 2 607.94 2847 607.94 5693.5 c 7 -#000000 L 2 630.69 2847 630.69 \
+5693.5 c 7 -#000000 L 2 585.94 2847 652.69 2847 c 7 -#000000 L 2 652.69 0.5 652.69 8539 c 7 -#000000 L 2 675.44 0.5 675.44 8539 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 122.34 4289.45 0 27 5 -hello F 14 11 -Times-Roman c 7 -#000000 T 122.34 4272.95 0 31.5 5 -world \
+F 14 11 -Times-Roman c 7 -#000000 T 122.34 4256.45 0 20.21 4 -
+and F 14 11 -Times-Roman c 7 -#000000 T 201.53 7111.2 0 91.75 16 \
+-Thats the reason F 14 11 -Times-Roman c 7 -#000000 T 201.53 4265.2 0 94.87 15 -post-menopausal F 14 11 -Times-Roman c 7 -#000000 \
+T 201.53 1418.7 0 47.43 8 -estrogen F 14 11 -Times-Roman c 7 -#000000 T 421.45 8181.7 0 9.34 2 -is F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 8165.2 0 244.53 43 -
+given together with another hormone called F 14 11 -Times-Roman c 7 -#000000 T 421.45 8132.2 0 255.59 \
+46 -
+progestin: The combination lowers the risk of F 14 11 -Times-Roman c 7 -#000000 T 421.45 8099.2 0 109.61 20 -
+endometrial cancer. \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 8066.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 8050.2 0 206.36 38 -
+But the \
+NTP advisers said putting all F 14 11 -Times-Roman c 7 -#000000 T 421.45 8017.2 0 220.06 41 -
+estrogens on the federal list would \
+help F 14 11 -Times-Roman c 7 -#000000 T 421.45 7984.2 0 230.16 41 -
+women trying to balance the benefits and F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 7951.2 0 215.66 37 -
+risks when choosing hormone therapy. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7918.2 \
+0 239.52 44 -
+Physicians never discuss any of these risks F 14 11 -Times-Roman c 7 -#000000 T 421.45 7885.2 0 246.33 43 -
+when they \
+are prescribing hormone therapy. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7852.2 0 230.99 42 -
+They only discuss benefits. Listing \
+might F 14 11 -Times-Roman c 7 -#000000 T 421.45 7819.2 0 237.41 44 -
+force it on the table, Michelle Medinsky, a F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 7786.2 0 248.45 44 -
+toxicologist from Durham, N.C., said before F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+7753.2 0 48.21 10 -
+the vote. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7720.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+7704.2 0 251.56 45 -
+The committee of scientists advises the NTP, F 14 11 -Times-Roman c 7 -#000000 T 421.45 7671.2 0 246.09 46 \
+-
+a branch of the National Institutes of Health F 14 11 -Times-Roman c 7 -#000000 T 421.45 7638.2 0 242.96 46 -
+that every two years \
+updates the federal list F 14 11 -Times-Roman c 7 -#000000 T 421.45 7605.2 0 222.85 39 -
+of proven and suspected cancer-causing \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 7572.2 0 63.38 12 -
+substances. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7539.2 0 0 \
+1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 7523.2 0 215.29 39 -
+The NTP typically follows its advisers F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 7490.2 0 242.74 43 -
+recommendations, but an officially updated F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+7457.2 0 223.17 42 -
+carcinogen list isnt expected until 2002. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7424.2 0 0 1 -
+ F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 7408.2 0 240.88 44 -
+Thursday, after a daylong debate, the panel F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 7375.2 0 213.83 41 -
+declined to add talc powder to the list, F 14 11 -Times-Roman c 7 -#000000 T 421.45 7342.2 0 245.32 \
+43 -
+saying there wasnt enough evidence linking F 14 11 -Times-Roman c 7 -#000000 T 421.45 7309.2 0 216.96 40 -
+its use in feminine \
+hygiene products to F 14 11 -Times-Roman c 7 -#000000 T 421.45 7276.2 0 239.19 42 -
+ovarian cancer. The panel deadlocked over F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 7243.2 0 223.94 42 -
+whether to a second type of talc, fibrous F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 7210.2 0 231.34 43 -
+talc that some studies have linked to lung F 14 11 -Times-Roman c 7 -#000000 T 421.45 7177.2 \
+0 119.72 23 -
+cancer in talc miners. F 14 11 -Times-Roman c 7 -#000000 T 421.45 7144.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 7128.2 0 214.27 37 -
+On Wednesday, the panel voted to add F 14 11 -Times-Roman c 7 -#000000 T 421.45 7095.2 0 156.67 31 \
+-
+ultraviolet radiation -- those F 14 11 -Times-Roman c 7 -#000000 T 421.45 7062.2 0 265.18 46 -
+sunburn-causing rays long known \
+to cause skin F 14 11 -Times-Roman c 7 -#000000 T 421.45 7029.2 0 216.27 43 -
+cancer -- to the official carcinogen list. F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 6996.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 6980.2 0 240.26 42 -
+The panel on \
+Friday continued debating an F 14 11 -Times-Roman c 7 -#000000 T 421.45 6947.2 0 246.46 44 -
+association between cancers of the \
+nose and F 14 11 -Times-Roman c 7 -#000000 T 421.45 6914.2 0 228.26 41 -
+sinuses with industrial exposure to wood F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 6881.2 0 26.84 6 -
+dust. F 14 11 -Times-Roman c 7 -#000000 T 421.45 6848.2 0 0 1 -
+ F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 6832.2 0 221.14 39 -
+Talc has long been controversial. When F 14 11 -Times-Roman c 7 -#000000 T 421.45 6799.2 \
+0 246.12 46 -
+studies first appeared suggesting it migrated F 14 11 -Times-Roman c 7 -#000000 T 421.45 6766.2 0 215.78 39 -
+into \
+the ovaries to cause tumors, many F 14 11 -Times-Roman c 7 -#000000 T 421.45 6733.2 0 252.29 45 -
+feminine hygiene products replaced \
+talc with F 14 11 -Times-Roman c 7 -#000000 T 421.45 6700.2 0 61.8 12 -
+cornstarch. F 14 11 -Times-Roman c 7 -#000000 T 421.45 6667.2 \
+0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 6651.2 0 258.15 45 -
+Panelist Medinsky said she had been prepared F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 6618.2 0 230.92 43 -
+to list talc powder as reasonably believed F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+6585.2 0 207.21 40 -
+to cause cancer. But after listening to F 14 11 -Times-Roman c 7 -#000000 T 421.45 6552.2 0 224.33 42 -
+hours \
+of industry attacks on the science, F 14 11 -Times-Roman c 7 -#000000 T 421.45 6519.2 0 221.2 39 -
+the evidence has knocked me out \
+of the F 14 11 -Times-Roman c 7 -#000000 T 421.45 6486.2 0 205.28 39 -
+reasonably category into not list, she F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 6453.2 0 216.15 40 -
+said before the panel voted 7-3 against F 14 11 -Times-Roman c 7 -#000000 T 421.45 6420.2 \
+0 62.21 14 -
+listing talc. F 14 11 -Times-Roman c 7 -#000000 T 421.45 6387.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+6371.2 0 221.14 39 -
+Talc has long been controversial. When F 14 11 -Times-Roman c 7 -#000000 T 421.45 6338.2 0 246.12 46 -
+studies \
+first appeared suggesting it migrated F 14 11 -Times-Roman c 7 -#000000 T 421.45 6305.2 0 215.78 39 -
+into the ovaries to cause \
+tumors, many F 14 11 -Times-Roman c 7 -#000000 T 421.45 6272.2 0 252.29 45 -
+feminine hygiene products replaced talc with F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 6239.2 0 61.8 12 -
+cornstarch. F 14 11 -Times-Roman c 7 -#000000 T 421.45 6206.2 0 0 1 -
+ F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 6190.2 0 258.15 45 -
+Panelist Medinsky said she had been prepared F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 6157.2 0 230.92 43 -
+to list talc powder as reasonably believed F 14 11 -Times-Roman c 7 -#000000 T 421.45 6124.2 \
+0 207.21 40 -
+to cause cancer. But after listening to F 14 11 -Times-Roman c 7 -#000000 T 421.45 6091.2 0 224.33 42 -
+hours of industry \
+attacks on the science, F 14 11 -Times-Roman c 7 -#000000 T 421.45 6058.2 0 221.2 39 -
+the evidence has knocked me out of the F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 6025.2 0 205.28 39 -
+reasonably category into not list, she F 14 11 -Times-Roman c 7 -#\
+000000 T 421.45 5992.2 0 216.15 40 -
+said before the panel voted 7-3 against F 14 11 -Times-Roman c 7 -#000000 T 421.45 5959.2 0 \
+62.21 14 -
+listing talc. F 14 11 -Times-Roman c 7 -#000000 T 421.45 5926.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 5910.2 \
+0 250.93 46 -
+Talc in one form or the other can be found in F 14 11 -Times-Roman c 7 -#000000 T 421.45 5877.2 0 259.3 46 -
+many \
+papers, paints, ceramics, food wrappers, F 14 11 -Times-Roman c 7 -#000000 T 421.45 5844.2 0 260.75 46 -
+hard candy, chewing gum, \
+cosmetics and pills. F 14 11 -Times-Roman c 7 -#000000 T 421.45 5811.2 0 248.03 46 -
+Most people are familiar with talc as a loose \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 5778.2 0 232.89 41 -
+powder used in cosmetics and as a drying F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 5745.2 0 44.72 8 -
+powder. F 14 11 -Times-Roman c 7 -#000000 T 421.45 5712.2 0 0 1 -
+ F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 5696.2 0 238.09 46 -
+Industry officials also attacked studies that F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+5663.2 0 247.24 44 -
+showed increased lung cancer in talc miners F 14 11 -Times-Roman c 7 -#000000 T 421.45 5630.2 0 207.27 36 -
+\
+in New York State and questioned an F 14 11 -Times-Roman c 7 -#000000 T 421.45 5597.2 0 238.31 43 -
+experiment that showed that \
+rats breathing F 14 11 -Times-Roman c 7 -#000000 T 421.45 5564.2 0 241.42 45 -
+high concentrations of talc got lung cancer. F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 5531.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 5515.2 0 245.68 44 -
+Higher lung-cancer \
+rates in talc miners may F 14 11 -Times-Roman c 7 -#000000 T 421.45 5482.2 0 252.32 45 -
+have resulted from their smoking or from \
+the F 14 11 -Times-Roman c 7 -#000000 T 421.45 5449.2 0 208.76 38 -
+presence of radon gas in the mines or F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 5416.2 0 232.16 45 -
+asbestos in soils nearby, industry officials F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+5383.2 0 26.05 6 -
+said. F 14 11 -Times-Roman c 7 -#000000 T 421.45 5350.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 5334.2 \
+0 237.54 43 -
+The scientific advisers then deadlocked on F 14 11 -Times-Roman c 7 -#000000 T 421.45 5301.2 0 223.56 42 -
+whether \
+this second type of talc, fibrous F 14 11 -Times-Roman c 7 -#000000 T 421.45 5268.2 0 215.59 40 -
+talc, caused lung cancer, voting \
+5-5 on F 14 11 -Times-Roman c 7 -#000000 T 421.45 5235.2 0 173.4 34 -
+adding it to the carcinogen list. F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 5202.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 5186.2 0 244.51 44 -
+UV light, however, was a no-brainer \
+for the F 14 11 -Times-Roman c 7 -#000000 T 421.45 5153.2 0 252.72 45 -
+panel, which voted unanimously that it was a F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 5120.2 0 148.12 24 -
+known human carcinogen. F 14 11 -Times-Roman c 7 -#000000 T 421.45 5087.2 0 0 1 -
+ F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 5071.2 0 219.45 44 -
+UV radiation is not visible, but it is felt F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 5038.2 0 247.24 45 -
+as heat and can damage the eyes and skin. It F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+5005.2 0 218.88 39 -
+comes in three forms, ranging from the F 14 11 -Times-Roman c 7 -#000000 T 421.45 4972.2 0 216.7 38 -
+relatively \
+long-wavelength UVA to the F 14 11 -Times-Roman c 7 -#000000 T 421.45 4939.2 0 251.71 42 -
+shortest wavelength UVC. UVA accounts \
+for F 14 11 -Times-Roman c 7 -#000000 T 421.45 4906.2 0 242.36 45 -
+most of the solar UV radiation because it is F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 4873.2 0 269.08 46 -
+not absorbed by the atmosphere. UVB is mostly F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+4840.2 0 226.66 39 -
+absorbed by the ozone layer and UVC is F 14 11 -Times-Roman c 7 -#000000 T 421.45 4807.2 0 93.31 18 -
+totally \
+absorbed. F 14 11 -Times-Roman c 7 -#000000 T 421.45 4774.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 4758.2 0 236.73 \
+42 -
+All three are produced by mercury arc sun F 14 11 -Times-Roman c 7 -#000000 T 421.45 4725.2 0 216.18 39 -
+lamps, while other \
+lamps that simulate F 14 11 -Times-Roman c 7 -#000000 T 421.45 4692.2 0 184.83 32 -
+sunlight produce primarily UVA. F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 4659.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 4643.2 0 241.62 41 -
+SYDNEY, Australia (AP) -- \
+Botanists have F 14 11 -Times-Roman c 7 -#000000 T 421.45 4610.2 0 221.24 42 -
+found a stand of living fossil trees from F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 4577.2 0 244.54 46 -
+a species dating back to prehistoric times in F 14 11 -Times-Roman c 7 -#\
+000000 T 421.45 4544.2 0 211.37 39 -
+the dense rainforests north of Sydney, F 14 11 -Times-Roman c 7 -#000000 T 421.45 4511.2 0 \
+127.79 25 -
+authorities said Friday. F 14 11 -Times-Roman c 7 -#000000 T 421.45 4478.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 4462.2 0 250.77 44 -
+About 20 mature trees found in the Nightcap F 14 11 -Times-Roman c 7 -#000000 T 421.45 4429.2 0 250 \
+43 -
+Range about 400 miles north of Sydney bear F 14 11 -Times-Roman c 7 -#000000 T 421.45 4396.2 0 244.17 46 -
+nuts similar in \
+structure to those discovered F 14 11 -Times-Roman c 7 -#000000 T 421.45 4363.2 0 247.69 45 -
+in fossilized form in 1875 by botanist \
+Baron F 14 11 -Times-Roman c 7 -#000000 T 421.45 4330.2 0 131.82 23 -
+Ferdinand von Mueller. F 14 11 -Times-Roman c 7 -#000000 T \
+421.45 4297.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 4281.2 0 221.2 41 -
+It gives us another small paragraph or a F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 4248.2 0 221.24 42 -
+page of the insight into the evolution of F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 4215.2 0 312.98 64 -
+flowering plants and the incredible changes                     F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 4182.2 0 247.26 45 -
+that have occurred on this continent through F 14 11 -Times-Roman c 7 -#000000 T 421.45 4149.2 \
+0 220.86 40 -
+enormous periods of time, said botanist F 14 11 -Times-Roman c 7 -#000000 T 421.45 4116.2 0 247.65 43 -
+Peter Kooyman, \
+who discovered the trees in F 14 11 -Times-Roman c 7 -#000000 T 421.45 4083.2 0 43.95 8 -
+August. F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 4050.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 4034.2 0 228.97 43 -
+The exact location is being kept secret \
+to F 14 11 -Times-Roman c 7 -#000000 T 421.45 4001.2 0 245.7 46 -
+protect the trees, state environment minister F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 3968.2 0 92.16 16 -
+Bob Debus said. F 14 11 -Times-Roman c 7 -#000000 T 421.45 3935.2 0 0 1 -
+ F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 3919.2 0 246.93 44 -
+Kooyman sent details of his find to Sydneys F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+3886.2 0 248.83 44 -
+Royal Botanic Gardens, which identified the F 14 11 -Times-Roman c 7 -#000000 T 421.45 3853.2 0 242.56 44 -
+\
+rainforests which once covered the ancient  F 14 11 -Times-Roman c 7 -#000000 T 421.45 3820.2 0 230.66 39 -
+super-continent of Gondwanaland \
+-- now F 14 11 -Times-Roman c 7 -#000000 T 421.45 3787.2 0 237.56 41 -
+Australia, Africa, South America and New F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 3754.2 0 117.41 21 -
+Zealand, Debus said. F 14 11 -Times-Roman c 7 -#000000 T 421.45 3721.2 0 0 1 -
+ F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 3705.2 0 246.09 45 -
+The biggest of the newly discovered trees is F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 3672.2 0 212.26 42 -
+at least 120 feet tall and has beautiful, F 14 11 -Times-Roman c 7 -#000000 T 421.45 3639.2 \
+0 228.63 41 -
+primitive and messy flowers with a scent F 14 11 -Times-Roman c 7 -#000000 T 421.45 3606.2 0 190.52 34 -
+similar to \
+aniseed, Kooyman said. F 14 11 -Times-Roman c 7 -#000000 T 421.45 3573.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 3557.2 \
+0 233.68 41 -
+A similar discovery was made in the Blue F 14 11 -Times-Roman c 7 -#000000 T 421.45 3524.2 0 232.93 39 -
+Mountains \
+west of Sydney in 1994, when F 14 11 -Times-Roman c 7 -#000000 T 421.45 3491.2 0 241.86 46 -
+botanists discovered a stand of living \
+fossil F 14 11 -Times-Roman c 7 -#000000 T 421.45 3458.2 0 192.27 34 -
+trees known as the Wollemi Pines. F 14 11 -Times-Roman c \
+7 -#000000 T 421.45 3425.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 3409.2 0 119.4 22 -
+provocative Turkish   F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 3376.2 0 123.28 25 -
+study suggests that      F 14 11 -Times-Roman c 7 -#000000 T 421.45 3343.2 \
+0 120.93 24 -
+using honey as an       F 14 11 -Times-Roman c 7 -#000000 T 421.45 3310.2 0 117.04 23 -
+ointment during a      F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 3277.2 0 101.85 22 -
+certain type of       F 14 11 -Times-Roman c 7 -#000000 T 421.45 3244.2 \
+0 117.52 21 -
+colon-cancer surgery F 14 11 -Times-Roman c 7 -#000000 T 421.45 3211.2 0 159.4 31 -
+can help prevent tumors        \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 3178.2 0 134.52 30 -
+from recurring.               F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 3145.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 3129.2 0 147.71 28 -
+While the research was      F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 3096.2 0 147.74 27 -
+done in mice and no one    F 14 11 -Times-Roman c 7 -#000000 T 421.45 3063.2 0 102.65 \
+20 -
+expects hospitals t F 14 11 -Times-Roman c 7 -#000000 T 421.45 3030.2 0 89.04 19 -
+start stocking     F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 2997.2 0 133.76 25 -
+operating rooms with     F 14 11 -Times-Roman c 7 -#000000 T 421.45 2964.2 0 128.3 24 \
+-
+honey jars, honey has   F 14 11 -Times-Roman c 7 -#000000 T 421.45 2931.2 0 117.02 23 -
+been used as a folk    F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 2898.2 0 117.01 22 -
+remedy for healing    F 14 11 -Times-Roman c 7 -#000000 T 421.45 2865.2 0 108.08 21 -
+\
+since biblical times F 14 11 -Times-Roman c 7 -#000000 T 421.45 2832.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 2816.2 \
+0 111.21 19 -
+And a Mayo Clinic  F 14 11 -Times-Roman c 7 -#000000 T 421.45 2783.2 0 146.15 30 -
+cancer expert said the        F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 2750.2 0 127.94 29 -
+results, though              F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+2717.2 0 134.38 28 -
+preliminary, are too        F 14 11 -Times-Roman c 7 -#000000 T 421.45 2684.2 0 124.02 27 -
+fascinating to \
+be          F 14 11 -Times-Roman c 7 -#000000 T 421.45 2651.2 0 111.23 26 -
+dismissed.                F 14 11 -Times-Roman c 7 -#\
+000000 T 421.45 2618.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 2602.2 0 138.37 24 -
+The research was aimed  F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 2569.2 0 139.97 27 -
+at improving the safety    F 14 11 -Times-Roman c 7 -#000000 T 421.45 2536.2 \
+0 120.91 26 -
+of laparoscopic           F 14 11 -Times-Roman c 7 -#000000 T 421.45 2503.2 0 61.04 12 -
+surgery, an F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 2470.2 0 248.04 45 -
+increasingly popular technique that involves F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+2437.2 0 187.43 34 -
+tiny keyhole incisions and skinny F 14 11 -Times-Roman c 7 -#000000 T 421.45 2404.2 0 68.83 13 -
+instruments. \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 2371.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 2355.2 0 215.77 38 -
+Enthusiasm \
+for the technique has been F 14 11 -Times-Roman c 7 -#000000 T 421.45 2322.2 0 260.47 46 -
+tempered by some reports that laparoscopy \
+for F 14 11 -Times-Roman c 7 -#000000 T 421.45 2289.2 0 216.91 40 -
+colon cancer can itself cause tumors to F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 2256.2 0 255.82 46 -
+develop in the abdominal wall, along the path F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+2223.2 0 165.4 31 -
+the surgical instruments took. F 14 11 -Times-Roman c 7 -#000000 T 421.45 2190.2 0 0 1 -
+ F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 2174.2 0 253.92 44 -
+The Turkish researchers suggest honey might F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+2141.2 0 232.88 44 -
+work as a barrier to tumor cells when it is F 14 11 -Times-Roman c 7 -#000000 T 421.45 2108.2 0 240.83 45 -
+\
+spread in the incisions. The findings, based F 14 11 -Times-Roman c 7 -#000000 T 421.45 2075.2 0 227.45 41 -
+on a study of 60 mice, \
+were published in F 14 11 -Times-Roman c 7 -#000000 T 421.45 2042.2 0 248.83 44 -
+Decembers issue of the Archives of Surgery. F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 2009.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 1993.2 0 266.48 45 -
+Dr. Tonia \
+Young-Fadok, a Mayo Clinic surgeon F 14 11 -Times-Roman c 7 -#000000 T 421.45 1960.2 0 223.18 41 -
+participating in a U.S. study \
+on whether F 14 11 -Times-Roman c 7 -#000000 T 421.45 1927.2 0 233.36 42 -
+laparoscopic surgery for colon cancer can F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 1894.2 0 245.33 43 -
+cause new tumors, said substances in honey F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+1861.2 0 227.07 42 -
+might actually help dissolve tumor cells. F 14 11 -Times-Roman c 7 -#000000 T 421.45 1828.2 0 0 1 -
+ F 14 11 \
+-Times-Roman c 7 -#000000 T 421.45 1812.2 0 225.1 42 -
+Its not clear what the power of honey is, F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 1779.2 0 226.65 42 -
+but theres certainly something here thats F 14 11 -Times-Roman c 7 -#000000 T 421.45 1746.2 0 168.79 \
+31 -
+of interest, Young-Fadok said. F 14 11 -Times-Roman c 7 -#000000 T 421.45 1713.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 1697.2 0 251.52 45 -
+Laparoscopies are being used increasingly to F 14 11 -Times-Roman c 7 -#000000 T 421.45 1664.2 0 230.92 \
+44 -
+treat a variety of conditions that formerly F 14 11 -Times-Roman c 7 -#000000 T 421.45 1631.2 0 260.12 46 -
+required major \
+operations. Skinny instruments F 14 11 -Times-Roman c 7 -#000000 T 421.45 1598.2 0 196.7 36 -
+and a slender viewing tube called \
+a F 14 11 -Times-Roman c 7 -#000000 T 421.45 1565.2 0 207.59 38 -
+laparoscope are inserted through tiny F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 1532.2 0 226.3 42 -
+incisions. Carbon dioxide gas is injected F 14 11 -Times-Roman c 7 -#000000 T 421.45 1499.2 \
+0 250.38 45 -
+into the body cavity to cause the abdomen to F 14 11 -Times-Roman c 7 -#000000 T 421.45 1466.2 0 234.56 43 -
+swell, \
+creating a work space for surgeons. F 14 11 -Times-Roman c 7 -#000000 T 421.45 1433.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 1417.2 0 251.56 46 -
+Colon tumors are essentially the only type of F 14 11 -Times-Roman c 7 -#000000 T 421.45 1384.2 0 \
+234.66 42 -
+cancer for which doctors use laparoscopy. F 14 11 -Times-Roman c 7 -#000000 T 421.45 1351.2 0 0 1 -
+ F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 1335.2 0 258.51 46 -
+Some theorize that the gas might cause cancer F 14 11 -Times-Roman c 7 -#000000 T 421.45 \
+1302.2 0 217.35 41 -
+cells to shift location and form tumors. F 14 11 -Times-Roman c 7 -#000000 T 421.45 1269.2 0 242.35 43 -
+Others \
+suggest that inexperienced surgeons F 14 11 -Times-Roman c 7 -#000000 T 421.45 1236.2 0 247.65 45 -
+might inadvertently cause malignant \
+cells to F 14 11 -Times-Roman c 7 -#000000 T 421.45 1203.2 0 187.4 35 -
+implant as they extract the tumor. F 14 11 -Times-Roman \
+c 7 -#000000 T 421.45 1170.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 1154.2 0 268.43 46 -
+Young-Fadok said some research \
+has found that F 14 11 -Times-Roman c 7 -#000000 T 421.45 1121.2 0 243.37 45 -
+tumors occur in less than 1 percent of cases F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 1088.2 0 231.33 41 -
+and that when the laparoscopy is done by F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 1055.2 0 244.69 46 -
+experienced surgeons, the risk is essentially F 14 11 -Times-Roman c 7 -#000000 T 421.45 1022.2 0 \
+27.59 6 -
+zero. F 14 11 -Times-Roman c 7 -#000000 T 421.45 989.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 973.2 0 212.62 \
+40 -
+In the Turkish study, led by Dr. Ismail F 14 11 -Times-Roman c 7 -#000000 T 421.45 940.2 0 259.94 46 -
+Hamzaoglu of Istanbul \
+University, researchers F 14 11 -Times-Roman c 7 -#000000 T 421.45 907.2 0 208.97 38 -
+injected the mice with air, made neck F 14 \
+11 -Times-Roman c 7 -#000000 T 421.45 874.2 0 254.28 46 -
+incisions and injected the animals with tumor F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 841.2 0 235.32 43 -
+cells. The researchers spread honey inside F 14 11 -Times-Roman c 7 -#000000 T 421.45 808.2 \
+0 253.48 46 -
+the incisions in one group of mice before and F 14 11 -Times-Roman c 7 -#000000 T 421.45 775.2 0 107.68 22 -
+after \
+the injections. F 14 11 -Times-Roman c 7 -#000000 T 421.45 742.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 726.2 0 257.01 \
+44 -
+All 30 mice without honey developed tumors, F 14 11 -Times-Roman c 7 -#000000 T 421.45 693.2 0 196.73 35 -
+compared with only \
+eight of the 30 F 14 11 -Times-Roman c 7 -#000000 T 421.45 660.2 0 111.17 20 -
+honey-treated mice. F 14 11 -Times-Roman c 7 -#000000 \
+T 421.45 627.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 611.2 0 237.02 40 -
+In a commentary accompanying the study, F \
+14 11 -Times-Roman c 7 -#000000 T 421.45 578.2 0 249.14 42 -
+Chicago plastic surgeon Dr. Thomas Mustoe F 14 11 -Times-Roman c 7 \
+-#000000 T 421.45 545.2 0 256.58 46 -
+noted that other research has suggested honey F 14 11 -Times-Roman c 7 -#000000 T 421.45 512.2 \
+0 240.23 44 -
+has anti-bacterial properties and may be an F 14 11 -Times-Roman c 7 -#000000 T 421.45 479.2 0 163.01 31 -
+effective \
+treatment for burns. F 14 11 -Times-Roman c 7 -#000000 T 421.45 446.2 0 0 1 -
+ F 14 11 -Times-Roman c 7 -#000000 T 421.45 430.2 \
+0 213.08 39 -
+The study highlights another potential F 14 11 -Times-Roman c 7 -#000000 T 421.45 397.2 0 97.21 18 -
+use, Mustoe said. \
+F 14 11 -Times-Roman c 7 -#000000 T 421.45 364.2 0 30.32 6 -
+abde\\ F 14 11 -Times-Roman c 7 -#000000 T 619.32 7111.2 0 6.75 1 -b \
+F 14 11 -Times-Roman c 7 -#000000 T 596.94 4265.2 0 6 1 -c F 14 11 -Times-Roman c 7 -#000000 T 619.32 4265.2 0 6.75 1 -d F 14 11 \
+-Times-Roman c 7 -#000000 T 641.69 4265.2 0 6 1 -e F 14 11 -Times-Roman c 7 -#000000 T 619.32 1418.7 0 4.5 1 -f F 14 11 -Times-Roman \
+c 7 -#000000 T 664.07 4264.7 0 6.75 1 -g F 14 11 -Times-Roman c 7 -#000000 T 687.32 4264.7 0 6.75 1 -h ",
+		height=118.6,
+		label="hello\nworld\n\
+and  | { Thats the reason | post-menopausal | estrogen } | is\n\
+given together with another hormone called\n\
+progestin: \
+The combination lowers the risk of\n\
+endometrial cancer.\n\
+\n\
+But the NTP advisers said putting all\n\
+estrogens on the federal \
+list would help\n\
+women trying to balance the benefits and\n\
+risks when choosing hormone therapy.\n\
+Physicians never discuss \
+any of these risks\n\
+when they are prescribing hormone therapy.\n\
+They only discuss benefits. Listing might\n\
+force it on the \
+table, Michelle Medinsky, a\n\
+toxicologist from Durham, N.C., said before\n\
+the vote.\n\
+\n\
+The committee of scientists advises \
+the NTP,\n\
+a branch of the National Institutes of Health\n\
+that every two years updates the federal list\n\
+of proven and suspected \
+cancer-causing\n\
+substances.\n\
+\n\
+The NTP typically follows its advisers\n\
+recommendations, but an officially updated\n\
+carcinogen \
+list isnt expected until 2002.\n\
+\n\
+Thursday, after a daylong debate, the panel\n\
+declined to add talc powder to the list,\n\
+\
+saying there wasnt enough evidence linking\n\
+its use in feminine hygiene products to\n\
+ovarian cancer. The panel deadlocked over\n\
+\
+whether to a second type of talc, fibrous\n\
+talc that some studies have linked to lung\n\
+cancer in talc miners.\n\
+\n\
+On Wednesday, \
+the panel voted to add\n\
+ultraviolet radiation -- those\n\
+sunburn-causing rays long known to cause skin\n\
+cancer -- to the official \
+carcinogen list.\n\
+\n\
+The panel on Friday continued debating an\n\
+association between cancers of the nose and\n\
+sinuses with \
+industrial exposure to wood\n\
+dust.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc in one form or the other can be found in\n\
+many papers, paints, ceramics, food wrappers,\n\
+\
+hard candy, chewing gum, cosmetics and pills.\n\
+Most people are familiar with talc as a loose\n\
+powder used in cosmetics and as \
+a drying\n\
+powder.\n\
+\n\
+Industry officials also attacked studies that\n\
+showed increased lung cancer in talc miners\n\
+in New \
+York State and questioned an\n\
+experiment that showed that rats breathing\n\
+high concentrations of talc got lung cancer.\n\
+\n\
+\
+Higher lung-cancer rates in talc miners may\n\
+have resulted from their smoking or from the\n\
+presence of radon gas in the mines \
+or\n\
+asbestos in soils nearby, industry officials\n\
+said.\n\
+\n\
+The scientific advisers then deadlocked on\n\
+whether this second \
+type of talc, fibrous\n\
+talc, caused lung cancer, voting 5-5 on\n\
+adding it to the carcinogen list.\n\
+\n\
+UV light, however, \
+was a no-brainer for the\n\
+panel, which voted unanimously that it was a\n\
+known human carcinogen.\n\
+\n\
+UV radiation is not visible, \
+but it is felt\n\
+as heat and can damage the eyes and skin. It\n\
+comes in three forms, ranging from the\n\
+relatively long-wavelength \
+UVA to the\n\
+shortest wavelength UVC. UVA accounts for\n\
+most of the solar UV radiation because it is\n\
+not absorbed by the atmosphere. \
+UVB is mostly\n\
+absorbed by the ozone layer and UVC is\n\
+totally absorbed.\n\
+\n\
+All three are produced by mercury arc sun\n\
+\
+lamps, while other lamps that simulate\n\
+sunlight produce primarily UVA.\n\
+\n\
+SYDNEY, Australia (AP) -- Botanists have\n\
+found \
+a stand of living fossil trees from\n\
+a species dating back to prehistoric times in\n\
+the dense rainforests north of Sydney,\n\
+\
+authorities said Friday.\n\
+\n\
+About 20 mature trees found in the Nightcap\n\
+Range about 400 miles north of Sydney bear\n\
+nuts \
+similar in structure to those discovered\n\
+in fossilized form in 1875 by botanist Baron\n\
+Ferdinand von Mueller.\n\
+\n\
+It gives \
+us another small paragraph or a\n\
+page of the insight into the evolution of\n\
+flowering plants and the incredible changes                    \n\
+\
+that have occurred on this continent through\n\
+enormous periods of time, said botanist\n\
+Peter Kooyman, who discovered the trees \
+in\n\
+August.\n\
+\n\
+The exact location is being kept secret to\n\
+protect the trees, state environment minister\n\
+Bob Debus said.\n\
+\n\
+\
+Kooyman sent details of his find to Sydneys\n\
+Royal Botanic Gardens, which identified the\n\
+rainforests which once covered the \
+ancient \n\
+super-continent of Gondwanaland -- now\n\
+Australia, Africa, South America and New\n\
+Zealand, Debus said.\n\
+\n\
+The \
+biggest of the newly discovered trees is\n\
+at least 120 feet tall and has beautiful,\n\
+primitive and messy flowers with a scent\n\
+\
+similar to aniseed, Kooyman said.\n\
+\n\
+A similar discovery was made in the Blue\n\
+Mountains west of Sydney in 1994, when\n\
+botanists \
+discovered a stand of living fossil\n\
+trees known as the Wollemi Pines.\n\
+\n\
+provocative Turkish  \n\
+study suggests that     \n\
+\
+using honey as an      \n\
+ointment during a     \n\
+certain type of      \n\
+colon-cancer surgery\n\
+can help prevent tumors       \n\
+\
+from recurring.              \n\
+\n\
+While the research was     \n\
+done in mice and no one   \n\
+expects hospitals t\n\
+start stocking    \n\
+\
+operating rooms with    \n\
+honey jars, honey has  \n\
+been used as a folk   \n\
+remedy for healing   \n\
+since biblical times\n\
+\n\
+\
+And a Mayo Clinic \n\
+cancer expert said the       \n\
+results, though             \n\
+preliminary, are too       \n\
+fascinating \
+to be         \n\
+dismissed.               \n\
+\n\
+The research was aimed \n\
+at improving the safety   \n\
+of laparoscopic          \n\
+\
+surgery, an\n\
+increasingly popular technique that involves\n\
+tiny keyhole incisions and skinny\n\
+instruments.\n\
+\n\
+Enthusiasm \
+for the technique has been\n\
+tempered by some reports that laparoscopy for\n\
+colon cancer can itself cause tumors to\n\
+develop \
+in the abdominal wall, along the path\n\
+the surgical instruments took.\n\
+\n\
+The Turkish researchers suggest honey might\n\
+work \
+as a barrier to tumor cells when it is\n\
+spread in the incisions. The findings, based\n\
+on a study of 60 mice, were published \
+in\n\
+Decembers issue of the Archives of Surgery.\n\
+\n\
+Dr. Tonia Young-Fadok, a Mayo Clinic surgeon\n\
+participating in a U.S. \
+study on whether\n\
+laparoscopic surgery for colon cancer can\n\
+cause new tumors, said substances in honey\n\
+might actually help \
+dissolve tumor cells.\n\
+\n\
+Its not clear what the power of honey is,\n\
+but theres certainly something here thats\n\
+of interest, \
+Young-Fadok said.\n\
+\n\
+Laparoscopies are being used increasingly to\n\
+treat a variety of conditions that formerly\n\
+required \
+major operations. Skinny instruments\n\
+and a slender viewing tube called a\n\
+laparoscope are inserted through tiny\n\
+incisions. \
+Carbon dioxide gas is injected\n\
+into the body cavity to cause the abdomen to\n\
+swell, creating a work space for surgeons.\n\
+\n\
+\
+Colon tumors are essentially the only type of\n\
+cancer for which doctors use laparoscopy.\n\
+\n\
+Some theorize that the gas might \
+cause cancer\n\
+cells to shift location and form tumors.\n\
+Others suggest that inexperienced surgeons\n\
+might inadvertently cause \
+malignant cells to\n\
+implant as they extract the tumor.\n\
+\n\
+Young-Fadok said some research has found that\n\
+tumors occur in \
+less than 1 percent of cases\n\
+and that when the laparoscopy is done by\n\
+experienced surgeons, the risk is essentially\n\
+zero.\n\
+\n\
+\
+In the Turkish study, led by Dr. Ismail\n\
+Hamzaoglu of Istanbul University, researchers\n\
+injected the mice with air, made neck\n\
+\
+incisions and injected the animals with tumor\n\
+cells. The researchers spread honey inside\n\
+the incisions in one group of mice \
+before and\n\
+after the injections.\n\
+\n\
+All 30 mice without honey developed tumors,\n\
+compared with only eight of the 30\n\
+\
+honey-treated mice.\n\
+\n\
+In a commentary accompanying the study,\n\
+Chicago plastic surgeon Dr. Thomas Mustoe\n\
+noted that other \
+research has suggested honey\n\
+has anti-bacterial properties and may be an\n\
+effective treatment for burns.\n\
+\n\
+The study highlights \
+another potential\n\
+use, Mustoe said.\n\
+abde\
+ |{ b |{c|<here> d|e}| f}| g | h",
+		pos="398.97,4269.8",
+		rects="98.591,0.5,147.25,8539 147.25,5693.5,258.12,8539 147.25,2847,258.12,5693.5 147.25,0.5,258.12,2847 258.12,0.5,587.11,8539 587.11,\
+5693.5,653.86,8539 587.11,2847,609.11,5693.5 609.11,2847,631.86,5693.5 631.86,2847,653.86,5693.5 587.11,0.5,653.86,2847 653.86,0.5,\
+676.61,8539 676.61,0.5,699.36,8539",
+		width=8.344];
+	struct1:f2 -> struct3:here	[_draw_="c 7 -#000000 B 7 347.1 8575.5 347.1 8521.57 551.75 8580.23 587.11 8539.5 634.29 8485.14 636.49 6923.94 630.93 5705.13 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 634.44 5705.44 630.89 5695.46 627.44 5705.47 ",
+		pos="e,630.88,5693.9 347.1,8575.5 347.1,8521.6 551.75,8580.2 587.11,8539.5 634.29,8485.1 636.49,6923.9 630.93,5705.1"];
+}

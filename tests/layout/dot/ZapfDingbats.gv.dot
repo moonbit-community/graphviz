@@ -1,0 +1,16 @@
+graph {
+	graph [bb="0,0,268.66,108"];
+	node [label="\N"];
+	35	[fontname=ZapfDingbats,
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"ZapfDingbats"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,54",
+		shape=box,
+		width=3.7314];
+}

@@ -1,0 +1,63 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 169 457.5 169 457.5 0 ",
+		bb="0,0,457.5,169",
+		xdotversion=1.7
+	];
+	node [label="aaaaaaaaaaaaaa\nddd\l",
+		shape=box
+	];
+	n	[_draw_="c 7 -#000000 p 4 216 164.5 0 164.5 0 107 216 107 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 108 138.95 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 64.5 122.45 -1 21 \
+3 -ddd ",
+		height=0.79861,
+		pos="108,135.75",
+		width=3];
+	m	[_draw_="c 7 -#000000 p 4 216 62 0 62 0 4.5 216 4.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 108 36.45 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 64.5 19.95 -1 21 3 \
+-ddd ",
+		height=0.79861,
+		pos="108,33.25",
+		width=3,
+		nojustify=true];
+	n -> m	[_draw_="c 7 -#000000 B 4 108 106.76 108 96.5 108 84.69 108 73.62 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 111.5 73.96 108 63.96 104.5 73.96 ",
+		pos="e,108,62.443 108,106.76 108,96.496 108,84.685 108,73.615"];
+	b	[_draw_="c 7 -#000000 p 4 336.5 62 233.5 62 233.5 4.5 336.5 4.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 285 36.45 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 241.5 19.95 -1 21 3 \
+-ddd ",
+		height=0.79861,
+		pos="285,33.25",
+		width=1.4305,
+		nojustify=true];
+	l	[_draw_="c 7 -#000000 p 4 354.5 103 354.5 168.5 457.5 168.5 457.5 103 c 7 -#000000 L 2 354.5 144 457.5 144 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 406 151.2 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 406 126.7 0 42 6 -bbbbbb \
+F 14 11 -Times-Roman c 7 -#000000 T 362.5 110.2 -1 21 3 -ddd ",
+		height=0.92361,
+		label="{aaaaaaaaaaaaaa\n | bbbbbb\nddd\l}",
+		pos="406,135.75",
+		rects="354.5,144,457.5,168.5 354.5,103,457.5,144",
+		shape=record,
+		width=1.4305];
+	p	[_draw_="c 7 -#000000 p 4 354.5 0.5 354.5 66 457.5 66 457.5 0.5 c 7 -#000000 L 2 354.5 41.5 457.5 41.5 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 406 48.7 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 406 24.2 0 42 6 -bbbbbb \
+F 14 11 -Times-Roman c 7 -#000000 T 362.5 7.7 -1 21 3 -ddd ",
+		height=0.92361,
+		label="{aaaaaaaaaaaaaa\n | bbbbbb\nddd\l}",
+		pos="406,33.25",
+		rects="354.5,41.5,457.5,66 354.5,0.5,457.5,41.5",
+		shape=record,
+		width=1.4305,
+		nojustify=true];
+	l -> p	[_draw_="c 7 -#000000 B 4 406 102.67 406 94.7 406 86.01 406 77.59 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 409.5 77.88 406 67.88 402.5 77.88 ",
+		pos="e,406,66.365 406,102.67 406,94.697 406,86.013 406,77.593"];
+	a	[_draw_="c 7 -#000000 p 4 336.5 164.5 233.5 164.5 233.5 107 336.5 107 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 285 138.95 0 86.99 14 -aaaaaaaaaaaaaa F 14 11 -Times-Roman c 7 -#000000 T 241.5 122.45 -1 21 \
+3 -ddd ",
+		height=0.79861,
+		pos="285,135.75",
+		width=1.4305];
+	a -> b	[_draw_="c 7 -#000000 B 4 285 106.76 285 96.5 285 84.69 285 73.62 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 288.5 73.96 285 63.96 281.5 73.96 ",
+		pos="e,285,62.443 285,106.76 285,96.496 285,84.685 285,73.615"];
+}

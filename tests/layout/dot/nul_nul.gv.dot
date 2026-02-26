@@ -1,0 +1,24 @@
+graph G {
+	graph [bb="0,0,782.14,62",
+		imagepath=""
+	];
+	node [label="\N"];
+	a	[height=0.86111,
+		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
+CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
+CELLBORDER="0">
+<TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (null)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (null)</FONT></TD></TR>
+</TABLE></TD></TR></TABLE>>,
+		pos="87.531,31",
+		shape=plaintext,
+		width=2.4314];
+	b	[fontname="Helvetica-Bold",
+		fontsize=30,
+		height=0.61111,
+		image="image.jpg",
+		label="image in working directory should be displayed",
+		pos="487.53,31",
+		shape=box,
+		width=8.1834,
+		labelloc=b];
+}

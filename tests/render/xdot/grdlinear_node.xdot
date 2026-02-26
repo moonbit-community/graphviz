@@ -1,0 +1,70 @@
+digraph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#000000 P 4 0 0 0 130 462 130 462 0 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 231 7.2 0 34.99 5 -Graph ",
+		bb="0,0,462,130",
+		bgcolor="yellow:blue",
+		label="Graph",
+		lheight=0.23,
+		lp="231,12.25",
+		lwidth=0.49,
+		gradientangle=60,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_1 {
+		graph [_draw_="c 7 -#000000 C 7 -#000000 P 4 8 32.5 8 122 454 122 454 32.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#ffffff T 231 104.7 0 40.44 7 -Cluster ",
+			bb="8,32.5,454,122",
+			fontcolor=white,
+			label=Cluster,
+			lheight=0.23,
+			lp="231,109.75",
+			lwidth=0.56,
+			style=filled,
+			fillcolor="green:magenta"
+		];
+		node [style=filled];
+		n5	[_draw_="c 7 -#000000 C 7 -#000000 P 4 70 83 16 83 16 47 70 47 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 43 59.95 0 14 2 -n5 ",
+			fillcolor="antiquewhite:aquamarine",
+			height=0.5,
+			pos="43,65",
+			shape=box,
+			width=0.75];
+		n4	[_draw_="c 7 -#000000 C 7 -#000000 E 115 65 27 18 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 115 59.95 0 14 2 -n4 ",
+			fillcolor="bisque4:blue2",
+			height=0.5,
+			pos="115,65",
+			shape=ellipse,
+			width=0.75];
+		n3	[_draw_="c 7 -#000000 C 7 -#000000 E 180 65 20.13 20.13 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 180 59.95 0 13.5 2 -n3 ",
+			fillcolor="cadetblue1:chocolate1",
+			height=0.5592,
+			pos="180,65",
+			shape=circle,
+			width=0.5592];
+		n2	[_draw_="c 7 -#000000 C 7 -#000000 P 4 247 83 218.53 65 247 47 275.47 65 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 247 59.95 0 13.5 2 -n2 ",
+			fillcolor="crimson:cyan4",
+			height=0.5,
+			pos="247,65",
+			shape=diamond,
+			width=0.79083];
+		n1	[_draw_="c 7 -#000000 C 7 -#000000 P 3 334 89.5 293.74 52.75 374.26 52.75 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 334 59.95 0 13.5 2 -n1 ",
+			fillcolor="deepskyblue2:firebrick",
+			height=0.68056,
+			pos="334,65",
+			shape=triangle,
+			width=1.1184];
+		n0	[_draw_="c 7 -#000000 C 7 -#000000 P 5 446 70.56 419 83 392 70.56 402.31 50.44 435.69 50.44 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 419 59.95 0 13.5 2 -n0 ",
+			fillcolor="gray24:gray88",
+			height=0.5,
+			pos="419,65",
+			shape=pentagon,
+			width=0.75];
+	}
+}

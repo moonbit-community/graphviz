@@ -1,0 +1,45 @@
+digraph bla {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 108 362.57 108 362.57 0 ",
+		bb="0,0,362.57,108",
+		rankdir=LR,
+		compound=true,
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	subgraph cluster_foo {
+		graph [_draw_="c 7 -#000000 p 4 251.87 8 251.87 62 321.87 62 321.87 8 ",
+			bb="251.87,8,321.87,62"
+		];
+		label_foo	[_draw_="c 7 -#000000 p 4 259.87 0.5 259.87 36.5 313.87 36.5 313.87 0.5 ",
+			_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 286.87 13.7 0 18 3 -foo ",
+			height=0.51389,
+			label="<foo>foo",
+			pos="286.87,18.5",
+			rects="259.87,1,313.87,36.5",
+			shape=record,
+			width=0.75];
+	}
+	cluster_foo	[_draw_="c 7 -#000000 e 91.58 73.5 53.9 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 91.58 68.45 0 62.98 11 -cluster_foo ",
+		height=0.5,
+		pos="91.584,73.5",
+		width=1.4971];
+	label_xxxxxxx	[_draw_="c 7 -#000000 e 286.87 73.5 67.7 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 286.87 68.45 0 83.21 13 -label_xxxxxxx ",
+		height=0.5,
+		pos="286.87,73.5",
+		width=1.8806];
+	cluster_foo -> label_xxxxxxx	[_draw_="c 7 -#000000 B 4 145.91 73.5 164.96 73.5 186.83 73.5 207.54 73.5 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 207.39 77 217.39 73.5 207.39 70 ",
+		lhead=cluster_foo,
+		pos="e,218.9,73.5 145.91,73.5 164.96,73.5 186.83,73.5 207.54,73.5"];
+	columns_foo_insider	[_draw_="c 7 -#000000 e 91.58 18.5 91.58 18 ",
+		_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 91.58 13.45 0 118.21 19 -columns_foo_insider ",
+		height=0.5,
+		pos="91.584,18.5",
+		width=2.544];
+	columns_foo_insider:foo -> label_foo	[_draw_="c 7 -#000000 B 4 183.57 18.5 203.36 18.5 223.47 18.5 240.56 18.5 ",
+		_hdraw_="S 5 -solid c 7 -#000000 C 7 -#000000 P 3 240.36 22 250.36 18.5 240.36 15 ",
+		lhead=cluster_foo,
+		pos="e,251.87,18.5 183.57,18.5 203.36,18.5 223.47,18.5 240.56,18.5"];
+}

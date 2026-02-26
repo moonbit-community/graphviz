@@ -1,0 +1,130 @@
+digraph structs {
+	graph [bb="0,0,642.36,2996.2"];
+	node [label="\N",
+		shape=record
+	];
+	struct1	[height=0.51389,
+		label="<f0> left|<f1> middle|<f2> right",
+		pos="269.88,2753",
+		rects="205,2735,239,2771 239,2735,293.25,2771 293.25,2735,334.75,2771",
+		width=1.8021];
+	struct2	[height=0.51389,
+		label="<f0> one|<f1> two",
+		pos="35.875,1349.2",
+		rects="0,1331.2,35.5,1367.2 35.5,1331.2,71.75,1367.2",
+		width=0.99653];
+	struct1:f1 -> struct2:f0	[pos="e,17.75,1368.2 266.12,2734.5 266.12,2650.6 135.75,2761.9 80.875,2698.5 -13.755,2589.1 16.303,1563.8 17.701,1379.6"];
+	struct3	[height=37.479,
+		label="hello\nworld\n\
+and  | { Thats the reason | post-menopausal | estrogen } | is\n\
+given together with another hormone called\n\
+progestin: \
+The combination lowers the risk of\n\
+endometrial cancer.\n\
+\n\
+But the NTP advisers said putting all\n\
+estrogens on the federal \
+list would help\n\
+women trying to balance the benefits and\n\
+risks when choosing hormone therapy.\n\
+Physicians never discuss \
+any of these risks\n\
+when they are prescribing hormone therapy.\n\
+They only discuss benefits. Listing might\n\
+force it on the \
+table, Michelle Medinsky, a\n\
+toxicologist from Durham, N.C., said before\n\
+the vote.\n\
+\n\
+The committee of scientists advises \
+the NTP,\n\
+a branch of the National Institutes of Health\n\
+that every two years updates the federal list\n\
+of proven and suspected \
+cancer-causing\n\
+substances.\n\
+\n\
+The NTP typically follows its advisers\n\
+recommendations, but an officially updated\n\
+carcinogen \
+list isnt expected until 2002.\n\
+\n\
+Thursday, after a daylong debate, the panel\n\
+declined to add talc powder to the list,\n\
+\
+saying there wasnt enough evidence linking\n\
+its use in feminine hygiene products to\n\
+ovarian cancer. The panel deadlocked over\n\
+\
+whether to a second type of talc, fibrous\n\
+talc that some studies have linked to lung\n\
+cancer in talc miners.\n\
+\n\
+On Wednesday, \
+the panel voted to add\n\
+ultraviolet radiation -- those\n\
+sunburn-causing rays long known to cause skin\n\
+cancer -- to the official \
+carcinogen list.\n\
+\n\
+The panel on Friday continued debating an\n\
+association between cancers of the nose and\n\
+sinuses with \
+industrial exposure to wood\n\
+dust.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc has long been controversial. When\n\
+studies first appeared suggesting it migrated\n\
+\
+into the ovaries to cause tumors, many\n\
+feminine hygiene products replaced talc with\n\
+cornstarch.\n\
+\n\
+Panelist Medinsky said \
+she had been prepared\n\
+to list talc powder as reasonably believed\n\
+to cause cancer. But after listening to\n\
+hours of industry \
+attacks on the science,\n\
+the evidence has knocked me out of the\n\
+reasonably category into not list, she\n\
+said before the panel \
+voted 7-3 against\n\
+listing talc.\n\
+\n\
+Talc in one form or the other can be found in\n\
+many papers, paints, ceramics, food wrappers,\n\
+\
+hard candy, chewing gum, cosmetics and pills.\n\
+Most people are familiar with talc as a loose\n\
+powder used in cosmetics and as \
+a drying\n\
+powder.\n\
+abde\
+ |{ b |{c|<here> d|e}| f}| g | h",
+		pos="365.88,1349.2",
+		rects="89.395,0.5,138.06,2698 138.06,1799.5,248.93,2698 138.06,900,248.93,1799.5 138.06,0.5,248.93,900 248.93,0.5,530.11,2698 530.11,1799.5,\
+596.86,2698 530.11,900,552.11,1799.5 552.11,900,574.86,1799.5 574.86,900,596.86,1799.5 530.11,0.5,596.86,900 596.86,0.5,619.61,2698 \
+619.61,0.5,642.36,2698",
+		width=7.68];
+	struct1:f2 -> struct3:here	[pos="e,575.35,1634.2 314,2734.5 314,2685.8 498.18,2735.3 530.11,2698.5 597.35,2621.1 588.22,2018.6 575.73,1645.5"];
+}

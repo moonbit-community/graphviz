@@ -1,0 +1,55 @@
+digraph {
+	graph [bb="0,0,273.91,519"];
+	node [label="\N"];
+	25	[fontname="Palatino-Bold",
+		height=1.4271,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"Palatino-Bold"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="136.96,467.62",
+		shape=box,
+		width=3.8043];
+	26	[fontname="Palatino-BoldItalic",
+		height=1.4271,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"Palatino-BoldItalic"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="136.96,328.88",
+		shape=box,
+		width=3.8043];
+	25 -> 26	[pos="e,136.96,380.66 136.96,416.09 136.96,408.23 136.96,400.03 136.96,391.95"];
+	27	[fontname="Palatino-Italic",
+		height=1.4271,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"Palatino-Italic"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="136.96,190.12",
+		shape=box,
+		width=3.8043];
+	26 -> 27	[pos="e,136.96,241.91 136.96,277.34 136.96,269.48 136.96,261.28 136.96,253.2"];
+	28	[fontname="Palatino-Roman",
+		height=1.4271,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"Palatino-Roman"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="136.96,51.375",
+		shape=box,
+		width=3.8043];
+	27 -> 28	[pos="e,136.96,103.16 136.96,138.59 136.96,130.73 136.96,122.53 136.96,114.45"];
+}

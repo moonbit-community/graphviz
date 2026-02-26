@@ -1,0 +1,30 @@
+graph G {
+	graph [_draw_="c 9 -#fffffe00 C 7 -#ffffff P 4 0 0 0 62 666.37 62 666.37 0 ",
+		bb="0,0,666.37,62",
+		imagepath="",
+		xdotversion=1.7
+	];
+	node [label="\N"];
+	a	[_ldraw_="F 14 11 -Times-Roman c 7 -#000000 T 16 36.7 -1 244.14 43 -image attribute (invalid absolute pathname) F 14 11 -Times-Roman c 7 -#\
+000000 T 16 15.2 -1 143.06 26 -imagepath attribute (null) ",
+		height=0.86111,
+		label=<<TABLE CELLSPACING="2" CELLPADDING="2" BORDER="0" 
+CELLBORDER="0"><TR><TD><TABLE CELLSPACING="3" CELLPADDING="1" BORDER="0" 
+CELLBORDER="0">
+<TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">image attribute (invalid absolute pathname)</FONT></TD></TR><TR><TD ALIGN="left"><FONT POINT-SIZE="30.0" FACE="Helvetica-Bold">imagepath attribute (null)</FONT></TD></TR>
+</TABLE></TD></TR></TABLE>>,
+		pos="138.07,31",
+		shape=plaintext,
+		width=3.8353];
+	b	[_draw_="c 7 -#000000 p 4 666.37 53 293.77 53 293.77 9 666.37 9 ",
+		_ldraw_="F 30 14 -Helvetica-Bold c 7 -#000000 T 480.07 22 0 356.6 28 -no image should be displayed ",
+		fontname="Helvetica-Bold",
+		fontsize=30,
+		height=0.61111,
+		image="/inv_dir/image.jpg",
+		label="no image should be displayed",
+		pos="480.07,31",
+		shape=box,
+		width=5.175,
+		labelloc=b];
+}
