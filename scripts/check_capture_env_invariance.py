@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import difflib
 import os
 import subprocess
@@ -14,6 +15,7 @@ from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path
 
 
 def parse_args() -> argparse.Namespace:
+    default_jobs = max(1, min(8, os.cpu_count() or 1))
     parser = argparse.ArgumentParser(
         description="Validate DOT_CAPTURE_ORDERING_INPUTS output invariance.",
     )
@@ -52,6 +54,12 @@ def parse_args() -> argparse.Namespace:
         "--write-diff",
         action="store_true",
         help="Write mismatched outputs/diffs under target/capture-env-invariance.",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=default_jobs,
+        help=f"Parallel case workers per format (default: {default_jobs}).",
     )
     return parser.parse_args()
 
@@ -146,6 +154,22 @@ def maybe_write_diff(
     diff_path.write_text("".join(unified), encoding="utf-8")
 
 
+def compare_case(
+    dot_bin: Path,
+    repo_root: Path,
+    fmt: str,
+    case_name: str,
+    write_diff: bool,
+) -> tuple[str, bool]:
+    input_path = resolve_input_path(repo_root, case_name)
+    base = run_case(dot_bin, repo_root, fmt, input_path, capture=False)
+    capture = run_case(dot_bin, repo_root, fmt, input_path, capture=True)
+    matched = base == capture
+    if not matched and write_diff:
+        maybe_write_diff(repo_root, fmt, case_name, base, capture)
+    return case_name, matched
+
+
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
@@ -153,17 +177,42 @@ def main() -> int:
     cases = load_case_names(repo_root, args)
 
     has_failures = False
+    jobs = max(1, args.jobs)
     for fmt in args.formats:
         mismatches: list[str] = []
-        for case in cases:
-            input_path = resolve_input_path(repo_root, case)
-            base = run_case(dot_bin, repo_root, fmt, input_path, capture=False)
-            capture = run_case(dot_bin, repo_root, fmt, input_path, capture=True)
-            if base == capture:
-                continue
-            mismatches.append(case)
-            if args.write_diff:
-                maybe_write_diff(repo_root, fmt, case, base, capture)
+        if jobs == 1 or len(cases) <= 1:
+            for case in cases:
+                _case_name, matched = compare_case(
+                    dot_bin,
+                    repo_root,
+                    fmt,
+                    case,
+                    args.write_diff,
+                )
+                if matched:
+                    continue
+                mismatches.append(case)
+        else:
+            case_results: dict[str, bool] = {}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+                futures = [
+                    executor.submit(
+                        compare_case,
+                        dot_bin,
+                        repo_root,
+                        fmt,
+                        case,
+                        args.write_diff,
+                    )
+                    for case in cases
+                ]
+                for future in concurrent.futures.as_completed(futures):
+                    case_name, matched = future.result()
+                    case_results[case_name] = matched
+            for case in cases:
+                if case_results.get(case, True):
+                    continue
+                mismatches.append(case)
         print(f"format={fmt} total={len(cases)} mismatches={len(mismatches)}")
         if mismatches:
             has_failures = True

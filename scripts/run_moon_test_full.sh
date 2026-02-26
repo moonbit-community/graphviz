@@ -8,6 +8,7 @@ default_jobs=$(
     echo 8
 )
 moon_jobs="${MOON_TEST_JOBS:-${default_jobs}}"
+capture_jobs="${CAPTURE_ENV_INVARIANCE_JOBS:-${moon_jobs}}"
 cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
 emit_timing="${LOCAL_GUARD_TIMING:-0}"
 
@@ -51,4 +52,5 @@ dot_bin="_build/native/release/build/cmd/dot/dot.exe"
 run_step "capture env invariance" scripts/check_capture_env_invariance.py \
   --dot-bin "${dot_bin}" \
   --formats dot xdot svg \
+  --jobs "${capture_jobs}" \
   --cases-file tests/capture_env_invariant_cases.txt
