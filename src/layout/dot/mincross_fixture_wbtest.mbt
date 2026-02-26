@@ -477,6 +477,8 @@ fn run_mincross_case_with_name_order(
   }
   let edges_input = input.edges.copy()
   for edge in edges_input {
+    let _ = edge.seq
+    let _ = edge.order
     let tail_name = match id_to_name.get(edge.tail) {
       Some(value) => value
       None => fail("case \{input.case_id} missing tail id \{edge.tail}")

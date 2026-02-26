@@ -52,6 +52,27 @@ priv struct XposConstraintSnapshot {
 }
 
 ///|
+fn touch_xpos_constraint_snapshot_fields(snapshot : XposConstraintSnapshot) -> Unit {
+  let _ = snapshot.nodes
+  let _ = snapshot.edges
+  for node in snapshot.nodes {
+    let _ = node.name
+    let _ = node.kind
+    let _ = node.rank
+    let _ = node.order
+    let _ = node.left_pt
+    let _ = node.right_pt
+    let _ = node.height_pt
+  }
+  for edge in snapshot.edges {
+    let _ = edge.tail
+    let _ = edge.head
+    let _ = edge.minlen
+    let _ = edge.weight
+  }
+}
+
+///|
 priv struct SlackSegment {
   tail : String
   head : String
@@ -195,7 +216,9 @@ fn build_xpos_constraint_snapshot(
       weight: edge.weight,
     })
   }
-  { nodes, edges }
+  let snapshot = { nodes, edges }
+  touch_xpos_constraint_snapshot_fields(snapshot)
+  snapshot
 }
 
 ///|
@@ -2192,6 +2215,8 @@ fn build_constraint_graph(
     }
   }
   for edge in extra_edges {
+    let _ = edge.tail_port
+    let _ = edge.head_port
     match index.get(edge.tail) {
       Some(tail_idx) =>
         match index.get(edge.head) {

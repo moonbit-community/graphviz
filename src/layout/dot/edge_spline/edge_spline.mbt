@@ -1079,7 +1079,6 @@ priv enum ClipShape {
   None
   Rect
   Ellipse
-  Diamond
   Polygon(Int, Double, Double, Double, Int)
   DoubleOctagon
   TripleOctagon
@@ -1378,23 +1377,6 @@ fn point_inside_ellipse(
   dx * dx + dy * dy < 1.0
 }
 
-///|
-fn point_inside_diamond(
-  point : @geom.Point,
-  center : @geom.Point,
-  size : NodeSize,
-) -> Bool {
-  let half_w = size.width_pt / 2.0
-  let half_h = size.height_pt / 2.0
-  if half_w <= 0.0 || half_h <= 0.0 {
-    return false
-  }
-  let dx = Double::abs(point.x - center.x)
-  let dy = Double::abs(point.y - center.y)
-  dx / half_w + dy / half_h <= 1.0
-}
-
-///|
 fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
   match quadrant {
     1 => point(-pt.y, pt.x)
@@ -1711,7 +1693,6 @@ fn point_inside_shape(
   match shape {
     ClipShape::Rect => point_inside_rect(point, center, size)
     ClipShape::Ellipse => point_inside_ellipse(point, center, size)
-    ClipShape::Diamond => point_inside_diamond(point, center, size)
     ClipShape::Trapezium
     | ClipShape::InvTrapezium
     | ClipShape::Parallelogram
@@ -2257,8 +2238,7 @@ fn clip_spline_to_nodes(
     }
   let tail_clip_size = match tail_shape {
     ClipShape::Rect
-    | ClipShape::Ellipse
-    | ClipShape::Diamond =>
+    | ClipShape::Ellipse =>
       // Graphviz parity guard: shape_clip(record_inside) extends both node
       // and port boxes by penwidth/2 before Bézier clipping.
       if tail_penwidth > 0.0 && fixedsize_mode(tail_node) != "shape" {
@@ -2278,8 +2258,7 @@ fn clip_spline_to_nodes(
   }
   let head_clip_size = match head_shape {
     ClipShape::Rect
-    | ClipShape::Ellipse
-    | ClipShape::Diamond =>
+    | ClipShape::Ellipse =>
       if head_penwidth > 0.0 && fixedsize_mode(head_node) != "shape" {
         inflate_node_size(head_shape_size, head_penwidth / 2.0)
       } else {
@@ -3918,8 +3897,7 @@ pub fn compass_port_point_on_shape(
   let penwidth = if compass_penwidth_applies(node) { node_penwidth_pt(node) } else { 0.0 }
   let clip_size = match shape {
     ClipShape::Rect
-    | ClipShape::Ellipse
-    | ClipShape::Diamond =>
+    | ClipShape::Ellipse =>
       if penwidth > 0.0 && fixedsize_mode(node) != "shape" {
         inflate_node_size(base_size, penwidth / 2.0)
       } else {

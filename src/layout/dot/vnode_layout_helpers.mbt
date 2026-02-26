@@ -12,8 +12,6 @@ priv struct FlatLabelNodeInfo {
   tail : String
   head : String
   rank : Int
-  order : Int
-  place : Int
 }
 
 ///|
@@ -377,16 +375,10 @@ fn add_flat_label_vnodes(
     let updated_rank = insert_at(names, place, name)
     x_groups[label_rank] = updated_rank
     rebuild_order(updated_rank)
-    let order = match order_index.get(name) {
-      Some(value) => value
-      None => place
-    }
     flat_label_nodes[name] = {
       tail,
       head,
       rank: label_rank,
-      order,
-      place,
     }
     flat_label_edges[edge_key(edge)] = name
     let vnode_edge_key = edge_vnode_key(edge)
