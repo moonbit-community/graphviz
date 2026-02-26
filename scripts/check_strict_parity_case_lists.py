@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from case_list_utils import load_case_names
+from case_list_utils import resolve_repo_path
 from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES
 from snapshot_inputs import resolve_input_path as resolve_snapshot_input_path
 
@@ -64,26 +66,6 @@ def parse_args() -> argparse.Namespace:
         help="Case list allowed to exist in input corpus but not strict manifests.",
     )
     return parser.parse_args()
-
-
-def resolve_path(repo_root: Path, path: Path) -> Path:
-    return path if path.is_absolute() else repo_root / path
-
-
-def load_case_names(path: Path, *, allow_empty: bool = False) -> list[str]:
-    names: list[str] = []
-    seen: set[str] = set()
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line in seen:
-            raise ValueError(f"duplicate case in {path}: {line}")
-        seen.add(line)
-        names.append(line)
-    if not names and not allow_empty:
-        raise ValueError(f"empty case list: {path}")
-    return names
 
 
 def load_manifest_case_names(repo_root: Path) -> tuple[list[str], list[str], list[str]]:
@@ -152,10 +134,10 @@ def validate_gv_suffix_variants(repo_root: Path, manifest_set: set[str]) -> int:
 def main() -> int:
     args = parse_args()
     repo_root = args.repo_root.resolve()
-    sentinel_path = resolve_path(repo_root, args.sentinel_file)
-    history_path = resolve_path(repo_root, args.history_file)
-    known_regression_path = resolve_path(repo_root, args.known_regression_file)
-    allowed_uncovered_path = resolve_path(repo_root, args.allowed_uncovered_file)
+    sentinel_path = resolve_repo_path(repo_root, args.sentinel_file)
+    history_path = resolve_repo_path(repo_root, args.history_file)
+    known_regression_path = resolve_repo_path(repo_root, args.known_regression_file)
+    allowed_uncovered_path = resolve_repo_path(repo_root, args.allowed_uncovered_file)
 
     dot_cases, xdot_cases, svg_cases = load_manifest_case_names(repo_root)
     manifest_set = validate_manifest_alignment(dot_cases, xdot_cases, svg_cases)

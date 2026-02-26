@@ -13,6 +13,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from case_list_utils import load_case_names
 from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path
 
 
@@ -110,22 +111,6 @@ def parse_args() -> argparse.Namespace:
         help=f"Parallel case workers per format (default: {default_jobs}).",
     )
     return parser.parse_args()
-
-
-def load_case_names(manifest_path: Path) -> list[str]:
-    names: list[str] = []
-    seen: set[str] = set()
-    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line in seen:
-            raise ValueError(f"duplicate case in manifest {manifest_path}: {line}")
-        seen.add(line)
-        names.append(line)
-    if not names:
-        raise ValueError(f"empty case manifest: {manifest_path}")
-    return names
 
 
 def load_manifest_case_names(repo_root: Path, fmt: str) -> list[str]:

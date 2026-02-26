@@ -11,6 +11,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from case_list_utils import load_case_names as load_case_names_from_file
+from case_list_utils import resolve_repo_path
 from snapshot_inputs import resolve_input_path
 
 
@@ -67,24 +69,10 @@ def parse_args() -> argparse.Namespace:
 def load_case_names(repo_root: Path, args: argparse.Namespace) -> list[str]:
     if args.cases:
         return list(dict.fromkeys(args.cases))
-    path = args.cases_file
-    if not path.is_absolute():
-        path = repo_root / path
+    path = resolve_repo_path(repo_root, args.cases_file)
     if not path.exists():
         raise FileNotFoundError(f"cases file not found: {path}")
-    names: list[str] = []
-    seen: set[str] = set()
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line in seen:
-            continue
-        seen.add(line)
-        names.append(line)
-    if not names:
-        raise ValueError(f"empty case list: {path}")
-    return names
+    return load_case_names_from_file(path, dedupe=True)
 
 
 def ensure_dot_bin(repo_root: Path, dot_bin: Path | None) -> Path:
