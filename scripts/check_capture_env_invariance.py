@@ -178,9 +178,11 @@ def main() -> int:
 
     has_failures = False
     jobs = max(1, args.jobs)
-    for fmt in args.formats:
-        mismatches: list[str] = []
-        if jobs == 1 or len(cases) <= 1:
+    case_results_by_format: dict[str, dict[str, bool]] = {
+        fmt: {} for fmt in args.formats
+    }
+    if jobs == 1 or len(cases) <= 1:
+        for fmt in args.formats:
             for case in cases:
                 _case_name, matched = compare_case(
                     dot_bin,
@@ -189,14 +191,13 @@ def main() -> int:
                     case,
                     args.write_diff,
                 )
-                if matched:
-                    continue
-                mismatches.append(case)
-        else:
-            case_results: dict[str, bool] = {}
-            with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
-                futures = [
-                    executor.submit(
+                case_results_by_format[fmt][case] = matched
+    else:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures: dict[concurrent.futures.Future[tuple[str, bool]], tuple[str, str]] = {}
+            for fmt in args.formats:
+                for case in cases:
+                    future = executor.submit(
                         compare_case,
                         dot_bin,
                         repo_root,
@@ -204,15 +205,17 @@ def main() -> int:
                         case,
                         args.write_diff,
                     )
-                    for case in cases
-                ]
-                for future in concurrent.futures.as_completed(futures):
-                    case_name, matched = future.result()
-                    case_results[case_name] = matched
-            for case in cases:
-                if case_results.get(case, True):
-                    continue
-                mismatches.append(case)
+                    futures[future] = (fmt, case)
+            for future in concurrent.futures.as_completed(futures):
+                fmt, case = futures[future]
+                _case_name, matched = future.result()
+                case_results_by_format[fmt][case] = matched
+    for fmt in args.formats:
+        mismatches: list[str] = []
+        for case in cases:
+            if case_results_by_format[fmt].get(case, True):
+                continue
+            mismatches.append(case)
         print(f"format={fmt} total={len(cases)} mismatches={len(mismatches)}")
         if mismatches:
             has_failures = True
