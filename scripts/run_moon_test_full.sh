@@ -12,6 +12,7 @@ capture_jobs="${CAPTURE_ENV_INVARIANCE_JOBS:-${moon_jobs}}"
 cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
 emit_timing="${LOCAL_GUARD_TIMING:-0}"
 use_frozen="${LOCAL_GUARD_FROZEN:-1}"
+sanitize_dot_env="${LOCAL_GUARD_SANITIZE_DOT_ENV:-1}"
 script_args=("$@")
 has_cached_modules=0
 if [[ -f "${repo_root}/.mooncakes/moonbitlang/x/moon.mod.json" ]]; then
@@ -63,6 +64,17 @@ run_moon_build_dot_command() {
   "${cmd[@]}"
 }
 
+sanitize_dot_runtime_env() {
+  if [[ "${sanitize_dot_env}" != "1" ]]; then
+    return
+  fi
+  while IFS='=' read -r key _; do
+    if [[ "${key}" == DOT_* ]]; then
+      unset "${key}"
+    fi
+  done < <(env)
+}
+
 if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
   -z "${MOON_CC:-}" &&
   -x "${cc_wrapper}" ]]; then
@@ -78,6 +90,7 @@ if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
 fi
 
 cd "${repo_root}"
+sanitize_dot_runtime_env
 DOT_RUN_FULL_PARITY_TESTS=1 run_step "moon test" run_moon_test_command
 
 run_step "check snapshot inputs" scripts/check_snapshot_input_candidates.py
