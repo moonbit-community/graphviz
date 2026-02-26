@@ -98,7 +98,26 @@ if [[ -e "${repo_root}/refs/graphviz/.git" || -d "${repo_root}/refs/graphviz/obj
     refs/graphviz
   )
 fi
-run_guard_step "submodule update" env GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/null
+should_sync_submodule=true
+if [[ "${LOCAL_GUARD_SUBMODULE_CHECK:-1}" == "1" ]]; then
+  expected_submodule_commit=$(git -C "${worktree_path}" rev-parse HEAD:refs/graphviz 2>/dev/null || true)
+  current_submodule_commit=""
+  if [[ -n "${expected_submodule_commit}" && -e "${worktree_path}/refs/graphviz/.git" ]]; then
+    current_submodule_commit=$(git -C "${worktree_path}/refs/graphviz" rev-parse HEAD 2>/dev/null || true)
+  fi
+  if [[ -n "${expected_submodule_commit}" &&
+    "${expected_submodule_commit}" == "${current_submodule_commit}" ]]; then
+    should_sync_submodule=false
+  fi
+fi
+
+if [[ "${should_sync_submodule}" == "true" ]]; then
+  run_guard_step "submodule update" env GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/null
+else
+  if [[ "${emit_timing}" == "1" ]]; then
+    echo "[local-guard] submodule update: 0s (up-to-date)"
+  fi
+fi
 
 run_guard_step "run moon test full" run_moon_test_full_in_worktree
 
