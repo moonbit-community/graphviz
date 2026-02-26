@@ -1,5 +1,6 @@
 {
   "import": [
-    "moonbit-community/graphviz/geom"
+    "moonbit-community/graphviz/geom",
+    "moonbitlang/core/math"
   ]
 }

@@ -1731,18 +1731,6 @@ fn mdiamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
 }
 
 ///|
-fn diamond_points(rect : @geom.Rect) -> Array[@geom.Point] {
-  let cx = (rect.llx + rect.urx) / 2.0
-  let cy = (rect.lly + rect.ury) / 2.0
-  [
-    { x: cx, y: rect.ury },
-    { x: rect.urx, y: cy },
-    { x: cx, y: rect.lly },
-    { x: rect.llx, y: cy },
-  ]
-}
-
-///|
 fn outline_rect_points(rect : @geom.Rect) -> Array[@geom.Point] {
   [
     { x: rect.llx, y: rect.lly },
@@ -3367,115 +3355,6 @@ fn record_layout_nodes(
 }
 
 ///|
-fn write_record_separators(
-  sb : StringBuilder,
-  layouts : Array[RecordLayout],
-  orientation : RecordOrientation,
-  rect : @geom.Rect,
-  stroke : String,
-  stroke_dash : String,
-  bbox : @geom.Rect,
-  indent : String,
-  pretty : Bool,
-) -> Unit {
-  if layouts.length() > 1 {
-    match orientation {
-      RecordOrientation::Vertical => {
-        let x1 = svg_x(rect.llx, bbox.llx)
-        let x2 = svg_x(rect.urx, bbox.llx)
-        let x1_text = format_double(x1)
-        let x2_text = format_double(x2)
-        for i in 1..<layouts.length() {
-          let line_y = svg_y(layouts[i].rect.ury, bbox.lly)
-          let line_y_text = format_double(line_y)
-          write_line(
-            sb,
-            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{x1_text},\{line_y_text} \{x2_text},\{line_y_text}\"/>",
-            indent,
-            pretty,
-          )
-        }
-      }
-      RecordOrientation::Horizontal => {
-        let y1 = svg_y(rect.lly, bbox.lly)
-        let y2 = svg_y(rect.ury, bbox.lly)
-        let y1_text = format_double(y1)
-        let y2_text = format_double(y2)
-        for i in 1..<layouts.length() {
-          let line_x = svg_x(layouts[i].rect.llx, bbox.llx)
-          let line_x_text = format_double(line_x)
-          write_line(
-            sb,
-            "<polyline fill=\"none\" stroke=\"\{stroke}\"\{stroke_dash} points=\"\{line_x_text},\{y1_text} \{line_x_text},\{y2_text}\"/>",
-            indent,
-            pretty,
-          )
-        }
-      }
-    }
-  }
-  for layout in layouts {
-    match layout.node {
-      RecordNode::Group(_) =>
-        write_record_separators(
-          sb,
-          layout.children,
-          toggle_record_orientation(orientation),
-          layout.rect,
-          stroke,
-          stroke_dash,
-          bbox,
-          indent,
-          pretty,
-        )
-      _ => ()
-    }
-  }
-}
-
-///|
-fn write_record_labels(
-  sb : StringBuilder,
-  layouts : Array[RecordLayout],
-  name : String,
-  font : String,
-  size : Double,
-  color : String,
-  bbox : @geom.Rect,
-  indent : String,
-  pretty : Bool,
-) -> Unit {
-  for layout in layouts {
-    match layout.node {
-      RecordNode::Field(field) => {
-        let text = resolve_label(field.text, name)
-        if text != "" {
-          let center = @geom.Point::{
-            x: (layout.rect.llx + layout.rect.urx) / 2.0,
-            y: (layout.rect.lly + layout.rect.ury) / 2.0,
-          }
-          write_record_label_lines(
-            sb, text, font, size, color, center, bbox, indent, pretty,
-          )
-        }
-      }
-      RecordNode::Group(_) =>
-        write_record_labels(
-          sb,
-          layout.children,
-          name,
-          font,
-          size,
-          color,
-          bbox,
-          indent,
-          pretty,
-        )
-    }
-  }
-}
-
-///|
 fn write_record_field_lines(
   sb : StringBuilder,
   text : String,
@@ -4553,59 +4432,6 @@ fn write_label_lines(
   }
   let font_attrs = svg_text_font_attrs(font)
   let (lines, max_width, total_height) = label_metrics(text, font, size)
-  let mut baseline = pos.y + total_height / 2.0 - size
-  for line in lines {
-    let line_x = match line.align {
-      @render.TextAlign::Left => pos.x - max_width / 2.0
-      @render.TextAlign::Right => pos.x + max_width / 2.0
-      @render.TextAlign::Center => pos.x
-    }
-    let line_y = baseline + line.yoffset_centerline
-    if line.text != "" {
-      let anchor = match line.align {
-        @render.TextAlign::Left => "start"
-        @render.TextAlign::Right => "end"
-        @render.TextAlign::Center => "middle"
-      }
-      let x = svg_x(line_x, bbox.llx)
-      let y = svg_y(line_y, bbox.lly)
-      let x_text = format_double(x)
-      let y_text = format_double(y)
-      let size_text = format_double_fixed(size, 2)
-      let escaped = escape_xml_text_with_dash(line.text)
-      let fill_attr = if color == "black" {
-        ""
-      } else {
-        " fill=\"\{color}\""
-      }
-      write_line(
-        sb,
-        "<text xml:space=\"preserve\" text-anchor=\"\{anchor}\" x=\"\{x_text}\" y=\"\{y_text}\"\{font_attrs} font-size=\"\{size_text}\"\{fill_attr}>\{escaped}</text>",
-        indent,
-        pretty,
-      )
-    }
-    baseline = baseline - line.height_pt
-  }
-}
-
-///|
-fn write_record_label_lines(
-  sb : StringBuilder,
-  text : String,
-  font : String,
-  size : Double,
-  color : String,
-  pos : @geom.Point,
-  bbox : @geom.Rect,
-  indent : String,
-  pretty : Bool,
-) -> Unit {
-  if text == "" {
-    return ()
-  }
-  let font_attrs = svg_text_font_attrs(font)
-  let (lines, max_width, total_height) = record_label_metrics(text, font, size)
   let mut baseline = pos.y + total_height / 2.0 - size
   for line in lines {
     let line_x = match line.align {

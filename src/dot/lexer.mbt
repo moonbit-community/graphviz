@@ -161,7 +161,7 @@ fn Lexer::read_quoted_string(self : Lexer) -> String raise DotParseError {
       Some(value) if value == b'"' => {
         let end_index = self.index
         self.advance()
-        let view = self.bytes.sub(start=start_index, end=end_index)
+        let view = self.bytes[start_index:end_index]
         return decode_bytes(view)
       }
       Some(value) if value == b'\\' => {
@@ -198,7 +198,7 @@ fn Lexer::read_html(self : Lexer) -> String raise DotParseError {
           depth = depth - 1
           if depth == 0 {
             let end_index = self.index
-            let view = self.bytes.sub(start=start_index, end=end_index)
+            let view = self.bytes[start_index:end_index]
             return decode_bytes(view)
           }
         }
@@ -214,7 +214,7 @@ fn Lexer::read_id(self : Lexer) -> String {
   while self.peek_byte() is Some(ch) && is_id_byte(ch) {
     self.advance()
   }
-  let view = self.bytes.sub(start=start, end=self.index)
+  let view = self.bytes[start:self.index]
   decode_bytes(view)
 }
 

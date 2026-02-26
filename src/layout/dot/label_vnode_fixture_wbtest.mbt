@@ -253,7 +253,7 @@ fn collect_label_vnode_actuals(
 ///|
 fn collect_flat_label_node_actuals(
   graph : @cgraph.Graph,
-) -> Array[FlatLabelNodeActual] raise {
+) -> Array[FlatLabelNodeActual] {
   let nodes = graph.nodes()
   let edges = graph.edges()
   let has_edge_labels = graph_has_edge_labels(edges)

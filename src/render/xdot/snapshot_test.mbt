@@ -9,55 +9,6 @@ fn attr_map(attrs : Array[(String, String)]) -> Map[String, String] {
 }
 
 ///|
-fn port_key(port : @cgraph.Port?) -> String {
-  match port {
-    None => ""
-    Some(value) => {
-      let mut out = ""
-      match value.name {
-        Some(name) => out = name
-        None => ()
-      }
-      match value.compass {
-        Some(compass) => {
-          let label = match compass {
-            @cgraph.Compass::N => "n"
-            @cgraph.Compass::NE => "ne"
-            @cgraph.Compass::E => "e"
-            @cgraph.Compass::SE => "se"
-            @cgraph.Compass::S => "s"
-            @cgraph.Compass::SW => "sw"
-            @cgraph.Compass::W => "w"
-            @cgraph.Compass::NW => "nw"
-            @cgraph.Compass::C => "c"
-          }
-          if out == "" {
-            out = label
-          } else {
-            out = "\{out}:\{label}"
-          }
-        }
-        None => ()
-      }
-      out
-    }
-  }
-}
-
-///|
-fn edge_key(edge : @cgraph.Edge) -> String {
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  let name = match edge.name() {
-    Some(value) => value
-    None => ""
-  }
-  let tail_port = port_key(edge.tail_port())
-  let head_port = port_key(edge.head_port())
-  "\{tail}|\{head}|\{name}|\{tail_port}|\{head_port}"
-}
-
-///|
 fn is_size_attr(name : String) -> Bool {
   match name {
     "width" | "height" | "lwidth" | "lheight" | "rects" => true
@@ -514,41 +465,6 @@ fn compare_nodes(
 }
 
 ///|
-fn compare_edges(
-  expected : @cgraph.Graph,
-  actual : @cgraph.Graph,
-  tol : Double,
-  rankdir : String,
-  skip_clustered : Bool,
-) -> Unit raise {
-  let expected_edges = expected.edges()
-  let actual_edges = actual.edges()
-  assert_eq(expected_edges.length(), actual_edges.length())
-  let expected_map : Map[String, @cgraph.Edge] = Map::new()
-  for edge in expected_edges {
-    expected_map[edge_key(edge)] = edge
-  }
-  let actual_map : Map[String, @cgraph.Edge] = Map::new()
-  for edge in actual_edges {
-    actual_map[edge_key(edge)] = edge
-  }
-  for key, expected_edge in expected_map {
-    match actual_map.get(key) {
-      Some(actual_edge) =>
-        compare_attrs(
-          expected_edge.attrs(),
-          actual_edge.attrs(),
-          tol,
-          rankdir,
-          skip_clustered,
-          false,
-        )
-      None => fail("missing edge \{key}")
-    }
-  }
-}
-
-///|
 fn compare_subgraphs(
   expected : @cgraph.Graph,
   actual : @cgraph.Graph,
@@ -566,68 +482,6 @@ fn compare_subgraphs(
       rankdir,
     )
   }
-}
-
-///|
-fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
-  match graph.name() {
-    Some(name) => name.has_prefix("cluster")
-    None => false
-  }
-}
-
-///|
-fn graph_rankdir(graph : @cgraph.Graph) -> String {
-  match graph.get_attr("rankdir") {
-    Some(value) => value.to_lower()
-    None => "tb"
-  }
-}
-
-///|
-fn compare_graph(
-  expected : @cgraph.Graph,
-  actual : @cgraph.Graph,
-  tol : Double,
-) -> Unit raise {
-  let rankdir = graph_rankdir(expected)
-  let skip_clustered = expected.subgraphs().length() > 0 ||
-    is_cluster_graph(expected)
-  compare_attrs(
-    expected.attrs(),
-    actual.attrs(),
-    tol,
-    rankdir,
-    skip_clustered,
-    false,
-  )
-  compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Graph),
-    actual.default_attrs(@cgraph.AttrKind::Graph),
-    tol,
-    rankdir,
-    skip_clustered,
-    false,
-  )
-  compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Node),
-    actual.default_attrs(@cgraph.AttrKind::Node),
-    tol,
-    rankdir,
-    skip_clustered,
-    false,
-  )
-  compare_attrs(
-    expected.default_attrs(@cgraph.AttrKind::Edge),
-    actual.default_attrs(@cgraph.AttrKind::Edge),
-    tol,
-    rankdir,
-    skip_clustered,
-    false,
-  )
-  compare_nodes(expected, actual, tol, rankdir, skip_clustered)
-  compare_edges(expected, actual, tol, rankdir, skip_clustered)
-  compare_subgraphs(expected, actual, tol, rankdir)
 }
 
 ///|
