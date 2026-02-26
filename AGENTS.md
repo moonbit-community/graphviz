@@ -19,6 +19,11 @@ scripts/run_local_guard.sh
 - strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)
 - `DOT_CAPTURE_ORDERING_INPUTS` env-invariance (`dot` / `xdot` / `svg`) on `tests/capture_env_invariant_cases.txt`
 
+Performance/reliability mode:
+
+- guard reuses `_build/local_guard/worktree/_build` between runs for faster iterative refactors
+- set `LOCAL_GUARD_PRISTINE=1` to force a fully clean worktree build when needed
+
 If the guard fails:
 
 - do **not** commit
