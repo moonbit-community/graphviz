@@ -1,0 +1,55 @@
+digraph {
+	graph [bb="0,0,268.66,540"];
+	node [label="\N"];
+	1	[fontname="AvantGarde-Book",
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"AvantGarde-Book"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,486",
+		shape=box,
+		width=3.7314];
+	2	[fontname="AvantGarde-BookOblique",
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"AvantGarde-BookOblique"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,342",
+		shape=box,
+		width=3.7314];
+	1 -> 2	[pos="e,134.33,396.11 134.33,431.72 134.33,423.8 134.33,415.57 134.33,407.46"];
+	3	[fontname="AvantGarde-Demi",
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"AvantGarde-Demi"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,198",
+		shape=box,
+		width=3.7314];
+	2 -> 3	[pos="e,134.33,252.11 134.33,287.72 134.33,279.8 134.33,271.57 134.33,263.46"];
+	4	[fontname="AvantGarde-DemiOblique",
+		height=1.5,
+		label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+	<TR><TD>"AvantGarde-DemiOblique"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ"</TD></TR>
+	<TR><TD>"abcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	<TR><TD>"ABCDEFGHIJLKLMNOPQRSTUVWXYZ\nabcdefghijlklmnopqrstuvwxyz"</TD></TR>
+	</TABLE>>,
+		margin="0,0",
+		pos="134.33,54",
+		shape=box,
+		width=3.7314];
+	3 -> 4	[pos="e,134.33,108.11 134.33,143.72 134.33,135.8 134.33,127.57 134.33,119.46"];
+}
