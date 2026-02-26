@@ -22,7 +22,7 @@ scripts/run_local_guard.sh
 
 Performance/reliability mode:
 
-- guard reuses `_build/local_guard/worktree/_build` between runs for faster iterative refactors
+- guard reuses `_build/local_guard/worktree/_build`, `.mooncakes`, and `refs/graphviz` between runs for faster iterative refactors
 - set `LOCAL_GUARD_PRISTINE=1` to force a fully clean worktree build when needed
 - guard uses `git -c core.hooksPath=/dev/null` for worktree sync to avoid local hook noise/interference
 - guard defaults to `scripts/moon_cc_wrapper.sh` to suppress known generated-C `exit` redeclaration noise (disable via `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING=0`)

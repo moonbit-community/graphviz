@@ -44,8 +44,11 @@ else
   if [[ "${LOCAL_GUARD_PRISTINE:-0}" == "1" ]]; then
     git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd >/dev/null
   else
-    # Keep _build cache between guard runs for faster iterative refactors.
-    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd -e _build/ >/dev/null
+    # Keep heavy caches between guard runs for faster iterative refactors.
+    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd \
+      -e _build/ \
+      -e .mooncakes/ \
+      -e refs/graphviz/ >/dev/null
   fi
 fi
 
