@@ -13,6 +13,10 @@ cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
 emit_timing="${LOCAL_GUARD_TIMING:-0}"
 use_frozen="${LOCAL_GUARD_FROZEN:-1}"
 script_args=("$@")
+has_cached_modules=0
+if [[ -f "${repo_root}/.mooncakes/moonbitlang/x/moon.mod.json" ]]; then
+  has_cached_modules=1
+fi
 
 run_step() {
   local label="$1"
@@ -29,7 +33,7 @@ run_step() {
 
 run_moon_test_command() {
   local cmd=(moon test --target native --release --deny-warn -j "${moon_jobs}")
-  if [[ "${use_frozen}" == "1" ]]; then
+  if [[ "${use_frozen}" == "1" && "${has_cached_modules}" == "1" ]]; then
     if [[ ${#script_args[@]} -gt 0 ]]; then
       if "${cmd[@]}" --frozen "${script_args[@]}"; then
         return
@@ -50,7 +54,7 @@ run_moon_test_command() {
 
 run_moon_build_dot_command() {
   local cmd=(moon build src/cmd/dot --target native --release -j "${moon_jobs}")
-  if [[ "${use_frozen}" == "1" ]]; then
+  if [[ "${use_frozen}" == "1" && "${has_cached_modules}" == "1" ]]; then
     if "${cmd[@]}" --frozen; then
       return
     fi
