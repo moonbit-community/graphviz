@@ -33,6 +33,7 @@ Performance/reliability mode:
 - set `CAPTURE_ENV_INVARIANCE_JOBS` to tune env-invariance checker parallelism (defaults to `MOON_TEST_JOBS`)
 - guard uses `git -c core.hooksPath=/dev/null` for worktree sync to avoid local hook noise/interference
 - guard defaults to `scripts/moon_cc_wrapper.sh` to suppress known generated-C `exit` redeclaration noise (disable via `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING=0`)
+- `scripts/run_local_guard.sh` is intentionally argument-free; tune behavior via `LOCAL_GUARD_*` env vars
 
 If the guard fails:
 
