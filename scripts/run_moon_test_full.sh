@@ -9,6 +9,7 @@ default_jobs=$(
 )
 moon_jobs="${MOON_TEST_JOBS:-${default_jobs}}"
 capture_jobs="${CAPTURE_ENV_INVARIANCE_JOBS:-${moon_jobs}}"
+strict_parity_jobs="${STRICT_PARITY_JOBS:-${moon_jobs}}"
 cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
 emit_timing="${LOCAL_GUARD_TIMING:-0}"
 use_frozen="${LOCAL_GUARD_FROZEN:-1}"
@@ -60,6 +61,13 @@ run_moon_build_dot_command() {
     moon build src/cmd/dot --target native --release -j "${moon_jobs}"
 }
 
+run_strict_parity_command() {
+  scripts/check_strict_parity.py \
+    --dot-bin "${dot_bin}" \
+    --formats dot xdot svg \
+    --jobs "${strict_parity_jobs}"
+}
+
 sanitize_dot_runtime_env() {
   if [[ "${sanitize_dot_env}" != "1" ]]; then
     return
@@ -90,13 +98,15 @@ fi
 
 cd "${repo_root}"
 sanitize_dot_runtime_env
-DOT_RUN_FULL_PARITY_TESTS=1 run_step "moon test" run_moon_test_command
+run_step "moon test" run_moon_test_command
 
 run_step "check snapshot inputs" scripts/check_snapshot_input_candidates.py
 run_step "check strict parity lists" scripts/check_strict_parity_case_lists.py
 
 run_step "moon build dot" run_moon_build_dot_command
 dot_bin="_build/native/release/build/cmd/dot/dot.exe"
+
+run_step "check strict parity" run_strict_parity_command
 
 run_step "capture env invariance" scripts/check_capture_env_invariance.py \
   --dot-bin "${dot_bin}" \

@@ -13,9 +13,9 @@ scripts/run_local_guard.sh
 `scripts/run_local_guard.sh` validates:
 
 - full release MoonBit test suite via `scripts/run_moon_test_full.sh`
-  - runs `moon test --target native --release --deny-warn` with `DOT_RUN_FULL_PARITY_TESTS=1`
+  - runs `moon test --target native --release --deny-warn`
   - default parallelism auto-detects CPU count (override via `MOON_TEST_JOBS`)
-  - includes full snapshot/parity coverage for `dot` / `xdot` / `svg`
+  - runs strict full-corpus parity via `scripts/check_strict_parity.py` (`dot` / `xdot` / `svg`) against the release `dot.exe`
 - snapshot-input candidate alignment (`scripts/check_snapshot_input_candidates.py`)
 - strict parity case-list invariants (`scripts/check_strict_parity_case_lists.py`)
 - `DOT_CAPTURE_ORDERING_INPUTS` env-invariance (`dot` / `xdot` / `svg`) on `tests/capture_env_invariant_cases.txt`
@@ -27,11 +27,12 @@ Performance/reliability mode:
 - set `LOCAL_GUARD_TIMING=1` to print per-step guard timing breakdown
 - guard caches last successful result by staged tree hash + `moon --version`; use `LOCAL_GUARD_FORCE=1` to bypass cache
 - cache auto-bypasses when `LOCAL_GUARD_PRISTINE=1` or `LOCAL_GUARD_TIMING=1`; set `LOCAL_GUARD_CACHE=0` to disable cache globally
-- cache key also includes guard tuning env overrides (`LOCAL_GUARD_FROZEN`, `LOCAL_GUARD_SUBMODULE_CHECK`, `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING`, `LOCAL_GUARD_SANITIZE_DOT_ENV`, `MOON_TEST_JOBS`, `CAPTURE_ENV_INVARIANCE_JOBS`, `DOT_WRITE_PARITY_ARTIFACTS`)
+- cache key also includes guard tuning env overrides (`LOCAL_GUARD_FROZEN`, `LOCAL_GUARD_SUBMODULE_CHECK`, `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING`, `LOCAL_GUARD_SANITIZE_DOT_ENV`, `MOON_TEST_JOBS`, `STRICT_PARITY_JOBS`, `CAPTURE_ENV_INVARIANCE_JOBS`, `DOT_WRITE_PARITY_ARTIFACTS`)
 - guard skips `git submodule update` when worktree `refs/graphviz` already matches staged gitlink (set `LOCAL_GUARD_SUBMODULE_CHECK=0` to always sync)
 - guard defaults to `--frozen` for moon commands when `.mooncakes` deps are available, and auto-falls back to non-frozen on failure (set `LOCAL_GUARD_FROZEN=0` to disable)
 - guard clears ambient `DOT_*` env vars before running checks (except `DOT_WRITE_PARITY_ARTIFACTS`; set `LOCAL_GUARD_SANITIZE_DOT_ENV=0` to keep caller DOT env)
 - parity tests only persist snapshot artifacts for mismatches by default; set `DOT_WRITE_PARITY_ARTIFACTS=1` to force writing all parity outputs under `target/render/*`
+- set `STRICT_PARITY_JOBS` to tune full-corpus strict parity checker parallelism (defaults to `MOON_TEST_JOBS`)
 - set `CAPTURE_ENV_INVARIANCE_JOBS` to tune env-invariance checker parallelism (defaults to `MOON_TEST_JOBS`)
 - guard uses `git -c core.hooksPath=/dev/null` for worktree sync to avoid local hook noise/interference
 - guard defaults to `scripts/moon_cc_wrapper.sh` to suppress known generated-C `exit` redeclaration noise (disable via `LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING=0`)

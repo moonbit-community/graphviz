@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import difflib
 import json
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -45,6 +47,7 @@ FORMAT_CONFIG = {
 
 
 def parse_args() -> argparse.Namespace:
+    default_jobs = max(1, min(8, os.cpu_count() or 1))
     parser = argparse.ArgumentParser(
         description="Strict byte-level parity checker for dot/xdot/svg fixtures.",
     )
@@ -99,6 +102,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Optional JSON report path for CI/debugging.",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=default_jobs,
+        help=f"Parallel case workers per format (default: {default_jobs}).",
     )
     return parser.parse_args()
 
@@ -215,6 +224,36 @@ def run_case(dot_bin: Path, fmt: str, input_path: Path, repo_root: Path) -> byte
     return proc.stdout
 
 
+def compare_case(
+    repo_root: Path,
+    dot_bin: Path,
+    fmt: str,
+    case_name: str,
+    write_actual: bool,
+    write_diff: bool,
+) -> tuple[str, bool, dict[str, object] | None]:
+    input_path = resolve_input_path(repo_root, case_name)
+    expected_path = fixture_path(repo_root, fmt, case_name)
+    expected = expected_path.read_bytes()
+    actual = run_case(dot_bin, fmt, input_path, repo_root)
+    if actual == expected:
+        return case_name, True, None
+    artifact_entry: dict[str, object] = {"case": case_name}
+    if write_actual:
+        actual_path = maybe_write_actual(repo_root, fmt, case_name, actual)
+        artifact_entry["actual_path"] = display_path(actual_path, repo_root)
+    if write_diff:
+        diff_path = maybe_write_diff(
+            repo_root,
+            fmt,
+            case_name,
+            expected,
+            actual,
+        )
+        artifact_entry["diff_path"] = display_path(diff_path, repo_root)
+    return case_name, False, artifact_entry
+
+
 def ensure_dot_bin(args: argparse.Namespace) -> Path:
     repo_root = args.repo_root.resolve()
     default_bin = repo_root / "_build/native/debug/build/cmd/dot/dot.exe"
@@ -315,6 +354,7 @@ def main() -> int:
         validate_manifest_alignment(repo_root, args.formats)
 
     had_mismatch = False
+    jobs = max(1, args.jobs)
     report_entries: list[dict[str, object]] = []
     for fmt in args.formats:
         config = FORMAT_CONFIG[fmt]
@@ -332,28 +372,50 @@ def main() -> int:
         else:
             validate_fixture_coverage(repo_root, fmt, case_names)
 
+        per_case_results: dict[str, tuple[bool, dict[str, object] | None]] = {}
+        if jobs == 1 or len(case_names) <= 1:
+            for case_name in case_names:
+                _case_name, matched, artifact_entry = compare_case(
+                    repo_root,
+                    dot_bin,
+                    fmt,
+                    case_name,
+                    args.write_actual,
+                    args.write_diff,
+                )
+                per_case_results[case_name] = (matched, artifact_entry)
+        else:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+                futures: dict[concurrent.futures.Future[tuple[str, bool, dict[str, object] | None]], str] = {}
+                for case_name in case_names:
+                    future = executor.submit(
+                        compare_case,
+                        repo_root,
+                        dot_bin,
+                        fmt,
+                        case_name,
+                        args.write_actual,
+                        args.write_diff,
+                    )
+                    futures[future] = case_name
+                for future in concurrent.futures.as_completed(futures):
+                    case_name = futures[future]
+                    try:
+                        _case_name, matched, artifact_entry = future.result()
+                    except Exception as exc:  # pragma: no cover - surfaced in CLI
+                        raise RuntimeError(
+                            f"strict parity check failed for {fmt} case {case_name}"
+                        ) from exc
+                    per_case_results[case_name] = (matched, artifact_entry)
+
         mismatches: list[str] = []
         mismatch_artifacts: list[dict[str, object]] = []
         for case_name in case_names:
-            input_path = resolve_input_path(repo_root, case_name)
-            expected_path = fixture_path(repo_root, fmt, case_name)
-            expected = expected_path.read_bytes()
-            actual = run_case(dot_bin, fmt, input_path, repo_root)
-            if actual != expected:
-                mismatches.append(case_name)
-                artifact_entry: dict[str, object] = {"case": case_name}
-                if args.write_actual:
-                    actual_path = maybe_write_actual(repo_root, fmt, case_name, actual)
-                    artifact_entry["actual_path"] = display_path(actual_path, repo_root)
-                if args.write_diff:
-                    diff_path = maybe_write_diff(
-                        repo_root,
-                        fmt,
-                        case_name,
-                        expected,
-                        actual,
-                    )
-                    artifact_entry["diff_path"] = display_path(diff_path, repo_root)
+            matched, artifact_entry = per_case_results.get(case_name, (True, None))
+            if matched:
+                continue
+            mismatches.append(case_name)
+            if artifact_entry is not None:
                 mismatch_artifacts.append(artifact_entry)
 
         print(f"format={fmt} total={len(case_names)} mismatches={len(mismatches)}")
