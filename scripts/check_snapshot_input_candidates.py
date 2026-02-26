@@ -82,6 +82,26 @@ def ensure_file_contains(path: Path, snippet: str) -> None:
         raise ValueError(f"{path}: missing required snippet: {snippet}")
 
 
+def ensure_imported_names(path: Path, module: str, required_names: list[str]) -> None:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    imported_names: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.module != module:
+            continue
+        for name in node.names:
+            imported_names.add(name.name)
+    missing = [name for name in required_names if name not in imported_names]
+    if missing:
+        imported_repr = ",".join(sorted(imported_names)) or "(none)"
+        missing_repr = ",".join(missing)
+        raise ValueError(
+            f"{path}: missing import(s) from {module}: {missing_repr}; "
+            f"imported={imported_repr}",
+        )
+
+
 def format_mismatch(reference: list[str], current: list[str]) -> str:
     ref_set = set(reference)
     cur_set = set(current)
@@ -111,17 +131,20 @@ def main() -> int:
     canonical_path = repo_root / "scripts/snapshot_inputs.py"
     canonical = parse_python_string_list(canonical_path, "INPUT_CANDIDATES")
 
-    ensure_file_contains(
+    ensure_imported_names(
         repo_root / "scripts/check_strict_parity.py",
-        "from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path",
+        "snapshot_inputs",
+        ["INPUT_CANDIDATES", "resolve_input_path"],
     )
-    ensure_file_contains(
+    ensure_imported_names(
         repo_root / "scripts/check_capture_env_invariance.py",
-        "from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path",
+        "snapshot_inputs",
+        ["resolve_input_path"],
     )
-    ensure_file_contains(
+    ensure_imported_names(
         repo_root / "scripts/check_strict_parity_case_lists.py",
-        "from snapshot_inputs import INPUT_CANDIDATES as STRICT_PARITY_INPUT_CANDIDATES",
+        "snapshot_inputs",
+        ["INPUT_CANDIDATES"],
     )
     for script_name in (
         "generate_dot_snapshots.sh",

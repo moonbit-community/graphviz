@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from snapshot_inputs import INPUT_CANDIDATES, resolve_input_path
+from snapshot_inputs import resolve_input_path
 
 
 def parse_args() -> argparse.Namespace:
