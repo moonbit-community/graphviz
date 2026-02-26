@@ -175,14 +175,34 @@ fn build_edge_index_for_order(
   edge_head : Array[String],
   ranks : Map[String, Int],
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+  let node_names : Array[String] = []
+  for node in nodes {
+    node_names.push(node.name())
+  }
+  build_edge_index_for_order_names_internal(
+    node_names,
+    edge_tail,
+    edge_head,
+    ranks,
+    edges.length(),
+  )
+}
+
+///|
+fn build_edge_index_for_order_names_internal(
+  node_names : Array[String],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+  edge_count : Int,
+) -> (Map[String, Array[String]], Map[String, Array[String]]) {
   let parents : Map[String, Array[String]] = Map::new()
   let children : Map[String, Array[String]] = Map::new()
-  for node in nodes {
-    let name = node.name()
+  for name in node_names {
     parents[name] = []
     children[name] = []
   }
-  for edge_idx in 0..<edges.length() {
+  for edge_idx in 0..<edge_count {
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     let tail_rank = match ranks.get(tail) {
@@ -215,36 +235,13 @@ fn build_edge_index_for_order_names(
   edge_head : Array[String],
   ranks : Map[String, Int],
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
-  let parents : Map[String, Array[String]] = Map::new()
-  let children : Map[String, Array[String]] = Map::new()
-  for name in node_names {
-    parents[name] = []
-    children[name] = []
-  }
-  for edge_idx in 0..<edge_tail.length() {
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    let tail_rank = match ranks.get(tail) {
-      Some(value) => value
-      None => 0
-    }
-    let head_rank = match ranks.get(head) {
-      Some(value) => value
-      None => 0
-    }
-    if tail_rank == head_rank {
-      continue
-    }
-    match parents.get(head) {
-      Some(list) => list.push(tail)
-      None => parents[head] = [tail]
-    }
-    match children.get(tail) {
-      Some(list) => list.push(head)
-      None => children[tail] = [head]
-    }
-  }
-  (parents, children)
+  build_edge_index_for_order_names_internal(
+    node_names,
+    edge_tail,
+    edge_head,
+    ranks,
+    edge_tail.length(),
+  )
 }
 
 ///|
