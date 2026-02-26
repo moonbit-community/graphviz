@@ -1397,6 +1397,22 @@ fn flat_parallel_group_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
+fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
+  match edge.get_attr(name) {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
+  match edge.get_attr(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 fn collect_flat_adjacent_simple_beziers(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
@@ -1414,13 +1430,9 @@ fn collect_flat_adjacent_simple_beziers(
     if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
       continue
     }
-    match edge.get_attr("samehead") {
-      Some(value) => if value != "" { continue }
-      None => ()
-    }
-    match edge.get_attr("sametail") {
-      Some(value) => if value != "" { continue }
-      None => ()
+    if edge_attr_non_empty(edge, "samehead") ||
+      edge_attr_non_empty(edge, "sametail") {
+      continue
     }
     let tail_rank = match ranks.get(edge.tail().name()) {
       Some(value) => value
@@ -3636,14 +3648,8 @@ fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
 ) -> (Bool, Bool) {
-  let samehead_direct = match edge.get_attr("samehead") {
-    Some(value) => value != ""
-    None => false
-  }
-  let sametail_direct = match edge.get_attr("sametail") {
-    Some(value) => value != ""
-    None => false
-  }
+  let samehead_direct = edge_attr_non_empty(edge, "samehead")
+  let sametail_direct = edge_attr_non_empty(edge, "sametail")
   if swap_ends {
     (samehead_direct, sametail_direct)
   } else {
@@ -4067,14 +4073,8 @@ fn graphviz_route_edge_cmp(
     return graph_cmp
   }
   if type_a == ROUTE_EDGE_FLAT {
-    let label_a = match a.get_attr("label") {
-      Some(value) => value
-      None => ""
-    }
-    let label_b = match b.get_attr("label") {
-      Some(value) => value
-      None => ""
-    }
+    let label_a = edge_attr_or_empty(a, "label")
+    let label_b = edge_attr_or_empty(b, "label")
     if label_a < label_b {
       return -1
     }
@@ -4493,48 +4493,46 @@ fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
 ) -> DotLayoutEdge {
-  let label_pos = match edge.get_attr("label") {
-    Some(value) => if value != "" { layout.label_pos } else { None }
-    None => None
-  }
-  let head_label_pos = match edge.get_attr("headlabel") {
-    Some(value) =>
-      if value != "" {
-        if layout.splines.length() == 0 {
-          layout.head_label_pos
-        } else {
-          let head_spline = layout.splines[layout.splines.length() - 1]
-          match edge_port_label_pos(edge, head_spline, true) {
-            Some(pos) => Some(pos)
-            None => layout.head_label_pos
-          }
-        }
+  let label_pos =
+    if edge_attr_non_empty(edge, "label") {
+      layout.label_pos
+    } else {
+      None
+    }
+  let head_label_pos =
+    if edge_attr_non_empty(edge, "headlabel") {
+      if layout.splines.length() == 0 {
+        layout.head_label_pos
       } else {
-        None
-      }
-    None => None
-  }
-  let tail_label_pos = match edge.get_attr("taillabel") {
-    Some(value) =>
-      if value != "" {
-        if layout.splines.length() == 0 {
-          layout.tail_label_pos
-        } else {
-          let tail_spline = layout.splines[0]
-          match edge_port_label_pos(edge, tail_spline, false) {
-            Some(pos) => Some(pos)
-            None => layout.tail_label_pos
-          }
+        let head_spline = layout.splines[layout.splines.length() - 1]
+        match edge_port_label_pos(edge, head_spline, true) {
+          Some(pos) => Some(pos)
+          None => layout.head_label_pos
         }
-      } else {
-        None
       }
-    None => None
-  }
-  let xlabel_pos = match edge.get_attr("xlabel") {
-    Some(value) => if value != "" { layout.xlabel_pos } else { None }
-    None => None
-  }
+    } else {
+      None
+    }
+  let tail_label_pos =
+    if edge_attr_non_empty(edge, "taillabel") {
+      if layout.splines.length() == 0 {
+        layout.tail_label_pos
+      } else {
+        let tail_spline = layout.splines[0]
+        match edge_port_label_pos(edge, tail_spline, false) {
+          Some(pos) => Some(pos)
+          None => layout.tail_label_pos
+        }
+      }
+    } else {
+      None
+    }
+  let xlabel_pos =
+    if edge_attr_non_empty(edge, "xlabel") {
+      layout.xlabel_pos
+    } else {
+      None
+    }
   {
     edge,
     splines: layout.splines,
@@ -4579,14 +4577,8 @@ fn remap_parallel_edge_layouts_for_graphviz(
     }
     let key = edge_parallel_group_key(edge)
     let sameport_mark =
-      match edge.get_attr("samehead") {
-        Some(value) => value != ""
-        None =>
-          match edge.get_attr("sametail") {
-            Some(value) => value != ""
-            None => false
-          }
-      }
+      edge_attr_non_empty(edge, "samehead") ||
+      edge_attr_non_empty(edge, "sametail")
     let dir_key = match edge.get_attr("dir") {
       Some(value) => value.to_lower()
       None => "forward"
