@@ -645,14 +645,23 @@ fn snapshot_cases_from_manifest(
 fn snapshot_matches(
   input_path : String,
   expected_path : String,
+  write_artifacts : Bool,
 ) -> Bool raise {
   let graph = @dot.parse_dot_file(input_path)
   let layout = @layout_dot.layout_dot(graph)
   let actual = render_xdot_bytes(layout)
-  let out_path = "target/render/xdot/\{snapshot_case_name(input_path)}.xdot"
-  @fs.write_bytes_to_file(out_path, actual)
   let expected = @fs.read_file_to_bytes(expected_path)
-  actual == expected
+  let matched = actual == expected
+  if write_artifacts || !matched {
+    if !write_artifacts {
+      ensure_dir("target")
+      ensure_dir("target/render")
+      ensure_dir("target/render/xdot")
+    }
+    let out_path = "target/render/xdot/\{snapshot_case_name(input_path)}.xdot"
+    @fs.write_bytes_to_file(out_path, actual)
+  }
+  matched
 }
 
 ///|
@@ -661,13 +670,21 @@ fn full_parity_tests_enabled() -> Bool {
 }
 
 ///|
+fn full_parity_artifacts_enabled() -> Bool {
+  @sys.get_env_var("DOT_WRITE_PARITY_ARTIFACTS") is Some(_)
+}
+
+///|
 test "xdot snapshot parity" {
   if !full_parity_tests_enabled() {
     return
   }
-  ensure_dir("target")
-  ensure_dir("target/render")
-  ensure_dir("target/render/xdot")
+  let write_artifacts = full_parity_artifacts_enabled()
+  if write_artifacts {
+    ensure_dir("target")
+    ensure_dir("target/render")
+    ensure_dir("target/render/xdot")
+  }
   let manifest_path = "tests/render/xdot/cases.txt"
   let fixture_dir = "tests/render/xdot"
   let mismatches : Array[String] = []
@@ -677,7 +694,7 @@ test "xdot snapshot parity" {
   }
   for pair in cases {
     let (input_path, expected_path) = pair
-    if !snapshot_matches(input_path, expected_path) {
+    if !snapshot_matches(input_path, expected_path, write_artifacts) {
       mismatches.push(input_path)
     }
   }

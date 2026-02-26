@@ -772,6 +772,11 @@ fn full_parity_tests_enabled() -> Bool {
 }
 
 ///|
+fn full_parity_artifacts_enabled() -> Bool {
+  @sys.get_env_var("DOT_WRITE_PARITY_ARTIFACTS") is Some(_)
+}
+
+///|
 test "svg snapshot parity" {
   if !full_parity_tests_enabled() {
     return
@@ -779,9 +784,12 @@ test "svg snapshot parity" {
   let out_dir = "target/render/svg"
   let manifest_path = "tests/render/svg_snapshot/cases.txt"
   let fixture_dir = "tests/render/svg_snapshot"
-  ensure_dir("target")
-  ensure_dir("target/render")
-  ensure_dir(out_dir)
+  let write_artifacts = full_parity_artifacts_enabled()
+  if write_artifacts {
+    ensure_dir("target")
+    ensure_dir("target/render")
+    ensure_dir(out_dir)
+  }
   let mismatches : Array[String] = []
   let case_names = validate_snapshot_manifest(manifest_path, fixture_dir, ".svg")
   for case_name in case_names {
@@ -791,10 +799,18 @@ test "svg snapshot parity" {
     let layout = @layout_dot.layout_dot(graph)
     let svg = render_svg(layout)
     let svg_bytes = @utf8.encode(svg, bom=false)
-    let out_path = "\{out_dir}/\{case_name}.svg"
-    @fs.write_bytes_to_file(out_path, svg_bytes)
     let fixture = @fs.read_file_to_bytes(fixture_path)
-    if svg_bytes != fixture {
+    let matched = svg_bytes == fixture
+    if write_artifacts || !matched {
+      if !write_artifacts {
+        ensure_dir("target")
+        ensure_dir("target/render")
+        ensure_dir(out_dir)
+      }
+      let out_path = "\{out_dir}/\{case_name}.svg"
+      @fs.write_bytes_to_file(out_path, svg_bytes)
+    }
+    if !matched {
       mismatches.push(input_path)
     }
   }

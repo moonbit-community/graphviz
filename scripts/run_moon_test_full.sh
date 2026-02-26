@@ -66,6 +66,9 @@ sanitize_dot_runtime_env() {
   fi
   while IFS='=' read -r key _; do
     if [[ "${key}" == DOT_* ]]; then
+      if [[ "${key}" == "DOT_WRITE_PARITY_ARTIFACTS" ]]; then
+        continue
+      fi
       unset "${key}"
     fi
   done < <(env)

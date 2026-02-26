@@ -8,7 +8,7 @@ guard_started_at=${SECONDS}
 guard_cache_dir="${repo_root}/_build/local_guard"
 guard_cache_key_file="${guard_cache_dir}/last_success_key.txt"
 cache_enabled="${LOCAL_GUARD_CACHE:-1}"
-guard_env_fingerprint="frozen=${LOCAL_GUARD_FROZEN-}|submodule_check=${LOCAL_GUARD_SUBMODULE_CHECK-}|suppress_cc_warn=${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING-}|sanitize_dot_env=${LOCAL_GUARD_SANITIZE_DOT_ENV-}|moon_jobs=${MOON_TEST_JOBS-}|capture_jobs=${CAPTURE_ENV_INVARIANCE_JOBS-}"
+guard_env_fingerprint="frozen=${LOCAL_GUARD_FROZEN-}|submodule_check=${LOCAL_GUARD_SUBMODULE_CHECK-}|suppress_cc_warn=${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING-}|sanitize_dot_env=${LOCAL_GUARD_SANITIZE_DOT_ENV-}|moon_jobs=${MOON_TEST_JOBS-}|capture_jobs=${CAPTURE_ENV_INVARIANCE_JOBS-}|write_parity_artifacts=${DOT_WRITE_PARITY_ARTIFACTS-}"
 
 if [[ $# -ne 0 ]]; then
   echo "scripts/run_local_guard.sh does not accept positional args" >&2
