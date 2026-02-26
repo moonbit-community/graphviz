@@ -60,6 +60,23 @@ pub fn layout_dot(
 }
 
 ///|
+fn set_edge_label_pos_if_present(
+  edge : @cgraph.Edge,
+  label_attr : String,
+  pos_attr : String,
+  pos : @geom.Point?,
+) -> Unit {
+  match pos {
+    Some(value) =>
+      match edge.get_attr(label_attr) {
+        Some(text) => if text != "" { edge.set_attr(pos_attr, format_point(value)) }
+        None => ()
+      }
+    None => ()
+  }
+}
+
+///|
 pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
   let arrow_is_none = (value : String?) => {
     match value {
@@ -167,38 +184,20 @@ pub fn DotLayoutGraph::apply(self : DotLayoutGraph) -> Unit {
     }
     let pos = segments.join(";")
     edge.set_attr("pos", pos)
-    match edge_layout.label_pos {
-      Some(pos) =>
-        match edge.get_attr("label") {
-          Some(value) => if value != "" { edge.set_attr("lp", format_point(pos)) }
-          None => ()
-        }
-      None => ()
-    }
-    match edge_layout.head_label_pos {
-      Some(pos) =>
-        match edge.get_attr("headlabel") {
-          Some(value) => if value != "" { edge.set_attr("head_lp", format_point(pos)) }
-          None => ()
-        }
-      None => ()
-    }
-    match edge_layout.tail_label_pos {
-      Some(pos) =>
-        match edge.get_attr("taillabel") {
-          Some(value) => if value != "" { edge.set_attr("tail_lp", format_point(pos)) }
-          None => ()
-        }
-      None => ()
-    }
-    match edge_layout.xlabel_pos {
-      Some(pos) =>
-        match edge.get_attr("xlabel") {
-          Some(value) => if value != "" { edge.set_attr("xlp", format_point(pos)) }
-          None => ()
-        }
-      None => ()
-    }
+    set_edge_label_pos_if_present(edge, "label", "lp", edge_layout.label_pos)
+    set_edge_label_pos_if_present(
+      edge,
+      "headlabel",
+      "head_lp",
+      edge_layout.head_label_pos,
+    )
+    set_edge_label_pos_if_present(
+      edge,
+      "taillabel",
+      "tail_lp",
+      edge_layout.tail_label_pos,
+    )
+    set_edge_label_pos_if_present(edge, "xlabel", "xlp", edge_layout.xlabel_pos)
   }
   for subgraph in self.subgraphs {
     subgraph.apply()
