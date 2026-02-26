@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+worktree_path="${repo_root}/_build/local_guard/worktree"
 
 # Guard checks run against the staged index snapshot so local untracked/debug
 # files do not pollute test discovery.
@@ -10,27 +11,38 @@ if ! git -C "${repo_root}" diff --quiet -- . ":(exclude)refs/graphviz"; then
   exit 1
 fi
 
-tmp_root=$(mktemp -d /tmp/graphviz_local_guard.XXXXXX)
-cleanup() {
-  if [[ -n "${worktree_path:-}" ]]; then
-    git -C "${repo_root}" worktree remove --force "${worktree_path}" >/dev/null 2>&1 || true
-  fi
-  python3 - "${tmp_root}" <<'PY'
-import shutil
-import sys
-shutil.rmtree(sys.argv[1], ignore_errors=True)
-PY
-}
-trap cleanup EXIT
-
 tree_hash=$(git -C "${repo_root}" write-tree)
 guard_commit=$(
   printf 'local guard snapshot\n' |
     git -C "${repo_root}" commit-tree "${tree_hash}" -p HEAD
 )
 
-worktree_path="${tmp_root}/worktree"
-git -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
+git -C "${repo_root}" worktree prune >/dev/null 2>&1 || true
+
+registered_worktrees=$(
+  git -C "${repo_root}" worktree list --porcelain | awk '/^worktree / {print $2}'
+)
+has_registered_worktree=false
+while IFS= read -r path; do
+  if [[ "${path}" == "${worktree_path}" ]]; then
+    has_registered_worktree=true
+    break
+  fi
+done <<< "${registered_worktrees}"
+
+if [[ "${has_registered_worktree}" == "true" && ! -e "${worktree_path}/.git" ]]; then
+  git -C "${repo_root}" worktree remove --force "${worktree_path}" >/dev/null 2>&1 || true
+  has_registered_worktree=false
+fi
+
+if [[ "${has_registered_worktree}" == "false" ]]; then
+  rm -rf "${worktree_path}"
+  mkdir -p "$(dirname "${worktree_path}")"
+  git -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
+else
+  git -C "${worktree_path}" reset --hard "${guard_commit}" >/dev/null
+  git -C "${worktree_path}" clean -ffd >/dev/null
+fi
 
 submodule_args=(submodule update --init refs/graphviz)
 if [[ -e "${repo_root}/refs/graphviz/.git" || -d "${repo_root}/refs/graphviz/objects" ]]; then
