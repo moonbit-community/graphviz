@@ -3,6 +3,28 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 worktree_path="${repo_root}/_build/local_guard/worktree"
+emit_timing="${LOCAL_GUARD_TIMING:-0}"
+guard_started_at=${SECONDS}
+
+run_guard_step() {
+  local label="$1"
+  shift
+  if [[ "${emit_timing}" == "1" ]]; then
+    local started_at=${SECONDS}
+    "$@"
+    local elapsed=$((SECONDS - started_at))
+    echo "[local-guard] ${label}: ${elapsed}s"
+  else
+    "$@"
+  fi
+}
+
+run_moon_test_full_in_worktree() {
+  (
+    cd "${worktree_path}"
+    scripts/run_moon_test_full.sh
+  )
+}
 
 # Guard checks run against the staged index snapshot so local untracked/debug
 # files do not pollute test discovery.
@@ -38,14 +60,14 @@ fi
 if [[ "${has_registered_worktree}" == "false" ]]; then
   rm -rf "${worktree_path}"
   mkdir -p "$(dirname "${worktree_path}")"
-  git -c core.hooksPath=/dev/null -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
+  run_guard_step "worktree add" git -c core.hooksPath=/dev/null -C "${repo_root}" worktree add --detach "${worktree_path}" "${guard_commit}" >/dev/null
 else
-  git -c core.hooksPath=/dev/null -C "${worktree_path}" reset --hard "${guard_commit}" >/dev/null
+  run_guard_step "worktree reset" git -c core.hooksPath=/dev/null -C "${worktree_path}" reset --hard "${guard_commit}" >/dev/null
   if [[ "${LOCAL_GUARD_PRISTINE:-0}" == "1" ]]; then
-    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd >/dev/null
+    run_guard_step "worktree clean pristine" git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd >/dev/null
   else
     # Keep heavy caches between guard runs for faster iterative refactors.
-    git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd \
+    run_guard_step "worktree clean cached" git -c core.hooksPath=/dev/null -C "${worktree_path}" clean -ffd \
       -e _build/ \
       -e .mooncakes/ \
       -e refs/graphviz/ >/dev/null
@@ -63,9 +85,11 @@ if [[ -e "${repo_root}/refs/graphviz/.git" || -d "${repo_root}/refs/graphviz/obj
     refs/graphviz
   )
 fi
-GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/null
+run_guard_step "submodule update" env GIT_TERMINAL_PROMPT=0 git -C "${worktree_path}" "${submodule_args[@]}" >/dev/null
 
-(
-  cd "${worktree_path}"
-  scripts/run_moon_test_full.sh
-)
+run_guard_step "run moon test full" run_moon_test_full_in_worktree
+
+if [[ "${emit_timing}" == "1" ]]; then
+  guard_elapsed=$((SECONDS - guard_started_at))
+  echo "[local-guard] total: ${guard_elapsed}s"
+fi

@@ -9,6 +9,20 @@ default_jobs=$(
 )
 moon_jobs="${MOON_TEST_JOBS:-${default_jobs}}"
 cc_wrapper="${repo_root}/scripts/moon_cc_wrapper.sh"
+emit_timing="${LOCAL_GUARD_TIMING:-0}"
+
+run_step() {
+  local label="$1"
+  shift
+  if [[ "${emit_timing}" == "1" ]]; then
+    local started_at=${SECONDS}
+    "$@"
+    local elapsed=$((SECONDS - started_at))
+    echo "[local-guard] ${label}: ${elapsed}s"
+  else
+    "$@"
+  fi
+}
 
 if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
   -z "${MOON_CC:-}" &&
@@ -25,16 +39,16 @@ if [[ "${LOCAL_GUARD_SUPPRESS_CLANG_EXIT_WARNING:-1}" == "1" &&
 fi
 
 cd "${repo_root}"
-DOT_RUN_FULL_PARITY_TESTS=1 \
+run_step "moon test" env DOT_RUN_FULL_PARITY_TESTS=1 \
   moon test --target native --release --deny-warn -j "${moon_jobs}" "$@"
 
-scripts/check_snapshot_input_candidates.py
-scripts/check_strict_parity_case_lists.py
+run_step "check snapshot inputs" scripts/check_snapshot_input_candidates.py
+run_step "check strict parity lists" scripts/check_strict_parity_case_lists.py
 
-moon build src/cmd/dot --target native --release -j "${moon_jobs}"
+run_step "moon build dot" moon build src/cmd/dot --target native --release -j "${moon_jobs}"
 dot_bin="_build/native/release/build/cmd/dot/dot.exe"
 
-scripts/check_capture_env_invariance.py \
+run_step "capture env invariance" scripts/check_capture_env_invariance.py \
   --dot-bin "${dot_bin}" \
   --formats dot xdot svg \
   --cases-file tests/capture_env_invariant_cases.txt
