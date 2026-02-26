@@ -1,2 +1,15 @@
 # Input corpus cases intentionally excluded from strict parity manifests.
 # Keep this list minimal and shrink it as alignment improves.
+
+# Performance issues (timeout > 15s):
+b100  # 7272 lines, large inheritance graph
+b102  # 916 lines, inheritance graph
+b103  # 3385 lines, large inheritance graph
+b104  # 7272 lines, large inheritance graph (duplicate of b100)
+b29   # 499 lines, complex graph (official graphviz succeeds)
+badvoro  # 1619 lines, Voronoi-related (official graphviz succeeds)
+root  # 2140 lines, uses root="..." attribute (official graphviz succeeds)
+xx    # 916 lines, inheritance graph (official graphviz succeeds)
+
+# Invalid syntax in reference corpus:
+b993  # Line 1: "diGraph" should be "digraph" (case-sensitive keyword)
