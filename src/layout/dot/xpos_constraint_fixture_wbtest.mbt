@@ -40,39 +40,13 @@ struct XposConstraintFixture {
 }
 
 ///|
-fn require_object_local(json : Json) -> Map[String, Json] raise {
-  match json {
-    Json::Object(value) => value
-    _ => fail("expected JSON object")
-  }
-}
-
-///|
-fn xpos_constraint_int_option(value : Json) -> Int? raise {
-  if value == Json::null() {
-    None
-  } else {
-    Some(@json.from_json(value))
-  }
-}
-
-///|
-fn xpos_constraint_string_option(value : Json) -> String? raise {
-  if value == Json::null() {
-    None
-  } else {
-    Some(@json.from_json(value))
-  }
-}
-
-///|
 fn parse_constraint_nodes(value : Json) -> Array[XposConstraintFixtureNode] raise {
   let items : Array[Json] = @json.from_json(value)
   let nodes : Array[XposConstraintFixtureNode] = []
   for item in items {
-    let obj = require_object_local(item)
+    let obj = fixture_require_object(item)
     let id : Int = @json.from_json(obj["id"])
-    let name : String? = xpos_constraint_string_option(obj["name"])
+    let name : String? = fixture_json_string_option(obj["name"])
     let kind : String = @json.from_json(obj["kind"])
     let rank : Int = @json.from_json(obj["rank"])
     let order : Int = @json.from_json(obj["order"])
@@ -89,7 +63,7 @@ fn parse_constraint_edges(value : Json) -> Array[XposConstraintFixtureEdge] rais
   let items : Array[Json] = @json.from_json(value)
   let edges : Array[XposConstraintFixtureEdge] = []
   for item in items {
-    let obj = require_object_local(item)
+    let obj = fixture_require_object(item)
     let tail : Int = @json.from_json(obj["tail"])
     let head : Int = @json.from_json(obj["head"])
     let minlen : Int = @json.from_json(obj["minlen"])
@@ -104,10 +78,10 @@ fn parse_constraint_clusters(value : Json) -> Array[XposConstraintFixtureCluster
   let items : Array[Json] = @json.from_json(value)
   let clusters : Array[XposConstraintFixtureCluster] = []
   for item in items {
-    let obj = require_object_local(item)
+    let obj = fixture_require_object(item)
     let name : String = @json.from_json(obj["name"])
-    let ln : Int? = xpos_constraint_int_option(obj["ln"])
-    let rn : Int? = xpos_constraint_int_option(obj["rn"])
+    let ln : Int? = fixture_json_int_option(obj["ln"])
+    let rn : Int? = fixture_json_int_option(obj["rn"])
     let minrank : Int = @json.from_json(obj["minrank"])
     let maxrank : Int = @json.from_json(obj["maxrank"])
     clusters.push({ name, minrank, maxrank, ln, rn })
@@ -131,7 +105,7 @@ fn load_xpos_constraint_fixture(
       continue
     }
     let json = @json.parse(line)
-    let obj = require_object_local(json)
+    let obj = fixture_require_object(json)
     let event : String = @json.from_json(obj["event"])
     if event != "xpos_input" {
       continue
@@ -227,24 +201,6 @@ fn snapshot_node_key(
           "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}:\{node.order}"
       }
   }
-}
-
-///|
-fn build_rank_order_map(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
-  let map : Map[Int, Int] = Map::new()
-  let mut rank_idx = 0
-  for rank_nodes in ranks {
-    let mut order = 0
-    for id in rank_nodes {
-      if map.get(id) is Some(_) {
-        fail("duplicate node id \{id} in rank list \{rank_idx}")
-      }
-      map[id] = order
-      order = order + 1
-    }
-    rank_idx = rank_idx + 1
-  }
-  map
 }
 
 ///|
@@ -409,7 +365,7 @@ test "xpos constraint graph matches Graphviz for complex" {
       "rank list count mismatch expected=\{expected_rank_count} actual=\{fixture.ranks.length()}",
     )
   }
-  let order_map = build_rank_order_map(fixture.ranks)
+  let order_map = fixture_build_rank_order_map(fixture.ranks)
   let mut non_slack = 0
   let fixture_ids : Map[Int, Bool] = Map::new()
   for node in fixture.nodes {

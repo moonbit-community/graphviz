@@ -66,22 +66,13 @@ fn parse_xpos_output(obj : Map[String, Json]) -> XposOutput raise {
 }
 
 ///|
-fn xpos_string_option(value : Json) -> String? raise {
-  if value == Json::null() {
-    None
-  } else {
-    Some(@json.from_json(value))
-  }
-}
-
-///|
 fn parse_xpos_nodes(value : Json) -> Array[XposNode] raise {
   let items : Array[Json] = @json.from_json(value)
   let nodes : Array[XposNode] = []
   for item in items {
-    let obj = require_object(item)
+    let obj = fixture_require_object(item)
     let id : Int = @json.from_json(obj["id"])
-    let name : String? = xpos_string_option(obj["name"])
+    let name : String? = fixture_json_string_option(obj["name"])
     let kind : String = @json.from_json(obj["kind"])
     let rank : Int = @json.from_json(obj["rank"])
     let order : Int = @json.from_json(obj["order"])
@@ -98,7 +89,7 @@ fn parse_xpos_edges(value : Json) -> Array[XposEdge] raise {
   let items : Array[Json] = @json.from_json(value)
   let edges : Array[XposEdge] = []
   for item in items {
-    let obj = require_object(item)
+    let obj = fixture_require_object(item)
     let tail : Int = @json.from_json(obj["tail"])
     let head : Int = @json.from_json(obj["head"])
     let minlen : Int = @json.from_json(obj["minlen"])
@@ -118,7 +109,7 @@ fn load_xpos_fixtures() -> Array[(XposInput, XposOutput)] raise {
       continue
     }
     let json = @json.parse(line)
-    let obj = require_object(json)
+    let obj = fixture_require_object(json)
     let event : String = @json.from_json(obj["event"])
     match event {
       "xpos_input" => {
@@ -153,24 +144,6 @@ fn load_xpos_fixtures() -> Array[(XposInput, XposOutput)] raise {
 }
 
 ///|
-fn build_rank_order_map_input(ranks : Array[Array[Int]]) -> Map[Int, Int] raise {
-  let map : Map[Int, Int] = Map::new()
-  let mut rank_idx = 0
-  for rank_nodes in ranks {
-    let mut order = 0
-    for id in rank_nodes {
-      if map.get(id) is Some(_) {
-        fail("duplicate node id \{id} in rank list \{rank_idx}")
-      }
-      map[id] = order
-      order = order + 1
-    }
-    rank_idx = rank_idx + 1
-  }
-  map
-}
-
-///|
 fn assert_xpos_input(input : XposInput) -> Map[Int, Int] raise {
   if input.graph == "" {
     fail("missing xpos graph name")
@@ -193,7 +166,7 @@ fn assert_xpos_input(input : XposInput) -> Map[Int, Int] raise {
       fail("unexpected flip=true for graph \{input.graph}")
     }
   }
-  let order_map = build_rank_order_map_input(input.ranks)
+  let order_map = fixture_build_rank_order_map(input.ranks)
   let mut non_slack = 0
   for node in input.nodes {
     if node.kind == "slack" {
