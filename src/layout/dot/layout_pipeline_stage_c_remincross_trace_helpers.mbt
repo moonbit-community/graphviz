@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
-/// ReMincross tracing helpers separate from reorder execution logic.
+/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// to keep Stage C ReMincross tracing helpers separate from reorder execution.
 
 ///|
 /// Debug trace: dump selected ReMincross per-tail edge lists when

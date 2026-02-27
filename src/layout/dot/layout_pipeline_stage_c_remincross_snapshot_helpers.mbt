@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
-/// ordering-input snapshot capture helpers isolated and maintainable.
+/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// to keep Stage C ordering-input snapshot capture helpers isolated.
 
 fn should_capture_ordering_inputs() -> Bool {
   @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)

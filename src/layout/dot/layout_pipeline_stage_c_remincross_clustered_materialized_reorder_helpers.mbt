@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
-/// clustered ReMincross rematerialize/reorder helpers isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// to keep Stage C clustered ReMincross rematerialize/reorder helpers isolated.
 
 ///|
 /// Graphviz parity: clustered ReMincross final reorder runs with real-node

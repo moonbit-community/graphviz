@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep clustered ReMincross
-/// and rematerialization helpers isolated from non-cluster order flow.
+/// Extracted from layout_pipeline_helpers.mbt to keep Stage C ReMincross
+/// reorder execution helpers isolated from non-cluster order flow.
 
 ///|
 /// Graphviz parity: ReMincross clustered reorder executes mincross with

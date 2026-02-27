@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
-/// intercluster-vnode and ReMincross seed-order helpers isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// to keep Stage C intercluster-vnode and seed-order helpers isolated.
 
 ///|
 /// Graphviz parity: trailing-vnode marking applies only to non-internal,

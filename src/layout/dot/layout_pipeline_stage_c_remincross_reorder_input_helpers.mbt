@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to isolate
-/// Stage C ReMincross reorder input derivation helpers.
+/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// to isolate Stage C ReMincross reorder-input derivation helpers.
 
 ///|
 /// Graphviz parity: ReMincross flat constraints combine existing same-rank
