@@ -9,28 +9,9 @@ fn compute_ranks_directed_with_clusters(
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
 ) -> Map[String, Int] {
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(source, None, cluster_graphs, cluster_parents)
-  let root_cluster_name =
-    if is_cluster_graph(source) {
-    match source.name() {
-      Some(value) => value
-      None => ""
-    }
-  } else {
-    ""
-  }
-  let top_clusters : Array[String] = []
-  for name, parent in cluster_parents {
-    match parent {
-      None =>
-        if name != root_cluster_name {
-          top_clusters.push(name)
-        }
-      Some(_) => ()
-    }
-  }
+  let (cluster_graphs, top_clusters) = collect_top_clusters_for_rank_assignment(
+    source,
+  )
   if top_clusters.length() == 0 {
     let (base_tail, base_head, base_reversed) =
       acyclic_edge_directions(source, nodes, edges)
@@ -45,76 +26,20 @@ fn compute_ranks_directed_with_clusters(
     )
   }
   let cluster_members = collect_cluster_members(cluster_graphs)
-  let node_cluster : Map[String, String] = Map::new()
-  for cluster_name in top_clusters {
-    match cluster_members.get(cluster_name) {
-      Some(members) =>
-        for name, _ in members {
-          node_cluster[name] = cluster_name
-        }
-      None => ()
-    }
-  }
-  let local_ranks : Map[String, Int] = Map::new()
-  let cluster_leaders : Map[String, String] = Map::new()
-  for cluster_name in top_clusters {
-    let members = match cluster_members.get(cluster_name) {
-      Some(value) => value
-      None => continue
-    }
-    let cluster_nodes : Array[@cgraph.Node] = []
-    for node in nodes {
-      if members.get(node.name()) is Some(_) {
-        cluster_nodes.push(node)
-      }
-    }
-    if cluster_nodes.length() == 0 {
-      continue
-    }
-    let cluster_edges : Array[@cgraph.Edge] = []
-    for edge in edges {
-      let tail = edge.tail().name()
-      let head = edge.head().name()
-      if members.get(tail) is Some(_) && members.get(head) is Some(_) {
-        cluster_edges.push(edge)
-      }
-    }
-    let cluster_graph = match cluster_graphs.get(cluster_name) {
-      Some(value) => value
-      None => source
-    }
-    let (cluster_tail, cluster_head, cluster_reversed) =
-      acyclic_edge_directions(cluster_graph, cluster_nodes, cluster_edges)
-    let cluster_ranks = compute_ranks_directed(
-      cluster_graph,
-      cluster_nodes,
-      cluster_edges,
+  let node_cluster = build_node_cluster_index_for_rank_assignment(
+    top_clusters,
+    cluster_members,
+  )
+  let (local_ranks, cluster_leaders) =
+    compute_local_cluster_ranks_and_leaders_for_rank_assignment(
+      source,
+      nodes,
+      edges,
       has_edge_labels,
-      cluster_tail,
-      cluster_head,
-      cluster_reversed,
+      top_clusters,
+      cluster_graphs,
+      cluster_members,
     )
-    for name, rank in cluster_ranks {
-      local_ranks[name] = rank
-    }
-    let mut leader_name : String? = None
-    for node in cluster_nodes {
-      let name = node.name()
-      match cluster_ranks.get(name) {
-        Some(rank) =>
-          if rank == 0 && leader_name is None {
-            leader_name = Some(name)
-          }
-        None => ()
-      }
-    }
-    let leader =
-      match leader_name {
-        Some(name) => name
-        None => cluster_nodes[0].name()
-      }
-    cluster_leaders[cluster_name] = leader
-  }
   let rank_graph = new_graph()
   let rank_index : Map[String, Int] = Map::new()
   let rank_names : Array[String] = []
