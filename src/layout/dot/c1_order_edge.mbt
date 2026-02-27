@@ -486,28 +486,6 @@ fn build_cluster_skeleton_creation(
 }
 
 ///|
-/// Graphviz parity: cluster skeleton CL_CROSS edges are inserted at the front
-/// of both local and root tail maps to preserve class2 traversal priority.
-/// Do not change behavior without updating fixtures/tests.
-fn prepend_cluster_skeleton_edge_to_local_and_root(
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  tail_name : String,
-  entry : (String, String, Int, Bool, Double, Double, Double, Double),
-) -> Unit {
-  prepend_order_edge_entry(
-    order_edges_by_tail,
-    tail_name,
-    entry,
-  )
-  prepend_order_edge_entry(
-    order_edges_by_tail_root,
-    tail_name,
-    entry,
-  )
-}
-
-///|
 /// Graphviz parity: cluster skeleton edges form a rank-by-rank CL_CROSS chain
 /// and must be prepended to both local and root order-edge maps.
 /// Do not change behavior without updating fixtures/tests.
@@ -525,8 +503,12 @@ fn append_cluster_skeleton_edges(
     let head_name = cluster_skeleton_name_for_rank(cluster, rank + 1)
     let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
     skeleton_edge_creation.push((tail_name, head_name))
-    prepend_cluster_skeleton_edge_to_local_and_root(
+    prepend_order_edge_entry(
       order_edges_by_tail,
+      tail_name,
+      entry,
+    )
+    prepend_order_edge_entry(
       order_edges_by_tail_root,
       tail_name,
       entry,
