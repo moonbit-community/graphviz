@@ -258,6 +258,8 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_forward_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_dispatch_helpers.mbt`
+- `src/layout/dot/stage_c_phase_c5_remincross_vnode_helpers.mbt`
+- `src/layout/dot/stage_c_phase_c5_remincross_vnode_intercluster_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_*` (Stage C ReMincross family)
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
@@ -592,6 +594,8 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_*`
   - `layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt`
+  - `stage_c_phase_c5_remincross_vnode_helpers.mbt`
+  - `stage_c_phase_c5_remincross_vnode_intercluster_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_trace_helpers.mbt`
 - Stage D position/xpos internals:
   - `layout_pipeline_stage_d_phase_d0_position_orchestrator_helpers.mbt`
