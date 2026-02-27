@@ -393,43 +393,6 @@ fn run_clustered_remincross_reorder_step(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross reorder-step metadata phase derives
-/// cluster keys, sizes, and flat constraints from current rem_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_reorder_step_inputs_metadata_phase(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  ranks : Map[String, Int],
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  order_sizes : Map[String, NodeSize],
-  rank_same_constraints : Map[String, Bool],
-  rem_groups : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
-) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
-  build_remincross_reorder_inputs(
-    graph,
-    edges,
-    edge_tail,
-    edge_head,
-    order_with_vnodes,
-    order_with_clusters,
-    ranks,
-    cluster_meta,
-    vnode_info,
-    order_sizes,
-    rank_same_constraints,
-    rem_groups,
-    real_nodes,
-  )
-}
-
-
-///|
 /// Graphviz parity: clustered ReMincross reorder-step input payload keeps
 /// edge-index and cluster-aware metadata tuple ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -498,7 +461,7 @@ fn build_clustered_remincross_reorder_step_inputs(
       rem_edges_out,
     )
   let (rem_cluster_keys, rem_sizes, rem_flat_constraints) =
-    build_clustered_remincross_reorder_step_inputs_metadata_phase(
+    build_remincross_reorder_inputs(
       graph,
       edges,
       edge_tail,

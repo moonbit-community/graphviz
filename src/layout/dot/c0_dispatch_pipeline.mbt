@@ -185,32 +185,6 @@ fn build_ordering_result_output(
 }
 
 ///|
-/// Graphviz parity: ordering dispatch result mapping keeps runtime-context and
-/// dispatch-setup arrays wired into OrderingResult without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_pipeline_result(
-  ordered_groups_internal : Map[Int, Array[String]],
-  ordered_with_vnodes : Map[Int, Array[String]],
-  runtime_context : OrderingRuntimeContext,
-  dispatch_setup : OrderingDispatchSetup,
-) -> OrderingResult {
-  build_ordering_result_output(
-    ordered_groups_internal,
-    ordered_with_vnodes,
-    runtime_context.vnode_info,
-    runtime_context.vnode_count,
-    dispatch_setup.edge_port_data.order_edges,
-    dispatch_setup.edge_port_data.order_edge_tail,
-    dispatch_setup.edge_port_data.order_edge_head,
-    dispatch_setup.edge_port_data.edge_order,
-    runtime_context.edge_cluster_keys,
-    dispatch_setup.nlist_order,
-    dispatch_setup.gdnlist_order,
-    dispatch_setup.vnode_creation_order,
-  )
-}
-
-///|
 /// Graphviz parity: dispatch setup uses runtime-context vnode/port fields in the
 /// same order as Graphviz pre-microstep staging.
 /// Do not change behavior without updating fixtures/tests.
@@ -339,11 +313,19 @@ fn run_ordering_dispatch_pipeline_execution_phase(
 ) -> OrderingResult {
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_dispatch_pipeline_stage_dispatch_phase(execution_context)
-  build_ordering_dispatch_pipeline_result(
+  build_ordering_result_output(
     ordered_groups_internal,
     ordered_with_vnodes,
-    execution_context.runtime_context,
-    execution_context.dispatch_setup,
+    execution_context.runtime_context.vnode_info,
+    execution_context.runtime_context.vnode_count,
+    execution_context.dispatch_setup.edge_port_data.order_edges,
+    execution_context.dispatch_setup.edge_port_data.order_edge_tail,
+    execution_context.dispatch_setup.edge_port_data.order_edge_head,
+    execution_context.dispatch_setup.edge_port_data.edge_order,
+    execution_context.runtime_context.edge_cluster_keys,
+    execution_context.dispatch_setup.nlist_order,
+    execution_context.dispatch_setup.gdnlist_order,
+    execution_context.dispatch_setup.vnode_creation_order,
   )
 }
 

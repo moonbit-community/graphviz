@@ -539,72 +539,6 @@ fn build_materialized_order_edges_and_neighbors_materialization_phase(
 }
 
 ///|
-/// Graphviz parity: order-edge neighbor/constraint phase derives Graphviz
-/// in/out neighbor maps and flat constraints before build_ranks reuse.
-/// Do not change behavior without updating fixtures/tests.
-fn build_materialized_order_edges_and_neighbors_neighbor_phase(
-  context : MaterializedOrderEdgesAndNeighborsContext,
-) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Bool]) {
-  build_order_neighbors_and_flat_constraints(
-    context.order_nodes,
-    context.order_edges_by_tail,
-    context.edge_creation_order,
-    context.cluster_meta,
-    context.gdnlist_order,
-    context.real_nodes,
-    context.edge_tail,
-    context.edge_head,
-    context.nodes,
-    context.order_node_order,
-  )
-}
-
-///|
-/// Graphviz parity: materialized order-edge output phase packages mapped/
-/// unmapped edge arrays with neighbor/flat-constraint maps in tuple order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_materialized_order_edges_and_neighbors_output_phase(
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_edges_out_unmapped : Array[@cgraph.Edge],
-  order_edge_tail_out_unmapped : Array[String],
-  order_edge_head_out_unmapped : Array[String],
-  order_edge_tail_port_x_unmapped : Array[Double],
-  order_edge_head_port_x_unmapped : Array[Double],
-  order_edge_tail_port_order_unmapped : Array[Double],
-  order_edge_head_port_order_unmapped : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  order_flat_constraints : Map[String, Bool],
-) -> OrderMaterializationData {
-  build_materialized_order_edges_and_neighbors_output(
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    order_flat_constraints,
-  )
-}
-
-
-///|
 /// Graphviz parity: mapped/unmapped order-edge materialization context keeps
 /// Graphviz traversal/neighbor inputs unchanged before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -692,8 +626,19 @@ fn build_materialized_order_edges_and_neighbors(
   ) =
     build_materialized_order_edges_and_neighbors_materialization_phase(context)
   let (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints) =
-    build_materialized_order_edges_and_neighbors_neighbor_phase(context)
-  build_materialized_order_edges_and_neighbors_output_phase(
+    build_order_neighbors_and_flat_constraints(
+      context.order_nodes,
+      context.order_edges_by_tail,
+      context.edge_creation_order,
+      context.cluster_meta,
+      context.gdnlist_order,
+      context.real_nodes,
+      context.edge_tail,
+      context.edge_head,
+      context.nodes,
+      context.order_node_order,
+    )
+  build_materialized_order_edges_and_neighbors_output(
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
