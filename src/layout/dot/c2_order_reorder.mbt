@@ -3,6 +3,22 @@
 /// and materialization helpers for root mincross flow.
 
 ///|
+/// Graphviz parity: order-edge trace materialization dispatch context keeps
+/// mapped/unmapped materialize+trace payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct MaterializeOrderEdgesWithTraceContext {
+  nlist_order : Array[String]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  order_ranks : Map[String, Int]
+  real_nodes : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: order-reorder context output keeps order-graph handles,
 /// creation ordering, and build_ranks node order mapping unchanged.
 /// Do not change behavior without updating fixtures/tests.

@@ -3,6 +3,53 @@
 /// stage-dispatch type definitions for phase orchestration.
 
 ///|
+/// Graphviz parity: clustered pre-root reorder/materialization context keeps
+/// stage payload ordering unchanged before reorder/materialize dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredPreRootReorderMaterializedContext {
+  order_groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  base_order_index : Map[String, Int]
+  cluster_meta : ClusterMetadata
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
+/// Graphviz parity: clustered pre-root stage context keeps order-group,
+/// reorder/materialize, and vnode payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredOrderingPreRootStageContext {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_sizes : Map[String, NodeSize]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
 /// Graphviz parity: clustered ordering pre-root/root phase context keeps
 /// stage setup payload ordering unchanged before stage-phase dispatch.
 /// Do not change behavior without updating fixtures/tests.
