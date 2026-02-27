@@ -1320,40 +1320,6 @@ fn build_root_cluster_reorder_inputs_for_rank_order_output(
 }
 
 ///|
-/// Graphviz parity: root reorder edge-bundle phase consumes root context
-/// graph artifacts before root-only mincross input tuple assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
-  root_nlist_order : Array[String],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  root_graph : @cgraph.Graph,
-  root_node_map : Map[String, @cgraph.Node],
-  root_nodes : Array[String],
-  root_ranks : Map[String, Int],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-) {
-  build_root_cluster_reorder_edge_bundle(
-    root_nlist_order,
-    order_edges_by_tail_root,
-    root_graph,
-    root_node_map,
-    root_nodes,
-    root_ranks,
-  )
-}
-
-
-///|
 /// Graphviz parity: root reorder context phase materializes root rank/group
 /// graph artifacts before root-edge bundle expansion for mincross inputs.
 /// Do not change behavior without updating fixtures/tests.
@@ -1434,7 +1400,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order_from_context_phase(
     root_children,
     root_edge_order,
   ) =
-    build_root_cluster_reorder_inputs_for_rank_order_edge_bundle_phase(
+    build_root_cluster_reorder_edge_bundle(
       root_nlist_order,
       order_edges_by_tail_root,
       root_graph,
@@ -1523,20 +1489,6 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
     root_nlist_order,
     root_node_order,
     order_edges_by_tail_root,
-  )
-}
-
-///|
-/// Graphviz parity: enabled-cluster rank-order assembly consumes root reorder
-/// materialization and forwards fields in Graphviz root-mincross order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_from_enabled_cluster_root_inputs(
-  dispatch_context : ClusterRankOrderFromRootReorderContext,
-  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
-) -> Map[Int, Map[String, Int]] {
-  build_cluster_rank_order_output_from_root_reorder(
-    dispatch_context,
-    root_reorder_output,
   )
 }
 
@@ -1659,7 +1611,7 @@ fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
     graphviz_flip,
     real_nodes,
   }
-  build_cluster_rank_order_from_enabled_cluster_root_inputs(
+  build_cluster_rank_order_output_from_root_reorder(
     dispatch_context,
     root_reorder_output,
   )
