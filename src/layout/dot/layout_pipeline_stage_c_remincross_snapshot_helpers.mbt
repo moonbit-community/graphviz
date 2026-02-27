@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep
+/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
 /// ordering-input snapshot capture helpers isolated and maintainable.
 
 fn should_capture_ordering_inputs() -> Bool {
@@ -214,4 +214,3 @@ fn capture_remincross_input_snapshot(
   touch_remincross_input_snapshot_fields(snapshot)
   remincross_input_snapshot.val = Some(snapshot)
 }
-

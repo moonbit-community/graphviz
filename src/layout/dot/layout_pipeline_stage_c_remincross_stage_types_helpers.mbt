@@ -1,6 +1,6 @@
 ///|
 /// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// clustered ReMincross stage type definitions isolated.
+/// Stage C clustered ReMincross stage type definitions isolated.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder-input context keeps
@@ -176,4 +176,3 @@ priv struct ClusteredReMincrossReorderStepContext {
   port_order_contrib : Map[String, Array[(String, Double)]]
   graphviz_flip : Bool
 }
-

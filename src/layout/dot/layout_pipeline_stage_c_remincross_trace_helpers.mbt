@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep
+/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
 /// ReMincross tracing helpers separate from reorder execution logic.
 
 ///|

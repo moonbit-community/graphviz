@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_materialize_helpers.mbt to keep
-/// ReMincross cluster-key and intercluster-span helpers isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_materialize_helpers.mbt
+/// to keep Stage C ReMincross cluster-key/intercluster-span helpers isolated.
 
 ///|
 /// Graphviz parity: ReMincross base cluster keys copy intercluster keys and

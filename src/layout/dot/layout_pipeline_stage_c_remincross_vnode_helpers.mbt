@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_remincross_helpers.mbt to keep
+/// Extracted from layout_pipeline_remincross_helpers.mbt to keep Stage C
 /// intercluster-vnode and ReMincross seed-order helpers isolated.
 
 ///|
@@ -305,4 +305,3 @@ fn build_remincross_groups_with_optional_vnodes(
     rem_base_groups
   }
 }
-
