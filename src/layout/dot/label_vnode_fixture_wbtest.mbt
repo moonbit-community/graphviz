@@ -171,7 +171,6 @@ fn compute_ranks_directed_with_clusters_for_tests(
     nodes,
     edges,
     has_edge_labels,
-    graph_has_cluster,
     edge_minlen,
     edge_weight,
     CL_BACK,

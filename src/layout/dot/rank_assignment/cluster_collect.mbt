@@ -7,6 +7,16 @@ fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+fn graph_has_cluster(graph : @cgraph.Graph) -> Bool {
+  for child in graph.subgraphs() {
+    if is_cluster_graph(child) || graph_has_cluster(child) {
+      return true
+    }
+  }
+  false
+}
+
+///|
 fn collect_cluster_graphs(
   graph : @cgraph.Graph,
   parent : String?,

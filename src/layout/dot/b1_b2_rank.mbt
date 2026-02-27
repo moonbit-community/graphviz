@@ -65,7 +65,6 @@ fn compute_rank_data(
     edge_tail,
     edge_head,
     edge_reversed,
-    graph_has_cluster,
     edge_minlen,
     edge_weight,
     CL_BACK,
