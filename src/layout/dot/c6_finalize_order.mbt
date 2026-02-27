@@ -3,17 +3,6 @@
 /// and nlist creation helpers for Stage C outputs.
 
 ///|
-/// Graphviz parity: final cleanup output preserves vnode-augmented groups and
-/// finalized real-node groups in Graphviz tuple ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_finalize_order_groups_with_cluster_remincross_output(
-  next_ordered_with_vnodes : Map[Int, Array[String]],
-  final_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  (next_ordered_with_vnodes, final_groups)
-}
-
-///|
 /// Graphviz parity: cluster-rank reorder is skipped when root reorder exposes
 /// a single-cluster single-anchor shape (one cluster bucket globally and at
 /// most one clustered node per rank), so cluster-local ordering remains
@@ -91,73 +80,6 @@ fn reorder_final_groups_for_cluster_remincross(
 
 
 ///|
-/// Graphviz parity: cluster-enabled finalize phase forwards cleaned groups
-/// into clustered ReMincross refinement with Graphviz argument ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_finalize_order_groups_cluster_remincross_phase(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  creation_order : Array[String],
-  edges_by_tail : Map[String, Array[Int]],
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  order_sizes : Map[String, NodeSize],
-  rank_same_constraints : Map[String, Bool],
-  final_groups : Map[Int, Array[String]],
-  next_ordered_with_vnodes : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
-  graphviz_flip : Bool,
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let dispatch_context =
-    build_clustered_remincross_pass_dispatch_context(
-      graph,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      order_with_vnodes,
-      order_with_clusters,
-      flat_rank_constraints,
-      creation_order,
-      edges_by_tail,
-      cluster_meta,
-      vnode_info,
-      order_sizes,
-      rank_same_constraints,
-      next_ordered_with_vnodes,
-      final_groups,
-      real_nodes,
-      graphviz_flip,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-    )
-  run_clustered_remincross_pass(dispatch_context)
-}
-
-
-///|
 /// Graphviz parity: cluster-enabled final cleanup phase applies cluster/local
 /// ordering then forwards into clustered ReMincross refinement unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -178,35 +100,36 @@ fn run_finalize_order_groups_cluster_enabled_phase(
         dispatch_context.local_cluster_order,
       )
     }
-  run_finalize_order_groups_cluster_remincross_phase(
-    dispatch_context.graph,
-    dispatch_context.edges,
-    dispatch_context.edge_tail,
-    dispatch_context.edge_head,
-    dispatch_context.edge_reversed,
-    dispatch_context.edge_tail_port_x,
-    dispatch_context.edge_head_port_x,
-    dispatch_context.edge_tail_port_order,
-    dispatch_context.edge_head_port_order,
-    dispatch_context.ranks,
-    dispatch_context.order_with_vnodes,
-    true,
-    dispatch_context.flat_rank_constraints,
-    dispatch_context.creation_order,
-    dispatch_context.edges_by_tail,
-    dispatch_context.cluster_meta,
-    dispatch_context.vnode_info,
-    dispatch_context.order_sizes,
-    dispatch_context.rank_same_constraints,
-    final_groups,
-    dispatch_context.ordered_with_vnodes,
-    dispatch_context.real_nodes,
-    dispatch_context.graphviz_flip,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-  )
+  let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
+    graph: dispatch_context.graph,
+    edges: dispatch_context.edges,
+    edge_tail: dispatch_context.edge_tail,
+    edge_head: dispatch_context.edge_head,
+    edge_reversed: dispatch_context.edge_reversed,
+    edge_tail_port_x: dispatch_context.edge_tail_port_x,
+    edge_head_port_x: dispatch_context.edge_head_port_x,
+    edge_tail_port_order: dispatch_context.edge_tail_port_order,
+    edge_head_port_order: dispatch_context.edge_head_port_order,
+    ranks: dispatch_context.ranks,
+    order_with_vnodes: dispatch_context.order_with_vnodes,
+    order_with_clusters: true,
+    flat_rank_constraints: dispatch_context.flat_rank_constraints,
+    creation_order: dispatch_context.creation_order,
+    edges_by_tail: dispatch_context.edges_by_tail,
+    cluster_meta: dispatch_context.cluster_meta,
+    vnode_info: dispatch_context.vnode_info,
+    order_sizes: dispatch_context.order_sizes,
+    rank_same_constraints: dispatch_context.rank_same_constraints,
+    ordered_with_vnodes: dispatch_context.ordered_with_vnodes,
+    base_groups: final_groups,
+    real_nodes: dispatch_context.real_nodes,
+    graphviz_flip: dispatch_context.graphviz_flip,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+  }
+  run_clustered_remincross_pass(cluster_pass_context)
 }
 
 
@@ -223,26 +146,6 @@ fn build_finalize_order_groups_cleaned_groups_phase(
     collect_real_only_rank_groups(order_rank_keys, ordered, real_nodes)
   dot_trace_groups("cleaned_groups_pre", cleaned_groups)
   cleaned_groups
-}
-
-
-
-///|
-/// Graphviz parity: final cleanup dispatch phase keeps cluster-enabled and
-/// non-clustered branches in Graphviz-equivalent control-flow ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_finalize_order_groups_dispatch_phase(
-  dispatch_context : FinalizeOrderGroupsDispatchContext,
-  cleaned_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  if dispatch_context.order_with_clusters {
-    run_finalize_order_groups_cluster_enabled_phase(
-      dispatch_context,
-      cleaned_groups,
-    )
-  } else {
-    (dispatch_context.ordered_with_vnodes, cleaned_groups)
-  }
 }
 
 ///|
@@ -328,26 +231,14 @@ fn finalize_order_groups_with_cluster_remincross(
       ordered,
       dispatch_context.real_nodes,
     )
-  let (next_ordered_with_vnodes, final_groups) =
-    run_finalize_order_groups_dispatch_phase(
+  if dispatch_context.order_with_clusters {
+    run_finalize_order_groups_cluster_enabled_phase(
       dispatch_context,
       cleaned_groups,
     )
-  build_finalize_order_groups_with_cluster_remincross_output(
-    next_ordered_with_vnodes,
-    final_groups,
-  )
-}
-
-///|
-/// Graphviz parity: class2 nlist/vnode output keeps GD_nlist order and vnode
-/// creation sequence unchanged after cluster-flip adjustment.
-/// Do not change behavior without updating fixtures/tests.
-fn build_nlist_order_and_vnode_creation_order_output(
-  nlist_order : Array[String],
-  vnode_creation_order : Array[String],
-) -> (Array[String], Array[String]) {
-  (nlist_order, vnode_creation_order)
+  } else {
+    (dispatch_context.ordered_with_vnodes, cleaned_groups)
+  }
 }
 
 ///|
@@ -400,5 +291,5 @@ fn build_nlist_order_and_vnode_creation_order(
       cluster_keys,
     )
   trace_nlist_order_debug(nlist_order)
-  build_nlist_order_and_vnode_creation_order_output(nlist_order, vnode_creation_order)
+  (nlist_order, vnode_creation_order)
 }
