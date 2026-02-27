@@ -100,26 +100,6 @@ fn build_noncluster_graphviz_neighbor_maps(
 }
 
 ///|
-/// Graphviz parity: non-cluster reorder edge indices follow build_ranks input
-/// maps built from order-edge arrays and rank map before rank permutation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_edge_indices_for_reorder(
-  nodes : Array[@cgraph.Node],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  ranks : Map[String, Int],
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
-  build_edge_index_for_order(
-    nodes,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    ranks,
-  )
-}
-
-///|
 /// Graphviz parity: per-component neighbor filtering preserves the local ND_out
 /// / ND_in order used when mincross runs each connected component separately.
 /// Do not change behavior without updating fixtures/tests.
@@ -488,7 +468,7 @@ fn run_noncluster_reorder_pass(
   let order_node_order =
     build_noncluster_order_node_order(nlist_order, node_order)
   let (parents, children) =
-    build_noncluster_edge_indices_for_reorder(
+    build_edge_index_for_order(
       nodes,
       order_edges,
       order_edge_tail,
