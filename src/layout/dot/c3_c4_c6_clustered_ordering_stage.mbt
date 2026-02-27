@@ -563,36 +563,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
 
 
 ///|
-/// Graphviz parity: clustered ordering pre-root phase dispatch reads typed
-/// stage context fields and preserves Graphviz pre-root call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase_from_context(
-  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
-) -> OrderClusteredPreRootStageData {
-  run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
-    phase_context.nodes,
-    phase_context.edge_tail,
-    phase_context.edge_head,
-    phase_context.node_order,
-    phase_context.order_sizes,
-    phase_context.cluster_meta,
-    phase_context.runtime_context.real_nodes,
-    phase_context.runtime_context.port_edge_nodes,
-    phase_context.reorder_setup.order_with_vnodes,
-    phase_context.reorder_setup.order_with_clusters,
-    phase_context.reorder_setup.ordering_groups_base,
-    phase_context.reorder_setup.base_order_index,
-    phase_context.runtime_context.vnode_info,
-    phase_context.reorder_setup.vnode_order_keys_for_ordering,
-    phase_context.class2_data.nlist_order,
-    phase_context.reorder_setup.gdnlist_order,
-    phase_context.class2_data.order_edges_by_tail,
-    phase_context.class2_data.order_edges_by_tail_unmapped,
-    phase_context.class2_data.edge_creation_order,
-  )
-}
-
-///|
 /// Graphviz parity: clustered root phase reuses root-only reorder input
 /// assembly to derive the root-tail replay order for mapped edge materialize.
 /// Do not change behavior without updating fixtures/tests.
@@ -719,25 +689,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
     )
   root_mincross_groups_override.val = None
   output
-}
-
-///|
-/// Graphviz parity: clustered ordering pre-root/root phase execution preserves
-/// Graphviz phase boundaries while forwarding through typed stage context.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
-  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  let pre_root_stage =
-    run_clustered_ordering_pre_root_and_root_stage_pre_root_phase_from_context(
-      phase_context,
-    )
-  let root_phase_output =
-    run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
-      phase_context,
-      pre_root_stage,
-    )
-  (pre_root_stage, root_phase_output)
 }
 
 ///|
@@ -1002,9 +953,32 @@ fn run_clustered_ordering_stage(
     stage_dispatch_context.reorder_setup,
     stage_dispatch_context.class2_data,
   )
-  let (pre_root_stage, root_cluster_stage) =
-    run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+  let pre_root_stage =
+    run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
+      phase_context.nodes,
+      phase_context.edge_tail,
+      phase_context.edge_head,
+      phase_context.node_order,
+      phase_context.order_sizes,
+      phase_context.cluster_meta,
+      phase_context.runtime_context.real_nodes,
+      phase_context.runtime_context.port_edge_nodes,
+      phase_context.reorder_setup.order_with_vnodes,
+      phase_context.reorder_setup.order_with_clusters,
+      phase_context.reorder_setup.ordering_groups_base,
+      phase_context.reorder_setup.base_order_index,
+      phase_context.runtime_context.vnode_info,
+      phase_context.reorder_setup.vnode_order_keys_for_ordering,
+      phase_context.class2_data.nlist_order,
+      phase_context.reorder_setup.gdnlist_order,
+      phase_context.class2_data.order_edges_by_tail,
+      phase_context.class2_data.order_edges_by_tail_unmapped,
+      phase_context.class2_data.edge_creation_order,
+    )
+  let root_cluster_stage =
+    run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
       phase_context,
+      pre_root_stage,
     )
   let finalize_dispatch_context = build_clustered_ordering_stage_output_phase_dispatch_context(
     stage_dispatch_context.graph,
