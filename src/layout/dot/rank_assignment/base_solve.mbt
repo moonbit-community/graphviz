@@ -63,12 +63,8 @@ pub fn compute_ranks_directed_base(
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
-  build_nlist_order_from_edges : (
-    (Array[String], Array[(String, String)]) -> (Array[String])
-  ),
 ) -> Map[String, Int] {
   let node_by_name : Map[String, @cgraph.Node] = Map::new()
   let tail_order : Array[String] = []
@@ -130,7 +126,12 @@ pub fn compute_ranks_directed_base(
   }
   // Graphviz parity: decompose ordering uses DFS over flat/in/out neighbors
   // driven by agfstnode/agfstout ordering.
-  let rank_node_names = build_nlist_order_from_edges(tail_order, edge_creation)
+  let rank_node_names = @shared.build_graphviz_nlist_order_from_edges(
+    tail_order,
+    tail_order,
+    edge_creation,
+    Map::new(),
+  )
   let rank_nodes : Array[@cgraph.Node] = []
   let seen : Map[String, Bool] = Map::new()
   for name in rank_node_names {
@@ -185,7 +186,7 @@ pub fn compute_ranks_directed_base(
     }
     for edge_idx in indices {
       let edge = edges[edge_idx]
-      if !edge_is_constraint(edge) {
+      if !@shared.edge_is_constraint(edge) {
         continue
       }
       let tail = edge_tail[edge_idx]

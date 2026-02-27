@@ -282,7 +282,7 @@ fn acyclic_edge_directions_with_order(
     edge_tail_orig.push(tail)
     edge_head_orig.push(head)
     edge_reversed.push(false)
-    let active = edge_is_constraint(edge)
+    let active = @dot_shared.edge_is_constraint(edge)
     edge_is_active.push(active)
     let edge_idx = edge_tail_orig.length() - 1
     match node_index.get(tail) {
@@ -424,7 +424,7 @@ fn acyclic_edge_directions_with_order(
     let head_rep = fast_edge_head[edge_idx]
     edge_creation.push((tail_rep, head_rep))
   }
-  let acyclic_order = build_graphviz_nlist_order_from_edges(
+  let acyclic_order = @dot_shared.build_graphviz_nlist_order_from_edges(
     rep_names,
     rep_names,
     edge_creation,

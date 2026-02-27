@@ -77,7 +77,6 @@ pub fn solve_clustered_leader_ranks(
   local_ranks : Map[String, Int],
   has_edge_labels : Bool,
   back_weight_scale : Int,
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
   orient_edges_for_names : (
@@ -119,7 +118,7 @@ pub fn solve_clustered_leader_ranks(
   let direct_active : Array[Bool] = []
   let mut slack_id = 0
   for edge in edges {
-    if !edge_is_constraint(edge) {
+    if !@shared.edge_is_constraint(edge) {
       continue
     }
     let tail_name = edge.tail().name()

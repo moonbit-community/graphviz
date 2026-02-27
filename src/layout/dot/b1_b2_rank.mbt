@@ -68,17 +68,8 @@ fn compute_rank_data(
     graph_has_cluster,
     acyclic_edge_directions,
     acyclic_edge_directions_for_names,
-    edge_is_constraint,
     edge_minlen,
     edge_weight,
-    (tail_order, edge_creation) => {
-      build_graphviz_nlist_order_from_edges(
-        tail_order,
-        tail_order,
-        edge_creation,
-        Map::new(),
-      )
-    },
     CL_BACK,
   )
   let groups = build_rank_groups(nodes, ranks)

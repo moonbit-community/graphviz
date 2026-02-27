@@ -118,6 +118,170 @@ pub fn edge_vnode_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
+/// Graphviz mapbool() parity for edge `constraint` handling.
+pub fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("constraint") {
+    Some(value) => {
+      // Graphviz mapbool() parity:
+      // - empty string keeps default (constraint=true)
+      // - unknown non-empty tokens map to false
+      let trimmed = value.trim()
+      if trimmed == "" {
+        true
+      } else {
+        let lower = trimmed.to_lower()
+        if lower == "false" || lower == "no" {
+          false
+        } else if lower == "true" || lower == "yes" {
+          true
+        } else {
+          match lower.get_char(0) {
+            Some(c) =>
+              if c.is_ascii_digit() {
+                let mut acc = 0
+                let mut seen = false
+                for ch in lower {
+                  if ch.is_ascii_digit() {
+                    seen = true
+                    acc = acc * 10 + (ch.to_int() - '0'.to_int())
+                  } else {
+                    break
+                  }
+                }
+                seen && acc != 0
+              } else {
+                false
+              }
+            None => true
+          }
+        }
+      }
+    }
+    None => true
+  }
+}
+
+///|
+/// Graphviz parity: approximate decompose DFS order over fast graph edges.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_graphviz_nlist_order_from_edges(
+  tail_order : Array[String],
+  order_nodes : Array[String],
+  edge_creation : Array[(String, String)],
+  flat_constraints : Map[String, Bool],
+) -> Array[String] {
+  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    out_neighbors[name] = []
+    in_neighbors[name] = []
+    flat_out[name] = []
+    flat_in[name] = []
+  }
+  for edge in edge_creation {
+    let (tail, head) = edge
+    match out_neighbors.get(tail) {
+      Some(list) => list.push(head)
+      None => out_neighbors[tail] = [head]
+    }
+    match in_neighbors.get(head) {
+      Some(list) => list.push(tail)
+      None => in_neighbors[head] = [tail]
+    }
+  }
+  // Graphviz parity: ND_out/ND_in lists follow edge sequence (AGSEQ) order
+  // within a fixed tail/head, so preserve edge_creation insertion order.
+  // Do not change behavior without updating fixtures/tests.
+  for key, _ in flat_constraints {
+    match key.find("|") {
+      Some(pos) => {
+        let len = key.length()
+        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+        let head =
+          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+            ""
+          }
+        match flat_out.get(tail) {
+          Some(list) => list.push(head)
+          None => flat_out[tail] = [head]
+        }
+        match flat_in.get(head) {
+          Some(list) => list.push(tail)
+          None => flat_in[head] = [tail]
+        }
+      }
+      None => ()
+    }
+  }
+  let visited : Map[String, Bool] = Map::new()
+  for name in order_nodes {
+    visited[name] = false
+  }
+  let nlist : Array[String] = []
+  let stack : Array[String] = []
+  let push_neighbors = (list : Array[String]) => {
+    let mut idx = list.length()
+    while idx > 0 {
+      idx = idx - 1
+      let other = list[idx]
+      if visited.get(other) != Some(true) {
+        stack.push(other)
+      }
+    }
+  }
+  let visit_from = (start : String) => {
+    if visited.get(start) == Some(true) {
+      return ()
+    }
+    stack.push(start)
+    while stack.length() > 0 {
+      let current = stack[stack.length() - 1]
+      let _ = stack.pop()
+      if visited.get(current) == Some(true) {
+        continue
+      }
+      visited[current] = true
+      nlist.push(current)
+      let fin = match flat_in.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let fout = match flat_out.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let inn = match in_neighbors.get(current) {
+        Some(list) => list
+        None => []
+      }
+      let out = match out_neighbors.get(current) {
+        Some(list) => list
+        None => []
+      }
+      push_neighbors(fin)
+      push_neighbors(fout)
+      push_neighbors(inn)
+      push_neighbors(out)
+    }
+  }
+  // Graphviz parity: agfstnode iteration follows creation order.
+  for start in tail_order {
+    visit_from(start)
+  }
+  if nlist.length() < order_nodes.length() {
+    for name in order_nodes {
+      if visited.get(name) != Some(true) {
+        nlist.push(name)
+        visited[name] = true
+      }
+    }
+  }
+  nlist
+}
+
+///|
 /// Graphviz parity: rank=same merges nodes into one representative set.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_rank_same_reps(

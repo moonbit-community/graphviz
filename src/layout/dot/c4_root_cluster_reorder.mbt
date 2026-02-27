@@ -471,7 +471,7 @@ fn build_root_nlist_order_for_cluster_reorder(
   let root_tail_order =
     build_root_tail_order_sources_first(tail_order_root, root_has_in)
   let root_nlist_full =
-    build_graphviz_nlist_order_from_edges(
+    @dot_shared.build_graphviz_nlist_order_from_edges(
       root_tail_order,
       root_nodes,
       root_edge_creation_order,

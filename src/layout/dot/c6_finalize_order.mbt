@@ -210,7 +210,7 @@ fn build_nlist_order_and_vnode_creation_order(
       order_creation
     }
   let nlist_order_raw =
-    build_graphviz_nlist_order_from_edges(
+    @dot_shared.build_graphviz_nlist_order_from_edges(
       nlist_tail_order,
       order_creation,
       edge_creation_order,

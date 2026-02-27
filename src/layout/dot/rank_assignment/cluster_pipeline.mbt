@@ -26,12 +26,8 @@ pub fn compute_ranks_directed(
       Array[Bool],
     ) -> (Array[String], Array[String], Array[Bool])
   ),
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
-  build_nlist_order_from_edges : (
-    (Array[String], Array[(String, String)]) -> (Array[String])
-  ),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   if graph_has_cluster(source) {
@@ -43,10 +39,8 @@ pub fn compute_ranks_directed(
       graph_has_cluster,
       orient_edges,
       orient_edges_for_names,
-      edge_is_constraint,
       edge_minlen,
       edge_weight,
-      build_nlist_order_from_edges,
       back_weight_scale,
     )
   }
@@ -57,10 +51,8 @@ pub fn compute_ranks_directed(
     has_edge_labels,
     edge_tail,
     edge_head,
-    edge_is_constraint,
     edge_minlen,
     edge_weight,
-    build_nlist_order_from_edges,
   )
 }
 
@@ -87,12 +79,8 @@ pub fn compute_ranks_directed_with_clusters(
       Array[Bool],
     ) -> (Array[String], Array[String], Array[Bool])
   ),
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
-  build_nlist_order_from_edges : (
-    (Array[String], Array[(String, String)]) -> (Array[String])
-  ),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   let (edge_tail, edge_head, edge_reversed) = orient_edges(source, nodes, edges)
@@ -107,10 +95,8 @@ pub fn compute_ranks_directed_with_clusters(
     graph_has_cluster,
     orient_edges,
     orient_edges_for_names,
-    edge_is_constraint,
     edge_minlen,
     edge_weight,
-    build_nlist_order_from_edges,
     back_weight_scale,
   )
 }
@@ -140,12 +126,8 @@ fn compute_ranks_directed_with_clusters_impl(
       Array[Bool],
     ) -> (Array[String], Array[String], Array[Bool])
   ),
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
-  build_nlist_order_from_edges : (
-    (Array[String], Array[(String, String)]) -> (Array[String])
-  ),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   compute_clustered_ranks(
@@ -162,10 +144,8 @@ fn compute_ranks_directed_with_clusters_impl(
         graph_has_edge_labels,
         tail,
         head,
-        edge_is_constraint,
         edge_minlen,
         edge_weight,
-        build_nlist_order_from_edges,
       )
     },
     (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
@@ -181,15 +161,12 @@ fn compute_ranks_directed_with_clusters_impl(
         graph_has_cluster,
         orient_edges,
         orient_edges_for_names,
-        edge_is_constraint,
         edge_minlen,
         edge_weight,
-        build_nlist_order_from_edges,
         back_weight_scale,
       )
     },
     back_weight_scale,
-    edge_is_constraint,
     edge_minlen,
     edge_weight,
     orient_edges_for_names,
@@ -219,7 +196,6 @@ fn compute_clustered_ranks(
     ) -> (Map[String, Int])
   ),
   back_weight_scale : Int,
-  edge_is_constraint : ((@cgraph.Edge) -> Bool),
   edge_minlen : ((@cgraph.Edge) -> Int),
   edge_weight : ((@cgraph.Edge) -> Int),
   orient_edges_for_names : (
@@ -260,7 +236,6 @@ fn compute_clustered_ranks(
     local_ranks,
     has_edge_labels,
     back_weight_scale,
-    edge_is_constraint,
     edge_minlen,
     edge_weight,
     orient_edges_for_names,
