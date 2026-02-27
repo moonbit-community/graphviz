@@ -1,4 +1,8 @@
 ///|
+/// Extracted from layout_pipeline_helpers.mbt to keep shared pipeline
+/// core data-model type definitions isolated and maintainable.
+
+///|
 priv struct LayoutPrep {
   rankdir : RankDir
   nodesep_in : Double
