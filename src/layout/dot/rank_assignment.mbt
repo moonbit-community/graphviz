@@ -65,7 +65,7 @@ fn compute_ranks_directed(
   edge_head : Array[String],
   edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
-  if rank_assignment_has_cluster(source) {
+  if graph_has_cluster(source) {
     return compute_ranks_directed_with_clusters(
       source,
       nodes,
@@ -508,27 +508,6 @@ fn compute_ranks_directed_base(
 /// logic together so clustered ranking behavior is easier to follow.
 
 ///|
-fn rank_assignment_is_cluster_graph(graph : @cgraph.Graph) -> Bool {
-  match graph.name() {
-    Some(name) => name.has_prefix("cluster")
-    None => false
-  }
-}
-
-///|
-fn rank_assignment_has_cluster(graph : @cgraph.Graph) -> Bool {
-  for subgraph in graph.subgraphs() {
-    if rank_assignment_is_cluster_graph(subgraph) {
-      return true
-    }
-    if rank_assignment_has_cluster(subgraph) {
-      return true
-    }
-  }
-  false
-}
-
-///|
 fn collect_cluster_graphs_for_rank_assignment(
   graph : @cgraph.Graph,
   parent : String?,
@@ -536,7 +515,7 @@ fn collect_cluster_graphs_for_rank_assignment(
   parents : Map[String, String?],
 ) -> Unit {
   let mut next_parent = parent
-  if rank_assignment_is_cluster_graph(graph) {
+  if is_cluster_graph(graph) {
     match graph.name() {
       Some(name) => {
         clusters[name] = graph
@@ -600,7 +579,7 @@ fn collect_top_clusters_for_rank_assignment(
     cluster_parents,
   )
   let root_cluster_name =
-    if rank_assignment_is_cluster_graph(source) {
+    if is_cluster_graph(source) {
     match source.name() {
       Some(value) => value
       None => ""
