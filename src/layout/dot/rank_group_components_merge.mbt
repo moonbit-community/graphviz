@@ -22,17 +22,16 @@ fn merge_rank_groups_graphviz_components(
     merged[rank] = []
   }
   for component in components {
-    let (component_groups, filtered_out, filtered_in) =
-      prepare_rank_group_component_merge_inputs(
-        rank_keys,
-        groups,
-        graphviz_out_neighbors,
-        graphviz_in_neighbors,
-        component,
-      )
+    let prepared = prepare_rank_group_component_merge_inputs(
+      rank_keys,
+      groups,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      component,
+    )
     let ordered_component = build_rank_groups_graphviz(
       rank_keys,
-      component_groups,
+      prepared.component_groups,
       edge_tail,
       edge_head,
       node_ranks,
@@ -41,8 +40,8 @@ fn merge_rank_groups_graphviz_components(
       cluster_skeleton,
       pass,
       flip=flip,
-      graphviz_out_neighbors=filtered_out,
-      graphviz_in_neighbors=filtered_in,
+      graphviz_out_neighbors=prepared.filtered_out,
+      graphviz_in_neighbors=prepared.filtered_in,
     )
     append_rank_group_component_order_to_merged(
       rank_keys,

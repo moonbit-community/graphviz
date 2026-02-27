@@ -8,11 +8,7 @@ fn prepare_rank_group_component_merge_inputs(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   component : Array[String],
-) -> (
-  Map[Int, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-) {
+) -> RankGroupComponentMergeInputs {
   let component_set : Map[String, Bool] = Map::new()
   for name in component {
     component_set[name] = true
@@ -59,5 +55,9 @@ fn prepare_rank_group_component_merge_inputs(
     }
     filtered_in[name] = filtered_in_list
   }
-  (component_groups, filtered_out, filtered_in)
+  {
+    component_groups,
+    filtered_out,
+    filtered_in,
+  }
 }
