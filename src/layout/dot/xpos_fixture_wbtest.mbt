@@ -263,7 +263,7 @@ fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
     }
     let _ = @network_simplex.add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
   }
-  @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
   let actual : Array[Int] = []
   for i in 0..<input.nodes.length() {
     actual.push(@network_simplex.node_rank(graph, i))

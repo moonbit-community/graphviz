@@ -195,7 +195,7 @@ fn snapshot_node_key(
     }
     None =>
       match node.kind {
-        NodeKind::Slack =>
+        @network_simplex.NodeKind::Slack =>
           "S:\{node.rank}:\{node.order}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}"
         _ =>
           "V:\{node.rank}:\{node.left_pt}:\{node.right_pt}:\{node.height_pt}:\{node.order}"

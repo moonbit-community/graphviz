@@ -93,11 +93,11 @@ fn parse_simplex_pre_balance(obj : Map[String, Json]) -> SimplexPreBalance raise
 }
 
 ///|
-fn fixture_node_kind(kind : String) -> NodeKind raise {
+fn fixture_node_kind(kind : String) -> @network_simplex.NodeKind raise {
   match kind {
-    "normal" => NodeKind::Normal
-    "virtual" => NodeKind::Virtual
-    "slack" => NodeKind::Slack
+    "normal" => @network_simplex.NodeKind::Normal
+    "virtual" => @network_simplex.NodeKind::Virtual
+    "slack" => @network_simplex.NodeKind::Slack
     _ => fail("unknown fixture node kind: \{kind}")
   }
 }
@@ -249,7 +249,7 @@ fn assert_ranks(
 }
 
 ///|
-fn build_fixture_graph(input : SimplexInput) -> NsGraph raise {
+fn build_fixture_graph(input : SimplexInput) -> @network_simplex.NsGraph raise {
   let graph = @network_simplex.new_graph()
   for node in input.nodes {
     let name = match node.name {
@@ -304,8 +304,8 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
       }
       let _ = @network_simplex.normalize_ranks_for_test(graph)
     }
-    2 => @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
-    _ => @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+    2 => @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
+    _ => @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::TB)
   }
   let actual_ranks : Array[Int] = []
   for i in 0..<input.nodes.length() {

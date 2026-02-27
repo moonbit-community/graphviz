@@ -1,9 +1,9 @@
 ///|
-fn node_kind_name(kind : NodeKind) -> String {
+fn node_kind_name(kind : @network_simplex.NodeKind) -> String {
   match kind {
-    NodeKind::Normal => "normal"
-    NodeKind::Virtual => "virtual"
-    NodeKind::Slack => "slack"
+    @network_simplex.NodeKind::Normal => "normal"
+    @network_simplex.NodeKind::Virtual => "virtual"
+    @network_simplex.NodeKind::Slack => "slack"
   }
 }
 

@@ -29,7 +29,7 @@ priv struct ConstraintEdge {
 ///|
 priv struct XposConstraintNodeSnapshot {
   name : String?
-  kind : NodeKind
+  kind : @network_simplex.NodeKind
   rank : Int
   order : Int
   left_pt : Double
@@ -157,7 +157,7 @@ fn should_capture_xpos_constraints(graph : @cgraph.Graph) -> Bool {
 
 ///|
 fn build_xpos_constraint_snapshot(
-  graph : NsGraph,
+  graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   sizes : Map[String, NodeSize],
   order_index : Map[String, Int],
@@ -223,10 +223,10 @@ fn build_xpos_constraint_snapshot(
 
 ///|
 fn reorder_constraint_graph(
-  graph : NsGraph,
+  graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   order : Array[Int],
-) -> (NsGraph, Map[String, Int]) {
+) -> (@network_simplex.NsGraph, Map[String, Int]) {
   let total = graph.nodes.length()
   if total == 0 || order.length() != total {
     return (graph, index)
@@ -259,7 +259,7 @@ fn reorder_constraint_graph(
 /// reverse creation order, then preserves GD_nlist order for existing nodes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_constraint_reorder(
-  graph : NsGraph,
+  graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   nlist_order : Array[String],
 ) -> Array[Int] {
@@ -274,7 +274,7 @@ fn build_constraint_reorder(
   }
   let slack_indices : Array[Int] = []
   for i in 0..<total {
-    if graph.nodes[i].kind == NodeKind::Slack {
+    if graph.nodes[i].kind == @network_simplex.NodeKind::Slack {
       slack_indices.push(i)
     }
   }
@@ -1447,13 +1447,13 @@ fn edge_port_order(
   }
 }
 
-fn extra_node_kind(name : String) -> NodeKind {
+fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
   if name.has_prefix(EDGE_VNODE_PREFIX) {
-    NodeKind::Virtual
+    @network_simplex.NodeKind::Virtual
   } else if name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX) {
-    NodeKind::Slack
+    @network_simplex.NodeKind::Slack
   } else {
-    NodeKind::Normal
+    @network_simplex.NodeKind::Normal
   }
 }
 
@@ -1489,7 +1489,7 @@ fn build_constraint_graph(
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
-) -> (NsGraph, Map[String, Int]) {
+) -> (@network_simplex.NsGraph, Map[String, Int]) {
   let _ = extra_slack_edges
   let graph = @network_simplex.new_graph()
   let ordered_nodes = nodes
@@ -2043,7 +2043,7 @@ fn build_constraint_graph(
       let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
       let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
       // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
-      let slack_idx = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+      let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
       let tail_rank = @network_simplex.node_rank(graph, tail_idx)
       let head_rank = @network_simplex.node_rank(graph, head_idx)
       let base_tail = tail_rank - m0 - 1
@@ -2088,7 +2088,7 @@ fn build_constraint_graph(
         let delta = head_offset - tail_offset
         let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
         let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-        let slack_idx = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+        let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
         let tail_rank = @network_simplex.node_rank(graph, tail_idx)
         let head_rank = @network_simplex.node_rank(graph, head_idx)
         let base_tail = tail_rank - m0 - 1
@@ -2112,8 +2112,8 @@ fn build_constraint_graph(
     @network_simplex.set_node_rank(graph, idx, 0)
   }
   if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
-    let root_ln = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
-    let root_rn = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+    let root_ln = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
+    let root_rn = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
     @network_simplex.set_node_rank(graph, root_ln, 0)
     @network_simplex.set_node_rank(graph, root_rn, 0)
     let root_margin = if nodes.length() > 0 {
@@ -2337,7 +2337,7 @@ fn x_positions_from_simplex(
   }
   dot_trace("xpos: constraint graph built")
   dot_trace("xpos: network simplex")
-  @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
   dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
