@@ -250,6 +250,7 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c2_c5_order_node_seed_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_input_phase_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_finalize_dispatch_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_materialized_output_phase_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
@@ -577,6 +578,7 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
 - Stage C ReMincross refinement family:
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_input_phase_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_finalize_dispatch_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_materialized_output_phase_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
