@@ -1,6 +1,6 @@
 ///|
-/// Remaining ReMincross materialized order-graph helper after
-/// extracting GD_nlist ordering and node-order seeding helpers.
+/// Remaining Stage C ReMincross materialized order-graph helper after
+/// extracting GD_nlist ordering and node-order seeding helper modules.
 
 ///|
 /// Graphviz parity: ReMincross order-graph materialization filters local flat
