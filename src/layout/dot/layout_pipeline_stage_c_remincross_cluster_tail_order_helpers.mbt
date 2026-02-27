@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_nlist_order_helpers.mbt to keep
-/// ReMincross clustered tail-order construction helpers isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt
+/// to keep Stage C ReMincross clustered tail-order construction isolated.
 
 ///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
@@ -13,103 +13,18 @@ fn build_remincross_cluster_tail_order(
   rem_edge_creation : Array[(String, String)],
   cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  let cluster_key_for_name = (name : String) => {
-    let direct = match rem_cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
-    if direct != "" {
-      return direct
-    }
-    if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
-      return ""
-    }
-    let prefix_len = CLUSTER_SKELETON_PREFIX.length()
-    let len = name.length()
-    if prefix_len >= len {
-      return ""
-    }
-    let suffix = name.unsafe_substring(start=prefix_len, end=len)
-    match suffix.find("@") {
-      Some(pos) =>
-        if pos > 0 { suffix.unsafe_substring(start=0, end=pos) } else { "" }
-      None => ""
-    }
-  }
-  let cluster_order_seen : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
-  let names_by_cluster : Map[String, Array[String]] = Map::new()
-  for name in rem_order_creation {
-    let cluster = cluster_key_for_name(name)
-    if cluster_seen.get(cluster) is None {
-      cluster_seen[cluster] = true
-      cluster_order_seen.push(cluster)
-    }
-    match names_by_cluster.get(cluster) {
-      Some(list) => list.push(name)
-      None => names_by_cluster[cluster] = [name]
-    }
-  }
-  let cluster_first_seen : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order_seen {
-    cluster_first_seen[cluster] = idx
-  }
-  let cluster_order_non_root : Array[String] = []
-  let mut has_root_cluster = false
-  for cluster in cluster_order_seen {
-    if cluster == "" {
-      has_root_cluster = true
-    } else {
-      cluster_order_non_root.push(cluster)
-    }
-  }
-  cluster_order_non_root.sort_by((a, b) => {
-    let a_idx = match cluster_order_index.get(a) {
-      Some(value) => value
-      None => -1
-    }
-    let b_idx = match cluster_order_index.get(b) {
-      Some(value) => value
-      None => -1
-    }
-    if a_idx > b_idx {
-      return -1
-    }
-    if a_idx < b_idx {
-      return 1
-    }
-    let a_seen = match cluster_first_seen.get(a) {
-      Some(value) => value
-      None => 0
-    }
-    let b_seen = match cluster_first_seen.get(b) {
-      Some(value) => value
-      None => 0
-    }
-    if a_seen < b_seen {
-      -1
-    } else if a_seen > b_seen {
-      1
-    } else {
-      0
-    }
-  })
-  let cluster_order = cluster_order_non_root
-  if has_root_cluster {
-    cluster_order.push("")
-  }
-  let cluster_order_pos : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order {
-    cluster_order_pos[cluster] = idx
-  }
-  let heads_by_tail : Map[String, Array[String]] = Map::new()
-  for edge in rem_edge_creation {
-    let (tail, head) = edge
-    match heads_by_tail.get(tail) {
-      Some(list) => list.push(head)
-      None => heads_by_tail[tail] = [head]
-    }
-  }
+  let (cluster_order_seen, names_by_cluster, cluster_first_seen) =
+    build_remincross_cluster_order_seen_and_names(
+      rem_order_creation,
+      rem_cluster_keys,
+    )
+  let (cluster_order, cluster_order_pos) =
+    build_remincross_cluster_order_and_positions(
+      cluster_order_seen,
+      cluster_first_seen,
+      cluster_order_index,
+    )
+  let heads_by_tail = build_remincross_heads_by_tail(rem_edge_creation)
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
     let names = match names_by_cluster.get(cluster) {
@@ -210,7 +125,8 @@ fn build_remincross_cluster_tail_order(
           let mut has_later = false
           let mut has_earlier = false
           for head in heads {
-            let head_cluster = cluster_key_for_name(head)
+            let head_cluster =
+              cluster_key_for_remincross_tail_order_name(rem_cluster_keys, head)
             if head_cluster == cluster {
               continue
             }

@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_nlist_order_helpers.mbt to keep
-/// root/ReMincross GD_nlist-based node-order seeding helper isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt
+/// to keep Stage C root/ReMincross GD_nlist node-order seeding isolated.
 
 ///|
 /// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
