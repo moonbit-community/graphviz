@@ -11,32 +11,43 @@ fn compute_ranks_directed(
   edge_head : Array[String],
   _edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
-  if graph_has_cluster(source) {
-    return compute_ranks_directed_with_clusters(
-      source,
-      nodes,
-      edges,
-      has_edge_labels,
-    )
-  }
-  @rank_assignment.compute_ranks_directed_base(
+  @rank_assignment.compute_ranks_directed(
     source,
     nodes,
     edges,
     has_edge_labels,
-    edge_tail,
-    edge_head,
-    edge_is_constraint,
-    edge_minlen,
-    edge_weight,
-    (tail_order, edge_creation) => {
-      build_graphviz_nlist_order_from_edges(
-        tail_order,
-        tail_order,
-        edge_creation,
-        Map::new(),
+    graph_has_cluster,
+    (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
+      let _ = graph
+      let _ = graph_nodes
+      let _ = graph_edges
+      @rank_assignment.compute_ranks_directed_base(
+        source,
+        nodes,
+        edges,
+        graph_has_edge_labels,
+        edge_tail,
+        edge_head,
+        edge_is_constraint,
+        edge_minlen,
+        edge_weight,
+        (tail_order, edge_creation) => {
+          build_graphviz_nlist_order_from_edges(
+            tail_order,
+            tail_order,
+            edge_creation,
+            Map::new(),
+          )
+        },
       )
     },
+    (graph, graph_nodes, graph_edges, graph_has_edge_labels) =>
+      compute_ranks_directed_with_clusters(
+        graph,
+        graph_nodes,
+        graph_edges,
+        graph_has_edge_labels,
+      ),
   )
 }
 
