@@ -19,28 +19,6 @@ fn compute_ranks_directed(
       has_edge_labels,
     )
   }
-  rank_assignment_compute_ranks_directed_base(
-    source,
-    nodes,
-    edges,
-    has_edge_labels,
-    edge_tail,
-    edge_head,
-  )
-}
-
-///|
-/// Graphviz parity: base rank assignment keeps agfstout/agfstnode edge-order
-/// driven decomposition behavior (rank.c + acyclic.c via fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn rank_assignment_compute_ranks_directed_base(
-  source : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> Map[String, Int] {
   @rank_assignment.compute_ranks_directed_base(
     source,
     nodes,
@@ -82,13 +60,24 @@ fn compute_ranks_directed_with_clusters(
   if top_clusters.length() == 0 {
     let (base_tail, base_head, _base_reversed) =
       acyclic_edge_directions(source, nodes, edges)
-    return rank_assignment_compute_ranks_directed_base(
+    return @rank_assignment.compute_ranks_directed_base(
       source,
       nodes,
       edges,
       has_edge_labels,
       base_tail,
       base_head,
+      edge_is_constraint,
+      edge_minlen,
+      edge_weight,
+      (tail_order, edge_creation) => {
+        build_graphviz_nlist_order_from_edges(
+          tail_order,
+          tail_order,
+          edge_creation,
+          Map::new(),
+        )
+      },
     )
   }
   let cluster_members = @rank_assignment.collect_cluster_members(cluster_graphs)
