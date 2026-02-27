@@ -8,56 +8,6 @@ fn attr_map(attrs : Array[(String, String)]) -> Map[String, String] {
   map
 }
 
-///|
-fn port_key(port : @cgraph.Port?) -> String {
-  match port {
-    None => ""
-    Some(value) => {
-      let mut out = ""
-      match value.name {
-        Some(name) => out = name
-        None => ()
-      }
-      match value.compass {
-        Some(compass) => {
-          let label = match compass {
-            @cgraph.Compass::N => "n"
-            @cgraph.Compass::NE => "ne"
-            @cgraph.Compass::E => "e"
-            @cgraph.Compass::SE => "se"
-            @cgraph.Compass::S => "s"
-            @cgraph.Compass::SW => "sw"
-            @cgraph.Compass::W => "w"
-            @cgraph.Compass::NW => "nw"
-            @cgraph.Compass::C => "c"
-          }
-          if out == "" {
-            out = label
-          } else {
-            out = "\{out}:\{label}"
-          }
-        }
-        None => ()
-      }
-      out
-    }
-  }
-}
-
-///|
-fn edge_key(edge : @cgraph.Edge) -> String {
-  let tail = edge.tail().name()
-  let head = edge.head().name()
-  let name = match edge.name() {
-    Some(value) => value
-    None => ""
-  }
-  let tail_port = port_key(edge.tail_port())
-  let head_port = port_key(edge.head_port())
-  "\{tail}|\{head}|\{name}|\{tail_port}|\{head_port}"
-}
-
-///|
 fn is_numeric_attr(name : String) -> Bool {
   match name {
     "bb" | "pos" | "lp" | "width" | "height" | "lwidth" | "lheight" | "rects" => true
@@ -179,11 +129,11 @@ fn compare_edges(
   assert_eq(expected_edges.length(), actual_edges.length())
   let expected_map : Map[String, @cgraph.Edge] = Map::new()
   for edge in expected_edges {
-    expected_map[edge_key(edge)] = edge
+    expected_map[@dot_shared.edge_key(edge)] = edge
   }
   let actual_map : Map[String, @cgraph.Edge] = Map::new()
   for edge in actual_edges {
-    actual_map[edge_key(edge)] = edge
+    actual_map[@dot_shared.edge_key(edge)] = edge
   }
   for key, expected_edge in expected_map {
     match actual_map.get(key) {
