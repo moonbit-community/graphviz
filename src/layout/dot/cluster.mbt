@@ -20,6 +20,42 @@ fn graph_has_cluster(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+fn collect_cluster_graphs(
+  graph : @cgraph.Graph,
+  parent : String?,
+  clusters : Map[String, @cgraph.Graph],
+  parents : Map[String, String?],
+) -> Unit {
+  let mut next_parent = parent
+  if is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => {
+        clusters[name] = graph
+        parents[name] = parent
+        next_parent = Some(name)
+      }
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_graphs(child, next_parent, clusters, parents)
+  }
+}
+
+///|
+fn collect_graph_nodes(
+  graph : @cgraph.Graph,
+  nodes_out : Map[String, Bool],
+) -> Unit {
+  for node in graph.nodes() {
+    nodes_out[node.name()] = true
+  }
+  for child in graph.subgraphs() {
+    collect_graph_nodes(child, nodes_out)
+  }
+}
+
+///|
 fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {

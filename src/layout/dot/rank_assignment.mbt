@@ -508,54 +508,13 @@ fn compute_ranks_directed_base(
 /// logic together so clustered ranking behavior is easier to follow.
 
 ///|
-fn rank_assignment_collect_cluster_graphs(
-  graph : @cgraph.Graph,
-  parent : String?,
-  clusters : Map[String, @cgraph.Graph],
-  parents : Map[String, String?],
-) -> Unit {
-  let mut next_parent = parent
-  if is_cluster_graph(graph) {
-    match graph.name() {
-      Some(name) => {
-        clusters[name] = graph
-        parents[name] = parent
-        next_parent = Some(name)
-      }
-      None => ()
-    }
-  }
-  for child in graph.subgraphs() {
-    rank_assignment_collect_cluster_graphs(
-      child,
-      next_parent,
-      clusters,
-      parents,
-    )
-  }
-}
-
-///|
-fn rank_assignment_collect_graph_nodes(
-  graph : @cgraph.Graph,
-  nodes_out : Map[String, Bool],
-) -> Unit {
-  for node in graph.nodes() {
-    nodes_out[node.name()] = true
-  }
-  for child in graph.subgraphs() {
-    rank_assignment_collect_graph_nodes(child, nodes_out)
-  }
-}
-
-///|
 fn rank_assignment_collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
   let members : Map[String, Map[String, Bool]] = Map::new()
   for name, cluster_graph in cluster_graphs {
     let set : Map[String, Bool] = Map::new()
-    rank_assignment_collect_graph_nodes(cluster_graph, set)
+    collect_graph_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
     }
@@ -572,7 +531,7 @@ fn rank_assignment_collect_top_clusters(
 ) -> (Map[String, @cgraph.Graph], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  rank_assignment_collect_cluster_graphs(
+  collect_cluster_graphs(
     source,
     None,
     cluster_graphs,
