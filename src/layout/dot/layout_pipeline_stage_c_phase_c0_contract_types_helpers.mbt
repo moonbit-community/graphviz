@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep cluster/ordering
-/// result type definitions isolated and maintainable.
+/// Stage C Phase C0 split: stage contract type
+/// definitions for cluster metadata and ordering outputs.
 
 ///|
 priv struct ClusterMetadata {
@@ -33,4 +33,3 @@ priv struct OrderingResult {
   gdnlist_order : Array[String]
   vnode_creation_order : Array[String]
 }
-

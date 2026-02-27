@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt`, `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
+Defined across stage data/type files (mainly `layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt`, `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`, `layout_pipeline_stage_c_phase_c0_contract_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -523,7 +523,7 @@ Repository guard validates:
 - Core stage data/type contracts:
   - `layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt`
   - `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`
-  - `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_contract_types_helpers.mbt`
   - `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`
 - Input canonicalization:
   - `layout_pipeline_stage_a_phase_a1_input_helpers.mbt`
