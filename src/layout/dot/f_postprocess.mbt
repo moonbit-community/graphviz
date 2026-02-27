@@ -1509,7 +1509,7 @@ fn finalize_layout_graph(
       ranks,
       flat_label_edge_vnodes,
     )
-  let with_xlabels = place_xlabels(graph, labeled, splines)
+  let with_xlabels = apply_xlabels(graph, labeled, splines)
   let (bbox, label_pos) =
     apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   let labeled_with_root = {

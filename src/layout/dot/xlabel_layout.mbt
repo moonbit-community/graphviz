@@ -1219,15 +1219,3 @@ fn apply_xlabels(
     subgraphs: updated.subgraphs,
   }
 }
-
-///|
-/// Graphviz parity: xlabels placement aligned to refs/graphviz/lib/common/postproc.c
-/// (addXLabels) + lib/label/xlabels.c (placeLabels).
-/// Do not change behavior without updating fixtures/tests.
-fn place_xlabels(
-  graph : @cgraph.Graph,
-  layout : DotLayoutGraph,
-  splines : SplinesMode,
-) -> DotLayoutGraph {
-  apply_xlabels(graph, layout, splines)
-}
