@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `layout_pipeline_stage_b_prep_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_position_types_helpers.mbt`).
+Defined across stage data/type files (mainly `layout_pipeline_stage_a_input_types_helpers.mbt`, `layout_pipeline_stage_b_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_position_types_helpers.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -151,7 +151,7 @@ flowchart LR
 Main files:
 
 - `src/layout/dot/layout_pipeline_stage_a_input_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_b_prep_rank_types_helpers.mbt` (shared prep/rank structs)
+- `src/layout/dot/layout_pipeline_stage_a_input_types_helpers.mbt` (stage input struct contract)
 
 ### What it does
 
@@ -511,6 +511,11 @@ Repository guard validates:
 
 - Entry + stage orchestration:
   - `layout.mbt`, `layout_stage_pipeline_orchestrator.mbt`
+- Core stage data/type contracts:
+  - `layout_pipeline_stage_a_input_types_helpers.mbt`
+  - `layout_pipeline_stage_b_rank_types_helpers.mbt`
+  - `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`
+  - `layout_pipeline_stage_d_position_types_helpers.mbt`
 - Input canonicalization:
   - `layout_pipeline_stage_a_input_helpers.mbt`
 - Rank assignment and rank heights:
