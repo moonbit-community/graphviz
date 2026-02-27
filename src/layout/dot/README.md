@@ -1,5 +1,8 @@
 This package uses pre-generated assets to avoid expensive MoonBit pre-build steps.
 
+Detailed algorithm documentation:
+- `src/layout/dot/DOT_LAYOUT_ALGORITHM.md` (end-to-end DOT layout pipeline, ordering/remincross details, routing/postprocess flow).
+
 Manual regeneration:
 - `DOT_BIN=refs/graphviz/build/cmd/dot/dot_builtins bash scripts/generate_font_metrics.sh` (updates `src/layout/dot/font_metrics/font_metrics.generated.mbt` with text widths + kerning; requires Graphviz build + `python3`).
 - `bash scripts/generate_textspan_fixtures_from_xdot.sh` (updates `tests/fixtures/graphviz/textspan.jsonl` from xdot snapshots; requires `python3`).
