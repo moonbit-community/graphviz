@@ -231,21 +231,21 @@ fn reorder_constraint_graph(
   if total == 0 || order.length() != total {
     return (graph, index)
   }
-  let new_graph = new_graph()
+  let new_graph = @network_simplex.new_graph()
   let old_to_new : Array[Int] = []
   for _ in 0..<total {
     old_to_new.push(-1)
   }
   for old_idx in order {
     let node = graph.nodes[old_idx]
-    let new_idx = add_node(new_graph, "", kind=node.kind)
-    set_node_rank(new_graph, new_idx, node.rank)
+    let new_idx = @network_simplex.add_node(new_graph, "", kind=node.kind)
+    @network_simplex.set_node_rank(new_graph, new_idx, node.rank)
     old_to_new[old_idx] = new_idx
   }
   for edge in graph.edges {
     let tail = old_to_new[edge.tail]
     let head = old_to_new[edge.head]
-    let _ = add_edge(new_graph, tail, head, edge.minlen, edge.weight)
+    let _ = @network_simplex.add_edge(new_graph, tail, head, edge.minlen, edge.weight)
   }
   let new_index : Map[String, Int] = Map::new()
   for name, old_idx in index {
@@ -1491,7 +1491,7 @@ fn build_constraint_graph(
   compress_width_minlen : Int?,
 ) -> (NsGraph, Map[String, Int]) {
   let _ = extra_slack_edges
-  let graph = new_graph()
+  let graph = @network_simplex.new_graph()
   let ordered_nodes = nodes
   let mut has_port_edges = false
   for edge in edges {
@@ -1578,24 +1578,24 @@ fn build_constraint_graph(
   for name in ordered_names {
     match real_by_name.get(name) {
       Some(node) => {
-        let idx = add_node(graph, node.name())
+        let idx = @network_simplex.add_node(graph, node.name())
         index[name] = idx
         let pos = match base_positions.get(name) {
           Some(value) => value
           None => 0.0
         }
-        set_node_rank(graph, idx, trunc_int(pos))
+        @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
       }
       None =>
         match extra_rank.get(name) {
           Some(rank) => {
-            let idx = add_node(graph, name, kind=extra_node_kind(name))
+            let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
             index[name] = idx
             let pos = match base_positions.get(name) {
               Some(value) => value
               None => rank.to_double()
             }
-            set_node_rank(graph, idx, trunc_int(pos))
+            @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
           }
           None => ()
         }
@@ -1985,7 +1985,7 @@ fn build_constraint_graph(
           Some(tail_idx) =>
             match index.get(head) {
               Some(head_idx) => {
-                let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+                let _ = @network_simplex.add_edge(graph, tail_idx, head_idx, minlen, weight)
               }
               None => ()
             }
@@ -2001,7 +2001,7 @@ fn build_constraint_graph(
       Some(tail_idx) =>
         match index.get(right) {
           Some(head_idx) => {
-            let _ = add_edge(graph, tail_idx, head_idx, minlen, weight)
+            let _ = @network_simplex.add_edge(graph, tail_idx, head_idx, minlen, weight)
           }
           None => ()
         }
@@ -2043,18 +2043,18 @@ fn build_constraint_graph(
       let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
       let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
       // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
-      let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-      let tail_rank = node_rank(graph, tail_idx)
-      let head_rank = node_rank(graph, head_idx)
+      let slack_idx = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+      let tail_rank = @network_simplex.node_rank(graph, tail_idx)
+      let head_rank = @network_simplex.node_rank(graph, head_idx)
       let base_tail = tail_rank - m0 - 1
       let base_head = head_rank - m1 - 1
-      set_node_rank(
+      @network_simplex.set_node_rank(
         graph,
         slack_idx,
         if base_tail < base_head { base_tail } else { base_head },
       )
-      let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
-      let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
+      let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
+      let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
     }
     tail_seen[tail_name] = true
   }
@@ -2088,34 +2088,34 @@ fn build_constraint_graph(
         let delta = head_offset - tail_offset
         let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
         let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-        let slack_idx = add_node(graph, "", kind=NodeKind::Slack)
-        let tail_rank = node_rank(graph, tail_idx)
-        let head_rank = node_rank(graph, head_idx)
+        let slack_idx = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+        let tail_rank = @network_simplex.node_rank(graph, tail_idx)
+        let head_rank = @network_simplex.node_rank(graph, head_idx)
         let base_tail = tail_rank - m0 - 1
         let base_head = head_rank - m1 - 1
-        set_node_rank(
+        @network_simplex.set_node_rank(
           graph,
           slack_idx,
           if base_tail < base_head { base_tail } else { base_head },
         )
-        let _ = add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
-        let _ = add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
+        let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
+        let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
       }
     }
   }
   for pair in late_extra_nodes {
     let (name, _rank) = pair
-    let idx = add_node(graph, name, kind=extra_node_kind(name))
+    let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
     index[name] = idx
     // Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
     // and are later positioned by constraints, not by seed x ranks.
-    set_node_rank(graph, idx, 0)
+    @network_simplex.set_node_rank(graph, idx, 0)
   }
   if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
-    let root_ln = add_node(graph, "", kind=NodeKind::Slack)
-    let root_rn = add_node(graph, "", kind=NodeKind::Slack)
-    set_node_rank(graph, root_ln, 0)
-    set_node_rank(graph, root_rn, 0)
+    let root_ln = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+    let root_rn = @network_simplex.add_node(graph, "", kind=NodeKind::Slack)
+    @network_simplex.set_node_rank(graph, root_ln, 0)
+    @network_simplex.set_node_rank(graph, root_rn, 0)
     let root_margin = if nodes.length() > 0 {
       cluster_margin_pt(nodes[0].graph())
     } else {
@@ -2131,7 +2131,7 @@ fn build_constraint_graph(
             } else {
               round_int(root_margin)
             }
-          let _ = add_edge(graph, root_ln, idx, minlen, 0)
+          let _ = @network_simplex.add_edge(graph, root_ln, idx, minlen, 0)
         }
         None => ()
       }
@@ -2145,14 +2145,14 @@ fn build_constraint_graph(
             } else {
               round_int(root_margin)
             }
-          let _ = add_edge(graph, idx, root_rn, minlen, 0)
+          let _ = @network_simplex.add_edge(graph, idx, root_rn, minlen, 0)
         }
         None => ()
       }
     }
     match compress_width_minlen {
       Some(width_minlen) => {
-        let _ = add_edge(
+        let _ = @network_simplex.add_edge(
           graph,
           root_ln,
           root_rn,
@@ -2170,7 +2170,7 @@ fn build_constraint_graph(
       Some(tail_idx) =>
         match index.get(edge.head) {
           Some(head_idx) => {
-            let _ = add_edge(
+            let _ = @network_simplex.add_edge(
               graph,
               tail_idx,
               head_idx,
@@ -2337,7 +2337,7 @@ fn x_positions_from_simplex(
   }
   dot_trace("xpos: constraint graph built")
   dot_trace("xpos: network simplex")
-  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
@@ -2346,7 +2346,7 @@ fn x_positions_from_simplex(
       Some(value) => value
       None => 0
     }
-    positions[name] = node_rank(graph, idx).to_double()
+    positions[name] = @network_simplex.node_rank(graph, idx).to_double()
   }
   for pair in extra_nodes {
     let (name, _rank) = pair
@@ -2354,7 +2354,7 @@ fn x_positions_from_simplex(
       Some(value) => value
       None => 0
     }
-    positions[name] = node_rank(graph, idx).to_double()
+    positions[name] = @network_simplex.node_rank(graph, idx).to_double()
   }
   positions
 }

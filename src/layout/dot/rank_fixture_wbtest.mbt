@@ -250,7 +250,7 @@ fn assert_ranks(
 
 ///|
 fn build_fixture_graph(input : SimplexInput) -> NsGraph raise {
-  let graph = new_graph()
+  let graph = @network_simplex.new_graph()
   for node in input.nodes {
     let name = match node.name {
       Json::Null => ""
@@ -258,20 +258,20 @@ fn build_fixture_graph(input : SimplexInput) -> NsGraph raise {
       _ => fail("unexpected node name payload")
     }
     let kind = fixture_node_kind(node.kind)
-    let idx = add_node(graph, name, kind=kind)
+    let idx = @network_simplex.add_node(graph, name, kind=kind)
     if idx != node.id {
       fail(
         "case \{input.case_id} node id mismatch expected=\{node.id} actual=\{idx}",
       )
     }
-    set_node_rank(graph, idx, node.rank)
+    @network_simplex.set_node_rank(graph, idx, node.rank)
   }
   let in_positions : Array[Int] = []
   for edge in input.edges {
     if edge.seq < 0 {
       fail("case \{input.case_id} negative edge seq \{edge.seq}")
     }
-    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+    let _ = @network_simplex.add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
     in_positions.push(edge.in_pos)
   }
   for i in 0..<graph.nodes.length() {
@@ -304,12 +304,12 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
       }
       let _ = @network_simplex.normalize_ranks_for_test(graph)
     }
-    2 => network_simplex(graph, 0x7fffffff, BalanceMode::LR)
-    _ => network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+    2 => @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+    _ => @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::TB)
   }
   let actual_ranks : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual_ranks.push(node_rank(graph, i))
+    actual_ranks.push(@network_simplex.node_rank(graph, i))
   }
   assert_ranks(input.case_id, actual_ranks, output.ranks)
 }
@@ -349,7 +349,7 @@ fn run_pre_balance_case(case_info : SimplexCase) -> Unit raise {
   }
   let actual_ranks : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual_ranks.push(node_rank(graph, i))
+    actual_ranks.push(@network_simplex.node_rank(graph, i))
   }
   assert_ranks(input.case_id, actual_ranks, case_info.pre_balance)
 }

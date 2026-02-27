@@ -245,15 +245,15 @@ fn assert_positions(
 ///|
 fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
   let _ = assert_xpos_input(input)
-  let graph = new_graph()
+  let graph = @network_simplex.new_graph()
   for node in input.nodes {
-    let idx = add_node(graph, "", kind=fixture_node_kind(node.kind))
+    let idx = @network_simplex.add_node(graph, "", kind=fixture_node_kind(node.kind))
     if idx != node.id {
       fail(
         "case \{input.case_id} graph=\{input.graph} node id mismatch expected=\{node.id} actual=\{idx}",
       )
     }
-    set_node_rank(graph, idx, node.rank)
+    @network_simplex.set_node_rank(graph, idx, node.rank)
   }
   for edge in input.edges {
     if edge.weight < 0 {
@@ -261,12 +261,12 @@ fn run_xpos_case(input : XposInput, output : XposOutput) -> Unit raise {
         "case \{input.case_id} graph=\{input.graph} negative weight \{edge.weight}",
       )
     }
-    let _ = add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
+    let _ = @network_simplex.add_edge(graph, edge.tail, edge.head, edge.minlen, edge.weight)
   }
-  network_simplex(graph, 0x7fffffff, BalanceMode::LR)
+  @network_simplex.network_simplex(graph, 0x7fffffff, BalanceMode::LR)
   let actual : Array[Int] = []
   for i in 0..<input.nodes.length() {
-    actual.push(node_rank(graph, i))
+    actual.push(@network_simplex.node_rank(graph, i))
   }
   assert_positions(input.case_id, input.graph, actual, output.positions)
 }
