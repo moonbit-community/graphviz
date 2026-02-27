@@ -254,6 +254,8 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_forward_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_dispatch_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_*` (Stage C ReMincross family)
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
@@ -579,6 +581,8 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_forward_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_dispatch_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_reorder_execute_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_reorder_input_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_clustered_*`
