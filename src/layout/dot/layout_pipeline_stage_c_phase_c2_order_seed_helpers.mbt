@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep Stage C ordering trace,
-/// edge materialization, and seeded-group helpers isolated.
+/// Stage C Phase C2 split: ordering trace, seeded-group,
+/// and early reorder-input materialization helpers.
 
 ///|
 /// Debug trace: dump GD_nlist sequence and skeleton-node subset when

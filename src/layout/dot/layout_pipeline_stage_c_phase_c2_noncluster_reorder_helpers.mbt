@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to isolate Stage C non-cluster
-/// rank-reorder helpers from shared/clustered ordering stages.
+/// Stage C Phase C2 split: non-cluster rank-reorder
+/// helpers isolated from clustered ordering branches.
 
 ///|
 /// Graphviz parity: non-cluster reorder output keeps reordered rank groups from

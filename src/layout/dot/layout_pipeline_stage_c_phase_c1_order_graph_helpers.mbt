@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep class2/order-graph
-/// construction helpers isolated and easier to maintain.
+/// Stage C Phase C1 split: class2/order-graph
+/// construction helpers for ordering-graph assembly.
 
 ///|
 /// Graphviz parity: class2 traverses agfstnode creation order.
@@ -1007,4 +1007,3 @@ fn build_order_groups_for_root_mincross(
   }
   filtered
 }
-

@@ -237,11 +237,11 @@ Entry:
 
 Supporting files:
 
-- `src/layout/dot/layout_pipeline_stage_c_order_edge_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_order_graph_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_order_seed_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_order_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_noncluster_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c2_order_seed_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c2_order_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c2_noncluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
@@ -526,13 +526,13 @@ Repository guard validates:
 - Ordering dispatch + shared stage logic:
   - `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 - Ordering edge materialization:
-  - `layout_pipeline_stage_c_order_edge_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt`
 - Ordering graph construction helpers:
-  - `layout_pipeline_stage_c_order_graph_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt`
 - Stage C ordering seed/reorder helpers:
-  - `layout_pipeline_stage_c_order_seed_helpers.mbt`
-  - `layout_pipeline_stage_c_order_reorder_helpers.mbt`
-  - `layout_pipeline_stage_c_noncluster_reorder_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c2_order_seed_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c2_order_reorder_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c2_noncluster_reorder_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
 - Cluster-local reorder:
   - `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
@@ -571,7 +571,7 @@ If you are new to layout algorithms, read in this order:
 2. `layout_stage_pipeline_orchestrator.mbt` — understand stage boundaries.
 3. `layout_pipeline_stage_a_input_helpers.mbt` — understand canonical input formation.
 4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
-5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
+5. `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt` + `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c5_remincross_*` — understand clustered reorder/refinement.
 7. `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.

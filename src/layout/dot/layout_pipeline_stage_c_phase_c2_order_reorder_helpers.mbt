@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep Stage C ordering-stage
-/// reorder/materialization helpers isolated and easier to maintain.
+/// Stage C Phase C2 split: ordering-stage reorder
+/// and materialization helpers for root mincross flow.
 
 ///|
 /// Graphviz parity: order-reorder context output keeps order-graph handles,

@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep order-edge,
-/// cluster-skeleton seeding, and graphviz-neighbor helpers isolated.
+/// Stage C Phase C1 split: ordering-edge materialization,
+/// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
 /// Graphviz parity: order-edge endpoint names may map to swapped virtual
@@ -942,4 +942,3 @@ fn build_skeleton_edge_creation_for_order_graph(
   )
   skeleton_edge_creation
 }
-
