@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// root-cluster/finalize stage type definitions isolated.
+/// Stage C Phase C4/C6 split: root-cluster and finalize
+/// stage type definitions for clustered ordering flow.
 
 ///|
 priv struct OrderRootClusterStageData {
@@ -200,4 +200,3 @@ priv struct RootMincrossRankReorderFinalizeDispatchContext {
   graphviz_in_neighbors : Map[String, Array[String]]
   graphviz_flip : Bool
 }
-

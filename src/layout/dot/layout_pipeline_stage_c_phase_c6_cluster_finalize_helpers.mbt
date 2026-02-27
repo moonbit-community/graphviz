@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep cluster-rank
-/// finalize/remincross stage helpers isolated and maintainable.
+/// Stage C Phase C6 split: cluster-rank finalize
+/// and post-remincross cleanup helpers.
 
 ///|
 /// Graphviz parity: clustered finalize stage output keeps final rank groups and
@@ -819,4 +819,3 @@ fn run_cluster_rank_order_and_finalize_stage(
     finalize_pass_output,
   )
 }
-

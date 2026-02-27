@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep root+cluster
-/// build_ranks/reorder stage helpers isolated and maintainable.
+/// Stage C Phase C4 split: root+cluster build_ranks
+/// and reorder helpers for root-cluster arrangement.
 
 ///|
 /// Graphviz parity: root+cluster build_ranks stage output preserves root
@@ -1120,5 +1120,4 @@ fn run_root_and_cluster_build_ranks_stage(
     root_reorder_output,
   )
 }
-
 
