@@ -103,16 +103,6 @@ priv struct OrderMaterializationData {
 }
 
 ///|
-priv struct OrderClusteredPreRootStageData {
-  order_groups : Map[Int, Array[String]]
-  order_sizes_out : Map[String, NodeSize]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  reorder_context : OrderReorderContext
-  materialized : OrderMaterializationData
-}
-
-///|
 priv struct OrderingBaseContext {
   real_nodes : Map[String, Bool]
   edge_cluster_keys : Map[String, String]

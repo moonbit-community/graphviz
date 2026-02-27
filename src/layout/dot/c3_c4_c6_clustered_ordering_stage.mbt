@@ -50,6 +50,19 @@ priv struct ClusteredOrderingPreRootStageContext {
 }
 
 ///|
+/// Graphviz parity: clustered pre-root stage output carries grouped sizes,
+/// cluster skeleton maps, reorder context, and materialized edges unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderClusteredPreRootStageData {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+}
+
+///|
 /// Graphviz parity: clustered ordering pre-root/root phase context keeps
 /// stage setup payload ordering unchanged before stage-phase dispatch.
 /// Do not change behavior without updating fixtures/tests.
