@@ -65,6 +65,24 @@ layout_dot
   -> finalize_layout_graph
 ```
 
+Pipeline diagram:
+
+```mermaid
+flowchart TD
+    A[layout_dot] --> B[prepare_layout_inputs]
+    B --> C[compute_dot_rank_stage]
+    C --> C1[compute_rank_data]
+    C --> C2[compute_rank_heights]
+    C --> C3[compute_cluster_metadata]
+    C --> C4[compute_ordering_and_vnodes]
+    C4 --> D[compute_dot_position_stage]
+    D --> D1[compute_positions]
+    D1 --> E[compute_dot_routing_stage]
+    E --> E1[build routing context]
+    E --> E2[route_edges]
+    E2 --> F[finalize_layout_graph]
+```
+
 Pipeline orchestrator files:
 
 - `src/layout/dot/layout.mbt`
@@ -100,6 +118,31 @@ Why these objects matter:
 - each stage consumes an explicit contract,
 - reduces hidden coupling,
 - makes parity diffs easier to localize.
+
+Data handoff diagram:
+
+```mermaid
+flowchart LR
+    G[Graph + options] --> LP[LayoutPrep]
+    LP --> RD[RankData]
+    LP --> RH[RankHeights]
+    LP --> CM[ClusterMetadata]
+    RD --> OR[OrderingResult]
+    RH --> OR
+    CM --> OR
+    LP --> PR[PositionResult]
+    RD --> PR
+    RH --> PR
+    CM --> PR
+    OR --> PR
+    LP --> RT[Routing]
+    RD --> RT
+    RH --> RT
+    CM --> RT
+    OR --> RT
+    PR --> RT
+    RT --> OUT[DotLayoutGraph attrs]
+```
 
 ---
 
@@ -404,6 +447,30 @@ Graphviz-compatible behavior is highly order-sensitive. Explicit maps/arrays pre
 ### 10.4 Why are there many helper files?
 
 The algorithm is complex. Splitting by responsibility (input, rank, order-edge, order-graph, cluster-local reorder, root-cluster reorder, routing) improves maintainability while keeping behavior unchanged.
+
+### 10.5 What happens to a single long edge?
+
+For beginners, this is often the hardest part. A long edge is not routed “as-is” immediately.
+
+Typical journey:
+
+1. rank stage decides endpoint ranks,
+2. ordering stage may expand the edge into vnode chain segments,
+3. mincross/remincross reorders ranks to reduce crossings,
+4. position stage assigns x/y to endpoints and vnodes,
+5. routing stage converts that geometry into spline control points.
+
+```mermaid
+flowchart TD
+    E0[Original edge tail -> head] --> E1[Rank assignment]
+    E1 --> E2[VNode chain expansion if needed]
+    E2 --> E3[Mincross / ReMincross ordering]
+    E3 --> E4[X/Y coordinate solve]
+    E4 --> E5[Route spline points]
+    E5 --> E6[Write edge pos/lp attrs]
+```
+
+This is why long edges can still look smooth and consistent even when they span many layers and clusters.
 
 ---
 
