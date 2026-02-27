@@ -975,13 +975,13 @@ fn build_clustered_ordering_stage_dispatch_context(
 }
 
 ///|
-/// Graphviz parity: clustered ordering pre-root/root phase context extraction
-/// reads stage dispatch fields without argument reordering.
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_ordering_stage_pre_root_and_root_phase_context_from_dispatch_context(
+fn run_clustered_ordering_stage(
   stage_dispatch_context : ClusteredOrderingStageDispatchContext,
-) -> ClusteredOrderingPreRootAndRootPhaseContext {
-  build_clustered_ordering_stage_pre_root_and_root_phase_context(
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let phase_context = build_clustered_ordering_stage_pre_root_and_root_phase_context(
     stage_dispatch_context.graph,
     stage_dispatch_context.nodes,
     stage_dispatch_context.edges,
@@ -999,16 +999,10 @@ fn build_clustered_ordering_stage_pre_root_and_root_phase_context_from_dispatch_
     stage_dispatch_context.reorder_setup,
     stage_dispatch_context.class2_data,
   )
-}
-
-///|
-/// Graphviz parity: clustered ordering finalize dispatch context extraction
-/// reads stage dispatch payloads without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_ordering_stage_output_phase_dispatch_context_from_dispatch_context(
-  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
-) -> ClusterFinalizePassDispatchContext {
-  build_clustered_ordering_stage_output_phase_dispatch_context(
+  let stage_output = run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+    phase_context,
+  )
+  let finalize_dispatch_context = build_clustered_ordering_stage_output_phase_dispatch_context(
     stage_dispatch_context.graph,
     stage_dispatch_context.edges,
     stage_dispatch_context.edge_tail,
@@ -1026,26 +1020,6 @@ fn build_clustered_ordering_stage_output_phase_dispatch_context_from_dispatch_co
     stage_dispatch_context.reorder_setup,
     stage_dispatch_context.class2_data,
   )
-}
-
-///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage(
-  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let phase_context =
-    build_clustered_ordering_stage_pre_root_and_root_phase_context_from_dispatch_context(
-      stage_dispatch_context,
-    )
-  let stage_output = run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
-    phase_context,
-  )
-  let finalize_dispatch_context =
-    build_clustered_ordering_stage_output_phase_dispatch_context_from_dispatch_context(
-      stage_dispatch_context,
-    )
   let (pre_root_stage, root_cluster_stage) = stage_output
   run_clustered_ordering_stage_from_phase_context(
     finalize_dispatch_context,
