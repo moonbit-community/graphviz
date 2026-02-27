@@ -5,29 +5,6 @@ type NodeSize = @dot_shared.NodeSize
 type RankDir = @dot_shared.RankDir
 
 ///|
-/// Graphviz parity: route/splines aligned to refs/graphviz/lib/pathplan/*.c + common/routespl.c + common/splines.c + dotgen/dotsplines.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn default_node_width_in() -> Double {
-  @dot_shared.default_node_width_in()
-}
-
-///|
-fn default_node_height_in() -> Double {
-  @dot_shared.default_node_height_in()
-}
-
-///|
-fn node_size_from_points(width_pt : Double, height_pt : Double) -> NodeSize {
-  @dot_shared.node_size_from_points(width_pt, height_pt)
-}
-
-///|
-///|
-fn edge_vnode_key(edge : @cgraph.Edge) -> String {
-  @dot_shared.edge_vnode_key(edge)
-}
-
-///|
 fn min_double(a : Double, b : Double) -> Double {
   if a < b { a } else { b }
 }
@@ -92,7 +69,7 @@ pub fn build_path_adjacency(
   let in_edges : Map[String, Array[String]] = Map::new()
   let mut edge_idx = 0
   for edge in edges {
-    let key = edge_vnode_key(edge)
+    let key = @dot_shared.edge_vnode_key(edge)
     let vnodes = match edge_vnodes.get(key) {
       Some(list) => list
       None => []
@@ -495,9 +472,9 @@ fn size_for_name(name : String, sizes : Map[String, NodeSize]) -> NodeSize {
   match sizes.get(name) {
     Some(value) => value
     None =>
-      node_size_from_points(
-        default_node_width_in() * 72.0,
-        default_node_height_in() * 72.0,
+      @dot_shared.node_size_from_points(
+        @dot_shared.default_node_width_in() * 72.0,
+        @dot_shared.default_node_height_in() * 72.0,
       )
   }
 }
@@ -1760,7 +1737,7 @@ pub fn edge_pathplan_polyline(
   right_bound : Double,
   has_edge_label : Bool,
 ) -> PathplanResult? {
-  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(list) => list.copy()
     None => []
   }

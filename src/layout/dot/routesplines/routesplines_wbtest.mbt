@@ -18,7 +18,7 @@ test "dedupe_polyline_points removes consecutive duplicates" {
 test "beginpath/endpath nudges follow side masks" {
   let base_box : @geom.Rect = { llx: -5.0, lly: -5.0, urx: 5.0, ury: 5.0 }
   let node_pos : @geom.Point = { x: 0.0, y: 0.0 }
-  let node_size = node_size_from_points(10.0, 10.0)
+  let node_size = @dot_shared.node_size_from_points(10.0, 10.0)
 
   let (tail_boxes, tail_start) = beginpath_boxes_regular(
     base_box,
