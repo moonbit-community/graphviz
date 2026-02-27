@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep ordering-stage
+/// Stage-focused split to keep ordering-stage
 /// clustered/nonclustered dispatch helpers isolated and maintainable.
 
 ///|

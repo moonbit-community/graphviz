@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep cluster-local
+/// Stage-focused split to keep cluster-local
 /// reorder/build-ranks helpers isolated and easier to navigate.
 
 ///|

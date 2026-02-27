@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep order-edge,
+/// Stage-focused split to keep order-edge,
 /// cluster-skeleton seeding, and graphviz-neighbor helpers isolated.
 
 ///|

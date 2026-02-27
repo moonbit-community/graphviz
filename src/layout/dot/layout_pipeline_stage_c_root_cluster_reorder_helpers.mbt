@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep root cluster
+/// Stage-focused split to keep root cluster
 /// reorder/rank-order helpers isolated from the core pipeline flow.
 
 ///|

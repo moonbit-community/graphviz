@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep rank computation
+/// Stage-focused split to keep rank computation
 /// helpers isolated and easier to navigate.
 
 /// Graphviz parity: edge direction/order comes from acyclic.c for both

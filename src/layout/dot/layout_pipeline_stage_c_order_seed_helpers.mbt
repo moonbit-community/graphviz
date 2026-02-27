@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep Stage C ordering trace,
+/// Stage-focused split to keep Stage C ordering trace,
 /// edge materialization, and seeded-group helpers isolated.
 
 ///|

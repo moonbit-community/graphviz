@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep ordering class2
+/// Stage-focused split to keep ordering class2
 /// preprocessing helpers isolated and easier to maintain.
 
 ///|

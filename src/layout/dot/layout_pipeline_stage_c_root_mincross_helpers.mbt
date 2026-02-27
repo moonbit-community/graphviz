@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep root ReMincross
+/// Stage-focused split to keep root ReMincross
 /// rank-reorder/replay helpers isolated and maintainable.
 
 ///|

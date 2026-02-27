@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep Stage C ReMincross
+/// Stage-focused split to keep Stage C ReMincross
 /// reorder execution helpers isolated from non-cluster order flow.
 
 ///|

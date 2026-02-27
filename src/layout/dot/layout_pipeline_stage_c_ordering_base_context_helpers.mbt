@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep shared ordering
+/// Stage-focused split to keep shared ordering
 /// base-context + position-name helpers isolated and maintainable.
 
 ///|

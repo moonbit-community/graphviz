@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep cluster-rank
+/// Stage-focused split to keep cluster-rank
 /// finalize/remincross stage helpers isolated and maintainable.
 
 ///|

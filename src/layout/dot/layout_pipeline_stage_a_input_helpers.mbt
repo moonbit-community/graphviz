@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep layout input prep
+/// Stage-focused split to keep layout input prep
 /// logic isolated and easier to navigate.
 
 ///|

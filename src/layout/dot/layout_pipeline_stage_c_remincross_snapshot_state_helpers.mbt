@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep ReMincross snapshot
+/// Stage-focused split to keep ReMincross snapshot
 /// structs/state refs and touch helpers isolated and maintainable.
 
 ///|

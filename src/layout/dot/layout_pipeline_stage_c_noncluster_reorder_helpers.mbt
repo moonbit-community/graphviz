@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate Stage C non-cluster
+/// Stage-focused split to isolate Stage C non-cluster
 /// rank-reorder helpers from shared/clustered ordering stages.
 
 ///|

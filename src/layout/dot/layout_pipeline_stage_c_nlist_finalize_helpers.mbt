@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep Stage C finalize-order
+/// Stage-focused split to keep Stage C finalize-order
 /// group cleanup and nlist-creation helpers isolated.
 
 ///|

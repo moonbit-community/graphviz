@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep class2/order-graph
+/// Stage-focused split to keep class2/order-graph
 /// construction helpers isolated and easier to maintain.
 
 ///|

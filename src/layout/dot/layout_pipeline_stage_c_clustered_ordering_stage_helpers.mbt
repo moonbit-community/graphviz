@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep clustered ordering
+/// Stage-focused split to keep clustered ordering
 /// pre-root/root/finalize stage helpers isolated and maintainable.
 
 ///|

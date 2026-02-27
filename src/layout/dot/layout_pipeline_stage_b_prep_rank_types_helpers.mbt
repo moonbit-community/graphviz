@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep layout prep/rank
+/// Stage-focused split to keep layout prep/rank
 /// data-model type definitions isolated and maintainable.
 
 ///|

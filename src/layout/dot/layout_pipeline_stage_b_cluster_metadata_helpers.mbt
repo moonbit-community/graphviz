@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep cluster metadata
+/// Stage-focused split to keep cluster metadata
 /// preprocessing and rank-same helpers isolated and maintainable.
 
 ///|
