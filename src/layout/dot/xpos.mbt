@@ -1806,7 +1806,7 @@ fn build_constraint_graph(
               Some(value) => value
               None => 0
             }
-            if tail_rank == head_rank && edge_is_constraint(edge) &&
+            if tail_rank == head_rank && @dot_shared.edge_is_constraint(edge) &&
               edge_mid_label_metrics(edge) is None {
               let (left, right) =
                 match (order_in_rank.get(tail_name), order_in_rank.get(head_name)) {

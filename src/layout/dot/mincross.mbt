@@ -1327,7 +1327,7 @@ fn reorder_rank_groups(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     let mut penalty = base_penalty
-    if coalesce_parallel_edges && base_penalty > 0 && edge_is_constraint(edge) {
+    if coalesce_parallel_edges && base_penalty > 0 && @dot_shared.edge_is_constraint(edge) {
       let tail_port_order =
         if edge_idx < edge_tail_port_order.length() { edge_tail_port_order[edge_idx] } else {
           0.5
@@ -1348,7 +1348,7 @@ fn reorder_rank_groups(
       }
     }
     edge_penalty.push(penalty)
-    if penalty <= 0 || !edge_is_constraint(edge) {
+    if penalty <= 0 || !@dot_shared.edge_is_constraint(edge) {
       continue
     }
     let tail_rank = match node_ranks.get(tail) {

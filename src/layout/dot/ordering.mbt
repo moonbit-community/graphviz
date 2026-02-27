@@ -1087,7 +1087,7 @@ fn count_crossings(
   let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    if !edge_is_constraint(edge) {
+    if !@dot_shared.edge_is_constraint(edge) {
       continue
     }
     let tail = edge_tail[edge_idx]
@@ -1305,7 +1305,7 @@ fn count_crossings_graphviz(
     let edge = edges[edge_idx]
     let penalty = edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if !edge_is_constraint(edge) {
+    if !@dot_shared.edge_is_constraint(edge) {
       continue
     }
     if penalty <= 0 {

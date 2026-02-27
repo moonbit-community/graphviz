@@ -1,9 +1,3 @@
-///|
-fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
-  @dot_shared.edge_is_constraint(edge)
-}
-
-///|
 fn edge_weight(edge : @cgraph.Edge) -> Int {
   let weight_value = match edge.get_attr("weight") {
     Some(value) => parse_double(value, 1.0)
@@ -13,7 +7,7 @@ fn edge_weight(edge : @cgraph.Edge) -> Int {
   if weight < 0 {
     weight = 0
   }
-  if !edge_is_constraint(edge) {
+  if !@dot_shared.edge_is_constraint(edge) {
     return 0
   }
   let tail_group = match edge.tail().get_attr("group") {
@@ -40,7 +34,7 @@ fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
   if penalty < 0 {
     penalty = 0
   }
-  if !edge_is_constraint(edge) {
+  if !@dot_shared.edge_is_constraint(edge) {
     return 0
   }
   penalty

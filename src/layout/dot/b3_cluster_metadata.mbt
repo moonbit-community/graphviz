@@ -79,7 +79,7 @@ fn append_same_rank_flat_constraints_for_metadata(
 ) -> Unit {
   let mut edge_idx = 0
   while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !edge_is_constraint(edges[edge_idx]) {
+    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
       edge_idx = edge_idx + 1
       continue
     }

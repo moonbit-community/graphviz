@@ -532,7 +532,7 @@ fn build_order_edges_by_tail_graphviz(
         head
       }
       let penalty = edge_xpenalty(edge)
-      let constraint = edge_is_constraint(edge)
+      let constraint = @dot_shared.edge_is_constraint(edge)
       let tail_port_x =
         if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else {
           0.0

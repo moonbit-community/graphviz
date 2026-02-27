@@ -355,7 +355,7 @@ fn build_clustered_xpos_reorder_input_edge_data(
       edge.head().name()
     }
   let penalty = edge_xpenalty(edge)
-  let constraint = edge_is_constraint(edge)
+  let constraint = @dot_shared.edge_is_constraint(edge)
   let tail_port_x =
     if edge_idx < x_edge_tail_port_x.length() { x_edge_tail_port_x[edge_idx] } else {
       0.0

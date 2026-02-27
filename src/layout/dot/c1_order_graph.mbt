@@ -168,7 +168,7 @@ fn collect_intercluster_vnode_tail_bonus(
       let intercluster =
         order_with_clusters && tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
-      if !intercluster || !edge_is_constraint(edge) || edge_xpenalty(edge) <= 0 {
+      if !intercluster || !@dot_shared.edge_is_constraint(edge) || edge_xpenalty(edge) <= 0 {
         continue
       }
       let tail_port_order =
@@ -947,7 +947,7 @@ fn build_transpose_seed_edge_maps(
     let edge = order_edges_out[edge_idx]
     let penalty = edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if penalty <= 0 || !edge_is_constraint(edge) {
+    if penalty <= 0 || !@dot_shared.edge_is_constraint(edge) {
       continue
     }
     let tail = order_edge_tail_out[edge_idx]
