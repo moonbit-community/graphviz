@@ -1618,67 +1618,8 @@ fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: cluster-enabled rank-order forwarding reads rank-same and
-/// flat-constraint maps from cluster metadata before root-order assembly call.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_with_cluster_meta(
-  root_groups : Map[Int, Array[String]],
-  root_rank_keys : Array[Int],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_cluster_skeleton : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-    order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_flip,
-    real_nodes,
-  )
-}
-
-
-///|
 /// Graphviz parity: cluster-enabled rank-order root phase builds root-only
-/// reorder payload before cluster-metadata forwarding and final map assembly.
+/// reorder payload before final cluster-rank-order map assembly.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_rank_order_when_clusters_enabled_root_reorder_phase(
   order_with_vnodes : Bool,
@@ -1733,121 +1674,6 @@ fn build_cluster_rank_order_when_clusters_enabled_root_reorder_phase(
     vnode_order_keys_for_ordering,
   )
 }
-
-///|
-/// Graphviz parity: cluster-enabled rank-order from-root phase forwards
-/// root-only reorder payload into cluster-metadata map assembly unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_phase(
-  root_groups : Map[Int, Array[String]],
-  root_rank_keys : Array[Int],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_cluster_skeleton : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_with_cluster_meta(
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-    order_cluster_keys,
-    cluster_meta,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    graphviz_flip,
-    real_nodes,
-  )
-}
-
-
-///|
-/// Graphviz parity: cluster-enabled rank-order finalize phase forwards
-/// root-only reorder payload into final cluster-rank-order map assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_when_clusters_enabled_finalize_phase(
-  root_groups : Map[Int, Array[String]],
-  root_rank_keys : Array[Int],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_cluster_skeleton : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_phase(
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-    order_cluster_keys,
-    cluster_meta,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    graphviz_flip,
-    real_nodes,
-  )
-}
-
-
 ///|
 /// Graphviz parity: cluster-enabled rank-order finalize dispatch reads
 /// root-reorder tuple and forwards values in Graphviz argument ordering.
@@ -1894,7 +1720,7 @@ fn build_cluster_rank_order_when_clusters_enabled_finalize_phase_from_root_reord
     root_edge_order,
     root_node_order,
   ) = root_reorder_output
-  build_cluster_rank_order_when_clusters_enabled_finalize_phase(
+  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
     root_groups,
     root_rank_keys,
     root_edges_out,
@@ -1909,13 +1735,15 @@ fn build_cluster_rank_order_when_clusters_enabled_finalize_phase_from_root_reord
     root_edge_order,
     root_node_order,
     order_cluster_keys,
-    cluster_meta,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
     order_sizes_out,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     order_cluster_skeleton,
+    cluster_meta.flat_constraints,
     graphviz_flip,
     real_nodes,
   )
