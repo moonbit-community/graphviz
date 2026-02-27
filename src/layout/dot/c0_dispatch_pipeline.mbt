@@ -1,4 +1,238 @@
 ///|
+/// Stage C Phase C0 split: stage contract type
+/// definitions for cluster metadata and ordering outputs.
+
+///|
+priv struct ClusterMetadata {
+  has_clusters : Bool
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  cluster_order : Array[String]
+  cluster_parents : Map[String, String?]
+  intercluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
+}
+
+///|
+priv struct OrderingResult {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_groups_with_vnodes : Map[Int, Array[String]]
+  vnode_info : EdgeVnodeInfo
+  vnode_count : Int
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  edge_order : Map[String, Int]
+  edge_cluster_keys : Map[String, String]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
+/// Stage C Phase C0 split: ordering edge/materialize
+/// runtime data types shared by dispatch/setup flow.
+
+///|
+priv struct OrderingEdgePortData {
+  edge_order : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
+priv struct OrderingClass2Data {
+  edges_by_tail : Map[String, Array[Int]]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  root_edge_creation : Array[(String, String)]
+  skeleton_edge_creation : Array[(String, String)]
+  edge_creation_order : Array[(String, String)]
+  creation_order : Array[String]
+  nlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
+priv struct OrderReorderContext {
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_nodes : Array[String]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  creation_order : Array[String]
+  order_node_order : Map[String, Int]
+}
+
+///|
+priv struct OrderMaterializationData {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  order_edges_out_unmapped : Array[@cgraph.Edge]
+  order_edge_tail_out_unmapped : Array[String]
+  order_edge_head_out_unmapped : Array[String]
+  order_edge_tail_port_x_unmapped : Array[Double]
+  order_edge_head_port_x_unmapped : Array[Double]
+  order_edge_tail_port_order_unmapped : Array[Double]
+  order_edge_head_port_order_unmapped : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_flat_constraints : Map[String, Bool]
+}
+
+///|
+priv struct OrderClusteredPreRootStageData {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+}
+
+///|
+priv struct OrderingBaseContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
+priv struct OrderingRuntimeContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+  vnode_count : Int
+}
+
+///|
+/// Stage C Phase C0 split: pre-root/materialize
+/// and non-cluster stage-local type definitions.
+
+///|
+/// Graphviz parity: clustered pre-root reorder/materialization context keeps
+/// stage payload ordering unchanged before reorder/materialize dispatch.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredPreRootReorderMaterializedContext {
+  order_groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  base_order_index : Map[String, Int]
+  cluster_meta : ClusterMetadata
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
+/// Graphviz parity: clustered pre-root stage context keeps order-group,
+/// reorder/materialize, and vnode payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredOrderingPreRootStageContext {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_sizes : Map[String, NodeSize]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
+/// Graphviz parity: order-edge trace materialization dispatch context keeps
+/// mapped/unmapped materialize+trace payload ordering unchanged.
+/// Do not change behavior without updating fixtures/tests.
+priv struct MaterializeOrderEdgesWithTraceContext {
+  nlist_order : Array[String]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  order_ranks : Map[String, Int]
+  real_nodes : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: non-cluster ordering stage dispatch context keeps
+/// single-pass mincross payload ordering unchanged before stage helpers.
+/// Do not change behavior without updating fixtures/tests.
+priv struct NonclusterOrderingStageDispatchContext {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  cluster_meta : ClusterMetadata
+  edge_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  graphviz_flip : Bool
+}
+
+///|
 /// Stage C Phase C0 split: ordering input-payload
 /// type definitions for compute_ordering_and_vnodes entry.
 
