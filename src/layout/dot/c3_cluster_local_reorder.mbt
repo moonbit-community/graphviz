@@ -1460,25 +1460,6 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
 
 
 ///|
-/// Graphviz parity: cluster-local reorder metadata phase builds cluster-only
-/// sizes, cluster keys, and flat-constraint map from filtered node subset.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_reorder_run_inputs_metadata_phase(
-  cluster_node_set : Map[String, Bool],
-  order_sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-  flat_constraints : Map[String, Bool],
-) -> (Map[String, NodeSize], Map[String, String], Map[String, Bool]) {
-  build_cluster_local_reorder_metadata(
-    cluster_node_set,
-    order_sizes,
-    vnode_sizes,
-    flat_constraints,
-  )
-}
-
-
-///|
 /// Graphviz parity: cluster-local reorder input-output context keeps edge
 /// bundle arrays/maps and metadata tuple ordering for local mincross call.
 /// Do not change behavior without updating fixtures/tests.
@@ -1636,7 +1617,7 @@ fn build_cluster_local_reorder_run_inputs(
       context.fixed_ranks,
     )
   let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
-    build_cluster_local_reorder_run_inputs_metadata_phase(
+    build_cluster_local_reorder_metadata(
       context.cluster_node_set,
       context.order_sizes,
       context.vnode_sizes,
