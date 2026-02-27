@@ -172,8 +172,6 @@ fn compute_ranks_directed_with_clusters_for_tests(
     edges,
     has_edge_labels,
     graph_has_cluster,
-    acyclic_edge_directions,
-    acyclic_edge_directions_for_names,
     edge_minlen,
     edge_weight,
     CL_BACK,
@@ -204,7 +202,7 @@ fn collect_label_vnode_actuals(
     existing_names[node.name()] = true
   }
   let (edge_tail, edge_head, _edge_reversed, out_edges, _in_edges) =
-    acyclic_edge_directions_with_order(graph, nodes, edges)
+    @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
   let edge_out_order : Map[String, Array[Int]] = Map::new()
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
@@ -406,7 +404,7 @@ test "label vnodes match Graphviz fixtures" {
       edge_reversed,
       _edge_out_order,
       _edge_in_order,
-    ) = acyclic_edge_directions_with_order(graph, nodes, edges)
+    ) = @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
     let edge_reversed_by_key : Map[String, Bool] = Map::new()
     for i in 0..<edges.length() {
       edge_reversed_by_key[edge_key(edges[i])] = edge_reversed[i]

@@ -223,7 +223,7 @@ fn acyclic_dfs_fast(
 }
 
 ///|
-fn acyclic_edge_directions(
+pub fn acyclic_edge_directions(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -234,7 +234,7 @@ fn acyclic_edge_directions(
 }
 
 ///|
-fn acyclic_edge_directions_with_order(
+pub fn acyclic_edge_directions_with_order(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -253,7 +253,7 @@ fn acyclic_edge_directions_with_order(
     node_index[name] = i
     node_names.push(name)
   }
-  let rank_same_reps = @dot_shared.build_rank_same_reps(graph, nodes)
+  let rank_same_reps = @shared.build_rank_same_reps(graph, nodes)
   let rep_names : Array[String] = []
   let rep_seen : Map[String, Bool] = Map::new()
   for name in node_names {
@@ -282,7 +282,7 @@ fn acyclic_edge_directions_with_order(
     edge_tail_orig.push(tail)
     edge_head_orig.push(head)
     edge_reversed.push(false)
-    let active = @dot_shared.edge_is_constraint(edge)
+    let active = @shared.edge_is_constraint(edge)
     edge_is_active.push(active)
     let edge_idx = edge_tail_orig.length() - 1
     match node_index.get(tail) {
@@ -424,7 +424,7 @@ fn acyclic_edge_directions_with_order(
     let head_rep = fast_edge_head[edge_idx]
     edge_creation.push((tail_rep, head_rep))
   }
-  let acyclic_order = @dot_shared.build_graphviz_nlist_order_from_edges(
+  let acyclic_order = @shared.build_graphviz_nlist_order_from_edges(
     rep_names,
     rep_names,
     edge_creation,
@@ -472,7 +472,7 @@ fn acyclic_edge_directions_with_order(
 }
 
 ///|
-fn acyclic_edge_directions_for_names(
+pub fn acyclic_edge_directions_for_names(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],

@@ -19,7 +19,7 @@ fn build_edge_direction_and_order_maps_for_rank_data(
   let edge_out_order : Map[String, Array[Int]] = Map::new()
   let edge_in_order : Map[String, Array[Int]] = Map::new()
   let (tail, head, reversed, out_edges, in_edges) =
-    acyclic_edge_directions_with_order(graph, nodes, edges)
+    @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
     edge_out_order[name] = out_edges[i].copy()
@@ -66,8 +66,6 @@ fn compute_rank_data(
     edge_head,
     edge_reversed,
     graph_has_cluster,
-    acyclic_edge_directions,
-    acyclic_edge_directions_for_names,
     edge_minlen,
     edge_weight,
     CL_BACK,
