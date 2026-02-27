@@ -325,6 +325,7 @@ Important current behavior:
 Entry:
 
 - `compute_positions` in `src/layout/dot/layout_pipeline_helpers.mbt`
+- stage helpers in `src/layout/dot/layout_pipeline_stage_d_*`
 
 ### D1) Mode gating
 
@@ -526,7 +527,14 @@ Repository guard validates:
   - `layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt`
   - `layout_pipeline_stage_c_remincross_cluster_tail_order_helpers.mbt`
   - `layout_pipeline_stage_c_remincross_trace_helpers.mbt`
-- X-position internals and crossing helpers:
+- Stage D position/xpos internals:
+  - `layout_pipeline_stage_d_position_helpers.mbt`
+  - `layout_pipeline_stage_d_xstage_seed_helpers.mbt`
+  - `layout_pipeline_stage_d_xstage_projection_helpers.mbt`
+  - `layout_pipeline_stage_d_xpos_clustered_helpers.mbt`
+  - `layout_pipeline_stage_d_xpos_noncluster_helpers.mbt`
+  - `layout_pipeline_stage_d_xpos_reorder_helpers.mbt`
+- Crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:
   - `layout_routing_helpers.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
@@ -545,7 +553,7 @@ If you are new to layout algorithms, read in this order:
 4. `layout_pipeline_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
-7. `layout_pipeline_helpers.mbt` — understand orchestration glue and position stage internals.
+7. `layout_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand orchestration glue and position stage internals.
 8. `layout_routing_helpers.mbt` — understand edge geometry generation.
 9. `layout_postprocess_helpers.mbt` — understand output attribute mapping.
 
