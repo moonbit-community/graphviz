@@ -41,28 +41,27 @@ fn discover_rank_group_components_graphviz(
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Array[Array[String]] {
-  let (ordered_nodes, out_neighbors, in_neighbors, flat_out, flat_in, cluster_skeleton_nodes) =
-    prepare_rank_group_component_discovery_graphviz(
-      nodes,
-      edge_tail,
-      edge_head,
-      node_ranks,
-      node_order,
-      cluster_keys,
-      cluster_skeleton,
-      flat_constraints,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-    )
-  discover_rank_group_components_from_neighbors_graphviz(
+  let prepared = prepare_rank_group_component_discovery_graphviz(
     nodes,
-    ordered_nodes,
+    edge_tail,
+    edge_head,
+    node_ranks,
+    node_order,
     cluster_keys,
     cluster_skeleton,
-    cluster_skeleton_nodes,
-    out_neighbors,
-    in_neighbors,
-    flat_out,
-    flat_in,
+    flat_constraints,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+  )
+  discover_rank_group_components_from_neighbors_graphviz(
+    nodes,
+    prepared.ordered_nodes,
+    cluster_keys,
+    cluster_skeleton,
+    prepared.cluster_skeleton_nodes,
+    prepared.out_neighbors,
+    prepared.in_neighbors,
+    prepared.flat_out,
+    prepared.flat_in,
   )
 }

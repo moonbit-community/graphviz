@@ -13,14 +13,7 @@ fn prepare_rank_group_component_discovery_graphviz(
   flat_constraints : Map[String, Bool],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
-) -> (
-  Array[String],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-) {
+) -> RankGroupComponentDiscoveryPrepared {
   let (ordered_nodes, fallback_order) = build_rank_group_component_discovery_order(
     nodes,
     node_order,
@@ -46,5 +39,12 @@ fn prepare_rank_group_component_discovery_graphviz(
     node_set,
     flat_constraints,
   )
-  (ordered_nodes, out_neighbors, in_neighbors, flat_out, flat_in, cluster_skeleton_nodes)
+  {
+    ordered_nodes,
+    out_neighbors,
+    in_neighbors,
+    flat_out,
+    flat_in,
+    cluster_skeleton_nodes,
+  }
 }
