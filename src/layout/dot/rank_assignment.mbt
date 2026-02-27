@@ -439,58 +439,6 @@ fn compute_ranks_directed_base(
 /// logic together so clustered ranking behavior is easier to follow.
 
 ///|
-fn rank_assignment_collect_cluster_members(
-  cluster_graphs : Map[String, @cgraph.Graph],
-) -> Map[String, Map[String, Bool]] {
-  let members : Map[String, Map[String, Bool]] = Map::new()
-  for name, cluster_graph in cluster_graphs {
-    let set : Map[String, Bool] = Map::new()
-    collect_graph_nodes(cluster_graph, set)
-    if set.length() > 0 {
-      members[name] = set
-    }
-  }
-  members
-}
-
-///|
-/// Graphviz parity: clustered ranking discovers top-level clusters from the
-/// collected cluster tree before any fallback/non-cluster branch selection.
-/// Do not change behavior without updating fixtures/tests.
-fn rank_assignment_collect_top_clusters(
-  source : @cgraph.Graph,
-) -> (Map[String, @cgraph.Graph], Array[String]) {
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(
-    source,
-    None,
-    cluster_graphs,
-    cluster_parents,
-  )
-  let root_cluster_name =
-    if is_cluster_graph(source) {
-    match source.name() {
-      Some(value) => value
-      None => ""
-    }
-  } else {
-    ""
-  }
-  let top_clusters : Array[String] = []
-  for name, parent in cluster_parents {
-    match parent {
-      None =>
-        if name != root_cluster_name {
-          top_clusters.push(name)
-        }
-      Some(_) => ()
-    }
-  }
-  (cluster_graphs, top_clusters)
-}
-
-///|
 /// Graphviz parity: clustered ranking first solves each top-level cluster
 /// locally, then promotes one local rank-0 leader per cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -735,7 +683,7 @@ fn compute_ranks_directed_with_clusters(
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
 ) -> Map[String, Int] {
-  let (cluster_graphs, top_clusters) = rank_assignment_collect_top_clusters(
+  let (cluster_graphs, top_clusters) = @rank_assignment.collect_top_clusters(
     source,
   )
   if top_clusters.length() == 0 {
@@ -751,8 +699,7 @@ fn compute_ranks_directed_with_clusters(
       base_reversed,
     )
   }
-  let cluster_members =
-    rank_assignment_collect_cluster_members(cluster_graphs)
+  let cluster_members = @rank_assignment.collect_cluster_members(cluster_graphs)
   let node_cluster = @rank_assignment.build_node_cluster_index(
     top_clusters,
     cluster_members,
