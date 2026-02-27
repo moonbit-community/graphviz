@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep cluster metadata
-/// preprocessing and rank-same helpers isolated and maintainable.
+/// Stage B Phase B3 split: cluster metadata preprocessing
+/// and rank-same helper flow for clustered ordering inputs.
 
 ///|
 /// Graphviz parity: cluster subgraph node order follows GD_nlist traversal
@@ -449,4 +449,3 @@ fn build_rank_same_constraints(
   let _ = ranks
   Map::new()
 }
-

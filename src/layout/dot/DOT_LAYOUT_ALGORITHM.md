@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `layout_pipeline_stage_a_input_types_helpers.mbt`, `layout_pipeline_stage_b_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
+Defined across stage data/type files (mainly `layout_pipeline_stage_a_input_types_helpers.mbt`, `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -184,7 +184,7 @@ This stage decides vertical layering and ordering inputs.
 
 Main files:
 
-- `src/layout/dot/layout_pipeline_stage_b_rank_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt`
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/network_simplex/*`
 - `src/layout/dot/acyclic_helpers.mbt`
@@ -216,7 +216,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
-- implemented in `src/layout/dot/layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
+- implemented in `src/layout/dot/layout_pipeline_stage_b_phase_b3_cluster_metadata_helpers.mbt`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -522,15 +522,15 @@ Repository guard validates:
   - `layout.mbt`, `layout_stage_pipeline_orchestrator.mbt`
 - Core stage data/type contracts:
   - `layout_pipeline_stage_a_input_types_helpers.mbt`
-  - `layout_pipeline_stage_b_rank_types_helpers.mbt`
+  - `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`
   - `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`
   - `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`
 - Input canonicalization:
   - `layout_pipeline_stage_a_input_helpers.mbt`
 - Rank assignment and rank heights:
-  - `layout_pipeline_stage_b_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
+  - `layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
+  - `layout_pipeline_stage_b_phase_b3_cluster_metadata_helpers.mbt`
 - Ordering dispatch + shared stage logic:
   - `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c0_setup_helpers.mbt`
@@ -598,7 +598,7 @@ If you are new to layout algorithms, read in this order:
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
 2. `layout_stage_pipeline_orchestrator.mbt` — understand stage boundaries.
 3. `layout_pipeline_stage_a_input_helpers.mbt` — understand canonical input formation.
-4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
+4. `layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt` + `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c5_remincross_*` — understand clustered reorder/refinement.
 7. `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.

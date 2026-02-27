@@ -1,6 +1,6 @@
 ///|
-/// Stage B rank stage-local type definitions shared by
-/// rank assignment and rank-height assembly helpers.
+/// Stage B Phase B1/B2 split: stage-local type definitions
+/// shared by rank assignment and rank-height assembly.
 
 ///|
 priv struct RankData {
