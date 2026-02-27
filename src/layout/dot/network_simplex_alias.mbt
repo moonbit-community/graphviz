@@ -47,10 +47,6 @@ fn network_simplex(graph : NsGraph, max_iter : Int, balance : BalanceMode) -> Un
   @network_simplex.network_simplex(graph, max_iter, balance)
 }
 
-fn network_simplex_pre_balance(graph : NsGraph, max_iter : Int) -> Bool {
-  @network_simplex.network_simplex_pre_balance(graph, max_iter)
-}
-
 ///|
 fn normalize_ranks_for_test(graph : NsGraph) -> Int {
   @network_simplex.normalize_ranks_for_test(graph)

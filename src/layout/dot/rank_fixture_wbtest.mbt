@@ -299,7 +299,7 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
   let graph = build_fixture_graph(input)
   match input.balance {
     0 => {
-      if !network_simplex_pre_balance(graph, 0x7fffffff) {
+      if !@network_simplex.network_simplex_pre_balance(graph, 0x7fffffff) {
         fail("case \{input.case_id} network_simplex_pre_balance failed")
       }
       let _ = normalize_ranks_for_test(graph)
@@ -344,7 +344,7 @@ fn run_feasible_tree_case(case_info : SimplexCase) -> Unit raise {
 fn run_pre_balance_case(case_info : SimplexCase) -> Unit raise {
   let input = case_info.input
   let graph = build_fixture_graph(input)
-  if !network_simplex_pre_balance(graph, 0x7fffffff) {
+  if !@network_simplex.network_simplex_pre_balance(graph, 0x7fffffff) {
     fail("case \{input.case_id} network_simplex_pre_balance failed")
   }
   let actual_ranks : Array[Int] = []

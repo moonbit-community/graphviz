@@ -1,6 +1,7 @@
 {
   "import": [
     "moonbit-community/graphviz/layout/dot/shared",
+    "moonbit-community/graphviz/layout/dot/network_simplex",
     "moonbit-community/graphviz/cgraph"
   ]
 }
