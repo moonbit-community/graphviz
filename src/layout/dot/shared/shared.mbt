@@ -162,6 +162,41 @@ pub fn edge_is_constraint(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+pub fn edge_weight(edge : @cgraph.Edge) -> Int {
+  let weight_value = @attrs.parse_double(edge.get_attr("weight"), 1.0)
+  let mut weight = weight_value.round().to_int()
+  if weight < 0 {
+    weight = 0
+  }
+  if !edge_is_constraint(edge) {
+    return 0
+  }
+  let tail_group = match edge.tail().get_attr("group") {
+    Some(value) => value
+    None => ""
+  }
+  let head_group = match edge.head().get_attr("group") {
+    Some(value) => value
+    None => ""
+  }
+  if tail_group != "" && tail_group == head_group {
+    weight = weight * 100
+  }
+  weight
+}
+
+///|
+pub fn edge_minlen(edge : @cgraph.Edge) -> Int {
+  let minlen_value = @attrs.parse_double(edge.get_attr("minlen"), 1.0)
+  let minlen = minlen_value.round().to_int()
+  if minlen < 1 {
+    1
+  } else {
+    minlen
+  }
+}
+
+///|
 /// Graphviz parity: approximate decompose DFS order over fast graph edges.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_graphviz_nlist_order_from_edges(

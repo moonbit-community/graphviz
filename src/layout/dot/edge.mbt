@@ -1,30 +1,3 @@
-fn edge_weight(edge : @cgraph.Edge) -> Int {
-  let weight_value = match edge.get_attr("weight") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-  let mut weight = weight_value.round().to_int()
-  if weight < 0 {
-    weight = 0
-  }
-  if !@dot_shared.edge_is_constraint(edge) {
-    return 0
-  }
-  let tail_group = match edge.tail().get_attr("group") {
-    Some(value) => value
-    None => ""
-  }
-  let head_group = match edge.head().get_attr("group") {
-    Some(value) => value
-    None => ""
-  }
-  if tail_group != "" && tail_group == head_group {
-    weight = weight * 100
-  }
-  weight
-}
-
-///|
 fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
   let penalty_value = match edge.get_attr("xpenalty") {
     Some(value) => parse_double(value, 1.0)
@@ -38,20 +11,6 @@ fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
     return 0
   }
   penalty
-}
-
-///|
-fn edge_minlen(edge : @cgraph.Edge) -> Int {
-  let minlen_value = match edge.get_attr("minlen") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-  let minlen = minlen_value.round().to_int()
-  if minlen < 1 {
-    1
-  } else {
-    minlen
-  }
 }
 
 ///|

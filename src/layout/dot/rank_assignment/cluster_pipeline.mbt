@@ -10,8 +10,6 @@ pub fn compute_ranks_directed(
   edge_tail : Array[String],
   edge_head : Array[String],
   _edge_reversed : Array[Bool],
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   if graph_has_cluster(source) {
@@ -20,8 +18,6 @@ pub fn compute_ranks_directed(
       nodes,
       edges,
       has_edge_labels,
-      edge_minlen,
-      edge_weight,
       back_weight_scale,
     )
   }
@@ -32,8 +28,6 @@ pub fn compute_ranks_directed(
     has_edge_labels,
     edge_tail,
     edge_head,
-    edge_minlen,
-    edge_weight,
   )
 }
 
@@ -44,8 +38,6 @@ pub fn compute_ranks_directed_with_clusters(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   let (edge_tail, edge_head, edge_reversed) =
@@ -58,8 +50,6 @@ pub fn compute_ranks_directed_with_clusters(
     edge_tail,
     edge_head,
     edge_reversed,
-    edge_minlen,
-    edge_weight,
     back_weight_scale,
   )
 }
@@ -73,8 +63,6 @@ fn compute_ranks_directed_with_clusters_impl(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   compute_clustered_ranks(
@@ -92,8 +80,6 @@ fn compute_ranks_directed_with_clusters_impl(
         graph_has_edge_labels,
         tail,
         head,
-        edge_minlen,
-        edge_weight,
       )
     },
     (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
@@ -107,14 +93,10 @@ fn compute_ranks_directed_with_clusters_impl(
         tail,
         head,
         reversed,
-        edge_minlen,
-        edge_weight,
         back_weight_scale,
       )
     },
     back_weight_scale,
-    edge_minlen,
-    edge_weight,
   )
 }
 
@@ -141,8 +123,6 @@ fn compute_clustered_ranks(
     ) -> (Map[String, Int])
   ),
   back_weight_scale : Int,
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
 ) -> Map[String, Int] {
   let (cluster_graphs, top_clusters) = collect_top_clusters(source)
   if top_clusters.length() == 0 {
@@ -173,8 +153,6 @@ fn compute_clustered_ranks(
     local_ranks,
     has_edge_labels,
     back_weight_scale,
-    edge_minlen,
-    edge_weight,
     acyclic_edge_directions_for_names,
   )
   let ranks = project_clustered_node_ranks(

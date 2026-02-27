@@ -63,8 +63,6 @@ pub fn compute_ranks_directed_base(
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
 ) -> Map[String, Int] {
   let node_by_name : Map[String, @cgraph.Node] = Map::new()
   let tail_order : Array[String] = []
@@ -206,9 +204,9 @@ pub fn compute_ranks_directed_base(
       if tail_idx == head_idx {
         continue
       }
-      let minlen_value = edge_minlen(edge)
+      let minlen_value = @shared.edge_minlen(edge)
       let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
-      let weight = edge_weight(edge)
+      let weight = @shared.edge_weight(edge)
       let key = "\{tail_idx}:\{head_idx}"
       match merged_edges.get(key) {
         Some(entry) => {

@@ -1754,7 +1754,7 @@ fn build_constraint_graph(
           Some(value) => value
           None => 0
         }
-        merged_edge_weight_bonus[rep_idx] = prev_bonus + edge_weight(edge)
+        merged_edge_weight_bonus[rep_idx] = prev_bonus + @dot_shared.edge_weight(edge)
       }
       None => ()
     }
@@ -1825,7 +1825,7 @@ fn build_constraint_graph(
                 }
                 let width = node_right_pt(left, sizes) + node_left_pt(right, sizes)
                 let mut minlen_value =
-                  Double::from_int(edge_minlen(edge)) * nodesep_pt + width
+                  Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
                 let is_invis = match edge.get_attr("style") {
                   Some(style) => style.to_lower().contains("invis")
                   None => false
@@ -1842,7 +1842,7 @@ fn build_constraint_graph(
                   minlen_value = minlen_value + nodesep_pt
                 }
                 let minlen = trunc_int(minlen_value)
-                let weight = edge_weight(edge)
+                let weight = @dot_shared.edge_weight(edge)
                 let flat_key = "\{left}|\{right}"
                 match rank_adj_constraints.get(flat_key) {
                   Some(entry) => {
@@ -1889,7 +1889,7 @@ fn build_constraint_graph(
                 if tail_name != head_name || ordered_vnodes.length() == 0 {
                   chain.push(head_name)
                 }
-                let base_weight = edge_weight(edge)
+                let base_weight = @dot_shared.edge_weight(edge)
                 let orig_tail = edge.tail().name()
                 let orig_head = edge.head().name()
               let mut idx = 0

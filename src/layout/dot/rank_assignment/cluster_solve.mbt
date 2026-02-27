@@ -77,8 +77,6 @@ pub fn solve_clustered_leader_ranks(
   local_ranks : Map[String, Int],
   has_edge_labels : Bool,
   back_weight_scale : Int,
-  edge_minlen : ((@cgraph.Edge) -> Int),
-  edge_weight : ((@cgraph.Edge) -> Int),
   orient_edges_for_names : (
     (
       Array[String],
@@ -131,9 +129,9 @@ pub fn solve_clustered_leader_ranks(
       Some(value) => value
       None => ""
     }
-    let minlen_value = edge_minlen(edge)
+    let minlen_value = @shared.edge_minlen(edge)
     let minlen = if has_edge_labels { minlen_value * 2 } else { minlen_value }
-    let weight = edge_weight(edge)
+    let weight = @shared.edge_weight(edge)
     if tail_cluster == head_cluster {
       if tail_cluster == "" && tail_name != head_name {
         direct_tail.push(tail_name)

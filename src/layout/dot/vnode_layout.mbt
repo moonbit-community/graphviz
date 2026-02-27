@@ -315,7 +315,7 @@ fn add_flat_label_vnodes(
     let right_left = node_left_pt(right, sizes)
     let width = left_right + right_left
     let base_minlen =
-      Double::from_int(edge_minlen(edge)) * nodesep_pt + width
+      Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
     if is_adjacent {
       let label_minlen = width + nodesep_pt + label_width
       // Graphviz parity: LR/RL flat-label adjacency uses integer rounding that
@@ -333,7 +333,7 @@ fn add_flat_label_vnodes(
         tail: left,
         head: right,
         minlen,
-        weight: edge_weight(edge),
+        weight: @dot_shared.edge_weight(edge),
         tail_port: None,
         head_port: None,
       })
@@ -397,14 +397,14 @@ fn add_flat_label_vnodes(
     } else {
       0.5
     }
-    let m0 = Double::from_int(edge_minlen(edge)) * nodesep_pt * m0_scale
+    let m0 = Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt * m0_scale
     let minlen_left = round_int(m0 + left_right + half_width)
     let minlen_right = round_int(m0 + half_width + right_left)
     extra_edges.push({
       tail: left,
       head: name,
       minlen: minlen_left,
-      weight: edge_weight(edge),
+      weight: @dot_shared.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })
@@ -412,7 +412,7 @@ fn add_flat_label_vnodes(
       tail: name,
       head: right,
       minlen: minlen_right,
-      weight: edge_weight(edge),
+      weight: @dot_shared.edge_weight(edge),
       tail_port: None,
       head_port: None,
     })
@@ -548,7 +548,7 @@ fn build_virtual_slack_edges(
     }
     let low = if tail_rank <= head_rank { tail } else { head }
     let high = if tail_rank <= head_rank { head } else { tail }
-    let base_weight = edge_weight(edge)
+    let base_weight = @dot_shared.edge_weight(edge)
     let reversed = current_idx < edge_reversed.length() && edge_reversed[current_idx]
     let mut prev = low
     for vnode in vnodes {

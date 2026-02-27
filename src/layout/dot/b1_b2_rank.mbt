@@ -65,8 +65,6 @@ fn compute_rank_data(
     edge_tail,
     edge_head,
     edge_reversed,
-    edge_minlen,
-    edge_weight,
     CL_BACK,
   )
   let groups = build_rank_groups(nodes, ranks)
