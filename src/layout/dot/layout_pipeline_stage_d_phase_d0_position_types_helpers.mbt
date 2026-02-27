@@ -1,6 +1,6 @@
 ///|
-/// Stage D position/xpos stage-local type definitions shared
-/// across mode, seed, reorder, and projection helper files.
+/// Stage D Phase D0 split: position/xpos stage-local
+/// type definitions shared across Stage D helper phases.
 
 ///|
 priv struct PositionResult {

@@ -1,6 +1,6 @@
 ///|
-/// Stage D phase split: non-cluster x-constraint solve helpers
-/// used by the shared reorder branch flow.
+/// Stage D Phase D4 split: non-cluster x-constraint solve
+/// helpers used by the shared reorder branch flow.
 
 ///|
 /// Graphviz parity: non-cluster xpos reorder uses both geometric port x and
@@ -244,4 +244,3 @@ fn maybe_apply_noncluster_xpos_reorder_fallback(
     x_groups
   }
 }
-

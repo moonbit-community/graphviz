@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `layout_pipeline_stage_a_input_types_helpers.mbt`, `layout_pipeline_stage_b_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_position_types_helpers.mbt`).
+Defined across stage data/type files (mainly `layout_pipeline_stage_a_input_types_helpers.mbt`, `layout_pipeline_stage_b_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -338,7 +338,7 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/layout_pipeline_stage_d_position_helpers.mbt`
+- `compute_positions` in `src/layout/dot/layout_pipeline_stage_d_phase_d0_position_orchestrator_helpers.mbt`
 - stage helpers in `src/layout/dot/layout_pipeline_stage_d_*`
 
 ### D1) Mode gating
@@ -524,7 +524,7 @@ Repository guard validates:
   - `layout_pipeline_stage_a_input_types_helpers.mbt`
   - `layout_pipeline_stage_b_rank_types_helpers.mbt`
   - `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`
-  - `layout_pipeline_stage_d_position_types_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`
 - Input canonicalization:
   - `layout_pipeline_stage_a_input_helpers.mbt`
 - Rank assignment and rank heights:
@@ -576,12 +576,12 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c5_remincross_trace_helpers.mbt`
 - Stage D position/xpos internals:
-  - `layout_pipeline_stage_d_position_helpers.mbt`
-  - `layout_pipeline_stage_d_seed_construction_helpers.mbt`
-  - `layout_pipeline_stage_d_mode_and_projection_helpers.mbt`
-  - `layout_pipeline_stage_d_constraint_solve_clustered_helpers.mbt`
-  - `layout_pipeline_stage_d_constraint_solve_noncluster_helpers.mbt`
-  - `layout_pipeline_stage_d_reorder_cleanup_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d0_position_orchestrator_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d1_d5_mode_and_projection_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d2_seed_construction_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d3_reorder_cleanup_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d4_constraint_solve_clustered_helpers.mbt`
+  - `layout_pipeline_stage_d_phase_d4_constraint_solve_noncluster_helpers.mbt`
 - Crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:

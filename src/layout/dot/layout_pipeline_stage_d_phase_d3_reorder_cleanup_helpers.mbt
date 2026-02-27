@@ -1,6 +1,6 @@
 ///|
-/// Stage D phase split: optional reorder/transpose-cleanup helpers
-/// for x-stage rank group refinement.
+/// Stage D Phase D3 split: optional reorder/transpose-cleanup
+/// helpers for x-stage rank-group refinement.
 
 ///|
 /// Graphviz parity: vnode xpos-reorder gate is shared across reorder branch
@@ -231,4 +231,3 @@ fn maybe_apply_xpos_transpose_cleanup(
     )
   }
 }
-

@@ -1,6 +1,6 @@
 ///|
-/// Stage D phase split: seed-construction helpers for x-stage inputs
-/// and flat-label vnode augmentation utilities.
+/// Stage D Phase D2 split: seed-construction helpers for
+/// x-stage inputs and flat-label vnode augmentation.
 
 ///|
 /// Graphviz parity: vnode order-key derivation follows Graphviz: explicit
@@ -156,4 +156,3 @@ fn build_flat_label_vnode_augmentation_for_positions(
     flat_label_edge_vnodes,
   }
 }
-

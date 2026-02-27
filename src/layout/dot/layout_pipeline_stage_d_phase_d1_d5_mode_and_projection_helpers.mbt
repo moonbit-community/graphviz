@@ -1,6 +1,6 @@
 ///|
-/// Stage D phase split: mode-gating and projection handoff helpers
-/// used by the x-stage/y-projection pipeline.
+/// Stage D Phase D1/D5 split: mode-gating and projection
+/// handoff helpers for the x-stage/y-projection pipeline.
 
 ///|
 /// Graphviz parity: vnode xpos mode gate follows Graphviz edge-label/port-edge
@@ -456,4 +456,3 @@ fn build_projection_result_from_x_stage_data_for_positions(
     projection_rank_height_maps.rank_ht2,
   )
 }
-

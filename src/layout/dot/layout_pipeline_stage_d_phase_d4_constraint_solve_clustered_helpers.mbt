@@ -1,6 +1,6 @@
 ///|
-/// Stage D phase split: clustered x-constraint solve helpers
-/// (seed/materialization/apply) used by reorder flow.
+/// Stage D Phase D4 split: clustered x-constraint solve
+/// helpers (seed/materialization/apply) for reorder flow.
 
 ///|
 /// Graphviz parity: clustered xpos reorder seed skeleton injection appends
@@ -669,4 +669,3 @@ fn build_clustered_xpos_reordered_groups(
     graphviz_flip,
   )
 }
-

@@ -1,6 +1,6 @@
 ///|
-/// Stage D position orchestrator helpers for x/y solve assembly,
-/// projection handoff, and final position output wiring.
+/// Stage D Phase D0 split: position orchestrator helpers
+/// for x/y solve assembly and final result wiring.
 
 ///|
 /// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
