@@ -966,7 +966,7 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
     while edge_idx < order_edges_out_mincross.length() {
       let tail = order_edge_tail_out_mincross[edge_idx]
       let head = order_edge_head_out_mincross[edge_idx]
-      let pen = edge_xpenalty(order_edges_out_mincross[edge_idx])
+      let pen = @dot_shared.edge_xpenalty(order_edges_out_mincross[edge_idx])
       let tail_port_order =
         if edge_idx < order_edge_tail_port_order_mincross.length() {
           order_edge_tail_port_order_mincross[edge_idx]

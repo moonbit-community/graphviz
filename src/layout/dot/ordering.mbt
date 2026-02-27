@@ -1303,7 +1303,7 @@ fn count_crossings_graphviz(
   let edge_penalty : Array[Int] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = edge_xpenalty(edge)
+    let penalty = @dot_shared.edge_xpenalty(edge)
     edge_penalty.push(penalty)
     if !@dot_shared.edge_is_constraint(edge) {
       continue

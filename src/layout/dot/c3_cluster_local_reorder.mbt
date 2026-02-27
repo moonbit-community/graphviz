@@ -1081,7 +1081,7 @@ fn run_cluster_local_rank_reorder(
     while edge_idx < cluster_edges.length() {
       let tail = cluster_edge_tail[edge_idx]
       let head = cluster_edge_head[edge_idx]
-      let pen = edge_xpenalty(cluster_edges[edge_idx])
+      let pen = @dot_shared.edge_xpenalty(cluster_edges[edge_idx])
       println("cluster_local_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
       edge_idx = edge_idx + 1
     }

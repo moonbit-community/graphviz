@@ -67,7 +67,7 @@ fn build_ordering_input_edges_snapshot(
     edges.push({
       tail,
       head,
-      xpenalty: edge_xpenalty(edges_out[idx]),
+      xpenalty: @dot_shared.edge_xpenalty(edges_out[idx]),
       tail_port_x,
       head_port_x,
       tail_port_order,

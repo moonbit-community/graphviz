@@ -1,19 +1,3 @@
-fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
-  let penalty_value = match edge.get_attr("xpenalty") {
-    Some(value) => parse_double(value, 1.0)
-    None => 1.0
-  }
-  let mut penalty = penalty_value.round().to_int()
-  if penalty < 0 {
-    penalty = 0
-  }
-  if !@dot_shared.edge_is_constraint(edge) {
-    return 0
-  }
-  penalty
-}
-
-///|
 fn edge_mid_label_text(edge : @cgraph.Edge) -> String? {
   match edge.get_attr("label") {
     Some(value) => if value == "" { None } else { Some(value) }

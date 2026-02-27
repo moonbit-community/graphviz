@@ -52,7 +52,7 @@ fn trace_remincross_materialized_edges(
   let mut idx = 0
   while idx < rem_edges_out.length() {
     let edge = rem_edges_out[idx]
-    let pen = edge_xpenalty(edge)
+    let pen = @dot_shared.edge_xpenalty(edge)
     if pen >= CL_CROSS {
       let tail = rem_edge_tail_out[idx]
       let head = rem_edge_head_out[idx]

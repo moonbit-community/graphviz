@@ -56,7 +56,7 @@ fn run_remincross_rank_reorder_startpass2(
     while idx < rem_edges_out.length() {
       let tail = rem_edge_tail_out[idx]
       let head = rem_edge_head_out[idx]
-      let pen = edge_xpenalty(rem_edges_out[idx])
+      let pen = @dot_shared.edge_xpenalty(rem_edges_out[idx])
       println("remincross_input_edge \{idx}: \{tail} -> \{head} pen=\{pen}")
       idx = idx + 1
     }

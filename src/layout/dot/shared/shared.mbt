@@ -197,6 +197,19 @@ pub fn edge_minlen(edge : @cgraph.Edge) -> Int {
 }
 
 ///|
+pub fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
+  let penalty_value = @attrs.parse_double(edge.get_attr("xpenalty"), 1.0)
+  let mut penalty = penalty_value.round().to_int()
+  if penalty < 0 {
+    penalty = 0
+  }
+  if !edge_is_constraint(edge) {
+    return 0
+  }
+  penalty
+}
+
+///|
 /// Graphviz parity: approximate decompose DFS order over fast graph edges.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_graphviz_nlist_order_from_edges(

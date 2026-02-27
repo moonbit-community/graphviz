@@ -761,7 +761,7 @@ fn trace_root_edges_for_cluster_reorder(
     while edge_idx < root_edges_out.length() {
       let tail = root_edge_tail_out[edge_idx]
       let head = root_edge_head_out[edge_idx]
-      let pen = edge_xpenalty(root_edges_out[edge_idx])
+      let pen = @dot_shared.edge_xpenalty(root_edges_out[edge_idx])
       println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
       edge_idx = edge_idx + 1
     }

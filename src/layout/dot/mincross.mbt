@@ -1232,7 +1232,7 @@ fn reorder_rank_groups(
   let node_penalty : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = edge_xpenalty(edge)
+    let penalty = @dot_shared.edge_xpenalty(edge)
     if penalty <= 0 {
       continue
     }
@@ -1323,7 +1323,7 @@ fn reorder_rank_groups(
   let coalesced_edge_index : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let base_penalty = edge_xpenalty(edge)
+    let base_penalty = @dot_shared.edge_xpenalty(edge)
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     let mut penalty = base_penalty
