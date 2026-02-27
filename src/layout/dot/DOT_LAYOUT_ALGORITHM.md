@@ -239,6 +239,10 @@ Supporting files:
 
 - `src/layout/dot/layout_pipeline_stage_c_order_edge_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_order_graph_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_order_seed_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_order_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_noncluster_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_nlist_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_remincross_*` (Stage C ReMincross family)
@@ -519,6 +523,11 @@ Repository guard validates:
   - `layout_pipeline_stage_c_order_edge_helpers.mbt`
 - Ordering graph construction helpers:
   - `layout_pipeline_stage_c_order_graph_helpers.mbt`
+- Stage C ordering seed/reorder helpers:
+  - `layout_pipeline_stage_c_order_seed_helpers.mbt`
+  - `layout_pipeline_stage_c_order_reorder_helpers.mbt`
+  - `layout_pipeline_stage_c_noncluster_reorder_helpers.mbt`
+  - `layout_pipeline_stage_c_nlist_finalize_helpers.mbt`
 - Cluster-local reorder:
   - `layout_pipeline_stage_c_cluster_reorder_helpers.mbt`
 - Root-cluster reorder and cluster-rank-order logic:

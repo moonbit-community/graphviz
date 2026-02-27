@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep finalize-order
+/// Extracted from layout_pipeline_helpers.mbt to keep Stage C finalize-order
 /// group cleanup and nlist-creation helpers isolated.
 
 ///|
@@ -402,4 +402,3 @@ fn build_nlist_order_and_vnode_creation_order(
   trace_nlist_order_debug(nlist_order)
   build_nlist_order_and_vnode_creation_order_output(nlist_order, vnode_creation_order)
 }
-

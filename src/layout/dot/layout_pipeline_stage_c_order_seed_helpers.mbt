@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep ordering trace,
+/// Extracted from layout_pipeline_helpers.mbt to keep Stage C ordering trace,
 /// edge materialization, and seeded-group helpers isolated.
 
 ///|
@@ -703,4 +703,3 @@ fn apply_cluster_build_ranks_and_track_vnodes(
   }
   next_ordered_with_vnodes
 }
-

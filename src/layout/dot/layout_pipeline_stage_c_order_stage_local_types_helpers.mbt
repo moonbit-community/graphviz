@@ -1,6 +1,6 @@
 ///|
 /// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// pre-root/materialize/noncluster stage type definitions isolated.
+/// Stage C pre-root/materialize/noncluster stage types isolated.
 
 ///|
 /// Graphviz parity: clustered pre-root reorder/materialization context keeps
@@ -96,4 +96,3 @@ priv struct NonclusterOrderingStageDispatchContext {
   port_order_contrib : Map[String, Array[(String, Double)]]
   graphviz_flip : Bool
 }
-

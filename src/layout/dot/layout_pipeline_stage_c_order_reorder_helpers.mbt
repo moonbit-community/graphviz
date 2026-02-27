@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep ordering-stage
+/// Extracted from layout_pipeline_helpers.mbt to keep Stage C ordering-stage
 /// reorder/materialization helpers isolated and easier to maintain.
 
 ///|
@@ -659,4 +659,3 @@ fn build_materialized_order_edges_and_neighbors(
     order_flat_constraints,
   )
 }
-

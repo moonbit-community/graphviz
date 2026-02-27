@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate non-cluster
-/// rank reorder helpers from shared/clustered ordering stages.
+/// Extracted from layout_pipeline_helpers.mbt to isolate Stage C non-cluster
+/// rank-reorder helpers from shared/clustered ordering stages.
 
 ///|
 /// Graphviz parity: non-cluster reorder output keeps reordered rank groups from
@@ -529,4 +529,3 @@ fn run_noncluster_reorder_pass(
     )
   build_noncluster_reorder_pass_output(ordered_groups)
 }
-
