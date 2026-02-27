@@ -104,8 +104,8 @@ fn scan_edge_flags_for_layout_inputs(
       None => ()
     }
     if !has_port_edges {
-      let tail_port = port_is_explicit(edge.tail_port())
-      let head_port = port_is_explicit(edge.head_port())
+      let tail_port = @dot_shared.port_is_explicit(edge.tail_port())
+      let head_port = @dot_shared.port_is_explicit(edge.head_port())
       if tail_port || head_port {
         has_port_edges = true
       }
@@ -265,10 +265,10 @@ fn accumulate_port_order_contrib_for_layout_inputs(
   for edge in edges {
     let tail_name = edge.tail().name()
     let head_name = edge.head().name()
-    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+    if @dot_shared.port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
       update_order(head_name, tail_name, edge.tail_port())
     }
-    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+    if @dot_shared.port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
       update_order(tail_name, head_name, edge.head_port())
     }
   }

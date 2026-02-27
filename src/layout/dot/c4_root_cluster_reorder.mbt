@@ -277,7 +277,7 @@ fn collect_root_vnodes_for_cluster_reorder(
       None => ""
     }
     if tail_cluster != head_cluster {
-      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }

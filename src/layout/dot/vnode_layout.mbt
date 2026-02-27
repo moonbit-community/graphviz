@@ -75,7 +75,7 @@ fn build_edge_vnodes(
     let use_cluster_plain =
       tail_cluster != "" && tail_cluster == head_cluster
     let delta = if use_cluster_plain { 0.0 } else { nodesep_pt / 2.0 }
-    let key = edge_vnode_key(edge)
+    let key = @dot_shared.edge_vnode_key(edge)
     match edge_vnodes.get(key) {
       Some(list) => {
         for name in list {
@@ -101,7 +101,7 @@ fn build_edge_vnodes(
       // Graphviz parity: reverse-direction duplicate edges reuse the
       // existing virtual chain and only widen shared virtual nodes.
       let reverse_key =
-        "\{edge.head().name()}|\{edge.tail().name()}|\{port_key(edge.head_port())}|\{port_key(edge.tail_port())}"
+        "\{edge.head().name()}|\{edge.tail().name()}|\{@dot_shared.port_key(edge.head_port())}|\{@dot_shared.port_key(edge.tail_port())}"
       match edge_vnodes.get(reverse_key) {
         Some(list) => {
           for name in list {
@@ -127,7 +127,7 @@ fn build_edge_vnodes(
       if tail_cluster != "" || head_cluster != "" {
         cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(edge_key(edge)) {
+        match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -362,7 +362,7 @@ fn add_flat_label_vnodes(
       if tail_cluster != "" || head_cluster != "" {
         cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
       } else {
-        match edge_cluster_keys.get(edge_key(edge)) {
+        match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value
           None => ""
         }
@@ -380,8 +380,8 @@ fn add_flat_label_vnodes(
       head,
       rank: label_rank,
     }
-    flat_label_edges[edge_key(edge)] = name
-    let vnode_edge_key = edge_vnode_key(edge)
+    flat_label_edges[@dot_shared.edge_key(edge)] = name
+    let vnode_edge_key = @dot_shared.edge_vnode_key(edge)
     match vnode_info.edge_vnodes.get(vnode_edge_key) {
       Some(list) => list.push(name)
       None => vnode_info.edge_vnodes[vnode_edge_key] = [name]
@@ -511,7 +511,7 @@ fn build_virtual_slack_edges(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }

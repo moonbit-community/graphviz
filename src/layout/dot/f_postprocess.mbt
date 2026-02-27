@@ -86,7 +86,7 @@ fn expand_bbox_for_edge_labels(
         _ => false
       }
     let has_flat_label_vnode =
-      match flat_label_edge_vnodes.get(edge_key(edge)) {
+      match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
         Some(_) => true
         None => false
       }
@@ -185,7 +185,7 @@ fn layout_subgraphs(
     }
     let edge_set : Map[String, Bool] = Map::new()
     for edge in subgraph.edges() {
-      edge_set[edge_key(edge)] = true
+      edge_set[@dot_shared.edge_key(edge)] = true
     }
     let sub_nodes : Array[DotLayoutNode] = []
     for node_layout in nodes_out {
@@ -195,7 +195,7 @@ fn layout_subgraphs(
     }
     let sub_edges : Array[DotLayoutEdge] = []
     for edge_layout in edges_out {
-      if edge_set.get(edge_key(edge_layout.edge)) is Some(_) {
+      if edge_set.get(@dot_shared.edge_key(edge_layout.edge)) is Some(_) {
         let tail_name = edge_layout.edge.tail().name()
         let head_name = edge_layout.edge.head().name()
         if node_set.get(tail_name) is Some(_) &&
@@ -566,7 +566,7 @@ fn collect_head_port_metrics(
     for edge in edges {
       let tail_name = edge.tail().name()
       let head_name = edge.head().name()
-      let head_port = port_key(edge.head_port())
+      let head_port = @dot_shared.port_key(edge.head_port())
       let key =
         if head_port == "" {
         if is_record_shape(edge.head()) { head_name } else { "" }

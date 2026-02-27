@@ -255,11 +255,11 @@ fn collect_edge_cluster_keys(
   let child_edges : Map[String, Bool] = Map::new()
   for child in graph.subgraphs() {
     for edge in child.edges() {
-      child_edges[edge_key(edge)] = true
+      child_edges[@dot_shared.edge_key(edge)] = true
     }
   }
   for edge in graph.edges() {
-    let key = edge_key(edge)
+    let key = @dot_shared.edge_key(edge)
     if child_edges.get(key) is None {
       edge_cluster_keys[key] = cluster_key
     }

@@ -21,7 +21,7 @@ fn edge_polyline_points(
   same_local_cluster : Bool,
 ) -> Array[@geom.Point] {
   let points : Array[@geom.Point] = [tail_anchor]
-  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }
@@ -93,7 +93,7 @@ fn edge_polyline_points(
           }
           let is_dotted = style_value.contains("dotted")
           let has_explicit_port =
-            port_is_explicit(tail_port) || port_is_explicit(head_port)
+            @dot_shared.port_is_explicit(tail_port) || @dot_shared.port_is_explicit(head_port)
           let base_vnode_weight =
             if use_cluster_tuning {
               if is_dotted {
@@ -234,8 +234,8 @@ fn edge_parallel_key(
   tail_port : @cgraph.Port?,
   head_port : @cgraph.Port?,
 ) -> String {
-  let tail_port_key = port_key(tail_port)
-  let head_port_key = port_key(head_port)
+  let tail_port_key = @dot_shared.port_key(tail_port)
+  let head_port_key = @dot_shared.port_key(head_port)
   let a = "\{tail}|\{tail_port_key}"
   let b = "\{head}|\{head_port_key}"
   if a <= b {

@@ -60,7 +60,7 @@ fn prepare_routing_context(
   }
   let path_vnode_clusters : Map[String, String] = Map::new()
   for edge in edges {
-    let key = edge_vnode_key(edge)
+    let key = @dot_shared.edge_vnode_key(edge)
     let vnodes = match vnode_info.edge_vnodes.get(key) {
       Some(list) => list
       None => []
@@ -665,8 +665,8 @@ fn build_self_edge_routes(
   } else {
     base0.head_port_side
   }
-  let tail_defined = port_is_explicit(base0.tail_port)
-  let head_defined = port_is_explicit(base0.head_port)
+  let tail_defined = @dot_shared.port_is_explicit(base0.tail_port)
+  let head_defined = @dot_shared.port_is_explicit(base0.head_port)
   let (min_rank, max_rank) = rank_bounds(rank_y)
   let sizey =
     self_edge_rank_spacing(
@@ -1058,7 +1058,7 @@ fn sameport_merge_key(edge : @cgraph.Edge) -> String {
     Some(value) => value
     None => ""
   }
-  "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{port_key(edge.tail_port())}|\{port_key(edge.head_port())}"
+  "\{edge.tail().name()}|\{edge.head().name()}|\{label}|\{@dot_shared.port_key(edge.tail_port())}|\{@dot_shared.port_key(edge.head_port())}"
 }
 
 ///|
@@ -1172,7 +1172,7 @@ fn sameport_anchor_for_group(
   let base_clip_size =
     match layout_rankdir {
       RankDir::LR | RankDir::RL =>
-        node_size_from_points(node_size.height_pt, node_size.width_pt)
+        @dot_shared.node_size_from_points(node_size.height_pt, node_size.width_pt)
       RankDir::TB | RankDir::BT => node_size
     }
   let clip_size =
@@ -1183,7 +1183,7 @@ fn sameport_anchor_for_group(
         if sameport_shape_has_outline(node) {
           let penwidth = sameport_node_penwidth_pt(node)
           if penwidth > 0.0 {
-            node_size_from_points(
+            @dot_shared.node_size_from_points(
               base_clip_size.width_pt + penwidth / 2.0,
               base_clip_size.height_pt + penwidth / 2.0,
             )
@@ -1194,7 +1194,7 @@ fn sameport_anchor_for_group(
           base_clip_size
         }
       if group_edges.length() > 2 {
-        node_size_from_points(
+        @dot_shared.node_size_from_points(
           clip_size.width_pt + 2.0,
           clip_size.height_pt + 2.0,
         )
@@ -1393,7 +1393,7 @@ fn collect_sameport_anchor_overrides(
 
 ///|
 fn flat_parallel_group_key(edge : @cgraph.Edge) -> String {
-  "\{edge.tail().name()}|\{port_key(edge.tail_port())}|\{edge.head().name()}|\{port_key(edge.head_port())}"
+  "\{edge.tail().name()}|\{@dot_shared.port_key(edge.tail_port())}|\{edge.head().name()}|\{@dot_shared.port_key(edge.head_port())}"
 }
 
 ///|
@@ -1427,7 +1427,7 @@ fn collect_flat_adjacent_simple_beziers(
     if edge_has_label(edge) {
       continue
     }
-    if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+    if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
       continue
     }
     if edge_attr_non_empty(edge, "samehead") ||
@@ -1675,14 +1675,14 @@ fn build_edge_route_base(
   let tail_record_border_adjust =
     if is_record_shape(tail_node) &&
       !@html_label.is_html_label_text(label_text(tail_node)) {
-      RECORD_BORDER_PT
+      @dot_shared.RECORD_BORDER_PT
     } else {
       0.0
     }
   let head_record_border_adjust =
     if is_record_shape(head_node) &&
       !@html_label.is_html_label_text(label_text(head_node)) {
-      RECORD_BORDER_PT
+      @dot_shared.RECORD_BORDER_PT
     } else {
       0.0
     }
@@ -1711,7 +1711,7 @@ fn build_edge_route_base(
       false
     }
   let has_cluster = tail_cluster_name != "" || head_cluster_name != ""
-  let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+  let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }
@@ -1729,8 +1729,8 @@ fn build_edge_route_base(
   let allow_offset =
     !is_flat_edge &&
     !has_cluster &&
-    !port_is_explicit(tail_port) &&
-    !port_is_explicit(head_port) &&
+    !@dot_shared.port_is_explicit(tail_port) &&
+    !@dot_shared.port_is_explicit(head_port) &&
     !use_pathplan
   let (tail_offset, head_offset) = if allow_offset {
     (
@@ -1852,7 +1852,7 @@ fn build_edge_route_base(
                         )
                       _ => size.width_pt
                     }
-                  node_size_from_points(
+                  @dot_shared.node_size_from_points(
                     width_pt,
                     size.height_pt + pad * 2.0,
                   )
@@ -1969,7 +1969,7 @@ fn build_edge_route_base(
   let tail_clip_target =
     if tail_sameport_anchor is Some(_) {
       tail_anchor0
-    } else if port_is_explicit(tail_port) &&
+    } else if @dot_shared.port_is_explicit(tail_port) &&
       (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
       point_add(tail_clip_center, tail_slope)
     } else {
@@ -1978,7 +1978,7 @@ fn build_edge_route_base(
   let head_clip_target =
     if head_sameport_anchor is Some(_) {
       head_anchor0
-    } else if port_is_explicit(head_port) &&
+    } else if @dot_shared.port_is_explicit(head_port) &&
       (head_slope.x != 0.0 || head_slope.y != 0.0) {
       point_sub(head_clip_center, head_slope)
     } else {
@@ -2050,8 +2050,8 @@ fn build_edge_route_base(
         head_side_anchor is None &&
         compass_tail_on_non_record &&
         compass_head_on_non_record &&
-        port_is_explicit(tail_port) &&
-        port_is_explicit(head_port) &&
+        @dot_shared.port_is_explicit(tail_port) &&
+        @dot_shared.port_is_explicit(head_port) &&
         (tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
         (head_port_side & PORT_SIDE_BOTTOM) != 0 &&
         (tail_port_side & PORT_SIDE_TOP) == 0 &&
@@ -2397,7 +2397,7 @@ fn adjust_route_points(
   nodesep_pt : Double,
 ) -> Array[@geom.Point] {
   let mut points = points
-  let touch_eps = max_double(RECORD_BORDER_PT + 0.01, 1.5)
+  let touch_eps = max_double(@dot_shared.RECORD_BORDER_PT + 0.01, 1.5)
   let head_lr_touch =
     match head_port_rect {
       Some(rect) => {
@@ -2484,7 +2484,7 @@ fn compute_curve_offset(
   let mut curve_offset = 0.0
   let mut curve_skew = 1.0
   if enable_complex_tuning {
-    let head_port_key = port_key(edge.head_port())
+    let head_port_key = @dot_shared.port_key(edge.head_port())
     let key =
       if head_port_key == "" {
       if is_record_shape(edge.head()) { base.orig_head_name } else { "" }
@@ -2663,7 +2663,7 @@ fn build_edge_spline(
     _ => {
       let label_width_pt = edge_mid_label_width_pt(edge)
       let has_explicit_port =
-        port_is_explicit(tail_port) || port_is_explicit(head_port)
+        @dot_shared.port_is_explicit(tail_port) || @dot_shared.port_is_explicit(head_port)
       let abs_dx = Double::abs(head_anchor.x - tail_anchor.x)
       let split_label = enable_complex_tuning &&
         label_width_pt > 0.0 &&
@@ -2792,20 +2792,20 @@ fn build_edge_spline(
           }
         if adjusted.length() <= 2 {
           let tail_slope_line =
-            if port_is_explicit(tail_port) {
+            if @dot_shared.port_is_explicit(tail_port) {
               tail_slope
             } else {
               point(0.0, 0.0)
             }
           let head_slope_line =
-            if port_is_explicit(head_port) {
+            if @dot_shared.port_is_explicit(head_port) {
               head_slope
             } else {
               point(0.0, 0.0)
             }
           let record_port_edge =
-            (is_record_shape(tail_node) && port_is_explicit(tail_port)) ||
-              (is_record_shape(head_node) && port_is_explicit(head_port))
+            (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
+              (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
           let needs_record_detour =
             !using_pathplan &&
             !is_flat_edge &&
@@ -3081,13 +3081,13 @@ fn build_edge_spline(
           }
         } else {
           let tail_slope_for =
-            if port_is_explicit(tail_port) {
+            if @dot_shared.port_is_explicit(tail_port) {
               tail_slope
             } else {
               point(0.0, 0.0)
             }
           let head_slope_for =
-            if port_is_explicit(head_port) {
+            if @dot_shared.port_is_explicit(head_port) {
               head_slope
             } else {
               point(0.0, 0.0)
@@ -3237,20 +3237,20 @@ fn build_edge_spline(
         }
       } else {
         let tail_slope_line =
-          if port_is_explicit(tail_port) {
+          if @dot_shared.port_is_explicit(tail_port) {
             tail_slope
           } else {
             point(0.0, 0.0)
           }
         let head_slope_line =
-          if port_is_explicit(head_port) {
+          if @dot_shared.port_is_explicit(head_port) {
             head_slope
           } else {
             point(0.0, 0.0)
           }
         let record_port_edge =
-          (is_record_shape(tail_node) && port_is_explicit(tail_port)) ||
-            (is_record_shape(head_node) && port_is_explicit(head_port))
+          (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
+            (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
         let needs_record_detour =
           !using_pathplan &&
           !is_flat_edge &&
@@ -3549,9 +3549,9 @@ fn build_edge_spline(
   if using_pathplan && pathplan_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.
     let tail_slope_for =
-      if port_is_explicit(tail_port) { tail_slope } else { point(0.0, 0.0) }
+      if @dot_shared.port_is_explicit(tail_port) { tail_slope } else { point(0.0, 0.0) }
     let head_slope_for =
-      if port_is_explicit(head_port) { head_slope } else { point(0.0, 0.0) }
+      if @dot_shared.port_is_explicit(head_port) { head_slope } else { point(0.0, 0.0) }
     let join_dir = straight_path_join_dir(layout_rankdir)
     let join_tail = join_dir
     let join_head = join_dir
@@ -3772,7 +3772,7 @@ fn build_edge_layout(
           }
           _ =>
             if base.is_flat_edge {
-              match flat_label_edge_vnodes.get(edge_key(edge)) {
+              match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
                 Some(vnode_name) =>
                   match vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)
@@ -3898,7 +3898,7 @@ const ROUTE_GRAPH_AUX : Int = 128
 /// Do not change behavior without updating fixtures/tests.
 fn edge_route_type(base : EdgeRouteBase) -> Int {
   if base.orig_tail_name == base.orig_head_name {
-    if port_is_explicit(base.tail_port) || port_is_explicit(base.head_port) {
+    if @dot_shared.port_is_explicit(base.tail_port) || @dot_shared.port_is_explicit(base.head_port) {
       ROUTE_EDGE_SELF_PORT
     } else {
       ROUTE_EDGE_SELF_NOPORT
@@ -3976,12 +3976,12 @@ fn edge_port_cmp_info(
   let tail_pos = if base.swap_ends { base.head_pos } else { base.tail_pos }
   let head_pos = if base.swap_ends { base.tail_pos } else { base.head_pos }
   let tail_defined =
-    if base.swap_ends { port_is_explicit(base.head_port) } else {
-      port_is_explicit(base.tail_port)
+    if base.swap_ends { @dot_shared.port_is_explicit(base.head_port) } else {
+      @dot_shared.port_is_explicit(base.tail_port)
     }
   let head_defined =
-    if base.swap_ends { port_is_explicit(base.tail_port) } else {
-      port_is_explicit(base.head_port)
+    if base.swap_ends { @dot_shared.port_is_explicit(base.tail_port) } else {
+      @dot_shared.port_is_explicit(base.head_port)
     }
   let tail_rel =
     point(tail_anchor.x - tail_pos.x, tail_anchor.y - tail_pos.y)
@@ -4597,7 +4597,7 @@ fn remap_parallel_edge_layouts_for_graphviz(
     }
     let sameport_tag = if sameport_mark { "sameport" } else { "plain" }
     let direction_key =
-      "\{tail}|\{port_key(edge.tail_port())}|\{head}|\{port_key(edge.head_port())}|\{dir_key}|\{sameport_tag}"
+      "\{tail}|\{@dot_shared.port_key(edge.tail_port())}|\{head}|\{@dot_shared.port_key(edge.head_port())}|\{dir_key}|\{sameport_tag}"
     match groups.get(key) {
       Some(list) => list.push(edge.id())
       None => groups[key] = [edge.id()]
@@ -4676,7 +4676,7 @@ fn sorted_edges_for_routing(
 fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
   if edge_has_label(edge) || !undirected {
-    "vnode|\{edge_vnode_key(edge)}"
+    "vnode|\{@dot_shared.edge_vnode_key(edge)}"
   } else {
     "parallel|\{edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
   }
@@ -4967,7 +4967,7 @@ fn collect_regular_parallel_groups_for_graphviz(
     if base.is_flat_edge {
       continue
     }
-    let key = edge_vnode_key(edge)
+    let key = @dot_shared.edge_vnode_key(edge)
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]
@@ -5171,7 +5171,7 @@ fn route_edges(
         recovered_slack_keys,
       )
     edges_out_by_id[edge_id] = edge_layout
-    let regular_key = edge_vnode_key(edge)
+    let regular_key = @dot_shared.edge_vnode_key(edge)
     let group_edges = match regular_parallel_groups.get(regular_key) {
       Some(value) => value
       None => continue

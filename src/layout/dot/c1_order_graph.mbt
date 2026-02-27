@@ -181,7 +181,7 @@ fn collect_intercluster_vnode_tail_bonus(
         }
       let vnodes =
         if order_with_vnodes {
-          match edge_vnodes.get(edge_vnode_key(edge)) {
+          match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
             Some(list) => list
             None => []
           }

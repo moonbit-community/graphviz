@@ -45,7 +45,7 @@ fn assign_remincross_vnode_clusters_from_edges(
 ) -> Unit {
   let mut edge_idx = 0
   for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }

@@ -178,7 +178,7 @@ fn build_vnode_order_keys(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -473,7 +473,7 @@ fn collect_vnode_out_heads(
     let head =
       if edge_idx < edge_head.length() { edge_head[edge_idx] } else { edge.head().name() }
     edge_idx = edge_idx + 1
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }
@@ -639,7 +639,7 @@ fn vnode_positions_from_endpoints(
 ) -> Map[String, @geom.Point] {
   let positions : Map[String, @geom.Point] = Map::new()
   for edge in edges {
-    let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
       None => []
     }

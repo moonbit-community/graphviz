@@ -86,7 +86,7 @@ fn collect_intercluster_trailing_vnodes(
       cluster_min_rank,
       cluster_max_rank,
     ) {
-      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }

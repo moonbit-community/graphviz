@@ -495,7 +495,7 @@ test "record fixtures match Graphviz layout" {
       let size = node_size(node, record_orientation)
       let record_size : RecordFixturePoint = {
         x: size.width_pt,
-        y: size.height_pt - RECORD_BORDER_PT * 2.0,
+        y: size.height_pt - @dot_shared.RECORD_BORDER_PT * 2.0,
       }
       let rect : @geom.Rect = {
         llx: -record_size.x / 2.0,
@@ -545,7 +545,7 @@ test "record fixtures match Graphviz layout" {
     assert_double_eq(fixture.node, "height_in", fixture.height_in, size.height_in)
     let record_size : RecordFixturePoint = {
       x: size.width_pt,
-      y: size.height_pt - RECORD_BORDER_PT * 2.0,
+      y: size.height_pt - @dot_shared.RECORD_BORDER_PT * 2.0,
     }
     assert_point_eq(fixture.node, "size_pt", fixture.size_pt, record_size)
     let rect : @geom.Rect = {

@@ -337,11 +337,11 @@ fn nodesep_minlen(
   let head_size = sizes.get(head_name)
   let tail_right = match tail_size {
     Some(value) => value.right_pt
-    None => default_node_width_in() * 72.0 / 2.0
+    None => @dot_shared.default_node_width_in() * 72.0 / 2.0
   }
   let head_left = match head_size {
     Some(value) => value.left_pt
-    None => default_node_width_in() * 72.0 / 2.0
+    None => @dot_shared.default_node_width_in() * 72.0 / 2.0
   }
   let sep = nodesep_pt
   let minlen = tail_right + head_left + sep
@@ -551,7 +551,7 @@ fn build_cluster_constraints(
   }
   if edge_vnodes.length() > 0 {
     for edge in edges {
-      let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }
@@ -1112,8 +1112,8 @@ fn port_offsets_for_nodes(
 
 ///|
 fn fallback_compass_size() -> NodeSize {
-  let width_pt = default_node_width_in() * 72.0
-  let height_pt = default_node_height_in() * 72.0
+  let width_pt = @dot_shared.default_node_width_in() * 72.0
+  let height_pt = @dot_shared.default_node_height_in() * 72.0
   let half = width_pt / 2.0
   {
     width_in: width_pt / 72.0,
@@ -1385,7 +1385,7 @@ fn edge_port_order(
   rankdir : RankDir,
   nodes_by_name : Map[String, @cgraph.Node],
 ) -> Double {
-  if !port_is_explicit(port) {
+  if !@dot_shared.port_is_explicit(port) {
     // Graphviz parity: absent ports contribute neutral 0.0 offset/order.
     return 0.0
   }
@@ -1495,7 +1495,7 @@ fn build_constraint_graph(
   let ordered_nodes = nodes
   let mut has_port_edges = false
   for edge in edges {
-    if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+    if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
       has_port_edges = true
       break
     }
@@ -1865,7 +1865,7 @@ fn build_constraint_graph(
                   }
               }
             } else {
-              let vnodes = match edge_vnodes.get(edge_vnode_key(edge)) {
+              let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
                 Some(list) => list
                 None => []
               }
@@ -1924,8 +1924,8 @@ fn build_constraint_graph(
                 }
                 if tail_rank == head_rank &&
                   edge_mid_label_metrics(edge) is Some(_) &&
-                  !port_is_explicit(edge.tail_port()) &&
-                  !port_is_explicit(edge.head_port()) &&
+                  !@dot_shared.port_is_explicit(edge.tail_port()) &&
+                  !@dot_shared.port_is_explicit(edge.head_port()) &&
                   (match root_graph_for_node(edge.tail()).get_attr("ordering") {
                     Some(value) => {
                       let lower = value.to_lower()

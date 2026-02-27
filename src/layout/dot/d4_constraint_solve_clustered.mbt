@@ -372,7 +372,7 @@ fn build_clustered_xpos_reorder_input_edge_data(
     if edge_idx < x_edge_head_port_order.length() { x_edge_head_port_order[edge_idx] } else {
       0.5
     }
-  let vnodes = match ordering.vnode_info.edge_vnodes.get(edge_vnode_key(edge)) {
+  let vnodes = match ordering.vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(list) => list
     None => []
   }

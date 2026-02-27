@@ -67,8 +67,8 @@ fn self_edge_right_space_for_edge(
 ) -> Double {
   let tail_port = edge.tail_port()
   let head_port = edge.head_port()
-  let tail_explicit = port_is_explicit(tail_port)
-  let head_explicit = port_is_explicit(head_port)
+  let tail_explicit = @dot_shared.port_is_explicit(tail_port)
+  let head_explicit = @dot_shared.port_is_explicit(head_port)
   let label_width = self_edge_label_width_pt(edge, rankdir)
   if !tail_explicit && !head_explicit {
     return SELF_EDGE_SIZE_PT + label_width

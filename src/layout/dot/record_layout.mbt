@@ -606,7 +606,7 @@ fn record_layout_nodes(
               x: (child_rect.llx + child_rect.urx) / 2.0,
               y: (child_rect.lly + child_rect.ury) / 2.0,
             }
-            let field_size = node_size_from_points(
+            let field_size = @dot_shared.node_size_from_points(
               child_rect.urx - child_rect.llx,
               child_rect.ury - child_rect.lly,
             )
@@ -658,9 +658,9 @@ fn record_rects(
   }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
-    lly: rect.lly + RECORD_BORDER_PT,
+    lly: rect.lly + @dot_shared.RECORD_BORDER_PT,
     urx: rect.urx,
-    ury: rect.ury - RECORD_BORDER_PT,
+    ury: rect.ury - @dot_shared.RECORD_BORDER_PT,
   }
   record_layout_nodes(
     nodes,
@@ -707,9 +707,9 @@ fn record_ports(
   }
   let inner_rect : @geom.Rect = {
     llx: rect.llx,
-    lly: rect.lly + RECORD_BORDER_PT,
+    lly: rect.lly + @dot_shared.RECORD_BORDER_PT,
     urx: rect.urx,
-    ury: rect.ury - RECORD_BORDER_PT,
+    ury: rect.ury - @dot_shared.RECORD_BORDER_PT,
   }
   record_layout_nodes(
     nodes,
@@ -825,7 +825,7 @@ fn record_port_path_box(
   size : NodeSize,
   rankdir : RankDir,
 ) -> @geom.Rect? {
-  if !port_is_explicit(port) {
+  if !@dot_shared.port_is_explicit(port) {
     return None
   }
   if !is_record_shape(node) {
@@ -856,9 +856,9 @@ fn record_port_path_box(
   }
   let inner_rect : @geom.Rect = {
     llx: node_rect.llx,
-    lly: node_rect.lly + RECORD_BORDER_PT,
+    lly: node_rect.lly + @dot_shared.RECORD_BORDER_PT,
     urx: node_rect.urx,
-    ury: node_rect.ury - RECORD_BORDER_PT,
+    ury: node_rect.ury - @dot_shared.RECORD_BORDER_PT,
   }
   let top_rects =
     record_top_level_rects(
@@ -945,7 +945,7 @@ fn record_port_padding_y(
                         let dy = port_info.center.y - node_pos.y
                         let half_height =
                           port_info.size.height_pt / 2.0 -
-                          RECORD_BORDER_PT / 2.0 -
+                          @dot_shared.RECORD_BORDER_PT / 2.0 -
                           0.01
                         let adjusted =
                           if half_height < 0.0 {
@@ -971,10 +971,10 @@ fn record_port_padding_y(
     }
   }
   for edge in edges {
-    if port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
+    if @dot_shared.port_is_explicit(edge.tail_port()) && is_record_shape(edge.tail()) {
       update_padding(edge.tail().name(), edge.tail_port())
     }
-    if port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
+    if @dot_shared.port_is_explicit(edge.head_port()) && is_record_shape(edge.head()) {
       update_padding(edge.head().name(), edge.head_port())
     }
   }
@@ -1112,7 +1112,7 @@ fn collect_html_ports(
           x: (cell_layout.rect.llx + cell_layout.rect.urx) / 2.0,
           y: (cell_layout.rect.lly + cell_layout.rect.ury) / 2.0,
         }
-        let size = node_size_from_points(
+        let size = @dot_shared.node_size_from_points(
           cell_layout.rect.urx - cell_layout.rect.llx,
           cell_layout.rect.ury - cell_layout.rect.lly,
         )
@@ -1265,8 +1265,8 @@ fn port_side_mask_from_rects(
   port_rect : @geom.Rect,
   node_rect : @geom.Rect,
 ) -> Int {
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
+  let eps = if @dot_shared.RECORD_BORDER_PT > 0.01 {
+    @dot_shared.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }
@@ -1489,8 +1489,8 @@ fn port_side_mask_from_anchor(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> Int {
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
+  let eps = if @dot_shared.RECORD_BORDER_PT > 0.01 {
+    @dot_shared.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }
@@ -1545,11 +1545,11 @@ fn port_rect_from_geometry(
   size : NodeSize,
   node_size : NodeSize,
 ) -> @geom.Rect? {
-  if !port_is_explicit(port) {
+  if !@dot_shared.port_is_explicit(port) {
     return None
   }
-  let eps = if RECORD_BORDER_PT > 0.01 {
-    RECORD_BORDER_PT + 0.01
+  let eps = if @dot_shared.RECORD_BORDER_PT > 0.01 {
+    @dot_shared.RECORD_BORDER_PT + 0.01
   } else {
     0.01
   }
@@ -1931,10 +1931,10 @@ fn node_size(
   let (fallback_width, fallback_height) = if shape == "point" || shape == "dot" {
     (default_point_size_in(), default_point_size_in())
   } else if regular_shape {
-    let height = default_node_height_in()
+    let height = @dot_shared.default_node_height_in()
     (height, height)
   } else {
-    (default_node_width_in(), default_node_height_in())
+    (@dot_shared.default_node_width_in(), @dot_shared.default_node_height_in())
   }
   let base_width_in = match node.get_attr("width") {
     Some(value) => parse_double(value, fallback_width)
@@ -1958,7 +1958,7 @@ fn node_size(
           None => fallback_width
         }
     }
-    return node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
+    return @dot_shared.node_size_from_points(point_size_in * 72.0, point_size_in * 72.0)
   }
   let label = label_text(node)
   if @html_label.is_html_label_text(label) {
@@ -1994,7 +1994,7 @@ fn node_size(
             },
           )
         }
-        return node_size_from_points(width_pt, height_pt)
+        return @dot_shared.node_size_from_points(width_pt, height_pt)
       }
       None => ()
     }
@@ -2036,8 +2036,8 @@ fn node_size(
         },
       )
     }
-    let bordered_height = height_pt + RECORD_BORDER_PT * 2.0
-    return node_size_from_points(width_pt, bordered_height)
+    let bordered_height = height_pt + @dot_shared.RECORD_BORDER_PT * 2.0
+    return @dot_shared.node_size_from_points(width_pt, bordered_height)
   }
   let (text_width_pt, text_height_pt) = label_text_dimensions(
     label, font, font_size_pt,

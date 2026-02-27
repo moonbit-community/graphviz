@@ -821,7 +821,7 @@ fn apply_xlabel_updates(
   }
   let edges : Array[DotLayoutEdge] = []
   for edge_layout in layout.edges {
-    let key = edge_key(edge_layout.edge)
+    let key = @dot_shared.edge_key(edge_layout.edge)
     let label_pos = match edge_mid_updates.get(key) {
       Some(pos) => Some(pos)
       None => edge_layout.label_pos
@@ -978,7 +978,7 @@ fn apply_xlabels(
     }
     for edge_layout in edges_for_node {
       let edge = edge_layout.edge
-      let edge_key_value = edge_key(edge)
+      let edge_key_value = @dot_shared.edge_key(edge)
       let has_geometry = edge_layout.splines.length() > 0
       match edge_layout.label_pos {
         Some(pos) =>

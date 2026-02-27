@@ -516,7 +516,7 @@ fn edge_label_rank_x(
   edge_vnodes : Map[String, Array[String]],
   vnode_positions : Map[String, @geom.Point],
 ) -> Double? {
-  match edge_vnodes.get(edge_vnode_key(edge)) {
+  match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(vnodes) =>
       for name in vnodes {
         match vnode_ranks.get(name) {
@@ -1014,7 +1014,7 @@ fn adjust_edge_label_positions(
       None => ()
     }
     match label_pos {
-      Some(pos) => updates[edge_key(edge_layout.edge)] = pos
+      Some(pos) => updates[@dot_shared.edge_key(edge_layout.edge)] = pos
       None => ()
     }
     adjusted.push({
@@ -1038,7 +1038,7 @@ fn apply_edge_label_updates(
   for graph in graphs {
     let edges : Array[DotLayoutEdge] = []
     for edge_layout in graph.edges {
-      let label_pos = match updates.get(edge_key(edge_layout.edge)) {
+      let label_pos = match updates.get(@dot_shared.edge_key(edge_layout.edge)) {
         Some(pos) => Some(pos)
         None => edge_layout.label_pos
       }
@@ -1150,7 +1150,7 @@ fn adjust_edge_labels_for_label_overlaps(
               if tail_axis + tail_pad > pos_axis { tail_axis + tail_pad } else { pos_axis }
             let half_axis = if axis_is_x { width / 2.0 } else { height / 2.0 }
             let entry = {
-              key: edge_key(edge_layout.edge),
+              key: @dot_shared.edge_key(edge_layout.edge),
               pos,
               base_axis,
               half_axis,
@@ -1217,7 +1217,7 @@ fn adjust_edge_labels_for_label_overlaps(
   } else {
     let edges : Array[DotLayoutEdge] = []
     for edge_layout in layout.edges {
-      let label_pos = match updates.get(edge_key(edge_layout.edge)) {
+      let label_pos = match updates.get(@dot_shared.edge_key(edge_layout.edge)) {
         Some(pos) => Some(pos)
         None => edge_layout.label_pos
       }
