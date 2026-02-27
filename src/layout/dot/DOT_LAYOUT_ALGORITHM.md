@@ -150,7 +150,7 @@ flowchart LR
 
 Main files:
 
-- `src/layout/dot/layout_pipeline_input_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_a_input_helpers.mbt`
 - `src/layout/dot/layout_pipeline_helpers.mbt` (shared structs/utilities)
 
 ### What it does
@@ -184,7 +184,7 @@ This stage decides vertical layering and ordering inputs.
 
 Main files:
 
-- `src/layout/dot/layout_pipeline_rank_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_b_rank_helpers.mbt`
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/network_simplex/*`
 - `src/layout/dot/acyclic_helpers.mbt`
@@ -216,6 +216,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
+- implemented in `src/layout/dot/layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -507,9 +508,11 @@ Repository guard validates:
 - Entry + stage orchestration:
   - `layout.mbt`, `layout_dot_pipeline.mbt`
 - Input canonicalization:
-  - `layout_pipeline_input_helpers.mbt`
+  - `layout_pipeline_stage_a_input_helpers.mbt`
 - Rank assignment and rank heights:
-  - `layout_pipeline_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
+  - `layout_pipeline_stage_b_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
+- Stage B cluster metadata:
+  - `layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
 - Ordering dispatch + shared stage logic:
   - `layout_pipeline_helpers.mbt`
 - Ordering edge materialization:
@@ -549,8 +552,8 @@ If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
 2. `layout_dot_pipeline.mbt` — understand stage boundaries.
-3. `layout_pipeline_input_helpers.mbt` — understand canonical input formation.
-4. `layout_pipeline_rank_helpers.mbt` — understand rank and spacing foundations.
+3. `layout_pipeline_stage_a_input_helpers.mbt` — understand canonical input formation.
+4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
 7. `layout_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand orchestration glue and position stage internals.
