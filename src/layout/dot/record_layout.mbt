@@ -1318,7 +1318,7 @@ fn resolve_dynamic_port_anchor(
       return ()
     }
     let cand = point_add(pt, pos)
-    let dist = point_dist2(cand, opt)
+    let dist = @edge_spline.point_dist2(cand, opt)
     if !seen || dist < best_dist {
       best_dist = dist
       best_side = side
@@ -1479,7 +1479,7 @@ fn port_side_mask_from_rect(
   node_pos : @geom.Point,
   node_size : NodeSize,
 ) -> Int {
-  let node_rect = port_side_rect(node_pos, node_size)
+  let node_rect = @edge_spline.port_side_rect(node_pos, node_size)
   port_side_mask_from_rects(port_rect, node_rect)
 }
 
@@ -1494,7 +1494,7 @@ fn port_side_mask_from_anchor(
   } else {
     0.01
   }
-  let node_rect = port_side_rect(node_pos, node_size)
+  let node_rect = @edge_spline.port_side_rect(node_pos, node_size)
   if Double::abs(anchor.x - node_rect.llx) <= eps {
     return PORT_SIDE_LEFT
   }

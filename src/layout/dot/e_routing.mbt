@@ -347,8 +347,8 @@ fn flat_no_arrow_detour_points_if_blocked(
         Some((
           [
           line_start,
-          point(bend1_x, detour_y),
-          point(bend2_x, detour_y),
+          @edge_spline.point(bend1_x, detour_y),
+          @edge_spline.point(bend2_x, detour_y),
           line_end,
         ],
           first_right,
@@ -401,8 +401,8 @@ fn flat_no_arrow_detour_points_if_blocked(
         let detour_x = max_right + ranksep_pt / 2.0
         Some(([
           line_start,
-          point(detour_x, line_start.y),
-          point(detour_x, line_end.y),
+          @edge_spline.point(detour_x, line_start.y),
+          @edge_spline.point(detour_x, line_end.y),
           line_end,
         ], 0.0, 0.0, 0.0, 0.0))
       }
@@ -547,17 +547,17 @@ fn self_edge_routes_top(
     dx = dx + sgn * stepx
     let points = [
       tp,
-      point(tp.x + dx, tp.y + ty / 3.0),
-      point(tp.x + dx, np.y + dy),
-      point((tp.x + hp.x) / 2.0, np.y + dy),
-      point(hp.x - dx, np.y + dy),
-      point(hp.x - dx, hp.y + hy / 3.0),
+      @edge_spline.point(tp.x + dx, tp.y + ty / 3.0),
+      @edge_spline.point(tp.x + dx, np.y + dy),
+      @edge_spline.point((tp.x + hp.x) / 2.0, np.y + dy),
+      @edge_spline.point(hp.x - dx, np.y + dy),
+      @edge_spline.point(hp.x - dx, hp.y + hy / 3.0),
       hp,
     ]
     let mut label_pos : @geom.Point? = None
     let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
     if label_height > 0.0 {
-      label_pos = Some(point(np.x, np.y + dy + label_height / 2.0))
+      label_pos = Some(@edge_spline.point(np.x, np.y + dy + label_height / 2.0))
       if label_height > stepy {
         dy = dy + (label_height - stepy)
       }
@@ -599,17 +599,17 @@ fn self_edge_routes_bottom(
     dx = dx + sgn * stepx
     let points = [
       tp,
-      point(tp.x + dx, tp.y - ty / 3.0),
-      point(tp.x + dx, np.y - dy),
-      point((tp.x + hp.x) / 2.0, np.y - dy),
-      point(hp.x - dx, np.y - dy),
-      point(hp.x - dx, hp.y - hy / 3.0),
+      @edge_spline.point(tp.x + dx, tp.y - ty / 3.0),
+      @edge_spline.point(tp.x + dx, np.y - dy),
+      @edge_spline.point((tp.x + hp.x) / 2.0, np.y - dy),
+      @edge_spline.point(hp.x - dx, np.y - dy),
+      @edge_spline.point(hp.x - dx, hp.y - hy / 3.0),
       hp,
     ]
     let mut label_pos : @geom.Point? = None
     let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
     if label_height > 0.0 {
-      label_pos = Some(point(np.x, np.y - dy - label_height / 2.0))
+      label_pos = Some(@edge_spline.point(np.x, np.y - dy - label_height / 2.0))
       if label_height > stepy {
         dy = dy + (label_height - stepy)
       }
@@ -714,17 +714,17 @@ fn build_self_edge_routes(
       dy = dy + sgn * stepy
       let points = [
         tp,
-        point(tp.x + tx / 3.0, tp.y + dy),
-        point(np.x + dx, tp.y + dy),
-        point(np.x + dx, (tp.y + hp.y) / 2.0),
-        point(np.x + dx, hp.y - dy),
-        point(hp.x + hx / 3.0, hp.y - dy),
+        @edge_spline.point(tp.x + tx / 3.0, tp.y + dy),
+        @edge_spline.point(np.x + dx, tp.y + dy),
+        @edge_spline.point(np.x + dx, (tp.y + hp.y) / 2.0),
+        @edge_spline.point(np.x + dx, hp.y - dy),
+        @edge_spline.point(hp.x + hx / 3.0, hp.y - dy),
         hp,
       ]
       let mut label_pos : @geom.Point? = None
       let label_width = self_edge_label_width_pt(edge, base0.rankdir)
       if label_width > 0.0 {
-        label_pos = Some(point(np.x + dx + label_width / 2.0, np.y))
+        label_pos = Some(@edge_spline.point(np.x + dx + label_width / 2.0, np.y))
         if label_width > stepx {
           dx = dx + (label_width - stepx)
         }
@@ -763,17 +763,17 @@ fn build_self_edge_routes(
         dy = dy + sgn * stepy
         let points = [
           tp,
-          point(tp.x - tx / 3.0, tp.y + dy),
-          point(np.x - dx, tp.y + dy),
-          point(np.x - dx, (tp.y + hp.y) / 2.0),
-          point(np.x - dx, hp.y - dy),
-          point(hp.x - hx / 3.0, hp.y - dy),
+          @edge_spline.point(tp.x - tx / 3.0, tp.y + dy),
+          @edge_spline.point(np.x - dx, tp.y + dy),
+          @edge_spline.point(np.x - dx, (tp.y + hp.y) / 2.0),
+          @edge_spline.point(np.x - dx, hp.y - dy),
+          @edge_spline.point(hp.x - hx / 3.0, hp.y - dy),
           hp,
         ]
         let mut label_pos : @geom.Point? = None
         let label_width = self_edge_label_width_pt(edge, base0.rankdir)
         if label_width > 0.0 {
-          label_pos = Some(point(np.x - dx - label_width / 2.0, np.y))
+          label_pos = Some(@edge_spline.point(np.x - dx - label_width / 2.0, np.y))
           if label_width > stepx {
             dx = dx + (label_width - stepx)
           }
@@ -907,7 +907,7 @@ fn clip_polygon_vertices_for_shape(
   let mut angle = (sector - @math.PI) / 2.0
   let mut sinx = @math.sin(angle)
   let mut cosx = @math.cos(angle)
-  let mut r = point(0.5 * cosx, 0.5 * sinx)
+  let mut r = @edge_spline.point(0.5 * cosx, 0.5 * sinx)
   let mut xmax = 0.0
   let mut ymax = 0.0
   angle = angle + (@math.PI - sector) / 2.0
@@ -916,7 +916,7 @@ fn clip_polygon_vertices_for_shape(
     angle = angle + sector
     sinx = @math.sin(angle)
     cosx = @math.cos(angle)
-    r = point(r.x + side_len * cosx, r.y + side_len * sinx)
+    r = @edge_spline.point(r.x + side_len * cosx, r.y + side_len * sinx)
     let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
     let mut py = r.y
     let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
@@ -929,7 +929,7 @@ fn clip_polygon_vertices_for_shape(
     if Double::abs(py) > ymax {
       ymax = Double::abs(py)
     }
-    base.push(point(px, py))
+    base.push(@edge_spline.point(px, py))
   }
   if xmax <= 0.0 || ymax <= 0.0 {
     return []
@@ -938,7 +938,7 @@ fn clip_polygon_vertices_for_shape(
   let scale_y = half_h / ymax
   let out : Array[@geom.Point] = []
   for vertex in base {
-    out.push(point(vertex.x * scale_x, vertex.y * scale_y))
+    out.push(@edge_spline.point(vertex.x * scale_x, vertex.y * scale_y))
   }
   out
 }
@@ -994,7 +994,7 @@ fn clip_to_polygon_shape(
     }
   }
   if found {
-    point(center.x + dx * best_t, center.y + dy * best_t)
+    @edge_spline.point(center.x + dx * best_t, center.y + dy * best_t)
   } else {
     clip_to_rect(center, size, target)
   }
@@ -1229,12 +1229,12 @@ fn sameport_anchor_for_group(
     clip_size.left_pt + clip_size.right_pt,
     clip_size.height_pt + ranksep_pt,
   )
-  let target = point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
+  let target = @edge_spline.point(node_pos.x + dir_x * far, node_pos.y + dir_y * far)
   let clipped0 = clip_to_node_shape(node, node_pos, clip_size, target)
   let clipped =
     if group_edges.length() > 3 {
       if Double::abs(dir_x) <= Double::abs(dir_y) * 0.25 {
-        point(clipped0.x + dir_x, clipped0.y + dir_y)
+        @edge_spline.point(clipped0.x + dir_x, clipped0.y + dir_y)
       } else {
         clipped0
       }
@@ -1245,7 +1245,7 @@ fn sameport_anchor_for_group(
         } else {
           1.0
         }
-      point(
+      @edge_spline.point(
         clipped0.x + dir_x * sameport_nudge,
         clipped0.y + dir_y * sameport_nudge,
       )
@@ -1253,7 +1253,7 @@ fn sameport_anchor_for_group(
   // Graphviz sameport stores integer offset from node center.
   let rel_x = (clipped.x - node_pos.x).round()
   let rel_y = (clipped.y - node_pos.y).round()
-  Some(point(node_pos.x + rel_x, node_pos.y + rel_y))
+  Some(@edge_spline.point(node_pos.x + rel_x, node_pos.y + rel_y))
 }
 
 ///|
@@ -1506,11 +1506,11 @@ fn collect_flat_adjacent_simple_beziers(
     }
     group_edges.sort_by((a, b) => cmp_int(a.id(), b.id()))
     let count = group_edges.length()
-    let base_one_third = point(
+    let base_one_third = @edge_spline.point(
       tx + (hx - tx) / 3.0,
       ty + (hy - ty) / 3.0,
     )
-    let base_two_third = point(
+    let base_two_third = @edge_spline.point(
       tx + (hx - tx) * 2.0 / 3.0,
       ty + (hy - ty) * 2.0 / 3.0,
     )
@@ -1519,14 +1519,14 @@ fn collect_flat_adjacent_simple_beziers(
     for i in 0..<count {
       let frac = Double::from_int(i) / denom
       let offset = -span / 2.0 + span * frac
-      let shift = point(perp_x * offset, perp_y * offset)
+      let shift = @edge_spline.point(perp_x * offset, perp_y * offset)
       let edge = group_edges[i]
       let edge_base = match base_cache.get(edge.id()) {
         Some(value) => value
         None => continue
       }
-      let c1 = point_add(base_one_third, shift)
-      let c2 = point_add(base_two_third, shift)
+      let c1 = @edge_spline.point_add(base_one_third, shift)
+      let c2 = @edge_spline.point_add(base_two_third, shift)
       out[edge.id()] = [
         edge_base.tail_anchor,
         c1,
@@ -1651,11 +1651,11 @@ fn build_edge_route_base(
     head_size,
   )
   let tail_port_sides = match tail_port_rect {
-    Some(rect) => port_side_count(rect, tail_pos, tail_size)
+    Some(rect) => @edge_spline.port_side_count(rect, tail_pos, tail_size)
     None => 0
   }
   let head_port_sides = match head_port_rect {
-    Some(rect) => port_side_count(rect, head_pos, head_size)
+    Some(rect) => @edge_spline.port_side_count(rect, head_pos, head_size)
     None => 0
   }
   let tail_label_port = port_is_label_port(tail_name, tail_port, label_ports_raw)
@@ -1734,11 +1734,11 @@ fn build_edge_route_base(
     !use_pathplan
   let (tail_offset, head_offset) = if allow_offset {
     (
-      layout_port_offset(point(0.0, -1.0), layout_rankdir),
-      layout_port_offset(point(0.0, 1.0), layout_rankdir),
+      layout_port_offset(@edge_spline.point(0.0, -1.0), layout_rankdir),
+      layout_port_offset(@edge_spline.point(0.0, 1.0), layout_rankdir),
     )
   } else {
-    (point(0.0, 0.0), point(0.0, 0.0))
+    (@edge_spline.point(0.0, 0.0), @edge_spline.point(0.0, 0.0))
   }
   let tail_cluster_bbox : @geom.Rect? =
     if tail_cluster_name == "" {
@@ -1823,8 +1823,8 @@ fn build_edge_route_base(
       None,
     )
   }
-  let tail_anchor0 = point_add(tail_anchor_base, tail_offset)
-  let head_anchor0 = point_add(head_anchor_base, head_offset)
+  let tail_anchor0 = @edge_spline.point_add(tail_anchor_base, tail_offset)
+  let head_anchor0 = @edge_spline.point_add(head_anchor_base, head_offset)
   let self_edge = orig_tail_name == orig_head_name
   let adjust_self_edge_compass_clip_size =
     (node : @cgraph.Node, port : @cgraph.Port?, size : NodeSize) => {
@@ -1893,7 +1893,7 @@ fn build_edge_route_base(
             Some(@cgraph.Compass::C) => None
             Some(compass) =>
               Some(
-                compass_port_point_on_shape(
+                @edge_spline.compass_port_point_on_shape(
                   node,
                   center,
                   size,
@@ -1944,7 +1944,7 @@ fn build_edge_route_base(
     }
   let tail_slope_rankdir = slope_rankdir_for_endpoint(tail_node, tail_port)
   let head_slope_rankdir = slope_rankdir_for_endpoint(head_node, head_port)
-  let tail_slope = endpoint_slope_for_anchor(
+  let tail_slope = @edge_spline.endpoint_slope_for_anchor(
     tail_port,
     tail_port_side,
     tail_anchor0,
@@ -1955,7 +1955,7 @@ fn build_edge_route_base(
     true,
     tail_port_rect,
   )
-  let head_slope = endpoint_slope_for_anchor(
+  let head_slope = @edge_spline.endpoint_slope_for_anchor(
     head_port,
     head_port_side,
     head_anchor0,
@@ -1971,7 +1971,7 @@ fn build_edge_route_base(
       tail_anchor0
     } else if @dot_shared.port_is_explicit(tail_port) &&
       (tail_slope.x != 0.0 || tail_slope.y != 0.0) {
-      point_add(tail_clip_center, tail_slope)
+      @edge_spline.point_add(tail_clip_center, tail_slope)
     } else {
       head_anchor0
     }
@@ -1980,7 +1980,7 @@ fn build_edge_route_base(
       head_anchor0
     } else if @dot_shared.port_is_explicit(head_port) &&
       (head_slope.x != 0.0 || head_slope.y != 0.0) {
-      point_sub(head_clip_center, head_slope)
+      @edge_spline.point_sub(head_clip_center, head_slope)
     } else {
       tail_anchor0
     }
@@ -2067,8 +2067,8 @@ fn build_edge_route_base(
       )
     if delta != 0.0 {
       let x_dir = if head_anchor0.x >= tail_anchor0.x { 1.0 } else { -1.0 }
-      tail_clip = point(tail_clip.x + x_dir * delta, tail_clip.y)
-      head_clip = point(head_clip.x + x_dir * delta, head_clip.y)
+      tail_clip = @edge_spline.point(tail_clip.x + x_dir * delta, tail_clip.y)
+      head_clip = @edge_spline.point(head_clip.x + x_dir * delta, head_clip.y)
     }
   }
   let tail_anchor =
@@ -2120,9 +2120,9 @@ fn build_edge_route_base(
     if include_tail || include_head {
     if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
       let (tail_len, head_len) =
-        arrow_length_for_edge(edge, include_tail, include_head, None)
+        @edge_spline.arrow_length_for_edge(edge, include_tail, include_head, None)
       let base = if tail_len > head_len { tail_len } else { head_len }
-      let span = point_dist(tail_clip, head_clip)
+      let span = @edge_spline.point_dist(tail_clip, head_clip)
       let max_len = if span < 12.0 { span * 0.25 } else { span }
       if max_len > 0.0 && max_len < base {
         Some(max_len)
@@ -2401,7 +2401,7 @@ fn adjust_route_points(
   let head_lr_touch =
     match head_port_rect {
       Some(rect) => {
-        let node_rect = port_side_rect(base.head_pos, base.head_size)
+        let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
         Double::abs(rect.llx - node_rect.llx) <= touch_eps ||
           Double::abs(rect.urx - node_rect.urx) <= touch_eps
       }
@@ -2410,7 +2410,7 @@ fn adjust_route_points(
   let head_tb_touch =
     match head_port_rect {
       Some(rect) => {
-        let node_rect = port_side_rect(base.head_pos, base.head_size)
+        let node_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
         Double::abs(rect.lly - node_rect.lly) <= touch_eps ||
           Double::abs(rect.ury - node_rect.ury) <= touch_eps
       }
@@ -2422,8 +2422,8 @@ fn adjust_route_points(
       RankDir::LR | RankDir::RL => head_lr_touch && !head_tb_touch
     }
   if points.length() <= 2 && has_explicit_port && detour_ok && !using_pathplan {
-    let tail_rect = port_side_rect(base.tail_pos, base.tail_size)
-    let head_rect = port_side_rect(base.head_pos, base.head_size)
+    let tail_rect = @edge_spline.port_side_rect(base.tail_pos, base.tail_size)
+    let head_rect = @edge_spline.port_side_rect(base.head_pos, base.head_size)
     let anchor_eps = 0.02
     let needs_detour =
       segment_intersects_rect(
@@ -2459,10 +2459,10 @@ fn adjust_route_points(
     let offset = max_double(4.0, nodesep_pt * 0.5)
     let kinked : Array[@geom.Point] = [base.tail_anchor]
     if base.tail_slope.x != 0.0 || base.tail_slope.y != 0.0 {
-      kinked.push(point_add(base.tail_anchor, point_scale(base.tail_slope, offset)))
+      kinked.push(@edge_spline.point_add(base.tail_anchor, @edge_spline.point_scale(base.tail_slope, offset)))
     }
     if base.head_slope.x != 0.0 || base.head_slope.y != 0.0 {
-      kinked.push(point_add(base.head_anchor, point_scale(base.head_slope, -offset)))
+      kinked.push(@edge_spline.point_add(base.head_anchor, @edge_spline.point_scale(base.head_slope, -offset)))
     }
     kinked.push(base.head_anchor)
     points = kinked
@@ -2538,10 +2538,10 @@ fn compute_curve_offset(
 /// Do not change behavior without updating fixtures/tests.
 fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
   match rankdir {
-    RankDir::TB => point(0.0, -1.0)
-    RankDir::BT => point(0.0, 1.0)
-    RankDir::LR => point(1.0, 0.0)
-    RankDir::RL => point(-1.0, 0.0)
+    RankDir::TB => @edge_spline.point(0.0, -1.0)
+    RankDir::BT => @edge_spline.point(0.0, 1.0)
+    RankDir::LR => @edge_spline.point(1.0, 0.0)
+    RankDir::RL => @edge_spline.point(-1.0, 0.0)
   }
 }
 
@@ -2617,7 +2617,7 @@ fn build_edge_spline(
   let mut apply_dotted_adjustment = false
   let spline = match splines {
     SplinesMode::None | SplinesMode::Polyline =>
-      edge_spline_for_polyline(
+      @edge_spline.edge_spline_for_polyline(
         edge,
         tail_clip_center,
         head_clip_center,
@@ -2639,7 +2639,7 @@ fn build_edge_spline(
         arrow_swapped=swap_arrow_attrs,
       )
     SplinesMode::Ortho =>
-      edge_spline_for_polyline(
+      @edge_spline.edge_spline_for_polyline(
         edge,
         tail_clip_center,
         head_clip_center,
@@ -2795,13 +2795,13 @@ fn build_edge_spline(
             if @dot_shared.port_is_explicit(tail_port) {
               tail_slope
             } else {
-              point(0.0, 0.0)
+              @edge_spline.point(0.0, 0.0)
             }
           let head_slope_line =
             if @dot_shared.port_is_explicit(head_port) {
               head_slope
             } else {
-              point(0.0, 0.0)
+              @edge_spline.point(0.0, 0.0)
             }
           let record_port_edge =
             (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
@@ -2858,8 +2858,8 @@ fn build_edge_spline(
               None
             }
           if needs_record_detour {
-            let tail_rect = port_side_rect(tail_clip_center, tail_clip_size)
-            let head_rect = port_side_rect(head_clip_center, head_clip_size)
+            let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
+            let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
             let detour_offset = nodesep_pt * 0.5
             let detour_points =
               match layout_rankdir {
@@ -2879,8 +2879,8 @@ fn build_edge_spline(
                     }
                   [
                     tail_clip,
-                    point(detour_x, tail_clip.y),
-                    point(detour_x, head_clip.y),
+                    @edge_spline.point(detour_x, tail_clip.y),
+                    @edge_spline.point(detour_x, head_clip.y),
                     head_clip,
                   ]
                 }
@@ -2900,15 +2900,15 @@ fn build_edge_spline(
                     }
                   [
                     tail_clip,
-                    point(detour_y, tail_clip.y),
-                    point(detour_y, head_clip.y),
+                    @edge_spline.point(detour_y, tail_clip.y),
+                    @edge_spline.point(detour_y, head_clip.y),
                     head_clip,
                   ]
               }
             }
             if using_pathplan {
               raw_bezier =
-                edge_spline_raw_for_points(
+                @edge_spline.edge_spline_raw_for_points(
                   detour_points,
                   tail_slope_line,
                   head_slope_line,
@@ -2916,7 +2916,7 @@ fn build_edge_spline(
                   route_barriers=route_barriers,
                 )
             }
-            edge_spline_for_points(
+            @edge_spline.edge_spline_for_points(
               edge,
               detour_points,
               tail_clip_center,
@@ -2945,7 +2945,7 @@ fn build_edge_spline(
           ) {
             if using_pathplan {
               raw_bezier =
-                edge_spline_raw_for_points(
+                @edge_spline.edge_spline_raw_for_points(
                   detour_points,
                   tail_slope_line,
                   head_slope_line,
@@ -2954,7 +2954,7 @@ fn build_edge_spline(
                 )
             }
             let mut detour_spline =
-              edge_spline_for_points(
+              @edge_spline.edge_spline_for_points(
               edge,
               detour_points,
               tail_clip_center,
@@ -3003,14 +3003,14 @@ fn build_edge_spline(
             if using_pathplan {
               let line_points = adjusted
               raw_bezier =
-                edge_spline_raw_for_points(
+                @edge_spline.edge_spline_raw_for_points(
                   line_points,
                   tail_slope_line,
                   head_slope_line,
                   force_segmented,
                   route_barriers=route_barriers,
                 )
-              edge_spline_for_points(
+              @edge_spline.edge_spline_for_points(
                 edge,
                 line_points,
                 tail_clip_center,
@@ -3043,8 +3043,8 @@ fn build_edge_spline(
                     base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
                   let line_y = min_double(tail_bottom, head_bottom)
                   (
-                    point(adjusted[0].x, line_y),
-                    point(adjusted[adjusted.length() - 1].x, line_y),
+                    @edge_spline.point(adjusted[0].x, line_y),
+                    @edge_spline.point(adjusted[adjusted.length() - 1].x, line_y),
                   )
                 } else {
                   (
@@ -3052,7 +3052,7 @@ fn build_edge_spline(
                     adjusted[adjusted.length() - 1],
                   )
                 }
-              edge_spline_for_line(
+              @edge_spline.edge_spline_for_line(
                 edge,
                 line_start,
                 line_end,
@@ -3084,13 +3084,13 @@ fn build_edge_spline(
             if @dot_shared.port_is_explicit(tail_port) {
               tail_slope
             } else {
-              point(0.0, 0.0)
+              @edge_spline.point(0.0, 0.0)
             }
           let head_slope_for =
             if @dot_shared.port_is_explicit(head_port) {
               head_slope
             } else {
-              point(0.0, 0.0)
+              @edge_spline.point(0.0, 0.0)
             }
           // Graphviz parity: pathplan edges always allow spline fitting.
           let edge_force_segmented = if using_pathplan { false } else { force_segmented }
@@ -3152,7 +3152,7 @@ fn build_edge_spline(
                   join_head
                 }
               let seg_raw =
-                edge_spline_raw_for_points(
+                @edge_spline.edge_spline_raw_for_points(
                   segment_points,
                   seg_tail_slope,
                   seg_head_slope,
@@ -3175,7 +3175,7 @@ fn build_edge_spline(
           if use_segmented_pathplan && segmented_raw.length() > 0 {
             raw_bezier = segmented_raw
             let spline =
-              edge_spline_for_bezier_points(
+              @edge_spline.edge_spline_for_bezier_points(
                 edge,
                 raw_bezier,
                 tail_clip_center,
@@ -3198,7 +3198,7 @@ fn build_edge_spline(
           } else {
             if using_pathplan {
               raw_bezier =
-                edge_spline_raw_for_points(
+                @edge_spline.edge_spline_raw_for_points(
                   adjusted,
                   tail_slope_for,
                   head_slope_for,
@@ -3207,7 +3207,7 @@ fn build_edge_spline(
                 )
             }
             let spline =
-              edge_spline_for_points(
+              @edge_spline.edge_spline_for_points(
                 edge,
                 adjusted,
                 tail_clip_center,
@@ -3240,13 +3240,13 @@ fn build_edge_spline(
           if @dot_shared.port_is_explicit(tail_port) {
             tail_slope
           } else {
-            point(0.0, 0.0)
+            @edge_spline.point(0.0, 0.0)
           }
         let head_slope_line =
           if @dot_shared.port_is_explicit(head_port) {
             head_slope
           } else {
-            point(0.0, 0.0)
+            @edge_spline.point(0.0, 0.0)
           }
         let record_port_edge =
           (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
@@ -3303,8 +3303,8 @@ fn build_edge_spline(
             None
           }
         if needs_record_detour {
-          let tail_rect = port_side_rect(tail_clip_center, tail_clip_size)
-          let head_rect = port_side_rect(head_clip_center, head_clip_size)
+          let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
+          let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
           let detour_offset = nodesep_pt * 0.5
           let detour_points =
             match layout_rankdir {
@@ -3324,8 +3324,8 @@ fn build_edge_spline(
                   }
                 [
                   tail_clip,
-                  point(detour_x, tail_clip.y),
-                  point(detour_x, head_clip.y),
+                  @edge_spline.point(detour_x, tail_clip.y),
+                  @edge_spline.point(detour_x, head_clip.y),
                   head_clip,
                 ]
               }
@@ -3345,15 +3345,15 @@ fn build_edge_spline(
                   }
                 [
                   tail_clip,
-                  point(tail_clip.x, detour_y),
-                  point(head_clip.x, detour_y),
+                  @edge_spline.point(tail_clip.x, detour_y),
+                  @edge_spline.point(head_clip.x, detour_y),
                   head_clip,
                 ]
               }
             }
           if using_pathplan {
             raw_bezier =
-              edge_spline_raw_for_points(
+              @edge_spline.edge_spline_raw_for_points(
                 detour_points,
                 tail_slope_line,
                 head_slope_line,
@@ -3361,7 +3361,7 @@ fn build_edge_spline(
                 route_barriers=route_barriers,
               )
           }
-          edge_spline_for_points(
+          @edge_spline.edge_spline_for_points(
             edge,
             detour_points,
             tail_clip_center,
@@ -3390,7 +3390,7 @@ fn build_edge_spline(
         ) {
           if using_pathplan {
             raw_bezier =
-              edge_spline_raw_for_points(
+              @edge_spline.edge_spline_raw_for_points(
                 detour_points,
                 tail_slope_line,
                 head_slope_line,
@@ -3399,7 +3399,7 @@ fn build_edge_spline(
               )
           }
           let mut detour_spline =
-            edge_spline_for_points(
+            @edge_spline.edge_spline_for_points(
               edge,
               detour_points,
               tail_clip_center,
@@ -3464,7 +3464,7 @@ fn build_edge_spline(
               let head_bottom =
                 base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
               let line_y = min_double(tail_bottom, head_bottom)
-              (point(line_start.x, line_y), point(line_end.x, line_y))
+              (@edge_spline.point(line_start.x, line_y), @edge_spline.point(line_end.x, line_y))
             } else {
               (line_start, line_end)
             }
@@ -3472,14 +3472,14 @@ fn build_edge_spline(
             let line_points : Array[@geom.Point] =
               if points.length() >= 2 { points } else { [line_start, line_end] }
             raw_bezier =
-              edge_spline_raw_for_points(
+              @edge_spline.edge_spline_raw_for_points(
                 line_points,
                 tail_slope_line,
                 head_slope_line,
                 force_segmented,
                 route_barriers=route_barriers,
               )
-            edge_spline_for_points(
+            @edge_spline.edge_spline_for_points(
               edge,
               line_points,
               tail_clip_center,
@@ -3504,7 +3504,7 @@ fn build_edge_spline(
               arrow_swapped=swap_arrow_attrs,
             )
           } else {
-            edge_spline_for_line(
+            @edge_spline.edge_spline_for_line(
               edge,
               line_start,
               line_end,
@@ -3549,9 +3549,9 @@ fn build_edge_spline(
   if using_pathplan && pathplan_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.
     let tail_slope_for =
-      if @dot_shared.port_is_explicit(tail_port) { tail_slope } else { point(0.0, 0.0) }
+      if @dot_shared.port_is_explicit(tail_port) { tail_slope } else { @edge_spline.point(0.0, 0.0) }
     let head_slope_for =
-      if @dot_shared.port_is_explicit(head_port) { head_slope } else { point(0.0, 0.0) }
+      if @dot_shared.port_is_explicit(head_port) { head_slope } else { @edge_spline.point(0.0, 0.0) }
     let join_dir = straight_path_join_dir(layout_rankdir)
     let join_tail = join_dir
     let join_head = join_dir
@@ -3568,7 +3568,7 @@ fn build_edge_spline(
           join_head
         }
       let segment_raw =
-        edge_spline_raw_for_points(
+        @edge_spline.edge_spline_raw_for_points(
           segment.points,
           seg_tail_slope,
           seg_head_slope,
@@ -3690,7 +3690,7 @@ fn rebuild_spline_for_render(
     return spline_result
   }
   let rebuilt =
-    edge_spline_for_bezier_points(
+    @edge_spline.edge_spline_for_bezier_points(
       base.edge,
       spline_result.raw_bezier,
       base.tail_clip_center,
@@ -3763,7 +3763,7 @@ fn build_edge_layout(
           (Some(rank_x), Some(rank_y), Some((width, height))) => {
             Some(
               edge_label_pos_from_vnode(
-                point(rank_x, rank_y),
+                @edge_spline.point(rank_x, rank_y),
                 width,
                 height,
                 base.rankdir,
@@ -3984,9 +3984,9 @@ fn edge_port_cmp_info(
       @dot_shared.port_is_explicit(base.head_port)
     }
   let tail_rel =
-    point(tail_anchor.x - tail_pos.x, tail_anchor.y - tail_pos.y)
+    @edge_spline.point(tail_anchor.x - tail_pos.x, tail_anchor.y - tail_pos.y)
   let head_rel =
-    point(head_anchor.x - head_pos.x, head_anchor.y - head_pos.y)
+    @edge_spline.point(head_anchor.x - head_pos.x, head_anchor.y - head_pos.y)
   if edge_type == ROUTE_EDGE_FLAT {
     let tail_order = match order_index.get(base.orig_tail_name) {
       Some(value) => value
@@ -4275,7 +4275,7 @@ fn build_self_edge_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    edge_spline_for_bezier_points(
+    @edge_spline.edge_spline_for_bezier_points(
       base.edge,
       route.points,
       base.tail_clip_center,
@@ -4347,7 +4347,7 @@ fn build_flat_adjacent_simple_edge_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    edge_spline_for_bezier_points(
+    @edge_spline.edge_spline_for_bezier_points(
       base.edge,
       bezier,
       base.tail_clip_center,
@@ -4820,7 +4820,7 @@ fn build_regular_edge_layout_from_shared_raw_bezier(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    edge_spline_for_bezier_points(
+    @edge_spline.edge_spline_for_bezier_points(
       base.edge,
       shared_spline_result.raw_bezier,
       base.tail_clip_center,

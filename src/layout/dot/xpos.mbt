@@ -1194,9 +1194,9 @@ fn compass_port_point(
       match node {
         Some(value) =>
           if compass_uses_shape_clipping(value) {
-            compass_port_point_on_shape(
+            @edge_spline.compass_port_point_on_shape(
               value,
-              point(0.0, 0.0),
+              @edge_spline.point(0.0, 0.0),
               base_size,
               compass,
               rankdir,
@@ -1343,7 +1343,7 @@ fn port_order_fraction(point : @geom.Point) -> Double {
     return 0.5
   }
   let two_pi = 2.0 * @math.PI
-  let mut angle = libm_atan2(point.y, point.x) + 1.5 * @math.PI
+  let mut angle = @edge_spline.libm_atan2(point.y, point.x) + 1.5 * @math.PI
   if angle >= two_pi {
     angle = angle - two_pi
   }
