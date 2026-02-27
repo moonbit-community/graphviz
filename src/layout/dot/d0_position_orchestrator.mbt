@@ -1422,26 +1422,6 @@ fn build_projection_data_for_projection_result_for_positions(
 }
 
 ///|
-/// Graphviz parity: projection-data to position-result handoff keeps x-groups,
-/// flat-label vnode maps, and rank-height maps unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_projection_result_output_for_positions(
-  x_groups : Map[Int, Array[String]],
-  position_projection_data : PositionProjectionData,
-  flat_label_edge_vnodes : Map[String, String],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-) -> PositionResult {
-  build_position_result_from_projection_data_for_positions(
-    x_groups,
-    position_projection_data,
-    flat_label_edge_vnodes,
-    rank_ht1,
-    rank_ht2,
-  )
-}
-
-///|
 /// Graphviz parity: final projection stage in compute_positions keeps y/x solve
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -1479,7 +1459,7 @@ fn build_projection_result_for_positions(
       flat_label_edges,
       flat_label_nodes,
     )
-  build_projection_result_output_for_positions(
+  build_position_result_from_projection_data_for_positions(
     x_groups,
     position_projection_data,
     flat_label_edge_vnodes,
