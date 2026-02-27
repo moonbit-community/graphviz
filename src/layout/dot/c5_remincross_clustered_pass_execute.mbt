@@ -40,5 +40,5 @@ fn run_clustered_remincross_pass(
       dispatch_context,
       rem_groups,
     )
-  build_clustered_remincross_pass_output(next_ordered_with_vnodes, next_final_groups)
+  (next_ordered_with_vnodes, next_final_groups)
 }

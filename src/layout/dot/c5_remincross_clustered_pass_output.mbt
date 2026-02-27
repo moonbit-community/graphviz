@@ -3,17 +3,6 @@
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: clustered ReMincross output keeps vnode-augmented and
-/// cleaned real-node groups in Graphviz tuple ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_pass_output(
-  next_ordered_with_vnodes : Map[Int, Array[String]],
-  next_final_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  (next_ordered_with_vnodes, next_final_groups)
-}
-
-///|
 /// Graphviz parity: clustered ReMincross pass derives rem_rank_keys from
 /// vnode-augmented rem_groups before rank-count branch and cleanup reorder.
 /// Do not change behavior without updating fixtures/tests.

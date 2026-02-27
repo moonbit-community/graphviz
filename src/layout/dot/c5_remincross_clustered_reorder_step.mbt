@@ -61,63 +61,6 @@ fn run_clustered_remincross_reorder_step_from_reorder_inputs(
 
 
 ///|
-/// Graphviz parity: clustered ReMincross reorder-step execution forwards
-/// prepared indices/cluster maps into startpass=2 cleanup reorder call.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_remincross_reorder_step_reorder_phase(
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-  rem_edges_out : Array[@cgraph.Edge],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-  rem_edge_tail_port_x : Array[Double],
-  rem_edge_head_port_x : Array[Double],
-  rem_edge_tail_port_order : Array[Double],
-  rem_edge_head_port_order : Array[Double],
-  rem_parents : Map[String, Array[String]],
-  rem_children : Map[String, Array[String]],
-  rem_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  rem_edge_order : Map[String, Int],
-  rem_node_order : Map[String, Int],
-  rem_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  rem_flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_clustered_remincross_reorder_step_from_reorder_inputs(
-    rem_rank_keys,
-    rem_groups,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-    rem_parents,
-    rem_children,
-    rem_cluster_keys,
-    cluster_meta,
-    rem_edge_order,
-    rem_node_order,
-    rem_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    rem_flat_constraints,
-    graphviz_flip,
-    real_nodes,
-  )
-}
-
-
-///|
 /// Graphviz parity: clustered ReMincross reorder-step finalize phase forwards
 /// prepared index/cluster maps into final cleanup reorder execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -146,7 +89,7 @@ fn run_clustered_remincross_reorder_step_finalize_phase(
   graphviz_flip : Bool,
   real_nodes : Map[String, Bool],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_clustered_remincross_reorder_step_reorder_phase(
+  run_clustered_remincross_reorder_step_from_reorder_inputs(
     rem_rank_keys,
     rem_groups,
     rem_edges_out,
