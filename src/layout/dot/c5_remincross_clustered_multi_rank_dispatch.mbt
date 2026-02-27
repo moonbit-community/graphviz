@@ -393,27 +393,6 @@ fn run_clustered_remincross_reorder_step(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross reorder-step edge-index phase builds
-/// parent/child maps plus edge-order indices from rematerialized edge arrays.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_reorder_step_inputs_edge_indices_phase(
-  rem_nodes : Array[String],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-  rem_ranks : Map[String, Int],
-  rem_edges_out : Array[@cgraph.Edge],
-) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
-  build_clustered_remincross_edge_indices_for_reorder(
-    rem_nodes,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_ranks,
-    rem_edges_out,
-  )
-}
-
-
-///|
 /// Graphviz parity: clustered ReMincross reorder-step metadata phase derives
 /// cluster keys, sizes, and flat constraints from current rem_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -511,7 +490,7 @@ fn build_clustered_remincross_reorder_step_inputs(
   rem_edges_out : Array[@cgraph.Edge],
 ) -> ClusteredReMincrossReorderStepInputsOutput {
   let (rem_parents, rem_children, rem_edge_order) =
-    build_clustered_remincross_reorder_step_inputs_edge_indices_phase(
+    build_clustered_remincross_edge_indices_for_reorder(
       rem_nodes,
       rem_edge_tail_out,
       rem_edge_head_out,
