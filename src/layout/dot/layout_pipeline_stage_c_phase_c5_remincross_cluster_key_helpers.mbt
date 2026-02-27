@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_materialize_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_materialize_helpers.mbt
 /// to keep Stage C ReMincross cluster-key/intercluster-span helpers isolated.
 
 ///|

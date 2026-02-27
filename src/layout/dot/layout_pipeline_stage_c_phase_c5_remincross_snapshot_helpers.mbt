@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_reorder_execute_helpers.mbt
 /// to keep Stage C ordering-input snapshot capture helpers isolated.
 
 fn should_capture_ordering_inputs() -> Bool {

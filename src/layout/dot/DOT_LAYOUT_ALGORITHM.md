@@ -246,7 +246,7 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_remincross_*` (Stage C ReMincross family)
+- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_*` (Stage C ReMincross family)
 - `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
@@ -541,12 +541,12 @@ Repository guard validates:
 - Root mincross replay helpers:
   - `layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
 - Stage C ReMincross refinement family:
-  - `layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt`
-  - `layout_pipeline_stage_c_remincross_reorder_input_helpers.mbt`
-  - `layout_pipeline_stage_c_remincross_clustered_*`
-  - `layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt`
-  - `layout_pipeline_stage_c_remincross_cluster_tail_order_helpers.mbt`
-  - `layout_pipeline_stage_c_remincross_trace_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_reorder_execute_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_reorder_input_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_*`
+  - `layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c5_remincross_trace_helpers.mbt`
 - Stage D position/xpos internals:
   - `layout_pipeline_stage_d_position_helpers.mbt`
   - `layout_pipeline_stage_d_seed_construction_helpers.mbt`
@@ -572,7 +572,7 @@ If you are new to layout algorithms, read in this order:
 3. `layout_pipeline_stage_a_input_helpers.mbt` — understand canonical input formation.
 4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
-6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
+6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c5_remincross_*` — understand clustered reorder/refinement.
 7. `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.
 9. `layout_stage_f_postprocess_helpers.mbt` — understand output attribute mapping.

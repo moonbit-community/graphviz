@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_clustered_pass_execute_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_clustered_pass_execute_helpers.mbt
 /// to keep Stage C clustered ReMincross pass output/finalization helpers isolated.
 
 ///|

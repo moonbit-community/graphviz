@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt
 /// to keep Stage C root/ReMincross GD_nlist node-order seeding isolated.
 
 ///|

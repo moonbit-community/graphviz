@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_cluster_tail_order_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt
 /// to isolate Stage C clustered tail-order setup phases.
 
 ///|

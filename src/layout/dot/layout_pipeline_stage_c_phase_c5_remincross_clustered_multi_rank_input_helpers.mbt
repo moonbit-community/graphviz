@@ -1,5 +1,5 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_remincross_clustered_multi_rank_dispatch_helpers.mbt
+/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_dispatch_helpers.mbt
 /// to isolate Stage C clustered ReMincross multi-rank reorder-input helpers.
 
 ///|
