@@ -124,26 +124,6 @@ fn build_root_mincross_order_edges(
 }
 
 ///|
-/// Graphviz parity: root ReMincross builds parent/child adjacency and edge
-/// ordering from filtered root/skeleton edges before reorder_rank_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_edge_indices_and_order(
-  order_nodes_for_mincross : Array[String],
-  order_edge_tail_out_mincross : Array[String],
-  order_edge_head_out_mincross : Array[String],
-  order_ranks : Map[String, Int],
-  order_edges_out_mincross : Array[@cgraph.Edge],
-) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
-  build_order_edge_indices_and_order(
-    order_nodes_for_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_ranks,
-    order_edges_out_mincross,
-  )
-}
-
-///|
 /// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
 /// and builds parent/child + edge-order indices before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -190,7 +170,7 @@ fn build_root_mincross_edges_and_indices(
       order_edge_head_port_order,
     )
   let (parents, children, edge_order) =
-    build_root_mincross_edge_indices_and_order(
+    build_order_edge_indices_and_order(
       order_nodes_for_mincross,
       order_edge_tail_out_mincross,
       order_edge_head_out_mincross,
