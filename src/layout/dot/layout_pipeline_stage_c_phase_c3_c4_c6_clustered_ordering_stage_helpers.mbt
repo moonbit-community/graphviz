@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep clustered ordering
-/// pre-root/root/finalize stage helpers isolated and maintainable.
+/// Stage C Phase C3/C4/C6 split: clustered ordering
+/// pre-root/root/finalize stage orchestration helpers.
 
 ///|
 /// Graphviz parity: clustered pre-root stage output object maps grouped sizes,
@@ -1124,5 +1124,4 @@ fn run_clustered_ordering_stage(
     stage_output,
   )
 }
-
 

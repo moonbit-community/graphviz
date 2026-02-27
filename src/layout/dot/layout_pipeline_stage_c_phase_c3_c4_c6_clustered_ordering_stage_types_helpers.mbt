@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// clustered ordering stage-dispatch type definitions isolated.
+/// Stage C Phase C3/C4/C6 split: clustered ordering
+/// stage-dispatch type definitions for phase orchestration.
 
 ///|
 /// Graphviz parity: clustered ordering pre-root/root phase context keeps
@@ -49,4 +49,3 @@ priv struct ClusteredOrderingStageDispatchContext {
   reorder_setup : OrderingReorderSetup
   class2_data : OrderingClass2Data
 }
-

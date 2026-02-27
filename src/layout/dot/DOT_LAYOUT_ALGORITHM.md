@@ -244,12 +244,15 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c2_noncluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_build_ranks_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c2_c5_order_node_seed_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_*` (Stage C ReMincross family)
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_types_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
@@ -539,6 +542,10 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
 - Cluster-local reorder:
   - `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
+- Clustered phase orchestration:
+  - `layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_helpers.mbt`
+- Shared node-order seed helpers:
+  - `layout_pipeline_stage_c_phase_c2_c5_order_node_seed_helpers.mbt`
 - Root-cluster reorder and cluster-rank-order logic:
   - `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c4_root_cluster_build_ranks_helpers.mbt`
@@ -546,6 +553,8 @@ Repository guard validates:
   - `layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
 - Clustered root/finalize stage types:
   - `layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
+- Clustered ordering stage-dispatch types:
+  - `layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_types_helpers.mbt`
 - Root mincross replay helpers:
   - `layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
 - Stage C ReMincross refinement family:

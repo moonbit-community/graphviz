@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt
-/// to keep Stage C root/ReMincross GD_nlist node-order seeding isolated.
+/// Stage C Phase C2/C5 split: root/ReMincross GD_nlist
+/// node-order seeding helpers shared across both phases.
 
 ///|
 /// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
