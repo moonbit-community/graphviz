@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// ordering setup-stage type definitions isolated and maintainable.
+/// Stage C Phase C0 split: ordering setup-stage
+/// type definitions for reorder/materialize preparation.
 
 ///|
 priv struct OrderingReorderSetup {

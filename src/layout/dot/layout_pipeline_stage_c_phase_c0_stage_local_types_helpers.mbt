@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// Stage C pre-root/materialize/noncluster stage types isolated.
+/// Stage C Phase C0 split: pre-root/materialize
+/// and non-cluster stage-local type definitions.
 
 ///|
 /// Graphviz parity: clustered pre-root reorder/materialization context keeps

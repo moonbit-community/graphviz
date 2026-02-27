@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep ordering setup
-/// context/dispatch helpers isolated and easier to maintain.
+/// Stage C Phase C0 split: ordering setup context
+/// and dispatch preparation helpers.
 
 ///|
 /// Graphviz parity: ordering base-context output object maps precomputed node,

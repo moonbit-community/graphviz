@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep ordering dispatch
-/// pipeline/result helpers isolated and easier to maintain.
+/// Stage C Phase C0 split: ordering dispatch pipeline
+/// and result assembly helpers for Stage C entry flow.
 
 ///|
 /// Graphviz parity: final ordering result output object maps ordering arrays,

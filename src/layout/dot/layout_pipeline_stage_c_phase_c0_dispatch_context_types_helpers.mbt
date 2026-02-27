@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// ordering dispatch-context type definitions isolated.
+/// Stage C Phase C0 split: ordering dispatch-context
+/// type definitions for clustered/non-cluster branching.
 
 ///|
 /// Graphviz parity: ordering-stage dispatch context keeps clustered/non-cluster

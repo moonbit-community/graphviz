@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// Stage C clustered ReMincross stage type definitions isolated.
+/// Stage C Phase C5 split: clustered ReMincross
+/// stage type definitions for pass/reorder orchestration.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder-input context keeps

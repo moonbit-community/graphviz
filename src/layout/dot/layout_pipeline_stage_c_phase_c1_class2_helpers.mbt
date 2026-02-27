@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep ordering class2
-/// preprocessing helpers isolated and easier to maintain.
+/// Stage C Phase C1 split: ordering class2
+/// preprocessing helpers for order-graph construction.
 
 ///|
 /// Graphviz parity: edge-port data output keeps original and deduplicated edge

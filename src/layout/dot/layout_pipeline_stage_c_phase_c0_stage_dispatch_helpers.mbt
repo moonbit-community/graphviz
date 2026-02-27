@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep ordering-stage
-/// clustered/nonclustered dispatch helpers isolated and maintainable.
+/// Stage C Phase C0 split: ordering-stage clustered
+/// and non-cluster dispatch helpers.
 
 ///|
 /// Graphviz parity: clustered ordering stage returns finalized groups and

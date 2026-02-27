@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep shared ordering
-/// base-context + position-name helpers isolated and maintainable.
+/// Stage C Phase C0 split: shared ordering base-context
+/// and position-name helpers for dispatch setup.
 
 ///|
 /// Graphviz parity: existing-name map is seeded from declared nodes before

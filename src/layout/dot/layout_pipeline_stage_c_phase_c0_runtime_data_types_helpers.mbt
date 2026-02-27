@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// ordering edge/materialize runtime data types isolated.
+/// Stage C Phase C0 split: ordering edge/materialize
+/// runtime data types shared by dispatch/setup flow.
 
 ///|
 priv struct OrderingEdgePortData {

@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_types_helpers.mbt to keep
-/// ordering input-payload type definitions isolated.
+/// Stage C Phase C0 split: ordering input-payload
+/// type definitions for compute_ordering_and_vnodes entry.
 
 ///|
 /// Graphviz parity: ordering+vnode compute input payload keeps ordering/rank/

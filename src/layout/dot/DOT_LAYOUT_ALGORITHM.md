@@ -233,7 +233,7 @@ Clusters alter ordering and positioning constraints globally. This metadata is r
 
 Entry:
 
-- `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
+- `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
 
 Supporting files:
 
@@ -253,7 +253,9 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_types_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c0_*` (dispatch/setup/types family)
+- `src/layout/dot/layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_phase_c1_class2_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
 
@@ -530,11 +532,20 @@ Repository guard validates:
 - Stage B cluster metadata:
   - `layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
 - Ordering dispatch + shared stage logic:
-  - `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_setup_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_stage_dispatch_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_base_context_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_runtime_data_types_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_input_types_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_setup_types_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_dispatch_context_types_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c0_stage_local_types_helpers.mbt`
 - Ordering edge materialization:
   - `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt`
 - Ordering graph construction helpers:
   - `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt`
+  - `layout_pipeline_stage_c_phase_c1_class2_helpers.mbt`
 - Stage C ordering seed/reorder helpers:
   - `layout_pipeline_stage_c_phase_c2_order_seed_helpers.mbt`
   - `layout_pipeline_stage_c_phase_c2_order_reorder_helpers.mbt`
@@ -590,7 +601,7 @@ If you are new to layout algorithms, read in this order:
 4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt` + `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c5_remincross_*` — understand clustered reorder/refinement.
-7. `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
+7. `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.
 9. `layout_stage_f_postprocess_helpers.mbt` — understand output attribute mapping.
 
