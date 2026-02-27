@@ -44,23 +44,11 @@ fn merge_rank_groups_graphviz_components(
       graphviz_out_neighbors=filtered_out,
       graphviz_in_neighbors=filtered_in,
     )
-    for rank in rank_keys {
-      let names = match ordered_component.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      if names.length() == 0 {
-        continue
-      }
-      let merged_list = match merged.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
-        merged_list.push(name)
-      }
-      merged[rank] = merged_list
-    }
+    append_rank_group_component_order_to_merged(
+      rank_keys,
+      merged,
+      ordered_component,
+    )
   }
   dedup_rank_groups_graphviz_merged(rank_keys, merged)
 }
