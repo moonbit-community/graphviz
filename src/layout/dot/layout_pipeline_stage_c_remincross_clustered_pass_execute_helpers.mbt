@@ -1,6 +1,6 @@
 ///|
-/// Remaining clustered ReMincross pass execution helper after extracting
-/// dispatch/output/group/materialize/reorder flows into focused modules.
+/// Remaining Stage C clustered ReMincross pass execution helper after
+/// extracting dispatch/output/group/materialize/reorder helper modules.
 
 ///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus

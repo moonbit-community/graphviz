@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_clustered_helpers.mbt to keep
-/// clustered ReMincross pass dispatch-context helpers isolated.
+/// Extracted from layout_pipeline_stage_c_remincross_clustered_pass_execute_helpers.mbt
+/// to keep Stage C clustered ReMincross pass dispatch-context helpers isolated.
 
 ///|
 /// Graphviz parity: clustered ReMincross pass dispatch context keeps

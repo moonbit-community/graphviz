@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_clustered_multi_rank_helpers.mbt
-/// to isolate clustered ReMincross multi-rank finalize helpers.
+/// Extracted from layout_pipeline_stage_c_remincross_clustered_multi_rank_dispatch_helpers.mbt
+/// to isolate Stage C clustered ReMincross multi-rank finalize helpers.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder phase forwards

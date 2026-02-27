@@ -1,6 +1,6 @@
 ///|
-/// Remaining clustered ReMincross multi-rank dispatch/orchestration
-/// helpers after extracting reorder-input and finalize helpers.
+/// Remaining Stage C clustered ReMincross multi-rank dispatch/orchestration
+/// helpers after extracting reorder-input and finalize helper modules.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank dispatch context builder
