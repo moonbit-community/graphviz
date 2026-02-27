@@ -12,13 +12,6 @@ fn should_capture_ordering_fixture_mode() -> Bool {
 }
 
 ///|
-fn clone_groups_for_ordering_input_snapshot(
-  groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  clone_rank_groups(groups)
-}
-
-///|
 fn clone_string_map_for_ordering_input_snapshot(
   values : Map[String, String],
 ) -> Map[String, String] {
@@ -170,7 +163,7 @@ fn capture_root_mincross_input_snapshot(
     )
   let snapshot : RootMincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
-    groups: clone_groups_for_ordering_input_snapshot(groups),
+    groups: clone_rank_groups(groups),
     edges,
     cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
     cluster_skeleton: clone_bool_map_for_ordering_input_snapshot(
@@ -199,7 +192,7 @@ fn capture_remincross_input_snapshot(
   }
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
-    groups: clone_groups_for_ordering_input_snapshot(groups),
+    groups: clone_rank_groups(groups),
     edges: build_ordering_input_edges_snapshot(
       edges_out,
       edge_tail_out,
