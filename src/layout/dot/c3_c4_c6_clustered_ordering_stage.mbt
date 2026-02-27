@@ -299,21 +299,6 @@ fn build_cluster_finalize_stage_inputs_from_stages(
 
 
 ///|
-/// Graphviz parity: clustered finalize dispatch context forwards typed payload
-/// into cluster rank-order + finalize stage without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_rank_order_and_finalize_stage_from_stage_inputs_with_dispatch_context(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  stage_inputs : ClusterFinalizeStageInputs,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_cluster_rank_order_and_finalize_stage(
-    dispatch_context,
-    stage_inputs,
-  )
-}
-
-
-///|
 /// Graphviz parity: clustered finalize-stage tuple output is unpacked into
 /// named fields before forwarding to final cluster-rank-order dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -353,34 +338,6 @@ fn build_cluster_finalize_stage_inputs_from_stage_inputs_output(
 
 
 ///|
-/// Graphviz parity: clustered finalize pre-root output dispatch consumes a
-/// typed finalize context and stage tuple without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_rank_order_and_finalize_stage_from_pre_root_with_stage_inputs_output(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  stage_inputs_output : (
-    Array[Int],
-    Map[Int, Array[String]],
-    Map[String, String],
-    Map[String, Bool],
-    Map[String, NodeSize],
-    Map[Int, Array[String]],
-    Map[Int, Array[String]],
-    Array[String],
-  ),
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let stage_inputs =
-    build_cluster_finalize_stage_inputs_from_stage_inputs_output(
-      stage_inputs_output,
-    )
-  run_cluster_rank_order_and_finalize_stage_from_stage_inputs_with_dispatch_context(
-    dispatch_context,
-    stage_inputs,
-  )
-}
-
-
-///|
 /// Graphviz parity: clustered finalize stage consumes root/pre-root outputs
 /// without argument reordering before final cluster ReMincross.
 /// Do not change behavior without updating fixtures/tests.
@@ -394,23 +351,16 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root(
       pre_root_stage,
       root_cluster_stage,
     )
-  run_cluster_rank_order_and_finalize_stage_from_pre_root_with_stage_inputs_output(
+  let stage_inputs =
+    build_cluster_finalize_stage_inputs_from_stage_inputs_output(
+      stage_inputs_output,
+    )
+  run_cluster_rank_order_and_finalize_stage(
     dispatch_context,
-    stage_inputs_output,
+    stage_inputs,
   )
 }
 
-
-///|
-/// Graphviz parity: clustered pre-root/root stage output keeps stage tuple
-/// ordering unchanged before clustered finalize-phase dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_ordering_pre_root_and_root_stage_output(
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  (pre_root_stage, root_cluster_stage)
-}
 
 ///|
 /// Graphviz parity: clustered ordering root+cluster build_ranks phase consumes
@@ -499,20 +449,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_pre_root_phase(
   build_clustered_ordering_pre_root_stage(pre_root_stage_context)
 }
 
-
-///|
-/// Graphviz parity: clustered ordering pre-root/root stage output dispatch
-/// reads root-phase output and preserves Graphviz tuple ordering unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_output(
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_phase_output : OrderRootClusterStageData,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  build_clustered_ordering_pre_root_and_root_stage_output(
-    pre_root_stage,
-    root_phase_output,
-  )
-}
 
 ///|
 /// Graphviz parity: clustered ordering pre-root phase dispatch reads typed
@@ -688,40 +624,8 @@ fn run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
       phase_context,
       pre_root_stage,
     )
-  run_clustered_ordering_pre_root_and_root_stage_output_phase_from_root_phase_output(
-    pre_root_stage,
-    root_phase_output,
-  )
+  (pre_root_stage, root_phase_output)
 }
-
-///|
-/// Graphviz parity: clustered ordering finalize-phase forwarding keeps stage
-/// payloads and rank-order inputs in Graphviz finalize-call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_finalize_phase_finalize_pass(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_cluster_rank_order_and_finalize_stage_from_pre_root(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-  )
-}
-
-///|
-/// Graphviz parity: clustered ordering finalize-stage output dispatch reads
-/// finalize-pass tuple and preserves Graphviz tuple ordering unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_finalize_phase_output_from_finalize_pass_output(
-  finalize_pass_output : (Map[Int, Array[String]], Map[Int, Array[String]]),
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (next_ordered_with_vnodes, final_groups) = finalize_pass_output
-  remincross_root_tail_order_override_snapshot.val = None
-  build_clustered_ordering_stage_output(next_ordered_with_vnodes, final_groups)
-}
-
 
 ///|
 /// Graphviz parity: clustered ordering finalize dispatch context preserves
@@ -802,33 +706,19 @@ fn run_clustered_ordering_finalize_phase(
   pre_root_stage : OrderClusteredPreRootStageData,
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let finalize_pass_output =
-    run_clustered_ordering_finalize_phase_finalize_pass(
+  let (next_ordered_with_vnodes, final_groups) =
+    run_cluster_rank_order_and_finalize_stage_from_pre_root(
       dispatch_context,
       pre_root_stage,
       root_cluster_stage,
     )
-  run_clustered_ordering_finalize_phase_output_from_finalize_pass_output(
-    finalize_pass_output,
+  remincross_root_tail_order_override_snapshot.val = None
+  build_clustered_ordering_stage_output(
+    next_ordered_with_vnodes,
+    final_groups,
   )
 }
 
-
-///|
-/// Graphviz parity: clustered ordering stage forwards pre-root/root phase
-/// outputs unchanged into finalize-phase clustered cleanup dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_from_phase_context(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_clustered_ordering_finalize_phase(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-  )
-}
 
 ///|
 /// Graphviz parity: clustered ordering pre-root/root phase context builder
@@ -972,4 +862,58 @@ fn build_clustered_ordering_stage_dispatch_context(
     reorder_setup,
     class2_data,
   }
+}
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_ordering_stage(
+  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let phase_context = build_clustered_ordering_stage_pre_root_and_root_phase_context(
+    stage_dispatch_context.graph,
+    stage_dispatch_context.nodes,
+    stage_dispatch_context.edges,
+    stage_dispatch_context.edge_tail,
+    stage_dispatch_context.edge_head,
+    stage_dispatch_context.ranks,
+    stage_dispatch_context.node_order,
+    stage_dispatch_context.order_sizes,
+    stage_dispatch_context.nodesep_pt,
+    stage_dispatch_context.has_edge_labels,
+    stage_dispatch_context.cluster_meta,
+    stage_dispatch_context.port_order_positions,
+    stage_dispatch_context.port_order_contrib,
+    stage_dispatch_context.runtime_context,
+    stage_dispatch_context.reorder_setup,
+    stage_dispatch_context.class2_data,
+  )
+  let (pre_root_stage, root_cluster_stage) =
+    run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+      phase_context,
+    )
+  let finalize_dispatch_context = build_clustered_ordering_stage_output_phase_dispatch_context(
+    stage_dispatch_context.graph,
+    stage_dispatch_context.edges,
+    stage_dispatch_context.edge_tail,
+    stage_dispatch_context.edge_head,
+    stage_dispatch_context.edge_reversed,
+    stage_dispatch_context.ranks,
+    stage_dispatch_context.order_sizes,
+    stage_dispatch_context.nodesep_pt,
+    stage_dispatch_context.has_edge_labels,
+    stage_dispatch_context.cluster_meta,
+    stage_dispatch_context.port_order_positions,
+    stage_dispatch_context.port_order_contrib,
+    stage_dispatch_context.runtime_context,
+    stage_dispatch_context.edge_port_data,
+    stage_dispatch_context.reorder_setup,
+    stage_dispatch_context.class2_data,
+  )
+  run_clustered_ordering_finalize_phase(
+    finalize_dispatch_context,
+    pre_root_stage,
+    root_cluster_stage,
+  )
 }
