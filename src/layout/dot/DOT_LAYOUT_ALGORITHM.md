@@ -185,6 +185,7 @@ This stage decides vertical layering and ordering inputs.
 Main files:
 
 - `src/layout/dot/b1_b2_rank.mbt`
+- `src/layout/dot/b1_b2_rank_heights.mbt`
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/network_simplex/*`
 - `src/layout/dot/acyclic.mbt`
@@ -539,7 +540,7 @@ Repository guard validates:
 - Input canonicalization:
   - `a1_input.mbt`
 - Rank assignment and rank heights:
-  - `b1_b2_rank.mbt`, `rank_assignment.mbt`, `network_simplex/*`
+  - `b1_b2_rank.mbt`, `b1_b2_rank_heights.mbt`, `rank_assignment.mbt`, `network_simplex/*`
 - Stage B cluster metadata:
   - `b3_cluster_metadata.mbt`
 - Ordering dispatch + shared stage logic:
@@ -620,7 +621,7 @@ If you are new to layout algorithms, read in this order:
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
 2. `layout_stage_pipeline_orchestrator.mbt` — understand stage boundaries.
 3. `a1_input.mbt` — understand canonical input formation.
-4. `b1_b2_rank.mbt` — understand rank and spacing foundations.
+4. `b1_b2_rank.mbt` + `b1_b2_rank_heights.mbt` — understand rank and spacing foundations.
 5. `c1_order_edge.mbt` + `c1_order_graph.mbt` — understand order graph construction.
 6. `c3_cluster_local_reorder.mbt` + `c4_root_cluster_reorder.mbt` + `c5_remincross_*` — understand clustered reorder/refinement.
 7. `c0_dispatch_pipeline.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
