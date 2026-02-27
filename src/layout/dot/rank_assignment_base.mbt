@@ -65,7 +65,7 @@ fn compute_ranks_directed(
   edge_head : Array[String],
   edge_reversed : Array[Bool],
 ) -> Map[String, Int] {
-  if graph_has_cluster(source) {
+  if rank_assignment_has_cluster(source) {
     return compute_ranks_directed_with_clusters(
       source,
       nodes,

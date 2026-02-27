@@ -11,6 +11,19 @@ fn rank_assignment_is_cluster_graph(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+fn rank_assignment_has_cluster(graph : @cgraph.Graph) -> Bool {
+  for subgraph in graph.subgraphs() {
+    if rank_assignment_is_cluster_graph(subgraph) {
+      return true
+    }
+    if rank_assignment_has_cluster(subgraph) {
+      return true
+    }
+  }
+  false
+}
+
+///|
 fn collect_cluster_graphs_for_rank_assignment(
   graph : @cgraph.Graph,
   parent : String?,
