@@ -873,63 +873,6 @@ fn build_clustered_ordering_stage_pre_root_and_root_phase_context(
 }
 
 ///|
-/// Graphviz parity: clustered ordering stage first computes pre-root/root phase
-/// context and forwards the untouched stage tuple into finalize-phase dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_pre_root_and_root_phase(
-  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
-    phase_context,
-  )
-}
-
-///|
-/// Graphviz parity: clustered ordering finalize phase consumes pre-root/root
-/// stage tuple and forwards unchanged payload into finalize dispatch helper.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_finalize_phase_from_stage_tuple(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_clustered_ordering_stage_from_phase_context(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-  )
-}
-
-
-///|
-/// Graphviz parity: clustered ordering finalize dispatch unpacks pre-root/root
-/// stage tuple and forwards payload to finalize-phase helper unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_finalize_phase_from_stage_output(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  stage_output : (OrderClusteredPreRootStageData, OrderRootClusterStageData),
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (pre_root_stage, root_cluster_stage) = stage_output
-  run_clustered_ordering_stage_finalize_phase_from_stage_tuple(
-    dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-  )
-}
-
-
-///|
-/// Graphviz parity: clustered ordering pre-root/root stage dispatch reads
-/// typed runtime/reorder payloads and forwards Graphviz call ordering unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
-  phase_context : ClusteredOrderingPreRootAndRootPhaseContext,
-) -> (OrderClusteredPreRootStageData, OrderRootClusterStageData) {
-  run_clustered_ordering_stage_pre_root_and_root_phase(phase_context)
-}
-
-
-///|
 /// Graphviz parity: clustered ordering finalize output dispatch-context
 /// builder preserves finalize-phase payload ordering before stage output run.
 /// Do not change behavior without updating fixtures/tests.
@@ -984,21 +927,6 @@ fn build_clustered_ordering_stage_output_phase_dispatch_context(
     runtime_context.rank_same_constraints,
   )
 }
-
-///|
-/// Graphviz parity: clustered ordering finalize output dispatch reads typed
-/// stage/context payloads and preserves Graphviz finalize call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_output_phase_from_stage_output(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  stage_output : (OrderClusteredPreRootStageData, OrderRootClusterStageData),
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  run_clustered_ordering_stage_finalize_phase_from_stage_output(
-    dispatch_context,
-    stage_output,
-  )
-}
-
 
 ///|
 /// Graphviz parity: clustered ordering stage dispatch context builder keeps
@@ -1111,17 +1039,17 @@ fn run_clustered_ordering_stage(
     build_clustered_ordering_stage_pre_root_and_root_phase_context_from_dispatch_context(
       stage_dispatch_context,
     )
-  let stage_output =
-    run_clustered_ordering_stage_pre_root_and_root_phase_output_from_context(
-      phase_context,
-    )
+  let stage_output = run_clustered_ordering_pre_root_and_root_stage_from_phase_context(
+    phase_context,
+  )
   let finalize_dispatch_context =
     build_clustered_ordering_stage_output_phase_dispatch_context_from_dispatch_context(
       stage_dispatch_context,
     )
-  run_clustered_ordering_stage_output_phase_from_stage_output(
+  let (pre_root_stage, root_cluster_stage) = stage_output
+  run_clustered_ordering_stage_from_phase_context(
     finalize_dispatch_context,
-    stage_output,
+    pre_root_stage,
+    root_cluster_stage,
   )
 }
-
