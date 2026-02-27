@@ -30,31 +30,6 @@ fn build_edge_direction_and_order_maps_for_rank_data(
 
 
 
-/// Graphviz parity: rank.c flow applies to both directed and undirected inputs
-/// after acyclic orientation.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_ranks_for_rank_data(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-) -> Map[String, Int] {
-  compute_ranks_directed(
-    graph,
-    nodes,
-    edges,
-    has_edge_labels,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-  )
-}
-
-
-
 ///|
 /// Graphviz parity: rank sweep iterates the closed min..max rank interval from
 /// sorted rank keys, including missing intermediate ranks.
@@ -72,38 +47,33 @@ fn build_all_ranks_span_for_rank_data(rank_keys : Array[Int]) -> Array[Int] {
 }
 
 ///|
-/// Graphviz parity: rank groups expand to a continuous rank interval
-/// from min to max rank before later per-rank passes.
+/// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn build_rank_keys_and_all_ranks_for_rank_data(
-  groups : Map[Int, Array[String]],
-) -> (Array[Int], Array[Int]) {
+fn compute_rank_data(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+) -> RankData {
+  let (edge_tail, edge_head, edge_reversed, edge_out_order, _edge_in_order) =
+    build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
+  let ranks = compute_ranks_directed(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+  )
+  let groups = build_rank_groups(nodes, ranks)
   let rank_keys : Array[Int] = []
   for key, _ in groups {
     rank_keys.push(key)
   }
   rank_keys.sort()
   let all_ranks = build_all_ranks_span_for_rank_data(rank_keys)
-  (rank_keys, all_ranks)
-}
-
-
-
-///|
-/// Graphviz parity: rank preprocessing stages consume RankData fields in
-/// fixed order for ranking, ordering, and position pipeline steps.
-/// Do not change behavior without updating fixtures/tests.
-fn build_rank_data_output(
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  all_ranks : Array[Int],
-  self_edge_labels : Map[String, Double],
-) -> RankData {
+  let self_edge_labels = self_edge_label_half_heights(edges)
   {
     edge_tail,
     edge_head,
@@ -115,45 +85,6 @@ fn build_rank_data_output(
     all_ranks,
     self_edge_labels,
   }
-}
-
-
-
-///|
-/// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_rank_data(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
-) -> RankData {
-  let (edge_tail, edge_head, edge_reversed, edge_out_order, _edge_in_order) =
-    build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
-  let ranks = compute_ranks_for_rank_data(
-    graph,
-    nodes,
-    edges,
-    has_edge_labels,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-  )
-  let groups = build_rank_groups(nodes, ranks)
-  let (rank_keys, all_ranks) =
-    build_rank_keys_and_all_ranks_for_rank_data(groups)
-  let self_edge_labels = self_edge_label_half_heights(edges)
-  build_rank_data_output(
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    rank_keys,
-    all_ranks,
-    self_edge_labels,
-  )
 }
 
 ///|
