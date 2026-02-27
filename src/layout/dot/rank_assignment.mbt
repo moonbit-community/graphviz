@@ -53,12 +53,6 @@ fn tb_tie_adjust_rank_assignment_graphviz(graph : NsGraph) -> Unit {
 }
 
 ///|
-fn network_simplex_rank_assignment_graphviz(graph : NsGraph) -> Unit {
-  network_simplex(graph, 0x7fffffff, BalanceMode::TB)
-  tb_tie_adjust_rank_assignment_graphviz(graph)
-}
-
-///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/rank.c + common/ns.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ranks_directed_base(
@@ -330,7 +324,8 @@ fn compute_ranks_directed_base(
       }
       let _ = add_edge(graph, tail_local, head_local, minlen, weight)
     }
-    network_simplex_rank_assignment_graphviz(graph)
+    network_simplex(graph, 0x7fffffff, BalanceMode::TB)
+    tb_tie_adjust_rank_assignment_graphviz(graph)
     let mut component_min_rank = 0
     let mut component_seen = false
     for rep_idx in component {
