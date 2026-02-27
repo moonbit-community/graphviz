@@ -62,21 +62,5 @@ fn merge_rank_groups_graphviz_components(
       merged[rank] = merged_list
     }
   }
-  // Graphviz parity: cluster rankleaders should appear once per cluster.
-  let seen : Map[String, Bool] = Map::new()
-  for rank in rank_keys {
-    let names = match merged.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let unique : Array[String] = []
-    for name in names {
-      if seen.get(name) is None {
-        seen[name] = true
-        unique.push(name)
-      }
-    }
-    merged[rank] = unique
-  }
-  merged
+  dedup_rank_groups_graphviz_merged(rank_keys, merged)
 }
