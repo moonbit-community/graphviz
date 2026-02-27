@@ -25,32 +25,6 @@ priv struct ClusteredReMincrossMultiRankReorderInputsContext {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross multi-rank finalize context keeps
-/// startpass=2 cleanup payload ordering unchanged before dispatch.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredReMincrossMultiRankFinalizeContext {
-  graph : @cgraph.Graph
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  order_with_vnodes : Bool
-  order_with_clusters : Bool
-  ranks : Map[String, Int]
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-  order_sizes : Map[String, NodeSize]
-  rank_same_constraints : Map[String, Bool]
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
-  real_nodes : Map[String, Bool]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  graphviz_flip : Bool
-}
-
-///|
 /// Graphviz parity: clustered ReMincross multi-rank dispatch context keeps
 /// rematerialize + finalize payload ordering unchanged across phase helpers.
 /// Do not change behavior without updating fixtures/tests.
