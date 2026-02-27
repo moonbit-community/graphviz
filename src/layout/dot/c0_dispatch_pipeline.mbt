@@ -156,12 +156,12 @@ fn build_ordering_result_output(
 }
 
 ///|
-/// Graphviz parity: ordering dispatch stage forwards setup/runtime context
-/// into clustered/non-clustered stage dispatch without argument reshuffling.
+/// Graphviz parity: ordering dispatch execution phase consumes prepared
+/// dispatch setup, then maps staged outputs into OrderingResult unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn run_ordering_dispatch_pipeline_stage_dispatch_phase(
+fn run_ordering_dispatch_pipeline_execution_phase(
   execution_context : OrderingDispatchPipelineExecutionContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> OrderingResult {
   let stage_dispatch_context =
     build_ordering_stage_dispatch_context(
       execution_context.graph,
@@ -184,67 +184,8 @@ fn run_ordering_dispatch_pipeline_stage_dispatch_phase(
       execution_context.runtime_context,
       execution_context.dispatch_setup,
     )
-  run_ordering_stage_dispatch(stage_dispatch_context)
-}
-
-///|
-/// Graphviz parity: ordering-dispatch execution context builder preserves
-/// stage-dispatch payload ordering before execution-phase dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_pipeline_execution_context(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  runtime_context : OrderingRuntimeContext,
-  dispatch_setup : OrderingDispatchSetup,
-) -> OrderingDispatchPipelineExecutionContext {
-  {
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    rank_keys,
-    groups,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-    dispatch_setup,
-  }
-}
-
-
-///|
-/// Graphviz parity: ordering dispatch execution phase consumes prepared
-/// dispatch setup, then maps staged outputs into OrderingResult unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_ordering_dispatch_pipeline_execution_phase(
-  execution_context : OrderingDispatchPipelineExecutionContext,
-) -> OrderingResult {
   let (ordered_groups_internal, ordered_with_vnodes) =
-    run_ordering_dispatch_pipeline_stage_dispatch_phase(execution_context)
+    run_ordering_stage_dispatch(stage_dispatch_context)
   build_ordering_result_output(
     ordered_groups_internal,
     ordered_with_vnodes,
@@ -259,55 +200,6 @@ fn run_ordering_dispatch_pipeline_execution_phase(
     execution_context.dispatch_setup.gdnlist_order,
     execution_context.dispatch_setup.vnode_creation_order,
   )
-}
-
-
-///|
-/// Graphviz parity: ordering-dispatch pipeline context builder preserves
-/// ordering/runtime payload ordering before pipeline execution.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_pipeline_context(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  runtime_context : OrderingRuntimeContext,
-) -> OrderingDispatchPipelineContext {
-  {
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    rank_keys,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    rankdir,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context,
-  }
 }
 
 
@@ -336,28 +228,27 @@ fn run_ordering_dispatch_pipeline(
     vnode_info: pipeline_context.runtime_context.vnode_info,
   }
   let dispatch_setup = build_ordering_dispatch_setup(setup_context)
-  let execution_context =
-    build_ordering_dispatch_pipeline_execution_context(
-      pipeline_context.graph,
-      pipeline_context.nodes,
-      pipeline_context.edges,
-      pipeline_context.edge_tail,
-      pipeline_context.edge_head,
-      pipeline_context.edge_reversed,
-      pipeline_context.edge_out_order,
-      pipeline_context.ranks,
-      pipeline_context.rank_keys,
-      pipeline_context.groups,
-      pipeline_context.node_order,
-      pipeline_context.order_sizes,
-      pipeline_context.nodesep_pt,
-      pipeline_context.has_edge_labels,
-      pipeline_context.cluster_meta,
-      pipeline_context.port_order_positions,
-      pipeline_context.port_order_contrib,
-      pipeline_context.runtime_context,
-      dispatch_setup,
-    )
+  let execution_context : OrderingDispatchPipelineExecutionContext = {
+    graph: pipeline_context.graph,
+    nodes: pipeline_context.nodes,
+    edges: pipeline_context.edges,
+    edge_tail: pipeline_context.edge_tail,
+    edge_head: pipeline_context.edge_head,
+    edge_reversed: pipeline_context.edge_reversed,
+    edge_out_order: pipeline_context.edge_out_order,
+    ranks: pipeline_context.ranks,
+    rank_keys: pipeline_context.rank_keys,
+    groups: pipeline_context.groups,
+    node_order: pipeline_context.node_order,
+    order_sizes: pipeline_context.order_sizes,
+    nodesep_pt: pipeline_context.nodesep_pt,
+    has_edge_labels: pipeline_context.has_edge_labels,
+    cluster_meta: pipeline_context.cluster_meta,
+    port_order_positions: pipeline_context.port_order_positions,
+    port_order_contrib: pipeline_context.port_order_contrib,
+    runtime_context: pipeline_context.runtime_context,
+    dispatch_setup,
+  }
   run_ordering_dispatch_pipeline_execution_phase(execution_context)
 }
 
@@ -399,27 +290,26 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let pipeline_context =
-    build_ordering_dispatch_pipeline_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      groups,
-      rank_keys,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      rankdir,
-      cluster_meta,
-      port_order_positions,
-      port_order_contrib,
-      runtime_context,
-    )
+  let pipeline_context : OrderingDispatchPipelineContext = {
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    edge_out_order,
+    ranks,
+    groups,
+    rank_keys,
+    node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    rankdir,
+    cluster_meta,
+    port_order_positions,
+    port_order_contrib,
+    runtime_context,
+  }
   run_ordering_dispatch_pipeline(pipeline_context)
 }
