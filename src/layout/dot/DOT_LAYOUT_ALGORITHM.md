@@ -240,6 +240,7 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_order_graph_helpers.mbt`
 - `src/layout/dot/layout_pipeline_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_root_cluster_reorder_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_remincross_*` (Stage C ReMincross family)
 - `src/layout/dot/layout_pipeline_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
@@ -518,6 +519,13 @@ Repository guard validates:
   - `layout_pipeline_cluster_reorder_helpers.mbt`
 - Root-cluster reorder and cluster-rank-order logic:
   - `layout_pipeline_root_cluster_reorder_helpers.mbt`
+- Stage C ReMincross refinement family:
+  - `layout_pipeline_stage_c_remincross_reorder_execute_helpers.mbt`
+  - `layout_pipeline_stage_c_remincross_reorder_input_helpers.mbt`
+  - `layout_pipeline_stage_c_remincross_clustered_*`
+  - `layout_pipeline_stage_c_remincross_nlist_order_helpers.mbt`
+  - `layout_pipeline_stage_c_remincross_cluster_tail_order_helpers.mbt`
+  - `layout_pipeline_stage_c_remincross_trace_helpers.mbt`
 - X-position internals and crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:
@@ -536,8 +544,8 @@ If you are new to layout algorithms, read in this order:
 3. `layout_pipeline_input_helpers.mbt` — understand canonical input formation.
 4. `layout_pipeline_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_order_edge_helpers.mbt` + `layout_pipeline_order_graph_helpers.mbt` — understand order graph construction.
-6. `layout_pipeline_cluster_reorder_helpers.mbt` + `layout_pipeline_root_cluster_reorder_helpers.mbt` — understand clustered reorder/refinement.
-7. `layout_pipeline_helpers.mbt` — understand orchestration glue, ReMincross path, and position stage internals.
+6. `layout_pipeline_cluster_reorder_helpers.mbt` + `layout_pipeline_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
+7. `layout_pipeline_helpers.mbt` — understand orchestration glue and position stage internals.
 8. `layout_routing_helpers.mbt` — understand edge geometry generation.
 9. `layout_postprocess_helpers.mbt` — understand output attribute mapping.
 
