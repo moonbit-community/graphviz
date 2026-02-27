@@ -3,6 +3,31 @@
 /// type definitions for reorder/materialize preparation.
 
 ///|
+/// Stage C Phase C0 split: ordering base/runtime
+/// context types for pre-class2 setup derivation.
+
+///|
+priv struct OrderingBaseContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
+priv struct OrderingRuntimeContext {
+  real_nodes : Map[String, Bool]
+  edge_cluster_keys : Map[String, String]
+  vnode_info : EdgeVnodeInfo
+  port_edge_nodes : Map[String, Bool]
+  local_cluster_order : Map[String, Int]
+  rank_same_constraints : Map[String, Bool]
+  vnode_count : Int
+}
+
+///|
 priv struct OrderingReorderSetup {
   ordering_groups_base : Map[Int, Array[String]]
   base_order_index : Map[String, Int]
@@ -550,5 +575,4 @@ fn build_ordering_dispatch_setup(
     build_ordering_reorder_setup(reorder_setup_context)
   build_ordering_dispatch_setup_output(edge_port_data, reorder_setup)
 }
-
 

@@ -19,6 +19,44 @@ priv struct MaterializeOrderEdgesWithTraceContext {
 }
 
 ///|
+/// Stage C Phase C2 split: order-reorder/materialize
+/// runtime data types shared with clustered root stages.
+
+///|
+priv struct OrderReorderContext {
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_nodes : Array[String]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  creation_order : Array[String]
+  order_node_order : Map[String, Int]
+}
+
+///|
+priv struct OrderMaterializationData {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  order_edges_out_unmapped : Array[@cgraph.Edge]
+  order_edge_tail_out_unmapped : Array[String]
+  order_edge_head_out_unmapped : Array[String]
+  order_edge_tail_port_x_unmapped : Array[Double]
+  order_edge_head_port_x_unmapped : Array[Double]
+  order_edge_tail_port_order_unmapped : Array[Double]
+  order_edge_head_port_order_unmapped : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_flat_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: order-reorder context output keeps order-graph handles,
 /// creation ordering, and build_ranks node order mapping unchanged.
 /// Do not change behavior without updating fixtures/tests.

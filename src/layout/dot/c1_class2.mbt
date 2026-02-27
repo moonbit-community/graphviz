@@ -3,6 +3,40 @@
 /// preprocessing helpers for order-graph construction.
 
 ///|
+/// Stage C Phase C1 split: ordering edge-port/class2
+/// runtime data types produced by class2 preprocessing.
+
+///|
+priv struct OrderingEdgePortData {
+  edge_order : Map[String, Int]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
+priv struct OrderingClass2Data {
+  edges_by_tail : Map[String, Array[Int]]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  root_edge_creation : Array[(String, String)]
+  skeleton_edge_creation : Array[(String, String)]
+  edge_creation_order : Array[(String, String)]
+  creation_order : Array[String]
+  nlist_order : Array[String]
+  vnode_creation_order : Array[String]
+}
+
+///|
 /// Graphviz parity: edge-port data output keeps original and deduplicated edge
 /// arrays plus sampled port coordinates/orders unchanged.
 /// Do not change behavior without updating fixtures/tests.
