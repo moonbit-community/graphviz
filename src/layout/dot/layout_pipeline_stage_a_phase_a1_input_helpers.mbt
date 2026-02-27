@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep layout input prep
-/// logic isolated and easier to navigate.
+/// Stage A Phase A1 split: layout input preparation
+/// logic and canonicalization helper flow.
 
 ///|
 /// Graphviz parity: rankdir resolution uses option override first, then
@@ -407,4 +407,3 @@ fn prepare_layout_inputs(
     port_order_contrib,
   )
 }
-

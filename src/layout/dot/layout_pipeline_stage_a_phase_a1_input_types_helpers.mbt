@@ -1,6 +1,6 @@
 ///|
-/// Stage A input stage-local type definitions shared between
-/// input preparation and downstream stage wiring.
+/// Stage A Phase A1 split: stage-local input type
+/// definitions shared with downstream pipeline wiring.
 
 ///|
 priv struct LayoutPrep {
