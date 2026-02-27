@@ -19,12 +19,6 @@ const PORT_SIDE_TOP : Int = 4
 ///|
 const PORT_SIDE_LEFT : Int = 8
 
-///|
-fn port_is_explicit(port : @cgraph.Port?) -> Bool {
-  @dot_shared.port_is_explicit(port)
-}
-
-///|
 fn parse_double(value : String, fallback : Double) -> Double {
   try @strconv.parse_double(value) catch {
     _ => fallback
@@ -1264,7 +1258,7 @@ fn builtin_polygon_clip_params(
 ///|
 /// Graphviz parity: clip_shape_kind mirrors shape clipping in refs/graphviz/lib/common/shapes.c.
 fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
-  if port_is_explicit(port) && is_record_shape(node) {
+  if @dot_shared.port_is_explicit(port) && is_record_shape(node) {
     return ClipShape::Rect
   }
   let shape = match node.get_attr("shape") {
@@ -2197,13 +2191,13 @@ fn clip_spline_to_nodes(
   let tail_base_size = fixedshape_clip_size(tail_node, tail_size)
   let head_base_size = fixedshape_clip_size(head_node, head_size)
   let tail_shape_size =
-    if is_record_shape(tail_node) && !port_is_explicit(tail_port) {
+    if is_record_shape(tail_node) && !@dot_shared.port_is_explicit(tail_port) {
       trim_record_border_for_clip(tail_base_size, rankdir_lr_rl)
     } else {
       tail_base_size
     }
   let head_shape_size =
-    if is_record_shape(head_node) && !port_is_explicit(head_port) {
+    if is_record_shape(head_node) && !@dot_shared.port_is_explicit(head_port) {
       trim_record_border_for_clip(head_base_size, rankdir_lr_rl)
     } else {
       head_base_size
@@ -2737,7 +2731,8 @@ fn orthogonal_polyline_points_cardinal(
   if rankdir != RankDir::TB {
     return None
   }
-  if port_is_explicit(edge.tail_port()) || port_is_explicit(edge.head_port()) {
+  if @dot_shared.port_is_explicit(edge.tail_port()) ||
+    @dot_shared.port_is_explicit(edge.head_port()) {
     return None
   }
   let (tail_dir, head_dir) = orthogonal_tb_endpoint_dirs(tail_center, head_center)
@@ -4085,7 +4080,7 @@ pub fn endpoint_slope_for_anchor(
   tail : Bool,
   port_rect : @geom.Rect?,
 ) -> @geom.Point {
-  if !port_is_explicit(port) {
+  if !@dot_shared.port_is_explicit(port) {
     return point(0.0, 0.0)
   }
   match port {
