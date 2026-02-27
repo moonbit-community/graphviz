@@ -602,7 +602,7 @@ fn build_root_tail_order_override_for_clustered_root_phase(
 ) -> (Array[String], Map[Int, Array[String]]) {
   let reorder_context = pre_root_stage.reorder_context
   let root_reorder_output : RootClusterReorderInputsForRankOrderOutput =
-    build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
+    build_root_cluster_reorder_inputs_for_rank_order(
       phase_context.reorder_setup.order_with_vnodes,
       reorder_context.order_rank_keys,
       pre_root_stage.order_groups,
@@ -611,15 +611,16 @@ fn build_root_tail_order_override_for_clustered_root_phase(
       phase_context.edges,
       phase_context.edge_tail,
       phase_context.edge_head,
+      phase_context.cluster_meta.cluster_keys,
+      phase_context.runtime_context.vnode_info.edge_vnodes,
+      phase_context.runtime_context.vnode_info.vnodes_by_rank,
+      phase_context.reorder_setup.vnode_order_keys_for_ordering,
       phase_context.class2_data.nlist_order,
       phase_context.ranks,
       phase_context.class2_data.skeleton_edge_creation,
       phase_context.class2_data.root_edge_creation,
       phase_context.reorder_setup.flat_rank_constraints,
       phase_context.class2_data.order_edges_by_tail_root,
-      phase_context.cluster_meta,
-      phase_context.runtime_context.vnode_info,
-      phase_context.reorder_setup.vnode_order_keys_for_ordering,
     )
   let (
     _root_groups,

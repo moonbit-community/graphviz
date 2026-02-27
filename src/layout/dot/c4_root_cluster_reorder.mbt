@@ -1374,131 +1374,6 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
 }
 
 ///|
-/// Graphviz parity: enabled-cluster rank-order prep pulls cluster-key/vnode
-/// fields from cluster metadata before root-only reorder input assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
-  order_with_vnodes : Bool,
-  order_rank_keys : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nlist_order : Array[String],
-  ranks : Map[String, Int],
-  skeleton_edge_creation : Array[(String, String)],
-  root_edge_creation : Array[(String, String)],
-  flat_rank_constraints : Map[String, Bool],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  vnode_order_keys_for_ordering : Map[String, Double],
-) -> (
-  Map[Int, Array[String]],
-  Array[Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-  Map[String, Int],
-) {
-  build_root_cluster_reorder_inputs_for_rank_order(
-    order_with_vnodes,
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    edges,
-    edge_tail,
-    edge_head,
-    cluster_meta.cluster_keys,
-    vnode_info.edge_vnodes,
-    vnode_info.vnodes_by_rank,
-    vnode_order_keys_for_ordering,
-    nlist_order,
-    ranks,
-    skeleton_edge_creation,
-    root_edge_creation,
-    flat_rank_constraints,
-    order_edges_by_tail_root,
-  )
-}
-
-///|
-/// Graphviz parity: cluster-enabled rank-order output maps root-only reorder
-/// materialization into Graphviz cluster-rank-order assembly arguments.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
-  root_groups : Map[Int, Array[String]],
-  root_rank_keys : Array[Int],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  let root_reorder_output : RootClusterReorderInputsForRankOrderOutput = (
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-  )
-  let dispatch_context : ClusterRankOrderFromRootReorderContext = {
-    order_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    flat_constraints,
-    graphviz_flip,
-    real_nodes,
-  }
-  build_cluster_rank_order_output_from_root_reorder(
-    dispatch_context,
-    root_reorder_output,
-  )
-}
-
-///|
 /// Graphviz parity: when cluster ordering is enabled, cluster rank-order map
 /// is built from root-only reorder inputs and root mincross output.
 /// Do not change behavior without updating fixtures/tests.
@@ -1528,22 +1403,8 @@ fn build_cluster_rank_order_when_clusters_enabled(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> Map[Int, Map[String, Int]] {
-  let (
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-  ) =
-    build_root_cluster_reorder_inputs_for_enabled_cluster_rank_order(
+  let root_reorder_output =
+    build_root_cluster_reorder_inputs_for_rank_order(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -1552,42 +1413,34 @@ fn build_cluster_rank_order_when_clusters_enabled(
       edges,
       edge_tail,
       edge_head,
+      cluster_meta.cluster_keys,
+      vnode_info.edge_vnodes,
+      vnode_info.vnodes_by_rank,
+      vnode_order_keys_for_ordering,
       nlist_order,
       ranks,
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
       order_edges_by_tail_root,
-      cluster_meta,
-      vnode_info,
-      vnode_order_keys_for_ordering,
     )
-  build_cluster_rank_order_when_clusters_enabled_from_root_reorder_inputs(
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
+  let dispatch_context : ClusterRankOrderFromRootReorderContext = {
     order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
+    rank_same_groups: cluster_meta.rank_same_groups,
+    rank_same_order: cluster_meta.rank_same_order,
     order_sizes_out,
     nodesep_pt,
     has_edge_labels,
     port_order_positions,
     port_order_contrib,
     order_cluster_skeleton,
-    cluster_meta.flat_constraints,
+    flat_constraints: cluster_meta.flat_constraints,
     graphviz_flip,
     real_nodes,
+  }
+  build_cluster_rank_order_output_from_root_reorder(
+    dispatch_context,
+    root_reorder_output,
   )
 }
 
