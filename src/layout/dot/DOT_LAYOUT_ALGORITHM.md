@@ -186,7 +186,7 @@ Main files:
 
 - `src/layout/dot/b1_b2_rank.mbt`
 - `src/layout/dot/b1_b2_rank_heights.mbt`
-- `src/layout/dot/rank_assignment.mbt`
+- `src/layout/dot/rank_assignment_base.mbt`
 - `src/layout/dot/rank_assignment_clustered.mbt`
 - `src/layout/dot/network_simplex/*`
 - `src/layout/dot/rank_acyclic.mbt`
@@ -541,7 +541,7 @@ Repository guard validates:
 - Input canonicalization:
   - `a1_input.mbt`
 - Rank assignment and rank heights:
-  - `b1_b2_rank.mbt`, `b1_b2_rank_heights.mbt`, `rank_assignment.mbt`, `rank_assignment_clustered.mbt`, `network_simplex/*`
+  - `b1_b2_rank.mbt`, `b1_b2_rank_heights.mbt`, `rank_assignment_base.mbt`, `rank_assignment_clustered.mbt`, `network_simplex/*`
 - Stage B cluster metadata:
   - `b3_cluster_metadata.mbt`
 - Ordering dispatch + shared stage logic:
