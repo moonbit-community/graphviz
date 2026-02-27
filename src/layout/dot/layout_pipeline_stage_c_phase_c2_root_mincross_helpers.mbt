@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep root ReMincross
-/// rank-reorder/replay helpers isolated and maintainable.
+/// Stage C Phase C2 split: root mincross/replay helpers
+/// for primary crossing-reduction ordering passes.
 
 ///|
 /// Graphviz parity: root ReMincross output preserves root ordering groups and
@@ -1306,4 +1306,3 @@ fn run_root_mincross_reorder(
     order_groups_for_mincross,
   )
 }
-

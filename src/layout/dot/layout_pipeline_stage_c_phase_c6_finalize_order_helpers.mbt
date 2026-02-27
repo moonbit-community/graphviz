@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep Stage C finalize-order
-/// group cleanup and nlist-creation helpers isolated.
+/// Stage C Phase C6 split: finalize-order group cleanup
+/// and nlist creation helpers for Stage C outputs.
 
 ///|
 /// Graphviz parity: final cleanup output preserves vnode-augmented groups and

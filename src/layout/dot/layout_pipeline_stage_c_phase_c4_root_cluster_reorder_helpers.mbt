@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep root cluster
-/// reorder/rank-order helpers isolated from the core pipeline flow.
+/// Stage C Phase C4 split: root-cluster reorder and
+/// cluster-rank-order helpers for global cluster arrangement.
 
 ///|
 /// Graphviz parity: membership checks for mincross subgraph are exact-name set
@@ -2432,4 +2432,3 @@ fn reorder_rank_groups_by_cluster_rank_order(
   }
   ordered_by_cluster
 }
-

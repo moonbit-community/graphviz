@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep cluster-local
-/// reorder/build-ranks helpers isolated and easier to navigate.
+/// Stage C Phase C3 split: cluster-local reorder/build-ranks
+/// helpers isolated from other Stage C phases.
 
 ///|
 /// Graphviz parity: local cluster ordering seeds per-cluster minimum rank and
@@ -2296,4 +2296,3 @@ fn reorder_groups_by_cluster_build_ranks(
     order_with_vnodes,
   )
 }
-
