@@ -121,7 +121,7 @@ fn update_bbox_with_bezier(
 
 ///|
 /// Graphviz parity: bbox aggregation aligned to refs/graphviz/lib/common/utils.c (compute_bb),
-/// with label/cluster expansion handled in layout_postprocess_helpers.
+/// with label/cluster expansion handled in layout_stage_f_postprocess_helpers.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_bbox(
   nodes : Array[DotLayoutNode],

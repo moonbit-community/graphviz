@@ -399,7 +399,7 @@ Entry:
 
 Main files:
 
-- `src/layout/dot/layout_routing_helpers.mbt`
+- `src/layout/dot/layout_stage_e_routing_helpers.mbt`
 - `src/layout/dot/routesplines/*`
 - `src/layout/dot/pathplan/*`
 - `src/layout/dot/edge_spline/*`
@@ -423,7 +423,7 @@ Positioning tells “where nodes are.” Routing solves “how edges travel betw
 
 Main file:
 
-- `src/layout/dot/layout_postprocess_helpers.mbt`
+- `src/layout/dot/layout_stage_f_postprocess_helpers.mbt`
 
 What is written:
 
@@ -549,9 +549,9 @@ Repository guard validates:
 - Crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:
-  - `layout_routing_helpers.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
+  - `layout_stage_e_routing_helpers.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
 - Final graph writeback:
-  - `layout_postprocess_helpers.mbt`
+  - `layout_stage_f_postprocess_helpers.mbt`
 
 ---
 
@@ -566,7 +566,7 @@ If you are new to layout algorithms, read in this order:
 5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
 7. `layout_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand orchestration glue and position stage internals.
-8. `layout_routing_helpers.mbt` — understand edge geometry generation.
-9. `layout_postprocess_helpers.mbt` — understand output attribute mapping.
+8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.
+9. `layout_stage_f_postprocess_helpers.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
