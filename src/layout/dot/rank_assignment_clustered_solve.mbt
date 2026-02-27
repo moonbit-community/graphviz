@@ -221,7 +221,7 @@ fn apply_clustered_rank_postprocessing_for_rank_assignment(
   nodes : Array[@cgraph.Node],
   ranks : Map[String, Int],
 ) -> Map[String, Int] {
-  let rank_same_reps = build_rank_same_reps(source, nodes)
+  let rank_same_reps = @dot_shared.build_rank_same_reps(source, nodes)
   let rep_ranks : Map[String, Int] = Map::new()
   for name, rank in ranks {
     let rep = match rank_same_reps.get(name) {

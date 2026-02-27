@@ -252,7 +252,7 @@ fn acyclic_edge_directions_with_order(
     node_index[name] = i
     node_names.push(name)
   }
-  let rank_same_reps = build_rank_same_reps(graph, nodes)
+  let rank_same_reps = @dot_shared.build_rank_same_reps(graph, nodes)
   let rep_names : Array[String] = []
   let rep_seen : Map[String, Bool] = Map::new()
   for name in node_names {

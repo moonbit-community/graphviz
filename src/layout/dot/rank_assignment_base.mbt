@@ -154,7 +154,7 @@ fn compute_ranks_directed_base(
       }
     }
   }
-  let rank_same_reps = build_rank_same_reps(source, nodes)
+  let rank_same_reps = @dot_shared.build_rank_same_reps(source, nodes)
   let rep_index : Map[String, Int] = Map::new()
   let rep_order : Array[String] = []
   let index : Map[String, Int] = Map::new()
