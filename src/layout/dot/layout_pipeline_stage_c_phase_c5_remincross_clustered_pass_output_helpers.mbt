@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_clustered_pass_execute_helpers.mbt
-/// to keep Stage C clustered ReMincross pass output/finalization helpers isolated.
+/// Stage C Phase C5 split: remincross clustered pass output
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross output keeps vnode-augmented and

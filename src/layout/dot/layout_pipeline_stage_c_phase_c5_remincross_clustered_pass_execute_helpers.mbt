@@ -1,6 +1,6 @@
 ///|
-/// Remaining Stage C clustered ReMincross pass execution helper after
-/// extracting dispatch/output/group/materialize/reorder helper modules.
+/// Stage C Phase C5 split: remincross clustered pass execute
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus

@@ -1,6 +1,6 @@
 ///|
-/// Remaining Stage C clustered ReMincross multi-rank dispatch/orchestration
-/// helpers after extracting reorder-input and finalize helper modules.
+/// Stage C Phase C5 split: remincross clustered multi rank dispatch
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank dispatch context builder

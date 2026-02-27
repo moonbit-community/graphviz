@@ -1,6 +1,6 @@
 ///|
-/// Stage C Phase C5 split: clustered ReMincross
-/// stage type definitions for pass/reorder orchestration.
+/// Stage C Phase C5 split: remincross stage types
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder-input context keeps

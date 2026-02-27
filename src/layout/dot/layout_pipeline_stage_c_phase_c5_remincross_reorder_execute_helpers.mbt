@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep Stage C ReMincross
-/// reorder execution helpers isolated from non-cluster order flow.
+/// Stage C Phase C5 split: remincross reorder execute
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: ReMincross clustered reorder executes mincross with

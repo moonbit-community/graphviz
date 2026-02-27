@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt
-/// to isolate Stage C clustered tail-order non-root rank phases.
+/// Stage C Phase C5 split: remincross cluster tail order rank phase
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key

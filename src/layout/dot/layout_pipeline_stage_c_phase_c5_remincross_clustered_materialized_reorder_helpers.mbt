@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_reorder_execute_helpers.mbt
-/// to keep Stage C clustered ReMincross rematerialize/reorder helpers isolated.
+/// Stage C Phase C5 split: remincross clustered materialized reorder
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross final reorder runs with real-node

@@ -1,6 +1,6 @@
 ///|
-/// Remaining Stage C ReMincross materialized order-graph helper after
-/// extracting GD_nlist ordering and node-order seeding helper modules.
+/// Stage C Phase C5 split: remincross materialize
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: ReMincross order-graph materialization filters local flat

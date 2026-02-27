@@ -1,6 +1,6 @@
 ///|
-/// Stage-focused split to keep ReMincross snapshot
-/// structs/state refs and touch helpers isolated and maintainable.
+/// Stage C Phase C5 split: remincross snapshot state
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 priv struct OrderingInputEdgeSnapshot {

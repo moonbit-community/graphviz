@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_dispatch_helpers.mbt
-/// to isolate Stage C clustered ReMincross multi-rank finalize helpers.
+/// Stage C Phase C5 split: remincross clustered multi rank finalize
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: clustered ReMincross multi-rank reorder phase forwards

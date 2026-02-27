@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_remincross_materialize_helpers.mbt to keep
-/// Stage C ReMincross GD_nlist ordering helpers isolated.
+/// Stage C Phase C5 split: remincross nlist order
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in

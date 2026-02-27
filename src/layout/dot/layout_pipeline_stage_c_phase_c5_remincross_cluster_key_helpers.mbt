@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_materialize_helpers.mbt
-/// to keep Stage C ReMincross cluster-key/intercluster-span helpers isolated.
+/// Stage C Phase C5 split: remincross cluster key
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: ReMincross base cluster keys copy intercluster keys and

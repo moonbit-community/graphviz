@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt
-/// to keep Stage C ReMincross clustered tail-order construction isolated.
+/// Stage C Phase C5 split: remincross cluster tail order
+/// helpers for focused ReMincross responsibilities.
 
 ///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
