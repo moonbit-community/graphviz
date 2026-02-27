@@ -148,54 +148,6 @@ fn build_x_stage_mode_and_virtual_slack_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage seed generation consumes vnode-mode flag from
-/// mode/slack stage before flat-label augmentation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_seed_from_mode_slack_data_for_positions(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  mode_slack_data : XStageModeAndSlackData,
-) -> XPositionStageSeedData {
-  build_x_position_stage_seed_data_for_positions(
-    mode_slack_data.use_vnodes_for_xpos,
-    prep,
-    rank_data,
-    cluster_meta,
-    ordering,
-  )
-}
-
-///|
-/// Graphviz parity: flat-label augmentation from x-stage seed consumes mode
-/// flags unchanged before vnode/slot augmentation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_flat_label_augmentation_from_x_stage_seed_for_positions(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  mode_slack_data : XStageModeAndSlackData,
-  x_stage_seed : XPositionStageSeedData,
-) -> XposFlatLabelAugmentation {
-  build_x_stage_with_flat_label_augmentation_for_positions(
-    mode_slack_data.xpos_reorder_enabled,
-    mode_slack_data.use_vnodes_for_xpos,
-    mode_slack_data.allow_xpos_reorder,
-    mode_slack_data.graphviz_flip,
-    prep,
-    rank_data,
-    rank_heights,
-    cluster_meta,
-    ordering,
-    x_stage_seed,
-  )
-}
-
-
-///|
 /// Graphviz parity: x-stage seed+flat-label output object maps seed base sizes
 /// with flat-label augmentation data without additional transforms.
 /// Do not change behavior without updating fixtures/tests.
@@ -220,21 +172,24 @@ fn build_x_stage_seed_and_flat_label_data_for_positions(
   mode_slack_data : XStageModeAndSlackData,
 ) -> XStageSeedAndFlatLabelData {
   let x_stage_seed =
-    build_x_stage_seed_from_mode_slack_data_for_positions(
+    build_x_position_stage_seed_data_for_positions(
+      mode_slack_data.use_vnodes_for_xpos,
       prep,
       rank_data,
       cluster_meta,
       ordering,
-      mode_slack_data,
     )
   let flat_label_augmentation =
-    build_flat_label_augmentation_from_x_stage_seed_for_positions(
+    build_x_stage_with_flat_label_augmentation_for_positions(
+      mode_slack_data.xpos_reorder_enabled,
+      mode_slack_data.use_vnodes_for_xpos,
+      mode_slack_data.allow_xpos_reorder,
+      mode_slack_data.graphviz_flip,
       prep,
       rank_data,
       rank_heights,
       cluster_meta,
       ordering,
-      mode_slack_data,
       x_stage_seed,
     )
   build_x_stage_seed_and_flat_label_output_for_positions(
