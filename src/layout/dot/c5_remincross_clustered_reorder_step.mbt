@@ -67,8 +67,15 @@ fn run_clustered_remincross_reorder_step_from_reorder_inputs(
 fn run_clustered_remincross_reorder_step(
   context : ClusteredReMincrossReorderStepContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let input_phase_output =
-    run_clustered_remincross_reorder_step_input_phase(
+  let (
+    rem_parents,
+    rem_children,
+    rem_edge_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  ) =
+    build_clustered_remincross_reorder_step_inputs(
       context.graph,
       context.edges,
       context.edge_tail,
@@ -88,27 +95,29 @@ fn run_clustered_remincross_reorder_step(
       context.rem_ranks,
       context.rem_edges_out,
     )
-  let dispatch_context : ClusteredReMincrossReorderStepFinalizeDispatchContext = {
-    rem_rank_keys: context.rem_rank_keys,
-    rem_groups: context.rem_groups,
-    rem_edges_out: context.rem_edges_out,
-    rem_edge_tail_out: context.rem_edge_tail_out,
-    rem_edge_head_out: context.rem_edge_head_out,
-    rem_edge_tail_port_x: context.rem_edge_tail_port_x,
-    rem_edge_head_port_x: context.rem_edge_head_port_x,
-    rem_edge_tail_port_order: context.rem_edge_tail_port_order,
-    rem_edge_head_port_order: context.rem_edge_head_port_order,
-    cluster_meta: context.cluster_meta,
-    rem_node_order: context.rem_node_order,
-    nodesep_pt: context.nodesep_pt,
-    has_edge_labels: context.has_edge_labels,
-    port_order_positions: context.port_order_positions,
-    port_order_contrib: context.port_order_contrib,
-    graphviz_flip: context.graphviz_flip,
-    real_nodes: context.real_nodes,
-  }
-  run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
-    dispatch_context,
-    input_phase_output,
+  run_clustered_remincross_reorder_step_from_reorder_inputs(
+    context.rem_rank_keys,
+    context.rem_groups,
+    context.rem_edges_out,
+    context.rem_edge_tail_out,
+    context.rem_edge_head_out,
+    context.rem_edge_tail_port_x,
+    context.rem_edge_head_port_x,
+    context.rem_edge_tail_port_order,
+    context.rem_edge_head_port_order,
+    rem_parents,
+    rem_children,
+    rem_cluster_keys,
+    context.cluster_meta,
+    rem_edge_order,
+    context.rem_node_order,
+    rem_sizes,
+    context.nodesep_pt,
+    context.has_edge_labels,
+    context.port_order_positions,
+    context.port_order_contrib,
+    rem_flat_constraints,
+    context.graphviz_flip,
+    context.real_nodes,
   )
 }

@@ -92,30 +92,6 @@ priv struct ClusteredReMincrossPassDispatchContext {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross reorder-step finalize dispatch context
-/// keeps cleanup reorder payload ordering unchanged before tuple unpack.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredReMincrossReorderStepFinalizeDispatchContext {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
-  rem_edges_out : Array[@cgraph.Edge]
-  rem_edge_tail_out : Array[String]
-  rem_edge_head_out : Array[String]
-  rem_edge_tail_port_x : Array[Double]
-  rem_edge_head_port_x : Array[Double]
-  rem_edge_tail_port_order : Array[Double]
-  rem_edge_head_port_order : Array[Double]
-  cluster_meta : ClusterMetadata
-  rem_node_order : Map[String, Int]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  graphviz_flip : Bool
-  real_nodes : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: clustered ReMincross reorder-step context keeps remapped
 /// edge arrays plus cleanup metadata in Graphviz call ordering.
 /// Do not change behavior without updating fixtures/tests.
