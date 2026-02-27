@@ -51,7 +51,7 @@ fn run_clustered_remincross_multi_rank_finalize_phase_from_reorder_inputs_output
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
   ) = reorder_inputs_output
-  run_clustered_remincross_multi_rank_finalize_phase(
+  run_clustered_remincross_multi_rank_from_reorder_inputs(
     graph,
     edges,
     edge_tail,

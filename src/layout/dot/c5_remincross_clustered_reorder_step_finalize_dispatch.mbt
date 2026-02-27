@@ -18,7 +18,7 @@ fn run_clustered_remincross_reorder_step_finalize_phase_from_input_phase_output(
     rem_sizes,
     rem_flat_constraints,
   ) = input_phase_output
-  run_clustered_remincross_reorder_step_finalize_phase(
+  run_clustered_remincross_reorder_step_from_reorder_inputs(
     dispatch_context.rem_rank_keys,
     dispatch_context.rem_groups,
     dispatch_context.rem_edges_out,

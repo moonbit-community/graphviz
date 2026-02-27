@@ -257,7 +257,6 @@ Supporting files:
 - `src/layout/dot/c5_remincross_seeded_group_projection.mbt`
 - `src/layout/dot/c5_remincross_clustered_multi_rank_input_phase.mbt`
 - `src/layout/dot/c5_remincross_clustered_multi_rank_forward.mbt`
-- `src/layout/dot/c5_remincross_clustered_multi_rank_finalize.mbt`
 - `src/layout/dot/c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
 - `src/layout/dot/c5_remincross_vnode.mbt`
 - `src/layout/dot/c5_remincross_vnode_intercluster.mbt`
@@ -589,7 +588,6 @@ Repository guard validates:
   - `c5_remincross_seeded_group_projection.mbt`
   - `c5_remincross_clustered_multi_rank_input_phase.mbt`
   - `c5_remincross_clustered_multi_rank_forward.mbt`
-  - `c5_remincross_clustered_multi_rank_finalize.mbt`
   - `c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
   - `c5_remincross_reorder_execute.mbt`
   - `c5_remincross_reorder_input.mbt`
