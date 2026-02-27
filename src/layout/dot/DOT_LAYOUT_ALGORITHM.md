@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined across stage data/type files (mainly `layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt`, `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`, `layout_pipeline_stage_c_phase_c0_contract_types_helpers.mbt`, and `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`).
+Defined across stage data/type files (mainly `a1_input_types.mbt`, `b1_b2_rank_types.mbt`, `c0_contract_types.mbt`, and `d0_position_types.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -150,8 +150,8 @@ flowchart LR
 
 Main files:
 
-- `src/layout/dot/layout_pipeline_stage_a_phase_a1_input_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt` (stage input struct contract)
+- `src/layout/dot/a1_input.mbt`
+- `src/layout/dot/a1_input_types.mbt` (stage input struct contract)
 
 ### What it does
 
@@ -184,10 +184,10 @@ This stage decides vertical layering and ordering inputs.
 
 Main files:
 
-- `src/layout/dot/layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt`
+- `src/layout/dot/b1_b2_rank.mbt`
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/network_simplex/*`
-- `src/layout/dot/acyclic_helpers.mbt`
+- `src/layout/dot/acyclic.mbt`
 
 What happens:
 
@@ -216,7 +216,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
-- implemented in `src/layout/dot/layout_pipeline_stage_b_phase_b3_cluster_metadata_helpers.mbt`
+- implemented in `src/layout/dot/b3_cluster_metadata.mbt`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -233,41 +233,42 @@ Clusters alter ordering and positioning constraints globally. This metadata is r
 
 Entry:
 
-- `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
+- `compute_ordering_and_vnodes` in `src/layout/dot/c0_dispatch_pipeline.mbt`
 
 Supporting files:
 
-- `src/layout/dot/layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c2_order_seed_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c2_order_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c2_noncluster_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c4_root_cluster_build_ranks_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c2_c5_order_node_seed_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_input_phase_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_finalize_dispatch_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_context_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_materialized_output_phase_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_forward_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_dispatch_helpers.mbt`
-- `src/layout/dot/stage_c_phase_c5_remincross_vnode_helpers.mbt`
-- `src/layout/dot/stage_c_phase_c5_remincross_vnode_intercluster_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c5_remincross_*` (Stage C ReMincross family)
-- `src/layout/dot/layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_types_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c0_*` (dispatch/setup/types family)
-- `src/layout/dot/layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
-- `src/layout/dot/layout_pipeline_stage_c_phase_c1_class2_helpers.mbt`
-- `src/layout/dot/ordering_helpers.mbt`
+- `src/layout/dot/c1_order_edge.mbt`
+- `src/layout/dot/c1_order_graph.mbt`
+- `src/layout/dot/c2_order_seed.mbt`
+- `src/layout/dot/c2_order_reorder.mbt`
+- `src/layout/dot/c2_noncluster_reorder.mbt`
+- `src/layout/dot/c6_finalize_order.mbt`
+- `src/layout/dot/c3_cluster_local_reorder.mbt`
+- `src/layout/dot/c3_c4_c6_clustered_ordering_stage.mbt`
+- `src/layout/dot/c4_root_cluster_reorder.mbt`
+- `src/layout/dot/c4_root_cluster_build_ranks.mbt`
+- `src/layout/dot/c2_root_mincross.mbt`
+- `src/layout/dot/c2_c5_order_node_seed.mbt`
+- `src/layout/dot/c5_remincross_clustered_reorder_step_input_phase.mbt`
+- `src/layout/dot/c5_remincross_clustered_reorder_step.mbt`
+- `src/layout/dot/c5_remincross_clustered_reorder_step_finalize_dispatch.mbt`
+- `src/layout/dot/c5_remincross_clustered_reorder_step_context.mbt`
+- `src/layout/dot/c5_remincross_clustered_materialized_output_phase.mbt`
+- `src/layout/dot/c5_remincross_seeded_group_projection.mbt`
+- `src/layout/dot/c5_remincross_clustered_multi_rank_input_phase.mbt`
+- `src/layout/dot/c5_remincross_clustered_multi_rank_forward.mbt`
+- `src/layout/dot/c5_remincross_clustered_multi_rank_finalize.mbt`
+- `src/layout/dot/c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
+- `src/layout/dot/c5_remincross_vnode.mbt`
+- `src/layout/dot/c5_remincross_vnode_intercluster.mbt`
+- `src/layout/dot/c5_remincross_*` (Stage C ReMincross family)
+- `src/layout/dot/c6_cluster_finalize.mbt`
+- `src/layout/dot/c4_c6_root_cluster_stage_types.mbt`
+- `src/layout/dot/c3_c4_c6_clustered_ordering_stage_types.mbt`
+- `src/layout/dot/c0_*` (dispatch/setup/types family)
+- `src/layout/dot/c0_dispatch_pipeline.mbt`
+- `src/layout/dot/c1_class2.mbt`
+- `src/layout/dot/ordering.mbt`
 - `src/layout/dot/mincross.mbt`
 
 This is the most complex stage.
@@ -349,8 +350,8 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/layout_pipeline_stage_d_phase_d0_position_orchestrator_helpers.mbt`
-- stage helpers in `src/layout/dot/layout_pipeline_stage_d_*`
+- `compute_positions` in `src/layout/dot/d0_position_orchestrator.mbt`
+- stage helpers in `src/layout/dot/d*_`
 
 ### D1) Mode gating
 
@@ -419,7 +420,7 @@ Entry:
 
 Main files:
 
-- `src/layout/dot/layout_stage_e_routing_helpers.mbt`
+- `src/layout/dot/e_routing.mbt`
 - `src/layout/dot/routesplines/*`
 - `src/layout/dot/pathplan/*`
 - `src/layout/dot/edge_spline/*`
@@ -443,7 +444,7 @@ Positioning tells “where nodes are.” Routing solves “how edges travel betw
 
 Main file:
 
-- `src/layout/dot/layout_stage_f_postprocess_helpers.mbt`
+- `src/layout/dot/f_postprocess.mbt`
 
 What is written:
 
@@ -532,84 +533,85 @@ Repository guard validates:
 - Entry + stage orchestration:
   - `layout.mbt`, `layout_stage_pipeline_orchestrator.mbt`
 - Core stage data/type contracts:
-  - `layout_pipeline_stage_a_phase_a1_input_types_helpers.mbt`
-  - `layout_pipeline_stage_b_phase_b1_b2_rank_types_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_contract_types_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d0_position_types_helpers.mbt`
+  - `a1_input_types.mbt`
+  - `b1_b2_rank_types.mbt`
+  - `c0_contract_types.mbt`
+  - `d0_position_types.mbt`
 - Input canonicalization:
-  - `layout_pipeline_stage_a_phase_a1_input_helpers.mbt`
+  - `a1_input.mbt`
 - Rank assignment and rank heights:
-  - `layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
+  - `b1_b2_rank.mbt`, `rank_assignment.mbt`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `layout_pipeline_stage_b_phase_b3_cluster_metadata_helpers.mbt`
+  - `b3_cluster_metadata.mbt`
 - Ordering dispatch + shared stage logic:
-  - `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_setup_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_stage_dispatch_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_base_context_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_runtime_data_types_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_input_types_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_setup_types_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_dispatch_context_types_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c0_stage_local_types_helpers.mbt`
+  - `c0_dispatch_pipeline.mbt`
+  - `c0_setup.mbt`
+  - `c0_stage_dispatch.mbt`
+  - `c0_base_context.mbt`
+  - `c0_runtime_data_types.mbt`
+  - `c0_input_types.mbt`
+  - `c0_setup_types.mbt`
+  - `c0_dispatch_context_types.mbt`
+  - `c0_stage_local_types.mbt`
 - Ordering edge materialization:
-  - `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt`
+  - `c1_order_edge.mbt`
 - Ordering graph construction helpers:
-  - `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c1_class2_helpers.mbt`
+  - `c1_order_graph.mbt`
+  - `c1_class2.mbt`
 - Stage C ordering seed/reorder helpers:
-  - `layout_pipeline_stage_c_phase_c2_order_seed_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c2_order_reorder_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c2_noncluster_reorder_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c6_finalize_order_helpers.mbt`
+  - `c2_order_seed.mbt`
+  - `c2_order_reorder.mbt`
+  - `c2_noncluster_reorder.mbt`
+  - `c6_finalize_order.mbt`
 - Cluster-local reorder:
-  - `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt`
+  - `c3_cluster_local_reorder.mbt`
 - Clustered phase orchestration:
-  - `layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_helpers.mbt`
+  - `c3_c4_c6_clustered_ordering_stage.mbt`
 - Shared node-order seed helpers:
-  - `layout_pipeline_stage_c_phase_c2_c5_order_node_seed_helpers.mbt`
+  - `c2_c5_order_node_seed.mbt`
 - Root-cluster reorder and cluster-rank-order logic:
-  - `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c4_root_cluster_build_ranks_helpers.mbt`
+  - `c4_root_cluster_reorder.mbt`
+  - `c4_root_cluster_build_ranks.mbt`
 - Clustered finalize helpers:
-  - `layout_pipeline_stage_c_phase_c6_cluster_finalize_helpers.mbt`
+  - `c6_cluster_finalize.mbt`
 - Clustered root/finalize stage types:
-  - `layout_pipeline_stage_c_phase_c4_c6_root_cluster_stage_types_helpers.mbt`
+  - `c4_c6_root_cluster_stage_types.mbt`
 - Clustered ordering stage-dispatch types:
-  - `layout_pipeline_stage_c_phase_c3_c4_c6_clustered_ordering_stage_types_helpers.mbt`
+  - `c3_c4_c6_clustered_ordering_stage_types.mbt`
 - Root mincross replay helpers:
-  - `layout_pipeline_stage_c_phase_c2_root_mincross_helpers.mbt`
+  - `c2_root_mincross.mbt`
 - Stage C ReMincross refinement family:
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_input_phase_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_finalize_dispatch_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_reorder_step_context_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_materialized_output_phase_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_seeded_group_projection_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_input_phase_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_forward_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_multi_rank_finalize_dispatch_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_reorder_execute_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_reorder_input_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_clustered_*`
-  - `layout_pipeline_stage_c_phase_c5_remincross_nlist_order_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_cluster_tail_order_helpers.mbt`
-  - `stage_c_phase_c5_remincross_vnode_helpers.mbt`
-  - `stage_c_phase_c5_remincross_vnode_intercluster_helpers.mbt`
-  - `layout_pipeline_stage_c_phase_c5_remincross_trace_helpers.mbt`
+  - `c5_remincross_clustered_reorder_step_input_phase.mbt`
+  - `c5_remincross_clustered_reorder_step.mbt`
+  - `c5_remincross_clustered_reorder_step_finalize_dispatch.mbt`
+  - `c5_remincross_clustered_reorder_step_context.mbt`
+  - `c5_remincross_clustered_materialized_output_phase.mbt`
+  - `c5_remincross_seeded_group_projection.mbt`
+  - `c5_remincross_clustered_multi_rank_input_phase.mbt`
+  - `c5_remincross_clustered_multi_rank_forward.mbt`
+  - `c5_remincross_clustered_multi_rank_finalize.mbt`
+  - `c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
+  - `c5_remincross_reorder_execute.mbt`
+  - `c5_remincross_reorder_input.mbt`
+  - `c5_remincross_clustered_*`
+  - `c5_remincross_nlist_order.mbt`
+  - `c5_remincross_cluster_tail_order.mbt`
+  - `c5_remincross_vnode.mbt`
+  - `c5_remincross_vnode_intercluster.mbt`
+  - `c5_remincross_trace.mbt`
 - Stage D position/xpos internals:
-  - `layout_pipeline_stage_d_phase_d0_position_orchestrator_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d1_d5_mode_and_projection_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d2_seed_construction_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d3_reorder_cleanup_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d4_constraint_solve_clustered_helpers.mbt`
-  - `layout_pipeline_stage_d_phase_d4_constraint_solve_noncluster_helpers.mbt`
+  - `d0_position_orchestrator.mbt`
+  - `d1_d5_mode_and_projection.mbt`
+  - `d2_seed_construction.mbt`
+  - `d3_reorder_cleanup.mbt`
+  - `d4_constraint_solve_clustered.mbt`
+  - `d4_constraint_solve_noncluster.mbt`
 - Crossing helpers:
-  - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
+  - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
 - Routing:
-  - `layout_stage_e_routing_helpers.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
+  - `e_routing.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
 - Final graph writeback:
-  - `layout_stage_f_postprocess_helpers.mbt`
+  - `f_postprocess.mbt`
 
 ---
 
@@ -619,12 +621,12 @@ If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
 2. `layout_stage_pipeline_orchestrator.mbt` — understand stage boundaries.
-3. `layout_pipeline_stage_a_phase_a1_input_helpers.mbt` — understand canonical input formation.
-4. `layout_pipeline_stage_b_phase_b1_b2_rank_helpers.mbt` — understand rank and spacing foundations.
-5. `layout_pipeline_stage_c_phase_c1_order_edge_helpers.mbt` + `layout_pipeline_stage_c_phase_c1_order_graph_helpers.mbt` — understand order graph construction.
-6. `layout_pipeline_stage_c_phase_c3_cluster_local_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c4_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_phase_c5_remincross_*` — understand clustered reorder/refinement.
-7. `layout_pipeline_stage_c_phase_c0_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
-8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.
-9. `layout_stage_f_postprocess_helpers.mbt` — understand output attribute mapping.
+3. `a1_input.mbt` — understand canonical input formation.
+4. `b1_b2_rank.mbt` — understand rank and spacing foundations.
+5. `c1_order_edge.mbt` + `c1_order_graph.mbt` — understand order graph construction.
+6. `c3_cluster_local_reorder.mbt` + `c4_root_cluster_reorder.mbt` + `c5_remincross_*` — understand clustered reorder/refinement.
+7. `c0_dispatch_pipeline.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
+8. `e_routing.mbt` — understand edge geometry generation.
+9. `f_postprocess.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
