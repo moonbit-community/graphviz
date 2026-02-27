@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep position-stage
-/// assembly/projection/output helpers isolated and maintainable.
+/// Stage D position orchestrator helpers for x/y solve assembly,
+/// projection handoff, and final position output wiring.
 
 ///|
 /// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.

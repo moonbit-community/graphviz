@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate x-stage mode
-/// gating and projection/result handoff helpers.
+/// Stage D phase split: mode-gating and projection handoff helpers
+/// used by the x-stage/y-projection pipeline.
 
 ///|
 /// Graphviz parity: vnode xpos mode gate follows Graphviz edge-label/port-edge

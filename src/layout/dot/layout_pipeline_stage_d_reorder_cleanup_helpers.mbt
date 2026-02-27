@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate xpos reorder
-/// branch dispatch and transpose-cleanup helpers.
+/// Stage D phase split: optional reorder/transpose-cleanup helpers
+/// for x-stage rank group refinement.
 
 ///|
 /// Graphviz parity: vnode xpos-reorder gate is shared across reorder branch

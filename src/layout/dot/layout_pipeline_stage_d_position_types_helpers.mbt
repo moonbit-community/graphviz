@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to keep position/xpos
-/// stage type definitions isolated and easier to maintain.
+/// Stage D position/xpos stage-local type definitions shared
+/// across mode, seed, reorder, and projection helper files.
 
 ///|
 priv struct PositionResult {
@@ -225,4 +225,3 @@ priv struct ProjectionFromXStageData {
   flat_label_nodes : Map[String, FlatLabelNodeInfo]
   flat_label_edge_vnodes : Map[String, String]
 }
-

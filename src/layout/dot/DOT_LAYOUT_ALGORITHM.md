@@ -98,7 +98,7 @@ Why this design:
 
 ## 3) Core Stage Data Objects
 
-Defined in `src/layout/dot/layout_pipeline_helpers.mbt`.
+Defined across stage data/type files (mainly `layout_pipeline_stage_b_prep_rank_types_helpers.mbt`, `layout_pipeline_stage_c_cluster_ordering_result_types_helpers.mbt`, and `layout_pipeline_stage_d_position_types_helpers.mbt`).
 
 - `LayoutPrep`
   - normalized options/attrs, node/edge arrays, size/port metadata.
@@ -151,7 +151,7 @@ flowchart LR
 Main files:
 
 - `src/layout/dot/layout_pipeline_stage_a_input_helpers.mbt`
-- `src/layout/dot/layout_pipeline_helpers.mbt` (shared structs/utilities)
+- `src/layout/dot/layout_pipeline_stage_b_prep_rank_types_helpers.mbt` (shared prep/rank structs)
 
 ### What it does
 
@@ -233,7 +233,7 @@ Clusters alter ordering and positioning constraints globally. This metadata is r
 
 Entry:
 
-- `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_helpers.mbt`
+- `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 
 Supporting files:
 
@@ -246,7 +246,7 @@ Supporting files:
 - `src/layout/dot/layout_pipeline_stage_c_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_stage_c_remincross_*` (Stage C ReMincross family)
-- `src/layout/dot/layout_pipeline_helpers.mbt`
+- `src/layout/dot/layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
 
@@ -329,7 +329,7 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/layout_pipeline_helpers.mbt`
+- `compute_positions` in `src/layout/dot/layout_pipeline_stage_d_position_helpers.mbt`
 - stage helpers in `src/layout/dot/layout_pipeline_stage_d_*`
 
 ### D1) Mode gating
@@ -518,7 +518,7 @@ Repository guard validates:
 - Stage B cluster metadata:
   - `layout_pipeline_stage_b_cluster_metadata_helpers.mbt`
 - Ordering dispatch + shared stage logic:
-  - `layout_pipeline_helpers.mbt`
+  - `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt`
 - Ordering edge materialization:
   - `layout_pipeline_stage_c_order_edge_helpers.mbt`
 - Ordering graph construction helpers:
@@ -541,11 +541,11 @@ Repository guard validates:
   - `layout_pipeline_stage_c_remincross_trace_helpers.mbt`
 - Stage D position/xpos internals:
   - `layout_pipeline_stage_d_position_helpers.mbt`
-  - `layout_pipeline_stage_d_xstage_seed_helpers.mbt`
-  - `layout_pipeline_stage_d_xstage_projection_helpers.mbt`
-  - `layout_pipeline_stage_d_xpos_clustered_helpers.mbt`
-  - `layout_pipeline_stage_d_xpos_noncluster_helpers.mbt`
-  - `layout_pipeline_stage_d_xpos_reorder_helpers.mbt`
+  - `layout_pipeline_stage_d_seed_construction_helpers.mbt`
+  - `layout_pipeline_stage_d_mode_and_projection_helpers.mbt`
+  - `layout_pipeline_stage_d_constraint_solve_clustered_helpers.mbt`
+  - `layout_pipeline_stage_d_constraint_solve_noncluster_helpers.mbt`
+  - `layout_pipeline_stage_d_reorder_cleanup_helpers.mbt`
 - Crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:
@@ -565,7 +565,7 @@ If you are new to layout algorithms, read in this order:
 4. `layout_pipeline_stage_b_rank_helpers.mbt` — understand rank and spacing foundations.
 5. `layout_pipeline_stage_c_order_edge_helpers.mbt` + `layout_pipeline_stage_c_order_graph_helpers.mbt` — understand order graph construction.
 6. `layout_pipeline_stage_c_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_root_cluster_reorder_helpers.mbt` + `layout_pipeline_stage_c_remincross_*` — understand clustered reorder/refinement.
-7. `layout_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand orchestration glue and position stage internals.
+7. `layout_pipeline_stage_c_ordering_dispatch_pipeline_helpers.mbt` + `layout_pipeline_stage_d_*` — understand Stage C dispatch handoff and Stage D position internals.
 8. `layout_stage_e_routing_helpers.mbt` — understand edge geometry generation.
 9. `layout_stage_f_postprocess_helpers.mbt` — understand output attribute mapping.
 

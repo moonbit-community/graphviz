@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate x-stage seed
-/// helper preparation and flat-label vnode augmentation utilities.
+/// Stage D phase split: seed-construction helpers for x-stage inputs
+/// and flat-label vnode augmentation utilities.
 
 ///|
 /// Graphviz parity: vnode order-key derivation follows Graphviz: explicit

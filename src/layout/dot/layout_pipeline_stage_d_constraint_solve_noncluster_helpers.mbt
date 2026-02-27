@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate non-cluster
-/// xpos reorder helper flow from shared xpos branch dispatch.
+/// Stage D phase split: non-cluster x-constraint solve helpers
+/// used by the shared reorder branch flow.
 
 ///|
 /// Graphviz parity: non-cluster xpos reorder uses both geometric port x and

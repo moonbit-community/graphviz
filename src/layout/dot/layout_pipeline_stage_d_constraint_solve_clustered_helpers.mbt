@@ -1,6 +1,6 @@
 ///|
-/// Extracted from layout_pipeline_helpers.mbt to isolate clustered
-/// xpos reorder seed/materialization/apply helpers from branch dispatch.
+/// Stage D phase split: clustered x-constraint solve helpers
+/// (seed/materialization/apply) used by reorder flow.
 
 ///|
 /// Graphviz parity: clustered xpos reorder seed skeleton injection appends
