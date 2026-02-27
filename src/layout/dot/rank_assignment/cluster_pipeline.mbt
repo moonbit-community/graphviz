@@ -1,5 +1,203 @@
 ///|
+/// Graphviz parity: clustered path branch selection happens before non-cluster
+/// base rank assignment, matching rank.c control flow.
+/// Do not change behavior without updating fixtures/tests.
+pub fn compute_ranks_directed(
+  source : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  _edge_reversed : Array[Bool],
+  graph_has_cluster : ((@cgraph.Graph) -> Bool),
+  orient_edges : (
+    ((@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> (
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ))
+  ),
+  orient_edges_for_names : (
+    (
+      Array[String],
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ) -> (Array[String], Array[String], Array[Bool])
+  ),
+  edge_is_constraint : ((@cgraph.Edge) -> Bool),
+  edge_minlen : ((@cgraph.Edge) -> Int),
+  edge_weight : ((@cgraph.Edge) -> Int),
+  build_nlist_order_from_edges : (
+    (Array[String], Array[(String, String)]) -> (Array[String])
+  ),
+  back_weight_scale : Int,
+) -> Map[String, Int] {
+  if graph_has_cluster(source) {
+    return compute_ranks_directed_with_clusters_impl(
+      source,
+      nodes,
+      edges,
+      has_edge_labels,
+      graph_has_cluster,
+      orient_edges,
+      orient_edges_for_names,
+      edge_is_constraint,
+      edge_minlen,
+      edge_weight,
+      build_nlist_order_from_edges,
+      back_weight_scale,
+    )
+  }
+  compute_ranks_directed_base(
+    source,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_is_constraint,
+    edge_minlen,
+    edge_weight,
+    build_nlist_order_from_edges,
+  )
+}
+
+///|
+/// Convenience entry for callers that want internal edge orientation.
 pub fn compute_ranks_directed_with_clusters(
+  source : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+  graph_has_cluster : ((@cgraph.Graph) -> Bool),
+  orient_edges : (
+    ((@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> (
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ))
+  ),
+  orient_edges_for_names : (
+    (
+      Array[String],
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ) -> (Array[String], Array[String], Array[Bool])
+  ),
+  edge_is_constraint : ((@cgraph.Edge) -> Bool),
+  edge_minlen : ((@cgraph.Edge) -> Int),
+  edge_weight : ((@cgraph.Edge) -> Int),
+  build_nlist_order_from_edges : (
+    (Array[String], Array[(String, String)]) -> (Array[String])
+  ),
+  back_weight_scale : Int,
+) -> Map[String, Int] {
+  let (edge_tail, edge_head, edge_reversed) = orient_edges(source, nodes, edges)
+  compute_ranks_directed(
+    source,
+    nodes,
+    edges,
+    has_edge_labels,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    graph_has_cluster,
+    orient_edges,
+    orient_edges_for_names,
+    edge_is_constraint,
+    edge_minlen,
+    edge_weight,
+    build_nlist_order_from_edges,
+    back_weight_scale,
+  )
+}
+
+///|
+/// Graphviz parity: clustered rank assignment keeps non-cluster fallback path
+/// and cluster-local/global solve sequence aligned to rank.c behavior.
+/// Do not change behavior without updating fixtures/tests.
+fn compute_ranks_directed_with_clusters_impl(
+  source : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+  graph_has_cluster : ((@cgraph.Graph) -> Bool),
+  orient_edges : (
+    ((@cgraph.Graph, Array[@cgraph.Node], Array[@cgraph.Edge]) -> (
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ))
+  ),
+  orient_edges_for_names : (
+    (
+      Array[String],
+      Array[String],
+      Array[String],
+      Array[Bool],
+    ) -> (Array[String], Array[String], Array[Bool])
+  ),
+  edge_is_constraint : ((@cgraph.Edge) -> Bool),
+  edge_minlen : ((@cgraph.Edge) -> Int),
+  edge_weight : ((@cgraph.Edge) -> Int),
+  build_nlist_order_from_edges : (
+    (Array[String], Array[(String, String)]) -> (Array[String])
+  ),
+  back_weight_scale : Int,
+) -> Map[String, Int] {
+  compute_clustered_ranks(
+    source,
+    nodes,
+    edges,
+    has_edge_labels,
+    (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
+      let (tail, head, _reversed) = orient_edges(graph, graph_nodes, graph_edges)
+      compute_ranks_directed_base(
+        graph,
+        graph_nodes,
+        graph_edges,
+        graph_has_edge_labels,
+        tail,
+        head,
+        edge_is_constraint,
+        edge_minlen,
+        edge_weight,
+        build_nlist_order_from_edges,
+      )
+    },
+    (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
+      let (tail, head, reversed) = orient_edges(graph, graph_nodes, graph_edges)
+      compute_ranks_directed(
+        graph,
+        graph_nodes,
+        graph_edges,
+        graph_has_edge_labels,
+        tail,
+        head,
+        reversed,
+        graph_has_cluster,
+        orient_edges,
+        orient_edges_for_names,
+        edge_is_constraint,
+        edge_minlen,
+        edge_weight,
+        build_nlist_order_from_edges,
+        back_weight_scale,
+      )
+    },
+    back_weight_scale,
+    edge_is_constraint,
+    edge_minlen,
+    edge_weight,
+    orient_edges_for_names,
+  )
+}
+
+///|
+fn compute_clustered_ranks(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],

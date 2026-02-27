@@ -57,7 +57,7 @@ fn compute_rank_data(
 ) -> RankData {
   let (edge_tail, edge_head, edge_reversed, edge_out_order, _edge_in_order) =
     build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
-  let ranks = compute_ranks_directed(
+  let ranks = @rank_assignment.compute_ranks_directed(
     graph,
     nodes,
     edges,
@@ -65,6 +65,21 @@ fn compute_rank_data(
     edge_tail,
     edge_head,
     edge_reversed,
+    graph_has_cluster,
+    acyclic_edge_directions,
+    acyclic_edge_directions_for_names,
+    edge_is_constraint,
+    edge_minlen,
+    edge_weight,
+    (tail_order, edge_creation) => {
+      build_graphviz_nlist_order_from_edges(
+        tail_order,
+        tail_order,
+        edge_creation,
+        Map::new(),
+      )
+    },
+    CL_BACK,
   )
   let groups = build_rank_groups(nodes, ranks)
   let rank_keys : Array[Int] = []

@@ -160,6 +160,36 @@ fn label_vnode_key(
 }
 
 ///|
+fn compute_ranks_directed_with_clusters_for_tests(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  has_edge_labels : Bool,
+) -> Map[String, Int] {
+  @rank_assignment.compute_ranks_directed_with_clusters(
+    graph,
+    nodes,
+    edges,
+    has_edge_labels,
+    graph_has_cluster,
+    acyclic_edge_directions,
+    acyclic_edge_directions_for_names,
+    edge_is_constraint,
+    edge_minlen,
+    edge_weight,
+    (tail_order, edge_creation) => {
+      build_graphviz_nlist_order_from_edges(
+        tail_order,
+        tail_order,
+        edge_creation,
+        Map::new(),
+      )
+    },
+    CL_BACK,
+  )
+}
+
+///|
 ///|
 fn collect_label_vnode_actuals(
   graph : @cgraph.Graph,
@@ -167,7 +197,7 @@ fn collect_label_vnode_actuals(
   let nodes = graph.nodes()
   let edges = graph.edges()
   let has_edge_labels = graph_has_edge_labels(edges)
-  let ranks = compute_ranks_directed_with_clusters(
+  let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
     edges,
@@ -257,7 +287,7 @@ fn collect_flat_label_node_actuals(
   let nodes = graph.nodes()
   let edges = graph.edges()
   let has_edge_labels = graph_has_edge_labels(edges)
-  let ranks = compute_ranks_directed_with_clusters(
+  let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
     edges,
@@ -373,7 +403,7 @@ test "label vnodes match Graphviz fixtures" {
     let nodes = graph.nodes()
     let edges = graph.edges()
     let has_edge_labels = graph_has_edge_labels(edges)
-    let ranks = compute_ranks_directed_with_clusters(
+    let ranks = compute_ranks_directed_with_clusters_for_tests(
       graph,
       nodes,
       edges,
@@ -492,7 +522,7 @@ test "flat label node sizes match Graphviz fixtures" {
   let nodes = graph.nodes()
   let edges = graph.edges()
   let has_edge_labels = graph_has_edge_labels(edges)
-  let ranks = compute_ranks_directed_with_clusters(
+  let ranks = compute_ranks_directed_with_clusters_for_tests(
     graph,
     nodes,
     edges,
