@@ -315,7 +315,7 @@ fn expand_bbox_with_cluster_subgraphs(
 ) -> @geom.Rect {
   let mut result = bbox
   for subgraph in subgraphs {
-    if is_cluster_graph(subgraph.graph) {
+    if @dot_shared.is_cluster_graph(subgraph.graph) {
       // Graphviz parity: dot_compute_bb expands root bbox by CL_OFFSET for
       // cluster subgraphs in x direction.
       let padded : @geom.Rect = {

@@ -15,7 +15,7 @@ priv struct HeadPortMetrics {
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
-    if is_cluster_graph(subgraph) {
+    if @dot_shared.is_cluster_graph(subgraph) {
       count = count + 1
     }
     count = count + count_cluster_subgraphs(subgraph)
@@ -221,10 +221,10 @@ fn layout_subgraphs(
         rank_ht1,
         rank_ht2,
       )
-    if is_cluster_graph(subgraph) {
+    if @dot_shared.is_cluster_graph(subgraph) {
       // Graphviz parity: empty clusters (no descendant nodes) are omitted.
       let cluster_nodes : Map[String, Bool] = Map::new()
-      collect_graph_nodes(subgraph, cluster_nodes)
+      @dot_shared.collect_graph_nodes(subgraph, cluster_nodes)
       if cluster_nodes.length() == 0 {
         continue
       }
@@ -232,7 +232,7 @@ fn layout_subgraphs(
     if sub_subgraphs.length() > 0 {
       bbox = expand_bbox_with_subgraphs(bbox, sub_subgraphs)
     }
-    if is_cluster_graph(subgraph) {
+    if @dot_shared.is_cluster_graph(subgraph) {
       let pad = cluster_margin_pt(subgraph)
       let mut pad_left = pad
       let mut pad_right = pad
@@ -242,7 +242,7 @@ fn layout_subgraphs(
       let mut min_rank : Int? = None
       let mut max_rank : Int? = None
       let cluster_nodes : Map[String, Bool] = Map::new()
-      collect_graph_nodes(subgraph, cluster_nodes)
+      @dot_shared.collect_graph_nodes(subgraph, cluster_nodes)
       for name, _ in cluster_nodes {
         match ranks.get(name) {
           Some(rank) => {
@@ -478,7 +478,7 @@ fn compute_cluster_bboxes_for_routing(
   rank_ht2 : Map[Int, Double],
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
-  if graph_has_cluster(graph) {
+  if @dot_shared.graph_has_cluster(graph) {
     let cluster_layouts =
       layout_subgraphs(
         graph,
@@ -773,7 +773,7 @@ fn compute_root_cluster_padding(
   all_ranks : Array[Int],
   ranks : Map[String, Int],
 ) -> (Double, Double) {
-  if graph.is_root() && graph_has_cluster(graph) && all_ranks.length() > 0 {
+  if graph.is_root() && @dot_shared.graph_has_cluster(graph) && all_ranks.length() > 0 {
     let min_rank = all_ranks[0]
     let max_rank = all_ranks[all_ranks.length() - 1]
     let mut cluster_at_min = false
@@ -958,7 +958,7 @@ fn apply_root_margin_x(
   bbox : @geom.Rect,
 ) -> @geom.Rect {
   if graph.is_root() {
-    let margin_x = if graph_has_cluster(graph) {
+    let margin_x = if @dot_shared.graph_has_cluster(graph) {
       graph_margin_x_pt(graph)
     } else {
       0.0
@@ -1294,7 +1294,7 @@ fn refresh_cluster_label_positions_from_bbox(
     subgraphs.push(refresh_cluster_label_positions_from_bbox(subgraph))
   }
   let label_pos =
-    if is_cluster_graph(layout.graph) {
+    if @dot_shared.is_cluster_graph(layout.graph) {
       match graph_label_metrics(layout.graph) {
         Some((width_pt, height_pt)) => {
           let pad = CLUSTER_LABEL_PAD_PT
@@ -1530,14 +1530,14 @@ fn finalize_layout_graph(
   let use_cluster_point_mirror =
     base_bbox.urx > rank_bbox.urx &&
     (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    graph_has_cluster(graph)
+    @dot_shared.graph_has_cluster(graph)
   let use_lr_multi_cluster_creation_order_mode =
     (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
     count_cluster_subgraphs(graph) > 1
   // Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
   // rotation (dotgen cluster decompose + postproc map_point ordering).
   let rotated = if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    graph_has_cluster(graph) &&
+    @dot_shared.graph_has_cluster(graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       refresh_cluster_label_positions_from_bbox(

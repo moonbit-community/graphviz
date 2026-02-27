@@ -504,7 +504,7 @@ fn build_cluster_constraints(
 ) -> (Array[(String, Int)], Array[ConstraintEdge], Array[String], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   if cluster_graphs.length() == 0 {
     return ([], [], [], [])
   }

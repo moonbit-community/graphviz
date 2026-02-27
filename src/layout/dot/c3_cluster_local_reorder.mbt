@@ -262,7 +262,7 @@ fn build_cluster_graph_order_for_local_reorder(
 ) -> (Map[String, @cgraph.Graph], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   let cluster_names = build_cluster_name_list_for_local_reorder(cluster_graphs)
   if cluster_graphs.length() == 0 {
     return (cluster_graphs, cluster_names)

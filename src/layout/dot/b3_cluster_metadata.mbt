@@ -259,7 +259,7 @@ fn build_cluster_order_and_parents_for_metadata(
   }
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
+  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   (cluster_order, cluster_parents)
 }
 
@@ -377,7 +377,7 @@ fn compute_cluster_metadata(
   edge_head : Array[String],
   graphviz_flip : Bool,
 ) -> ClusterMetadata {
-  let has_clusters = graph_has_cluster(graph)
+  let has_clusters = @dot_shared.graph_has_cluster(graph)
   let cluster_keys = build_cluster_keys_for_metadata(nodes)
   assign_cluster_node_order_for_metadata(
     nodes,

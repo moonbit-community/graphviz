@@ -296,7 +296,7 @@ fn shift_graph_positions(
   dy : Double,
 ) -> Unit {
   let members : Map[String, Bool] = Map::new()
-  collect_graph_nodes(graph, members)
+  @dot_shared.collect_graph_nodes(graph, members)
   for name, _ in members {
     match positions.get(name) {
       Some(pos) => positions[name] = shift_point(pos, dx, dy)
@@ -344,7 +344,7 @@ fn adjust_cluster_positions_for_rounding(
     Some(value) => value
     None => return None
   }
-  if is_cluster_graph(graph) {
+  if @dot_shared.is_cluster_graph(graph) {
     let pad = cluster_margin_pt(graph)
     current = {
       llx: current.llx - pad,
@@ -389,7 +389,7 @@ fn collect_cluster_bboxes(
   out : Map[String, @geom.Rect],
 ) -> Unit {
   for layout in subgraphs {
-    if is_cluster_graph(layout.graph) {
+    if @dot_shared.is_cluster_graph(layout.graph) {
       match layout.graph.name() {
         Some(name) => out[name] = layout.bbox
         None => ()

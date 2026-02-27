@@ -655,7 +655,7 @@ fn build_y_positions_with_cluster_flip_adjustment(
     rank_y,
   )
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    graph_has_cluster(graph) {
+    @dot_shared.graph_has_cluster(graph) {
     let min_root_rank = if y_all_ranks.length() > 0 { y_all_ranks[0] } else { 0 }
     let adjusted =
       adjust_flip_cluster_rank_heights(

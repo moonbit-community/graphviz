@@ -1,61 +1,3 @@
-///|
-fn is_cluster_graph(graph : @cgraph.Graph) -> Bool {
-  match graph.name() {
-    Some(name) => name.has_prefix("cluster")
-    None => false
-  }
-}
-
-///|
-fn graph_has_cluster(graph : @cgraph.Graph) -> Bool {
-  for subgraph in graph.subgraphs() {
-    if is_cluster_graph(subgraph) {
-      return true
-    }
-    if graph_has_cluster(subgraph) {
-      return true
-    }
-  }
-  false
-}
-
-///|
-fn collect_cluster_graphs(
-  graph : @cgraph.Graph,
-  parent : String?,
-  clusters : Map[String, @cgraph.Graph],
-  parents : Map[String, String?],
-) -> Unit {
-  let mut next_parent = parent
-  if is_cluster_graph(graph) {
-    match graph.name() {
-      Some(name) => {
-        clusters[name] = graph
-        parents[name] = parent
-        next_parent = Some(name)
-      }
-      None => ()
-    }
-  }
-  for child in graph.subgraphs() {
-    collect_cluster_graphs(child, next_parent, clusters, parents)
-  }
-}
-
-///|
-fn collect_graph_nodes(
-  graph : @cgraph.Graph,
-  nodes_out : Map[String, Bool],
-) -> Unit {
-  for node in graph.nodes() {
-    nodes_out[node.name()] = true
-  }
-  for child in graph.subgraphs() {
-    collect_graph_nodes(child, nodes_out)
-  }
-}
-
-///|
 fn root_graph_for_node(node : @cgraph.Node) -> @cgraph.Graph {
   let mut graph = node.graph()
   while !graph.is_root() {
@@ -144,7 +86,7 @@ fn nearest_cluster_ancestor_name(graph : @cgraph.Graph) -> String {
   while true {
     match current {
       Some(value) => {
-        if is_cluster_graph(value) {
+        if @dot_shared.is_cluster_graph(value) {
           match value.name() {
             Some(name) => return name
             None => return ""
@@ -183,7 +125,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> (String, String) {
     if !graph_contains_node(current, node) {
       continue
     }
-    if is_cluster_graph(current) {
+    if @dot_shared.is_cluster_graph(current) {
       let name = match current.name() {
         Some(value) => value
         None => ""
@@ -223,7 +165,7 @@ fn graph_cluster_key(graph : @cgraph.Graph) -> String {
   let mut current = graph
   let mut key = ""
   while !current.is_root() {
-    if is_cluster_graph(current) {
+    if @dot_shared.is_cluster_graph(current) {
       match current.name() {
         Some(name) => key = name
         None => key = ""
@@ -245,7 +187,7 @@ fn collect_edge_cluster_keys(
   for child in graph.subgraphs() {
     collect_edge_cluster_keys(child, edge_cluster_keys)
   }
-  if !is_cluster_graph(graph) {
+  if !@dot_shared.is_cluster_graph(graph) {
     return ()
   }
   let cluster_key = graph_cluster_key(graph)
@@ -418,7 +360,7 @@ fn collect_cluster_names(
   graph : @cgraph.Graph,
   out : Map[String, Bool],
 ) -> Unit {
-  if is_cluster_graph(graph) {
+  if @dot_shared.is_cluster_graph(graph) {
     match graph.name() {
       Some(name) => out[name] = true
       None => ()
@@ -437,7 +379,7 @@ fn collect_cluster_names_graphviz_order(
   out : Array[String],
 ) -> Unit {
   for subgraph in graph.subgraphs() {
-    if is_cluster_graph(subgraph) {
+    if @dot_shared.is_cluster_graph(subgraph) {
       match subgraph.name() {
         Some(name) => out.push(name)
         None => ()

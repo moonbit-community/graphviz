@@ -12,7 +12,7 @@ pub fn compute_ranks_directed(
   _edge_reversed : Array[Bool],
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  if graph_has_cluster(source) {
+  if @shared.graph_has_cluster(source) {
     return compute_ranks_directed_with_clusters_impl(
       source,
       nodes,
