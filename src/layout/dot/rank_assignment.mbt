@@ -508,7 +508,7 @@ fn compute_ranks_directed_base(
 /// logic together so clustered ranking behavior is easier to follow.
 
 ///|
-fn collect_cluster_graphs_for_rank_assignment(
+fn rank_assignment_collect_cluster_graphs(
   graph : @cgraph.Graph,
   parent : String?,
   clusters : Map[String, @cgraph.Graph],
@@ -526,7 +526,7 @@ fn collect_cluster_graphs_for_rank_assignment(
     }
   }
   for child in graph.subgraphs() {
-    collect_cluster_graphs_for_rank_assignment(
+    rank_assignment_collect_cluster_graphs(
       child,
       next_parent,
       clusters,
@@ -536,7 +536,7 @@ fn collect_cluster_graphs_for_rank_assignment(
 }
 
 ///|
-fn collect_graph_nodes_for_rank_assignment(
+fn rank_assignment_collect_graph_nodes(
   graph : @cgraph.Graph,
   nodes_out : Map[String, Bool],
 ) -> Unit {
@@ -544,18 +544,18 @@ fn collect_graph_nodes_for_rank_assignment(
     nodes_out[node.name()] = true
   }
   for child in graph.subgraphs() {
-    collect_graph_nodes_for_rank_assignment(child, nodes_out)
+    rank_assignment_collect_graph_nodes(child, nodes_out)
   }
 }
 
 ///|
-fn collect_cluster_members_for_rank_assignment(
+fn rank_assignment_collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
   let members : Map[String, Map[String, Bool]] = Map::new()
   for name, cluster_graph in cluster_graphs {
     let set : Map[String, Bool] = Map::new()
-    collect_graph_nodes_for_rank_assignment(cluster_graph, set)
+    rank_assignment_collect_graph_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
     }
@@ -567,12 +567,12 @@ fn collect_cluster_members_for_rank_assignment(
 /// Graphviz parity: clustered ranking discovers top-level clusters from the
 /// collected cluster tree before any fallback/non-cluster branch selection.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_top_clusters_for_rank_assignment(
+fn rank_assignment_collect_top_clusters(
   source : @cgraph.Graph,
 ) -> (Map[String, @cgraph.Graph], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs_for_rank_assignment(
+  rank_assignment_collect_cluster_graphs(
     source,
     None,
     cluster_graphs,
@@ -604,7 +604,7 @@ fn collect_top_clusters_for_rank_assignment(
 /// Graphviz parity: each node is assigned to at most one top-level cluster for
 /// clustered rank projection.
 /// Do not change behavior without updating fixtures/tests.
-fn build_node_cluster_index_for_rank_assignment(
+fn rank_assignment_build_node_cluster_index(
   top_clusters : Array[String],
   cluster_members : Map[String, Map[String, Bool]],
 ) -> Map[String, String] {
@@ -625,7 +625,7 @@ fn build_node_cluster_index_for_rank_assignment(
 /// Graphviz parity: clustered ranking first solves each top-level cluster
 /// locally, then promotes one local rank-0 leader per cluster.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_local_cluster_ranks_and_leaders_for_rank_assignment(
+fn rank_assignment_compute_local_cluster_ranks_and_leaders(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -701,7 +701,7 @@ fn compute_local_cluster_ranks_and_leaders_for_rank_assignment(
 /// Graphviz parity: clustered ranking solves a leader-level rank graph with
 /// slack nodes for inter-cluster constraints before projecting back to nodes.
 /// Do not change behavior without updating fixtures/tests.
-fn solve_clustered_leader_ranks_for_rank_assignment(
+fn rank_assignment_solve_clustered_leader_ranks(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   node_cluster : Map[String, String],
@@ -860,7 +860,7 @@ fn solve_clustered_leader_ranks_for_rank_assignment(
 /// Graphviz parity: clustered rank projection combines leader/global ranks with
 /// per-cluster local offsets, then normalizes to zero minimum rank.
 /// Do not change behavior without updating fixtures/tests.
-fn project_clustered_node_ranks_for_rank_assignment(
+fn rank_assignment_project_clustered_node_ranks(
   nodes : Array[@cgraph.Node],
   node_cluster : Map[String, String],
   cluster_leaders : Map[String, String],
@@ -915,7 +915,7 @@ fn project_clustered_node_ranks_for_rank_assignment(
 /// Graphviz parity: clustered path applies rank-set representative collapse and
 /// min/max/source/sink extrema post-processing after projection.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_rank_postprocessing_for_rank_assignment(
+fn rank_assignment_apply_clustered_rank_postprocessing(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   ranks : Map[String, Int],
@@ -959,7 +959,7 @@ fn compute_ranks_directed_with_clusters(
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
 ) -> Map[String, Int] {
-  let (cluster_graphs, top_clusters) = collect_top_clusters_for_rank_assignment(
+  let (cluster_graphs, top_clusters) = rank_assignment_collect_top_clusters(
     source,
   )
   if top_clusters.length() == 0 {
@@ -976,13 +976,13 @@ fn compute_ranks_directed_with_clusters(
     )
   }
   let cluster_members =
-    collect_cluster_members_for_rank_assignment(cluster_graphs)
-  let node_cluster = build_node_cluster_index_for_rank_assignment(
+    rank_assignment_collect_cluster_members(cluster_graphs)
+  let node_cluster = rank_assignment_build_node_cluster_index(
     top_clusters,
     cluster_members,
   )
   let (local_ranks, cluster_leaders) =
-    compute_local_cluster_ranks_and_leaders_for_rank_assignment(
+    rank_assignment_compute_local_cluster_ranks_and_leaders(
       source,
       nodes,
       edges,
@@ -991,7 +991,7 @@ fn compute_ranks_directed_with_clusters(
       cluster_graphs,
       cluster_members,
     )
-  let leader_ranks = solve_clustered_leader_ranks_for_rank_assignment(
+  let leader_ranks = rank_assignment_solve_clustered_leader_ranks(
     nodes,
     edges,
     node_cluster,
@@ -999,12 +999,12 @@ fn compute_ranks_directed_with_clusters(
     local_ranks,
     has_edge_labels,
   )
-  let ranks = project_clustered_node_ranks_for_rank_assignment(
+  let ranks = rank_assignment_project_clustered_node_ranks(
     nodes,
     node_cluster,
     cluster_leaders,
     local_ranks,
     leader_ranks,
   )
-  apply_clustered_rank_postprocessing_for_rank_assignment(source, nodes, ranks)
+  rank_assignment_apply_clustered_rank_postprocessing(source, nodes, ranks)
 }
