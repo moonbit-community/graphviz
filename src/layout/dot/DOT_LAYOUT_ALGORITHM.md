@@ -189,7 +189,7 @@ Main files:
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/rank_assignment_clustered.mbt`
 - `src/layout/dot/network_simplex/*`
-- `src/layout/dot/acyclic.mbt`
+- `src/layout/dot/rank_acyclic.mbt`
 
 What happens:
 

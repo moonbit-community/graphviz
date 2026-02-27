@@ -1,5 +1,6 @@
 ///|
-///|
+/// Rank domain: acyclic edge-direction preprocessing helpers.
+
 /// Graphviz parity: adjacency removal uses zapinlist (swap with last), not stable delete.
 fn remove_edge_at(list : Array[Int], idx : Int) -> Unit {
   let last = list.length() - 1
