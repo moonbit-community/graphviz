@@ -9,7 +9,6 @@ pub fn compute_ranks_directed(
   has_edge_labels : Bool,
   edge_tail : Array[String],
   edge_head : Array[String],
-  _edge_reversed : Array[Bool],
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   if @shared.graph_has_cluster(source) {
@@ -40,7 +39,7 @@ pub fn compute_ranks_directed_with_clusters(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let (edge_tail, edge_head, edge_reversed) =
+  let (edge_tail, edge_head, _edge_reversed) =
     acyclic_edge_directions(source, nodes, edges)
   compute_ranks_directed(
     source,
@@ -49,7 +48,6 @@ pub fn compute_ranks_directed_with_clusters(
     has_edge_labels,
     edge_tail,
     edge_head,
-    edge_reversed,
     back_weight_scale,
   )
 }
@@ -83,7 +81,7 @@ fn compute_ranks_directed_with_clusters_impl(
       )
     },
     (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-      let (tail, head, reversed) =
+      let (tail, head, _reversed) =
         acyclic_edge_directions(graph, graph_nodes, graph_edges)
       compute_ranks_directed(
         graph,
@@ -92,7 +90,6 @@ fn compute_ranks_directed_with_clusters_impl(
         graph_has_edge_labels,
         tail,
         head,
-        reversed,
         back_weight_scale,
       )
     },
