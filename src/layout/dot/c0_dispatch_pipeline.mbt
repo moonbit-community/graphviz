@@ -35,35 +35,6 @@ priv struct OrderingResult {
 }
 
 ///|
-/// Stage C Phase C0 split: ordering input-payload
-/// type definitions for compute_ordering_and_vnodes entry.
-
-///|
-/// Graphviz parity: ordering+vnode compute input payload keeps ordering/rank/
-/// port fields in Graphviz compute_ordering_and_vnodes call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingAndVnodesInputs {
-  graph : @cgraph.Graph
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  rank_keys : Array[Int]
-  node_order : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  rankdir : RankDir
-  cluster_meta : ClusterMetadata
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-}
-
-///|
 /// Stage C Phase C0 split: ordering dispatch-context
 /// type definitions for clustered/non-cluster branching.
 
@@ -182,45 +153,6 @@ fn build_ordering_result_output(
     gdnlist_order,
     vnode_creation_order,
   }
-}
-
-///|
-/// Graphviz parity: dispatch setup uses runtime-context vnode/port fields in the
-/// same order as Graphviz pre-microstep staging.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_setup_from_runtime_context(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  runtime_context : OrderingRuntimeContext,
-) -> OrderingDispatchSetup {
-  let setup_context : OrderingDispatchSetupContext = {
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    node_order,
-    order_sizes,
-    port_edge_nodes: runtime_context.port_edge_nodes,
-    vnode_count: runtime_context.vnode_count,
-    rankdir,
-    cluster_meta,
-    vnode_info: runtime_context.vnode_info,
-  }
-  build_ordering_dispatch_setup(setup_context)
 }
 
 ///|
@@ -386,22 +318,24 @@ fn build_ordering_dispatch_pipeline_context(
 fn run_ordering_dispatch_pipeline(
   pipeline_context : OrderingDispatchPipelineContext,
 ) -> OrderingResult {
-  let dispatch_setup =
-    build_ordering_dispatch_setup_from_runtime_context(
-      pipeline_context.nodes,
-      pipeline_context.edges,
-      pipeline_context.edge_tail,
-      pipeline_context.edge_head,
-      pipeline_context.edge_reversed,
-      pipeline_context.edge_out_order,
-      pipeline_context.ranks,
-      pipeline_context.groups,
-      pipeline_context.node_order,
-      pipeline_context.order_sizes,
-      pipeline_context.rankdir,
-      pipeline_context.cluster_meta,
-      pipeline_context.runtime_context,
-    )
+  let setup_context : OrderingDispatchSetupContext = {
+    nodes: pipeline_context.nodes,
+    edges: pipeline_context.edges,
+    edge_tail: pipeline_context.edge_tail,
+    edge_head: pipeline_context.edge_head,
+    edge_reversed: pipeline_context.edge_reversed,
+    edge_out_order: pipeline_context.edge_out_order,
+    ranks: pipeline_context.ranks,
+    groups: pipeline_context.groups,
+    node_order: pipeline_context.node_order,
+    order_sizes: pipeline_context.order_sizes,
+    port_edge_nodes: pipeline_context.runtime_context.port_edge_nodes,
+    vnode_count: pipeline_context.runtime_context.vnode_count,
+    rankdir: pipeline_context.rankdir,
+    cluster_meta: pipeline_context.cluster_meta,
+    vnode_info: pipeline_context.runtime_context.vnode_info,
+  }
+  let dispatch_setup = build_ordering_dispatch_setup(setup_context)
   let execution_context =
     build_ordering_dispatch_pipeline_execution_context(
       pipeline_context.graph,
@@ -429,98 +363,6 @@ fn run_ordering_dispatch_pipeline(
 
 
 ///|
-/// Graphviz parity: ordering+vnode input payload assembly reads ordering stage
-/// inputs without argument reordering before runtime/pipeline dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_and_vnodes_inputs(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-) -> OrderingAndVnodesInputs {
-  {
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    rank_keys,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    rankdir,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-  }
-}
-
-///|
-/// Graphviz parity: ordering+vnode execution consumes typed input payload and
-/// preserves runtime-context + dispatch-pipeline stage ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_compute_ordering_and_vnodes_from_inputs(
-  ordering_inputs : OrderingAndVnodesInputs,
-) -> OrderingResult {
-  let runtime_context =
-    build_ordering_runtime_context_with_tail_constraints(
-      ordering_inputs.graph,
-      ordering_inputs.nodes,
-      ordering_inputs.edges,
-      ordering_inputs.edge_tail,
-      ordering_inputs.edge_head,
-      ordering_inputs.edge_out_order,
-      ordering_inputs.ranks,
-      ordering_inputs.node_order,
-      ordering_inputs.nodesep_pt,
-      ordering_inputs.rankdir,
-      ordering_inputs.cluster_meta,
-    )
-  let pipeline_context =
-    build_ordering_dispatch_pipeline_context(
-      ordering_inputs.graph,
-      ordering_inputs.nodes,
-      ordering_inputs.edges,
-      ordering_inputs.edge_tail,
-      ordering_inputs.edge_head,
-      ordering_inputs.edge_reversed,
-      ordering_inputs.edge_out_order,
-      ordering_inputs.ranks,
-      ordering_inputs.groups,
-      ordering_inputs.rank_keys,
-      ordering_inputs.node_order,
-      ordering_inputs.order_sizes,
-      ordering_inputs.nodesep_pt,
-      ordering_inputs.has_edge_labels,
-      ordering_inputs.rankdir,
-      ordering_inputs.cluster_meta,
-      ordering_inputs.port_order_positions,
-      ordering_inputs.port_order_contrib,
-      runtime_context,
-    )
-  run_ordering_dispatch_pipeline(pipeline_context)
-}
-
-///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -543,8 +385,22 @@ fn compute_ordering_and_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
-  let ordering_inputs =
-    build_ordering_and_vnodes_inputs(
+  let runtime_context =
+    build_ordering_runtime_context_with_tail_constraints(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      node_order,
+      nodesep_pt,
+      rankdir,
+      cluster_meta,
+    )
+  let pipeline_context =
+    build_ordering_dispatch_pipeline_context(
       graph,
       nodes,
       edges,
@@ -563,6 +419,7 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
+      runtime_context,
     )
-  run_compute_ordering_and_vnodes_from_inputs(ordering_inputs)
+  run_ordering_dispatch_pipeline(pipeline_context)
 }

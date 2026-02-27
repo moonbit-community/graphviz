@@ -155,28 +155,16 @@ fn run_noncluster_ordering_stage(
 }
 
 ///|
-/// Graphviz parity: dispatch setup fields are unpacked once and forwarded with
-/// unchanged ordering into clustered/non-clustered stage dispatch helpers.
-/// Do not change behavior without updating fixtures/tests.
-fn unpack_ordering_dispatch_setup(
-  dispatch_setup : OrderingDispatchSetup,
-) -> (OrderingEdgePortData, OrderingReorderSetup, OrderingClass2Data) {
-  let edge_port_data = dispatch_setup.edge_port_data
-  let reorder_setup = dispatch_setup.reorder_setup
-  let class2_data = reorder_setup.class2_data
-  (edge_port_data, reorder_setup, class2_data)
-}
-
-
-///|
 /// Graphviz parity: clustered dispatch path reads ordering inputs from a
 /// shared stage-dispatch context and forwards them without reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered_ordering_stage_from_context(
   dispatch_context : OrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (edge_port_data, reorder_setup, class2_data) =
-    unpack_ordering_dispatch_setup(dispatch_context.dispatch_setup)
+  let dispatch_setup = dispatch_context.dispatch_setup
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let class2_data = reorder_setup.class2_data
   let clustered_dispatch_context =
     build_clustered_ordering_stage_dispatch_context(
       dispatch_context.graph,
@@ -208,8 +196,10 @@ fn run_clustered_ordering_stage_from_context(
 fn run_noncluster_ordering_stage_from_context(
   dispatch_context : OrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (edge_port_data, reorder_setup, class2_data) =
-    unpack_ordering_dispatch_setup(dispatch_context.dispatch_setup)
+  let dispatch_setup = dispatch_context.dispatch_setup
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let class2_data = reorder_setup.class2_data
   let noncluster_dispatch_context =
     build_noncluster_ordering_stage_dispatch_context(
       dispatch_context.nodes,
@@ -313,4 +303,3 @@ fn run_ordering_stage_dispatch(
     run_noncluster_ordering_stage_from_context(dispatch_context)
   }
 }
-
