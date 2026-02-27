@@ -302,7 +302,7 @@ fn run_simplex_case(input : SimplexInput, output : SimplexOutput) -> Unit raise 
       if !@network_simplex.network_simplex_pre_balance(graph, 0x7fffffff) {
         fail("case \{input.case_id} network_simplex_pre_balance failed")
       }
-      let _ = normalize_ranks_for_test(graph)
+      let _ = @network_simplex.normalize_ranks_for_test(graph)
     }
     2 => network_simplex(graph, 0x7fffffff, BalanceMode::LR)
     _ => network_simplex(graph, 0x7fffffff, BalanceMode::TB)

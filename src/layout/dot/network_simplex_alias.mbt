@@ -46,8 +46,3 @@ fn set_node_rank(graph : NsGraph, idx : Int, rank : Int) -> Unit {
 fn network_simplex(graph : NsGraph, max_iter : Int, balance : BalanceMode) -> Unit {
   @network_simplex.network_simplex(graph, max_iter, balance)
 }
-
-///|
-fn normalize_ranks_for_test(graph : NsGraph) -> Int {
-  @network_simplex.normalize_ranks_for_test(graph)
-}
