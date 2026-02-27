@@ -3,6 +3,70 @@
 /// logic together so clustered ranking behavior is easier to follow.
 
 ///|
+fn rank_assignment_is_cluster_graph(graph : @cgraph.Graph) -> Bool {
+  match graph.name() {
+    Some(name) => name.has_prefix("cluster")
+    None => false
+  }
+}
+
+///|
+fn collect_cluster_graphs_for_rank_assignment(
+  graph : @cgraph.Graph,
+  parent : String?,
+  clusters : Map[String, @cgraph.Graph],
+  parents : Map[String, String?],
+) -> Unit {
+  let mut next_parent = parent
+  if rank_assignment_is_cluster_graph(graph) {
+    match graph.name() {
+      Some(name) => {
+        clusters[name] = graph
+        parents[name] = parent
+        next_parent = Some(name)
+      }
+      None => ()
+    }
+  }
+  for child in graph.subgraphs() {
+    collect_cluster_graphs_for_rank_assignment(
+      child,
+      next_parent,
+      clusters,
+      parents,
+    )
+  }
+}
+
+///|
+fn collect_graph_nodes_for_rank_assignment(
+  graph : @cgraph.Graph,
+  nodes_out : Map[String, Bool],
+) -> Unit {
+  for node in graph.nodes() {
+    nodes_out[node.name()] = true
+  }
+  for child in graph.subgraphs() {
+    collect_graph_nodes_for_rank_assignment(child, nodes_out)
+  }
+}
+
+///|
+fn collect_cluster_members_for_rank_assignment(
+  cluster_graphs : Map[String, @cgraph.Graph],
+) -> Map[String, Map[String, Bool]] {
+  let members : Map[String, Map[String, Bool]] = Map::new()
+  for name, cluster_graph in cluster_graphs {
+    let set : Map[String, Bool] = Map::new()
+    collect_graph_nodes_for_rank_assignment(cluster_graph, set)
+    if set.length() > 0 {
+      members[name] = set
+    }
+  }
+  members
+}
+
+///|
 /// Graphviz parity: clustered ranking discovers top-level clusters from the
 /// collected cluster tree before any fallback/non-cluster branch selection.
 /// Do not change behavior without updating fixtures/tests.
@@ -11,9 +75,14 @@ fn collect_top_clusters_for_rank_assignment(
 ) -> (Map[String, @cgraph.Graph], Array[String]) {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
-  collect_cluster_graphs(source, None, cluster_graphs, cluster_parents)
+  collect_cluster_graphs_for_rank_assignment(
+    source,
+    None,
+    cluster_graphs,
+    cluster_parents,
+  )
   let root_cluster_name =
-    if is_cluster_graph(source) {
+    if rank_assignment_is_cluster_graph(source) {
     match source.name() {
       Some(value) => value
       None => ""
@@ -409,7 +478,8 @@ fn compute_ranks_directed_with_clusters(
       base_reversed,
     )
   }
-  let cluster_members = collect_cluster_members(cluster_graphs)
+  let cluster_members =
+    collect_cluster_members_for_rank_assignment(cluster_graphs)
   let node_cluster = build_node_cluster_index_for_rank_assignment(
     top_clusters,
     cluster_members,

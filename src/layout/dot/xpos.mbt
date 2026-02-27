@@ -506,21 +506,6 @@ fn collect_graph_nodes_for_cluster_members(
   }
 }
 
-///|
-fn collect_cluster_members(
-  cluster_graphs : Map[String, @cgraph.Graph],
-) -> Map[String, Map[String, Bool]] {
-  let members : Map[String, Map[String, Bool]] = Map::new()
-  for name, cluster_graph in cluster_graphs {
-    let set : Map[String, Bool] = Map::new()
-    collect_graph_nodes(cluster_graph, set)
-    if set.length() > 0 {
-      members[name] = set
-    }
-  }
-  members
-}
-
 fn collect_cluster_members_for_xpos(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
