@@ -1,37 +1,53 @@
-# DOT Layout Algorithm (Implementation Notes)
+# DOT Layout Algorithm (Beginner-Friendly + Implementation Notes)
 
-This document explains how the `src/layout/dot` package computes a DOT layout, with an emphasis on:
+This document explains how the `src/layout/dot` package lays out a graph in DOT style.
 
-- pipeline stages,
-- major data structures,
-- clustering and virtual-node handling,
-- ordering/crossing-reduction flow,
-- position and routing flow,
-- Graphviz parity constraints.
+It is written for readers who may **not** be familiar with graph layout algorithms.
 
-The implementation targets strict behavior parity with Graphviz (`dot`), validated by byte-level fixtures.
+Goals of this document:
 
-## 1) Entry Point and Stage Boundary
+- explain **what each stage does**,
+- explain **why that stage exists**,
+- connect high-level ideas to actual implementation files,
+- highlight Graphviz parity constraints used by this repository.
 
-Primary public API:
+The implementation targets strict output parity with Graphviz `dot` and is validated with byte-level fixtures.
+
+---
+
+## 0) Quick Mental Model
+
+Think of DOT layout like planning a multi-floor transit map:
+
+1. decide which floor each station belongs to (**ranking**),
+2. choose left-to-right order on each floor (**ordering / crossing reduction**),
+3. assign concrete coordinates (**positioning**),
+4. draw routes with good geometry (**routing**),
+5. write all results back to graph attributes (**finalization**).
+
+DOT is not one single formula. It is a staged pipeline where each stage solves one subproblem and passes structured data to the next stage.
+
+---
+
+## 1) Basic Terms (for newcomers)
+
+- **Node**: a graph vertex.
+- **Edge**: a connection from tail node to head node.
+- **Rank**: a layer/level (e.g., top-to-bottom row in TB mode).
+- **Cluster**: a grouped subgraph (often rendered as a box around members).
+- **VNode (virtual node)**: an internal synthetic node added by the algorithm to make long edges and constraints manageable.
+- **Mincross**: crossing-reduction phase that tries to reduce edge crossings by reordering nodes.
+- **Class2/XPos**: Graphviz family of x-coordinate constraint logic.
+
+---
+
+## 2) Public Entry and Pipeline Boundary
+
+Primary entry point:
 
 - `layout_dot` in `src/layout/dot/layout.mbt`
 
-The high-level stage sequence is:
-
-1. validate graph + reset caches
-2. prepare layout inputs
-3. rank/order stage
-4. position stage
-5. routing stage
-6. postprocess/finalize output graph
-
-The stage orchestration is implemented in:
-
-- `src/layout/dot/layout.mbt`
-- `src/layout/dot/layout_dot_pipeline.mbt`
-
-A simplified flow:
+High-level call flow:
 
 ```text
 layout_dot
@@ -44,237 +60,362 @@ layout_dot
   -> compute_dot_position_stage
        -> compute_positions
   -> compute_dot_routing_stage
-       -> build spatial data + routing context
+       -> build spatial/routing context
        -> route_edges
   -> finalize_layout_graph
 ```
 
-## 2) Core Intermediate Objects
+Pipeline orchestrator files:
 
-The pipeline is driven by typed intermediate states (see `src/layout/dot/layout_pipeline_helpers.mbt`):
+- `src/layout/dot/layout.mbt`
+- `src/layout/dot/layout_dot_pipeline.mbt`
 
-- `LayoutPrep`: canonicalized options, node/edge arrays, size maps, and port-order metadata.
-- `RankData`: oriented edge arrays, node ranks, rank groups, rank keys.
-- `RankHeights`: per-rank half-heights and spacing in points.
-- `ClusterMetadata`: cluster membership/order/range and ordering constraints metadata.
-- `OrderingResult`: final rank ordering (with and without vnodes), order graph artifacts, vnode info.
-- `PositionResult`: x/y coordinates for real nodes and vnodes, plus cluster boundary x/rank y maps.
+Why this design:
 
-These objects are intentionally explicit to keep stage boundaries deterministic and testable.
+- easier debugging (stage-by-stage trace),
+- deterministic behavior (typed stage payloads),
+- parity-safe refactoring (small, testable stage boundaries).
 
-## 3) Input Preparation Stage
+---
 
-Key implementation files:
+## 3) Core Stage Data Objects
+
+Defined in `src/layout/dot/layout_pipeline_helpers.mbt`.
+
+- `LayoutPrep`
+  - normalized options/attrs, node/edge arrays, size/port metadata.
+- `RankData`
+  - oriented edges, rank map, groups, rank keys/span.
+- `RankHeights`
+  - per-rank top/bottom half-heights + spacing constants.
+- `ClusterMetadata`
+  - cluster membership/order/parent/range and related ordering metadata.
+- `OrderingResult`
+  - final rank ordering (real + vnode variants), order graph artifacts, vnode info.
+- `PositionResult`
+  - x/y maps for nodes/vnodes + cluster boundary maps.
+
+Why these objects matter:
+
+- each stage consumes an explicit contract,
+- reduces hidden coupling,
+- makes parity diffs easier to localize.
+
+---
+
+## 4) Stage A — Input Preparation
+
+Main files:
 
 - `src/layout/dot/layout_pipeline_input_helpers.mbt`
 - `src/layout/dot/layout_pipeline_helpers.mbt` (shared structs/utilities)
 
-What happens:
+### What it does
 
-1. **Option/attribute resolution**
-   - `rankdir`, `nodesep`, `ranksep`, `splines` are resolved from options first, then graph attrs.
-   - negative spacing is rejected; Graphviz-compatible minimum clamps are applied.
+1. Resolve options and graph attributes (`rankdir`, `nodesep`, `ranksep`, `splines`).
+2. Validate and clamp spacing values (Graphviz-compatible minima).
+3. Collect ordered node/edge arrays.
+4. Detect important flags (port edges, dotted edges, edge labels).
+5. Compute node sizes and record-port ordering metadata.
+6. Build initial deterministic node-order seed.
 
-2. **Graph scan and flags**
-   - collect ordered nodes and edges
-   - detect dotted edges, port edges, edge-label presence
+### Why this stage exists
 
-3. **Node ordering seed**
-   - build deterministic initial order map from graph/node iteration order, with `rankdir`-specific behavior.
+Later stages assume a clean canonical view of the graph. If option parsing or size derivation happened in many places, behavior would drift and parity would break.
 
-4. **Size preparation**
-   - compute node sizes used by ordering vs rendering
-   - derive record orientation and record-port order metadata
+### Principle
 
-5. **Port-order contribution metadata**
-   - collect per-node port-order contributions from edges for ordering tie-break behavior.
+**Canonicalize early, reuse everywhere.**
 
-Output is a `LayoutPrep` object that is passed to downstream stages without lossy conversion.
+---
 
-## 4) Rank Stage
+## 5) Stage B — Rank Stage
 
-Rank stage orchestrator:
+Orchestrator:
 
 - `compute_dot_rank_stage` in `src/layout/dot/layout_dot_pipeline.mbt`
 
-### 4.1 Rank Assignment and Edge Orientation
+This stage decides vertical layering and ordering inputs.
 
-Key files:
+### B1) Rank assignment + acyclic orientation
+
+Main files:
 
 - `src/layout/dot/layout_pipeline_rank_helpers.mbt`
 - `src/layout/dot/rank_assignment.mbt`
 - `src/layout/dot/network_simplex/*`
 - `src/layout/dot/acyclic_helpers.mbt`
 
-Core behavior:
+What happens:
 
-- run acyclic orientation preprocessing
-- compute directed ranks (network-simplex style flow)
-- build per-rank groups and full rank span
-- carry self-edge label metadata for height expansion
+- preprocess orientation so ranking can run on a directed structure,
+- compute rank index for each node,
+- build rank groups and complete rank span,
+- keep metadata for self-edge labels.
 
-### 4.2 Rank Heights
+Why:
 
-- start from node/self-edge half-heights
-- apply edge-label midpoint height requirements
-- apply vnode half-height expansion
-- convert to `rank_ht1` / `rank_ht2` plus `nodesep_pt` and `ranksep_pt`
+You need a layered skeleton first. Without rank assignment, later crossing-reduction and x-coordinate solving are ill-defined.
 
-This keeps y-spacing compatible with Graphviz rank/position semantics.
+### B2) Rank heights and y-spacing budgets
 
-### 4.3 Cluster Metadata
+What happens:
 
-Key behavior:
+- initialize per-rank height from node sizes,
+- inflate for edge labels and vnode requirements,
+- compute final `rank_ht1`, `rank_ht2`, `nodesep_pt`, `ranksep_pt`.
 
-- derive cluster membership (`cluster_keys`) and cluster order/parents
-- compute cluster rank min/max bounds
-- build cluster skeleton metadata
-- derive `rank=same` related maps and flat constraints
+Why:
 
-This metadata is consumed heavily by ordering, x constraints, and routing.
+Ranks are not just integer layers; each layer needs physical height budget so labels and nodes do not overlap.
 
-## 5) Ordering + VNode Expansion Stage
+### B3) Cluster metadata
+
+What happens:
+
+- compute cluster membership (`cluster_keys`),
+- build cluster order and parent relation,
+- compute cluster rank ranges (`min/max rank`),
+- build cluster skeleton metadata,
+- collect rank=same and flat-constraint metadata.
+
+Why:
+
+Clusters alter ordering and positioning constraints globally. This metadata is required by ordering, x constraints, and routing.
+
+---
+
+## 6) Stage C — Ordering + VNode Expansion
 
 Entry:
 
 - `compute_ordering_and_vnodes` in `src/layout/dot/layout_pipeline_helpers.mbt`
 
-Supporting files (after refactoring):
+Supporting files:
 
 - `src/layout/dot/layout_pipeline_order_edge_helpers.mbt`
 - `src/layout/dot/layout_pipeline_order_graph_helpers.mbt`
 - `src/layout/dot/layout_pipeline_cluster_reorder_helpers.mbt`
 - `src/layout/dot/layout_pipeline_root_cluster_reorder_helpers.mbt`
-- `src/layout/dot/layout_pipeline_helpers.mbt` (dispatch/orchestration + remincross path)
+- `src/layout/dot/layout_pipeline_helpers.mbt`
 - `src/layout/dot/ordering_helpers.mbt`
 - `src/layout/dot/mincross.mbt`
 
-### 5.1 Order-edge Materialization
+This is the most complex stage.
 
-The engine converts original edges into ordering edges with penalties and port metadata:
+### C1) Build ordering edges
 
-- endpoint normalization (including virtual-direction remaps)
-- edge-chain expansion over edge vnodes
-- per-tail bucketization and merge/coalescing rules
-- deterministic creation-order replay
+What happens:
 
-### 5.2 Root Mincross Pass
+- normalize edge endpoints (including virtual-direction mapping),
+- expand edge chains through vnodes,
+- attach penalty/port-order metadata,
+- group by tail and coalesce mergeable entries,
+- replay deterministic creation order.
 
-A Graphviz-like mincross pass is run over rank groups to reduce crossings, preserving deterministic tie-break rules.
+Why:
 
-### 5.3 Cluster-local Reorder
+Crossing-reduction works on an internal “ordering graph”, not directly on original edges.
 
-For clustered graphs, each cluster may run local reorder/build-ranks logic with cluster-local edge bundles and graphviz-neighbor maps.
+### C2) Root mincross pass
 
-### 5.4 Root-cluster Reorder
+What happens:
 
-A root-level cluster reorder pass computes cluster rank order and reprojects ordering for clustered cases.
+- run median/transpose-style crossing reduction on rank groups.
 
-### 5.5 ReMincross Pass
+Why:
 
-A second pass (remincross path) rematerializes ordering graphs with cluster/vnode-aware constraints and reruns crossing reduction on the rematerialized structure.
+Edge crossings strongly affect readability; this pass is the primary crossing minimization pass.
 
-### 5.6 Final Ordering Output
+### C3) Cluster-local reorder
 
-The stage emits:
+What happens:
 
-- `ordered_groups` (real nodes)
-- `ordered_groups_with_vnodes`
-- vnode maps (rank, cluster, edge-vnode chains)
-- order graph edge arrays and order index maps
+- for clustered graphs, run local ordering logic in cluster scopes,
+- preserve local neighbor/order semantics.
 
-Notes:
+Why:
 
-- `rank=same` ordering constraints are intentionally restricted (`build_rank_same_constraints` currently returns empty constraints), matching current parity behavior.
-- cluster skeleton nodes are used internally in ordering/x-stage and later removed from final visible groups.
+A global reorder alone can violate cluster-local visual quality.
 
-## 6) Position Stage
+### C4) Root-cluster reorder
+
+What happens:
+
+- compute cluster rank order at root level,
+- project cluster order back into node ordering.
+
+Why:
+
+Needed to keep global cluster arrangement stable and Graphviz-compatible.
+
+### C5) ReMincross pass
+
+What happens:
+
+- rematerialize an ordering graph with cluster/vnode-aware constraints,
+- run another crossing-reduction pass.
+
+Why:
+
+The first pass may not capture all clustered/vnode interactions. ReMincross refines ordering under richer constraints.
+
+### C6) Stage output
+
+Produces `OrderingResult` containing:
+
+- `ordered_groups` (real nodes),
+- `ordered_groups_with_vnodes`,
+- vnode maps (ranks/clusters/chains),
+- materialized order-edge arrays and order indices.
+
+Important current behavior:
+
+- `build_rank_same_constraints` currently yields empty constraints by design, matching current parity baseline.
+- cluster skeleton nodes are internal helpers and are removed from final visible groups.
+
+---
+
+## 7) Stage D — Position Stage (X then Y)
 
 Entry:
 
 - `compute_positions` in `src/layout/dot/layout_pipeline_helpers.mbt`
 
-Core logic:
+### D1) Mode gating
 
-1. **mode gates**
-   - decide whether vnode-aware x positioning is used
-   - decide whether xpos reorder path is allowed
+Decides whether to use:
 
-2. **x-stage seed construction**
-   - build x-groups (real + optional vnodes)
-   - build x cluster key overlays
-   - compute edge port-x/order arrays for constraint solving
+- vnode-aware xpos path,
+- optional xpos reorder path.
 
-3. **optional xpos reorder + transpose cleanup**
-   - reorder by medians/transpose when enabled
-   - cleanup to avoid unstable artifacts
+Why:
 
-4. **constraint graph and x solve**
-   - use class2/xpos-style constraints
-   - include cluster boundary constraints and optional flat-label augmentation
+Different graphs require different internal paths for parity and stability.
 
-5. **y projection**
-   - compute `rank_y` from rank heights
-   - map node/vnode positions from rank/x results
-   - derive cluster left/right boundary x maps and bbox heights
+### D2) X-stage seed construction
 
-Important details:
+Builds:
 
-- cluster boundary nodes (`ln`/`rn`) are translated back into cluster x-bound maps.
-- vnode output positions use either direct rank/x projection or endpoint interpolation fallback.
+- x groups (with/without vnodes),
+- x cluster ownership map,
+- edge port-x and port-order arrays.
 
-## 7) Routing Stage
+Why:
+
+X solving is constraint-driven. It needs clean, explicit constraint inputs.
+
+### D3) Optional x reorder + transpose cleanup
+
+What happens:
+
+- apply reorder heuristics (when enabled),
+- apply cleanup to remove unstable artifacts.
+
+Why:
+
+Improves crossing/spacing while keeping deterministic behavior.
+
+### D4) X constraint solving
+
+What happens:
+
+- solve x positions with class2/xpos-style constraints,
+- include cluster boundary and optional flat-label augmentation constraints.
+
+Why:
+
+Transforms relative ordering rules into concrete x coordinates.
+
+### D5) Y projection and output maps
+
+What happens:
+
+- map ranks to y coordinates via rank heights,
+- produce real/vnode positions,
+- derive cluster left/right boundary x maps and cluster bbox height metadata.
+
+Why:
+
+Final geometry needs both coordinates and cluster envelope data for routing/finalization.
+
+---
+
+## 8) Stage E — Routing Stage
 
 Entry:
 
 - `compute_dot_routing_stage` in `src/layout/dot/layout_dot_pipeline.mbt`
 
-Key files:
+Main files:
 
 - `src/layout/dot/layout_routing_helpers.mbt`
 - `src/layout/dot/routesplines/*`
 - `src/layout/dot/pathplan/*`
 - `src/layout/dot/edge_spline/*`
 
-Flow:
+### What it does
 
 1. Build final node geometry and port maps from positioned nodes.
-2. Compute cluster bboxes for routing constraints.
-3. Apply `ratio/fill` scaling if required (with round-trip normalization rules).
-4. Build routing context using:
-   - rank maps,
-   - final order groups/x-groups,
-   - vnode positions,
-   - cluster bboxes,
-   - label port maps.
-5. Route edges according to `splines` mode.
-6. Emit routed splines and label positions.
+2. Compute cluster bounding boxes for obstacle/context routing.
+3. Apply optional `ratio/fill` scaling workflow.
+4. Build routing context (groups, ranks, vnode positions, bboxes, ports).
+5. Route each edge according to splines mode.
+6. Emit spline control points and label positions.
 
-Routing is designed to preserve Graphviz-compatible edge clipping/port behavior and ordering-sensitive path selection.
+### Why routing is separate from positioning
 
-## 8) Postprocess and Graph Attribute Writeback
+Positioning tells “where nodes are.” Routing solves “how edges travel between them” while honoring ports, labels, clusters, and shape clipping.
 
-Finalization file:
+---
+
+## 9) Stage F — Finalization / Attribute Writeback
+
+Main file:
 
 - `src/layout/dot/layout_postprocess_helpers.mbt`
 
-Writeback responsibilities:
+What is written:
 
-- graph/subgraph bbox (`bb`) and label metrics attrs
-- node attrs (`pos`, `width`, `height`, record `rects`, label/xlabel positions)
-- edge `pos` spline encoding and label positions (`lp`, `head_lp`, `tail_lp`, `xlp`)
+- graph/subgraph `bb`, label metrics,
+- node `pos`, `width`, `height`, record `rects`, label/xlabel positions,
+- edge `pos` (spline encoding) + label positions (`lp`, `head_lp`, `tail_lp`, `xlp`).
 
-Special handling includes arrowhead/arrowtail `none` behavior and shape-specific parity nuances.
+Why:
 
-## 9) Determinism and Parity Controls
+DOT layout API returns geometry, but users/renderers consume attributes on graph/node/edge objects.
 
-Determinism/parity principles:
+---
 
-- preserve Graphviz creation order semantics (node/edge AGSEQ-style ordering)
-- keep stage argument wiring stable and explicit
-- avoid implicit map iteration assumptions for externally visible order
+## 10) Special Topics (Beginners Usually Ask)
 
-Useful env toggles for diagnostics (implementation-level):
+### 10.1 Why virtual nodes?
+
+Long edges that cross many ranks are hard to optimize directly. Splitting them into rank-by-rank segments via vnodes makes ordering and crossing logic tractable.
+
+### 10.2 Why multiple crossing-reduction passes?
+
+Cluster constraints and vnode expansions can change crossing behavior after initial ordering. A later pass (ReMincross) refines ordering under the full constraint set.
+
+### 10.3 Why so many maps and arrays?
+
+Graphviz-compatible behavior is highly order-sensitive. Explicit maps/arrays preserve exact edge/node iteration semantics required for strict parity.
+
+### 10.4 Why are there many helper files?
+
+The algorithm is complex. Splitting by responsibility (input, rank, order-edge, order-graph, cluster-local reorder, root-cluster reorder, routing) improves maintainability while keeping behavior unchanged.
+
+---
+
+## 11) Determinism, Debugging, and Parity
+
+Determinism rules:
+
+- preserve creation-order semantics,
+- keep stage argument wiring explicit,
+- avoid hidden order dependence from unordered traversals.
+
+Useful debug env flags:
 
 - `DOT_TRACE`
 - `DOT_TRACE_GROUPS`
@@ -285,40 +426,52 @@ Useful env toggles for diagnostics (implementation-level):
 - `DOT_CAPTURE_ORDERING_INPUTS`
 - `DOT_CAPTURE_ORDERING_FIXTURE_MODE`
 
-The repository guard validates strict parity and env invariance for ordering-capture mode.
+Repository guard validates:
 
-## 10) Source Map by Responsibility
+- strict output parity (`dot` / `xdot` / `svg`),
+- invariance when ordering-input capture mode is enabled.
 
-- Entry + stage orchestrator:
+---
+
+## 12) Source Map by Responsibility
+
+- Entry + stage orchestration:
   - `layout.mbt`, `layout_dot_pipeline.mbt`
 - Input canonicalization:
   - `layout_pipeline_input_helpers.mbt`
-- Rank assignment/heights:
+- Rank assignment and rank heights:
   - `layout_pipeline_rank_helpers.mbt`, `rank_assignment.mbt`, `network_simplex/*`
-- Cluster metadata + main ordering dispatch:
+- Ordering dispatch + shared stage logic:
   - `layout_pipeline_helpers.mbt`
-- Ordering edge/order-graph helpers:
-  - `layout_pipeline_order_edge_helpers.mbt`, `layout_pipeline_order_graph_helpers.mbt`
-- Cluster-local reorder + root-cluster reorder:
-  - `layout_pipeline_cluster_reorder_helpers.mbt`, `layout_pipeline_root_cluster_reorder_helpers.mbt`
-- X-position internals:
+- Ordering edge materialization:
+  - `layout_pipeline_order_edge_helpers.mbt`
+- Ordering graph construction helpers:
+  - `layout_pipeline_order_graph_helpers.mbt`
+- Cluster-local reorder:
+  - `layout_pipeline_cluster_reorder_helpers.mbt`
+- Root-cluster reorder and cluster-rank-order logic:
+  - `layout_pipeline_root_cluster_reorder_helpers.mbt`
+- X-position internals and crossing helpers:
   - `xpos.mbt`, `ordering_helpers.mbt`, `mincross.mbt`
 - Routing:
   - `layout_routing_helpers.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
-- Final output mapping:
+- Final graph writeback:
   - `layout_postprocess_helpers.mbt`
 
-## 11) Practical Reading Order for New Contributors
+---
 
-Recommended reading sequence:
+## 13) Recommended Reading Order (New Contributors)
 
-1. `layout.mbt` (`layout_dot`)
-2. `layout_dot_pipeline.mbt` (stage boundaries)
-3. `layout_pipeline_input_helpers.mbt`
-4. `layout_pipeline_rank_helpers.mbt`
-5. ordering helpers (`layout_pipeline_order_*`, `layout_pipeline_cluster_*`, `layout_pipeline_root_cluster_*`)
-6. `layout_pipeline_helpers.mbt` (ordering dispatch + position stage)
-7. `layout_routing_helpers.mbt`
-8. `layout_postprocess_helpers.mbt`
+If you are new to layout algorithms, read in this order:
 
-This sequence follows data flow and makes parity-sensitive behavior easier to reason about.
+1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
+2. `layout_dot_pipeline.mbt` — understand stage boundaries.
+3. `layout_pipeline_input_helpers.mbt` — understand canonical input formation.
+4. `layout_pipeline_rank_helpers.mbt` — understand rank and spacing foundations.
+5. `layout_pipeline_order_edge_helpers.mbt` + `layout_pipeline_order_graph_helpers.mbt` — understand order graph construction.
+6. `layout_pipeline_cluster_reorder_helpers.mbt` + `layout_pipeline_root_cluster_reorder_helpers.mbt` — understand clustered reorder/refinement.
+7. `layout_pipeline_helpers.mbt` — understand orchestration glue, ReMincross path, and position stage internals.
+8. `layout_routing_helpers.mbt` — understand edge geometry generation.
+9. `layout_postprocess_helpers.mbt` — understand output attribute mapping.
+
+This order follows data flow and keeps the learning curve manageable.
