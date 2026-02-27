@@ -903,10 +903,10 @@ fn record_port_path_box(
     }
   }
   let corners : Array[@geom.Point] = [
-    point(path_rect_local.llx, path_rect_local.lly),
-    point(path_rect_local.llx, path_rect_local.ury),
-    point(path_rect_local.urx, path_rect_local.lly),
-    point(path_rect_local.urx, path_rect_local.ury),
+    @edge_spline.point(path_rect_local.llx, path_rect_local.lly),
+    @edge_spline.point(path_rect_local.llx, path_rect_local.ury),
+    @edge_spline.point(path_rect_local.urx, path_rect_local.lly),
+    @edge_spline.point(path_rect_local.urx, path_rect_local.ury),
   ]
   let mut minx = 1.0e308
   let mut miny = 1.0e308
@@ -914,7 +914,7 @@ fn record_port_path_box(
   let mut maxy = -1.0e308
   for corner in corners {
     let offset = layout_port_offset(corner, rankdir)
-    let abs = point(pos.x + offset.x, pos.y + offset.y)
+    let abs = @edge_spline.point(pos.x + offset.x, pos.y + offset.y)
     if abs.x < minx { minx = abs.x }
     if abs.x > maxx { maxx = abs.x }
     if abs.y < miny { miny = abs.y }
@@ -1220,9 +1220,9 @@ const PORT_SIDE_ALL : Int =
 fn cvt_pt(p : @geom.Point, rankdir : RankDir) -> @geom.Point {
   match rankdir {
     RankDir::TB => p
-    RankDir::BT => point(p.x, -p.y)
-    RankDir::LR => point(-p.y, p.x)
-    RankDir::RL => point(p.y, p.x)
+    RankDir::BT => @edge_spline.point(p.x, -p.y)
+    RankDir::LR => @edge_spline.point(-p.y, p.x)
+    RankDir::RL => @edge_spline.point(p.y, p.x)
   }
 }
 
@@ -1311,13 +1311,13 @@ fn resolve_dynamic_port_anchor(
   let opt = cvt_pt(other_pos, rankdir)
   let mut best_side = 0
   let mut best_dist = 0.0
-  let mut best_point = point(0.0, 0.0)
+  let mut best_point = @edge_spline.point(0.0, 0.0)
   let mut seen = false
   let consider = (side : Int, pos : @geom.Point) => {
     if (sides & side) == 0 {
       return ()
     }
-    let cand = point_add(pt, pos)
+    let cand = @edge_spline.point_add(pt, pos)
     let dist = @edge_spline.point_dist2(cand, opt)
     if !seen || dist < best_dist {
       best_dist = dist
@@ -1326,15 +1326,15 @@ fn resolve_dynamic_port_anchor(
       seen = true
     }
   }
-  consider(PORT_SIDE_BOTTOM, point(mid_x, port_rect.lly))
-  consider(PORT_SIDE_RIGHT, point(port_rect.urx, mid_y))
-  consider(PORT_SIDE_TOP, point(mid_x, port_rect.ury))
-  consider(PORT_SIDE_LEFT, point(port_rect.llx, mid_y))
+  consider(PORT_SIDE_BOTTOM, @edge_spline.point(mid_x, port_rect.lly))
+  consider(PORT_SIDE_RIGHT, @edge_spline.point(port_rect.urx, mid_y))
+  consider(PORT_SIDE_TOP, @edge_spline.point(mid_x, port_rect.ury))
+  consider(PORT_SIDE_LEFT, @edge_spline.point(port_rect.llx, mid_y))
   if !seen {
     return (None, 0)
   }
   let offset = layout_port_offset(best_point, rankdir)
-  let anchor = point_add(node_pos, offset)
+  let anchor = @edge_spline.point_add(node_pos, offset)
   (Some(anchor), invflip_side(best_side, rankdir))
 }
 
@@ -1789,7 +1789,7 @@ fn polygon_vertices_for_size(
   let mut angle = (sector - @math.PI) / 2.0
   let mut sinx = @math.sin(angle)
   let mut cosx = @math.cos(angle)
-  let mut r = point(0.5 * cosx, 0.5 * sinx)
+  let mut r = @edge_spline.point(0.5 * cosx, 0.5 * sinx)
   let mut max_x = 0.0
   let mut max_y = 0.0
   angle = angle + (@math.PI - sector) / 2.0
@@ -1798,7 +1798,7 @@ fn polygon_vertices_for_size(
     angle = angle + sector
     sinx = @math.sin(angle)
     cosx = @math.cos(angle)
-    r = point(r.x + side_len * cosx, r.y + side_len * sinx)
+    r = @edge_spline.point(r.x + side_len * cosx, r.y + side_len * sinx)
     let mut px = r.x * (skew_dist + r.y * g_distortion) + r.y * g_skew
     let mut py = r.y
     let alpha = orientation_deg * @math.PI / 180.0 + @math.atan2(py, px)
@@ -1815,7 +1815,7 @@ fn polygon_vertices_for_size(
     if Double::abs(py) > max_y {
       max_y = Double::abs(py)
     }
-    base.push(point(px, py))
+    base.push(@edge_spline.point(px, py))
   }
   if max_x <= 0.0 || max_y <= 0.0 {
     return (width_pt, height_pt, [])
@@ -1828,7 +1828,7 @@ fn polygon_vertices_for_size(
   let scale_y = if ymax > 0.0 { bbox_height / ymax } else { 1.0 }
   let out : Array[@geom.Point] = []
   for vertex in base {
-    out.push(point(vertex.x * scale_x, vertex.y * scale_y))
+    out.push(@edge_spline.point(vertex.x * scale_x, vertex.y * scale_y))
   }
   (bbox_width, bbox_height, out)
 }
@@ -1883,7 +1883,7 @@ fn polygon_outline_vertices_for_size(
     }
     prev_vertex = q
     out.push(
-      point(
+      @edge_spline.point(
         q.x + offset_x * outline_pad_pt / PERIPHERY_GAP_PT,
         q.y + offset_y * outline_pad_pt / PERIPHERY_GAP_PT,
       ),

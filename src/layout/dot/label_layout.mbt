@@ -251,12 +251,12 @@ fn bezier_point(
   p3 : @geom.Point,
   t : Double,
 ) -> @geom.Point {
-  let p01 = point_lerp(p0, p1, t)
-  let p12 = point_lerp(p1, p2, t)
-  let p23 = point_lerp(p2, p3, t)
-  let p012 = point_lerp(p01, p12, t)
-  let p123 = point_lerp(p12, p23, t)
-  point_lerp(p012, p123, t)
+  let p01 = @edge_spline.point_lerp(p0, p1, t)
+  let p12 = @edge_spline.point_lerp(p1, p2, t)
+  let p23 = @edge_spline.point_lerp(p2, p3, t)
+  let p012 = @edge_spline.point_lerp(p01, p12, t)
+  let p123 = @edge_spline.point_lerp(p12, p23, t)
+  @edge_spline.point_lerp(p012, p123, t)
 }
 
 ///|
@@ -269,9 +269,9 @@ fn point_lerp_graphviz(
   t : Double,
 ) -> @geom.Point {
   let mt = 1.0 - t
-  let x = libm_fma(mt, a.x, t * b.x)
-  let y = libm_fma(mt, a.y, t * b.y)
-  point(x, y)
+  let x = @edge_spline.libm_fma(mt, a.x, t * b.x)
+  let y = @edge_spline.libm_fma(mt, a.y, t * b.y)
+  @edge_spline.point(x, y)
 }
 
 ///|
@@ -291,7 +291,7 @@ fn bezier_point_graphviz(
     let line : Array[@geom.Point] = []
     let mut col = 0
     while col < 4 {
-      line.push(point(0.0, 0.0))
+      line.push(@edge_spline.point(0.0, 0.0))
       col = col + 1
     }
     vtemp.push(line)
@@ -350,20 +350,20 @@ fn polyline_point_with_dir(
     return None
   }
   if points.length() == 1 {
-    return Some((points[0], point(1.0, 0.0)))
+    return Some((points[0], @edge_spline.point(1.0, 0.0)))
   }
   let mut remaining = target_len
-  let mut last_dir = point(1.0, 0.0)
+  let mut last_dir = @edge_spline.point(1.0, 0.0)
   let mut last_pos = points[points.length() - 1]
   for i in 0..<(points.length() - 1) {
     let a = points[i]
     let b = points[i + 1]
-    let seg_len = segment_length(a, b)
+    let seg_len = @edge_spline.segment_length(a, b)
     if seg_len > 0.0 {
-      let delta = point_sub(b, a)
+      let delta = @edge_spline.point_sub(b, a)
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
       if len > 0.0 {
-        last_dir = point_scale(delta, 1.0 / len)
+        last_dir = @edge_spline.point_scale(delta, 1.0 / len)
         last_pos = b
       }
     }
@@ -372,11 +372,11 @@ fn polyline_point_with_dir(
     }
     if remaining <= seg_len {
       let t = remaining / seg_len
-      let pos = point_lerp(a, b, t)
-      let delta = point_sub(b, a)
+      let pos = @edge_spline.point_lerp(a, b, t)
+      let delta = @edge_spline.point_sub(b, a)
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
       let dir =
-        if len <= 0.0 { point(1.0, 0.0) } else { point_scale(delta, 1.0 / len) }
+        if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
       return Some((pos, dir))
     }
     remaining = remaining - seg_len
@@ -394,9 +394,9 @@ fn polyline_point_at_axis(
     return None
   }
   if points.length() == 1 {
-    return Some((points[0], point(1.0, 0.0)))
+    return Some((points[0], @edge_spline.point(1.0, 0.0)))
   }
-  let total_len = polyline_length(points)
+  let total_len = @edge_spline.polyline_length(points)
   let target = if total_len <= 0.0 { 0.0 } else { total_len / 2.0 }
   let epsilon = 0.000001
   let mut traveled = 0.0
@@ -406,7 +406,7 @@ fn polyline_point_at_axis(
   for i in 0..<(points.length() - 1) {
     let a = points[i]
     let b = points[i + 1]
-    let seg_len = segment_length(a, b)
+    let seg_len = @edge_spline.segment_length(a, b)
     let a_axis = if axis_is_x { a.x } else { a.y }
     let b_axis = if axis_is_x { b.x } else { b.y }
     let min_axis = if a_axis < b_axis { a_axis } else { b_axis }
@@ -422,11 +422,11 @@ fn polyline_point_at_axis(
       } else {
         (axis_value - a_axis) / delta_axis
       }
-    let pos = point_lerp(a, b, t)
-    let delta = point_sub(b, a)
+    let pos = @edge_spline.point_lerp(a, b, t)
+    let delta = @edge_spline.point_sub(b, a)
     let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
     let dir =
-      if len <= 0.0 { point(1.0, 0.0) } else { point_scale(delta, 1.0 / len) }
+      if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
     let cross_len = traveled + seg_len * t
     let dist = Double::abs(cross_len - target)
     if best_pos is None || dist < best_dist {
@@ -453,7 +453,7 @@ fn spline_label_pos_with_dir_samples(
   if samples.length() == 0 {
     return None
   }
-  let total_len = polyline_length(samples)
+  let total_len = @edge_spline.polyline_length(samples)
   let target = if total_len <= 0.0 { 0.0 } else { total_len / 2.0 }
   polyline_point_with_dir(samples, target)
 }
@@ -551,7 +551,7 @@ fn edge_label_pos_from_vnode(
     } else {
       label_width_pt
     }
-  point(vnode_pos.x + width / 2.0, vnode_pos.y)
+  @edge_spline.point(vnode_pos.x + width / 2.0, vnode_pos.y)
 }
 
 ///|
@@ -685,7 +685,7 @@ fn flat_edge_label_pos_simple(
   let right_end = head_port.x - head_left_pt
   let ctrx = (left_end + right_end) / 2.0
   let ctry = tail_port.y + (label_height_pt + EDGE_LABEL_FLAT_SPACE_PT) / 2.0
-  point(ctrx, ctry)
+  @edge_spline.point(ctrx, ctry)
 }
 
 ///|
@@ -788,15 +788,15 @@ fn port_label_pos_from_points(
   distance_scale : Double,
 ) -> @geom.Point {
   let angle =
-    libm_fma(
+    @edge_spline.libm_fma(
       angle_deg / 180.0,
       GRAPHVIZ_PI,
-      libm_atan2(pf.y - pe.y, pf.x - pe.x),
+      @edge_spline.libm_atan2(pf.y - pe.y, pf.x - pe.x),
     )
   let dist = PORT_LABEL_DISTANCE_PT * distance_scale
-  point(
-    libm_fma(dist, libm_cos(angle), pe.x),
-    libm_fma(dist, libm_sin(angle), pe.y),
+  @edge_spline.point(
+    @edge_spline.libm_fma(dist, @edge_spline.libm_cos(angle), pe.x),
+    @edge_spline.libm_fma(dist, @edge_spline.libm_sin(angle), pe.y),
   )
 }
 
@@ -858,14 +858,14 @@ fn edge_label_pos(
   let fallback = match spline_label_pos_with_dir_samples(samples) {
     Some((pos, tangent)) => (pos, tangent)
     None => {
-      let mid = point(
+      let mid = @edge_spline.point(
         (tail_clip.x + head_clip.x) / 2.0,
         (tail_clip.y + head_clip.y) / 2.0,
       )
-      let delta = point_sub(head_clip, tail_clip)
+      let delta = @edge_spline.point_sub(head_clip, tail_clip)
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
       let tangent =
-        if len <= 0.0 { point(1.0, 0.0) } else { point_scale(delta, 1.0 / len) }
+        if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
       (mid, tangent)
     }
   }
@@ -885,13 +885,13 @@ fn edge_label_pos(
     match (label_rank_x, label_rank_y) {
       (Some(x_axis), Some(y_axis)) =>
         match rankdir {
-          RankDir::LR | RankDir::RL => point(y_axis, x_axis)
-          _ => point(x_axis, y_axis)
+          RankDir::LR | RankDir::RL => @edge_spline.point(y_axis, x_axis)
+          _ => @edge_spline.point(x_axis, y_axis)
         }
       (Some(value), None) =>
         match rankdir {
-          RankDir::LR | RankDir::RL => point(raw_pos.x, value)
-          _ => point(value, raw_pos.y)
+          RankDir::LR | RankDir::RL => @edge_spline.point(raw_pos.x, value)
+          _ => @edge_spline.point(value, raw_pos.y)
         }
       _ => raw_pos
     }
@@ -920,7 +920,7 @@ fn edge_label_pos(
           } else {
             pad = 0.0
           }
-          Some(point(base_pos.x + sign * (half_extent + pad), base_pos.y))
+          Some(@edge_spline.point(base_pos.x + sign * (half_extent + pad), base_pos.y))
         }
         None => Some(base_pos)
       }
@@ -929,7 +929,7 @@ fn edge_label_pos(
         Some((w, h)) => (w, h)
         None => return Some(base_pos)
       }
-      let normal = point(-dir.y, dir.x)
+      let normal = @edge_spline.point(-dir.y, dir.x)
       let axis_threshold = 0.1
       let abs_dx = Double::abs(dir.x)
       let abs_dy = Double::abs(dir.y)
@@ -950,7 +950,7 @@ fn edge_label_pos(
         Some(base_pos)
       } else {
         let pad = label_pad_boost
-        Some(point_add(base_pos, point_scale(normal, offset + pad)))
+        Some(@edge_spline.point_add(base_pos, @edge_spline.point_scale(normal, offset + pad)))
       }
     }
   }

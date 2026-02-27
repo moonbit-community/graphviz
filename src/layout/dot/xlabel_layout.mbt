@@ -272,7 +272,7 @@ fn xlintersections(
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
     Some(value) => value
-    None => return { n: 0, area: 0.0, pos: point(0.0, 0.0) }
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
   }
   let label = labels[label_idx]
   let mut count = 0
@@ -339,7 +339,7 @@ fn xladjust(
   let obj = objs[obj_idx]
   let label_idx = match obj.label_index {
     Some(value) => value
-    None => return { n: 0, area: 0.0, pos: point(0.0, 0.0) }
+    None => return { n: 0, area: 0.0, pos: @edge_spline.point(0.0, 0.0) }
   }
   let label = labels[label_idx]
   let xincr = (2.0 * label.width + obj.width) / XLXDENOM
@@ -359,13 +359,13 @@ fn xladjust(
     labels[label_idx] = updated
   }
   // x left
-  set_label(point(obj.pos.x - label.width, obj.pos.y + obj.height))
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y + obj.height))
   let mut best = xlintersections(objs, labels, obj_idx, intrsx)
   if best.n == 0 {
     return best
   }
   // mid
-  set_label(point(obj.pos.x - label.width, obj.pos.y))
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y))
   let mut candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -374,7 +374,7 @@ fn xladjust(
     best = candidate
   }
   // bottom
-  set_label(point(obj.pos.x - label.width, obj.pos.y - label.height))
+  set_label(@edge_spline.point(obj.pos.x - label.width, obj.pos.y - label.height))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -384,7 +384,7 @@ fn xladjust(
   }
 
   // x mid
-  set_label(point(obj.pos.x, obj.pos.y + obj.height))
+  set_label(@edge_spline.point(obj.pos.x, obj.pos.y + obj.height))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -393,7 +393,7 @@ fn xladjust(
     best = candidate
   }
   // bottom
-  set_label(point(obj.pos.x, obj.pos.y - label.height))
+  set_label(@edge_spline.point(obj.pos.x, obj.pos.y - label.height))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -403,7 +403,7 @@ fn xladjust(
   }
 
   // x right
-  set_label(point(obj.pos.x + obj.width, obj.pos.y + obj.height))
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y + obj.height))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -412,7 +412,7 @@ fn xladjust(
     best = candidate
   }
   // mid
-  set_label(point(obj.pos.x + obj.width, obj.pos.y))
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -421,7 +421,7 @@ fn xladjust(
     best = candidate
   }
   // bottom
-  set_label(point(obj.pos.x + obj.width, obj.pos.y - label.height))
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y - label.height))
   candidate = xlintersections(objs, labels, obj_idx, intrsx)
   if candidate.n == 0 {
     return candidate
@@ -439,7 +439,7 @@ fn xladjust(
     if intrsx[XLCXNY] is None && intrsx[XLNXNY] is None {
       let mut x = obj.pos.x - label.width
       while x <= obj.pos.x + obj.width {
-        set_label(point(x, obj.pos.y + obj.height))
+        set_label(@edge_spline.point(x, obj.pos.y + obj.height))
         candidate = xlintersections(objs, labels, obj_idx, intrsx)
         if candidate.n == 0 {
           return candidate
@@ -453,7 +453,7 @@ fn xladjust(
     if intrsx[XLPXCY] is None && intrsx[XLPXPY] is None {
       let mut y = obj.pos.y + obj.height
       while y >= obj.pos.y - label.height {
-        set_label(point(obj.pos.x - label.width, y))
+        set_label(@edge_spline.point(obj.pos.x - label.width, y))
         candidate = xlintersections(objs, labels, obj_idx, intrsx)
         if candidate.n == 0 {
           return candidate
@@ -467,7 +467,7 @@ fn xladjust(
   }
 
   // sliding from bottom right
-  set_label(point(obj.pos.x + obj.width, obj.pos.y - label.height))
+  set_label(@edge_spline.point(obj.pos.x + obj.width, obj.pos.y - label.height))
   if intrsx[XLNXPY] is Some(_) ||
     intrsx[XLCXPY] is Some(_) ||
     intrsx[XLPXPY] is Some(_) ||
@@ -476,7 +476,7 @@ fn xladjust(
     if intrsx[XLCXPY] is None && intrsx[XLPXPY] is None {
       let mut x = obj.pos.x + obj.width
       while x >= obj.pos.x - label.width {
-        set_label(point(x, obj.pos.y - label.height))
+        set_label(@edge_spline.point(x, obj.pos.y - label.height))
         candidate = xlintersections(objs, labels, obj_idx, intrsx)
         if candidate.n == 0 {
           return candidate
@@ -490,7 +490,7 @@ fn xladjust(
     if intrsx[XLNXCY] is None && intrsx[XLNXNY] is None {
       let mut y = obj.pos.y - label.height
       while y <= obj.pos.y + obj.height {
-        set_label(point(obj.pos.x + obj.width, y))
+        set_label(@edge_spline.point(obj.pos.x + obj.width, y))
         candidate = xlintersections(objs, labels, obj_idx, intrsx)
         if candidate.n == 0 {
           return candidate
@@ -687,7 +687,7 @@ fn polyline_midpoint(edge_layout : DotLayoutEdge) -> @geom.Point? {
     let points = spline.points
     let mut j = 0
     while j + 3 < points.length() {
-      total = total + segment_length(points[j], points[j + 3])
+      total = total + @edge_spline.segment_length(points[j], points[j + 3])
       j = j + 3
     }
   }
@@ -704,12 +704,12 @@ fn polyline_midpoint(edge_layout : DotLayoutEdge) -> @geom.Point? {
     while j + 3 < points.length() {
       let pf = points[j]
       let qf = points[j + 3]
-      let d = segment_length(pf, qf)
+      let d = @edge_spline.segment_length(pf, qf)
       if d >= dist {
         let t = dist / d
         let x = qf.x * t + pf.x * (1.0 - t)
         let y = qf.y * t + pf.y * (1.0 - t)
-        return Some(point(x, y))
+        return Some(@edge_spline.point(x, y))
       }
       dist = dist - d
       j = j + 3
@@ -733,7 +733,7 @@ fn edge_midpoint_for_layout(
       }
       match splines {
         SplinesMode::Spline | SplinesMode::Curved => {
-          let mid = point((tail.x + head.x) / 2.0, (tail.y + head.y) / 2.0)
+          let mid = @edge_spline.point((tail.x + head.x) / 2.0, (tail.y + head.y) / 2.0)
           match dotneato_closest_point(edge_layout, mid) {
             Some(value) => Some(value)
             None => Some(mid)
@@ -884,7 +884,7 @@ fn collect_cluster_label_objects(
             let llx = pos.x - width / 2.0
             let lly = pos.y - height / 2.0
             objects.push({
-              pos: point(llx, lly),
+              pos: @edge_spline.point(llx, lly),
               width,
               height,
               label_index: None,
@@ -938,7 +938,7 @@ fn apply_xlabels(
         let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
         match node_layout.xlabel_pos {
           Some(pos) => {
-            let pos_ll = point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+            let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
             label_object = Some({
               pos: pos_ll,
               width: label_w,
@@ -952,7 +952,7 @@ fn apply_xlabels(
               target: XLabelTarget::Node(node.name()),
               width: label_w,
               height: label_h,
-              pos: point(0.0, 0.0),
+              pos: @edge_spline.point(0.0, 0.0),
               set: false,
             })
             label_index = Some(idx)
@@ -962,7 +962,7 @@ fn apply_xlabels(
       None => ()
     }
     objects.push({
-      pos: point(llx, lly),
+      pos: @edge_spline.point(llx, lly),
       width: obj_w,
       height: obj_h,
       label_index,
@@ -985,7 +985,7 @@ fn apply_xlabels(
           match edge_mid_label_metrics(edge) {
             Some((label_w, label_h)) => {
               let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
-              let pos_ll = point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
                 width: label_w,
@@ -1007,7 +1007,7 @@ fn apply_xlabels(
                       target: XLabelTarget::EdgeMid(edge_key_value),
                       width: label_w,
                       height: label_h,
-                      pos: point(0.0, 0.0),
+                      pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
                     objects.push({
@@ -1028,7 +1028,7 @@ fn apply_xlabels(
           match edge_label_metrics_for_attr(edge, "taillabel", true) {
             Some((label_w, label_h)) => {
               let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
-              let pos_ll = point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
                 width: label_w,
@@ -1050,7 +1050,7 @@ fn apply_xlabels(
                       target: XLabelTarget::EdgeTail(edge_key_value),
                       width: label_w,
                       height: label_h,
-                      pos: point(0.0, 0.0),
+                      pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
                     objects.push({
@@ -1071,7 +1071,7 @@ fn apply_xlabels(
           match edge_label_metrics_for_attr(edge, "headlabel", true) {
             Some((label_w, label_h)) => {
               let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
-              let pos_ll = point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
                 width: label_w,
@@ -1093,7 +1093,7 @@ fn apply_xlabels(
                       target: XLabelTarget::EdgeHead(edge_key_value),
                       width: label_w,
                       height: label_h,
-                      pos: point(0.0, 0.0),
+                      pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
                     objects.push({
@@ -1114,7 +1114,7 @@ fn apply_xlabels(
           match xlabel_metrics_for_edge(edge) {
             Some((label_w, label_h)) => {
               let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
-              let pos_ll = point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
                 width: label_w,
@@ -1136,7 +1136,7 @@ fn apply_xlabels(
                       target: XLabelTarget::EdgeXlabel(edge_key_value),
                       width: label_w,
                       height: label_h,
-                      pos: point(0.0, 0.0),
+                      pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
                     objects.push({
@@ -1191,7 +1191,7 @@ fn apply_xlabels(
       continue
     }
     let center =
-      point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
+      @edge_spline.point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
     bbox = expand_bbox_for_label_pos(bbox, Some(center), Some((label.width, label.height)))
     match label.target {
       XLabelTarget::Node(name) => node_updates[name] = center

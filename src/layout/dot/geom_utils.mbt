@@ -118,7 +118,7 @@ fn clip_to_bbox(
     consider((rect.ury - from.y) / dy)
   }
   match best {
-    Some(t) => point(from.x + dx * t, from.y + dy * t)
+    Some(t) => @edge_spline.point(from.x + dx * t, from.y + dy * t)
     None => from
   }
 }
@@ -230,10 +230,10 @@ fn detour_polyline_for_rects(
         if path_len(left_x) <= path_len(right_x) { left_x } else { right_x }
       [
         tail,
-        point(tail.x, exit_y),
-        point(detour_x, exit_y),
-        point(detour_x, entry_y),
-        point(head.x, entry_y),
+        @edge_spline.point(tail.x, exit_y),
+        @edge_spline.point(detour_x, exit_y),
+        @edge_spline.point(detour_x, entry_y),
+        @edge_spline.point(head.x, entry_y),
         head,
       ]
     }
@@ -275,10 +275,10 @@ fn detour_polyline_for_rects(
         if path_len(lower_y) <= path_len(upper_y) { lower_y } else { upper_y }
       [
         tail,
-        point(exit_x, tail.y),
-        point(exit_x, detour_y),
-        point(entry_x, detour_y),
-        point(entry_x, head.y),
+        @edge_spline.point(exit_x, tail.y),
+        @edge_spline.point(exit_x, detour_y),
+        @edge_spline.point(entry_x, detour_y),
+        @edge_spline.point(entry_x, head.y),
         head,
       ]
     }

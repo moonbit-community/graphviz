@@ -177,7 +177,7 @@ test "edge label vnode positions match Graphviz" {
         )
     }
     let actual = edge_label_pos_from_vnode(
-      point(fixture.vnode_x, fixture.vnode_y),
+      @edge_spline.point(fixture.vnode_x, fixture.vnode_y),
       fixture.dimen_x,
       fixture.dimen_y,
       rankdir,
@@ -219,8 +219,8 @@ test "flat edge label positions match Graphviz" {
     assert_eq(width, fixture.dimen_x)
     assert_eq(height, fixture.dimen_y)
     let actual = flat_edge_label_pos_simple(
-      point(fixture.tp_x, fixture.tp_y),
-      point(fixture.hp_x, fixture.hp_y),
+      @edge_spline.point(fixture.tp_x, fixture.tp_y),
+      @edge_spline.point(fixture.hp_x, fixture.hp_y),
       fixture.tail_rw,
       fixture.head_lw,
       fixture.dimen_y,

@@ -122,8 +122,8 @@ test "port label positions match Graphviz" {
     assert_eq(fixture.label_html, false)
     assert_eq(fixture.dist, PORT_LABEL_DISTANCE_PT * fixture.labeldistance)
     let actual = port_label_pos_from_points(
-      point(fixture.pe_x, fixture.pe_y),
-      point(fixture.pf_x, fixture.pf_y),
+      @edge_spline.point(fixture.pe_x, fixture.pe_y),
+      @edge_spline.point(fixture.pf_x, fixture.pf_y),
       fixture.labelangle,
       fixture.labeldistance,
     )

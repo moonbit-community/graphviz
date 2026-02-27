@@ -80,12 +80,12 @@ fn split_bezier_half(
   (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
   (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
 ) {
-  let p01 = point((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0)
-  let p12 = point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
-  let p23 = point((p2.x + p3.x) / 2.0, (p2.y + p3.y) / 2.0)
-  let p012 = point((p01.x + p12.x) / 2.0, (p01.y + p12.y) / 2.0)
-  let p123 = point((p12.x + p23.x) / 2.0, (p12.y + p23.y) / 2.0)
-  let p0123 = point((p012.x + p123.x) / 2.0, (p012.y + p123.y) / 2.0)
+  let p01 = @edge_spline.point((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0)
+  let p12 = @edge_spline.point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
+  let p23 = @edge_spline.point((p2.x + p3.x) / 2.0, (p2.y + p3.y) / 2.0)
+  let p012 = @edge_spline.point((p01.x + p12.x) / 2.0, (p01.y + p12.y) / 2.0)
+  let p123 = @edge_spline.point((p12.x + p23.x) / 2.0, (p12.y + p23.y) / 2.0)
+  let p0123 = @edge_spline.point((p012.x + p123.x) / 2.0, (p012.y + p123.y) / 2.0)
   (
     (p0, p01, p012, p0123),
     (p0123, p123, p23, p3),
