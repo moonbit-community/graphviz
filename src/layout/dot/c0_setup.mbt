@@ -102,13 +102,8 @@ fn build_ordering_runtime_context_with_tail_constraints(
     ranks,
     node_order,
   )
-  let rank_same_constraints = build_rank_same_constraints(
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    node_order,
-    port_edge_nodes,
-    ranks,
-  )
+  // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
+  let rank_same_constraints : Map[String, Bool] = Map::new()
   let runtime_context =
     {
       real_nodes,

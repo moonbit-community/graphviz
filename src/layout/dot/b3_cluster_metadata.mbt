@@ -236,21 +236,3 @@ fn compute_cluster_metadata(
     ordering_set,
   }
 }
-
-///|
-/// Graphviz parity: rank=same does not impose ordering constraints.
-/// Do not change behavior without updating fixtures/tests.
-fn build_rank_same_constraints(
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  node_order : Map[String, Int],
-  port_edge_nodes : Map[String, Bool],
-  ranks : Map[String, Int],
-) -> Map[String, Bool] {
-  let _ = rank_same_groups
-  let _ = rank_same_order
-  let _ = node_order
-  let _ = port_edge_nodes
-  let _ = ranks
-  Map::new()
-}
