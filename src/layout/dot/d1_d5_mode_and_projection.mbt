@@ -16,13 +16,10 @@ fn build_position_mode_flags(
   let allow_xpos_reorder =
     !use_vnodes_for_xpos || ordering.vnode_count <= MAX_XPOS_REORDER_VNODES
   let graphviz_flip = prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL
-  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
-  let xpos_reorder_enabled = false
   {
     use_vnodes_for_xpos,
     allow_xpos_reorder,
     graphviz_flip,
-    xpos_reorder_enabled,
   }
 }
 
@@ -59,7 +56,7 @@ fn build_x_stage_with_flat_labels_for_positions(
     )
   let flat_label_augmentation =
     build_x_stage_with_flat_label_augmentation_for_positions(
-      mode_flags.xpos_reorder_enabled,
+      false,
       mode_flags.use_vnodes_for_xpos,
       mode_flags.allow_xpos_reorder,
       mode_flags.graphviz_flip,

@@ -96,7 +96,6 @@ priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
   graphviz_flip : Bool
-  xpos_reorder_enabled : Bool
 }
 
 ///|
