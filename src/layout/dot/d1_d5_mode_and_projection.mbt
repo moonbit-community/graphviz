@@ -33,40 +33,6 @@ fn is_graphviz_rankdir_flip_for_positions(prep : LayoutPrep) -> Bool {
 
 
 ///|
-/// Graphviz parity: position-mode gate values are derived once from prep and
-/// ordering before final mode-flag output assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_position_mode_gate_values_for_positions(
-  prep : LayoutPrep,
-  ordering : OrderingResult,
-) -> PositionModeGateValues {
-  let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
-  let allow_xpos_reorder =
-    should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
-  let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
-  { use_vnodes_for_xpos, allow_xpos_reorder, graphviz_flip }
-}
-
-///|
-/// Graphviz parity: position-mode output object maps computed gate values and
-/// preserves fixed xpos_reorder_enabled=false behavior.
-/// Do not change behavior without updating fixtures/tests.
-fn build_position_mode_flags_output_for_positions(
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  graphviz_flip : Bool,
-) -> PositionModeFlags {
-  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
-  let xpos_reorder_enabled = false
-  {
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    graphviz_flip,
-    xpos_reorder_enabled,
-  }
-}
-
-///|
 /// Graphviz parity: position-mode gates (vnode usage / reorder allowance /
 /// rankdir flip) are computed once from prep+ordering and forwarded unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -74,29 +40,17 @@ fn build_position_mode_flags(
   prep : LayoutPrep,
   ordering : OrderingResult,
 ) -> PositionModeFlags {
-  let mode_gate_values =
-    build_position_mode_gate_values_for_positions(prep, ordering)
-  build_position_mode_flags_output_for_positions(
-    mode_gate_values.use_vnodes_for_xpos,
-    mode_gate_values.allow_xpos_reorder,
-    mode_gate_values.graphviz_flip,
-  )
-}
-
-///|
-/// Graphviz parity: x-stage mode/slack output object maps gate flags and
-/// synthesized virtual-slack edges without extra normalization.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_mode_and_virtual_slack_output_for_positions(
-  mode_flags : PositionModeFlags,
-  virtual_slack_edges : Array[ConstraintEdge],
-) -> XStageModeAndSlackData {
+  let use_vnodes_for_xpos = should_use_vnodes_for_xpos_in_positions(prep, ordering)
+  let allow_xpos_reorder =
+    should_allow_xpos_reorder_in_positions(use_vnodes_for_xpos, ordering)
+  let graphviz_flip = is_graphviz_rankdir_flip_for_positions(prep)
+  // Graphviz parity: xpos constraints must preserve mincross ordering; do not reorder here.
+  let xpos_reorder_enabled = false
   {
-    use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-    allow_xpos_reorder: mode_flags.allow_xpos_reorder,
-    graphviz_flip: mode_flags.graphviz_flip,
-    xpos_reorder_enabled: mode_flags.xpos_reorder_enabled,
-    virtual_slack_edges,
+    use_vnodes_for_xpos,
+    allow_xpos_reorder,
+    graphviz_flip,
+    xpos_reorder_enabled,
   }
 }
 
@@ -141,22 +95,13 @@ fn build_x_stage_mode_and_virtual_slack_data_for_positions(
       cluster_meta,
       ordering,
     )
-  build_x_stage_mode_and_virtual_slack_output_for_positions(
-    mode_flags,
+  {
+    use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+    allow_xpos_reorder: mode_flags.allow_xpos_reorder,
+    graphviz_flip: mode_flags.graphviz_flip,
+    xpos_reorder_enabled: mode_flags.xpos_reorder_enabled,
     virtual_slack_edges,
-  )
-}
-
-///|
-/// Graphviz parity: x-stage seed+flat-label output object maps seed base sizes
-/// with flat-label augmentation data without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_seed_and_flat_label_output_for_positions(
-  x_stage_seed : XPositionStageSeedData,
-  flat_label_augmentation : XposFlatLabelAugmentation,
-) -> XStageSeedAndFlatLabelData {
-  let x_base_sizes = x_stage_seed.x_base_sizes
-  { x_base_sizes, flat_label_augmentation }
+  }
 }
 
 ///|
@@ -192,10 +137,8 @@ fn build_x_stage_seed_and_flat_label_data_for_positions(
       ordering,
       x_stage_seed,
     )
-  build_x_stage_seed_and_flat_label_output_for_positions(
-    x_stage_seed,
-    flat_label_augmentation,
-  )
+  let x_base_sizes = x_stage_seed.x_base_sizes
+  { x_base_sizes, flat_label_augmentation }
 }
 
 ///|
@@ -220,27 +163,17 @@ fn build_x_stage_output_from_mode_and_seed_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage mode/seed output object maps stage-local data
-/// bundles without additional transforms.
+/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
+/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
+/// Graphviz-aligned order and wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_mode_and_seed_output_for_positions(
-  mode_slack_data : XStageModeAndSlackData,
-  seed_flat_label_data : XStageSeedAndFlatLabelData,
-) -> XStageModeAndSeedData {
-  { mode_slack_data, seed_flat_label_data }
-}
-
-///|
-/// Graphviz parity: x-stage mode/slack and seed/flat-label stages are executed
-/// in fixed order before final x-stage output assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_mode_and_seed_data_for_positions(
+fn build_x_stage_with_flat_labels_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageModeAndSeedData {
+) -> XStageWithFlatLabelData {
   let mode_slack_data =
     build_x_stage_mode_and_virtual_slack_data_for_positions(
       prep,
@@ -257,35 +190,9 @@ fn build_x_stage_mode_and_seed_data_for_positions(
       ordering,
       mode_slack_data,
     )
-  build_x_stage_mode_and_seed_output_for_positions(
+  build_x_stage_output_from_mode_and_seed_data_for_positions(
     mode_slack_data,
     seed_flat_label_data,
-  )
-}
-
-///|
-/// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
-/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
-/// Graphviz-aligned order and wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_labels_for_positions(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-) -> XStageWithFlatLabelData {
-  let x_stage_mode_and_seed_data =
-    build_x_stage_mode_and_seed_data_for_positions(
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-    )
-  build_x_stage_output_from_mode_and_seed_data_for_positions(
-    x_stage_mode_and_seed_data.mode_slack_data,
-    x_stage_mode_and_seed_data.seed_flat_label_data,
   )
 }
 

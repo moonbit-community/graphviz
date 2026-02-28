@@ -133,24 +133,11 @@ priv struct XStageSeedAndFlatLabelData {
 }
 
 ///|
-priv struct XStageModeAndSeedData {
-  mode_slack_data : XStageModeAndSlackData
-  seed_flat_label_data : XStageSeedAndFlatLabelData
-}
-
-///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
   graphviz_flip : Bool
   xpos_reorder_enabled : Bool
-}
-
-///|
-priv struct PositionModeGateValues {
-  use_vnodes_for_xpos : Bool
-  allow_xpos_reorder : Bool
-  graphviz_flip : Bool
 }
 
 ///|
