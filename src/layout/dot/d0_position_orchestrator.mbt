@@ -366,7 +366,7 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
     x_groups,
   )
   let skip_multi_cluster_flip_reverse =
-    use_lr_multi_cluster_creation_order_mode(graphviz_flip, cluster_meta)
+    graphviz_flip && cluster_meta.cluster_order.length() > 1
   if graphviz_flip && cluster_meta.cluster_order.length() > 1 &&
     !skip_multi_cluster_flip_reverse {
     for rank, names in x_groups {

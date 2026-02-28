@@ -171,15 +171,6 @@ fn build_ordering_runtime_context_with_tail_constraints(
 }
 
 ///|
-fn use_lr_multi_cluster_creation_order_mode(
-  graphviz_flip : Bool,
-  cluster_meta : ClusterMetadata,
-) -> Bool {
-  graphviz_flip && cluster_meta.cluster_order.length() > 1
-}
-
-
-///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -228,7 +219,7 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
   // Do not change behavior without updating fixtures/tests.
   let gdnlist_order =
     if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
-      use_lr_multi_cluster_creation_order_mode(graphviz_flip, cluster_meta) {
+      (graphviz_flip && cluster_meta.cluster_order.length() > 1) {
       build_reverse_creation_order_from_nlist(class2_data.creation_order)
     } else {
       class2_data.nlist_order
