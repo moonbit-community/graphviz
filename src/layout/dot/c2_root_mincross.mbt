@@ -99,43 +99,6 @@ fn build_root_mincross_edges_and_indices(
 
 
 ///|
-/// Graphviz parity: root ReMincross debug trace prints selected ND_in/ND_out
-/// neighbor lists only when DOT_TRACE_GROUPS is enabled.
-/// Do not change behavior without updating fixtures/tests.
-fn trace_root_mincross_graphviz_neighbors(
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let debug_nodes : Array[String] = [
-      "front_end_jz",
-      "z_req1",
-      "z_req",
-      "4",
-      "15",
-      "19",
-      "29",
-      "18",
-      "20",
-      "21",
-      "28",
-      "41",
-    ]
-    for name in debug_nodes {
-      let inn = match graphviz_in_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
-      let out = match graphviz_out_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
-      println("order_neighbors \{name} in=\{inn} out=\{out}")
-    }
-  }
-}
-
-///|
 /// Graphviz parity: component-local node-position hints are passed to mincross
 /// only for nodes belonging to the active connected component.
 /// Do not change behavior without updating fixtures/tests.
@@ -693,10 +656,33 @@ fn run_root_mincross_reorder(
       }
     }
   }
-  trace_root_mincross_graphviz_neighbors(
-    graphviz_in_neighbors,
-    graphviz_out_neighbors,
-  )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let debug_nodes : Array[String] = [
+      "front_end_jz",
+      "z_req1",
+      "z_req",
+      "4",
+      "15",
+      "19",
+      "29",
+      "18",
+      "20",
+      "21",
+      "28",
+      "41",
+    ]
+    for name in debug_nodes {
+      let inn = match graphviz_in_neighbors.get(name) {
+        Some(list) => list
+        None => []
+      }
+      let out = match graphviz_out_neighbors.get(name) {
+        Some(list) => list
+        None => []
+      }
+      println("order_neighbors \{name} in=\{inn} out=\{out}")
+    }
+  }
   let order_groups_for_mincross =
     match root_mincross_groups_override.val {
       Some(override_groups) => clone_rank_groups(override_groups)
