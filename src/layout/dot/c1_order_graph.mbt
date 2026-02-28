@@ -420,22 +420,6 @@ fn build_order_sizes_for_order_graph(
 }
 
 ///|
-/// Graphviz parity: class2 build_ranks reverses current nlist when creating
-/// node visit seed order for edge materialization.
-/// Do not change behavior without updating fixtures/tests.
-fn build_reverse_creation_order_from_nlist(
-  nlist_order : Array[String],
-) -> Array[String] {
-  let creation_order : Array[String] = []
-  let mut creation_idx = nlist_order.length()
-  while creation_idx > 0 {
-    creation_idx = creation_idx - 1
-    creation_order.push(nlist_order[creation_idx])
-  }
-  creation_order
-}
-
-///|
 /// Graphviz parity: order graph cluster-key map starts from real-node keys and
 /// appends vnode cluster keys only when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.

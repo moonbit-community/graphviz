@@ -229,7 +229,13 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
   let gdnlist_order =
     if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
       (graphviz_flip && cluster_meta.cluster_order.length() > 1) {
-      build_reverse_creation_order_from_nlist(class2_data.creation_order)
+      let reversed_creation_order : Array[String] = []
+      let mut creation_idx = class2_data.creation_order.length()
+      while creation_idx > 0 {
+        creation_idx = creation_idx - 1
+        reversed_creation_order.push(class2_data.creation_order[creation_idx])
+      }
+      reversed_creation_order
     } else {
       class2_data.nlist_order
     }

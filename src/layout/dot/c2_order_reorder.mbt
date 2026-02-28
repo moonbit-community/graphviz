@@ -64,8 +64,12 @@ fn build_order_reorder_context(
     build_order_graph_and_nodes("order_graph", order_nodes)
   let (order_graph_unmapped, order_node_map_unmapped) =
     build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
-  let creation_order =
-    build_reverse_creation_order_from_nlist(nlist_order)
+  let creation_order : Array[String] = []
+  let mut creation_idx = nlist_order.length()
+  while creation_idx > 0 {
+    creation_idx = creation_idx - 1
+    creation_order.push(nlist_order[creation_idx])
+  }
   let order_node_order =
     build_order_node_order_for_build_ranks(
       gdnlist_order,
