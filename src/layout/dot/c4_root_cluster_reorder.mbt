@@ -569,59 +569,6 @@ fn anchor_root_bucket_from_previous_cluster_rank_order(
 }
 
 ///|
-/// Graphviz parity: root mincross rank map records first-seen cluster skeleton
-/// (or root real-node bucket) order per rank for cluster-phase reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_from_root_ordered(
-  root_rank_keys : Array[Int],
-  ordered_root : Map[Int, Array[String]],
-  order_cluster_skeleton : Map[String, Bool],
-  order_cluster_keys : Map[String, String],
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Map[String, Int]] {
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
-  let mut previous_order_map : Map[String, Int]? = None
-  for rank in root_rank_keys {
-    let names = match ordered_root.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let order_map : Map[String, Int] = Map::new()
-    let mut idx = 0
-    for name in names {
-      if order_cluster_skeleton.get(name) == Some(true) {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        if cluster != "" && order_map.get(cluster) is None {
-          order_map[cluster] = idx
-          idx = idx + 1
-        }
-      } else if real_nodes.get(name) is Some(_) {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        if cluster == "" && order_map.get("") is None {
-          order_map[""] = idx
-          idx = idx + 1
-        }
-      }
-    }
-    anchor_root_bucket_from_previous_cluster_rank_order(
-      order_map,
-      previous_order_map,
-    )
-    if order_map.length() > 0 {
-      cluster_rank_order[rank] = order_map
-      previous_order_map = Some(order_map)
-    }
-  }
-  cluster_rank_order
-}
-
-///|
 /// Graphviz parity: root reorder edge bundle keeps tail-sequence edge
 /// materialization, optional trace output, and index maps in one stage.
 /// Do not change behavior without updating fixtures/tests.
@@ -1027,16 +974,45 @@ fn build_cluster_rank_order_for_cluster_reorder(
       graphviz_flip,
       root_reorder_output,
     )
-  let root_cluster_rank_order =
-    build_cluster_rank_order_from_root_ordered(
-      root_rank_keys,
-      ordered_root,
-      order_cluster_skeleton,
-      order_cluster_keys,
-      real_nodes,
+  // Graphviz parity: root mincross rank map records first-seen cluster skeleton
+  // (or root real-node bucket) order per rank for cluster-phase reordering.
+  let mut previous_order_map : Map[String, Int]? = None
+  for rank in root_rank_keys {
+    let names = match ordered_root.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let order_map : Map[String, Int] = Map::new()
+    let mut idx = 0
+    for name in names {
+      if order_cluster_skeleton.get(name) == Some(true) {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster != "" && order_map.get(cluster) is None {
+          order_map[cluster] = idx
+          idx = idx + 1
+        }
+      } else if real_nodes.get(name) is Some(_) {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        if cluster == "" && order_map.get("") is None {
+          order_map[""] = idx
+          idx = idx + 1
+        }
+      }
+    }
+    anchor_root_bucket_from_previous_cluster_rank_order(
+      order_map,
+      previous_order_map,
     )
-  for rank, order_map in root_cluster_rank_order {
-    cluster_rank_order[rank] = order_map
+    if order_map.length() > 0 {
+      cluster_rank_order[rank] = order_map
+      previous_order_map = Some(order_map)
+    }
   }
   cluster_rank_order
 }
