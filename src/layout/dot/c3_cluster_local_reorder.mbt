@@ -437,6 +437,29 @@ fn build_cluster_local_neighbor_maps(
     }
     false
   }
+  let append_raw_neighbors_with_external_anchor = (
+    neighbors : Array[String],
+    raw_neighbors : Array[String],
+  ) => {
+    let external_cluster_seen : Map[String, Bool] = Map::new()
+    for other in raw_neighbors {
+      if is_edge_vnode_name(other) || other.has_prefix(CLUSTER_SKELETON_PREFIX) {
+        continue
+      }
+      let normalized = normalize_external_neighbor(other)
+      if normalized == external_anchor_name {
+        let external_cluster = cluster_key_or_empty(other)
+        if external_cluster == "" ||
+          external_cluster_seen.get(external_cluster) is Some(_) {
+          continue
+        }
+        external_cluster_seen[external_cluster] = true
+        neighbors.push(normalized)
+      } else {
+        append_unique(neighbors, normalized)
+      }
+    }
+  }
   for name in cluster_nodes {
     let out_neighbors = match source_graphviz_out_neighbors.get(name) {
       Some(list) => list.copy()
@@ -447,50 +470,16 @@ fn build_cluster_local_neighbor_maps(
       None => []
     }
     if allow_raw_neighbors && !has_source_external_anchor(name) {
-      let out_external_cluster_seen : Map[String, Bool] = Map::new()
       let raw_out = match raw_graphviz_out_neighbors.get(name) {
         Some(list) => list
         None => []
       }
-      for other in raw_out {
-        if is_edge_vnode_name(other) || other.has_prefix(CLUSTER_SKELETON_PREFIX) {
-          continue
-        }
-        let normalized = normalize_external_neighbor(other)
-        if normalized == external_anchor_name {
-          let external_cluster = cluster_key_or_empty(other)
-          if external_cluster == "" ||
-            out_external_cluster_seen.get(external_cluster) is Some(_) {
-            continue
-          }
-          out_external_cluster_seen[external_cluster] = true
-          out_neighbors.push(normalized)
-        } else {
-          append_unique(out_neighbors, normalized)
-        }
-      }
-      let in_external_cluster_seen : Map[String, Bool] = Map::new()
+      append_raw_neighbors_with_external_anchor(out_neighbors, raw_out)
       let raw_in = match raw_graphviz_in_neighbors.get(name) {
         Some(list) => list
         None => []
       }
-      for other in raw_in {
-        if is_edge_vnode_name(other) || other.has_prefix(CLUSTER_SKELETON_PREFIX) {
-          continue
-        }
-        let normalized = normalize_external_neighbor(other)
-        if normalized == external_anchor_name {
-          let external_cluster = cluster_key_or_empty(other)
-          if external_cluster == "" ||
-            in_external_cluster_seen.get(external_cluster) is Some(_) {
-            continue
-          }
-          in_external_cluster_seen[external_cluster] = true
-          in_neighbors.push(normalized)
-        } else {
-          append_unique(in_neighbors, normalized)
-        }
-      }
+      append_raw_neighbors_with_external_anchor(in_neighbors, raw_in)
     }
     graphviz_out_neighbors[name] = out_neighbors
     graphviz_in_neighbors[name] = in_neighbors
