@@ -337,114 +337,6 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
 
 
 ///|
-/// Graphviz parity: root + cluster build_ranks stage reads clustered pre-root
-/// context directly and forwards unchanged ordering/materialized maps.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_build_ranks_stage_from_pre_root(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  graph : @cgraph.Graph,
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_flip : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  ranks : Map[String, Int],
-  vnode_info : EdgeVnodeInfo,
-  pre_root_stage : OrderClusteredPreRootStageData,
-) -> OrderRootClusterStageData {
-  let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
-  run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
-    order_with_clusters,
-    order_with_vnodes,
-    graph,
-    cluster_meta,
-    vnode_order_keys_for_ordering,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    graphviz_flip,
-    flat_rank_constraints,
-    ranks,
-    vnode_info,
-    pre_root_stage,
-    reorder_context,
-    materialized,
-  )
-}
-
-
-///|
-/// Graphviz parity: clustered finalize stage consumes root/pre-root outputs
-/// without argument reordering before final cluster ReMincross.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_rank_order_and_finalize_stage_from_pre_root(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let reorder_context = pre_root_stage.reorder_context
-  let stage_inputs : ClusterFinalizeStageInputs = {
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    ordered: root_cluster_stage.ordered,
-    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-    creation_order: reorder_context.creation_order,
-  }
-  run_cluster_rank_order_and_finalize_stage(
-    dispatch_context,
-    stage_inputs,
-  )
-}
-
-
-///|
-/// Graphviz parity: clustered ordering root+cluster build_ranks phase consumes
-/// pre-root stage payload unchanged before finalize-stage dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  graph : @cgraph.Graph,
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_flip : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  ranks : Map[String, Int],
-  vnode_info : EdgeVnodeInfo,
-  pre_root_stage : OrderClusteredPreRootStageData,
-) -> OrderRootClusterStageData {
-  run_root_and_cluster_build_ranks_stage_from_pre_root(
-    order_with_clusters,
-    order_with_vnodes,
-    graph,
-    cluster_meta,
-    vnode_order_keys_for_ordering,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    graphviz_flip,
-    flat_rank_constraints,
-    ranks,
-    vnode_info,
-    pre_root_stage,
-  )
-}
-
-///|
 /// Graphviz parity: clustered ordering pre-root phase constructs reorder
 /// context/materialized payload from ordering base inputs before root phase.
 /// Do not change behavior without updating fixtures/tests.
@@ -602,8 +494,10 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
   } else {
     root_mincross_groups_override.val = None
   }
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
   let output =
-    run_clustered_ordering_pre_root_and_root_stage_root_phase(
+    run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
       phase_context.reorder_setup.order_with_clusters,
       phase_context.reorder_setup.order_with_vnodes,
       phase_context.graph,
@@ -618,6 +512,8 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
       phase_context.ranks,
       phase_context.runtime_context.vnode_info,
       pre_root_stage,
+      reorder_context,
+      materialized,
     )
   root_mincross_groups_override.val = None
   output
@@ -702,11 +598,21 @@ fn run_clustered_ordering_finalize_phase(
   pre_root_stage : OrderClusteredPreRootStageData,
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let reorder_context = pre_root_stage.reorder_context
+  let stage_inputs : ClusterFinalizeStageInputs = {
+    order_rank_keys: reorder_context.order_rank_keys,
+    order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    ordered: root_cluster_stage.ordered,
+    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
+    creation_order: reorder_context.creation_order,
+  }
   let (next_ordered_with_vnodes, final_groups) =
-    run_cluster_rank_order_and_finalize_stage_from_pre_root(
+    run_cluster_rank_order_and_finalize_stage(
       dispatch_context,
-      pre_root_stage,
-      root_cluster_stage,
+      stage_inputs,
     )
   remincross_root_tail_order_override_snapshot.val = None
   build_clustered_ordering_stage_output(
