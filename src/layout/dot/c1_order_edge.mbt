@@ -553,29 +553,6 @@ fn build_cluster_reversed_nodes_and_index_for_flip(
 
 
 ///|
-/// Graphviz parity: flipped nlist reconstruction consumes one reversed member
-/// per cluster occurrence, falling back to original name on index overflow.
-/// Do not change behavior without updating fixtures/tests.
-fn consume_cluster_flip_name(
-  cluster : String,
-  name : String,
-  cluster_reversed : Map[String, Array[String]],
-  cluster_index : Map[String, Int],
-) -> String {
-  let idx = match cluster_index.get(cluster) {
-    Some(value) => value
-    None => 0
-  }
-  let list = match cluster_reversed.get(cluster) {
-    Some(value) => value
-    None => []
-  }
-  let resolved = if idx < list.length() { list[idx] } else { name }
-  cluster_index[cluster] = idx + 1
-  resolved
-}
-
-///|
 /// Graphviz parity: flipped nlist reconstruction preserves non-cluster names
 /// and replaces cluster names by sequential consumption from reversed buckets.
 /// Do not change behavior without updating fixtures/tests.
@@ -591,13 +568,20 @@ fn build_adjusted_nlist_order_for_cluster_flip(
     if cluster == "" {
       adjusted.push(name)
     } else {
+      // Graphviz parity: consume one reversed member per cluster occurrence,
+      // falling back to original name on index overflow.
+      let idx = match cluster_index.get(cluster) {
+        Some(value) => value
+        None => 0
+      }
+      let list = match cluster_reversed.get(cluster) {
+        Some(value) => value
+        None => []
+      }
+      let resolved = if idx < list.length() { list[idx] } else { name }
+      cluster_index[cluster] = idx + 1
       adjusted.push(
-        consume_cluster_flip_name(
-          cluster,
-          name,
-          cluster_reversed,
-          cluster_index,
-        ),
+        resolved,
       )
     }
   }
