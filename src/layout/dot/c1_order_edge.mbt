@@ -266,40 +266,6 @@ fn compute_edge_port_orders(
 }
 
 ///|
-/// Graphviz parity: ND_in order follows edge sequence (AGSEQ) within each
-/// fixed head, preserving edge creation insertion order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_graphviz_in_entries_from_edge_sequence(
-  edge_creation_order : Array[(String, String)],
-) -> Map[String, Array[String]] {
-  let in_entries : Map[String, Array[String]] = Map::new()
-  for edge in edge_creation_order {
-    let (tail, head) = edge
-    match in_entries.get(head) {
-      Some(list) => list.push(tail)
-      None => in_entries[head] = [tail]
-    }
-  }
-  in_entries
-}
-
-///|
-/// Graphviz parity: ND_out keeps tail-local edge insertion order for heads,
-/// mirroring Graphviz AGSEQ traversal on each tail adjacency list.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_graphviz_out_heads(
-  entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-) -> Array[String] {
-  let heads : Array[String] = []
-  for entry in entries {
-    let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
-      entry
-    heads.push(h)
-  }
-  heads
-}
-
-///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
 fn build_graphviz_neighbor_maps(
@@ -314,11 +280,22 @@ fn build_graphviz_neighbor_maps(
     graphviz_in_neighbors[name] = []
   }
   for tail, entries in order_edges_by_tail {
-    graphviz_out_neighbors[tail] = collect_graphviz_out_heads(entries)
+    let heads : Array[String] = []
+    for entry in entries {
+      let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
+        entry
+      heads.push(h)
+    }
+    graphviz_out_neighbors[tail] = heads
   }
-  let in_entries = build_graphviz_in_entries_from_edge_sequence(
-    edge_creation_order,
-  )
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for edge in edge_creation_order {
+    let (tail, head) = edge
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+  }
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
