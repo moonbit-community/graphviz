@@ -482,35 +482,6 @@ fn collect_internal_cluster_edges_for_local_bundle(
 
 
 ///|
-/// Graphviz parity: cluster-local ND_out/ND_in maps keep local tails/heads but
-/// preserve external anchors in AGSEQ order for startpass=2 medians.
-/// Do not change behavior without updating fixtures/tests.
-fn build_neighbor_maps_from_graph_edges(
-  graph : @cgraph.Graph,
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  for node in graph.nodes() {
-    let name = node.name()
-    graphviz_out_neighbors[name] = []
-    graphviz_in_neighbors[name] = []
-  }
-  for edge in graph.edges() {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    match graphviz_out_neighbors.get(tail) {
-      Some(list) => list.push(head)
-      None => graphviz_out_neighbors[tail] = [head]
-    }
-    match graphviz_in_neighbors.get(head) {
-      Some(list) => list.push(tail)
-      None => graphviz_in_neighbors[head] = [tail]
-    }
-  }
-  (graphviz_out_neighbors, graphviz_in_neighbors)
-}
-
-///|
 /// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
@@ -1415,8 +1386,27 @@ fn reorder_groups_by_cluster_build_ranks(
   for name, rank in vnode_info.vnode_ranks {
     fixed_ranks[name] = rank
   }
-  let (raw_graphviz_out_neighbors, raw_graphviz_in_neighbors) =
-    build_neighbor_maps_from_graph_edges(graph)
+  // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
+  // tail/head AGSEQ replay order for startpass=2 median anchors.
+  let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for node in graph.nodes() {
+    let name = node.name()
+    raw_graphviz_out_neighbors[name] = []
+    raw_graphviz_in_neighbors[name] = []
+  }
+  for edge in graph.edges() {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    match raw_graphviz_out_neighbors.get(tail) {
+      Some(list) => list.push(head)
+      None => raw_graphviz_out_neighbors[tail] = [head]
+    }
+    match raw_graphviz_in_neighbors.get(head) {
+      Some(list) => list.push(tail)
+      None => raw_graphviz_in_neighbors[head] = [tail]
+    }
+  }
   reorder_cluster_rank_groups_for_cluster_names(
     cluster_names,
     cluster_graphs,
