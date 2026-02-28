@@ -1160,16 +1160,6 @@ fn polygon_edges(
 }
 
 ///|
-fn regular_end_box_bottom(box : @geom.Rect, y : Double) -> @geom.Rect {
-  { llx: box.llx, lly: y, urx: box.urx, ury: box.lly }
-}
-
-///|
-fn regular_end_box_top(box : @geom.Rect, y : Double) -> @geom.Rect {
-  { llx: box.llx, lly: box.ury, urx: box.urx, ury: y }
-}
-
-///|
 fn adjust_regular_path(
   boxes : Array[@geom.Rect],
   fb : Int,
@@ -1523,8 +1513,12 @@ fn edge_pathplan_polyline_core(
         urx: tail_max_box.urx,
         ury: last_tail_box.ury,
       }
-      let end_box =
-        regular_end_box_bottom(tail_gap_box, tail_rank_y - tail_ht1)
+      let end_box : @geom.Rect = {
+        llx: tail_gap_box.llx,
+        lly: tail_rank_y - tail_ht1,
+        urx: tail_gap_box.urx,
+        ury: tail_gap_box.lly,
+      }
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         tail_boxes.push(end_box)
       }
@@ -1653,8 +1647,12 @@ fn edge_pathplan_polyline_core(
         urx: head_max_box.urx,
         ury: last_head_box.ury,
       }
-      let end_box =
-        regular_end_box_top(head_gap_box, head_rank_y + head_ht2)
+      let end_box : @geom.Rect = {
+        llx: head_gap_box.llx,
+        lly: head_gap_box.ury,
+        urx: head_gap_box.urx,
+        ury: head_rank_y + head_ht2,
+      }
       if end_box.llx < end_box.urx && end_box.lly < end_box.ury {
         head_boxes.push(end_box)
       }
