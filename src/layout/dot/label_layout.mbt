@@ -153,11 +153,6 @@ fn max_double(a : Double, b : Double) -> Double {
 }
 
 ///|
-fn rect_center(rect : @geom.Rect) -> @geom.Point {
-  { x: (rect.llx + rect.urx) / 2.0, y: (rect.lly + rect.ury) / 2.0 }
-}
-
-///|
 fn rect_from_center(
   center : @geom.Point,
   width : Double,
@@ -207,7 +202,10 @@ fn nudge_label_rect(
 ) -> (@geom.Point, @geom.Rect) {
   match rect_overlap_amount(label_rect, other_rect) {
     Some((overlap_x, overlap_y)) => {
-      let other_center = rect_center(other_rect)
+      let other_center : @geom.Point = {
+        x: (other_rect.llx + other_rect.urx) / 2.0,
+        y: (other_rect.lly + other_rect.ury) / 2.0,
+      }
       if overlap_x < overlap_y {
         let dir = if label_pos.x < other_center.x { -1.0 } else { 1.0 }
         let shift = overlap_x + pad
