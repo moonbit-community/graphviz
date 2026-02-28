@@ -150,7 +150,6 @@ fn reorder_final_groups_for_cluster_remincross(
     intercluster_keys,
     local_cluster_order,
   )
-  dot_trace_groups("cleaned_groups_post", reordered)
   reordered
 }
 
@@ -197,7 +196,6 @@ fn finalize_order_groups_with_cluster_remincross(
       ordered,
       real_nodes,
     )
-  dot_trace_groups("cleaned_groups_pre", cleaned_groups)
   if order_with_clusters {
     let final_groups =
       reorder_final_groups_for_cluster_remincross(

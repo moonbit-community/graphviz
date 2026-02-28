@@ -46,26 +46,6 @@ fn dot_trace(message : String) -> Unit {
 }
 
 ///|
-fn dot_trace_groups(label : String, groups : Map[Int, Array[String]]) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
-    return ()
-  }
-  let ranks : Array[Int] = []
-  for rank, _ in groups {
-    ranks.push(rank)
-  }
-  ranks.sort()
-  for rank in ranks {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let joined = names.join(" ")
-    println("\{label} rank \{rank}: \{joined}")
-  }
-}
-
-///|
 fn dot_trace_positions(label : String, positions : Map[String, Double]) -> Unit {
   if @sys.get_env_var("DOT_TRACE_POS") is None {
     return ()

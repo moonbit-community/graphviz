@@ -165,7 +165,6 @@ fn run_root_and_cluster_build_ranks_stage(
     } else {
       ordered
     }
-  dot_trace_groups("ordered_after_root_merge", ordered)
   let next_ordered_with_vnodes =
     apply_cluster_build_ranks_and_track_vnodes(
       order_with_clusters,
@@ -192,7 +191,6 @@ fn run_root_and_cluster_build_ranks_stage(
       vnode_info,
       stage_inputs.ordered_with_vnodes,
     )
-  dot_trace_groups("ordered_before_clean", ordered)
   {
     order_groups_for_mincross,
     ordered,

@@ -792,7 +792,6 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
     graphviz_flip=root_graphviz_flip,
     coalesce_parallel_edges=true,
   )
-  dot_trace_groups("order_root", ordered_root)
   ordered_root
 }
 

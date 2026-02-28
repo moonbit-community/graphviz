@@ -465,7 +465,6 @@ fn build_seeded_groups_for_order_reorder(
     order_cluster_skeleton,
     flat_rank_constraints,
   )
-  dot_trace_groups("seeded_groups", seeded_groups)
   seeded_groups
 }
 

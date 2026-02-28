@@ -51,7 +51,6 @@ fn run_clustered_remincross_pass(
     } else {
       rebuild_groups()
     }
-  dot_trace_groups("remincross_groups", rem_groups)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() > 1 {
     run_clustered_remincross_multi_rank(

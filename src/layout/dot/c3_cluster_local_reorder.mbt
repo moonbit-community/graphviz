@@ -1020,7 +1020,6 @@ fn run_cluster_local_rank_reorder(
       cluster_flat_constraints,
       false,
     )
-  dot_trace_groups("cluster_local_mincross_input", seeded_cluster_groups)
   let ordered_cluster =
     reorder_rank_groups(
       cluster_rank_keys,
@@ -1059,7 +1058,6 @@ fn run_cluster_local_rank_reorder(
       startpass=2,
       startpass_init_infinite=false,
     )
-  dot_trace_groups("cluster_local_mincross_output", ordered_cluster)
   (true, ordered_cluster)
 }
 

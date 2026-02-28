@@ -512,7 +512,6 @@ Determinism rules:
 Useful debug env flags:
 
 - `DOT_TRACE`
-- `DOT_TRACE_GROUPS`
 - `DOT_TRACE_POS`
 - `DOT_TRACE_EDGES`
 - `DOT_TRACE_ROUTE`

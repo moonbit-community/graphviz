@@ -340,7 +340,6 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
       graphviz_flip,
       x_stage_seed.x_groups,
     )
-  dot_trace_groups("x-groups", x_groups)
   maybe_apply_xpos_transpose_cleanup(
     xpos_reorder_enabled,
     use_vnodes_for_xpos,

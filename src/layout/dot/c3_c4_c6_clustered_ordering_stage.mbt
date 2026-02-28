@@ -85,7 +85,6 @@ fn build_clustered_ordering_pre_root_stage(
       vnode_order_keys_for_ordering,
       order_sizes,
     )
-  dot_trace_groups("order_groups_pre", order_groups)
   let reorder_context =
     build_order_reorder_context(
       order_groups,
