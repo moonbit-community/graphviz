@@ -104,12 +104,17 @@ fn build_order_groups_sizes_and_cluster_skeleton(
       order_with_vnodes,
       vnode_info.vnode_sizes,
     )
-  let order_cluster_keys =
-    build_order_cluster_keys_for_order_graph(
-      cluster_meta.cluster_keys,
-      order_with_vnodes,
-      vnode_info.vnode_clusters,
-    )
+  // Graphviz parity: order graph cluster-key map starts from real-node keys and
+  // appends vnode cluster keys only when vnode ordering is enabled.
+  let order_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_meta.cluster_keys {
+    order_cluster_keys[name] = key
+  }
+  if order_with_vnodes {
+    for name, key in vnode_info.vnode_clusters {
+      order_cluster_keys[name] = key
+    }
+  }
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
   install_order_cluster_skeleton_nodes(
     order_with_clusters,
@@ -146,8 +151,14 @@ fn apply_unconstrained_order_node_overrides(
   order_node_order : Map[String, Int],
 ) -> Unit {
   // Graphviz parity: unconstrained nodes retain GD_nlist order for seeding.
-  let gdnlist_order_index =
-    build_gdnlist_order_index_for_real_nodes(gdnlist_order, real_nodes)
+  let gdnlist_order_index : Map[String, Int] = Map::new()
+  let mut gdnlist_idx = 0
+  for name in gdnlist_order {
+    if real_nodes.get(name) is Some(_) {
+      gdnlist_order_index[name] = gdnlist_idx
+    }
+    gdnlist_idx = gdnlist_idx + 1
+  }
   let unconstrained_nodes =
     collect_unconstrained_order_nodes(
       order_nodes,

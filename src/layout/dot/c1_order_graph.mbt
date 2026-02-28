@@ -306,27 +306,6 @@ fn build_order_sizes_for_order_graph(
 }
 
 ///|
-/// Graphviz parity: order graph cluster-key map starts from real-node keys and
-/// appends vnode cluster keys only when vnode ordering is enabled.
-/// Do not change behavior without updating fixtures/tests.
-fn build_order_cluster_keys_for_order_graph(
-  cluster_keys : Map[String, String],
-  order_with_vnodes : Bool,
-  vnode_clusters : Map[String, String],
-) -> Map[String, String] {
-  let order_cluster_keys : Map[String, String] = Map::new()
-  for name, key in cluster_keys {
-    order_cluster_keys[name] = key
-  }
-  if order_with_vnodes {
-    for name, key in vnode_clusters {
-      order_cluster_keys[name] = key
-    }
-  }
-  order_cluster_keys
-}
-
-///|
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.
@@ -540,25 +519,6 @@ fn build_order_node_order_for_build_ranks(
     )
   }
   order_node_order
-}
-
-///|
-/// Graphviz parity: unconstrained-node seeding uses GD_nlist indices for real
-/// nodes only, matching class2 fallback behavior.
-/// Do not change behavior without updating fixtures/tests.
-fn build_gdnlist_order_index_for_real_nodes(
-  gdnlist_order : Array[String],
-  real_nodes : Map[String, Bool],
-) -> Map[String, Int] {
-  let gdnlist_order_index : Map[String, Int] = Map::new()
-  let mut gdnlist_idx = 0
-  for name in gdnlist_order {
-    if real_nodes.get(name) is Some(_) {
-      gdnlist_order_index[name] = gdnlist_idx
-    }
-    gdnlist_idx = gdnlist_idx + 1
-  }
-  gdnlist_order_index
 }
 
 ///|
