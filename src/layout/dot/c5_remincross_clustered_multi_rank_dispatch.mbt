@@ -11,11 +11,10 @@ fn run_clustered_remincross_multi_rank(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (rem_ranks, rem_nodes, rem_graph, rem_node_map) =
-    build_clustered_remincross_graph_inputs(
-      rem_groups,
-      rem_rank_keys,
-    )
+  let rem_ranks = build_node_ranks(rem_groups)
+  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+  let (rem_graph, rem_node_map) =
+    build_order_graph_and_nodes("order_remincross", rem_nodes)
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
   let cluster_order_index =
