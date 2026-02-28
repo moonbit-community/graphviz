@@ -108,7 +108,6 @@ fn build_materialized_order_edges_and_neighbors(
   order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph_unmapped : @cgraph.Graph,
   order_node_map_unmapped : Map[String, @cgraph.Node],
-  order_ranks : Map[String, Int],
   real_nodes : Map[String, Bool],
   order_nodes : Array[String],
   edge_creation_order : Array[(String, String)],
@@ -144,13 +143,6 @@ fn build_materialized_order_edges_and_neighbors(
       order_graph_unmapped,
       order_node_map_unmapped,
     )
-  trace_order_edges_with_ranks(
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_ranks,
-    real_nodes,
-  )
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
     build_graphviz_neighbor_maps(
       order_nodes,

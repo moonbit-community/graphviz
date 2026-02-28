@@ -1,61 +1,6 @@
 ///|
-/// Stage C Phase C2 split: ordering trace, seeded-group,
+/// Stage C Phase C2 split: seeded-group,
 /// and early reorder-input materialization helpers.
-
-///|
-/// Debug trace: dump GD_nlist sequence and skeleton-node subset when
-/// DOT_TRACE_GROUPS is enabled (diagnostic only).
-fn trace_nlist_order_debug(
-  nlist_order : Array[String],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
-    return
-  }
-  let order_joined = nlist_order.join(" ")
-  if order_joined.length() > 0 {
-    println("nlist_order \{order_joined}")
-  }
-  let skeleton_names =
-    nlist_order.filter(name => name.has_prefix(CLUSTER_SKELETON_PREFIX))
-  let joined = skeleton_names.join(" ")
-  if joined.length() > 0 {
-    println("nlist_skeleton \{joined}")
-  }
-}
-
-///|
-/// Debug trace: dump materialized order edges with rank/real-node flags when
-/// DOT_TRACE_ORDER_EDGES is enabled (diagnostic only).
-fn trace_order_edges_with_ranks(
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_ranks : Map[String, Int],
-  real_nodes : Map[String, Bool],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_ORDER_EDGES") is None {
-    return
-  }
-  let mut edge_idx = 0
-  for _edge in order_edges_out {
-    let tail = order_edge_tail_out[edge_idx]
-    let head = order_edge_head_out[edge_idx]
-    let tail_rank = match order_ranks.get(tail) {
-      Some(value) => value
-      None => 0
-    }
-    let head_rank = match order_ranks.get(head) {
-      Some(value) => value
-      None => 0
-    }
-    let tail_real = real_nodes.get(tail) is Some(_)
-    let head_real = real_nodes.get(head) is Some(_)
-    println(
-      "order_edge \{edge_idx}: \{tail}(\{tail_rank},\{tail_real}) -> \{head}(\{head_rank},\{head_real})",
-    )
-    edge_idx = edge_idx + 1
-  }
-}
 
 ///|
 /// Graphviz parity: mapped order-edge arrays are materialized from GD_nlist

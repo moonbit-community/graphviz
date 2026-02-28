@@ -108,7 +108,6 @@ fn build_clustered_ordering_pre_root_stage(
       order_edges_by_tail_unmapped,
       reorder_context.order_graph_unmapped,
       reorder_context.order_node_map_unmapped,
-      reorder_context.order_ranks,
       real_nodes,
       reorder_context.order_nodes,
       edge_creation_order,

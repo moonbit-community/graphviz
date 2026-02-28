@@ -286,6 +286,5 @@ fn build_nlist_order_and_vnode_creation_order(
       has_clusters,
       cluster_keys,
     )
-  trace_nlist_order_debug(nlist_order)
   (nlist_order, vnode_creation_order)
 }
