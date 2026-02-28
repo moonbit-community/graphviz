@@ -3,15 +3,16 @@
 /// helpers isolated from other Stage C phases.
 
 ///|
-/// Graphviz parity: local cluster ordering seeds per-cluster minimum rank and
-/// first-seen node order prior to stable cluster sorting.
+/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
 /// Do not change behavior without updating fixtures/tests.
-fn collect_local_cluster_rank_and_first_order(
+fn build_local_cluster_order(
   nodes : Array[@cgraph.Node],
   local_cluster_keys : Map[String, String],
   ranks : Map[String, Int],
   node_order : Map[String, Int],
-) -> (Map[String, Int], Map[String, Int]) {
+) -> Map[String, Int] {
+  // Graphviz parity: local cluster ordering seeds per-cluster minimum rank and
+  // first-seen node order prior to stable cluster sorting.
   let min_rank : Map[String, Int] = Map::new()
   let first_order : Map[String, Int] = Map::new()
   for node in nodes {
@@ -39,19 +40,8 @@ fn collect_local_cluster_rank_and_first_order(
       first_order[cluster] = order_value
     }
   }
-  (min_rank, first_order)
-}
-
-
-
-///|
-/// Graphviz parity: local cluster order entries are sorted by min rank, then
-/// first node order, then cluster name for deterministic stable ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_sorted_local_cluster_entries(
-  min_rank : Map[String, Int],
-  first_order : Map[String, Int],
-) -> Array[(String, Int, Int)] {
+  // Graphviz parity: local cluster order entries are sorted by min rank, then
+  // first node order, then cluster name for deterministic stable ordering.
   let entries : Array[(String, Int, Int)] = []
   for cluster, rank in min_rank {
     let order = match first_order.get(cluster) {
@@ -79,18 +69,8 @@ fn build_sorted_local_cluster_entries(
       0
     }
   })
-  entries
-}
-
-
-
-///|
-/// Graphviz parity: sorted local cluster entries are assigned contiguous order
-/// ids in traversal order for clustered mincross passes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_order_map_from_entries(
-  entries : Array[(String, Int, Int)],
-) -> Map[String, Int] {
+  // Graphviz parity: sorted local cluster entries are assigned contiguous order
+  // ids in traversal order for clustered mincross passes.
   let order_map : Map[String, Int] = Map::new()
   let mut idx = 0
   for entry in entries {
@@ -101,27 +81,6 @@ fn build_local_cluster_order_map_from_entries(
     }
   }
   order_map
-}
-
-
-
-///|
-/// Graphviz parity: local cluster ordering uses minrank + first node order (cluster.c).
-/// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_order(
-  nodes : Array[@cgraph.Node],
-  local_cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-) -> Map[String, Int] {
-  let (min_rank, first_order) = collect_local_cluster_rank_and_first_order(
-    nodes,
-    local_cluster_keys,
-    ranks,
-    node_order,
-  )
-  let entries = build_sorted_local_cluster_entries(min_rank, first_order)
-  build_local_cluster_order_map_from_entries(entries)
 }
 
 ///|
