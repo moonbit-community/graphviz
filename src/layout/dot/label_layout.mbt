@@ -263,7 +263,7 @@ fn bezier_point(
 /// Graphviz parity: linear interpolation aligned to refs/graphviz/lib/common/utils.c
 /// (Bezier helper, uses fused multiply-add to match Graphviz compiler output).
 /// Do not change behavior without updating fixtures/tests.
-fn point_lerp_graphviz(
+fn point_lerp_fma(
   a : @geom.Point,
   b : @geom.Point,
   t : Double,
@@ -278,7 +278,7 @@ fn point_lerp_graphviz(
 /// Graphviz parity: Bézier evaluation aligned to refs/graphviz/lib/common/utils.c
 /// (Bezier).
 /// Do not change behavior without updating fixtures/tests.
-fn bezier_point_graphviz(
+fn bezier_point_fma(
   p0 : @geom.Point,
   p1 : @geom.Point,
   p2 : @geom.Point,
@@ -307,7 +307,7 @@ fn bezier_point_graphviz(
     while j <= 3 - i {
       let a = vtemp[i - 1][j]
       let b = vtemp[i - 1][j + 1]
-      vtemp[i][j] = point_lerp_graphviz(a, b, t)
+      vtemp[i][j] = point_lerp_fma(a, b, t)
       j = j + 1
     }
     i = i + 1
@@ -746,7 +746,7 @@ fn port_label_points(
           let p1 = points[start + 1]
           let p2 = points[start + 2]
           let p3 = points[start + 3]
-          Some((p3, bezier_point_graphviz(p0, p1, p2, p3, 0.9)))
+          Some((p3, bezier_point_fma(p0, p1, p2, p3, 0.9)))
         }
       None => {
         let start = points.length() - 4
@@ -754,7 +754,7 @@ fn port_label_points(
         let p1 = points[start + 1]
         let p2 = points[start + 2]
         let p3 = points[start + 3]
-        Some((p3, bezier_point_graphviz(p0, p1, p2, p3, 0.9)))
+        Some((p3, bezier_point_fma(p0, p1, p2, p3, 0.9)))
       }
     }
   } else {
@@ -767,14 +767,14 @@ fn port_label_points(
           let p1 = points[1]
           let p2 = points[2]
           let p3 = points[3]
-          Some((p0, bezier_point_graphviz(p0, p1, p2, p3, 0.1)))
+          Some((p0, bezier_point_fma(p0, p1, p2, p3, 0.1)))
         }
       None => {
         let p0 = points[0]
         let p1 = points[1]
         let p2 = points[2]
         let p3 = points[3]
-        Some((p0, bezier_point_graphviz(p0, p1, p2, p3, 0.1)))
+        Some((p0, bezier_point_fma(p0, p1, p2, p3, 0.1)))
       }
     }
   }
