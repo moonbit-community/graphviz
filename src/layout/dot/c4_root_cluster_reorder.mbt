@@ -328,14 +328,22 @@ fn build_root_groups_base_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: root cluster reorder seeds tail order from current nlist,
-/// replacing cluster members with rank-qualified skeleton names and deduping.
+/// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
+/// sequence from input order, prioritizes source tails, then rebuilds nlist via
+/// edge creation order while appending any missing root nodes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_tail_seed_order_for_cluster_reorder(
+fn build_root_nlist_order_for_cluster_reorder(
   nlist_order : Array[String],
   cluster_keys : Map[String, String],
   ranks : Map[String, Int],
+  root_nodes : Array[String],
+  root_node_map : Map[String, @cgraph.Node],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
 ) -> Array[String] {
+  // Graphviz parity: root cluster reorder seeds tail order from current nlist,
+  // replacing cluster members with rank-qualified skeleton names and deduping.
   let tail_order_root : Array[String] = []
   let tail_root_seen : Map[String, Bool] = Map::new()
   for name in nlist_order {
@@ -356,30 +364,6 @@ fn build_root_tail_seed_order_for_cluster_reorder(
       )
     }
   }
-  tail_order_root
-}
-
-///|
-/// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
-/// sequence from input order, prioritizes source tails, then rebuilds nlist via
-/// edge creation order while appending any missing root nodes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_nlist_order_for_cluster_reorder(
-  nlist_order : Array[String],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  root_nodes : Array[String],
-  root_node_map : Map[String, @cgraph.Node],
-  skeleton_edge_creation : Array[(String, String)],
-  root_edge_creation : Array[(String, String)],
-  flat_rank_constraints : Map[String, Bool],
-) -> Array[String] {
-  let tail_order_root =
-    build_root_tail_seed_order_for_cluster_reorder(
-      nlist_order,
-      cluster_keys,
-      ranks,
-    )
   let root_edge_creation_order =
     merge_edge_creation_sequences(
       skeleton_edge_creation,
