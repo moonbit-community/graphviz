@@ -312,33 +312,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
 }
 
 ///|
-/// Graphviz parity: clustered ordering finalize phase consumes pre-root/root
-/// stage data before running cluster-rank-order + final ReMincross cleanup.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_finalize_phase(
-  dispatch_context : ClusterFinalizePassDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let reorder_context = pre_root_stage.reorder_context
-  let (next_ordered_with_vnodes, final_groups) =
-    run_cluster_rank_order_and_finalize_stage(
-      dispatch_context,
-      reorder_context.order_rank_keys,
-      root_cluster_stage.order_groups_for_mincross,
-      pre_root_stage.order_cluster_keys,
-      pre_root_stage.order_cluster_skeleton,
-      pre_root_stage.order_sizes_out,
-      root_cluster_stage.ordered,
-      root_cluster_stage.ordered_with_vnodes,
-      reorder_context.creation_order,
-    )
-  remincross_root_tail_order_override_snapshot.val = None
-  (final_groups, next_ordered_with_vnodes)
-}
-
-
-///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
@@ -407,9 +380,19 @@ fn run_clustered_ordering_stage(
     order_sizes: stage_dispatch_context.order_sizes,
     rank_same_constraints: runtime_context.rank_same_constraints,
   }
-  run_clustered_ordering_finalize_phase(
+  let reorder_context = pre_root_stage.reorder_context
+  let (next_ordered_with_vnodes, final_groups) =
+    run_cluster_rank_order_and_finalize_stage(
     finalize_dispatch_context,
-    pre_root_stage,
-    root_cluster_stage,
-  )
+      reorder_context.order_rank_keys,
+      root_cluster_stage.order_groups_for_mincross,
+      pre_root_stage.order_cluster_keys,
+      pre_root_stage.order_cluster_skeleton,
+      pre_root_stage.order_sizes_out,
+      root_cluster_stage.ordered,
+      root_cluster_stage.ordered_with_vnodes,
+      reorder_context.creation_order,
+    )
+  remincross_root_tail_order_override_snapshot.val = None
+  (final_groups, next_ordered_with_vnodes)
 }
