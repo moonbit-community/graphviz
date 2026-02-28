@@ -1380,7 +1380,7 @@ fn tb_balance_bounds(
 /// Graphviz parity: TB_balance sorts by rank only via qsort (unstable).
 /// Stable tie ordering can invert adjacent sibling placements in tie-heavy DAGs
 /// (for example rowe: 12/13). Keep this narrow post-pass local to TB balance.
-fn tb_adjust_sibling_ties_graphviz(
+fn tb_adjust_sibling_ties(
   graph : NsGraph,
   max_rank : Int,
   initial_ranks : Array[Int],
@@ -1517,7 +1517,7 @@ fn tb_balance(graph : NsGraph) -> Unit {
       graph.nodes[idx].rank = choice
     }
   }
-  tb_adjust_sibling_ties_graphviz(graph, max_rank, initial_ranks)
+  tb_adjust_sibling_ties(graph, max_rank, initial_ranks)
 }
 
 ///|
