@@ -123,19 +123,6 @@ priv struct XposClusteredReorderEdgesData {
 }
 
 ///|
-priv struct XposClusteredInputEdgeData {
-  tail : String
-  head : String
-  penalty : Int
-  constraint : Bool
-  tail_port_x : Double
-  head_port_x : Double
-  tail_port_order : Double
-  head_port_order : Double
-  vnodes : Array[String]
-}
-
-///|
 /// Stage D Phase D0 split: position orchestrator helpers
 /// for x/y solve assembly and final result wiring.
 
