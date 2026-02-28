@@ -249,6 +249,44 @@ fn remincross_cluster_rank_ranges_overlap(
 }
 
 ///|
+/// Graphviz parity: mark_lowclusters assigns ReMincross edge-vnodes to the
+/// lowest common ancestor cluster (or root cluster when LCA is empty).
+fn assign_remincross_vnode_cluster_keys(
+  rem_cluster_keys : Map[String, String],
+  root_cluster : String,
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_vnodes : Map[String, Array[String]],
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+) -> Unit {
+  for edge_idx, edge in edges {
+    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+      Some(list) => list
+      None => []
+    }
+    if vnodes.length() == 0 {
+      continue
+    }
+    let (tail, head) =
+      remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let tail_cluster = remincross_cluster_key_or_empty(intercluster_keys, tail)
+    let head_cluster = remincross_cluster_key_or_empty(intercluster_keys, head)
+    let vnode_cluster =
+      cluster_lowest_common_ancestor(
+        tail_cluster,
+        head_cluster,
+        cluster_parents,
+      )
+    let rem_cluster = if vnode_cluster == "" { root_cluster } else { vnode_cluster }
+    for vnode in vnodes {
+      rem_cluster_keys[vnode] = rem_cluster
+    }
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
@@ -282,33 +320,16 @@ fn build_remincross_reorder_inputs(
     }
   }
   if order_with_vnodes {
-    for edge_idx, edge in edges {
-      let vnodes = match vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-        Some(list) => list
-        None => []
-      }
-      if vnodes.length() == 0 {
-        continue
-      }
-      let (tail, head) =
-        remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-      let tail_cluster =
-        remincross_cluster_key_or_empty(cluster_meta.intercluster_keys, tail)
-      let head_cluster =
-        remincross_cluster_key_or_empty(cluster_meta.intercluster_keys, head)
-      // Graphviz parity: mark_lowclusters assigns virtual nodes to the
-      // lowest common ancestor cluster for intercluster edges.
-      let vnode_cluster =
-        cluster_lowest_common_ancestor(
-          tail_cluster,
-          head_cluster,
-          cluster_meta.cluster_parents,
-        )
-      let rem_cluster = if vnode_cluster == "" { root_cluster } else { vnode_cluster }
-      for vnode in vnodes {
-        rem_cluster_keys[vnode] = rem_cluster
-      }
-    }
+    assign_remincross_vnode_cluster_keys(
+      rem_cluster_keys,
+      root_cluster,
+      edges,
+      edge_tail,
+      edge_head,
+      vnode_info.edge_vnodes,
+      cluster_meta.intercluster_keys,
+      cluster_meta.cluster_parents,
+    )
   }
   let rem_sizes =
     build_order_sizes_for_order_graph(
