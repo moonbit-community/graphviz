@@ -305,29 +305,6 @@ fn build_x_cluster_keys_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage seed output object maps vnode-order probe result,
-/// edge-port metadata, and prepared groups/cluster keys without remapping.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_position_stage_seed_output_for_positions(
-  has_vnode_order : Bool,
-  x_order_edge_port_data : XposOrderEdgePortData,
-  x_groups : Map[Int, Array[String]],
-  x_cluster_keys : Map[String, String],
-) -> XPositionStageSeedData {
-  {
-    has_vnode_order,
-    x_base_sizes: x_order_edge_port_data.x_base_sizes,
-    x_order_sizes: x_order_edge_port_data.x_order_sizes,
-    x_edge_tail_port_x: x_order_edge_port_data.x_edge_tail_port_x,
-    x_edge_head_port_x: x_order_edge_port_data.x_edge_head_port_x,
-    x_edge_tail_port_order: x_order_edge_port_data.x_edge_tail_port_order,
-    x_edge_head_port_order: x_order_edge_port_data.x_edge_head_port_order,
-    x_groups,
-    x_cluster_keys,
-  }
-}
-
-///|
 /// Graphviz parity: x-stage seed group/cluster maps derive from initial x
 /// groups and vnode-aware cluster-key overlays without remapping.
 /// Do not change behavior without updating fixtures/tests.
@@ -418,12 +395,17 @@ fn build_x_position_stage_seed_data_for_positions(
       seed_order_vnode_data.vnode_order_state.vnode_order_keys,
       cluster_meta,
     )
-  build_x_position_stage_seed_output_for_positions(
+  {
     has_vnode_order,
-    x_order_edge_port_data,
-    x_stage_seed_group_cluster_data.x_groups,
-    x_stage_seed_group_cluster_data.x_cluster_keys,
-  )
+    x_base_sizes: x_order_edge_port_data.x_base_sizes,
+    x_order_sizes: x_order_edge_port_data.x_order_sizes,
+    x_edge_tail_port_x: x_order_edge_port_data.x_edge_tail_port_x,
+    x_edge_head_port_x: x_order_edge_port_data.x_edge_head_port_x,
+    x_edge_tail_port_order: x_order_edge_port_data.x_edge_tail_port_order,
+    x_edge_head_port_order: x_order_edge_port_data.x_edge_head_port_order,
+    x_groups: x_stage_seed_group_cluster_data.x_groups,
+    x_cluster_keys: x_stage_seed_group_cluster_data.x_cluster_keys,
+  }
 }
 
 ///|
