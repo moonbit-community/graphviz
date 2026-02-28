@@ -221,6 +221,34 @@ fn remincross_cluster_key_or_empty(
 }
 
 ///|
+/// Graphviz parity: intercluster trailing-vnode checks use inclusive rank-range
+/// overlap derived from each cluster's min/max rank bounds.
+fn remincross_cluster_rank_ranges_overlap(
+  tail_cluster : String,
+  head_cluster : String,
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Bool {
+  let tail_min = match cluster_min_rank.get(tail_cluster) {
+    Some(value) => value
+    None => 0
+  }
+  let tail_max = match cluster_max_rank.get(tail_cluster) {
+    Some(value) => value
+    None => tail_min
+  }
+  let head_min = match cluster_min_rank.get(head_cluster) {
+    Some(value) => value
+    None => 0
+  }
+  let head_max = match cluster_max_rank.get(head_cluster) {
+    Some(value) => value
+    None => head_min
+  }
+  tail_min <= head_max && head_min <= tail_max
+}
+
+///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
@@ -344,29 +372,18 @@ fn build_remincross_groups_with_optional_vnodes(
           tail_cluster != "" && head_cluster != "" &&
           edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
         let should_trail =
-          if internal || tail_cluster == head_cluster {
-            false
-          } else if tail_cluster == "" || head_cluster == "" {
+          if internal ||
+            tail_cluster == head_cluster ||
+            tail_cluster == "" ||
+            head_cluster == "" {
             false
           } else {
-            let tail_min = match cluster_min_rank.get(tail_cluster) {
-              Some(value) => value
-              None => 0
-            }
-            let tail_max = match cluster_max_rank.get(tail_cluster) {
-              Some(value) => value
-              None => tail_min
-            }
-            let head_min = match cluster_min_rank.get(head_cluster) {
-              Some(value) => value
-              None => 0
-            }
-            let head_max = match cluster_max_rank.get(head_cluster) {
-              Some(value) => value
-              None => head_min
-            }
-            let overlap = tail_min <= head_max && head_min <= tail_max
-            !overlap
+            !remincross_cluster_rank_ranges_overlap(
+              tail_cluster,
+              head_cluster,
+              cluster_min_rank,
+              cluster_max_rank,
+            )
           }
         if should_trail {
           let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
