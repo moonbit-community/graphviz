@@ -97,52 +97,6 @@ fn append_same_rank_flat_constraints_for_metadata(
 }
 
 ///|
-/// Graphviz parity: cluster rank bounds are collected from member node rank
-/// and first appearance order before cluster-order base expansion.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_bounds_for_metadata(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-) -> (Map[String, Int], Map[String, Int], Map[String, Int]) {
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
-  // Graphviz parity: cluster min/max rank and first order are collected
-  // from cluster member nodes before clustered reorder setup.
-  for node in nodes {
-    let name = node.name()
-    let cluster = cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let rank = match ranks.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    match cluster_min_rank.get(cluster) {
-      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
-      None => cluster_min_rank[cluster] = rank
-    }
-    match cluster_max_rank.get(cluster) {
-      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
-      None => cluster_max_rank[cluster] = rank
-    }
-    if cluster_first_order.get(cluster) is None {
-      let order_value = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
-      cluster_first_order[cluster] = order_value
-    }
-  }
-  (cluster_min_rank, cluster_max_rank, cluster_first_order)
-}
-
-
-
-///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -269,13 +223,39 @@ fn compute_cluster_metadata(
     graphviz_flip,
   )
   let cluster_skeleton = build_cluster_skeleton_for_metadata(groups, cluster_keys)
-  let (cluster_min_rank, cluster_max_rank, cluster_first_order) =
-    build_cluster_rank_bounds_for_metadata(
-      nodes,
-      cluster_keys,
-      ranks,
-      node_order,
-    )
+  // Graphviz parity: cluster rank bounds are collected from member node rank
+  // and first appearance order before cluster-order base expansion.
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  // Graphviz parity: cluster min/max rank and first order are collected
+  // from cluster member nodes before clustered reorder setup.
+  for node in nodes {
+    let name = node.name()
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
+    }
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    match cluster_min_rank.get(cluster) {
+      Some(current) => if rank < current { cluster_min_rank[cluster] = rank }
+      None => cluster_min_rank[cluster] = rank
+    }
+    match cluster_max_rank.get(cluster) {
+      Some(current) => if rank > current { cluster_max_rank[cluster] = rank }
+      None => cluster_max_rank[cluster] = rank
+    }
+    if cluster_first_order.get(cluster) is None {
+      let order_value = match node_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+      cluster_first_order[cluster] = order_value
+    }
+  }
   // Graphviz parity: cluster order and parent map are collected from
   // Graphviz cluster traversal before clustered ordering stages.
   let cluster_order : Array[String] = []
