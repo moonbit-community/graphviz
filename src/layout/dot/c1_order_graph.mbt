@@ -399,22 +399,6 @@ fn build_root_order_edges_by_tail(
 }
 
 ///|
-/// Graphviz parity: nlist index map follows current GD_nlist/decompose order
-/// for vnode key fallback and class2 ordering ties.
-/// Do not change behavior without updating fixtures/tests.
-fn build_nlist_order_index(
-  nlist_order : Array[String],
-) -> Map[String, Int] {
-  let nlist_order_index : Map[String, Int] = Map::new()
-  let mut nlist_idx = 0
-  for name in nlist_order {
-    nlist_order_index[name] = nlist_idx
-    nlist_idx = nlist_idx + 1
-  }
-  nlist_order_index
-}
-
-///|
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.

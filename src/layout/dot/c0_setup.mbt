@@ -232,7 +232,12 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
     } else {
       class2_data.nlist_order
     }
-  let nlist_order_index = build_nlist_order_index(class2_data.nlist_order)
+  let nlist_order_index : Map[String, Int] = Map::new()
+  let mut nlist_idx = 0
+  for name in class2_data.nlist_order {
+    nlist_order_index[name] = nlist_idx
+    nlist_idx = nlist_idx + 1
+  }
   let vnode_order_keys_for_ordering =
     build_vnode_order_keys_for_ordering_stage(
       vnode_count,
