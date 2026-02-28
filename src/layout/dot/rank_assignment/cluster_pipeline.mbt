@@ -17,31 +17,6 @@ pub fn compute_ranks_directed(
       nodes,
       edges,
       has_edge_labels,
-      (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-        let (tail, head, _reversed, _out_edges, _in_edges) =
-          acyclic_edge_directions_with_order(graph, graph_nodes, graph_edges)
-        compute_ranks_directed_base(
-          graph,
-          graph_nodes,
-          graph_edges,
-          graph_has_edge_labels,
-          tail,
-          head,
-        )
-      },
-      (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-        let (tail, head, _reversed, _out_edges, _in_edges) =
-          acyclic_edge_directions_with_order(graph, graph_nodes, graph_edges)
-        compute_ranks_directed(
-          graph,
-          graph_nodes,
-          graph_edges,
-          graph_has_edge_labels,
-          tail,
-          head,
-          back_weight_scale,
-        )
-      },
       back_weight_scale,
     )
   }
@@ -83,27 +58,20 @@ fn compute_clustered_ranks(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
-  compute_base_ranks : (
-    (
-      @cgraph.Graph,
-      Array[@cgraph.Node],
-      Array[@cgraph.Edge],
-      Bool,
-    ) -> (Map[String, Int])
-  ),
-  compute_cluster_ranks : (
-    (
-      @cgraph.Graph,
-      Array[@cgraph.Node],
-      Array[@cgraph.Edge],
-      Bool,
-    ) -> (Map[String, Int])
-  ),
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   let (cluster_graphs, top_clusters) = collect_top_clusters(source)
   if top_clusters.length() == 0 {
-    return compute_base_ranks(source, nodes, edges, has_edge_labels)
+    let (tail, head, _reversed, _out_edges, _in_edges) =
+      acyclic_edge_directions_with_order(source, nodes, edges)
+    return compute_ranks_directed_base(
+      source,
+      nodes,
+      edges,
+      has_edge_labels,
+      tail,
+      head,
+    )
   }
   let cluster_members = collect_cluster_members(cluster_graphs)
   let node_cluster = build_node_cluster_index(top_clusters, cluster_members)
@@ -114,13 +82,23 @@ fn compute_clustered_ranks(
     top_clusters,
     cluster_graphs,
     cluster_members,
-    (cluster_graph, cluster_nodes, cluster_edges) =>
-      compute_cluster_ranks(
+    (cluster_graph, cluster_nodes, cluster_edges) => {
+      let (tail, head, _reversed, _out_edges, _in_edges) =
+        acyclic_edge_directions_with_order(
+          cluster_graph,
+          cluster_nodes,
+          cluster_edges,
+        )
+      compute_ranks_directed(
         cluster_graph,
         cluster_nodes,
         cluster_edges,
         has_edge_labels,
-      ),
+        tail,
+        head,
+        back_weight_scale,
+      )
+    },
   )
   let leader_ranks = solve_clustered_leader_ranks(
     nodes,
