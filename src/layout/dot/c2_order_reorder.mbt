@@ -247,45 +247,6 @@ priv struct MaterializedOrderEdgesAndNeighborsContext {
 }
 
 ///|
-/// Graphviz parity: materialized order-edge context builder keeps reorder
-/// graph fields and neighbor inputs in Graphviz materialization order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_materialized_order_edges_and_neighbors_context(
-  nlist_order : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  reorder_context : OrderReorderContext,
-  real_nodes : Map[String, Bool],
-  edge_creation_order : Array[(String, String)],
-  cluster_meta : ClusterMetadata,
-  gdnlist_order : Array[String],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nodes : Array[@cgraph.Node],
-) -> MaterializedOrderEdgesAndNeighborsContext {
-  {
-    nlist_order,
-    order_edges_by_tail,
-    order_graph: reorder_context.order_graph,
-    order_node_map: reorder_context.order_node_map,
-    order_edges_by_tail_unmapped,
-    order_graph_unmapped: reorder_context.order_graph_unmapped,
-    order_node_map_unmapped: reorder_context.order_node_map_unmapped,
-    order_ranks: reorder_context.order_ranks,
-    real_nodes,
-    order_nodes: reorder_context.order_nodes,
-    edge_creation_order,
-    cluster_meta,
-    gdnlist_order,
-    edge_tail,
-    edge_head,
-    nodes,
-    order_node_order: reorder_context.order_node_order,
-  }
-}
-
-
-///|
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.

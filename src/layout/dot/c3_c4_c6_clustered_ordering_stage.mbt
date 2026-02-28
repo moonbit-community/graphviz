@@ -135,20 +135,25 @@ fn build_clustered_pre_root_reorder_context_and_materialized(
       context.port_edge_nodes,
     )
   trace_order_node_order_debug(reorder_context.order_node_order)
-  let materialized_inputs =
-    build_materialized_order_edges_and_neighbors_context(
-      context.nlist_order,
-      context.order_edges_by_tail,
-      context.order_edges_by_tail_unmapped,
-      reorder_context,
-      context.real_nodes,
-      context.edge_creation_order,
-      context.cluster_meta,
-      context.gdnlist_order,
-      context.edge_tail,
-      context.edge_head,
-      context.nodes,
-    )
+  let materialized_inputs : MaterializedOrderEdgesAndNeighborsContext = {
+    nlist_order: context.nlist_order,
+    order_edges_by_tail: context.order_edges_by_tail,
+    order_graph: reorder_context.order_graph,
+    order_node_map: reorder_context.order_node_map,
+    order_edges_by_tail_unmapped: context.order_edges_by_tail_unmapped,
+    order_graph_unmapped: reorder_context.order_graph_unmapped,
+    order_node_map_unmapped: reorder_context.order_node_map_unmapped,
+    order_ranks: reorder_context.order_ranks,
+    real_nodes: context.real_nodes,
+    order_nodes: reorder_context.order_nodes,
+    edge_creation_order: context.edge_creation_order,
+    cluster_meta: context.cluster_meta,
+    gdnlist_order: context.gdnlist_order,
+    edge_tail: context.edge_tail,
+    edge_head: context.edge_head,
+    nodes: context.nodes,
+    order_node_order: reorder_context.order_node_order,
+  }
   let materialized =
     build_materialized_order_edges_and_neighbors(materialized_inputs)
   (reorder_context, materialized)
