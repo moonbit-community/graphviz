@@ -296,19 +296,39 @@ fn build_remincross_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: ReMincross virtual nodes take the LCA endpoint cluster
-/// (or root fallback) from intercluster edge endpoints.
+/// Graphviz parity: ReMincross cluster keys start from intercluster keys,
+/// map empty keys to the root graph key, and assign edge vnodes to the LCA
+/// cluster (mark_lowclusters) for cluster-boundary swap guards.
 /// Do not change behavior without updating fixtures/tests.
-fn assign_remincross_vnode_clusters_from_edges(
-  rem_cluster_keys : Map[String, String],
-  root_cluster : String,
+fn build_remincross_cluster_keys(
+  graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
+  order_with_vnodes : Bool,
   intercluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   edge_vnodes : Map[String, Array[String]],
-) -> Unit {
+) -> Map[String, String] {
+  let rem_cluster_keys : Map[String, String] = Map::new()
+  for name, key in intercluster_keys {
+    rem_cluster_keys[name] = key
+  }
+  // Graphviz parity: ND_clust is the root graph for nodes outside
+  // any cluster (mark_lowclusters). Use a non-empty root key so
+  // ReMincross can block swaps across cluster boundaries.
+  let root_cluster = match graph.name() {
+    Some(value) => value
+    None => "__root__"
+  }
+  for name, key in rem_cluster_keys {
+    if key == "" {
+      rem_cluster_keys[name] = root_cluster
+    }
+  }
+  if !order_with_vnodes {
+    return rem_cluster_keys
+  }
   let mut edge_idx = 0
   for edge in edges {
     let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
@@ -343,52 +363,6 @@ fn assign_remincross_vnode_clusters_from_edges(
     }
     edge_idx = edge_idx + 1
   }
-}
-
-///|
-/// Graphviz parity: ReMincross cluster keys start from intercluster keys,
-/// map empty keys to the root graph key, and assign edge vnodes to the LCA
-/// cluster (mark_lowclusters) for cluster-boundary swap guards.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_keys(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_with_vnodes : Bool,
-  intercluster_keys : Map[String, String],
-  cluster_parents : Map[String, String?],
-  edge_vnodes : Map[String, Array[String]],
-) -> Map[String, String] {
-  let rem_cluster_keys : Map[String, String] = Map::new()
-  for name, key in intercluster_keys {
-    rem_cluster_keys[name] = key
-  }
-  // Graphviz parity: ND_clust is the root graph for nodes outside
-  // any cluster (mark_lowclusters). Use a non-empty root key so
-  // ReMincross can block swaps across cluster boundaries.
-  let root_cluster = match graph.name() {
-    Some(value) => value
-    None => "__root__"
-  }
-  for name, key in rem_cluster_keys {
-    if key == "" {
-      rem_cluster_keys[name] = root_cluster
-    }
-  }
-  if !order_with_vnodes {
-    return rem_cluster_keys
-  }
-  assign_remincross_vnode_clusters_from_edges(
-    rem_cluster_keys,
-    root_cluster,
-    edges,
-    edge_tail,
-    edge_head,
-    intercluster_keys,
-    cluster_parents,
-    edge_vnodes,
-  )
   rem_cluster_keys
 }
 
