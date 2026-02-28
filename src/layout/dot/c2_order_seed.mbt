@@ -3,104 +3,6 @@
 /// and early reorder-input materialization helpers.
 
 ///|
-/// Graphviz parity: mapped order-edge arrays are materialized from GD_nlist
-/// tail order against the cluster-remapped order graph.
-/// Do not change behavior without updating fixtures/tests.
-fn materialize_mapped_order_edges_for_tail_sequence(
-  nlist_order : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_graph : @cgraph.Graph,
-  order_node_map : Map[String, @cgraph.Node],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let order_edges_out : Array[@cgraph.Edge] = []
-  let order_edge_tail_out : Array[String] = []
-  let order_edge_head_out : Array[String] = []
-  let order_edge_tail_port_x : Array[Double] = []
-  let order_edge_head_port_x : Array[Double] = []
-  let order_edge_tail_port_order : Array[Double] = []
-  let order_edge_head_port_order : Array[Double] = []
-  append_order_edges_for_tail_sequence(
-    nlist_order,
-    order_edges_by_tail,
-    order_graph,
-    order_node_map,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  )
-  (
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  )
-}
-
-///|
-/// Graphviz parity: unmapped order-edge arrays are materialized from GD_nlist
-/// tail order against the non-remapped order graph.
-/// Do not change behavior without updating fixtures/tests.
-fn materialize_unmapped_order_edges_for_tail_sequence(
-  nlist_order : Array[String],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_graph_unmapped : @cgraph.Graph,
-  order_node_map_unmapped : Map[String, @cgraph.Node],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let order_edges_out_unmapped : Array[@cgraph.Edge] = []
-  let order_edge_tail_out_unmapped : Array[String] = []
-  let order_edge_head_out_unmapped : Array[String] = []
-  let order_edge_tail_port_x_unmapped : Array[Double] = []
-  let order_edge_head_port_x_unmapped : Array[Double] = []
-  let order_edge_tail_port_order_unmapped : Array[Double] = []
-  let order_edge_head_port_order_unmapped : Array[Double] = []
-  append_order_edges_for_tail_sequence(
-    nlist_order,
-    order_edges_by_tail_unmapped,
-    order_graph_unmapped,
-    order_node_map_unmapped,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  )
-  (
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  )
-}
-
-///|
 /// Graphviz parity: order-graph edge arrays are materialized from GD_nlist
 /// tail order for both mapped (cluster-remapped) and unmapped variants.
 /// Do not change behavior without updating fixtures/tests.
@@ -137,7 +39,9 @@ fn materialize_mapped_and_unmapped_order_edges(
     order_edge_tail_port_order,
     order_edge_head_port_order,
   ) =
-    materialize_mapped_order_edges_for_tail_sequence(
+    // Graphviz parity: mapped order-edge arrays are materialized from GD_nlist
+    // tail order against the cluster-remapped order graph.
+    collect_order_edges_for_tail_sequence(
       nlist_order,
       order_edges_by_tail,
       order_graph,
@@ -152,7 +56,9 @@ fn materialize_mapped_and_unmapped_order_edges(
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
   ) =
-    materialize_unmapped_order_edges_for_tail_sequence(
+    // Graphviz parity: unmapped order-edge arrays are materialized from GD_nlist
+    // tail order against the non-remapped order graph.
+    collect_order_edges_for_tail_sequence(
       nlist_order,
       order_edges_by_tail_unmapped,
       order_graph_unmapped,
