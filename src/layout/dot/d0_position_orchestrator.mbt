@@ -188,14 +188,6 @@ priv struct NonclusterXposReorderInputs {
 }
 
 ///|
-priv struct XposTransposeCleanupInputs {
-  parents : Map[String, Array[String]]
-  children : Map[String, Array[String]]
-  tmp_rank_keys : Array[Int]
-  tmp_ranks : Map[String, Int]
-}
-
-///|
 /// Stage D Phase D0 split: position orchestrator helpers
 /// for x/y solve assembly and final result wiring.
 
@@ -476,7 +468,7 @@ fn build_x_stage_groups_after_optional_reorder_for_positions(
   x_stage_seed : XPositionStageSeedData,
 ) -> Map[Int, Array[String]] {
   let x_groups =
-    maybe_apply_xpos_reorder_for_positions(
+    build_xpos_reordered_groups_for_positions(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
