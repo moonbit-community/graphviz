@@ -182,6 +182,35 @@ fn build_remincross_materialized_order_graph(
 }
 
 ///|
+/// Graphviz parity: ReMincross creation order starts from tail creation order
+/// then appends each tail vnode sequence once (stable dedupe).
+/// Do not change behavior without updating fixtures/tests.
+fn build_rem_order_creation_sequence(
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+) -> Array[String] {
+  let rem_order_creation : Array[String] = []
+  let rem_seen : Map[String, Bool] = Map::new()
+  for tail_name in creation_order {
+    if rem_seen.get(tail_name) is None {
+      rem_seen[tail_name] = true
+      rem_order_creation.push(tail_name)
+    }
+    let vnodes = match rem_vnode_creation.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for vnode in vnodes {
+      if rem_seen.get(vnode) is None {
+        rem_seen[vnode] = true
+        rem_order_creation.push(vnode)
+      }
+    }
+  }
+  rem_order_creation
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
 /// first-seen cluster sequence and replays each cluster block by rank-desc
 /// reverse-order before root-cluster nodes.
