@@ -585,43 +585,6 @@ fn apply_clustered_xpos_reorder_rank_groups_for_positions(
 }
 
 ///|
-/// Graphviz parity: clustered reorder apply step wires seed/edge bundles into
-/// reorder_rank_groups without changing Graphviz-aligned argument flow.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_xpos_reorder_from_seed_and_edges_for_positions(
-  reorder_seed_data : XposClusteredReorderSeedData,
-  reorder_edges_data : XposClusteredReorderEdgesData,
-  cluster_meta : ClusterMetadata,
-  prep : LayoutPrep,
-  rank_heights : RankHeights,
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  apply_clustered_xpos_reorder_rank_groups_for_positions(
-    reorder_seed_data.order_rank_keys,
-    reorder_seed_data.order_groups,
-    reorder_edges_data.order_edges_out,
-    reorder_edges_data.order_edge_tail_out,
-    reorder_edges_data.order_edge_head_out,
-    reorder_edges_data.order_edge_tail_port_x,
-    reorder_edges_data.order_edge_head_port_x,
-    reorder_edges_data.order_edge_tail_port_order,
-    reorder_edges_data.order_edge_head_port_order,
-    reorder_seed_data.order_nodes,
-    reorder_seed_data.order_ranks,
-    reorder_seed_data.order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    reorder_seed_data.order_node_order,
-    reorder_seed_data.order_sizes,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
-    reorder_seed_data.order_cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_flip,
-  )
-}
-
-///|
 /// Graphviz parity: clustered xpos reorder branch keeps the same seed build,
 /// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -660,12 +623,27 @@ fn build_clustered_xpos_reordered_groups(
       x_edge_tail_port_order,
       x_edge_head_port_order,
     )
-  apply_clustered_xpos_reorder_from_seed_and_edges_for_positions(
-    reorder_seed_data,
-    reorder_edges_data,
-    cluster_meta,
-    prep,
-    rank_heights,
+  apply_clustered_xpos_reorder_rank_groups_for_positions(
+    reorder_seed_data.order_rank_keys,
+    reorder_seed_data.order_groups,
+    reorder_edges_data.order_edges_out,
+    reorder_edges_data.order_edge_tail_out,
+    reorder_edges_data.order_edge_head_out,
+    reorder_edges_data.order_edge_tail_port_x,
+    reorder_edges_data.order_edge_head_port_x,
+    reorder_edges_data.order_edge_tail_port_order,
+    reorder_edges_data.order_edge_head_port_order,
+    reorder_seed_data.order_nodes,
+    reorder_seed_data.order_ranks,
+    reorder_seed_data.order_cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    reorder_seed_data.order_node_order,
+    reorder_seed_data.order_sizes,
+    rank_heights.nodesep_pt,
+    prep.has_edge_labels,
+    reorder_seed_data.order_cluster_skeleton,
+    cluster_meta.flat_constraints,
     graphviz_flip,
   )
 }
