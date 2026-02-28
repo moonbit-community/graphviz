@@ -360,34 +360,6 @@ fn build_root_tail_seed_order_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: root GD_nlist output keeps only materialized root nodes,
-/// then appends any missing root names in root_nodes order.
-/// Do not change behavior without updating fixtures/tests.
-fn finalize_root_nlist_order_for_cluster_reorder(
-  root_nlist_full : Array[String],
-  root_nodes : Array[String],
-  root_node_map : Map[String, @cgraph.Node],
-) -> Array[String] {
-  let root_nlist_order : Array[String] = []
-  let root_seen : Map[String, Bool] = Map::new()
-  for name in root_nlist_full {
-    if root_node_map.get(name) is Some(_) {
-      root_seen[name] = true
-      root_nlist_order.push(name)
-    }
-  }
-  if root_nlist_order.length() < root_nodes.length() {
-    for name in root_nodes {
-      if root_seen.get(name) is None {
-        root_nlist_order.push(name)
-      }
-    }
-  }
-  root_nlist_order
-}
-
-
-///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
@@ -452,11 +424,24 @@ fn build_root_nlist_order_for_cluster_reorder(
       root_edge_creation_order,
       flat_rank_constraints,
     )
-  finalize_root_nlist_order_for_cluster_reorder(
-    root_nlist_full,
-    root_nodes,
-    root_node_map,
-  )
+  // Graphviz parity: root GD_nlist output keeps only materialized root nodes,
+  // then appends any missing root names in root_nodes order.
+  let root_nlist_order : Array[String] = []
+  let root_seen : Map[String, Bool] = Map::new()
+  for name in root_nlist_full {
+    if root_node_map.get(name) is Some(_) {
+      root_seen[name] = true
+      root_nlist_order.push(name)
+    }
+  }
+  if root_nlist_order.length() < root_nodes.length() {
+    for name in root_nodes {
+      if root_seen.get(name) is None {
+        root_nlist_order.push(name)
+      }
+    }
+  }
+  root_nlist_order
 }
 
 ///|
