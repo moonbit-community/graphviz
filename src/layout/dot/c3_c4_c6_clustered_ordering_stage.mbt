@@ -129,18 +129,19 @@ fn build_clustered_ordering_pre_root_stage(
 
 
 ///|
-/// Graphviz parity: clustered root phase reuses root-only reorder input
-/// assembly to derive the root-tail replay order for mapped edge materialize.
+/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
+/// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_tail_order_override_for_clustered_root_phase(
+fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
   stage_dispatch_context : ClusteredOrderingStageDispatchContext,
   pre_root_stage : OrderClusteredPreRootStageData,
-) -> (Array[String], Map[Int, Array[String]]) {
+) -> OrderRootClusterStageData {
   let reorder_setup = stage_dispatch_context.reorder_setup
   let class2_data = stage_dispatch_context.class2_data
   let runtime_context = stage_dispatch_context.runtime_context
   let cluster_meta = stage_dispatch_context.cluster_meta
   let reorder_context = pre_root_stage.reorder_context
+  remincross_root_tail_order_override_snapshot.val = None
   let root_reorder_output : RootClusterReorderInputsForRankOrderOutput =
     build_root_cluster_reorder_inputs_for_rank_order(
       reorder_setup.order_with_vnodes,
@@ -184,7 +185,7 @@ fn build_root_tail_order_override_for_clustered_root_phase(
   for tail in root_edge_tail_out {
     append_order_creation_name_if_absent(root_tail_order_override, seen_root_tail, tail)
   }
-  let (_root_rank_keys, ordered_root) =
+  let (_root_rank_keys, root_groups_override) =
     run_root_cluster_rank_order_phase_from_root_reorder_output(
       pre_root_stage.order_cluster_keys,
       cluster_meta.rank_same_groups,
@@ -199,25 +200,6 @@ fn build_root_tail_order_override_for_clustered_root_phase(
       reorder_setup.graphviz_flip,
       root_reorder_output,
     )
-  (root_tail_order_override, ordered_root)
-}
-
-///|
-/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
-/// typed stage context + pre-root output without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
-  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
-) -> OrderRootClusterStageData {
-  let reorder_setup = stage_dispatch_context.reorder_setup
-  let runtime_context = stage_dispatch_context.runtime_context
-  remincross_root_tail_order_override_snapshot.val = None
-  let (root_tail_order_override, root_groups_override) =
-    build_root_tail_order_override_for_clustered_root_phase(
-      stage_dispatch_context,
-      pre_root_stage,
-    )
   if reorder_setup.order_with_clusters {
     remincross_root_tail_order_override_snapshot.val =
       Some(root_tail_order_override.copy())
@@ -230,7 +212,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
   } else {
     root_mincross_groups_override.val = None
   }
-  let reorder_context = pre_root_stage.reorder_context
   let materialized = pre_root_stage.materialized
   let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
   let stage_inputs : RootClusterBuildRanksStageInputs = {
