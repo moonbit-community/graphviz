@@ -3,19 +3,6 @@
 /// construction helpers for ordering-graph assembly.
 
 ///|
-/// Graphviz parity: class2 traverses agfstnode creation order.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_creation_order(
-  nodes : Array[@cgraph.Node],
-) -> Array[String] {
-  let creation_order : Array[String] = []
-  for node in nodes {
-    creation_order.push(node.name())
-  }
-  creation_order
-}
-
-///|
 /// Graphviz parity: order-graph tail buckets copy ND_out edge insertion order
 /// for each agfstnode name, with empty lists for nodes without out edges.
 /// Do not change behavior without updating fixtures/tests.

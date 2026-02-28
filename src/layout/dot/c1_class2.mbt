@@ -268,7 +268,10 @@ fn build_ordering_class2_base_edge_chains(
   Array[(String, String)],
 ) {
   // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
-  let creation_order = collect_creation_order(nodes)
+  let creation_order : Array[String] = []
+  for node in nodes {
+    creation_order.push(node.name())
+  }
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
   let edges_by_tail =
     build_edges_by_tail_from_out_order(nodes, edge_out_order)
