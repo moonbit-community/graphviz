@@ -2,7 +2,7 @@
 /// Graphviz parity: rank.c tb_balance uses qsort(rank-only), which can move
 /// tie-equivalent chain nodes one rank further than stable ordering.
 /// Keep this local post-pass scoped to rank assignment.
-fn tb_tie_adjust_rank_assignment_graphviz(graph : @network_simplex.NsGraph) -> Unit {
+fn tb_tie_adjust_rank_assignment(graph : @network_simplex.NsGraph) -> Unit {
   let max_rank = @network_simplex.normalize_ranks_for_test(graph)
   if max_rank <= 0 {
     return ()
@@ -312,7 +312,7 @@ pub fn compute_ranks_directed_base(
       let _ = @network_simplex.add_edge(graph, tail_local, head_local, minlen, weight)
     }
     @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::TB)
-    tb_tie_adjust_rank_assignment_graphviz(graph)
+    tb_tie_adjust_rank_assignment(graph)
     let mut component_min_rank = 0
     let mut component_seen = false
     for rep_idx in component {
