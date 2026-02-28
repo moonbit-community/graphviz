@@ -41,53 +41,6 @@ priv struct OrderingReorderSetup {
 }
 
 ///|
-/// Graphviz parity: reorder-setup context keeps class2/mincross preparation
-/// inputs in Graphviz ordering before setup-stage dispatch.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingReorderSetupContext {
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
-  port_edge_nodes : Map[String, Bool]
-  vnode_count : Int
-  rankdir : RankDir
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-}
-
-///|
-/// Graphviz parity: dispatch-setup context keeps edge-port extraction +
-/// reorder-setup payload ordering unchanged before setup assembly.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingDispatchSetupContext {
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
-  port_edge_nodes : Map[String, Bool]
-  vnode_count : Int
-  rankdir : RankDir
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-}
-
-///|
 priv struct OrderingDispatchSetup {
   edge_port_data : OrderingEdgePortData
   reorder_setup : OrderingReorderSetup
@@ -355,7 +308,24 @@ fn build_ordering_reorder_flags_and_constraints(
 /// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_reorder_setup(
-  context : OrderingReorderSetupContext,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
 ) -> OrderingReorderSetup {
   let (
     ordering_groups_base,
@@ -366,38 +336,38 @@ fn build_ordering_reorder_setup(
     flat_rank_constraints,
   ) =
     build_ordering_reorder_flags_and_constraints(
-      context.groups,
-      context.cluster_meta,
-      context.node_order,
-      context.port_edge_nodes,
-      context.vnode_count,
-      context.rankdir,
-      context.edge_tail,
-      context.edge_head,
-      context.ranks,
+      groups,
+      cluster_meta,
+      node_order,
+      port_edge_nodes,
+      vnode_count,
+      rankdir,
+      edge_tail,
+      edge_head,
+      ranks,
     )
   let (class2_data, gdnlist_order, vnode_order_keys_for_ordering) =
     build_ordering_class2_and_vnode_keys_for_reorder_setup(
-      context.nodes,
-      context.edges,
-      context.edge_tail,
-      context.edge_head,
-      context.edge_reversed,
-      context.edge_out_order,
-      context.ranks,
-      context.vnode_count,
-      context.cluster_meta,
-      context.vnode_info,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      vnode_count,
+      cluster_meta,
+      vnode_info,
       ordering_groups_base,
       base_order_index,
       order_with_vnodes,
       order_with_clusters,
       flat_rank_constraints,
       graphviz_flip,
-      context.edge_tail_port_x,
-      context.edge_head_port_x,
-      context.edge_tail_port_order,
-      context.edge_head_port_order,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
     )
   {
     ordering_groups_base,
@@ -417,38 +387,51 @@ fn build_ordering_reorder_setup(
 /// sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_dispatch_setup(
-  context : OrderingDispatchSetupContext,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
 ) -> OrderingDispatchSetup {
   let edge_port_data =
     build_ordering_edge_port_data(
-      context.nodes,
-      context.edges,
-      context.edge_tail,
-      context.edge_head,
-      context.order_sizes,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
     )
-  let reorder_setup_context : OrderingReorderSetupContext = {
-    nodes: context.nodes,
-    edges: context.edges,
-    edge_tail: context.edge_tail,
-    edge_head: context.edge_head,
-    edge_reversed: context.edge_reversed,
-    edge_out_order: context.edge_out_order,
-    ranks: context.ranks,
-    groups: context.groups,
-    node_order: context.node_order,
-    port_edge_nodes: context.port_edge_nodes,
-    vnode_count: context.vnode_count,
-    rankdir: context.rankdir,
-    cluster_meta: context.cluster_meta,
-    vnode_info: context.vnode_info,
-    edge_tail_port_x: edge_port_data.edge_tail_port_x,
-    edge_head_port_x: edge_port_data.edge_head_port_x,
-    edge_tail_port_order: edge_port_data.edge_tail_port_order,
-    edge_head_port_order: edge_port_data.edge_head_port_order,
-  }
   let reorder_setup =
-    build_ordering_reorder_setup(reorder_setup_context)
+    build_ordering_reorder_setup(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      port_edge_nodes,
+      vnode_count,
+      rankdir,
+      cluster_meta,
+      vnode_info,
+      edge_port_data.edge_tail_port_x,
+      edge_port_data.edge_head_port_x,
+      edge_port_data.edge_tail_port_order,
+      edge_port_data.edge_head_port_order,
+    )
   let class2_data = reorder_setup.class2_data
   {
     edge_port_data,

@@ -71,24 +71,24 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let setup_context : OrderingDispatchSetupContext = {
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    ranks,
-    groups,
-    node_order,
-    order_sizes,
-    port_edge_nodes: runtime_context.port_edge_nodes,
-    vnode_count: runtime_context.vnode_count,
-    rankdir,
-    cluster_meta,
-    vnode_info: runtime_context.vnode_info,
-  }
-  let dispatch_setup = build_ordering_dispatch_setup(setup_context)
+  let dispatch_setup =
+    build_ordering_dispatch_setup(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      order_sizes,
+      runtime_context.port_edge_nodes,
+      runtime_context.vnode_count,
+      rankdir,
+      cluster_meta,
+      runtime_context.vnode_info,
+    )
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_stage_dispatch(
       graph,
