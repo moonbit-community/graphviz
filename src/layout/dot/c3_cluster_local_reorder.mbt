@@ -691,40 +691,6 @@ fn build_cluster_local_reorder_metadata(
   (cluster_sizes, cluster_keys, cluster_flat_constraints)
 }
 
-///|
-/// Graphviz parity: cluster-local reorder writes only cluster members back to
-/// existing rank slots, preserving non-cluster node positions.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_cluster_local_rank_order_to_groups(
-  groups : Map[Int, Array[String]],
-  cluster_rank_keys : Array[Int],
-  ordered_cluster : Map[Int, Array[String]],
-  cluster_node_set : Map[String, Bool],
-) -> Unit {
-  for rank in cluster_rank_keys {
-    let desired = match ordered_cluster.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    if desired.length() <= 1 {
-      continue
-    }
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => continue
-    }
-    let mut idx = 0
-    let mut pos = 0
-    while pos < names.length() && idx < desired.length() {
-      if cluster_node_set.get(names[pos]) is Some(_) {
-        names[pos] = desired[idx]
-        idx = idx + 1
-      }
-      pos = pos + 1
-    }
-  }
-}
-
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
@@ -1302,12 +1268,30 @@ fn reorder_single_cluster_rank_groups(
   if !has_internal_constraints {
     return ()
   }
-  apply_cluster_local_rank_order_to_groups(
-    groups,
-    cluster_rank_keys,
-    ordered_cluster,
-    cluster_node_set,
-  )
+  // Graphviz parity: cluster-local reorder writes only cluster members back to
+  // existing rank slots, preserving non-cluster node positions.
+  for rank in cluster_rank_keys {
+    let desired = match ordered_cluster.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    if desired.length() <= 1 {
+      continue
+    }
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => continue
+    }
+    let mut idx = 0
+    let mut pos = 0
+    while pos < names.length() && idx < desired.length() {
+      if cluster_node_set.get(names[pos]) is Some(_) {
+        names[pos] = desired[idx]
+        idx = idx + 1
+      }
+      pos = pos + 1
+    }
+  }
 }
 
 ///|
