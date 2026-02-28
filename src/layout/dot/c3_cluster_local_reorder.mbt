@@ -294,33 +294,6 @@ fn sort_cluster_real_nodes_by_seed_order(
 }
 
 ///|
-/// Graphviz parity: cluster-local seed ordering uses per-tail ND_out edge
-/// iteration from the current order-graph neighbor maps.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_out_heads_by_tail(
-  cluster_node_set : Map[String, Bool],
-  source_graphviz_out_neighbors : Map[String, Array[String]],
-) -> Map[String, Array[String]] {
-  let out_heads_by_tail : Map[String, Array[String]] = Map::new()
-  for tail, _ in cluster_node_set {
-    let heads = match source_graphviz_out_neighbors.get(tail) {
-      Some(value) => value
-      None => []
-    }
-    let filtered : Array[String] = []
-    for head in heads {
-      if cluster_node_set.get(head) is Some(_) {
-        filtered.push(head)
-      }
-    }
-    if filtered.length() > 0 {
-      out_heads_by_tail[tail] = filtered
-    }
-  }
-  out_heads_by_tail
-}
-
-///|
 /// Graphviz parity: local cluster rank groups include only cluster members and
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
@@ -382,11 +355,22 @@ fn build_cluster_local_rank_groups(
       cluster_groups[rank] = list
     }
   }
-  let out_heads_by_tail =
-    build_cluster_local_out_heads_by_tail(
-      cluster_node_set,
-      source_graphviz_out_neighbors,
-    )
+  let out_heads_by_tail : Map[String, Array[String]] = Map::new()
+  for tail, _ in cluster_node_set {
+    let heads = match source_graphviz_out_neighbors.get(tail) {
+      Some(value) => value
+      None => []
+    }
+    let filtered : Array[String] = []
+    for head in heads {
+      if cluster_node_set.get(head) is Some(_) {
+        filtered.push(head)
+      }
+    }
+    if filtered.length() > 0 {
+      out_heads_by_tail[tail] = filtered
+    }
+  }
   let cluster_rank_keys = collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
