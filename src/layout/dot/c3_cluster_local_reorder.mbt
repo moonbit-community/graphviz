@@ -216,53 +216,6 @@ fn build_cluster_graph_order_for_local_reorder(
 }
 
 ///|
-/// Graphviz parity: cluster-local node set uses global node_order as stable
-/// seed to create deterministic local node indices.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_nodes_and_order(
-  cluster_node_set : Map[String, Bool],
-  node_order : Map[String, Int],
-) -> (Array[String], Map[String, Int]) {
-  let cluster_nodes : Array[String] = []
-  for name, _ in cluster_node_set {
-    cluster_nodes.push(name)
-  }
-  let cluster_node_order : Map[String, Int] = Map::new()
-  let cluster_ordered_nodes = cluster_nodes.copy()
-  if cluster_ordered_nodes.length() > 1 {
-    cluster_ordered_nodes.sort_by((a, b) => {
-      let a_idx = match node_order.get(a) {
-        Some(value) => value
-        None => 0
-      }
-      let b_idx = match node_order.get(b) {
-        Some(value) => value
-        None => 0
-      }
-      if a_idx < b_idx {
-        -1
-      } else if a_idx > b_idx {
-        1
-      } else if a < b {
-        -1
-      } else if a > b {
-        1
-      } else {
-        0
-      }
-    })
-  }
-  let mut order_idx = 0
-  for name in cluster_ordered_nodes {
-    cluster_node_order[name] = order_idx
-    order_idx = order_idx + 1
-  }
-  (cluster_nodes, cluster_node_order)
-}
-
-
-
-///|
 /// Graphviz parity: local cluster rank groups include only cluster members and
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
@@ -1129,10 +1082,42 @@ fn reorder_single_cluster_rank_groups(
   if cluster_node_set.length() <= 1 {
     return ()
   }
-  let (
-    cluster_nodes,
-    cluster_node_order,
-  ) = build_cluster_local_nodes_and_order(cluster_node_set, node_order)
+  // Graphviz parity: cluster-local node set uses global node_order as stable
+  // seed to create deterministic local node indices.
+  let cluster_nodes : Array[String] = []
+  for name, _ in cluster_node_set {
+    cluster_nodes.push(name)
+  }
+  let cluster_node_order : Map[String, Int] = Map::new()
+  let cluster_ordered_nodes = cluster_nodes.copy()
+  if cluster_ordered_nodes.length() > 1 {
+    cluster_ordered_nodes.sort_by((a, b) => {
+      let a_idx = match node_order.get(a) {
+        Some(value) => value
+        None => 0
+      }
+      let b_idx = match node_order.get(b) {
+        Some(value) => value
+        None => 0
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else if a < b {
+        -1
+      } else if a > b {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let mut order_idx = 0
+  for name in cluster_ordered_nodes {
+    cluster_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
   let cluster_groups = build_cluster_local_rank_groups(
     groups,
     cluster_node_set,
