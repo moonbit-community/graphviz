@@ -677,12 +677,31 @@ fn run_root_mincross_reorder(
   // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
   // cluster-internal nodes are handled by cluster-local build_ranks passes.
   let order_groups_for_mincross_base =
-    build_order_groups_for_root_mincross(
-      order_with_clusters,
-      seeded_groups,
-      order_cluster_keys,
-      order_cluster_skeleton,
-    )
+    if !order_with_clusters {
+      seeded_groups
+    } else {
+      // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
+      // nodes; cluster-internal ordering stays in cluster-local build_ranks
+      // passes.
+      let filtered : Map[Int, Array[String]] = Map::new()
+      for rank, names in seeded_groups {
+        let list : Array[String] = []
+        for name in names {
+          let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+          let cluster = match order_cluster_keys.get(name) {
+            Some(value) => value
+            None => ""
+          }
+          if is_skeleton || cluster == "" {
+            list.push(name)
+          }
+        }
+        if list.length() > 0 {
+          filtered[rank] = list
+        }
+      }
+      filtered
+    }
   let order_groups_for_mincross =
     match root_mincross_groups_override.val {
       Some(override_groups) => clone_rank_groups(override_groups)
