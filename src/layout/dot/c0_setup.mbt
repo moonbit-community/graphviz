@@ -72,10 +72,11 @@ fn build_ordering_base_context(
   cluster_meta : ClusterMetadata,
 ) -> OrderingBaseContext {
   let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names = build_existing_node_names_map_for_positions(nodes)
+  let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
     let name = node.name()
     real_nodes[name] = true
+    existing_names[name] = true
   }
   let edge_cluster_keys : Map[String, String] = Map::new()
   collect_edge_cluster_keys(graph, edge_cluster_keys)
