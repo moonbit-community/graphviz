@@ -1058,6 +1058,16 @@ fn reorder_rank_names_by_override(
 }
 
 ///|
+/// Graphviz parity: root-override skeleton checks treat non-skeleton names as
+/// empty cluster keys when rebuilding attached-cluster bundles.
+fn skeleton_cluster_or_empty(name : String) -> String {
+  match cluster_key_from_skeleton_name(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 /// Graphviz parity: root phase can apply a rank-order override from root
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -1082,28 +1092,14 @@ fn apply_root_rank_groups_override(
         }
         let skeleton_for_cluster : Map[String, String] = Map::new()
         for name in rank_names {
-          let skeleton_cluster = match cluster_key_from_skeleton_name(name) {
-            Some(value) => value
-            None => ""
-          }
-          let is_skeleton = skeleton_cluster != ""
-          if is_skeleton {
-            let cluster =
-              if skeleton_cluster != "" { skeleton_cluster } else {
-                cluster_key_or_empty(cluster_keys, name)
-              }
-            if cluster != "" {
-              skeleton_for_cluster[cluster] = name
-            }
+          let skeleton_cluster = skeleton_cluster_or_empty(name)
+          if skeleton_cluster != "" {
+            skeleton_for_cluster[skeleton_cluster] = name
           }
         }
         let attached_by_skeleton : Map[String, Array[String]] = Map::new()
         for name in rank_names {
-          let is_skeleton =
-            (match cluster_key_from_skeleton_name(name) {
-              Some(_) => true
-              None => false
-            })
+          let is_skeleton = skeleton_cluster_or_empty(name) != ""
           if is_skeleton {
             continue
           }
@@ -1126,10 +1122,7 @@ fn apply_root_rank_groups_override(
           if seen.get(name) is Some(_) {
             continue
           }
-          let skeleton_cluster = match cluster_key_from_skeleton_name(name) {
-            Some(value) => value
-            None => ""
-          }
+          let skeleton_cluster = skeleton_cluster_or_empty(name)
           let is_skeleton = skeleton_cluster != ""
           if is_skeleton {
             next_names.push(name)
