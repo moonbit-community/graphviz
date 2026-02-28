@@ -592,47 +592,6 @@ fn build_ordering_class2_data(
 
 
 ///|
-/// Graphviz parity: vnode ordering keys use cluster-aware class2 traversal when
-/// clusters exist, otherwise GD_nlist fallback ordering for vnode ranks.
-/// Do not change behavior without updating fixtures/tests.
-fn build_vnode_order_keys_for_nonzero_vnodes(
-  cluster_meta : ClusterMetadata,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  ranks : Map[String, Int],
-  base_order_index : Map[String, Int],
-  vnode_info : EdgeVnodeInfo,
-  ordering_groups_base : Map[Int, Array[String]],
-  nlist_order_index : Map[String, Int],
-) -> Map[String, Double] {
-  if cluster_meta.has_clusters {
-    build_vnode_order_keys(
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      cluster_meta.cluster_keys,
-      cluster_meta.cluster_parents,
-      vnode_info.edge_vnodes,
-      vnode_info.vnode_ranks,
-    )
-  } else {
-    build_vnode_order_keys_from_nlist(
-      ordering_groups_base,
-      vnode_info.vnodes_by_rank,
-      base_order_index,
-      nlist_order_index,
-      Map::new(),
-      false,
-    )
-  }
-}
-
-///|
 /// Graphviz parity: vnode ordering keys come from cluster-aware class2 walks,
 /// or from GD_nlist fallback ordering when clusters are absent.
 /// Do not change behavior without updating fixtures/tests.
@@ -650,18 +609,29 @@ fn build_vnode_order_keys_for_ordering_stage(
   nlist_order_index : Map[String, Int],
 ) -> Map[String, Double] {
   if vnode_count > 0 {
-    build_vnode_order_keys_for_nonzero_vnodes(
-      cluster_meta,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      vnode_info,
-      ordering_groups_base,
-      nlist_order_index,
-    )
+    if cluster_meta.has_clusters {
+      build_vnode_order_keys(
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        ranks,
+        base_order_index,
+        cluster_meta.cluster_keys,
+        cluster_meta.cluster_parents,
+        vnode_info.edge_vnodes,
+        vnode_info.vnode_ranks,
+      )
+    } else {
+      build_vnode_order_keys_from_nlist(
+        ordering_groups_base,
+        vnode_info.vnodes_by_rank,
+        base_order_index,
+        nlist_order_index,
+        Map::new(),
+        false,
+      )
+    }
   } else {
     Map::new()
   }
