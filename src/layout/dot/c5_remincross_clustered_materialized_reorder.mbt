@@ -3,6 +3,53 @@
 /// reorder/input orchestration helpers.
 
 ///|
+/// Graphviz parity: nested intercluster merge-chain bonuses are applied to the
+/// first representative coalesced edge entry for each merge key.
+fn apply_remincross_intercluster_bonus(
+  order_edges_by_tail_coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  intercluster_bonus : Map[String, Int],
+) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
+  if intercluster_bonus.length() == 0 {
+    return order_edges_by_tail_coalesced
+  }
+  let remaining_bonus : Map[String, Int] = Map::new()
+  for key, value in intercluster_bonus {
+    remaining_bonus[key] = value
+  }
+  let adjusted : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
+    Map::new()
+  for tail_name, entries in order_edges_by_tail_coalesced {
+    let adjusted_entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
+    for entry in entries {
+      let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
+        entry
+      let key =
+        order_edge_merge_key(
+          tail,
+          head,
+          constraint,
+          tail_port_order,
+          head_port_order,
+        )
+      let mut adjusted_penalty = penalty
+      match remaining_bonus.get(key) {
+        Some(extra) =>
+          if extra > 0 {
+            adjusted_penalty = adjusted_penalty + extra
+            remaining_bonus[key] = 0
+          }
+        None => ()
+      }
+      adjusted_entries.push(
+        (tail, head, adjusted_penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
+      )
+    }
+    adjusted[tail_name] = adjusted_entries
+  }
+  adjusted
+}
+
+///|
 /// Graphviz parity: clustered ReMincross materializes remapped order edges
 /// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays.
 /// Do not change behavior without updating fixtures/tests.
@@ -74,48 +121,11 @@ fn build_clustered_remincross_materialized_edges(
       edges_by_tail,
       cluster_keys,
     )
-  // Graphviz parity: apply nested intercluster merge-chain bonus to the first
-  // representative vnode-tail segment for each merge key.
   let rem_order_edges_by_tail =
-    if intercluster_bonus.length() == 0 {
-      rem_order_edges_by_tail_coalesced
-    } else {
-      let remaining_bonus : Map[String, Int] = Map::new()
-      for key, value in intercluster_bonus {
-        remaining_bonus[key] = value
-      }
-      let adjusted : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-        Map::new()
-      for tail_name, entries in rem_order_edges_by_tail_coalesced {
-        let adjusted_entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
-        for entry in entries {
-          let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-            entry
-          let key =
-            order_edge_merge_key(
-              tail,
-              head,
-              constraint,
-              tail_port_order,
-              head_port_order,
-            )
-          let mut adjusted_penalty = penalty
-          match remaining_bonus.get(key) {
-            Some(extra) =>
-              if extra > 0 {
-                adjusted_penalty = adjusted_penalty + extra
-                remaining_bonus[key] = 0
-              }
-            None => ()
-          }
-          adjusted_entries.push(
-            (tail, head, adjusted_penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
-          )
-        }
-        adjusted[tail_name] = adjusted_entries
-      }
-      adjusted
-    }
+    apply_remincross_intercluster_bonus(
+      rem_order_edges_by_tail_coalesced,
+      intercluster_bonus,
+    )
   // Graphviz parity: edge creation replay follows per-tail ND_out order after
   // class2 merge-chain coalescing in rematerialized clustered passes.
   let rem_edge_creation : Array[(String, String)] = []
