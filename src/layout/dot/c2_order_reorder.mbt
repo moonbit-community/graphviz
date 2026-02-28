@@ -3,22 +3,6 @@
 /// and materialization helpers for root mincross flow.
 
 ///|
-/// Graphviz parity: order-edge trace materialization dispatch context keeps
-/// mapped/unmapped materialize+trace payload ordering unchanged.
-/// Do not change behavior without updating fixtures/tests.
-priv struct MaterializeOrderEdgesWithTraceContext {
-  nlist_order : Array[String]
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_graph : @cgraph.Graph
-  order_node_map : Map[String, @cgraph.Node]
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  order_graph_unmapped : @cgraph.Graph
-  order_node_map_unmapped : Map[String, @cgraph.Node]
-  order_ranks : Map[String, Int]
-  real_nodes : Map[String, Bool]
-}
-
-///|
 /// Stage C Phase C2 split: order-reorder/materialize
 /// runtime data types shared with clustered root stages.
 
@@ -150,79 +134,6 @@ fn build_order_neighbors_and_flat_constraints(
 
 
 ///|
-/// Graphviz parity: mapped/unmapped order-edge arrays are materialized first,
-/// and trace emission observes the mapped arrays before neighbor construction.
-/// Do not change behavior without updating fixtures/tests.
-fn materialize_order_edges_with_trace(
-  trace_context : MaterializeOrderEdgesWithTraceContext,
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let (
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  ) =
-    materialize_mapped_and_unmapped_order_edges(
-      trace_context.nlist_order,
-      trace_context.order_edges_by_tail,
-      trace_context.order_graph,
-      trace_context.order_node_map,
-      trace_context.order_edges_by_tail_unmapped,
-      trace_context.order_graph_unmapped,
-      trace_context.order_node_map_unmapped,
-    )
-  trace_order_edges_with_ranks(
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    trace_context.order_ranks,
-    trace_context.real_nodes,
-  )
-  (
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  )
-}
-
-
-///|
 /// Graphviz parity: mapped/unmapped order-edge materialization context keeps
 /// Graphviz traversal/neighbor inputs unchanged before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -269,17 +180,22 @@ fn build_materialized_order_edges_and_neighbors(
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
   ) =
-    materialize_order_edges_with_trace({
-      nlist_order: context.nlist_order,
-      order_edges_by_tail: context.order_edges_by_tail,
-      order_graph: context.order_graph,
-      order_node_map: context.order_node_map,
-      order_edges_by_tail_unmapped: context.order_edges_by_tail_unmapped,
-      order_graph_unmapped: context.order_graph_unmapped,
-      order_node_map_unmapped: context.order_node_map_unmapped,
-      order_ranks: context.order_ranks,
-      real_nodes: context.real_nodes,
-    })
+    materialize_mapped_and_unmapped_order_edges(
+      context.nlist_order,
+      context.order_edges_by_tail,
+      context.order_graph,
+      context.order_node_map,
+      context.order_edges_by_tail_unmapped,
+      context.order_graph_unmapped,
+      context.order_node_map_unmapped,
+    )
+  trace_order_edges_with_ranks(
+    order_edges_out,
+    order_edge_tail_out,
+    order_edge_head_out,
+    context.order_ranks,
+    context.real_nodes,
+  )
   let (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints) =
     build_order_neighbors_and_flat_constraints(
       context.order_nodes,
