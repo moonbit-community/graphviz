@@ -1112,47 +1112,17 @@ fn build_projection_result_for_positions(
       flat_label_edges,
       flat_label_nodes,
     )
-  build_position_result_output_for_positions(
-    x_groups,
-    position_projection_data.rank_y,
-    position_projection_data.position_output_maps.positions,
-    position_projection_data.position_output_maps.vnode_positions,
-    position_projection_data.position_output_maps.cluster_ln_x,
-    position_projection_data.position_output_maps.cluster_rn_x,
-    flat_label_edge_vnodes,
-    rank_ht1,
-    rank_ht2,
-    position_projection_data.cluster_bbox_heights,
-  )
-}
-
-///|
-/// Graphviz parity: position-result output object maps prepared position/rank
-/// fields directly without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_position_result_output_for_positions(
-  x_groups : Map[Int, Array[String]],
-  rank_y : Map[Int, Double],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  cluster_ln_x : Map[String, Double],
-  cluster_rn_x : Map[String, Double],
-  flat_label_edge_vnodes : Map[String, String],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  cluster_bbox_heights : Map[String, (Double, Double)],
-) -> PositionResult {
   {
     x_groups,
-    rank_y,
-    positions,
-    vnode_positions,
-    cluster_ln_x,
-    cluster_rn_x,
+    rank_y: position_projection_data.rank_y,
+    positions: position_projection_data.position_output_maps.positions,
+    vnode_positions: position_projection_data.position_output_maps.vnode_positions,
+    cluster_ln_x: position_projection_data.position_output_maps.cluster_ln_x,
+    cluster_rn_x: position_projection_data.position_output_maps.cluster_rn_x,
     flat_label_edge_vnodes,
     rank_ht1,
     rank_ht2,
-    cluster_bbox_heights,
+    cluster_bbox_heights: position_projection_data.cluster_bbox_heights,
   }
 }
 
