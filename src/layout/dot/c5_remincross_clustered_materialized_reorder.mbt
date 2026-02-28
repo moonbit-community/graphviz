@@ -3,10 +3,10 @@
 /// reorder/input orchestration helpers.
 
 ///|
-/// Graphviz parity: clustered ReMincross order-edge rematerialization uses
-/// Graphviz ND_out chain expansion with vnode creation + edge creation outputs.
+/// Graphviz parity: clustered ReMincross materializes remapped order edges
+/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays with traces.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_order_edges_by_tail(
+fn build_clustered_remincross_materialized_edges(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -22,11 +22,22 @@ fn build_clustered_remincross_order_edges_by_tail(
   order_with_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
   cluster_order_index : Map[String, Int],
+  flat_rank_constraints : Map[String, Bool],
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  rem_groups : Map[Int, Array[String]],
 ) -> (
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  Map[String, Array[String]],
-  Array[(String, String)],
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
 ) {
+  // Graphviz parity: clustered ReMincross order-edge rematerialization uses
+  // Graphviz ND_out chain expansion with vnode creation + edge creation outputs.
   let rem_edges_by_tail = edges_by_tail
   let (rem_order_edges_by_tail_raw, rem_vnode_creation, _rem_edge_creation_raw) =
     build_order_edges_by_tail_graphviz(
@@ -74,61 +85,6 @@ fn build_clustered_remincross_order_edges_by_tail(
     rebuild_edge_creation_from_tail_order(
       creation_order,
       rem_order_edges_by_tail,
-    )
-  (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation)
-}
-
-///|
-/// Graphviz parity: clustered ReMincross materializes remapped order edges
-/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays with traces.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_materialized_edges(
-  creation_order : Array[String],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  order_with_vnodes : Bool,
-  cluster_keys : Map[String, String],
-  order_with_clusters : Bool,
-  edges_by_tail : Map[String, Array[Int]],
-  cluster_order_index : Map[String, Int],
-  flat_rank_constraints : Map[String, Bool],
-  rem_graph : @cgraph.Graph,
-  rem_node_map : Map[String, @cgraph.Node],
-  rem_groups : Map[Int, Array[String]],
-) -> (
-  Map[String, Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation) =
-    build_clustered_remincross_order_edges_by_tail(
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      cluster_keys,
-      order_with_clusters,
-      edges_by_tail,
-      cluster_order_index,
     )
   let _ = flat_rank_constraints
   // Graphviz parity: clustered ReMincross materialized-edge flow rebuilds
