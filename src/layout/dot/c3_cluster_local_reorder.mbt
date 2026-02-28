@@ -1504,33 +1504,6 @@ type ClusterLocalReorderRunInputsOutput = (
 )
 
 ///|
-/// Graphviz parity: cluster-local reorder input output preserves edge bundle
-/// arrays/maps followed by metadata tuple ordering for local mincross call.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_reorder_run_inputs_output(
-  context : ClusterLocalReorderRunInputsOutputContext,
-) -> ClusterLocalReorderRunInputsOutput {
-  (
-    context.cluster_edges,
-    context.cluster_edge_tail,
-    context.cluster_edge_head,
-    context.cluster_edge_tail_port_x,
-    context.cluster_edge_head_port_x,
-    context.cluster_edge_tail_port_order,
-    context.cluster_edge_head_port_order,
-    context.parents,
-    context.children,
-    context.graphviz_out_neighbors,
-    context.graphviz_in_neighbors,
-    context.edge_order,
-    context.cluster_sizes,
-    context.cluster_keys,
-    context.cluster_flat_constraints,
-  )
-}
-
-
-///|
 /// Graphviz parity: cluster-local reorder context keeps edge bundle and
 /// metadata inputs unchanged before local mincross preprocessing.
 /// Do not change behavior without updating fixtures/tests.
@@ -1652,7 +1625,23 @@ fn build_cluster_local_reorder_run_inputs(
     cluster_keys,
     cluster_flat_constraints,
   }
-  build_cluster_local_reorder_run_inputs_output(output_context)
+  (
+    output_context.cluster_edges,
+    output_context.cluster_edge_tail,
+    output_context.cluster_edge_head,
+    output_context.cluster_edge_tail_port_x,
+    output_context.cluster_edge_head_port_x,
+    output_context.cluster_edge_tail_port_order,
+    output_context.cluster_edge_head_port_order,
+    output_context.parents,
+    output_context.children,
+    output_context.graphviz_out_neighbors,
+    output_context.graphviz_in_neighbors,
+    output_context.edge_order,
+    output_context.cluster_sizes,
+    output_context.cluster_keys,
+    output_context.cluster_flat_constraints,
+  )
 }
 
 ///|
@@ -1807,64 +1796,6 @@ fn run_cluster_local_rank_reorder_execution_phase_input_phase(
 
 
 ///|
-/// Graphviz parity: cluster-local reorder apply dispatch reads input-phase
-/// tuple and forwards cluster-scoped payload in Graphviz call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
-  dispatch_context : ClusterLocalReorderApplyDispatchContext,
-  input_phase_output : ClusterLocalReorderRunInputsOutput,
-) -> Unit {
-  let (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    edge_order,
-    cluster_sizes,
-    cluster_keys,
-    cluster_flat_constraints,
-  ) = input_phase_output
-  run_cluster_local_rank_reorder_execution_phase_apply_phase(
-    dispatch_context.groups,
-    dispatch_context.cluster_rank_keys,
-    dispatch_context.cluster_groups,
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    cluster_keys,
-    dispatch_context.cluster_meta,
-    edge_order,
-    dispatch_context.cluster_node_order,
-    cluster_sizes,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    dispatch_context.empty_cluster_skeleton,
-    cluster_flat_constraints,
-    dispatch_context.fixed_positions,
-    dispatch_context.fixed_ranks,
-    dispatch_context.cluster_node_set,
-  )
-}
-
-
-///|
 /// Graphviz parity: cluster-local reorder execution phase builds cluster-scoped
 /// edge/metadata inputs before applying local mincross results back to groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -1939,9 +1870,52 @@ fn run_cluster_local_rank_reorder_execution_phase(
     fixed_ranks,
     cluster_node_set,
   }
-  run_cluster_local_rank_reorder_execution_phase_apply_phase_from_input_output(
-    dispatch_context,
-    input_phase_output,
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    edge_order,
+    cluster_sizes,
+    cluster_keys,
+    cluster_flat_constraints,
+  ) = input_phase_output
+  run_cluster_local_rank_reorder_execution_phase_apply_phase(
+    dispatch_context.groups,
+    dispatch_context.cluster_rank_keys,
+    dispatch_context.cluster_groups,
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    cluster_keys,
+    dispatch_context.cluster_meta,
+    edge_order,
+    dispatch_context.cluster_node_order,
+    cluster_sizes,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    dispatch_context.empty_cluster_skeleton,
+    cluster_flat_constraints,
+    dispatch_context.fixed_positions,
+    dispatch_context.fixed_ranks,
+    dispatch_context.cluster_node_set,
   )
 }
 
