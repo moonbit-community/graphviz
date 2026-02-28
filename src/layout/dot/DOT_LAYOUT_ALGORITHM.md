@@ -239,34 +239,20 @@ Supporting files:
 
 - `src/layout/dot/c1_order_edge.mbt`
 - `src/layout/dot/c1_order_graph.mbt`
+- `src/layout/dot/c1_class2.mbt`
 - `src/layout/dot/c2_order_seed.mbt`
 - `src/layout/dot/c2_order_reorder.mbt`
 - `src/layout/dot/c2_noncluster_reorder.mbt`
-- `src/layout/dot/c6_finalize_order.mbt`
-- `src/layout/dot/c3_cluster_local_reorder.mbt`
-- `src/layout/dot/c3_c4_c6_clustered_ordering_stage.mbt`
-- `src/layout/dot/c4_root_cluster_reorder.mbt`
-- `src/layout/dot/c4_root_cluster_build_ranks.mbt`
 - `src/layout/dot/c2_root_mincross.mbt`
 - `src/layout/dot/c2_c5_order_node_seed.mbt`
-- `src/layout/dot/c5_remincross_clustered_reorder_step_input_phase.mbt`
-- `src/layout/dot/c5_remincross_clustered_reorder_step.mbt`
-- `src/layout/dot/c5_remincross_clustered_reorder_step_finalize_dispatch.mbt`
-- `src/layout/dot/c5_remincross_clustered_reorder_step_context.mbt`
-- `src/layout/dot/c5_remincross_clustered_materialized_output_phase.mbt`
-- `src/layout/dot/c5_remincross_seeded_group_projection.mbt`
-- `src/layout/dot/c5_remincross_clustered_multi_rank_input_phase.mbt`
-- `src/layout/dot/c5_remincross_clustered_multi_rank_forward.mbt`
-- `src/layout/dot/c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
-- `src/layout/dot/c5_remincross_vnode.mbt`
-- `src/layout/dot/c5_remincross_vnode_intercluster.mbt`
-- `src/layout/dot/c5_remincross_*` (Stage C ReMincross family)
-- `src/layout/dot/c6_cluster_finalize.mbt`
-- `src/layout/dot/c4_c6_root_cluster_stage_types.mbt`
-- `src/layout/dot/c3_c4_c6_clustered_ordering_stage_types.mbt`
-- `src/layout/dot/c0_*` (dispatch/setup/types family)
-- `src/layout/dot/c0_dispatch_pipeline.mbt`
-- `src/layout/dot/c1_class2.mbt`
+- `src/layout/dot/c3_c4_c6_clustered_ordering_stage.mbt`
+- `src/layout/dot/c3_cluster_local_reorder.mbt`
+- `src/layout/dot/c4_root_cluster_reorder.mbt`
+- `src/layout/dot/c4_root_cluster_build_ranks.mbt`
+- `src/layout/dot/c5_remincross_clustered_groups.mbt`
+- `src/layout/dot/c5_remincross_clustered_materialized_reorder.mbt`
+- `src/layout/dot/c5_remincross_snapshot.mbt`
+- `src/layout/dot/c6_finalize_order.mbt`
 - `src/layout/dot/ordering.mbt`
 - `src/layout/dot/mincross.mbt`
 
@@ -560,7 +546,6 @@ Repository guard validates:
   - `c5_remincross_clustered_groups.mbt`
   - `c5_remincross_clustered_materialized_reorder.mbt`
   - `c5_remincross_snapshot.mbt`
-  - `c5_remincross_vnode.mbt`
 - Stage D position/xpos internals:
   - `d0_position_orchestrator.mbt`
   - `d1_d5_mode_and_projection.mbt`
