@@ -15,25 +15,3 @@ fn build_existing_node_names_map_for_positions(
   }
   existing_names
 }
-
-///|
-/// Graphviz parity: ordering base-context port-edge map marks both endpoints
-/// for edges with explicit tail/head ports before rank-same constraints build.
-/// Do not change behavior without updating fixtures/tests.
-fn build_port_edge_nodes_for_ordering_base_context(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> Map[String, Bool] {
-  let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
-      @dot_shared.port_is_explicit(edge.head_port())
-    if ported {
-      port_edge_nodes[edge_tail[edge_idx]] = true
-      port_edge_nodes[edge_head[edge_idx]] = true
-    }
-  }
-  port_edge_nodes
-}

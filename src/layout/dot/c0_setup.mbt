@@ -92,8 +92,16 @@ fn build_ordering_base_context(
     edge_cluster_keys,
     cluster_meta.cluster_parents,
   )
-  let port_edge_nodes =
-    build_port_edge_nodes_for_ordering_base_context(edges, edge_tail, edge_head)
+  let port_edge_nodes : Map[String, Bool] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
+      @dot_shared.port_is_explicit(edge.head_port())
+    if ported {
+      port_edge_nodes[edge_tail[edge_idx]] = true
+      port_edge_nodes[edge_head[edge_idx]] = true
+    }
+  }
   let local_cluster_order = build_local_cluster_order(
     nodes,
     cluster_meta.intercluster_keys,
