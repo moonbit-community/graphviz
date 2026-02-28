@@ -328,42 +328,6 @@ fn build_flat_constraints_for_cluster_metadata(
 
 
 ///|
-/// Graphviz parity: clustered ordering stage consumes a fixed ClusterMetadata
-/// field set assembled from preprocessing helpers.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_metadata_output(
-  has_clusters : Bool,
-  cluster_keys : Map[String, String],
-  cluster_skeleton : Map[String, Bool],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  cluster_order : Array[String],
-  cluster_parents : Map[String, String?],
-  intercluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  flat_constraints : Map[String, Bool],
-  ordering_set : Bool,
-) -> ClusterMetadata {
-  {
-    has_clusters,
-    cluster_keys,
-    cluster_skeleton,
-    cluster_min_rank,
-    cluster_max_rank,
-    cluster_order,
-    cluster_parents,
-    intercluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    flat_constraints,
-    ordering_set,
-  }
-}
-
-
-
-///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -416,7 +380,7 @@ fn compute_cluster_metadata(
       ranks,
       cluster_keys,
     )
-  build_cluster_metadata_output(
+  {
     has_clusters,
     cluster_keys,
     cluster_skeleton,
@@ -429,7 +393,7 @@ fn compute_cluster_metadata(
     rank_same_order,
     flat_constraints,
     ordering_set,
-  )
+  }
 }
 
 ///|

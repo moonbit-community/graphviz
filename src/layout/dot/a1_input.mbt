@@ -340,49 +340,6 @@ fn build_port_order_metadata_for_layout_inputs(
 
 
 ///|
-/// Graphviz parity: layout input preparation returns fields in fixed LayoutPrep
-/// order consumed by later pipeline stages.
-/// Do not change behavior without updating fixtures/tests.
-fn build_layout_prep_output(
-  rankdir : RankDir,
-  nodesep_in : Double,
-  ranksep_in : Double,
-  splines : SplinesMode,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_dotted_edges : Bool,
-  has_port_edges : Bool,
-  has_edge_labels : Bool,
-  node_order : Map[String, Int],
-  record_orientation : RecordOrientation,
-  output_sizes : Map[String, NodeSize],
-  order_sizes : Map[String, NodeSize],
-  sizes : Map[String, NodeSize],
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-) -> LayoutPrep {
-  {
-    rankdir,
-    nodesep_in,
-    ranksep_in,
-    splines,
-    nodes,
-    edges,
-    has_dotted_edges,
-    has_port_edges,
-    has_edge_labels,
-    node_order,
-    record_orientation,
-    output_sizes,
-    order_sizes,
-    sizes,
-    port_order_positions,
-    port_order_contrib,
-  }
-}
-
-
-///|
 /// Graphviz parity: layout attribute parsing aligned to refs/graphviz/lib/dotgen/dotinit.c + lib/common/input.c.
 /// Do not change behavior without updating fixtures/tests.
 fn prepare_layout_inputs(
@@ -412,7 +369,7 @@ fn prepare_layout_inputs(
       output_sizes,
       record_orientation,
     )
-  build_layout_prep_output(
+  {
     rankdir,
     nodesep_in,
     ranksep_in,
@@ -429,5 +386,5 @@ fn prepare_layout_inputs(
     sizes,
     port_order_positions,
     port_order_contrib,
-  )
+  }
 }
