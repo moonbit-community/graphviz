@@ -307,7 +307,7 @@ fn run_clustered_remincross_reorder_step(
       context.rem_ranks,
       context.rem_edges_out,
     )
-  run_clustered_remincross_final_reorder(
+  run_remincross_reorder_and_collect_real_groups(
     context.rem_rank_keys,
     context.rem_groups,
     context.rem_edges_out,
