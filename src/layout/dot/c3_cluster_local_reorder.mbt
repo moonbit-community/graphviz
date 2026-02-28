@@ -84,36 +84,6 @@ fn build_local_cluster_order(
 }
 
 ///|
-/// Graphviz parity: cluster parent lookup prefers explicit traversal hints
-/// and falls back to collected parent graph edges.
-/// Do not change behavior without updating fixtures/tests.
-fn resolve_cluster_parent_for_order(
-  cluster : String,
-  parents : Map[String, String?],
-  fallback_parents : Map[String, String?],
-) -> String? {
-  let candidate = match parents.get(cluster) {
-    Some(value) => value
-    None =>
-      match fallback_parents.get(cluster) {
-        Some(value) => value
-        None => None
-      }
-  }
-  match candidate {
-    Some(value) =>
-      if value == "" || value == cluster {
-        None
-      } else {
-        Some(value)
-      }
-    None => None
-  }
-}
-
-
-
-///|
 fn cluster_depth_for_order(
   cluster : String,
   parents : Map[String, String?],
@@ -143,8 +113,26 @@ fn cluster_depth_for_order_inner(
         return 0
       }
       visiting[cluster] = true
-      let parent_opt =
-        resolve_cluster_parent_for_order(cluster, parents, fallback_parents)
+      // Graphviz parity: cluster parent lookup prefers explicit traversal hints
+      // and falls back to collected parent graph edges.
+      let candidate : String? = match parents.get(cluster) {
+        Some(value) => value
+        None =>
+          match fallback_parents.get(cluster) {
+            Some(value) => value
+            None => None
+          }
+      }
+      let parent_opt : String? =
+        match candidate {
+          Some(value) =>
+            if value == "" || value == cluster {
+              None
+            } else {
+              Some(value)
+            }
+          None => None
+        }
       let depth = match parent_opt {
         Some(parent) =>
           cluster_depth_for_order_inner(
