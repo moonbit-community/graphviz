@@ -92,21 +92,6 @@ priv struct XStageWithFlatLabelData {
 }
 
 ///|
-priv struct XStageModeAndSlackData {
-  use_vnodes_for_xpos : Bool
-  allow_xpos_reorder : Bool
-  graphviz_flip : Bool
-  xpos_reorder_enabled : Bool
-  virtual_slack_edges : Array[ConstraintEdge]
-}
-
-///|
-priv struct XStageSeedAndFlatLabelData {
-  x_base_sizes : Map[String, NodeSize]
-  flat_label_augmentation : XposFlatLabelAugmentation
-}
-
-///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
