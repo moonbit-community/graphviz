@@ -130,7 +130,6 @@ fn build_clustered_remincross_materialized_edges(
       edges_by_tail,
       cluster_order_index,
     )
-  trace_remincross_order_edges_by_tail(rem_order_edges_by_tail)
   let _ = flat_rank_constraints
   // Graphviz parity: clustered ReMincross materialized-edge flow rebuilds
   // remapped order graph arrays, then traces edge endpoints before tuple output.
@@ -155,11 +154,6 @@ fn build_clustered_remincross_materialized_edges(
       rem_node_map,
       rem_groups,
     )
-  trace_remincross_materialized_edges(
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-  )
   (
     rem_node_order,
     rem_edges_out,
@@ -250,26 +244,6 @@ fn build_remincross_nlist_order(
 ) -> Array[String] {
   let rem_order_creation =
     build_rem_order_creation_sequence(creation_order, rem_vnode_creation)
-  if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
-    let debug_names : Array[String] = [
-      "i-gd-gd",
-      "o-gd-vrml",
-      "i-core-ps",
-      "i-core-svg",
-      "i-svg",
-    ]
-    for name in debug_names {
-      let cluster = match rem_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      let rank = match rem_ranks.get(name) {
-        Some(value) => value
-        None => -1
-      }
-      println("remincross cluster_key \{name}=\{cluster} rank=\{rank}")
-    }
-  }
   let rem_nlist_order =
     if cluster_order_index.length() <= 2 {
       // Graphviz parity: single-cluster/root-only remincross materialization
@@ -309,76 +283,6 @@ fn build_remincross_nlist_order(
     println("remincross rem_nlist_order \{rem_nlist_joined}")
   }
   rem_nlist_order
-}
-
-///|
-/// Debug trace: dump selected ReMincross per-tail edge lists when
-/// DOT_TRACE_GROUPS is enabled (diagnostic only).
-fn trace_remincross_order_edges_by_tail(
-  rem_order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
-    return
-  }
-  match rem_order_edges_by_tail.get("arbiter_vadam") {
-    Some(list) => {
-      let mut idx = 0
-      while idx < list.length() {
-        let (t, h, _pen, _c, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = list[idx]
-        println("remincross arbiter edge \{idx}: \{t} -> \{h}")
-        idx = idx + 1
-      }
-    }
-    None => ()
-  }
-  let debug_tails : Array[String] = ["front_end_jz", "others"]
-  for name in debug_tails {
-    match rem_order_edges_by_tail.get(name) {
-      Some(list) => {
-        let mut idx = 0
-        while idx < list.length() {
-          let (t, h, _pen, _c, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) = list[idx]
-          println("remincross out \{name} \{idx}: \{t} -> \{h}")
-          idx = idx + 1
-        }
-      }
-      None => ()
-    }
-  }
-}
-
-///|
-/// Debug trace: dump materialized ReMincross edges (high-pen and selected
-/// endpoints) when DOT_TRACE_GROUPS is enabled (diagnostic only).
-fn trace_remincross_materialized_edges(
-  rem_edges_out : Array[@cgraph.Edge],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
-    return
-  }
-  let mut idx = 0
-  while idx < rem_edges_out.length() {
-    let edge = rem_edges_out[idx]
-    let pen = @dot_shared.edge_xpenalty(edge)
-    if pen >= CL_CROSS {
-      let tail = rem_edge_tail_out[idx]
-      let head = rem_edge_head_out[idx]
-      println("remincross high-pen edge \{tail} -> \{head} pen=\{pen}")
-    }
-    idx = idx + 1
-  }
-  let mut edge_idx = 0
-  while edge_idx < rem_edge_tail_out.length() {
-    let tail = rem_edge_tail_out[edge_idx]
-    let head = rem_edge_head_out[edge_idx]
-    if tail == "z_req" || tail == "z_req1" || head == "z_req" ||
-      head == "z_req1" {
-      println("remincross edge \{edge_idx}: \{tail} -> \{head}")
-    }
-    edge_idx = edge_idx + 1
-  }
 }
 
 ///|
