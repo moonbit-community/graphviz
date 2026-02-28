@@ -168,12 +168,22 @@ fn build_ordering_dispatch_setup(
   let order_with_clusters =
     cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
   let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
-  let flat_rank_constraints =
-    build_flat_rank_constraints(
-      edge_tail,
-      edge_head,
-      ranks,
-    )
+  // Graphviz parity: flat edge constraints include same-rank non-self edges
+  // and use missing-rank fallback 0 exactly as class2 input pre-pass.
+  let flat_rank_constraints : Map[String, Bool] = Map::new()
+  let mut flat_idx = 0
+  while flat_idx < edge_tail.length() {
+    let tail = edge_tail[flat_idx]
+    let head = edge_head[flat_idx]
+    if tail != head {
+      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+      if tail_rank == head_rank {
+        flat_rank_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    flat_idx = flat_idx + 1
+  }
   // Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
   // vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
   let class2_data =
