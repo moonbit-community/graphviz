@@ -497,8 +497,8 @@ fn build_remincross_cluster_tail_order_nonroot_names(
         break
       }
     }
-    if rank == min_rank && rank_ordered.length() > 1 && all_input_like {
-      let reordered_rank =
+    let rank_ordered =
+      if rank == min_rank && rank_ordered.length() > 1 && all_input_like {
         rebucket_remincross_input_like_rank_order(
           cluster,
           rank_ordered,
@@ -507,12 +507,9 @@ fn build_remincross_cluster_tail_order_nonroot_names(
           cluster_order,
           rem_cluster_keys,
         )
-      let mut idx = 0
-      while idx < reordered_rank.length() {
-        rank_ordered[idx] = reordered_rank[idx]
-        idx = idx + 1
+      } else {
+        rank_ordered
       }
-    }
     for name in rank_ordered {
       cluster_rank_ordered.push(name)
     }
