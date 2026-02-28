@@ -83,87 +83,6 @@ priv struct RootClusterBuildRanksStageInputs {
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
-/// Graphviz parity: post-root-reorder stage applies clustered build_ranks on
-/// unmapped order edges and returns Graphviz tuple-ordered stage output.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_and_cluster_stage_output_after_root_reorder(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  graph : @cgraph.Graph,
-  ordered : Map[Int, Array[String]],
-  cluster_meta : ClusterMetadata,
-  order_node_order : Map[String, Int],
-  order_edges_out_unmapped : Array[@cgraph.Edge],
-  order_edge_tail_out_unmapped : Array[String],
-  order_edge_head_out_unmapped : Array[String],
-  order_edge_tail_port_x_unmapped : Array[Double],
-  order_edge_head_port_x_unmapped : Array[Double],
-  order_edge_tail_port_order_unmapped : Array[Double],
-  order_edge_head_port_order_unmapped : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  ranks : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  vnode_info : EdgeVnodeInfo,
-  graphviz_flip : Bool,
-  ordered_with_vnodes : Map[Int, Array[String]],
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> OrderRootClusterStageData {
-  let ordered =
-    if graphviz_flip {
-      match root_mincross_groups_override.val {
-        Some(override_groups) =>
-          apply_root_rank_groups_override(
-            ordered,
-            override_groups,
-            cluster_meta.cluster_keys,
-            graphviz_flip,
-          )
-        None => ordered
-      }
-    } else {
-      ordered
-    }
-  dot_trace_groups("ordered_after_root_merge", ordered)
-  let next_ordered_with_vnodes =
-    apply_cluster_build_ranks_and_track_vnodes(
-      order_with_clusters,
-      order_with_vnodes,
-      graph,
-      ordered,
-      cluster_meta,
-      order_node_order,
-      order_edges_out_unmapped,
-      order_edge_tail_out_unmapped,
-      order_edge_head_out_unmapped,
-      order_edge_tail_port_x_unmapped,
-      order_edge_head_port_x_unmapped,
-      order_edge_tail_port_order_unmapped,
-      order_edge_head_port_order_unmapped,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      ranks,
-      order_sizes_out,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      vnode_info,
-      graphviz_flip,
-      ordered_with_vnodes,
-    )
-  dot_trace_groups("ordered_before_clean", ordered)
-  {
-    order_groups_for_mincross,
-    ordered,
-    ordered_with_vnodes: next_ordered_with_vnodes,
-  }
-}
-///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -231,31 +150,53 @@ fn run_root_and_cluster_build_ranks_stage(
       stage_inputs.graphviz_in_neighbors,
       graphviz_flip,
     )
-  build_root_and_cluster_stage_output_after_root_reorder(
-    order_with_clusters,
-    order_with_vnodes,
-    graph,
-    ordered,
-    cluster_meta,
-    stage_inputs.order_node_order,
-    stage_inputs.order_edges_out_unmapped,
-    stage_inputs.order_edge_tail_out_unmapped,
-    stage_inputs.order_edge_head_out_unmapped,
-    stage_inputs.order_edge_tail_port_x_unmapped,
-    stage_inputs.order_edge_head_port_x_unmapped,
-    stage_inputs.order_edge_tail_port_order_unmapped,
-    stage_inputs.order_edge_head_port_order_unmapped,
-    stage_inputs.graphviz_out_neighbors,
-    stage_inputs.graphviz_in_neighbors,
-    ranks,
-    stage_inputs.order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    vnode_info,
-    graphviz_flip,
-    stage_inputs.ordered_with_vnodes,
+  let ordered =
+    if graphviz_flip {
+      match root_mincross_groups_override.val {
+        Some(override_groups) =>
+          apply_root_rank_groups_override(
+            ordered,
+            override_groups,
+            cluster_meta.cluster_keys,
+            graphviz_flip,
+          )
+        None => ordered
+      }
+    } else {
+      ordered
+    }
+  dot_trace_groups("ordered_after_root_merge", ordered)
+  let next_ordered_with_vnodes =
+    apply_cluster_build_ranks_and_track_vnodes(
+      order_with_clusters,
+      order_with_vnodes,
+      graph,
+      ordered,
+      cluster_meta,
+      stage_inputs.order_node_order,
+      stage_inputs.order_edges_out_unmapped,
+      stage_inputs.order_edge_tail_out_unmapped,
+      stage_inputs.order_edge_head_out_unmapped,
+      stage_inputs.order_edge_tail_port_x_unmapped,
+      stage_inputs.order_edge_head_port_x_unmapped,
+      stage_inputs.order_edge_tail_port_order_unmapped,
+      stage_inputs.order_edge_head_port_order_unmapped,
+      stage_inputs.graphviz_out_neighbors,
+      stage_inputs.graphviz_in_neighbors,
+      ranks,
+      stage_inputs.order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      vnode_info,
+      graphviz_flip,
+      stage_inputs.ordered_with_vnodes,
+    )
+  dot_trace_groups("ordered_before_clean", ordered)
+  {
     order_groups_for_mincross,
-  )
+    ordered,
+    ordered_with_vnodes: next_ordered_with_vnodes,
+  }
 }
