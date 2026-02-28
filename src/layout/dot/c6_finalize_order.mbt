@@ -3,78 +3,6 @@
 /// and nlist creation helpers for Stage C outputs.
 
 ///|
-/// Graphviz parity: cluster-enabled final groups apply cluster-rank ordering
-/// then local-cluster bucket ordering before clustered ReMincross refinement.
-/// Do not change behavior without updating fixtures/tests.
-fn reorder_final_groups_for_cluster_remincross(
-  final_groups : Map[Int, Array[String]],
-  cluster_rank_order : Map[Int, Map[String, Int]],
-  cluster_keys : Map[String, String],
-  intercluster_keys : Map[String, String],
-  local_cluster_order : Map[String, Int],
-) -> Map[Int, Array[String]] {
-  // Graphviz parity: cluster-rank reorder is skipped when root reorder
-  // exposes a single-cluster single-anchor shape (one cluster bucket
-  // globally and at most one clustered node per rank).
-  let seen_clusters : Map[String, Bool] = Map::new()
-  let mut has_single_cluster_rank_order_bucket = true
-  for _rank, order_map in cluster_rank_order {
-    if !has_single_cluster_rank_order_bucket {
-      break
-    }
-    for cluster, _order in order_map {
-      if cluster == "" {
-        continue
-      }
-      seen_clusters[cluster] = true
-      if seen_clusters.length() > 1 {
-        has_single_cluster_rank_order_bucket = false
-        break
-      }
-    }
-  }
-  if has_single_cluster_rank_order_bucket && seen_clusters.length() != 1 {
-    has_single_cluster_rank_order_bucket = false
-  }
-  if has_single_cluster_rank_order_bucket {
-    for _rank, names in final_groups {
-      let mut cluster_nodes = 0
-      for name in names {
-        if cluster_key_or_empty(cluster_keys, name) != "" {
-          cluster_nodes = cluster_nodes + 1
-          if cluster_nodes > 1 {
-            has_single_cluster_rank_order_bucket = false
-            break
-          }
-        }
-      }
-      if !has_single_cluster_rank_order_bucket {
-        break
-      }
-    }
-  }
-  let reordered =
-    if has_single_cluster_rank_order_bucket {
-      final_groups
-    } else {
-      reorder_rank_groups_by_cluster_rank_order(
-        final_groups,
-        cluster_rank_order,
-        cluster_keys,
-      )
-    }
-  // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
-  reorder_groups_by_local_cluster_order(
-    reordered,
-    cluster_keys,
-    intercluster_keys,
-    local_cluster_order,
-  )
-  reordered
-}
-
-
-///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -117,14 +45,63 @@ fn finalize_order_groups_with_cluster_remincross(
       real_nodes,
     )
   if order_with_clusters {
+    // Graphviz parity: cluster-rank reorder is skipped when root reorder
+    // exposes a single-cluster single-anchor shape (one cluster bucket
+    // globally and at most one clustered node per rank).
+    let seen_clusters : Map[String, Bool] = Map::new()
+    let mut has_single_cluster_rank_order_bucket = true
+    for _rank, order_map in cluster_rank_order {
+      if !has_single_cluster_rank_order_bucket {
+        break
+      }
+      for cluster, _order in order_map {
+        if cluster == "" {
+          continue
+        }
+        seen_clusters[cluster] = true
+        if seen_clusters.length() > 1 {
+          has_single_cluster_rank_order_bucket = false
+          break
+        }
+      }
+    }
+    if has_single_cluster_rank_order_bucket && seen_clusters.length() != 1 {
+      has_single_cluster_rank_order_bucket = false
+    }
+    if has_single_cluster_rank_order_bucket {
+      for _rank, names in cleaned_groups {
+        let mut cluster_nodes = 0
+        for name in names {
+          if cluster_key_or_empty(cluster_meta.cluster_keys, name) != "" {
+            cluster_nodes = cluster_nodes + 1
+            if cluster_nodes > 1 {
+              has_single_cluster_rank_order_bucket = false
+              break
+            }
+          }
+        }
+        if !has_single_cluster_rank_order_bucket {
+          break
+        }
+      }
+    }
     let final_groups =
-      reorder_final_groups_for_cluster_remincross(
-        cleaned_groups,
-        cluster_rank_order,
-        cluster_meta.cluster_keys,
-        cluster_meta.intercluster_keys,
-        local_cluster_order,
-      )
+      if has_single_cluster_rank_order_bucket {
+        cleaned_groups
+      } else {
+        reorder_rank_groups_by_cluster_rank_order(
+          cleaned_groups,
+          cluster_rank_order,
+          cluster_meta.cluster_keys,
+        )
+      }
+    // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
+    reorder_groups_by_local_cluster_order(
+      final_groups,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      local_cluster_order,
+    )
     let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
       graph,
       edges,
