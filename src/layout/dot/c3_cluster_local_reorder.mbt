@@ -263,37 +263,6 @@ fn build_cluster_local_nodes_and_order(
 
 
 ///|
-/// Graphviz parity: local cluster rank groups include only cluster members
-/// and keep cluster-local node order as stable sort key.
-/// Do not change behavior without updating fixtures/tests.
-fn sort_cluster_real_nodes_by_seed_order(
-  real_nodes : Array[String],
-  cluster_node_order : Map[String, Int],
-) -> Unit {
-  real_nodes.sort_by((a, b) => {
-    let a_idx = match cluster_node_order.get(a) {
-      Some(value) => value
-      None => 0
-    }
-    let b_idx = match cluster_node_order.get(b) {
-      Some(value) => value
-      None => 0
-    }
-    if a_idx < b_idx {
-      -1
-    } else if a_idx > b_idx {
-      1
-    } else if a < b {
-      -1
-    } else if a > b {
-      1
-    } else {
-      0
-    }
-  })
-}
-
-///|
 /// Graphviz parity: local cluster rank groups include only cluster members and
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
@@ -410,10 +379,27 @@ fn build_cluster_local_rank_groups(
       }
     }
     let fallback_real_nodes = real_nodes.copy()
-    sort_cluster_real_nodes_by_seed_order(
-      fallback_real_nodes,
-      cluster_node_order,
-    )
+    fallback_real_nodes.sort_by((a, b) => {
+      let a_idx = match cluster_node_order.get(a) {
+        Some(value) => value
+        None => 0
+      }
+      let b_idx = match cluster_node_order.get(b) {
+        Some(value) => value
+        None => 0
+      }
+      if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else if a < b {
+        -1
+      } else if a > b {
+        1
+      } else {
+        0
+      }
+    })
     for name in fallback_real_nodes {
       if seeded_seen.get(name) is None {
         seeded_real_nodes.push(name)
