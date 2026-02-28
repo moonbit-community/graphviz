@@ -1023,25 +1023,6 @@ fn build_root_nlist_and_node_order_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: root cluster-rank-order output context keeps rank-same,
-/// order-size, and cluster-filter payload ordering for root reorder dispatch.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterRankOrderFromRootReorderContext {
-  order_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  order_sizes_out : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_cluster_skeleton : Map[String, Bool]
-  flat_constraints : Map[String, Bool]
-  graphviz_flip : Bool
-  real_nodes : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
 /// and ordered-root groups tuple ordering unchanged before rank transfer.
 /// Do not change behavior without updating fixtures/tests.
@@ -1055,7 +1036,17 @@ type RootClusterRankOrderPhaseOutput = (
 /// and dispatch context without reordering Graphviz call arguments.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_cluster_rank_order_phase_from_root_reorder_output(
-  dispatch_context : ClusterRankOrderFromRootReorderContext,
+  order_cluster_keys : Map[String, String],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  order_sizes_out : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  order_cluster_skeleton : Map[String, Bool],
+  flat_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
   root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
 ) -> RootClusterRankOrderPhaseOutput {
   let (
@@ -1085,21 +1076,21 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
     root_edge_head_port_order,
     root_parents,
     root_children,
-    dispatch_context.order_cluster_keys,
-    dispatch_context.rank_same_groups,
-    dispatch_context.rank_same_order,
+    order_cluster_keys,
+    rank_same_groups,
+    rank_same_order,
     root_edge_order,
     root_node_order,
-    dispatch_context.order_sizes_out,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    dispatch_context.order_cluster_skeleton,
-    dispatch_context.flat_constraints,
-    dispatch_context.graphviz_flip,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    order_cluster_skeleton,
+    flat_constraints,
+    graphviz_flip,
   )
-  if !dispatch_context.graphviz_flip {
+  if !graphviz_flip {
     return (root_rank_keys, ordered_root)
   }
   let ordered_root_nodes =
@@ -1112,8 +1103,8 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
       root_groups,
       ordered_root,
       ordered_root_mincross_nodes,
-      dispatch_context.order_cluster_keys,
-      dispatch_context.order_cluster_skeleton,
+      order_cluster_keys,
+      order_cluster_skeleton,
     )
   (root_rank_keys, merged_ordered_root)
 }
@@ -1288,33 +1279,29 @@ fn build_cluster_rank_order_for_cluster_reorder(
       flat_rank_constraints,
       order_edges_by_tail_root,
     )
-  let dispatch_context : ClusterRankOrderFromRootReorderContext = {
-    order_cluster_keys,
-    rank_same_groups: cluster_meta.rank_same_groups,
-    rank_same_order: cluster_meta.rank_same_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    flat_constraints: cluster_meta.flat_constraints,
-    graphviz_flip,
-    real_nodes,
-  }
   let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let (root_rank_keys, ordered_root) =
     run_root_cluster_rank_order_phase_from_root_reorder_output(
-      dispatch_context,
+      order_cluster_keys,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      order_cluster_skeleton,
+      cluster_meta.flat_constraints,
+      graphviz_flip,
       root_reorder_output,
     )
   let root_cluster_rank_order =
     build_cluster_rank_order_from_root_ordered(
       root_rank_keys,
       ordered_root,
-      dispatch_context.order_cluster_skeleton,
-      dispatch_context.order_cluster_keys,
-      dispatch_context.real_nodes,
+      order_cluster_skeleton,
+      order_cluster_keys,
+      real_nodes,
     )
   for rank, order_map in root_cluster_rank_order {
     cluster_rank_order[rank] = order_map
