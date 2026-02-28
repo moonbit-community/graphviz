@@ -599,7 +599,7 @@ fn median_value(values : Array[Double]) -> Double? {
 }
 
 ///|
-fn median_value_graphviz(values : Array[Double]) -> Double? {
+fn median_value_mc_scale(values : Array[Double]) -> Double? {
   if values.length() == 0 {
     return None
   }
@@ -1146,7 +1146,7 @@ fn count_crossings(
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
 /// Do not change behavior without updating fixtures/tests.
-fn local_cross_out_graphviz(
+fn local_cross_out_port_aware(
   node : String,
   next_rank : Int,
   ranks : Map[String, Int],
@@ -1208,7 +1208,7 @@ fn local_cross_out_graphviz(
 /// Graphviz parity: include local port-order crossings
 /// (mincross.c rcross/local_cross).
 /// Do not change behavior without updating fixtures/tests.
-fn local_cross_in_graphviz(
+fn local_cross_in_port_aware(
   node : String,
   prev_rank : Int,
   ranks : Map[String, Int],
@@ -1269,7 +1269,7 @@ fn local_cross_in_graphviz(
 ///|
 /// Graphviz parity: rcross-style crossing count with local port-order ties.
 /// Do not change behavior without updating fixtures/tests.
-fn count_crossings_graphviz(
+fn count_crossings_port_aware(
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
   edges : Array[@cgraph.Edge],
@@ -1439,7 +1439,7 @@ fn count_crossings_graphviz(
       for top in top_nodes {
         rank_cross =
           rank_cross +
-          local_cross_out_graphviz(
+          local_cross_out_port_aware(
             top,
             next_rank,
             ranks,
@@ -1453,7 +1453,7 @@ fn count_crossings_graphviz(
       for bottom in next_nodes {
         rank_cross =
           rank_cross +
-          local_cross_in_graphviz(
+          local_cross_in_port_aware(
             bottom,
             rank,
             ranks,

@@ -371,7 +371,7 @@ fn apply_seeded_groups_transpose_phase(
 ) -> Unit {
   // Graphviz parity: build_ranks applies transpose if crossings remain;
   // crossing count uses endpoint port x offsets for tie-correct ordering.
-  let seed_cross = count_crossings_graphviz(
+  let seed_cross = count_crossings_port_aware(
     seeded_groups,
     order_ranks,
     order_edges_out,

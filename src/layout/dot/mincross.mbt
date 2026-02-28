@@ -288,7 +288,7 @@ fn compute_desired_positions_graphviz(
         None => ()
       }
     }
-    match median_value_graphviz(values) {
+    match median_value_mc_scale(values) {
       Some(value) => desired[name] = value
       None => ()
     }
@@ -1463,7 +1463,7 @@ fn reorder_rank_groups(
   } else if graphviz_style && startpass <= 1 {
     2147483647
   } else if graphviz_style {
-    count_crossings_graphviz(
+    count_crossings_port_aware(
       ordered,
       node_ranks,
       edges,
@@ -1502,7 +1502,7 @@ fn reorder_rank_groups(
     order_positions = order_positions_from_groups(ordered)
     merge_fixed_positions()
     let seed_cross =
-      count_crossings_graphviz(
+      count_crossings_port_aware(
         ordered,
         node_ranks,
         edges,
@@ -1825,7 +1825,7 @@ fn reorder_rank_groups(
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
         let seed_cross =
-          count_crossings_graphviz(
+          count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -1867,7 +1867,7 @@ fn reorder_rank_groups(
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
-          count_crossings_graphviz(
+          count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -2028,7 +2028,7 @@ fn reorder_rank_groups(
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
-          count_crossings_graphviz(
+          count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -2180,7 +2180,7 @@ fn reorder_rank_groups(
           merge_fixed_positions()
         }
         let cross =
-          count_crossings_graphviz(
+          count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
