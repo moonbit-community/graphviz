@@ -177,17 +177,6 @@ priv struct XposClusteredInputEdgeData {
 }
 
 ///|
-priv struct NonclusterXposReorderInputs {
-  parents : Map[String, Array[String]]
-  children : Map[String, Array[String]]
-  tmp_rank_keys : Array[Int]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-}
-
-///|
 /// Stage D Phase D0 split: position orchestrator helpers
 /// for x/y solve assembly and final result wiring.
 

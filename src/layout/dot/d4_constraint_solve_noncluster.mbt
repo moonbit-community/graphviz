@@ -59,16 +59,20 @@ fn build_noncluster_xpos_reorder_graph_inputs_for_positions(
 }
 
 ///|
-/// Graphviz parity: non-cluster reorder input assembly keeps vnode edge-index
-/// and port-hint derivation in Graphviz-aligned order before reorder apply.
+/// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
+/// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_xpos_reorder_inputs_for_positions(
+fn build_noncluster_xpos_reordered_groups_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
+  rank_heights : RankHeights,
+  cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
   x_order_sizes : Map[String, NodeSize],
+  x_cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
-) -> NonclusterXposReorderInputs {
+) -> Map[Int, Array[String]] {
   let (parents, children, tmp_rank_keys) =
     build_noncluster_xpos_reorder_graph_inputs_for_positions(
       prep.nodes,
@@ -88,52 +92,18 @@ fn build_noncluster_xpos_reorder_inputs_for_positions(
     ordering,
     x_order_sizes,
   )
-  {
-    parents,
-    children,
-    tmp_rank_keys,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  }
-}
-
-///|
-/// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
-/// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_xpos_reordered_groups_for_positions(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_order_sizes : Map[String, NodeSize],
-  x_cluster_keys : Map[String, String],
-  graphviz_flip : Bool,
-  x_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  let noncluster_reorder_inputs =
-    build_noncluster_xpos_reorder_inputs_for_positions(
-      prep,
-      rank_data,
-      ordering,
-      x_order_sizes,
-      x_groups,
-    )
   reorder_rank_groups(
-    noncluster_reorder_inputs.tmp_rank_keys,
+    tmp_rank_keys,
     x_groups,
     ordering.order_edges,
     ordering.order_edge_tail,
     ordering.order_edge_head,
-    noncluster_reorder_inputs.order_edge_tail_port_x,
-    noncluster_reorder_inputs.order_edge_head_port_x,
-    noncluster_reorder_inputs.order_edge_tail_port_order,
-    noncluster_reorder_inputs.order_edge_head_port_order,
-    noncluster_reorder_inputs.parents,
-    noncluster_reorder_inputs.children,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    parents,
+    children,
     x_cluster_keys,
     cluster_meta.rank_same_groups,
     cluster_meta.rank_same_order,
