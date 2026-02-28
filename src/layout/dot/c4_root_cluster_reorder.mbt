@@ -574,45 +574,6 @@ fn build_root_groups_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: cluster-rank sort keys are normalized into deterministic
-/// order for root-bucket anchor transfer across adjacent ranks.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_sorted_cluster_keys_for_cluster_rank_order(
-  order_map : Map[String, Int],
-) -> Array[String] {
-  let entries : Array[(Int, String)] = []
-  for cluster, order in order_map {
-    if cluster == "" {
-      continue
-    }
-    entries.push((order, cluster))
-  }
-  if entries.length() > 1 {
-    entries.sort_by((a, b) => {
-      let (a_order, a_cluster) = a
-      let (b_order, b_cluster) = b
-      if a_order < b_order {
-        -1
-      } else if a_order > b_order {
-        1
-      } else if a_cluster < b_cluster {
-        -1
-      } else if a_cluster > b_cluster {
-        1
-      } else {
-        0
-      }
-    })
-  }
-  let sorted : Array[String] = []
-  for entry in entries {
-    let (_order, cluster) = entry
-    sorted.push(cluster)
-  }
-  sorted
-}
-
-///|
 /// Graphviz parity: root real-node bucket keeps relative left/right anchor
 /// continuity across adjacent ranks when both ranks expose root buckets.
 /// Do not change behavior without updating fixtures/tests.
@@ -659,7 +620,37 @@ fn anchor_root_bucket_from_previous_cluster_rank_order(
   if prev_cluster_count != 1 || !has_left || has_right {
     return ()
   }
-  let sorted_clusters = collect_sorted_cluster_keys_for_cluster_rank_order(order_map)
+  // Graphviz parity: cluster-rank sort keys are normalized into deterministic
+  // order for root-bucket anchor transfer across adjacent ranks.
+  let entries : Array[(Int, String)] = []
+  for cluster, order in order_map {
+    if cluster == "" {
+      continue
+    }
+    entries.push((order, cluster))
+  }
+  if entries.length() > 1 {
+    entries.sort_by((a, b) => {
+      let (a_order, a_cluster) = a
+      let (b_order, b_cluster) = b
+      if a_order < b_order {
+        -1
+      } else if a_order > b_order {
+        1
+      } else if a_cluster < b_cluster {
+        -1
+      } else if a_cluster > b_cluster {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let sorted_clusters : Array[String] = []
+  for entry in entries {
+    let (_order, cluster) = entry
+    sorted_clusters.push(cluster)
+  }
   if sorted_clusters.length() == 0 {
     return ()
   }
