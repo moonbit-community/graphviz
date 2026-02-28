@@ -215,54 +215,6 @@ fn collect_intercluster_vnode_tail_bonus(
 }
 
 ///|
-/// Graphviz parity: apply nested intercluster merge-chain bonus to the first
-/// representative vnode-tail segment for each merge key.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_intercluster_vnode_tail_bonus(
-  order_edges_by_tail_coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  bonus_by_key : Map[String, Int],
-) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
-  if bonus_by_key.length() == 0 {
-    return order_edges_by_tail_coalesced
-  }
-  let remaining_bonus : Map[String, Int] = Map::new()
-  for key, value in bonus_by_key {
-    remaining_bonus[key] = value
-  }
-  let adjusted : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
-    Map::new()
-  for tail_name, entries in order_edges_by_tail_coalesced {
-    let adjusted_entries : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = []
-    for entry in entries {
-      let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        entry
-      let key =
-        order_edge_merge_key(
-          tail,
-          head,
-          constraint,
-          tail_port_order,
-          head_port_order,
-        )
-      let mut adjusted_penalty = penalty
-      match remaining_bonus.get(key) {
-        Some(extra) =>
-          if extra > 0 {
-            adjusted_penalty = adjusted_penalty + extra
-            remaining_bonus[key] = 0
-          }
-        None => ()
-      }
-      adjusted_entries.push(
-        (tail, head, adjusted_penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order),
-      )
-    }
-    adjusted[tail_name] = adjusted_entries
-  }
-  adjusted
-}
-
-///|
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
