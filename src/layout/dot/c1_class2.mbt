@@ -455,56 +455,6 @@ fn build_ordering_class2_creation_sequences(
 
 
 ///|
-/// Graphviz parity: class2 data assembly consumes edge-chain outputs, then
-/// appends creation-sequence outputs without tuple field reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_data_from_edge_chain_data(
-  creation_order : Array[String],
-  edges_by_tail : Map[String, Array[Int]],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  vnode_creation_by_tail : Map[String, Array[String]],
-  order_edge_creation : Array[(String, String)],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  root_edge_creation : Array[(String, String)],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
-  flat_rank_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> OrderingClass2Data {
-  let (
-    skeleton_edge_creation,
-    edge_creation_order,
-    nlist_order,
-    vnode_creation_order,
-  ) =
-    build_ordering_class2_creation_sequences(
-      order_with_clusters,
-      cluster_meta,
-      order_edges_by_tail,
-      order_edges_by_tail_root,
-      order_edge_creation,
-      creation_order,
-      vnode_creation_by_tail,
-      flat_rank_constraints,
-      graphviz_flip,
-    )
-  {
-    edges_by_tail,
-    order_edges_by_tail,
-    order_edges_by_tail_root,
-    order_edges_by_tail_unmapped,
-    root_edge_creation,
-    skeleton_edge_creation,
-    edge_creation_order,
-    creation_order,
-    nlist_order,
-    vnode_creation_order,
-  }
-}
-
-
-///|
 /// Graphviz parity: class2/decompose ordering prep follows creation order,
 /// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
 /// Do not change behavior without updating fixtures/tests.
@@ -552,20 +502,35 @@ fn build_ordering_class2_data(
       order_with_clusters,
       cluster_meta.cluster_keys,
     )
-  build_ordering_class2_data_from_edge_chain_data(
-    creation_order,
+  let (
+    skeleton_edge_creation,
+    edge_creation_order,
+    nlist_order,
+    vnode_creation_order,
+  ) =
+    build_ordering_class2_creation_sequences(
+      order_with_clusters,
+      cluster_meta,
+      order_edges_by_tail,
+      order_edges_by_tail_root,
+      order_edge_creation,
+      creation_order,
+      vnode_creation_by_tail,
+      flat_rank_constraints,
+      graphviz_flip,
+    )
+  {
     edges_by_tail,
     order_edges_by_tail,
-    vnode_creation_by_tail,
-    order_edge_creation,
     order_edges_by_tail_root,
-    root_edge_creation,
     order_edges_by_tail_unmapped,
-    order_with_clusters,
-    cluster_meta,
-    flat_rank_constraints,
-    graphviz_flip,
-  )
+    root_edge_creation,
+    skeleton_edge_creation,
+    edge_creation_order,
+    creation_order,
+    nlist_order,
+    vnode_creation_order,
+  }
 }
 
 
