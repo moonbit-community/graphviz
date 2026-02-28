@@ -226,20 +226,36 @@ fn build_ordering_dispatch_setup(
     nlist_order_index[name] = nlist_idx
     nlist_idx = nlist_idx + 1
   }
+  // Graphviz parity: vnode ordering keys come from cluster-aware class2 walks,
+  // or from GD_nlist fallback ordering when clusters are absent.
   let vnode_order_keys_for_ordering =
-    build_vnode_order_keys_for_ordering_stage(
-      vnode_count,
-      cluster_meta,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      vnode_info,
-      ordering_groups_base,
-      nlist_order_index,
-    )
+    if vnode_count > 0 {
+      if cluster_meta.has_clusters {
+        build_vnode_order_keys(
+          edges,
+          edge_tail,
+          edge_head,
+          edge_reversed,
+          ranks,
+          base_order_index,
+          cluster_meta.cluster_keys,
+          cluster_meta.cluster_parents,
+          vnode_info.edge_vnodes,
+          vnode_info.vnode_ranks,
+        )
+      } else {
+        build_vnode_order_keys_from_nlist(
+          ordering_groups_base,
+          vnode_info.vnodes_by_rank,
+          base_order_index,
+          nlist_order_index,
+          Map::new(),
+          false,
+        )
+      }
+    } else {
+      Map::new()
+    }
   let reorder_setup =
     {
       ordering_groups_base,
