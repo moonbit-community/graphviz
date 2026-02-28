@@ -10,12 +10,6 @@
 fn run_clustered_remincross_pass(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
-    let tail_order =
-      collect_unique_tail_order_from_edge_tail_sequence(dispatch_context.edge_tail)
-    let tail_order_joined = tail_order.join(" ")
-    println("remincross source_tail_order \{tail_order_joined}")
-  }
   let prefer_seeded_from_ordered_with_vnodes =
     match dispatch_context.graph.get_attr("ratio") {
       Some(value) => value == "fill"

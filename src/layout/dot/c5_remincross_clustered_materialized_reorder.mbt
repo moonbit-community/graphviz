@@ -228,12 +228,6 @@ fn build_remincross_nlist_order(
       }
     }
   }
-  if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
-    let rem_creation_joined = rem_order_creation.join(" ")
-    let rem_nlist_joined = rem_nlist_order.join(" ")
-    println("remincross rem_order_creation \{rem_creation_joined}")
-    println("remincross rem_nlist_order \{rem_nlist_joined}")
-  }
   rem_nlist_order
 }
 
