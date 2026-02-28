@@ -133,32 +133,6 @@ fn build_order_groups_sizes_and_cluster_skeleton(
 }
 
 ///|
-/// Graphviz parity: unconstrained nodes are exactly nodes with zero ND_out and
-/// zero ND_in neighbors in the order graph.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_unconstrained_order_nodes(
-  order_nodes : Array[String],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-) -> Map[String, Bool] {
-  let unconstrained_nodes : Map[String, Bool] = Map::new()
-  for name in order_nodes {
-    let out = match graphviz_out_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let inn = match graphviz_in_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    if out.length() == 0 && inn.length() == 0 {
-      unconstrained_nodes[name] = true
-    }
-  }
-  unconstrained_nodes
-}
-
-///|
 /// Graphviz parity: local cluster node creation order follows node scan order
 /// per intercluster key, matching class2 fast-node insertion inputs.
 /// Do not change behavior without updating fixtures/tests.
@@ -298,12 +272,20 @@ fn apply_unconstrained_order_node_overrides(
     }
     gdnlist_idx = gdnlist_idx + 1
   }
-  let unconstrained_nodes =
-    collect_unconstrained_order_nodes(
-      order_nodes,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-    )
+  let unconstrained_nodes : Map[String, Bool] = Map::new()
+  for name in order_nodes {
+    let out = match graphviz_out_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let inn = match graphviz_in_neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    if out.length() == 0 && inn.length() == 0 {
+      unconstrained_nodes[name] = true
+    }
+  }
   for name, idx in gdnlist_order_index {
     if real_nodes.get(name) is Some(_) &&
       unconstrained_nodes.get(name) is Some(_) &&
