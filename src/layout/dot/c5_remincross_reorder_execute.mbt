@@ -169,10 +169,6 @@ fn build_remincross_flat_constraints(
   flat_constraints : Map[String, Bool],
   rank_same_constraints : Map[String, Bool],
   order_with_clusters : Bool,
-  rem_groups : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
-  rem_cluster_keys : Map[String, String],
-  intercluster_nodes : Map[String, Bool],
 ) -> Map[String, Bool] {
   let rem_flat_constraints : Map[String, Bool] = Map::new()
   if !order_with_clusters {
@@ -184,17 +180,13 @@ fn build_remincross_flat_constraints(
     }
     return rem_flat_constraints
   }
-  ignore(rem_groups)
-  ignore(real_nodes)
-  ignore(rem_cluster_keys)
-  ignore(intercluster_nodes)
   rem_flat_constraints
 }
 
 ///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
-/// vnode LCA assignments), local intercluster-node guards, size map extension,
-/// and flat-constraint augmentation before final reorder pass.
+/// vnode LCA assignments), size map extension, and flat-constraint
+/// augmentation before final reorder pass.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_reorder_inputs(
   graph : @cgraph.Graph,
@@ -203,13 +195,10 @@ fn build_remincross_reorder_inputs(
   edge_head : Array[String],
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
-  ranks : Map[String, Int],
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
-  rem_groups : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
 ) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
   let rem_cluster_keys =
     build_remincross_cluster_keys(
@@ -222,14 +211,6 @@ fn build_remincross_reorder_inputs(
       cluster_meta.cluster_parents,
       vnode_info.edge_vnodes,
     )
-  let intercluster_nodes =
-    collect_intercluster_nodes_with_short_span(
-      order_with_clusters,
-      edge_tail,
-      edge_head,
-      cluster_meta.intercluster_keys,
-      ranks,
-    )
   let rem_sizes =
     build_order_sizes_for_order_graph(
       order_sizes,
@@ -241,10 +222,6 @@ fn build_remincross_reorder_inputs(
       cluster_meta.flat_constraints,
       rank_same_constraints,
       order_with_clusters,
-      rem_groups,
-      real_nodes,
-      rem_cluster_keys,
-      intercluster_nodes,
     )
   (rem_cluster_keys, rem_sizes, rem_flat_constraints)
 }
@@ -344,45 +321,4 @@ fn build_remincross_cluster_keys(
     edge_vnodes,
   )
   rem_cluster_keys
-}
-
-///|
-/// Graphviz parity: intercluster node guard marks real endpoints of
-/// intercluster edges with rank span <= 1 for local-order relaxation.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_intercluster_nodes_with_short_span(
-  order_with_clusters : Bool,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  intercluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-) -> Map[String, Bool] {
-  let intercluster_nodes : Map[String, Bool] = Map::new()
-  if !order_with_clusters {
-    return intercluster_nodes
-  }
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    let tail_cluster = cluster_key_or_empty(intercluster_keys, tail)
-    let head_cluster = cluster_key_or_empty(intercluster_keys, head)
-    if tail_cluster != head_cluster {
-      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
-      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
-      let span = if tail_rank <= head_rank {
-        head_rank - tail_rank
-      } else {
-        tail_rank - head_rank
-      }
-      // Graphviz parity: intercluster short-span guard selects only edges
-      // crossing cluster keys with absolute rank difference <= 1.
-      if span <= 1 {
-        intercluster_nodes[tail] = true
-        intercluster_nodes[head] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-  intercluster_nodes
 }

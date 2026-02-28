@@ -61,13 +61,10 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context.edge_head,
       dispatch_context.order_with_vnodes,
       dispatch_context.order_with_clusters,
-      dispatch_context.ranks,
       dispatch_context.cluster_meta,
       dispatch_context.vnode_info,
       dispatch_context.order_sizes,
       dispatch_context.rank_same_constraints,
-      rem_groups,
-      dispatch_context.real_nodes,
     )
   let (rem_parents, rem_children, rem_edge_order) =
     build_order_edge_indices_and_order(
