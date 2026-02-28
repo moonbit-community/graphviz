@@ -236,22 +236,6 @@ fn cluster_index_or_default_for_local_reorder(
 
 
 ///|
-/// Graphviz parity: local cluster pass begins from collected cluster names
-/// before depth/index tie-break sorting.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_name_list_for_local_reorder(
-  cluster_graphs : Map[String, @cgraph.Graph],
-) -> Array[String] {
-  let cluster_names : Array[String] = []
-  for name, _ in cluster_graphs {
-    cluster_names.push(name)
-  }
-  cluster_names
-}
-
-
-
-///|
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
@@ -263,7 +247,10 @@ fn build_cluster_graph_order_for_local_reorder(
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
-  let cluster_names = build_cluster_name_list_for_local_reorder(cluster_graphs)
+  let cluster_names : Array[String] = []
+  for name, _ in cluster_graphs {
+    cluster_names.push(name)
+  }
   if cluster_graphs.length() == 0 {
     return (cluster_graphs, cluster_names)
   }
