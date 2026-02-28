@@ -3,32 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-/// Graphviz parity: per-component neighbor filtering preserves the local ND_out
-/// / ND_in order used when mincross runs each connected component separately.
-/// Do not change behavior without updating fixtures/tests.
-fn filter_noncluster_neighbor_map_for_component(
-  component_nodes : Array[String],
-  component_set : Map[String, Bool],
-  neighbors : Map[String, Array[String]],
-) -> Map[String, Array[String]] {
-  let filtered : Map[String, Array[String]] = Map::new()
-  for name in component_nodes {
-    let values = match neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let keep : Array[String] = []
-    for other in values {
-      if component_set.get(other) is Some(_) {
-        keep.push(other)
-      }
-    }
-    filtered[name] = keep
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
@@ -317,6 +291,30 @@ fn run_root_mincross_rank_reorder(
   for rank in order_rank_keys_for_mincross {
     merged[rank] = []
   }
+  // Graphviz parity: per-component neighbor filtering preserves the local
+  // ND_out / ND_in order used when mincross runs each connected component.
+  let filter_component_neighbor_map =
+    (
+      component_nodes : Array[String],
+      component_set : Map[String, Bool],
+      neighbors : Map[String, Array[String]],
+    ) => {
+      let filtered : Map[String, Array[String]] = Map::new()
+      for name in component_nodes {
+        let values = match neighbors.get(name) {
+          Some(list) => list
+          None => []
+        }
+        let keep : Array[String] = []
+        for other in values {
+          if component_set.get(other) is Some(_) {
+            keep.push(other)
+          }
+        }
+        filtered[name] = keep
+      }
+      filtered
+    }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
     // Graphviz parity: component reorder keeps each rank's relative extraction
@@ -357,25 +355,25 @@ fn run_root_mincross_rank_reorder(
         order_edge_head_port_order_mincross,
       )
     let component_parents =
-      filter_noncluster_neighbor_map_for_component(
+      filter_component_neighbor_map(
         component_nodes,
         component_set,
         parents,
       )
     let component_children =
-      filter_noncluster_neighbor_map_for_component(
+      filter_component_neighbor_map(
         component_nodes,
         component_set,
         children,
       )
     let component_graphviz_out_neighbors =
-      filter_noncluster_neighbor_map_for_component(
+      filter_component_neighbor_map(
         component_nodes,
         component_set,
         graphviz_out_neighbors,
       )
     let component_graphviz_in_neighbors =
-      filter_noncluster_neighbor_map_for_component(
+      filter_component_neighbor_map(
         component_nodes,
         component_set,
         graphviz_in_neighbors,
