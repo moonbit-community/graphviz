@@ -1392,11 +1392,6 @@ fn collect_sameport_anchor_overrides(
 }
 
 ///|
-fn flat_parallel_group_key(edge : @cgraph.Edge) -> String {
-  "\{edge.tail().name()}|\{@dot_shared.port_key(edge.tail_port())}|\{edge.head().name()}|\{@dot_shared.port_key(edge.head_port())}"
-}
-
-///|
 fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
   match edge.get_attr(name) {
     Some(value) => value != ""
@@ -1465,7 +1460,8 @@ fn collect_flat_adjacent_simple_beziers(
       !base.tail_clip_enabled || !base.head_clip_enabled {
       continue
     }
-    let key = flat_parallel_group_key(edge)
+    let key =
+      "\{edge.tail().name()}|\{@dot_shared.port_key(edge.tail_port())}|\{edge.head().name()}|\{@dot_shared.port_key(edge.head_port())}"
     match groups.get(key) {
       Some(list) => list.push(edge)
       None => groups[key] = [edge]
