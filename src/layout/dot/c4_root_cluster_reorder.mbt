@@ -902,12 +902,22 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_edge_creation,
       flat_rank_constraints,
     )
-  let root_node_order =
-    build_order_node_order_from_nlist_and_groups(
-      root_nlist_order,
-      root_node_map,
-      root_groups,
-    )
+  // Graphviz parity: root/ReMincross node-order seeding follows GD_nlist
+  // order and fills missing nodes from current rank-group index.
+  let root_node_order : Map[String, Int] = Map::new()
+  let mut root_node_idx = 0
+  for name in root_nlist_order {
+    if root_node_map.get(name) is Some(_) {
+      root_node_order[name] = root_node_idx
+      root_node_idx = root_node_idx + 1
+    }
+  }
+  let root_order_index = build_order_index(root_groups)
+  for name, idx in root_order_index {
+    if root_node_order.get(name) is None {
+      root_node_order[name] = idx
+    }
+  }
   let (
     root_edges_out,
     root_edge_tail_out,
