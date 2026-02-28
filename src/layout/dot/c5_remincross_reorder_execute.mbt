@@ -260,33 +260,6 @@ fn build_remincross_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: ReMincross base cluster keys copy intercluster keys and
-/// map empty keys to a non-empty root ND_clust key (mark_lowclusters).
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_keys_base(
-  graph : @cgraph.Graph,
-  intercluster_keys : Map[String, String],
-) -> (Map[String, String], String) {
-  let rem_cluster_keys : Map[String, String] = Map::new()
-  for name, key in intercluster_keys {
-    rem_cluster_keys[name] = key
-  }
-  // Graphviz parity: ND_clust is the root graph for nodes outside
-  // any cluster (mark_lowclusters). Use a non-empty root key so
-  // ReMincross can block swaps across cluster boundaries.
-  let root_cluster = match graph.name() {
-    Some(value) => value
-    None => "__root__"
-  }
-  for name, key in rem_cluster_keys {
-    if key == "" {
-      rem_cluster_keys[name] = root_cluster
-    }
-  }
-  (rem_cluster_keys, root_cluster)
-}
-
-///|
 /// Graphviz parity: ReMincross virtual nodes take the LCA endpoint cluster
 /// (or root fallback) from intercluster edge endpoints.
 /// Do not change behavior without updating fixtures/tests.
@@ -351,8 +324,22 @@ fn build_remincross_cluster_keys(
   cluster_parents : Map[String, String?],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, String] {
-  let (rem_cluster_keys, root_cluster) =
-    build_remincross_cluster_keys_base(graph, intercluster_keys)
+  let rem_cluster_keys : Map[String, String] = Map::new()
+  for name, key in intercluster_keys {
+    rem_cluster_keys[name] = key
+  }
+  // Graphviz parity: ND_clust is the root graph for nodes outside
+  // any cluster (mark_lowclusters). Use a non-empty root key so
+  // ReMincross can block swaps across cluster boundaries.
+  let root_cluster = match graph.name() {
+    Some(value) => value
+    None => "__root__"
+  }
+  for name, key in rem_cluster_keys {
+    if key == "" {
+      rem_cluster_keys[name] = root_cluster
+    }
+  }
   if !order_with_vnodes {
     return rem_cluster_keys
   }
@@ -367,31 +354,6 @@ fn build_remincross_cluster_keys(
     edge_vnodes,
   )
   rem_cluster_keys
-}
-
-///|
-/// Graphviz parity: intercluster short-span guard selects only edges crossing
-/// cluster keys with absolute rank difference <= 1.
-/// Do not change behavior without updating fixtures/tests.
-fn edge_has_intercluster_short_span(
-  tail : String,
-  head : String,
-  intercluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-) -> Bool {
-  let tail_cluster = cluster_key_or_empty(intercluster_keys, tail)
-  let head_cluster = cluster_key_or_empty(intercluster_keys, head)
-  if tail_cluster == head_cluster {
-    return false
-  }
-  let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
-  let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
-  let span = if tail_rank <= head_rank {
-    head_rank - tail_rank
-  } else {
-    tail_rank - head_rank
-  }
-  span <= 1
 }
 
 ///|
@@ -413,14 +375,22 @@ fn collect_intercluster_nodes_with_short_span(
   while edge_idx < edge_tail.length() {
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
-    if edge_has_intercluster_short_span(
-      tail,
-      head,
-      intercluster_keys,
-      ranks,
-    ) {
-      intercluster_nodes[tail] = true
-      intercluster_nodes[head] = true
+    let tail_cluster = cluster_key_or_empty(intercluster_keys, tail)
+    let head_cluster = cluster_key_or_empty(intercluster_keys, head)
+    if tail_cluster != head_cluster {
+      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+      let span = if tail_rank <= head_rank {
+        head_rank - tail_rank
+      } else {
+        tail_rank - head_rank
+      }
+      // Graphviz parity: intercluster short-span guard selects only edges
+      // crossing cluster keys with absolute rank difference <= 1.
+      if span <= 1 {
+        intercluster_nodes[tail] = true
+        intercluster_nodes[head] = true
+      }
     }
     edge_idx = edge_idx + 1
   }
