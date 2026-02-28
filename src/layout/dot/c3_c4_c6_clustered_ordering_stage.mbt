@@ -351,17 +351,67 @@ fn run_clustered_ordering_stage(
     rank_same_constraints: runtime_context.rank_same_constraints,
   }
   let reorder_context = pre_root_stage.reorder_context
-  let (next_ordered_with_vnodes, final_groups) =
-    run_cluster_rank_order_and_finalize_stage(
-      finalize_dispatch_context,
+  // Graphviz parity: clustered cleanup applies root cluster-rank ordering,
+  // then runs final clustered ReMincross via typed dispatch context.
+  let cluster_rank_order =
+    build_cluster_rank_order_for_cluster_reorder(
+      finalize_dispatch_context.order_with_clusters,
+      finalize_dispatch_context.order_with_vnodes,
+      finalize_dispatch_context.graphviz_flip,
+      finalize_dispatch_context.edges,
+      finalize_dispatch_context.edge_tail,
+      finalize_dispatch_context.edge_head,
+      finalize_dispatch_context.nlist_order,
+      finalize_dispatch_context.ranks,
       reorder_context.order_rank_keys,
       root_cluster_stage.order_groups_for_mincross,
       pre_root_stage.order_cluster_keys,
       pre_root_stage.order_cluster_skeleton,
+      finalize_dispatch_context.order_edges_by_tail_root,
+      finalize_dispatch_context.skeleton_edge_creation,
+      finalize_dispatch_context.root_edge_creation,
+      finalize_dispatch_context.flat_rank_constraints,
+      finalize_dispatch_context.cluster_meta,
+      finalize_dispatch_context.vnode_info,
+      finalize_dispatch_context.vnode_order_keys_for_ordering,
+      finalize_dispatch_context.real_nodes,
       pre_root_stage.order_sizes_out,
-      root_cluster_stage.ordered,
+      finalize_dispatch_context.nodesep_pt,
+      finalize_dispatch_context.has_edge_labels,
+      finalize_dispatch_context.port_order_positions,
+      finalize_dispatch_context.port_order_contrib,
+    )
+  let (next_ordered_with_vnodes, final_groups) =
+    finalize_order_groups_with_cluster_remincross(
+      finalize_dispatch_context.order_with_clusters,
+      finalize_dispatch_context.order_with_vnodes,
+      cluster_rank_order,
+      finalize_dispatch_context.cluster_meta,
+      finalize_dispatch_context.local_cluster_order,
       root_cluster_stage.ordered_with_vnodes,
+      finalize_dispatch_context.graph,
+      finalize_dispatch_context.edges,
+      finalize_dispatch_context.edge_tail,
+      finalize_dispatch_context.edge_head,
+      finalize_dispatch_context.edge_reversed,
+      finalize_dispatch_context.edge_tail_port_x,
+      finalize_dispatch_context.edge_head_port_x,
+      finalize_dispatch_context.edge_tail_port_order,
+      finalize_dispatch_context.edge_head_port_order,
+      finalize_dispatch_context.ranks,
       reorder_context.creation_order,
+      finalize_dispatch_context.edges_by_tail,
+      finalize_dispatch_context.vnode_info,
+      finalize_dispatch_context.order_sizes,
+      finalize_dispatch_context.rank_same_constraints,
+      finalize_dispatch_context.real_nodes,
+      finalize_dispatch_context.graphviz_flip,
+      finalize_dispatch_context.nodesep_pt,
+      finalize_dispatch_context.has_edge_labels,
+      finalize_dispatch_context.port_order_positions,
+      finalize_dispatch_context.port_order_contrib,
+      reorder_context.order_rank_keys,
+      root_cluster_stage.ordered,
     )
   remincross_root_tail_order_override_snapshot.val = None
   (final_groups, next_ordered_with_vnodes)
