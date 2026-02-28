@@ -52,46 +52,6 @@ fn update_rank_pht_for_edge_label_midpoint(
 
 
 ///|
-/// Graphviz parity: long edges reserve vnode half-height across intermediate
-/// ranks before cluster rank height adjustments.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_vnode_half_heights_for_rank_pht(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
-) -> Unit {
-  let vnode_half_height = VNODE_HEIGHT_PT / 2.0
-  for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    let tail_rank = match ranks.get(tail) {
-      Some(value) => value
-      None => continue
-    }
-    let head_rank = match ranks.get(head) {
-      Some(value) => value
-      None => continue
-    }
-    let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
-    let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
-    if max_rank - min_rank <= 1 {
-      continue
-    }
-    for rank in (min_rank + 1)..<max_rank {
-      let current = match rank_pht.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if vnode_half_height > current {
-        rank_pht[rank] = vnode_half_height
-      }
-    }
-  }
-}
-
-
-
-///|
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_heights(
@@ -135,7 +95,35 @@ fn compute_rank_heights(
       update_rank_pht_for_edge_label_midpoint(edge, ranks, rank_pht, rankdir)
     }
   }
-  apply_vnode_half_heights_for_rank_pht(edges, ranks, rank_pht)
+  // Graphviz parity: long edges reserve vnode half-height across
+  // intermediate ranks before cluster rank height adjustments.
+  let vnode_half_height = VNODE_HEIGHT_PT / 2.0
+  for edge in edges {
+    let tail = edge.tail().name()
+    let head = edge.head().name()
+    let tail_rank = match ranks.get(tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_rank = match ranks.get(head) {
+      Some(value) => value
+      None => continue
+    }
+    let min_rank = if tail_rank < head_rank { tail_rank } else { head_rank }
+    let max_rank = if tail_rank < head_rank { head_rank } else { tail_rank }
+    if max_rank - min_rank <= 1 {
+      continue
+    }
+    for rank in (min_rank + 1)..<max_rank {
+      let current = match rank_pht.get(rank) {
+        Some(value) => value
+        None => 0.0
+      }
+      if vnode_half_height > current {
+        rank_pht[rank] = vnode_half_height
+      }
+    }
+  }
   // Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
   // before cluster-specific adjustments.
   let rank_ht1 : Map[Int, Double] = Map::new()
