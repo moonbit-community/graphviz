@@ -1326,13 +1326,22 @@ fn compute_positions(
       cluster_meta,
       ordering,
     )
-  build_projection_result_from_x_stage_data_for_positions(
+  build_projection_result_for_positions(
     graph,
     prep,
     rank_data,
     rank_heights,
     cluster_meta,
     ordering,
-    x_stage_data,
+    x_stage_data.use_vnodes_for_xpos,
+    x_stage_data.x_base_sizes,
+    x_stage_data.x_groups,
+    x_stage_data.x_cluster_keys,
+    x_stage_data.virtual_slack_edges,
+    x_stage_data.flat_label_edges,
+    x_stage_data.flat_label_nodes,
+    x_stage_data.flat_label_edge_vnodes,
+    rank_heights.rank_ht1,
+    rank_heights.rank_ht2,
   )
 }
