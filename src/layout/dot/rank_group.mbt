@@ -352,7 +352,11 @@ fn build_rank_groups_by_components(
 ) -> Map[Int, Array[String]] {
   let nodes = collect_rank_group_component_nodes(rank_keys, groups)
   if nodes.length() == 0 {
-    return build_empty_rank_group_map(rank_keys)
+    let empty : Map[Int, Array[String]] = Map::new()
+    for rank in rank_keys {
+      empty[rank] = []
+    }
+    return empty
   }
   let components = discover_rank_group_components(
     nodes,
@@ -415,16 +419,6 @@ fn collect_rank_group_component_nodes(
   }
   nodes
 }
-
-///|
-fn build_empty_rank_group_map(rank_keys : Array[Int]) -> Map[Int, Array[String]] {
-  let empty : Map[Int, Array[String]] = Map::new()
-  for rank in rank_keys {
-    empty[rank] = []
-  }
-  empty
-}
-
 
 ///|
 priv struct RankGroupComponentDiscoveryPrepared {
