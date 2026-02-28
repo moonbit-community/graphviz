@@ -389,27 +389,6 @@ fn build_root_tail_order_sources_first(
 }
 
 ///|
-/// Graphviz parity: root source-first ordering marks incoming heads among
-/// root nodes from merged edge-creation order before tail-order filtering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_has_in_map_for_cluster_reorder(
-  root_nodes : Array[String],
-  root_edge_creation_order : Array[(String, String)],
-) -> Map[String, Bool] {
-  let root_has_in : Map[String, Bool] = Map::new()
-  for name in root_nodes {
-    root_has_in[name] = false
-  }
-  for edge in root_edge_creation_order {
-    let (_tail, head) = edge
-    if root_has_in.get(head) is Some(_) {
-      root_has_in[head] = true
-    }
-  }
-  root_has_in
-}
-
-///|
 /// Graphviz parity: root GD_nlist output keeps only materialized root nodes,
 /// then appends any missing root names in root_nodes order.
 /// Do not change behavior without updating fixtures/tests.
@@ -463,11 +442,18 @@ fn build_root_nlist_order_for_cluster_reorder(
       skeleton_edge_creation,
       root_edge_creation,
     )
-  let root_has_in =
-    build_root_has_in_map_for_cluster_reorder(
-      root_nodes,
-      root_edge_creation_order,
-    )
+  // Graphviz parity: root source-first ordering marks incoming heads among
+  // root nodes from merged edge-creation order before tail-order filtering.
+  let root_has_in : Map[String, Bool] = Map::new()
+  for name in root_nodes {
+    root_has_in[name] = false
+  }
+  for edge in root_edge_creation_order {
+    let (_tail, head) = edge
+    if root_has_in.get(head) is Some(_) {
+      root_has_in[head] = true
+    }
+  }
   let root_tail_order =
     build_root_tail_order_sources_first(tail_order_root, root_has_in)
   let root_nlist_full =
