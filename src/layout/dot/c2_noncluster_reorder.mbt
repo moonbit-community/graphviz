@@ -3,16 +3,6 @@
 /// helpers isolated from clustered ordering branches.
 
 ///|
-/// Graphviz parity: non-cluster reorder output keeps reordered rank groups from
-/// the Graphviz-style single-pass mincross call unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_reorder_pass_output(
-  ordered_groups : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  ordered_groups
-}
-
-///|
 /// Graphviz parity: non-cluster reorder seeds build_ranks node order from
 /// GD_nlist, then falls back to existing node order for missing nodes.
 /// Do not change behavior without updating fixtures/tests.
@@ -507,5 +497,5 @@ fn run_noncluster_reorder_pass(
       graphviz_in_neighbors,
       graphviz_flip,
     )
-  build_noncluster_reorder_pass_output(ordered_groups)
+  ordered_groups
 }
