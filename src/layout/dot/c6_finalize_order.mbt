@@ -199,19 +199,14 @@ fn finalize_order_groups_with_cluster_remincross(
     )
   dot_trace_groups("cleaned_groups_pre", cleaned_groups)
   if order_with_clusters {
-    let skip_cluster_rank_order_for_lr = false
     let final_groups =
-      if skip_cluster_rank_order_for_lr {
-        cleaned_groups
-      } else {
-        reorder_final_groups_for_cluster_remincross(
-          cleaned_groups,
-          cluster_rank_order,
-          cluster_meta.cluster_keys,
-          cluster_meta.intercluster_keys,
-          local_cluster_order,
-        )
-      }
+      reorder_final_groups_for_cluster_remincross(
+        cleaned_groups,
+        cluster_rank_order,
+        cluster_meta.cluster_keys,
+        cluster_meta.intercluster_keys,
+        local_cluster_order,
+      )
     let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
       graph,
       edges,
