@@ -303,16 +303,12 @@ fn build_remincross_nlist_order(
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
-/// + vnode expansion + fast-graph edge insertion order (decompose parity).
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_tail_order(
+/// Graphviz parity: clustered ReMincross groups names by cluster in
+/// rem_order_creation order and records first-seen cluster sequence.
+fn build_remincross_cluster_grouping(
   rem_order_creation : Array[String],
-  rem_ranks : Map[String, Int],
   rem_cluster_keys : Map[String, String],
-  rem_edge_creation : Array[(String, String)],
-  cluster_order_index : Map[String, Int],
-) -> Array[String] {
+) -> (Array[String], Map[String, Array[String]], Map[String, Int]) {
   let cluster_order_seen : Array[String] = []
   let cluster_seen : Map[String, Bool] = Map::new()
   let names_by_cluster : Map[String, Array[String]] = Map::new()
@@ -335,6 +331,25 @@ fn build_remincross_cluster_tail_order(
   for idx, cluster in cluster_order_seen {
     cluster_first_seen[cluster] = idx
   }
+  (cluster_order_seen, names_by_cluster, cluster_first_seen)
+}
+
+///|
+/// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
+/// + vnode expansion + fast-graph edge insertion order (decompose parity).
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_cluster_tail_order(
+  rem_order_creation : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_cluster_keys : Map[String, String],
+  rem_edge_creation : Array[(String, String)],
+  cluster_order_index : Map[String, Int],
+) -> Array[String] {
+  let (cluster_order_seen, names_by_cluster, cluster_first_seen) =
+    build_remincross_cluster_grouping(
+      rem_order_creation,
+      rem_cluster_keys,
+    )
   let (cluster_order, cluster_order_pos) =
     build_remincross_cluster_order_and_positions(
       cluster_order_seen,
