@@ -220,22 +220,6 @@ fn build_cluster_index_for_local_reorder(
 
 
 ///|
-/// Graphviz parity: clusters not present in cluster_order sort after known
-/// clusters using a stable default index.
-/// Do not change behavior without updating fixtures/tests.
-fn cluster_index_or_default_for_local_reorder(
-  name : String,
-  cluster_index : Map[String, Int],
-) -> Int {
-  match cluster_index.get(name) {
-    Some(value) => value
-    None => cluster_index.length() + 1
-  }
-}
-
-
-
-///|
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
@@ -267,8 +251,14 @@ fn build_cluster_graph_order_for_local_reorder(
       } else if a_depth > b_depth {
         1
       } else {
-        let a_idx = cluster_index_or_default_for_local_reorder(a, cluster_index)
-        let b_idx = cluster_index_or_default_for_local_reorder(b, cluster_index)
+        let a_idx = match cluster_index.get(a) {
+          Some(value) => value
+          None => cluster_index.length() + 1
+        }
+        let b_idx = match cluster_index.get(b) {
+          Some(value) => value
+          None => cluster_index.length() + 1
+        }
         if a_idx < b_idx {
           -1
         } else if a_idx > b_idx {
