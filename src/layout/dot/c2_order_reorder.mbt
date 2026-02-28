@@ -109,50 +109,6 @@ fn build_order_reorder_context(
 }
 
 ///|
-/// Graphviz parity: materialized order-edge output preserves mapped/unmapped
-/// arrays plus Graphviz neighbor maps for downstream reorder stages.
-/// Do not change behavior without updating fixtures/tests.
-fn build_materialized_order_edges_and_neighbors_output(
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_edges_out_unmapped : Array[@cgraph.Edge],
-  order_edge_tail_out_unmapped : Array[String],
-  order_edge_head_out_unmapped : Array[String],
-  order_edge_tail_port_x_unmapped : Array[Double],
-  order_edge_head_port_x_unmapped : Array[Double],
-  order_edge_tail_port_order_unmapped : Array[Double],
-  order_edge_head_port_order_unmapped : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  order_flat_constraints : Map[String, Bool],
-) -> OrderMaterializationData {
-  {
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    order_flat_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: Graphviz neighbor maps and flat constraints are derived
 /// before unconstrained-node seed-order overrides for build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -376,7 +332,7 @@ fn build_materialized_order_edges_and_neighbors(
       context.nodes,
       context.order_node_order,
     )
-  build_materialized_order_edges_and_neighbors_output(
+  {
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
@@ -394,5 +350,5 @@ fn build_materialized_order_edges_and_neighbors(
     graphviz_out_neighbors,
     graphviz_in_neighbors,
     order_flat_constraints,
-  )
+  }
 }
