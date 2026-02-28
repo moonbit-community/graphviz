@@ -643,39 +643,6 @@ fn build_cluster_local_neighbor_maps(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder only considers nodes that are
-/// present in rank groups and belong to the current cluster (plus local
-/// virtual nodes when enabled). Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_node_set_for_reorder(
-  cluster_graph : @cgraph.Graph,
-  cluster : String,
-  groups : Map[Int, Array[String]],
-  vnode_clusters : Map[String, String],
-  order_with_vnodes : Bool,
-) -> Map[String, Bool] {
-  let cluster_nodes_set : Map[String, Bool] = Map::new()
-  for node in cluster_graph.nodes() {
-    cluster_nodes_set[node.name()] = true
-  }
-  if order_with_vnodes {
-    for vnode, vnode_cluster in vnode_clusters {
-      if vnode_cluster == cluster {
-        cluster_nodes_set[vnode] = true
-      }
-    }
-  }
-  let cluster_node_set : Map[String, Bool] = Map::new()
-  for _rank, names in groups {
-    for name in names {
-      if cluster_nodes_set.get(name) is Some(_) {
-        cluster_node_set[name] = true
-      }
-    }
-  }
-  cluster_node_set
-}
-
-///|
 /// Graphviz parity: cluster-local reorder metadata keeps node sizes,
 /// local cluster keys, and same-rank flat constraints scoped to the cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -1218,13 +1185,28 @@ fn reorder_single_cluster_rank_groups(
   empty_cluster_skeleton : Map[String, Bool],
   order_with_vnodes : Bool,
 ) -> Unit {
-  let cluster_node_set = build_cluster_local_node_set_for_reorder(
-    cluster_graph,
-    cluster,
-    groups,
-    vnode_info.vnode_clusters,
-    order_with_vnodes,
-  )
+  // Graphviz parity: cluster-local reorder only considers nodes that are
+  // present in rank groups and belong to the current cluster (plus local
+  // virtual nodes when enabled).
+  let cluster_nodes_set : Map[String, Bool] = Map::new()
+  for node in cluster_graph.nodes() {
+    cluster_nodes_set[node.name()] = true
+  }
+  if order_with_vnodes {
+    for vnode, vnode_cluster in vnode_info.vnode_clusters {
+      if vnode_cluster == cluster {
+        cluster_nodes_set[vnode] = true
+      }
+    }
+  }
+  let cluster_node_set : Map[String, Bool] = Map::new()
+  for _rank, names in groups {
+    for name in names {
+      if cluster_nodes_set.get(name) is Some(_) {
+        cluster_node_set[name] = true
+      }
+    }
+  }
   if cluster_node_set.length() <= 1 {
     return ()
   }
