@@ -3,20 +3,6 @@
 /// helpers for x-stage rank-group refinement.
 
 ///|
-/// Graphviz parity: vnode xpos-reorder gate is shared across reorder branch
-/// selection and transpose cleanup eligibility.
-/// Do not change behavior without updating fixtures/tests.
-fn should_apply_vnode_xpos_reorder_for_positions(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  cluster_meta : ClusterMetadata,
-) -> Bool {
-  xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-  !cluster_meta.ordering_set
-}
-
-///|
 /// Graphviz parity: xpos reorder branch resolver keeps clustered vs non-cluster
 /// routing unchanged before transpose-cleanup stage.
 /// Do not change behavior without updating fixtures/tests.
@@ -39,12 +25,8 @@ fn build_xpos_reordered_groups_for_positions(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if should_apply_vnode_xpos_reorder_for_positions(
-    xpos_reorder_enabled,
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    cluster_meta,
-  ) {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
+    !cluster_meta.ordering_set {
     build_clustered_xpos_reordered_groups(
       prep,
       rank_data,
@@ -123,12 +105,8 @@ fn maybe_apply_xpos_transpose_cleanup(
   ranks : Map[String, Int],
   x_groups : Map[Int, Array[String]],
 ) -> Unit {
-  if should_apply_vnode_xpos_reorder_for_positions(
-    xpos_reorder_enabled,
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    cluster_meta,
-  ) {
+  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
+    !cluster_meta.ordering_set {
     let (parents, children) = build_edge_index_for_order_with_vnodes(
       nodes,
       ordering.order_edges,
