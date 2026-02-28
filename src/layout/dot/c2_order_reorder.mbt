@@ -134,15 +134,58 @@ fn build_materialized_order_edges_and_neighbors(
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
   ) =
-    materialize_mapped_and_unmapped_order_edges(
-      nlist_order,
-      order_edges_by_tail,
-      order_graph,
-      order_node_map,
-      order_edges_by_tail_unmapped,
-      order_graph_unmapped,
-      order_node_map_unmapped,
-    )
+    {
+      let (
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+      ) =
+        // Graphviz parity: mapped order-edge arrays are materialized from
+        // GD_nlist tail order against the cluster-remapped order graph.
+        collect_order_edges_for_tail_sequence(
+          nlist_order,
+          order_edges_by_tail,
+          order_graph,
+          order_node_map,
+        )
+      let (
+        order_edges_out_unmapped,
+        order_edge_tail_out_unmapped,
+        order_edge_head_out_unmapped,
+        order_edge_tail_port_x_unmapped,
+        order_edge_head_port_x_unmapped,
+        order_edge_tail_port_order_unmapped,
+        order_edge_head_port_order_unmapped,
+      ) =
+        // Graphviz parity: unmapped order-edge arrays are materialized from
+        // GD_nlist tail order against the non-remapped order graph.
+        collect_order_edges_for_tail_sequence(
+          nlist_order,
+          order_edges_by_tail_unmapped,
+          order_graph_unmapped,
+          order_node_map_unmapped,
+        )
+      (
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_edge_tail_port_x,
+        order_edge_head_port_x,
+        order_edge_tail_port_order,
+        order_edge_head_port_order,
+        order_edges_out_unmapped,
+        order_edge_tail_out_unmapped,
+        order_edge_head_out_unmapped,
+        order_edge_tail_port_x_unmapped,
+        order_edge_head_port_x_unmapped,
+        order_edge_tail_port_order_unmapped,
+        order_edge_head_port_order_unmapped,
+      )
+    }
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
     build_neighbor_maps(
       order_nodes,
