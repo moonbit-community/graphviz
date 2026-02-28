@@ -326,7 +326,7 @@ fn build_unmapped_order_edges_by_tail(
 ) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
   if order_with_clusters {
     let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
-      build_order_edges_by_tail_graphviz(
+      build_order_edges_by_tail(
         creation_order,
         edges,
         edge_tail,
@@ -374,7 +374,7 @@ fn build_root_order_edges_by_tail(
 ) -> (Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]], Array[(String, String)]) {
   if order_with_clusters {
     let (root_edges_by_tail, _root_vnode_creation_by_tail, root_edge_creation) =
-      build_order_edges_by_tail_graphviz(
+      build_order_edges_by_tail(
         creation_order,
         edges,
         edge_tail,

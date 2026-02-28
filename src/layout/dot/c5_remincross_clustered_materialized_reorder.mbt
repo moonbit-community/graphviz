@@ -38,7 +38,7 @@ fn build_clustered_remincross_materialized_edges(
   // Graphviz parity: clustered ReMincross order-edge rematerialization uses
   // Graphviz ND_out chain expansion with vnode creation + edge creation outputs.
   let (rem_order_edges_by_tail_raw, rem_vnode_creation, _rem_edge_creation_raw) =
-    build_order_edges_by_tail_graphviz(
+    build_order_edges_by_tail(
       creation_order,
       edges,
       edge_tail,

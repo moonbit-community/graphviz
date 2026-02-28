@@ -292,7 +292,7 @@ fn add_order_edge(
 
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_edges_by_tail_graphviz(
+fn build_order_edges_by_tail(
   tail_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],

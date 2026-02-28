@@ -276,7 +276,7 @@ fn build_ordering_class2_base_edge_chains(
   let edges_by_tail =
     build_edges_by_tail_from_out_order(nodes, edge_out_order)
   let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
-    build_order_edges_by_tail_graphviz(
+    build_order_edges_by_tail(
       creation_order,
       edges,
       edge_tail,
