@@ -3,62 +3,6 @@
 /// helpers used by the shared reorder branch flow.
 
 ///|
-/// Graphviz parity: non-cluster xpos reorder uses both geometric port x and
-/// compass/record port-order hints for mincross tie-breaking, same as Graphviz.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_xpos_reorder_port_hints_for_positions(
-  nodes : Array[@cgraph.Node],
-  ordering : OrderingResult,
-  x_order_sizes : Map[String, NodeSize],
-) -> (Array[Double], Array[Double], Array[Double], Array[Double]) {
-  let (order_edge_tail_port_x, order_edge_head_port_x) =
-    compute_edge_port_positions(
-      nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      x_order_sizes,
-    )
-  let (order_edge_tail_port_order, order_edge_head_port_order) =
-    compute_edge_port_orders(
-      nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      x_order_sizes,
-    )
-  (
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  )
-}
-
-///|
-/// Graphviz parity: non-cluster xpos reorder reads vnode edge-index parents/
-/// children and current rank keys before calling reorder_rank_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_xpos_reorder_graph_inputs_for_positions(
-  nodes : Array[@cgraph.Node],
-  ordering : OrderingResult,
-  ranks : Map[String, Int],
-  x_groups : Map[Int, Array[String]],
-) -> (Map[String, Array[String]], Map[String, Array[String]], Array[Int]) {
-  let (parents, children) = build_edge_index_for_order_with_vnodes(
-    nodes,
-    ordering.order_edges,
-    ordering.order_edge_tail,
-    ordering.order_edge_head,
-    ranks,
-    ordering.vnode_info.edge_vnodes,
-    ordering.vnode_info.vnode_ranks,
-  )
-  let tmp_rank_keys = collect_rank_keys(x_groups)
-  (parents, children, tmp_rank_keys)
-}
-
-///|
 /// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
 /// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -73,25 +17,34 @@ fn build_noncluster_xpos_reordered_groups_for_positions(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let (parents, children, tmp_rank_keys) =
-    build_noncluster_xpos_reorder_graph_inputs_for_positions(
-      prep.nodes,
-      ordering,
-      rank_data.ranks,
-      x_groups,
-    )
+  let (parents, children) = build_edge_index_for_order_with_vnodes(
+    prep.nodes,
+    ordering.order_edges,
+    ordering.order_edge_tail,
+    ordering.order_edge_head,
+    rank_data.ranks,
+    ordering.vnode_info.edge_vnodes,
+    ordering.vnode_info.vnode_ranks,
+  )
+  let tmp_rank_keys = collect_rank_keys(x_groups)
   // Graphviz parity: even non-cluster xpos reorder uses compass/record
   // port-order fractions when mincross scoring ties are evaluated.
-  let (
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  ) = build_noncluster_xpos_reorder_port_hints_for_positions(
-    prep.nodes,
-    ordering,
-    x_order_sizes,
-  )
+  let (order_edge_tail_port_x, order_edge_head_port_x) =
+    compute_edge_port_positions(
+      prep.nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      x_order_sizes,
+    )
+  let (order_edge_tail_port_order, order_edge_head_port_order) =
+    compute_edge_port_orders(
+      prep.nodes,
+      ordering.order_edges,
+      ordering.order_edge_tail,
+      ordering.order_edge_head,
+      x_order_sizes,
+    )
   reorder_rank_groups(
     tmp_rank_keys,
     x_groups,
