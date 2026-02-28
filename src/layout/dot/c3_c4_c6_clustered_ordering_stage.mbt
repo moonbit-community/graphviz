@@ -100,27 +100,26 @@ fn build_clustered_ordering_pre_root_stage(
       port_edge_nodes,
     )
   trace_order_node_order_debug(reorder_context.order_node_order)
-  let materialized_inputs : MaterializedOrderEdgesAndNeighborsContext = {
-    nlist_order,
-    order_edges_by_tail,
-    order_graph: reorder_context.order_graph,
-    order_node_map: reorder_context.order_node_map,
-    order_edges_by_tail_unmapped,
-    order_graph_unmapped: reorder_context.order_graph_unmapped,
-    order_node_map_unmapped: reorder_context.order_node_map_unmapped,
-    order_ranks: reorder_context.order_ranks,
-    real_nodes,
-    order_nodes: reorder_context.order_nodes,
-    edge_creation_order,
-    cluster_meta,
-    gdnlist_order,
-    edge_tail,
-    edge_head,
-    nodes,
-    order_node_order: reorder_context.order_node_order,
-  }
   let materialized =
-    build_materialized_order_edges_and_neighbors(materialized_inputs)
+    build_materialized_order_edges_and_neighbors(
+      nlist_order,
+      order_edges_by_tail,
+      reorder_context.order_graph,
+      reorder_context.order_node_map,
+      order_edges_by_tail_unmapped,
+      reorder_context.order_graph_unmapped,
+      reorder_context.order_node_map_unmapped,
+      reorder_context.order_ranks,
+      real_nodes,
+      reorder_context.order_nodes,
+      edge_creation_order,
+      cluster_meta,
+      gdnlist_order,
+      edge_tail,
+      edge_head,
+      nodes,
+      reorder_context.order_node_order,
+    )
   {
     order_groups,
     order_sizes_out,
