@@ -159,33 +159,6 @@ fn collect_unconstrained_order_nodes(
 }
 
 ///|
-/// Graphviz parity: incoming-only unconstrained handling uses non-self edge
-/// presence and first incoming edge order from the unmapped order graph.
-/// Do not change behavior without updating fixtures/tests.
-fn build_node_in_out_presence_and_first_in_order(
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> (Map[String, Bool], Map[String, Bool], Map[String, Int]) {
-  let node_has_out : Map[String, Bool] = Map::new()
-  let node_has_in : Map[String, Bool] = Map::new()
-  let first_in_order : Map[String, Int] = Map::new()
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    if tail != head {
-      node_has_out[tail] = true
-      node_has_in[head] = true
-      if first_in_order.get(head) is None {
-        first_in_order[head] = edge_idx
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-  (node_has_out, node_has_in, first_in_order)
-}
-
-///|
 /// Graphviz parity: local cluster node creation order follows node scan order
 /// per intercluster key, matching class2 fast-node insertion inputs.
 /// Do not change behavior without updating fixtures/tests.
@@ -340,8 +313,22 @@ fn apply_unconstrained_order_node_overrides(
   }
   // Graphviz parity: incoming-only unconstrained nodes inside local clusters
   // follow first incoming-edge order from unmapped class2 edge lists.
-  let (node_has_out, node_has_in, first_in_order) =
-    build_node_in_out_presence_and_first_in_order(edge_tail, edge_head)
+  let node_has_out : Map[String, Bool] = Map::new()
+  let node_has_in : Map[String, Bool] = Map::new()
+  let first_in_order : Map[String, Int] = Map::new()
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      node_has_out[tail] = true
+      node_has_in[head] = true
+      if first_in_order.get(head) is None {
+        first_in_order[head] = edge_idx
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
   let local_creation =
     build_local_cluster_creation_order(nodes, intercluster_keys)
   reorder_incoming_only_unconstrained_local_nodes(
