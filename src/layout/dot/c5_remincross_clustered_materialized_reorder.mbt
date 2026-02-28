@@ -210,6 +210,15 @@ fn build_remincross_order_creation(
 }
 
 ///|
+/// Graphviz parity: grouped ReMincross name buckets are replayed in stable
+/// input order when merged into nlist/rank output vectors.
+fn append_names_in_order(target : Array[String], names : Array[String]) -> Unit {
+  for name in names {
+    target.push(name)
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
 /// first-seen cluster sequence and replays each cluster block by rank-desc
 /// reverse-order before root-cluster nodes.
@@ -325,9 +334,7 @@ fn build_remincross_cluster_tail_order(
           )
         None => names
       }
-      for name in root_names {
-        rem_nlist_order.push(name)
-      }
+      append_names_in_order(rem_nlist_order, root_names)
       continue
     }
     let nonroot_rank_ordered =
@@ -340,9 +347,7 @@ fn build_remincross_cluster_tail_order(
         cluster_order,
         rem_cluster_keys,
       )
-    for name in nonroot_rank_ordered {
-      rem_nlist_order.push(name)
-    }
+    append_names_in_order(rem_nlist_order, nonroot_rank_ordered)
   }
   rem_nlist_order
 }
@@ -509,9 +514,7 @@ fn build_remincross_cluster_tail_order_nonroot_names(
       }
     }
     if cluster != "" && all_without_outgoing {
-      for name in rank_names {
-        rank_ordered.push(name)
-      }
+      append_names_in_order(rank_ordered, rank_names)
     } else {
       let mut name_idx = rank_names.length()
       while name_idx > 0 {
@@ -539,9 +542,7 @@ fn build_remincross_cluster_tail_order_nonroot_names(
       } else {
         rank_ordered
       }
-    for name in rank_ordered {
-      cluster_rank_ordered.push(name)
-    }
+    append_names_in_order(cluster_rank_ordered, rank_ordered)
   }
   cluster_rank_ordered
 }
@@ -601,17 +602,9 @@ fn rebucket_remincross_input_like_rank_order(
     }
   }
   let reordered_rank : Array[String] = []
-  for name in category0 {
-    reordered_rank.push(name)
-  }
-  for name in category1 {
-    reordered_rank.push(name)
-  }
-  for name in category2 {
-    reordered_rank.push(name)
-  }
-  for name in category3 {
-    reordered_rank.push(name)
-  }
+  append_names_in_order(reordered_rank, category0)
+  append_names_in_order(reordered_rank, category1)
+  append_names_in_order(reordered_rank, category2)
+  append_names_in_order(reordered_rank, category3)
   reordered_rank
 }
