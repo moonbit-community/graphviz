@@ -252,7 +252,7 @@ fn build_cluster_order_and_parents_for_metadata(
   graph : @cgraph.Graph,
 ) -> (Array[String], Map[String, String?]) {
   let cluster_order : Array[String] = []
-  collect_cluster_names_graphviz_order(graph, cluster_order)
+  collect_cluster_names_order(graph, cluster_order)
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)

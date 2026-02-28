@@ -374,7 +374,7 @@ fn collect_cluster_names(
 ///|
 /// Graphviz parity: collapse_sets walks subgraphs and only recurses into
 /// non-cluster subgraphs when building the root cluster list.
-fn collect_cluster_names_graphviz_order(
+fn collect_cluster_names_order(
   graph : @cgraph.Graph,
   out : Array[String],
 ) -> Unit {
@@ -385,7 +385,7 @@ fn collect_cluster_names_graphviz_order(
         None => ()
       }
     } else {
-      collect_cluster_names_graphviz_order(subgraph, out)
+      collect_cluster_names_order(subgraph, out)
     }
   }
 }
