@@ -714,20 +714,6 @@ fn build_y_position_data_for_positions(
 
 
 ///|
-/// Graphviz parity: intercluster alignment is gated by DOT_INTERCLUSTER_ALIGN
-/// and only applied for clustered dotted-edge graphs.
-/// Do not change behavior without updating fixtures/tests.
-fn is_intercluster_alignment_enabled() -> Bool {
-  match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
-    Some(value) => {
-      let lower = value.to_lower()
-      lower != "0" && lower != "false" && lower != "no"
-    }
-    None => false
-  }
-}
-
-///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
@@ -743,8 +729,16 @@ fn build_position_output_maps_for_positions(
   y_positions : Map[String, Double],
   rank_y : Map[Int, Double],
 ) -> PositionOutputMaps {
+  let intercluster_alignment_enabled =
+    match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
+      Some(value) => {
+        let lower = value.to_lower()
+        lower != "0" && lower != "false" && lower != "no"
+      }
+      None => false
+    }
   if cluster_meta.has_clusters && prep.has_dotted_edges &&
-    is_intercluster_alignment_enabled() {
+    intercluster_alignment_enabled {
     adjust_intercluster_alignment(
       prep.nodes,
       prep.edges,
