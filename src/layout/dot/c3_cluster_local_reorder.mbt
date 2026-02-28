@@ -1158,54 +1158,6 @@ fn seed_cluster_local_groups_by_vnode_interpolation(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder seeds node/rank subsets from the
-/// cluster graph before running mincross on local groups only.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_reorder_seed(
-  cluster_graph : @cgraph.Graph,
-  cluster : String,
-  groups : Map[Int, Array[String]],
-  vnode_clusters : Map[String, String],
-  order_with_vnodes : Bool,
-  node_order : Map[String, Int],
-  source_graphviz_out_neighbors : Map[String, Array[String]],
-) ->
-  (
-    Map[String, Bool],
-    Array[String],
-    Map[String, Int],
-    Map[Int, Array[String]],
-    Array[Int],
-  ) {
-  let cluster_node_set = build_cluster_local_node_set_for_reorder(
-    cluster_graph,
-    cluster,
-    groups,
-    vnode_clusters,
-    order_with_vnodes,
-  )
-  let (
-    cluster_nodes,
-    cluster_node_order,
-    cluster_groups,
-    cluster_rank_keys,
-  ) =
-    build_cluster_local_rank_groups_and_order(
-      groups,
-      cluster_node_set,
-      node_order,
-      source_graphviz_out_neighbors,
-    )
-  (
-    cluster_node_set,
-    cluster_nodes,
-    cluster_node_order,
-    cluster_groups,
-    cluster_rank_keys,
-  )
-}
-
-///|
 /// Graphviz parity: cluster-local reorder edge-bundle phase filters local
 /// edges/ports and parent-child maps from the cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
@@ -1439,19 +1391,22 @@ fn reorder_single_cluster_rank_groups(
   empty_cluster_skeleton : Map[String, Bool],
   order_with_vnodes : Bool,
 ) -> Unit {
+  let cluster_node_set = build_cluster_local_node_set_for_reorder(
+    cluster_graph,
+    cluster,
+    groups,
+    vnode_info.vnode_clusters,
+    order_with_vnodes,
+  )
   let (
-    cluster_node_set,
     cluster_nodes,
     cluster_node_order,
     cluster_groups,
     cluster_rank_keys,
   ) =
-    build_cluster_local_rank_reorder_seed(
-      cluster_graph,
-      cluster,
+    build_cluster_local_rank_groups_and_order(
       groups,
-      vnode_info.vnode_clusters,
-      order_with_vnodes,
+      cluster_node_set,
       node_order,
       graphviz_out_neighbors,
     )
