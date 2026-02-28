@@ -914,55 +914,6 @@ fn build_node_positions_for_output(
 }
 
 ///|
-/// Graphviz parity: cluster rounding post-adjustment runs only for clustered
-/// graphs when the runtime gate is enabled.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_adjust_cluster_positions_for_rounding_for_positions(
-  graph : @cgraph.Graph,
-  cluster_meta : ClusterMetadata,
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  ordering : OrderingResult,
-  prep : LayoutPrep,
-) -> Unit {
-  if cluster_meta.has_clusters && cluster_rounding_enabled() {
-    let _ = adjust_cluster_positions_for_rounding(
-      graph,
-      positions,
-      vnode_positions,
-      ordering.vnode_info.vnode_clusters,
-      prep.sizes,
-    )
-  }
-}
-
-///|
-/// Graphviz parity: final node position map build and cluster-rounding
-/// adjustment run after vnode projection data is available.
-/// Do not change behavior without updating fixtures/tests.
-fn build_positions_with_rounding_adjustment_for_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_positions : Map[String, Double],
-  y_positions : Map[String, Double],
-  vnode_positions : Map[String, @geom.Point],
-) -> Map[String, @geom.Point] {
-  let positions =
-    build_node_positions_for_output(prep.nodes, x_positions, y_positions)
-  maybe_adjust_cluster_positions_for_rounding_for_positions(
-    graph,
-    cluster_meta,
-    positions,
-    vnode_positions,
-    ordering,
-    prep,
-  )
-  positions
-}
-
-///|
 /// Graphviz parity: intercluster alignment, cluster boundary x capture, and
 /// vnode position projection are executed in fixed order before node map build.
 /// Do not change behavior without updating fixtures/tests.
@@ -1029,15 +980,16 @@ fn build_position_output_maps_for_positions(
       rank_y,
     )
   let positions =
-    build_positions_with_rounding_adjustment_for_positions(
+    build_node_positions_for_output(prep.nodes, x_positions, y_positions)
+  if cluster_meta.has_clusters && cluster_rounding_enabled() {
+    let _ = adjust_cluster_positions_for_rounding(
       graph,
-      prep,
-      cluster_meta,
-      ordering,
-      x_positions,
-      y_positions,
+      positions,
       position_boundary_and_vnode_data.vnode_positions,
+      ordering.vnode_info.vnode_clusters,
+      prep.sizes,
     )
+  }
   {
     positions,
     vnode_positions: position_boundary_and_vnode_data.vnode_positions,
