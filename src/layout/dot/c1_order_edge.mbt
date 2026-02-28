@@ -3,41 +3,6 @@
 /// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
-/// Graphviz parity: order-edge endpoint names may map to swapped virtual
-/// directions, so corresponding tail/head ports must be remapped per endpoint.
-/// Do not change behavior without updating fixtures/tests.
-fn resolve_order_edge_names_and_ports(
-  edge : @cgraph.Edge,
-  idx : Int,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> (String, String, @cgraph.Port?, @cgraph.Port?) {
-  let tail_name =
-    if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
-  let head_name =
-    if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
-  let orig_tail = edge.tail().name()
-  let orig_head = edge.head().name()
-  let tail_port =
-    if tail_name == orig_tail {
-      edge.tail_port()
-    } else if tail_name == orig_head {
-      edge.head_port()
-    } else {
-      edge.tail_port()
-    }
-  let head_port =
-    if head_name == orig_head {
-      edge.head_port()
-    } else if head_name == orig_tail {
-      edge.tail_port()
-    } else {
-      edge.head_port()
-    }
-  (tail_name, head_name, tail_port, head_port)
-}
-
-///|
 /// Graphviz parity: order-edge endpoint remap is computed once per edge index
 /// and reused by both port-offset and port-order passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -53,13 +18,28 @@ fn collect_order_edge_endpoint_ports(
   let mut idx = 0
   while idx < edges.length() {
     let edge = edges[idx]
-    let (tail_name, head_name, tail_port, head_port) =
-      resolve_order_edge_names_and_ports(
-        edge,
-        idx,
-        edge_tail,
-        edge_head,
-      )
+    let tail_name =
+      if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
+    let head_name =
+      if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+    let orig_tail = edge.tail().name()
+    let orig_head = edge.head().name()
+    let tail_port =
+      if tail_name == orig_tail {
+        edge.tail_port()
+      } else if tail_name == orig_head {
+        edge.head_port()
+      } else {
+        edge.tail_port()
+      }
+    let head_port =
+      if head_name == orig_head {
+        edge.head_port()
+      } else if head_name == orig_tail {
+        edge.tail_port()
+      } else {
+        edge.head_port()
+      }
     tail_names.push(tail_name)
     head_names.push(head_name)
     tail_ports.push(tail_port)
