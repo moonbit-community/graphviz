@@ -806,74 +806,6 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   ordered_root
 }
 
-///|
-/// Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
-/// root-node order map from the same root graph/group membership snapshot.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_nlist_and_node_order_for_cluster_reorder(
-  nlist_order : Array[String],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  root_nodes : Array[String],
-  root_node_map : Map[String, @cgraph.Node],
-  skeleton_edge_creation : Array[(String, String)],
-  root_edge_creation : Array[(String, String)],
-  flat_rank_constraints : Map[String, Bool],
-  root_groups : Map[Int, Array[String]],
-) -> (Array[String], Map[String, Int]) {
-  let root_nlist_order =
-    build_root_nlist_order_for_cluster_reorder(
-      nlist_order,
-      cluster_keys,
-      ranks,
-      root_nodes,
-      root_node_map,
-      skeleton_edge_creation,
-      root_edge_creation,
-      flat_rank_constraints,
-    )
-  let root_node_order =
-    build_order_node_order_from_nlist_and_groups(
-      root_nlist_order,
-      root_node_map,
-      root_groups,
-    )
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let root_nlist_joined = root_nlist_order.join(" ")
-    println("root_nlist_order \{root_nlist_joined}")
-    let pairs : Array[(Int, String)] = []
-    for name, idx in root_node_order {
-      pairs.push((idx, name))
-    }
-    if pairs.length() > 1 {
-      pairs.sort_by((a, b) => {
-        let (ai, an) = a
-        let (bi, bn) = b
-        if ai < bi {
-          -1
-        } else if ai > bi {
-          1
-        } else if an < bn {
-          -1
-        } else if an > bn {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    let ordered_labels : Array[String] = []
-    for pair in pairs {
-      let (idx, name) = pair
-      ordered_labels.push("\{name}=\{idx}")
-    }
-    let root_node_order_joined = ordered_labels.join(" ")
-    println("root_node_order \{root_node_order_joined}")
-  }
-  (root_nlist_order, root_node_order)
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
 /// and ordered-root groups tuple ordering unchanged before rank transfer.
 /// Do not change behavior without updating fixtures/tests.
@@ -1025,8 +957,10 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
   let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
   let (root_graph, root_node_map) =
     build_order_graph_and_nodes("order_root", root_nodes)
-  let (root_nlist_order, root_node_order) =
-    build_root_nlist_and_node_order_for_cluster_reorder(
+  // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
+  // root-node order map from the same root graph/group membership snapshot.
+  let root_nlist_order =
+    build_root_nlist_order_for_cluster_reorder(
       nlist_order,
       cluster_keys,
       ranks,
@@ -1035,8 +969,45 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       skeleton_edge_creation,
       root_edge_creation,
       flat_rank_constraints,
+    )
+  let root_node_order =
+    build_order_node_order_from_nlist_and_groups(
+      root_nlist_order,
+      root_node_map,
       root_groups,
     )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let root_nlist_joined = root_nlist_order.join(" ")
+    println("root_nlist_order \{root_nlist_joined}")
+    let pairs : Array[(Int, String)] = []
+    for name, idx in root_node_order {
+      pairs.push((idx, name))
+    }
+    if pairs.length() > 1 {
+      pairs.sort_by((a, b) => {
+        let (ai, an) = a
+        let (bi, bn) = b
+        if ai < bi {
+          -1
+        } else if ai > bi {
+          1
+        } else if an < bn {
+          -1
+        } else if an > bn {
+          1
+        } else {
+          0
+        }
+      })
+    }
+    let ordered_labels : Array[String] = []
+    for pair in pairs {
+      let (idx, name) = pair
+      ordered_labels.push("\{name}=\{idx}")
+    }
+    let root_node_order_joined = ordered_labels.join(" ")
+    println("root_node_order \{root_node_order_joined}")
+  }
   let (
     root_edges_out,
     root_edge_tail_out,
