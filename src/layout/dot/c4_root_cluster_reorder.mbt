@@ -748,27 +748,6 @@ fn build_cluster_rank_order_from_root_ordered(
 }
 
 ///|
-/// Graphviz parity: debug root-edge trace for cluster reorder mirrors the
-/// root mincross materialization sequence and penalties.
-/// Do not change behavior without updating fixtures/tests.
-fn trace_root_edges_for_cluster_reorder(
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let mut edge_idx = 0
-    while edge_idx < root_edges_out.length() {
-      let tail = root_edge_tail_out[edge_idx]
-      let head = root_edge_head_out[edge_idx]
-      let pen = @dot_shared.edge_xpenalty(root_edges_out[edge_idx])
-      println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
-      edge_idx = edge_idx + 1
-    }
-  }
-}
-
-///|
 /// Graphviz parity: root reorder edge bundle keeps tail-sequence edge
 /// materialization, optional trace output, and index maps in one stage.
 /// Do not change behavior without updating fixtures/tests.
@@ -841,11 +820,16 @@ fn build_root_cluster_reorder_edge_bundle(
     )
     root_port_idx = root_port_idx + 1
   }
-  trace_root_edges_for_cluster_reorder(
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-  )
+  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
+    let mut edge_idx = 0
+    while edge_idx < root_edges_out.length() {
+      let tail = root_edge_tail_out[edge_idx]
+      let head = root_edge_head_out[edge_idx]
+      let pen = @dot_shared.edge_xpenalty(root_edges_out[edge_idx])
+      println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
+      edge_idx = edge_idx + 1
+    }
+  }
   let (root_parents, root_children, root_edge_order) =
     build_order_edge_indices_and_order(
       root_nodes,
