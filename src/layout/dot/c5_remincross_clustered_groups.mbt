@@ -21,6 +21,24 @@ fn run_clustered_remincross_pass(
       Some(value) => value == "fill"
       None => false
     }
+  let rebuild_groups =
+    () =>
+      build_remincross_groups_with_optional_vnodes(
+        dispatch_context.base_groups,
+        dispatch_context.order_with_vnodes,
+        dispatch_context.edges,
+        dispatch_context.edge_tail,
+        dispatch_context.edge_head,
+        dispatch_context.edge_reversed,
+        dispatch_context.ranks,
+        dispatch_context.cluster_meta.intercluster_keys,
+        dispatch_context.cluster_meta.cluster_parents,
+        dispatch_context.cluster_meta.cluster_min_rank,
+        dispatch_context.cluster_meta.cluster_max_rank,
+        dispatch_context.vnode_info.edge_vnodes,
+        dispatch_context.vnode_info.vnode_ranks,
+        dispatch_context.vnode_info.vnodes_by_rank,
+      )
   let rem_groups =
     if dispatch_context.order_with_vnodes &&
       (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
@@ -32,50 +50,14 @@ fn run_clustered_remincross_pass(
           dispatch_context.cluster_meta.cluster_keys,
         )
       if seeded.length() > 0 {
-        dot_trace_groups("remincross_groups", seeded)
         seeded
       } else {
-        let rebuilt =
-          build_remincross_groups_with_optional_vnodes(
-            dispatch_context.base_groups,
-            dispatch_context.order_with_vnodes,
-            dispatch_context.edges,
-            dispatch_context.edge_tail,
-            dispatch_context.edge_head,
-            dispatch_context.edge_reversed,
-            dispatch_context.ranks,
-            dispatch_context.cluster_meta.intercluster_keys,
-            dispatch_context.cluster_meta.cluster_parents,
-            dispatch_context.cluster_meta.cluster_min_rank,
-            dispatch_context.cluster_meta.cluster_max_rank,
-            dispatch_context.vnode_info.edge_vnodes,
-            dispatch_context.vnode_info.vnode_ranks,
-            dispatch_context.vnode_info.vnodes_by_rank,
-          )
-        dot_trace_groups("remincross_groups", rebuilt)
-        rebuilt
+        rebuild_groups()
       }
     } else {
-      let rebuilt =
-        build_remincross_groups_with_optional_vnodes(
-          dispatch_context.base_groups,
-          dispatch_context.order_with_vnodes,
-          dispatch_context.edges,
-          dispatch_context.edge_tail,
-          dispatch_context.edge_head,
-          dispatch_context.edge_reversed,
-          dispatch_context.ranks,
-          dispatch_context.cluster_meta.intercluster_keys,
-          dispatch_context.cluster_meta.cluster_parents,
-          dispatch_context.cluster_meta.cluster_min_rank,
-          dispatch_context.cluster_meta.cluster_max_rank,
-          dispatch_context.vnode_info.edge_vnodes,
-          dispatch_context.vnode_info.vnode_ranks,
-          dispatch_context.vnode_info.vnodes_by_rank,
-        )
-      dot_trace_groups("remincross_groups", rebuilt)
-      rebuilt
+      rebuild_groups()
     }
+  dot_trace_groups("remincross_groups", rem_groups)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() > 1 {
     run_clustered_remincross_multi_rank(
