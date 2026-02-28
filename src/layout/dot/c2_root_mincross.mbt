@@ -3,33 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-/// Graphviz parity: root ReMincross final ordered groups merge reordered root
-/// nodes back into seeded groups only in clustered mode.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_final_ordered_groups(
-  order_with_clusters : Bool,
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
-  ordered_mincross : Map[Int, Array[String]],
-  mincross_nodes : Map[String, Bool],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  if order_with_clusters {
-    merge_root_mincross_order_into_seeded_groups(
-      order_rank_keys,
-      seeded_groups,
-      ordered_mincross,
-      mincross_nodes,
-      order_cluster_keys,
-      order_cluster_skeleton,
-    )
-  } else {
-    ordered_mincross
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
 /// and builds parent/child + edge-order indices before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -716,14 +689,17 @@ fn run_root_mincross_reorder(
       graphviz_flip,
     )
   let ordered =
-    build_root_mincross_final_ordered_groups(
-      order_with_clusters,
-      order_rank_keys,
-      seeded_groups,
-      ordered_mincross,
-      mincross_nodes,
-      order_cluster_keys,
-      order_cluster_skeleton,
-    )
+    if order_with_clusters {
+      merge_root_mincross_order_into_seeded_groups(
+        order_rank_keys,
+        seeded_groups,
+        ordered_mincross,
+        mincross_nodes,
+        order_cluster_keys,
+        order_cluster_skeleton,
+      )
+    } else {
+      ordered_mincross
+    }
   (order_groups_for_mincross, ordered)
 }
