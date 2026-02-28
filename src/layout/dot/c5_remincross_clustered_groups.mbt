@@ -208,6 +208,19 @@ fn remincross_edge_endpoints_at(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross cluster-key reads treat missing keys
+/// as root-empty values for intercluster/internal edge classification.
+fn remincross_cluster_key_or_empty(
+  cluster_keys : Map[String, String],
+  name : String,
+) -> String {
+  match cluster_keys.get(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
@@ -253,8 +266,10 @@ fn build_remincross_reorder_inputs(
       }
       let (tail, head) =
         remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-      let tail_cluster = cluster_key_or_empty(cluster_meta.intercluster_keys, tail)
-      let head_cluster = cluster_key_or_empty(cluster_meta.intercluster_keys, head)
+      let tail_cluster =
+        remincross_cluster_key_or_empty(cluster_meta.intercluster_keys, tail)
+      let head_cluster =
+        remincross_cluster_key_or_empty(cluster_meta.intercluster_keys, head)
       // Graphviz parity: mark_lowclusters assigns virtual nodes to the
       // lowest common ancestor cluster for intercluster edges.
       let vnode_cluster =
@@ -327,14 +342,8 @@ fn build_remincross_groups_with_optional_vnodes(
       for edge in edges {
         let (tail, head) =
           remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-        let tail_cluster = match remincross_cluster_keys.get(tail) {
-          Some(value) => value
-          None => ""
-        }
-        let head_cluster = match remincross_cluster_keys.get(head) {
-          Some(value) => value
-          None => ""
-        }
+        let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
+        let head_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, head)
         let internal =
           tail_cluster != "" && head_cluster != "" &&
           edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
