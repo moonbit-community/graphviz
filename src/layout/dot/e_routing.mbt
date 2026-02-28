@@ -4006,7 +4006,7 @@ fn edge_port_cmp_info(
 ///|
 /// Graphviz parity: routing edge order matches dotgen/dotsplines.c edgecmp.
 /// Do not change behavior without updating fixtures/tests.
-fn graphviz_route_edge_cmp(
+fn route_edge_cmp(
   a : @cgraph.Edge,
   b : @cgraph.Edge,
   base_cache : Map[Int, EdgeRouteBase],
@@ -4664,7 +4664,7 @@ fn sorted_edges_for_routing(
   let ordered_edges = edges.copy()
   if ordered_edges.length() > 1 {
     ordered_edges.sort_by((a, b) => {
-      graphviz_route_edge_cmp(a, b, base_cache, order_index)
+      route_edge_cmp(a, b, base_cache, order_index)
     })
   }
   ordered_edges
