@@ -3,50 +3,6 @@
 /// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
-/// Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
-/// sequence order after endpoint-name/port remap.
-/// Do not change behavior without updating fixtures/tests.
-fn build_edge_port_offsets_from_endpoint_ports(
-  edges : Array[@cgraph.Edge],
-  tail_names : Array[String],
-  head_names : Array[String],
-  tail_ports : Array[@cgraph.Port?],
-  head_ports : Array[@cgraph.Port?],
-  port_offsets : Map[String, Map[String, RecordPort]],
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  nodes_by_name : Map[String, @cgraph.Node],
-) -> (Array[Double], Array[Double]) {
-  let tail_offsets : Array[Double] = []
-  let head_offsets : Array[Double] = []
-  let mut idx = 0
-  while idx < edges.length() {
-    let tail_x =
-      edge_port_offset(
-        tail_names[idx],
-        tail_ports[idx],
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      )
-    let head_x =
-      edge_port_offset(
-        head_names[idx],
-        head_ports[idx],
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      )
-    tail_offsets.push(tail_x)
-    head_offsets.push(head_x)
-    idx = idx + 1
-  }
-  (tail_offsets, head_offsets)
-}
-
-///|
 /// Graphviz parity: port-sampling inputs reuse one endpoint remap + per-node
 /// port offset table so x-offset and order passes share identical edge context.
 /// Do not change behavior without updating fixtures/tests.
@@ -129,40 +85,14 @@ fn compute_edge_port_positions(
       edge_head,
       sizes,
     )
-  build_edge_port_offsets_from_endpoint_ports(
-    edges,
-    tail_names,
-    head_names,
-    tail_ports,
-    head_ports,
-    port_offsets,
-    sizes,
-    rankdir,
-    nodes_by_name,
-  )
-}
-
-///|
-/// Graphviz parity: per-edge tail/head port-order samples are emitted in edge
-/// sequence order using the same endpoint remap as tie-break x-offsets.
-/// Do not change behavior without updating fixtures/tests.
-fn build_edge_port_orders_from_endpoint_ports(
-  edges : Array[@cgraph.Edge],
-  tail_names : Array[String],
-  head_names : Array[String],
-  tail_ports : Array[@cgraph.Port?],
-  head_ports : Array[@cgraph.Port?],
-  port_offsets : Map[String, Map[String, RecordPort]],
-  sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  nodes_by_name : Map[String, @cgraph.Node],
-) -> (Array[Double], Array[Double]) {
-  let tail_orders : Array[Double] = []
-  let head_orders : Array[Double] = []
+  // Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
+  // sequence order after endpoint-name/port remap.
+  let tail_offsets : Array[Double] = []
+  let head_offsets : Array[Double] = []
   let mut idx = 0
   while idx < edges.length() {
-    let tail_order =
-      edge_port_order(
+    let tail_x =
+      edge_port_offset(
         tail_names[idx],
         tail_ports[idx],
         port_offsets,
@@ -170,8 +100,8 @@ fn build_edge_port_orders_from_endpoint_ports(
         rankdir,
         nodes_by_name,
       )
-    let head_order =
-      edge_port_order(
+    let head_x =
+      edge_port_offset(
         head_names[idx],
         head_ports[idx],
         port_offsets,
@@ -179,11 +109,11 @@ fn build_edge_port_orders_from_endpoint_ports(
         rankdir,
         nodes_by_name,
       )
-    tail_orders.push(tail_order)
-    head_orders.push(head_order)
+    tail_offsets.push(tail_x)
+    head_offsets.push(head_x)
     idx = idx + 1
   }
-  (tail_orders, head_orders)
+  (tail_offsets, head_offsets)
 }
 
 ///|
@@ -214,17 +144,35 @@ fn compute_edge_port_orders(
       edge_head,
       sizes,
     )
-  build_edge_port_orders_from_endpoint_ports(
-    edges,
-    tail_names,
-    head_names,
-    tail_ports,
-    head_ports,
-    port_offsets,
-    sizes,
-    rankdir,
-    nodes_by_name,
-  )
+  // Graphviz parity: per-edge tail/head port-order samples are emitted in edge
+  // sequence order using the same endpoint remap as tie-break x-offsets.
+  let tail_orders : Array[Double] = []
+  let head_orders : Array[Double] = []
+  let mut idx = 0
+  while idx < edges.length() {
+    let tail_order =
+      edge_port_order(
+        tail_names[idx],
+        tail_ports[idx],
+        port_offsets,
+        sizes,
+        rankdir,
+        nodes_by_name,
+      )
+    let head_order =
+      edge_port_order(
+        head_names[idx],
+        head_ports[idx],
+        port_offsets,
+        sizes,
+        rankdir,
+        nodes_by_name,
+      )
+    tail_orders.push(tail_order)
+    head_orders.push(head_order)
+    idx = idx + 1
+  }
+  (tail_orders, head_orders)
 }
 
 ///|
