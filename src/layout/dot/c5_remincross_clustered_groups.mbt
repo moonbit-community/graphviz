@@ -254,14 +254,12 @@ fn build_remincross_reorder_inputs(
     }
   }
   if order_with_vnodes {
-    let mut edge_idx = 0
-    for edge in edges {
+    for edge_idx, edge in edges {
       let vnodes = match vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
         Some(list) => list
         None => []
       }
       if vnodes.length() == 0 {
-        edge_idx = edge_idx + 1
         continue
       }
       let (tail, head) =
@@ -282,7 +280,6 @@ fn build_remincross_reorder_inputs(
       for vnode in vnodes {
         rem_cluster_keys[vnode] = rem_cluster
       }
-      edge_idx = edge_idx + 1
     }
   }
   let rem_sizes =
@@ -338,8 +335,7 @@ fn build_remincross_groups_with_optional_vnodes(
         remincross_cluster_keys[name] = key
       }
       let intercluster_vnodes : Map[String, Bool] = Map::new()
-      let mut edge_idx = 0
-      for edge in edges {
+      for edge_idx, edge in edges {
         let (tail, head) =
           remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
         let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
@@ -381,7 +377,6 @@ fn build_remincross_groups_with_optional_vnodes(
             intercluster_vnodes[vnode] = true
           }
         }
-        edge_idx = edge_idx + 1
       }
       let keys = build_vnode_order_keys(
         edges,
