@@ -1065,117 +1065,6 @@ fn seed_cluster_local_groups_by_vnode_interpolation(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder edge-bundle phase filters local
-/// edges/ports and parent-child maps from the cluster node subset.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
-  cluster : String,
-  cluster_graph_edge_count : Int,
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  cluster_node_set : Map[String, Bool],
-  cluster_rank_keys : Array[Int],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-) {
-  let mut vnode_count = 0
-  for name in cluster_nodes {
-    if is_edge_vnode_name(name) {
-      vnode_count = vnode_count + 1
-    }
-  }
-  let include_external_crossing =
-    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
-      cluster_rank_keys.length() <= 2
-    } else if cluster_rank_keys.length() > 2 &&
-      cluster_graph_edge_count == 0 &&
-      vnode_count == 0 {
-      false
-    } else {
-      true
-    }
-  if @sys.get_env_var("DOT_DEBUG_CLUSTER_EDGE_BUNDLE") is Some(_) {
-    let mut fixed_rank_count = 0
-    for name in cluster_nodes {
-      if fixed_ranks.get(name) is Some(_) {
-        fixed_rank_count = fixed_rank_count + 1
-      }
-    }
-    let mut internal = 0
-    let mut crossing = 0
-    for i in 0..<order_edges.length() {
-      let tail = order_edge_tail[i]
-      let head = order_edge_head[i]
-      let tail_in = cluster_node_set.get(tail) is Some(_)
-      let head_in = cluster_node_set.get(head) is Some(_)
-      if tail_in && head_in {
-        internal = internal + 1
-      } else if tail_in || head_in {
-        crossing = crossing + 1
-      }
-    }
-    println(
-      "cluster_edge_bundle \{cluster} ranks=\{cluster_rank_keys.length()} nodes=\{cluster_nodes.length()} vnodes=\{vnode_count} fixed=\{fixed_rank_count} include_external=\{include_external_crossing} internal=\{internal} crossing=\{crossing}",
-    )
-  }
-  let (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-  ) =
-    collect_internal_cluster_edges_for_local_bundle(
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_node_set,
-      include_external_crossing,
-    )
-  let (parents, children) = build_edge_index_for_order_names(
-    cluster_nodes,
-    cluster_edge_tail,
-    cluster_edge_head,
-    fixed_ranks,
-  )
-  let edge_order = collect_edge_order(cluster_edges)
-  (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    edge_order,
-  )
-}
-
-///|
 /// Graphviz parity: cluster-local reorder run-input output tuple alias keeps
 /// edge/metadata tuple ordering shared across input/apply dispatch steps.
 /// Do not change behavior without updating fixtures/tests.
@@ -1225,6 +1114,46 @@ fn build_cluster_local_reorder_run_inputs(
   intercluster_keys : Map[String, String],
   flat_constraints : Map[String, Bool],
 ) -> ClusterLocalReorderRunInputsOutput {
+  let mut vnode_count = 0
+  for name in cluster_nodes {
+    if is_edge_vnode_name(name) {
+      vnode_count = vnode_count + 1
+    }
+  }
+  let include_external_crossing =
+    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+      cluster_rank_keys.length() <= 2
+    } else if cluster_rank_keys.length() > 2 &&
+      cluster_graph_edge_count == 0 &&
+      vnode_count == 0 {
+      false
+    } else {
+      true
+    }
+  if @sys.get_env_var("DOT_DEBUG_CLUSTER_EDGE_BUNDLE") is Some(_) {
+    let mut fixed_rank_count = 0
+    for name in cluster_nodes {
+      if fixed_ranks.get(name) is Some(_) {
+        fixed_rank_count = fixed_rank_count + 1
+      }
+    }
+    let mut internal = 0
+    let mut crossing = 0
+    for i in 0..<order_edges.length() {
+      let tail = order_edge_tail[i]
+      let head = order_edge_head[i]
+      let tail_in = cluster_node_set.get(tail) is Some(_)
+      let head_in = cluster_node_set.get(head) is Some(_)
+      if tail_in && head_in {
+        internal = internal + 1
+      } else if tail_in || head_in {
+        crossing = crossing + 1
+      }
+    }
+    println(
+      "cluster_edge_bundle \{cluster} ranks=\{cluster_rank_keys.length()} nodes=\{cluster_nodes.length()} vnodes=\{vnode_count} fixed=\{fixed_rank_count} include_external=\{include_external_crossing} internal=\{internal} crossing=\{crossing}",
+    )
+  }
   let (
     cluster_edges,
     cluster_edge_tail,
@@ -1237,21 +1166,47 @@ fn build_cluster_local_reorder_run_inputs(
     children,
     edge_order,
   ) =
-    build_cluster_local_reorder_run_inputs_edge_bundle_phase(
-      cluster,
-      cluster_graph_edge_count,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_node_set,
-      cluster_rank_keys,
-      cluster_nodes,
-      fixed_ranks,
-    )
+    {
+      let (
+        cluster_edges,
+        cluster_edge_tail,
+        cluster_edge_head,
+        cluster_edge_tail_port_x,
+        cluster_edge_head_port_x,
+        cluster_edge_tail_port_order,
+        cluster_edge_head_port_order,
+      ) =
+        collect_internal_cluster_edges_for_local_bundle(
+          order_edges,
+          order_edge_tail,
+          order_edge_head,
+          order_edge_tail_port_x,
+          order_edge_head_port_x,
+          order_edge_tail_port_order,
+          order_edge_head_port_order,
+          cluster_node_set,
+          include_external_crossing,
+        )
+      let (parents, children) = build_edge_index_for_order_names(
+        cluster_nodes,
+        cluster_edge_tail,
+        cluster_edge_head,
+        fixed_ranks,
+      )
+      let edge_order = collect_edge_order(cluster_edges)
+      (
+        cluster_edges,
+        cluster_edge_tail,
+        cluster_edge_head,
+        cluster_edge_tail_port_x,
+        cluster_edge_head_port_x,
+        cluster_edge_tail_port_order,
+        cluster_edge_head_port_order,
+        parents,
+        children,
+        edge_order,
+      )
+    }
   let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
     build_cluster_local_reorder_metadata(
       cluster_node_set,
