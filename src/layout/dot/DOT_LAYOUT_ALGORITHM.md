@@ -529,27 +529,16 @@ Repository guard validates:
 
 - Entry + stage orchestration:
   - `layout.mbt`, `layout_stage_pipeline_orchestrator.mbt`
-- Core stage data/type contracts:
-  - `a1_input_types.mbt`
-  - `b1_b2_rank_types.mbt`
-  - `c0_contract_types.mbt`
-  - `d0_position_types.mbt`
 - Input canonicalization:
   - `a1_input.mbt`
 - Rank assignment and rank heights:
   - `b1_b2_rank.mbt`, `b1_b2_rank_heights.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `b3_cluster_metadata.mbt`
+  - `b3_cluster_metadata.mbt`, `cluster.mbt`
 - Ordering dispatch + shared stage logic:
   - `c0_dispatch_pipeline.mbt`
   - `c0_setup.mbt`
   - `c0_stage_dispatch.mbt`
-  - `c0_base_context.mbt`
-  - `c0_runtime_data_types.mbt`
-  - `c0_input_types.mbt`
-  - `c0_setup_types.mbt`
-  - `c0_dispatch_context_types.mbt`
-  - `c0_stage_local_types.mbt`
 - Ordering edge materialization:
   - `c1_order_edge.mbt`
 - Ordering graph construction helpers:
@@ -559,42 +548,19 @@ Repository guard validates:
   - `c2_order_seed.mbt`
   - `c2_order_reorder.mbt`
   - `c2_noncluster_reorder.mbt`
-  - `c6_finalize_order.mbt`
-- Cluster-local reorder:
-  - `c3_cluster_local_reorder.mbt`
-- Clustered phase orchestration:
-  - `c3_c4_c6_clustered_ordering_stage.mbt`
-- Shared node-order seed helpers:
-  - `c2_c5_order_node_seed.mbt`
-- Root-cluster reorder and cluster-rank-order logic:
-  - `c4_root_cluster_reorder.mbt`
-  - `c4_root_cluster_build_ranks.mbt`
-- Clustered finalize helpers:
-  - `c6_cluster_finalize.mbt`
-- Clustered root/finalize stage types:
-  - `c4_c6_root_cluster_stage_types.mbt`
-- Clustered ordering stage-dispatch types:
-  - `c3_c4_c6_clustered_ordering_stage_types.mbt`
-- Root mincross replay helpers:
   - `c2_root_mincross.mbt`
+  - `c2_c5_order_node_seed.mbt`
+- Clustered ordering orchestration and rank-order updates:
+  - `c3_c4_c6_clustered_ordering_stage.mbt`
+  - `c3_cluster_local_reorder.mbt`
+  - `c4_root_cluster_build_ranks.mbt`
+  - `c4_root_cluster_reorder.mbt`
+  - `c6_finalize_order.mbt`
 - Stage C ReMincross refinement family:
-  - `c5_remincross_clustered_reorder_step_input_phase.mbt`
-  - `c5_remincross_clustered_reorder_step.mbt`
-  - `c5_remincross_clustered_reorder_step_finalize_dispatch.mbt`
-  - `c5_remincross_clustered_reorder_step_context.mbt`
-  - `c5_remincross_clustered_materialized_output_phase.mbt`
-  - `c5_remincross_seeded_group_projection.mbt`
-  - `c5_remincross_clustered_multi_rank_input_phase.mbt`
-  - `c5_remincross_clustered_multi_rank_forward.mbt`
-  - `c5_remincross_clustered_multi_rank_finalize_dispatch.mbt`
-  - `c5_remincross_reorder_execute.mbt`
-  - `c5_remincross_reorder_input.mbt`
-  - `c5_remincross_clustered_*`
-  - `c5_remincross_nlist_order.mbt`
-  - `c5_remincross_cluster_tail_order.mbt`
+  - `c5_remincross_clustered_groups.mbt`
+  - `c5_remincross_clustered_materialized_reorder.mbt`
+  - `c5_remincross_snapshot.mbt`
   - `c5_remincross_vnode.mbt`
-  - `c5_remincross_vnode_intercluster.mbt`
-  - `c5_remincross_trace.mbt`
 - Stage D position/xpos internals:
   - `d0_position_orchestrator.mbt`
   - `d1_d5_mode_and_projection.mbt`
