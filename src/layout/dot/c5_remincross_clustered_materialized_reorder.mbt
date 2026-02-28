@@ -418,6 +418,19 @@ fn build_remincross_cluster_order_and_positions(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross rank lookups use -1 fallback for
+/// names missing from the rematerialized rank map.
+fn remincross_rank_or_missing(
+  rem_ranks : Map[String, Int],
+  name : String,
+) -> Int {
+  match rem_ranks.get(name) {
+    Some(value) => value
+    None => -1
+  }
+}
+
+///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -433,10 +446,7 @@ fn build_remincross_cluster_tail_order_nonroot_names(
   let rank_keys : Array[Int] = []
   let rank_seen : Map[Int, Bool] = Map::new()
   for name in names {
-    let rank = match rem_ranks.get(name) {
-      Some(value) => value
-      None => -1
-    }
+    let rank = remincross_rank_or_missing(rem_ranks, name)
     if rank_seen.get(rank) is None {
       rank_seen[rank] = true
       rank_keys.push(rank)
@@ -460,10 +470,7 @@ fn build_remincross_cluster_tail_order_nonroot_names(
     let rank = rank_keys[rank_idx]
     let rank_names : Array[String] = []
     for name in names {
-      let name_rank = match rem_ranks.get(name) {
-        Some(value) => value
-        None => -1
-      }
+      let name_rank = remincross_rank_or_missing(rem_ranks, name)
       if name_rank == rank {
         rank_names.push(name)
       }
