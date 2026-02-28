@@ -64,11 +64,6 @@ fn run_root_mincross_rank_reorder(
     } else {
       graphviz_flip
     }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    println(
-      "root_mincross_flip has_cluster=\{has_cluster_keys} in=\{graphviz_flip} out=\{root_graphviz_flip}",
-    )
-  }
   if components.length() <= 1 {
     return reorder_rank_groups(
       order_rank_keys_for_mincross,
@@ -355,30 +350,6 @@ fn run_root_mincross_rank_reorder_pass(
     }
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
-  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
-    let mut edge_idx = 0
-    while edge_idx < order_edges_out_mincross.length() {
-      let tail = order_edge_tail_out_mincross[edge_idx]
-      let head = order_edge_head_out_mincross[edge_idx]
-      let pen = @dot_shared.edge_xpenalty(order_edges_out_mincross[edge_idx])
-      let tail_port_order =
-        if edge_idx < order_edge_tail_port_order_mincross.length() {
-          order_edge_tail_port_order_mincross[edge_idx]
-        } else {
-          -1.0
-        }
-      let head_port_order =
-        if edge_idx < order_edge_head_port_order_mincross.length() {
-          order_edge_head_port_order_mincross[edge_idx]
-        } else {
-          -1.0
-        }
-      println(
-        "root_input_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen} tpo=\{tail_port_order} hpo=\{head_port_order}",
-      )
-      edge_idx = edge_idx + 1
-    }
-  }
   let ordered_mincross =
     run_root_mincross_rank_reorder(
       order_rank_keys_for_mincross,
@@ -468,20 +439,6 @@ fn run_root_mincross_reorder(
       order_cluster_keys,
       order_cluster_skeleton,
     )
-  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
-    for rank, names in order_groups_for_mincross_base {
-      let rank_joined = names.join(" ")
-      println("root_input_rank \{rank}: \{rank_joined}")
-      for name in names {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        let skel = order_cluster_skeleton.get(name) == Some(true)
-        println("root_input_node \{name} cluster=\{cluster} skel=\{skel}")
-      }
-    }
-  }
   let order_groups_for_mincross =
     match root_mincross_groups_override.val {
       Some(override_groups) => clone_rank_groups(override_groups)
