@@ -3,53 +3,6 @@
 /// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
-/// Graphviz parity: order-edge endpoint remap is computed once per edge index
-/// and reused by both port-offset and port-order passes.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_order_edge_endpoint_ports(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> (Array[String], Array[String], Array[@cgraph.Port?], Array[@cgraph.Port?]) {
-  let tail_names : Array[String] = []
-  let head_names : Array[String] = []
-  let tail_ports : Array[@cgraph.Port?] = []
-  let head_ports : Array[@cgraph.Port?] = []
-  let mut idx = 0
-  while idx < edges.length() {
-    let edge = edges[idx]
-    let tail_name =
-      if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
-    let head_name =
-      if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
-    let orig_tail = edge.tail().name()
-    let orig_head = edge.head().name()
-    let tail_port =
-      if tail_name == orig_tail {
-        edge.tail_port()
-      } else if tail_name == orig_head {
-        edge.head_port()
-      } else {
-        edge.tail_port()
-      }
-    let head_port =
-      if head_name == orig_head {
-        edge.head_port()
-      } else if head_name == orig_tail {
-        edge.tail_port()
-      } else {
-        edge.head_port()
-      }
-    tail_names.push(tail_name)
-    head_names.push(head_name)
-    tail_ports.push(tail_port)
-    head_ports.push(head_port)
-    idx = idx + 1
-  }
-  (tail_names, head_names, tail_ports, head_ports)
-}
-
-///|
 /// Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
 /// sequence order after endpoint-name/port remap.
 /// Do not change behavior without updating fixtures/tests.
@@ -111,12 +64,41 @@ fn build_edge_port_sampling_inputs(
   Array[@cgraph.Port?],
 ) {
   let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let (tail_names, head_names, tail_ports, head_ports) =
-    collect_order_edge_endpoint_ports(
-      edges,
-      edge_tail,
-      edge_head,
-    )
+  let tail_names : Array[String] = []
+  let head_names : Array[String] = []
+  let tail_ports : Array[@cgraph.Port?] = []
+  let head_ports : Array[@cgraph.Port?] = []
+  let mut idx = 0
+  while idx < edges.length() {
+    let edge = edges[idx]
+    let tail_name =
+      if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
+    let head_name =
+      if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+    let orig_tail = edge.tail().name()
+    let orig_head = edge.head().name()
+    let tail_port =
+      if tail_name == orig_tail {
+        edge.tail_port()
+      } else if tail_name == orig_head {
+        edge.head_port()
+      } else {
+        edge.tail_port()
+      }
+    let head_port =
+      if head_name == orig_head {
+        edge.head_port()
+      } else if head_name == orig_tail {
+        edge.tail_port()
+      } else {
+        edge.head_port()
+      }
+    tail_names.push(tail_name)
+    head_names.push(head_name)
+    tail_ports.push(tail_port)
+    head_ports.push(head_port)
+    idx = idx + 1
+  }
   (port_offsets, tail_names, head_names, tail_ports, head_ports)
 }
 
