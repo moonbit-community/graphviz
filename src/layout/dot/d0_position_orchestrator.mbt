@@ -209,24 +209,6 @@ priv struct XposTransposeCleanupInputs {
 }
 
 ///|
-priv struct PositionRankHeightMaps {
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-}
-
-///|
-priv struct ProjectionFromXStageData {
-  use_vnodes_for_xpos : Bool
-  x_base_sizes : Map[String, NodeSize]
-  x_groups : Map[Int, Array[String]]
-  x_cluster_keys : Map[String, String]
-  virtual_slack_edges : Array[ConstraintEdge]
-  flat_label_edges : Array[ConstraintEdge]
-  flat_label_nodes : Map[String, FlatLabelNodeInfo]
-  flat_label_edge_vnodes : Map[String, String]
-}
-
-///|
 /// Stage D Phase D0 split: position orchestrator helpers
 /// for x/y solve assembly and final result wiring.
 
