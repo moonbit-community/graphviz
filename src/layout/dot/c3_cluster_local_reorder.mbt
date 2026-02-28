@@ -1013,7 +1013,7 @@ fn run_cluster_local_rank_reorder(
     )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
   let seeded_cluster_groups =
-    flat_reorder_rank_groups_graphviz(
+    flat_reorder_rank_groups(
       cluster_rank_keys,
       seeded_by_vnode_interp,
       fixed_ranks,

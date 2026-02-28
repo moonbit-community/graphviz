@@ -269,7 +269,7 @@ fn compute_desired_positions(
 }
 
 ///|
-fn compute_desired_positions_graphviz(
+fn compute_desired_positions_scaled_median(
   names : Array[String],
   neighbors : Map[String, Array[(String, Double)]],
   x_positions : Map[String, Double],
@@ -372,7 +372,7 @@ fn transpose_rank_groups_limited(
 
 ///|
 /// Graphviz parity: port x tie-break matches mincross.c in_cross.
-fn in_cross_graphviz(
+fn in_cross_port_tiebreak(
   left : String,
   right : String,
   rank : Int,
@@ -440,7 +440,7 @@ fn in_cross_graphviz(
 
 ///|
 /// Graphviz parity: port x tie-break matches mincross.c out_cross.
-fn out_cross_graphviz(
+fn out_cross_port_tiebreak(
   left : String,
   right : String,
   rank : Int,
@@ -507,7 +507,7 @@ fn out_cross_graphviz(
 }
 
 ///|
-fn count_single_rank_crossings_graphviz(
+fn count_single_rank_crossings_port_tiebreak(
   rank : Int,
   names : Array[String],
   ranks : Map[String, Int],
@@ -531,7 +531,7 @@ fn count_single_rank_crossings_graphviz(
     let mut right_idx = left_idx + 1
     while right_idx < names.length() {
       let right = names[right_idx]
-      cross = cross + in_cross_graphviz(
+      cross = cross + in_cross_port_tiebreak(
         left,
         right,
         rank,
@@ -543,7 +543,7 @@ fn count_single_rank_crossings_graphviz(
         edge_tail_port_x,
         edge_penalty,
       )
-      cross = cross + out_cross_graphviz(
+      cross = cross + out_cross_port_tiebreak(
         left,
         right,
         rank,
@@ -623,7 +623,7 @@ fn has_single_rank_real_incident_edges(
 }
 
 ///|
-fn transpose_rank_graphviz(
+fn transpose_rank_port_tiebreak(
   rank : Int,
   ranks : Map[String, Int],
   names : Array[String],
@@ -661,7 +661,7 @@ fn transpose_rank_graphviz(
     }
     let mut c0 = 0
     let mut c1 = 0
-    c0 = c0 + in_cross_graphviz(
+    c0 = c0 + in_cross_port_tiebreak(
       left,
       right,
       rank,
@@ -673,7 +673,7 @@ fn transpose_rank_graphviz(
       edge_tail_port_x,
       edge_penalty,
     )
-    c1 = c1 + in_cross_graphviz(
+    c1 = c1 + in_cross_port_tiebreak(
       right,
       left,
       rank,
@@ -685,7 +685,7 @@ fn transpose_rank_graphviz(
       edge_tail_port_x,
       edge_penalty,
     )
-    c0 = c0 + out_cross_graphviz(
+    c0 = c0 + out_cross_port_tiebreak(
       left,
       right,
       rank,
@@ -697,7 +697,7 @@ fn transpose_rank_graphviz(
       edge_head_port_x,
       edge_penalty,
     )
-    c1 = c1 + out_cross_graphviz(
+    c1 = c1 + out_cross_port_tiebreak(
       right,
       left,
       rank,
@@ -723,7 +723,7 @@ fn transpose_rank_graphviz(
 }
 
 ///|
-fn transpose_rank_groups_graphviz(
+fn transpose_rank_groups_port_tiebreak(
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
   ranks : Map[String, Int],
@@ -769,7 +769,7 @@ fn transpose_rank_groups_graphviz(
         idx = idx + 1
         continue
       }
-      let (rank_delta, changed) = transpose_rank_graphviz(
+      let (rank_delta, changed) = transpose_rank_port_tiebreak(
         rank,
         ranks,
         names,
@@ -812,7 +812,7 @@ fn transpose_rank_groups_graphviz(
 ///|
 /// Graphviz parity: medians() assigns flat_mval for nodes with no in/out
 /// non-flat edges (mincross.c flat_mval + medians).
-fn apply_flat_mvals_graphviz(
+fn apply_flat_mvals(
   names : Array[String],
   desired : Map[String, Double],
   edge_in : Map[String, Array[Int]],
@@ -950,7 +950,7 @@ fn apply_flat_mvals_graphviz(
 ///|
 /// Graphviz parity: flat edge reorder aligned to refs/graphviz/lib/dotgen/flat.c.
 /// Do not change behavior without updating fixtures/tests.
-fn flat_reorder_rank_groups_graphviz(
+fn flat_reorder_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   node_ranks : Map[String, Int],
@@ -1492,7 +1492,7 @@ fn reorder_rank_groups(
       graphviz_out_neighbors=graphviz_out_neighbors,
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
-    ordered = flat_reorder_rank_groups_graphviz(
+    ordered = flat_reorder_rank_groups(
       rank_keys,
       ordered,
       node_ranks,
@@ -1513,7 +1513,7 @@ fn reorder_rank_groups(
         fixed_order=fixed_order,
       )
     if seed_cross > 0 {
-      let _ = transpose_rank_groups_graphviz(
+      let _ = transpose_rank_groups_port_tiebreak(
         rank_keys,
         ordered,
         node_ranks,
@@ -1562,7 +1562,7 @@ fn reorder_rank_groups(
         Some(list) => list
         None => []
       }
-      count_single_rank_crossings_graphviz(
+      count_single_rank_crossings_port_tiebreak(
         rank,
         names,
         node_ranks,
@@ -1616,7 +1616,7 @@ fn reorder_rank_groups(
         )
         let seed_cross = compute_single_cross()
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_graphviz(
+          let _ = transpose_rank_groups_port_tiebreak(
             rank_keys,
             ordered,
             node_ranks,
@@ -1636,7 +1636,7 @@ fn reorder_rank_groups(
             remincross_mode=remincross_mode,
           )
         }
-        ordered = flat_reorder_rank_groups_graphviz(
+        ordered = flat_reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
@@ -1681,19 +1681,19 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired =
             if iter % 2 == 0 {
-              compute_desired_positions_graphviz(
+              compute_desired_positions_scaled_median(
                 names,
                 median_parents,
                 order_positions,
               )
             } else {
-              compute_desired_positions_graphviz(
+              compute_desired_positions_scaled_median(
                 names,
                 median_children,
                 order_positions,
               )
             }
-          let hasfixed = apply_flat_mvals_graphviz(
+          let hasfixed = apply_flat_mvals(
             names,
             desired,
             edge_in,
@@ -1713,7 +1713,7 @@ fn reorder_rank_groups(
           order_positions = order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
-        let _ = transpose_rank_groups_graphviz(
+        let _ = transpose_rank_groups_port_tiebreak(
           rank_keys,
           ordered,
           node_ranks,
@@ -1763,7 +1763,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_graphviz(
+      let _ = transpose_rank_groups_port_tiebreak(
         rank_keys,
         ordered,
         node_ranks,
@@ -1836,7 +1836,7 @@ fn reorder_rank_groups(
             fixed_order=fixed_order,
           )
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_graphviz(
+          let _ = transpose_rank_groups_port_tiebreak(
             rank_keys,
             ordered,
             node_ranks,
@@ -1856,7 +1856,7 @@ fn reorder_rank_groups(
             remincross_mode=remincross_mode,
           )
         }
-        ordered = flat_reorder_rank_groups_graphviz(
+        ordered = flat_reorder_rank_groups(
           rank_keys,
           ordered,
           node_ranks,
@@ -1922,12 +1922,12 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_desired_positions_graphviz(
+              let desired = compute_desired_positions_scaled_median(
                 names,
                 median_parents,
                 desired_positions,
               )
-              let hasfixed = apply_flat_mvals_graphviz(
+              let hasfixed = apply_flat_mvals(
                 names,
                 desired,
                 edge_in,
@@ -1967,12 +1967,12 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_desired_positions_graphviz(
+              let desired = compute_desired_positions_scaled_median(
                 names,
                 median_children,
                 desired_positions,
               )
-              let hasfixed = apply_flat_mvals_graphviz(
+              let hasfixed = apply_flat_mvals(
                 names,
                 desired,
                 edge_in,
@@ -2006,7 +2006,7 @@ fn reorder_rank_groups(
         }
         // Graphviz parity: transpose remains active with port-order hints;
         // ties are resolved by in/out port x during crossing checks.
-        let _ = transpose_rank_groups_graphviz(
+        let _ = transpose_rank_groups_port_tiebreak(
           rank_keys,
           ordered,
           node_ranks,
@@ -2066,7 +2066,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_graphviz(
+      let _ = transpose_rank_groups_port_tiebreak(
         rank_keys,
         ordered,
         node_ranks,
@@ -2103,7 +2103,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_desired_positions_graphviz(
+              let desired = compute_desired_positions_scaled_median(
                 names,
                 median_parents,
                 order_positions,
@@ -2132,7 +2132,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_desired_positions_graphviz(
+              let desired = compute_desired_positions_scaled_median(
                 names,
                 median_children,
                 order_positions,
@@ -2157,7 +2157,7 @@ fn reorder_rank_groups(
           }
         }
         if !has_port_order {
-          let _ = transpose_rank_groups_graphviz(
+          let _ = transpose_rank_groups_port_tiebreak(
             rank_keys,
             ordered,
             node_ranks,

@@ -390,7 +390,7 @@ fn apply_seeded_groups_transpose_phase(
         order_edge_head_out,
         order_ranks,
       )
-    let _ = transpose_rank_groups_graphviz(
+    let _ = transpose_rank_groups_port_tiebreak(
       order_rank_keys,
       seeded_groups,
       order_ranks,
