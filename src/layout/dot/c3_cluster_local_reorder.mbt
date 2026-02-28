@@ -1692,30 +1692,6 @@ fn reorder_cluster_rank_groups_for_cluster_names(
 
 
 ///|
-/// Graphviz parity: cluster-local reorder only runs when cluster build order
-/// yields materialized cluster subgraphs in deterministic traversal order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_graph_order_for_build_ranks(
-  graph : @cgraph.Graph,
-  cluster_order : Array[String],
-  cluster_parents : Map[String, String?],
-) -> (Map[String, @cgraph.Graph], Array[String])? {
-  if cluster_order.length() == 0 {
-    return None
-  }
-  let (cluster_graphs, cluster_names) =
-    build_cluster_graph_order_for_local_reorder(
-      graph,
-      cluster_order,
-      cluster_parents,
-    )
-  if cluster_graphs.length() == 0 {
-    return None
-  }
-  Some((cluster_graphs, cluster_names))
-}
-
-///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_groups_by_cluster_build_ranks(
@@ -1741,15 +1717,18 @@ fn reorder_groups_by_cluster_build_ranks(
   vnode_info : EdgeVnodeInfo,
   order_with_vnodes : Bool,
 ) -> Unit {
+  if cluster_meta.cluster_order.length() == 0 {
+    return ()
+  }
   let (cluster_graphs, cluster_names) =
-    match build_cluster_graph_order_for_build_ranks(
+    build_cluster_graph_order_for_local_reorder(
       graph,
       cluster_meta.cluster_order,
       cluster_meta.cluster_parents,
-    ) {
-      Some(value) => value
-      None => return ()
-    }
+    )
+  if cluster_graphs.length() == 0 {
+    return ()
+  }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   let fixed_positions = order_positions_from_groups(groups)
   let fixed_ranks : Map[String, Int] = Map::new()
