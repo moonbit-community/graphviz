@@ -3,17 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-/// Graphviz parity: root ReMincross output preserves root ordering groups and
-/// merged ordered groups for downstream cluster build_ranks stages.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_reorder_output(
-  order_groups_for_mincross : Map[Int, Array[String]],
-  ordered : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  (order_groups_for_mincross, ordered)
-}
-
-///|
 /// Graphviz parity: root ReMincross preferred positions use vnode ordering
 /// keys only when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
@@ -532,7 +521,7 @@ fn build_root_mincross_reorder_stage_output(
       order_cluster_keys,
       order_cluster_skeleton,
     )
-  build_root_mincross_reorder_output(order_groups_for_mincross, ordered)
+  (order_groups_for_mincross, ordered)
 }
 
 

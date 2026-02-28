@@ -245,42 +245,6 @@ fn build_clustered_remincross_materialized_graph_with_trace(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross materialized-edge output preserves
-/// node-order and remapped edge/port arrays in Graphviz tuple ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_materialized_edges_output(
-  rem_node_order : Map[String, Int],
-  rem_edges_out : Array[@cgraph.Edge],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-  rem_edge_tail_port_x : Array[Double],
-  rem_edge_head_port_x : Array[Double],
-  rem_edge_tail_port_order : Array[Double],
-  rem_edge_head_port_order : Array[Double],
-) -> (
-  Map[String, Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  (
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-  )
-}
-
-
-///|
 /// Graphviz parity: ReMincross order-graph materialization filters local flat
 /// constraints by fast-graph membership, rebuilds GD_nlist, seeds node order,
 /// then materializes edge arrays in nlist tail order.
@@ -331,7 +295,7 @@ fn build_remincross_materialized_order_graph(
       rem_graph,
       rem_node_map,
     )
-  build_clustered_remincross_materialized_edges_output(
+  (
     rem_node_order,
     rem_edges_out,
     rem_edge_tail_out,
