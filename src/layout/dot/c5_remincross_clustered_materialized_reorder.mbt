@@ -50,6 +50,27 @@ fn apply_remincross_intercluster_bonus(
 }
 
 ///|
+/// Graphviz parity: rematerialized ReMincross edge-creation replay walks each
+/// tail bucket in creation-order sequence and preserves per-tail ND_out order.
+fn build_remincross_edge_creation(
+  creation_order : Array[String],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Array[(String, String)] {
+  let rem_edge_creation : Array[(String, String)] = []
+  for tail_name in creation_order {
+    let entries = match order_edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for entry in entries {
+      let (tail, head, _, _, _, _, _, _) = entry
+      rem_edge_creation.push((tail, head))
+    }
+  }
+  rem_edge_creation
+}
+
+///|
 /// Graphviz parity: clustered ReMincross materializes remapped order edges
 /// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays.
 /// Do not change behavior without updating fixtures/tests.
@@ -126,19 +147,11 @@ fn build_clustered_remincross_materialized_edges(
       rem_order_edges_by_tail_coalesced,
       intercluster_bonus,
     )
-  // Graphviz parity: edge creation replay follows per-tail ND_out order after
-  // class2 merge-chain coalescing in rematerialized clustered passes.
-  let rem_edge_creation : Array[(String, String)] = []
-  for tail_name in creation_order {
-    let entries = match rem_order_edges_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for entry in entries {
-      let (tail, head, _, _, _, _, _, _) = entry
-      rem_edge_creation.push((tail, head))
-    }
-  }
+  let rem_edge_creation =
+    build_remincross_edge_creation(
+      creation_order,
+      rem_order_edges_by_tail,
+    )
   // Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
   // seeds node order, then materializes edge arrays in nlist tail order.
   let rem_ranks = build_node_ranks(rem_groups)
