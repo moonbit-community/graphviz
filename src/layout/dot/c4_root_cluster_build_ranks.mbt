@@ -165,10 +165,10 @@ fn run_root_and_cluster_build_ranks_stage(
     } else {
       ordered
     }
-  let next_ordered_with_vnodes =
-    apply_cluster_build_ranks_and_track_vnodes(
-      order_with_clusters,
-      order_with_vnodes,
+  // Graphviz parity: clustered order pass runs cluster-local build_ranks on
+  // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
+  if order_with_clusters {
+    reorder_groups_by_cluster_build_ranks(
       graph,
       ordered,
       cluster_meta,
@@ -189,8 +189,13 @@ fn run_root_and_cluster_build_ranks_stage(
       port_order_positions,
       port_order_contrib,
       vnode_info,
-      stage_inputs.ordered_with_vnodes,
+      order_with_vnodes,
     )
+  }
+  let mut next_ordered_with_vnodes = stage_inputs.ordered_with_vnodes
+  if order_with_vnodes {
+    next_ordered_with_vnodes = ordered
+  }
   {
     order_groups_for_mincross,
     ordered,
