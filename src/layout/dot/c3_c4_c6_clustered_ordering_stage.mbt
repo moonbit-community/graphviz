@@ -223,7 +223,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
   pre_root_stage : OrderClusteredPreRootStageData,
 ) -> OrderRootClusterStageData {
   let reorder_setup = stage_dispatch_context.reorder_setup
-  let class2_data = stage_dispatch_context.class2_data
   let runtime_context = stage_dispatch_context.runtime_context
   remincross_root_tail_order_override_snapshot.val = None
   let (root_tail_order_override, root_groups_override) =
@@ -236,21 +235,6 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
       Some(root_tail_order_override.copy())
   } else {
     remincross_root_tail_order_override_snapshot.val = None
-  }
-  if reorder_setup.order_with_clusters &&
-    @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
-    let joined = root_tail_order_override.join(" ")
-    println("remincross root_tail_order_override \{joined}")
-    let gdnlist_joined = reorder_setup.gdnlist_order.join(" ")
-    let nlist_joined = class2_data.nlist_order.join(" ")
-    let creation_joined = pre_root_stage.reorder_context.creation_order.join(" ")
-    let cluster_order_joined = stage_dispatch_context.cluster_meta.cluster_order.join(
-      " ",
-    )
-    println("remincross source_gdnlist_order \{gdnlist_joined}")
-    println("remincross source_nlist_order \{nlist_joined}")
-    println("remincross source_creation_order \{creation_joined}")
-    println("remincross source_cluster_order \{cluster_order_joined}")
   }
   if reorder_setup.order_with_clusters {
     root_mincross_groups_override.val =
