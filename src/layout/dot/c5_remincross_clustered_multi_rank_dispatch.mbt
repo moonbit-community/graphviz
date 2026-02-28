@@ -45,7 +45,6 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context.order_with_clusters,
       dispatch_context.edges_by_tail,
       cluster_order_index,
-      dispatch_context.flat_rank_constraints,
       rem_graph,
       rem_node_map,
       rem_groups,
@@ -131,7 +130,6 @@ priv struct ClusteredReMincrossPassDispatchContext {
   ranks : Map[String, Int]
   order_with_vnodes : Bool
   order_with_clusters : Bool
-  flat_rank_constraints : Map[String, Bool]
   creation_order : Array[String]
   edges_by_tail : Map[String, Array[Int]]
   cluster_meta : ClusterMetadata

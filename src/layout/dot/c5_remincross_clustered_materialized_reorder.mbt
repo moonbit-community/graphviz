@@ -22,7 +22,6 @@ fn build_clustered_remincross_materialized_edges(
   order_with_clusters : Bool,
   edges_by_tail : Map[String, Array[Int]],
   cluster_order_index : Map[String, Int],
-  flat_rank_constraints : Map[String, Bool],
   rem_graph : @cgraph.Graph,
   rem_node_map : Map[String, @cgraph.Node],
   rem_groups : Map[Int, Array[String]],
@@ -86,7 +85,6 @@ fn build_clustered_remincross_materialized_edges(
       creation_order,
       rem_order_edges_by_tail,
     )
-  let _ = flat_rank_constraints
   // Graphviz parity: clustered ReMincross materialized-edge flow rebuilds
   // remapped order graph arrays, then traces edge endpoints before tuple output.
   let (
