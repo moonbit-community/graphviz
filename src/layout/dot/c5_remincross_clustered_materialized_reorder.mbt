@@ -461,7 +461,14 @@ fn build_remincross_cluster_tail_order(
       cluster_first_seen,
       cluster_order_index,
     )
-  let heads_by_tail = build_remincross_heads_by_tail(rem_edge_creation)
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  for edge in rem_edge_creation {
+    let (tail, head) = edge
+    match heads_by_tail.get(tail) {
+      Some(list) => list.push(head)
+      None => heads_by_tail[tail] = [head]
+    }
+  }
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
     let names = match names_by_cluster.get(cluster) {
@@ -589,24 +596,6 @@ fn build_remincross_cluster_order_and_positions(
     cluster_order_pos[cluster] = idx
   }
   (cluster_order, cluster_order_pos)
-}
-
-///|
-/// Graphviz parity: clustered tail-order setup preserves rem_edge_creation
-/// tail insertion order in heads_by_tail adjacency buckets.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_heads_by_tail(
-  rem_edge_creation : Array[(String, String)],
-) -> Map[String, Array[String]] {
-  let heads_by_tail : Map[String, Array[String]] = Map::new()
-  for edge in rem_edge_creation {
-    let (tail, head) = edge
-    match heads_by_tail.get(tail) {
-      Some(list) => list.push(head)
-      None => heads_by_tail[tail] = [head]
-    }
-  }
-  heads_by_tail
 }
 
 ///|
