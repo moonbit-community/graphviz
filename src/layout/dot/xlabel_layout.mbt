@@ -764,7 +764,7 @@ fn parse_int_prefix(value : String) -> Int? {
   }
 }
 
-fn map_bool_graphviz(value : String, default_value : Bool) -> Bool {
+fn parse_bool_attr(value : String, default_value : Bool) -> Bool {
   if value == "" {
     return default_value
   }
@@ -792,7 +792,7 @@ fn map_bool_graphviz(value : String, default_value : Bool) -> Bool {
 fn parse_forcelabels(graph : @cgraph.Graph) -> Bool {
   match graph.get_attr("forcelabels") {
     None => true
-    Some(text) => map_bool_graphviz(text, false)
+    Some(text) => parse_bool_attr(text, false)
   }
 }
 
