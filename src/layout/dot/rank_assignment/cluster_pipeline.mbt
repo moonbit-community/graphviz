@@ -12,11 +12,36 @@ pub fn compute_ranks_directed(
   back_weight_scale : Int,
 ) -> Map[String, Int] {
   if @shared.graph_has_cluster(source) {
-    return compute_ranks_directed_with_clusters_impl(
+    return compute_clustered_ranks(
       source,
       nodes,
       edges,
       has_edge_labels,
+      (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
+        let (tail, head, _reversed) =
+          acyclic_edge_directions(graph, graph_nodes, graph_edges)
+        compute_ranks_directed_base(
+          graph,
+          graph_nodes,
+          graph_edges,
+          graph_has_edge_labels,
+          tail,
+          head,
+        )
+      },
+      (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
+        let (tail, head, _reversed) =
+          acyclic_edge_directions(graph, graph_nodes, graph_edges)
+        compute_ranks_directed(
+          graph,
+          graph_nodes,
+          graph_edges,
+          graph_has_edge_labels,
+          tail,
+          head,
+          back_weight_scale,
+        )
+      },
       back_weight_scale,
     )
   }
@@ -48,51 +73,6 @@ pub fn compute_ranks_directed_with_clusters(
     has_edge_labels,
     edge_tail,
     edge_head,
-    back_weight_scale,
-  )
-}
-
-///|
-/// Graphviz parity: clustered rank assignment keeps non-cluster fallback path
-/// and cluster-local/global solve sequence aligned to rank.c behavior.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_ranks_directed_with_clusters_impl(
-  source : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
-  back_weight_scale : Int,
-) -> Map[String, Int] {
-  compute_clustered_ranks(
-    source,
-    nodes,
-    edges,
-    has_edge_labels,
-    (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-      let (tail, head, _reversed) =
-        acyclic_edge_directions(graph, graph_nodes, graph_edges)
-      compute_ranks_directed_base(
-        graph,
-        graph_nodes,
-        graph_edges,
-        graph_has_edge_labels,
-        tail,
-        head,
-      )
-    },
-    (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-      let (tail, head, _reversed) =
-        acyclic_edge_directions(graph, graph_nodes, graph_edges)
-      compute_ranks_directed(
-        graph,
-        graph_nodes,
-        graph_edges,
-        graph_has_edge_labels,
-        tail,
-        head,
-        back_weight_scale,
-      )
-    },
     back_weight_scale,
   )
 }
