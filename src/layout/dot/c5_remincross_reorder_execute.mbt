@@ -161,29 +161,6 @@ fn run_remincross_reorder_and_collect_real_groups(
 }
 
 ///|
-/// Graphviz parity: ReMincross flat constraints combine existing same-rank
-/// constraints with local intra-cluster adjacency locks for non-intercluster
-/// real-node pairs (flat.c cluster-local reorder guard).
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_flat_constraints(
-  flat_constraints : Map[String, Bool],
-  rank_same_constraints : Map[String, Bool],
-  order_with_clusters : Bool,
-) -> Map[String, Bool] {
-  let rem_flat_constraints : Map[String, Bool] = Map::new()
-  if !order_with_clusters {
-    for key, value in flat_constraints {
-      rem_flat_constraints[key] = value
-    }
-    for key, _ in rank_same_constraints {
-      rem_flat_constraints[key] = true
-    }
-    return rem_flat_constraints
-  }
-  rem_flat_constraints
-}
-
-///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
@@ -217,12 +194,18 @@ fn build_remincross_reorder_inputs(
       order_with_vnodes,
       vnode_info.vnode_sizes,
     )
-  let rem_flat_constraints =
-    build_remincross_flat_constraints(
-      cluster_meta.flat_constraints,
-      rank_same_constraints,
-      order_with_clusters,
-    )
+  let rem_flat_constraints : Map[String, Bool] = Map::new()
+  // Graphviz parity: ReMincross flat constraints combine existing same-rank
+  // constraints with local intra-cluster adjacency locks for non-intercluster
+  // real-node pairs (flat.c cluster-local reorder guard).
+  if !order_with_clusters {
+    for key, value in cluster_meta.flat_constraints {
+      rem_flat_constraints[key] = value
+    }
+    for key, _ in rank_same_constraints {
+      rem_flat_constraints[key] = true
+    }
+  }
   (rem_cluster_keys, rem_sizes, rem_flat_constraints)
 }
 
