@@ -383,7 +383,7 @@ fn run_clustered_ordering_stage(
   let reorder_context = pre_root_stage.reorder_context
   let (next_ordered_with_vnodes, final_groups) =
     run_cluster_rank_order_and_finalize_stage(
-    finalize_dispatch_context,
+      finalize_dispatch_context,
       reorder_context.order_rank_keys,
       root_cluster_stage.order_groups_for_mincross,
       pre_root_stage.order_cluster_keys,
