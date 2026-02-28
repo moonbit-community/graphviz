@@ -716,27 +716,22 @@ fn build_root_cluster_reorder_edge_bundle(
   )
 }
 
-///|
-/// Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
-/// path and tracing as cluster-phase root bucket ordering.
+/// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
+/// and ordered-root groups tuple ordering unchanged before rank transfer.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_cluster_reorder_for_cluster_rank_order(
-  root_rank_keys : Array[Int],
-  root_groups : Map[Int, Array[String]],
-  root_edges_out : Array[@cgraph.Edge],
-  root_edge_tail_out : Array[String],
-  root_edge_head_out : Array[String],
-  root_edge_tail_port_x : Array[Double],
-  root_edge_head_port_x : Array[Double],
-  root_edge_tail_port_order : Array[Double],
-  root_edge_head_port_order : Array[Double],
-  root_parents : Map[String, Array[String]],
-  root_children : Map[String, Array[String]],
+type RootClusterRankOrderPhaseOutput = (
+  Array[Int],
+  Map[Int, Array[String]],
+)
+
+///|
+/// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
+/// and dispatch context without reordering Graphviz call arguments.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   order_cluster_keys : Map[String, String],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
-  root_edge_order : Map[String, Int],
-  root_node_order : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -745,7 +740,25 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   order_cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
+  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
+) -> RootClusterRankOrderPhaseOutput {
+  let (
+    root_groups,
+    root_rank_keys,
+    root_edges_out,
+    root_edge_tail_out,
+    root_edge_head_out,
+    root_edge_tail_port_x,
+    root_edge_head_port_x,
+    root_edge_tail_port_order,
+    root_edge_head_port_order,
+    root_parents,
+    root_children,
+    root_edge_order,
+    root_node_order,
+  ) = root_reorder_output
+  // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
+  // path as cluster-phase root bucket ordering, with root-flip guarding.
   let seen_cluster_keys : Map[String, Bool] = Map::new()
   let mut has_multi_cluster_roots = false
   for _name, key in order_cluster_keys {
@@ -791,76 +804,6 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
     flat_constraints,
     graphviz_flip=root_graphviz_flip,
     coalesce_parallel_edges=true,
-  )
-  ordered_root
-}
-
-/// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
-/// and ordered-root groups tuple ordering unchanged before rank transfer.
-/// Do not change behavior without updating fixtures/tests.
-type RootClusterRankOrderPhaseOutput = (
-  Array[Int],
-  Map[Int, Array[String]],
-)
-
-///|
-/// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
-/// and dispatch context without reordering Graphviz call arguments.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_cluster_rank_order_phase_from_root_reorder_output(
-  order_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
-) -> RootClusterRankOrderPhaseOutput {
-  let (
-    root_groups,
-    root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
-    root_node_order,
-  ) = root_reorder_output
-  let ordered_root = run_root_cluster_reorder_for_cluster_rank_order(
-    root_rank_keys,
-    root_groups,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-    root_parents,
-    root_children,
-    order_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    root_edge_order,
-    root_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_cluster_skeleton,
-    flat_constraints,
-    graphviz_flip,
   )
   if !graphviz_flip {
     return (root_rank_keys, ordered_root)
