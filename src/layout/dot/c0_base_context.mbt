@@ -17,19 +17,6 @@ fn build_existing_node_names_map_for_positions(
 }
 
 ///|
-/// Graphviz parity: vnode names are overlaid onto existing-name maps before
-/// helper calls that need collision-safe synthetic node naming.
-/// Do not change behavior without updating fixtures/tests.
-fn add_vnode_names_to_existing_names_for_positions(
-  existing_names : Map[String, Bool],
-  vnode_ranks : Map[String, Int],
-) -> Unit {
-  for vnode, _ in vnode_ranks {
-    existing_names[vnode] = true
-  }
-}
-
-///|
 /// Graphviz parity: ordering base-context port-edge map marks both endpoints
 /// for edges with explicit tail/head ports before rank-same constraints build.
 /// Do not change behavior without updating fixtures/tests.
@@ -50,4 +37,3 @@ fn build_port_edge_nodes_for_ordering_base_context(
   }
   port_edge_nodes
 }
-

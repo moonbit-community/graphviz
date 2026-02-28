@@ -115,10 +115,9 @@ fn build_flat_label_vnode_augmentation_for_positions(
   let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
   let next_x_cluster_keys = x_cluster_keys
   let existing_names = build_existing_node_names_map_for_positions(prep.nodes)
-  add_vnode_names_to_existing_names_for_positions(
-    existing_names,
-    ordering.vnode_info.vnode_ranks,
-  )
+  for vnode, _ in ordering.vnode_info.vnode_ranks {
+    existing_names[vnode] = true
+  }
   if use_vnodes_for_xpos {
     let (
       updated_groups,
