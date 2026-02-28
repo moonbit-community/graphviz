@@ -99,7 +99,6 @@ fn build_clustered_ordering_pre_root_stage(
       cluster_meta.rank_same_order,
       port_edge_nodes,
     )
-  trace_order_node_order_debug(reorder_context.order_node_order)
   let materialized =
     build_materialized_order_edges_and_neighbors(
       nlist_order,

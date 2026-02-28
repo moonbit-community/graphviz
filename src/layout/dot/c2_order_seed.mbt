@@ -24,47 +24,6 @@ fn trace_nlist_order_debug(
 }
 
 ///|
-/// Debug trace: dump selected order-node positions when DOT_TRACE_GROUPS is
-/// enabled (diagnostic only).
-fn trace_order_node_order_debug(
-  order_node_order : Map[String, Int],
-) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is None {
-    return
-  }
-  let debug_names : Array[String] = [
-    "z_req",
-    "z_req1",
-    "handle_x",
-    "handle_1",
-    "mobvm_a_req",
-    "mobvm_a_req1",
-    "front_end_jz",
-    "other_xprot",
-    "z_shapeshifter",
-    "i-core-(lib)",
-    "i-core-ps",
-    "i-core-svg",
-    "r-ps",
-    "r-dot",
-    "r-fig",
-    "r-svg",
-    "r-xdot",
-    "r-map",
-    "r-tk",
-    "r-vml",
-    "o-gd-wbmp",
-    "o-gd-vrml",
-  ]
-  for name in debug_names {
-    match order_node_order.get(name) {
-      Some(value) => println("order_node_order \{name}=\{value}")
-      None => ()
-    }
-  }
-}
-
-///|
 /// Debug trace: dump materialized order edges with rank/real-node flags when
 /// DOT_TRACE_ORDER_EDGES is enabled (diagnostic only).
 fn trace_order_edges_with_ranks(
