@@ -433,11 +433,28 @@ fn build_remincross_cluster_tail_order(
   rem_edge_creation : Array[(String, String)],
   cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  let (cluster_order_seen, names_by_cluster, cluster_first_seen) =
-    build_remincross_cluster_order_seen_and_names(
-      rem_order_creation,
-      rem_cluster_keys,
-    )
+  let cluster_order_seen : Array[String] = []
+  let cluster_seen : Map[String, Bool] = Map::new()
+  let names_by_cluster : Map[String, Array[String]] = Map::new()
+  for name in rem_order_creation {
+    let cluster =
+      cluster_key_for_remincross_tail_order_name(
+        rem_cluster_keys,
+        name,
+      )
+    if cluster_seen.get(cluster) is None {
+      cluster_seen[cluster] = true
+      cluster_order_seen.push(cluster)
+    }
+    match names_by_cluster.get(cluster) {
+      Some(list) => list.push(name)
+      None => names_by_cluster[cluster] = [name]
+    }
+  }
+  let cluster_first_seen : Map[String, Int] = Map::new()
+  for idx, cluster in cluster_order_seen {
+    cluster_first_seen[cluster] = idx
+  }
   let (cluster_order, cluster_order_pos) =
     build_remincross_cluster_order_and_positions(
       cluster_order_seen,
@@ -511,39 +528,6 @@ fn cluster_key_for_remincross_tail_order_name(
       if pos > 0 { suffix.unsafe_substring(start=0, end=pos) } else { "" }
     None => ""
   }
-}
-
-///|
-/// Graphviz parity: clustered tail-order setup preserves first-seen cluster
-/// sequence while grouping rem_order_creation names by cluster key.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_order_seen_and_names(
-  rem_order_creation : Array[String],
-  rem_cluster_keys : Map[String, String],
-) -> (Array[String], Map[String, Array[String]], Map[String, Int]) {
-  let cluster_order_seen : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
-  let names_by_cluster : Map[String, Array[String]] = Map::new()
-  for name in rem_order_creation {
-    let cluster =
-      cluster_key_for_remincross_tail_order_name(
-        rem_cluster_keys,
-        name,
-      )
-    if cluster_seen.get(cluster) is None {
-      cluster_seen[cluster] = true
-      cluster_order_seen.push(cluster)
-    }
-    match names_by_cluster.get(cluster) {
-      Some(list) => list.push(name)
-      None => names_by_cluster[cluster] = [name]
-    }
-  }
-  let cluster_first_seen : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order_seen {
-    cluster_first_seen[cluster] = idx
-  }
-  (cluster_order_seen, names_by_cluster, cluster_first_seen)
 }
 
 ///|
