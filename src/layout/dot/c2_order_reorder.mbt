@@ -186,12 +186,33 @@ fn build_materialized_order_edges_and_neighbors(
         order_edge_head_port_order_unmapped,
       )
     }
-  let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_neighbor_maps(
-      order_nodes,
-      order_edges_by_tail,
-      edge_creation_order,
-    )
+  // Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    graphviz_out_neighbors[name] = []
+    graphviz_in_neighbors[name] = []
+  }
+  for tail, entries in order_edges_by_tail {
+    let heads : Array[String] = []
+    for entry in entries {
+      let (_t, h, _pen, _constraint, _tail_port_x, _head_port_x, _tail_port_order, _head_port_order) =
+        entry
+      heads.push(h)
+    }
+    graphviz_out_neighbors[tail] = heads
+  }
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for edge in edge_creation_order {
+    let (tail, head) = edge
+    match in_entries.get(head) {
+      Some(list) => list.push(tail)
+      None => in_entries[head] = [tail]
+    }
+  }
+  for head, entries in in_entries {
+    graphviz_in_neighbors[head] = entries
+  }
   let order_flat_constraints : Map[String, Bool] = Map::new()
   for key, value in cluster_meta.flat_constraints {
     order_flat_constraints[key] = value
