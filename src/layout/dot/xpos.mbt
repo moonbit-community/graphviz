@@ -1458,11 +1458,6 @@ fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
 }
 
 ///|
-fn is_cluster_extra_node(name : String) -> Bool {
-  name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX)
-}
-
-///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -1534,7 +1529,7 @@ fn build_constraint_graph(
   let late_extra_nodes : Array[(String, Int)] = []
   for pair in extra_nodes {
     let (name, _rank) = pair
-    if is_cluster_extra_node(name) {
+    if name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX) {
       late_extra_nodes.push(pair)
     } else {
       early_extra_nodes.push(pair)
