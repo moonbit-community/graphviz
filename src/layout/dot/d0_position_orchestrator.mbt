@@ -92,13 +92,6 @@ priv struct PositionOutputMaps {
 }
 
 ///|
-priv struct PositionBoundaryAndVnodeData {
-  cluster_ln_x : Map[String, Double]
-  cluster_rn_x : Map[String, Double]
-  vnode_positions : Map[String, @geom.Point]
-}
-
-///|
 priv struct PositionProjectionData {
   rank_y : Map[Int, Double]
   cluster_bbox_heights : Map[String, (Double, Double)]
@@ -863,32 +856,6 @@ fn is_intercluster_alignment_enabled() -> Bool {
 }
 
 ///|
-/// Graphviz parity: intercluster alignment mutates x positions only under the
-/// same runtime and graph-shape gates as Graphviz fixtures.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_adjust_intercluster_alignment(
-  cluster_meta : ClusterMetadata,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  x_positions : Map[String, Double],
-) -> Unit {
-  if cluster_meta.has_clusters && prep.has_dotted_edges &&
-    is_intercluster_alignment_enabled() {
-    adjust_intercluster_alignment(
-      prep.nodes,
-      prep.edges,
-      rank_data.ranks,
-      x_positions,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      rank_heights.nodesep_pt,
-      prep.has_edge_labels,
-    )
-  }
-}
-
-///|
 /// Graphviz parity: final node output positions are direct x/y map lookups for
 /// each real node, with missing coordinates defaulting to zero.
 /// Do not change behavior without updating fixtures/tests.
@@ -914,44 +881,6 @@ fn build_node_positions_for_output(
 }
 
 ///|
-/// Graphviz parity: intercluster alignment, cluster boundary x capture, and
-/// vnode position projection are executed in fixed order before node map build.
-/// Do not change behavior without updating fixtures/tests.
-fn build_position_boundary_and_vnode_data_for_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
-) -> PositionBoundaryAndVnodeData {
-  maybe_adjust_intercluster_alignment(
-    cluster_meta,
-    prep,
-    rank_data,
-    rank_heights,
-    x_positions,
-  )
-  // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
-  let (cluster_ln_x, cluster_rn_x) =
-    build_cluster_boundary_x_positions(graph, cluster_meta, x_positions)
-  // Let the final bounding-box translation handle normalization, matching Graphviz.
-  let vnode_positions =
-    build_vnode_positions_for_output(
-      use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      ordering,
-      x_positions,
-      rank_y,
-    )
-  { cluster_ln_x, cluster_rn_x, vnode_positions }
-}
-
-///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
@@ -967,15 +896,29 @@ fn build_position_output_maps_for_positions(
   y_positions : Map[String, Double],
   rank_y : Map[Int, Double],
 ) -> PositionOutputMaps {
-  let position_boundary_and_vnode_data =
-    build_position_boundary_and_vnode_data_for_positions(
-      graph,
+  if cluster_meta.has_clusters && prep.has_dotted_edges &&
+    is_intercluster_alignment_enabled() {
+    adjust_intercluster_alignment(
+      prep.nodes,
+      prep.edges,
+      rank_data.ranks,
+      x_positions,
+      cluster_meta.cluster_keys,
+      cluster_meta.intercluster_keys,
+      rank_heights.nodesep_pt,
+      prep.has_edge_labels,
+    )
+  }
+  // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
+  let (cluster_ln_x, cluster_rn_x) =
+    build_cluster_boundary_x_positions(graph, cluster_meta, x_positions)
+  // Let the final bounding-box translation handle normalization, matching Graphviz.
+  let vnode_positions =
+    build_vnode_positions_for_output(
+      use_vnodes_for_xpos,
       prep,
       rank_data,
-      rank_heights,
-      cluster_meta,
       ordering,
-      use_vnodes_for_xpos,
       x_positions,
       rank_y,
     )
@@ -985,16 +928,16 @@ fn build_position_output_maps_for_positions(
     let _ = adjust_cluster_positions_for_rounding(
       graph,
       positions,
-      position_boundary_and_vnode_data.vnode_positions,
+      vnode_positions,
       ordering.vnode_info.vnode_clusters,
       prep.sizes,
     )
   }
   {
     positions,
-    vnode_positions: position_boundary_and_vnode_data.vnode_positions,
-    cluster_ln_x: position_boundary_and_vnode_data.cluster_ln_x,
-    cluster_rn_x: position_boundary_and_vnode_data.cluster_rn_x,
+    vnode_positions,
+    cluster_ln_x,
+    cluster_rn_x,
   }
 }
 
