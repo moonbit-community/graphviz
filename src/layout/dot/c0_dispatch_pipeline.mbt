@@ -122,40 +122,6 @@ priv struct OrderingDispatchPipelineContext {
 /// and result assembly helpers for Stage C entry flow.
 
 ///|
-/// Graphviz parity: final ordering result output object maps ordering arrays,
-/// vnode metadata, and edge-port-derived edge order fields unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_result_output(
-  ordered_groups : Map[Int, Array[String]],
-  ordered_groups_with_vnodes : Map[Int, Array[String]],
-  vnode_info : EdgeVnodeInfo,
-  vnode_count : Int,
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  edge_order : Map[String, Int],
-  edge_cluster_keys : Map[String, String],
-  nlist_order : Array[String],
-  gdnlist_order : Array[String],
-  vnode_creation_order : Array[String],
-) -> OrderingResult {
-  {
-    ordered_groups,
-    ordered_groups_with_vnodes,
-    vnode_info,
-    vnode_count,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    edge_order,
-    edge_cluster_keys,
-    nlist_order,
-    gdnlist_order,
-    vnode_creation_order,
-  }
-}
-
-///|
 /// Graphviz parity: ordering dispatch execution phase consumes prepared
 /// dispatch setup, then maps staged outputs into OrderingResult unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -186,20 +152,20 @@ fn run_ordering_dispatch_pipeline_execution_phase(
     )
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_stage_dispatch(stage_dispatch_context)
-  build_ordering_result_output(
-    ordered_groups_internal,
-    ordered_with_vnodes,
-    execution_context.runtime_context.vnode_info,
-    execution_context.runtime_context.vnode_count,
-    execution_context.dispatch_setup.edge_port_data.order_edges,
-    execution_context.dispatch_setup.edge_port_data.order_edge_tail,
-    execution_context.dispatch_setup.edge_port_data.order_edge_head,
-    execution_context.dispatch_setup.edge_port_data.edge_order,
-    execution_context.runtime_context.edge_cluster_keys,
-    execution_context.dispatch_setup.nlist_order,
-    execution_context.dispatch_setup.gdnlist_order,
-    execution_context.dispatch_setup.vnode_creation_order,
-  )
+  {
+    ordered_groups: ordered_groups_internal,
+    ordered_groups_with_vnodes: ordered_with_vnodes,
+    vnode_info: execution_context.runtime_context.vnode_info,
+    vnode_count: execution_context.runtime_context.vnode_count,
+    order_edges: execution_context.dispatch_setup.edge_port_data.order_edges,
+    order_edge_tail: execution_context.dispatch_setup.edge_port_data.order_edge_tail,
+    order_edge_head: execution_context.dispatch_setup.edge_port_data.order_edge_head,
+    edge_order: execution_context.dispatch_setup.edge_port_data.edge_order,
+    edge_cluster_keys: execution_context.runtime_context.edge_cluster_keys,
+    nlist_order: execution_context.dispatch_setup.nlist_order,
+    gdnlist_order: execution_context.dispatch_setup.gdnlist_order,
+    vnode_creation_order: execution_context.dispatch_setup.vnode_creation_order,
+  }
 }
 
 
