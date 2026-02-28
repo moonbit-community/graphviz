@@ -3,18 +3,8 @@
 /// type definitions for reorder/materialize preparation.
 
 ///|
-/// Stage C Phase C0 split: ordering base/runtime
-/// context types for pre-class2 setup derivation.
-
-///|
-priv struct OrderingBaseContext {
-  real_nodes : Map[String, Bool]
-  edge_cluster_keys : Map[String, String]
-  vnode_info : EdgeVnodeInfo
-  port_edge_nodes : Map[String, Bool]
-  local_cluster_order : Map[String, Int]
-  rank_same_constraints : Map[String, Bool]
-}
+/// Stage C Phase C0 split: ordering runtime
+/// context type for pre-class2 setup derivation.
 
 ///|
 priv struct OrderingRuntimeContext {
@@ -55,10 +45,11 @@ priv struct OrderingDispatchSetup {
 /// and dispatch preparation helpers.
 
 ///|
-/// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
-/// ownership, vnode chains, and local cluster/port constraints before class2.
+/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
+/// in the same position as Graphviz ordering setup, even when only used for
+/// parity diagnostics.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_base_context(
+fn build_ordering_runtime_context_with_tail_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -70,7 +61,9 @@ fn build_ordering_base_context(
   nodesep_pt : Double,
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
-) -> OrderingBaseContext {
+) -> OrderingRuntimeContext {
+  // Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
+  // ownership, vnode chains, and local cluster/port constraints before class2.
   let real_nodes : Map[String, Bool] = Map::new()
   let existing_names : Map[String, Bool] = Map::new()
   for node in nodes {
@@ -116,57 +109,15 @@ fn build_ordering_base_context(
     port_edge_nodes,
     ranks,
   )
-  {
-    real_nodes,
-    edge_cluster_keys,
-    vnode_info,
-    port_edge_nodes,
-    local_cluster_order,
-    rank_same_constraints,
-  }
-}
-
-///|
-/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
-/// in the same position as Graphviz ordering setup, even when only used for
-/// parity diagnostics.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context_with_tail_constraints(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  nodesep_pt : Double,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-) -> OrderingRuntimeContext {
-  let base_context =
-    build_ordering_base_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      node_order,
-      nodesep_pt,
-      rankdir,
-      cluster_meta,
-    )
   let runtime_context =
     {
-      real_nodes: base_context.real_nodes,
-      edge_cluster_keys: base_context.edge_cluster_keys,
-      vnode_info: base_context.vnode_info,
-      port_edge_nodes: base_context.port_edge_nodes,
-      local_cluster_order: base_context.local_cluster_order,
-      rank_same_constraints: base_context.rank_same_constraints,
-      vnode_count: base_context.vnode_info.vnode_ranks.length(),
+      real_nodes,
+      edge_cluster_keys,
+      vnode_info,
+      port_edge_nodes,
+      local_cluster_order,
+      rank_same_constraints,
+      vnode_count: vnode_info.vnode_ranks.length(),
     }
   // Graphviz parity: probe vnode tail constraints in setup order even though
   // the result is diagnostic-only.
