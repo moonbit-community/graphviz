@@ -126,29 +126,6 @@ fn apply_vnode_half_heights_for_rank_pht(
 
 
 ///|
-/// Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
-/// before cluster-specific adjustments.
-/// Do not change behavior without updating fixtures/tests.
-fn build_rank_ht_maps_from_rank_pht(
-  all_ranks : Array[Int],
-  rank_pht : Map[Int, Double],
-) -> (Map[Int, Double], Map[Int, Double]) {
-  let rank_ht1 : Map[Int, Double] = Map::new()
-  let rank_ht2 : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
-    let half_height = match rank_pht.get(rank) {
-      Some(value) => value
-      None => 0.0
-    }
-    rank_ht1[rank] = half_height
-    rank_ht2[rank] = half_height
-  }
-  (rank_ht1, rank_ht2)
-}
-
-
-
-///|
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_heights(
@@ -180,8 +157,18 @@ fn compute_rank_heights(
     }
   }
   apply_vnode_half_heights_for_rank_pht(edges, ranks, rank_pht)
-  let (rank_ht1, rank_ht2) =
-    build_rank_ht_maps_from_rank_pht(all_ranks, rank_pht)
+  // Graphviz parity: rank_ht1/rank_ht2 start as symmetric copies of rank_pht
+  // before cluster-specific adjustments.
+  let rank_ht1 : Map[Int, Double] = Map::new()
+  let rank_ht2 : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    let half_height = match rank_pht.get(rank) {
+      Some(value) => value
+      None => 0.0
+    }
+    rank_ht1[rank] = half_height
+    rank_ht2[rank] = half_height
+  }
   let _ = apply_cluster_rank_heights(
     graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
   )
