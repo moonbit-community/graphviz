@@ -452,10 +452,10 @@ fn build_x_position_stage_seed_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: optional x-stage reorder preserves vnode-order gating,
-/// port-order inputs, and trace emission before transpose cleanup.
+/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
+/// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_groups_after_optional_reorder_for_positions(
+fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -488,38 +488,6 @@ fn build_x_stage_groups_after_optional_reorder_for_positions(
       x_stage_seed.x_groups,
     )
   dot_trace_groups("x-groups", x_groups)
-  x_groups
-}
-
-///|
-/// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
-/// fixed order before flat-label augmentation consumes updated x_groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  graphviz_flip : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_stage_seed : XPositionStageSeedData,
-) -> Map[Int, Array[String]] {
-  let x_groups =
-    build_x_stage_groups_after_optional_reorder_for_positions(
-      xpos_reorder_enabled,
-      use_vnodes_for_xpos,
-      allow_xpos_reorder,
-      graphviz_flip,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      x_stage_seed,
-    )
   maybe_apply_xpos_transpose_cleanup(
     xpos_reorder_enabled,
     use_vnodes_for_xpos,
@@ -634,20 +602,30 @@ fn build_xpos_computation_input(
 }
 
 ///|
-/// Graphviz parity: x-position solver call and trace emission consume
-/// preassembled xpos inputs without additional remapping.
+/// Graphviz parity: x-position stage must use identical xpos input assembly,
+/// solver invocation, and trace points as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_positions_from_xpos_input_for_positions(
+fn compute_x_positions_for_positions(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
   ordering : OrderingResult,
+  use_vnodes_for_xpos : Bool,
+  x_base_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
   x_cluster_keys : Map[String, String],
+  virtual_slack_edges : Array[ConstraintEdge],
   flat_label_edges : Array[ConstraintEdge],
-  xpos_input : XposComputationInput,
 ) -> Map[String, Double] {
+  let xpos_input =
+    build_xpos_computation_input(
+      use_vnodes_for_xpos,
+      x_base_sizes,
+      x_groups,
+      ordering,
+      virtual_slack_edges,
+    )
   let x_positions = compute_x_positions(
     graph,
     prep.nodes,
@@ -673,44 +651,6 @@ fn build_x_positions_from_xpos_input_for_positions(
   dot_trace("layout_dot: x positions computed")
   dot_trace_positions("xpos", x_positions)
   x_positions
-}
-
-///|
-/// Graphviz parity: x-position stage must use identical xpos input assembly,
-/// solver invocation, and trace points as Graphviz-aligned pipeline order.
-/// Do not change behavior without updating fixtures/tests.
-fn compute_x_positions_for_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_base_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  x_cluster_keys : Map[String, String],
-  virtual_slack_edges : Array[ConstraintEdge],
-  flat_label_edges : Array[ConstraintEdge],
-) -> Map[String, Double] {
-  let xpos_input =
-    build_xpos_computation_input(
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      ordering,
-      virtual_slack_edges,
-    )
-  build_x_positions_from_xpos_input_for_positions(
-    graph,
-    prep,
-    rank_data,
-    rank_heights,
-    ordering,
-    x_groups,
-    x_cluster_keys,
-    flat_label_edges,
-    xpos_input,
-  )
 }
 
 
