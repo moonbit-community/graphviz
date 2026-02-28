@@ -366,65 +366,6 @@ fn collect_noncluster_reorder_components(
 }
 
 ///|
-/// Graphviz parity: non-cluster rank reorder runs build_ranks permutation using
-/// Graphviz ND_out/ND_in neighbor ordering and current edge/materialized maps.
-/// Do not change behavior without updating fixtures/tests.
-fn run_noncluster_graphviz_rank_reorder(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  cluster_meta : ClusterMetadata,
-  edge_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
-    rank_keys,
-    groups,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    parents,
-    children,
-    cluster_meta.cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    edge_order,
-    order_node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    Map::new(),
-    cluster_meta.cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
-    graphviz_flip=graphviz_flip,
-  )
-}
-
-///|
 /// Graphviz parity: non-cluster reorder path seeds node order from GD_nlist,
 /// builds Graphviz-style ND_out/ND_in neighbor order, and runs rank reorder
 /// without cluster remapping.
@@ -472,30 +413,33 @@ fn run_noncluster_reorder_pass(
       edge_head,
       edges,
     )
-  let ordered_groups =
-    run_noncluster_graphviz_rank_reorder(
-      rank_keys,
-      groups,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      parents,
-      children,
-      cluster_meta,
-      edge_order,
-      order_node_order,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      graphviz_flip,
-    )
-  ordered_groups
+  reorder_rank_groups(
+    rank_keys,
+    groups,
+    order_edges,
+    order_edge_tail,
+    order_edge_head,
+    order_edge_tail_port_x,
+    order_edge_head_port_x,
+    order_edge_tail_port_order,
+    order_edge_head_port_order,
+    parents,
+    children,
+    cluster_meta.cluster_keys,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    edge_order,
+    order_node_order,
+    order_sizes,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    Map::new(),
+    cluster_meta.cluster_skeleton,
+    cluster_meta.flat_constraints,
+    graphviz_out_neighbors=graphviz_out_neighbors,
+    graphviz_in_neighbors=graphviz_in_neighbors,
+    graphviz_flip=graphviz_flip,
+  )
 }
