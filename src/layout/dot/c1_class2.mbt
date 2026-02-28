@@ -239,13 +239,32 @@ fn build_ordering_class2_data(
       skeleton_edge_creation,
       order_edge_creation,
     )
-  let (nlist_order, vnode_creation_order) =
-    build_nlist_order_and_vnode_creation_order(
+  // Graphviz parity: class2 creates cluster skeletons first, then interleaves
+  // real nodes with their edge vnodes in agfstnode order.
+  let (order_creation, vnode_creation_order) =
+    build_order_creation_with_vnodes(
       cluster_skeleton_creation,
       creation_order,
       vnode_creation_by_tail,
+    )
+  // Graphviz parity: decompose DFS starts from agfstnode (creation) order
+  // regardless of rankdir flip.
+  let nlist_tail_order =
+    if cluster_meta.has_clusters {
+      creation_order
+    } else {
+      order_creation
+    }
+  let nlist_order_raw =
+    @dot_shared.build_graphviz_nlist_order_from_edges(
+      nlist_tail_order,
+      order_creation,
       edge_creation_order,
       flat_rank_constraints,
+    )
+  let nlist_order =
+    adjust_nlist_order_for_cluster_flip(
+      nlist_order_raw,
       graphviz_flip,
       cluster_meta.has_clusters,
       cluster_meta.cluster_keys,
