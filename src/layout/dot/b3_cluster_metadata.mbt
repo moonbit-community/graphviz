@@ -231,36 +231,6 @@ fn apply_cluster_order_base_for_metadata(
 }
 
 ///|
-/// Graphviz parity: cluster order and parent map are collected from
-/// Graphviz cluster traversal before clustered ordering stages.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_order_and_parents_for_metadata(
-  graph : @cgraph.Graph,
-) -> (Array[String], Map[String, String?]) {
-  let cluster_order : Array[String] = []
-  collect_cluster_names_order(graph, cluster_order)
-  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
-  let cluster_parents : Map[String, String?] = Map::new()
-  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
-  (cluster_order, cluster_parents)
-}
-
-///|
-/// Graphviz parity: rank=same groups/order are collected once for clustered
-/// ordering constraints, matching Graphviz same-rank preprocessing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_rank_same_maps_for_metadata(
-  graph : @cgraph.Graph,
-) -> (Map[String, Int], Map[String, Int]) {
-  let rank_same_groups : Map[String, Int] = Map::new()
-  let rank_same_order : Map[String, Int] = Map::new()
-  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
-  (rank_same_groups, rank_same_order)
-}
-
-
-
-///|
 /// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
 /// plus same-rank edge constraints before clustered reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -328,9 +298,13 @@ fn compute_cluster_metadata(
       ranks,
       node_order,
     )
-  let (cluster_order, cluster_parents) = build_cluster_order_and_parents_for_metadata(
-    graph,
-  )
+  // Graphviz parity: cluster order and parent map are collected from
+  // Graphviz cluster traversal before clustered ordering stages.
+  let cluster_order : Array[String] = []
+  collect_cluster_names_order(graph, cluster_order)
+  let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
+  let cluster_parents : Map[String, String?] = Map::new()
+  @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   apply_cluster_order_base_for_metadata(
     nodes,
     cluster_keys,
@@ -344,8 +318,11 @@ fn compute_cluster_metadata(
   for node in nodes {
     intercluster_keys[node.name()] = node_local_cluster_key(node)
   }
-  let (rank_same_groups, rank_same_order) =
-    build_rank_same_maps_for_metadata(graph)
+  // Graphviz parity: rank=same groups/order are collected once for clustered
+  // ordering constraints, matching Graphviz same-rank preprocessing.
+  let rank_same_groups : Map[String, Int] = Map::new()
+  let rank_same_order : Map[String, Int] = Map::new()
+  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   let (flat_constraints, ordering_set) =
     build_flat_constraints_for_cluster_metadata(
       graph,
