@@ -3,28 +3,6 @@
 /// helpers isolated from clustered ordering branches.
 
 ///|
-/// Graphviz parity: non-cluster reorder seeds build_ranks node order from
-/// GD_nlist, then falls back to existing node order for missing nodes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_order_node_order(
-  nlist_order : Array[String],
-  node_order : Map[String, Int],
-) -> Map[String, Int] {
-  let order_node_order : Map[String, Int] = Map::new()
-  let mut order_idx = 0
-  for name in nlist_order {
-    order_node_order[name] = order_idx
-    order_idx = order_idx + 1
-  }
-  for name, idx in node_order {
-    if order_node_order.get(name) is None {
-      order_node_order[name] = idx
-    }
-  }
-  order_node_order
-}
-
-///|
 /// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
 /// edge_out_order and ND_in head order from node-ordered ND_out scans.
 /// Do not change behavior without updating fixtures/tests.
@@ -382,8 +360,19 @@ fn run_noncluster_reorder_pass(
   port_order_contrib : Map[String, Array[(String, Double)]],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let order_node_order =
-    build_noncluster_order_node_order(nlist_order, node_order)
+  // Graphviz parity: non-cluster reorder seeds build_ranks node order from
+  // GD_nlist, then falls back to existing node order for missing nodes.
+  let order_node_order : Map[String, Int] = Map::new()
+  let mut order_idx = 0
+  for name in nlist_order {
+    order_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
+  for name, idx in node_order {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
   let (parents, children) =
     build_edge_index_for_order(
       nodes,
