@@ -135,65 +135,6 @@ fn run_clustered_remincross_multi_rank(
       rem_ranks,
       rem_edges_out,
     )
-  run_remincross_reorder_and_collect_real_groups(
-    rem_rank_keys,
-    rem_groups,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-    rem_parents,
-    rem_children,
-    rem_cluster_keys,
-    dispatch_context.cluster_meta.rank_same_groups,
-    dispatch_context.cluster_meta.rank_same_order,
-    rem_edge_order,
-    rem_node_order,
-    rem_sizes,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    rem_flat_constraints,
-    dispatch_context.graphviz_flip,
-    dispatch_context.real_nodes,
-  )
-}
-
-///|
-/// Graphviz parity: ReMincross final reorder runs with startpass=2 using
-/// materialized fast-graph edges, then drops non-real nodes for final groups
-/// while preserving rank iteration and per-rank order.
-/// Do not change behavior without updating fixtures/tests.
-fn run_remincross_reorder_and_collect_real_groups(
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-  rem_edges_out : Array[@cgraph.Edge],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-  rem_edge_tail_port_x : Array[Double],
-  rem_edge_head_port_x : Array[Double],
-  rem_edge_tail_port_order : Array[Double],
-  rem_edge_head_port_order : Array[Double],
-  rem_parents : Map[String, Array[String]],
-  rem_children : Map[String, Array[String]],
-  rem_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  rem_edge_order : Map[String, Int],
-  rem_node_order : Map[String, Int],
-  rem_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  rem_flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  real_nodes : Map[String, Bool],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   // Graphviz parity: ReMincross clustered reorder executes mincross with
   // startpass=2 on rematerialized fast-graph edges and local flat constraints.
   capture_remincross_input_snapshot(
@@ -222,19 +163,19 @@ fn run_remincross_reorder_and_collect_real_groups(
       rem_parents,
       rem_children,
       rem_cluster_keys,
-      rank_same_groups,
-      rank_same_order,
+      dispatch_context.cluster_meta.rank_same_groups,
+      dispatch_context.cluster_meta.rank_same_order,
       rem_edge_order,
       rem_node_order,
       rem_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
       Map::new(),
       Map::new(),
       rem_flat_constraints,
-      graphviz_flip=graphviz_flip,
+      graphviz_flip=dispatch_context.graphviz_flip,
       // Graphviz parity: ReMincross counts parallel chain segments once
       // with summed xpenalty before startpass=2 transposition.
       coalesce_parallel_edges=true,
@@ -242,7 +183,7 @@ fn run_remincross_reorder_and_collect_real_groups(
       remincross_mode=true,
     )
   let rem_cleaned =
-    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, real_nodes)
+    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
   (rem_ordered, rem_cleaned)
 }
 
