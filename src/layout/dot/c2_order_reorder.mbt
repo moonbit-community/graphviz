@@ -97,49 +97,6 @@ fn build_order_reorder_context(
 }
 
 ///|
-/// Graphviz parity: Graphviz neighbor maps and flat constraints are derived
-/// before unconstrained-node seed-order overrides for build_ranks seeding.
-/// Do not change behavior without updating fixtures/tests.
-fn build_order_neighbors_and_flat_constraints(
-  order_nodes : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  edge_creation_order : Array[(String, String)],
-  cluster_meta : ClusterMetadata,
-  gdnlist_order : Array[String],
-  real_nodes : Map[String, Bool],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nodes : Array[@cgraph.Node],
-  order_node_order : Map[String, Int],
-) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Bool]) {
-  let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_graphviz_neighbor_maps(
-      order_nodes,
-      order_edges_by_tail,
-      edge_creation_order,
-    )
-  let order_flat_constraints : Map[String, Bool] = Map::new()
-  for key, value in cluster_meta.flat_constraints {
-    order_flat_constraints[key] = value
-  }
-  apply_unconstrained_order_node_overrides(
-    gdnlist_order,
-    real_nodes,
-    order_nodes,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    cluster_meta.rank_same_groups,
-    edge_tail,
-    edge_head,
-    nodes,
-    cluster_meta.intercluster_keys,
-    order_node_order,
-  )
-  (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints)
-}
-
-
-///|
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
@@ -194,19 +151,31 @@ fn build_materialized_order_edges_and_neighbors(
     order_ranks,
     real_nodes,
   )
-  let (graphviz_out_neighbors, graphviz_in_neighbors, order_flat_constraints) =
-    build_order_neighbors_and_flat_constraints(
+  let (graphviz_out_neighbors, graphviz_in_neighbors) =
+    build_graphviz_neighbor_maps(
       order_nodes,
       order_edges_by_tail,
       edge_creation_order,
-      cluster_meta,
-      gdnlist_order,
-      real_nodes,
-      edge_tail,
-      edge_head,
-      nodes,
-      order_node_order,
     )
+  let order_flat_constraints : Map[String, Bool] = Map::new()
+  for key, value in cluster_meta.flat_constraints {
+    order_flat_constraints[key] = value
+  }
+  // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
+  // before unconstrained-node seed-order overrides for build_ranks seeding.
+  apply_unconstrained_order_node_overrides(
+    gdnlist_order,
+    real_nodes,
+    order_nodes,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    cluster_meta.rank_same_groups,
+    edge_tail,
+    edge_head,
+    nodes,
+    cluster_meta.intercluster_keys,
+    order_node_order,
+  )
   {
     order_edges_out,
     order_edge_tail_out,
