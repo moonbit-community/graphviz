@@ -528,31 +528,6 @@ fn collect_cluster_nodes_for_flip(
 
 
 ///|
-/// Graphviz parity: cluster flip precomputes reversed per-cluster node lists
-/// and zeroed consumption indices before reconstructing adjusted nlist order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_reversed_nodes_and_index_for_flip(
-  cluster_nodes : Map[String, Array[String]],
-) -> (Map[String, Array[String]], Map[String, Int]) {
-  let cluster_reversed : Map[String, Array[String]] = Map::new()
-  let cluster_index : Map[String, Int] = Map::new()
-  for cluster, list in cluster_nodes {
-    // Graphviz parity: cluster flip uses explicit reverse traversal to
-    // construct per-cluster replacement lists in reverse local order.
-    let reversed : Array[String] = []
-    let mut idx = list.length()
-    while idx > 0 {
-      idx = idx - 1
-      reversed.push(list[idx])
-    }
-    cluster_reversed[cluster] = reversed
-    cluster_index[cluster] = 0
-  }
-  (cluster_reversed, cluster_index)
-}
-
-
-///|
 /// Graphviz parity: flipped nlist reconstruction preserves non-cluster names
 /// and replaces cluster names by sequential consumption from reversed buckets.
 /// Do not change behavior without updating fixtures/tests.
@@ -605,8 +580,22 @@ fn adjust_nlist_order_for_cluster_flip(
     nlist_order_raw,
     cluster_keys,
   )
-  let (cluster_reversed, cluster_index) =
-    build_cluster_reversed_nodes_and_index_for_flip(cluster_nodes)
+  // Graphviz parity: cluster flip precomputes reversed per-cluster node lists
+  // and zeroed consumption indices before reconstructing adjusted nlist order.
+  let cluster_reversed : Map[String, Array[String]] = Map::new()
+  let cluster_index : Map[String, Int] = Map::new()
+  for cluster, list in cluster_nodes {
+    // Graphviz parity: cluster flip uses explicit reverse traversal to
+    // construct per-cluster replacement lists in reverse local order.
+    let reversed : Array[String] = []
+    let mut idx = list.length()
+    while idx > 0 {
+      idx = idx - 1
+      reversed.push(list[idx])
+    }
+    cluster_reversed[cluster] = reversed
+    cluster_index[cluster] = 0
+  }
   build_adjusted_nlist_order_for_cluster_flip(
     nlist_order_raw,
     cluster_keys,
