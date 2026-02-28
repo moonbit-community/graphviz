@@ -242,10 +242,10 @@ fn build_ordering_root_and_unmapped_edge_chains(
 
 
 ///|
-/// Graphviz parity: class2 base edge-chain build follows agfstnode creation
-/// order and ND_out traversal before root/unmapped derivations.
+/// Graphviz parity: class2 builds ND_out edge chains in agfstnode order,
+/// then derives root/unmapped variants for clustered build_ranks passes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_base_edge_chains(
+fn build_ordering_class2_edge_chain_data(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -266,6 +266,9 @@ fn build_ordering_class2_base_edge_chains(
   Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   Map[String, Array[String]],
   Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  Array[(String, String)],
+  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) {
   // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
   let creation_order : Array[String] = []
@@ -299,68 +302,6 @@ fn build_ordering_class2_base_edge_chains(
       false,
       true,
       edges_by_tail,
-    )
-  (
-    creation_order,
-    edges_by_tail,
-    order_edges_by_tail,
-    vnode_creation_by_tail,
-    order_edge_creation,
-  )
-}
-
-
-///|
-/// Graphviz parity: class2 builds ND_out edge chains in agfstnode order,
-/// then derives root/unmapped variants for clustered build_ranks passes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_edge_chain_data(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  cluster_keys : Map[String, String],
-) -> (
-  Array[String],
-  Map[String, Array[Int]],
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  Map[String, Array[String]],
-  Array[(String, String)],
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  Array[(String, String)],
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) {
-  let (
-    creation_order,
-    edges_by_tail,
-    order_edges_by_tail,
-    vnode_creation_by_tail,
-    order_edge_creation,
-  ) =
-    build_ordering_class2_base_edge_chains(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_keys,
     )
   let (
     order_edges_by_tail_root,
