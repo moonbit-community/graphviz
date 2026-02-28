@@ -3,48 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-/// Graphviz parity: component-local node-position hints are passed to mincross
-/// only for nodes belonging to the active connected component.
-/// Do not change behavior without updating fixtures/tests.
-fn filter_node_double_map_for_component(
-  component_set : Map[String, Bool],
-  values : Map[String, Double],
-) -> Map[String, Double] {
-  let filtered : Map[String, Double] = Map::new()
-  for name, value in values {
-    if component_set.get(name) is Some(_) {
-      filtered[name] = value
-    }
-  }
-  filtered
-}
-
-///|
-/// Graphviz parity: component-local port-order contributor lists drop endpoints
-/// outside the active connected component before mincross.
-/// Do not change behavior without updating fixtures/tests.
-fn filter_node_contrib_map_for_component(
-  component_set : Map[String, Bool],
-  values : Map[String, Array[(String, Double)]],
-) -> Map[String, Array[(String, Double)]] {
-  let filtered : Map[String, Array[(String, Double)]] = Map::new()
-  for name, entries in values {
-    if component_set.get(name) is None {
-      continue
-    }
-    let keep : Array[(String, Double)] = []
-    for entry in entries {
-      let (other, weight) = entry
-      if component_set.get(other) is Some(_) {
-        keep.push((other, weight))
-      }
-    }
-    filtered[name] = keep
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -201,21 +159,37 @@ fn run_root_mincross_rank_reorder(
         component_set,
         graphviz_in_neighbors,
       )
-    let component_port_order_positions =
-      filter_node_double_map_for_component(
-        component_set,
-        port_order_positions,
-      )
-    let component_preferred_positions =
-      filter_node_double_map_for_component(
-        component_set,
-        preferred_positions,
-      )
-    let component_port_order_contrib =
-      filter_node_contrib_map_for_component(
-        component_set,
-        port_order_contrib,
-      )
+    // Graphviz parity: component-local node-position hints are passed to
+    // mincross only for nodes belonging to the active connected component.
+    let component_port_order_positions : Map[String, Double] = Map::new()
+    for name, value in port_order_positions {
+      if component_set.get(name) is Some(_) {
+        component_port_order_positions[name] = value
+      }
+    }
+    let component_preferred_positions : Map[String, Double] = Map::new()
+    for name, value in preferred_positions {
+      if component_set.get(name) is Some(_) {
+        component_preferred_positions[name] = value
+      }
+    }
+    // Graphviz parity: component-local port-order contributor lists drop
+    // endpoints outside the active connected component before mincross.
+    let component_port_order_contrib : Map[String, Array[(String, Double)]] =
+      Map::new()
+    for name, entries in port_order_contrib {
+      if component_set.get(name) is None {
+        continue
+      }
+      let keep : Array[(String, Double)] = []
+      for entry in entries {
+        let (other, weight) = entry
+        if component_set.get(other) is Some(_) {
+          keep.push((other, weight))
+        }
+      }
+      component_port_order_contrib[name] = keep
+    }
     let component_flat_constraints =
       filter_noncluster_flat_constraints_for_component(
         order_flat_constraints,
