@@ -133,32 +133,6 @@ fn build_order_groups_sizes_and_cluster_skeleton(
 }
 
 ///|
-/// Graphviz parity: local cluster node creation order follows node scan order
-/// per intercluster key, matching class2 fast-node insertion inputs.
-/// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_creation_order(
-  nodes : Array[@cgraph.Node],
-  intercluster_keys : Map[String, String],
-) -> Map[String, Array[String]] {
-  let local_creation : Map[String, Array[String]] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    let local_cluster = match intercluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
-    if local_cluster == "" {
-      continue
-    }
-    match local_creation.get(local_cluster) {
-      Some(list) => list.push(name)
-      None => local_creation[local_cluster] = [name]
-    }
-  }
-  local_creation
-}
-
-///|
 /// Graphviz parity: incoming-only unconstrained local nodes are reassigned by
 /// first incoming edge order while preserving their sorted order slots.
 /// Do not change behavior without updating fixtures/tests.
@@ -311,8 +285,21 @@ fn apply_unconstrained_order_node_overrides(
     }
     edge_idx = edge_idx + 1
   }
-  let local_creation =
-    build_local_cluster_creation_order(nodes, intercluster_keys)
+  let local_creation : Map[String, Array[String]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let local_cluster = match intercluster_keys.get(name) {
+      Some(value) => value
+      None => ""
+    }
+    if local_cluster == "" {
+      continue
+    }
+    match local_creation.get(local_cluster) {
+      Some(list) => list.push(name)
+      None => local_creation[local_cluster] = [name]
+    }
+  }
   reorder_incoming_only_unconstrained_local_nodes(
     local_creation,
     unconstrained_nodes,
