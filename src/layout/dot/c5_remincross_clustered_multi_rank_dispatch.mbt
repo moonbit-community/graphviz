@@ -72,7 +72,7 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context.real_nodes,
     )
   let (rem_parents, rem_children, rem_edge_order) =
-    build_clustered_remincross_edge_indices_for_reorder(
+    build_order_edge_indices_and_order(
       rem_nodes,
       rem_edge_tail_out,
       rem_edge_head_out,
