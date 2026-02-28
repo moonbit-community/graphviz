@@ -691,20 +691,16 @@ fn run_root_mincross_rank_reorder_pass(
   (ordered_mincross, mincross_nodes)
 }
 
-
 ///|
-/// Graphviz parity: root ReMincross stage first derives root/skeleton groups,
-/// then runs root rank-reorder pass before final seeded-group merge output.
+/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
+/// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_reorder_rank_reorder_phase(
+fn run_root_mincross_reorder(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   seeded_groups : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  vnode_order_keys_for_ordering : Map[String, Double],
+  order_rank_keys : Array[Int],
+  order_ranks : Map[String, Int],
   order_edges_out : Array[@cgraph.Edge],
   order_edge_tail_out : Array[String],
   order_edge_head_out : Array[String],
@@ -712,8 +708,10 @@ fn run_root_mincross_reorder_rank_reorder_phase(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  order_ranks : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
   cluster_meta : ClusterMetadata,
+  vnode_order_keys_for_ordering : Map[String, Double],
   order_node_order : Map[String, Int],
   order_sizes_out : Map[String, NodeSize],
   nodesep_pt : Double,
@@ -721,8 +719,12 @@ fn run_root_mincross_reorder_rank_reorder_phase(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
   order_flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]], Map[String, Bool]) {
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
+  // cluster-internal nodes are handled by cluster-local build_ranks passes.
   let order_groups_for_mincross_base =
     build_root_mincross_groups_with_trace(
       order_with_clusters,
@@ -762,71 +764,6 @@ fn run_root_mincross_reorder_rank_reorder_phase(
       order_flat_constraints,
       graphviz_out_neighbors,
       graphviz_in_neighbors,
-      graphviz_flip,
-    )
-  (order_groups_for_mincross, ordered_mincross, mincross_nodes)
-}
-
-///|
-/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
-/// then merges reordered root positions back into seeded build_ranks groups.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_reorder(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  seeded_groups : Map[Int, Array[String]],
-  order_rank_keys : Array[Int],
-  order_ranks : Map[String, Int],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_flip : Bool,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
-  // cluster-internal nodes are handled by cluster-local build_ranks passes.
-  let (order_groups_for_mincross, ordered_mincross, mincross_nodes) =
-    run_root_mincross_reorder_rank_reorder_phase(
-      order_with_clusters,
-      order_with_vnodes,
-      seeded_groups,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      graphviz_in_neighbors,
-      graphviz_out_neighbors,
-      vnode_order_keys_for_ordering,
-      order_edges_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      order_ranks,
-      cluster_meta,
-      order_node_order,
-      order_sizes_out,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      order_flat_constraints,
       graphviz_flip,
     )
   let ordered =
