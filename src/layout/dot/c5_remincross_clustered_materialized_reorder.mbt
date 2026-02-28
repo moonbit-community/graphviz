@@ -197,19 +197,21 @@ fn build_remincross_nlist_order(
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
-    if rem_seen.get(tail_name) is None {
-      rem_seen[tail_name] = true
-      rem_order_creation.push(tail_name)
-    }
+    append_order_creation_name_if_absent(
+      rem_order_creation,
+      rem_seen,
+      tail_name,
+    )
     let vnodes = match rem_vnode_creation.get(tail_name) {
       Some(list) => list
       None => []
     }
     for vnode in vnodes {
-      if rem_seen.get(vnode) is None {
-        rem_seen[vnode] = true
-        rem_order_creation.push(vnode)
-      }
+      append_order_creation_name_if_absent(
+        rem_order_creation,
+        rem_seen,
+        vnode,
+      )
     }
   }
   let rem_nlist_order =
@@ -238,10 +240,7 @@ fn build_remincross_nlist_order(
       seen[name] = true
     }
     for name in rem_order_creation {
-      if seen.get(name) is None {
-        rem_nlist_order.push(name)
-        seen[name] = true
-      }
+      append_order_creation_name_if_absent(rem_nlist_order, seen, name)
     }
   }
   rem_nlist_order
