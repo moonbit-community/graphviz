@@ -52,40 +52,6 @@ fn update_rank_pht_for_edge_label_midpoint(
 
 
 ///|
-/// Graphviz parity: initial per-rank half-heights come from the tallest
-/// real node (plus self-edge label inflation) in each rank.
-/// Do not change behavior without updating fixtures/tests.
-fn build_initial_rank_pht_for_rank_heights(
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  all_ranks : Array[Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-) -> Map[Int, Double] {
-  let rank_pht : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
-    rank_pht[rank] = 0.0
-  }
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let mut max_half = 0.0
-    for name in names {
-      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
-      if half_height > max_half {
-        max_half = half_height
-      }
-    }
-    rank_pht[rank] = max_half
-  }
-  rank_pht
-}
-
-
-
-///|
 /// Graphviz parity: long edges reserve vnode half-height across intermediate
 /// ranks before cluster rank height adjustments.
 /// Do not change behavior without updating fixtures/tests.
@@ -142,13 +108,26 @@ fn compute_rank_heights(
   ranksep_in : Double,
   has_edge_labels : Bool,
 ) -> RankHeights {
-  let rank_pht = build_initial_rank_pht_for_rank_heights(
-    groups,
-    rank_keys,
-    all_ranks,
-    sizes,
-    self_edge_labels,
-  )
+  // Graphviz parity: initial per-rank half-heights come from the tallest
+  // real node (plus self-edge label inflation) in each rank.
+  let rank_pht : Map[Int, Double] = Map::new()
+  for rank in all_ranks {
+    rank_pht[rank] = 0.0
+  }
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let mut max_half = 0.0
+    for name in names {
+      let half_height = node_half_height_pt(name, sizes, self_edge_labels)
+      if half_height > max_half {
+        max_half = half_height
+      }
+    }
+    rank_pht[rank] = max_half
+  }
   // Graphviz parity: edge labels can raise intermediate rank half-heights
   // for long edges before vnode rank expansion in rank.c/position.c flow.
   if has_edge_labels {
