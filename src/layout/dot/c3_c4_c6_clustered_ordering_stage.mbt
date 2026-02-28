@@ -216,45 +216,6 @@ fn build_clustered_ordering_pre_root_stage(
 
 
 ///|
-/// Graphviz parity: root+cluster build_ranks stage input payload is assembled
-/// from pre-root/reorder/materialized artifacts without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_and_cluster_build_ranks_stage_inputs_from_pre_root_payload(
-  pre_root_stage : OrderClusteredPreRootStageData,
-  reorder_context : OrderReorderContext,
-  materialized : OrderMaterializationData,
-  ordered_with_vnodes : Map[Int, Array[String]],
-) -> RootClusterBuildRanksStageInputs {
-  {
-    order_node_order: reorder_context.order_node_order,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups: pre_root_stage.order_groups,
-    order_ranks: reorder_context.order_ranks,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    order_flat_constraints: materialized.order_flat_constraints,
-    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-    order_edges_out: materialized.order_edges_out,
-    order_edge_tail_out: materialized.order_edge_tail_out,
-    order_edge_head_out: materialized.order_edge_head_out,
-    order_edge_tail_port_x: materialized.order_edge_tail_port_x,
-    order_edge_head_port_x: materialized.order_edge_head_port_x,
-    order_edge_tail_port_order: materialized.order_edge_tail_port_order,
-    order_edge_head_port_order: materialized.order_edge_head_port_order,
-    order_edges_out_unmapped: materialized.order_edges_out_unmapped,
-    order_edge_tail_out_unmapped: materialized.order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped: materialized.order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped: materialized.order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped: materialized.order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped: materialized.order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped: materialized.order_edge_head_port_order_unmapped,
-    ordered_with_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: root-phase tail override preserves first-seen tail order
 /// while suppressing duplicate tail names in root-edge replay sequences.
 /// Do not change behavior without updating fixtures/tests.
@@ -268,56 +229,6 @@ fn collect_unique_tail_order_from_edge_tail_sequence(
   }
   tail_order
 }
-
-///|
-/// Graphviz parity: pre-root payload forwarding into root+cluster build_ranks
-/// keeps reorder/materialized field mapping in Graphviz stage-call order.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  graph : @cgraph.Graph,
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_flip : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  ranks : Map[String, Int],
-  vnode_info : EdgeVnodeInfo,
-  pre_root_stage : OrderClusteredPreRootStageData,
-  reorder_context : OrderReorderContext,
-  materialized : OrderMaterializationData,
-) -> OrderRootClusterStageData {
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  let stage_inputs_base =
-    build_root_and_cluster_build_ranks_stage_inputs_from_pre_root_payload(
-      pre_root_stage,
-      reorder_context,
-      materialized,
-      ordered_with_vnodes,
-    )
-  let stage_inputs = stage_inputs_base
-  run_root_and_cluster_build_ranks_stage(
-    order_with_clusters,
-    order_with_vnodes,
-    graph,
-    cluster_meta,
-    vnode_order_keys_for_ordering,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    graphviz_flip,
-    flat_rank_constraints,
-    ranks,
-    vnode_info,
-    stage_inputs,
-  )
-}
-
 
 ///|
 /// Graphviz parity: clustered root phase reuses root-only reorder input
@@ -429,8 +340,36 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
   }
   let reorder_context = pre_root_stage.reorder_context
   let materialized = pre_root_stage.materialized
+  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
+  let stage_inputs : RootClusterBuildRanksStageInputs = {
+    order_node_order: reorder_context.order_node_order,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    order_rank_keys: reorder_context.order_rank_keys,
+    order_groups: pre_root_stage.order_groups,
+    order_ranks: reorder_context.order_ranks,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    order_flat_constraints: materialized.order_flat_constraints,
+    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+    order_edges_out: materialized.order_edges_out,
+    order_edge_tail_out: materialized.order_edge_tail_out,
+    order_edge_head_out: materialized.order_edge_head_out,
+    order_edge_tail_port_x: materialized.order_edge_tail_port_x,
+    order_edge_head_port_x: materialized.order_edge_head_port_x,
+    order_edge_tail_port_order: materialized.order_edge_tail_port_order,
+    order_edge_head_port_order: materialized.order_edge_head_port_order,
+    order_edges_out_unmapped: materialized.order_edges_out_unmapped,
+    order_edge_tail_out_unmapped: materialized.order_edge_tail_out_unmapped,
+    order_edge_head_out_unmapped: materialized.order_edge_head_out_unmapped,
+    order_edge_tail_port_x_unmapped: materialized.order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x_unmapped: materialized.order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order_unmapped: materialized.order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order_unmapped: materialized.order_edge_head_port_order_unmapped,
+    ordered_with_vnodes,
+  }
   let output =
-    run_root_and_cluster_build_ranks_stage_from_pre_root_payload(
+    run_root_and_cluster_build_ranks_stage(
       phase_context.reorder_setup.order_with_clusters,
       phase_context.reorder_setup.order_with_vnodes,
       phase_context.graph,
@@ -444,9 +383,7 @@ fn run_clustered_ordering_pre_root_and_root_stage_root_phase_from_context(
       phase_context.reorder_setup.flat_rank_constraints,
       phase_context.ranks,
       phase_context.runtime_context.vnode_info,
-      pre_root_stage,
-      reorder_context,
-      materialized,
+      stage_inputs,
     )
   root_mincross_groups_override.val = None
   output
