@@ -380,76 +380,6 @@ fn run_root_and_cluster_build_ranks_stage_from_pre_root(
 
 
 ///|
-/// Graphviz parity: finalize-stage inputs are read directly from pre-root/root
-/// stage payloads without reordering before clustered cleanup dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_finalize_stage_inputs_from_stages(
-  pre_root_stage : OrderClusteredPreRootStageData,
-  root_cluster_stage : OrderRootClusterStageData,
-) -> (
-  Array[Int],
-  Map[Int, Array[String]],
-  Map[String, String],
-  Map[String, Bool],
-  Map[String, NodeSize],
-  Map[Int, Array[String]],
-  Map[Int, Array[String]],
-  Array[String],
-) {
-  let reorder_context = pre_root_stage.reorder_context
-  (
-    reorder_context.order_rank_keys,
-    root_cluster_stage.order_groups_for_mincross,
-    pre_root_stage.order_cluster_keys,
-    pre_root_stage.order_cluster_skeleton,
-    pre_root_stage.order_sizes_out,
-    root_cluster_stage.ordered,
-    root_cluster_stage.ordered_with_vnodes,
-    reorder_context.creation_order,
-  )
-}
-
-
-///|
-/// Graphviz parity: clustered finalize-stage tuple output is unpacked into
-/// named fields before forwarding to final cluster-rank-order dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_finalize_stage_inputs_from_stage_inputs_output(
-  stage_inputs_output : (
-    Array[Int],
-    Map[Int, Array[String]],
-    Map[String, String],
-    Map[String, Bool],
-    Map[String, NodeSize],
-    Map[Int, Array[String]],
-    Map[Int, Array[String]],
-    Array[String],
-  ),
-) -> ClusterFinalizeStageInputs {
-  let (
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    order_sizes_out,
-    ordered,
-    ordered_with_vnodes,
-    creation_order,
-  ) = stage_inputs_output
-  {
-    order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    order_sizes_out,
-    ordered,
-    ordered_with_vnodes,
-    creation_order,
-  }
-}
-
-
-///|
 /// Graphviz parity: clustered finalize stage consumes root/pre-root outputs
 /// without argument reordering before final cluster ReMincross.
 /// Do not change behavior without updating fixtures/tests.
@@ -458,15 +388,17 @@ fn run_cluster_rank_order_and_finalize_stage_from_pre_root(
   pre_root_stage : OrderClusteredPreRootStageData,
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let stage_inputs_output =
-    build_cluster_finalize_stage_inputs_from_stages(
-      pre_root_stage,
-      root_cluster_stage,
-    )
-  let stage_inputs =
-    build_cluster_finalize_stage_inputs_from_stage_inputs_output(
-      stage_inputs_output,
-    )
+  let reorder_context = pre_root_stage.reorder_context
+  let stage_inputs : ClusterFinalizeStageInputs = {
+    order_rank_keys: reorder_context.order_rank_keys,
+    order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    ordered: root_cluster_stage.ordered,
+    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
+    creation_order: reorder_context.creation_order,
+  }
   run_cluster_rank_order_and_finalize_stage(
     dispatch_context,
     stage_inputs,

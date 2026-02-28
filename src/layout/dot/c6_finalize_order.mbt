@@ -134,21 +134,6 @@ fn run_finalize_order_groups_cluster_enabled_phase(
 
 
 ///|
-/// Graphviz parity: final cleanup pre-phase keeps only real nodes from ordered
-/// groups before cluster/local reorder and clustered ReMincross refinement.
-/// Do not change behavior without updating fixtures/tests.
-fn build_finalize_order_groups_cleaned_groups_phase(
-  order_rank_keys : Array[Int],
-  ordered : Map[Int, Array[String]],
-  real_nodes : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let cleaned_groups =
-    collect_real_only_rank_groups(order_rank_keys, ordered, real_nodes)
-  dot_trace_groups("cleaned_groups_pre", cleaned_groups)
-  cleaned_groups
-}
-
-///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -159,11 +144,12 @@ fn finalize_order_groups_with_cluster_remincross(
   ordered : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let cleaned_groups =
-    build_finalize_order_groups_cleaned_groups_phase(
+    collect_real_only_rank_groups(
       order_rank_keys,
       ordered,
       dispatch_context.real_nodes,
     )
+  dot_trace_groups("cleaned_groups_pre", cleaned_groups)
   if dispatch_context.order_with_clusters {
     run_finalize_order_groups_cluster_enabled_phase(
       dispatch_context,
