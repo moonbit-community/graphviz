@@ -557,43 +557,6 @@ type RootMincrossRankReorderInputsPhaseOutput = (
 )
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder input tuple preserves
-/// Graphviz field ordering across membership/edge/preferred-position outputs.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_rank_reorder_inputs_output(
-  order_rank_keys_for_mincross : Array[Int],
-  mincross_nodes : Map[String, Bool],
-  order_edges_out_mincross : Array[@cgraph.Edge],
-  order_edge_tail_out_mincross : Array[String],
-  order_edge_head_out_mincross : Array[String],
-  order_edge_tail_port_x_mincross : Array[Double],
-  order_edge_head_port_x_mincross : Array[Double],
-  order_edge_tail_port_order_mincross : Array[Double],
-  order_edge_head_port_order_mincross : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  edge_order : Map[String, Int],
-  preferred_positions : Map[String, Double],
-) -> RootMincrossRankReorderInputsPhaseOutput {
-  (
-    order_rank_keys_for_mincross,
-    mincross_nodes,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    edge_order,
-    preferred_positions,
-  )
-}
-
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder inputs derive root-node
 /// membership, filtered edge arrays, and preferred positions in pass order.
 /// Do not change behavior without updating fixtures/tests.
@@ -641,7 +604,7 @@ fn build_root_mincross_rank_reorder_inputs(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
     )
-  build_root_mincross_rank_reorder_inputs_output(
+  (
     order_rank_keys_for_mincross,
     mincross_nodes,
     order_edges_out_mincross,
@@ -656,144 +619,6 @@ fn build_root_mincross_rank_reorder_inputs(
     edge_order,
     preferred_positions,
   )
-}
-
-
-///|
-/// Graphviz parity: root ReMincross rank-reorder execution consumes prepared
-/// root-only inputs and applies Graphviz reorder_rank_groups semantics.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_rank_reorder_from_inputs(
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_edges_out_mincross : Array[@cgraph.Edge],
-  order_edge_tail_out_mincross : Array[String],
-  order_edge_head_out_mincross : Array[String],
-  order_edge_tail_port_x_mincross : Array[Double],
-  order_edge_head_port_x_mincross : Array[Double],
-  order_edge_tail_port_order_mincross : Array[Double],
-  order_edge_head_port_order_mincross : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  edge_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  preferred_positions : Map[String, Double],
-  order_cluster_skeleton : Map[String, Bool],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  run_root_mincross_rank_reorder(
-    order_rank_keys_for_mincross,
-    order_groups_for_mincross,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    order_cluster_keys,
-    cluster_meta,
-    edge_order,
-    order_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    preferred_positions,
-    order_cluster_skeleton,
-    order_flat_constraints,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    graphviz_flip,
-  )
-}
-
-
-///|
-/// Graphviz parity: root ReMincross rank-reorder execution phase forwards
-/// prepared root-only inputs into Graphviz reorder_rank_groups semantics.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_rank_reorder_pass_reorder_phase(
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_edges_out_mincross : Array[@cgraph.Edge],
-  order_edge_tail_out_mincross : Array[String],
-  order_edge_head_out_mincross : Array[String],
-  order_edge_tail_port_x_mincross : Array[Double],
-  order_edge_head_port_x_mincross : Array[Double],
-  order_edge_tail_port_order_mincross : Array[Double],
-  order_edge_head_port_order_mincross : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  edge_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  preferred_positions : Map[String, Double],
-  order_cluster_skeleton : Map[String, Bool],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  run_root_mincross_rank_reorder_from_inputs(
-    order_rank_keys_for_mincross,
-    order_groups_for_mincross,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    order_cluster_keys,
-    cluster_meta,
-    edge_order,
-    order_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    preferred_positions,
-    order_cluster_skeleton,
-    order_flat_constraints,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    graphviz_flip,
-  )
-}
-
-
-///|
-/// Graphviz parity: root ReMincross rank-reorder pass output preserves
-/// reordered-root groups plus mincross-node membership tuple ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_rank_reorder_pass_output(
-  ordered_mincross : Map[Int, Array[String]],
-  mincross_nodes : Map[String, Bool],
-) -> (Map[Int, Array[String]], Map[String, Bool]) {
-  (ordered_mincross, mincross_nodes)
 }
 
 
@@ -857,7 +682,7 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
     }
   }
   let ordered_mincross =
-    run_root_mincross_rank_reorder_pass_reorder_phase(
+    run_root_mincross_rank_reorder(
       order_rank_keys_for_mincross,
       order_groups_for_mincross,
       order_edges_out_mincross,
@@ -901,66 +726,8 @@ fn run_root_mincross_rank_reorder_pass_finalize_phase(
     order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  build_root_mincross_rank_reorder_pass_output(
-    ordered_mincross,
-    mincross_nodes,
-  )
+  (ordered_mincross, mincross_nodes)
 }
-
-///|
-/// Graphviz parity: root ReMincross rank-reorder finalize dispatch reads
-/// input-phase tuple and forwards values in Graphviz call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_rank_reorder_pass_finalize_phase_from_inputs_phase_output(
-  dispatch_context : RootMincrossRankReorderFinalizeDispatchContext,
-  inputs_phase_output : RootMincrossRankReorderInputsPhaseOutput,
-) -> (Map[Int, Array[String]], Map[String, Bool]) {
-  let (
-    order_rank_keys_for_mincross,
-    mincross_nodes,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    edge_order,
-    preferred_positions,
-  ) = inputs_phase_output
-  run_root_mincross_rank_reorder_pass_finalize_phase(
-    order_rank_keys_for_mincross,
-    dispatch_context.order_groups_for_mincross,
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    dispatch_context.order_cluster_keys,
-    dispatch_context.cluster_meta,
-    edge_order,
-    dispatch_context.order_node_order,
-    dispatch_context.order_sizes_out,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    preferred_positions,
-    dispatch_context.order_cluster_skeleton,
-    dispatch_context.order_flat_constraints,
-    dispatch_context.graphviz_out_neighbors,
-    dispatch_context.graphviz_in_neighbors,
-    dispatch_context.graphviz_flip,
-    mincross_nodes,
-  )
-}
-
 
 ///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
@@ -1022,9 +789,49 @@ fn run_root_mincross_rank_reorder_pass(
     graphviz_in_neighbors,
     graphviz_flip,
   }
-  run_root_mincross_rank_reorder_pass_finalize_phase_from_inputs_phase_output(
-    dispatch_context,
-    inputs_phase_output,
+  let (
+    order_rank_keys_for_mincross,
+    mincross_nodes,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    edge_order,
+    preferred_positions,
+  ) = inputs_phase_output
+  run_root_mincross_rank_reorder_pass_finalize_phase(
+    order_rank_keys_for_mincross,
+    dispatch_context.order_groups_for_mincross,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents,
+    children,
+    dispatch_context.order_cluster_keys,
+    dispatch_context.cluster_meta,
+    edge_order,
+    dispatch_context.order_node_order,
+    dispatch_context.order_sizes_out,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    preferred_positions,
+    dispatch_context.order_cluster_skeleton,
+    dispatch_context.order_flat_constraints,
+    dispatch_context.graphviz_out_neighbors,
+    dispatch_context.graphviz_in_neighbors,
+    dispatch_context.graphviz_flip,
+    mincross_nodes,
   )
 }
 
