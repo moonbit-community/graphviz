@@ -25,30 +25,6 @@ fn build_noncluster_order_node_order(
 }
 
 ///|
-/// Graphviz parity: non-cluster ND_in neighbor order follows ND_out traversal
-/// in graph node iteration order (agfstnode/agnxtnode), matching add_fast_edges.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_noncluster_in_neighbor_entries_from_out_order(
-  node_names : Array[String],
-  out_neighbors : Map[String, Array[String]],
-) -> Map[String, Array[String]] {
-  let in_entries : Map[String, Array[String]] = Map::new()
-  for tail in node_names {
-    let heads = match out_neighbors.get(tail) {
-      Some(list) => list
-      None => []
-    }
-    for head in heads {
-      match in_entries.get(head) {
-        Some(list) => list.push(tail)
-        None => in_entries[head] = [tail]
-      }
-    }
-  }
-  in_entries
-}
-
-///|
 /// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
 /// edge_out_order and ND_in head order from node-ordered ND_out scans.
 /// Do not change behavior without updating fixtures/tests.
@@ -78,11 +54,21 @@ fn build_noncluster_neighbor_maps(
     }
     graphviz_out_neighbors[name] = heads
   }
-  let in_entries =
-    collect_noncluster_in_neighbor_entries_from_out_order(
-      node_names,
-      graphviz_out_neighbors,
-    )
+  // Graphviz parity: non-cluster ND_in neighbor order follows ND_out traversal
+  // in graph node iteration order (agfstnode/agnxtnode), matching add_fast_edges.
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for tail in node_names {
+    let heads = match graphviz_out_neighbors.get(tail) {
+      Some(list) => list
+      None => []
+    }
+    for head in heads {
+      match in_entries.get(head) {
+        Some(list) => list.push(tail)
+        None => in_entries[head] = [tail]
+      }
+    }
+  }
   for head, entries in in_entries {
     graphviz_in_neighbors[head] = entries
   }
