@@ -356,64 +356,6 @@ fn apply_unconstrained_order_node_overrides(
 }
 
 ///|
-/// Graphviz parity: seeded build_ranks transpose phase runs only when crossing
-/// count remains positive after component-scoped initial ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_seeded_groups_transpose_phase(
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
-  order_ranks : Map[String, Int],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  flat_rank_constraints : Map[String, Bool],
-) -> Unit {
-  // Graphviz parity: build_ranks applies transpose if crossings remain;
-  // crossing count uses endpoint port x offsets for tie-correct ordering.
-  let seed_cross = count_crossings_port_aware(
-    seeded_groups,
-    order_ranks,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    edge_tail_port_x=order_edge_tail_port_x,
-    edge_head_port_x=order_edge_head_port_x,
-  )
-  if seed_cross > 0 {
-    let (edge_penalty, edge_in, edge_out) =
-      build_transpose_seed_edge_maps(
-        order_rank_keys,
-        seeded_groups,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_ranks,
-      )
-    let _ = transpose_rank_groups_port_tiebreak(
-      order_rank_keys,
-      seeded_groups,
-      order_ranks,
-      edge_in,
-      edge_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      edge_penalty,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      flat_rank_constraints,
-      false,
-      0,
-    )
-  }
-}
-
-///|
 /// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
 /// then applies transpose when crossings remain (port-offset aware tie-breaks).
 /// Do not change behavior without updating fixtures/tests.
@@ -455,19 +397,45 @@ fn build_seeded_groups_for_order_reorder(
     graphviz_out_neighbors=graphviz_out_neighbors,
     graphviz_in_neighbors=graphviz_in_neighbors,
   )
-  apply_seeded_groups_transpose_phase(
-    order_rank_keys,
+  // Graphviz parity: build_ranks applies transpose if crossings remain;
+  // crossing count uses endpoint port x offsets for tie-correct ordering.
+  let seed_cross = count_crossings_port_aware(
     seeded_groups,
     order_ranks,
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_cluster_keys,
-    order_cluster_skeleton,
-    flat_rank_constraints,
+    edge_tail_port_x=order_edge_tail_port_x,
+    edge_head_port_x=order_edge_head_port_x,
   )
+  if seed_cross > 0 {
+    let (edge_penalty, edge_in, edge_out) =
+      build_transpose_seed_edge_maps(
+        order_rank_keys,
+        seeded_groups,
+        order_edges_out,
+        order_edge_tail_out,
+        order_edge_head_out,
+        order_ranks,
+      )
+    let _ = transpose_rank_groups_port_tiebreak(
+      order_rank_keys,
+      seeded_groups,
+      order_ranks,
+      edge_in,
+      edge_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      edge_penalty,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      flat_rank_constraints,
+      false,
+      0,
+    )
+  }
   seeded_groups
 }
 
