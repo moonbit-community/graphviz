@@ -163,44 +163,59 @@ fn build_ordering_class2_data(
     order_edges_by_tail_root,
     root_edge_creation,
   ) =
-    build_root_order_edges_by_tail(
-      order_with_clusters,
-      order_edges_by_tail,
-      order_edge_creation,
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      cluster_meta.cluster_keys,
-      edges_by_tail,
-    )
+    // Graphviz parity: root order-edge chains use remapped cluster endpoints,
+    // while non-cluster graphs reuse the base order_edges_by_tail mapping.
+    if order_with_clusters {
+      let (root_edges_by_tail, _root_vnode_creation_by_tail, root_edge_creation) =
+        build_order_edges_by_tail(
+          creation_order,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x,
+          edge_head_port_x,
+          edge_tail_port_order,
+          edge_head_port_order,
+          ranks,
+          edge_vnodes,
+          order_with_vnodes,
+          cluster_meta.cluster_keys,
+          order_with_clusters,
+          true,
+          true,
+          edges_by_tail,
+        )
+      (root_edges_by_tail, root_edge_creation)
+    } else {
+      (order_edges_by_tail, order_edge_creation)
+    }
   // Graphviz parity: cluster-local build_ranks uses edge chains before
   // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
-    build_unmapped_order_edges_by_tail(
-      order_with_clusters,
-      order_edges_by_tail,
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      cluster_meta.cluster_keys,
-      edges_by_tail,
-    )
+    if order_with_clusters {
+      let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
+        build_order_edges_by_tail(
+          creation_order,
+          edges,
+          edge_tail,
+          edge_head,
+          edge_tail_port_x,
+          edge_head_port_x,
+          edge_tail_port_order,
+          edge_head_port_order,
+          ranks,
+          edge_vnodes,
+          order_with_vnodes,
+          cluster_meta.cluster_keys,
+          order_with_clusters,
+          false,
+          false,
+          edges_by_tail,
+        )
+      unmapped_edges_by_tail
+    } else {
+      order_edges_by_tail
+    }
   // Graphviz parity: class2 creation sequences build cluster skeleton edges,
   // then edge creation order and GD_nlist ordering in Graphviz pass order.
   let cluster_skeleton_creation =
