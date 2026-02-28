@@ -94,27 +94,6 @@ fn build_x_stage_seed_and_flat_label_data_for_positions(
 }
 
 ///|
-/// Graphviz parity: x-stage final bundle preserves mode/slack and flat-label
-/// augmentation field mapping without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_output_from_mode_and_seed_data_for_positions(
-  mode_slack_data : XStageModeAndSlackData,
-  seed_flat_label_data : XStageSeedAndFlatLabelData,
-) -> XStageWithFlatLabelData {
-  let flat_label_augmentation = seed_flat_label_data.flat_label_augmentation
-  {
-    use_vnodes_for_xpos: mode_slack_data.use_vnodes_for_xpos,
-    virtual_slack_edges: mode_slack_data.virtual_slack_edges,
-    x_base_sizes: seed_flat_label_data.x_base_sizes,
-    x_groups: flat_label_augmentation.x_groups,
-    x_cluster_keys: flat_label_augmentation.x_cluster_keys,
-    flat_label_edges: flat_label_augmentation.flat_label_edges,
-    flat_label_nodes: flat_label_augmentation.flat_label_nodes,
-    flat_label_edge_vnodes: flat_label_augmentation.flat_label_edge_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
 /// virtual-slack generation, reorder/transpose, and flat-label augmentation in
 /// Graphviz-aligned order and wiring.
@@ -142,8 +121,15 @@ fn build_x_stage_with_flat_labels_for_positions(
       ordering,
       mode_slack_data,
     )
-  build_x_stage_output_from_mode_and_seed_data_for_positions(
-    mode_slack_data,
-    seed_flat_label_data,
-  )
+  let flat_label_augmentation = seed_flat_label_data.flat_label_augmentation
+  {
+    use_vnodes_for_xpos: mode_slack_data.use_vnodes_for_xpos,
+    virtual_slack_edges: mode_slack_data.virtual_slack_edges,
+    x_base_sizes: seed_flat_label_data.x_base_sizes,
+    x_groups: flat_label_augmentation.x_groups,
+    x_cluster_keys: flat_label_augmentation.x_cluster_keys,
+    flat_label_edges: flat_label_augmentation.flat_label_edges,
+    flat_label_nodes: flat_label_augmentation.flat_label_nodes,
+    flat_label_edge_vnodes: flat_label_augmentation.flat_label_edge_vnodes,
+  }
 }
