@@ -488,12 +488,28 @@ fn build_remincross_cluster_tail_order_nonroot_names(
         rank_names.push(name)
       }
     }
-    let rank_ordered =
-      build_remincross_cluster_rank_ordered_names(
-        cluster,
-        rank_names,
-        heads_by_tail,
-      )
+    // Graphviz parity: clustered tail-order rank names remain forward when
+    // all names have no outgoing edges in non-root cluster blocks; otherwise
+    // replayed in reverse insertion order.
+    let rank_ordered : Array[String] = []
+    let mut all_without_outgoing = true
+    for name in rank_names {
+      if heads_by_tail.get(name) is Some(_) {
+        all_without_outgoing = false
+        break
+      }
+    }
+    if cluster != "" && all_without_outgoing {
+      for name in rank_names {
+        rank_ordered.push(name)
+      }
+    } else {
+      let mut name_idx = rank_names.length()
+      while name_idx > 0 {
+        name_idx = name_idx - 1
+        rank_ordered.push(rank_names[name_idx])
+      }
+    }
     let mut all_input_like = true
     for name in rank_ordered {
       if !name.has_prefix("i-") {
@@ -522,38 +538,6 @@ fn build_remincross_cluster_tail_order_nonroot_names(
     }
   }
   cluster_rank_ordered
-}
-
-///|
-/// Graphviz parity: clustered tail-order rank names remain forward when all
-/// names have no outgoing edges in non-root cluster blocks; otherwise replayed
-/// in reverse insertion order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_rank_ordered_names(
-  cluster : String,
-  rank_names : Array[String],
-  heads_by_tail : Map[String, Array[String]],
-) -> Array[String] {
-  let rank_ordered : Array[String] = []
-  let mut all_without_outgoing = true
-  for name in rank_names {
-    if heads_by_tail.get(name) is Some(_) {
-      all_without_outgoing = false
-      break
-    }
-  }
-  if cluster != "" && all_without_outgoing {
-    for name in rank_names {
-      rank_ordered.push(name)
-    }
-    return rank_ordered
-  }
-  let mut name_idx = rank_names.length()
-  while name_idx > 0 {
-    name_idx = name_idx - 1
-    rank_ordered.push(rank_names[name_idx])
-  }
-  rank_ordered
 }
 
 ///|
