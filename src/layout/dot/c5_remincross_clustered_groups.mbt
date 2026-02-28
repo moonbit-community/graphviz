@@ -423,18 +423,64 @@ fn build_remincross_groups_with_optional_vnodes(
       for name, key in intercluster_keys {
         remincross_cluster_keys[name] = key
       }
-      let intercluster_vnodes =
-        collect_intercluster_trailing_vnodes(
-          order_with_vnodes,
-          edges,
-          edge_tail,
-          edge_head,
-          remincross_cluster_keys,
-          cluster_parents,
-          cluster_min_rank,
-          cluster_max_rank,
-          edge_vnodes,
-        )
+      let intercluster_vnodes : Map[String, Bool] = Map::new()
+      let mut edge_idx = 0
+      for edge in edges {
+        let tail =
+          if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+            edge.tail().name()
+          }
+        let head =
+          if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+            edge.head().name()
+          }
+        let tail_cluster = match remincross_cluster_keys.get(tail) {
+          Some(value) => value
+          None => ""
+        }
+        let head_cluster = match remincross_cluster_keys.get(head) {
+          Some(value) => value
+          None => ""
+        }
+        let internal =
+          tail_cluster != "" && head_cluster != "" &&
+          edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+        let should_trail =
+          if internal || tail_cluster == head_cluster {
+            false
+          } else if tail_cluster == "" || head_cluster == "" {
+            false
+          } else {
+            let tail_min = match cluster_min_rank.get(tail_cluster) {
+              Some(value) => value
+              None => 0
+            }
+            let tail_max = match cluster_max_rank.get(tail_cluster) {
+              Some(value) => value
+              None => tail_min
+            }
+            let head_min = match cluster_min_rank.get(head_cluster) {
+              Some(value) => value
+              None => 0
+            }
+            let head_max = match cluster_max_rank.get(head_cluster) {
+              Some(value) => value
+              None => head_min
+            }
+            let overlap = tail_min <= head_max && head_min <= tail_max
+            !overlap
+          }
+        if should_trail {
+          let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+            Some(list) => list
+            None => []
+          }
+          for vnode in vnodes {
+            intercluster_vnodes[vnode] = true
+          }
+        }
+        edge_idx = edge_idx + 1
+      }
       let keys = build_vnode_order_keys(
         edges,
         edge_tail,
@@ -499,85 +545,6 @@ fn build_remincross_groups_with_optional_vnodes(
   } else {
     rem_base_groups
   }
-}
-
-///|
-/// Graphviz parity: ReMincross trailing vnode set marks intercluster edge
-/// vnodes whose endpoint cluster rank ranges do not overlap.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_intercluster_trailing_vnodes(
-  order_with_vnodes : Bool,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  cluster_keys : Map[String, String],
-  cluster_parents : Map[String, String?],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-) -> Map[String, Bool] {
-  let intercluster_vnodes : Map[String, Bool] = Map::new()
-  if !order_with_vnodes {
-    return intercluster_vnodes
-  }
-  let mut edge_idx = 0
-  for edge in edges {
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let tail_cluster = match cluster_keys.get(tail) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head) {
-      Some(value) => value
-      None => ""
-    }
-    let internal =
-      tail_cluster != "" && head_cluster != "" &&
-      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
-    let should_trail =
-      if internal || tail_cluster == head_cluster {
-        false
-      } else if tail_cluster == "" || head_cluster == "" {
-        false
-      } else {
-        let tail_min = match cluster_min_rank.get(tail_cluster) {
-          Some(value) => value
-          None => 0
-        }
-        let tail_max = match cluster_max_rank.get(tail_cluster) {
-          Some(value) => value
-          None => tail_min
-        }
-        let head_min = match cluster_min_rank.get(head_cluster) {
-          Some(value) => value
-          None => 0
-        }
-        let head_max = match cluster_max_rank.get(head_cluster) {
-          Some(value) => value
-          None => head_min
-        }
-        let overlap = tail_min <= head_max && head_min <= tail_max
-        !overlap
-      }
-    if should_trail {
-      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-        Some(list) => list
-        None => []
-      }
-      for vnode in vnodes {
-        intercluster_vnodes[vnode] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-  intercluster_vnodes
 }
 
 ///|
