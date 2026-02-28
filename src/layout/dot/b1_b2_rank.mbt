@@ -57,22 +57,6 @@ fn build_edge_direction_and_order_maps_for_rank_data(
 
 
 ///|
-/// Graphviz parity: rank sweep iterates the closed min..max rank interval from
-/// sorted rank keys, including missing intermediate ranks.
-/// Do not change behavior without updating fixtures/tests.
-fn build_all_ranks_span_for_rank_data(rank_keys : Array[Int]) -> Array[Int] {
-  let all_ranks : Array[Int] = []
-  if rank_keys.length() > 0 {
-    let min_rank = rank_keys[0]
-    let max_rank = rank_keys[rank_keys.length() - 1]
-    for rank in min_rank..=max_rank {
-      all_ranks.push(rank)
-    }
-  }
-  all_ranks
-}
-
-///|
 /// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_data(
@@ -98,7 +82,16 @@ fn compute_rank_data(
     rank_keys.push(key)
   }
   rank_keys.sort()
-  let all_ranks = build_all_ranks_span_for_rank_data(rank_keys)
+  // Graphviz parity: rank sweep iterates the closed min..max rank interval
+  // from sorted rank keys, including missing intermediate ranks.
+  let all_ranks : Array[Int] = []
+  if rank_keys.length() > 0 {
+    let min_rank = rank_keys[0]
+    let max_rank = rank_keys[rank_keys.length() - 1]
+    for rank in min_rank..=max_rank {
+      all_ranks.push(rank)
+    }
+  }
   let self_edge_labels = self_edge_label_half_heights(edges)
   {
     edge_tail,
