@@ -382,7 +382,7 @@ fn build_rank_groups_by_components(
       graphviz_in_neighbors=graphviz_in_neighbors,
     )
   }
-  merge_rank_groups_graphviz_components(
+  merge_rank_groups_components(
     rank_keys,
     groups,
     edge_tail,
@@ -958,7 +958,7 @@ fn append_rank_group_component_order_to_merged(
 /// Graphviz parity: merged per-rank order keeps first-seen occurrence globally
 /// so cluster rankleaders appear once across all ranks/components.
 /// Do not change behavior without updating fixtures/tests.
-fn dedup_rank_groups_graphviz_merged(
+fn dedup_rank_groups_merged(
   rank_keys : Array[Int],
   merged : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
@@ -984,7 +984,7 @@ fn dedup_rank_groups_graphviz_merged(
 /// Graphviz parity: per-component rank-group ordering preserves component-local
 /// neighbor filtering and merge order before final deduplication.
 /// Do not change behavior without updating fixtures/tests.
-fn merge_rank_groups_graphviz_components(
+fn merge_rank_groups_components(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -1031,5 +1031,5 @@ fn merge_rank_groups_graphviz_components(
       ordered_component,
     )
   }
-  dedup_rank_groups_graphviz_merged(rank_keys, merged)
+  dedup_rank_groups_merged(rank_keys, merged)
 }
