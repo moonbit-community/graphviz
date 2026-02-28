@@ -180,20 +180,12 @@ fn build_clustered_remincross_materialized_edges(
 }
 
 ///|
-/// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
-/// first-seen cluster sequence and replays each cluster block by rank-desc
-/// reverse-order before root-cluster nodes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_nlist_order(
+/// Graphviz parity: clustered ReMincross creation order starts from tail
+/// creation order and appends per-tail vnode sequences with stable dedupe.
+fn build_remincross_order_creation(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
-  rem_edge_creation : Array[(String, String)],
-  rem_ranks : Map[String, Int],
-  rem_cluster_keys : Map[String, String],
-  cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  // Graphviz parity: ReMincross creation order starts from tail creation
-  // order then appends each tail vnode sequence once (stable dedupe).
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
@@ -214,6 +206,27 @@ fn build_remincross_nlist_order(
       )
     }
   }
+  rem_order_creation
+}
+
+///|
+/// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
+/// first-seen cluster sequence and replays each cluster block by rank-desc
+/// reverse-order before root-cluster nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_nlist_order(
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+  rem_edge_creation : Array[(String, String)],
+  rem_ranks : Map[String, Int],
+  rem_cluster_keys : Map[String, String],
+  cluster_order_index : Map[String, Int],
+) -> Array[String] {
+  let rem_order_creation =
+    build_remincross_order_creation(
+      creation_order,
+      rem_vnode_creation,
+    )
   let rem_nlist_order =
     if cluster_order_index.length() <= 2 {
       // Graphviz parity: single-cluster/root-only remincross materialization
