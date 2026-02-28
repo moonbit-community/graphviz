@@ -243,54 +243,6 @@ fn merge_root_mincross_order_into_seeded_groups(
 }
 
 ///|
-/// Graphviz parity: root-vnode set for cluster root reorder includes vnodes on
-/// edges crossing cluster boundaries (same edge_vnode_key mapping as routing).
-/// Do not change behavior without updating fixtures/tests.
-fn collect_root_vnodes_for_cluster_reorder(
-  order_with_vnodes : Bool,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  cluster_keys : Map[String, String],
-  edge_vnodes : Map[String, Array[String]],
-) -> Map[String, Bool] {
-  let root_vnodes : Map[String, Bool] = Map::new()
-  if !order_with_vnodes {
-    return root_vnodes
-  }
-  let mut edge_idx = 0
-  for edge in edges {
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let tail_cluster = match cluster_keys.get(tail) {
-      Some(value) => value
-      None => ""
-    }
-    let head_cluster = match cluster_keys.get(head) {
-      Some(value) => value
-      None => ""
-    }
-    if tail_cluster != head_cluster {
-      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-        Some(list) => list
-        None => []
-      }
-      for vnode in vnodes {
-        root_vnodes[vnode] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-  root_vnodes
-}
-
-///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
@@ -443,15 +395,40 @@ fn build_root_groups_for_cluster_reorder(
   vnodes_by_rank : Map[Int, Array[String]],
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> Map[Int, Array[String]] {
-  let root_vnodes =
-    collect_root_vnodes_for_cluster_reorder(
-      order_with_vnodes,
-      edges,
-      edge_tail,
-      edge_head,
-      cluster_keys,
-      edge_vnodes,
-    )
+  // Graphviz parity: root-vnode set for cluster root reorder includes vnodes
+  // on edges crossing cluster boundaries (same edge_vnode_key mapping as routing).
+  let root_vnodes : Map[String, Bool] = Map::new()
+  if order_with_vnodes {
+    let mut edge_idx = 0
+    for edge in edges {
+      let tail =
+        if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+          edge.tail().name()
+        }
+      let head =
+        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+          edge.head().name()
+        }
+      let tail_cluster = match cluster_keys.get(tail) {
+        Some(value) => value
+        None => ""
+      }
+      let head_cluster = match cluster_keys.get(head) {
+        Some(value) => value
+        None => ""
+      }
+      if tail_cluster != head_cluster {
+        let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+          Some(list) => list
+          None => []
+        }
+        for vnode in vnodes {
+          root_vnodes[vnode] = true
+        }
+      }
+      edge_idx = edge_idx + 1
+    }
+  }
   // Graphviz parity: root cluster reorder base groups keep only root/skeleton
   // nodes, and include edge-vnodes only when flagged as root-vnodes.
   let root_groups_base : Map[Int, Array[String]] = Map::new()
