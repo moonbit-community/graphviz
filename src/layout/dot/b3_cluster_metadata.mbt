@@ -3,36 +3,6 @@
 /// and rank-same helper flow for clustered ordering inputs.
 
 ///|
-/// Graphviz parity: same-rank edges are promoted to flat ordering
-/// constraints for clustered metadata reorder paths.
-/// Do not change behavior without updating fixtures/tests.
-fn append_same_rank_flat_constraints_for_metadata(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  flat_constraints : Map[String, Bool],
-) -> Unit {
-  let mut edge_idx = 0
-  while edge_idx < edge_tail.length() {
-    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
-      edge_idx = edge_idx + 1
-      continue
-    }
-    let tail = edge_tail[edge_idx]
-    let head = edge_head[edge_idx]
-    if tail != head {
-      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
-      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
-      if tail_rank == head_rank {
-        flat_constraints["\{tail}|\{head}"] = true
-      }
-    }
-    edge_idx = edge_idx + 1
-  }
-}
-
-///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -232,13 +202,25 @@ fn compute_cluster_metadata(
     edge_head,
     cluster_keys,
   )
-  append_same_rank_flat_constraints_for_metadata(
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    flat_constraints,
-  )
+  // Graphviz parity: same-rank edges are promoted to flat ordering
+  // constraints for clustered metadata reorder paths.
+  let mut edge_idx = 0
+  while edge_idx < edge_tail.length() {
+    if edge_idx < edges.length() && !@dot_shared.edge_is_constraint(edges[edge_idx]) {
+      edge_idx = edge_idx + 1
+      continue
+    }
+    let tail = edge_tail[edge_idx]
+    let head = edge_head[edge_idx]
+    if tail != head {
+      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
+      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+      if tail_rank == head_rank {
+        flat_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    edge_idx = edge_idx + 1
+  }
   {
     has_clusters,
     cluster_keys,
