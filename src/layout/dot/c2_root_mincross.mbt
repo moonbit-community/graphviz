@@ -508,33 +508,6 @@ fn run_root_mincross_reorder(
       }
     }
   }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let debug_nodes : Array[String] = [
-      "front_end_jz",
-      "z_req1",
-      "z_req",
-      "4",
-      "15",
-      "19",
-      "29",
-      "18",
-      "20",
-      "21",
-      "28",
-      "41",
-    ]
-    for name in debug_nodes {
-      let inn = match graphviz_in_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
-      let out = match graphviz_out_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
-      println("order_neighbors \{name} in=\{inn} out=\{out}")
-    }
-  }
   let order_groups_for_mincross =
     match root_mincross_groups_override.val {
       Some(override_groups) => clone_rank_groups(override_groups)
