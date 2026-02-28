@@ -28,34 +28,6 @@ priv struct RankHeights {
 /// Stage B Phase B1/B2 split: rank-data scaffolding
 /// helpers for layered ordering preparation.
 
-/// Graphviz parity: edge direction/order comes from acyclic.c for both
-/// directed and undirected inputs (dot rank preprocessing orients edges first).
-/// Do not change behavior without updating fixtures/tests.
-fn build_edge_direction_and_order_maps_for_rank_data(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-) -> (
-  Array[String],
-  Array[String],
-  Array[Bool],
-  Map[String, Array[Int]],
-  Map[String, Array[Int]],
-) {
-  let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let edge_in_order : Map[String, Array[Int]] = Map::new()
-  let (tail, head, reversed, out_edges, in_edges) =
-    @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
-  for i in 0..<nodes.length() {
-    let name = nodes[i].name()
-    edge_out_order[name] = out_edges[i].copy()
-    edge_in_order[name] = in_edges[i].copy()
-  }
-  (tail, head, reversed, edge_out_order, edge_in_order)
-}
-
-
-
 ///|
 /// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -65,8 +37,15 @@ fn compute_rank_data(
   edges : Array[@cgraph.Edge],
   has_edge_labels : Bool,
 ) -> RankData {
-  let (edge_tail, edge_head, edge_reversed, edge_out_order, _edge_in_order) =
-    build_edge_direction_and_order_maps_for_rank_data(graph, nodes, edges)
+  // Graphviz parity: edge direction/order comes from acyclic.c for both
+  // directed and undirected inputs (dot rank preprocessing orients edges first).
+  let edge_out_order : Map[String, Array[Int]] = Map::new()
+  let (edge_tail, edge_head, edge_reversed, out_edges, _in_edges) =
+    @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
+  for i in 0..<nodes.length() {
+    let name = nodes[i].name()
+    edge_out_order[name] = out_edges[i].copy()
+  }
   let ranks = @rank_assignment.compute_ranks_directed(
     graph,
     nodes,
