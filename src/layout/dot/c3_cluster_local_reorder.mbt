@@ -864,14 +864,8 @@ fn build_cluster_local_node_set_for_reorder(
   order_with_vnodes : Bool,
 ) -> Map[String, Bool] {
   let cluster_nodes_set : Map[String, Bool] = Map::new()
-  let cluster_graph_node_order : Array[String] = []
   for node in cluster_graph.nodes() {
     cluster_nodes_set[node.name()] = true
-    cluster_graph_node_order.push(node.name())
-  }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let joined = cluster_graph_node_order.join(" ")
-    println("cluster_graph_nodes \{cluster}: \{joined}")
   }
   if order_with_vnodes {
     for vnode, vnode_cluster in vnode_clusters {
@@ -1008,40 +1002,6 @@ fn run_cluster_local_rank_reorder(
 ) -> (Bool, Map[Int, Array[String]]) {
   if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
     return (false, Map::new())
-  }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let mut edge_sample = ""
-    if cluster_edge_tail.length() > 0 {
-      edge_sample = "\{cluster_edge_tail[0]}->\{cluster_edge_head[0]}"
-    }
-    println(
-      "cluster_local_edges count=\{cluster_edges.length()} sample=\{edge_sample}",
-    )
-    let mut edge_idx = 0
-    while edge_idx < cluster_edges.length() {
-      let tail = cluster_edge_tail[edge_idx]
-      let head = cluster_edge_head[edge_idx]
-      let pen = @dot_shared.edge_xpenalty(cluster_edges[edge_idx])
-      println("cluster_local_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
-      edge_idx = edge_idx + 1
-    }
-    for rank in cluster_rank_keys {
-      let names = match cluster_groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
-        let out = match graphviz_out_neighbors.get(name) {
-          Some(list) => list
-          None => []
-        }
-        let inn = match graphviz_in_neighbors.get(name) {
-          Some(list) => list
-          None => []
-        }
-        println("cluster_local_neighbors \{name} in=\{inn} out=\{out}")
-      }
-    }
   }
   let seeded_by_vnode_interp =
     seed_cluster_local_groups_by_vnode_interpolation(
@@ -1229,15 +1189,6 @@ fn seed_cluster_local_groups_by_vnode_interpolation(
         }
       }
       items.push((key, idx, name))
-    }
-    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-      let parts : Array[String] = []
-      for item in items {
-        let (k, _i, n) = item
-        parts.push("\{n}=\{k}")
-      }
-      let joined = parts.join(" ")
-      println("cluster_local_seed_keys rank \{rank}: \{joined}")
     }
     items.sort_by((a, b) => {
       let (a_key, a_idx, _a_name) = a
@@ -1547,9 +1498,6 @@ fn reorder_single_cluster_rank_groups(
   empty_cluster_skeleton : Map[String, Bool],
   order_with_vnodes : Bool,
 ) -> Unit {
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    println("cluster_graph_edges \{cluster}: \{cluster_graph.edges().length()}")
-  }
   let (
     cluster_node_set,
     cluster_nodes,
