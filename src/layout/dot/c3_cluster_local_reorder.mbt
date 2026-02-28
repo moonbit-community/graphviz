@@ -542,75 +542,6 @@ fn collect_internal_cluster_edges_for_local_bundle(
 
 
 ///|
-/// Graphviz parity: cluster-local edge bundle keeps internal edges and,
-/// for shallow clusters, crossing edges needed by median anchors.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_edge_bundle(
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  cluster_node_set : Map[String, Bool],
-  include_external_crossing : Bool,
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-) {
-  let (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-  ) =
-    collect_internal_cluster_edges_for_local_bundle(
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_node_set,
-      include_external_crossing,
-    )
-  let (parents, children) = build_edge_index_for_order_names(
-    cluster_nodes,
-    cluster_edge_tail,
-    cluster_edge_head,
-    fixed_ranks,
-  )
-  let edge_order = collect_edge_order(cluster_edges)
-  (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    edge_order,
-  )
-}
-
-///|
 /// Graphviz parity: cluster-local ND_out/ND_in maps keep local tails/heads but
 /// preserve external anchors in AGSEQ order for startpass=2 medians.
 /// Do not change behavior without updating fixtures/tests.
@@ -1203,21 +1134,46 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
       "cluster_edge_bundle \{cluster} ranks=\{cluster_rank_keys.length()} nodes=\{cluster_nodes.length()} vnodes=\{vnode_count} fixed=\{fixed_rank_count} include_external=\{include_external_crossing} internal=\{internal} crossing=\{crossing}",
     )
   }
-  build_cluster_local_edge_bundle(
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    cluster_node_set,
-    include_external_crossing,
+  let (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+  ) =
+    collect_internal_cluster_edges_for_local_bundle(
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+      include_external_crossing,
+    )
+  let (parents, children) = build_edge_index_for_order_names(
     cluster_nodes,
+    cluster_edge_tail,
+    cluster_edge_head,
     fixed_ranks,
   )
+  let edge_order = collect_edge_order(cluster_edges)
+  (
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents,
+    children,
+    edge_order,
+  )
 }
-
 
 ///|
 /// Graphviz parity: cluster-local reorder run-input output tuple alias keeps
