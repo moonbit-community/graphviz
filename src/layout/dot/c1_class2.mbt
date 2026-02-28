@@ -273,8 +273,14 @@ fn build_ordering_class2_base_edge_chains(
     creation_order.push(node.name())
   }
   // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
-  let edges_by_tail =
-    build_edges_by_tail_from_out_order(nodes, edge_out_order)
+  let edges_by_tail : Map[String, Array[Int]] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    match edge_out_order.get(name) {
+      Some(list) => edges_by_tail[name] = list.copy()
+      None => edges_by_tail[name] = []
+    }
+  }
   let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
     build_order_edges_by_tail(
       creation_order,

@@ -3,25 +3,6 @@
 /// construction helpers for ordering-graph assembly.
 
 ///|
-/// Graphviz parity: order-graph tail buckets copy ND_out edge insertion order
-/// for each agfstnode name, with empty lists for nodes without out edges.
-/// Do not change behavior without updating fixtures/tests.
-fn build_edges_by_tail_from_out_order(
-  nodes : Array[@cgraph.Node],
-  edge_out_order : Map[String, Array[Int]],
-) -> Map[String, Array[Int]] {
-  let edges_by_tail : Map[String, Array[Int]] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    match edge_out_order.get(name) {
-      Some(list) => edges_by_tail[name] = list.copy()
-      None => edges_by_tail[name] = []
-    }
-  }
-  edges_by_tail
-}
-
-///|
 fn order_edge_merge_key(
   tail : String,
   head : String,
