@@ -352,20 +352,6 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
     rank_data.ranks,
     x_groups,
   )
-  let skip_multi_cluster_flip_reverse =
-    graphviz_flip && cluster_meta.cluster_order.length() > 1
-  if graphviz_flip && cluster_meta.cluster_order.length() > 1 &&
-    !skip_multi_cluster_flip_reverse {
-    for rank, names in x_groups {
-      let reversed : Array[String] = []
-      let mut idx = names.length()
-      while idx > 0 {
-        idx = idx - 1
-        reversed.push(names[idx])
-      }
-      x_groups[rank] = reversed
-    }
-  }
   x_groups
 }
 
