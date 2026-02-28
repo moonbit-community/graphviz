@@ -505,29 +505,6 @@ fn cluster_key_or_empty(
 }
 
 ///|
-/// Graphviz parity: cluster flip preprocessing first buckets nlist nodes by
-/// cluster key while skipping non-cluster entries.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_cluster_nodes_for_flip(
-  nlist_order_raw : Array[String],
-  cluster_keys : Map[String, String],
-) -> Map[String, Array[String]] {
-  let cluster_nodes : Map[String, Array[String]] = Map::new()
-  for name in nlist_order_raw {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    match cluster_nodes.get(cluster) {
-      Some(list) => list.push(name)
-      None => cluster_nodes[cluster] = [name]
-    }
-  }
-  cluster_nodes
-}
-
-
-///|
 /// Graphviz parity: flipped nlist reconstruction preserves non-cluster names
 /// and replaces cluster names by sequential consumption from reversed buckets.
 /// Do not change behavior without updating fixtures/tests.
@@ -576,10 +553,19 @@ fn adjust_nlist_order_for_cluster_flip(
   if !(graphviz_flip && has_clusters) {
     return nlist_order_raw
   }
-  let cluster_nodes = collect_cluster_nodes_for_flip(
-    nlist_order_raw,
-    cluster_keys,
-  )
+  // Graphviz parity: cluster flip preprocessing first buckets nlist nodes by
+  // cluster key while skipping non-cluster entries.
+  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  for name in nlist_order_raw {
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
+    }
+    match cluster_nodes.get(cluster) {
+      Some(list) => list.push(name)
+      None => cluster_nodes[cluster] = [name]
+    }
+  }
   // Graphviz parity: cluster flip precomputes reversed per-cluster node lists
   // and zeroed consumption indices before reconstructing adjusted nlist order.
   let cluster_reversed : Map[String, Array[String]] = Map::new()
