@@ -43,24 +43,6 @@ fn run_remincross_rank_reorder_startpass2(
     rem_edge_head_port_order,
     rem_cluster_keys,
   )
-  if @sys.get_env_var("DOT_TRACE_REMINCROSS_INPUT") is Some(_) {
-    for rank in rem_rank_keys {
-      let names = match rem_groups.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      let rank_joined = names.join(" ")
-      println("remincross_input_rank \{rank}: \{rank_joined}")
-    }
-    let mut idx = 0
-    while idx < rem_edges_out.length() {
-      let tail = rem_edge_tail_out[idx]
-      let head = rem_edge_head_out[idx]
-      let pen = @dot_shared.edge_xpenalty(rem_edges_out[idx])
-      println("remincross_input_edge \{idx}: \{tail} -> \{head} pen=\{pen}")
-      idx = idx + 1
-    }
-  }
   reorder_rank_groups(
     rem_rank_keys,
     rem_groups,
@@ -152,9 +134,6 @@ fn run_remincross_reorder_and_collect_real_groups(
       rem_flat_constraints,
       graphviz_flip,
     )
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    dot_trace_groups("remincross_ordered", rem_ordered)
-  }
   let rem_cleaned =
     collect_real_only_rank_groups(rem_rank_keys, rem_ordered, real_nodes)
   (rem_ordered, rem_cleaned)
