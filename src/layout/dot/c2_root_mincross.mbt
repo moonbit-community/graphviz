@@ -3,26 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-/// Graphviz parity: root ReMincross preferred positions use vnode ordering
-/// keys only when vnode ordering is enabled.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_preferred_positions(
-  order_with_vnodes : Bool,
-  vnode_order_keys_for_ordering : Map[String, Double],
-) -> Map[String, Double] {
-  if !order_with_vnodes {
-    return Map::new()
-  }
-  let filtered : Map[String, Double] = Map::new()
-  for name, value in vnode_order_keys_for_ordering {
-    if name.has_prefix(EDGE_VNODE_PREFIX) {
-      filtered[name] = value
-    }
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: root ReMincross final ordered groups merge reordered root
 /// nodes back into seeded groups only in clustered mode.
 /// Do not change behavior without updating fixtures/tests.
@@ -496,11 +476,18 @@ fn build_root_mincross_rank_reorder_inputs(
       order_nodes_for_mincross,
       order_ranks,
     )
-  let preferred_positions =
-    build_root_mincross_preferred_positions(
-      order_with_vnodes,
-      vnode_order_keys_for_ordering,
-    )
+  let preferred_positions : Map[String, Double] =
+    if order_with_vnodes {
+      let filtered : Map[String, Double] = Map::new()
+      for name, value in vnode_order_keys_for_ordering {
+        if name.has_prefix(EDGE_VNODE_PREFIX) {
+          filtered[name] = value
+        }
+      }
+      filtered
+    } else {
+      Map::new()
+    }
   (
     order_rank_keys_for_mincross,
     mincross_nodes,
