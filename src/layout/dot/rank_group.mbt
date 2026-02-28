@@ -350,7 +350,16 @@ fn build_rank_groups_by_components(
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Map[Int, Array[String]] {
-  let nodes = collect_rank_group_component_nodes(rank_keys, groups)
+  let nodes : Array[String] = []
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for name in names {
+      nodes.push(name)
+    }
+  }
   if nodes.length() == 0 {
     let empty : Map[Int, Array[String]] = Map::new()
     for rank in rank_keys {
@@ -401,23 +410,6 @@ fn build_rank_groups_by_components(
     graphviz_in_neighbors,
     components,
   )
-}
-///|
-fn collect_rank_group_component_nodes(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-) -> Array[String] {
-  let nodes : Array[String] = []
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for name in names {
-      nodes.push(name)
-    }
-  }
-  nodes
 }
 
 ///|
