@@ -99,59 +99,6 @@ fn trace_order_edges_with_ranks(
 }
 
 ///|
-/// Graphviz parity: mapped/unmapped order-edge materialization output keeps
-/// both edge-array bundles and sampled port arrays unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn materialize_mapped_and_unmapped_order_edges_output(
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_edges_out_unmapped : Array[@cgraph.Edge],
-  order_edge_tail_out_unmapped : Array[String],
-  order_edge_head_out_unmapped : Array[String],
-  order_edge_tail_port_x_unmapped : Array[Double],
-  order_edge_head_port_x_unmapped : Array[Double],
-  order_edge_tail_port_order_unmapped : Array[Double],
-  order_edge_head_port_order_unmapped : Array[Double],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  (
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  )
-}
-
-///|
 /// Graphviz parity: mapped order-edge arrays are materialized from GD_nlist
 /// tail order against the cluster-remapped order graph.
 /// Do not change behavior without updating fixtures/tests.
@@ -307,7 +254,7 @@ fn materialize_mapped_and_unmapped_order_edges(
       order_graph_unmapped,
       order_node_map_unmapped,
     )
-  materialize_mapped_and_unmapped_order_edges_output(
+  (
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
@@ -322,29 +269,6 @@ fn materialize_mapped_and_unmapped_order_edges(
     order_edge_head_port_x_unmapped,
     order_edge_tail_port_order_unmapped,
     order_edge_head_port_order_unmapped,
-  )
-}
-
-///|
-/// Graphviz parity: order-stage group/sizes output preserves order groups,
-/// order sizes, cluster keys, and skeleton flags without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_order_groups_sizes_and_cluster_skeleton_output(
-  order_groups : Map[Int, Array[String]],
-  order_sizes_out : Map[String, NodeSize],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> (
-  Map[Int, Array[String]],
-  Map[String, NodeSize],
-  Map[String, String],
-  Map[String, Bool],
-) {
-  (
-    order_groups,
-    order_sizes_out,
-    order_cluster_keys,
-    order_cluster_skeleton,
   )
 }
 
@@ -465,7 +389,7 @@ fn build_order_groups_sizes_and_cluster_skeleton(
     order_sizes_out,
     order_groups,
   )
-  build_order_groups_sizes_and_cluster_skeleton_output(
+  (
     order_groups,
     order_sizes_out,
     order_cluster_keys,
