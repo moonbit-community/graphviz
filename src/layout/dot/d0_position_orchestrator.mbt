@@ -794,61 +794,6 @@ fn build_y_positions_with_cluster_flip_adjustment(
 }
 
 ///|
-/// Graphviz parity: cluster bbox heights for y-positioning are computed only
-/// for clustered graphs and otherwise remain an empty map.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_bbox_heights_for_y_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  cluster_meta : ClusterMetadata,
-) -> Map[String, (Double, Double)] {
-  if cluster_meta.has_clusters {
-    compute_cluster_bbox_heights(
-      graph,
-      rank_data.ranks,
-      prep.sizes,
-      rank_data.self_edge_labels,
-      prep.rankdir,
-    )
-  } else {
-    Map::new()
-  }
-}
-
-///|
-/// Graphviz parity: y-position solve consumes rank-height maps after flat-label
-/// updates and uses identical rank sweep + cluster-flip adjustment wiring.
-/// Do not change behavior without updating fixtures/tests.
-fn build_y_positions_and_rank_y_for_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  flat_label_nodes : Map[String, FlatLabelNodeInfo],
-  cluster_bbox_heights : Map[String, (Double, Double)],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-) -> (Map[String, Double], Map[Int, Double]) {
-  let y_all_ranks =
-    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
-  build_y_positions_with_cluster_flip_adjustment(
-    graph,
-    prep.rankdir,
-    rank_data.rank_keys,
-    rank_data.groups,
-    rank_data.ranks,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-    rank_heights.ranksep_pt,
-    cluster_bbox_heights,
-    y_all_ranks,
-  )
-}
-
-///|
 /// Graphviz parity: y-position pre-solve in compute_positions keeps cluster bbox
 /// derivation, flat-label rank-height updates, and y-sweep wiring unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -865,12 +810,17 @@ fn build_y_position_data_for_positions(
   let rank_ht1 = rank_heights.rank_ht1
   let rank_ht2 = rank_heights.rank_ht2
   let cluster_bbox_heights =
-    build_cluster_bbox_heights_for_y_positions(
-      graph,
-      prep,
-      rank_data,
-      cluster_meta,
-    )
+    if cluster_meta.has_clusters {
+      compute_cluster_bbox_heights(
+        graph,
+        rank_data.ranks,
+        prep.sizes,
+        rank_data.self_edge_labels,
+        prep.rankdir,
+      )
+    } else {
+      Map::new()
+    }
   apply_flat_label_rank_height_updates(
     flat_label_nodes,
     ordering.vnode_info.vnode_sizes,
@@ -878,17 +828,21 @@ fn build_y_position_data_for_positions(
     rank_ht1,
     rank_ht2,
   )
+  let y_all_ranks =
+    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
   let (y_positions, rank_y) =
-    build_y_positions_and_rank_y_for_positions(
+    build_y_positions_with_cluster_flip_adjustment(
       graph,
-      prep,
-      rank_data,
-      rank_heights,
-      flat_label_nodes,
-      cluster_bbox_heights,
+      prep.rankdir,
+      rank_data.rank_keys,
+      rank_data.groups,
+      rank_data.ranks,
       rank_pht,
       rank_ht1,
       rank_ht2,
+      rank_heights.ranksep_pt,
+      cluster_bbox_heights,
+      y_all_ranks,
     )
   { y_positions, rank_y, cluster_bbox_heights }
 }
