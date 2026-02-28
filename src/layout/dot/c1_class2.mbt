@@ -417,7 +417,7 @@ fn build_ordering_class2_skeleton_and_edge_creation_sequences(
       order_edges_by_tail_root,
     )
   let edge_creation_order =
-    build_edge_creation_order(
+    merge_edge_creation_sequences(
       skeleton_edge_creation,
       order_edge_creation,
     )

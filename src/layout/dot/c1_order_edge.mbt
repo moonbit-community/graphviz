@@ -773,20 +773,6 @@ fn merge_edge_creation_sequences(
 }
 
 ///|
-/// Graphviz parity: edge creation order feeds ND_in AGSEQ capture with cluster
-/// skeleton links preceding regular order_edge_creation links.
-/// Do not change behavior without updating fixtures/tests.
-fn build_edge_creation_order(
-  skeleton_edge_creation : Array[(String, String)],
-  order_edge_creation : Array[(String, String)],
-) -> Array[(String, String)] {
-  merge_edge_creation_sequences(
-    skeleton_edge_creation,
-    order_edge_creation,
-  )
-}
-
-///|
 /// Graphviz parity: class2 flat-rank preprocessing treats unknown node ranks
 /// as 0 when evaluating same-rank non-self edge constraints.
 /// Do not change behavior without updating fixtures/tests.

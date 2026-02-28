@@ -1482,7 +1482,6 @@ type ClusterLocalReorderRunInputsOutput = (
 )
 
 ///|
-///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
