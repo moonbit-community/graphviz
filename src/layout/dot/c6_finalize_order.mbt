@@ -8,7 +8,14 @@
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_rank_order_and_finalize_stage(
   dispatch_context : ClusterFinalizePassDispatchContext,
-  stage_inputs : ClusterFinalizeStageInputs,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_sizes_out : Map[String, NodeSize],
+  ordered : Map[Int, Array[String]],
+  ordered_with_vnodes : Map[Int, Array[String]],
+  creation_order : Array[String],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let cluster_rank_order =
     build_cluster_rank_order_for_cluster_reorder(
@@ -20,10 +27,10 @@ fn run_cluster_rank_order_and_finalize_stage(
       dispatch_context.edge_head,
       dispatch_context.nlist_order,
       dispatch_context.ranks,
-      stage_inputs.order_rank_keys,
-      stage_inputs.order_groups_for_mincross,
-      stage_inputs.order_cluster_keys,
-      stage_inputs.order_cluster_skeleton,
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
       dispatch_context.order_edges_by_tail_root,
       dispatch_context.skeleton_edge_creation,
       dispatch_context.root_edge_creation,
@@ -32,7 +39,7 @@ fn run_cluster_rank_order_and_finalize_stage(
       dispatch_context.vnode_info,
       dispatch_context.vnode_order_keys_for_ordering,
       dispatch_context.real_nodes,
-      stage_inputs.order_sizes_out,
+      order_sizes_out,
       dispatch_context.nodesep_pt,
       dispatch_context.has_edge_labels,
       dispatch_context.port_order_positions,
@@ -44,7 +51,7 @@ fn run_cluster_rank_order_and_finalize_stage(
     cluster_rank_order,
     cluster_meta: dispatch_context.cluster_meta,
     local_cluster_order: dispatch_context.local_cluster_order,
-    ordered_with_vnodes: stage_inputs.ordered_with_vnodes,
+    ordered_with_vnodes,
     graph: dispatch_context.graph,
     edges: dispatch_context.edges,
     edge_tail: dispatch_context.edge_tail,
@@ -56,7 +63,7 @@ fn run_cluster_rank_order_and_finalize_stage(
     edge_head_port_order: dispatch_context.edge_head_port_order,
     ranks: dispatch_context.ranks,
     flat_rank_constraints: dispatch_context.flat_rank_constraints,
-    creation_order: stage_inputs.creation_order,
+    creation_order,
     edges_by_tail: dispatch_context.edges_by_tail,
     vnode_info: dispatch_context.vnode_info,
     order_sizes: dispatch_context.order_sizes,
@@ -70,8 +77,8 @@ fn run_cluster_rank_order_and_finalize_stage(
   }
   finalize_order_groups_with_cluster_remincross(
     finalize_dispatch_context,
-    stage_inputs.order_rank_keys,
-    stage_inputs.ordered,
+    order_rank_keys,
+    ordered,
   )
 }
 

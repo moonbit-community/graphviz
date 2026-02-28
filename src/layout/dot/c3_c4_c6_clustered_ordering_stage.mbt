@@ -321,20 +321,17 @@ fn run_clustered_ordering_finalize_phase(
   root_cluster_stage : OrderRootClusterStageData,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let reorder_context = pre_root_stage.reorder_context
-  let stage_inputs : ClusterFinalizeStageInputs = {
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    ordered: root_cluster_stage.ordered,
-    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-    creation_order: reorder_context.creation_order,
-  }
   let (next_ordered_with_vnodes, final_groups) =
     run_cluster_rank_order_and_finalize_stage(
       dispatch_context,
-      stage_inputs,
+      reorder_context.order_rank_keys,
+      root_cluster_stage.order_groups_for_mincross,
+      pre_root_stage.order_cluster_keys,
+      pre_root_stage.order_cluster_skeleton,
+      pre_root_stage.order_sizes_out,
+      root_cluster_stage.ordered,
+      root_cluster_stage.ordered_with_vnodes,
+      reorder_context.creation_order,
     )
   remincross_root_tail_order_override_snapshot.val = None
   (final_groups, next_ordered_with_vnodes)

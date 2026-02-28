@@ -10,21 +10,6 @@ priv struct OrderRootClusterStageData {
 }
 
 ///|
-/// Graphviz parity: clustered finalize-stage input payload keeps rank/group,
-/// cluster keys/skeleton, order sizes, and vnode ordering fields unchanged.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterFinalizeStageInputs {
-  order_rank_keys : Array[Int]
-  order_groups_for_mincross : Map[Int, Array[String]]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  order_sizes_out : Map[String, NodeSize]
-  ordered : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
-  creation_order : Array[String]
-}
-
-///|
 /// Graphviz parity: finalize-pass dispatch context keeps clustered finalize
 /// runtime payload ordering unchanged across cluster-rank/ReMincross phases.
 /// Do not change behavior without updating fixtures/tests.
