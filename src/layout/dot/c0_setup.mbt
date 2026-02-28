@@ -102,29 +102,6 @@ priv struct OrderingDispatchSetup {
 /// and dispatch preparation helpers.
 
 ///|
-/// Graphviz parity: ordering base-context output object maps precomputed node,
-/// cluster, vnode, and rank-same artifacts without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_base_context_output(
-  real_nodes : Map[String, Bool],
-  edge_cluster_keys : Map[String, String],
-  vnode_info : EdgeVnodeInfo,
-  port_edge_nodes : Map[String, Bool],
-  local_cluster_order : Map[String, Int],
-  rank_same_constraints : Map[String, Bool],
-) -> OrderingBaseContext {
-  {
-    real_nodes,
-    edge_cluster_keys,
-    vnode_info,
-    port_edge_nodes,
-    local_cluster_order,
-    rank_same_constraints,
-  }
-}
-
-
-///|
 /// Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
 /// ownership, vnode chains, and local cluster/port constraints before class2.
 /// Do not change behavior without updating fixtures/tests.
@@ -177,31 +154,13 @@ fn build_ordering_base_context(
     port_edge_nodes,
     ranks,
   )
-  build_ordering_base_context_output(
+  {
     real_nodes,
     edge_cluster_keys,
     vnode_info,
     port_edge_nodes,
     local_cluster_order,
     rank_same_constraints,
-  )
-}
-
-///|
-/// Graphviz parity: ordering runtime output object maps base-context fields and
-/// vnode-count derivation without additional transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context_output(
-  base_context : OrderingBaseContext,
-) -> OrderingRuntimeContext {
-  {
-    real_nodes: base_context.real_nodes,
-    edge_cluster_keys: base_context.edge_cluster_keys,
-    vnode_info: base_context.vnode_info,
-    port_edge_nodes: base_context.port_edge_nodes,
-    local_cluster_order: base_context.local_cluster_order,
-    rank_same_constraints: base_context.rank_same_constraints,
-    vnode_count: base_context.vnode_info.vnode_ranks.length(),
   }
 }
 
@@ -236,7 +195,15 @@ fn build_ordering_runtime_context(
       rankdir,
       cluster_meta,
     )
-  build_ordering_runtime_context_output(base_context)
+  {
+    real_nodes: base_context.real_nodes,
+    edge_cluster_keys: base_context.edge_cluster_keys,
+    vnode_info: base_context.vnode_info,
+    port_edge_nodes: base_context.port_edge_nodes,
+    local_cluster_order: base_context.local_cluster_order,
+    rank_same_constraints: base_context.rank_same_constraints,
+    vnode_count: base_context.vnode_info.vnode_ranks.length(),
+  }
 }
 
 ///|
@@ -293,35 +260,6 @@ fn build_ordering_runtime_context_with_tail_constraints(
   )
   runtime_context
 }
-
-///|
-/// Graphviz parity: reorder-setup output object maps precomputed flags,
-/// constraints, class2 payload, and vnode-order keys without extra transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_reorder_setup_output(
-  ordering_groups_base : Map[Int, Array[String]],
-  base_order_index : Map[String, Int],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  graphviz_flip : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  class2_data : OrderingClass2Data,
-  gdnlist_order : Array[String],
-  vnode_order_keys_for_ordering : Map[String, Double],
-) -> OrderingReorderSetup {
-  {
-    ordering_groups_base,
-    base_order_index,
-    order_with_vnodes,
-    order_with_clusters,
-    graphviz_flip,
-    flat_rank_constraints,
-    class2_data,
-    gdnlist_order,
-    vnode_order_keys_for_ordering,
-  }
-}
-
 
 ///|
 fn use_lr_multi_cluster_creation_order_mode(
@@ -505,7 +443,7 @@ fn build_ordering_reorder_setup(
       context.edge_tail_port_order,
       context.edge_head_port_order,
     )
-  build_ordering_reorder_setup_output(
+  {
     ordering_groups_base,
     base_order_index,
     order_with_vnodes,
@@ -515,24 +453,6 @@ fn build_ordering_reorder_setup(
     class2_data,
     gdnlist_order,
     vnode_order_keys_for_ordering,
-  )
-}
-
-///|
-/// Graphviz parity: dispatch-setup output object maps edge-port data with
-/// reorder/class2-derived traversal orders without extra transforms.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_setup_output(
-  edge_port_data : OrderingEdgePortData,
-  reorder_setup : OrderingReorderSetup,
-) -> OrderingDispatchSetup {
-  let class2_data = reorder_setup.class2_data
-  {
-    edge_port_data,
-    reorder_setup,
-    nlist_order: class2_data.nlist_order,
-    vnode_creation_order: class2_data.vnode_creation_order,
-    gdnlist_order: reorder_setup.gdnlist_order,
   }
 }
 
@@ -573,6 +493,12 @@ fn build_ordering_dispatch_setup(
   }
   let reorder_setup =
     build_ordering_reorder_setup(reorder_setup_context)
-  build_ordering_dispatch_setup_output(edge_port_data, reorder_setup)
+  let class2_data = reorder_setup.class2_data
+  {
+    edge_port_data,
+    reorder_setup,
+    nlist_order: class2_data.nlist_order,
+    vnode_creation_order: class2_data.vnode_creation_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
+  }
 }
-
