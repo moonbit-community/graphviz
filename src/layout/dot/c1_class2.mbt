@@ -218,13 +218,43 @@ fn build_ordering_class2_data(
     }
   // Graphviz parity: class2 creation sequences build cluster skeleton edges,
   // then edge creation order and GD_nlist ordering in Graphviz pass order.
-  let cluster_skeleton_creation =
-    build_cluster_skeleton_creation(
-      order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-    )
+  // Graphviz parity: cluster skeleton creation follows cluster_order first,
+  // then remaining cluster_min_rank iteration order.
+  let cluster_skeleton_creation : Array[String] = []
+  if order_with_clusters {
+    let cluster_seen : Map[String, Bool] = Map::new()
+    for cluster in cluster_meta.cluster_order {
+      match cluster_meta.cluster_min_rank.get(cluster) {
+        Some(min_rank) => {
+          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+            Some(value) => value
+            None => min_rank
+          }
+          for rank in min_rank..=max_rank {
+            cluster_skeleton_creation.push(
+              cluster_skeleton_name_for_rank(cluster, rank),
+            )
+          }
+          cluster_seen[cluster] = true
+        }
+        None => ()
+      }
+    }
+    for cluster, min_rank in cluster_meta.cluster_min_rank {
+      if cluster_seen.get(cluster) is Some(_) {
+        continue
+      }
+      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+        Some(value) => value
+        None => min_rank
+      }
+      for rank in min_rank..=max_rank {
+        cluster_skeleton_creation.push(
+          cluster_skeleton_name_for_rank(cluster, rank),
+        )
+      }
+    }
+  }
   let skeleton_edge_creation =
     build_skeleton_edge_creation_for_order_graph(
       order_with_clusters,
