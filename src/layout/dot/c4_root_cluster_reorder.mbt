@@ -694,16 +694,6 @@ fn build_root_cluster_reorder_edge_bundle(
     )
     root_port_idx = root_port_idx + 1
   }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let mut edge_idx = 0
-    while edge_idx < root_edges_out.length() {
-      let tail = root_edge_tail_out[edge_idx]
-      let head = root_edge_head_out[edge_idx]
-      let pen = @dot_shared.edge_xpenalty(root_edges_out[edge_idx])
-      println("root_edge \{edge_idx}: \{tail} -> \{head} pen=\{pen}")
-      edge_idx = edge_idx + 1
-    }
-  }
   let (root_parents, root_children, root_edge_order) =
     build_order_edge_indices_and_order(
       root_nodes,
@@ -976,38 +966,6 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_node_map,
       root_groups,
     )
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let root_nlist_joined = root_nlist_order.join(" ")
-    println("root_nlist_order \{root_nlist_joined}")
-    let pairs : Array[(Int, String)] = []
-    for name, idx in root_node_order {
-      pairs.push((idx, name))
-    }
-    if pairs.length() > 1 {
-      pairs.sort_by((a, b) => {
-        let (ai, an) = a
-        let (bi, bn) = b
-        if ai < bi {
-          -1
-        } else if ai > bi {
-          1
-        } else if an < bn {
-          -1
-        } else if an > bn {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    let ordered_labels : Array[String] = []
-    for pair in pairs {
-      let (idx, name) = pair
-      ordered_labels.push("\{name}=\{idx}")
-    }
-    let root_node_order_joined = ordered_labels.join(" ")
-    println("root_node_order \{root_node_order_joined}")
-  }
   let (
     root_edges_out,
     root_edge_tail_out,
@@ -1249,21 +1207,6 @@ fn apply_root_rank_groups_override(
                 None => attached_by_skeleton[skel] = [name]
               }
             None => ()
-          }
-        }
-        if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-          let joined = rank_names.join(" ")
-          println("root_override rank \{rank} names \{joined}")
-          for name in rank_names {
-            let cluster = cluster_key_or_empty(cluster_keys, name)
-            let skel = match cluster_key_from_skeleton_name(name) {
-              Some(value) => value
-              None => ""
-            }
-            println("root_override node \{name} cluster=\{cluster} skel=\{skel}")
-          }
-          for skel, attached in attached_by_skeleton {
-            println("root_override attach \{skel} -> \{attached}")
           }
         }
         let next_names : Array[String] = []
