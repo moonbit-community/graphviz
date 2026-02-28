@@ -437,7 +437,7 @@ fn build_seeded_groups_for_order_reorder(
   // cluster-expanded flat constraints.
   let seed_pass =
     if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
-  let seeded_groups = build_rank_groups_graphviz_components(
+  let seeded_groups = build_rank_groups_by_components(
     order_rank_keys,
     order_groups,
     order_edge_tail_out,

@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn build_rank_groups_graphviz(
+fn build_rank_groups_by_neighbors(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -335,7 +335,7 @@ fn build_rank_groups(
 ///|
 /// Graphviz parity: decompose/build_ranks operate per connected component.
 /// Do not change behavior without updating fixtures/tests.
-fn build_rank_groups_graphviz_components(
+fn build_rank_groups_by_components(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -354,7 +354,7 @@ fn build_rank_groups_graphviz_components(
   if nodes.length() == 0 {
     return build_empty_rank_group_map(rank_keys)
   }
-  let components = discover_rank_group_components_graphviz(
+  let components = discover_rank_group_components(
     nodes,
     edge_tail,
     edge_head,
@@ -367,7 +367,7 @@ fn build_rank_groups_graphviz_components(
     graphviz_in_neighbors=graphviz_in_neighbors,
   )
   if components.length() <= 1 {
-    return build_rank_groups_graphviz(
+    return build_rank_groups_by_neighbors(
       rank_keys,
       groups,
       edge_tail,
@@ -663,7 +663,7 @@ fn build_rank_group_component_flat_constraint_neighbors(
 /// Graphviz parity: prepare decompose inputs with Graphviz-compatible node
 /// ordering, edge neighborhoods, flat constraints, and cluster rankleaders.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_rank_group_component_discovery_graphviz(
+fn prepare_rank_group_component_discovery(
   nodes : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -714,7 +714,7 @@ fn prepare_rank_group_component_discovery_graphviz(
 /// Graphviz parity: component walk follows decompose-style DFS over flat and
 /// edge neighborhoods, then closes each component over cluster rankleaders.
 /// Do not change behavior without updating fixtures/tests.
-fn discover_rank_group_components_from_neighbors_graphviz(
+fn discover_rank_group_components_from_neighbors(
   nodes : Array[String],
   ordered_nodes : Array[String],
   cluster_keys : Map[String, String],
@@ -822,7 +822,7 @@ fn discover_rank_group_components_from_neighbors_graphviz(
 /// Graphviz parity: component discovery follows Graphviz's decompose-style DFS
 /// over edge and flat-constraint neighborhoods with cluster rankleader closure.
 /// Do not change behavior without updating fixtures/tests.
-fn discover_rank_group_components_graphviz(
+fn discover_rank_group_components(
   nodes : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -834,7 +834,7 @@ fn discover_rank_group_components_graphviz(
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Array[Array[String]] {
-  let prepared = prepare_rank_group_component_discovery_graphviz(
+  let prepared = prepare_rank_group_component_discovery(
     nodes,
     edge_tail,
     edge_head,
@@ -846,7 +846,7 @@ fn discover_rank_group_components_graphviz(
     graphviz_out_neighbors,
     graphviz_in_neighbors,
   )
-  discover_rank_group_components_from_neighbors_graphviz(
+  discover_rank_group_components_from_neighbors(
     nodes,
     prepared.ordered_nodes,
     cluster_keys,
@@ -1011,7 +1011,7 @@ fn merge_rank_groups_graphviz_components(
       graphviz_in_neighbors,
       component,
     )
-    let ordered_component = build_rank_groups_graphviz(
+    let ordered_component = build_rank_groups_by_neighbors(
       rank_keys,
       prepared.component_groups,
       edge_tail,
