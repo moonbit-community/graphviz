@@ -133,93 +133,6 @@ fn build_order_groups_sizes_and_cluster_skeleton(
 }
 
 ///|
-/// Graphviz parity: incoming-only unconstrained local nodes are reassigned by
-/// first incoming edge order while preserving their sorted order slots.
-/// Do not change behavior without updating fixtures/tests.
-fn reorder_incoming_only_unconstrained_local_nodes(
-  local_creation : Map[String, Array[String]],
-  unconstrained_nodes : Map[String, Bool],
-  rank_same_groups : Map[String, Int],
-  node_has_out : Map[String, Bool],
-  node_has_in : Map[String, Bool],
-  first_in_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-) -> Unit {
-  for _cluster, names in local_creation {
-    let unconstrained_local : Array[String] = []
-    for name in names {
-      if unconstrained_nodes.get(name) is Some(_) &&
-        rank_same_groups.get(name) is None &&
-        node_has_out.get(name) is None &&
-        node_has_in.get(name) is Some(_) {
-        unconstrained_local.push(name)
-      }
-    }
-    if unconstrained_local.length() <= 1 {
-      continue
-    }
-    let desired = unconstrained_local.copy()
-    if desired.length() > 1 {
-      let local_index : Map[String, Int] = Map::new()
-      for idx, name in unconstrained_local {
-        local_index[name] = idx
-      }
-      desired.sort_by((a, b) => {
-        let a_in = match first_in_order.get(a) {
-          Some(value) => value
-          None => 0x7fffffff
-        }
-        let b_in = match first_in_order.get(b) {
-          Some(value) => value
-          None => 0x7fffffff
-        }
-        if a_in < b_in {
-          -1
-        } else if a_in > b_in {
-          1
-        } else {
-          let a_idx = match local_index.get(a) {
-            Some(value) => value
-            None => 0
-          }
-          let b_idx = match local_index.get(b) {
-            Some(value) => value
-            None => 0
-          }
-          if a_idx < b_idx {
-            -1
-          } else if a_idx > b_idx {
-            1
-          } else {
-            0
-          }
-        }
-      })
-    }
-    let orders : Array[Int] = []
-    let mut all_present = true
-    for name in unconstrained_local {
-      match order_node_order.get(name) {
-        Some(value) => orders.push(value)
-        None => {
-          all_present = false
-          break
-        }
-      }
-    }
-    if !all_present || orders.length() != desired.length() {
-      continue
-    }
-    orders.sort()
-    let mut idx = 0
-    while idx < desired.length() && idx < orders.length() {
-      order_node_order[desired[idx]] = orders[idx]
-      idx = idx + 1
-    }
-  }
-}
-
-///|
 /// Graphviz parity: unconstrained real nodes keep GD_nlist seed order, with
 /// incoming-only local-cluster nodes reversed to match fast_node head-insert
 /// behavior before build_ranks seeding.
@@ -300,15 +213,78 @@ fn apply_unconstrained_order_node_overrides(
       None => local_creation[local_cluster] = [name]
     }
   }
-  reorder_incoming_only_unconstrained_local_nodes(
-    local_creation,
-    unconstrained_nodes,
-    rank_same_groups,
-    node_has_out,
-    node_has_in,
-    first_in_order,
-    order_node_order,
-  )
+  for _cluster, names in local_creation {
+    let unconstrained_local : Array[String] = []
+    for name in names {
+      if unconstrained_nodes.get(name) is Some(_) &&
+        rank_same_groups.get(name) is None &&
+        node_has_out.get(name) is None &&
+        node_has_in.get(name) is Some(_) {
+        unconstrained_local.push(name)
+      }
+    }
+    if unconstrained_local.length() <= 1 {
+      continue
+    }
+    let desired = unconstrained_local.copy()
+    if desired.length() > 1 {
+      let local_index : Map[String, Int] = Map::new()
+      for idx, name in unconstrained_local {
+        local_index[name] = idx
+      }
+      desired.sort_by((a, b) => {
+        let a_in = match first_in_order.get(a) {
+          Some(value) => value
+          None => 0x7fffffff
+        }
+        let b_in = match first_in_order.get(b) {
+          Some(value) => value
+          None => 0x7fffffff
+        }
+        if a_in < b_in {
+          -1
+        } else if a_in > b_in {
+          1
+        } else {
+          let a_idx = match local_index.get(a) {
+            Some(value) => value
+            None => 0
+          }
+          let b_idx = match local_index.get(b) {
+            Some(value) => value
+            None => 0
+          }
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else {
+            0
+          }
+        }
+      })
+    }
+    let orders : Array[Int] = []
+    let mut all_present = true
+    for name in unconstrained_local {
+      match order_node_order.get(name) {
+        Some(value) => orders.push(value)
+        None => {
+          all_present = false
+          break
+        }
+      }
+    }
+    if !all_present || orders.length() != desired.length() {
+      continue
+    }
+    orders.sort()
+    let mut idx = 0
+    while idx < desired.length() && idx < orders.length() {
+      order_node_order[desired[idx]] = orders[idx]
+      idx = idx + 1
+    }
+  }
 }
 
 ///|
