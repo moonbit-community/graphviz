@@ -190,7 +190,7 @@ pub fn layout_neato(
   let scale_factor = 72.0 / scale_value
   let rankdir = graph_rankdir(active_graph)
   let record_orientation = record_layout_orientation(rankdir)
-  let nodes = ordered_nodes(active_graph)
+  let nodes = active_graph.nodes()
   let node_count = nodes.length()
   let sizes : Map[String, NodeSize] = Map::new()
   let indices : Map[String, Int] = Map::new()

@@ -364,7 +364,7 @@ pub fn layout_neato_noop(
   let record_orientation = record_layout_orientation(rankdir)
   let positions : Map[String, @geom.Point] = Map::new()
   let nodes_out : Array[DotLayoutNode] = []
-  for node in ordered_nodes(active_graph) {
+  for node in active_graph.nodes() {
     let pos_value = match node.get_attr("pos") {
       Some(value) => value
       None =>

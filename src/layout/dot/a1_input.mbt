@@ -334,7 +334,7 @@ fn prepare_layout_inputs(
   let (nodesep_in, ranksep_in) =
     resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
   let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
-  let nodes = ordered_nodes(graph)
+  let nodes = graph.nodes()
   let edges = graph.edges()
   dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
   let (has_dotted_edges, has_port_edges) =
