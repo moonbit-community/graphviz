@@ -4559,7 +4559,7 @@ fn remap_edge_layout_edge(
 /// Graphviz parity: duplicate regular-edge spline slots are assigned in
 /// pair order after routing, but only within one-direction parallel classes.
 /// Do not change behavior without updating fixtures/tests.
-fn remap_parallel_edge_layouts_for_graphviz(
+fn remap_parallel_edge_layouts(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
@@ -4948,7 +4948,7 @@ fn maybe_build_self_edge_layout(
 }
 
 ///|
-fn collect_regular_parallel_groups_for_graphviz(
+fn collect_regular_parallel_groups(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Array[@cgraph.Edge]] {
@@ -5071,7 +5071,7 @@ fn route_edges(
   let recover_edge_id_by_key =
     recover_edge_selection_for_regular_edges(ordered_edges, base_cache)
   let regular_parallel_groups =
-    collect_regular_parallel_groups_for_graphviz(ordered_edges, base_cache)
+    collect_regular_parallel_groups(ordered_edges, base_cache)
   let recover_edge_id_for_routing : Map[String, Int] = Map::new()
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id
@@ -5205,6 +5205,6 @@ fn route_edges(
       edges_out_by_id[group_edge_id] = group_layout
     }
   }
-  remap_parallel_edge_layouts_for_graphviz(edges, ranks, edges_out_by_id)
+  remap_parallel_edge_layouts(edges, ranks, edges_out_by_id)
   collect_edges_in_input_order(edges, edges_out_by_id)
 }
