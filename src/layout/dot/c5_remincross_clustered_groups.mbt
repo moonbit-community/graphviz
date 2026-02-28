@@ -188,6 +188,26 @@ fn run_clustered_remincross_multi_rank(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross edge endpoint reads prefer oriented
+/// edge_tail/edge_head arrays and fall back to edge object endpoints.
+fn remincross_edge_endpoints_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (String, String) {
+  let tail =
+    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head =
+    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  (tail, head)
+}
+
+///|
 /// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
@@ -231,14 +251,8 @@ fn build_remincross_reorder_inputs(
         edge_idx = edge_idx + 1
         continue
       }
-      let tail =
-        if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-          edge.tail().name()
-        }
-      let head =
-        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-          edge.head().name()
-        }
+      let (tail, head) =
+        remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
       let tail_cluster = cluster_key_or_empty(cluster_meta.intercluster_keys, tail)
       let head_cluster = cluster_key_or_empty(cluster_meta.intercluster_keys, head)
       // Graphviz parity: mark_lowclusters assigns virtual nodes to the
@@ -311,14 +325,8 @@ fn build_remincross_groups_with_optional_vnodes(
       let intercluster_vnodes : Map[String, Bool] = Map::new()
       let mut edge_idx = 0
       for edge in edges {
-        let tail =
-          if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-            edge.tail().name()
-          }
-        let head =
-          if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-            edge.head().name()
-          }
+        let (tail, head) =
+          remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
         let tail_cluster = match remincross_cluster_keys.get(tail) {
           Some(value) => value
           None => ""
