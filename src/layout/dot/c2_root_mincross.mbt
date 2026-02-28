@@ -29,40 +29,6 @@ fn filter_noncluster_neighbor_map_for_component(
 }
 
 ///|
-/// Graphviz parity: component-local flat constraints are forwarded to mincross
-/// only when both endpoints belong to the current connected component.
-/// Do not change behavior without updating fixtures/tests.
-fn filter_noncluster_flat_constraints_for_component(
-  flat_constraints : Map[String, Bool],
-  component_set : Map[String, Bool],
-) -> Map[String, Bool] {
-  let filtered : Map[String, Bool] = Map::new()
-  for key, enabled in flat_constraints {
-    if !enabled {
-      continue
-    }
-    match key.find("|") {
-      Some(pos) => {
-        let len = key.length()
-        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-        let head =
-          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-            ""
-          }
-        if tail == "" || head == "" {
-          continue
-        }
-        if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
-          filtered[key] = true
-        }
-      }
-      None => ()
-    }
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
@@ -445,11 +411,31 @@ fn run_root_mincross_rank_reorder(
       }
       component_port_order_contrib[name] = keep
     }
-    let component_flat_constraints =
-      filter_noncluster_flat_constraints_for_component(
-        order_flat_constraints,
-        component_set,
-      )
+    // Graphviz parity: component-local flat constraints are forwarded to
+    // mincross only when both endpoints belong to the active component.
+    let component_flat_constraints : Map[String, Bool] = Map::new()
+    for key, enabled in order_flat_constraints {
+      if !enabled {
+        continue
+      }
+      match key.find("|") {
+        Some(pos) => {
+          let len = key.length()
+          let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+          let head =
+            if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+              ""
+            }
+          if tail == "" || head == "" {
+            continue
+          }
+          if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
+            component_flat_constraints[key] = true
+          }
+        }
+        None => ()
+      }
+    }
     let ordered_component =
       reorder_rank_groups(
         order_rank_keys_for_mincross,
