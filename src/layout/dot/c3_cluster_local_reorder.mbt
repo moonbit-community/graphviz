@@ -817,30 +817,6 @@ fn build_cluster_local_reorder_run_inputs(
     } else {
       true
     }
-  if @sys.get_env_var("DOT_DEBUG_CLUSTER_EDGE_BUNDLE") is Some(_) {
-    let mut fixed_rank_count = 0
-    for name in cluster_nodes {
-      if fixed_ranks.get(name) is Some(_) {
-        fixed_rank_count = fixed_rank_count + 1
-      }
-    }
-    let mut internal = 0
-    let mut crossing = 0
-    for i in 0..<order_edges.length() {
-      let tail = order_edge_tail[i]
-      let head = order_edge_head[i]
-      let tail_in = cluster_node_set.get(tail) is Some(_)
-      let head_in = cluster_node_set.get(head) is Some(_)
-      if tail_in && head_in {
-        internal = internal + 1
-      } else if tail_in || head_in {
-        crossing = crossing + 1
-      }
-    }
-    println(
-      "cluster_edge_bundle \{cluster} ranks=\{cluster_rank_keys.length()} nodes=\{cluster_nodes.length()} vnodes=\{vnode_count} fixed=\{fixed_rank_count} include_external=\{include_external_crossing} internal=\{internal} crossing=\{crossing}",
-    )
-  }
   let (
     cluster_edges,
     cluster_edge_tail,
