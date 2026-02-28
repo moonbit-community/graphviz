@@ -2,11 +2,6 @@
 /// Stage C Phase C5 split: remincross snapshot
 /// helpers for focused ReMincross responsibilities.
 
-fn should_capture_ordering_inputs() -> Bool {
-  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
-}
-
-///|
 fn should_capture_ordering_fixture_mode() -> Bool {
   @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_)
 }
@@ -124,7 +119,7 @@ fn capture_root_mincross_input_snapshot(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
 ) -> Unit {
-  if !should_capture_ordering_inputs() {
+  if @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is None {
     return
   }
   let edges =
@@ -175,7 +170,7 @@ fn capture_remincross_input_snapshot(
   edge_head_port_order : Array[Double],
   cluster_keys : Map[String, String],
 ) -> Unit {
-  if !should_capture_ordering_inputs() {
+  if @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is None {
     return
   }
   let snapshot_cluster_keys : Map[String, String] = Map::new()
