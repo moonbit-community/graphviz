@@ -3,41 +3,6 @@
 /// and rank-same helper flow for clustered ordering inputs.
 
 ///|
-/// Graphviz parity: cluster subgraph node order follows GD_nlist traversal
-/// direction and rankdir flip behavior from dotgen cluster ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn assign_cluster_node_order_for_metadata(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  node_order : Map[String, Int],
-  graphviz_flip : Bool,
-) -> Unit {
-  let creation_order : Map[String, Int] = Map::new()
-  for i, node in nodes {
-    creation_order[node.name()] = i
-  }
-  let total_nodes = nodes.length()
-  for node in nodes {
-    let name = node.name()
-    let cluster = cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    let base_order = match creation_order.get(name) {
-      Some(value) => value
-      None => 0
-    }
-    let order_value =
-      if graphviz_flip {
-      total_nodes - 1 - base_order
-    } else {
-      base_order
-    }
-    node_order[name] = order_value
-  }
-}
-
-///|
 /// Graphviz parity: each cluster contributes one skeleton node per rank
 /// (first node encountered in rank order).
 /// Do not change behavior without updating fixtures/tests.
@@ -183,12 +148,31 @@ fn compute_cluster_metadata(
   for node in nodes {
     cluster_keys[node.name()] = node_cluster_key(node)
   }
-  assign_cluster_node_order_for_metadata(
-    nodes,
-    cluster_keys,
-    node_order,
-    graphviz_flip,
-  )
+  // Graphviz parity: cluster subgraph node order follows GD_nlist traversal
+  // direction and rankdir flip behavior from dotgen cluster ordering.
+  let creation_order : Map[String, Int] = Map::new()
+  for i, node in nodes {
+    creation_order[node.name()] = i
+  }
+  let total_nodes = nodes.length()
+  for node in nodes {
+    let name = node.name()
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
+    }
+    let base_order = match creation_order.get(name) {
+      Some(value) => value
+      None => 0
+    }
+    let order_value =
+      if graphviz_flip {
+        total_nodes - 1 - base_order
+      } else {
+        base_order
+      }
+    node_order[name] = order_value
+  }
   let cluster_skeleton = build_cluster_skeleton_for_metadata(groups, cluster_keys)
   // Graphviz parity: cluster rank bounds are collected from member node rank
   // and first appearance order before cluster-order base expansion.
