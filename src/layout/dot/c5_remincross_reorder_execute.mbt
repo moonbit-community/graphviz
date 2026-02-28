@@ -230,16 +230,6 @@ fn build_remincross_reorder_inputs(
       cluster_meta.intercluster_keys,
       ranks,
     )
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let debug_vnodes : Array[String] = [
-      "_mbt_edge_vn_0_3",
-      "_mbt_edge_vn_1_3",
-    ]
-    for name in debug_vnodes {
-      let cluster = cluster_key_or_empty(rem_cluster_keys, name)
-      println("remincross vnode \{name} cluster=\{cluster}")
-    }
-  }
   let rem_sizes =
     build_order_sizes_for_order_graph(
       order_sizes,
