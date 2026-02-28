@@ -18,8 +18,8 @@ pub fn compute_ranks_directed(
       edges,
       has_edge_labels,
       (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-        let (tail, head, _reversed) =
-          acyclic_edge_directions(graph, graph_nodes, graph_edges)
+        let (tail, head, _reversed, _out_edges, _in_edges) =
+          acyclic_edge_directions_with_order(graph, graph_nodes, graph_edges)
         compute_ranks_directed_base(
           graph,
           graph_nodes,
@@ -30,8 +30,8 @@ pub fn compute_ranks_directed(
         )
       },
       (graph, graph_nodes, graph_edges, graph_has_edge_labels) => {
-        let (tail, head, _reversed) =
-          acyclic_edge_directions(graph, graph_nodes, graph_edges)
+        let (tail, head, _reversed, _out_edges, _in_edges) =
+          acyclic_edge_directions_with_order(graph, graph_nodes, graph_edges)
         compute_ranks_directed(
           graph,
           graph_nodes,
@@ -64,8 +64,8 @@ pub fn compute_ranks_directed_with_clusters(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let (edge_tail, edge_head, _edge_reversed) =
-    acyclic_edge_directions(source, nodes, edges)
+  let (edge_tail, edge_head, _edge_reversed, _out_edges, _in_edges) =
+    acyclic_edge_directions_with_order(source, nodes, edges)
   compute_ranks_directed(
     source,
     nodes,

@@ -222,18 +222,6 @@ fn acyclic_dfs_fast(
   }
 }
 
-///|
-pub fn acyclic_edge_directions(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-) -> (Array[String], Array[String], Array[Bool]) {
-  let (edge_tail, edge_head, edge_reversed, _out_edges, _in_edges) =
-    acyclic_edge_directions_with_order(graph, nodes, edges)
-  (edge_tail, edge_head, edge_reversed)
-}
-
-///|
 pub fn acyclic_edge_directions_with_order(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
