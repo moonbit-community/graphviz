@@ -63,34 +63,6 @@ fn filter_noncluster_flat_constraints_for_component(
 }
 
 ///|
-/// Graphviz parity: component reorder keeps each rank's relative extraction order
-/// from the full group list before running mincross on that component.
-/// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_reorder_component_groups(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  component_set : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let component_groups : Map[Int, Array[String]] = Map::new()
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let keep : Array[String] = []
-    for name in names {
-      if component_set.get(name) is Some(_) {
-        keep.push(name)
-      }
-    }
-    if keep.length() > 0 {
-      component_groups[rank] = keep
-    }
-  }
-  component_groups
-}
-
-///|
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
@@ -381,12 +353,24 @@ fn run_root_mincross_rank_reorder(
   }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
-    let component_groups =
-      build_noncluster_reorder_component_groups(
-        order_rank_keys_for_mincross,
-        order_groups_for_mincross,
-        component_set,
-      )
+    // Graphviz parity: component reorder keeps each rank's relative extraction
+    // order from the full group list before running mincross on that component.
+    let component_groups : Map[Int, Array[String]] = Map::new()
+    for rank in order_rank_keys_for_mincross {
+      let names = match order_groups_for_mincross.get(rank) {
+        Some(list) => list
+        None => []
+      }
+      let keep : Array[String] = []
+      for name in names {
+        if component_set.get(name) is Some(_) {
+          keep.push(name)
+        }
+      }
+      if keep.length() > 0 {
+        component_groups[rank] = keep
+      }
+    }
     let (
       component_edges,
       component_edge_tail,
