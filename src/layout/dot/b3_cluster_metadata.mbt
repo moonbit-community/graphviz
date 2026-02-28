@@ -97,18 +97,20 @@ fn append_same_rank_flat_constraints_for_metadata(
 }
 
 ///|
-/// Graphviz parity: cluster min/max rank and first order are collected
-/// from cluster member nodes before clustered reorder setup.
+/// Graphviz parity: cluster rank bounds are collected from member node rank
+/// and first appearance order before cluster-order base expansion.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_cluster_rank_bounds_for_metadata(
+fn build_cluster_rank_bounds_for_metadata(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   ranks : Map[String, Int],
   node_order : Map[String, Int],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  cluster_first_order : Map[String, Int],
-) -> Unit {
+) -> (Map[String, Int], Map[String, Int], Map[String, Int]) {
+  let cluster_min_rank : Map[String, Int] = Map::new()
+  let cluster_max_rank : Map[String, Int] = Map::new()
+  let cluster_first_order : Map[String, Int] = Map::new()
+  // Graphviz parity: cluster min/max rank and first order are collected
+  // from cluster member nodes before clustered reorder setup.
   for node in nodes {
     let name = node.name()
     let cluster = cluster_key_or_empty(cluster_keys, name)
@@ -135,30 +137,6 @@ fn collect_cluster_rank_bounds_for_metadata(
       cluster_first_order[cluster] = order_value
     }
   }
-}
-
-///|
-/// Graphviz parity: cluster rank bounds are collected from member node rank
-/// and first appearance order before cluster-order base expansion.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_bounds_for_metadata(
-  nodes : Array[@cgraph.Node],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-) -> (Map[String, Int], Map[String, Int], Map[String, Int]) {
-  let cluster_min_rank : Map[String, Int] = Map::new()
-  let cluster_max_rank : Map[String, Int] = Map::new()
-  let cluster_first_order : Map[String, Int] = Map::new()
-  collect_cluster_rank_bounds_for_metadata(
-    nodes,
-    cluster_keys,
-    ranks,
-    node_order,
-    cluster_min_rank,
-    cluster_max_rank,
-    cluster_first_order,
-  )
   (cluster_min_rank, cluster_max_rank, cluster_first_order)
 }
 
