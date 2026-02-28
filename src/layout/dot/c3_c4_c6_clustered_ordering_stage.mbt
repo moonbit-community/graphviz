@@ -615,10 +615,7 @@ fn run_clustered_ordering_finalize_phase(
       stage_inputs,
     )
   remincross_root_tail_order_override_snapshot.val = None
-  build_clustered_ordering_stage_output(
-    next_ordered_with_vnodes,
-    final_groups,
-  )
+  (final_groups, next_ordered_with_vnodes)
 }
 
 

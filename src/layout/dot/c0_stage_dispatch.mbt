@@ -35,17 +35,6 @@ priv struct NonclusterOrderingStageDispatchContext {
 }
 
 ///|
-/// Graphviz parity: clustered ordering stage returns finalized groups and
-/// vnode-augmented groups with Graphviz tuple ordering unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_ordering_stage_output(
-  next_ordered_with_vnodes : Map[Int, Array[String]],
-  final_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  (final_groups, next_ordered_with_vnodes)
-}
-
-///|
 /// Graphviz parity: non-clustered ordering path still runs the single mincross
 /// pass directly (matching Graphviz control flow).
 /// Do not change behavior without updating fixtures/tests.

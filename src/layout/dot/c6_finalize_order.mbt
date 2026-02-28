@@ -80,60 +80,6 @@ fn reorder_final_groups_for_cluster_remincross(
 
 
 ///|
-/// Graphviz parity: cluster-enabled final cleanup phase applies cluster/local
-/// ordering then forwards into clustered ReMincross refinement unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn run_finalize_order_groups_cluster_enabled_phase(
-  dispatch_context : FinalizeOrderGroupsDispatchContext,
-  cleaned_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let skip_cluster_rank_order_for_lr = false
-  let final_groups =
-    if skip_cluster_rank_order_for_lr {
-      cleaned_groups
-    } else {
-      reorder_final_groups_for_cluster_remincross(
-        cleaned_groups,
-        dispatch_context.cluster_rank_order,
-        dispatch_context.cluster_meta.cluster_keys,
-        dispatch_context.cluster_meta.intercluster_keys,
-        dispatch_context.local_cluster_order,
-      )
-    }
-  let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
-    graph: dispatch_context.graph,
-    edges: dispatch_context.edges,
-    edge_tail: dispatch_context.edge_tail,
-    edge_head: dispatch_context.edge_head,
-    edge_reversed: dispatch_context.edge_reversed,
-    edge_tail_port_x: dispatch_context.edge_tail_port_x,
-    edge_head_port_x: dispatch_context.edge_head_port_x,
-    edge_tail_port_order: dispatch_context.edge_tail_port_order,
-    edge_head_port_order: dispatch_context.edge_head_port_order,
-    ranks: dispatch_context.ranks,
-    order_with_vnodes: dispatch_context.order_with_vnodes,
-    order_with_clusters: true,
-    flat_rank_constraints: dispatch_context.flat_rank_constraints,
-    creation_order: dispatch_context.creation_order,
-    edges_by_tail: dispatch_context.edges_by_tail,
-    cluster_meta: dispatch_context.cluster_meta,
-    vnode_info: dispatch_context.vnode_info,
-    order_sizes: dispatch_context.order_sizes,
-    rank_same_constraints: dispatch_context.rank_same_constraints,
-    ordered_with_vnodes: dispatch_context.ordered_with_vnodes,
-    base_groups: final_groups,
-    real_nodes: dispatch_context.real_nodes,
-    graphviz_flip: dispatch_context.graphviz_flip,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-  }
-  run_clustered_remincross_pass(cluster_pass_context)
-}
-
-
-///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -151,10 +97,49 @@ fn finalize_order_groups_with_cluster_remincross(
     )
   dot_trace_groups("cleaned_groups_pre", cleaned_groups)
   if dispatch_context.order_with_clusters {
-    run_finalize_order_groups_cluster_enabled_phase(
-      dispatch_context,
-      cleaned_groups,
-    )
+    let skip_cluster_rank_order_for_lr = false
+    let final_groups =
+      if skip_cluster_rank_order_for_lr {
+        cleaned_groups
+      } else {
+        reorder_final_groups_for_cluster_remincross(
+          cleaned_groups,
+          dispatch_context.cluster_rank_order,
+          dispatch_context.cluster_meta.cluster_keys,
+          dispatch_context.cluster_meta.intercluster_keys,
+          dispatch_context.local_cluster_order,
+        )
+      }
+    let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
+      graph: dispatch_context.graph,
+      edges: dispatch_context.edges,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      edge_reversed: dispatch_context.edge_reversed,
+      edge_tail_port_x: dispatch_context.edge_tail_port_x,
+      edge_head_port_x: dispatch_context.edge_head_port_x,
+      edge_tail_port_order: dispatch_context.edge_tail_port_order,
+      edge_head_port_order: dispatch_context.edge_head_port_order,
+      ranks: dispatch_context.ranks,
+      order_with_vnodes: dispatch_context.order_with_vnodes,
+      order_with_clusters: true,
+      flat_rank_constraints: dispatch_context.flat_rank_constraints,
+      creation_order: dispatch_context.creation_order,
+      edges_by_tail: dispatch_context.edges_by_tail,
+      cluster_meta: dispatch_context.cluster_meta,
+      vnode_info: dispatch_context.vnode_info,
+      order_sizes: dispatch_context.order_sizes,
+      rank_same_constraints: dispatch_context.rank_same_constraints,
+      ordered_with_vnodes: dispatch_context.ordered_with_vnodes,
+      base_groups: final_groups,
+      real_nodes: dispatch_context.real_nodes,
+      graphviz_flip: dispatch_context.graphviz_flip,
+      nodesep_pt: dispatch_context.nodesep_pt,
+      has_edge_labels: dispatch_context.has_edge_labels,
+      port_order_positions: dispatch_context.port_order_positions,
+      port_order_contrib: dispatch_context.port_order_contrib,
+    }
+    run_clustered_remincross_pass(cluster_pass_context)
   } else {
     (dispatch_context.ordered_with_vnodes, cleaned_groups)
   }
