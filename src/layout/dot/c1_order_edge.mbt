@@ -302,18 +302,6 @@ fn build_graphviz_neighbor_maps(
   (graphviz_out_neighbors, graphviz_in_neighbors)
 }
 
-/// Graphviz parity: flat constraints are copied before local augmentation.
-/// Do not change behavior without updating fixtures/tests.
-fn clone_flat_constraints(
-  flat_constraints : Map[String, Bool],
-) -> Map[String, Bool] {
-  let cloned : Map[String, Bool] = Map::new()
-  for key, value in flat_constraints {
-    cloned[key] = value
-  }
-  cloned
-}
-
 ///|
 /// Graphviz parity: prepended cluster skeleton edges must stay ahead of
 /// previously collected tail edges during class2 ordering.

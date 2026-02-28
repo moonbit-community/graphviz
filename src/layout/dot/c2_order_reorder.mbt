@@ -114,8 +114,10 @@ fn build_order_neighbors_and_flat_constraints(
       order_edges_by_tail,
       edge_creation_order,
     )
-  let order_flat_constraints =
-    clone_flat_constraints(cluster_meta.flat_constraints)
+  let order_flat_constraints : Map[String, Bool] = Map::new()
+  for key, value in cluster_meta.flat_constraints {
+    order_flat_constraints[key] = value
+  }
   apply_unconstrained_order_node_overrides(
     gdnlist_order,
     real_nodes,
