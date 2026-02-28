@@ -131,10 +131,10 @@ fn build_ordering_runtime_context_with_tail_constraints(
 }
 
 ///|
-/// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
-/// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
+/// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
+/// clustered/nonclustered mincross paths diverge.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
+fn build_ordering_reorder_setup(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -142,20 +142,40 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
   edge_reversed : Array[Bool],
   edge_out_order : Map[String, Array[Int]],
   ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
   vnode_count : Int,
+  rankdir : RankDir,
   cluster_meta : ClusterMetadata,
   vnode_info : EdgeVnodeInfo,
-  ordering_groups_base : Map[Int, Array[String]],
-  base_order_index : Map[String, Int],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  flat_rank_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
   edge_tail_port_x : Array[Double],
   edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
-) -> (OrderingClass2Data, Array[String], Map[String, Double]) {
+) -> OrderingReorderSetup {
+  // Graphviz parity: reorder setup derives rank-same-adjusted groups, order
+  // indices, cluster/vnode flags, flip direction, and flat-rank constraints.
+  let ordering_groups_base = apply_rank_same_order_with_port_override(
+    groups,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    node_order,
+    port_edge_nodes,
+  )
+  let base_order_index = build_order_index(ordering_groups_base)
+  let order_with_vnodes = vnode_count > 0
+  let order_with_clusters =
+    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
+  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
+  let flat_rank_constraints =
+    build_flat_rank_constraints(
+      edge_tail,
+      edge_head,
+      ranks,
+    )
+  // Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
+  // vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
   let class2_data =
     build_ordering_class2_data(
       nodes,
@@ -209,77 +229,6 @@ fn build_ordering_class2_and_vnode_keys_for_reorder_setup(
       vnode_info,
       ordering_groups_base,
       nlist_order_index,
-    )
-  (class2_data, gdnlist_order, vnode_order_keys_for_ordering)
-}
-
-
-///|
-/// Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
-/// clustered/nonclustered mincross paths diverge.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_reorder_setup(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  port_edge_nodes : Map[String, Bool],
-  vnode_count : Int,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-) -> OrderingReorderSetup {
-  // Graphviz parity: reorder setup derives rank-same-adjusted groups, order
-  // indices, cluster/vnode flags, flip direction, and flat-rank constraints.
-  let ordering_groups_base = apply_rank_same_order_with_port_override(
-    groups,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    node_order,
-    port_edge_nodes,
-  )
-  let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = vnode_count > 0
-  let order_with_clusters =
-    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
-  let flat_rank_constraints =
-    build_flat_rank_constraints(
-      edge_tail,
-      edge_head,
-      ranks,
-    )
-  let (class2_data, gdnlist_order, vnode_order_keys_for_ordering) =
-    build_ordering_class2_and_vnode_keys_for_reorder_setup(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      vnode_count,
-      cluster_meta,
-      vnode_info,
-      ordering_groups_base,
-      base_order_index,
-      order_with_vnodes,
-      order_with_clusters,
-      flat_rank_constraints,
-      graphviz_flip,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
     )
   {
     ordering_groups_base,
