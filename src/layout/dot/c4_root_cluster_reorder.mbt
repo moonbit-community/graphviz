@@ -898,8 +898,18 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let has_multi_cluster_roots =
-    has_multiple_nonempty_cluster_keys_for_root_reorder(order_cluster_keys)
+  let seen_cluster_keys : Map[String, Bool] = Map::new()
+  let mut has_multi_cluster_roots = false
+  for _name, key in order_cluster_keys {
+    if key == "" || seen_cluster_keys.get(key) is Some(_) {
+      continue
+    }
+    seen_cluster_keys[key] = true
+    if seen_cluster_keys.length() > 1 {
+      has_multi_cluster_roots = true
+      break
+    }
+  }
   let root_graphviz_flip =
     if should_capture_ordering_fixture_mode() {
       graphviz_flip
@@ -936,23 +946,6 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
   )
   dot_trace_groups("order_root", ordered_root)
   ordered_root
-}
-
-///|
-fn has_multiple_nonempty_cluster_keys_for_root_reorder(
-  cluster_keys : Map[String, String],
-) -> Bool {
-  let seen : Map[String, Bool] = Map::new()
-  for _name, key in cluster_keys {
-    if key == "" || seen.get(key) is Some(_) {
-      continue
-    }
-    seen[key] = true
-    if seen.length() > 1 {
-      return true
-    }
-  }
-  false
 }
 
 ///|
