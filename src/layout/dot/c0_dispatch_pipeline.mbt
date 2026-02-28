@@ -128,28 +128,27 @@ priv struct OrderingDispatchPipelineContext {
 fn run_ordering_dispatch_pipeline_execution_phase(
   execution_context : OrderingDispatchPipelineExecutionContext,
 ) -> OrderingResult {
-  let stage_dispatch_context =
-    build_ordering_stage_dispatch_context(
-      execution_context.graph,
-      execution_context.nodes,
-      execution_context.edges,
-      execution_context.edge_tail,
-      execution_context.edge_head,
-      execution_context.edge_reversed,
-      execution_context.edge_out_order,
-      execution_context.ranks,
-      execution_context.rank_keys,
-      execution_context.groups,
-      execution_context.node_order,
-      execution_context.order_sizes,
-      execution_context.nodesep_pt,
-      execution_context.has_edge_labels,
-      execution_context.cluster_meta,
-      execution_context.port_order_positions,
-      execution_context.port_order_contrib,
-      execution_context.runtime_context,
-      execution_context.dispatch_setup,
-    )
+  let stage_dispatch_context : OrderingStageDispatchContext = {
+    graph: execution_context.graph,
+    nodes: execution_context.nodes,
+    edges: execution_context.edges,
+    edge_tail: execution_context.edge_tail,
+    edge_head: execution_context.edge_head,
+    edge_reversed: execution_context.edge_reversed,
+    edge_out_order: execution_context.edge_out_order,
+    ranks: execution_context.ranks,
+    rank_keys: execution_context.rank_keys,
+    groups: execution_context.groups,
+    node_order: execution_context.node_order,
+    order_sizes: execution_context.order_sizes,
+    nodesep_pt: execution_context.nodesep_pt,
+    has_edge_labels: execution_context.has_edge_labels,
+    cluster_meta: execution_context.cluster_meta,
+    port_order_positions: execution_context.port_order_positions,
+    port_order_contrib: execution_context.port_order_contrib,
+    runtime_context: execution_context.runtime_context,
+    dispatch_setup: execution_context.dispatch_setup,
+  }
   let (ordered_groups_internal, ordered_with_vnodes) =
     run_ordering_stage_dispatch(stage_dispatch_context)
   {
