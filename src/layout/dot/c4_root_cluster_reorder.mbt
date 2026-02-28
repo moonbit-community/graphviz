@@ -911,7 +911,7 @@ fn run_root_cluster_reorder_for_cluster_rank_order(
     }
   }
   let root_graphviz_flip =
-    if should_capture_ordering_fixture_mode() {
+    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
       graphviz_flip
     } else {
       graphviz_flip && has_multi_cluster_roots

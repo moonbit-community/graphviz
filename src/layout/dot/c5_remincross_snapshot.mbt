@@ -2,11 +2,6 @@
 /// Stage C Phase C5 split: remincross snapshot
 /// helpers for focused ReMincross responsibilities.
 
-fn should_capture_ordering_fixture_mode() -> Bool {
-  @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_)
-}
-
-///|
 fn build_ordering_input_edges_snapshot(
   edges_out : Array[@cgraph.Edge],
   edge_tail_out : Array[String],

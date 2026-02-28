@@ -1360,7 +1360,7 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
     }
   }
   let include_external_crossing =
-    if should_capture_ordering_fixture_mode() {
+    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
       cluster_rank_keys.length() <= 2
     } else if cluster_rank_keys.length() > 2 &&
       cluster_graph_edge_count == 0 &&
