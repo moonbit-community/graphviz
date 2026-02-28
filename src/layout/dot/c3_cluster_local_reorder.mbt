@@ -83,6 +83,35 @@ fn build_local_cluster_order(
   order_map
 }
 
+///|
+/// Graphviz parity: local-cluster stable sorts compare seed order first and
+/// break ties by node name to keep deterministic fixture ordering.
+fn compare_names_by_order_then_name(
+  order_map : Map[String, Int],
+  a : String,
+  b : String,
+) -> Int {
+  let a_idx = match order_map.get(a) {
+    Some(value) => value
+    None => 0
+  }
+  let b_idx = match order_map.get(b) {
+    Some(value) => value
+    None => 0
+  }
+  if a_idx < b_idx {
+    -1
+  } else if a_idx > b_idx {
+    1
+  } else if a < b {
+    -1
+  } else if a > b {
+    1
+  } else {
+    0
+  }
+}
+
 fn cluster_depth_for_order_inner(
   cluster : String,
   parents : Map[String, String?],
@@ -243,25 +272,7 @@ fn build_cluster_local_rank_groups(
       }
       if real_nodes.length() > 1 {
         real_nodes.sort_by((a, b) => {
-          let a_idx = match cluster_node_order.get(a) {
-            Some(value) => value
-            None => 0
-          }
-          let b_idx = match cluster_node_order.get(b) {
-            Some(value) => value
-            None => 0
-          }
-          if a_idx < b_idx {
-            -1
-          } else if a_idx > b_idx {
-            1
-          } else if a < b {
-            -1
-          } else if a > b {
-            1
-          } else {
-            0
-          }
+          compare_names_by_order_then_name(cluster_node_order, a, b)
         })
         let mut real_idx = 0
         for i in 0..<list.length() {
@@ -333,25 +344,7 @@ fn build_cluster_local_rank_groups(
     }
     let fallback_real_nodes = real_nodes.copy()
     fallback_real_nodes.sort_by((a, b) => {
-      let a_idx = match cluster_node_order.get(a) {
-        Some(value) => value
-        None => 0
-      }
-      let b_idx = match cluster_node_order.get(b) {
-        Some(value) => value
-        None => 0
-      }
-      if a_idx < b_idx {
-        -1
-      } else if a_idx > b_idx {
-        1
-      } else if a < b {
-        -1
-      } else if a > b {
-        1
-      } else {
-        0
-      }
+      compare_names_by_order_then_name(cluster_node_order, a, b)
     })
     for name in fallback_real_nodes {
       if seeded_seen.get(name) is None {
@@ -1014,25 +1007,7 @@ fn reorder_single_cluster_rank_groups(
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
-      let a_idx = match node_order.get(a) {
-        Some(value) => value
-        None => 0
-      }
-      let b_idx = match node_order.get(b) {
-        Some(value) => value
-        None => 0
-      }
-      if a_idx < b_idx {
-        -1
-      } else if a_idx > b_idx {
-        1
-      } else if a < b {
-        -1
-      } else if a > b {
-        1
-      } else {
-        0
-      }
+      compare_names_by_order_then_name(node_order, a, b)
     })
   }
   let mut order_idx = 0
