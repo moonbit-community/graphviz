@@ -1460,28 +1460,6 @@ fn build_cluster_local_reorder_run_inputs_edge_bundle_phase(
 
 
 ///|
-/// Graphviz parity: cluster-local reorder input-output context keeps edge
-/// bundle arrays/maps and metadata tuple ordering for local mincross call.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderRunInputsOutputContext {
-  cluster_edges : Array[@cgraph.Edge]
-  cluster_edge_tail : Array[String]
-  cluster_edge_head : Array[String]
-  cluster_edge_tail_port_x : Array[Double]
-  cluster_edge_head_port_x : Array[Double]
-  cluster_edge_tail_port_order : Array[Double]
-  cluster_edge_head_port_order : Array[Double]
-  parents : Map[String, Array[String]]
-  children : Map[String, Array[String]]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  edge_order : Map[String, Int]
-  cluster_sizes : Map[String, NodeSize]
-  cluster_keys : Map[String, String]
-  cluster_flat_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: cluster-local reorder run-input output tuple alias keeps
 /// edge/metadata tuple ordering shared across input/apply dispatch steps.
 /// Do not change behavior without updating fixtures/tests.
@@ -1504,64 +1482,34 @@ type ClusterLocalReorderRunInputsOutput = (
 )
 
 ///|
-/// Graphviz parity: cluster-local reorder context keeps edge bundle and
-/// metadata inputs unchanged before local mincross preprocessing.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderRunInputsContext {
-  cluster : String
-  cluster_graph_edge_count : Int
-  expanded_clusters : Map[String, Bool]
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  raw_graphviz_out_neighbors : Map[String, Array[String]]
-  raw_graphviz_in_neighbors : Map[String, Array[String]]
-  cluster_node_set : Map[String, Bool]
-  cluster_rank_keys : Array[Int]
-  cluster_nodes : Array[String]
-  fixed_ranks : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
-  vnode_sizes : Map[String, NodeSize]
-  intercluster_keys : Map[String, String]
-  vnode_clusters : Map[String, String]
-  flat_constraints : Map[String, Bool]
-}
-
-///|
-/// Graphviz parity: cluster-local reorder apply dispatch context keeps
-/// tuple-independent apply-phase payload in Graphviz ordering.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReorderApplyDispatchContext {
-  groups : Map[Int, Array[String]]
-  cluster_rank_keys : Array[Int]
-  cluster_groups : Map[Int, Array[String]]
-  cluster_meta : ClusterMetadata
-  cluster_node_order : Map[String, Int]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  empty_cluster_skeleton : Map[String, Bool]
-  fixed_positions : Map[String, Double]
-  fixed_ranks : Map[String, Int]
-  cluster_node_set : Map[String, Bool]
-}
-
-
 ///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs(
-  context : ClusterLocalReorderRunInputsContext,
+  cluster : String,
+  cluster_graph_edge_count : Int,
+  expanded_clusters : Map[String, Bool],
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  raw_graphviz_out_neighbors : Map[String, Array[String]],
+  raw_graphviz_in_neighbors : Map[String, Array[String]],
+  cluster_node_set : Map[String, Bool],
+  cluster_rank_keys : Array[Int],
+  cluster_nodes : Array[String],
+  fixed_ranks : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+  intercluster_keys : Map[String, String],
+  flat_constraints : Map[String, Bool],
 ) -> ClusterLocalReorderRunInputsOutput {
-  let _ = context.vnode_clusters
   let (
     cluster_edges,
     cluster_edge_tail,
@@ -1575,40 +1523,40 @@ fn build_cluster_local_reorder_run_inputs(
     edge_order,
   ) =
     build_cluster_local_reorder_run_inputs_edge_bundle_phase(
-      context.cluster,
-      context.cluster_graph_edge_count,
-      context.order_edges,
-      context.order_edge_tail,
-      context.order_edge_head,
-      context.order_edge_tail_port_x,
-      context.order_edge_head_port_x,
-      context.order_edge_tail_port_order,
-      context.order_edge_head_port_order,
-      context.cluster_node_set,
-      context.cluster_rank_keys,
-      context.cluster_nodes,
-      context.fixed_ranks,
+      cluster,
+      cluster_graph_edge_count,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+      cluster_rank_keys,
+      cluster_nodes,
+      fixed_ranks,
     )
   let (cluster_sizes, cluster_keys, cluster_flat_constraints) =
     build_cluster_local_reorder_metadata(
-      context.cluster_node_set,
-      context.order_sizes,
-      context.vnode_sizes,
-      context.flat_constraints,
+      cluster_node_set,
+      order_sizes,
+      vnode_sizes,
+      flat_constraints,
     )
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
     build_cluster_local_graphviz_neighbor_maps(
-      context.cluster,
-      context.expanded_clusters,
-      context.cluster_nodes,
-      context.graphviz_out_neighbors,
-      context.graphviz_in_neighbors,
-      context.raw_graphviz_out_neighbors,
-      context.raw_graphviz_in_neighbors,
-      context.intercluster_keys,
+      cluster,
+      expanded_clusters,
+      cluster_nodes,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      raw_graphviz_out_neighbors,
+      raw_graphviz_in_neighbors,
+      intercluster_keys,
       cluster_edges.length() >= 5,
     )
-  let output_context : ClusterLocalReorderRunInputsOutputContext = {
+  (
     cluster_edges,
     cluster_edge_tail,
     cluster_edge_head,
@@ -1624,23 +1572,6 @@ fn build_cluster_local_reorder_run_inputs(
     cluster_sizes,
     cluster_keys,
     cluster_flat_constraints,
-  }
-  (
-    output_context.cluster_edges,
-    output_context.cluster_edge_tail,
-    output_context.cluster_edge_head,
-    output_context.cluster_edge_tail_port_x,
-    output_context.cluster_edge_head_port_x,
-    output_context.cluster_edge_tail_port_order,
-    output_context.cluster_edge_head_port_order,
-    output_context.parents,
-    output_context.children,
-    output_context.graphviz_out_neighbors,
-    output_context.graphviz_in_neighbors,
-    output_context.edge_order,
-    output_context.cluster_sizes,
-    output_context.cluster_keys,
-    output_context.cluster_flat_constraints,
   )
 }
 
@@ -1740,62 +1671,6 @@ fn reorder_single_cluster_rank_groups(
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder execution input phase builds
-/// cluster-scoped edge and metadata tuples before local apply phase.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_reorder_execution_phase_input_phase(
-  cluster : String,
-  cluster_graph_edge_count : Int,
-  expanded_clusters : Map[String, Bool],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  raw_graphviz_out_neighbors : Map[String, Array[String]],
-  raw_graphviz_in_neighbors : Map[String, Array[String]],
-  cluster_node_set : Map[String, Bool],
-  cluster_rank_keys : Array[Int],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-) -> ClusterLocalReorderRunInputsOutput {
-  let input_context : ClusterLocalReorderRunInputsContext = {
-    cluster,
-    cluster_graph_edge_count,
-    expanded_clusters,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    raw_graphviz_out_neighbors,
-    raw_graphviz_in_neighbors,
-    cluster_node_set,
-    cluster_rank_keys,
-    cluster_nodes,
-    fixed_ranks,
-    order_sizes,
-    vnode_sizes: vnode_info.vnode_sizes,
-    intercluster_keys: cluster_meta.intercluster_keys,
-    vnode_clusters: vnode_info.vnode_clusters,
-    flat_constraints: cluster_meta.flat_constraints,
-  }
-  build_cluster_local_reorder_run_inputs(input_context)
-}
-
-
-///|
 /// Graphviz parity: cluster-local reorder execution phase builds cluster-scoped
 /// edge/metadata inputs before applying local mincross results back to groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -1832,7 +1707,7 @@ fn run_cluster_local_rank_reorder_execution_phase(
   cluster_rank_keys : Array[Int],
 ) -> Unit {
   let input_phase_output =
-    run_cluster_local_rank_reorder_execution_phase_input_phase(
+    build_cluster_local_reorder_run_inputs(
       cluster,
       cluster_graph_edge_count,
       expanded_clusters,
@@ -1852,24 +1727,10 @@ fn run_cluster_local_rank_reorder_execution_phase(
       cluster_nodes,
       fixed_ranks,
       order_sizes,
-      cluster_meta,
-      vnode_info,
+      vnode_info.vnode_sizes,
+      cluster_meta.intercluster_keys,
+      cluster_meta.flat_constraints,
     )
-  let dispatch_context : ClusterLocalReorderApplyDispatchContext = {
-    groups,
-    cluster_rank_keys,
-    cluster_groups,
-    cluster_meta,
-    cluster_node_order,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    empty_cluster_skeleton,
-    fixed_positions,
-    fixed_ranks,
-    cluster_node_set,
-  }
   let (
     cluster_edges,
     cluster_edge_tail,
@@ -1887,73 +1748,6 @@ fn run_cluster_local_rank_reorder_execution_phase(
     cluster_keys,
     cluster_flat_constraints,
   ) = input_phase_output
-  run_cluster_local_rank_reorder_execution_phase_apply_phase(
-    dispatch_context.groups,
-    dispatch_context.cluster_rank_keys,
-    dispatch_context.cluster_groups,
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    cluster_keys,
-    dispatch_context.cluster_meta,
-    edge_order,
-    dispatch_context.cluster_node_order,
-    cluster_sizes,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    dispatch_context.empty_cluster_skeleton,
-    cluster_flat_constraints,
-    dispatch_context.fixed_positions,
-    dispatch_context.fixed_ranks,
-    dispatch_context.cluster_node_set,
-  )
-}
-
-
-///|
-/// Graphviz parity: cluster-local reorder apply phase forwards cluster-scoped
-/// reorder inputs into local mincross apply without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_reorder_execution_phase_apply_phase(
-  groups : Map[Int, Array[String]],
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-  cluster_edges : Array[@cgraph.Edge],
-  cluster_edge_tail : Array[String],
-  cluster_edge_head : Array[String],
-  cluster_edge_tail_port_x : Array[Double],
-  cluster_edge_head_port_x : Array[Double],
-  cluster_edge_tail_port_order : Array[Double],
-  cluster_edge_head_port_order : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  edge_order : Map[String, Int],
-  cluster_node_order : Map[String, Int],
-  cluster_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  empty_cluster_skeleton : Map[String, Bool],
-  cluster_flat_constraints : Map[String, Bool],
-  fixed_positions : Map[String, Double],
-  fixed_ranks : Map[String, Int],
-  cluster_node_set : Map[String, Bool],
-) -> Unit {
   run_and_apply_cluster_local_rank_reorder(
     groups,
     cluster_rank_keys,
