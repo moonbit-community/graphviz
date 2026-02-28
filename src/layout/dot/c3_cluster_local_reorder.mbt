@@ -587,8 +587,34 @@ fn run_cluster_local_rank_reorder(
       coalesce_parallel_edges=true,
       startpass=2,
       startpass_init_infinite=false,
-    )
+  )
   (true, ordered_cluster)
+}
+
+///|
+/// Graphviz parity: vnode interpolation picks the first neighbor that crosses
+/// the current rank boundary and falls back to the first incident endpoint.
+fn select_vnode_anchor_neighbor(
+  neighbors : Array[String],
+  ranks : Map[String, Int],
+  vnode_rank : Int,
+  select_lower : Bool,
+) -> String {
+  for candidate in neighbors {
+    let candidate_rank =
+      match ranks.get(candidate) {
+        Some(value) => value
+        None => if select_lower { vnode_rank - 1 } else { vnode_rank + 1 }
+      }
+    if select_lower {
+      if candidate_rank < vnode_rank {
+        return candidate
+      }
+    } else if candidate_rank > vnode_rank {
+      return candidate
+    }
+  }
+  if neighbors.length() > 0 { neighbors[0] } else { "" }
 }
 
 ///|
@@ -638,46 +664,24 @@ fn seed_cluster_local_groups_by_vnode_interpolation(
         }
         let parent_name =
           match parents.get(name) {
-            Some(list) => {
-              let mut selected : String? = None
-              for candidate in list {
-                let candidate_rank = match ranks.get(candidate) {
-                  Some(value) => value
-                  None => vnode_rank - 1
-                }
-                if candidate_rank < vnode_rank {
-                  selected = Some(candidate)
-                  break
-                }
-              }
-              match selected {
-                Some(value) => value
-                None =>
-                  if list.length() > 0 { list[0] } else { "" }
-              }
-            }
+            Some(list) =>
+              select_vnode_anchor_neighbor(
+                list,
+                ranks,
+                vnode_rank,
+                true,
+              )
             None => ""
           }
         let child_name =
           match children.get(name) {
-            Some(list) => {
-              let mut selected : String? = None
-              for candidate in list {
-                let candidate_rank = match ranks.get(candidate) {
-                  Some(value) => value
-                  None => vnode_rank + 1
-                }
-                if candidate_rank > vnode_rank {
-                  selected = Some(candidate)
-                  break
-                }
-              }
-              match selected {
-                Some(value) => value
-                None =>
-                  if list.length() > 0 { list[0] } else { "" }
-              }
-            }
+            Some(list) =>
+              select_vnode_anchor_neighbor(
+                list,
+                ranks,
+                vnode_rank,
+                false,
+              )
             None => ""
           }
         if parent_name != "" && child_name != "" {
