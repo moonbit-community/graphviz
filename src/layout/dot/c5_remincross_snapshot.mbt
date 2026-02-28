@@ -170,7 +170,11 @@ fn capture_root_mincross_input_snapshot(
       cluster_skeleton,
     ),
   }
-  touch_root_mincross_input_snapshot_fields(snapshot)
+  let _ = snapshot.rank_keys
+  let _ = snapshot.groups
+  let _ = snapshot.edges
+  let _ = snapshot.cluster_keys
+  let _ = snapshot.cluster_skeleton
   root_mincross_input_snapshot.val = Some(snapshot)
 }
 
@@ -204,7 +208,10 @@ fn capture_remincross_input_snapshot(
     ),
     cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
   }
-  touch_remincross_input_snapshot_fields(snapshot)
+  let _ = snapshot.rank_keys
+  let _ = snapshot.groups
+  let _ = snapshot.edges
+  let _ = snapshot.cluster_keys
   remincross_input_snapshot.val = Some(snapshot)
 }
 
@@ -236,28 +243,6 @@ priv struct RemincrossInputSnapshot {
   cluster_keys : Map[String, String]
 }
 
-///|
-fn touch_root_mincross_input_snapshot_fields(
-  snapshot : RootMincrossInputSnapshot,
-) -> Unit {
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-  let _ = snapshot.cluster_skeleton
-}
-
-///|
-fn touch_remincross_input_snapshot_fields(
-  snapshot : RemincrossInputSnapshot,
-) -> Unit {
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-}
-
-///|
 let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(None)
 
 ///|
@@ -269,4 +254,3 @@ let root_mincross_groups_override : Ref[Map[Int, Array[String]]?] = Ref::new(Non
 ///|
 let remincross_root_tail_order_override_snapshot : Ref[Array[String]?] =
   Ref::new(None)
-
