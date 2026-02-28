@@ -129,21 +129,6 @@ fn build_clustered_ordering_pre_root_stage(
 
 
 ///|
-/// Graphviz parity: root-phase tail override preserves first-seen tail order
-/// while suppressing duplicate tail names in root-edge replay sequences.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_unique_tail_order_from_edge_tail_sequence(
-  edge_tail_out : Array[String],
-) -> Array[String] {
-  let tail_order : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
-  for tail in edge_tail_out {
-    append_order_creation_name_if_absent(tail_order, seen, tail)
-  }
-  tail_order
-}
-
-///|
 /// Graphviz parity: clustered root phase reuses root-only reorder input
 /// assembly to derive the root-tail replay order for mapped edge materialize.
 /// Do not change behavior without updating fixtures/tests.
@@ -192,8 +177,13 @@ fn build_root_tail_order_override_for_clustered_root_phase(
     _root_edge_order,
     _root_node_order,
   ) = root_reorder_output
-  let root_tail_order_override =
-    collect_unique_tail_order_from_edge_tail_sequence(root_edge_tail_out)
+  // Graphviz parity: root-phase tail override preserves first-seen tail order
+  // while suppressing duplicate tail names in root-edge replay sequences.
+  let root_tail_order_override : Array[String] = []
+  let seen_root_tail : Map[String, Bool] = Map::new()
+  for tail in root_edge_tail_out {
+    append_order_creation_name_if_absent(root_tail_order_override, seen_root_tail, tail)
+  }
   let (_root_rank_keys, ordered_root) =
     run_root_cluster_rank_order_phase_from_root_reorder_output(
       pre_root_stage.order_cluster_keys,
