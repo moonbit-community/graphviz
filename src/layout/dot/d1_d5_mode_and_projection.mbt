@@ -56,27 +56,6 @@ fn build_position_mode_flags(
 
 
 ///|
-/// Graphviz parity: virtual-slack synthesis consumes mode flags after vnode
-/// trace emission and preserves vnode-xpos gating semantics.
-/// Do not change behavior without updating fixtures/tests.
-fn build_virtual_slack_edges_from_mode_flags_for_positions(
-  mode_flags : PositionModeFlags,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-) -> Array[ConstraintEdge] {
-  dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
-  build_virtual_slack_edges_for_positions(
-    mode_flags.use_vnodes_for_xpos,
-    prep,
-    rank_data,
-    ordering,
-    cluster_meta,
-  )
-}
-
-///|
 /// Graphviz parity: x-stage mode/virtual-slack setup keeps gate derivation,
 /// vnode trace emission, and virtual-slack synthesis ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -87,13 +66,14 @@ fn build_x_stage_mode_and_virtual_slack_data_for_positions(
   ordering : OrderingResult,
 ) -> XStageModeAndSlackData {
   let mode_flags = build_position_mode_flags(prep, ordering)
+  dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
-    build_virtual_slack_edges_from_mode_flags_for_positions(
-      mode_flags,
+    build_virtual_slack_edges_for_positions(
+      mode_flags.use_vnodes_for_xpos,
       prep,
       rank_data,
-      cluster_meta,
       ordering,
+      cluster_meta,
     )
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
