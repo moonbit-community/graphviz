@@ -83,22 +83,6 @@ fn build_local_cluster_order(
   order_map
 }
 
-///|
-fn cluster_depth_for_order(
-  cluster : String,
-  parents : Map[String, String?],
-  fallback_parents : Map[String, String?],
-  memo : Map[String, Int],
-) -> Int {
-  cluster_depth_for_order_inner(
-    cluster,
-    parents,
-    fallback_parents,
-    memo,
-    Map::new(),
-  )
-}
-
 fn cluster_depth_for_order_inner(
   cluster : String,
   parents : Map[String, String?],
@@ -190,9 +174,21 @@ fn build_cluster_graph_order_for_local_reorder(
   if cluster_names.length() > 1 {
     cluster_names.sort_by((a, b) => {
       let a_depth =
-        cluster_depth_for_order(a, cluster_parents_hint, cluster_parents, cluster_depth)
+        cluster_depth_for_order_inner(
+          a,
+          cluster_parents_hint,
+          cluster_parents,
+          cluster_depth,
+          Map::new(),
+        )
       let b_depth =
-        cluster_depth_for_order(b, cluster_parents_hint, cluster_parents, cluster_depth)
+        cluster_depth_for_order_inner(
+          b,
+          cluster_parents_hint,
+          cluster_parents,
+          cluster_depth,
+          Map::new(),
+        )
       if a_depth < b_depth {
         -1
       } else if a_depth > b_depth {
