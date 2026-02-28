@@ -286,62 +286,6 @@ fn build_ordering_class2_edge_chain_data(
 
 
 ///|
-/// Graphviz parity: class2 creation sequences build cluster skeleton edges,
-/// then edge creation order and GD_nlist ordering in Graphviz pass order.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_creation_sequences(
-  order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edge_creation : Array[(String, String)],
-  creation_order : Array[String],
-  vnode_creation_by_tail : Map[String, Array[String]],
-  flat_rank_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> (Array[(String, String)], Array[(String, String)], Array[String], Array[String]) {
-  let cluster_skeleton_creation =
-    build_cluster_skeleton_creation(
-      order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-    )
-  let skeleton_edge_creation =
-    build_skeleton_edge_creation_for_order_graph(
-      order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
-      order_edges_by_tail,
-      order_edges_by_tail_root,
-    )
-  let edge_creation_order =
-    merge_edge_creation_sequences(
-      skeleton_edge_creation,
-      order_edge_creation,
-    )
-  let (nlist_order, vnode_creation_order) =
-    build_nlist_order_and_vnode_creation_order(
-      cluster_skeleton_creation,
-      creation_order,
-      vnode_creation_by_tail,
-      edge_creation_order,
-      flat_rank_constraints,
-      graphviz_flip,
-      cluster_meta.has_clusters,
-      cluster_meta.cluster_keys,
-    )
-  (
-    skeleton_edge_creation,
-    edge_creation_order,
-    nlist_order,
-    vnode_creation_order,
-  )
-}
-
-
-///|
 /// Graphviz parity: class2/decompose ordering prep follows creation order,
 /// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
 /// Do not change behavior without updating fixtures/tests.
@@ -389,22 +333,39 @@ fn build_ordering_class2_data(
       order_with_clusters,
       cluster_meta.cluster_keys,
     )
-  let (
-    skeleton_edge_creation,
-    edge_creation_order,
-    nlist_order,
-    vnode_creation_order,
-  ) =
-    build_ordering_class2_creation_sequences(
+  // Graphviz parity: class2 creation sequences build cluster skeleton edges,
+  // then edge creation order and GD_nlist ordering in Graphviz pass order.
+  let cluster_skeleton_creation =
+    build_cluster_skeleton_creation(
       order_with_clusters,
-      cluster_meta,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+    )
+  let skeleton_edge_creation =
+    build_skeleton_edge_creation_for_order_graph(
+      order_with_clusters,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
       order_edges_by_tail,
       order_edges_by_tail_root,
+    )
+  let edge_creation_order =
+    merge_edge_creation_sequences(
+      skeleton_edge_creation,
       order_edge_creation,
+    )
+  let (nlist_order, vnode_creation_order) =
+    build_nlist_order_and_vnode_creation_order(
+      cluster_skeleton_creation,
       creation_order,
       vnode_creation_by_tail,
+      edge_creation_order,
       flat_rank_constraints,
       graphviz_flip,
+      cluster_meta.has_clusters,
+      cluster_meta.cluster_keys,
     )
   {
     edges_by_tail,
