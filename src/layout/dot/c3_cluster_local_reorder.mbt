@@ -283,43 +283,6 @@ fn build_cluster_graph_order_for_local_reorder(
 }
 
 ///|
-/// Graphviz parity: local cluster pass pins both real-node and vnode ranks
-/// so per-cluster reorder cannot move nodes across global rank slots.
-/// Do not change behavior without updating fixtures/tests.
-fn build_fixed_ranks_with_vnodes_for_cluster_local_reorder(
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> Map[String, Int] {
-  let fixed_ranks : Map[String, Int] = Map::new()
-  for name, rank in ranks {
-    fixed_ranks[name] = rank
-  }
-  for name, rank in vnode_ranks {
-    fixed_ranks[name] = rank
-  }
-  fixed_ranks
-}
-
-
-
-///|
-/// Graphviz parity: cluster-local mincross keeps global fixed positions and
-/// fixed ranks (including vnodes) for constrained reorder passes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_fixed_positions_and_ranks(
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> (Map[String, Double], Map[String, Int]) {
-  let fixed_positions = order_positions_from_groups(groups)
-  let fixed_ranks = build_fixed_ranks_with_vnodes_for_cluster_local_reorder(
-    ranks,
-    vnode_ranks,
-  )
-  (fixed_positions, fixed_ranks)
-}
-
-///|
 /// Graphviz parity: cluster-local node set uses global node_order as stable
 /// seed to create deterministic local node indices.
 /// Do not change behavior without updating fixtures/tests.
@@ -1917,25 +1880,6 @@ fn reorder_cluster_rank_groups_for_cluster_names(
 
 
 ///|
-/// Graphviz parity: cluster-local passes share one immutable fixed-slot snapshot
-/// and an empty local skeleton map across cluster iterations.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_reorder_shared_state(
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-) -> (Map[String, Bool], Map[String, Double], Map[String, Int]) {
-  let empty_cluster_skeleton : Map[String, Bool] = Map::new()
-  let (fixed_positions, fixed_ranks) =
-    build_cluster_local_fixed_positions_and_ranks(
-      groups,
-      ranks,
-      vnode_ranks,
-    )
-  (empty_cluster_skeleton, fixed_positions, fixed_ranks)
-}
-
-///|
 /// Graphviz parity: cluster-local reorder only runs when cluster build order
 /// yields materialized cluster subgraphs in deterministic traversal order.
 /// Do not change behavior without updating fixtures/tests.
@@ -1994,12 +1938,15 @@ fn reorder_groups_by_cluster_build_ranks(
       Some(value) => value
       None => return ()
     }
-  let (empty_cluster_skeleton, fixed_positions, fixed_ranks) =
-    build_cluster_local_reorder_shared_state(
-      groups,
-      ranks,
-      vnode_info.vnode_ranks,
-    )
+  let empty_cluster_skeleton : Map[String, Bool] = Map::new()
+  let fixed_positions = order_positions_from_groups(groups)
+  let fixed_ranks : Map[String, Int] = Map::new()
+  for name, rank in ranks {
+    fixed_ranks[name] = rank
+  }
+  for name, rank in vnode_info.vnode_ranks {
+    fixed_ranks[name] = rank
+  }
   let (raw_graphviz_out_neighbors, raw_graphviz_in_neighbors) =
     build_graphviz_neighbor_maps_from_graph_edges(graph)
   reorder_cluster_rank_groups_for_cluster_names(
