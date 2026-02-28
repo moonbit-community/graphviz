@@ -144,7 +144,7 @@ fn build_materialized_order_edges_and_neighbors(
       order_node_map_unmapped,
     )
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_graphviz_neighbor_maps(
+    build_neighbor_maps(
       order_nodes,
       order_edges_by_tail,
       edge_creation_order,

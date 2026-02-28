@@ -695,7 +695,7 @@ fn build_cluster_local_edge_bundle(
 /// Graphviz parity: cluster-local ND_out/ND_in maps keep local tails/heads but
 /// preserve external anchors in AGSEQ order for startpass=2 medians.
 /// Do not change behavior without updating fixtures/tests.
-fn build_graphviz_neighbor_maps_from_graph_edges(
+fn build_neighbor_maps_from_graph_edges(
   graph : @cgraph.Graph,
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
@@ -725,7 +725,7 @@ fn build_graphviz_neighbor_maps_from_graph_edges(
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_graphviz_neighbor_maps(
+fn build_cluster_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_nodes : Array[String],
@@ -1433,7 +1433,7 @@ fn build_cluster_local_reorder_run_inputs(
       flat_constraints,
     )
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_cluster_local_graphviz_neighbor_maps(
+    build_cluster_local_neighbor_maps(
       cluster,
       expanded_clusters,
       cluster_nodes,
@@ -1884,7 +1884,7 @@ fn reorder_groups_by_cluster_build_ranks(
     fixed_ranks[name] = rank
   }
   let (raw_graphviz_out_neighbors, raw_graphviz_in_neighbors) =
-    build_graphviz_neighbor_maps_from_graph_edges(graph)
+    build_neighbor_maps_from_graph_edges(graph)
   reorder_cluster_rank_groups_for_cluster_names(
     cluster_names,
     cluster_graphs,

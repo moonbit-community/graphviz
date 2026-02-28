@@ -268,7 +268,7 @@ fn compute_edge_port_orders(
 ///|
 /// Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
 /// Do not change behavior without updating fixtures/tests.
-fn build_graphviz_neighbor_maps(
+fn build_neighbor_maps(
   order_nodes : Array[String],
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   edge_creation_order : Array[(String, String)],

@@ -52,7 +52,7 @@ fn collect_noncluster_in_neighbor_entries_from_out_order(
 /// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
 /// edge_out_order and ND_in head order from node-ordered ND_out scans.
 /// Do not change behavior without updating fixtures/tests.
-fn build_noncluster_graphviz_neighbor_maps(
+fn build_noncluster_neighbor_maps(
   nodes : Array[@cgraph.Node],
   edge_out_order : Map[String, Array[Int]],
   edge_head : Array[String],
@@ -407,7 +407,7 @@ fn run_noncluster_reorder_pass(
       ranks,
     )
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_noncluster_graphviz_neighbor_maps(
+    build_noncluster_neighbor_maps(
       nodes,
       edge_out_order,
       edge_head,
