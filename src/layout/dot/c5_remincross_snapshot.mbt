@@ -12,28 +12,6 @@ fn should_capture_ordering_fixture_mode() -> Bool {
 }
 
 ///|
-fn clone_string_map_for_ordering_input_snapshot(
-  values : Map[String, String],
-) -> Map[String, String] {
-  let out : Map[String, String] = Map::new()
-  for key, value in values {
-    out[key] = value
-  }
-  out
-}
-
-///|
-fn clone_bool_map_for_ordering_input_snapshot(
-  values : Map[String, Bool],
-) -> Map[String, Bool] {
-  let out : Map[String, Bool] = Map::new()
-  for key, value in values {
-    out[key] = value
-  }
-  out
-}
-
-///|
 fn build_ordering_input_edges_snapshot(
   edges_out : Array[@cgraph.Edge],
   edge_tail_out : Array[String],
@@ -161,14 +139,20 @@ fn capture_root_mincross_input_snapshot(
         edge_head_port_order,
       ),
     )
+  let snapshot_cluster_keys : Map[String, String] = Map::new()
+  for key, value in cluster_keys {
+    snapshot_cluster_keys[key] = value
+  }
+  let snapshot_cluster_skeleton : Map[String, Bool] = Map::new()
+  for key, value in cluster_skeleton {
+    snapshot_cluster_skeleton[key] = value
+  }
   let snapshot : RootMincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
     groups: clone_rank_groups(groups),
     edges,
-    cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
-    cluster_skeleton: clone_bool_map_for_ordering_input_snapshot(
-      cluster_skeleton,
-    ),
+    cluster_keys: snapshot_cluster_keys,
+    cluster_skeleton: snapshot_cluster_skeleton,
   }
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
@@ -194,6 +178,10 @@ fn capture_remincross_input_snapshot(
   if !should_capture_ordering_inputs() {
     return
   }
+  let snapshot_cluster_keys : Map[String, String] = Map::new()
+  for key, value in cluster_keys {
+    snapshot_cluster_keys[key] = value
+  }
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
     groups: clone_rank_groups(groups),
@@ -206,7 +194,7 @@ fn capture_remincross_input_snapshot(
       edge_tail_port_order,
       edge_head_port_order,
     ),
-    cluster_keys: clone_string_map_for_ordering_input_snapshot(cluster_keys),
+    cluster_keys: snapshot_cluster_keys,
   }
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
