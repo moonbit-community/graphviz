@@ -741,31 +741,6 @@ fn is_intercluster_alignment_enabled() -> Bool {
 }
 
 ///|
-/// Graphviz parity: final node output positions are direct x/y map lookups for
-/// each real node, with missing coordinates defaulting to zero.
-/// Do not change behavior without updating fixtures/tests.
-fn build_node_positions_for_output(
-  nodes : Array[@cgraph.Node],
-  x_positions : Map[String, Double],
-  y_positions : Map[String, Double],
-) -> Map[String, @geom.Point] {
-  let positions : Map[String, @geom.Point] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    let pos_x = match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    let pos_y = match y_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    positions[name] = { x: pos_x, y: pos_y }
-  }
-  positions
-}
-
-///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
@@ -807,8 +782,19 @@ fn build_position_output_maps_for_positions(
       x_positions,
       rank_y,
     )
-  let positions =
-    build_node_positions_for_output(prep.nodes, x_positions, y_positions)
+  let positions : Map[String, @geom.Point] = Map::new()
+  for node in prep.nodes {
+    let name = node.name()
+    let pos_x = match x_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    let pos_y = match y_positions.get(name) {
+      Some(value) => value
+      None => 0.0
+    }
+    positions[name] = { x: pos_x, y: pos_y }
+  }
   if cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions_for_rounding(
       graph,
