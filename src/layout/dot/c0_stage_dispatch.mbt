@@ -155,83 +155,6 @@ fn run_noncluster_ordering_stage(
 }
 
 ///|
-/// Graphviz parity: clustered dispatch path reads ordering inputs from a
-/// shared stage-dispatch context and forwards them without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage_from_context(
-  dispatch_context : OrderingStageDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let dispatch_setup = dispatch_context.dispatch_setup
-  let edge_port_data = dispatch_setup.edge_port_data
-  let reorder_setup = dispatch_setup.reorder_setup
-  let class2_data = reorder_setup.class2_data
-  let clustered_dispatch_context =
-    build_clustered_ordering_stage_dispatch_context(
-      dispatch_context.graph,
-      dispatch_context.nodes,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.edge_reversed,
-      dispatch_context.ranks,
-      dispatch_context.node_order,
-      dispatch_context.order_sizes,
-      dispatch_context.nodesep_pt,
-      dispatch_context.has_edge_labels,
-      dispatch_context.cluster_meta,
-      dispatch_context.port_order_positions,
-      dispatch_context.port_order_contrib,
-      dispatch_context.runtime_context,
-      edge_port_data,
-      reorder_setup,
-      class2_data,
-    )
-  run_clustered_ordering_stage(clustered_dispatch_context)
-}
-
-///|
-/// Graphviz parity: non-clustered dispatch path continues to run a single
-/// mincross pass using the same stage-dispatch context payloads.
-/// Do not change behavior without updating fixtures/tests.
-fn run_noncluster_ordering_stage_from_context(
-  dispatch_context : OrderingStageDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let dispatch_setup = dispatch_context.dispatch_setup
-  let edge_port_data = dispatch_setup.edge_port_data
-  let reorder_setup = dispatch_setup.reorder_setup
-  let class2_data = reorder_setup.class2_data
-  let noncluster_dispatch_context =
-    build_noncluster_ordering_stage_dispatch_context(
-      dispatch_context.nodes,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.edge_out_order,
-      dispatch_context.ranks,
-      dispatch_context.rank_keys,
-      dispatch_context.groups,
-      class2_data.nlist_order,
-      dispatch_context.node_order,
-      edge_port_data.order_edges,
-      edge_port_data.order_edge_tail,
-      edge_port_data.order_edge_head,
-      edge_port_data.order_edge_tail_port_x,
-      edge_port_data.order_edge_head_port_x,
-      edge_port_data.order_edge_tail_port_order,
-      edge_port_data.order_edge_head_port_order,
-      dispatch_context.cluster_meta,
-      edge_port_data.edge_order,
-      dispatch_context.order_sizes,
-      dispatch_context.nodesep_pt,
-      dispatch_context.has_edge_labels,
-      dispatch_context.port_order_positions,
-      dispatch_context.port_order_contrib,
-      reorder_setup.graphviz_flip,
-    )
-  run_noncluster_ordering_stage(noncluster_dispatch_context)
-}
-
-///|
 /// Graphviz parity: dispatch clustered ordering when vnode/cluster mode is
 /// active, matching Graphviz mincross control gating.
 /// Do not change behavior without updating fixtures/tests.
@@ -296,10 +219,62 @@ fn build_ordering_stage_dispatch_context(
 fn run_ordering_stage_dispatch(
   dispatch_context : OrderingStageDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let reorder_setup = dispatch_context.dispatch_setup.reorder_setup
+  let dispatch_setup = dispatch_context.dispatch_setup
+  let edge_port_data = dispatch_setup.edge_port_data
+  let reorder_setup = dispatch_setup.reorder_setup
+  let class2_data = reorder_setup.class2_data
   if should_run_clustered_ordering_stage(reorder_setup) {
-    run_clustered_ordering_stage_from_context(dispatch_context)
+    let clustered_dispatch_context =
+      build_clustered_ordering_stage_dispatch_context(
+        dispatch_context.graph,
+        dispatch_context.nodes,
+        dispatch_context.edges,
+        dispatch_context.edge_tail,
+        dispatch_context.edge_head,
+        dispatch_context.edge_reversed,
+        dispatch_context.ranks,
+        dispatch_context.node_order,
+        dispatch_context.order_sizes,
+        dispatch_context.nodesep_pt,
+        dispatch_context.has_edge_labels,
+        dispatch_context.cluster_meta,
+        dispatch_context.port_order_positions,
+        dispatch_context.port_order_contrib,
+        dispatch_context.runtime_context,
+        edge_port_data,
+        reorder_setup,
+        class2_data,
+      )
+    run_clustered_ordering_stage(clustered_dispatch_context)
   } else {
-    run_noncluster_ordering_stage_from_context(dispatch_context)
+    let noncluster_dispatch_context =
+      build_noncluster_ordering_stage_dispatch_context(
+        dispatch_context.nodes,
+        dispatch_context.edges,
+        dispatch_context.edge_tail,
+        dispatch_context.edge_head,
+        dispatch_context.edge_out_order,
+        dispatch_context.ranks,
+        dispatch_context.rank_keys,
+        dispatch_context.groups,
+        class2_data.nlist_order,
+        dispatch_context.node_order,
+        edge_port_data.order_edges,
+        edge_port_data.order_edge_tail,
+        edge_port_data.order_edge_head,
+        edge_port_data.order_edge_tail_port_x,
+        edge_port_data.order_edge_head_port_x,
+        edge_port_data.order_edge_tail_port_order,
+        edge_port_data.order_edge_head_port_order,
+        dispatch_context.cluster_meta,
+        edge_port_data.edge_order,
+        dispatch_context.order_sizes,
+        dispatch_context.nodesep_pt,
+        dispatch_context.has_edge_labels,
+        dispatch_context.port_order_positions,
+        dispatch_context.port_order_contrib,
+        reorder_setup.graphviz_flip,
+      )
+    run_noncluster_ordering_stage(noncluster_dispatch_context)
   }
 }

@@ -1239,31 +1239,6 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
 
 
 ///|
-/// Graphviz parity: root reorder output map for clustered ordering is
-/// produced by root mincross reorder followed by root-rank map transfer.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_output_from_root_reorder(
-  dispatch_context : ClusterRankOrderFromRootReorderContext,
-  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
-) -> Map[Int, Map[String, Int]] {
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
-  let (root_rank_keys, ordered_root) =
-    run_root_cluster_rank_order_phase_from_root_reorder_output(
-      dispatch_context,
-      root_reorder_output,
-    )
-  append_root_cluster_rank_order_for_cluster_reorder(
-    cluster_rank_order,
-    root_rank_keys,
-    ordered_root,
-    dispatch_context.order_cluster_skeleton,
-    dispatch_context.order_cluster_keys,
-    dispatch_context.real_nodes,
-  )
-  cluster_rank_order
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order prep tuple alias keeps root
 /// groups/edges/node-order field ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -1438,10 +1413,21 @@ fn build_cluster_rank_order_when_clusters_enabled(
     graphviz_flip,
     real_nodes,
   }
-  build_cluster_rank_order_output_from_root_reorder(
-    dispatch_context,
-    root_reorder_output,
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let (root_rank_keys, ordered_root) =
+    run_root_cluster_rank_order_phase_from_root_reorder_output(
+      dispatch_context,
+      root_reorder_output,
+    )
+  append_root_cluster_rank_order_for_cluster_reorder(
+    cluster_rank_order,
+    root_rank_keys,
+    ordered_root,
+    dispatch_context.order_cluster_skeleton,
+    dispatch_context.order_cluster_keys,
+    dispatch_context.real_nodes,
   )
+  cluster_rank_order
 }
 
 ///|
