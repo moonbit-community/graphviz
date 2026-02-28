@@ -190,7 +190,6 @@ fn run_root_and_cluster_build_ranks_stage(
       port_order_positions,
       port_order_contrib,
       vnode_info,
-      graphviz_flip,
       stage_inputs.ordered_with_vnodes,
     )
   dot_trace_groups("ordered_before_clean", ordered)

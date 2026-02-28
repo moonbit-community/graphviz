@@ -551,10 +551,8 @@ fn apply_cluster_build_ranks_and_track_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
   vnode_info : EdgeVnodeInfo,
-  graphviz_flip : Bool,
   ordered_with_vnodes : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let _ = graphviz_flip
   if order_with_clusters {
     reorder_groups_by_cluster_build_ranks(
       graph,
