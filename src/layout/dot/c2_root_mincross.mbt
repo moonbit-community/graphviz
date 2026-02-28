@@ -429,46 +429,6 @@ fn run_root_mincross_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: root ReMincross seeds root/skeleton rank groups and keeps
-/// DOT_TRACE_GROUPS neighbor tracing aligned to Graphviz debug flow.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_groups_with_trace(
-  order_with_clusters : Bool,
-  seeded_groups : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-) -> Map[Int, Array[String]] {
-  let order_groups_for_mincross =
-    build_order_groups_for_root_mincross(
-      order_with_clusters,
-      seeded_groups,
-      order_cluster_keys,
-      order_cluster_skeleton,
-    )
-  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
-    for rank, names in order_groups_for_mincross {
-      let rank_joined = names.join(" ")
-      println("root_input_rank \{rank}: \{rank_joined}")
-      for name in names {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
-        let skel = order_cluster_skeleton.get(name) == Some(true)
-        println("root_input_node \{name} cluster=\{cluster} skel=\{skel}")
-      }
-    }
-  }
-  trace_root_mincross_graphviz_neighbors(
-    graphviz_in_neighbors,
-    graphviz_out_neighbors,
-  )
-  order_groups_for_mincross
-}
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder input tuple alias keeps
 /// membership/edge/preferred-position field ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -726,14 +686,30 @@ fn run_root_mincross_reorder(
   // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
   // cluster-internal nodes are handled by cluster-local build_ranks passes.
   let order_groups_for_mincross_base =
-    build_root_mincross_groups_with_trace(
+    build_order_groups_for_root_mincross(
       order_with_clusters,
       seeded_groups,
       order_cluster_keys,
       order_cluster_skeleton,
-      graphviz_in_neighbors,
-      graphviz_out_neighbors,
     )
+  if @sys.get_env_var("DOT_TRACE_ROOT_INPUT") is Some(_) {
+    for rank, names in order_groups_for_mincross_base {
+      let rank_joined = names.join(" ")
+      println("root_input_rank \{rank}: \{rank_joined}")
+      for name in names {
+        let cluster = match order_cluster_keys.get(name) {
+          Some(value) => value
+          None => ""
+        }
+        let skel = order_cluster_skeleton.get(name) == Some(true)
+        println("root_input_node \{name} cluster=\{cluster} skel=\{skel}")
+      }
+    }
+  }
+  trace_root_mincross_graphviz_neighbors(
+    graphviz_in_neighbors,
+    graphviz_out_neighbors,
+  )
   let order_groups_for_mincross =
     match root_mincross_groups_override.val {
       Some(override_groups) => clone_rank_groups(override_groups)
