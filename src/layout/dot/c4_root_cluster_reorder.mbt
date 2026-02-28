@@ -45,6 +45,37 @@ fn should_zero_synthetic_mincross_ports(
 }
 
 ///|
+/// Graphviz parity: synthetic mincross endpoints keep default port values at
+/// zero when Graphviz treats the endpoint pair as synthetic-only.
+fn normalize_synthetic_mincross_ports(
+  tail : String,
+  head : String,
+  tail_port_x_raw : Double,
+  head_port_x_raw : Double,
+  tail_port_order_raw : Double,
+  head_port_order_raw : Double,
+) -> (Double, Double, Double, Double) {
+  let zero_synthetic_defaults =
+    should_zero_synthetic_mincross_ports(
+      tail,
+      head,
+      tail_port_x_raw,
+      head_port_x_raw,
+      tail_port_order_raw,
+      head_port_order_raw,
+    )
+  if !zero_synthetic_defaults {
+    return (
+      tail_port_x_raw,
+      head_port_x_raw,
+      tail_port_order_raw,
+      head_port_order_raw,
+    )
+  }
+  (0.0, 0.0, 0.0, 0.0)
+}
+
+///|
 /// Graphviz parity: root mincross edge set keeps only edges whose endpoints are
 /// both in the filtered node set, preserving edge and port-order sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -82,8 +113,8 @@ fn collect_mincross_order_edges(
       let head_port_x_raw = order_edge_head_port_x[edge_idx]
       let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
       let head_port_order_raw = order_edge_head_port_order[edge_idx]
-      let zero_synthetic_defaults =
-        should_zero_synthetic_mincross_ports(
+      let (tail_port_x, head_port_x, tail_port_order, head_port_order) =
+        normalize_synthetic_mincross_ports(
           tail,
           head,
           tail_port_x_raw,
@@ -91,22 +122,6 @@ fn collect_mincross_order_edges(
           tail_port_order_raw,
           head_port_order_raw,
         )
-      let tail_port_x =
-        if zero_synthetic_defaults { 0.0 } else { tail_port_x_raw }
-      let head_port_x =
-        if zero_synthetic_defaults { 0.0 } else { head_port_x_raw }
-      let tail_port_order =
-        if zero_synthetic_defaults {
-          0.0
-        } else {
-          tail_port_order_raw
-        }
-      let head_port_order =
-        if zero_synthetic_defaults {
-          0.0
-        } else {
-          head_port_order_raw
-        }
       order_edges_out_mincross.push(order_edges_out[edge_idx])
       order_edge_tail_out_mincross.push(tail)
       order_edge_head_out_mincross.push(head)
@@ -812,8 +827,13 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
         let head_port_x_raw = root_edge_head_port_x[root_port_idx]
         let tail_port_order_raw = root_edge_tail_port_order[root_port_idx]
         let head_port_order_raw = root_edge_head_port_order[root_port_idx]
-        let zero_ports =
-          should_zero_synthetic_mincross_ports(
+        let (
+          tail_port_x_norm,
+          head_port_x_norm,
+          tail_port_order_norm,
+          head_port_order_norm,
+        ) =
+          normalize_synthetic_mincross_ports(
             tail,
             head,
             tail_port_x_raw,
@@ -821,18 +841,10 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
             tail_port_order_raw,
             head_port_order_raw,
           )
-        root_edge_tail_port_x_norm.push(
-          if zero_ports { 0.0 } else { tail_port_x_raw },
-        )
-        root_edge_head_port_x_norm.push(
-          if zero_ports { 0.0 } else { head_port_x_raw },
-        )
-        root_edge_tail_port_order_norm.push(
-          if zero_ports { 0.0 } else { tail_port_order_raw },
-        )
-        root_edge_head_port_order_norm.push(
-          if zero_ports { 0.0 } else { head_port_order_raw },
-        )
+        root_edge_tail_port_x_norm.push(tail_port_x_norm)
+        root_edge_head_port_x_norm.push(head_port_x_norm)
+        root_edge_tail_port_order_norm.push(tail_port_order_norm)
+        root_edge_head_port_order_norm.push(head_port_order_norm)
         root_port_idx = root_port_idx + 1
       }
       let (root_parents, root_children, root_edge_order) =
