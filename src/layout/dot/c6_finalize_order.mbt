@@ -263,10 +263,6 @@ fn build_nlist_order_and_vnode_creation_order(
       creation_order,
       vnode_creation_by_tail,
     )
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let order_creation_joined = order_creation.join(" ")
-    println("order_creation \{order_creation_joined}")
-  }
   // Graphviz parity: decompose DFS starts from agfstnode (creation) order
   // regardless of rankdir flip.
   // Do not change behavior without updating fixtures/tests.

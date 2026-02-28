@@ -253,10 +253,6 @@ fn build_cluster_order_and_parents_for_metadata(
 ) -> (Array[String], Map[String, String?]) {
   let cluster_order : Array[String] = []
   collect_cluster_names_graphviz_order(graph, cluster_order)
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && cluster_order.length() > 0 {
-    let joined = cluster_order.join(" ")
-    println("cluster_order \{joined}")
-  }
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)

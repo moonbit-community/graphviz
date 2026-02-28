@@ -1465,9 +1465,6 @@ fn count_crossings_graphviz(
           )
       }
     }
-    if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) && rank_cross > 0 {
-      println("crossings rank \{rank}->\{next_rank}: \{rank_cross}")
-    }
     crossings = crossings + rank_cross
     idx = idx + 1
   }

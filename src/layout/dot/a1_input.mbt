@@ -154,22 +154,6 @@ fn build_node_order_for_layout_inputs(
     node_order[nlist_nodes[order_idx].name()] = order_idx
     order_idx = order_idx + 1
   }
-  if @sys.get_env_var("DOT_TRACE_GROUPS") is Some(_) {
-    let debug_names : Array[String] = [
-      "z_req",
-      "z_req1",
-      "handle_x",
-      "handle_1",
-      "mobvm_a_req",
-      "mobvm_a_req1",
-    ]
-    for name in debug_names {
-      match node_order.get(name) {
-        Some(value) => println("raw_node_order \{name}=\{value}")
-        None => ()
-      }
-    }
-  }
   if rankdir == RankDir::RL {
     let total = nodes.length()
     for node in nodes {
