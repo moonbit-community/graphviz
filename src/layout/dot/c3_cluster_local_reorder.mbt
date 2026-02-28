@@ -374,67 +374,6 @@ fn build_cluster_local_rank_groups(
 
 
 ///|
-/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) needs both
-/// incoming and outgoing crossing edges so median anchors see external slots.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_internal_cluster_edges_for_local_bundle(
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  cluster_node_set : Map[String, Bool],
-  include_external_crossing : Bool,
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let cluster_edges : Array[@cgraph.Edge] = []
-  let cluster_edge_tail : Array[String] = []
-  let cluster_edge_head : Array[String] = []
-  let cluster_edge_tail_port_x : Array[Double] = []
-  let cluster_edge_head_port_x : Array[Double] = []
-  let cluster_edge_tail_port_order : Array[Double] = []
-  let cluster_edge_head_port_order : Array[Double] = []
-  for i in 0..<order_edges.length() {
-    let tail = order_edge_tail[i]
-    let head = order_edge_head[i]
-    let tail_in = cluster_node_set.get(tail) is Some(_)
-    let head_in = cluster_node_set.get(head) is Some(_)
-    let keep = (tail_in && head_in) ||
-      (include_external_crossing && (tail_in || head_in))
-    if !keep {
-      continue
-    }
-    cluster_edges.push(order_edges[i])
-    cluster_edge_tail.push(tail)
-    cluster_edge_head.push(head)
-    cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
-    cluster_edge_head_port_x.push(order_edge_head_port_x[i])
-    cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
-    cluster_edge_head_port_order.push(order_edge_head_port_order[i])
-  }
-  (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-  )
-}
-
-
-
-///|
 /// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
@@ -915,26 +854,33 @@ fn build_cluster_local_reorder_run_inputs(
     edge_order,
   ) =
     {
-      let (
-        cluster_edges,
-        cluster_edge_tail,
-        cluster_edge_head,
-        cluster_edge_tail_port_x,
-        cluster_edge_head_port_x,
-        cluster_edge_tail_port_order,
-        cluster_edge_head_port_order,
-      ) =
-        collect_internal_cluster_edges_for_local_bundle(
-          order_edges,
-          order_edge_tail,
-          order_edge_head,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-          cluster_node_set,
-          include_external_crossing,
-        )
+      // Graphviz parity: shallow cluster-local reorder (<=2 ranks) needs both
+      // incoming and outgoing crossing edges so median anchors see external slots.
+      let cluster_edges : Array[@cgraph.Edge] = []
+      let cluster_edge_tail : Array[String] = []
+      let cluster_edge_head : Array[String] = []
+      let cluster_edge_tail_port_x : Array[Double] = []
+      let cluster_edge_head_port_x : Array[Double] = []
+      let cluster_edge_tail_port_order : Array[Double] = []
+      let cluster_edge_head_port_order : Array[Double] = []
+      for i in 0..<order_edges.length() {
+        let tail = order_edge_tail[i]
+        let head = order_edge_head[i]
+        let tail_in = cluster_node_set.get(tail) is Some(_)
+        let head_in = cluster_node_set.get(head) is Some(_)
+        let keep = (tail_in && head_in) ||
+          (include_external_crossing && (tail_in || head_in))
+        if !keep {
+          continue
+        }
+        cluster_edges.push(order_edges[i])
+        cluster_edge_tail.push(tail)
+        cluster_edge_head.push(head)
+        cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
+        cluster_edge_head_port_x.push(order_edge_head_port_x[i])
+        cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
+        cluster_edge_head_port_order.push(order_edge_head_port_order[i])
+      }
       let (parents, children) = build_edge_index_for_order_names(
         cluster_nodes,
         cluster_edge_tail,
