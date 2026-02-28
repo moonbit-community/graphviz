@@ -239,14 +239,47 @@ fn build_ordering_class2_data(
       skeleton_edge_creation,
       order_edge_creation,
     )
-  // Graphviz parity: class2 creates cluster skeletons first, then interleaves
-  // real nodes with their edge vnodes in agfstnode order.
+  // Graphviz parity: class2 order_creation starts with cluster skeletons, then
+  // agfstnode real nodes interleaved with edge-vnodes per tail.
   let (order_creation, vnode_creation_order) =
-    build_order_creation_with_vnodes(
-      cluster_skeleton_creation,
-      creation_order,
-      vnode_creation_by_tail,
-    )
+    {
+      let order_creation : Array[String] = []
+      let order_seen : Map[String, Bool] = Map::new()
+      for name in cluster_skeleton_creation {
+        append_order_creation_name_if_absent(
+          order_creation,
+          order_seen,
+          name,
+        )
+      }
+      for tail_name in creation_order {
+        // Graphviz parity: each real-node tail emits itself first, followed by
+        // its per-tail vnode sequence, while preserving first-seen dedup semantics.
+        append_order_creation_name_if_absent(
+          order_creation,
+          order_seen,
+          tail_name,
+        )
+        let vnodes = match vnode_creation_by_tail.get(tail_name) {
+          Some(list) => list
+          None => []
+        }
+        for vnode in vnodes {
+          append_order_creation_name_if_absent(
+            order_creation,
+            order_seen,
+            vnode,
+          )
+        }
+      }
+      let vnode_creation_order : Array[String] = []
+      for name in order_creation {
+        if name.has_prefix(EDGE_VNODE_PREFIX) {
+          vnode_creation_order.push(name)
+        }
+      }
+      (order_creation, vnode_creation_order)
+    }
   // Graphviz parity: decompose DFS starts from agfstnode (creation) order
   // regardless of rankdir flip.
   let nlist_tail_order =
@@ -282,4 +315,3 @@ fn build_ordering_class2_data(
     vnode_creation_order,
   }
 }
-

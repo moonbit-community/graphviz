@@ -301,53 +301,6 @@ fn append_order_creation_name_if_absent(
 }
 
 ///|
-/// Graphviz parity: class2 order_creation starts with cluster skeletons, then
-/// agfstnode real nodes interleaved with edge-vnodes per tail.
-/// Do not change behavior without updating fixtures/tests.
-fn build_order_creation_with_vnodes(
-  cluster_skeleton_creation : Array[String],
-  creation_order : Array[String],
-  vnode_creation_by_tail : Map[String, Array[String]],
-) -> (Array[String], Array[String]) {
-  let order_creation : Array[String] = []
-  let order_seen : Map[String, Bool] = Map::new()
-  for name in cluster_skeleton_creation {
-    append_order_creation_name_if_absent(
-      order_creation,
-      order_seen,
-      name,
-    )
-  }
-  for tail_name in creation_order {
-    // Graphviz parity: each real-node tail emits itself first, followed by its
-    // per-tail vnode sequence, while preserving first-seen dedup semantics.
-    append_order_creation_name_if_absent(
-      order_creation,
-      order_seen,
-      tail_name,
-    )
-    let vnodes = match vnode_creation_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for vnode in vnodes {
-      append_order_creation_name_if_absent(
-        order_creation,
-        order_seen,
-        vnode,
-      )
-    }
-  }
-  let vnode_creation_order : Array[String] = []
-  for name in order_creation {
-    if name.has_prefix(EDGE_VNODE_PREFIX) {
-      vnode_creation_order.push(name)
-    }
-  }
-  (order_creation, vnode_creation_order)
-}
-
-///|
 /// Graphviz parity: cluster membership lookup treats missing keys as
 /// non-cluster entries across class2 preprocessing passes.
 /// Do not change behavior without updating fixtures/tests.
