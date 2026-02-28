@@ -291,43 +291,6 @@ fn collect_root_vnodes_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: root cluster reorder base groups keep only root/skeleton
-/// nodes, and include edge-vnodes only when flagged as root-vnodes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_groups_base_for_cluster_reorder(
-  order_rank_keys : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  root_vnodes : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let root_groups_base : Map[Int, Array[String]] = Map::new()
-  for rank in order_rank_keys {
-    let names = match order_groups_for_mincross.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let root_names : Array[String] = []
-    for name in names {
-      let cluster = match order_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
-      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-      if is_skeleton || cluster == "" {
-        if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
-          root_names.push(name)
-        }
-      }
-    }
-    if root_names.length() > 0 {
-      root_groups_base[rank] = root_names
-    }
-  }
-  root_groups_base
-}
-
-///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
@@ -489,14 +452,31 @@ fn build_root_groups_for_cluster_reorder(
       cluster_keys,
       edge_vnodes,
     )
-  let root_groups_base =
-    build_root_groups_base_for_cluster_reorder(
-      order_rank_keys,
-      order_groups_for_mincross,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      root_vnodes,
-    )
+  // Graphviz parity: root cluster reorder base groups keep only root/skeleton
+  // nodes, and include edge-vnodes only when flagged as root-vnodes.
+  let root_groups_base : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys {
+    let names = match order_groups_for_mincross.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    let root_names : Array[String] = []
+    for name in names {
+      let cluster = match order_cluster_keys.get(name) {
+        Some(value) => value
+        None => ""
+      }
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      if is_skeleton || cluster == "" {
+        if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
+          root_names.push(name)
+        }
+      }
+    }
+    if root_names.length() > 0 {
+      root_groups_base[rank] = root_names
+    }
+  }
   let root_order_index = build_order_index(root_groups_base)
   let (root_vnodes_by_rank, root_vnode_order_keys) =
     collect_root_vnode_rank_groups_and_order_keys(
