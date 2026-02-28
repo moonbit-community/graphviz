@@ -163,39 +163,6 @@ fn apply_cluster_order_base_for_metadata(
 }
 
 ///|
-/// Graphviz parity: flat ordering constraints include Graphviz ordering attrs
-/// plus same-rank edge constraints before clustered reorder dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_flat_constraints_for_cluster_metadata(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  cluster_keys : Map[String, String],
-) -> (Map[String, Bool], Bool) {
-  let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    cluster_keys,
-  )
-  append_same_rank_flat_constraints_for_metadata(
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    flat_constraints,
-  )
-  (flat_constraints, ordering_set)
-}
-
-
-
-///|
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
@@ -281,16 +248,23 @@ fn compute_cluster_metadata(
   let rank_same_groups : Map[String, Int] = Map::new()
   let rank_same_order : Map[String, Int] = Map::new()
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
-  let (flat_constraints, ordering_set) =
-    build_flat_constraints_for_cluster_metadata(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      ranks,
-      cluster_keys,
-    )
+  // Graphviz parity: flat ordering constraints include Graphviz ordering attrs
+  // plus same-rank edge constraints before clustered reorder dispatch.
+  let (flat_constraints, ordering_set) = build_ordering_flat_constraints(
+    graph,
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    cluster_keys,
+  )
+  append_same_rank_flat_constraints_for_metadata(
+    edges,
+    edge_tail,
+    edge_head,
+    ranks,
+    flat_constraints,
+  )
   {
     has_clusters,
     cluster_keys,
