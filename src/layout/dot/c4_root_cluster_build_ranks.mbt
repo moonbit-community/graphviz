@@ -114,27 +114,6 @@ priv struct RootClusterBuildRanksStageInputs {
 }
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder finalize dispatch context
-/// keeps finalize-phase arguments in Graphviz ordering before tuple unpack.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootMincrossRankReorderFinalizeDispatchContext {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  order_cluster_keys : Map[String, String]
-  cluster_meta : ClusterMetadata
-  order_node_order : Map[String, Int]
-  order_sizes_out : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_cluster_skeleton : Map[String, Bool]
-  order_flat_constraints : Map[String, Bool]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  graphviz_flip : Bool
-}
-
-///|
 /// Stage C Phase C4 split: root+cluster build_ranks
 /// and reorder helpers for root-cluster arrangement.
 
