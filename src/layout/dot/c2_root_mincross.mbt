@@ -50,35 +50,6 @@ fn build_root_mincross_final_ordered_groups(
 }
 
 ///|
-/// Graphviz parity: root ReMincross traverses seeded groups by collected
-/// rank keys to build the exact order-node sequence used for edge filtering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_rank_keys_and_nodes(
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> (Array[Int], Array[String]) {
-  let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
-  let order_nodes_for_mincross =
-    build_order_nodes_from_groups(
-      order_groups_for_mincross,
-      order_rank_keys_for_mincross,
-    )
-  (order_rank_keys_for_mincross, order_nodes_for_mincross)
-}
-
-///|
-/// Graphviz parity: root ReMincross builds rank-key/node flattening and
-/// membership map from seeded root/skeleton groups before edge filtering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_node_membership_inputs(
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> (Array[Int], Array[String], Map[String, Bool]) {
-  let (order_rank_keys_for_mincross, order_nodes_for_mincross) =
-    build_root_mincross_rank_keys_and_nodes(order_groups_for_mincross)
-  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
-  (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes)
-}
-
-///|
 /// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
 /// and builds parent/child + edge-order indices before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -534,8 +505,13 @@ fn build_root_mincross_rank_reorder_inputs(
   order_edge_head_port_order : Array[Double],
   order_ranks : Map[String, Int],
 ) -> RootMincrossRankReorderInputsPhaseOutput {
-  let (order_rank_keys_for_mincross, order_nodes_for_mincross, mincross_nodes) =
-    build_root_mincross_node_membership_inputs(order_groups_for_mincross)
+  let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
+  let order_nodes_for_mincross =
+    build_order_nodes_from_groups(
+      order_groups_for_mincross,
+      order_rank_keys_for_mincross,
+    )
+  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
   let (
     order_edges_out_mincross,
     order_edge_tail_out_mincross,
