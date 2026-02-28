@@ -4,7 +4,7 @@
 
 ///|
 /// Graphviz parity: clustered ReMincross materializes remapped order edges
-/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays with traces.
+/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_remincross_materialized_edges(
   creation_order : Array[String],
@@ -37,7 +37,6 @@ fn build_clustered_remincross_materialized_edges(
 ) {
   // Graphviz parity: clustered ReMincross order-edge rematerialization uses
   // Graphviz ND_out chain expansion with vnode creation + edge creation outputs.
-  let rem_edges_by_tail = edges_by_tail
   let (rem_order_edges_by_tail_raw, rem_vnode_creation, _rem_edge_creation_raw) =
     build_order_edges_by_tail_graphviz(
       creation_order,
@@ -55,7 +54,7 @@ fn build_clustered_remincross_materialized_edges(
       order_with_clusters,
       false,
       false,
-      rem_edges_by_tail,
+      edges_by_tail,
       cluster_order_index=cluster_order_index,
     )
   let rem_order_edges_by_tail_coalesced =
@@ -72,7 +71,7 @@ fn build_clustered_remincross_materialized_edges(
       edge_vnodes,
       order_with_vnodes,
       order_with_clusters,
-      rem_edges_by_tail,
+      edges_by_tail,
       cluster_keys,
     )
   let rem_order_edges_by_tail =
@@ -86,7 +85,7 @@ fn build_clustered_remincross_materialized_edges(
       rem_order_edges_by_tail,
     )
   // Graphviz parity: clustered ReMincross materialized-edge flow rebuilds
-  // remapped order graph arrays, then traces edge endpoints before tuple output.
+  // remapped order graph arrays before tuple output.
   let (
     rem_node_order,
     rem_edges_out,
@@ -121,9 +120,8 @@ fn build_clustered_remincross_materialized_edges(
 }
 
 ///|
-/// Graphviz parity: ReMincross order-graph materialization filters local flat
-/// constraints by fast-graph membership, rebuilds GD_nlist, seeds node order,
-/// then materializes edge arrays in nlist tail order.
+/// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
+/// seeds node order, then materializes edge arrays in nlist tail order.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_materialized_order_graph(
   creation_order : Array[String],
