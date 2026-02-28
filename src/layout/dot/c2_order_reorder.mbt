@@ -70,19 +70,50 @@ fn build_order_reorder_context(
     creation_idx = creation_idx - 1
     creation_order.push(nlist_order[creation_idx])
   }
-  let order_node_order =
-    build_order_node_order_for_build_ranks(
-      gdnlist_order,
-      nlist_order,
-      node_order,
-      real_nodes,
-      has_clusters,
-      order_groups,
-      base_order_index,
+  // Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
+  // fills with nlist/order_groups/base order; rank=same ND_order normalization
+  // is applied only on clustered reorder paths.
+  let order_node_order : Map[String, Int] = Map::new()
+  let mut order_idx = 0
+  for name in gdnlist_order {
+    order_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
+  for name in nlist_order {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = order_idx
+      order_idx = order_idx + 1
+    }
+  }
+  // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
+  for name, idx in node_order {
+    if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  let order_index = build_order_index(order_groups)
+  for name, idx in order_index {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  // Graphviz parity: seed missing real-node order from initial rank order;
+  // GD_nlist order remains the primary source.
+  for name, idx in base_order_index {
+    if real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  if has_clusters {
+    // Graphviz parity: non-cluster root reorder keeps GD_nlist-derived order
+    // (world.gv) and does not re-normalize ND_order by rank=same declaration.
+    apply_rank_same_order_to_node_order(
+      order_node_order,
       rank_same_groups,
       rank_same_order,
       port_edge_nodes,
     )
+  }
   {
     order_rank_keys,
     order_ranks,
