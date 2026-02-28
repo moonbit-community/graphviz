@@ -451,36 +451,6 @@ fn build_cluster_local_rank_groups(
 
 
 ///|
-/// Graphviz parity: cluster-local rank groups follow global node-order seeds
-/// before running local mincross in expanded cluster context.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_groups_and_order(
-  groups : Map[Int, Array[String]],
-  cluster_node_set : Map[String, Bool],
-  node_order : Map[String, Int],
-  source_graphviz_out_neighbors : Map[String, Array[String]],
-) -> (
-  Array[String],
-  Map[String, Int],
-  Map[Int, Array[String]],
-  Array[Int],
-) {
-  if cluster_node_set.length() <= 1 {
-    return ([], Map::new(), Map::new(), [])
-  }
-  let (cluster_nodes, cluster_node_order) =
-    build_cluster_local_nodes_and_order(cluster_node_set, node_order)
-  let cluster_groups = build_cluster_local_rank_groups(
-    groups,
-    cluster_node_set,
-    cluster_node_order,
-    source_graphviz_out_neighbors,
-  )
-  let cluster_rank_keys = collect_rank_keys(cluster_groups)
-  (cluster_nodes, cluster_node_order, cluster_groups, cluster_rank_keys)
-}
-
-///|
 /// Graphviz parity: shallow cluster-local reorder (<=2 ranks) needs both
 /// incoming and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
@@ -1285,21 +1255,20 @@ fn reorder_single_cluster_rank_groups(
     vnode_info.vnode_clusters,
     order_with_vnodes,
   )
+  if cluster_node_set.length() <= 1 {
+    return ()
+  }
   let (
     cluster_nodes,
     cluster_node_order,
-    cluster_groups,
-    cluster_rank_keys,
-  ) =
-    build_cluster_local_rank_groups_and_order(
-      groups,
-      cluster_node_set,
-      node_order,
-      graphviz_out_neighbors,
-    )
-  if cluster_rank_keys.length() == 0 {
-    return ()
-  }
+  ) = build_cluster_local_nodes_and_order(cluster_node_set, node_order)
+  let cluster_groups = build_cluster_local_rank_groups(
+    groups,
+    cluster_node_set,
+    cluster_node_order,
+    graphviz_out_neighbors,
+  )
+  let cluster_rank_keys = collect_rank_keys(cluster_groups)
   let cluster_fixed_positions : Map[String, Double] = Map::new()
   for name, value in fixed_positions {
     if cluster_node_set.get(name) is None {
