@@ -165,10 +165,11 @@ fn build_ordering_base_context(
 }
 
 ///|
-/// Graphviz parity: ordering runtime context keeps base-context extraction and
-/// vnode-count derivation in the same sequence as Graphviz prep flow.
+/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
+/// in the same position as Graphviz ordering setup, even when only used for
+/// parity diagnostics.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context(
+fn build_ordering_runtime_context_with_tail_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -195,69 +196,24 @@ fn build_ordering_runtime_context(
       rankdir,
       cluster_meta,
     )
-  {
-    real_nodes: base_context.real_nodes,
-    edge_cluster_keys: base_context.edge_cluster_keys,
-    vnode_info: base_context.vnode_info,
-    port_edge_nodes: base_context.port_edge_nodes,
-    local_cluster_order: base_context.local_cluster_order,
-    rank_same_constraints: base_context.rank_same_constraints,
-    vnode_count: base_context.vnode_info.vnode_ranks.length(),
-  }
-}
-
-///|
-/// Graphviz parity: vnode tail-constraint probe runs only when vnode ordering
-/// data exists, preserving Graphviz-aligned diagnostic derivation path.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_probe_vnode_tail_constraints_for_ordering_runtime_context(
-  runtime_context : OrderingRuntimeContext,
-  edge_tail : Array[String],
-) -> Unit {
+  let runtime_context =
+    {
+      real_nodes: base_context.real_nodes,
+      edge_cluster_keys: base_context.edge_cluster_keys,
+      vnode_info: base_context.vnode_info,
+      port_edge_nodes: base_context.port_edge_nodes,
+      local_cluster_order: base_context.local_cluster_order,
+      rank_same_constraints: base_context.rank_same_constraints,
+      vnode_count: base_context.vnode_info.vnode_ranks.length(),
+    }
+  // Graphviz parity: probe vnode tail constraints in setup order even though
+  // the result is diagnostic-only.
   let _ =
     if runtime_context.vnode_count > 0 {
       build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
     } else {
       Map::new()
     }
-}
-
-///|
-/// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
-/// in the same position as Graphviz ordering setup, even when only used for
-/// parity diagnostics.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context_with_tail_constraints(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  nodesep_pt : Double,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-) -> OrderingRuntimeContext {
-  let runtime_context =
-    build_ordering_runtime_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      node_order,
-      nodesep_pt,
-      rankdir,
-      cluster_meta,
-    )
-  maybe_probe_vnode_tail_constraints_for_ordering_runtime_context(
-    runtime_context,
-    edge_tail,
-  )
   runtime_context
 }
 
