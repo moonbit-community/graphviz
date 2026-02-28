@@ -56,18 +56,6 @@ priv struct XPositionStageSeedData {
 }
 
 ///|
-priv struct XStageSeedGroupAndClusterData {
-  x_groups : Map[Int, Array[String]]
-  x_cluster_keys : Map[String, String]
-}
-
-///|
-priv struct XStageSeedOrderAndVNodeData {
-  order_index : Map[String, Int]
-  vnode_order_state : XposVNodeOrderState
-}
-
-///|
 priv struct XposFlatLabelAugmentation {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
@@ -284,67 +272,16 @@ fn build_initial_x_groups(
 }
 
 ///|
-/// Graphviz parity: xpos cluster ownership map starts from real cluster keys,
-/// then overlays vnode cluster keys only when vnode xpos path is enabled.
+/// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
+/// order probing, edge-port metadata, and initial group/cluster maps unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_cluster_keys_for_positions(
-  cluster_meta : ClusterMetadata,
-  use_vnodes_for_xpos : Bool,
-  vnode_clusters : Map[String, String],
-) -> Map[String, String] {
-  let x_cluster_keys : Map[String, String] = Map::new()
-  for name, key in cluster_meta.cluster_keys {
-    x_cluster_keys[name] = key
-  }
-  if use_vnodes_for_xpos {
-    for name, key in vnode_clusters {
-      x_cluster_keys[name] = key
-    }
-  }
-  x_cluster_keys
-}
-
-///|
-/// Graphviz parity: x-stage seed group/cluster maps derive from initial x
-/// groups and vnode-aware cluster-key overlays without remapping.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_seed_group_and_cluster_data_for_positions(
-  use_vnodes_for_xpos : Bool,
-  ordering : OrderingResult,
-  order_index : Map[String, Int],
-  vnode_order_keys : Map[String, Double],
-  cluster_meta : ClusterMetadata,
-) -> XStageSeedGroupAndClusterData {
-  let x_groups =
-    build_initial_x_groups(
-      use_vnodes_for_xpos,
-      ordering.ordered_groups,
-      ordering.ordered_groups_with_vnodes,
-      order_index,
-      ordering.vnode_info.vnodes_by_rank,
-      vnode_order_keys,
-      cluster_meta,
-    )
-  let x_cluster_keys =
-    build_x_cluster_keys_for_positions(
-      cluster_meta,
-      use_vnodes_for_xpos,
-      ordering.vnode_info.vnode_clusters,
-    )
-  { x_groups, x_cluster_keys }
-}
-
-///|
-/// Graphviz parity: x-stage seed order-index and vnode-order probe are derived
-/// before seed group/cluster maps and edge-port metadata assembly.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_seed_order_and_vnode_data_for_positions(
+fn build_x_position_stage_seed_data_for_positions(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageSeedOrderAndVNodeData {
+) -> XPositionStageSeedData {
   let order_index = build_order_index(ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state_for_positions(
@@ -356,30 +293,7 @@ fn build_x_stage_seed_order_and_vnode_data_for_positions(
       cluster_meta,
       ordering,
     )
-  { order_index, vnode_order_state }
-}
-
-///|
-/// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
-/// order probing, edge-port metadata, and initial group/cluster maps unchanged.
-/// Do not change behavior without updating fixtures/tests.
-fn build_x_position_stage_seed_data_for_positions(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-) -> XPositionStageSeedData {
-  let seed_order_vnode_data =
-    build_x_stage_seed_order_and_vnode_data_for_positions(
-      use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      cluster_meta,
-      ordering,
-    )
-  let has_vnode_order =
-    seed_order_vnode_data.vnode_order_state.has_vnode_order
+  let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
     build_x_order_edge_port_data_for_positions(
       use_vnodes_for_xpos,
@@ -387,14 +301,25 @@ fn build_x_position_stage_seed_data_for_positions(
       rank_data,
       ordering,
     )
-  let x_stage_seed_group_cluster_data =
-    build_x_stage_seed_group_and_cluster_data_for_positions(
+  let x_groups =
+    build_initial_x_groups(
       use_vnodes_for_xpos,
-      ordering,
-      seed_order_vnode_data.order_index,
-      seed_order_vnode_data.vnode_order_state.vnode_order_keys,
+      ordering.ordered_groups,
+      ordering.ordered_groups_with_vnodes,
+      order_index,
+      ordering.vnode_info.vnodes_by_rank,
+      vnode_order_state.vnode_order_keys,
       cluster_meta,
     )
+  let x_cluster_keys : Map[String, String] = Map::new()
+  for name, key in cluster_meta.cluster_keys {
+    x_cluster_keys[name] = key
+  }
+  if use_vnodes_for_xpos {
+    for name, key in ordering.vnode_info.vnode_clusters {
+      x_cluster_keys[name] = key
+    }
+  }
   {
     has_vnode_order,
     x_base_sizes: x_order_edge_port_data.x_base_sizes,
@@ -403,8 +328,8 @@ fn build_x_position_stage_seed_data_for_positions(
     x_edge_head_port_x: x_order_edge_port_data.x_edge_head_port_x,
     x_edge_tail_port_order: x_order_edge_port_data.x_edge_tail_port_order,
     x_edge_head_port_order: x_order_edge_port_data.x_edge_head_port_order,
-    x_groups: x_stage_seed_group_cluster_data.x_groups,
-    x_cluster_keys: x_stage_seed_group_cluster_data.x_cluster_keys,
+    x_groups,
+    x_cluster_keys,
   }
 }
 
