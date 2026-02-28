@@ -778,7 +778,7 @@ type ClusterLocalReorderRunInputsOutput = (
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_local_reorder_run_inputs(
-  cluster : String,
+  cluster_name : String,
   cluster_graph_edge_count : Int,
   expanded_clusters : Map[String, Bool],
   order_edges : Array[@cgraph.Edge],
@@ -917,7 +917,7 @@ fn build_cluster_local_reorder_run_inputs(
   }
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
     build_cluster_local_neighbor_maps(
-      cluster,
+      cluster_name,
       expanded_clusters,
       cluster_nodes,
       graphviz_out_neighbors,
