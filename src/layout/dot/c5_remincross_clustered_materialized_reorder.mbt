@@ -79,11 +79,19 @@ fn build_clustered_remincross_materialized_edges(
       rem_order_edges_by_tail_coalesced,
       intercluster_bonus,
     )
-  let rem_edge_creation =
-    rebuild_edge_creation_from_tail_order(
-      creation_order,
-      rem_order_edges_by_tail,
-    )
+  // Graphviz parity: edge creation replay follows per-tail ND_out order after
+  // class2 merge-chain coalescing in rematerialized clustered passes.
+  let rem_edge_creation : Array[(String, String)] = []
+  for tail_name in creation_order {
+    let entries = match rem_order_edges_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for entry in entries {
+      let (tail, head, _, _, _, _, _, _) = entry
+      rem_edge_creation.push((tail, head))
+    }
+  }
   // Graphviz parity: clustered ReMincross materialized-edge flow rebuilds
   // remapped order graph arrays before tuple output.
   let (

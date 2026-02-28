@@ -263,28 +263,6 @@ fn apply_intercluster_vnode_tail_bonus(
 }
 
 ///|
-/// Graphviz parity: edge creation replay follows per-tail ND_out order after
-/// class2 merge-chain coalescing in rematerialized clustered passes.
-/// Do not change behavior without updating fixtures/tests.
-fn rebuild_edge_creation_from_tail_order(
-  tail_order : Array[String],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> Array[(String, String)] {
-  let edge_creation : Array[(String, String)] = []
-  for tail_name in tail_order {
-    let entries = match order_edges_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for entry in entries {
-      let (tail, head, _, _, _, _, _, _) = entry
-      edge_creation.push((tail, head))
-    }
-  }
-  edge_creation
-}
-
-///|
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
