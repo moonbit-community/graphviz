@@ -89,35 +89,34 @@ fn run_clustered_remincross_pass(
     )
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() > 1 {
-    let multi_rank_dispatch_context =
-      build_clustered_remincross_multi_rank_dispatch_context(
-        dispatch_context.graph,
-        dispatch_context.edges,
-        dispatch_context.edge_tail,
-        dispatch_context.edge_head,
-        dispatch_context.edge_tail_port_x,
-        dispatch_context.edge_head_port_x,
-        dispatch_context.edge_tail_port_order,
-        dispatch_context.edge_head_port_order,
-        dispatch_context.ranks,
-        dispatch_context.order_with_vnodes,
-        dispatch_context.order_with_clusters,
-        dispatch_context.flat_rank_constraints,
-        dispatch_context.creation_order,
-        dispatch_context.edges_by_tail,
-        dispatch_context.cluster_meta,
-        dispatch_context.vnode_info,
-        dispatch_context.order_sizes,
-        dispatch_context.rank_same_constraints,
-        rem_rank_keys,
-        rem_groups,
-        dispatch_context.real_nodes,
-        dispatch_context.graphviz_flip,
-        dispatch_context.nodesep_pt,
-        dispatch_context.has_edge_labels,
-        dispatch_context.port_order_positions,
-        dispatch_context.port_order_contrib,
-      )
+    let multi_rank_dispatch_context : ClusteredReMincrossMultiRankDispatchContext = {
+      graph: dispatch_context.graph,
+      edges: dispatch_context.edges,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      edge_tail_port_x: dispatch_context.edge_tail_port_x,
+      edge_head_port_x: dispatch_context.edge_head_port_x,
+      edge_tail_port_order: dispatch_context.edge_tail_port_order,
+      edge_head_port_order: dispatch_context.edge_head_port_order,
+      ranks: dispatch_context.ranks,
+      order_with_vnodes: dispatch_context.order_with_vnodes,
+      order_with_clusters: dispatch_context.order_with_clusters,
+      flat_rank_constraints: dispatch_context.flat_rank_constraints,
+      creation_order: dispatch_context.creation_order,
+      edges_by_tail: dispatch_context.edges_by_tail,
+      cluster_meta: dispatch_context.cluster_meta,
+      vnode_info: dispatch_context.vnode_info,
+      order_sizes: dispatch_context.order_sizes,
+      rank_same_constraints: dispatch_context.rank_same_constraints,
+      rem_rank_keys,
+      rem_groups,
+      real_nodes: dispatch_context.real_nodes,
+      graphviz_flip: dispatch_context.graphviz_flip,
+      nodesep_pt: dispatch_context.nodesep_pt,
+      has_edge_labels: dispatch_context.has_edge_labels,
+      port_order_positions: dispatch_context.port_order_positions,
+      port_order_contrib: dispatch_context.port_order_contrib,
+    }
     run_clustered_remincross_multi_rank(multi_rank_dispatch_context)
   } else {
     (dispatch_context.ordered_with_vnodes, dispatch_context.base_groups)
