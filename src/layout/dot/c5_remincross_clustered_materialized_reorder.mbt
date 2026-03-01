@@ -671,6 +671,55 @@ fn build_remincross_cluster_tail_order_nonroot_names(
 }
 
 ///|
+/// Graphviz parity: input-like rebucketing classifies names by outgoing
+/// cross-cluster direction and out-degree priority.
+fn classify_remincross_input_like_name_bucket(
+  cluster : String,
+  name : String,
+  heads_by_tail : Map[String, Array[String]],
+  cluster_order_pos : Map[String, Int],
+  cluster_end_pos : Int,
+  current_cluster_pos : Int,
+  rem_cluster_keys : Map[String, String],
+) -> Int {
+  let heads = match heads_by_tail.get(name) {
+    Some(list) => list
+    None => []
+  }
+  let mut has_later = false
+  let mut has_earlier = false
+  for head in heads {
+    let head_cluster =
+      cluster_key_for_remincross_tail_order_name(rem_cluster_keys, head)
+    if head_cluster == cluster {
+      continue
+    }
+    let head_pos =
+      remincross_cluster_position_or_default(
+        cluster_order_pos,
+        head_cluster,
+        cluster_end_pos,
+      )
+    if head_pos > current_cluster_pos {
+      has_later = true
+    } else if head_pos < current_cluster_pos {
+      has_earlier = true
+    }
+  }
+  let out_degree = heads.length()
+  if !has_later && !has_earlier && out_degree > 1 {
+    return 0
+  }
+  if has_later {
+    return 1
+  }
+  if has_earlier {
+    return 2
+  }
+  3
+}
+
+///|
 /// Graphviz parity: minimum-rank all-input-like clustered rank blocks are
 /// rebucketed by outgoing cross-cluster direction and out-degree priority.
 /// Do not change behavior without updating fixtures/tests.
@@ -694,39 +743,19 @@ fn rebucket_remincross_input_like_rank_order(
   let category2 : Array[String] = []
   let category3 : Array[String] = []
   for name in rank_ordered {
-    let heads = match heads_by_tail.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let mut has_later = false
-    let mut has_earlier = false
-    for head in heads {
-      let head_cluster =
-        cluster_key_for_remincross_tail_order_name(rem_cluster_keys, head)
-      if head_cluster == cluster {
-        continue
-      }
-      let head_pos =
-        remincross_cluster_position_or_default(
-          cluster_order_pos,
-          head_cluster,
-          cluster_end_pos,
-        )
-      if head_pos > current_cluster_pos {
-        has_later = true
-      } else if head_pos < current_cluster_pos {
-        has_earlier = true
-      }
-    }
-    let out_degree = heads.length()
-    if !has_later && !has_earlier && out_degree > 1 {
-      category0.push(name)
-    } else if has_later {
-      category1.push(name)
-    } else if has_earlier {
-      category2.push(name)
-    } else {
-      category3.push(name)
+    match classify_remincross_input_like_name_bucket(
+      cluster,
+      name,
+      heads_by_tail,
+      cluster_order_pos,
+      cluster_end_pos,
+      current_cluster_pos,
+      rem_cluster_keys,
+    ) {
+      0 => category0.push(name)
+      1 => category1.push(name)
+      2 => category2.push(name)
+      _ => category3.push(name)
     }
   }
   let reordered_rank : Array[String] = []
