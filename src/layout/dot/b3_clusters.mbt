@@ -6,7 +6,7 @@
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_cluster_order_base_for_metadata(
+fn apply_cluster_order_metadata(
   nodes : Array[@cgraph.Node],
   cluster_keys : Map[String, String],
   cluster_min_rank : Map[String, Int],
@@ -174,7 +174,7 @@ fn compute_cluster_metadata(
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
-  apply_cluster_order_base_for_metadata(
+  apply_cluster_order_metadata(
     nodes,
     cluster_keys,
     cluster_min_rank,
