@@ -1233,6 +1233,40 @@ fn collect_cluster_rank_order_map_for_root_rank(
 }
 
 ///|
+/// Graphviz parity: cluster-phase rank-order map records first-seen cluster
+/// skeleton buckets (or root bucket) per rank, with root-anchor transfer
+/// between adjacent ranks when anchor preconditions match.
+fn build_cluster_rank_order_from_root_rank_output(
+  root_rank_keys : Array[Int],
+  ordered_root : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  real_nodes : Map[String, Bool],
+) -> Map[Int, Map[String, Int]] {
+  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
+  let mut previous_order_map : Map[String, Int]? = None
+  for rank in root_rank_keys {
+    let names = rank_group_names_or_empty(ordered_root, rank)
+    let order_map =
+      collect_cluster_rank_order_map_for_root_rank(
+        names,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        real_nodes,
+      )
+    anchor_root_bucket_from_previous_cluster_rank_order(
+      order_map,
+      previous_order_map,
+    )
+    if order_map.length() > 0 {
+      cluster_rank_order[rank] = order_map
+      previous_order_map = Some(order_map)
+    }
+  }
+  cluster_rank_order
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -1288,7 +1322,6 @@ fn build_cluster_rank_order_for_cluster_reorder(
       flat_rank_constraints,
       order_edges_by_tail_root,
     )
-  let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let (root_rank_keys, ordered_root) =
     run_root_cluster_rank_order_phase_from_root_reorder_output(
       order_cluster_keys,
@@ -1304,28 +1337,13 @@ fn build_cluster_rank_order_for_cluster_reorder(
       graphviz_flip,
       root_reorder_output,
     )
-  // Graphviz parity: root mincross rank map records first-seen cluster skeleton
-  // (or root real-node bucket) order per rank for cluster-phase reordering.
-  let mut previous_order_map : Map[String, Int]? = None
-  for rank in root_rank_keys {
-    let names = rank_group_names_or_empty(ordered_root, rank)
-    let order_map =
-      collect_cluster_rank_order_map_for_root_rank(
-        names,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        real_nodes,
-      )
-    anchor_root_bucket_from_previous_cluster_rank_order(
-      order_map,
-      previous_order_map,
-    )
-    if order_map.length() > 0 {
-      cluster_rank_order[rank] = order_map
-      previous_order_map = Some(order_map)
-    }
-  }
-  cluster_rank_order
+  build_cluster_rank_order_from_root_rank_output(
+    root_rank_keys,
+    ordered_root,
+    order_cluster_keys,
+    order_cluster_skeleton,
+    real_nodes,
+  )
 }
 
 ///|
