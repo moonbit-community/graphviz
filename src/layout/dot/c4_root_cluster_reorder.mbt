@@ -706,30 +706,6 @@ fn should_enable_root_graphviz_flip(
 }
 
 ///|
-/// Graphviz parity: root graphviz_flip merge replays root mincross output back
-/// into seeded rank groups using filtered root node membership.
-fn merge_root_rank_order_after_graphviz_flip(
-  root_rank_keys : Array[Int],
-  root_groups : Map[Int, Array[String]],
-  ordered_root : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let ordered_root_nodes =
-    build_order_nodes_from_groups(ordered_root, root_rank_keys)
-  let ordered_root_mincross_nodes =
-    build_node_membership_set(ordered_root_nodes)
-  merge_root_mincross_order_into_seeded_groups(
-    root_rank_keys,
-    root_groups,
-    ordered_root,
-    ordered_root_mincross_nodes,
-    order_cluster_keys,
-    order_cluster_skeleton,
-  )
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
 /// and dispatch context without reordering Graphviz call arguments.
 /// Do not change behavior without updating fixtures/tests.
@@ -797,11 +773,18 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   if !graphviz_flip {
     return (root_rank_keys, ordered_root)
   }
+  // Graphviz parity: root graphviz_flip merge replays root mincross output
+  // back into seeded rank groups using filtered root node membership.
+  let ordered_root_nodes =
+    build_order_nodes_from_groups(ordered_root, root_rank_keys)
+  let ordered_root_mincross_nodes =
+    build_node_membership_set(ordered_root_nodes)
   let merged_ordered_root =
-    merge_root_rank_order_after_graphviz_flip(
+    merge_root_mincross_order_into_seeded_groups(
       root_rank_keys,
       root_groups,
       ordered_root,
+      ordered_root_mincross_nodes,
       order_cluster_keys,
       order_cluster_skeleton,
     )
