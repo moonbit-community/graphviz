@@ -126,16 +126,11 @@ fn build_clustered_remincross_materialized_inputs(
   let cluster_order_index =
     build_cluster_index_for_local_reorder(dispatch_context.cluster_meta.cluster_order)
   let (
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
+    rem_order_edges_by_tail,
+    rem_vnode_creation,
+    rem_edge_creation,
   ) =
-    build_clustered_remincross_materialized_edges(
+    build_remincross_materialized_order_edges(
       dispatch_context.creation_order,
       dispatch_context.edges,
       dispatch_context.edge_tail,
@@ -151,9 +146,27 @@ fn build_clustered_remincross_materialized_inputs(
       dispatch_context.order_with_clusters,
       dispatch_context.edges_by_tail,
       cluster_order_index,
+    )
+  let (
+    rem_node_order,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+  ) =
+    build_remincross_materialized_edge_arrays(
+      dispatch_context.creation_order,
+      rem_vnode_creation,
+      rem_edge_creation,
+      rem_order_edges_by_tail,
       rem_graph,
       rem_node_map,
       rem_groups,
+      dispatch_context.cluster_meta.intercluster_keys,
+      cluster_order_index,
     )
   let (
     rem_cluster_keys,
