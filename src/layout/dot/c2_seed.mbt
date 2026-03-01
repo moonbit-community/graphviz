@@ -113,7 +113,7 @@ fn build_order_seed_groups(
 /// incoming-only local-cluster nodes reversed to match fast_node head-insert
 /// behavior before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_unconstrained_order_node_overrides(
+fn apply_unconstrained_order_overrides(
   gdnlist_order : Array[String],
   real_nodes : Map[String, Bool],
   order_nodes : Array[String],
@@ -267,7 +267,7 @@ fn apply_unconstrained_order_node_overrides(
 /// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
 /// then applies transpose when crossings remain (port-offset aware tie-breaks).
 /// Do not change behavior without updating fixtures/tests.
-fn build_seeded_groups_for_order_reorder(
+fn build_seeded_groups_for_reorder(
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
   order_edge_tail_out : Array[String],

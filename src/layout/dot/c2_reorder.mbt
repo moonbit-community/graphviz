@@ -250,7 +250,7 @@ fn build_materialized_order_inputs(
   }
   // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
   // before unconstrained-node seed-order overrides for build_ranks seeding.
-  apply_unconstrained_order_node_overrides(
+  apply_unconstrained_order_overrides(
     gdnlist_order,
     real_nodes,
     order_nodes,

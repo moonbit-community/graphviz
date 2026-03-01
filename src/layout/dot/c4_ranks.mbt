@@ -103,7 +103,7 @@ fn run_root_and_cluster_build_ranks(
   build_ranks_inputs : RootClusterBuildRanksInputs,
 ) -> OrderRootClusterData {
   let seeded_groups =
-    build_seeded_groups_for_order_reorder(
+    build_seeded_groups_for_reorder(
       build_ranks_inputs.order_rank_keys,
       build_ranks_inputs.order_groups,
       build_ranks_inputs.order_edge_tail_out,
