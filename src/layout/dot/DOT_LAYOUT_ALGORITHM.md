@@ -248,8 +248,8 @@ Supporting files:
 - `src/layout/dot/c3_cluster_local_reorder.mbt`
 - `src/layout/dot/c4_root_reorder.mbt`
 - `src/layout/dot/c4_build_ranks.mbt`
-- `src/layout/dot/c5_remincross_clustered_groups.mbt`
-- `src/layout/dot/c5_remincross_clustered_materialized_reorder.mbt`
+- `src/layout/dot/c5_remincross_groups.mbt`
+- `src/layout/dot/c5_remincross_materialized_reorder.mbt`
 - `src/layout/dot/c5_remincross_snapshot.mbt`
 - `src/layout/dot/c6_finalize_order.mbt`
 - `src/layout/dot/ordering.mbt`
@@ -541,8 +541,8 @@ Repository guard validates:
   - `c4_root_reorder.mbt`
   - `c6_finalize_order.mbt`
 - Stage C ReMincross refinement family:
-  - `c5_remincross_clustered_groups.mbt`
-  - `c5_remincross_clustered_materialized_reorder.mbt`
+  - `c5_remincross_groups.mbt`
+  - `c5_remincross_materialized_reorder.mbt`
   - `c5_remincross_snapshot.mbt`
 - Stage D position/xpos internals:
   - `d0_position_orchestrator.mbt`
