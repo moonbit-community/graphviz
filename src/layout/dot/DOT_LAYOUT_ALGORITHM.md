@@ -247,7 +247,7 @@ Supporting files:
 - `src/layout/dot/c3_clustered.mbt`
 - `src/layout/dot/c3_local_reorder.mbt`
 - `src/layout/dot/c4_root_reorder.mbt`
-- `src/layout/dot/c4_build_ranks.mbt`
+- `src/layout/dot/c4_ranks.mbt`
 - `src/layout/dot/c5_groups.mbt`
 - `src/layout/dot/c5_materialized.mbt`
 - `src/layout/dot/c5_snapshot.mbt`
@@ -537,7 +537,7 @@ Repository guard validates:
 - Clustered ordering orchestration and rank-order updates:
   - `c3_clustered.mbt`
   - `c3_local_reorder.mbt`
-  - `c4_build_ranks.mbt`
+  - `c4_ranks.mbt`
   - `c4_root_reorder.mbt`
   - `c6_finalize.mbt`
 - Stage C ReMincross refinement family:
