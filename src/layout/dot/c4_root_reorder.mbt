@@ -1054,7 +1054,7 @@ fn build_root_reorder_inputs(
         root_edge_tail_port_order,
         root_edge_head_port_order,
       ) =
-        collect_order_edges_for_tail_sequence(
+        collect_order_edges_for_tails(
           root_nlist_order,
           order_edges_by_tail_root,
           root_graph,

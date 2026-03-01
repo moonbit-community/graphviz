@@ -84,7 +84,7 @@ fn coalesce_order_edges_by_tail(
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_intercluster_vnode_tail_bonus(
+fn collect_intercluster_tail_bonus(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -307,7 +307,7 @@ fn build_order_graph_and_nodes(
 /// Graphviz parity: edge arrays are materialized from per-tail lists in exact
 /// nlist tail iteration order (shared root/remincross order-graph builder).
 /// Do not change behavior without updating fixtures/tests.
-fn collect_order_edges_for_tail_sequence(
+fn collect_order_edges_for_tails(
   tail_sequence : Array[String],
   edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph : @cgraph.Graph,

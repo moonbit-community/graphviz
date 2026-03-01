@@ -177,7 +177,7 @@ fn build_materialized_order_inputs(
       ) =
         // Graphviz parity: mapped order-edge arrays are materialized from
         // GD_nlist tail order against the cluster-remapped order graph.
-        collect_order_edges_for_tail_sequence(
+        collect_order_edges_for_tails(
           nlist_order,
           order_edges_by_tail,
           order_graph,
@@ -194,7 +194,7 @@ fn build_materialized_order_inputs(
       ) =
         // Graphviz parity: unmapped order-edge arrays are materialized from
         // GD_nlist tail order against the non-remapped order graph.
-        collect_order_edges_for_tail_sequence(
+        collect_order_edges_for_tails(
           nlist_order,
           order_edges_by_tail_unmapped,
           order_graph_unmapped,
