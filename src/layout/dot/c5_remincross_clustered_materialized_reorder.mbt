@@ -435,6 +435,33 @@ fn build_remincross_root_tail_names(names : Array[String]) -> Array[String] {
 }
 
 ///|
+/// Graphviz parity: clustered tail-order per-cluster replay uses root override
+/// snapshot for root cluster and non-root rank replay for other clusters.
+fn build_remincross_cluster_tail_names_for_cluster(
+  cluster : String,
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+  heads_by_tail : Map[String, Array[String]],
+  cluster_order_pos : Map[String, Int],
+  cluster_order : Array[String],
+  rem_cluster_keys : Map[String, String],
+) -> Array[String] {
+  if cluster == "" {
+    build_remincross_root_tail_names(names)
+  } else {
+    build_remincross_cluster_tail_order_nonroot_names(
+      cluster,
+      names,
+      rem_ranks,
+      heads_by_tail,
+      cluster_order_pos,
+      cluster_order,
+      rem_cluster_keys,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
@@ -461,19 +488,15 @@ fn build_remincross_cluster_tail_order(
   for cluster in cluster_order {
     let names = remincross_cluster_names_or_empty(names_by_cluster, cluster)
     let ordered_names =
-      if cluster == "" {
-        build_remincross_root_tail_names(names)
-      } else {
-        build_remincross_cluster_tail_order_nonroot_names(
-          cluster,
-          names,
-          rem_ranks,
-          heads_by_tail,
-          cluster_order_pos,
-          cluster_order,
-          rem_cluster_keys,
-        )
-      }
+      build_remincross_cluster_tail_names_for_cluster(
+        cluster,
+        names,
+        rem_ranks,
+        heads_by_tail,
+        cluster_order_pos,
+        cluster_order,
+        rem_cluster_keys,
+      )
     append_names_in_order(rem_nlist_order, ordered_names)
   }
   rem_nlist_order
