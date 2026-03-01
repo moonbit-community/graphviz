@@ -1431,20 +1431,6 @@ fn reorder_rank_names_by_override(
 }
 
 ///|
-/// Graphviz parity: root-override skeleton checks treat non-skeleton names as
-/// empty cluster keys when rebuilding attached-cluster bundles.
-fn skeleton_cluster_or_empty(name : String) -> String {
-  cluster_key_from_skeleton_name(name).unwrap_or_default()
-}
-
-///|
-/// Graphviz parity: root-override skeleton checks treat any parsed skeleton
-/// cluster key as a skeleton marker.
-fn is_root_override_skeleton_name(name : String) -> Bool {
-  skeleton_cluster_or_empty(name) != ""
-}
-
-///|
 /// Graphviz parity: root-override graphviz_flip replay keeps skeleton names in
 /// rank order, reattaches same-cluster names after skeletons, and preserves any
 /// unmatched names as final fallback in original rank order.
@@ -1452,6 +1438,13 @@ fn rebuild_root_override_rank_names_for_graphviz_flip(
   rank_names : Array[String],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
+  // Graphviz parity: root-override skeleton checks treat non-skeleton names as
+  // empty cluster keys when rebuilding attached-cluster bundles.
+  let skeleton_cluster_or_empty = (name : String) =>
+    cluster_key_from_skeleton_name(name).unwrap_or_default()
+  // Graphviz parity: any parsed skeleton cluster key is a skeleton marker.
+  let is_root_override_skeleton_name = (name : String) =>
+    skeleton_cluster_or_empty(name) != ""
   let skeleton_for_cluster =
     build_skeleton_for_cluster_from_names(
       rank_names,
