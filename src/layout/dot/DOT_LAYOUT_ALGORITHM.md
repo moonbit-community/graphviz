@@ -251,7 +251,7 @@ Supporting files:
 - `src/layout/dot/c5_remincross_groups.mbt`
 - `src/layout/dot/c5_remincross_materialized_reorder.mbt`
 - `src/layout/dot/c5_remincross_snapshot.mbt`
-- `src/layout/dot/c6_finalize_order.mbt`
+- `src/layout/dot/c6_finalize.mbt`
 - `src/layout/dot/ordering.mbt`
 - `src/layout/dot/mincross.mbt`
 
@@ -539,7 +539,7 @@ Repository guard validates:
   - `c3_local_reorder.mbt`
   - `c4_build_ranks.mbt`
   - `c4_root_reorder.mbt`
-  - `c6_finalize_order.mbt`
+  - `c6_finalize.mbt`
 - Stage C ReMincross refinement family:
   - `c5_remincross_groups.mbt`
   - `c5_remincross_materialized_reorder.mbt`
