@@ -143,7 +143,7 @@ fn run_clustered_ordering_root_phase(
   let reorder_context = pre_root_stage.reorder_context
   remincross_root_tail_order_override_snapshot.val = None
   let root_reorder_output : RootClusterReorderInputs =
-    build_root_cluster_reorder_inputs(
+    build_root_reorder_inputs(
       reorder_setup.order_with_vnodes,
       reorder_context.order_rank_keys,
       pre_root_stage.order_groups,
@@ -186,7 +186,7 @@ fn run_clustered_ordering_root_phase(
     append_order_creation_name_if_absent(root_tail_order_override, seen_root_tail, tail)
   }
   let (_root_rank_keys, root_groups_override) =
-    run_root_cluster_rank_order_phase(
+    run_root_rank_order_phase(
       pre_root_stage.order_cluster_keys,
       cluster_meta.rank_same_groups,
       cluster_meta.rank_same_order,
