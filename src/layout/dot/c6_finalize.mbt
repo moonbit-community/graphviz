@@ -130,7 +130,7 @@ fn finalize_order_groups_with_cluster_remincross(
       port_order_positions,
       port_order_contrib,
     }
-    run_clustered_remincross_pass(cluster_pass_context)
+    run_remincross_pass(cluster_pass_context)
   } else {
     (ordered_with_vnodes, cleaned_groups)
   }

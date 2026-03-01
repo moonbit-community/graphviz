@@ -6,7 +6,7 @@
 /// Graphviz parity: clustered ReMincross rank groups can seed from current
 /// vnode-inclusive order for single-cluster or ratio=fill scenarios, with
 /// fallback to full rebuild when seeded output is empty.
-fn build_clustered_remincross_groups(
+fn build_remincross_groups_for_dispatch(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
 ) -> Map[Int, Array[String]] {
   // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
@@ -55,10 +55,10 @@ fn build_clustered_remincross_groups(
 /// edge vnodes, then materializes/remaps edges and executes final startpass=2
 /// reorder before dropping non-real nodes.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_remincross_pass(
+fn run_remincross_pass(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let rem_groups = build_clustered_remincross_groups(dispatch_context)
+  let rem_groups = build_remincross_groups_for_dispatch(dispatch_context)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     (dispatch_context.ordered_with_vnodes, dispatch_context.base_groups)
@@ -66,13 +66,13 @@ fn run_clustered_remincross_pass(
     // Graphviz parity: clustered ReMincross multi-rank branch materializes
     // remapped edges and executes clustered cleanup reorder in startpass=2.
     let materialized_inputs =
-      build_clustered_remincross_materialized_inputs(
+      build_remincross_materialized_inputs(
         dispatch_context,
         rem_rank_keys,
         rem_groups,
       )
     let rem_ordered =
-      run_clustered_remincross_cleanup_reorder(
+      run_remincross_cleanup_reorder(
         dispatch_context,
         rem_rank_keys,
         rem_groups,
@@ -112,7 +112,7 @@ type ClusteredReMincrossMaterializedInputs = (
 /// Graphviz parity: clustered ReMincross multi-rank materialization builds
 /// order graph context, rematerialized edge arrays, and reorder input maps
 /// before cleanup reorder dispatch.
-fn build_clustered_remincross_materialized_inputs(
+fn build_remincross_materialized_inputs(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
@@ -206,7 +206,7 @@ fn build_clustered_remincross_materialized_inputs(
 /// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
 /// inputs, builds edge index maps, and executes startpass=2 mincross on the
 /// rematerialized fast-graph edge set.
-fn run_clustered_remincross_cleanup_reorder(
+fn run_remincross_cleanup_reorder(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
