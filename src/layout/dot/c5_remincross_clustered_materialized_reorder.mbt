@@ -272,33 +272,6 @@ fn build_clustered_remincross_materialized_edges(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross creation order starts from tail
-/// creation order and appends per-tail vnode sequences with stable dedupe.
-fn build_remincross_order_creation(
-  creation_order : Array[String],
-  rem_vnode_creation : Map[String, Array[String]],
-) -> Array[String] {
-  let rem_order_creation : Array[String] = []
-  let rem_seen : Map[String, Bool] = Map::new()
-  for tail_name in creation_order {
-    append_order_creation_name_if_absent(
-      rem_order_creation,
-      rem_seen,
-      tail_name,
-    )
-    let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
-    for vnode in vnodes {
-      append_order_creation_name_if_absent(
-        rem_order_creation,
-        rem_seen,
-        vnode,
-      )
-    }
-  }
-  rem_order_creation
-}
-
-///|
 /// Graphviz parity: grouped ReMincross name buckets are replayed in stable
 /// input order when merged into nlist/rank output vectors.
 fn append_names_in_order(target : Array[String], names : Array[String]) -> Unit {
@@ -320,11 +293,25 @@ fn build_remincross_nlist_order(
   rem_cluster_keys : Map[String, String],
   cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  let rem_order_creation =
-    build_remincross_order_creation(
-      creation_order,
-      rem_vnode_creation,
+  // Graphviz parity: clustered ReMincross creation order starts from tail
+  // creation order and appends per-tail vnode sequences with stable dedupe.
+  let rem_order_creation : Array[String] = []
+  let rem_seen : Map[String, Bool] = Map::new()
+  for tail_name in creation_order {
+    append_order_creation_name_if_absent(
+      rem_order_creation,
+      rem_seen,
+      tail_name,
     )
+    let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
+    for vnode in vnodes {
+      append_order_creation_name_if_absent(
+        rem_order_creation,
+        rem_seen,
+        vnode,
+      )
+    }
+  }
   let rem_nlist_order =
     if cluster_order_index.length() <= 2 {
       // Graphviz parity: single-cluster/root-only remincross materialization
