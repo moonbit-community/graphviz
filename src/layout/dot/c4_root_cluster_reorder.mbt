@@ -144,6 +144,16 @@ fn collect_mincross_order_edges(
 }
 
 ///|
+/// Graphviz parity: rank-group map lookups in root cluster reorder default to
+/// empty rank lists for ranks absent from the current grouping map.
+fn rank_group_names_or_empty(
+  groups : Map[Int, Array[String]],
+  rank : Int,
+) -> Array[String] {
+  groups.get(rank).unwrap_or_default()
+}
+
+///|
 /// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
 /// merged back into seeded rank lists by replacing only filtered positions.
 /// Do not change behavior without updating fixtures/tests.
@@ -157,14 +167,8 @@ fn merge_root_mincross_order_into_seeded_groups(
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
-    let names = match seeded_groups.get(rank) {
-      Some(list) => list.copy()
-      None => []
-    }
-    let replacements = match ordered_mincross.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = rank_group_names_or_empty(seeded_groups, rank).copy()
+    let replacements = rank_group_names_or_empty(ordered_mincross, rank)
     if replacements.length() == 0 {
       merged[rank] = names
       continue
@@ -586,10 +590,7 @@ fn build_root_groups_for_cluster_reorder(
   // nodes, and include edge-vnodes only when flagged as root-vnodes.
   let root_groups_base : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
-    let names = match order_groups_for_mincross.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = rank_group_names_or_empty(order_groups_for_mincross, rank)
     let root_names =
       collect_root_group_names_at_rank(
         names,
@@ -1237,10 +1238,7 @@ fn build_cluster_rank_order_for_cluster_reorder(
   // (or root real-node bucket) order per rank for cluster-phase reordering.
   let mut previous_order_map : Map[String, Int]? = None
   for rank in root_rank_keys {
-    let names = match ordered_root.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = rank_group_names_or_empty(ordered_root, rank)
     let order_map =
       collect_cluster_rank_order_map_for_root_rank(
         names,
@@ -1271,10 +1269,7 @@ fn collect_real_only_rank_groups(
 ) -> Map[Int, Array[String]] {
   let cleaned_groups : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
-    let names = match ordered.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = rank_group_names_or_empty(ordered, rank)
     let cleaned : Array[String] = []
     for name in names {
       if real_nodes.get(name) is Some(_) {
