@@ -763,7 +763,7 @@ type ClusterLocalReorderRunInputsOutput = (
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_reorder_run_inputs(
+fn build_local_reorder_inputs(
   cluster_name : String,
   cluster_graph_edge_count : Int,
   expanded_clusters : Map[String, Bool],
@@ -1022,7 +1022,7 @@ fn reorder_single_cluster_rank_groups(
     }
   }
   let input_phase_output =
-    build_cluster_local_reorder_run_inputs(
+    build_local_reorder_inputs(
       cluster,
       cluster_graph.edges().length(),
       expanded_clusters,
@@ -1199,7 +1199,7 @@ fn reorder_cluster_rank_groups(
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn reorder_groups_by_cluster_build_ranks(
+fn reorder_groups_by_cluster_ranks(
   graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
   cluster_meta : ClusterMetadata,
