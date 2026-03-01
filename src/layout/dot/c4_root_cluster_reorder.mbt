@@ -1133,6 +1133,35 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
 }
 
 ///|
+/// Graphviz parity: root mincross rank map records first-seen cluster skeleton
+/// buckets and one root-real bucket in rank-sequence order.
+fn collect_cluster_rank_order_map_for_root_rank(
+  names : Array[String],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  real_nodes : Map[String, Bool],
+) -> Map[String, Int] {
+  let order_map : Map[String, Int] = Map::new()
+  let mut idx = 0
+  for name in names {
+    if order_cluster_skeleton.get(name) == Some(true) {
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      if cluster != "" && order_map.get(cluster) is None {
+        order_map[cluster] = idx
+        idx = idx + 1
+      }
+    } else if real_nodes.get(name) is Some(_) {
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      if cluster == "" && order_map.get("") is None {
+        order_map[""] = idx
+        idx = idx + 1
+      }
+    }
+  }
+  order_map
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -1212,23 +1241,13 @@ fn build_cluster_rank_order_for_cluster_reorder(
       Some(list) => list
       None => []
     }
-    let order_map : Map[String, Int] = Map::new()
-    let mut idx = 0
-    for name in names {
-      if order_cluster_skeleton.get(name) == Some(true) {
-        let cluster = cluster_key_or_empty(order_cluster_keys, name)
-        if cluster != "" && order_map.get(cluster) is None {
-          order_map[cluster] = idx
-          idx = idx + 1
-        }
-      } else if real_nodes.get(name) is Some(_) {
-        let cluster = cluster_key_or_empty(order_cluster_keys, name)
-        if cluster == "" && order_map.get("") is None {
-          order_map[""] = idx
-          idx = idx + 1
-        }
-      }
-    }
+    let order_map =
+      collect_cluster_rank_order_map_for_root_rank(
+        names,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        real_nodes,
+      )
     anchor_root_bucket_from_previous_cluster_rank_order(
       order_map,
       previous_order_map,
