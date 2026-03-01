@@ -761,7 +761,7 @@ fn build_position_output_maps(
     positions[name] = { x: pos_x, y: pos_y }
   }
   if cluster_meta.has_clusters && cluster_rounding_enabled() {
-    let _ = adjust_cluster_positions_for_rounding(
+    let _ = adjust_cluster_positions_for_round(
       graph,
       positions,
       vnode_positions,

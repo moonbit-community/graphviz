@@ -96,7 +96,7 @@ fn finalize_order_groups(
         )
       }
     // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
-    reorder_groups_by_local_cluster_order(
+    reorder_groups_by_local_cluster(
       final_groups,
       cluster_meta.cluster_keys,
       cluster_meta.intercluster_keys,

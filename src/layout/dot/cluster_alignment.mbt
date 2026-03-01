@@ -111,7 +111,7 @@ fn adjust_intercluster_alignment(
 
 /// Graphviz parity: within an outer cluster, order local subclusters by minrank/first order.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_groups_by_local_cluster_order(
+fn reorder_groups_by_local_cluster(
   groups : Map[Int, Array[String]],
   outer_cluster_keys : Map[String, String],
   local_cluster_keys : Map[String, String],
@@ -316,7 +316,7 @@ fn shift_graph_positions(
 }
 
 ///|
-fn adjust_cluster_positions_for_rounding(
+fn adjust_cluster_positions_for_round(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
@@ -325,7 +325,7 @@ fn adjust_cluster_positions_for_rounding(
 ) -> @geom.Rect? {
   let mut bbox = compute_nodes_bbox(graph, positions, sizes)
   for child in graph.subgraphs() {
-    match adjust_cluster_positions_for_rounding(
+    match adjust_cluster_positions_for_round(
       child,
       positions,
       vnode_positions,
