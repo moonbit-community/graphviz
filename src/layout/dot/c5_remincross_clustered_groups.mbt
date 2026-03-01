@@ -152,30 +152,6 @@ type ClusteredReMincrossMaterializedInputs = (
 )
 
 ///|
-/// Graphviz parity: clustered ReMincross graph context captures rank map,
-/// rank-expanded node order, and fast-graph handles used by rematerialization.
-type ClusteredReMincrossGraphContext = (
-  Map[String, Int],
-  Array[String],
-  @cgraph.Graph,
-  Map[String, @cgraph.Node],
-)
-
-///|
-/// Graphviz parity: clustered ReMincross graph context is derived directly from
-/// rematerialized rank groups before edge rematerialization.
-fn build_clustered_remincross_graph_context(
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-) -> ClusteredReMincrossGraphContext {
-  let rem_ranks = build_node_ranks(rem_groups)
-  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
-  let (rem_graph, rem_node_map) =
-    build_order_graph_and_nodes("order_remincross", rem_nodes)
-  (rem_ranks, rem_nodes, rem_graph, rem_node_map)
-}
-
-///|
 /// Graphviz parity: clustered ReMincross multi-rank materialization builds
 /// order graph context, rematerialized edge arrays, and reorder input maps
 /// before cleanup reorder dispatch.
@@ -184,8 +160,10 @@ fn build_clustered_remincross_materialized_inputs(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> ClusteredReMincrossMaterializedInputs {
-  let (rem_ranks, rem_nodes, rem_graph, rem_node_map) =
-    build_clustered_remincross_graph_context(rem_rank_keys, rem_groups)
+  let rem_ranks = build_node_ranks(rem_groups)
+  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+  let (rem_graph, rem_node_map) =
+    build_order_graph_and_nodes("order_remincross", rem_nodes)
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
   let cluster_order_index =
@@ -362,10 +340,7 @@ fn remincross_cluster_key_or_empty(
   cluster_keys : Map[String, String],
   name : String,
 ) -> String {
-  match cluster_keys.get(name) {
-    Some(value) => value
-    None => ""
-  }
+  cluster_keys.get(name).unwrap_or_default()
 }
 
 ///|
