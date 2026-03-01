@@ -288,7 +288,7 @@ fn accumulate_port_order_contrib(
 /// Graphviz parity: record/html port order hints are collected for LR/RL only
 /// when explicit ports exist, then averaged onto opposite endpoints.
 /// Do not change behavior without updating fixtures/tests.
-fn build_port_order_metadata_for_layout_inputs(
+fn build_port_order_metadata(
   rankdir : RankDir,
   has_port_edges : Bool,
   nodes : Array[@cgraph.Node],
@@ -345,7 +345,7 @@ fn prepare_layout_inputs(
   let (output_sizes, order_sizes, sizes) =
     build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
   let (port_order_positions, port_order_contrib) =
-    build_port_order_metadata_for_layout_inputs(
+    build_port_order_metadata(
       rankdir,
       has_port_edges,
       nodes,
