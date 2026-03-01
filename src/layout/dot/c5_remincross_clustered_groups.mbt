@@ -449,33 +449,6 @@ fn build_remincross_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: trailing-vnode tagging applies only to non-internal,
-/// non-root, cross-cluster edges whose cluster rank ranges do not overlap.
-fn should_trail_remincross_intercluster_edge_vnodes(
-  tail_cluster : String,
-  head_cluster : String,
-  cluster_parents : Map[String, String?],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-) -> Bool {
-  let internal =
-    tail_cluster != "" && head_cluster != "" &&
-    edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
-  if internal ||
-    tail_cluster == head_cluster ||
-    tail_cluster == "" ||
-    head_cluster == "" {
-    return false
-  }
-  !remincross_cluster_rank_ranges_overlap(
-    tail_cluster,
-    head_cluster,
-    cluster_min_rank,
-    cluster_max_rank,
-  )
-}
-
-///|
 /// Graphviz parity: trailing-vnode candidate set comes from intercluster edge
 /// vnode chains on edges that satisfy the rank-range overlap gate.
 fn collect_remincross_intercluster_trailing_vnodes(
@@ -494,13 +467,21 @@ fn collect_remincross_intercluster_trailing_vnodes(
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
     let head_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, head)
-    if !should_trail_remincross_intercluster_edge_vnodes(
-      tail_cluster,
-      head_cluster,
-      cluster_parents,
-      cluster_min_rank,
-      cluster_max_rank,
-    ) {
+    // Graphviz parity: trailing-vnode tagging applies only to non-internal,
+    // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
+    let internal =
+      tail_cluster != "" && head_cluster != "" &&
+      edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+    if internal ||
+      tail_cluster == head_cluster ||
+      tail_cluster == "" ||
+      head_cluster == "" ||
+      remincross_cluster_rank_ranges_overlap(
+        tail_cluster,
+        head_cluster,
+        cluster_min_rank,
+        cluster_max_rank,
+      ) {
       continue
     }
     let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
