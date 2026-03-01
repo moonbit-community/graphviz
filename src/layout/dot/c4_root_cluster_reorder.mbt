@@ -645,16 +645,13 @@ fn sorted_non_root_clusters_for_rank_order(
 fn build_root_anchored_cluster_order(
   sorted_clusters : Array[String],
   left_anchor : String,
-) -> Array[String]? {
+) -> Array[String] {
   let mut insert_idx = sorted_clusters.length()
   for i in 0..<sorted_clusters.length() {
     if sorted_clusters[i] == left_anchor {
       insert_idx = i + 1
       break
     }
-  }
-  if insert_idx > sorted_clusters.length() {
-    return None
   }
   let reordered : Array[String] = []
   for i in 0..<sorted_clusters.length() {
@@ -666,7 +663,7 @@ fn build_root_anchored_cluster_order(
   if insert_idx >= sorted_clusters.length() {
     reordered.push("")
   }
-  Some(reordered)
+  reordered
 }
 
 ///|
@@ -724,10 +721,7 @@ fn anchor_root_bucket_from_previous_cluster_rank_order(
     Some(value) => value
     None => return ()
   }
-  let reordered = match build_root_anchored_cluster_order(sorted_clusters, left) {
-    Some(value) => value
-    None => return ()
-  }
+  let reordered = build_root_anchored_cluster_order(sorted_clusters, left)
   let mut idx = 0
   for cluster in reordered {
     order_map[cluster] = idx
