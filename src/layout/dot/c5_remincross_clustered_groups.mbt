@@ -13,6 +13,43 @@ fn graph_prefers_seeded_remincross_groups(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross seeded-group path is considered only
+/// when vnode ordering is enabled and graph shape matches single-cluster or
+/// ratio=fill seeded scenarios.
+fn should_try_seeded_clustered_remincross_groups(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+  prefer_seeded_from_ordered_with_vnodes : Bool,
+) -> Bool {
+  dispatch_context.order_with_vnodes &&
+  (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
+  prefer_seeded_from_ordered_with_vnodes)
+}
+
+///|
+/// Graphviz parity: clustered ReMincross rebuilt groups come from base real
+/// groups plus optional vnode injection with trailing-vnode adjustments.
+fn build_clustered_remincross_groups_rebuilt(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+) -> Map[Int, Array[String]] {
+  build_remincross_groups_with_optional_vnodes(
+    dispatch_context.base_groups,
+    dispatch_context.order_with_vnodes,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.edge_reversed,
+    dispatch_context.ranks,
+    dispatch_context.cluster_meta.intercluster_keys,
+    dispatch_context.cluster_meta.cluster_parents,
+    dispatch_context.cluster_meta.cluster_min_rank,
+    dispatch_context.cluster_meta.cluster_max_rank,
+    dispatch_context.vnode_info.edge_vnodes,
+    dispatch_context.vnode_info.vnode_ranks,
+    dispatch_context.vnode_info.vnodes_by_rank,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ReMincross rank groups can seed from current
 /// vnode-inclusive order for single-cluster or ratio=fill scenarios, with
 /// fallback to full rebuild when seeded output is empty.
@@ -20,27 +57,10 @@ fn build_clustered_remincross_groups(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
   prefer_seeded_from_ordered_with_vnodes : Bool,
 ) -> Map[Int, Array[String]] {
-  let rebuild_groups =
-    () =>
-      build_remincross_groups_with_optional_vnodes(
-        dispatch_context.base_groups,
-        dispatch_context.order_with_vnodes,
-        dispatch_context.edges,
-        dispatch_context.edge_tail,
-        dispatch_context.edge_head,
-        dispatch_context.edge_reversed,
-        dispatch_context.ranks,
-        dispatch_context.cluster_meta.intercluster_keys,
-        dispatch_context.cluster_meta.cluster_parents,
-        dispatch_context.cluster_meta.cluster_min_rank,
-        dispatch_context.cluster_meta.cluster_max_rank,
-        dispatch_context.vnode_info.edge_vnodes,
-        dispatch_context.vnode_info.vnode_ranks,
-        dispatch_context.vnode_info.vnodes_by_rank,
-      )
-  if dispatch_context.order_with_vnodes &&
-    (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
-    prefer_seeded_from_ordered_with_vnodes) {
+  if should_try_seeded_clustered_remincross_groups(
+    dispatch_context,
+    prefer_seeded_from_ordered_with_vnodes,
+  ) {
     let seeded =
       build_remincross_groups_from_ordered_with_vnodes(
         dispatch_context.base_groups,
@@ -50,10 +70,10 @@ fn build_clustered_remincross_groups(
     if seeded.length() > 0 {
       seeded
     } else {
-      rebuild_groups()
+      build_clustered_remincross_groups_rebuilt(dispatch_context)
     }
   } else {
-    rebuild_groups()
+    build_clustered_remincross_groups_rebuilt(dispatch_context)
   }
 }
 
