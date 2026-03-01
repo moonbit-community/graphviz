@@ -60,42 +60,32 @@ fn run_clustered_remincross_pass(
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let rem_groups = build_clustered_remincross_groups(dispatch_context)
   let rem_rank_keys = collect_rank_keys(rem_groups)
-  if rem_rank_keys.length() > 1 {
-    run_clustered_remincross_multi_rank(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-    )
-  } else {
+  if rem_rank_keys.length() <= 1 {
     (dispatch_context.ordered_with_vnodes, dispatch_context.base_groups)
+  } else {
+    // Graphviz parity: clustered ReMincross multi-rank branch materializes
+    // remapped edges and executes clustered cleanup reorder in startpass=2.
+    let materialized_inputs =
+      build_clustered_remincross_materialized_inputs(
+        dispatch_context,
+        rem_rank_keys,
+        rem_groups,
+      )
+    let rem_ordered =
+      run_clustered_remincross_cleanup_reorder(
+        dispatch_context,
+        rem_rank_keys,
+        rem_groups,
+        materialized_inputs,
+      )
+    let rem_cleaned =
+      collect_real_only_rank_groups(
+        rem_rank_keys,
+        rem_ordered,
+        dispatch_context.real_nodes,
+      )
+    (rem_ordered, rem_cleaned)
   }
-}
-
-///|
-/// Graphviz parity: clustered ReMincross multi-rank branch materializes
-/// remapped edges and executes clustered cleanup reorder in startpass=2 flow.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_remincross_multi_rank(
-  dispatch_context : ClusteredReMincrossPassDispatchContext,
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let materialized_inputs =
-    build_clustered_remincross_materialized_inputs(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-    )
-  let rem_ordered =
-    run_clustered_remincross_cleanup_reorder(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-      materialized_inputs,
-    )
-  let rem_cleaned =
-    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
-  (rem_ordered, rem_cleaned)
 }
 
 ///|
