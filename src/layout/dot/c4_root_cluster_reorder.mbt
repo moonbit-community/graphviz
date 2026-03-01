@@ -1309,6 +1309,49 @@ fn apply_root_rank_groups_override(
 }
 
 ///|
+/// Graphviz parity: cluster-rank-order guard keeps original rank order when
+/// root nodes appear on both sides of the clustered node block in one rank.
+fn has_root_nodes_on_both_sides_of_cluster_block(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+) -> Bool {
+  if names.length() <= 2 {
+    return false
+  }
+  let mut first_cluster = -1
+  let mut last_cluster = -1
+  for i in 0..<names.length() {
+    let cluster = cluster_key_or_empty(cluster_keys, names[i])
+    if cluster != "" {
+      if first_cluster < 0 {
+        first_cluster = i
+      }
+      last_cluster = i
+    }
+  }
+  if first_cluster < 0 {
+    return false
+  }
+  let mut root_before = false
+  let mut root_after = false
+  for i in 0..<first_cluster {
+    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+      root_before = true
+      break
+    }
+  }
+  if last_cluster + 1 < names.length() {
+    for i in (last_cluster + 1)..<names.length() {
+      if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+        root_after = true
+        break
+      }
+    }
+  }
+  root_before && root_after
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1326,40 +1369,9 @@ fn reorder_rank_groups_by_cluster_rank_order(
         continue
       }
     }
-    if names.length() > 2 {
-      let mut first_cluster = -1
-      let mut last_cluster = -1
-      let mut root_before = false
-      let mut root_after = false
-      for i in 0..<names.length() {
-        let cluster = cluster_key_or_empty(cluster_keys, names[i])
-        if cluster != "" {
-          if first_cluster < 0 {
-            first_cluster = i
-          }
-          last_cluster = i
-        }
-      }
-      if first_cluster >= 0 {
-        for i in 0..<first_cluster {
-          if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-            root_before = true
-            break
-          }
-        }
-        if last_cluster + 1 < names.length() {
-          for i in (last_cluster + 1)..<names.length() {
-            if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-              root_after = true
-              break
-            }
-          }
-        }
-      }
-      if root_before && root_after {
-        ordered_by_cluster[rank] = names
-        continue
-      }
+    if has_root_nodes_on_both_sides_of_cluster_block(names, cluster_keys) {
+      ordered_by_cluster[rank] = names
+      continue
     }
     // Graphviz parity: cluster reorder buckets keep first-seen cluster
     // sequence and preserve per-cluster node order within each rank.
