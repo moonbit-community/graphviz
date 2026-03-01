@@ -269,7 +269,7 @@ fn compute_desired_positions(
 }
 
 ///|
-fn compute_desired_positions_scaled_median(
+fn compute_scaled_median_positions(
   names : Array[String],
   neighbors : Map[String, Array[(String, Double)]],
   x_positions : Map[String, Double],
@@ -507,7 +507,7 @@ fn out_cross_port_tiebreak(
 }
 
 ///|
-fn count_single_rank_crossings_port_tiebreak(
+fn count_single_rank_crossings_port(
   rank : Int,
   names : Array[String],
   ranks : Map[String, Int],
@@ -563,7 +563,7 @@ fn count_single_rank_crossings_port_tiebreak(
 }
 
 ///|
-fn has_single_rank_real_incident_edges(
+fn has_single_rank_real_incidents(
   names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -723,7 +723,7 @@ fn transpose_rank_port_tiebreak(
 }
 
 ///|
-fn transpose_rank_groups_port_tiebreak(
+fn transpose_rank_groups_port(
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
   ranks : Map[String, Int],
@@ -1130,7 +1130,7 @@ let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
 let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(None)
 
 ///|
-fn maybe_capture_pass0_flat_seed_groups(
+fn maybe_capture_pass0_seed_groups(
   pass : Int,
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
@@ -1513,7 +1513,7 @@ fn reorder_rank_groups(
         fixed_order=fixed_order,
       )
     if seed_cross > 0 {
-      let _ = transpose_rank_groups_port_tiebreak(
+      let _ = transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -1547,7 +1547,7 @@ fn reorder_rank_groups(
       Some(list) => list
       None => []
     }
-    if !has_single_rank_real_incident_edges(
+    if !has_single_rank_real_incidents(
       single_names,
       edge_tail,
       edge_head,
@@ -1562,7 +1562,7 @@ fn reorder_rank_groups(
         Some(list) => list
         None => []
       }
-      count_single_rank_crossings_port_tiebreak(
+      count_single_rank_crossings_port(
         rank,
         names,
         node_ranks,
@@ -1616,7 +1616,7 @@ fn reorder_rank_groups(
         )
         let seed_cross = compute_single_cross()
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_port_tiebreak(
+          let _ = transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
@@ -1643,7 +1643,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
-        maybe_capture_pass0_flat_seed_groups(pass, rank_keys, ordered)
+        maybe_capture_pass0_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross = compute_single_cross()
@@ -1681,13 +1681,13 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired =
             if iter % 2 == 0 {
-              compute_desired_positions_scaled_median(
+              compute_scaled_median_positions(
                 names,
                 median_parents,
                 order_positions,
               )
             } else {
-              compute_desired_positions_scaled_median(
+              compute_scaled_median_positions(
                 names,
                 median_children,
                 order_positions,
@@ -1713,7 +1713,7 @@ fn reorder_rank_groups(
           order_positions = order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
-        let _ = transpose_rank_groups_port_tiebreak(
+        let _ = transpose_rank_groups_port(
           rank_keys,
           ordered,
           node_ranks,
@@ -1763,7 +1763,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_port_tiebreak(
+      let _ = transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -1836,7 +1836,7 @@ fn reorder_rank_groups(
             fixed_order=fixed_order,
           )
         if seed_cross > 0 {
-          let _ = transpose_rank_groups_port_tiebreak(
+          let _ = transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,
@@ -1863,7 +1863,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
-        maybe_capture_pass0_flat_seed_groups(pass, rank_keys, ordered)
+        maybe_capture_pass0_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
@@ -1922,7 +1922,7 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_desired_positions_scaled_median(
+              let desired = compute_scaled_median_positions(
                 names,
                 median_parents,
                 desired_positions,
@@ -1967,7 +1967,7 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_desired_positions_scaled_median(
+              let desired = compute_scaled_median_positions(
                 names,
                 median_children,
                 desired_positions,
@@ -2006,7 +2006,7 @@ fn reorder_rank_groups(
         }
         // Graphviz parity: transpose remains active with port-order hints;
         // ties are resolved by in/out port x during crossing checks.
-        let _ = transpose_rank_groups_port_tiebreak(
+        let _ = transpose_rank_groups_port(
           rank_keys,
           ordered,
           node_ranks,
@@ -2066,7 +2066,7 @@ fn reorder_rank_groups(
       merge_fixed_positions()
     }
     if best_cross > 0 {
-      let _ = transpose_rank_groups_port_tiebreak(
+      let _ = transpose_rank_groups_port(
         rank_keys,
         ordered,
         node_ranks,
@@ -2103,7 +2103,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_desired_positions_scaled_median(
+              let desired = compute_scaled_median_positions(
                 names,
                 median_parents,
                 order_positions,
@@ -2132,7 +2132,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_desired_positions_scaled_median(
+              let desired = compute_scaled_median_positions(
                 names,
                 median_children,
                 order_positions,
@@ -2157,7 +2157,7 @@ fn reorder_rank_groups(
           }
         }
         if !has_port_order {
-          let _ = transpose_rank_groups_port_tiebreak(
+          let _ = transpose_rank_groups_port(
             rank_keys,
             ordered,
             node_ranks,

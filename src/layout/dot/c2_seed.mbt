@@ -326,7 +326,7 @@ fn build_seeded_groups_for_reorder(
         order_edge_head_out,
         order_ranks,
       )
-    let _ = transpose_rank_groups_port_tiebreak(
+    let _ = transpose_rank_groups_port(
       order_rank_keys,
       seeded_groups,
       order_ranks,
