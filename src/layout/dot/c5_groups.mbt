@@ -435,7 +435,7 @@ fn build_remincross_reorder_inputs(
 ///|
 /// Graphviz parity: trailing-vnode candidate set comes from intercluster edge
 /// vnode chains on edges that satisfy the rank-range overlap gate.
-fn collect_remincross_intercluster_trailing_vnodes(
+fn collect_remincross_trailing_vnodes(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -482,7 +482,7 @@ fn collect_remincross_intercluster_trailing_vnodes(
 ///|
 /// Graphviz parity: trailing intercluster vnodes are floored behind real-node
 /// positions on their rank using stable sequence offsets.
-fn apply_remincross_intercluster_vnode_floor(
+fn apply_remincross_trailing_vnode_floor(
   keys : Map[String, Double],
   intercluster_vnodes : Map[String, Bool],
   rem_base_order_index : Map[String, Int],
@@ -533,7 +533,7 @@ fn apply_remincross_intercluster_vnode_floor(
 /// Graphviz parity: ReMincross vnode order keys come from base vnode-order
 /// scoring plus trailing-vnode floor adjustments for selected intercluster
 /// vnode chains.
-fn build_remincross_vnode_order_keys_with_trailing_adjustment(
+fn build_remincross_vnode_order_keys(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -550,7 +550,7 @@ fn build_remincross_vnode_order_keys_with_trailing_adjustment(
   let remincross_cluster_keys =
     clone_remincross_cluster_keys(intercluster_keys)
   let intercluster_vnodes =
-    collect_remincross_intercluster_trailing_vnodes(
+    collect_remincross_trailing_vnodes(
       edges,
       edge_tail,
       edge_head,
@@ -572,7 +572,7 @@ fn build_remincross_vnode_order_keys_with_trailing_adjustment(
     edge_vnodes,
     vnode_ranks,
   )
-  apply_remincross_intercluster_vnode_floor(
+  apply_remincross_trailing_vnode_floor(
     keys,
     intercluster_vnodes,
     rem_base_order_index,
@@ -609,7 +609,7 @@ fn build_remincross_groups_with_optional_vnodes(
     if !order_with_vnodes {
       Map::new()
     } else {
-      build_remincross_vnode_order_keys_with_trailing_adjustment(
+      build_remincross_vnode_order_keys(
         edges,
         edge_tail,
         edge_head,
