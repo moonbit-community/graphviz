@@ -132,7 +132,7 @@ fn build_clustered_ordering_pre_root_stage(
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_pre_root_and_root_stage_root_phase(
+fn run_clustered_ordering_root_phase(
   stage_dispatch_context : ClusteredOrderingStageDispatchContext,
   pre_root_stage : OrderClusteredPreRootStageData,
 ) -> OrderRootClusterStageData {
@@ -295,7 +295,7 @@ fn run_clustered_ordering_stage(
       stage_dispatch_context.nodes,
     )
   let root_cluster_stage =
-    run_clustered_ordering_pre_root_and_root_stage_root_phase(
+    run_clustered_ordering_root_phase(
       stage_dispatch_context,
       pre_root_stage,
     )
