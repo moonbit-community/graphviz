@@ -39,7 +39,7 @@ fn build_x_with_flat_labels(
   let mode_flags = build_position_mode_flags(prep, ordering)
   dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
-    build_virtual_slack_edges_for_layout(
+    build_virtual_slack_edges_for_xpos(
       mode_flags.use_vnodes_for_xpos,
       prep,
       rank_data,
@@ -55,7 +55,7 @@ fn build_x_with_flat_labels(
       ordering,
     )
   let flat_label_augmentation =
-    build_x_with_flat_label_augmentation(
+    build_x_flat_label_augmentation(
       false,
       mode_flags.use_vnodes_for_xpos,
       mode_flags.allow_xpos_reorder,

@@ -308,7 +308,7 @@ fn build_x_seed_data(
 /// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
 /// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_groups_after_reorder_and_cleanup(
+fn build_x_groups_after_reorder(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -357,7 +357,7 @@ fn build_x_groups_after_reorder_and_cleanup(
 /// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_with_flat_label_augmentation(
+fn build_x_flat_label_augmentation(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -370,7 +370,7 @@ fn build_x_with_flat_label_augmentation(
   x_seed : XPositionSeedData,
 ) -> XposFlatLabelAugmentation {
   let x_groups =
-    build_x_groups_after_reorder_and_cleanup(
+    build_x_groups_after_reorder(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
@@ -496,7 +496,7 @@ fn compute_x_positions_for_layout(
 /// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
 /// and these maxima must feed y-rank placement exactly as in Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_flat_label_rank_height_updates(
+fn apply_flat_label_height_updates(
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
   vnode_sizes : Map[String, NodeSize],
   rank_pht : Map[Int, Double],
@@ -670,7 +670,7 @@ fn build_y_position_data(
     } else {
       Map::new()
     }
-  apply_flat_label_rank_height_updates(
+  apply_flat_label_height_updates(
     flat_label_nodes,
     ordering.vnode_info.vnode_sizes,
     rank_pht,
@@ -781,7 +781,7 @@ fn build_position_output_maps(
 /// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
 /// paths and must preserve node-singleton and cluster-key inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn build_virtual_slack_edges_for_layout(
+fn build_virtual_slack_edges_for_xpos(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
