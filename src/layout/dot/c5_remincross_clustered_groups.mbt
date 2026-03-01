@@ -3,29 +3,6 @@
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input in
-/// clustered ReMincross, matching Graphviz's fill-specific branch behavior.
-fn graph_prefers_seeded_remincross_groups(graph : @cgraph.Graph) -> Bool {
-  match graph.get_attr("ratio") {
-    Some(value) => value == "fill"
-    None => false
-  }
-}
-
-///|
-/// Graphviz parity: clustered ReMincross seeded-group path is considered only
-/// when vnode ordering is enabled and graph shape matches single-cluster or
-/// ratio=fill seeded scenarios.
-fn should_try_seeded_clustered_remincross_groups(
-  dispatch_context : ClusteredReMincrossPassDispatchContext,
-  prefer_seeded_from_ordered_with_vnodes : Bool,
-) -> Bool {
-  dispatch_context.order_with_vnodes &&
-  (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
-  prefer_seeded_from_ordered_with_vnodes)
-}
-
-///|
 /// Graphviz parity: clustered ReMincross rebuilt groups come from base real
 /// groups plus optional vnode injection with trailing-vnode adjustments.
 fn build_clustered_remincross_groups_rebuilt(
@@ -55,13 +32,22 @@ fn build_clustered_remincross_groups_rebuilt(
 /// fallback to full rebuild when seeded output is empty.
 fn build_clustered_remincross_groups(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
-  prefer_seeded_from_ordered_with_vnodes : Bool,
 ) -> Map[Int, Array[String]] {
+  // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
+  // in clustered ReMincross (Graphviz fill-specific branch behavior).
+  let prefer_seeded_from_ordered_with_vnodes =
+    match dispatch_context.graph.get_attr("ratio") {
+      Some(value) => value == "fill"
+      None => false
+    }
+  // Graphviz parity: seeded-group path is considered only when vnode ordering
+  // is enabled and graph shape matches single-cluster or ratio=fill scenarios.
+  let should_try_seeded =
+    dispatch_context.order_with_vnodes &&
+    (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
+    prefer_seeded_from_ordered_with_vnodes)
   let seeded =
-    if should_try_seeded_clustered_remincross_groups(
-      dispatch_context,
-      prefer_seeded_from_ordered_with_vnodes,
-    ) {
+    if should_try_seeded {
       build_remincross_groups_from_ordered_with_vnodes(
         dispatch_context.base_groups,
         dispatch_context.ordered_with_vnodes,
@@ -85,13 +71,7 @@ fn build_clustered_remincross_groups(
 fn run_clustered_remincross_pass(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let prefer_seeded_from_ordered_with_vnodes =
-    graph_prefers_seeded_remincross_groups(dispatch_context.graph)
-  let rem_groups =
-    build_clustered_remincross_groups(
-      dispatch_context,
-      prefer_seeded_from_ordered_with_vnodes,
-    )
+  let rem_groups = build_clustered_remincross_groups(dispatch_context)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() > 1 {
     run_clustered_remincross_multi_rank(
