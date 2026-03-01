@@ -246,7 +246,7 @@ fn build_initial_x_groups(
 /// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
 /// order probing, edge-port metadata, and initial group/cluster maps unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_seed_data_for_positions(
+fn build_x_seed_data(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -308,7 +308,7 @@ fn build_x_seed_data_for_positions(
 /// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
 /// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_groups_after_reorder_and_cleanup_for_positions(
+fn build_x_groups_after_reorder_and_cleanup(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -357,7 +357,7 @@ fn build_x_groups_after_reorder_and_cleanup_for_positions(
 /// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_with_flat_label_augmentation_for_positions(
+fn build_x_with_flat_label_augmentation(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -370,7 +370,7 @@ fn build_x_with_flat_label_augmentation_for_positions(
   x_seed : XPositionSeedData,
 ) -> XposFlatLabelAugmentation {
   let x_groups =
-    build_x_groups_after_reorder_and_cleanup_for_positions(
+    build_x_groups_after_reorder_and_cleanup(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
@@ -443,7 +443,7 @@ fn build_xpos_computation_input(
 /// Graphviz parity: x-position stage must use identical xpos input assembly,
 /// solver invocation, and trace points as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_x_positions_for_positions(
+fn compute_x_positions_for_layout(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -646,7 +646,7 @@ fn build_y_positions_with_cluster_flip_adjustment(
 /// Graphviz parity: y-position pre-solve in compute_positions keeps cluster bbox
 /// derivation, flat-label rank-height updates, and y-sweep wiring unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_y_position_data_for_positions(
+fn build_y_position_data(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -701,7 +701,7 @@ fn build_y_position_data_for_positions(
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
-fn build_position_output_maps_for_positions(
+fn build_position_output_maps(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -781,7 +781,7 @@ fn build_position_output_maps_for_positions(
 /// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
 /// paths and must preserve node-singleton and cluster-key inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn build_virtual_slack_edges_for_positions(
+fn build_virtual_slack_edges_for_layout(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -813,7 +813,7 @@ fn build_virtual_slack_edges_for_positions(
 /// Graphviz parity: final projection stage in compute_positions keeps y/x solve
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_projection_result_for_positions(
+fn build_projection_result(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -832,7 +832,7 @@ fn build_projection_result_for_positions(
   rank_ht2 : Map[Int, Double],
 ) -> PositionResult {
   let y_position_data =
-    build_y_position_data_for_positions(
+    build_y_position_data(
       graph,
       prep,
       rank_data,
@@ -842,7 +842,7 @@ fn build_projection_result_for_positions(
       flat_label_nodes,
     )
   let x_positions =
-    compute_x_positions_for_positions(
+    compute_x_positions_for_layout(
       graph,
       prep,
       rank_data,
@@ -856,7 +856,7 @@ fn build_projection_result_for_positions(
       flat_label_edges,
     )
   let position_output_maps =
-    build_position_output_maps_for_positions(
+    build_position_output_maps(
       graph,
       prep,
       rank_data,
@@ -894,14 +894,14 @@ fn compute_positions(
   ordering : OrderingResult,
 ) -> PositionResult {
   let x_data =
-    build_x_with_flat_labels_for_positions(
+    build_x_with_flat_labels(
       prep,
       rank_data,
       rank_heights,
       cluster_meta,
       ordering,
     )
-  build_projection_result_for_positions(
+  build_projection_result(
     graph,
     prep,
     rank_data,
