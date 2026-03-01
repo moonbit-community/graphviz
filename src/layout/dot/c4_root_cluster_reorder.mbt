@@ -1477,23 +1477,6 @@ fn find_cluster_block_bounds_for_rank(
 }
 
 ///|
-/// Graphviz parity: root-name scan in a rank subrange checks for names with
-/// empty cluster key and returns true on the first root hit.
-fn has_root_name_in_rank_range(
-  names : Array[String],
-  cluster_keys : Map[String, String],
-  start : Int,
-  end_ : Int,
-) -> Bool {
-  for i in start..<end_ {
-    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-      return true
-    }
-  }
-  false
-}
-
-///|
 /// Graphviz parity: cluster-rank-order guard keeps original rank order when
 /// root nodes appear on both sides of the clustered node block in one rank.
 fn has_root_nodes_on_both_sides_of_cluster_block(
@@ -1508,16 +1491,23 @@ fn has_root_nodes_on_both_sides_of_cluster_block(
   if first_cluster < 0 {
     return false
   }
-  let root_before =
-    has_root_name_in_rank_range(names, cluster_keys, 0, first_cluster)
+  let mut root_before = false
+  for i in 0..<first_cluster {
+    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+      root_before = true
+      break
+    }
+  }
   let root_after =
     if last_cluster + 1 < names.length() {
-      has_root_name_in_rank_range(
-        names,
-        cluster_keys,
-        last_cluster + 1,
-        names.length(),
-      )
+      let mut found = false
+      for i in (last_cluster + 1)..<names.length() {
+        if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+          found = true
+          break
+        }
+      }
+      found
     } else {
       false
     }
