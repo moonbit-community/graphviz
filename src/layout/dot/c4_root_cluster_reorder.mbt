@@ -458,6 +458,29 @@ fn should_keep_name_in_root_cluster_groups(
 }
 
 ///|
+/// Graphviz parity: root cluster reorder rank filtering applies the same
+/// root/skeleton + vnode gate to each name in rank-sequence order.
+fn collect_root_group_names_at_rank(
+  names : Array[String],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  root_vnodes : Map[String, Bool],
+) -> Array[String] {
+  let root_names : Array[String] = []
+  for name in names {
+    if should_keep_name_in_root_cluster_groups(
+      name,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      root_vnodes,
+    ) {
+      root_names.push(name)
+    }
+  }
+  root_names
+}
+
+///|
 /// Graphviz parity: root cluster reorder groups keep root/skeleton base order
 /// and optionally merge only root-vnodes into rank groups using filtered vnode
 /// keys/rank buckets from root-mincross inputs.
@@ -493,17 +516,13 @@ fn build_root_groups_for_cluster_reorder(
       Some(list) => list
       None => []
     }
-    let root_names : Array[String] = []
-    for name in names {
-      if should_keep_name_in_root_cluster_groups(
-        name,
+    let root_names =
+      collect_root_group_names_at_rank(
+        names,
         order_cluster_keys,
         order_cluster_skeleton,
         root_vnodes,
-      ) {
-        root_names.push(name)
-      }
-    }
+      )
     if root_names.length() > 0 {
       root_groups_base[rank] = root_names
     }
