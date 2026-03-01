@@ -490,6 +490,43 @@ fn build_remincross_groups_with_optional_vnodes(
 }
 
 ///|
+/// Graphviz parity: seeded vnode-inclusive rank rebuilding anchors synthetic
+/// names between nearest real-node predecessors/successors from base order.
+fn build_remincross_neighbor_real_indices(
+  filtered : Array[String],
+  real_order : Map[String, Int],
+) -> (Array[Int?], Array[Int?]) {
+  let prev_real : Array[Int?] = []
+  let mut last_real : Int? = None
+  for name in filtered {
+    match real_order.get(name) {
+      Some(idx) => last_real = Some(idx)
+      None => ()
+    }
+    prev_real.push(last_real)
+  }
+  let next_rev : Array[Int?] = []
+  let mut next_real : Int? = None
+  let mut rev_idx = filtered.length()
+  while rev_idx > 0 {
+    rev_idx = rev_idx - 1
+    let name = filtered[rev_idx]
+    match real_order.get(name) {
+      Some(idx) => next_real = Some(idx)
+      None => ()
+    }
+    next_rev.push(next_real)
+  }
+  let next_real_by_pos : Array[Int?] = []
+  let mut idx = next_rev.length()
+  while idx > 0 {
+    idx = idx - 1
+    next_real_by_pos.push(next_rev[idx])
+  }
+  (prev_real, next_real_by_pos)
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -560,33 +597,8 @@ fn build_remincross_groups_from_ordered_with_vnodes(
       rem_groups[rank] = special_order
       continue
     }
-    let prev_real : Array[Int?] = []
-    let mut last_real : Int? = None
-    for name in filtered {
-      match real_order.get(name) {
-        Some(idx) => last_real = Some(idx)
-        None => ()
-      }
-      prev_real.push(last_real)
-    }
-    let next_rev : Array[Int?] = []
-    let mut next_real : Int? = None
-    let mut rev_idx = filtered.length()
-    while rev_idx > 0 {
-      rev_idx = rev_idx - 1
-      let name = filtered[rev_idx]
-      match real_order.get(name) {
-        Some(idx) => next_real = Some(idx)
-        None => ()
-      }
-      next_rev.push(next_real)
-    }
-    let next_real_by_pos : Array[Int?] = []
-    let mut idx = next_rev.length()
-    while idx > 0 {
-      idx = idx - 1
-      next_real_by_pos.push(next_rev[idx])
-    }
+    let (prev_real, next_real_by_pos) =
+      build_remincross_neighbor_real_indices(filtered, real_order)
     let keyed : Array[(String, Int, Int)] = []
     for i in 0..<filtered.length() {
       let name = filtered[i]
