@@ -732,28 +732,6 @@ fn remincross_seeded_rank_merge_key(
 }
 
 ///|
-/// Graphviz parity: seeded rank key sort keeps merge-key primary order and
-/// original index tie-break so equal keys preserve input relative order.
-fn compare_remincross_seeded_rank_keyed_entries(
-  a : (String, Int, Int),
-  b : (String, Int, Int),
-) -> Int {
-  let (_, key_a, idx_a) = a
-  let (_, key_b, idx_b) = b
-  if key_a < key_b {
-    -1
-  } else if key_a > key_b {
-    1
-  } else if idx_a < idx_b {
-    -1
-  } else if idx_a > idx_b {
-    1
-  } else {
-    0
-  }
-}
-
-///|
 /// Graphviz parity: seeded rank rebuild first applies special mixed handoff
 /// ordering, then falls back to key-based synthetic/real merge replay.
 fn build_remincross_seeded_rank_order(
@@ -792,7 +770,23 @@ fn build_remincross_seeded_rank_order(
       }
       // Graphviz parity: seeded rank replay uses keyed sort output order
       // directly as the vnode-inclusive rank sequence.
-      keyed.sort_by(compare_remincross_seeded_rank_keyed_entries)
+      keyed.sort_by((a, b) => {
+        // Graphviz parity: keyed sort keeps merge-key primary order and
+        // original index tie-break so equal keys preserve input order.
+        let (_, key_a, idx_a) = a
+        let (_, key_b, idx_b) = b
+        if key_a < key_b {
+          -1
+        } else if key_a > key_b {
+          1
+        } else if idx_a < idx_b {
+          -1
+        } else if idx_a > idx_b {
+          1
+        } else {
+          0
+        }
+      })
       let ordered_rank : Array[String] = []
       for entry in keyed {
         let (name, _, _) = entry
