@@ -423,47 +423,6 @@ fn build_remincross_cluster_grouping(
 }
 
 ///|
-/// Graphviz parity: root cluster tail order can apply a temporary override
-/// snapshot before replaying root names into rematerialized GD_nlist order.
-fn build_remincross_root_tail_names(names : Array[String]) -> Array[String] {
-  match remincross_root_tail_order_override_snapshot.val {
-    Some(override_names) =>
-      reorder_rank_names_by_override(
-        names,
-        override_names,
-      )
-    None => names
-  }
-}
-
-///|
-/// Graphviz parity: clustered tail-order per-cluster replay uses root override
-/// snapshot for root cluster and non-root rank replay for other clusters.
-fn build_remincross_cluster_tail_names_for_cluster(
-  cluster : String,
-  names : Array[String],
-  rem_ranks : Map[String, Int],
-  heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
-  cluster_order : Array[String],
-  rem_cluster_keys : Map[String, String],
-) -> Array[String] {
-  if cluster == "" {
-    build_remincross_root_tail_names(names)
-  } else {
-    build_remincross_cluster_tail_order_nonroot_names(
-      cluster,
-      names,
-      rem_ranks,
-      heads_by_tail,
-      cluster_order_pos,
-      cluster_order,
-      rem_cluster_keys,
-    )
-  }
-}
-
-///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
@@ -492,15 +451,28 @@ fn build_remincross_cluster_tail_order(
     // grouped creation-order names.
     let names = names_by_cluster.get(cluster).unwrap_or_default()
     let ordered_names =
-      build_remincross_cluster_tail_names_for_cluster(
-        cluster,
-        names,
-        rem_ranks,
-        heads_by_tail,
-        cluster_order_pos,
-        cluster_order,
-        rem_cluster_keys,
-      )
+      if cluster == "" {
+        // Graphviz parity: root cluster tail order can apply a temporary
+        // override snapshot before replaying root names into GD_nlist.
+        match remincross_root_tail_order_override_snapshot.val {
+          Some(override_names) =>
+            reorder_rank_names_by_override(
+              names,
+              override_names,
+            )
+          None => names
+        }
+      } else {
+        build_remincross_cluster_tail_order_nonroot_names(
+          cluster,
+          names,
+          rem_ranks,
+          heads_by_tail,
+          cluster_order_pos,
+          cluster_order,
+          rem_cluster_keys,
+        )
+      }
     append_names_in_order(rem_nlist_order, ordered_names)
   }
   rem_nlist_order
