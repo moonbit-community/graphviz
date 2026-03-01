@@ -362,16 +362,28 @@ fn build_remincross_nlist_order(
         cluster_order_index,
       )
     }
-  if rem_nlist_order.length() < rem_order_creation.length() {
-    let seen : Map[String, Bool] = Map::new()
-    for name in rem_nlist_order {
-      seen[name] = true
-    }
-    for name in rem_order_creation {
-      append_order_creation_name_if_absent(rem_nlist_order, seen, name)
-    }
-  }
+  append_missing_remincross_order_creation_names(rem_nlist_order, rem_order_creation)
   rem_nlist_order
+}
+
+///|
+/// Graphviz parity: remincross GD_nlist tail order appends any creation-order
+/// names missing from the clustered/single-cluster replay result with stable
+/// first-seen dedupe.
+fn append_missing_remincross_order_creation_names(
+  rem_nlist_order : Array[String],
+  rem_order_creation : Array[String],
+) -> Unit {
+  if rem_nlist_order.length() >= rem_order_creation.length() {
+    return ()
+  }
+  let seen : Map[String, Bool] = Map::new()
+  for name in rem_nlist_order {
+    seen[name] = true
+  }
+  for name in rem_order_creation {
+    append_order_creation_name_if_absent(rem_nlist_order, seen, name)
+  }
 }
 
 ///|
