@@ -655,18 +655,6 @@ fn build_remincross_nonroot_rank_ordered_names(
 }
 
 ///|
-/// Graphviz parity: minimum-rank rebucketing applies only to all-input-like
-/// rank names (the Graphviz 'i-' synthetic input class).
-fn remincross_names_all_input_like(names : Array[String]) -> Bool {
-  for name in names {
-    if !name.has_prefix("i-") {
-      return false
-    }
-  }
-  true
-}
-
-///|
 /// Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
 /// that satisfy Graphviz's rank+shape preconditions.
 fn maybe_rebucket_remincross_input_like_rank_order(
@@ -679,9 +667,16 @@ fn maybe_rebucket_remincross_input_like_rank_order(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  if rank == min_rank &&
-    rank_ordered.length() > 1 &&
-    remincross_names_all_input_like(rank_ordered) {
+  // Graphviz parity: minimum-rank rebucketing applies only to all
+  // input-like rank names (Graphviz's "i-" synthetic input class).
+  let mut all_input_like = true
+  for name in rank_ordered {
+    if !name.has_prefix("i-") {
+      all_input_like = false
+      break
+    }
+  }
+  if rank == min_rank && rank_ordered.length() > 1 && all_input_like {
     return rebucket_remincross_input_like_rank_order(
       cluster,
       rank_ordered,
