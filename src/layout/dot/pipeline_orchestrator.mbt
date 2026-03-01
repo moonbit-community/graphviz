@@ -245,7 +245,7 @@ fn scale_record_port_maps(
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_routing_spatial_data_for_stage(
+fn build_routing_spatial_data(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   ranks : Map[String, Int],
@@ -296,7 +296,7 @@ fn build_routing_spatial_data_for_stage(
 /// Graphviz parity: routing edge solve precompute keeps metric and path-context
 /// derivation in fixed order from typed edge/padding inputs before solve wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_routing_edge_solve_precompute_data_for_stage(
+fn build_routing_edge_solve_precompute_data(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
@@ -376,7 +376,7 @@ fn compute_dot_routing_stage(
   positions_state : PositionResult,
 ) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
   let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
-    build_routing_spatial_data_for_stage(graph, prep, rank_data.ranks, positions_state)
+    build_routing_spatial_data(graph, prep, rank_data.ranks, positions_state)
   let routing_bbox =
     compute_dot_bbox(
       nodes_out,
@@ -460,7 +460,7 @@ fn compute_dot_routing_stage(
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
   let (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context) =
-    build_routing_edge_solve_precompute_data_for_stage(
+    build_routing_edge_solve_precompute_data(
       prep,
       rank_data,
       rank_heights,
