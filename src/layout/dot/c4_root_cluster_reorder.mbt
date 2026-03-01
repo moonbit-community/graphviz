@@ -408,6 +408,39 @@ fn collect_root_vnodes_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root mincross vnode inputs keep only root-vnodes from
+/// vnode rank buckets and vnode-order key map.
+fn build_root_vnode_inputs_for_cluster_reorder(
+  order_with_vnodes : Bool,
+  root_vnodes : Map[String, Bool],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> (Map[Int, Array[String]], Map[String, Double]) {
+  let root_vnodes_by_rank : Map[Int, Array[String]] = Map::new()
+  let root_vnode_order_keys : Map[String, Double] = Map::new()
+  if !order_with_vnodes {
+    return (root_vnodes_by_rank, root_vnode_order_keys)
+  }
+  for rank, names in vnodes_by_rank {
+    let filtered : Array[String] = []
+    for name in names {
+      if root_vnodes.get(name) == Some(true) {
+        filtered.push(name)
+      }
+    }
+    if filtered.length() > 0 {
+      root_vnodes_by_rank[rank] = filtered
+    }
+  }
+  for name, key in vnode_order_keys_for_ordering {
+    if root_vnodes.get(name) == Some(true) {
+      root_vnode_order_keys[name] = key
+    }
+  }
+  (root_vnodes_by_rank, root_vnode_order_keys)
+}
+
+///|
 /// Graphviz parity: root cluster reorder groups keep root/skeleton base order
 /// and optionally merge only root-vnodes into rank groups using filtered vnode
 /// keys/rank buckets from root-mincross inputs.
@@ -458,28 +491,13 @@ fn build_root_groups_for_cluster_reorder(
     }
   }
   let root_order_index = build_order_index(root_groups_base)
-  // Graphviz parity: root mincross vnode inputs keep only root-vnodes from
-  // vnode rank buckets and vnode order keys.
-  let root_vnodes_by_rank : Map[Int, Array[String]] = Map::new()
-  let root_vnode_order_keys : Map[String, Double] = Map::new()
-  if order_with_vnodes {
-    for rank, names in vnodes_by_rank {
-      let filtered : Array[String] = []
-      for name in names {
-        if root_vnodes.get(name) == Some(true) {
-          filtered.push(name)
-        }
-      }
-      if filtered.length() > 0 {
-        root_vnodes_by_rank[rank] = filtered
-      }
-    }
-    for name, key in vnode_order_keys_for_ordering {
-      if root_vnodes.get(name) == Some(true) {
-        root_vnode_order_keys[name] = key
-      }
-    }
-  }
+  let (root_vnodes_by_rank, root_vnode_order_keys) =
+    build_root_vnode_inputs_for_cluster_reorder(
+      order_with_vnodes,
+      root_vnodes,
+      vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+    )
   if order_with_vnodes {
     build_x_groups_with_vnodes(
       root_groups_base,
