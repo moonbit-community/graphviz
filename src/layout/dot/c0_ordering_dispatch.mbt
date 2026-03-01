@@ -6,7 +6,7 @@
 /// Graphviz parity: choose clustered/non-clustered ordering flow using the same
 /// flag gates as Graphviz (vnode/cluster mode).
 /// Do not change behavior without updating fixtures/tests.
-fn run_ordering_stage_dispatch(
+fn run_ordering_dispatch(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
