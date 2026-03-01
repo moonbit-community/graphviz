@@ -1200,8 +1200,8 @@ fn adjust_edge_labels_if_enabled(
 ) -> DotLayoutGraph {
   if edge_label_adjust_enabled() {
     let adjusted_for_clusters =
-      adjust_edge_labels_for_cluster_labels(layout, nodesep_pt)
-    adjust_edge_labels_for_label_overlaps(
+      adjust_edge_labels_for_clusters(layout, nodesep_pt)
+    adjust_edge_labels_for_overlaps(
       adjusted_for_clusters,
       nodesep_pt,
       rankdir,
