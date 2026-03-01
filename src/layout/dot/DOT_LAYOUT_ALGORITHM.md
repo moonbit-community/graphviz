@@ -237,8 +237,8 @@ Entry:
 
 Supporting files:
 
-- `src/layout/dot/c1_order_edge.mbt`
-- `src/layout/dot/c1_order_graph.mbt`
+- `src/layout/dot/c1_edges.mbt`
+- `src/layout/dot/c1_graph.mbt`
 - `src/layout/dot/c1_class2.mbt`
 - `src/layout/dot/c2_seed.mbt`
 - `src/layout/dot/c2_reorder.mbt`
@@ -525,9 +525,9 @@ Repository guard validates:
   - `c0_setup.mbt`
   - `c0_dispatch.mbt`
 - Ordering edge materialization:
-  - `c1_order_edge.mbt`
+  - `c1_edges.mbt`
 - Ordering graph construction helpers:
-  - `c1_order_graph.mbt`
+  - `c1_graph.mbt`
   - `c1_class2.mbt`
 - Stage C ordering seed/reorder helpers:
   - `c2_seed.mbt`
@@ -568,7 +568,7 @@ If you are new to layout algorithms, read in this order:
 2. `pipeline_orchestrator.mbt` — understand stage boundaries.
 3. `a1_input.mbt` — understand canonical input formation.
 4. `b1_b2_rank.mbt` + `b1_b2_rank_heights.mbt` — understand rank and spacing foundations.
-5. `c1_order_edge.mbt` + `c1_order_graph.mbt` — understand order graph construction.
+5. `c1_edges.mbt` + `c1_graph.mbt` — understand order graph construction.
 6. `c3_local_reorder.mbt` + `c4_root_reorder.mbt` + `c5_remincross_*` — understand clustered reorder/refinement.
 7. `c0_ordering.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
 8. `e_routing.mbt` — understand edge geometry generation.
