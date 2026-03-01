@@ -626,21 +626,6 @@ fn remincross_min_nonnegative_rank_or_missing(rank_keys : Array[Int]) -> Int {
 }
 
 ///|
-/// Graphviz parity: clustered non-root rank replay preserves forward rank order
-/// only when every tail has no outgoing edge in the rematerialized graph.
-fn remincross_rank_names_all_without_outgoing(
-  rank_names : Array[String],
-  heads_by_tail : Map[String, Array[String]],
-) -> Bool {
-  for name in rank_names {
-    if heads_by_tail.get(name) is Some(_) {
-      return false
-    }
-  }
-  true
-}
-
-///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
 fn build_remincross_nonroot_rank_ordered_names(
@@ -648,7 +633,16 @@ fn build_remincross_nonroot_rank_ordered_names(
   heads_by_tail : Map[String, Array[String]],
 ) -> Array[String] {
   let rank_ordered : Array[String] = []
-  if remincross_rank_names_all_without_outgoing(rank_names, heads_by_tail) {
+  // Graphviz parity: preserve forward rank order only when every tail has no
+  // outgoing edge in the rematerialized graph.
+  let mut all_without_outgoing = true
+  for name in rank_names {
+    if heads_by_tail.get(name) is Some(_) {
+      all_without_outgoing = false
+      break
+    }
+  }
+  if all_without_outgoing {
     append_names_in_order(rank_ordered, rank_names)
     return rank_ordered
   }
