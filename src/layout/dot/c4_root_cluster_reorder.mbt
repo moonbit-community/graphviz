@@ -295,10 +295,7 @@ fn append_attached_by_skeleton_if_unseen(
   attached_by_skeleton : Map[String, Array[String]],
   skeleton_name : String,
 ) -> Unit {
-  let attached = match attached_by_skeleton.get(skeleton_name) {
-    Some(list) => list
-    None => []
-  }
+  let attached = attached_by_skeleton.get(skeleton_name).unwrap_or_default()
   for attached_name in attached {
     if seen.get(attached_name) is None {
       target.push(attached_name)
@@ -322,10 +319,8 @@ fn should_use_root_positional_merge(
     order_cluster_skeleton.get(replacements[0]) == Some(true) {
     return false
   }
-  let attached_count = match attached_by_skeleton.get(replacements[1]) {
-    Some(list) => list.length()
-    None => 0
-  }
+  let attached_count =
+    attached_by_skeleton.get(replacements[1]).unwrap_or_default().length()
   attached_count == 1
 }
 
@@ -1316,10 +1311,7 @@ fn reorder_rank_names_by_override(
 /// Graphviz parity: root-override skeleton checks treat non-skeleton names as
 /// empty cluster keys when rebuilding attached-cluster bundles.
 fn skeleton_cluster_or_empty(name : String) -> String {
-  match cluster_key_from_skeleton_name(name) {
-    Some(value) => value
-    None => ""
-  }
+  cluster_key_from_skeleton_name(name).unwrap_or_default()
 }
 
 ///|
