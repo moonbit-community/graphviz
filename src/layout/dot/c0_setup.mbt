@@ -156,7 +156,7 @@ fn build_ordering_dispatch_setup(
     )
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
   // clustered/nonclustered mincross paths diverge.
-  let ordering_groups_base = apply_rank_same_order_with_port_override(
+  let ordering_groups_base = apply_rank_same_order_with_ports(
     groups,
     cluster_meta.rank_same_groups,
     cluster_meta.rank_same_order,
