@@ -32,7 +32,7 @@ fn build_remincross_groups(
   }
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
-  build_remincross_groups_with_optional_vnodes(
+  build_remincross_groups_with_vnodes(
     dispatch_context.base_groups,
     dispatch_context.order_with_vnodes,
     dispatch_context.edges,
@@ -587,7 +587,7 @@ fn build_remincross_vnode_order_keys(
 /// optionally inject edge-vnodes using vnode order keys from cluster-aware
 /// trailing-vnode adjustments.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_groups_with_optional_vnodes(
+fn build_remincross_groups_with_vnodes(
   final_groups : Map[Int, Array[String]],
   order_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],
