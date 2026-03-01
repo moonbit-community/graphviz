@@ -180,24 +180,13 @@ fn merge_root_mincross_order_into_seeded_groups(
         }
       }
     }
-    let attached_by_skeleton : Map[String, Array[String]] = Map::new()
-    for name in names {
-      if mincross_nodes.get(name) is Some(_) {
-        continue
-      }
-      let cluster = cluster_key_or_empty(_order_cluster_keys, name)
-      if cluster == "" {
-        continue
-      }
-      match skeleton_for_cluster.get(cluster) {
-        Some(skeleton_name) =>
-          match attached_by_skeleton.get(skeleton_name) {
-            Some(list) => list.push(name)
-            None => attached_by_skeleton[skeleton_name] = [name]
-          }
-        None => ()
-      }
-    }
+    let attached_by_skeleton =
+      build_attached_by_skeleton_for_names(
+        names,
+        _order_cluster_keys,
+        skeleton_for_cluster,
+        (name) => mincross_nodes.get(name) is Some(_),
+      )
     // Graphviz parity: when root mincross returns [root, skeleton] in a
     // single-root rank, keep the attached cluster node in front via positional
     // replacement (matches biological rank handoff in Graphviz).
@@ -249,6 +238,36 @@ fn merge_root_mincross_order_into_seeded_groups(
     merged[rank] = next_names
   }
   merged
+}
+
+///|
+/// Graphviz parity: attached-by-skeleton buckets map non-skipped cluster
+/// members to their rankleader skeleton in input order.
+fn build_attached_by_skeleton_for_names(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+  skeleton_for_cluster : Map[String, String],
+  should_skip : (String) -> Bool,
+) -> Map[String, Array[String]] {
+  let attached_by_skeleton : Map[String, Array[String]] = Map::new()
+  for name in names {
+    if should_skip(name) {
+      continue
+    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster == "" {
+      continue
+    }
+    match skeleton_for_cluster.get(cluster) {
+      Some(skeleton_name) =>
+        match attached_by_skeleton.get(skeleton_name) {
+          Some(list) => list.push(name)
+          None => attached_by_skeleton[skeleton_name] = [name]
+        }
+      None => ()
+    }
+  }
+  attached_by_skeleton
 }
 
 ///|
@@ -1167,25 +1186,13 @@ fn apply_root_rank_groups_override(
             skeleton_for_cluster[skeleton_cluster] = name
           }
         }
-        let attached_by_skeleton : Map[String, Array[String]] = Map::new()
-        for name in rank_names {
-          let is_skeleton = skeleton_cluster_or_empty(name) != ""
-          if is_skeleton {
-            continue
-          }
-          let cluster = cluster_key_or_empty(cluster_keys, name)
-          if cluster == "" {
-            continue
-          }
-          match skeleton_for_cluster.get(cluster) {
-            Some(skel) =>
-              match attached_by_skeleton.get(skel) {
-                Some(list) => list.push(name)
-                None => attached_by_skeleton[skel] = [name]
-              }
-            None => ()
-          }
-        }
+        let attached_by_skeleton =
+          build_attached_by_skeleton_for_names(
+            rank_names,
+            cluster_keys,
+            skeleton_for_cluster,
+            (name) => skeleton_cluster_or_empty(name) != "",
+          )
         let next_names : Array[String] = []
         let seen : Map[String, Bool] = Map::new()
         for name in rank_names {
