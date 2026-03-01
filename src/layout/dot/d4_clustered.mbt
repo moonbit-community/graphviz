@@ -102,7 +102,7 @@ fn build_clustered_xpos_seed_data(
 /// Graphviz parity: clustered xpos reorder vnode chain direction follows
 /// rank order (forward/reverse) before segment emission.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_edge_chain_with_vnodes(
+fn build_xpos_edge_chain_with_vnodes(
   ranks : Map[String, Int],
   tail : String,
   head : String,
@@ -137,7 +137,7 @@ fn build_clustered_xpos_edge_chain_with_vnodes(
 /// Graphviz parity: clustered xpos reorder emits chain segments with
 /// endpoint port hints and midpoint-neutral port-order values.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_edge_chain_segments(
+fn append_xpos_edge_chain_segments(
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
   order_edges_out : Array[@cgraph.Edge],
@@ -196,7 +196,7 @@ fn append_clustered_xpos_edge_chain_segments(
 /// Graphviz parity: clustered xpos reorder expands vnode edge chains
 /// into order-graph segments while preserving endpoint port hints.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_edge_with_vnodes(
+fn append_xpos_edge_with_vnodes(
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
   order_edges_out : Array[@cgraph.Edge],
@@ -238,13 +238,13 @@ fn append_clustered_xpos_edge_with_vnodes(
       head_port_order,
     )
   } else {
-    let chain = build_clustered_xpos_edge_chain_with_vnodes(
+    let chain = build_xpos_edge_chain_with_vnodes(
       ranks,
       tail,
       head,
       vnodes,
     )
-    append_clustered_xpos_edge_chain_segments(
+    append_xpos_edge_chain_segments(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -371,7 +371,7 @@ fn append_clustered_xpos_input_edges(
       Some(list) => list
       None => []
     }
-    append_clustered_xpos_edge_with_vnodes(
+    append_xpos_edge_with_vnodes(
       order_graph,
       order_node_map,
       order_edges_out,
