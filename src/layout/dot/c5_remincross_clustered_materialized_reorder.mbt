@@ -235,16 +235,7 @@ fn build_clustered_remincross_materialized_edges(
   rem_graph : @cgraph.Graph,
   rem_node_map : Map[String, @cgraph.Node],
   rem_groups : Map[Int, Array[String]],
-  ) -> (
-  Map[String, Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
+) -> ReMincrossMaterializedEdgeArrays {
   let (
     rem_order_edges_by_tail,
     rem_vnode_creation,
