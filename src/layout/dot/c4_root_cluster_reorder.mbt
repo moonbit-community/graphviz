@@ -192,13 +192,11 @@ fn merge_root_mincross_order_into_seeded_groups(
     // single-root rank, keep the attached cluster node in front via positional
     // replacement (matches biological rank handoff in Graphviz).
     let should_use_positional_merge =
-      replacements.length() == 2 &&
-      order_cluster_skeleton.get(replacements[1]) == Some(true) &&
-      order_cluster_skeleton.get(replacements[0]) != Some(true) &&
-      (match attached_by_skeleton.get(replacements[1]) {
-        Some(list) => list.length()
-        None => 0
-      }) == 1
+      should_use_root_positional_merge(
+        replacements,
+        order_cluster_skeleton,
+        attached_by_skeleton,
+      )
     if should_use_positional_merge {
       let mut replace_idx = 0
       for i in 0..<names.length() {
@@ -303,6 +301,28 @@ fn append_attached_by_skeleton_if_unseen(
       seen[attached_name] = true
     }
   }
+}
+
+///|
+/// Graphviz parity: positional root merge triggers only for [root, skeleton]
+/// replacement pairs with exactly one attached member on that skeleton.
+fn should_use_root_positional_merge(
+  replacements : Array[String],
+  order_cluster_skeleton : Map[String, Bool],
+  attached_by_skeleton : Map[String, Array[String]],
+) -> Bool {
+  if replacements.length() != 2 {
+    return false
+  }
+  if order_cluster_skeleton.get(replacements[1]) != Some(true) ||
+    order_cluster_skeleton.get(replacements[0]) == Some(true) {
+    return false
+  }
+  let attached_count = match attached_by_skeleton.get(replacements[1]) {
+    Some(list) => list.length()
+    None => 0
+  }
+  attached_count == 1
 }
 
 ///|
