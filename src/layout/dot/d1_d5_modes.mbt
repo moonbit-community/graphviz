@@ -35,7 +35,7 @@ fn build_x_with_flat_labels_for_positions(
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XStageWithFlatLabelData {
+) -> XWithFlatLabelData {
   let mode_flags = build_position_mode_flags(prep, ordering)
   dot_trace("layout_dot: vnodes built count=\{ordering.vnode_count}")
   let virtual_slack_edges =
@@ -46,7 +46,7 @@ fn build_x_with_flat_labels_for_positions(
       ordering,
       cluster_meta,
     )
-  let x_stage_seed =
+  let x_seed =
     build_x_seed_data_for_positions(
       mode_flags.use_vnodes_for_xpos,
       prep,
@@ -65,12 +65,12 @@ fn build_x_with_flat_labels_for_positions(
       rank_heights,
       cluster_meta,
       ordering,
-      x_stage_seed,
+      x_seed,
     )
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
     virtual_slack_edges,
-    x_base_sizes: x_stage_seed.x_base_sizes,
+    x_base_sizes: x_seed.x_base_sizes,
     x_groups: flat_label_augmentation.x_groups,
     x_cluster_keys: flat_label_augmentation.x_cluster_keys,
     flat_label_edges: flat_label_augmentation.flat_label_edges,

@@ -43,7 +43,7 @@ priv struct XposOrderEdgePortData {
 }
 
 ///|
-priv struct XPositionStageSeedData {
+priv struct XPositionSeedData {
   has_vnode_order : Bool
   x_base_sizes : Map[String, NodeSize]
   x_order_sizes : Map[String, NodeSize]
@@ -80,7 +80,7 @@ priv struct PositionOutputMaps {
 }
 
 ///|
-priv struct XStageWithFlatLabelData {
+priv struct XWithFlatLabelData {
   use_vnodes_for_xpos : Bool
   virtual_slack_edges : Array[ConstraintEdge]
   x_base_sizes : Map[String, NodeSize]
@@ -252,7 +252,7 @@ fn build_x_seed_data_for_positions(
   rank_data : RankData,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-) -> XPositionStageSeedData {
+) -> XPositionSeedData {
   let order_index = build_order_index(ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state_for_positions(
@@ -318,27 +318,27 @@ fn build_x_groups_after_reorder_and_cleanup_for_positions(
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-  x_stage_seed : XPositionStageSeedData,
+  x_seed : XPositionSeedData,
 ) -> Map[Int, Array[String]] {
   let x_groups =
     build_xpos_reordered_groups_for_positions(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
-      x_stage_seed.has_vnode_order,
+      x_seed.has_vnode_order,
       cluster_meta,
       prep,
       rank_data,
       rank_heights,
       ordering,
-      x_stage_seed.x_order_sizes,
-      x_stage_seed.x_cluster_keys,
-      x_stage_seed.x_edge_tail_port_x,
-      x_stage_seed.x_edge_head_port_x,
-      x_stage_seed.x_edge_tail_port_order,
-      x_stage_seed.x_edge_head_port_order,
+      x_seed.x_order_sizes,
+      x_seed.x_cluster_keys,
+      x_seed.x_edge_tail_port_x,
+      x_seed.x_edge_head_port_x,
+      x_seed.x_edge_tail_port_order,
+      x_seed.x_edge_head_port_order,
       graphviz_flip,
-      x_stage_seed.x_groups,
+      x_seed.x_groups,
     )
   maybe_apply_xpos_transpose_cleanup(
     xpos_reorder_enabled,
@@ -367,7 +367,7 @@ fn build_x_with_flat_label_augmentation_for_positions(
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-  x_stage_seed : XPositionStageSeedData,
+  x_seed : XPositionSeedData,
 ) -> XposFlatLabelAugmentation {
   let x_groups =
     build_x_groups_after_reorder_and_cleanup_for_positions(
@@ -380,7 +380,7 @@ fn build_x_with_flat_label_augmentation_for_positions(
       rank_heights,
       cluster_meta,
       ordering,
-      x_stage_seed,
+      x_seed,
     )
   build_flat_label_vnode_augmentation_for_positions(
     use_vnodes_for_xpos,
@@ -389,9 +389,9 @@ fn build_x_with_flat_label_augmentation_for_positions(
     ordering,
     rank_heights,
     cluster_meta,
-    x_stage_seed.x_base_sizes,
+    x_seed.x_base_sizes,
     x_groups,
-    x_stage_seed.x_cluster_keys,
+    x_seed.x_cluster_keys,
   )
 }
 
@@ -893,7 +893,7 @@ fn compute_positions(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
 ) -> PositionResult {
-  let x_stage_data =
+  let x_data =
     build_x_with_flat_labels_for_positions(
       prep,
       rank_data,
@@ -908,14 +908,14 @@ fn compute_positions(
     rank_heights,
     cluster_meta,
     ordering,
-    x_stage_data.use_vnodes_for_xpos,
-    x_stage_data.x_base_sizes,
-    x_stage_data.x_groups,
-    x_stage_data.x_cluster_keys,
-    x_stage_data.virtual_slack_edges,
-    x_stage_data.flat_label_edges,
-    x_stage_data.flat_label_nodes,
-    x_stage_data.flat_label_edge_vnodes,
+    x_data.use_vnodes_for_xpos,
+    x_data.x_base_sizes,
+    x_data.x_groups,
+    x_data.x_cluster_keys,
+    x_data.virtual_slack_edges,
+    x_data.flat_label_edges,
+    x_data.flat_label_nodes,
+    x_data.flat_label_edge_vnodes,
     rank_heights.rank_ht1,
     rank_heights.rank_ht2,
   )
