@@ -7,7 +7,7 @@
 /// ordered_groups_with_vnodes means vnode order is present; otherwise build
 /// keys from edge-vnode chains and mark presence by non-empty key map.
 /// Do not change behavior without updating fixtures/tests.
-fn build_vnode_order_state_for_positions(
+fn build_vnode_order_state(
   use_vnodes_for_xpos : Bool,
   ordered_groups_with_vnodes : Map[Int, Array[String]],
   prep : LayoutPrep,
@@ -46,7 +46,7 @@ fn build_vnode_order_state_for_positions(
 /// Graphviz parity: x-order sizes and edge port position/order arrays are
 /// derived from layout-coordinate sizes before any xpos reorder pass.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_order_edge_port_data_for_positions(
+fn build_x_order_edge_port_data(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -98,7 +98,7 @@ fn build_x_order_edge_port_data_for_positions(
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
 /// label edges, and vnode cluster-key overlay only on vnode-xpos path.
 /// Do not change behavior without updating fixtures/tests.
-fn build_flat_label_vnode_augmentation_for_positions(
+fn build_flat_label_vnode_augmentation(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,

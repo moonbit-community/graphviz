@@ -255,7 +255,7 @@ fn build_x_seed_data(
 ) -> XPositionSeedData {
   let order_index = build_order_index(ordering.ordered_groups)
   let vnode_order_state =
-    build_vnode_order_state_for_positions(
+    build_vnode_order_state(
       use_vnodes_for_xpos,
       ordering.ordered_groups_with_vnodes,
       prep,
@@ -266,7 +266,7 @@ fn build_x_seed_data(
     )
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
-    build_x_order_edge_port_data_for_positions(
+    build_x_order_edge_port_data(
       use_vnodes_for_xpos,
       prep,
       rank_data,
@@ -382,7 +382,7 @@ fn build_x_with_flat_label_augmentation(
       ordering,
       x_seed,
     )
-  build_flat_label_vnode_augmentation_for_positions(
+  build_flat_label_vnode_augmentation(
     use_vnodes_for_xpos,
     prep,
     rank_data,
