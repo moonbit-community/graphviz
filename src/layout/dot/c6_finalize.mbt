@@ -102,7 +102,7 @@ fn finalize_order_groups_with_cluster_remincross(
       cluster_meta.intercluster_keys,
       local_cluster_order,
     )
-    let cluster_pass_context : ClusteredReMincrossPassDispatchContext = {
+    let remincross_context : ReMincrossDispatchContext = {
       graph,
       edges,
       edge_tail,
@@ -130,7 +130,7 @@ fn finalize_order_groups_with_cluster_remincross(
       port_order_positions,
       port_order_contrib,
     }
-    run_remincross_pass(cluster_pass_context)
+    run_remincross_pass(remincross_context)
   } else {
     (ordered_with_vnodes, cleaned_groups)
   }
