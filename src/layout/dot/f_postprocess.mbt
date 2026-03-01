@@ -1286,12 +1286,12 @@ fn mirror_layout_points_with_bbox(
 }
 
 ///|
-fn refresh_cluster_label_positions_from_bbox(
+fn refresh_cluster_label_positions(
   layout : DotLayoutGraph,
 ) -> DotLayoutGraph {
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(refresh_cluster_label_positions_from_bbox(subgraph))
+    subgraphs.push(refresh_cluster_label_positions(subgraph))
   }
   let label_pos =
     if @dot_shared.is_cluster_graph(layout.graph) {
@@ -1348,7 +1348,7 @@ fn shift_layout_to_origin_if_root(
 /// Graphviz parity: root cluster padding aligned to refs/graphviz/lib/dotgen/position.c
 /// (clust_ht/adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
-fn apply_root_cluster_padding_if_needed(
+fn apply_root_cluster_padding(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
   root_cluster_pad_top : Double,
@@ -1382,7 +1382,7 @@ fn apply_root_cluster_padding_if_needed(
 }
 
 ///|
-fn refresh_root_label_position_from_bbox(
+fn refresh_root_label_position(
   layout : DotLayoutGraph,
 ) -> DotLayoutGraph {
   if layout.graph.is_root() {
@@ -1472,7 +1472,7 @@ fn finalize_layout_graph(
       port_pad_above,
     )
   let layout_with_root_pad =
-    apply_root_cluster_padding_if_needed(
+    apply_root_cluster_padding(
       graph,
       {
         graph,
@@ -1540,7 +1540,7 @@ fn finalize_layout_graph(
     @dot_shared.graph_has_cluster(graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
-      refresh_cluster_label_positions_from_bbox(
+      refresh_cluster_label_positions(
         mirror_layout_points_with_bbox(
           rotated,
           cluster_mirror_bbox,
@@ -1561,7 +1561,7 @@ fn finalize_layout_graph(
     edges: rotated.edges,
     subgraphs: rotated.subgraphs,
   }
-  refresh_root_label_position_from_bbox(
+  refresh_root_label_position(
     shift_layout_to_origin_if_root(graph, rotated_with_margin),
   )
 }
