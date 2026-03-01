@@ -1689,7 +1689,7 @@ fn builtin_polygon_shape_attrs(
 ///|
 /// Graphviz parity: built-in polygon shapes honor peripheries/orientation attrs
 /// and regular=true override (poly_init late_* flow for non-generic polygons).
-fn builtin_polygon_shape_attrs_for_node(
+fn builtin_polygon_attrs_for_node(
   node : @cgraph.Node,
   shape : String,
 ) -> (Int, Int, Double, Double, Double, Bool)? {
@@ -2055,7 +2055,7 @@ fn node_size(
     } else {
       (0.0, 0.0)
   }
-  let polygon_shape = match builtin_polygon_shape_attrs_for_node(node, shape) {
+  let polygon_shape = match builtin_polygon_attrs_for_node(node, shape) {
     Some(attrs) => Some(attrs)
     None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
   }
