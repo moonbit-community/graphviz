@@ -557,6 +557,53 @@ fn build_remincross_neighbor_real_indices(
 }
 
 ///|
+/// Graphviz parity: when a mixed root/cluster rank begins with one synthetic
+/// vnode, keep root real first, cluster reals next, and trail that vnode.
+fn try_build_remincross_special_seeded_rank_order(
+  filtered : Array[String],
+  base_real : Array[String],
+  real_order : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> Array[String]? {
+  let mut root_real_count = 0
+  let mut cluster_real_count = 0
+  let mut root_real_name = ""
+  let cluster_real_names : Array[String] = []
+  for name in base_real {
+    if cluster_key_or_empty(cluster_keys, name) == "" {
+      root_real_count = root_real_count + 1
+      root_real_name = name
+    } else {
+      cluster_real_count = cluster_real_count + 1
+      cluster_real_names.push(name)
+    }
+  }
+  let mut synthetic_count = 0
+  let mut synthetic_name = ""
+  for name in filtered {
+    if real_order.get(name) is None {
+      synthetic_count = synthetic_count + 1
+      synthetic_name = name
+    }
+  }
+  if filtered.length() == 4 &&
+    is_edge_vnode_name(filtered[0]) &&
+    root_real_count == 1 &&
+    cluster_real_count >= 2 &&
+    synthetic_count == 1 &&
+    synthetic_name != "" &&
+    root_real_name != "" {
+    let special_order : Array[String] = [root_real_name]
+    for name in cluster_real_names {
+      special_order.push(name)
+    }
+    special_order.push(synthetic_name)
+    return Some(special_order)
+  }
+  None
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -588,44 +635,19 @@ fn build_remincross_groups_from_ordered_with_vnodes(
     for i in 0..<base_real.length() {
       real_order[base_real[i]] = i
     }
-    let mut root_real_count = 0
-    let mut cluster_real_count = 0
-    let mut root_real_name = ""
-    let cluster_real_names : Array[String] = []
-    for name in base_real {
-      if cluster_key_or_empty(cluster_keys, name) == "" {
-        root_real_count = root_real_count + 1
-        root_real_name = name
-      } else {
-        cluster_real_count = cluster_real_count + 1
-        cluster_real_names.push(name)
+    // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
+    // sequence aligned with Graphviz before generic key-based placement.
+    match try_build_remincross_special_seeded_rank_order(
+      filtered,
+      base_real,
+      real_order,
+      cluster_keys,
+    ) {
+      Some(special_order) => {
+        rem_groups[rank] = special_order
+        continue
       }
-    }
-    let mut synthetic_count = 0
-    let mut synthetic_name = ""
-    for name in filtered {
-      if real_order.get(name) is None {
-        synthetic_count = synthetic_count + 1
-        synthetic_name = name
-      }
-    }
-    // Graphviz parity: when a mixed root/cluster rank starts with exactly one
-    // synthetic vnode, keep the root real node as the rank leader and trail
-    // that single vnode after clustered real nodes.
-    if filtered.length() == 4 &&
-      is_edge_vnode_name(filtered[0]) &&
-      root_real_count == 1 &&
-      cluster_real_count >= 2 &&
-      synthetic_count == 1 &&
-      synthetic_name != "" &&
-      root_real_name != "" {
-      let special_order : Array[String] = [root_real_name]
-      for name in cluster_real_names {
-        special_order.push(name)
-      }
-      special_order.push(synthetic_name)
-      rem_groups[rank] = special_order
-      continue
+      None => ()
     }
     let (prev_real, next_real_by_pos) =
       build_remincross_neighbor_real_indices(filtered, real_order)
