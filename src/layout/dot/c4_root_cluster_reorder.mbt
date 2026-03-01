@@ -1352,6 +1352,28 @@ fn has_root_nodes_on_both_sides_of_cluster_block(
 }
 
 ///|
+/// Graphviz parity: cluster bucket grouping keeps first-seen cluster sequence
+/// while preserving per-cluster name order inside each rank.
+fn build_cluster_nodes_and_sequence_for_rank_order(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+) -> (Map[String, Array[String]], Array[String]) {
+  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_seq : Array[String] = []
+  for name in names {
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    match cluster_nodes.get(cluster) {
+      Some(list) => list.push(name)
+      None => {
+        cluster_nodes[cluster] = [name]
+        cluster_seq.push(cluster)
+      }
+    }
+  }
+  (cluster_nodes, cluster_seq)
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1373,20 +1395,11 @@ fn reorder_rank_groups_by_cluster_rank_order(
       ordered_by_cluster[rank] = names
       continue
     }
-    // Graphviz parity: cluster reorder buckets keep first-seen cluster
-    // sequence and preserve per-cluster node order within each rank.
-    let cluster_nodes : Map[String, Array[String]] = Map::new()
-    let cluster_seq : Array[String] = []
-    for name in names {
-      let cluster = cluster_key_or_empty(cluster_keys, name)
-      match cluster_nodes.get(cluster) {
-        Some(list) => list.push(name)
-        None => {
-          cluster_nodes[cluster] = [name]
-          cluster_seq.push(cluster)
-        }
-      }
-    }
+    let (cluster_nodes, cluster_seq) =
+      build_cluster_nodes_and_sequence_for_rank_order(
+        names,
+        cluster_keys,
+      )
     // Graphviz parity: cluster bucket sort keys use root rank-order map with
     // stable first-seen sequence fallback for clusters missing from the map.
     let cluster_ordered : Array[(Int, Int, String)] = []
