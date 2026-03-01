@@ -198,7 +198,7 @@ fn build_size_maps_for_layout_inputs(
 /// Graphviz parity: record/html nodes expose per-port horizontal order offsets
 /// (layout_port_offset.x) used by later opposite-endpoint averaging.
 /// Do not change behavior without updating fixtures/tests.
-fn build_record_port_order_map_for_layout_inputs(
+fn build_record_port_order_map(
   nodes : Array[@cgraph.Node],
   output_sizes : Map[String, NodeSize],
   rankdir : RankDir,
@@ -236,7 +236,7 @@ fn build_record_port_order_map_for_layout_inputs(
 /// Graphviz parity: edge-side port-order contributions are accumulated from
 /// explicit record/html ports onto opposite endpoints before averaging.
 /// Do not change behavior without updating fixtures/tests.
-fn accumulate_port_order_contrib_for_layout_inputs(
+fn accumulate_port_order_contrib(
   edges : Array[@cgraph.Edge],
   record_port_order : Map[String, Map[String, Double]],
   port_order_contrib : Map[String, Array[(String, Double)]],
@@ -300,14 +300,14 @@ fn build_port_order_metadata_for_layout_inputs(
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
     let record_port_order =
-      build_record_port_order_map_for_layout_inputs(
+      build_record_port_order_map(
         nodes,
         output_sizes,
         rankdir,
         record_orientation,
       )
     let order_sum =
-      accumulate_port_order_contrib_for_layout_inputs(
+      accumulate_port_order_contrib(
         edges,
         record_port_order,
         port_order_contrib,
