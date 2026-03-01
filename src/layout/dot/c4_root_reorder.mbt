@@ -405,7 +405,7 @@ fn build_root_nlist_order(
 ///|
 /// Graphviz parity: root cluster reorder edge endpoint reads prefer oriented
 /// edge_tail/edge_head arrays and fall back to edge object endpoints.
-fn root_cluster_reorder_edge_endpoints_at(
+fn root_reorder_edge_endpoints_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],
@@ -440,7 +440,7 @@ fn collect_root_vnodes(
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) =
-      root_cluster_reorder_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+      root_reorder_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
