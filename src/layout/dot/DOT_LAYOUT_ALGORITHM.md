@@ -522,8 +522,8 @@ Repository guard validates:
   - `b3_cluster_metadata.mbt`, `cluster.mbt`
 - Ordering dispatch + shared stage logic:
   - `c0_ordering.mbt`
-  - `c0_ordering_setup.mbt`
-  - `c0_ordering_dispatch.mbt`
+  - `c0_setup.mbt`
+  - `c0_dispatch.mbt`
 - Ordering edge materialization:
   - `c1_order_edge.mbt`
 - Ordering graph construction helpers:
