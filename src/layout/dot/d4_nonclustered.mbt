@@ -78,7 +78,7 @@ fn build_nonclustered_xpos_groups(
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
-fn maybe_apply_nonclustered_xpos_fallback(
+fn maybe_apply_nonclustered_xpos(
   xpos_reorder_enabled : Bool,
   allow_xpos_reorder : Bool,
   has_vnode_order : Bool,
