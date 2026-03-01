@@ -507,41 +507,6 @@ fn cluster_key_for_remincross_tail_order_name(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order non-root cluster comparator uses
-/// descending Graphviz cluster-order index (-1 fallback) then first-seen
-/// tie-break (0 fallback).
-fn compare_remincross_nonroot_clusters_for_tail_order(
-  a : String,
-  b : String,
-  cluster_order_index : Map[String, Int],
-  cluster_first_seen : Map[String, Int],
-) -> Int {
-  let a_idx = match cluster_order_index.get(a) {
-    Some(value) => value
-    None => -1
-  }
-  let b_idx = match cluster_order_index.get(b) {
-    Some(value) => value
-    None => -1
-  }
-  if a_idx > b_idx {
-    return -1
-  }
-  if a_idx < b_idx {
-    return 1
-  }
-  let a_seen = cluster_first_seen.get(a).unwrap_or_default()
-  let b_seen = cluster_first_seen.get(b).unwrap_or_default()
-  if a_seen < b_seen {
-    -1
-  } else if a_seen > b_seen {
-    1
-  } else {
-    0
-  }
-}
-
-///|
 /// Graphviz parity: clustered tail-order cluster ordering sorts non-root
 /// clusters by descending cluster_order_index, then by first-seen sequence.
 /// Root cluster always remains last when present.
@@ -560,13 +525,27 @@ fn build_remincross_cluster_order_and_positions(
       cluster_order_non_root.push(cluster)
     }
   }
-  cluster_order_non_root.sort_by((a, b) =>
-    compare_remincross_nonroot_clusters_for_tail_order(
-      a,
-      b,
-      cluster_order_index,
-      cluster_first_seen,
-    ))
+  cluster_order_non_root.sort_by((a, b) => {
+    // Graphviz parity: non-root clusters sort by descending Graphviz
+    // cluster-order index (-1 fallback), then first-seen tie-break.
+    let a_idx = cluster_order_index.get(a).unwrap_or(-1)
+    let b_idx = cluster_order_index.get(b).unwrap_or(-1)
+    if a_idx > b_idx {
+      return -1
+    }
+    if a_idx < b_idx {
+      return 1
+    }
+    let a_seen = cluster_first_seen.get(a).unwrap_or_default()
+    let b_seen = cluster_first_seen.get(b).unwrap_or_default()
+    if a_seen < b_seen {
+      -1
+    } else if a_seen > b_seen {
+      1
+    } else {
+      0
+    }
+  })
   let cluster_order = cluster_order_non_root
   if has_root_cluster {
     cluster_order.push("")
