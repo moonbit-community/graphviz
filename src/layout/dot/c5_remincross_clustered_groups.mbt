@@ -395,6 +395,132 @@ fn build_remincross_reorder_inputs(
 }
 
 ///|
+/// Graphviz parity: trailing-vnode tagging applies only to non-internal,
+/// non-root, cross-cluster edges whose cluster rank ranges do not overlap.
+fn should_trail_remincross_intercluster_edge_vnodes(
+  tail_cluster : String,
+  head_cluster : String,
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Bool {
+  let internal =
+    tail_cluster != "" && head_cluster != "" &&
+    edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
+  if internal ||
+    tail_cluster == head_cluster ||
+    tail_cluster == "" ||
+    head_cluster == "" {
+    return false
+  }
+  !remincross_cluster_rank_ranges_overlap(
+    tail_cluster,
+    head_cluster,
+    cluster_min_rank,
+    cluster_max_rank,
+  )
+}
+
+///|
+/// Graphviz parity: trailing-vnode candidate set comes from intercluster edge
+/// vnode chains on edges that satisfy the rank-range overlap gate.
+fn collect_remincross_intercluster_trailing_vnodes(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_vnodes : Map[String, Array[String]],
+  remincross_cluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Map[String, Bool] {
+  let intercluster_vnodes : Map[String, Bool] = Map::new()
+  for edge_idx, edge in edges {
+    let (tail, head) =
+      remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
+    let head_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, head)
+    if !should_trail_remincross_intercluster_edge_vnodes(
+      tail_cluster,
+      head_cluster,
+      cluster_parents,
+      cluster_min_rank,
+      cluster_max_rank,
+    ) {
+      continue
+    }
+    let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
+    for vnode in vnodes {
+      intercluster_vnodes[vnode] = true
+    }
+  }
+  intercluster_vnodes
+}
+
+///|
+/// Graphviz parity: trailing-vnode floor uses maximum real-node order per rank
+/// from the current ReMincross base order index.
+fn build_remincross_max_order_by_rank(
+  rem_base_order_index : Map[String, Int],
+  ranks : Map[String, Int],
+) -> Map[Int, Int] {
+  let max_order_by_rank : Map[Int, Int] = Map::new()
+  for name, order in rem_base_order_index {
+    let rank = match ranks.get(name) {
+      Some(value) => value
+      None => continue
+    }
+    match max_order_by_rank.get(rank) {
+      Some(current) =>
+        if order > current {
+          max_order_by_rank[rank] = order
+        }
+      None => max_order_by_rank[rank] = order
+    }
+  }
+  max_order_by_rank
+}
+
+///|
+/// Graphviz parity: trailing intercluster vnodes are floored behind real-node
+/// positions on their rank using stable sequence offsets.
+fn apply_remincross_intercluster_vnode_floor(
+  keys : Map[String, Double],
+  intercluster_vnodes : Map[String, Bool],
+  rem_base_order_index : Map[String, Int],
+  ranks : Map[String, Int],
+  vnode_ranks : Map[String, Int],
+) -> Unit {
+  if intercluster_vnodes.length() == 0 {
+    return ()
+  }
+  let max_order_by_rank =
+    build_remincross_max_order_by_rank(rem_base_order_index, ranks)
+  let mut seq = 0
+  for vnode, _ in intercluster_vnodes {
+    let rank = match vnode_ranks.get(vnode) {
+      Some(value) => value
+      None => continue
+    }
+    let max_order = match max_order_by_rank.get(rank) {
+      Some(value) => value
+      None => -1
+    }
+    let base = Double::from_int(max_order + 1)
+    let offset = Double::from_int(seq) * 0.000001
+    let min_key = base + offset
+    match keys.get(vnode) {
+      Some(current) =>
+        if current < min_key {
+          keys[vnode] = min_key
+        }
+      None => keys[vnode] = min_key
+    }
+    seq = seq + 1
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross rank groups start from real-node groups and
 /// optionally inject edge-vnodes using vnode order keys from cluster-aware
 /// trailing-vnode adjustments.
@@ -423,36 +549,17 @@ fn build_remincross_groups_with_optional_vnodes(
     } else {
       let remincross_cluster_keys =
         clone_remincross_cluster_keys(intercluster_keys)
-      let intercluster_vnodes : Map[String, Bool] = Map::new()
-      for edge_idx, edge in edges {
-        let (tail, head) =
-          remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-        let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
-        let head_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, head)
-        let internal =
-          tail_cluster != "" && head_cluster != "" &&
-          edge_internal_to_cluster(tail_cluster, head_cluster, cluster_parents)
-        let should_trail =
-          if internal ||
-            tail_cluster == head_cluster ||
-            tail_cluster == "" ||
-            head_cluster == "" {
-            false
-          } else {
-            !remincross_cluster_rank_ranges_overlap(
-              tail_cluster,
-              head_cluster,
-              cluster_min_rank,
-              cluster_max_rank,
-            )
-          }
-        if should_trail {
-          let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
-          for vnode in vnodes {
-            intercluster_vnodes[vnode] = true
-          }
-        }
-      }
+      let intercluster_vnodes =
+        collect_remincross_intercluster_trailing_vnodes(
+          edges,
+          edge_tail,
+          edge_head,
+          edge_vnodes,
+          remincross_cluster_keys,
+          cluster_parents,
+          cluster_min_rank,
+          cluster_max_rank,
+        )
       let keys = build_vnode_order_keys(
         edges,
         edge_tail,
@@ -465,46 +572,13 @@ fn build_remincross_groups_with_optional_vnodes(
         edge_vnodes,
         vnode_ranks,
       )
-      if intercluster_vnodes.length() > 0 {
-        // Graphviz parity: trailing-vnode floor uses the maximum real-node order seen
-        // per rank from the current ReMincross base order index.
-        let max_order_by_rank : Map[Int, Int] = Map::new()
-        for name, order in rem_base_order_index {
-          let rank = match ranks.get(name) {
-            Some(value) => value
-            None => continue
-          }
-          match max_order_by_rank.get(rank) {
-            Some(current) =>
-              if order > current {
-                max_order_by_rank[rank] = order
-              }
-            None => max_order_by_rank[rank] = order
-          }
-        }
-        let mut seq = 0
-        for vnode, _ in intercluster_vnodes {
-          let rank = match vnode_ranks.get(vnode) {
-            Some(value) => value
-            None => continue
-          }
-          let max_order = match max_order_by_rank.get(rank) {
-            Some(value) => value
-            None => -1
-          }
-          let base = Double::from_int(max_order + 1)
-          let offset = Double::from_int(seq) * 0.000001
-          let min_key = base + offset
-          match keys.get(vnode) {
-            Some(current) =>
-              if current < min_key {
-                keys[vnode] = min_key
-              }
-            None => keys[vnode] = min_key
-          }
-          seq = seq + 1
-        }
-      }
+      apply_remincross_intercluster_vnode_floor(
+        keys,
+        intercluster_vnodes,
+        rem_base_order_index,
+        ranks,
+        vnode_ranks,
+      )
       keys
     }
   if order_with_vnodes {
