@@ -152,8 +152,8 @@ fn merge_root_mincross_order_into_seeded_groups(
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
   mincross_nodes : Map[String, Bool],
-  _order_cluster_keys : Map[String, String],
-  _order_cluster_skeleton : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
@@ -175,8 +175,8 @@ fn merge_root_mincross_order_into_seeded_groups(
       build_skeleton_for_cluster_from_names(
         names,
         (name) =>
-          if _order_cluster_skeleton.get(name) == Some(true) {
-            cluster_key_or_empty(_order_cluster_keys, name)
+          if order_cluster_skeleton.get(name) == Some(true) {
+            cluster_key_or_empty(order_cluster_keys, name)
           } else {
             ""
           },
@@ -184,7 +184,7 @@ fn merge_root_mincross_order_into_seeded_groups(
     let attached_by_skeleton =
       build_attached_by_skeleton_for_names(
         names,
-        _order_cluster_keys,
+        order_cluster_keys,
         skeleton_for_cluster,
         (name) => mincross_nodes.get(name) is Some(_),
       )
@@ -193,8 +193,8 @@ fn merge_root_mincross_order_into_seeded_groups(
     // replacement (matches biological rank handoff in Graphviz).
     let should_use_positional_merge =
       replacements.length() == 2 &&
-      _order_cluster_skeleton.get(replacements[1]) == Some(true) &&
-      _order_cluster_skeleton.get(replacements[0]) != Some(true) &&
+      order_cluster_skeleton.get(replacements[1]) == Some(true) &&
+      order_cluster_skeleton.get(replacements[0]) != Some(true) &&
       (match attached_by_skeleton.get(replacements[1]) {
         Some(list) => list.length()
         None => 0
@@ -217,7 +217,7 @@ fn merge_root_mincross_order_into_seeded_groups(
     for replacement in replacements {
       next_names.push(replacement)
       seen[replacement] = true
-      if _order_cluster_skeleton.get(replacement) == Some(true) {
+      if order_cluster_skeleton.get(replacement) == Some(true) {
         append_attached_by_skeleton_if_unseen(
           next_names,
           seen,
