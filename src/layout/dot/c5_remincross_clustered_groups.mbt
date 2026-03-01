@@ -148,6 +148,52 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context.order_sizes,
       dispatch_context.rank_same_constraints,
     )
+  let rem_ordered =
+    run_clustered_remincross_cleanup_reorder(
+      dispatch_context,
+      rem_rank_keys,
+      rem_groups,
+      rem_nodes,
+      rem_ranks,
+      rem_node_order,
+      rem_edges_out,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_edge_tail_port_x,
+      rem_edge_head_port_x,
+      rem_edge_tail_port_order,
+      rem_edge_head_port_order,
+      rem_cluster_keys,
+      rem_sizes,
+      rem_flat_constraints,
+    )
+  let rem_cleaned =
+    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
+  (rem_ordered, rem_cleaned)
+}
+
+///|
+/// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
+/// inputs, builds edge index maps, and executes startpass=2 mincross on the
+/// rematerialized fast-graph edge set.
+fn run_clustered_remincross_cleanup_reorder(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+  rem_rank_keys : Array[Int],
+  rem_groups : Map[Int, Array[String]],
+  rem_nodes : Array[String],
+  rem_ranks : Map[String, Int],
+  rem_node_order : Map[String, Int],
+  rem_edges_out : Array[@cgraph.Edge],
+  rem_edge_tail_out : Array[String],
+  rem_edge_head_out : Array[String],
+  rem_edge_tail_port_x : Array[Double],
+  rem_edge_head_port_x : Array[Double],
+  rem_edge_tail_port_order : Array[Double],
+  rem_edge_head_port_order : Array[Double],
+  rem_cluster_keys : Map[String, String],
+  rem_sizes : Map[String, NodeSize],
+  rem_flat_constraints : Map[String, Bool],
+) -> Map[Int, Array[String]] {
   let (rem_parents, rem_children, rem_edge_order) =
     build_order_edge_indices_and_order(
       rem_nodes,
@@ -170,42 +216,38 @@ fn run_clustered_remincross_multi_rank(
     rem_edge_head_port_order,
     rem_cluster_keys,
   )
-  let rem_ordered =
-    reorder_rank_groups(
-      rem_rank_keys,
-      rem_groups,
-      rem_edges_out,
-      rem_edge_tail_out,
-      rem_edge_head_out,
-      rem_edge_tail_port_x,
-      rem_edge_head_port_x,
-      rem_edge_tail_port_order,
-      rem_edge_head_port_order,
-      rem_parents,
-      rem_children,
-      rem_cluster_keys,
-      dispatch_context.cluster_meta.rank_same_groups,
-      dispatch_context.cluster_meta.rank_same_order,
-      rem_edge_order,
-      rem_node_order,
-      rem_sizes,
-      dispatch_context.nodesep_pt,
-      dispatch_context.has_edge_labels,
-      dispatch_context.port_order_positions,
-      dispatch_context.port_order_contrib,
-      Map::new(),
-      Map::new(),
-      rem_flat_constraints,
-      graphviz_flip=dispatch_context.graphviz_flip,
-      // Graphviz parity: ReMincross counts parallel chain segments once
-      // with summed xpenalty before startpass=2 transposition.
-      coalesce_parallel_edges=true,
-      startpass=2,
-      remincross_mode=true,
-    )
-  let rem_cleaned =
-    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
-  (rem_ordered, rem_cleaned)
+  reorder_rank_groups(
+    rem_rank_keys,
+    rem_groups,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_parents,
+    rem_children,
+    rem_cluster_keys,
+    dispatch_context.cluster_meta.rank_same_groups,
+    dispatch_context.cluster_meta.rank_same_order,
+    rem_edge_order,
+    rem_node_order,
+    rem_sizes,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    Map::new(),
+    Map::new(),
+    rem_flat_constraints,
+    graphviz_flip=dispatch_context.graphviz_flip,
+    // Graphviz parity: ReMincross counts parallel chain segments once
+    // with summed xpenalty before startpass=2 transposition.
+    coalesce_parallel_edges=true,
+    startpass=2,
+    remincross_mode=true,
+  )
 }
 
 ///|
