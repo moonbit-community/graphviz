@@ -246,7 +246,7 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> (Int, Int) {
 }
 
 ///|
-fn flat_no_arrow_detour_points_if_blocked(
+fn flat_detour_points_if_blocked(
   tail_name : String,
   head_name : String,
   rank : Int,
@@ -2835,7 +2835,7 @@ fn build_edge_spline(
           let flat_detour =
             if flat_no_arrow_candidate ||
               flat_top_compass_single_arrow_candidate {
-              flat_no_arrow_detour_points_if_blocked(
+              flat_detour_points_if_blocked(
                 tail_name,
                 head_name,
                 tail_rank,
@@ -3280,7 +3280,7 @@ fn build_edge_spline(
         let flat_detour =
           if flat_no_arrow_candidate ||
             flat_top_compass_single_arrow_candidate {
-            flat_no_arrow_detour_points_if_blocked(
+            flat_detour_points_if_blocked(
               tail_name,
               head_name,
               tail_rank,
@@ -4331,7 +4331,7 @@ fn build_self_edge_layout(
 /// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
-fn build_flat_adjacent_simple_edge_layout(
+fn build_flat_adjacent_edge_layout(
   base : EdgeRouteBase,
   bezier : Array[@geom.Point],
   ranks : Map[String, Int],
@@ -4681,7 +4681,7 @@ fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
 ///|
 /// Graphviz parity: recover_slack for regular-edge classes uses the
 /// center-most parallel member (tie: later edge id).
-fn recover_edge_selection_for_regular_edges(
+fn recover_regular_edge_selection(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Int] {
@@ -4804,7 +4804,7 @@ fn build_regular_edge_layout_from_spline(
 
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
-fn build_regular_edge_layout_from_raw_bezier(
+fn build_regular_edge_layout_from_bezier(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
   ranks : Map[String, Int],
@@ -5065,7 +5065,7 @@ fn route_edges(
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
   let recover_edge_id_by_key =
-    recover_edge_selection_for_regular_edges(ordered_edges, base_cache)
+    recover_regular_edge_selection(ordered_edges, base_cache)
   let regular_parallel_groups =
     collect_regular_parallel_groups(ordered_edges, base_cache)
   let recover_edge_id_for_routing : Map[String, Int] = Map::new()
@@ -5090,7 +5090,7 @@ fn route_edges(
     match flat_adjacent_simple_beziers.get(edge_id) {
       Some(bezier) => {
         let edge_layout =
-          build_flat_adjacent_simple_edge_layout(
+          build_flat_adjacent_edge_layout(
             base,
             bezier,
             ranks,
@@ -5187,7 +5187,7 @@ fn route_edges(
         None => continue
       }
       let group_layout =
-        build_regular_edge_layout_from_raw_bezier(
+        build_regular_edge_layout_from_bezier(
           group_base,
           edge_spline_result,
           ranks,
