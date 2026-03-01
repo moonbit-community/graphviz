@@ -174,10 +174,7 @@ fn merge_root_mincross_order_into_seeded_groups(
     let skeleton_for_cluster : Map[String, String] = Map::new()
     for name in names {
       if _order_cluster_skeleton.get(name) == Some(true) {
-        let cluster = match _order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
+        let cluster = cluster_key_or_empty(_order_cluster_keys, name)
         if cluster != "" {
           skeleton_for_cluster[cluster] = name
         }
@@ -188,10 +185,7 @@ fn merge_root_mincross_order_into_seeded_groups(
       if mincross_nodes.get(name) is Some(_) {
         continue
       }
-      let cluster = match _order_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
+      let cluster = cluster_key_or_empty(_order_cluster_keys, name)
       if cluster == "" {
         continue
       }
@@ -391,14 +385,8 @@ fn build_root_groups_for_cluster_reorder(
         if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
           edge.head().name()
         }
-      let tail_cluster = match cluster_keys.get(tail) {
-        Some(value) => value
-        None => ""
-      }
-      let head_cluster = match cluster_keys.get(head) {
-        Some(value) => value
-        None => ""
-      }
+      let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
+      let head_cluster = cluster_key_or_empty(cluster_keys, head)
       if tail_cluster != head_cluster {
         let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
           Some(list) => list
@@ -421,10 +409,7 @@ fn build_root_groups_for_cluster_reorder(
     }
     let root_names : Array[String] = []
     for name in names {
-      let cluster = match order_cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
       let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
       if is_skeleton || cluster == "" {
         if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
@@ -969,19 +954,13 @@ fn build_cluster_rank_order_for_cluster_reorder(
     let mut idx = 0
     for name in names {
       if order_cluster_skeleton.get(name) == Some(true) {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
+        let cluster = cluster_key_or_empty(order_cluster_keys, name)
         if cluster != "" && order_map.get(cluster) is None {
           order_map[cluster] = idx
           idx = idx + 1
         }
       } else if real_nodes.get(name) is Some(_) {
-        let cluster = match order_cluster_keys.get(name) {
-          Some(value) => value
-          None => ""
-        }
+        let cluster = cluster_key_or_empty(order_cluster_keys, name)
         if cluster == "" && order_map.get("") is None {
           order_map[""] = idx
           idx = idx + 1
