@@ -133,13 +133,13 @@ fn build_clustered_ordering_pre_root(
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered_ordering_root_phase(
-  stage_dispatch_context : ClusteredOrderingDispatchContext,
+  dispatch_context : ClusteredOrderingDispatchContext,
   pre_root_stage : OrderClusteredPreRootData,
 ) -> OrderRootClusterData {
-  let reorder_setup = stage_dispatch_context.reorder_setup
-  let class2_data = stage_dispatch_context.class2_data
-  let runtime_context = stage_dispatch_context.runtime_context
-  let cluster_meta = stage_dispatch_context.cluster_meta
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let runtime_context = dispatch_context.runtime_context
+  let cluster_meta = dispatch_context.cluster_meta
   let reorder_context = pre_root_stage.reorder_context
   remincross_root_tail_order_override_snapshot.val = None
   let root_reorder_output : RootClusterReorderInputs =
@@ -149,15 +149,15 @@ fn run_clustered_ordering_root_phase(
       pre_root_stage.order_groups,
       pre_root_stage.order_cluster_keys,
       pre_root_stage.order_cluster_skeleton,
-      stage_dispatch_context.edges,
-      stage_dispatch_context.edge_tail,
-      stage_dispatch_context.edge_head,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
       cluster_meta.cluster_keys,
       runtime_context.vnode_info.edge_vnodes,
       runtime_context.vnode_info.vnodes_by_rank,
       reorder_setup.vnode_order_keys_for_ordering,
       class2_data.nlist_order,
-      stage_dispatch_context.ranks,
+      dispatch_context.ranks,
       class2_data.skeleton_edge_creation,
       class2_data.root_edge_creation,
       reorder_setup.flat_rank_constraints,
@@ -191,10 +191,10 @@ fn run_clustered_ordering_root_phase(
       cluster_meta.rank_same_groups,
       cluster_meta.rank_same_order,
       pre_root_stage.order_sizes_out,
-      stage_dispatch_context.nodesep_pt,
-      stage_dispatch_context.has_edge_labels,
-      stage_dispatch_context.port_order_positions,
-      stage_dispatch_context.port_order_contrib,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
       pre_root_stage.order_cluster_skeleton,
       cluster_meta.flat_constraints,
       reorder_setup.graphviz_flip,
@@ -245,16 +245,16 @@ fn run_clustered_ordering_root_phase(
     run_root_and_cluster_build_ranks(
       reorder_setup.order_with_clusters,
       reorder_setup.order_with_vnodes,
-      stage_dispatch_context.graph,
-      stage_dispatch_context.cluster_meta,
+      dispatch_context.graph,
+      dispatch_context.cluster_meta,
       reorder_setup.vnode_order_keys_for_ordering,
-      stage_dispatch_context.nodesep_pt,
-      stage_dispatch_context.has_edge_labels,
-      stage_dispatch_context.port_order_positions,
-      stage_dispatch_context.port_order_contrib,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
       reorder_setup.graphviz_flip,
       reorder_setup.flat_rank_constraints,
-      stage_dispatch_context.ranks,
+      dispatch_context.ranks,
       runtime_context.vnode_info,
       build_ranks_inputs,
     )
@@ -267,68 +267,68 @@ fn run_clustered_ordering_root_phase(
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered_ordering(
-  stage_dispatch_context : ClusteredOrderingDispatchContext,
+  dispatch_context : ClusteredOrderingDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let reorder_setup = stage_dispatch_context.reorder_setup
-  let class2_data = stage_dispatch_context.class2_data
-  let runtime_context = stage_dispatch_context.runtime_context
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let runtime_context = dispatch_context.runtime_context
   let pre_root_stage =
     build_clustered_ordering_pre_root(
       reorder_setup.ordering_groups_base,
       reorder_setup.base_order_index,
       reorder_setup.order_with_vnodes,
       reorder_setup.order_with_clusters,
-      stage_dispatch_context.cluster_meta,
+      dispatch_context.cluster_meta,
       runtime_context.vnode_info,
       reorder_setup.vnode_order_keys_for_ordering,
-      stage_dispatch_context.order_sizes,
+      dispatch_context.order_sizes,
       class2_data.nlist_order,
       reorder_setup.gdnlist_order,
-      stage_dispatch_context.node_order,
+      dispatch_context.node_order,
       runtime_context.real_nodes,
       runtime_context.port_edge_nodes,
       class2_data.order_edges_by_tail,
       class2_data.order_edges_by_tail_unmapped,
       class2_data.edge_creation_order,
-      stage_dispatch_context.edge_tail,
-      stage_dispatch_context.edge_head,
-      stage_dispatch_context.nodes,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.nodes,
     )
   let root_cluster_stage =
     run_clustered_ordering_root_phase(
-      stage_dispatch_context,
+      dispatch_context,
       pre_root_stage,
     )
   let finalize_dispatch_context : ClusterFinalizeDispatchContext = {
     order_with_clusters: reorder_setup.order_with_clusters,
     order_with_vnodes: reorder_setup.order_with_vnodes,
     graphviz_flip: reorder_setup.graphviz_flip,
-    edges: stage_dispatch_context.edges,
-    edge_tail: stage_dispatch_context.edge_tail,
-    edge_head: stage_dispatch_context.edge_head,
-    edge_reversed: stage_dispatch_context.edge_reversed,
+    edges: dispatch_context.edges,
+    edge_tail: dispatch_context.edge_tail,
+    edge_head: dispatch_context.edge_head,
+    edge_reversed: dispatch_context.edge_reversed,
     nlist_order: class2_data.nlist_order,
-    ranks: stage_dispatch_context.ranks,
+    ranks: dispatch_context.ranks,
     order_edges_by_tail_root: class2_data.order_edges_by_tail_root,
     skeleton_edge_creation: class2_data.skeleton_edge_creation,
     root_edge_creation: class2_data.root_edge_creation,
     flat_rank_constraints: reorder_setup.flat_rank_constraints,
-    cluster_meta: stage_dispatch_context.cluster_meta,
+    cluster_meta: dispatch_context.cluster_meta,
     vnode_info: runtime_context.vnode_info,
     vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
     real_nodes: runtime_context.real_nodes,
-    nodesep_pt: stage_dispatch_context.nodesep_pt,
-    has_edge_labels: stage_dispatch_context.has_edge_labels,
-    port_order_positions: stage_dispatch_context.port_order_positions,
-    port_order_contrib: stage_dispatch_context.port_order_contrib,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
     local_cluster_order: runtime_context.local_cluster_order,
-    graph: stage_dispatch_context.graph,
-    edge_tail_port_x: stage_dispatch_context.edge_port_data.edge_tail_port_x,
-    edge_head_port_x: stage_dispatch_context.edge_port_data.edge_head_port_x,
-    edge_tail_port_order: stage_dispatch_context.edge_port_data.edge_tail_port_order,
-    edge_head_port_order: stage_dispatch_context.edge_port_data.edge_head_port_order,
+    graph: dispatch_context.graph,
+    edge_tail_port_x: dispatch_context.edge_port_data.edge_tail_port_x,
+    edge_head_port_x: dispatch_context.edge_port_data.edge_head_port_x,
+    edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
+    edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
     edges_by_tail: class2_data.edges_by_tail,
-    order_sizes: stage_dispatch_context.order_sizes,
+    order_sizes: dispatch_context.order_sizes,
     rank_same_constraints: runtime_context.rank_same_constraints,
   }
   let reorder_context = pre_root_stage.reorder_context
