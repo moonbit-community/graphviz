@@ -256,7 +256,7 @@ fn build_ordering_class2_data(
     }
   }
   let skeleton_edge_creation =
-    build_skeleton_edge_creation_for_order_graph(
+    build_skeleton_edge_creation(
       order_with_clusters,
       cluster_meta.cluster_order,
       cluster_meta.cluster_min_rank,

@@ -371,7 +371,7 @@ fn rank_or_zero_for_flat_constraints(
 /// Graphviz parity: cluster skeleton edge chains are emitted in Graphviz
 /// cluster-order sequence first, then for any remaining cluster-min-rank keys.
 /// Do not change behavior without updating fixtures/tests.
-fn build_skeleton_edge_creation_for_order_graph(
+fn build_skeleton_edge_creation(
   order_with_clusters : Bool,
   cluster_order : Array[String],
   cluster_min_rank : Map[String, Int],

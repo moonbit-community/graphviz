@@ -6,7 +6,7 @@
 /// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
 /// vnodes, and install cluster skeleton nodes with virtual-node defaults.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_groups_sizes_and_cluster_skeleton(
+fn build_order_seed_groups(
   ordering_groups_base : Map[Int, Array[String]],
   base_order_index : Map[String, Int],
   order_with_vnodes : Bool,

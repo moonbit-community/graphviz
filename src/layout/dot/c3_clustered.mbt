@@ -75,7 +75,7 @@ fn build_clustered_pre_root(
     order_cluster_keys,
     order_cluster_skeleton,
   ) =
-    build_order_groups_sizes_and_cluster_skeleton(
+    build_order_seed_groups(
       ordering_groups_base,
       base_order_index,
       order_with_vnodes,
@@ -99,7 +99,7 @@ fn build_clustered_pre_root(
       port_edge_nodes,
     )
   let materialized =
-    build_materialized_order_edges_and_neighbors(
+    build_materialized_order_inputs(
       nlist_order,
       order_edges_by_tail,
       reorder_context.order_graph,
