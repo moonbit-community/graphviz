@@ -1330,6 +1330,60 @@ fn is_root_override_skeleton_name(name : String) -> Bool {
 }
 
 ///|
+/// Graphviz parity: root-override graphviz_flip replay keeps skeleton names in
+/// rank order, reattaches same-cluster names after skeletons, and preserves any
+/// unmatched names as final fallback in original rank order.
+fn rebuild_root_override_rank_names_for_graphviz_flip(
+  rank_names : Array[String],
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  let skeleton_for_cluster =
+    build_skeleton_for_cluster_from_names(
+      rank_names,
+      skeleton_cluster_or_empty,
+    )
+  let attached_by_skeleton =
+    build_attached_by_skeleton_for_names(
+      rank_names,
+      cluster_keys,
+      skeleton_for_cluster,
+      is_root_override_skeleton_name,
+    )
+  let next_names : Array[String] = []
+  let seen : Map[String, Bool] = Map::new()
+  for name in rank_names {
+    if seen.get(name) is Some(_) {
+      continue
+    }
+    let is_skeleton = is_root_override_skeleton_name(name)
+    if is_skeleton {
+      next_names.push(name)
+      seen[name] = true
+      append_attached_by_skeleton_if_unseen(
+        next_names,
+        seen,
+        attached_by_skeleton,
+        name,
+      )
+      continue
+    }
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
+      continue
+    }
+    next_names.push(name)
+    seen[name] = true
+  }
+  for name in rank_names {
+    if seen.get(name) is None {
+      next_names.push(name)
+      seen[name] = true
+    }
+  }
+  next_names
+}
+
+///|
 /// Graphviz parity: root phase can apply a rank-order override from root
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -1352,49 +1406,11 @@ fn apply_root_rank_groups_override(
           reordered[rank] = rank_names
           continue
         }
-        let skeleton_for_cluster =
-          build_skeleton_for_cluster_from_names(
-            rank_names,
-            skeleton_cluster_or_empty,
-          )
-        let attached_by_skeleton =
-          build_attached_by_skeleton_for_names(
+        let next_names =
+          rebuild_root_override_rank_names_for_graphviz_flip(
             rank_names,
             cluster_keys,
-            skeleton_for_cluster,
-            is_root_override_skeleton_name,
           )
-        let next_names : Array[String] = []
-        let seen : Map[String, Bool] = Map::new()
-        for name in rank_names {
-          if seen.get(name) is Some(_) {
-            continue
-          }
-          let is_skeleton = is_root_override_skeleton_name(name)
-          if is_skeleton {
-            next_names.push(name)
-            seen[name] = true
-            append_attached_by_skeleton_if_unseen(
-              next_names,
-              seen,
-              attached_by_skeleton,
-              name,
-            )
-            continue
-          }
-          let cluster = cluster_key_or_empty(cluster_keys, name)
-          if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
-            continue
-          }
-          next_names.push(name)
-          seen[name] = true
-        }
-        for name in rank_names {
-          if seen.get(name) is None {
-            next_names.push(name)
-            seen[name] = true
-          }
-        }
         reordered[rank] = next_names
       }
       None => ()
