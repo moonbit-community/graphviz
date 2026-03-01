@@ -135,7 +135,7 @@ fn build_clustered_ordering_pre_root(
 fn run_clustered_ordering_root_phase(
   stage_dispatch_context : ClusteredOrderingDispatchContext,
   pre_root_stage : OrderClusteredPreRootData,
-) -> OrderRootClusterStageData {
+) -> OrderRootClusterData {
   let reorder_setup = stage_dispatch_context.reorder_setup
   let class2_data = stage_dispatch_context.class2_data
   let runtime_context = stage_dispatch_context.runtime_context
@@ -214,7 +214,7 @@ fn run_clustered_ordering_root_phase(
   }
   let materialized = pre_root_stage.materialized
   let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  let stage_inputs : RootClusterBuildRanksStageInputs = {
+  let stage_inputs : RootClusterBuildRanksInputs = {
     order_node_order: reorder_context.order_node_order,
     order_sizes_out: pre_root_stage.order_sizes_out,
     order_rank_keys: reorder_context.order_rank_keys,
@@ -242,7 +242,7 @@ fn run_clustered_ordering_root_phase(
     ordered_with_vnodes,
   }
   let output =
-    run_root_and_cluster_build_ranks_stage(
+    run_root_and_cluster_build_ranks(
       reorder_setup.order_with_clusters,
       reorder_setup.order_with_vnodes,
       stage_dispatch_context.graph,
@@ -299,7 +299,7 @@ fn run_clustered_ordering(
       stage_dispatch_context,
       pre_root_stage,
     )
-  let finalize_dispatch_context : ClusterFinalizePassDispatchContext = {
+  let finalize_dispatch_context : ClusterFinalizeDispatchContext = {
     order_with_clusters: reorder_setup.order_with_clusters,
     order_with_vnodes: reorder_setup.order_with_vnodes,
     graphviz_flip: reorder_setup.graphviz_flip,

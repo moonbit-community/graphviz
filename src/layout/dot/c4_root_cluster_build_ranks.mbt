@@ -3,7 +3,7 @@
 /// stage type definitions for clustered ordering flow.
 
 ///|
-priv struct OrderRootClusterStageData {
+priv struct OrderRootClusterData {
   order_groups_for_mincross : Map[Int, Array[String]]
   ordered : Map[Int, Array[String]]
   ordered_with_vnodes : Map[Int, Array[String]]
@@ -13,7 +13,7 @@ priv struct OrderRootClusterStageData {
 /// Graphviz parity: finalize-pass dispatch context keeps clustered finalize
 /// runtime payload ordering unchanged across cluster-rank/ReMincross phases.
 /// Do not change behavior without updating fixtures/tests.
-priv struct ClusterFinalizePassDispatchContext {
+priv struct ClusterFinalizeDispatchContext {
   order_with_clusters : Bool
   order_with_vnodes : Bool
   graphviz_flip : Bool
@@ -50,7 +50,7 @@ priv struct ClusterFinalizePassDispatchContext {
 /// Graphviz parity: root+cluster build_ranks stage input payload keeps root
 /// reorder/materialized artifacts and vnode groups unchanged.
 /// Do not change behavior without updating fixtures/tests.
-priv struct RootClusterBuildRanksStageInputs {
+priv struct RootClusterBuildRanksInputs {
   order_node_order : Map[String, Int]
   order_sizes_out : Map[String, NodeSize]
   order_rank_keys : Array[Int]
@@ -86,7 +86,7 @@ priv struct RootClusterBuildRanksStageInputs {
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_build_ranks_stage(
+fn run_root_and_cluster_build_ranks(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   graph : @cgraph.Graph,
@@ -100,8 +100,8 @@ fn run_root_and_cluster_build_ranks_stage(
   flat_rank_constraints : Map[String, Bool],
   ranks : Map[String, Int],
   vnode_info : EdgeVnodeInfo,
-  stage_inputs : RootClusterBuildRanksStageInputs,
-) -> OrderRootClusterStageData {
+  stage_inputs : RootClusterBuildRanksInputs,
+) -> OrderRootClusterData {
   let seeded_groups =
     build_seeded_groups_for_order_reorder(
       stage_inputs.order_rank_keys,
