@@ -57,21 +57,21 @@ fn build_clustered_remincross_groups(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
   prefer_seeded_from_ordered_with_vnodes : Bool,
 ) -> Map[Int, Array[String]] {
-  if should_try_seeded_clustered_remincross_groups(
-    dispatch_context,
-    prefer_seeded_from_ordered_with_vnodes,
-  ) {
-    let seeded =
+  let seeded =
+    if should_try_seeded_clustered_remincross_groups(
+      dispatch_context,
+      prefer_seeded_from_ordered_with_vnodes,
+    ) {
       build_remincross_groups_from_ordered_with_vnodes(
         dispatch_context.base_groups,
         dispatch_context.ordered_with_vnodes,
         dispatch_context.cluster_meta.cluster_keys,
       )
-    if seeded.length() > 0 {
-      seeded
     } else {
-      build_clustered_remincross_groups_rebuilt(dispatch_context)
+      Map::new()
     }
+  if seeded.length() > 0 {
+    seeded
   } else {
     build_clustered_remincross_groups_rebuilt(dispatch_context)
   }
