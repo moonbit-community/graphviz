@@ -1525,12 +1525,19 @@ fn has_root_nodes_on_both_sides_of_cluster_block(
 }
 
 ///|
-/// Graphviz parity: cluster bucket grouping keeps first-seen cluster sequence
-/// while preserving per-cluster name order inside each rank.
-fn build_cluster_nodes_and_sequence_for_rank_order(
+/// Graphviz parity: per-rank cluster-rank-order replay preserves original rank
+/// order when root nodes straddle clustered block; otherwise reorders by
+/// stable cluster buckets from root mincross rank map.
+fn reorder_rank_names_by_cluster_rank_order_if_needed(
   names : Array[String],
+  order_map : Map[String, Int],
   cluster_keys : Map[String, String],
-) -> (Map[String, Array[String]], Array[String]) {
+) -> Array[String] {
+  if has_root_nodes_on_both_sides_of_cluster_block(names, cluster_keys) {
+    return names
+  }
+  // Graphviz parity: cluster bucket grouping keeps first-seen cluster sequence
+  // while preserving per-cluster name order inside each rank.
   let cluster_nodes : Map[String, Array[String]] = Map::new()
   let cluster_seq : Array[String] = []
   for name in names {
@@ -1543,23 +1550,11 @@ fn build_cluster_nodes_and_sequence_for_rank_order(
       }
     }
   }
-  (cluster_nodes, cluster_seq)
-}
-
-///|
-/// Graphviz parity: cluster bucket sort keys use root rank-order map with
-/// stable first-seen sequence fallback for clusters missing from the map.
-fn build_sorted_cluster_buckets_for_rank_order(
-  cluster_seq : Array[String],
-  order_map : Map[String, Int],
-) -> Array[(Int, Int, String)] {
+  // Graphviz parity: cluster bucket sort keys use root rank-order map with
+  // stable first-seen sequence fallback for clusters missing from the map.
   let cluster_ordered : Array[(Int, Int, String)] = []
   for idx, cluster in cluster_seq {
-    let base =
-      match order_map.get(cluster) {
-        Some(value) => value
-        None => order_map.length() + idx
-      }
+    let base = order_map.get(cluster).unwrap_or(order_map.length() + idx)
     cluster_ordered.push((base, idx, cluster))
   }
   if cluster_ordered.length() > 1 {
@@ -1579,16 +1574,8 @@ fn build_sorted_cluster_buckets_for_rank_order(
       }
     })
   }
-  cluster_ordered
-}
-
-///|
-/// Graphviz parity: cluster bucket flattening emits clusters in sorted bucket
-/// order while preserving each cluster's original node sequence.
-fn flatten_cluster_buckets_for_rank_order(
-  cluster_ordered : Array[(Int, Int, String)],
-  cluster_nodes : Map[String, Array[String]],
-) -> Array[String] {
+  // Graphviz parity: cluster bucket flattening emits clusters in sorted
+  // bucket order while preserving each cluster's original node sequence.
   let ordered_names : Array[String] = []
   for entry in cluster_ordered {
     let (_order, _idx, cluster) = entry
@@ -1598,31 +1585,6 @@ fn flatten_cluster_buckets_for_rank_order(
     }
   }
   ordered_names
-}
-
-///|
-/// Graphviz parity: per-rank cluster-rank-order replay preserves original rank
-/// order when root nodes straddle clustered block; otherwise reorders by
-/// stable cluster buckets from root mincross rank map.
-fn reorder_rank_names_by_cluster_rank_order_if_needed(
-  names : Array[String],
-  order_map : Map[String, Int],
-  cluster_keys : Map[String, String],
-) -> Array[String] {
-  if has_root_nodes_on_both_sides_of_cluster_block(names, cluster_keys) {
-    return names
-  }
-  let (cluster_nodes, cluster_seq) =
-    build_cluster_nodes_and_sequence_for_rank_order(
-      names,
-      cluster_keys,
-    )
-  let cluster_ordered =
-    build_sorted_cluster_buckets_for_rank_order(
-      cluster_seq,
-      order_map,
-    )
-  flatten_cluster_buckets_for_rank_order(cluster_ordered, cluster_nodes)
 }
 
 ///|
