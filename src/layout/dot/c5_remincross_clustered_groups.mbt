@@ -3,18 +3,23 @@
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
-/// edge vnodes, then materializes/remaps edges and executes final startpass=2
-/// reorder before dropping non-real nodes.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_remincross_pass(
+/// Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input in
+/// clustered ReMincross, matching Graphviz's fill-specific branch behavior.
+fn graph_prefers_seeded_remincross_groups(graph : @cgraph.Graph) -> Bool {
+  match graph.get_attr("ratio") {
+    Some(value) => value == "fill"
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: clustered ReMincross rank groups can seed from current
+/// vnode-inclusive order for single-cluster or ratio=fill scenarios, with
+/// fallback to full rebuild when seeded output is empty.
+fn build_clustered_remincross_groups(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let prefer_seeded_from_ordered_with_vnodes =
-    match dispatch_context.graph.get_attr("ratio") {
-      Some(value) => value == "fill"
-      None => false
-    }
+  prefer_seeded_from_ordered_with_vnodes : Bool,
+) -> Map[Int, Array[String]] {
   let rebuild_groups =
     () =>
       build_remincross_groups_with_optional_vnodes(
@@ -33,24 +38,40 @@ fn run_clustered_remincross_pass(
         dispatch_context.vnode_info.vnode_ranks,
         dispatch_context.vnode_info.vnodes_by_rank,
       )
-  let rem_groups =
-    if dispatch_context.order_with_vnodes &&
-      (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
-      prefer_seeded_from_ordered_with_vnodes) {
-      let seeded =
-        build_remincross_groups_from_ordered_with_vnodes(
-          dispatch_context.base_groups,
-          dispatch_context.ordered_with_vnodes,
-          dispatch_context.cluster_meta.cluster_keys,
-        )
-      if seeded.length() > 0 {
-        seeded
-      } else {
-        rebuild_groups()
-      }
+  if dispatch_context.order_with_vnodes &&
+    (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
+    prefer_seeded_from_ordered_with_vnodes) {
+    let seeded =
+      build_remincross_groups_from_ordered_with_vnodes(
+        dispatch_context.base_groups,
+        dispatch_context.ordered_with_vnodes,
+        dispatch_context.cluster_meta.cluster_keys,
+      )
+    if seeded.length() > 0 {
+      seeded
     } else {
       rebuild_groups()
     }
+  } else {
+    rebuild_groups()
+  }
+}
+
+///|
+/// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
+/// edge vnodes, then materializes/remaps edges and executes final startpass=2
+/// reorder before dropping non-real nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_remincross_pass(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let prefer_seeded_from_ordered_with_vnodes =
+    graph_prefers_seeded_remincross_groups(dispatch_context.graph)
+  let rem_groups =
+    build_clustered_remincross_groups(
+      dispatch_context,
+      prefer_seeded_from_ordered_with_vnodes,
+    )
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() > 1 {
     run_clustered_remincross_multi_rank(
