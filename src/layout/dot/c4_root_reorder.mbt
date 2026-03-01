@@ -134,7 +134,7 @@ fn rank_group_names_or_empty(
 /// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
 /// merged back into seeded rank lists by replacing only filtered positions.
 /// Do not change behavior without updating fixtures/tests.
-fn merge_root_mincross_into_seeded_groups(
+fn merge_root_mincross_groups(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
   ordered_mincross : Map[Int, Array[String]],
@@ -563,7 +563,7 @@ fn build_root_reorder_groups(
 /// Graphviz parity: root real-node bucket keeps relative left/right anchor
 /// continuity across adjacent ranks when both ranks expose root buckets.
 /// Do not change behavior without updating fixtures/tests.
-fn anchor_root_bucket_from_previous_order(
+fn anchor_root_bucket_from_previous(
   order_map : Map[String, Int],
   previous_order_map : Map[String, Int]?,
 ) -> Unit {
@@ -780,7 +780,7 @@ fn run_root_rank_order_phase(
   let ordered_root_mincross_nodes =
     build_node_membership_set(ordered_root_nodes)
   let merged_ordered_root =
-    merge_root_mincross_into_seeded_groups(
+    merge_root_mincross_groups(
       root_rank_keys,
       root_groups,
       ordered_root,
@@ -1116,7 +1116,7 @@ fn build_root_reorder_inputs(
 /// Graphviz parity: cluster-phase rank-order map records first-seen cluster
 /// skeleton buckets (or root bucket) per rank, with root-anchor transfer
 /// between adjacent ranks when anchor preconditions match.
-fn build_cluster_order_from_root_output(
+fn build_cluster_order_from_root(
   root_rank_keys : Array[Int],
   ordered_root : Map[Int, Array[String]],
   order_cluster_keys : Map[String, String],
@@ -1146,7 +1146,7 @@ fn build_cluster_order_from_root_output(
         }
       }
     }
-    anchor_root_bucket_from_previous_order(
+    anchor_root_bucket_from_previous(
       order_map,
       previous_order_map,
     )
@@ -1229,7 +1229,7 @@ fn build_cluster_rank_order(
       graphviz_flip,
       root_reorder_output,
     )
-  build_cluster_order_from_root_output(
+  build_cluster_order_from_root(
     root_rank_keys,
     ordered_root,
     order_cluster_keys,
@@ -1296,7 +1296,7 @@ fn reorder_rank_names_by_override(
 /// Graphviz parity: root-override graphviz_flip replay keeps skeleton names in
 /// rank order, reattaches same-cluster names after skeletons, and preserves any
 /// unmatched names as final fallback in original rank order.
-fn rebuild_root_override_rank_names_for_flip(
+fn rebuild_root_override_rank_names(
   rank_names : Array[String],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
@@ -1377,7 +1377,7 @@ fn apply_root_rank_groups_override(
           continue
         }
         let next_names =
-          rebuild_root_override_rank_names_for_flip(
+          rebuild_root_override_rank_names(
             rank_names,
             cluster_keys,
           )

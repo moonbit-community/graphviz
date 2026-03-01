@@ -736,7 +736,7 @@ fn run_root_mincross_reorder(
     )
   let ordered =
     if order_with_clusters {
-      merge_root_mincross_into_seeded_groups(
+      merge_root_mincross_groups(
         order_rank_keys,
         seeded_groups,
         ordered_mincross,
