@@ -709,7 +709,7 @@ fn should_enable_root_graphviz_flip(
 /// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
 /// and dispatch context without reordering Graphviz call arguments.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_cluster_rank_order_phase_from_root_reorder_output(
+fn run_root_cluster_rank_order_phase(
   order_cluster_keys : Map[String, String],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
@@ -721,7 +721,7 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   order_cluster_skeleton : Map[String, Bool],
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
-  root_reorder_output : RootClusterReorderInputsForRankOrderOutput,
+  root_reorder_output : RootClusterReorderInputs,
 ) -> RootClusterRankOrderPhaseOutput {
   let (
     root_groups,
@@ -796,7 +796,7 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
 /// Graphviz parity: root cluster-rank-order prep tuple alias keeps root
 /// groups/edges/node-order field ordering unchanged.
 /// Do not change behavior without updating fixtures/tests.
-type RootClusterReorderInputsForRankOrderOutput = (
+type RootClusterReorderInputs = (
   Map[Int, Array[String]],
   Array[Int],
   Array[@cgraph.Edge],
@@ -980,7 +980,7 @@ fn build_root_cluster_reorder_context(
 /// Graphviz parity: root reorder context + root edge bundle are materialized
 /// before root-only mincross in cluster-order phase.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_cluster_reorder_inputs_for_rank_order(
+fn build_root_cluster_reorder_inputs(
   order_with_vnodes : Bool,
   order_rank_keys : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -999,7 +999,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
   root_edge_creation : Array[(String, String)],
   flat_rank_constraints : Map[String, Bool],
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> RootClusterReorderInputsForRankOrderOutput {
+) -> RootClusterReorderInputs {
   let (
     root_groups,
     root_rank_keys,
@@ -1163,7 +1163,7 @@ fn build_cluster_rank_order_from_root_rank_output(
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_for_cluster_reorder(
+fn build_cluster_rank_order(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   graphviz_flip : Bool,
@@ -1194,7 +1194,7 @@ fn build_cluster_rank_order_for_cluster_reorder(
     return Map::new()
   }
   let root_reorder_output =
-    build_root_cluster_reorder_inputs_for_rank_order(
+    build_root_cluster_reorder_inputs(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -1215,7 +1215,7 @@ fn build_cluster_rank_order_for_cluster_reorder(
       order_edges_by_tail_root,
     )
   let (root_rank_keys, ordered_root) =
-    run_root_cluster_rank_order_phase_from_root_reorder_output(
+    run_root_cluster_rank_order_phase(
       order_cluster_keys,
       cluster_meta.rank_same_groups,
       cluster_meta.rank_same_order,
