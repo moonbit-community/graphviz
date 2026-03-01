@@ -462,15 +462,11 @@ fn remincross_cluster_position_or_default(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order cluster ordering sorts non-root
-/// clusters by descending cluster_order_index, then by first-seen sequence.
-/// Root cluster always remains last when present.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_order_and_positions(
+/// Graphviz parity: clustered tail-order split keeps first-seen non-root
+/// cluster sequence and tracks whether root cluster is present.
+fn split_remincross_seen_clusters_root_and_nonroot(
   cluster_order_seen : Array[String],
-  cluster_first_seen : Map[String, Int],
-  cluster_order_index : Map[String, Int],
-) -> (Array[String], Map[String, Int]) {
+) -> (Array[String], Bool) {
   let cluster_order_non_root : Array[String] = []
   let mut has_root_cluster = false
   for cluster in cluster_order_seen {
@@ -480,6 +476,21 @@ fn build_remincross_cluster_order_and_positions(
       cluster_order_non_root.push(cluster)
     }
   }
+  (cluster_order_non_root, has_root_cluster)
+}
+
+///|
+/// Graphviz parity: clustered tail-order cluster ordering sorts non-root
+/// clusters by descending cluster_order_index, then by first-seen sequence.
+/// Root cluster always remains last when present.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_cluster_order_and_positions(
+  cluster_order_seen : Array[String],
+  cluster_first_seen : Map[String, Int],
+  cluster_order_index : Map[String, Int],
+) -> (Array[String], Map[String, Int]) {
+  let (cluster_order_non_root, has_root_cluster) =
+    split_remincross_seen_clusters_root_and_nonroot(cluster_order_seen)
   cluster_order_non_root.sort_by((a, b) => {
     let a_idx = remincross_cluster_index_or_missing(cluster_order_index, a)
     let b_idx = remincross_cluster_index_or_missing(cluster_order_index, b)
