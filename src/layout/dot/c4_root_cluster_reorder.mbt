@@ -1208,6 +1208,13 @@ fn skeleton_cluster_or_empty(name : String) -> String {
 }
 
 ///|
+/// Graphviz parity: root-override skeleton checks treat any parsed skeleton
+/// cluster key as a skeleton marker.
+fn is_root_override_skeleton_name(name : String) -> Bool {
+  skeleton_cluster_or_empty(name) != ""
+}
+
+///|
 /// Graphviz parity: root phase can apply a rank-order override from root
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -1240,7 +1247,7 @@ fn apply_root_rank_groups_override(
             rank_names,
             cluster_keys,
             skeleton_for_cluster,
-            (name) => skeleton_cluster_or_empty(name) != "",
+            (name) => is_root_override_skeleton_name(name),
           )
         let next_names : Array[String] = []
         let seen : Map[String, Bool] = Map::new()
@@ -1248,8 +1255,7 @@ fn apply_root_rank_groups_override(
           if seen.get(name) is Some(_) {
             continue
           }
-          let skeleton_cluster = skeleton_cluster_or_empty(name)
-          let is_skeleton = skeleton_cluster != ""
+          let is_skeleton = is_root_override_skeleton_name(name)
           if is_skeleton {
             next_names.push(name)
             seen[name] = true
