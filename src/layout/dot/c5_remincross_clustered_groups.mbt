@@ -19,38 +19,35 @@ fn build_clustered_remincross_groups(
     dispatch_context.order_with_vnodes &&
     (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
     prefer_seeded_from_ordered_with_vnodes)
-  let seeded =
-    if should_try_seeded {
+  if should_try_seeded {
+    let seeded =
       build_remincross_groups_from_ordered_with_vnodes(
         dispatch_context.base_groups,
         dispatch_context.ordered_with_vnodes,
         dispatch_context.cluster_meta.cluster_keys,
       )
-    } else {
-      Map::new()
+    if seeded.length() > 0 {
+      return seeded
     }
-  if seeded.length() > 0 {
-    seeded
-  } else {
-    // Graphviz parity: clustered ReMincross rebuilt groups come from base real
-    // groups plus optional vnode injection with trailing-vnode adjustments.
-    build_remincross_groups_with_optional_vnodes(
-      dispatch_context.base_groups,
-      dispatch_context.order_with_vnodes,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.edge_reversed,
-      dispatch_context.ranks,
-      dispatch_context.cluster_meta.intercluster_keys,
-      dispatch_context.cluster_meta.cluster_parents,
-      dispatch_context.cluster_meta.cluster_min_rank,
-      dispatch_context.cluster_meta.cluster_max_rank,
-      dispatch_context.vnode_info.edge_vnodes,
-      dispatch_context.vnode_info.vnode_ranks,
-      dispatch_context.vnode_info.vnodes_by_rank,
-    )
   }
+  // Graphviz parity: clustered ReMincross rebuilt groups come from base real
+  // groups plus optional vnode injection with trailing-vnode adjustments.
+  build_remincross_groups_with_optional_vnodes(
+    dispatch_context.base_groups,
+    dispatch_context.order_with_vnodes,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.edge_reversed,
+    dispatch_context.ranks,
+    dispatch_context.cluster_meta.intercluster_keys,
+    dispatch_context.cluster_meta.cluster_parents,
+    dispatch_context.cluster_meta.cluster_min_rank,
+    dispatch_context.cluster_meta.cluster_max_rank,
+    dispatch_context.vnode_info.edge_vnodes,
+    dispatch_context.vnode_info.vnode_ranks,
+    dispatch_context.vnode_info.vnodes_by_rank,
+  )
 }
 
 ///|
