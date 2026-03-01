@@ -334,7 +334,7 @@ Important current behavior:
 
 Entry:
 
-- `compute_positions` in `src/layout/dot/d0_position_orchestrator.mbt`
+- `compute_positions` in `src/layout/dot/d0_positions.mbt`
 - stage helpers in `src/layout/dot/d*_`
 
 ### D1) Mode gating
@@ -545,7 +545,7 @@ Repository guard validates:
   - `c5_materialized_reorder.mbt`
   - `c5_snapshot.mbt`
 - Stage D position/xpos internals:
-  - `d0_position_orchestrator.mbt`
+  - `d0_positions.mbt`
   - `d1_d5_modes.mbt`
   - `d2_seed_construction.mbt`
   - `d3_reorder_cleanup.mbt`
