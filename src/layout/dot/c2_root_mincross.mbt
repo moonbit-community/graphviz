@@ -6,7 +6,7 @@
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_noncluster_reorder_components(
+fn collect_noncluster_components(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   order_node_order : Map[String, Int],
@@ -233,7 +233,7 @@ fn run_root_mincross_rank_reorder(
     if has_cluster_keys {
       []
     } else {
-      collect_noncluster_reorder_components(
+      collect_noncluster_components(
         order_rank_keys_for_mincross,
         order_groups_for_mincross,
         order_node_order,
@@ -492,7 +492,7 @@ fn run_root_mincross_rank_reorder(
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_rank_reorder_pass(
+fn run_root_mincross_reorder_pass(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -708,7 +708,7 @@ fn run_root_mincross_reorder(
       None => order_groups_for_mincross_base
     }
   let (ordered_mincross, mincross_nodes) =
-    run_root_mincross_rank_reorder_pass(
+    run_root_mincross_reorder_pass(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
       order_groups_for_mincross,
