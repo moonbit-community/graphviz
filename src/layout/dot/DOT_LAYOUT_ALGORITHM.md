@@ -216,7 +216,7 @@ Ranks are not just integer layers; each layer needs physical height budget so la
 
 What happens:
 
-- implemented in `src/layout/dot/b3_cluster_metadata.mbt`
+- implemented in `src/layout/dot/b3_clusters.mbt`
 - compute cluster membership (`cluster_keys`),
 - build cluster order and parent relation,
 - compute cluster rank ranges (`min/max rank`),
@@ -519,7 +519,7 @@ Repository guard validates:
 - Rank assignment and rank heights:
   - `b1_b2_rank.mbt`, `b1_b2_heights.mbt`, `rank_assignment/*`, `network_simplex/*`
 - Stage B cluster metadata:
-  - `b3_cluster_metadata.mbt`, `cluster.mbt`
+  - `b3_clusters.mbt`, `cluster.mbt`
 - Ordering dispatch + shared stage logic:
   - `c0_ordering.mbt`
   - `c0_setup.mbt`
