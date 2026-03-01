@@ -482,41 +482,6 @@ fn build_remincross_nonroot_rank_ordered_names(
 }
 
 ///|
-/// Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
-/// that satisfy Graphviz's rank+shape preconditions.
-fn maybe_rebucket_remincross_input_like_rank_order(
-  cluster : String,
-  rank : Int,
-  min_rank : Int,
-  rank_ordered : Array[String],
-  heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
-  cluster_order : Array[String],
-  rem_cluster_keys : Map[String, String],
-) -> Array[String] {
-  // Graphviz parity: minimum-rank rebucketing applies only to all
-  // input-like rank names (Graphviz's "i-" synthetic input class).
-  let mut all_input_like = true
-  for name in rank_ordered {
-    if !name.has_prefix("i-") {
-      all_input_like = false
-      break
-    }
-  }
-  if rank == min_rank && rank_ordered.length() > 1 && all_input_like {
-    return rebucket_remincross_input_like_rank_order(
-      cluster,
-      rank_ordered,
-      heads_by_tail,
-      cluster_order_pos,
-      cluster_order,
-      rem_cluster_keys,
-    )
-  }
-  rank_ordered
-}
-
-///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -566,17 +531,28 @@ fn build_remincross_cluster_tail_order_nonroot_names(
     }
     let rank_ordered_base =
       build_remincross_nonroot_rank_ordered_names(rank_names, heads_by_tail)
+    // Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
+    // that satisfy Graphviz's rank+shape preconditions.
+    let mut all_input_like = true
+    for name in rank_ordered_base {
+      if !name.has_prefix("i-") {
+        all_input_like = false
+        break
+      }
+    }
     let rank_ordered =
-      maybe_rebucket_remincross_input_like_rank_order(
-        cluster,
-        rank,
-        min_rank,
-        rank_ordered_base,
-        heads_by_tail,
-        cluster_order_pos,
-        cluster_order,
-        rem_cluster_keys,
-      )
+      if rank == min_rank && rank_ordered_base.length() > 1 && all_input_like {
+        rebucket_remincross_input_like_rank_order(
+          cluster,
+          rank_ordered_base,
+          heads_by_tail,
+          cluster_order_pos,
+          cluster_order,
+          rem_cluster_keys,
+        )
+      } else {
+        rank_ordered_base
+      }
     append_names_in_order(cluster_rank_ordered, rank_ordered)
   }
   cluster_rank_ordered
