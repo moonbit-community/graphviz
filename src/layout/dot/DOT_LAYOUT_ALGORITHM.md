@@ -549,8 +549,8 @@ Repository guard validates:
   - `d1_d5_modes.mbt`
   - `d2_seed.mbt`
   - `d3_cleanup.mbt`
-  - `d4_solve_clustered.mbt`
-  - `d4_solve_nonclustered.mbt`
+  - `d4_clustered.mbt`
+  - `d4_nonclustered.mbt`
 - Crossing helpers:
   - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
 - Routing:
