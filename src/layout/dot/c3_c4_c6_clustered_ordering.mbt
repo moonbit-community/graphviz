@@ -214,7 +214,7 @@ fn run_clustered_ordering_root_phase(
   }
   let materialized = pre_root_stage.materialized
   let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  let stage_inputs : RootClusterBuildRanksInputs = {
+  let build_ranks_inputs : RootClusterBuildRanksInputs = {
     order_node_order: reorder_context.order_node_order,
     order_sizes_out: pre_root_stage.order_sizes_out,
     order_rank_keys: reorder_context.order_rank_keys,
@@ -256,7 +256,7 @@ fn run_clustered_ordering_root_phase(
       reorder_setup.flat_rank_constraints,
       stage_dispatch_context.ranks,
       runtime_context.vnode_info,
-      stage_inputs,
+      build_ranks_inputs,
     )
   root_mincross_groups_override.val = None
   output
