@@ -171,15 +171,16 @@ fn merge_root_mincross_order_into_seeded_groups(
     }
     // Graphviz parity: keep cluster-internal nodes attached to the rankleader
     // skeleton position when root mincross reorders cluster skeleton chains.
-    let skeleton_for_cluster : Map[String, String] = Map::new()
-    for name in names {
-      if _order_cluster_skeleton.get(name) == Some(true) {
-        let cluster = cluster_key_or_empty(_order_cluster_keys, name)
-        if cluster != "" {
-          skeleton_for_cluster[cluster] = name
-        }
-      }
-    }
+    let skeleton_for_cluster =
+      build_skeleton_for_cluster_from_names(
+        names,
+        (name) =>
+          if _order_cluster_skeleton.get(name) == Some(true) {
+            cluster_key_or_empty(_order_cluster_keys, name)
+          } else {
+            ""
+          },
+      )
     let attached_by_skeleton =
       build_attached_by_skeleton_for_names(
         names,
@@ -238,6 +239,23 @@ fn merge_root_mincross_order_into_seeded_groups(
     merged[rank] = next_names
   }
   merged
+}
+
+///|
+/// Graphviz parity: cluster->skeleton map keeps last-seen skeleton per cluster
+/// from input order and ignores names without a cluster skeleton key.
+fn build_skeleton_for_cluster_from_names(
+  names : Array[String],
+  cluster_for_name : (String) -> String,
+) -> Map[String, String] {
+  let skeleton_for_cluster : Map[String, String] = Map::new()
+  for name in names {
+    let cluster = cluster_for_name(name)
+    if cluster != "" {
+      skeleton_for_cluster[cluster] = name
+    }
+  }
+  skeleton_for_cluster
 }
 
 ///|
@@ -1187,13 +1205,11 @@ fn apply_root_rank_groups_override(
           reordered[rank] = rank_names
           continue
         }
-        let skeleton_for_cluster : Map[String, String] = Map::new()
-        for name in rank_names {
-          let skeleton_cluster = skeleton_cluster_or_empty(name)
-          if skeleton_cluster != "" {
-            skeleton_for_cluster[skeleton_cluster] = name
-          }
-        }
+        let skeleton_for_cluster =
+          build_skeleton_for_cluster_from_names(
+            rank_names,
+            (name) => skeleton_cluster_or_empty(name),
+          )
         let attached_by_skeleton =
           build_attached_by_skeleton_for_names(
             rank_names,
