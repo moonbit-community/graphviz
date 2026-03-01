@@ -521,6 +521,59 @@ fn apply_remincross_intercluster_vnode_floor(
 }
 
 ///|
+/// Graphviz parity: ReMincross vnode order keys come from base vnode-order
+/// scoring plus trailing-vnode floor adjustments for selected intercluster
+/// vnode chains.
+fn build_remincross_vnode_order_keys_with_trailing_adjustment(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  ranks : Map[String, Int],
+  rem_base_order_index : Map[String, Int],
+  intercluster_keys : Map[String, String],
+  cluster_parents : Map[String, String?],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  vnode_ranks : Map[String, Int],
+) -> Map[String, Double] {
+  let remincross_cluster_keys =
+    clone_remincross_cluster_keys(intercluster_keys)
+  let intercluster_vnodes =
+    collect_remincross_intercluster_trailing_vnodes(
+      edges,
+      edge_tail,
+      edge_head,
+      edge_vnodes,
+      remincross_cluster_keys,
+      cluster_parents,
+      cluster_min_rank,
+      cluster_max_rank,
+    )
+  let keys = build_vnode_order_keys(
+    edges,
+    edge_tail,
+    edge_head,
+    edge_reversed,
+    ranks,
+    rem_base_order_index,
+    remincross_cluster_keys,
+    cluster_parents,
+    edge_vnodes,
+    vnode_ranks,
+  )
+  apply_remincross_intercluster_vnode_floor(
+    keys,
+    intercluster_vnodes,
+    rem_base_order_index,
+    ranks,
+    vnode_ranks,
+  )
+  keys
+}
+
+///|
 /// Graphviz parity: ReMincross rank groups start from real-node groups and
 /// optionally inject edge-vnodes using vnode order keys from cluster-aware
 /// trailing-vnode adjustments.
@@ -547,39 +600,20 @@ fn build_remincross_groups_with_optional_vnodes(
     if !order_with_vnodes {
       Map::new()
     } else {
-      let remincross_cluster_keys =
-        clone_remincross_cluster_keys(intercluster_keys)
-      let intercluster_vnodes =
-        collect_remincross_intercluster_trailing_vnodes(
-          edges,
-          edge_tail,
-          edge_head,
-          edge_vnodes,
-          remincross_cluster_keys,
-          cluster_parents,
-          cluster_min_rank,
-          cluster_max_rank,
-        )
-      let keys = build_vnode_order_keys(
+      build_remincross_vnode_order_keys_with_trailing_adjustment(
         edges,
         edge_tail,
         edge_head,
         edge_reversed,
         ranks,
         rem_base_order_index,
-        remincross_cluster_keys,
+        intercluster_keys,
         cluster_parents,
+        cluster_min_rank,
+        cluster_max_rank,
         edge_vnodes,
         vnode_ranks,
       )
-      apply_remincross_intercluster_vnode_floor(
-        keys,
-        intercluster_vnodes,
-        rem_base_order_index,
-        ranks,
-        vnode_ranks,
-      )
-      keys
     }
   if order_with_vnodes {
     build_x_groups_with_vnodes(
