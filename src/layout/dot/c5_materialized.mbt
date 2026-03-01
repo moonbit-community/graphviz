@@ -75,7 +75,7 @@ type ReMincrossMaterializedEdgeArrays = (
 ///|
 /// Graphviz parity: clustered ReMincross order-edge rematerialization applies
 /// ND_out expansion, coalescing, intercluster bonus, then tail-order replay.
-fn build_remincross_materialized_order_edges(
+fn build_materialized_order_edges(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -150,7 +150,7 @@ fn build_remincross_materialized_order_edges(
 ///|
 /// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
 /// seeds node order, then materializes edge arrays in nlist tail order.
-fn build_remincross_materialized_edge_arrays(
+fn build_materialized_edge_arrays(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
   rem_edge_creation : Array[(String, String)],
@@ -297,7 +297,7 @@ fn build_remincross_cluster_tail_order(
   let names_by_cluster : Map[String, Array[String]] = Map::new()
   for name in rem_order_creation {
     let cluster =
-      cluster_key_for_remincross_tail_order_name(
+      cluster_key_for_tail_order_name(
         rem_cluster_keys,
         name,
       )
@@ -367,7 +367,7 @@ fn build_remincross_cluster_tail_order(
 /// Graphviz parity: clustered tail-order cluster lookup uses explicit
 /// rem_cluster_keys with skeleton-name fallback parsing.
 /// Do not change behavior without updating fixtures/tests.
-fn cluster_key_for_remincross_tail_order_name(
+fn cluster_key_for_tail_order_name(
   rem_cluster_keys : Map[String, String],
   name : String,
 ) -> String {
@@ -455,7 +455,7 @@ fn remincross_rank_or_missing(
 ///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
-fn build_remincross_nonroot_rank_ordered_names(
+fn build_nonroot_rank_ordered_names(
   rank_names : Array[String],
   heads_by_tail : Map[String, Array[String]],
 ) -> Array[String] {
@@ -530,7 +530,7 @@ fn build_remincross_nonroot_tail_names(
       }
     }
     let rank_ordered_base =
-      build_remincross_nonroot_rank_ordered_names(rank_names, heads_by_tail)
+      build_nonroot_rank_ordered_names(rank_names, heads_by_tail)
     // Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
     // that satisfy Graphviz's rank+shape preconditions.
     let mut all_input_like = true
@@ -542,7 +542,7 @@ fn build_remincross_nonroot_tail_names(
     }
     let rank_ordered =
       if rank == min_rank && rank_ordered_base.length() > 1 && all_input_like {
-        rebucket_remincross_input_like_rank_order(
+        rebucket_input_like_rank_order(
           cluster,
           rank_ordered_base,
           heads_by_tail,
@@ -561,7 +561,7 @@ fn build_remincross_nonroot_tail_names(
 ///|
 /// Graphviz parity: input-like rebucketing classifies names by outgoing
 /// cross-cluster direction and out-degree priority.
-fn classify_remincross_input_like_name_bucket(
+fn classify_input_like_name_bucket(
   cluster : String,
   name : String,
   heads_by_tail : Map[String, Array[String]],
@@ -575,7 +575,7 @@ fn classify_remincross_input_like_name_bucket(
   let mut has_earlier = false
   for head in heads {
     let head_cluster =
-      cluster_key_for_remincross_tail_order_name(rem_cluster_keys, head)
+      cluster_key_for_tail_order_name(rem_cluster_keys, head)
     if head_cluster == cluster {
       continue
     }
@@ -603,7 +603,7 @@ fn classify_remincross_input_like_name_bucket(
 /// Graphviz parity: minimum-rank all-input-like clustered rank blocks are
 /// rebucketed by outgoing cross-cluster direction and out-degree priority.
 /// Do not change behavior without updating fixtures/tests.
-fn rebucket_remincross_input_like_rank_order(
+fn rebucket_input_like_rank_order(
   cluster : String,
   rank_ordered : Array[String],
   heads_by_tail : Map[String, Array[String]],
@@ -618,7 +618,7 @@ fn rebucket_remincross_input_like_rank_order(
   let category2 : Array[String] = []
   let category3 : Array[String] = []
   for name in rank_ordered {
-    match classify_remincross_input_like_name_bucket(
+    match classify_input_like_name_bucket(
       cluster,
       name,
       heads_by_tail,

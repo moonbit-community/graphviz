@@ -130,7 +130,7 @@ fn build_remincross_materialized_inputs(
     rem_vnode_creation,
     rem_edge_creation,
   ) =
-    build_remincross_materialized_order_edges(
+    build_materialized_order_edges(
       dispatch_context.creation_order,
       dispatch_context.edges,
       dispatch_context.edge_tail,
@@ -157,7 +157,7 @@ fn build_remincross_materialized_inputs(
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
   ) =
-    build_remincross_materialized_edge_arrays(
+    build_materialized_edge_arrays(
       dispatch_context.creation_order,
       rem_vnode_creation,
       rem_edge_creation,
