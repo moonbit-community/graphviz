@@ -52,7 +52,7 @@ priv struct XposConstraintSnapshot {
 }
 
 ///|
-fn touch_xpos_constraint_snapshot_fields(snapshot : XposConstraintSnapshot) -> Unit {
+fn touch_xpos_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
   let _ = snapshot.nodes
   let _ = snapshot.edges
   for node in snapshot.nodes {
@@ -217,7 +217,7 @@ fn build_xpos_constraint_snapshot(
     })
   }
   let snapshot = { nodes, edges }
-  touch_xpos_constraint_snapshot_fields(snapshot)
+  touch_xpos_constraint_snapshot(snapshot)
   snapshot
 }
 
@@ -456,7 +456,7 @@ fn unique_cluster_node_name(
   ""
 }
 
-fn collect_graph_nodes_for_cluster_members(
+fn collect_cluster_member_nodes(
   graph : @cgraph.Graph,
   nodes_out : Map[String, Bool],
 ) -> Unit {
@@ -466,7 +466,7 @@ fn collect_graph_nodes_for_cluster_members(
     }
   }
   for child in graph.subgraphs() {
-    collect_graph_nodes_for_cluster_members(child, nodes_out)
+    collect_cluster_member_nodes(child, nodes_out)
   }
 }
 
@@ -476,7 +476,7 @@ fn collect_cluster_members_for_xpos(
   let members : Map[String, Map[String, Bool]] = Map::new()
   for name, cluster_graph in cluster_graphs {
     let set : Map[String, Bool] = Map::new()
-    collect_graph_nodes_for_cluster_members(cluster_graph, set)
+    collect_cluster_member_nodes(cluster_graph, set)
     if set.length() > 0 {
       members[name] = set
     }
