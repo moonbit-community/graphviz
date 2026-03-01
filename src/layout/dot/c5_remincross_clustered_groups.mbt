@@ -628,6 +628,43 @@ fn remincross_seeded_rank_merge_key(
 }
 
 ///|
+/// Graphviz parity: seeded rank key sort keeps merge-key primary order and
+/// original index tie-break so equal keys preserve input relative order.
+fn compare_remincross_seeded_rank_keyed_entries(
+  a : (String, Int, Int),
+  b : (String, Int, Int),
+) -> Int {
+  let (_, key_a, idx_a) = a
+  let (_, key_b, idx_b) = b
+  if key_a < key_b {
+    -1
+  } else if key_a > key_b {
+    1
+  } else if idx_a < idx_b {
+    -1
+  } else if idx_a > idx_b {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+/// Graphviz parity: seeded rank replay uses keyed sort output order directly
+/// as the vnode-inclusive rank sequence.
+fn build_remincross_seeded_rank_order_from_keyed_entries(
+  keyed : Array[(String, Int, Int)],
+) -> Array[String] {
+  keyed.sort_by(compare_remincross_seeded_rank_keyed_entries)
+  let ordered_rank : Array[String] = []
+  for entry in keyed {
+    let (name, _, _) = entry
+    ordered_rank.push(name)
+  }
+  ordered_rank
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -688,26 +725,8 @@ fn build_remincross_groups_from_ordered_with_vnodes(
         )
       keyed.push((name, key, i))
     }
-    keyed.sort_by((a, b) => {
-      let (_, key_a, idx_a) = a
-      let (_, key_b, idx_b) = b
-      if key_a < key_b {
-        -1
-      } else if key_a > key_b {
-        1
-      } else if idx_a < idx_b {
-        -1
-      } else if idx_a > idx_b {
-        1
-      } else {
-        0
-      }
-    })
-    let ordered_rank : Array[String] = []
-    for entry in keyed {
-      let (name, _, _) = entry
-      ordered_rank.push(name)
-    }
+    let ordered_rank =
+      build_remincross_seeded_rank_order_from_keyed_entries(keyed)
     rem_groups[rank] = ordered_rank
   }
   rem_groups
