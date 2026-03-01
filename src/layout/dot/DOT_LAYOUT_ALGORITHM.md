@@ -547,10 +547,10 @@ Repository guard validates:
 - Stage D position/xpos internals:
   - `d0_positions.mbt`
   - `d1_d5_modes.mbt`
-  - `d2_seed_construction.mbt`
-  - `d3_reorder_cleanup.mbt`
-  - `d4_constraint_solve_clustered.mbt`
-  - `d4_constraint_solve_noncluster.mbt`
+  - `d2_seed.mbt`
+  - `d3_cleanup.mbt`
+  - `d4_solve_clustered.mbt`
+  - `d4_solve_noncluster.mbt`
 - Crossing helpers:
   - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
 - Routing:
