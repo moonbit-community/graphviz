@@ -884,34 +884,6 @@ fn build_remincross_seeded_rank_order_from_keyed_entries(
 }
 
 ///|
-/// Graphviz parity: seeded rank replay drops cluster skeleton placeholders and
-/// keeps remaining name order unchanged.
-fn collect_remincross_seeded_rank_names_without_skeletons(
-  names : Array[String],
-) -> Array[String] {
-  let filtered : Array[String] = []
-  for name in names {
-    if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
-      filtered.push(name)
-    }
-  }
-  filtered
-}
-
-///|
-/// Graphviz parity: seeded rank real-order index follows cleaned base-group
-/// real-node sequence so synthetic merge keys anchor to current real order.
-fn build_remincross_seeded_real_order_index(
-  base_real : Array[String],
-) -> Map[String, Int] {
-  let real_order : Map[String, Int] = Map::new()
-  for i in 0..<base_real.length() {
-    real_order[base_real[i]] = i
-  }
-  real_order
-}
-
-///|
 /// Graphviz parity: seeded rank rebuild first applies special mixed handoff
 /// ordering, then falls back to key-based synthetic/real merge replay.
 fn build_remincross_seeded_rank_order(
@@ -919,8 +891,10 @@ fn build_remincross_seeded_rank_order(
   base_real : Array[String],
   cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let real_order =
-    build_remincross_seeded_real_order_index(base_real)
+  let real_order : Map[String, Int] = Map::new()
+  for i in 0..<base_real.length() {
+    real_order[base_real[i]] = i
+  }
   // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
   // sequence aligned with Graphviz before generic key-based placement.
   match try_build_remincross_special_seeded_rank_order(
@@ -962,8 +936,14 @@ fn build_remincross_groups_from_ordered_with_vnodes(
 ) -> Map[Int, Array[String]] {
   let rem_groups : Map[Int, Array[String]] = Map::new()
   for rank, names in ordered_with_vnodes {
-    let filtered =
-      collect_remincross_seeded_rank_names_without_skeletons(names)
+    // Graphviz parity: seeded rank replay drops cluster skeleton placeholders
+    // and keeps remaining name order unchanged.
+    let filtered : Array[String] = []
+    for name in names {
+      if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+        filtered.push(name)
+      }
+    }
     if filtered.length() == 0 {
       continue
     }
