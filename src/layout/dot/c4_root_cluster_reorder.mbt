@@ -218,16 +218,12 @@ fn merge_root_mincross_order_into_seeded_groups(
       next_names.push(replacement)
       seen[replacement] = true
       if _order_cluster_skeleton.get(replacement) == Some(true) {
-        let attached = match attached_by_skeleton.get(replacement) {
-          Some(list) => list
-          None => []
-        }
-        for attached_name in attached {
-          if seen.get(attached_name) is None {
-            next_names.push(attached_name)
-            seen[attached_name] = true
-          }
-        }
+        append_attached_by_skeleton_if_unseen(
+          next_names,
+          seen,
+          attached_by_skeleton,
+          replacement,
+        )
       }
     }
     for name in names {
@@ -286,6 +282,27 @@ fn build_attached_by_skeleton_for_names(
     }
   }
   attached_by_skeleton
+}
+
+///|
+/// Graphviz parity: attached cluster members are replayed after their
+/// skeleton only once, preserving original attached list order.
+fn append_attached_by_skeleton_if_unseen(
+  target : Array[String],
+  seen : Map[String, Bool],
+  attached_by_skeleton : Map[String, Array[String]],
+  skeleton_name : String,
+) -> Unit {
+  let attached = match attached_by_skeleton.get(skeleton_name) {
+    Some(list) => list
+    None => []
+  }
+  for attached_name in attached {
+    if seen.get(attached_name) is None {
+      target.push(attached_name)
+      seen[attached_name] = true
+    }
+  }
 }
 
 ///|
@@ -1242,16 +1259,12 @@ fn apply_root_rank_groups_override(
           if is_skeleton {
             next_names.push(name)
             seen[name] = true
-            let attached = match attached_by_skeleton.get(name) {
-              Some(list) => list
-              None => []
-            }
-            for attached_name in attached {
-              if seen.get(attached_name) is None {
-                next_names.push(attached_name)
-                seen[attached_name] = true
-              }
-            }
+            append_attached_by_skeleton_if_unseen(
+              next_names,
+              seen,
+              attached_by_skeleton,
+              name,
+            )
             continue
           }
           let cluster = cluster_key_or_empty(cluster_keys, name)
