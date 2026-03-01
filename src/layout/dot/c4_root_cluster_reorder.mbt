@@ -467,10 +467,7 @@ fn collect_root_vnodes_for_cluster_reorder(
     let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
-      let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-        Some(list) => list
-        None => []
-      }
+      let vnodes = edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
       for vnode in vnodes {
         root_vnodes[vnode] = true
       }
@@ -1522,10 +1519,7 @@ fn flatten_cluster_buckets_for_rank_order(
   let ordered_names : Array[String] = []
   for entry in cluster_ordered {
     let (_order, _idx, cluster) = entry
-    let nodes_in_cluster = match cluster_nodes.get(cluster) {
-      Some(list) => list
-      None => []
-    }
+    let nodes_in_cluster = cluster_nodes.get(cluster).unwrap_or_default()
     for name in nodes_in_cluster {
       ordered_names.push(name)
     }

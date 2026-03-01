@@ -261,10 +261,7 @@ fn remincross_edge_vnodes_or_empty(
   edge_vnodes : Map[String, Array[String]],
   edge : @cgraph.Edge,
 ) -> Array[String] {
-  match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-    Some(list) => list
-    None => []
-  }
+  edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
 }
 
 ///|
@@ -856,10 +853,7 @@ fn build_remincross_groups_from_ordered_with_vnodes(
     if filtered.length() == 0 {
       continue
     }
-    let base_real = match base_groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let base_real = base_groups.get(rank).unwrap_or_default()
     if base_real.length() == 0 {
       rem_groups[rank] = filtered
       continue

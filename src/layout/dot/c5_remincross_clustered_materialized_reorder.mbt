@@ -58,10 +58,7 @@ fn build_remincross_edge_creation(
 ) -> Array[(String, String)] {
   let rem_edge_creation : Array[(String, String)] = []
   for tail_name in creation_order {
-    let entries = match order_edges_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
+    let entries = order_edges_by_tail.get(tail_name).unwrap_or_default()
     for entry in entries {
       let (tail, head, _, _, _, _, _, _) = entry
       rem_edge_creation.push((tail, head))
@@ -259,10 +256,7 @@ fn build_remincross_order_creation(
       rem_seen,
       tail_name,
     )
-    let vnodes = match rem_vnode_creation.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
+    let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
     for vnode in vnodes {
       append_order_creation_name_if_absent(
         rem_order_creation,
@@ -795,10 +789,7 @@ fn classify_remincross_input_like_name_bucket(
   current_cluster_pos : Int,
   rem_cluster_keys : Map[String, String],
 ) -> Int {
-  let heads = match heads_by_tail.get(name) {
-    Some(list) => list
-    None => []
-  }
+  let heads = heads_by_tail.get(name).unwrap_or_default()
   let mut has_later = false
   let mut has_earlier = false
   for head in heads {
