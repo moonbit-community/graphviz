@@ -113,21 +113,7 @@ fn run_clustered_remincross_multi_rank(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let (
-    rem_nodes,
-    rem_ranks,
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-    rem_cluster_keys,
-    rem_sizes,
-    rem_flat_constraints,
-  ) =
+  let materialized_inputs =
     build_clustered_remincross_materialized_inputs(
       dispatch_context,
       rem_rank_keys,
@@ -138,19 +124,7 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context,
       rem_rank_keys,
       rem_groups,
-      rem_nodes,
-      rem_ranks,
-      rem_node_order,
-      rem_edges_out,
-      rem_edge_tail_out,
-      rem_edge_head_out,
-      rem_edge_tail_port_x,
-      rem_edge_head_port_x,
-      rem_edge_tail_port_order,
-      rem_edge_head_port_order,
-      rem_cluster_keys,
-      rem_sizes,
-      rem_flat_constraints,
+      materialized_inputs,
     )
   let rem_cleaned =
     collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
@@ -266,20 +240,23 @@ fn run_clustered_remincross_cleanup_reorder(
   dispatch_context : ClusteredReMincrossPassDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
-  rem_nodes : Array[String],
-  rem_ranks : Map[String, Int],
-  rem_node_order : Map[String, Int],
-  rem_edges_out : Array[@cgraph.Edge],
-  rem_edge_tail_out : Array[String],
-  rem_edge_head_out : Array[String],
-  rem_edge_tail_port_x : Array[Double],
-  rem_edge_head_port_x : Array[Double],
-  rem_edge_tail_port_order : Array[Double],
-  rem_edge_head_port_order : Array[Double],
-  rem_cluster_keys : Map[String, String],
-  rem_sizes : Map[String, NodeSize],
-  rem_flat_constraints : Map[String, Bool],
+  materialized_inputs : ClusteredReMincrossMaterializedInputs,
 ) -> Map[Int, Array[String]] {
+  let (
+    rem_nodes,
+    rem_ranks,
+    rem_node_order,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  ) = materialized_inputs
   let (rem_parents, rem_children, rem_edge_order) =
     build_order_edge_indices_and_order(
       rem_nodes,
