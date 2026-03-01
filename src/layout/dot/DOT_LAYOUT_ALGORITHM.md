@@ -546,7 +546,7 @@ Repository guard validates:
   - `c5_snapshot.mbt`
 - Stage D position/xpos internals:
   - `d0_position_orchestrator.mbt`
-  - `d1_d5_mode_and_projection.mbt`
+  - `d1_d5_modes.mbt`
   - `d2_seed_construction.mbt`
   - `d3_reorder_cleanup.mbt`
   - `d4_constraint_solve_clustered.mbt`
