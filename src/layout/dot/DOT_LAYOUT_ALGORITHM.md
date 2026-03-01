@@ -246,7 +246,7 @@ Supporting files:
 - `src/layout/dot/c2_root_mincross.mbt`
 - `src/layout/dot/c3_c4_c6_clustered_ordering.mbt`
 - `src/layout/dot/c3_cluster_local_reorder.mbt`
-- `src/layout/dot/c4_root_cluster_reorder.mbt`
+- `src/layout/dot/c4_root_reorder.mbt`
 - `src/layout/dot/c4_root_cluster_build_ranks.mbt`
 - `src/layout/dot/c5_remincross_clustered_groups.mbt`
 - `src/layout/dot/c5_remincross_clustered_materialized_reorder.mbt`
@@ -538,7 +538,7 @@ Repository guard validates:
   - `c3_c4_c6_clustered_ordering.mbt`
   - `c3_cluster_local_reorder.mbt`
   - `c4_root_cluster_build_ranks.mbt`
-  - `c4_root_cluster_reorder.mbt`
+  - `c4_root_reorder.mbt`
   - `c6_finalize_order.mbt`
 - Stage C ReMincross refinement family:
   - `c5_remincross_clustered_groups.mbt`
@@ -569,7 +569,7 @@ If you are new to layout algorithms, read in this order:
 3. `a1_input.mbt` — understand canonical input formation.
 4. `b1_b2_rank.mbt` + `b1_b2_rank_heights.mbt` — understand rank and spacing foundations.
 5. `c1_order_edge.mbt` + `c1_order_graph.mbt` — understand order graph construction.
-6. `c3_cluster_local_reorder.mbt` + `c4_root_cluster_reorder.mbt` + `c5_remincross_*` — understand clustered reorder/refinement.
+6. `c3_cluster_local_reorder.mbt` + `c4_root_reorder.mbt` + `c5_remincross_*` — understand clustered reorder/refinement.
 7. `c0_ordering_entry.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
 8. `e_routing.mbt` — understand edge geometry generation.
 9. `f_postprocess.mbt` — understand output attribute mapping.
