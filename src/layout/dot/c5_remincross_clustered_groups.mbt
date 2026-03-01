@@ -221,6 +221,19 @@ fn remincross_cluster_key_or_empty(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross starts from a shallow clone of
+/// intercluster keys before root remapping and vnode LCA assignments.
+fn clone_remincross_cluster_keys(
+  intercluster_keys : Map[String, String],
+) -> Map[String, String] {
+  let cloned : Map[String, String] = Map::new()
+  for name, key in intercluster_keys {
+    cloned[name] = key
+  }
+  cloned
+}
+
+///|
 /// Graphviz parity: clustered ReMincross vnode lookup is keyed by edge vnode
 /// key and returns empty for edges without vnode expansion.
 fn remincross_edge_vnodes_or_empty(
@@ -313,10 +326,8 @@ fn build_remincross_reorder_inputs(
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
 ) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
-  let rem_cluster_keys : Map[String, String] = Map::new()
-  for name, key in cluster_meta.intercluster_keys {
-    rem_cluster_keys[name] = key
-  }
+  let rem_cluster_keys =
+    clone_remincross_cluster_keys(cluster_meta.intercluster_keys)
   // Graphviz parity: ND_clust is the root graph for nodes outside
   // any cluster (mark_lowclusters). Use a non-empty root key so
   // ReMincross can block swaps across cluster boundaries.
@@ -389,10 +400,8 @@ fn build_remincross_groups_with_optional_vnodes(
     if !order_with_vnodes {
       Map::new()
     } else {
-      let remincross_cluster_keys : Map[String, String] = Map::new()
-      for name, key in intercluster_keys {
-        remincross_cluster_keys[name] = key
-      }
+      let remincross_cluster_keys =
+        clone_remincross_cluster_keys(intercluster_keys)
       let intercluster_vnodes : Map[String, Bool] = Map::new()
       for edge_idx, edge in edges {
         let (tail, head) =
