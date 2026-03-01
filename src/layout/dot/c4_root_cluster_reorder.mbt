@@ -1409,15 +1409,12 @@ fn apply_root_rank_groups_override(
 }
 
 ///|
-/// Graphviz parity: cluster-rank-order guard keeps original rank order when
-/// root nodes appear on both sides of the clustered node block in one rank.
-fn has_root_nodes_on_both_sides_of_cluster_block(
+/// Graphviz parity: clustered-block bounds are the first/last clustered-name
+/// positions in the rank, with (-1, -1) when no clustered names exist.
+fn find_cluster_block_bounds_for_rank(
   names : Array[String],
   cluster_keys : Map[String, String],
-) -> Bool {
-  if names.length() <= 2 {
-    return false
-  }
+) -> (Int, Int) {
   let mut first_cluster = -1
   let mut last_cluster = -1
   for i in 0..<names.length() {
@@ -1429,25 +1426,54 @@ fn has_root_nodes_on_both_sides_of_cluster_block(
       last_cluster = i
     }
   }
+  (first_cluster, last_cluster)
+}
+
+///|
+/// Graphviz parity: root-name scan in a rank subrange checks for names with
+/// empty cluster key and returns true on the first root hit.
+fn has_root_name_in_rank_range(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+  start : Int,
+  end_ : Int,
+) -> Bool {
+  for i in start..<end_ {
+    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// Graphviz parity: cluster-rank-order guard keeps original rank order when
+/// root nodes appear on both sides of the clustered node block in one rank.
+fn has_root_nodes_on_both_sides_of_cluster_block(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+) -> Bool {
+  if names.length() <= 2 {
+    return false
+  }
+  let (first_cluster, last_cluster) =
+    find_cluster_block_bounds_for_rank(names, cluster_keys)
   if first_cluster < 0 {
     return false
   }
-  let mut root_before = false
-  let mut root_after = false
-  for i in 0..<first_cluster {
-    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-      root_before = true
-      break
+  let root_before =
+    has_root_name_in_rank_range(names, cluster_keys, 0, first_cluster)
+  let root_after =
+    if last_cluster + 1 < names.length() {
+      has_root_name_in_rank_range(
+        names,
+        cluster_keys,
+        last_cluster + 1,
+        names.length(),
+      )
+    } else {
+      false
     }
-  }
-  if last_cluster + 1 < names.length() {
-    for i in (last_cluster + 1)..<names.length() {
-      if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-        root_after = true
-        break
-      }
-    }
-  }
   root_before && root_after
 }
 
