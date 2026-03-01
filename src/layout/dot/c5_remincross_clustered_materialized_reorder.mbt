@@ -612,24 +612,6 @@ fn collect_remincross_rank_keys_for_cluster_names(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order rank replay groups names by exact
-/// rematerialized rank value (including -1 fallback bucket).
-fn collect_remincross_names_at_rank(
-  names : Array[String],
-  rem_ranks : Map[String, Int],
-  rank : Int,
-) -> Array[String] {
-  let rank_names : Array[String] = []
-  for name in names {
-    let name_rank = remincross_rank_or_missing(rem_ranks, name)
-    if name_rank == rank {
-      rank_names.push(name)
-    }
-  }
-  rank_names
-}
-
-///|
 /// Graphviz parity: minimum replay rank for input-like rebucketing ignores
 /// missing-name (-1) buckets and falls back to -1 when absent.
 fn remincross_min_nonnegative_rank_or_missing(rank_keys : Array[Int]) -> Int {
@@ -732,7 +714,14 @@ fn build_remincross_nonroot_rank_replay_names(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
+  // Graphviz parity: clustered tail-order rank replay groups names by exact
+  // rematerialized rank value (including -1 fallback bucket).
+  let rank_names : Array[String] = []
+  for name in names {
+    if remincross_rank_or_missing(rem_ranks, name) == rank {
+      rank_names.push(name)
+    }
+  }
   let rank_ordered =
     build_remincross_nonroot_rank_ordered_names(rank_names, heads_by_tail)
   maybe_rebucket_remincross_input_like_rank_order(

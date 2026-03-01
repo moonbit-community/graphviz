@@ -849,21 +849,6 @@ fn compare_remincross_seeded_rank_keyed_entries(
 }
 
 ///|
-/// Graphviz parity: seeded rank replay uses keyed sort output order directly
-/// as the vnode-inclusive rank sequence.
-fn build_remincross_seeded_rank_order_from_keyed_entries(
-  keyed : Array[(String, Int, Int)],
-) -> Array[String] {
-  keyed.sort_by(compare_remincross_seeded_rank_keyed_entries)
-  let ordered_rank : Array[String] = []
-  for entry in keyed {
-    let (name, _, _) = entry
-    ordered_rank.push(name)
-  }
-  ordered_rank
-}
-
-///|
 /// Graphviz parity: seeded rank rebuild first applies special mixed handoff
 /// ordering, then falls back to key-based synthetic/real merge replay.
 fn build_remincross_seeded_rank_order(
@@ -900,7 +885,15 @@ fn build_remincross_seeded_rank_order(
           )
         keyed.push((name, key, i))
       }
-      build_remincross_seeded_rank_order_from_keyed_entries(keyed)
+      // Graphviz parity: seeded rank replay uses keyed sort output order
+      // directly as the vnode-inclusive rank sequence.
+      keyed.sort_by(compare_remincross_seeded_rank_keyed_entries)
+      let ordered_rank : Array[String] = []
+      for entry in keyed {
+        let (name, _, _) = entry
+        ordered_rank.push(name)
+      }
+      ordered_rank
     }
   }
 }
