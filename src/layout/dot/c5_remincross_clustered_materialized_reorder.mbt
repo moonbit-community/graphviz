@@ -398,10 +398,7 @@ fn cluster_key_for_remincross_tail_order_name(
   rem_cluster_keys : Map[String, String],
   name : String,
 ) -> String {
-  let direct = match rem_cluster_keys.get(name) {
-    Some(value) => value
-    None => ""
-  }
+  let direct = rem_cluster_keys.get(name).unwrap_or_default()
   if direct != "" {
     return direct
   }
@@ -476,14 +473,8 @@ fn compare_remincross_nonroot_clusters_for_tail_order(
   if a_idx < b_idx {
     return 1
   }
-  let a_seen = match cluster_first_seen.get(a) {
-    Some(value) => value
-    None => 0
-  }
-  let b_seen = match cluster_first_seen.get(b) {
-    Some(value) => value
-    None => 0
-  }
+  let a_seen = cluster_first_seen.get(a).unwrap_or_default()
+  let b_seen = cluster_first_seen.get(b).unwrap_or_default()
   if a_seen < b_seen {
     -1
   } else if a_seen > b_seen {
@@ -792,10 +783,7 @@ fn rebucket_remincross_input_like_rank_order(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let current_cluster_pos = match cluster_order_pos.get(cluster) {
-    Some(value) => value
-    None => 0
-  }
+  let current_cluster_pos = cluster_order_pos.get(cluster).unwrap_or_default()
   let cluster_end_pos = cluster_order.length()
   let category0 : Array[String] = []
   let category1 : Array[String] = []
