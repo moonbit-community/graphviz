@@ -315,7 +315,7 @@ fn build_remincross_cluster_tail_order(
     cluster_first_seen[cluster] = idx
   }
   let (cluster_order, cluster_order_pos) =
-    build_remincross_cluster_order_and_positions(
+    build_remincross_cluster_order(
       cluster_order_seen,
       cluster_first_seen,
       cluster_order_index,
@@ -348,7 +348,7 @@ fn build_remincross_cluster_tail_order(
           None => names
         }
       } else {
-        build_remincross_cluster_tail_order_nonroot_names(
+        build_remincross_nonroot_tail_names(
           cluster,
           names,
           rem_ranks,
@@ -396,7 +396,7 @@ fn cluster_key_for_remincross_tail_order_name(
 /// clusters by descending cluster_order_index, then by first-seen sequence.
 /// Root cluster always remains last when present.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_order_and_positions(
+fn build_remincross_cluster_order(
   cluster_order_seen : Array[String],
   cluster_first_seen : Map[String, Int],
   cluster_order_index : Map[String, Int],
@@ -485,7 +485,7 @@ fn build_remincross_nonroot_rank_ordered_names(
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_tail_order_nonroot_names(
+fn build_remincross_nonroot_tail_names(
   cluster : String,
   names : Array[String],
   rem_ranks : Map[String, Int],
