@@ -511,46 +511,6 @@ fn build_root_vnode_inputs_for_cluster_reorder(
 }
 
 ///|
-/// Graphviz parity: root reorder group filtering keeps root-cluster skeletons
-/// plus root real nodes, and only keeps edge-vnodes when marked root-vnode.
-fn should_keep_name_in_root_cluster_groups(
-  name : String,
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  root_vnodes : Map[String, Bool],
-) -> Bool {
-  let cluster = cluster_key_or_empty(order_cluster_keys, name)
-  let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-  if !is_skeleton && cluster != "" {
-    return false
-  }
-  !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true)
-}
-
-///|
-/// Graphviz parity: root cluster reorder rank filtering applies the same
-/// root/skeleton + vnode gate to each name in rank-sequence order.
-fn collect_root_group_names_at_rank(
-  names : Array[String],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  root_vnodes : Map[String, Bool],
-) -> Array[String] {
-  let root_names : Array[String] = []
-  for name in names {
-    if should_keep_name_in_root_cluster_groups(
-      name,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      root_vnodes,
-    ) {
-      root_names.push(name)
-    }
-  }
-  root_names
-}
-
-///|
 /// Graphviz parity: root cluster reorder groups keep root/skeleton base order
 /// and optionally merge only root-vnodes into rank groups using filtered vnode
 /// keys/rank buckets from root-mincross inputs.
@@ -583,13 +543,21 @@ fn build_root_groups_for_cluster_reorder(
   let root_groups_base : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
     let names = rank_group_names_or_empty(order_groups_for_mincross, rank)
-    let root_names =
-      collect_root_group_names_at_rank(
-        names,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        root_vnodes,
-      )
+    let root_names : Array[String] = []
+    for name in names {
+      // Graphviz parity: root reorder rank filtering keeps root-cluster
+      // skeletons plus root real nodes, and only keeps edge-vnodes when
+      // marked as root-vnodes.
+      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      if !is_skeleton && cluster != "" {
+        continue
+      }
+      if name.has_prefix(EDGE_VNODE_PREFIX) && root_vnodes.get(name) != Some(true) {
+        continue
+      }
+      root_names.push(name)
+    }
     if root_names.length() > 0 {
       root_groups_base[rank] = root_names
     }
