@@ -524,6 +524,58 @@ fn remincross_rank_or_missing(
 }
 
 ///|
+/// Graphviz parity: clustered tail-order rank buckets keep first-seen unique
+/// rank keys in cluster-name order, then sort ascending for reverse replay.
+fn collect_remincross_rank_keys_for_cluster_names(
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+) -> Array[Int] {
+  let rank_keys : Array[Int] = []
+  let rank_seen : Map[Int, Bool] = Map::new()
+  for name in names {
+    let rank = remincross_rank_or_missing(rem_ranks, name)
+    if rank_seen.get(rank) is None {
+      rank_seen[rank] = true
+      rank_keys.push(rank)
+    }
+  }
+  rank_keys.sort()
+  rank_keys
+}
+
+///|
+/// Graphviz parity: clustered tail-order rank replay groups names by exact
+/// rematerialized rank value (including -1 fallback bucket).
+fn collect_remincross_names_at_rank(
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+  rank : Int,
+) -> Array[String] {
+  let rank_names : Array[String] = []
+  for name in names {
+    let name_rank = remincross_rank_or_missing(rem_ranks, name)
+    if name_rank == rank {
+      rank_names.push(name)
+    }
+  }
+  rank_names
+}
+
+///|
+/// Graphviz parity: minimum replay rank for input-like rebucketing ignores
+/// missing-name (-1) buckets and falls back to -1 when absent.
+fn remincross_min_nonnegative_rank_or_missing(rank_keys : Array[Int]) -> Int {
+  let mut candidate = -1
+  for value in rank_keys {
+    if value >= 0 {
+      candidate = value
+      break
+    }
+  }
+  candidate
+}
+
+///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -536,38 +588,14 @@ fn build_remincross_cluster_tail_order_nonroot_names(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let rank_keys : Array[Int] = []
-  let rank_seen : Map[Int, Bool] = Map::new()
-  for name in names {
-    let rank = remincross_rank_or_missing(rem_ranks, name)
-    if rank_seen.get(rank) is None {
-      rank_seen[rank] = true
-      rank_keys.push(rank)
-    }
-  }
-  rank_keys.sort()
-  let min_rank = {
-    let mut candidate = -1
-    for value in rank_keys {
-      if value >= 0 {
-        candidate = value
-        break
-      }
-    }
-    candidate
-  }
+  let rank_keys = collect_remincross_rank_keys_for_cluster_names(names, rem_ranks)
+  let min_rank = remincross_min_nonnegative_rank_or_missing(rank_keys)
   let cluster_rank_ordered : Array[String] = []
   let mut rank_idx = rank_keys.length()
   while rank_idx > 0 {
     rank_idx = rank_idx - 1
     let rank = rank_keys[rank_idx]
-    let rank_names : Array[String] = []
-    for name in names {
-      let name_rank = remincross_rank_or_missing(rem_ranks, name)
-      if name_rank == rank {
-        rank_names.push(name)
-      }
-    }
+    let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
     // Graphviz parity: clustered tail-order rank names remain forward when
     // all names have no outgoing edges in non-root cluster blocks; otherwise
     // replayed in reverse insertion order.
