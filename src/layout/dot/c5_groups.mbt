@@ -32,7 +32,7 @@ fn build_remincross_groups(
   }
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
-  build_remincross_groups_with_vnodes(
+  build_remincross_vnode_groups(
     dispatch_context.base_groups,
     dispatch_context.order_with_vnodes,
     dispatch_context.edges,
@@ -66,7 +66,7 @@ fn run_remincross_pass(
     // Graphviz parity: clustered ReMincross multi-rank branch materializes
     // remapped edges and executes clustered cleanup reorder in startpass=2.
     let materialized_inputs =
-      build_remincross_materialized_inputs(
+      build_remincross_inputs(
         dispatch_context,
         rem_rank_keys,
         rem_groups,
@@ -112,7 +112,7 @@ type ClusteredReMincrossMaterializedInputs = (
 /// Graphviz parity: clustered ReMincross multi-rank materialization builds
 /// order graph context, rematerialized edge arrays, and reorder input maps
 /// before cleanup reorder dispatch.
-fn build_remincross_materialized_inputs(
+fn build_remincross_inputs(
   dispatch_context : ReMincrossDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
@@ -339,7 +339,7 @@ fn remincross_edge_vnodes_or_empty(
 ///|
 /// Graphviz parity: mark_lowclusters assigns ReMincross edge-vnodes to the
 /// lowest common ancestor cluster (or root cluster when LCA is empty).
-fn assign_remincross_vnode_cluster_keys(
+fn assign_remincross_vnode_clusters(
   rem_cluster_keys : Map[String, String],
   root_cluster : String,
   edges : Array[@cgraph.Edge],
@@ -400,7 +400,7 @@ fn build_remincross_reorder_inputs(
     }
   }
   if order_with_vnodes {
-    assign_remincross_vnode_cluster_keys(
+    assign_remincross_vnode_clusters(
       rem_cluster_keys,
       root_cluster,
       edges,
@@ -482,7 +482,7 @@ fn collect_remincross_trailing_vnodes(
 ///|
 /// Graphviz parity: trailing intercluster vnodes are floored behind real-node
 /// positions on their rank using stable sequence offsets.
-fn apply_remincross_trailing_vnode_floor(
+fn apply_remincross_trailing_floor(
   keys : Map[String, Double],
   intercluster_vnodes : Map[String, Bool],
   rem_base_order_index : Map[String, Int],
@@ -572,7 +572,7 @@ fn build_remincross_vnode_order_keys(
     edge_vnodes,
     vnode_ranks,
   )
-  apply_remincross_trailing_vnode_floor(
+  apply_remincross_trailing_floor(
     keys,
     intercluster_vnodes,
     rem_base_order_index,
@@ -587,7 +587,7 @@ fn build_remincross_vnode_order_keys(
 /// optionally inject edge-vnodes using vnode order keys from cluster-aware
 /// trailing-vnode adjustments.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_groups_with_vnodes(
+fn build_remincross_vnode_groups(
   final_groups : Map[Int, Array[String]],
   order_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],

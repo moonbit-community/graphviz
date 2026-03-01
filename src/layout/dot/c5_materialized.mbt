@@ -5,7 +5,7 @@
 ///|
 /// Graphviz parity: nested intercluster merge-chain bonuses are applied to the
 /// first representative coalesced edge entry for each merge key.
-fn apply_remincross_intercluster_bonus(
+fn apply_intercluster_bonus(
   order_edges_by_tail_coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   intercluster_bonus : Map[String, Int],
 ) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
@@ -130,7 +130,7 @@ fn build_materialized_order_edges(
       cluster_keys,
     )
   let rem_order_edges_by_tail =
-    apply_remincross_intercluster_bonus(
+    apply_intercluster_bonus(
       rem_order_edges_by_tail_coalesced,
       intercluster_bonus,
     )
@@ -252,7 +252,7 @@ fn build_remincross_nlist_order(
       }
       reversed
     } else {
-      build_remincross_cluster_tail_order(
+      build_cluster_tail_order(
         rem_order_creation,
         rem_ranks,
         rem_cluster_keys,
@@ -283,7 +283,7 @@ fn build_remincross_nlist_order(
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_tail_order(
+fn build_cluster_tail_order(
   rem_order_creation : Array[String],
   rem_ranks : Map[String, Int],
   rem_cluster_keys : Map[String, String],
@@ -348,7 +348,7 @@ fn build_remincross_cluster_tail_order(
           None => names
         }
       } else {
-        build_remincross_nonroot_tail_names(
+        build_nonroot_tail_names(
           cluster,
           names,
           rem_ranks,
@@ -485,7 +485,7 @@ fn build_nonroot_rank_ordered_names(
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_nonroot_tail_names(
+fn build_nonroot_tail_names(
   cluster : String,
   names : Array[String],
   rem_ranks : Map[String, Int],
