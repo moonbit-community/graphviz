@@ -4724,7 +4724,7 @@ fn recover_edge_selection_for_regular_edges(
 ///|
 /// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_regular_edge_layout_with_spline_result(
+fn build_regular_edge_layout_from_spline(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   splines : SplinesMode,
@@ -4804,7 +4804,7 @@ fn build_regular_edge_layout_with_spline_result(
 
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
-fn build_regular_edge_layout_from_shared_raw_bezier(
+fn build_regular_edge_layout_from_raw_bezier(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
   ranks : Map[String, Int],
@@ -5139,7 +5139,7 @@ fn route_edges(
       continue
     }
     let (edge_layout, edge_spline_result) =
-      build_regular_edge_layout_with_spline_result(
+      build_regular_edge_layout_from_spline(
         edge,
         base,
         splines,
@@ -5187,7 +5187,7 @@ fn route_edges(
         None => continue
       }
       let group_layout =
-        build_regular_edge_layout_from_shared_raw_bezier(
+        build_regular_edge_layout_from_raw_bezier(
           group_base,
           edge_spline_result,
           ranks,
