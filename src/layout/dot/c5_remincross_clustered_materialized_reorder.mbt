@@ -480,6 +480,19 @@ fn split_remincross_seen_clusters_root_and_nonroot(
 }
 
 ///|
+/// Graphviz parity: clustered tail-order position map records cluster index in
+/// final cluster-order sequence for downstream cross-cluster comparisons.
+fn build_remincross_cluster_order_positions(
+  cluster_order : Array[String],
+) -> Map[String, Int] {
+  let cluster_order_pos : Map[String, Int] = Map::new()
+  for idx, cluster in cluster_order {
+    cluster_order_pos[cluster] = idx
+  }
+  cluster_order_pos
+}
+
+///|
 /// Graphviz parity: clustered tail-order cluster ordering sorts non-root
 /// clusters by descending cluster_order_index, then by first-seen sequence.
 /// Root cluster always remains last when present.
@@ -514,10 +527,8 @@ fn build_remincross_cluster_order_and_positions(
   if has_root_cluster {
     cluster_order.push("")
   }
-  let cluster_order_pos : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order {
-    cluster_order_pos[cluster] = idx
-  }
+  let cluster_order_pos =
+    build_remincross_cluster_order_positions(cluster_order)
   (cluster_order, cluster_order_pos)
 }
 
