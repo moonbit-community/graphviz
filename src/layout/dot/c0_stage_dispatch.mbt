@@ -31,7 +31,7 @@ fn run_ordering_stage_dispatch(
   let reorder_setup = dispatch_setup.reorder_setup
   let class2_data = reorder_setup.class2_data
   if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
-    let clustered_dispatch_context : ClusteredOrderingStageDispatchContext = {
+    let clustered_dispatch_context : ClusteredOrderingDispatchContext = {
       graph,
       nodes,
       edges,
@@ -51,7 +51,7 @@ fn run_ordering_stage_dispatch(
       reorder_setup,
       class2_data,
     }
-    run_clustered_ordering_stage(clustered_dispatch_context)
+    run_clustered_ordering(clustered_dispatch_context)
   } else {
     // Graphviz parity: non-clustered ordering path still runs a single
     // mincross pass directly (matching Graphviz control flow).

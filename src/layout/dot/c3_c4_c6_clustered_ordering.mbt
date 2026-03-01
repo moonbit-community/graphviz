@@ -6,7 +6,7 @@
 /// Graphviz parity: clustered pre-root stage output carries grouped sizes,
 /// cluster skeleton maps, reorder context, and materialized edges unchanged.
 /// Do not change behavior without updating fixtures/tests.
-priv struct OrderClusteredPreRootStageData {
+priv struct OrderClusteredPreRootData {
   order_groups : Map[Int, Array[String]]
   order_sizes_out : Map[String, NodeSize]
   order_cluster_keys : Map[String, String]
@@ -19,7 +19,7 @@ priv struct OrderClusteredPreRootStageData {
 /// Graphviz parity: clustered ordering stage dispatch context keeps complete
 /// clustered ordering payload ordering unchanged before stage execution.
 /// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredOrderingStageDispatchContext {
+priv struct ClusteredOrderingDispatchContext {
   graph : @cgraph.Graph
   nodes : Array[@cgraph.Node]
   edges : Array[@cgraph.Edge]
@@ -48,7 +48,7 @@ priv struct ClusteredOrderingStageDispatchContext {
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_ordering_pre_root_stage(
+fn build_clustered_ordering_pre_root(
   ordering_groups_base : Map[Int, Array[String]],
   base_order_index : Map[String, Int],
   order_with_vnodes : Bool,
@@ -68,7 +68,7 @@ fn build_clustered_ordering_pre_root_stage(
   edge_tail : Array[String],
   edge_head : Array[String],
   nodes : Array[@cgraph.Node],
-) -> OrderClusteredPreRootStageData {
+) -> OrderClusteredPreRootData {
   let (
     order_groups,
     order_sizes_out,
@@ -133,8 +133,8 @@ fn build_clustered_ordering_pre_root_stage(
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered_ordering_root_phase(
-  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
-  pre_root_stage : OrderClusteredPreRootStageData,
+  stage_dispatch_context : ClusteredOrderingDispatchContext,
+  pre_root_stage : OrderClusteredPreRootData,
 ) -> OrderRootClusterStageData {
   let reorder_setup = stage_dispatch_context.reorder_setup
   let class2_data = stage_dispatch_context.class2_data
@@ -266,14 +266,14 @@ fn run_clustered_ordering_root_phase(
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_ordering_stage(
-  stage_dispatch_context : ClusteredOrderingStageDispatchContext,
+fn run_clustered_ordering(
+  stage_dispatch_context : ClusteredOrderingDispatchContext,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let reorder_setup = stage_dispatch_context.reorder_setup
   let class2_data = stage_dispatch_context.class2_data
   let runtime_context = stage_dispatch_context.runtime_context
   let pre_root_stage =
-    build_clustered_ordering_pre_root_stage(
+    build_clustered_ordering_pre_root(
       reorder_setup.ordering_groups_base,
       reorder_setup.base_order_index,
       reorder_setup.order_with_vnodes,
