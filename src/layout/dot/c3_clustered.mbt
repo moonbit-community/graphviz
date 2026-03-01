@@ -363,7 +363,7 @@ fn run_clustered(
       finalize_dispatch_context.port_order_contrib,
     )
   let (next_ordered_with_vnodes, final_groups) =
-    finalize_order_groups_with_cluster_remincross(
+    finalize_order_groups(
       finalize_dispatch_context.order_with_clusters,
       finalize_dispatch_context.order_with_vnodes,
       cluster_rank_order,

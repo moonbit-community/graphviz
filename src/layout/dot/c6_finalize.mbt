@@ -7,7 +7,7 @@
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_order_groups_with_cluster_remincross(
+fn finalize_order_groups(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   cluster_rank_order : Map[Int, Map[String, Int]],
