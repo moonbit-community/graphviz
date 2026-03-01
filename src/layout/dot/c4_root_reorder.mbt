@@ -153,7 +153,7 @@ fn merge_root_mincross_groups(
     // Graphviz parity: keep cluster-internal nodes attached to the rankleader
     // skeleton position when root mincross reorders cluster skeleton chains.
     let skeleton_for_cluster =
-      build_skeleton_for_cluster_from_names(
+      build_skeleton_for_clusters(
         names,
         (name) =>
           if order_cluster_skeleton.get(name) == Some(true) {
@@ -163,7 +163,7 @@ fn merge_root_mincross_groups(
           },
       )
     let attached_by_skeleton =
-      build_attached_by_skeleton_for_names(
+      build_attached_by_skeleton(
         names,
         order_cluster_keys,
         skeleton_for_cluster,
@@ -197,7 +197,7 @@ fn merge_root_mincross_groups(
       next_names.push(replacement)
       seen[replacement] = true
       if order_cluster_skeleton.get(replacement) == Some(true) {
-        append_attached_by_skeleton_if_unseen(
+        append_attached_by_skeleton(
           next_names,
           seen,
           attached_by_skeleton,
@@ -219,7 +219,7 @@ fn merge_root_mincross_groups(
 ///|
 /// Graphviz parity: cluster->skeleton map keeps last-seen skeleton per cluster
 /// from input order and ignores names without a cluster skeleton key.
-fn build_skeleton_for_cluster_from_names(
+fn build_skeleton_for_clusters(
   names : Array[String],
   cluster_for_name : (String) -> String,
 ) -> Map[String, String] {
@@ -236,7 +236,7 @@ fn build_skeleton_for_cluster_from_names(
 ///|
 /// Graphviz parity: attached-by-skeleton buckets map non-skipped cluster
 /// members to their rankleader skeleton in input order.
-fn build_attached_by_skeleton_for_names(
+fn build_attached_by_skeleton(
   names : Array[String],
   cluster_keys : Map[String, String],
   skeleton_for_cluster : Map[String, String],
@@ -266,7 +266,7 @@ fn build_attached_by_skeleton_for_names(
 ///|
 /// Graphviz parity: attached cluster members are replayed after their
 /// skeleton only once, preserving original attached list order.
-fn append_attached_by_skeleton_if_unseen(
+fn append_attached_by_skeleton(
   target : Array[String],
   seen : Map[String, Bool],
   attached_by_skeleton : Map[String, Array[String]],
@@ -1308,12 +1308,12 @@ fn rebuild_root_override_rank_names(
   let is_root_override_skeleton_name = (name : String) =>
     skeleton_cluster_or_empty(name) != ""
   let skeleton_for_cluster =
-    build_skeleton_for_cluster_from_names(
+    build_skeleton_for_clusters(
       rank_names,
       skeleton_cluster_or_empty,
     )
   let attached_by_skeleton =
-    build_attached_by_skeleton_for_names(
+    build_attached_by_skeleton(
       rank_names,
       cluster_keys,
       skeleton_for_cluster,
@@ -1329,7 +1329,7 @@ fn rebuild_root_override_rank_names(
     if is_skeleton {
       next_names.push(name)
       seen[name] = true
-      append_attached_by_skeleton_if_unseen(
+      append_attached_by_skeleton(
         next_names,
         seen,
         attached_by_skeleton,
