@@ -2,7 +2,7 @@
 /// Stage C Phase C5 split: remincross snapshot
 /// helpers for focused ReMincross responsibilities.
 
-fn build_ordering_input_edges_snapshot(
+fn build_ordering_edges_snapshot(
   edges_out : Array[@cgraph.Edge],
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
@@ -47,7 +47,7 @@ fn build_ordering_input_edges_snapshot(
 }
 
 ///|
-fn coalesce_ordering_input_edges_snapshot(
+fn coalesce_ordering_edges_snapshot(
   edges : Array[OrderingInputEdgeSnapshot],
 ) -> Array[OrderingInputEdgeSnapshot] {
   let entries_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
@@ -101,7 +101,7 @@ fn coalesce_ordering_input_edges_snapshot(
 }
 
 ///|
-fn capture_root_mincross_input_snapshot(
+fn capture_root_mincross_snapshot(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edges_out : Array[@cgraph.Edge],
@@ -118,8 +118,8 @@ fn capture_root_mincross_input_snapshot(
     return
   }
   let edges =
-    coalesce_ordering_input_edges_snapshot(
-      build_ordering_input_edges_snapshot(
+    coalesce_ordering_edges_snapshot(
+      build_ordering_edges_snapshot(
         edges_out,
         edge_tail_out,
         edge_head_out,
@@ -175,7 +175,7 @@ fn capture_remincross_input_snapshot(
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
     groups: clone_rank_groups(groups),
-    edges: build_ordering_input_edges_snapshot(
+    edges: build_ordering_edges_snapshot(
       edges_out,
       edge_tail_out,
       edge_head_out,

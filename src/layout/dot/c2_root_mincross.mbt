@@ -625,7 +625,7 @@ fn run_root_mincross_rank_reorder_pass(
     )
   capture_pass0_flat_seed_groups_enabled.val = false
   let root_input_groups = order_groups_for_mincross
-  capture_root_mincross_input_snapshot(
+  capture_root_mincross_snapshot(
     order_rank_keys_for_mincross,
     root_input_groups,
     order_edges_out_mincross,
