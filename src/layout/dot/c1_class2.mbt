@@ -276,7 +276,7 @@ fn build_ordering_class2_data(
       let order_creation : Array[String] = []
       let order_seen : Map[String, Bool] = Map::new()
       for name in cluster_skeleton_creation {
-        append_order_creation_name_if_absent(
+        append_creation_name_if_absent(
           order_creation,
           order_seen,
           name,
@@ -285,7 +285,7 @@ fn build_ordering_class2_data(
       for tail_name in creation_order {
         // Graphviz parity: each real-node tail emits itself first, followed by
         // its per-tail vnode sequence, while preserving first-seen dedup semantics.
-        append_order_creation_name_if_absent(
+        append_creation_name_if_absent(
           order_creation,
           order_seen,
           tail_name,
@@ -295,7 +295,7 @@ fn build_ordering_class2_data(
           None => []
         }
         for vnode in vnodes {
-          append_order_creation_name_if_absent(
+          append_creation_name_if_absent(
             order_creation,
             order_seen,
             vnode,
@@ -326,7 +326,7 @@ fn build_ordering_class2_data(
       flat_rank_constraints,
     )
   let nlist_order =
-    adjust_nlist_order_for_cluster_flip(
+    adjust_nlist_order_for_flip(
       nlist_order_raw,
       graphviz_flip,
       cluster_meta.has_clusters,

@@ -239,7 +239,7 @@ fn build_order_sizes_for_order_graph(
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.
-fn append_order_cluster_skeleton_range(
+fn append_cluster_skeleton_range(
   cluster : String,
   min_rank : Int,
   max_rank : Int,

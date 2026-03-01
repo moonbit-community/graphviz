@@ -65,7 +65,7 @@ fn build_order_seed_groups(
             Some(value) => value
             None => min_rank
           }
-          append_order_cluster_skeleton_range(
+          append_cluster_skeleton_range(
             cluster,
             min_rank,
             max_rank,
@@ -88,7 +88,7 @@ fn build_order_seed_groups(
         Some(value) => value
         None => min_rank
       }
-      append_order_cluster_skeleton_range(
+      append_cluster_skeleton_range(
         cluster,
         min_rank,
         max_rank,

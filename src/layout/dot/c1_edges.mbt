@@ -240,7 +240,7 @@ fn append_cluster_skeleton_edges(
 /// Graphviz parity: class2 order_creation keeps first-seen insertion order,
 /// suppressing duplicates across skeleton, real-node, and vnode phases.
 /// Do not change behavior without updating fixtures/tests.
-fn append_order_creation_name_if_absent(
+fn append_creation_name_if_absent(
   order_creation : Array[String],
   order_seen : Map[String, Bool],
   name : String,
@@ -269,7 +269,7 @@ fn cluster_key_or_empty(
 /// Graphviz parity: when GD_flip is true, decompose nlist reverses node order
 /// inside each cluster while preserving cluster membership positions.
 /// Do not change behavior without updating fixtures/tests.
-fn adjust_nlist_order_for_cluster_flip(
+fn adjust_nlist_order_for_flip(
   nlist_order_raw : Array[String],
   graphviz_flip : Bool,
   has_clusters : Bool,

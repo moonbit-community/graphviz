@@ -226,14 +226,14 @@ fn build_remincross_nlist_order(
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
-    append_order_creation_name_if_absent(
+    append_creation_name_if_absent(
       rem_order_creation,
       rem_seen,
       tail_name,
     )
     let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
     for vnode in vnodes {
-      append_order_creation_name_if_absent(
+      append_creation_name_if_absent(
         rem_order_creation,
         rem_seen,
         vnode,
@@ -269,7 +269,7 @@ fn build_remincross_nlist_order(
       seen[name] = true
     }
     for name in rem_order_creation {
-      append_order_creation_name_if_absent(rem_nlist_order, seen, name)
+      append_creation_name_if_absent(rem_nlist_order, seen, name)
     }
   }
   rem_nlist_order
