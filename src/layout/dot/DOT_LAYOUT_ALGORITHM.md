@@ -523,7 +523,7 @@ Repository guard validates:
 - Ordering dispatch + shared stage logic:
   - `c0_dispatch_pipeline.mbt`
   - `c0_setup.mbt`
-  - `c0_stage_dispatch.mbt`
+  - `c0_ordering_dispatch.mbt`
 - Ordering edge materialization:
   - `c1_order_edge.mbt`
 - Ordering graph construction helpers:
