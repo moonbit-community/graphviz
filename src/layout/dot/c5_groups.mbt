@@ -124,7 +124,7 @@ fn build_remincross_materialized_inputs(
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
   let cluster_order_index =
-    build_cluster_index_for_local_reorder(dispatch_context.cluster_meta.cluster_order)
+    build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
   let (
     rem_order_edges_by_tail,
     rem_vnode_creation,

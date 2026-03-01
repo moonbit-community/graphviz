@@ -167,7 +167,7 @@ fn cluster_depth_for_order_inner(
 /// Graphviz parity: cluster traversal order index is seeded from Graphviz
 /// cluster_order for tie-breaking during local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_index_for_local_reorder(
+fn build_local_cluster_index(
   cluster_order : Array[String],
 ) -> Map[String, Int] {
   let cluster_index : Map[String, Int] = Map::new()
@@ -183,7 +183,7 @@ fn build_cluster_index_for_local_reorder(
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_graph_order_for_local_reorder(
+fn build_local_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
@@ -198,7 +198,7 @@ fn build_cluster_graph_order_for_local_reorder(
   if cluster_graphs.length() == 0 {
     return (cluster_graphs, cluster_names)
   }
-  let cluster_index = build_cluster_index_for_local_reorder(cluster_order)
+  let cluster_index = build_local_cluster_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
   if cluster_names.length() > 1 {
     cluster_names.sort_by((a, b) => {
@@ -523,7 +523,7 @@ fn run_cluster_local_rank_reorder(
     return (false, Map::new())
   }
   let seeded_by_vnode_interp =
-    seed_cluster_local_groups_by_vnode_interpolation(
+    seed_local_groups_by_vnode(
       cluster_rank_keys,
       cluster_groups,
       fixed_ranks,
@@ -610,7 +610,7 @@ fn select_vnode_anchor_neighbor(
 /// Graphviz parity: cluster-local ND_order seeds vnode positions by
 /// interpolating between current tail/head orders inside the cluster.
 /// Do not change behavior without updating fixtures/tests.
-fn seed_cluster_local_groups_by_vnode_interpolation(
+fn seed_local_groups_by_vnode(
   cluster_rank_keys : Array[Int],
   cluster_groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
@@ -1126,7 +1126,7 @@ fn reorder_single_cluster_rank_groups(
 /// Graphviz parity: cluster-local reorder iterates clusters in deterministic
 /// build order and applies one independent local pass per cluster.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_cluster_rank_groups_for_cluster_names(
+fn reorder_cluster_rank_groups(
   cluster_names : Array[String],
   cluster_graphs : Map[String, @cgraph.Graph],
   groups : Map[Int, Array[String]],
@@ -1226,7 +1226,7 @@ fn reorder_groups_by_cluster_build_ranks(
     return ()
   }
   let (cluster_graphs, cluster_names) =
-    build_cluster_graph_order_for_local_reorder(
+    build_local_cluster_graph_order(
       graph,
       cluster_meta.cluster_order,
       cluster_meta.cluster_parents,
@@ -1264,7 +1264,7 @@ fn reorder_groups_by_cluster_build_ranks(
       None => raw_graphviz_in_neighbors[head] = [tail]
     }
   }
-  reorder_cluster_rank_groups_for_cluster_names(
+  reorder_cluster_rank_groups(
     cluster_names,
     cluster_graphs,
     groups,
