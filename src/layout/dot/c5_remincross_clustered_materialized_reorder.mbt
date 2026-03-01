@@ -653,6 +653,39 @@ fn maybe_rebucket_remincross_input_like_rank_order(
 }
 
 ///|
+/// Graphviz parity: clustered non-root rank replay composes rank extraction,
+/// directional replay, and minimum-rank input-like rebucketing.
+fn build_remincross_nonroot_rank_replay_names(
+  cluster : String,
+  rank : Int,
+  min_rank : Int,
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+  heads_by_tail : Map[String, Array[String]],
+  cluster_order_pos : Map[String, Int],
+  cluster_order : Array[String],
+  rem_cluster_keys : Map[String, String],
+) -> Array[String] {
+  let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
+  let rank_ordered =
+    build_remincross_rank_ordered_names_for_cluster(
+      cluster,
+      rank_names,
+      heads_by_tail,
+    )
+  maybe_rebucket_remincross_input_like_rank_order(
+    cluster,
+    rank,
+    min_rank,
+    rank_ordered,
+    heads_by_tail,
+    cluster_order_pos,
+    cluster_order,
+    rem_cluster_keys,
+  )
+}
+
+///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -672,19 +705,13 @@ fn build_remincross_cluster_tail_order_nonroot_names(
   while rank_idx > 0 {
     rank_idx = rank_idx - 1
     let rank = rank_keys[rank_idx]
-    let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
     let rank_ordered =
-      build_remincross_rank_ordered_names_for_cluster(
-        cluster,
-        rank_names,
-        heads_by_tail,
-      )
-    let rank_ordered =
-      maybe_rebucket_remincross_input_like_rank_order(
+      build_remincross_nonroot_rank_replay_names(
         cluster,
         rank,
         min_rank,
-        rank_ordered,
+        names,
+        rem_ranks,
         heads_by_tail,
         cluster_order_pos,
         cluster_order,
