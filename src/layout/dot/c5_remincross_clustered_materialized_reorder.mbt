@@ -535,37 +535,6 @@ fn cluster_key_for_remincross_tail_order_name(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order split keeps first-seen non-root
-/// cluster sequence and tracks whether root cluster is present.
-fn split_remincross_seen_clusters_root_and_nonroot(
-  cluster_order_seen : Array[String],
-) -> (Array[String], Bool) {
-  let cluster_order_non_root : Array[String] = []
-  let mut has_root_cluster = false
-  for cluster in cluster_order_seen {
-    if cluster == "" {
-      has_root_cluster = true
-    } else {
-      cluster_order_non_root.push(cluster)
-    }
-  }
-  (cluster_order_non_root, has_root_cluster)
-}
-
-///|
-/// Graphviz parity: clustered tail-order position map records cluster index in
-/// final cluster-order sequence for downstream cross-cluster comparisons.
-fn build_remincross_cluster_order_positions(
-  cluster_order : Array[String],
-) -> Map[String, Int] {
-  let cluster_order_pos : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order {
-    cluster_order_pos[cluster] = idx
-  }
-  cluster_order_pos
-}
-
-///|
 /// Graphviz parity: clustered tail-order non-root cluster comparator uses
 /// descending Graphviz cluster-order index (-1 fallback) then first-seen
 /// tie-break (0 fallback).
@@ -610,8 +579,15 @@ fn build_remincross_cluster_order_and_positions(
   cluster_first_seen : Map[String, Int],
   cluster_order_index : Map[String, Int],
 ) -> (Array[String], Map[String, Int]) {
-  let (cluster_order_non_root, has_root_cluster) =
-    split_remincross_seen_clusters_root_and_nonroot(cluster_order_seen)
+  let cluster_order_non_root : Array[String] = []
+  let mut has_root_cluster = false
+  for cluster in cluster_order_seen {
+    if cluster == "" {
+      has_root_cluster = true
+    } else {
+      cluster_order_non_root.push(cluster)
+    }
+  }
   cluster_order_non_root.sort_by((a, b) =>
     compare_remincross_nonroot_clusters_for_tail_order(
       a,
@@ -623,8 +599,10 @@ fn build_remincross_cluster_order_and_positions(
   if has_root_cluster {
     cluster_order.push("")
   }
-  let cluster_order_pos =
-    build_remincross_cluster_order_positions(cluster_order)
+  let cluster_order_pos : Map[String, Int] = Map::new()
+  for idx, cluster in cluster_order {
+    cluster_order_pos[cluster] = idx
+  }
   (cluster_order, cluster_order_pos)
 }
 
