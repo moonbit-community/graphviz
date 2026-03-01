@@ -1080,7 +1080,7 @@ fn collect_sameport_merge_classes(
 }
 
 ///|
-fn assign_sameport_override_with_merge(
+fn assign_sameport_override(
   overrides : Map[Int, @geom.Point],
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
@@ -1100,7 +1100,7 @@ fn assign_sameport_override_with_merge(
 }
 
 ///|
-fn assign_sameport_group_size_with_merge(
+fn assign_sameport_group_size(
   group_sizes : Map[Int, Int],
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
@@ -1329,13 +1329,13 @@ fn collect_sameport_anchor_overrides(
     ) {
       Some(anchor) =>
         for edge in group_edges {
-          assign_sameport_override_with_merge(
+          assign_sameport_override(
             samehead_overrides,
             merge_classes,
             edge,
             anchor,
           )
-          assign_sameport_group_size_with_merge(
+          assign_sameport_group_size(
             samehead_group_sizes,
             merge_classes,
             edge,
@@ -1367,13 +1367,13 @@ fn collect_sameport_anchor_overrides(
     ) {
       Some(anchor) =>
         for edge in group_edges {
-          assign_sameport_override_with_merge(
+          assign_sameport_override(
             sametail_overrides,
             merge_classes,
             edge,
             anchor,
           )
-          assign_sameport_group_size_with_merge(
+          assign_sameport_group_size(
             sametail_group_sizes,
             merge_classes,
             edge,
@@ -1408,7 +1408,7 @@ fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
 }
 
 ///|
-fn collect_flat_adjacent_simple_beziers(
+fn collect_flat_adjacent_beziers(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
   ranks : Map[String, Int],
@@ -4724,7 +4724,7 @@ fn recover_regular_edge_selection(
 ///|
 /// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_regular_edge_layout_from_spline(
+fn build_regular_edge_layout_spline(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   splines : SplinesMode,
@@ -4804,7 +4804,7 @@ fn build_regular_edge_layout_from_spline(
 
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
-fn build_regular_edge_layout_from_bezier(
+fn build_regular_edge_layout_bezier(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
   ranks : Map[String, Int],
@@ -5041,7 +5041,7 @@ fn route_edges(
     )
   let flat_adjacent_simple_beziers =
     if splines == SplinesMode::Spline {
-      collect_flat_adjacent_simple_beziers(
+      collect_flat_adjacent_beziers(
         edges,
         base_cache,
         ranks,
@@ -5139,7 +5139,7 @@ fn route_edges(
       continue
     }
     let (edge_layout, edge_spline_result) =
-      build_regular_edge_layout_from_spline(
+      build_regular_edge_layout_spline(
         edge,
         base,
         splines,
@@ -5187,7 +5187,7 @@ fn route_edges(
         None => continue
       }
       let group_layout =
-        build_regular_edge_layout_from_bezier(
+        build_regular_edge_layout_bezier(
           group_base,
           edge_spline_result,
           ranks,
