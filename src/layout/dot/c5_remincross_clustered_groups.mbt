@@ -788,6 +788,59 @@ fn collect_remincross_seeded_rank_names_without_skeletons(
 }
 
 ///|
+/// Graphviz parity: seeded rank real-order index follows cleaned base-group
+/// real-node sequence so synthetic merge keys anchor to current real order.
+fn build_remincross_seeded_real_order_index(
+  base_real : Array[String],
+) -> Map[String, Int] {
+  let real_order : Map[String, Int] = Map::new()
+  for i in 0..<base_real.length() {
+    real_order[base_real[i]] = i
+  }
+  real_order
+}
+
+///|
+/// Graphviz parity: seeded rank rebuild first applies special mixed handoff
+/// ordering, then falls back to key-based synthetic/real merge replay.
+fn build_remincross_seeded_rank_order(
+  filtered : Array[String],
+  base_real : Array[String],
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  let real_order =
+    build_remincross_seeded_real_order_index(base_real)
+  // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
+  // sequence aligned with Graphviz before generic key-based placement.
+  match try_build_remincross_special_seeded_rank_order(
+    filtered,
+    base_real,
+    real_order,
+    cluster_keys,
+  ) {
+    Some(special_order) => special_order
+    None => {
+      let (prev_real, next_real_by_pos) =
+        build_remincross_neighbor_real_indices(filtered, real_order)
+      let keyed : Array[(String, Int, Int)] = []
+      for i in 0..<filtered.length() {
+        let name = filtered[i]
+        let key =
+          remincross_seeded_rank_merge_key(
+            i,
+            name,
+            real_order,
+            prev_real,
+            next_real_by_pos,
+          )
+        keyed.push((name, key, i))
+      }
+      build_remincross_seeded_rank_order_from_keyed_entries(keyed)
+    }
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -811,41 +864,12 @@ fn build_remincross_groups_from_ordered_with_vnodes(
       rem_groups[rank] = filtered
       continue
     }
-    let real_order : Map[String, Int] = Map::new()
-    for i in 0..<base_real.length() {
-      real_order[base_real[i]] = i
-    }
-    // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
-    // sequence aligned with Graphviz before generic key-based placement.
-    match try_build_remincross_special_seeded_rank_order(
-      filtered,
-      base_real,
-      real_order,
-      cluster_keys,
-    ) {
-      Some(special_order) => {
-        rem_groups[rank] = special_order
-        continue
-      }
-      None => ()
-    }
-    let (prev_real, next_real_by_pos) =
-      build_remincross_neighbor_real_indices(filtered, real_order)
-    let keyed : Array[(String, Int, Int)] = []
-    for i in 0..<filtered.length() {
-      let name = filtered[i]
-      let key =
-        remincross_seeded_rank_merge_key(
-          i,
-          name,
-          real_order,
-          prev_real,
-          next_real_by_pos,
-        )
-      keyed.push((name, key, i))
-    }
     let ordered_rank =
-      build_remincross_seeded_rank_order_from_keyed_entries(keyed)
+      build_remincross_seeded_rank_order(
+        filtered,
+        base_real,
+        cluster_keys,
+      )
     rem_groups[rank] = ordered_rank
   }
   rem_groups
