@@ -37,7 +37,7 @@ fn append_cluster_skeleton_nodes_for_xpos_reorder_seed(
 /// Graphviz parity: clustered xpos reorder seed setup clones x-order groups,
 /// injects cluster skeleton nodes, and materializes rank/order maps.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_reorder_seed_data(
+fn build_clustered_xpos_seed_data(
   x_groups : Map[Int, Array[String]],
   x_order_sizes : Map[String, NodeSize],
   x_cluster_keys : Map[String, String],
@@ -102,7 +102,7 @@ fn build_clustered_xpos_reorder_seed_data(
 /// Graphviz parity: clustered xpos reorder vnode chain direction follows
 /// rank order (forward/reverse) before segment emission.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_reorder_edge_chain_with_vnodes(
+fn build_clustered_xpos_edge_chain_with_vnodes(
   ranks : Map[String, Int],
   tail : String,
   head : String,
@@ -137,7 +137,7 @@ fn build_clustered_xpos_reorder_edge_chain_with_vnodes(
 /// Graphviz parity: clustered xpos reorder emits chain segments with
 /// endpoint port hints and midpoint-neutral port-order values.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_reorder_edge_chain_segments(
+fn append_clustered_xpos_edge_chain_segments(
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
   order_edges_out : Array[@cgraph.Edge],
@@ -196,7 +196,7 @@ fn append_clustered_xpos_reorder_edge_chain_segments(
 /// Graphviz parity: clustered xpos reorder expands vnode edge chains
 /// into order-graph segments while preserving endpoint port hints.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_reorder_edge_with_vnodes(
+fn append_clustered_xpos_edge_with_vnodes(
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
   order_edges_out : Array[@cgraph.Edge],
@@ -238,13 +238,13 @@ fn append_clustered_xpos_reorder_edge_with_vnodes(
       head_port_order,
     )
   } else {
-    let chain = build_clustered_xpos_reorder_edge_chain_with_vnodes(
+    let chain = build_clustered_xpos_edge_chain_with_vnodes(
       ranks,
       tail,
       head,
       vnodes,
     )
-    append_clustered_xpos_reorder_edge_chain_segments(
+    append_clustered_xpos_edge_chain_segments(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -321,7 +321,7 @@ fn append_cluster_skeleton_edges_for_xpos_reorder(
 /// Graphviz parity: clustered xpos reorder first materializes input
 /// edges in Graphviz iteration order before appending cluster skeleton edges.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_reorder_input_edges(
+fn append_clustered_xpos_input_edges(
   prep : LayoutPrep,
   rank_data : RankData,
   ordering : OrderingResult,
@@ -371,7 +371,7 @@ fn append_clustered_xpos_reorder_input_edges(
       Some(list) => list
       None => []
     }
-    append_clustered_xpos_reorder_edge_with_vnodes(
+    append_clustered_xpos_edge_with_vnodes(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -400,7 +400,7 @@ fn append_clustered_xpos_reorder_input_edges(
 /// Graphviz parity: clustered xpos reorder edge materialization preserves
 /// vnode chain splitting and cluster skeleton linking before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_reorder_edges(
+fn build_clustered_xpos_edges(
   prep : LayoutPrep,
   rank_data : RankData,
   ordering : OrderingResult,
@@ -424,7 +424,7 @@ fn build_clustered_xpos_reorder_edges(
   let order_edge_head_port_x : Array[Double] = []
   let order_edge_tail_port_order : Array[Double] = []
   let order_edge_head_port_order : Array[Double] = []
-  append_clustered_xpos_reorder_input_edges(
+  append_clustered_xpos_input_edges(
     prep,
     rank_data,
     ordering,
@@ -470,7 +470,7 @@ fn build_clustered_xpos_reorder_edges(
 /// Graphviz parity: clustered xpos reorder consumes order-graph parents/children
 /// plus edge-order hints exactly once before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_xpos_reorder_rank_groups(
+fn apply_clustered_xpos_rank_groups(
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
@@ -535,7 +535,7 @@ fn apply_clustered_xpos_reorder_rank_groups(
 /// Graphviz parity: clustered xpos reorder branch keeps the same seed build,
 /// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_reordered_groups(
+fn build_clustered_xpos_groups(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
@@ -551,7 +551,7 @@ fn build_clustered_xpos_reordered_groups(
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let reorder_seed_data =
-    build_clustered_xpos_reorder_seed_data(
+    build_clustered_xpos_seed_data(
       x_groups,
       x_order_sizes,
       x_cluster_keys,
@@ -559,7 +559,7 @@ fn build_clustered_xpos_reordered_groups(
       prep.node_order,
     )
   let reorder_edges_data =
-    build_clustered_xpos_reorder_edges(
+    build_clustered_xpos_edges(
       prep,
       rank_data,
       ordering,
@@ -570,7 +570,7 @@ fn build_clustered_xpos_reordered_groups(
       x_edge_tail_port_order,
       x_edge_head_port_order,
     )
-  apply_clustered_xpos_reorder_rank_groups(
+  apply_clustered_xpos_rank_groups(
     reorder_seed_data.order_rank_keys,
     reorder_seed_data.order_groups,
     reorder_edges_data.order_edges_out,

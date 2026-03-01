@@ -27,7 +27,7 @@ fn build_xpos_reordered_groups(
 ) -> Map[Int, Array[String]] {
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
-    build_clustered_xpos_reordered_groups(
+    build_clustered_xpos_groups(
       prep,
       rank_data,
       rank_heights,
