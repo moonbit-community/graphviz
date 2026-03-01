@@ -422,46 +422,6 @@ fn cluster_key_for_remincross_tail_order_name(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order sorting treats unknown clusters as
-/// order-index -1 so known clusters always win comparator priority.
-fn remincross_cluster_index_or_missing(
-  cluster_order_index : Map[String, Int],
-  cluster : String,
-) -> Int {
-  match cluster_order_index.get(cluster) {
-    Some(value) => value
-    None => -1
-  }
-}
-
-///|
-/// Graphviz parity: clustered tail-order first-seen tie breaks default to 0
-/// for names missing from cluster_first_seen map.
-fn remincross_cluster_seen_order_or_zero(
-  cluster_first_seen : Map[String, Int],
-  cluster : String,
-) -> Int {
-  match cluster_first_seen.get(cluster) {
-    Some(value) => value
-    None => 0
-  }
-}
-
-///|
-/// Graphviz parity: clustered tail-order position lookups provide explicit
-/// caller-controlled fallback for missing cluster keys.
-fn remincross_cluster_position_or_default(
-  cluster_order_pos : Map[String, Int],
-  cluster : String,
-  default_pos : Int,
-) -> Int {
-  match cluster_order_pos.get(cluster) {
-    Some(value) => value
-    None => default_pos
-  }
-}
-
-///|
 /// Graphviz parity: clustered tail-order split keeps first-seen non-root
 /// cluster sequence and tracks whether root cluster is present.
 fn split_remincross_seen_clusters_root_and_nonroot(
@@ -494,23 +454,36 @@ fn build_remincross_cluster_order_positions(
 
 ///|
 /// Graphviz parity: clustered tail-order non-root cluster comparator uses
-/// descending Graphviz cluster-order index then first-seen tie-break.
+/// descending Graphviz cluster-order index (-1 fallback) then first-seen
+/// tie-break (0 fallback).
 fn compare_remincross_nonroot_clusters_for_tail_order(
   a : String,
   b : String,
   cluster_order_index : Map[String, Int],
   cluster_first_seen : Map[String, Int],
 ) -> Int {
-  let a_idx = remincross_cluster_index_or_missing(cluster_order_index, a)
-  let b_idx = remincross_cluster_index_or_missing(cluster_order_index, b)
+  let a_idx = match cluster_order_index.get(a) {
+    Some(value) => value
+    None => -1
+  }
+  let b_idx = match cluster_order_index.get(b) {
+    Some(value) => value
+    None => -1
+  }
   if a_idx > b_idx {
     return -1
   }
   if a_idx < b_idx {
     return 1
   }
-  let a_seen = remincross_cluster_seen_order_or_zero(cluster_first_seen, a)
-  let b_seen = remincross_cluster_seen_order_or_zero(cluster_first_seen, b)
+  let a_seen = match cluster_first_seen.get(a) {
+    Some(value) => value
+    None => 0
+  }
+  let b_seen = match cluster_first_seen.get(b) {
+    Some(value) => value
+    None => 0
+  }
   if a_seen < b_seen {
     -1
   } else if a_seen > b_seen {
@@ -784,12 +757,10 @@ fn classify_remincross_input_like_name_bucket(
     if head_cluster == cluster {
       continue
     }
-    let head_pos =
-      remincross_cluster_position_or_default(
-        cluster_order_pos,
-        head_cluster,
-        cluster_end_pos,
-      )
+    let head_pos = match cluster_order_pos.get(head_cluster) {
+      Some(value) => value
+      None => cluster_end_pos
+    }
     if head_pos > current_cluster_pos {
       has_later = true
     } else if head_pos < current_cluster_pos {
@@ -821,12 +792,10 @@ fn rebucket_remincross_input_like_rank_order(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  let current_cluster_pos =
-    remincross_cluster_position_or_default(
-      cluster_order_pos,
-      cluster,
-      0,
-    )
+  let current_cluster_pos = match cluster_order_pos.get(cluster) {
+    Some(value) => value
+    None => 0
+  }
   let cluster_end_pos = cluster_order.length()
   let category0 : Array[String] = []
   let category1 : Array[String] = []
