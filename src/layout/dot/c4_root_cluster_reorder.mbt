@@ -888,6 +888,21 @@ type RootClusterReorderEdgeBundle = (
 )
 
 ///|
+/// Graphviz parity: root reorder context tuple keeps root groups, ranks, graph
+/// handles, GD_nlist walk order, and seeded node-order map in fixed field
+/// ordering before root-only edge materialization.
+type RootClusterReorderContext = (
+  Map[Int, Array[String]],
+  Array[Int],
+  Map[String, Int],
+  Array[String],
+  @cgraph.Graph,
+  Map[String, @cgraph.Node],
+  Array[String],
+  Map[String, Int],
+)
+
+///|
 /// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
 /// first, then fills missing names from current rank-group order index.
 fn build_root_cluster_reorder_node_order(
@@ -1026,10 +1041,9 @@ fn build_root_cluster_reorder_edge_bundle(
 }
 
 ///|
-/// Graphviz parity: root reorder context + root edge bundle are materialized
-/// before root-only mincross in cluster-order phase.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_cluster_reorder_inputs_for_rank_order(
+/// Graphviz parity: root reorder context is built from root-only filtered rank
+/// groups and shared GD_nlist walk order before root mincross edge bundle.
+fn build_root_cluster_reorder_context(
   order_with_vnodes : Bool,
   order_rank_keys : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -1047,8 +1061,7 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
   skeleton_edge_creation : Array[(String, String)],
   root_edge_creation : Array[(String, String)],
   flat_rank_constraints : Map[String, Bool],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-) -> RootClusterReorderInputsForRankOrderOutput {
+) -> RootClusterReorderContext {
   let root_groups =
     build_root_groups_for_cluster_reorder(
       order_with_vnodes,
@@ -1087,6 +1100,71 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_nlist_order,
       root_node_map,
       root_groups,
+    )
+  (
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
+    root_node_order,
+  )
+}
+
+///|
+/// Graphviz parity: root reorder context + root edge bundle are materialized
+/// before root-only mincross in cluster-order phase.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_reorder_inputs_for_rank_order(
+  order_with_vnodes : Bool,
+  order_rank_keys : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  cluster_keys : Map[String, String],
+  edge_vnodes : Map[String, Array[String]],
+  vnodes_by_rank : Map[Int, Array[String]],
+  vnode_order_keys_for_ordering : Map[String, Double],
+  nlist_order : Array[String],
+  ranks : Map[String, Int],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> RootClusterReorderInputsForRankOrderOutput {
+  let (
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph,
+    root_node_map,
+    root_nlist_order,
+    root_node_order,
+  ) =
+    build_root_cluster_reorder_context(
+      order_with_vnodes,
+      order_rank_keys,
+      order_groups_for_mincross,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      edges,
+      edge_tail,
+      edge_head,
+      cluster_keys,
+      edge_vnodes,
+      vnodes_by_rank,
+      vnode_order_keys_for_ordering,
+      nlist_order,
+      ranks,
+      skeleton_edge_creation,
+      root_edge_creation,
+      flat_rank_constraints,
     )
   let (
     root_edges_out,
