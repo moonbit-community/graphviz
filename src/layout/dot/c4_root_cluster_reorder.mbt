@@ -813,22 +813,6 @@ type RootClusterReorderInputsForRankOrderOutput = (
 )
 
 ///|
-/// Graphviz parity: root reorder edge bundle tuple keeps normalized edge arrays
-/// and index maps in fixed field order for root-only mincross.
-type RootClusterReorderEdgeBundle = (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Int],
-)
-
-///|
 /// Graphviz parity: root reorder context tuple keeps root groups, ranks, graph
 /// handles, GD_nlist walk order, and seeded node-order map in fixed field
 /// ordering before root-only edge materialization.
@@ -916,68 +900,6 @@ fn normalize_root_cluster_reorder_edge_ports(
     edge_head_port_x_norm,
     edge_tail_port_order_norm,
     edge_head_port_order_norm,
-  )
-}
-
-///|
-/// Graphviz parity: root reorder edge bundle keeps tail-sequence materialized
-/// edges, synthetic port normalization, and edge index/order maps in one stage.
-fn build_root_cluster_reorder_edge_bundle(
-  root_nlist_order : Array[String],
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  root_graph : @cgraph.Graph,
-  root_node_map : Map[String, @cgraph.Node],
-  root_nodes : Array[String],
-  root_ranks : Map[String, Int],
-) -> RootClusterReorderEdgeBundle {
-  let (
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-  ) =
-    collect_order_edges_for_tail_sequence(
-      root_nlist_order,
-      order_edges_by_tail_root,
-      root_graph,
-      root_node_map,
-    )
-  let (
-    root_edge_tail_port_x_norm,
-    root_edge_head_port_x_norm,
-    root_edge_tail_port_order_norm,
-    root_edge_head_port_order_norm,
-  ) =
-    normalize_root_cluster_reorder_edge_ports(
-      root_edge_tail_out,
-      root_edge_head_out,
-      root_edge_tail_port_x,
-      root_edge_head_port_x,
-      root_edge_tail_port_order,
-      root_edge_head_port_order,
-    )
-  let (root_parents, root_children, root_edge_order) =
-    build_order_edge_indices_and_order(
-      root_nodes,
-      root_edge_tail_out,
-      root_edge_head_out,
-      root_ranks,
-      root_edges_out,
-    )
-  (
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
-    root_edge_tail_port_x_norm,
-    root_edge_head_port_x_norm,
-    root_edge_tail_port_order_norm,
-    root_edge_head_port_order_norm,
-    root_parents,
-    root_children,
-    root_edge_order,
   )
 }
 
@@ -1107,6 +1029,9 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
       root_edge_creation,
       flat_rank_constraints,
     )
+  // Graphviz parity: root reorder edge bundle keeps tail-sequence
+  // materialized edges, synthetic port normalization, and edge index/order
+  // maps in one stage.
   let (
     root_edges_out,
     root_edge_tail_out,
@@ -1119,14 +1044,57 @@ fn build_root_cluster_reorder_inputs_for_rank_order(
     root_children,
     root_edge_order,
   ) =
-    build_root_cluster_reorder_edge_bundle(
-      root_nlist_order,
-      order_edges_by_tail_root,
-      root_graph,
-      root_node_map,
-      root_nodes,
-      root_ranks,
-    )
+    {
+      let (
+        root_edges_out,
+        root_edge_tail_out,
+        root_edge_head_out,
+        root_edge_tail_port_x,
+        root_edge_head_port_x,
+        root_edge_tail_port_order,
+        root_edge_head_port_order,
+      ) =
+        collect_order_edges_for_tail_sequence(
+          root_nlist_order,
+          order_edges_by_tail_root,
+          root_graph,
+          root_node_map,
+        )
+      let (
+        root_edge_tail_port_x_norm,
+        root_edge_head_port_x_norm,
+        root_edge_tail_port_order_norm,
+        root_edge_head_port_order_norm,
+      ) =
+        normalize_root_cluster_reorder_edge_ports(
+          root_edge_tail_out,
+          root_edge_head_out,
+          root_edge_tail_port_x,
+          root_edge_head_port_x,
+          root_edge_tail_port_order,
+          root_edge_head_port_order,
+        )
+      let (root_parents, root_children, root_edge_order) =
+        build_order_edge_indices_and_order(
+          root_nodes,
+          root_edge_tail_out,
+          root_edge_head_out,
+          root_ranks,
+          root_edges_out,
+        )
+      (
+        root_edges_out,
+        root_edge_tail_out,
+        root_edge_head_out,
+        root_edge_tail_port_x_norm,
+        root_edge_head_port_x_norm,
+        root_edge_tail_port_order_norm,
+        root_edge_head_port_order_norm,
+        root_parents,
+        root_children,
+        root_edge_order,
+      )
+    }
   (
     root_groups,
     root_rank_keys,
