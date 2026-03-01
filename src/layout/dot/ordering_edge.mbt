@@ -179,7 +179,7 @@ fn build_edge_index_for_order(
   for node in nodes {
     node_names.push(node.name())
   }
-  build_edge_index_for_order_names_internal(
+  build_edge_index_for_names_impl(
     node_names,
     edge_tail,
     edge_head,
@@ -189,7 +189,7 @@ fn build_edge_index_for_order(
 }
 
 ///|
-fn build_edge_index_for_order_names_internal(
+fn build_edge_index_for_names_impl(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -235,7 +235,7 @@ fn build_edge_index_for_order_names(
   edge_head : Array[String],
   ranks : Map[String, Int],
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
-  build_edge_index_for_order_names_internal(
+  build_edge_index_for_names_impl(
     node_names,
     edge_tail,
     edge_head,
@@ -638,7 +638,7 @@ fn build_order_edges_by_tail(
 }
 
 ///|
-fn build_edge_index_for_order_with_vnodes(
+fn build_edge_index_with_vnodes(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],

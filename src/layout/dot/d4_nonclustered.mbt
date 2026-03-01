@@ -17,7 +17,7 @@ fn build_nonclustered_xpos_groups(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let (parents, children) = build_edge_index_for_order_with_vnodes(
+  let (parents, children) = build_edge_index_with_vnodes(
     prep.nodes,
     ordering.order_edges,
     ordering.order_edge_tail,

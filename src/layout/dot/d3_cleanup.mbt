@@ -107,7 +107,7 @@ fn maybe_apply_xpos_transpose_cleanup(
 ) -> Unit {
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
-    let (parents, children) = build_edge_index_for_order_with_vnodes(
+    let (parents, children) = build_edge_index_with_vnodes(
       nodes,
       ordering.order_edges,
       ordering.order_edge_tail,
