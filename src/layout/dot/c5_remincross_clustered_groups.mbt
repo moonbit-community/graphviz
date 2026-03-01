@@ -392,6 +392,22 @@ fn remincross_edge_vnodes_or_empty(
 }
 
 ///|
+/// Graphviz parity: clustered rank-range checks read cluster min/max rank
+/// bounds with min default 0 and max fallback to min when max is absent.
+fn remincross_cluster_rank_bounds(
+  cluster : String,
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> (Int, Int) {
+  let min_rank = cluster_min_rank.get(cluster).unwrap_or_default()
+  let max_rank = match cluster_max_rank.get(cluster) {
+    Some(value) => value
+    None => min_rank
+  }
+  (min_rank, max_rank)
+}
+
+///|
 /// Graphviz parity: intercluster trailing-vnode checks use inclusive rank-range
 /// overlap derived from each cluster's min/max rank bounds.
 fn remincross_cluster_rank_ranges_overlap(
@@ -400,22 +416,18 @@ fn remincross_cluster_rank_ranges_overlap(
   cluster_min_rank : Map[String, Int],
   cluster_max_rank : Map[String, Int],
 ) -> Bool {
-  let tail_min = match cluster_min_rank.get(tail_cluster) {
-    Some(value) => value
-    None => 0
-  }
-  let tail_max = match cluster_max_rank.get(tail_cluster) {
-    Some(value) => value
-    None => tail_min
-  }
-  let head_min = match cluster_min_rank.get(head_cluster) {
-    Some(value) => value
-    None => 0
-  }
-  let head_max = match cluster_max_rank.get(head_cluster) {
-    Some(value) => value
-    None => head_min
-  }
+  let (tail_min, tail_max) =
+    remincross_cluster_rank_bounds(
+      tail_cluster,
+      cluster_min_rank,
+      cluster_max_rank,
+    )
+  let (head_min, head_max) =
+    remincross_cluster_rank_bounds(
+      head_cluster,
+      cluster_min_rank,
+      cluster_max_rank,
+    )
   tail_min <= head_max && head_min <= tail_max
 }
 
