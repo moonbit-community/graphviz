@@ -43,7 +43,7 @@ fn build_xpos_reordered_groups(
       graphviz_flip,
     )
   } else {
-    maybe_apply_nonclustered_xpos_reorder_fallback(
+    maybe_apply_nonclustered_xpos_fallback(
       xpos_reorder_enabled,
       allow_xpos_reorder,
       has_vnode_order,
