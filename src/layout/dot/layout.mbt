@@ -18,7 +18,7 @@ pub fn layout_dot(
   let (rank_data, rank_heights, cluster_meta, ordering) =
     compute_dot_rank_stage(graph, prep)
   let positions_state =
-    compute_dot_position_stage(
+    compute_positions(
       graph,
       prep,
       rank_data,
