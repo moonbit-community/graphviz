@@ -830,7 +830,7 @@ type RootClusterReorderContext = (
 ///|
 /// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
 /// first, then fills missing names from current rank-group order index.
-fn build_root_cluster_reorder_node_order(
+fn build_root_reorder_node_order(
   root_nlist_order : Array[String],
   root_node_map : Map[String, @cgraph.Node],
   root_groups : Map[Int, Array[String]],
@@ -855,7 +855,7 @@ fn build_root_cluster_reorder_node_order(
 ///|
 /// Graphviz parity: root edge-port arrays are normalized with synthetic-endpoint
 /// defaults before root mincross edge-index construction.
-fn normalize_root_cluster_reorder_edge_ports(
+fn normalize_root_reorder_edge_ports(
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
   edge_tail_port_x : Array[Double],
@@ -906,7 +906,7 @@ fn normalize_root_cluster_reorder_edge_ports(
 ///|
 /// Graphviz parity: root reorder context is built from root-only filtered rank
 /// groups and shared GD_nlist walk order before root mincross edge bundle.
-fn build_root_cluster_reorder_context(
+fn build_root_reorder_context(
   order_with_vnodes : Bool,
   order_rank_keys : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -959,7 +959,7 @@ fn build_root_cluster_reorder_context(
       flat_rank_constraints,
     )
   let root_node_order =
-    build_root_cluster_reorder_node_order(
+    build_root_reorder_node_order(
       root_nlist_order,
       root_node_map,
       root_groups,
@@ -1010,7 +1010,7 @@ fn build_root_cluster_reorder_inputs(
     root_nlist_order,
     root_node_order,
   ) =
-    build_root_cluster_reorder_context(
+    build_root_reorder_context(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -1066,7 +1066,7 @@ fn build_root_cluster_reorder_inputs(
         root_edge_tail_port_order_norm,
         root_edge_head_port_order_norm,
       ) =
-        normalize_root_cluster_reorder_edge_ports(
+        normalize_root_reorder_edge_ports(
           root_edge_tail_out,
           root_edge_head_out,
           root_edge_tail_port_x,
