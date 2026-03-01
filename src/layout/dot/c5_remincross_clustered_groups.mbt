@@ -221,6 +221,19 @@ fn remincross_cluster_key_or_empty(
 }
 
 ///|
+/// Graphviz parity: clustered ReMincross vnode lookup is keyed by edge vnode
+/// key and returns empty for edges without vnode expansion.
+fn remincross_edge_vnodes_or_empty(
+  edge_vnodes : Map[String, Array[String]],
+  edge : @cgraph.Edge,
+) -> Array[String] {
+  match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+    Some(list) => list
+    None => []
+  }
+}
+
+///|
 /// Graphviz parity: intercluster trailing-vnode checks use inclusive rank-range
 /// overlap derived from each cluster's min/max rank bounds.
 fn remincross_cluster_rank_ranges_overlap(
@@ -262,10 +275,7 @@ fn assign_remincross_vnode_cluster_keys(
   cluster_parents : Map[String, String?],
 ) -> Unit {
   for edge_idx, edge in edges {
-    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-      Some(list) => list
-      None => []
-    }
+    let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
     if vnodes.length() == 0 {
       continue
     }
@@ -407,10 +417,7 @@ fn build_remincross_groups_with_optional_vnodes(
             )
           }
         if should_trail {
-          let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
-            Some(list) => list
-            None => []
-          }
+          let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
           for vnode in vnodes {
             intercluster_vnodes[vnode] = true
           }
