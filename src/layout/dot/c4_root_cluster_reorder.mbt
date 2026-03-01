@@ -441,6 +441,23 @@ fn build_root_vnode_inputs_for_cluster_reorder(
 }
 
 ///|
+/// Graphviz parity: root reorder group filtering keeps root-cluster skeletons
+/// plus root real nodes, and only keeps edge-vnodes when marked root-vnode.
+fn should_keep_name_in_root_cluster_groups(
+  name : String,
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  root_vnodes : Map[String, Bool],
+) -> Bool {
+  let cluster = cluster_key_or_empty(order_cluster_keys, name)
+  let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+  if !is_skeleton && cluster != "" {
+    return false
+  }
+  !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true)
+}
+
+///|
 /// Graphviz parity: root cluster reorder groups keep root/skeleton base order
 /// and optionally merge only root-vnodes into rank groups using filtered vnode
 /// keys/rank buckets from root-mincross inputs.
@@ -478,12 +495,13 @@ fn build_root_groups_for_cluster_reorder(
     }
     let root_names : Array[String] = []
     for name in names {
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
-      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-      if is_skeleton || cluster == "" {
-        if !name.has_prefix(EDGE_VNODE_PREFIX) || root_vnodes.get(name) == Some(true) {
-          root_names.push(name)
-        }
+      if should_keep_name_in_root_cluster_groups(
+        name,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        root_vnodes,
+      ) {
+        root_names.push(name)
       }
     }
     if root_names.length() > 0 {
