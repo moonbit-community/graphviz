@@ -77,6 +77,20 @@ type ReMincrossMaterializedOrderEdges = (
 )
 
 ///|
+/// Graphviz parity: clustered ReMincross materialized-edge tuple keeps node
+/// order plus rematerialized edge arrays in fixed return ordering.
+type ReMincrossMaterializedEdgeArrays = (
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+)
+
+///|
 /// Graphviz parity: clustered ReMincross order-edge rematerialization applies
 /// ND_out expansion, coalescing, intercluster bonus, then tail-order replay.
 fn build_remincross_materialized_order_edges(
@@ -147,62 +161,19 @@ fn build_remincross_materialized_order_edges(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross materializes remapped order edges
-/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_remincross_materialized_edges(
+/// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
+/// seeds node order, then materializes edge arrays in nlist tail order.
+fn build_remincross_materialized_edge_arrays(
   creation_order : Array[String],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  order_with_vnodes : Bool,
-  cluster_keys : Map[String, String],
-  order_with_clusters : Bool,
-  edges_by_tail : Map[String, Array[Int]],
-  cluster_order_index : Map[String, Int],
+  rem_vnode_creation : Map[String, Array[String]],
+  rem_edge_creation : Array[(String, String)],
+  rem_order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   rem_graph : @cgraph.Graph,
   rem_node_map : Map[String, @cgraph.Node],
   rem_groups : Map[Int, Array[String]],
-) -> (
-  Map[String, Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
-  let (
-    rem_order_edges_by_tail,
-    rem_vnode_creation,
-    rem_edge_creation,
-  ) =
-    build_remincross_materialized_order_edges(
-      creation_order,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      edge_vnodes,
-      order_with_vnodes,
-      cluster_keys,
-      order_with_clusters,
-      edges_by_tail,
-      cluster_order_index,
-    )
-  // Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
-  // seeds node order, then materializes edge arrays in nlist tail order.
+  cluster_keys : Map[String, String],
+  cluster_order_index : Map[String, Int],
+) -> ReMincrossMaterializedEdgeArrays {
   let rem_ranks = build_node_ranks(rem_groups)
   let rem_nlist_order =
     build_remincross_nlist_order(
@@ -238,6 +209,74 @@ fn build_clustered_remincross_materialized_edges(
     rem_edge_head_port_x,
     rem_edge_tail_port_order,
     rem_edge_head_port_order,
+  )
+}
+
+///|
+/// Graphviz parity: clustered ReMincross materializes remapped order edges
+/// from ND_out chains, then rebuilds GD_nlist-seeded edge arrays.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_remincross_materialized_edges(
+  creation_order : Array[String],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_tail_port_x : Array[Double],
+  edge_head_port_x : Array[Double],
+  edge_tail_port_order : Array[Double],
+  edge_head_port_order : Array[Double],
+  ranks : Map[String, Int],
+  edge_vnodes : Map[String, Array[String]],
+  order_with_vnodes : Bool,
+  cluster_keys : Map[String, String],
+  order_with_clusters : Bool,
+  edges_by_tail : Map[String, Array[Int]],
+  cluster_order_index : Map[String, Int],
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  rem_groups : Map[Int, Array[String]],
+  ) -> (
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+) {
+  let (
+    rem_order_edges_by_tail,
+    rem_vnode_creation,
+    rem_edge_creation,
+  ) =
+    build_remincross_materialized_order_edges(
+      creation_order,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_tail_port_x,
+      edge_head_port_x,
+      edge_tail_port_order,
+      edge_head_port_order,
+      ranks,
+      edge_vnodes,
+      order_with_vnodes,
+      cluster_keys,
+      order_with_clusters,
+      edges_by_tail,
+      cluster_order_index,
+    )
+  build_remincross_materialized_edge_arrays(
+    creation_order,
+    rem_vnode_creation,
+    rem_edge_creation,
+    rem_order_edges_by_tail,
+    rem_graph,
+    rem_node_map,
+    rem_groups,
+    cluster_keys,
+    cluster_order_index,
   )
 }
 
