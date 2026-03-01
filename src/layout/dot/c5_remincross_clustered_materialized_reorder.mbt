@@ -612,20 +612,6 @@ fn collect_remincross_rank_keys_for_cluster_names(
 }
 
 ///|
-/// Graphviz parity: minimum replay rank for input-like rebucketing ignores
-/// missing-name (-1) buckets and falls back to -1 when absent.
-fn remincross_min_nonnegative_rank_or_missing(rank_keys : Array[Int]) -> Int {
-  let mut candidate = -1
-  for value in rank_keys {
-    if value >= 0 {
-      candidate = value
-      break
-    }
-  }
-  candidate
-}
-
-///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
 fn build_remincross_nonroot_rank_ordered_names(
@@ -739,7 +725,15 @@ fn build_remincross_cluster_tail_order_nonroot_names(
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
   let rank_keys = collect_remincross_rank_keys_for_cluster_names(names, rem_ranks)
-  let min_rank = remincross_min_nonnegative_rank_or_missing(rank_keys)
+  // Graphviz parity: minimum replay rank for input-like rebucketing ignores
+  // missing-name (-1) buckets and falls back to -1 when absent.
+  let mut min_rank = -1
+  for value in rank_keys {
+    if value >= 0 {
+      min_rank = value
+      break
+    }
+  }
   let cluster_rank_ordered : Array[String] = []
   let mut rank_idx = rank_keys.length()
   while rank_idx > 0 {
