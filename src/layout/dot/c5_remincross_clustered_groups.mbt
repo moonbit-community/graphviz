@@ -113,6 +113,79 @@ fn run_clustered_remincross_multi_rank(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  let (
+    rem_nodes,
+    rem_ranks,
+    rem_node_order,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  ) =
+    build_clustered_remincross_materialized_inputs(
+      dispatch_context,
+      rem_rank_keys,
+      rem_groups,
+    )
+  let rem_ordered =
+    run_clustered_remincross_cleanup_reorder(
+      dispatch_context,
+      rem_rank_keys,
+      rem_groups,
+      rem_nodes,
+      rem_ranks,
+      rem_node_order,
+      rem_edges_out,
+      rem_edge_tail_out,
+      rem_edge_head_out,
+      rem_edge_tail_port_x,
+      rem_edge_head_port_x,
+      rem_edge_tail_port_order,
+      rem_edge_head_port_order,
+      rem_cluster_keys,
+      rem_sizes,
+      rem_flat_constraints,
+    )
+  let rem_cleaned =
+    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
+  (rem_ordered, rem_cleaned)
+}
+
+///|
+/// Graphviz parity: clustered ReMincross materialized-input tuple keeps graph
+/// node/rank context, rematerialized edge arrays, and final reorder-input
+/// maps in fixed field order for cleanup reorder.
+type ClusteredReMincrossMaterializedInputs = (
+  Array[String],
+  Map[String, Int],
+  Map[String, Int],
+  Array[@cgraph.Edge],
+  Array[String],
+  Array[String],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Array[Double],
+  Map[String, String],
+  Map[String, NodeSize],
+  Map[String, Bool],
+)
+
+///|
+/// Graphviz parity: clustered ReMincross multi-rank materialization builds
+/// order graph context, rematerialized edge arrays, and reorder input maps
+/// before cleanup reorder dispatch.
+fn build_clustered_remincross_materialized_inputs(
+  dispatch_context : ClusteredReMincrossPassDispatchContext,
+  rem_rank_keys : Array[Int],
+  rem_groups : Map[Int, Array[String]],
+) -> ClusteredReMincrossMaterializedInputs {
   let rem_ranks = build_node_ranks(rem_groups)
   let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
   let (rem_graph, rem_node_map) =
@@ -168,28 +241,21 @@ fn run_clustered_remincross_multi_rank(
       dispatch_context.order_sizes,
       dispatch_context.rank_same_constraints,
     )
-  let rem_ordered =
-    run_clustered_remincross_cleanup_reorder(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-      rem_nodes,
-      rem_ranks,
-      rem_node_order,
-      rem_edges_out,
-      rem_edge_tail_out,
-      rem_edge_head_out,
-      rem_edge_tail_port_x,
-      rem_edge_head_port_x,
-      rem_edge_tail_port_order,
-      rem_edge_head_port_order,
-      rem_cluster_keys,
-      rem_sizes,
-      rem_flat_constraints,
-    )
-  let rem_cleaned =
-    collect_real_only_rank_groups(rem_rank_keys, rem_ordered, dispatch_context.real_nodes)
-  (rem_ordered, rem_cleaned)
+  (
+    rem_nodes,
+    rem_ranks,
+    rem_node_order,
+    rem_edges_out,
+    rem_edge_tail_out,
+    rem_edge_head_out,
+    rem_edge_tail_port_x,
+    rem_edge_head_port_x,
+    rem_edge_tail_port_order,
+    rem_edge_head_port_order,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
+  )
 }
 
 ///|
