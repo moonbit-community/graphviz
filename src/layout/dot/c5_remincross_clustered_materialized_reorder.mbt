@@ -595,14 +595,12 @@ fn remincross_rank_names_all_without_outgoing(
 ///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
-fn build_remincross_rank_ordered_names_for_cluster(
-  cluster : String,
+fn build_remincross_nonroot_rank_ordered_names(
   rank_names : Array[String],
   heads_by_tail : Map[String, Array[String]],
 ) -> Array[String] {
   let rank_ordered : Array[String] = []
-  if cluster != "" &&
-    remincross_rank_names_all_without_outgoing(rank_names, heads_by_tail) {
+  if remincross_rank_names_all_without_outgoing(rank_names, heads_by_tail) {
     append_names_in_order(rank_ordered, rank_names)
     return rank_ordered
   }
@@ -670,11 +668,7 @@ fn build_remincross_nonroot_rank_replay_names(
 ) -> Array[String] {
   let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
   let rank_ordered =
-    build_remincross_rank_ordered_names_for_cluster(
-      cluster,
-      rank_names,
-      heads_by_tail,
-    )
+    build_remincross_nonroot_rank_ordered_names(rank_names, heads_by_tail)
   maybe_rebucket_remincross_input_like_rank_order(
     cluster,
     rank,
