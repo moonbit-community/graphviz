@@ -36,10 +36,7 @@ fn build_clustered_remincross_groups(
   // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
   // in clustered ReMincross (Graphviz fill-specific branch behavior).
   let prefer_seeded_from_ordered_with_vnodes =
-    match dispatch_context.graph.get_attr("ratio") {
-      Some(value) => value == "fill"
-      None => false
-    }
+    dispatch_context.graph.get_attr("ratio").unwrap_or_default() == "fill"
   // Graphviz parity: seeded-group path is considered only when vnode ordering
   // is enabled and graph shape matches single-cluster or ratio=fill scenarios.
   let should_try_seeded =
