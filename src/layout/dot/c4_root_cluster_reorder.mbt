@@ -1260,14 +1260,14 @@ fn apply_root_rank_groups_override(
         let skeleton_for_cluster =
           build_skeleton_for_cluster_from_names(
             rank_names,
-            (name) => skeleton_cluster_or_empty(name),
+            skeleton_cluster_or_empty,
           )
         let attached_by_skeleton =
           build_attached_by_skeleton_for_names(
             rank_names,
             cluster_keys,
             skeleton_for_cluster,
-            (name) => is_root_override_skeleton_name(name),
+            is_root_override_skeleton_name,
           )
         let next_names : Array[String] = []
         let seen : Map[String, Bool] = Map::new()
