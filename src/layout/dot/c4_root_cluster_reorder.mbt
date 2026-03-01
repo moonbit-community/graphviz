@@ -1534,6 +1534,31 @@ fn flatten_cluster_buckets_for_rank_order(
 }
 
 ///|
+/// Graphviz parity: per-rank cluster-rank-order replay preserves original rank
+/// order when root nodes straddle clustered block; otherwise reorders by
+/// stable cluster buckets from root mincross rank map.
+fn reorder_rank_names_by_cluster_rank_order_if_needed(
+  names : Array[String],
+  order_map : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  if has_root_nodes_on_both_sides_of_cluster_block(names, cluster_keys) {
+    return names
+  }
+  let (cluster_nodes, cluster_seq) =
+    build_cluster_nodes_and_sequence_for_rank_order(
+      names,
+      cluster_keys,
+    )
+  let cluster_ordered =
+    build_sorted_cluster_buckets_for_rank_order(
+      cluster_seq,
+      order_map,
+    )
+  flatten_cluster_buckets_for_rank_order(cluster_ordered, cluster_nodes)
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1551,22 +1576,12 @@ fn reorder_rank_groups_by_cluster_rank_order(
         continue
       }
     }
-    if has_root_nodes_on_both_sides_of_cluster_block(names, cluster_keys) {
-      ordered_by_cluster[rank] = names
-      continue
-    }
-    let (cluster_nodes, cluster_seq) =
-      build_cluster_nodes_and_sequence_for_rank_order(
+    let ordered_names =
+      reorder_rank_names_by_cluster_rank_order_if_needed(
         names,
+        order_map,
         cluster_keys,
       )
-    let cluster_ordered =
-      build_sorted_cluster_buckets_for_rank_order(
-        cluster_seq,
-        order_map,
-      )
-    let ordered_names =
-      flatten_cluster_buckets_for_rank_order(cluster_ordered, cluster_nodes)
     ordered_by_cluster[rank] = ordered_names
   }
   ordered_by_cluster
