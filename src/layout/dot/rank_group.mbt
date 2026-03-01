@@ -423,7 +423,7 @@ priv struct RankGroupComponentDiscoveryPrepared {
 }
 
 ///|
-fn resolve_rank_group_component_order_index(
+fn resolve_component_order_index(
   name : String,
   node_order : Map[String, Int],
   fallback_order : Map[String, Int],
@@ -439,7 +439,7 @@ fn resolve_rank_group_component_order_index(
 }
 
 ///|
-fn build_rank_group_component_discovery_order(
+fn build_component_discovery_order(
   nodes : Array[String],
   node_order : Map[String, Int],
 ) -> (Array[String], Map[String, Int]) {
@@ -450,12 +450,12 @@ fn build_rank_group_component_discovery_order(
   let ordered_nodes = nodes.copy()
   if ordered_nodes.length() > 1 {
     ordered_nodes.sort_by((a, b) => {
-      let a_idx = resolve_rank_group_component_order_index(
+      let a_idx = resolve_component_order_index(
         a,
         node_order,
         fallback_order,
       )
-      let b_idx = resolve_rank_group_component_order_index(
+      let b_idx = resolve_component_order_index(
         b,
         node_order,
         fallback_order,
@@ -473,7 +473,7 @@ fn build_rank_group_component_discovery_order(
 }
 
 ///|
-fn build_rank_group_component_discovery_neighbors(
+fn build_component_discovery_neighbors(
   nodes : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -537,7 +537,7 @@ fn build_rank_group_component_discovery_neighbors(
 }
 
 ///|
-fn collect_rank_group_component_skeleton_nodes(
+fn collect_component_skeleton_nodes(
   ordered_nodes : Array[String],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
@@ -576,12 +576,12 @@ fn collect_rank_group_component_skeleton_nodes(
         } else if a_rank > b_rank {
           1
         } else {
-          let a_idx = resolve_rank_group_component_order_index(
+          let a_idx = resolve_component_order_index(
             a,
             node_order,
             fallback_order,
           )
-          let b_idx = resolve_rank_group_component_order_index(
+          let b_idx = resolve_component_order_index(
             b,
             node_order,
             fallback_order,
@@ -601,7 +601,7 @@ fn collect_rank_group_component_skeleton_nodes(
 }
 
 ///|
-fn build_rank_group_component_flat_constraint_neighbors(
+fn build_component_flat_neighbors(
   nodes : Array[String],
   node_set : Map[String, Bool],
   flat_constraints : Map[String, Bool],
@@ -649,7 +649,7 @@ fn build_rank_group_component_flat_constraint_neighbors(
 /// Graphviz parity: prepare decompose inputs with Graphviz-compatible node
 /// ordering, edge neighborhoods, flat constraints, and cluster rankleaders.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_rank_group_component_discovery(
+fn prepare_component_discovery(
   nodes : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -661,19 +661,19 @@ fn prepare_rank_group_component_discovery(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> RankGroupComponentDiscoveryPrepared {
-  let (ordered_nodes, fallback_order) = build_rank_group_component_discovery_order(
+  let (ordered_nodes, fallback_order) = build_component_discovery_order(
     nodes,
     node_order,
   )
   let (out_neighbors, in_neighbors, node_set) =
-    build_rank_group_component_discovery_neighbors(
+    build_component_discovery_neighbors(
       nodes,
       edge_tail,
       edge_head,
       graphviz_out_neighbors,
       graphviz_in_neighbors,
     )
-  let cluster_skeleton_nodes = collect_rank_group_component_skeleton_nodes(
+  let cluster_skeleton_nodes = collect_component_skeleton_nodes(
     ordered_nodes,
     cluster_keys,
     cluster_skeleton,
@@ -681,7 +681,7 @@ fn prepare_rank_group_component_discovery(
     node_order,
     fallback_order,
   )
-  let (flat_out, flat_in) = build_rank_group_component_flat_constraint_neighbors(
+  let (flat_out, flat_in) = build_component_flat_neighbors(
     nodes,
     node_set,
     flat_constraints,
@@ -700,7 +700,7 @@ fn prepare_rank_group_component_discovery(
 /// Graphviz parity: component walk follows decompose-style DFS over flat and
 /// edge neighborhoods, then closes each component over cluster rankleaders.
 /// Do not change behavior without updating fixtures/tests.
-fn discover_rank_group_components_from_neighbors(
+fn discover_components_from_neighbors(
   nodes : Array[String],
   ordered_nodes : Array[String],
   cluster_keys : Map[String, String],
@@ -820,7 +820,7 @@ fn discover_rank_group_components(
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Array[Array[String]] {
-  let prepared = prepare_rank_group_component_discovery(
+  let prepared = prepare_component_discovery(
     nodes,
     edge_tail,
     edge_head,
@@ -832,7 +832,7 @@ fn discover_rank_group_components(
     graphviz_out_neighbors,
     graphviz_in_neighbors,
   )
-  discover_rank_group_components_from_neighbors(
+  discover_components_from_neighbors(
     nodes,
     prepared.ordered_nodes,
     cluster_keys,
@@ -855,7 +855,7 @@ priv struct RankGroupComponentMergeInputs {
 /// Graphviz parity: component-local merge inputs preserve rank-group filtering
 /// and in/out neighbor projection constrained to the component node set.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_rank_group_component_merge_inputs(
+fn prepare_component_merge_inputs(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   graphviz_out_neighbors : Map[String, Array[String]],
@@ -916,7 +916,7 @@ fn prepare_rank_group_component_merge_inputs(
 }
 
 ///|
-fn append_rank_group_component_order_to_merged(
+fn append_component_order_to_merged(
   rank_keys : Array[Int],
   merged : Map[Int, Array[String]],
   ordered_component : Map[Int, Array[String]],
@@ -990,7 +990,7 @@ fn merge_rank_groups_components(
     merged[rank] = []
   }
   for component in components {
-    let prepared = prepare_rank_group_component_merge_inputs(
+    let prepared = prepare_component_merge_inputs(
       rank_keys,
       groups,
       graphviz_out_neighbors,
@@ -1011,7 +1011,7 @@ fn merge_rank_groups_components(
       graphviz_out_neighbors=prepared.filtered_out,
       graphviz_in_neighbors=prepared.filtered_in,
     )
-    append_rank_group_component_order_to_merged(
+    append_component_order_to_merged(
       rank_keys,
       merged,
       ordered_component,
