@@ -423,16 +423,6 @@ fn build_remincross_cluster_grouping(
 }
 
 ///|
-/// Graphviz parity: clustered tail-order cluster buckets default to empty
-/// name lists for clusters absent from grouping output.
-fn remincross_cluster_names_or_empty(
-  names_by_cluster : Map[String, Array[String]],
-  cluster : String,
-) -> Array[String] {
-  names_by_cluster.get(cluster).unwrap_or_default()
-}
-
-///|
 /// Graphviz parity: root cluster tail order can apply a temporary override
 /// snapshot before replaying root names into rematerialized GD_nlist order.
 fn build_remincross_root_tail_names(names : Array[String]) -> Array[String] {
@@ -498,7 +488,9 @@ fn build_remincross_cluster_tail_order(
   let heads_by_tail = build_remincross_heads_by_tail(rem_edge_creation)
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
-    let names = remincross_cluster_names_or_empty(names_by_cluster, cluster)
+    // Graphviz parity: cluster buckets default to empty when absent from
+    // grouped creation-order names.
+    let names = names_by_cluster.get(cluster).unwrap_or_default()
     let ordered_names =
       build_remincross_cluster_tail_names_for_cluster(
         cluster,
