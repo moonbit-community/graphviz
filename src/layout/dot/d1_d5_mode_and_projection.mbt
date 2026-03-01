@@ -29,7 +29,7 @@ fn build_position_mode_flags(
 /// virtual-slack generation, reorder/transpose, and flat-label augmentation in
 /// Graphviz-aligned order and wiring.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_labels_for_positions(
+fn build_x_with_flat_labels_for_positions(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
@@ -47,7 +47,7 @@ fn build_x_stage_with_flat_labels_for_positions(
       cluster_meta,
     )
   let x_stage_seed =
-    build_x_position_stage_seed_data_for_positions(
+    build_x_seed_data_for_positions(
       mode_flags.use_vnodes_for_xpos,
       prep,
       rank_data,
@@ -55,7 +55,7 @@ fn build_x_stage_with_flat_labels_for_positions(
       ordering,
     )
   let flat_label_augmentation =
-    build_x_stage_with_flat_label_augmentation_for_positions(
+    build_x_with_flat_label_augmentation_for_positions(
       false,
       mode_flags.use_vnodes_for_xpos,
       mode_flags.allow_xpos_reorder,

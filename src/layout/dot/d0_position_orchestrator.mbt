@@ -246,7 +246,7 @@ fn build_initial_x_groups(
 /// Graphviz parity: pre-reorder x-stage setup keeps order-index build, vnode
 /// order probing, edge-port metadata, and initial group/cluster maps unchanged.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_position_stage_seed_data_for_positions(
+fn build_x_seed_data_for_positions(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -308,7 +308,7 @@ fn build_x_position_stage_seed_data_for_positions(
 /// Graphviz parity: x-stage reorder and transpose-cleanup are applied in
 /// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
+fn build_x_groups_after_reorder_and_cleanup_for_positions(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -357,7 +357,7 @@ fn build_x_stage_groups_after_reorder_and_cleanup_for_positions(
 /// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_stage_with_flat_label_augmentation_for_positions(
+fn build_x_with_flat_label_augmentation_for_positions(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -370,7 +370,7 @@ fn build_x_stage_with_flat_label_augmentation_for_positions(
   x_stage_seed : XPositionStageSeedData,
 ) -> XposFlatLabelAugmentation {
   let x_groups =
-    build_x_stage_groups_after_reorder_and_cleanup_for_positions(
+    build_x_groups_after_reorder_and_cleanup_for_positions(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
@@ -894,7 +894,7 @@ fn compute_positions(
   ordering : OrderingResult,
 ) -> PositionResult {
   let x_stage_data =
-    build_x_stage_with_flat_labels_for_positions(
+    build_x_with_flat_labels_for_positions(
       prep,
       rank_data,
       rank_heights,
