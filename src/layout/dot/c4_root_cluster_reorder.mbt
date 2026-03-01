@@ -1268,11 +1268,7 @@ fn apply_root_rank_groups_override(
             continue
           }
           let cluster = cluster_key_or_empty(cluster_keys, name)
-          if cluster != "" &&
-            (match skeleton_for_cluster.get(cluster) {
-              Some(_) => true
-              None => false
-            }) {
+          if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
             continue
           }
           next_names.push(name)
