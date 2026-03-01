@@ -576,6 +576,55 @@ fn remincross_min_nonnegative_rank_or_missing(rank_keys : Array[Int]) -> Int {
 }
 
 ///|
+/// Graphviz parity: clustered non-root rank replay preserves forward rank order
+/// only when every tail has no outgoing edge in the rematerialized graph.
+fn remincross_rank_names_all_without_outgoing(
+  rank_names : Array[String],
+  heads_by_tail : Map[String, Array[String]],
+) -> Bool {
+  for name in rank_names {
+    if heads_by_tail.get(name) is Some(_) {
+      return false
+    }
+  }
+  true
+}
+
+///|
+/// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
+/// blocks and reverse insertion order otherwise.
+fn build_remincross_rank_ordered_names_for_cluster(
+  cluster : String,
+  rank_names : Array[String],
+  heads_by_tail : Map[String, Array[String]],
+) -> Array[String] {
+  let rank_ordered : Array[String] = []
+  if cluster != "" &&
+    remincross_rank_names_all_without_outgoing(rank_names, heads_by_tail) {
+    append_names_in_order(rank_ordered, rank_names)
+    return rank_ordered
+  }
+  let mut name_idx = rank_names.length()
+  while name_idx > 0 {
+    name_idx = name_idx - 1
+    rank_ordered.push(rank_names[name_idx])
+  }
+  rank_ordered
+}
+
+///|
+/// Graphviz parity: minimum-rank rebucketing applies only to all-input-like
+/// rank names (the Graphviz 'i-' synthetic input class).
+fn remincross_names_all_input_like(names : Array[String]) -> Bool {
+  for name in names {
+    if !name.has_prefix("i-") {
+      return false
+    }
+  }
+  true
+}
+
+///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -596,33 +645,13 @@ fn build_remincross_cluster_tail_order_nonroot_names(
     rank_idx = rank_idx - 1
     let rank = rank_keys[rank_idx]
     let rank_names = collect_remincross_names_at_rank(names, rem_ranks, rank)
-    // Graphviz parity: clustered tail-order rank names remain forward when
-    // all names have no outgoing edges in non-root cluster blocks; otherwise
-    // replayed in reverse insertion order.
-    let rank_ordered : Array[String] = []
-    let mut all_without_outgoing = true
-    for name in rank_names {
-      if heads_by_tail.get(name) is Some(_) {
-        all_without_outgoing = false
-        break
-      }
-    }
-    if cluster != "" && all_without_outgoing {
-      append_names_in_order(rank_ordered, rank_names)
-    } else {
-      let mut name_idx = rank_names.length()
-      while name_idx > 0 {
-        name_idx = name_idx - 1
-        rank_ordered.push(rank_names[name_idx])
-      }
-    }
-    let mut all_input_like = true
-    for name in rank_ordered {
-      if !name.has_prefix("i-") {
-        all_input_like = false
-        break
-      }
-    }
+    let rank_ordered =
+      build_remincross_rank_ordered_names_for_cluster(
+        cluster,
+        rank_names,
+        heads_by_tail,
+      )
+    let all_input_like = remincross_names_all_input_like(rank_ordered)
     let rank_ordered =
       if rank == min_rank && rank_ordered.length() > 1 && all_input_like {
         rebucket_remincross_input_like_rank_order(
