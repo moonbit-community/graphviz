@@ -751,6 +751,57 @@ type RootClusterRankOrderPhaseOutput = (
 )
 
 ///|
+/// Graphviz parity: root-only graphviz_flip gating enables root flip only when
+/// capture-fixture mode is active or when at least two non-empty cluster keys
+/// exist in the current ordering key map.
+fn should_enable_root_graphviz_flip(
+  graphviz_flip : Bool,
+  order_cluster_keys : Map[String, String],
+) -> Bool {
+  if !graphviz_flip {
+    return false
+  }
+  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+    return true
+  }
+  let seen_cluster_keys : Map[String, Bool] = Map::new()
+  for _name, key in order_cluster_keys {
+    if key == "" || seen_cluster_keys.get(key) is Some(_) {
+      continue
+    }
+    seen_cluster_keys[key] = true
+    if seen_cluster_keys.length() > 1 {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// Graphviz parity: root graphviz_flip merge replays root mincross output back
+/// into seeded rank groups using filtered root node membership.
+fn merge_root_rank_order_after_graphviz_flip(
+  root_rank_keys : Array[Int],
+  root_groups : Map[Int, Array[String]],
+  ordered_root : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let ordered_root_nodes =
+    build_order_nodes_from_groups(ordered_root, root_rank_keys)
+  let ordered_root_mincross_nodes =
+    build_node_membership_set(ordered_root_nodes)
+  merge_root_mincross_order_into_seeded_groups(
+    root_rank_keys,
+    root_groups,
+    ordered_root,
+    ordered_root_mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+}
+
+///|
 /// Graphviz parity: root cluster-rank-order phase consumes root reorder tuple
 /// and dispatch context without reordering Graphviz call arguments.
 /// Do not change behavior without updating fixtures/tests.
@@ -785,24 +836,8 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   ) = root_reorder_output
   // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
   // path as cluster-phase root bucket ordering, with root-flip guarding.
-  let seen_cluster_keys : Map[String, Bool] = Map::new()
-  let mut has_multi_cluster_roots = false
-  for _name, key in order_cluster_keys {
-    if key == "" || seen_cluster_keys.get(key) is Some(_) {
-      continue
-    }
-    seen_cluster_keys[key] = true
-    if seen_cluster_keys.length() > 1 {
-      has_multi_cluster_roots = true
-      break
-    }
-  }
   let root_graphviz_flip =
-    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
-      graphviz_flip
-    } else {
-      graphviz_flip && has_multi_cluster_roots
-    }
+    should_enable_root_graphviz_flip(graphviz_flip, order_cluster_keys)
   let ordered_root = reorder_rank_groups(
     root_rank_keys,
     root_groups,
@@ -834,16 +869,11 @@ fn run_root_cluster_rank_order_phase_from_root_reorder_output(
   if !graphviz_flip {
     return (root_rank_keys, ordered_root)
   }
-  let ordered_root_nodes =
-    build_order_nodes_from_groups(ordered_root, root_rank_keys)
-  let ordered_root_mincross_nodes =
-    build_node_membership_set(ordered_root_nodes)
   let merged_ordered_root =
-    merge_root_mincross_order_into_seeded_groups(
+    merge_root_rank_order_after_graphviz_flip(
       root_rank_keys,
       root_groups,
       ordered_root,
-      ordered_root_mincross_nodes,
       order_cluster_keys,
       order_cluster_skeleton,
     )
