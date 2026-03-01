@@ -1374,6 +1374,42 @@ fn build_cluster_nodes_and_sequence_for_rank_order(
 }
 
 ///|
+/// Graphviz parity: cluster bucket sort keys use root rank-order map with
+/// stable first-seen sequence fallback for clusters missing from the map.
+fn build_sorted_cluster_buckets_for_rank_order(
+  cluster_seq : Array[String],
+  order_map : Map[String, Int],
+) -> Array[(Int, Int, String)] {
+  let cluster_ordered : Array[(Int, Int, String)] = []
+  for idx, cluster in cluster_seq {
+    let base =
+      match order_map.get(cluster) {
+        Some(value) => value
+        None => order_map.length() + idx
+      }
+    cluster_ordered.push((base, idx, cluster))
+  }
+  if cluster_ordered.length() > 1 {
+    cluster_ordered.sort_by((a, b) => {
+      let (a_order, a_idx, _a_name) = a
+      let (b_order, b_idx, _b_name) = b
+      if a_order < b_order {
+        -1
+      } else if a_order > b_order {
+        1
+      } else if a_idx < b_idx {
+        -1
+      } else if a_idx > b_idx {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  cluster_ordered
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1400,34 +1436,11 @@ fn reorder_rank_groups_by_cluster_rank_order(
         names,
         cluster_keys,
       )
-    // Graphviz parity: cluster bucket sort keys use root rank-order map with
-    // stable first-seen sequence fallback for clusters missing from the map.
-    let cluster_ordered : Array[(Int, Int, String)] = []
-    for idx, cluster in cluster_seq {
-      let base =
-        match order_map.get(cluster) {
-          Some(value) => value
-          None => order_map.length() + idx
-        }
-      cluster_ordered.push((base, idx, cluster))
-    }
-    if cluster_ordered.length() > 1 {
-      cluster_ordered.sort_by((a, b) => {
-        let (a_order, a_idx, _a_name) = a
-        let (b_order, b_idx, _b_name) = b
-        if a_order < b_order {
-          -1
-        } else if a_order > b_order {
-          1
-        } else if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else {
-          0
-        }
-      })
-    }
+    let cluster_ordered =
+      build_sorted_cluster_buckets_for_rank_order(
+        cluster_seq,
+        order_map,
+      )
     // Graphviz parity: cluster bucket flattening emits clusters in sorted
     // bucket order while preserving each cluster's original node sequence.
     let ordered_names : Array[String] = []
