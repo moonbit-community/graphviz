@@ -337,22 +337,6 @@ fn remincross_edge_vnodes_or_empty(
 }
 
 ///|
-/// Graphviz parity: intercluster trailing-vnode checks use inclusive rank-range
-/// overlap derived from each cluster's min/max rank bounds.
-fn remincross_cluster_rank_ranges_overlap(
-  tail_cluster : String,
-  head_cluster : String,
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-) -> Bool {
-  let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
-  let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
-  let head_min = cluster_min_rank.get(head_cluster).unwrap_or_default()
-  let head_max = cluster_max_rank.get(head_cluster).unwrap_or(head_min)
-  tail_min <= head_max && head_min <= tail_max
-}
-
-///|
 /// Graphviz parity: mark_lowclusters assigns ReMincross edge-vnodes to the
 /// lowest common ancestor cluster (or root cluster when LCA is empty).
 fn assign_remincross_vnode_cluster_keys(
@@ -475,13 +459,16 @@ fn collect_remincross_intercluster_trailing_vnodes(
     if internal ||
       tail_cluster == head_cluster ||
       tail_cluster == "" ||
-      head_cluster == "" ||
-      remincross_cluster_rank_ranges_overlap(
-        tail_cluster,
-        head_cluster,
-        cluster_min_rank,
-        cluster_max_rank,
-      ) {
+      head_cluster == "" {
+      continue
+    }
+    // Graphviz parity: intercluster trailing-vnode checks use inclusive
+    // rank-range overlap derived from each cluster's min/max rank bounds.
+    let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
+    let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
+    let head_min = cluster_min_rank.get(head_cluster).unwrap_or_default()
+    let head_max = cluster_max_rank.get(head_cluster).unwrap_or(head_min)
+    if tail_min <= head_max && head_min <= tail_max {
       continue
     }
     let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
