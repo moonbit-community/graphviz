@@ -665,6 +665,21 @@ fn build_remincross_seeded_rank_order_from_keyed_entries(
 }
 
 ///|
+/// Graphviz parity: seeded rank replay drops cluster skeleton placeholders and
+/// keeps remaining name order unchanged.
+fn collect_remincross_seeded_rank_names_without_skeletons(
+  names : Array[String],
+) -> Array[String] {
+  let filtered : Array[String] = []
+  for name in names {
+    if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
+      filtered.push(name)
+    }
+  }
+  filtered
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -675,12 +690,8 @@ fn build_remincross_groups_from_ordered_with_vnodes(
 ) -> Map[Int, Array[String]] {
   let rem_groups : Map[Int, Array[String]] = Map::new()
   for rank, names in ordered_with_vnodes {
-    let filtered : Array[String] = []
-    for name in names {
-      if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
-        filtered.push(name)
-      }
-    }
+    let filtered =
+      collect_remincross_seeded_rank_names_without_skeletons(names)
     if filtered.length() == 0 {
       continue
     }
