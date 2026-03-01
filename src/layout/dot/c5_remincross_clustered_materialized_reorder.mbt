@@ -556,10 +556,7 @@ fn remincross_rank_or_missing(
   rem_ranks : Map[String, Int],
   name : String,
 ) -> Int {
-  match rem_ranks.get(name) {
-    Some(value) => value
-    None => -1
-  }
+  rem_ranks.get(name).unwrap_or(-1)
 }
 
 ///|
@@ -713,10 +710,7 @@ fn classify_remincross_input_like_name_bucket(
     if head_cluster == cluster {
       continue
     }
-    let head_pos = match cluster_order_pos.get(head_cluster) {
-      Some(value) => value
-      None => cluster_end_pos
-    }
+    let head_pos = cluster_order_pos.get(head_cluster).unwrap_or(cluster_end_pos)
     if head_pos > current_cluster_pos {
       has_later = true
     } else if head_pos < current_cluster_pos {

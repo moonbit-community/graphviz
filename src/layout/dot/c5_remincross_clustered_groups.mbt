@@ -353,17 +353,9 @@ fn remincross_cluster_rank_ranges_overlap(
   cluster_max_rank : Map[String, Int],
 ) -> Bool {
   let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
-  let tail_max =
-    match cluster_max_rank.get(tail_cluster) {
-      Some(value) => value
-      None => tail_min
-    }
+  let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
   let head_min = cluster_min_rank.get(head_cluster).unwrap_or_default()
-  let head_max =
-    match cluster_max_rank.get(head_cluster) {
-      Some(value) => value
-      None => head_min
-    }
+  let head_max = cluster_max_rank.get(head_cluster).unwrap_or(head_min)
   tail_min <= head_max && head_min <= tail_max
 }
 
@@ -424,10 +416,7 @@ fn build_remincross_reorder_inputs(
   // Graphviz parity: ND_clust is the root graph for nodes outside
   // any cluster (mark_lowclusters). Use a non-empty root key so
   // ReMincross can block swaps across cluster boundaries.
-  let root_cluster = match graph.name() {
-    Some(value) => value
-    None => "__root__"
-  }
+  let root_cluster = graph.name().unwrap_or("__root__")
   for name, key in rem_cluster_keys {
     if key == "" {
       rem_cluster_keys[name] = root_cluster
@@ -564,10 +553,7 @@ fn apply_remincross_intercluster_vnode_floor(
       Some(value) => value
       None => continue
     }
-    let max_order = match max_order_by_rank.get(rank) {
-      Some(value) => value
-      None => -1
-    }
+    let max_order = max_order_by_rank.get(rank).unwrap_or(-1)
     let base = Double::from_int(max_order + 1)
     let offset = Double::from_int(seq) * 0.000001
     let min_key = base + offset
