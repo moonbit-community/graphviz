@@ -1410,6 +1410,27 @@ fn build_sorted_cluster_buckets_for_rank_order(
 }
 
 ///|
+/// Graphviz parity: cluster bucket flattening emits clusters in sorted bucket
+/// order while preserving each cluster's original node sequence.
+fn flatten_cluster_buckets_for_rank_order(
+  cluster_ordered : Array[(Int, Int, String)],
+  cluster_nodes : Map[String, Array[String]],
+) -> Array[String] {
+  let ordered_names : Array[String] = []
+  for entry in cluster_ordered {
+    let (_order, _idx, cluster) = entry
+    let nodes_in_cluster = match cluster_nodes.get(cluster) {
+      Some(list) => list
+      None => []
+    }
+    for name in nodes_in_cluster {
+      ordered_names.push(name)
+    }
+  }
+  ordered_names
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1441,19 +1462,8 @@ fn reorder_rank_groups_by_cluster_rank_order(
         cluster_seq,
         order_map,
       )
-    // Graphviz parity: cluster bucket flattening emits clusters in sorted
-    // bucket order while preserving each cluster's original node sequence.
-    let ordered_names : Array[String] = []
-    for entry in cluster_ordered {
-      let (_order, _idx, cluster) = entry
-      let nodes_in_cluster = match cluster_nodes.get(cluster) {
-        Some(list) => list
-        None => []
-      }
-      for name in nodes_in_cluster {
-        ordered_names.push(name)
-      }
-    }
+    let ordered_names =
+      flatten_cluster_buckets_for_rank_order(cluster_ordered, cluster_nodes)
     ordered_by_cluster[rank] = ordered_names
   }
   ordered_by_cluster
