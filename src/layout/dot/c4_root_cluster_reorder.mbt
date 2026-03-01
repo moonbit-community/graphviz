@@ -15,36 +15,6 @@ fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
 }
 
 ///|
-/// Graphviz parity: mincross port metadata on synthetic ordering nodes uses
-/// default zero offsets/order unless an explicit non-default port survives
-/// into the materialized order edge.
-/// Do not change behavior without updating fixtures/tests.
-fn should_zero_synthetic_mincross_ports(
-  tail : String,
-  head : String,
-  tail_port_x : Double,
-  head_port_x : Double,
-  tail_port_order : Double,
-  head_port_order : Double,
-) -> Bool {
-  let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
-  let head_is_skeleton = head.has_prefix(CLUSTER_SKELETON_PREFIX)
-  let synthetic_endpoint =
-    is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
-    tail_is_skeleton || head_is_skeleton
-  if !synthetic_endpoint {
-    return false
-  }
-  let defaultish_x =
-    (tail_port_x == 0.0 || tail_port_x == 0.5) &&
-    (head_port_x == 0.0 || head_port_x == 0.5)
-  if tail_is_skeleton && head_is_skeleton {
-    return true
-  }
-  defaultish_x && tail_port_order == 0.0 && head_port_order == 0.0
-}
-
-///|
 /// Graphviz parity: synthetic mincross endpoints keep default port values at
 /// zero when Graphviz treats the endpoint pair as synthetic-only.
 fn normalize_synthetic_mincross_ports(
@@ -55,14 +25,21 @@ fn normalize_synthetic_mincross_ports(
   tail_port_order_raw : Double,
   head_port_order_raw : Double,
 ) -> (Double, Double, Double, Double) {
+  // Graphviz parity: synthetic ordering nodes keep default mincross ports
+  // unless a non-default port survives edge materialization.
+  let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
+  let head_is_skeleton = head.has_prefix(CLUSTER_SKELETON_PREFIX)
+  let synthetic_endpoint =
+    is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
+    tail_is_skeleton || head_is_skeleton
+  let defaultish_x =
+    (tail_port_x_raw == 0.0 || tail_port_x_raw == 0.5) &&
+    (head_port_x_raw == 0.0 || head_port_x_raw == 0.5)
   let zero_synthetic_defaults =
-    should_zero_synthetic_mincross_ports(
-      tail,
-      head,
-      tail_port_x_raw,
-      head_port_x_raw,
-      tail_port_order_raw,
-      head_port_order_raw,
+    synthetic_endpoint &&
+    (
+      (tail_is_skeleton && head_is_skeleton) ||
+      (defaultish_x && tail_port_order_raw == 0.0 && head_port_order_raw == 0.0)
     )
   if !zero_synthetic_defaults {
     return (
