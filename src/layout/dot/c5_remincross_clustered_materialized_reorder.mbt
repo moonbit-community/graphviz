@@ -387,6 +387,30 @@ fn build_remincross_cluster_grouping(
 }
 
 ///|
+/// Graphviz parity: clustered tail-order cluster buckets default to empty
+/// name lists for clusters absent from grouping output.
+fn remincross_cluster_names_or_empty(
+  names_by_cluster : Map[String, Array[String]],
+  cluster : String,
+) -> Array[String] {
+  names_by_cluster.get(cluster).unwrap_or_default()
+}
+
+///|
+/// Graphviz parity: root cluster tail order can apply a temporary override
+/// snapshot before replaying root names into rematerialized GD_nlist order.
+fn build_remincross_root_tail_names(names : Array[String]) -> Array[String] {
+  match remincross_root_tail_order_override_snapshot.val {
+    Some(override_names) =>
+      reorder_rank_names_by_override(
+        names,
+        override_names,
+      )
+    None => names
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross GD_nlist order is rebuilt from creation order
 /// + vnode expansion + fast-graph edge insertion order (decompose parity).
 /// Do not change behavior without updating fixtures/tests.
@@ -411,33 +435,22 @@ fn build_remincross_cluster_tail_order(
   let heads_by_tail = build_remincross_heads_by_tail(rem_edge_creation)
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
-    let names = match names_by_cluster.get(cluster) {
-      Some(list) => list
-      None => []
-    }
-    if cluster == "" {
-      let root_names = match remincross_root_tail_order_override_snapshot.val {
-        Some(override_names) =>
-          reorder_rank_names_by_override(
-            names,
-            override_names,
-          )
-        None => names
+    let names = remincross_cluster_names_or_empty(names_by_cluster, cluster)
+    let ordered_names =
+      if cluster == "" {
+        build_remincross_root_tail_names(names)
+      } else {
+        build_remincross_cluster_tail_order_nonroot_names(
+          cluster,
+          names,
+          rem_ranks,
+          heads_by_tail,
+          cluster_order_pos,
+          cluster_order,
+          rem_cluster_keys,
+        )
       }
-      append_names_in_order(rem_nlist_order, root_names)
-      continue
-    }
-    let nonroot_rank_ordered =
-      build_remincross_cluster_tail_order_nonroot_names(
-        cluster,
-        names,
-        rem_ranks,
-        heads_by_tail,
-        cluster_order_pos,
-        cluster_order,
-        rem_cluster_keys,
-      )
-    append_names_in_order(rem_nlist_order, nonroot_rank_ordered)
+    append_names_in_order(rem_nlist_order, ordered_names)
   }
   rem_nlist_order
 }
