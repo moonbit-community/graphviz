@@ -604,6 +604,30 @@ fn try_build_remincross_special_seeded_rank_order(
 }
 
 ///|
+/// Graphviz parity: seeded rank merge key places real nodes on even slots,
+/// synthetic nodes after nearest previous/next real anchors.
+fn remincross_seeded_rank_merge_key(
+  index : Int,
+  name : String,
+  real_order : Map[String, Int],
+  prev_real : Array[Int?],
+  next_real_by_pos : Array[Int?],
+) -> Int {
+  match real_order.get(name) {
+    Some(real_idx) => real_idx * 2
+    None =>
+      match prev_real[index] {
+        Some(prev_idx) => prev_idx * 2 + 1
+        None =>
+          match next_real_by_pos[index] {
+            Some(next_idx) => next_idx * 2 - 1
+            None => index * 2
+          }
+      }
+  }
+}
+
+///|
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -654,18 +678,14 @@ fn build_remincross_groups_from_ordered_with_vnodes(
     let keyed : Array[(String, Int, Int)] = []
     for i in 0..<filtered.length() {
       let name = filtered[i]
-      let key = match real_order.get(name) {
-        Some(real_idx) => real_idx * 2
-        None =>
-          match prev_real[i] {
-            Some(prev_idx) => prev_idx * 2 + 1
-            None =>
-              match next_real_by_pos[i] {
-                Some(next_idx) => next_idx * 2 - 1
-                None => i * 2
-              }
-          }
-      }
+      let key =
+        remincross_seeded_rank_merge_key(
+          i,
+          name,
+          real_order,
+          prev_real,
+          next_real_by_pos,
+        )
       keyed.push((name, key, i))
     }
     keyed.sort_by((a, b) => {
