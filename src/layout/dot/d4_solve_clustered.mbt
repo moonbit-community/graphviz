@@ -470,7 +470,7 @@ fn build_clustered_xpos_reorder_edges(
 /// Graphviz parity: clustered xpos reorder consumes order-graph parents/children
 /// plus edge-order hints exactly once before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_xpos_reorder_rank_groups_for_positions(
+fn apply_clustered_xpos_reorder_rank_groups(
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
@@ -570,7 +570,7 @@ fn build_clustered_xpos_reordered_groups(
       x_edge_tail_port_order,
       x_edge_head_port_order,
     )
-  apply_clustered_xpos_reorder_rank_groups_for_positions(
+  apply_clustered_xpos_reorder_rank_groups(
     reorder_seed_data.order_rank_keys,
     reorder_seed_data.order_groups,
     reorder_edges_data.order_edges_out,

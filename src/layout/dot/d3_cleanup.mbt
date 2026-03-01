@@ -6,7 +6,7 @@
 /// Graphviz parity: xpos reorder branch resolver keeps clustered vs non-cluster
 /// routing unchanged before transpose-cleanup stage.
 /// Do not change behavior without updating fixtures/tests.
-fn build_xpos_reordered_groups_for_positions(
+fn build_xpos_reordered_groups(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,

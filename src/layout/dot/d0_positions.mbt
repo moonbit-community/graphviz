@@ -321,7 +321,7 @@ fn build_x_groups_after_reorder_and_cleanup(
   x_seed : XPositionSeedData,
 ) -> Map[Int, Array[String]] {
   let x_groups =
-    build_xpos_reordered_groups_for_positions(
+    build_xpos_reordered_groups(
       xpos_reorder_enabled,
       use_vnodes_for_xpos,
       allow_xpos_reorder,
