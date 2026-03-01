@@ -306,7 +306,7 @@ fn should_use_root_positional_merge(
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_nlist_order_for_cluster_reorder(
+fn build_root_nlist_order(
   nlist_order : Array[String],
   cluster_keys : Map[String, String],
   ranks : Map[String, Int],
@@ -425,7 +425,7 @@ fn root_cluster_reorder_edge_endpoints_at(
 ///|
 /// Graphviz parity: root-vnode set for root cluster reorder includes only
 /// edge-vnodes on edges crossing cluster boundaries.
-fn collect_root_vnodes_for_cluster_reorder(
+fn collect_root_vnodes(
   order_with_vnodes : Bool,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -457,7 +457,7 @@ fn collect_root_vnodes_for_cluster_reorder(
 ///|
 /// Graphviz parity: root mincross vnode inputs keep only root-vnodes from
 /// vnode rank buckets and vnode-order key map.
-fn build_root_vnode_inputs_for_cluster_reorder(
+fn build_root_vnode_inputs(
   order_with_vnodes : Bool,
   root_vnodes : Map[String, Bool],
   vnodes_by_rank : Map[Int, Array[String]],
@@ -492,7 +492,7 @@ fn build_root_vnode_inputs_for_cluster_reorder(
 /// and optionally merge only root-vnodes into rank groups using filtered vnode
 /// keys/rank buckets from root-mincross inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_groups_for_cluster_reorder(
+fn build_root_reorder_groups(
   order_with_vnodes : Bool,
   order_rank_keys : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -507,7 +507,7 @@ fn build_root_groups_for_cluster_reorder(
   vnode_order_keys_for_ordering : Map[String, Double],
 ) -> Map[Int, Array[String]] {
   let root_vnodes =
-    collect_root_vnodes_for_cluster_reorder(
+    collect_root_vnodes(
       order_with_vnodes,
       edges,
       edge_tail,
@@ -541,7 +541,7 @@ fn build_root_groups_for_cluster_reorder(
   }
   let root_order_index = build_order_index(root_groups_base)
   let (root_vnodes_by_rank, root_vnode_order_keys) =
-    build_root_vnode_inputs_for_cluster_reorder(
+    build_root_vnode_inputs(
       order_with_vnodes,
       root_vnodes,
       vnodes_by_rank,
@@ -926,7 +926,7 @@ fn build_root_reorder_context(
   flat_rank_constraints : Map[String, Bool],
 ) -> RootClusterReorderContext {
   let root_groups =
-    build_root_groups_for_cluster_reorder(
+    build_root_reorder_groups(
       order_with_vnodes,
       order_rank_keys,
       order_groups_for_mincross,
@@ -948,7 +948,7 @@ fn build_root_reorder_context(
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
   // root-node order map from the same root graph/group membership snapshot.
   let root_nlist_order =
-    build_root_nlist_order_for_cluster_reorder(
+    build_root_nlist_order(
       nlist_order,
       cluster_keys,
       ranks,
