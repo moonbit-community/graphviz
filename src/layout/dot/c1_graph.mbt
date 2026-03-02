@@ -421,6 +421,16 @@ fn build_edge_indices_and_order(
 /// Graphviz parity: transpose seed maps include all seeded nodes and only
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
+priv struct TransposeSeedMapsOutput {
+  edge_penalty : Array[Int]
+  edge_in : Map[String, Array[Int]]
+  edge_out : Map[String, Array[Int]]
+}
+
+///|
+/// Graphviz parity: transpose seed maps include all seeded nodes and only
+/// positive-penalty constrained edges that cross ranks.
+/// Do not change behavior without updating fixtures/tests.
 fn build_transpose_seed_maps(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
@@ -428,7 +438,7 @@ fn build_transpose_seed_maps(
   order_edge_tail_out : Array[String],
   order_edge_head_out : Array[String],
   order_ranks : Map[String, Int],
-) -> (Array[Int], Map[String, Array[Int]], Map[String, Array[Int]]) {
+) -> TransposeSeedMapsOutput {
   let edge_penalty : Array[Int] = []
   let edge_in : Map[String, Array[Int]] = Map::new()
   let edge_out : Map[String, Array[Int]] = Map::new()
@@ -471,5 +481,5 @@ fn build_transpose_seed_maps(
       None => edge_in[head] = [edge_idx]
     }
   }
-  (edge_penalty, edge_in, edge_out)
+  { edge_penalty, edge_in, edge_out }
 }

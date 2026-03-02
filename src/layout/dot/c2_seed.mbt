@@ -322,7 +322,7 @@ fn build_seeded_reorder_groups(
     edge_head_port_x=order_edge_head_port_x,
   )
   if seed_cross > 0 {
-    let (edge_penalty, edge_in, edge_out) =
+    let transpose_seed_maps =
       build_transpose_seed_maps(
         order_rank_keys,
         seeded_groups,
@@ -335,13 +335,13 @@ fn build_seeded_reorder_groups(
       order_rank_keys,
       seeded_groups,
       order_ranks,
-      edge_in,
-      edge_out,
+      transpose_seed_maps.edge_in,
+      transpose_seed_maps.edge_out,
       order_edge_tail_out,
       order_edge_head_out,
       order_edge_tail_port_x,
       order_edge_head_port_x,
-      edge_penalty,
+      transpose_seed_maps.edge_penalty,
       order_cluster_keys,
       order_cluster_skeleton,
       flat_rank_constraints,
