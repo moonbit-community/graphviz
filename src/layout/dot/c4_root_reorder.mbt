@@ -1122,6 +1122,56 @@ priv struct RootClusterReorderContext {
 }
 
 ///|
+/// Graphviz parity: root reorder graph context keeps root-only groups, ranks,
+/// and order-graph handles from one root/skeleton filter snapshot.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootReorderGraphContext {
+  root_groups : Map[Int, Array[String]]
+  root_rank_keys : Array[Int]
+  root_ranks : Map[String, Int]
+  root_nodes : Array[String]
+  root_graph : @cgraph.Graph
+  root_node_map : Map[String, @cgraph.Node]
+}
+
+///|
+/// Graphviz parity: root reorder graph context is built from root-only groups
+/// before deriving root GD_nlist walk order and root-node order indices.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_reorder_graph_context(
+  sources : RootReorderBuildSources,
+) -> RootReorderGraphContext {
+  let root_groups =
+    build_root_reorder_groups(
+      sources.order_with_vnodes,
+      sources.order_rank_keys,
+      sources.order_groups_for_mincross,
+      sources.order_cluster_keys,
+      sources.order_cluster_skeleton,
+      sources.edges,
+      sources.edge_tail,
+      sources.edge_head,
+      sources.cluster_keys,
+      sources.edge_vnodes,
+      sources.vnodes_by_rank,
+      sources.vnode_order_keys_for_ordering,
+    )
+  let root_rank_keys = collect_rank_keys(root_groups)
+  let root_ranks = build_node_ranks(root_groups)
+  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let root_graph_output =
+    build_order_graph_and_nodes("order_root", root_nodes)
+  {
+    root_groups,
+    root_rank_keys,
+    root_ranks,
+    root_nodes,
+    root_graph: root_graph_output.order_graph,
+    root_node_map: root_graph_output.order_node_map,
+  }
+}
+
+///|
 /// Graphviz parity: root/ReMincross node-order seeding follows GD_nlist order
 /// first, then fills missing names from current rank-group order index.
 fn build_root_reorder_node_order(
@@ -1271,28 +1321,8 @@ fn build_root_reorder_edge_data(
 fn build_root_reorder_context(
   sources : RootReorderBuildSources,
 ) -> RootClusterReorderContext {
-  let root_groups =
-    build_root_reorder_groups(
-      sources.order_with_vnodes,
-      sources.order_rank_keys,
-      sources.order_groups_for_mincross,
-      sources.order_cluster_keys,
-      sources.order_cluster_skeleton,
-      sources.edges,
-      sources.edge_tail,
-      sources.edge_head,
-      sources.cluster_keys,
-      sources.edge_vnodes,
-      sources.vnodes_by_rank,
-      sources.vnode_order_keys_for_ordering,
-    )
-  let root_rank_keys = collect_rank_keys(root_groups)
-  let root_ranks = build_node_ranks(root_groups)
-  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let root_graph_output =
-    build_order_graph_and_nodes("order_root", root_nodes)
-  let root_graph = root_graph_output.order_graph
-  let root_node_map = root_graph_output.order_node_map
+  let graph_context =
+    build_root_reorder_graph_context(sources)
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
   // root-node order map from the same root graph/group membership snapshot.
   let root_nlist_order =
@@ -1301,8 +1331,8 @@ fn build_root_reorder_context(
         nlist_order: sources.nlist_order,
         cluster_keys: sources.cluster_keys,
         ranks: sources.ranks,
-        root_nodes,
-        root_node_map,
+        root_nodes: graph_context.root_nodes,
+        root_node_map: graph_context.root_node_map,
         skeleton_edge_creation: sources.skeleton_edge_creation,
         root_edge_creation: sources.root_edge_creation,
         flat_rank_constraints: sources.flat_rank_constraints,
@@ -1311,16 +1341,16 @@ fn build_root_reorder_context(
   let root_node_order =
     build_root_reorder_node_order(
       root_nlist_order,
-      root_node_map,
-      root_groups,
+      graph_context.root_node_map,
+      graph_context.root_groups,
     )
   {
-    root_groups,
-    root_rank_keys,
-    root_ranks,
-    root_nodes,
-    root_graph,
-    root_node_map,
+    root_groups: graph_context.root_groups,
+    root_rank_keys: graph_context.root_rank_keys,
+    root_ranks: graph_context.root_ranks,
+    root_nodes: graph_context.root_nodes,
+    root_graph: graph_context.root_graph,
+    root_node_map: graph_context.root_node_map,
     root_nlist_order,
     root_node_order,
   }
