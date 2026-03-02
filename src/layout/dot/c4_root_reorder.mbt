@@ -882,6 +882,7 @@ priv struct RootRankOrderReorderCallInputs {
   port_order_contrib : Map[String, Array[(String, Double)]]
   order_cluster_skeleton : Map[String, Bool]
   flat_constraints : Map[String, Bool]
+  root_graphviz_flip : Bool
 }
 
 ///|
@@ -890,6 +891,7 @@ priv struct RootRankOrderReorderCallInputs {
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_rank_order_reorder_call_inputs(
   inputs : RootRankOrderPhaseInputs,
+  root_graphviz_flip : Bool,
 ) -> RootRankOrderReorderCallInputs {
   let root_reorder_output = inputs.root_reorder_output
   {
@@ -916,6 +918,7 @@ fn build_root_rank_order_reorder_call_inputs(
     port_order_contrib: inputs.port_order_contrib,
     order_cluster_skeleton: inputs.order_cluster_skeleton,
     flat_constraints: inputs.flat_constraints,
+    root_graphviz_flip,
   }
 }
 
@@ -925,7 +928,6 @@ fn build_root_rank_order_reorder_call_inputs(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_order_reorder_call(
   inputs : RootRankOrderReorderCallInputs,
-  root_graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   reorder_rank_groups(
     inputs.root_rank_keys,
@@ -952,54 +954,11 @@ fn run_root_rank_order_reorder_call(
     Map::new(),
     inputs.order_cluster_skeleton,
     inputs.flat_constraints,
-    graphviz_flip=root_graphviz_flip,
+    graphviz_flip=inputs.root_graphviz_flip,
     coalesce_parallel_edges=true,
   )
 }
 
-///|
-/// Graphviz parity: root rank-order phase build inputs keep clustered reorder
-/// payload unchanged before dispatching root-only rank-order execution.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootRankOrderPhaseBuildInputs {
-  order_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  order_sizes_out : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_cluster_skeleton : Map[String, Bool]
-  flat_constraints : Map[String, Bool]
-  graphviz_flip : Bool
-  root_reorder_output : RootClusterReorderInputs
-}
-
-///|
-/// Graphviz parity: root rank-order phase input is assembled from clustered
-/// reorder payload snapshots without changing Graphviz call ordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_phase_inputs(
-  inputs : RootRankOrderPhaseBuildInputs,
-) -> RootRankOrderPhaseInputs {
-  {
-    order_cluster_keys: inputs.order_cluster_keys,
-    rank_same_groups: inputs.rank_same_groups,
-    rank_same_order: inputs.rank_same_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    flat_constraints: inputs.flat_constraints,
-    graphviz_flip: inputs.graphviz_flip,
-    root_reorder_output: inputs.root_reorder_output,
-  }
-}
-
-///|
 fn has_multiple_non_empty_cluster_keys(
   order_cluster_keys : Map[String, String],
 ) -> Bool {
@@ -1045,12 +1004,9 @@ fn run_root_rank_order_phase(
   let root_graphviz_flip =
     should_enable_root_flip(inputs.graphviz_flip, inputs.order_cluster_keys)
   let reorder_call_inputs =
-    build_root_rank_order_reorder_call_inputs(inputs)
+    build_root_rank_order_reorder_call_inputs(inputs, root_graphviz_flip)
   let ordered_root =
-    run_root_rank_order_reorder_call(
-      reorder_call_inputs,
-      root_graphviz_flip,
-    )
+    run_root_rank_order_reorder_call(reorder_call_inputs)
   finalize_root_rank_order_phase_output(
     inputs.root_reorder_output.root_rank_keys,
     inputs.root_reorder_output.root_groups,
@@ -1588,23 +1544,21 @@ fn build_cluster_rank_order(
       root_reorder_sources,
       inputs.order_edges_by_tail_root,
     )
-  let root_phase_inputs =
-    build_root_rank_order_phase_inputs(
-      {
-        order_cluster_keys: inputs.order_cluster_keys,
-        rank_same_groups: inputs.cluster_meta.rank_same_groups,
-        rank_same_order: inputs.cluster_meta.rank_same_order,
-        order_sizes_out: inputs.order_sizes_out,
-        nodesep_pt: inputs.nodesep_pt,
-        has_edge_labels: inputs.has_edge_labels,
-        port_order_positions: inputs.port_order_positions,
-        port_order_contrib: inputs.port_order_contrib,
-        order_cluster_skeleton: inputs.order_cluster_skeleton,
-        flat_constraints: inputs.cluster_meta.flat_constraints,
-        graphviz_flip: inputs.graphviz_flip,
-        root_reorder_output,
-      },
-    )
+  let root_phase_inputs : RootRankOrderPhaseInputs =
+    {
+      order_cluster_keys: inputs.order_cluster_keys,
+      rank_same_groups: inputs.cluster_meta.rank_same_groups,
+      rank_same_order: inputs.cluster_meta.rank_same_order,
+      order_sizes_out: inputs.order_sizes_out,
+      nodesep_pt: inputs.nodesep_pt,
+      has_edge_labels: inputs.has_edge_labels,
+      port_order_positions: inputs.port_order_positions,
+      port_order_contrib: inputs.port_order_contrib,
+      order_cluster_skeleton: inputs.order_cluster_skeleton,
+      flat_constraints: inputs.cluster_meta.flat_constraints,
+      graphviz_flip: inputs.graphviz_flip,
+      root_reorder_output,
+    }
   let root_rank_order_phase_output =
     run_root_rank_order_phase(root_phase_inputs)
   build_cluster_order_from_root(
