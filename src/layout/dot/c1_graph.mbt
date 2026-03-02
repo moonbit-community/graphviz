@@ -122,6 +122,18 @@ fn edge_endpoints_at(
 }
 
 ///|
+/// Graphviz parity: oriented endpoint names represent a reversed edge when
+/// they swap the original tail/head names.
+fn edge_orientation_is_reversed(
+  edge : @cgraph.Edge,
+  tail_name : String,
+  head_name : String,
+) -> Bool {
+  tail_name == edge.head().name() &&
+  head_name == edge.tail().name()
+}
+
+///|
 /// Graphviz parity: oriented endpoint port lookup follows remapped endpoint
 /// names (including reversed directed edges), with optional fallback for
 /// callers that require original endpoint defaults.

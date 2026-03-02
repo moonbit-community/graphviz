@@ -1857,9 +1857,7 @@ fn oriented_edge_endpoints(
       edge_tail,
       edge_head,
     )
-  let is_reversed =
-    tail_name == edge.head().name() &&
-    head_name == edge.tail().name()
+  let is_reversed = edge_orientation_is_reversed(edge, tail_name, head_name)
   { tail_name, head_name, is_reversed }
 }
 

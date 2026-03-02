@@ -109,9 +109,7 @@ fn prepare_routing_context(
         edge_tail,
         edge_head,
       )
-    let reversed =
-      oriented_tail == edge.head().name() &&
-      oriented_head == edge.tail().name()
+    let reversed = edge_orientation_is_reversed(edge, oriented_tail, oriented_head)
     edge_reversed_by_id[edge.id()] = reversed
   }
   let parallel_offsets =
