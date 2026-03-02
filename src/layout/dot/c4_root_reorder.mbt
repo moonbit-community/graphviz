@@ -1360,6 +1360,35 @@ fn build_cluster_order_from_root(
 }
 
 ///|
+/// Graphviz parity: root cluster-reorder phase keeps root input assembly and
+/// root rank-order execution in one sequence for shared clustered consumers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_reorder_and_rank_order_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> (RootClusterReorderInputs, RootClusterRankOrderPhaseOutput) {
+  let root_reorder_sources =
+    build_root_reorder_sources(
+      dispatch_context,
+      pre_root_stage,
+      order_groups_for_mincross,
+    )
+  let root_reorder_output =
+    build_root_reorder_inputs(
+      root_reorder_sources,
+      dispatch_context.class2_data.order_edges_by_tail_root,
+    )
+  let root_rank_order_phase_output =
+    run_root_rank_order_phase(
+      dispatch_context,
+      pre_root_stage,
+      root_reorder_output,
+    )
+  (root_reorder_output, root_rank_order_phase_output)
+}
+
+///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -1370,27 +1399,15 @@ fn build_cluster_rank_order(
   root_cluster_stage : OrderRootClusterData,
 ) -> Map[Int, Map[String, Int]] {
   let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
   if !reorder_setup.order_with_clusters {
     return Map::new()
   }
-  let root_reorder_sources : RootReorderBuildSources =
-    build_root_reorder_sources(
+  let (_root_reorder_output, root_rank_order_phase_output) =
+    run_root_reorder_and_rank_order_phase(
       dispatch_context,
       pre_root_stage,
       root_cluster_stage.order_groups_for_mincross,
-    )
-  let root_reorder_output =
-    build_root_reorder_inputs(
-      root_reorder_sources,
-      class2_data.order_edges_by_tail_root,
-    )
-  let root_rank_order_phase_output =
-    run_root_rank_order_phase(
-      dispatch_context,
-      pre_root_stage,
-      root_reorder_output,
     )
   build_cluster_order_from_root(
     root_rank_order_phase_output.root_rank_keys,

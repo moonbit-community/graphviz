@@ -120,18 +120,12 @@ fn run_clustered_root_phase(
   pre_root_stage : ClusteredPreRootData,
 ) -> OrderRootClusterData {
   let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
   remincross_root_tail_order_override_snapshot.val = None
-  let root_reorder_sources : RootReorderBuildSources =
-    build_root_reorder_sources(
+  let (root_reorder_output, root_rank_order_phase_output) =
+    run_root_reorder_and_rank_order_phase(
       dispatch_context,
       pre_root_stage,
       pre_root_stage.order_groups,
-    )
-  let root_reorder_output : RootClusterReorderInputs =
-    build_root_reorder_inputs(
-      root_reorder_sources,
-      class2_data.order_edges_by_tail_root,
     )
   // Graphviz parity: root-phase tail override keeps first-seen tail replay
   // order while suppressing duplicate tail names from root-edge replay
@@ -141,12 +135,6 @@ fn run_clustered_root_phase(
   for tail in root_reorder_output.root_edge_tail_out {
     append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
-  let root_rank_order_phase_output =
-    run_root_rank_order_phase(
-      dispatch_context,
-      pre_root_stage,
-      root_reorder_output,
-    )
   let root_groups_override = root_rank_order_phase_output.ordered_root
   // Graphviz parity: clustered root phase sets both tail-order and group
   // overrides only in cluster mode; otherwise both override channels are
