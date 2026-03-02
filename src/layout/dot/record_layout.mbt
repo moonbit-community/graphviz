@@ -22,18 +22,30 @@ fn extract_numbers(value : String) -> Array[Double] {
 }
 
 ///|
-fn parse_margin(value : String) -> (Double, Double)? {
+priv struct MarginValues {
+  x_in : Double
+  y_in : Double
+}
+
+///|
+priv struct NodePadding {
+  pad_x_pt : Double
+  pad_y_pt : Double
+}
+
+///|
+fn parse_margin(value : String) -> MarginValues? {
   let numbers = extract_numbers(value)
   if numbers.length() == 0 {
     return None
   }
   if numbers.length() == 1 {
     let val = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
-    return Some((val, val))
+    return Some({ x_in: val, y_in: val })
   }
   let x = if numbers[0] < 0.0 { 0.0 } else { numbers[0] }
   let y = if numbers[1] < 0.0 { 0.0 } else { numbers[1] }
-  Some((x, y))
+  Some({ x_in: x, y_in: y })
 }
 
 ///|
@@ -43,7 +55,7 @@ fn graph_margin_x_pt(graph : @cgraph.Graph) -> Double {
   match graph.get_attr("margin") {
     Some(value) =>
       match parse_margin(value) {
-        Some((margin_x, _margin_y)) => margin_x * 72.0
+        Some(margins) => margins.x_in * 72.0
         None => 0.0
       }
     None => 0.0
@@ -71,21 +83,21 @@ fn is_record_shape(node : @cgraph.Node) -> Bool {
 }
 
 ///|
-fn node_padding(node : @cgraph.Node) -> (Double, Double) {
+fn node_padding(node : @cgraph.Node) -> NodePadding {
   let mut pad_x_pt = PAD_X_PT
   let mut pad_y_pt = PAD_Y_PT
   match node.get_attr("margin") {
     Some(value) =>
       match parse_margin(value) {
-        Some((margin_x, margin_y)) => {
-          pad_x_pt = margin_x * 72.0 * 2.0
-          pad_y_pt = margin_y * 72.0 * 2.0
+        Some(margins) => {
+          pad_x_pt = margins.x_in * 72.0 * 2.0
+          pad_y_pt = margins.y_in * 72.0 * 2.0
         }
         None => ()
       }
     None => ()
   }
-  (pad_x_pt, pad_y_pt)
+  { pad_x_pt, pad_y_pt }
 }
 
 ///|
@@ -647,7 +659,7 @@ fn record_rects(
   let nodes = record_nodes(label)
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
-  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let padding = node_padding(node)
   let rects : Array[@geom.Rect] = []
   let ports : Map[String, RecordPort] = Map::new()
   let rect : @geom.Rect = {
@@ -668,8 +680,8 @@ fn record_rects(
     orientation,
     font,
     font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
     PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_LEFT | PORT_SIDE_RIGHT,
     rects,
     ports,
@@ -696,7 +708,7 @@ fn record_ports(
   let nodes = record_nodes(label)
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
-  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let padding = node_padding(node)
   let ports : Map[String, RecordPort] = Map::new()
   let rects : Array[@geom.Rect] = []
   let rect : @geom.Rect = {
@@ -717,8 +729,8 @@ fn record_ports(
     orientation,
     font,
     font_size_pt,
-    pad_x_pt,
-    pad_y_pt,
+    padding.pad_x_pt,
+    padding.pad_y_pt,
     PORT_SIDE_TOP | PORT_SIDE_BOTTOM | PORT_SIDE_LEFT | PORT_SIDE_RIGHT,
     rects,
     ports,
@@ -847,7 +859,7 @@ fn record_port_path_box(
   let nodes = record_nodes(label)
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
-  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let padding = node_padding(node)
   let node_rect : @geom.Rect = {
     llx: -size.width_pt / 2.0,
     lly: -size.height_pt / 2.0,
@@ -867,8 +879,8 @@ fn record_port_path_box(
       orientation,
       font,
       font_size_pt,
-      pad_x_pt,
-      pad_y_pt,
+      padding.pad_x_pt,
+      padding.pad_y_pt,
     )
   let port_x = port_info.center.x
   let mut chosen : @geom.Rect? = None
@@ -1946,7 +1958,7 @@ fn node_size(
   }
   let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
   let font = @attrs.font_name(node.get_attr("fontname"))
-  let (pad_x_pt, pad_y_pt) = node_padding(node)
+  let padding = node_padding(node)
   let base_width_pt = base_width_in * 72.0
   let base_height_pt = base_height_in * 72.0
   if shape == "point" || shape == "dot" {
@@ -1972,8 +1984,8 @@ fn node_size(
             shape,
             html_width_pt,
             html_height_pt,
-            pad_x_pt,
-            pad_y_pt,
+            padding.pad_x_pt,
+            padding.pad_y_pt,
           )
         let (width_pt, height_pt) = match fixedsize_mode {
           NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
@@ -2006,8 +2018,8 @@ fn node_size(
       record_orientation,
       font,
       font_size_pt,
-      pad_x_pt,
-      pad_y_pt,
+      padding.pad_x_pt,
+      padding.pad_y_pt,
     )
     let (width_pt, height_pt) = match fixedsize_mode {
       NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
@@ -2049,8 +2061,8 @@ fn node_size(
         shape,
         text_width_pt,
         text_height_pt,
-        pad_x_pt,
-        pad_y_pt,
+        padding.pad_x_pt,
+        padding.pad_y_pt,
       )
     } else {
       (0.0, 0.0)

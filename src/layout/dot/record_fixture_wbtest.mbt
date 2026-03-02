@@ -505,15 +505,15 @@ test "record fixtures match Graphviz layout" {
       }
       let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
       let font = @attrs.font_name(node.get_attr("fontname"))
-      let (pad_x_pt, pad_y_pt) = node_padding(node)
+      let padding = node_padding(node)
       let computed = compute_record_tree(
         record_nodes_unflattened(label),
         rect,
         record_orientation,
         font,
         font_size_pt,
-        pad_x_pt,
-        pad_y_pt,
+        padding.pad_x_pt,
+        padding.pad_y_pt,
       )
       let json = record_fixture_json(
         fixture.node,
@@ -556,15 +556,15 @@ test "record fixtures match Graphviz layout" {
     }
     let font_size_pt = @attrs.font_size(node.get_attr("fontsize"))
     let font = @attrs.font_name(node.get_attr("fontname"))
-    let (pad_x_pt, pad_y_pt) = node_padding(node)
+    let padding = node_padding(node)
     let computed = compute_record_tree(
       record_nodes_unflattened(label),
       rect,
       record_orientation,
       font,
       font_size_pt,
-      pad_x_pt,
-      pad_y_pt,
+      padding.pad_x_pt,
+      padding.pad_y_pt,
     )
     assert_field_eq(fixture.node, fixture.field, computed)
   }
