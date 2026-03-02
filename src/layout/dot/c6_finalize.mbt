@@ -130,9 +130,7 @@ fn finalize_order_groups(
       port_order_positions,
       port_order_contrib,
     }
-    let (ordered_with_vnodes, ordered_groups) =
-      run_remincross_pass(remincross_context)
-    { ordered_groups, ordered_with_vnodes }
+    run_remincross_pass(remincross_context)
   } else {
     {
       ordered_groups: cleaned_groups,

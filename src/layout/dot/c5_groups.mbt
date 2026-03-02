@@ -57,11 +57,14 @@ fn build_remincross_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn run_remincross_pass(
   dispatch_context : ReMincrossDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> OrderingDispatchOutput {
   let rem_groups = build_remincross_groups(dispatch_context)
   let rem_rank_keys = collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
-    (dispatch_context.ordered_with_vnodes, dispatch_context.base_groups)
+    {
+      ordered_groups: dispatch_context.base_groups,
+      ordered_with_vnodes: dispatch_context.ordered_with_vnodes,
+    }
   } else {
     // Graphviz parity: clustered ReMincross multi-rank branch materializes
     // remapped edges and executes clustered cleanup reorder in startpass=2.
@@ -84,7 +87,10 @@ fn run_remincross_pass(
         rem_ordered,
         dispatch_context.real_nodes,
       )
-    (rem_ordered, rem_cleaned)
+    {
+      ordered_groups: rem_cleaned,
+      ordered_with_vnodes: rem_ordered,
+    }
   }
 }
 
