@@ -1784,6 +1784,22 @@ fn add_root_boundary_constraints(
 }
 
 ///|
+fn push_slack_segment(
+  segments_by_tail : Map[String, Array[SlackSegment]],
+  seg_tail : String,
+  seg_head : String,
+  weight : Int,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+) -> Unit {
+  let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port }
+  match segments_by_tail.get(seg_tail) {
+    Some(list) => list.push(entry)
+    None => segments_by_tail[seg_tail] = [entry]
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2042,19 +2058,6 @@ fn build_constraint_graph(
       None => ()
     }
   }
-  let add_segment = (
-    seg_tail : String,
-    seg_head : String,
-    weight : Int,
-    tail_port : @cgraph.Port?,
-    head_port : @cgraph.Port?,
-  ) => {
-    let entry = { tail: seg_tail, head: seg_head, weight, tail_port, head_port }
-    match segments_by_tail.get(seg_tail) {
-      Some(list) => list.push(entry)
-      None => segments_by_tail[seg_tail] = [entry]
-    }
-  }
   let record_edge_segments = (edge_idx : Int, edge : @cgraph.Edge) => {
     if merged_edge_skip.get(edge_idx) is Some(_) {
       return ()
@@ -2217,7 +2220,14 @@ fn build_constraint_graph(
                     head_port = Some({ name: None, compass: Some(@cgraph.Compass::E) })
                   }
                 }
-                add_segment(seg_tail, seg_head, weight, tail_port, head_port)
+                push_slack_segment(
+                  segments_by_tail,
+                  seg_tail,
+                  seg_head,
+                  weight,
+                  tail_port,
+                  head_port,
+                )
               }
             }
           }
