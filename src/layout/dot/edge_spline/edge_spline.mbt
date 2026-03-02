@@ -1394,20 +1394,35 @@ fn rotate_ccw_quadrant(pt : @geom.Point, quadrant : Int) -> @geom.Point {
   }
 }
 
+priv struct PolygonShapeParams {
+  sides : Int
+  orientation_deg : Double
+  distortion : Double
+  skew : Double
+  peripheries : Int
+}
+
 ///|
 fn polygon_shape_params(
   shape : ClipShape,
-) -> (Int, Double, Double, Double, Int)? {
+) -> PolygonShapeParams? {
   match shape {
     ClipShape::Polygon(sides, orientation, distortion, skew, peripheries) =>
-      Some((sides, orientation, distortion, skew, peripheries))
-    ClipShape::DoubleOctagon => Some((8, 0.0, 0.0, 0.0, 2))
-    ClipShape::TripleOctagon => Some((8, 0.0, 0.0, 0.0, 3))
-    ClipShape::Trapezium => Some((4, 0.0, -0.4, 0.0, 1))
-    ClipShape::InvTrapezium => Some((4, 180.0, -0.4, 0.0, 1))
-    ClipShape::Parallelogram => Some((4, 0.0, 0.0, 0.6, 1))
-    ClipShape::House => Some((5, 0.0, -0.64, 0.0, 1))
-    ClipShape::InvHouse => Some((5, 180.0, -0.64, 0.0, 1))
+      Some({ sides, orientation_deg: orientation, distortion, skew, peripheries })
+    ClipShape::DoubleOctagon =>
+      Some({ sides: 8, orientation_deg: 0.0, distortion: 0.0, skew: 0.0, peripheries: 2 })
+    ClipShape::TripleOctagon =>
+      Some({ sides: 8, orientation_deg: 0.0, distortion: 0.0, skew: 0.0, peripheries: 3 })
+    ClipShape::Trapezium =>
+      Some({ sides: 4, orientation_deg: 0.0, distortion: -0.4, skew: 0.0, peripheries: 1 })
+    ClipShape::InvTrapezium =>
+      Some({ sides: 4, orientation_deg: 180.0, distortion: -0.4, skew: 0.0, peripheries: 1 })
+    ClipShape::Parallelogram =>
+      Some({ sides: 4, orientation_deg: 0.0, distortion: 0.0, skew: 0.6, peripheries: 1 })
+    ClipShape::House =>
+      Some({ sides: 5, orientation_deg: 0.0, distortion: -0.64, skew: 0.0, peripheries: 1 })
+    ClipShape::InvHouse =>
+      Some({ sides: 5, orientation_deg: 180.0, distortion: -0.64, skew: 0.0, peripheries: 1 })
     _ => None
   }
 }
@@ -1664,7 +1679,7 @@ fn point_inside_polygon(
   outline_pad_pt : Double,
 ) -> Bool {
   match polygon_shape_params(shape) {
-    Some((sides, orientation_deg, distortion, skew, peripheries)) => {
+    Some(params) => {
       let rel = point(pt.x - center.x, pt.y - center.y)
       let probe = rotate_ccw_quadrant(rel, rankdir_quadrant)
       let polygon_size =
@@ -1676,11 +1691,11 @@ fn point_inside_polygon(
         }
       let vertices = polygon_outline_vertices_for_shape(
         polygon_size,
-        sides,
-        orientation_deg,
-        distortion,
-        skew,
-        peripheries,
+        params.sides,
+        params.orientation_deg,
+        params.distortion,
+        params.skew,
+        params.peripheries,
         outline_pad_pt,
       )
       point_in_convex_polygon(probe, vertices)
