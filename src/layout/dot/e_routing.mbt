@@ -861,23 +861,37 @@ fn clip_polygon_attr_double(
 }
 
 ///|
+priv struct ClipPolygonShapeParams {
+  sides : Int
+  orientation : Double
+  distortion : Double
+  skew : Double
+}
+
+///|
 fn clip_polygon_shape_params(
   node : @cgraph.Node,
   shape : String,
-) -> (Int, Double, Double, Double)? {
+) -> ClipPolygonShapeParams? {
   match shape {
-    "triangle" => Some((3, 0.0, 0.0, 0.0))
-    "invtriangle" => Some((3, 180.0, 0.0, 0.0))
-    "trapezium" => Some((4, 0.0, -0.4, 0.0))
-    "invtrapezium" => Some((4, 180.0, -0.4, 0.0))
-    "parallelogram" => Some((4, 0.0, 0.0, 0.6))
-    "egg" => Some((120, 0.0, -0.3, 0.0))
-    "house" => Some((5, 0.0, -0.64, 0.0))
-    "invhouse" => Some((5, 180.0, -0.64, 0.0))
-    "pentagon" => Some((5, 0.0, 0.0, 0.0))
-    "hexagon" => Some((6, 0.0, 0.0, 0.0))
-    "septagon" => Some((7, 0.0, 0.0, 0.0))
-    "octagon" | "doubleoctagon" | "tripleoctagon" => Some((8, 0.0, 0.0, 0.0))
+    "triangle" => Some({ sides: 3, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "invtriangle" =>
+      Some({ sides: 3, orientation: 180.0, distortion: 0.0, skew: 0.0 })
+    "trapezium" =>
+      Some({ sides: 4, orientation: 0.0, distortion: -0.4, skew: 0.0 })
+    "invtrapezium" =>
+      Some({ sides: 4, orientation: 180.0, distortion: -0.4, skew: 0.0 })
+    "parallelogram" =>
+      Some({ sides: 4, orientation: 0.0, distortion: 0.0, skew: 0.6 })
+    "egg" => Some({ sides: 120, orientation: 0.0, distortion: -0.3, skew: 0.0 })
+    "house" => Some({ sides: 5, orientation: 0.0, distortion: -0.64, skew: 0.0 })
+    "invhouse" =>
+      Some({ sides: 5, orientation: 180.0, distortion: -0.64, skew: 0.0 })
+    "pentagon" => Some({ sides: 5, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "hexagon" => Some({ sides: 6, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "septagon" => Some({ sides: 7, orientation: 0.0, distortion: 0.0, skew: 0.0 })
+    "octagon" | "doubleoctagon" | "tripleoctagon" =>
+      Some({ sides: 8, orientation: 0.0, distortion: 0.0, skew: 0.0 })
     "polygon" => {
       let mut sides = clip_polygon_attr_int(node, "sides", 4)
       if sides < 0 {
@@ -890,7 +904,7 @@ fn clip_polygon_shape_params(
         sides = 120
       }
       if sides >= 3 {
-        Some((sides, orientation, distortion, skew))
+        Some({ sides, orientation, distortion, skew })
       } else {
         None
       }
@@ -1039,15 +1053,15 @@ fn clip_to_node_shape(
     "diamond" | "mdiamond" => clip_to_diamond(center, size, target)
     _ =>
       match clip_polygon_shape_params(node, shape) {
-        Some((sides, orientation, distortion, skew)) =>
+        Some(params) =>
           clip_to_polygon_shape(
             center,
             size,
             target,
-            sides,
-            orientation,
-            distortion,
-            skew,
+            params.sides,
+            params.orientation,
+            params.distortion,
+            params.skew,
           )
         None => clip_to_rect(center, size, target)
       }
@@ -2488,6 +2502,12 @@ fn adjust_route_points(
 }
 
 ///|
+priv struct CurveOffsetParams {
+  curve_offset : Double
+  curve_skew : Double
+}
+
+///|
 /// Graphviz parity: curve offset tuning aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_curve_offset(
@@ -2497,7 +2517,7 @@ fn compute_curve_offset(
   label_width_pt : Double,
   nodesep_pt : Double,
   enable_complex_tuning : Bool,
-) -> (Double, Double) {
+) -> CurveOffsetParams {
   let mut curve_offset = 0.0
   let mut curve_skew = 1.0
   if enable_complex_tuning {
@@ -2547,7 +2567,7 @@ fn compute_curve_offset(
       }
     }
   }
-  (curve_offset, curve_skew)
+  { curve_offset, curve_skew }
 }
 
 ///|
@@ -2746,15 +2766,16 @@ fn build_edge_spline(
           using_pathplan,
           nodesep_pt,
         )
-      let (curve_offset, curve_skew) =
-        compute_curve_offset(
-          edge,
-          base,
-          head_port_metrics,
-          label_width_pt,
-          nodesep_pt,
-          enable_complex_tuning,
-        )
+      let curve_offset_params = compute_curve_offset(
+        edge,
+        base,
+        head_port_metrics,
+        label_width_pt,
+        nodesep_pt,
+        enable_complex_tuning,
+      )
+      let curve_offset = curve_offset_params.curve_offset
+      let curve_skew = curve_offset_params.curve_skew
       let style_value = match edge.get_attr("style") {
         Some(value) => value.to_lower()
         None => ""
