@@ -82,6 +82,20 @@ priv struct SlackSegment {
 }
 
 ///|
+priv struct ConstraintGraphState {
+  graph : @network_simplex.NsGraph
+  index : Map[String, Int]
+}
+
+///|
+priv struct ClusterConstraintBuild {
+  extra_nodes : Array[(String, Int)]
+  extra_edges : Array[ConstraintEdge]
+  root_ln_targets : Array[String]
+  root_rn_targets : Array[String]
+}
+
+///|
 priv enum EndpointClass {
   Ordinary
   Singleton
@@ -226,10 +240,10 @@ fn reorder_constraint_graph(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   order : Array[Int],
-) -> (@network_simplex.NsGraph, Map[String, Int]) {
+) -> ConstraintGraphState {
   let total = graph.nodes.length()
   if total == 0 || order.length() != total {
-    return (graph, index)
+    return { graph, index }
   }
   let new_graph = @network_simplex.new_graph()
   let old_to_new : Array[Int] = []
@@ -252,7 +266,7 @@ fn reorder_constraint_graph(
     let new_idx = old_to_new[old_idx]
     new_index[name] = new_idx
   }
-  (new_graph, new_index)
+  { graph: new_graph, index: new_index }
 }
 ///|
 /// Graphviz parity: GD_nlist after create_aux_edges prepends slack nodes in
@@ -471,16 +485,26 @@ fn build_cluster_constraints(
   nodesep_pt : Double,
   has_edge_labels : Bool,
   edge_vnodes : Map[String, Array[String]],
-) -> (Array[(String, Int)], Array[ConstraintEdge], Array[String], Array[String]) {
+) -> ClusterConstraintBuild {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
   if cluster_graphs.length() == 0 {
-    return ([], [], [], [])
+    return {
+      extra_nodes: [],
+      extra_edges: [],
+      root_ln_targets: [],
+      root_rn_targets: [],
+    }
   }
   let cluster_members = collect_cluster_members(cluster_graphs)
   if cluster_members.length() == 0 {
-    return ([], [], [], [])
+    return {
+      extra_nodes: [],
+      extra_edges: [],
+      root_ln_targets: [],
+      root_rn_targets: [],
+    }
   }
   for node_name, cluster_key in cluster_keys {
     if cluster_key == "" {
@@ -669,7 +693,12 @@ fn build_cluster_constraints(
     }
   }
   if cluster_nodes.length() == 0 {
-    return ([], [], [], [])
+    return {
+      extra_nodes: [],
+      extra_edges: [],
+      root_ln_targets: [],
+      root_rn_targets: [],
+    }
   }
   for name, pair in cluster_nodes {
     let (ln_name, rn_name) = pair
@@ -1032,7 +1061,12 @@ fn build_cluster_constraints(
       }
     }
   }
-  (extra_nodes, extra_edges, root_ln_targets, root_rn_targets)
+  {
+    extra_nodes,
+    extra_edges,
+    root_ln_targets,
+    root_rn_targets,
+  }
 }
 
 ///|
@@ -1454,7 +1488,7 @@ fn build_constraint_graph(
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
-) -> (@network_simplex.NsGraph, Map[String, Int]) {
+) -> ConstraintGraphState {
   let _ = extra_slack_edges
   let graph = @network_simplex.new_graph()
   let ordered_nodes = nodes
@@ -2149,7 +2183,7 @@ fn build_constraint_graph(
       None => ()
     }
   }
-  (graph, index)
+  { graph, index }
 }
 
 ///|
@@ -2267,7 +2301,7 @@ fn x_positions_from_simplex(
     }
   }
   let order_index = build_order_index(groups)
-  let (graph, index) = build_constraint_graph(
+  let constraint_graph = build_constraint_graph(
     nodes,
     edges,
     edge_tail,
@@ -2292,30 +2326,49 @@ fn x_positions_from_simplex(
     compress_width_minlen,
   )
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
-  let order = build_constraint_reorder(graph, index, xpos_nlist_order)
-  let (graph, index) = reorder_constraint_graph(graph, index, order)
+  let order =
+    build_constraint_reorder(
+      constraint_graph.graph,
+      constraint_graph.index,
+      xpos_nlist_order,
+    )
+  let reordered =
+    reorder_constraint_graph(
+      constraint_graph.graph,
+      constraint_graph.index,
+      order,
+    )
   if should_capture_xpos_snapshot(graph_root) {
     xpos_constraint_snapshot.val = Some(
-      build_constraint_snapshot(graph, index, sizes, order_index),
+      build_constraint_snapshot(
+        reordered.graph,
+        reordered.index,
+        sizes,
+        order_index,
+      ),
     )
   }
-  @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
+  @network_simplex.network_simplex(
+    reordered.graph,
+    0x7fffffff,
+    @network_simplex.BalanceMode::LR,
+  )
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
     let name = node.name()
-    let idx = match index.get(name) {
+    let idx = match reordered.index.get(name) {
       Some(value) => value
       None => 0
     }
-    positions[name] = @network_simplex.node_rank(graph, idx).to_double()
+    positions[name] = @network_simplex.node_rank(reordered.graph, idx).to_double()
   }
   for pair in extra_nodes {
     let (name, _rank) = pair
-    let idx = match index.get(name) {
+    let idx = match reordered.index.get(name) {
       Some(value) => value
       None => 0
     }
-    positions[name] = @network_simplex.node_rank(graph, idx).to_double()
+    positions[name] = @network_simplex.node_rank(reordered.graph, idx).to_double()
   }
   positions
 }
@@ -2345,7 +2398,7 @@ fn compute_x_positions(
   edge_vnodes : Map[String, Array[String]],
   extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
-  let (cluster_nodes, extra_edges, root_ln_targets, root_rn_targets) =
+  let cluster_constraints =
     build_cluster_constraints(
     graph,
     nodes,
@@ -2360,17 +2413,17 @@ fn compute_x_positions(
     edge_vnodes,
   )
   let all_extra_nodes = extra_nodes.copy()
-  for pair in cluster_nodes {
+  for pair in cluster_constraints.extra_nodes {
     all_extra_nodes.push(pair)
   }
-  let all_extra_edges = extra_edges.copy()
+  let all_extra_edges = cluster_constraints.extra_edges.copy()
   for edge in flat_label_edges {
     all_extra_edges.push(edge)
   }
   let rankdir = graph_rankdir(graph)
   let compress_width_minlen = compress_width_minlen_pt(graph, rankdir)
-  let all_root_ln_targets = root_ln_targets.copy()
-  let all_root_rn_targets = root_rn_targets.copy()
+  let all_root_ln_targets = cluster_constraints.root_ln_targets.copy()
+  let all_root_rn_targets = cluster_constraints.root_rn_targets.copy()
   match compress_width_minlen {
     Some(_) => {
       // Graphviz parity: contain_nodes constrains per-rank leftmost/rightmost
