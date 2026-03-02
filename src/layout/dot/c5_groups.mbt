@@ -435,7 +435,7 @@ fn build_remincross_reorder_inputs(
 ///|
 /// Graphviz parity: trailing-vnode candidate set comes from intercluster edge
 /// vnode chains on edges that satisfy the rank-range overlap gate.
-fn collect_remincross_trailing_vnodes(
+fn collect_remincross_trailing(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -550,7 +550,7 @@ fn build_remincross_vnode_order_keys(
   let remincross_cluster_keys =
     clone_remincross_cluster_keys(intercluster_keys)
   let intercluster_vnodes =
-    collect_remincross_trailing_vnodes(
+    collect_remincross_trailing(
       edges,
       edge_tail,
       edge_head,
@@ -676,7 +676,7 @@ fn build_neighbor_real_indices(
 ///|
 /// Graphviz parity: when a mixed root/cluster rank begins with one synthetic
 /// vnode, keep root real first, cluster reals next, and trail that vnode.
-fn try_build_special_seeded_rank_order(
+fn try_build_special_seed_order(
   filtered : Array[String],
   base_real : Array[String],
   real_order : Map[String, Int],
@@ -758,7 +758,7 @@ fn build_seeded_rank_order(
   }
   // Graphviz parity: special mixed rank handoff keeps root/cluster/vnode
   // sequence aligned with Graphviz before generic key-based placement.
-  match try_build_special_seeded_rank_order(
+  match try_build_special_seed_order(
     filtered,
     base_real,
     real_order,
