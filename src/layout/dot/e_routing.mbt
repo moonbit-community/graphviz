@@ -879,7 +879,7 @@ fn clip_polygon_shape_params(
 }
 
 ///|
-fn clip_polygon_vertices_for_shape(
+fn clip_polygon_for_shape(
   size : NodeSize,
   sides : Int,
   orientation_deg : Double,
@@ -954,7 +954,7 @@ fn clip_to_polygon_shape(
   skew : Double,
 ) -> @geom.Point {
   let vertices =
-    clip_polygon_vertices_for_shape(
+    clip_polygon_for_shape(
       size,
       sides,
       orientation_deg,
