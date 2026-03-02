@@ -1063,7 +1063,7 @@ fn apply_edge_label_updates(
 }
 
 ///|
-fn adjust_edge_labels_for_clusters(
+fn adjust_labels_for_clusters(
   layout : DotLayoutGraph,
   nodesep_pt : Double,
 ) -> DotLayoutGraph {
@@ -1086,7 +1086,7 @@ fn adjust_edge_labels_for_clusters(
     let subgraphs : Array[DotLayoutGraph] = []
     for subgraph in layout.subgraphs {
       subgraphs.push(
-        adjust_edge_labels_for_clusters(subgraph, nodesep_pt),
+        adjust_labels_for_clusters(subgraph, nodesep_pt),
       )
     }
     {
@@ -1107,7 +1107,7 @@ fn adjust_edge_labels_for_clusters(
     let subgraphs : Array[DotLayoutGraph] = []
     for subgraph in updated_subgraphs {
       subgraphs.push(
-        adjust_edge_labels_for_clusters(subgraph, nodesep_pt),
+        adjust_labels_for_clusters(subgraph, nodesep_pt),
       )
     }
     {
@@ -1122,7 +1122,7 @@ fn adjust_edge_labels_for_clusters(
 }
 
 ///|
-fn adjust_edge_labels_for_overlaps(
+fn adjust_labels_for_overlaps(
   layout : DotLayoutGraph,
   nodesep_pt : Double,
   rankdir : RankDir,
@@ -1201,7 +1201,7 @@ fn adjust_edge_labels_for_overlaps(
     let subgraphs : Array[DotLayoutGraph] = []
     for subgraph in layout.subgraphs {
       subgraphs.push(
-        adjust_edge_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
+        adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
       )
     }
     {
@@ -1232,7 +1232,7 @@ fn adjust_edge_labels_for_overlaps(
     let subgraphs : Array[DotLayoutGraph] = []
     for subgraph in updated_subgraphs {
       subgraphs.push(
-        adjust_edge_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
+        adjust_labels_for_overlaps(subgraph, nodesep_pt, rankdir),
       )
     }
     {
