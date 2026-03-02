@@ -86,6 +86,87 @@ fn should_skip_cluster_rank_bucket_reorder(
 }
 
 ///|
+/// Graphviz parity: clustered finalize groups keep cleaned real-node ranks,
+/// optionally apply cluster-rank bucket reorder, then apply local-cluster
+/// ordering before final ReMincross.
+fn build_clustered_finalize_groups(
+  cleaned_groups : Map[Int, Array[String]],
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_meta : ClusterMetadata,
+  local_cluster_order : Map[String, Int],
+) -> Map[Int, Array[String]] {
+  let should_skip_cluster_rank_reorder =
+    should_skip_cluster_rank_bucket_reorder(
+      cluster_rank_order,
+      cleaned_groups,
+      cluster_meta.cluster_keys,
+    )
+  let final_groups =
+    if should_skip_cluster_rank_reorder {
+      cleaned_groups
+    } else {
+      reorder_groups_by_cluster(
+        cleaned_groups,
+        cluster_rank_order,
+        cluster_meta.cluster_keys,
+      )
+    }
+  // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
+  reorder_by_local_cluster(
+    final_groups,
+    cluster_meta.cluster_keys,
+    cluster_meta.intercluster_keys,
+    local_cluster_order,
+  )
+  final_groups
+}
+
+///|
+/// Graphviz parity: clustered finalize ReMincross dispatch uses the same
+/// context bundle fields and ordering as the previous inlined branch.
+fn run_clustered_finalize_remincross(
+  inputs : FinalizeOrderGroupsInputs,
+  cleaned_groups : Map[Int, Array[String]],
+) -> OrderingDispatchOutput {
+  let final_groups =
+    build_clustered_finalize_groups(
+      cleaned_groups,
+      inputs.cluster_rank_order,
+      inputs.cluster_meta,
+      inputs.local_cluster_order,
+    )
+  let remincross_context : ReMincrossDispatchContext = {
+    graph: inputs.graph,
+    edges: inputs.edges,
+    edge_tail: inputs.edge_tail,
+    edge_head: inputs.edge_head,
+    edge_reversed: inputs.edge_reversed,
+    edge_tail_port_x: inputs.edge_tail_port_x,
+    edge_head_port_x: inputs.edge_head_port_x,
+    edge_tail_port_order: inputs.edge_tail_port_order,
+    edge_head_port_order: inputs.edge_head_port_order,
+    ranks: inputs.ranks,
+    order_with_vnodes: inputs.order_with_vnodes,
+    order_with_clusters: true,
+    creation_order: inputs.creation_order,
+    edges_by_tail: inputs.edges_by_tail,
+    cluster_meta: inputs.cluster_meta,
+    vnode_info: inputs.vnode_info,
+    order_sizes: inputs.order_sizes,
+    rank_same_constraints: inputs.rank_same_constraints,
+    ordered_with_vnodes: inputs.ordered_with_vnodes,
+    base_groups: final_groups,
+    real_nodes: inputs.real_nodes,
+    graphviz_flip: inputs.graphviz_flip,
+    nodesep_pt: inputs.nodesep_pt,
+    has_edge_labels: inputs.has_edge_labels,
+    port_order_positions: inputs.port_order_positions,
+    port_order_contrib: inputs.port_order_contrib,
+  }
+  run_remincross_pass(remincross_context)
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -93,98 +174,18 @@ fn should_skip_cluster_rank_bucket_reorder(
 fn finalize_order_groups(
   inputs : FinalizeOrderGroupsInputs,
 ) -> OrderingDispatchOutput {
-  let order_with_clusters = inputs.order_with_clusters
-  let order_with_vnodes = inputs.order_with_vnodes
-  let cluster_rank_order = inputs.cluster_rank_order
-  let cluster_meta = inputs.cluster_meta
-  let local_cluster_order = inputs.local_cluster_order
-  let ordered_with_vnodes = inputs.ordered_with_vnodes
-  let graph = inputs.graph
-  let edges = inputs.edges
-  let edge_tail = inputs.edge_tail
-  let edge_head = inputs.edge_head
-  let edge_reversed = inputs.edge_reversed
-  let edge_tail_port_x = inputs.edge_tail_port_x
-  let edge_head_port_x = inputs.edge_head_port_x
-  let edge_tail_port_order = inputs.edge_tail_port_order
-  let edge_head_port_order = inputs.edge_head_port_order
-  let ranks = inputs.ranks
-  let creation_order = inputs.creation_order
-  let edges_by_tail = inputs.edges_by_tail
-  let vnode_info = inputs.vnode_info
-  let order_sizes = inputs.order_sizes
-  let rank_same_constraints = inputs.rank_same_constraints
-  let real_nodes = inputs.real_nodes
-  let graphviz_flip = inputs.graphviz_flip
-  let nodesep_pt = inputs.nodesep_pt
-  let has_edge_labels = inputs.has_edge_labels
-  let port_order_positions = inputs.port_order_positions
-  let port_order_contrib = inputs.port_order_contrib
-  let order_rank_keys = inputs.order_rank_keys
-  let ordered = inputs.ordered
   let cleaned_groups =
     collect_real_only_rank_groups(
-      order_rank_keys,
-      ordered,
-      real_nodes,
+      inputs.order_rank_keys,
+      inputs.ordered,
+      inputs.real_nodes,
     )
-  if order_with_clusters {
-    let should_skip_cluster_rank_reorder =
-      should_skip_cluster_rank_bucket_reorder(
-        cluster_rank_order,
-        cleaned_groups,
-        cluster_meta.cluster_keys,
-      )
-    let final_groups =
-      if should_skip_cluster_rank_reorder {
-        cleaned_groups
-      } else {
-        reorder_groups_by_cluster(
-          cleaned_groups,
-          cluster_rank_order,
-          cluster_meta.cluster_keys,
-        )
-      }
-    // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
-    reorder_by_local_cluster(
-      final_groups,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      local_cluster_order,
-    )
-    let remincross_context : ReMincrossDispatchContext = {
-      graph,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
-      ranks,
-      order_with_vnodes,
-      order_with_clusters: true,
-      creation_order,
-      edges_by_tail,
-      cluster_meta,
-      vnode_info,
-      order_sizes,
-      rank_same_constraints,
-      ordered_with_vnodes,
-      base_groups: final_groups,
-      real_nodes,
-      graphviz_flip,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-    }
-    run_remincross_pass(remincross_context)
+  if inputs.order_with_clusters {
+    run_clustered_finalize_remincross(inputs, cleaned_groups)
   } else {
     {
       ordered_groups: cleaned_groups,
-      ordered_with_vnodes,
+      ordered_with_vnodes: inputs.ordered_with_vnodes,
     }
   }
 }
