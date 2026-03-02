@@ -128,7 +128,7 @@ priv struct XposClusteredReorderEdgesData {
 ///|
 /// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_boundary_x_positions(
+fn build_cluster_boundary_x(
   graph : @cgraph.Graph,
   cluster_meta : ClusterMetadata,
   x_positions : Map[String, Double],
@@ -540,7 +540,7 @@ fn apply_flat_label_height_updates(
 /// Graphviz parity: y-rank sweep range expands to include inserted flat-label
 /// vnode ranks, while preserving continuous rank iteration.
 /// Do not change behavior without updating fixtures/tests.
-fn build_y_all_ranks_with_flat_labels(
+fn build_y_all_ranks_with_flat(
   rank_keys : Array[Int],
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
 ) -> Array[Int] {
@@ -678,7 +678,7 @@ fn build_y_position_data(
     rank_ht2,
   )
   let y_all_ranks =
-    build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
+    build_y_all_ranks_with_flat(rank_data.rank_keys, flat_label_nodes)
   let (y_positions, rank_y) =
     build_y_positions_with_flip(
       graph,
@@ -736,7 +736,7 @@ fn build_position_output_maps(
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let (cluster_ln_x, cluster_rn_x) =
-    build_cluster_boundary_x_positions(graph, cluster_meta, x_positions)
+    build_cluster_boundary_x(graph, cluster_meta, x_positions)
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
     build_vnode_positions_for_output(
@@ -781,7 +781,7 @@ fn build_position_output_maps(
 /// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
 /// paths and must preserve node-singleton and cluster-key inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn build_virtual_slack_edges_for_xpos(
+fn build_xpos_virtual_slack_edges(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
