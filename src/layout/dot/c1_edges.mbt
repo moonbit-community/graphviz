@@ -357,7 +357,7 @@ fn merge_edge_creation_sequences(
 /// Graphviz parity: class2 flat-rank preprocessing treats unknown node ranks
 /// as 0 when evaluating same-rank non-self edge constraints.
 /// Do not change behavior without updating fixtures/tests.
-fn rank_or_zero_for_flat_constraints(
+fn flat_constraint_rank_or_zero(
   ranks : Map[String, Int],
   name : String,
 ) -> Int {

@@ -323,7 +323,7 @@ fn build_root_nlist_order(
   for name in nlist_order {
     let cluster = cluster_key_or_empty(cluster_keys, name)
     if cluster != "" {
-      let rank = rank_or_zero_for_flat_constraints(ranks, name)
+      let rank = flat_constraint_rank_or_zero(ranks, name)
       let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
       append_creation_name_if_absent(
         tail_order_root,

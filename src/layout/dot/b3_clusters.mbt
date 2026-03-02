@@ -213,8 +213,8 @@ fn compute_cluster_metadata(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     if tail != head {
-      let tail_rank = rank_or_zero_for_flat_constraints(ranks, tail)
-      let head_rank = rank_or_zero_for_flat_constraints(ranks, head)
+      let tail_rank = flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = flat_constraint_rank_or_zero(ranks, head)
       if tail_rank == head_rank {
         flat_constraints["\{tail}|\{head}"] = true
       }
