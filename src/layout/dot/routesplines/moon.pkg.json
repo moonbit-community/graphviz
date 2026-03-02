@@ -9,8 +9,7 @@
       "alias": "dot_shared"
     },
     "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom",
-    "moonbitlang/x/sys"
+    "moonbit-community/graphviz/geom"
   ],
   "wbtest-import": [
     "moonbitlang/core/json",

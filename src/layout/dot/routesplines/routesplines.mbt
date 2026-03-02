@@ -585,11 +585,6 @@ fn maximal_bbox_for_name(
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
             let nb = rect.urx + splinesep_pt
-            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-              println(
-                "  left_cluster \{name} -> \{neighbor} cluster=\{neighbor_cluster} rect=\{rect.llx},\{rect.lly},\{rect.urx},\{rect.ury} nb=\{nb}",
-              )
-            }
             if nb < b {
               b = nb
             }
@@ -641,11 +636,6 @@ fn maximal_bbox_for_name(
         match cluster_bboxes.get(neighbor_cluster) {
           Some(rect) => {
             let nb = rect.llx - splinesep_pt
-            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-              println(
-                "  right_cluster \{name} -> \{neighbor} cluster=\{neighbor_cluster} rect=\{rect.llx},\{rect.lly},\{rect.urx},\{rect.ury} nb=\{nb}",
-              )
-            }
             if nb > br {
               br = nb
             }
@@ -659,11 +649,6 @@ fn maximal_bbox_for_name(
             let nb =
               neighbor_pos.x - neighbor_size.left_pt -
               neighbor_sep(neighbor, neighbor_size)
-            if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-              println(
-                "  right_neighbor \{name} -> \{neighbor} pos=\{neighbor_pos.x},\{neighbor_pos.y} left_pt=\{neighbor_size.left_pt} nb=\{nb}",
-              )
-            }
             if nb > br {
               br = nb
             }
@@ -698,19 +683,6 @@ fn maximal_bbox_for_name(
     let tmp = lly
     lly = ury
     ury = tmp
-  }
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    let left_name = match left_neighbor {
-      Some(value) => value
-      None => "None"
-    }
-    let right_name = match right_neighbor {
-      Some(value) => value
-      None => "None"
-    }
-    println(
-      "  node \{name} rank=\{rank} pos=\{pos.x},\{pos.y} size=\{size.left_pt},\{size.right_pt} left=\{left_name} right=\{right_name} box=\{llx},\{lly},\{urx},\{ury}",
-    )
   }
   Some({ llx, lly, urx, ury })
 }
@@ -1121,23 +1093,7 @@ fn route_pathplan_from_boxes(
   if polygon.length() < 3 {
     return None
   }
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    let poly_parts : Array[String] = []
-    for point in polygon {
-      poly_parts.push("\{point.x},\{point.y}")
-    }
-    let joined = poly_parts.join(" ")
-    println("  pathplan polygon: \{joined}")
-  }
   let path = @pathplan.shortest_path_in_poly(polygon, start, end)
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    let parts : Array[String] = []
-    for point in path {
-      parts.push("\{point.x},\{point.y}")
-    }
-    let joined = parts.join(" ")
-    println("  pathplan polyline: \{joined}")
-  }
   if path.length() < 2 {
     return None
   }
@@ -1674,15 +1630,6 @@ fn edge_pathplan_polyline_core(
   let fb = tail_boxes.length() + 1
   // Graphviz parity: adjustregularpath uses vnode box list length (rank + node).
   let lb = fb + path_boxes.length() - 3
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    let mut bi = 0
-    for box in boxes {
-      println(
-        "  box[\{bi}] llx=\{box.llx} lly=\{box.lly} urx=\{box.urx} ury=\{box.ury}",
-      )
-      bi = bi + 1
-    }
-  }
   let adjusted_boxes = adjust_regular_path(boxes, fb, lb)
   let normalized_boxes = adjusted_boxes
   match route_pathplan_from_boxes(
@@ -1762,38 +1709,12 @@ pub fn edge_pathplan_polyline(
   let path_head_side = if swap_path { tail_port_side } else { head_port_side }
   let path_tail_port_box = if swap_path { head_port_box } else { tail_port_box }
   let path_head_port_box = if swap_path { tail_port_box } else { head_port_box }
-  let path_tail_pos = match positions.get(path_tail_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let path_head_pos = match positions.get(path_head_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let path_tail_size = size_for_name(path_tail_name, sizes)
-  let path_head_size = size_for_name(path_head_name, sizes)
-  let _ = path_tail_size
-  let _ = path_head_size
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    println(
-      "pathplan edge \{path_tail_name} -> \{path_head_name} tail_pos=\{path_tail_pos.x},\{path_tail_pos.y} head_pos=\{path_head_pos.x},\{path_head_pos.y} tail_anchor=\{path_tail_anchor.x},\{path_tail_anchor.y} head_anchor=\{path_head_anchor.x},\{path_head_anchor.y}",
-    )
-  }
-  let tail_cluster =
-    cluster_key_for_name(path_tail_name, cluster_keys, vnode_clusters)
-  let head_cluster =
-    cluster_key_for_name(path_head_name, cluster_keys, vnode_clusters)
-  let _ = tail_cluster
-  let _ = head_cluster
   let ordered = vnodes
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, nodesep_pt)
   let mval_route_sizes = merge_sizes(mval_sizes, vnode_mval_sizes)
   // Graphviz parity: Splinesep uses integer GD_nodesep / 4 (GD_nodesep is int).
   let splinesep_pt = (round_int(nodesep_pt) / 4).to_double()
-  if @sys.get_env_var("DOT_TRACE_PATHPLAN") is Some(_) {
-    println("  pathplan bounds left=\{left_bound} right=\{right_bound}")
-  }
   let straight_eps = 0.01
   let label_threshold = if has_edge_label { 5 } else { 3 }
   let straight_len_from = (names : Array[String], start_idx : Int) => {
