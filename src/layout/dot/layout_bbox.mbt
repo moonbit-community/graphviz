@@ -309,7 +309,7 @@ fn expand_bbox_with_subgraphs(
 /// Graphviz parity: root bbox only expands to include cluster subgraphs
 /// (dot_compute_bb uses GD_clust list, not generic subgraphs).
 /// Do not change behavior without updating fixtures/tests.
-fn expand_bbox_with_cluster_subgraphs(
+fn expand_bbox_with_clusters(
   bbox : @geom.Rect,
   subgraphs : Array[DotLayoutGraph],
 ) -> @geom.Rect {
@@ -327,7 +327,7 @@ fn expand_bbox_with_cluster_subgraphs(
       result = merge_bbox(result, padded)
     }
     if subgraph.subgraphs.length() > 0 {
-      result = expand_bbox_with_cluster_subgraphs(result, subgraph.subgraphs)
+      result = expand_bbox_with_clusters(result, subgraph.subgraphs)
     }
   }
   result

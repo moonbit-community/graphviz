@@ -756,7 +756,7 @@ fn build_subgraphs_and_bbox(
       rank_ht2,
     )
   let expanded = if subgraphs.length() > 0 {
-    expand_bbox_with_cluster_subgraphs(bbox, subgraphs)
+    expand_bbox_with_clusters(bbox, subgraphs)
   } else {
     bbox
   }
