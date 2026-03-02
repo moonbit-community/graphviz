@@ -1591,6 +1591,42 @@ fn add_constraint_edge_if_present(
 }
 
 ///|
+fn add_root_boundary_target_edges(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  target_names : Array[String],
+  root_idx : Int,
+  sizes : Map[String, NodeSize],
+  root_margin : Double,
+  compress_mode : Bool,
+  is_left_boundary : Bool,
+) -> Unit {
+  let base_minlen = round_int(root_margin)
+  for name in target_names {
+    match index.get(name) {
+      Some(idx) => {
+        let minlen =
+          if compress_mode {
+            if is_left_boundary {
+              round_int(node_left_pt(name, sizes) + root_margin)
+            } else {
+              round_int(node_right_pt(name, sizes) + root_margin)
+            }
+          } else {
+            base_minlen
+          }
+        if is_left_boundary {
+          let _ = @network_simplex.add_edge(graph, root_idx, idx, minlen, 0)
+        } else {
+          let _ = @network_simplex.add_edge(graph, idx, root_idx, minlen, 0)
+        }
+      }
+      None => ()
+    }
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2171,34 +2207,26 @@ fn build_constraint_graph(
       CLUSTER_MARGIN_PT
     }
     let compress_mode = compress_width_minlen is Some(_)
-    for name in root_ln_targets {
-      match index.get(name) {
-        Some(idx) => {
-          let minlen =
-            if compress_mode {
-              round_int(node_left_pt(name, sizes) + root_margin)
-            } else {
-              round_int(root_margin)
-            }
-          let _ = @network_simplex.add_edge(graph, root_ln, idx, minlen, 0)
-        }
-        None => ()
-      }
-    }
-    for name in root_rn_targets {
-      match index.get(name) {
-        Some(idx) => {
-          let minlen =
-            if compress_mode {
-              round_int(node_right_pt(name, sizes) + root_margin)
-            } else {
-              round_int(root_margin)
-            }
-          let _ = @network_simplex.add_edge(graph, idx, root_rn, minlen, 0)
-        }
-        None => ()
-      }
-    }
+    add_root_boundary_target_edges(
+      graph,
+      index,
+      root_ln_targets,
+      root_ln,
+      sizes,
+      root_margin,
+      compress_mode,
+      true,
+    )
+    add_root_boundary_target_edges(
+      graph,
+      index,
+      root_rn_targets,
+      root_rn,
+      sizes,
+      root_margin,
+      compress_mode,
+      false,
+    )
     match compress_width_minlen {
       Some(width_minlen) => {
         let _ = @network_simplex.add_edge(
@@ -2215,23 +2243,7 @@ fn build_constraint_graph(
   for edge in extra_edges {
     let _ = edge.tail_port
     let _ = edge.head_port
-    match index.get(edge.tail) {
-      Some(tail_idx) =>
-        match index.get(edge.head) {
-          Some(head_idx) => {
-            let _ = @network_simplex.add_edge(
-              graph,
-              tail_idx,
-              head_idx,
-              edge.minlen,
-              edge.weight,
-            )
-
-          }
-          None => ()
-        }
-      None => ()
-    }
+    add_constraint_edge_if_present(graph, index, edge)
   }
   { graph, index }
 }
