@@ -12,6 +12,15 @@ priv struct HeadPortMetrics {
 }
 
 ///|
+priv struct ClusterLabelPlacementInfo {
+  width_pt : Double
+  height_pt : Double
+  loc : LabelLoc
+  just : LabelJust
+  flipped : Bool
+}
+
+///|
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
@@ -206,7 +215,7 @@ fn layout_subgraphs(
     }
     let mut bbox = compute_bbox(sub_nodes, sub_edges)
     let mut label_pos : @geom.Point? = None
-    let mut label_info : (Double, Double, LabelLoc, LabelJust, Bool)? = None
+    let mut label_info : ClusterLabelPlacementInfo? = None
     let sub_subgraphs =
       layout_subgraphs(
         subgraph,
@@ -346,7 +355,13 @@ fn layout_subgraphs(
               ury = ury + diff
             }
             bbox = { llx, lly, urx, ury }
-            label_info = Some((border_x, border_y, loc, just, true))
+            label_info = Some({
+              width_pt: border_x,
+              height_pt: border_y,
+              loc,
+              just,
+              flipped: true,
+            })
           } else {
             if !use_rank_bbox {
               bbox =
@@ -357,7 +372,13 @@ fn layout_subgraphs(
                   loc,
                 )
             }
-            label_info = Some((padded_width, padded_height, loc, just, false))
+            label_info = Some({
+              width_pt: padded_width,
+              height_pt: padded_height,
+              loc,
+              just,
+              flipped: false,
+            })
           }
         }
         None => ()
@@ -365,13 +386,25 @@ fn layout_subgraphs(
       bbox = round_bbox(bbox)
     }
     match label_info {
-      Some((width_pt, height_pt, loc, just, flipped)) =>
+      Some(value) =>
         label_pos =
           Some(
-            if flipped {
-              graph_label_pos_flip(bbox, width_pt, height_pt, loc, just)
+            if value.flipped {
+              graph_label_pos_flip(
+                bbox,
+                value.width_pt,
+                value.height_pt,
+                value.loc,
+                value.just,
+              )
             } else {
-              graph_label_pos(bbox, width_pt, height_pt, loc, just)
+              graph_label_pos(
+                bbox,
+                value.width_pt,
+                value.height_pt,
+                value.loc,
+                value.just,
+              )
             },
           )
       None => ()
