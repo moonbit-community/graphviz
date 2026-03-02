@@ -934,8 +934,10 @@ fn build_root_reorder_context(
   let root_rank_keys = collect_rank_keys(root_groups)
   let root_ranks = build_node_ranks(root_groups)
   let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
-  let (root_graph, root_node_map) =
+  let root_graph_output =
     build_order_graph_and_nodes("order_root", root_nodes)
+  let root_graph = root_graph_output.order_graph
+  let root_node_map = root_graph_output.order_node_map
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and
   // root-node order map from the same root graph/group membership snapshot.
   let root_nlist_order =

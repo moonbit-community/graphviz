@@ -60,10 +60,14 @@ fn build_order_reorder_context(
   let order_ranks = build_node_ranks(order_groups)
   let order_nodes =
     build_order_nodes_from_groups(order_groups, order_rank_keys)
-  let (order_graph, order_node_map) =
+  let order_graph_output =
     build_order_graph_and_nodes("order_graph", order_nodes)
-  let (order_graph_unmapped, order_node_map_unmapped) =
+  let order_graph = order_graph_output.order_graph
+  let order_node_map = order_graph_output.order_node_map
+  let order_graph_unmapped_output =
     build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  let order_graph_unmapped = order_graph_unmapped_output.order_graph
+  let order_node_map_unmapped = order_graph_unmapped_output.order_node_map
   let creation_order : Array[String] = []
   let mut creation_idx = nlist_order.length()
   while creation_idx > 0 {

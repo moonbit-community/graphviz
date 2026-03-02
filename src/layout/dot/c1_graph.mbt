@@ -286,10 +286,19 @@ fn build_order_nodes_from_groups(
 /// Graphviz parity: order graph node table is built by creating each name in
 /// order_nodes sequence, matching agnode creation iteration order.
 /// Do not change behavior without updating fixtures/tests.
+priv struct OrderGraphAndNodes {
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+}
+
+///|
+/// Graphviz parity: order graph node table is built by creating each name in
+/// order_nodes sequence, matching agnode creation iteration order.
+/// Do not change behavior without updating fixtures/tests.
 fn build_order_graph_and_nodes(
   graph_name : String,
   order_nodes : Array[String],
-) -> (@cgraph.Graph, Map[String, @cgraph.Node]) {
+) -> OrderGraphAndNodes {
   let order_graph =
     @cgraph.Graph::new(
       @cgraph.GraphKind::Directed,
@@ -300,7 +309,7 @@ fn build_order_graph_and_nodes(
   for name in order_nodes {
     order_node_map[name] = order_graph.node(name)
   }
-  (order_graph, order_node_map)
+  { order_graph, order_node_map }
 }
 
 ///|

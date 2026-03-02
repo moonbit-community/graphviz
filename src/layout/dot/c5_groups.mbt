@@ -125,8 +125,10 @@ fn build_remincross_inputs(
 ) -> ClusteredReMincrossMaterializedInputs {
   let rem_ranks = build_node_ranks(rem_groups)
   let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
-  let (rem_graph, rem_node_map) =
+  let rem_graph_output =
     build_order_graph_and_nodes("order_remincross", rem_nodes)
+  let rem_graph = rem_graph_output.order_graph
+  let rem_node_map = rem_graph_output.order_node_map
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
   let cluster_order_index =
