@@ -6,7 +6,7 @@
 /// Graphviz parity: non-cluster xpos reorder build path keeps vnode-edge input,
 /// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
-fn build_nonclustered_xpos_groups(
+fn build_nonclustered_groups(
   prep : LayoutPrep,
   rank_data : RankData,
   rank_heights : RankHeights,
@@ -94,7 +94,7 @@ fn maybe_apply_nonclustered_xpos(
 ) -> Map[Int, Array[String]] {
   if xpos_reorder_enabled && allow_xpos_reorder && !cluster_meta.ordering_set &&
     !has_vnode_order && !cluster_meta.has_clusters {
-    build_nonclustered_xpos_groups(
+    build_nonclustered_groups(
       prep,
       rank_data,
       rank_heights,
