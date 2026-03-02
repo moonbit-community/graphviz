@@ -1034,14 +1034,38 @@ fn run_root_reorder_pass(
 }
 
 ///|
-/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
-/// then merges reordered root positions back into seeded build_ranks groups.
+/// Graphviz parity: root ReMincross keeps only root + cluster-skeleton names
+/// from seeded build_ranks groups; cluster-internal names stay cluster-local.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_reorder(
+fn filter_root_mincross_seeded_groups_for_clusters(
+  seeded_groups : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let filtered : Map[Int, Array[String]] = Map::new()
+  for rank, names in seeded_groups {
+    let list : Array[String] = []
+    for name in names {
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      let cluster = order_cluster_keys.get(name).unwrap_or_default()
+      if is_skeleton || cluster == "" {
+        list.push(name)
+      }
+    }
+    if list.length() > 0 {
+      filtered[rank] = list
+    }
+  }
+  filtered
+}
+
+///|
+/// Graphviz parity: root ReMincross input groups are cluster-filtered when
+/// cluster ordering is enabled, then optionally overridden for fixture replay.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_root_mincross_input_groups(
   inputs : RootMincrossReorderInputs,
-) -> RootMincrossReorderOutput {
-  // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
-  // cluster-internal nodes are handled by cluster-local build_ranks passes.
+) -> Map[Int, Array[String]] {
   let order_groups_for_mincross_base =
     if !inputs.order_with_clusters {
       inputs.seeded_groups
@@ -1049,31 +1073,27 @@ fn run_root_mincross_reorder(
       // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
       // nodes; cluster-internal ordering stays in cluster-local build_ranks
       // passes.
-      let filtered : Map[Int, Array[String]] = Map::new()
-      for rank, names in inputs.seeded_groups {
-        let list : Array[String] = []
-        for name in names {
-          let is_skeleton =
-            inputs.order_cluster_skeleton.get(name) == Some(true)
-          let cluster = match inputs.order_cluster_keys.get(name) {
-            Some(value) => value
-            None => ""
-          }
-          if is_skeleton || cluster == "" {
-            list.push(name)
-          }
-        }
-        if list.length() > 0 {
-          filtered[rank] = list
-        }
-      }
-      filtered
+      filter_root_mincross_seeded_groups_for_clusters(
+        inputs.seeded_groups,
+        inputs.order_cluster_keys,
+        inputs.order_cluster_skeleton,
+      )
     }
+  match root_mincross_groups_override.val {
+    Some(override_groups) => clone_rank_groups(override_groups)
+    None => order_groups_for_mincross_base
+  }
+}
+
+///|
+/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
+/// then merges reordered root positions back into seeded build_ranks groups.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_mincross_reorder(
+  inputs : RootMincrossReorderInputs,
+) -> RootMincrossReorderOutput {
   let order_groups_for_mincross =
-    match root_mincross_groups_override.val {
-      Some(override_groups) => clone_rank_groups(override_groups)
-      None => order_groups_for_mincross_base
-    }
+    resolve_root_mincross_input_groups(inputs)
   let root_reorder_output =
     run_root_reorder_pass(
       {
