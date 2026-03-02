@@ -68,14 +68,15 @@ fn build_port_sampling_inputs(
 }
 
 ///|
-/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
-/// Do not change behavior without updating fixtures/tests.
-fn compute_edge_port_positions(
+/// Graphviz parity: shared edge-port sampling setup keeps endpoint remap and
+/// per-edge iteration order identical for both x-offset and port-order passes.
+fn compute_edge_port_samples(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
+  sample_fn : (String, @cgraph.Port?, Map[String, Map[String, RecordPort]], Map[String, NodeSize], RankDir, Map[String, @cgraph.Node]) -> Double,
 ) -> EdgePortSamples {
   if edges.length() == 0 {
     return { tail_values: [], head_values: [] }
@@ -93,35 +94,55 @@ fn compute_edge_port_positions(
   let head_names = sampling_inputs.head_names
   let tail_ports = sampling_inputs.tail_ports
   let head_ports = sampling_inputs.head_ports
-  // Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
-  // sequence order after endpoint-name/port remap.
-  let tail_offsets : Array[Double] = []
-  let head_offsets : Array[Double] = []
+  let tail_samples : Array[Double] = []
+  let head_samples : Array[Double] = []
   let mut idx = 0
   while idx < edges.length() {
-    let tail_x =
-      edge_port_offset(
+    tail_samples.push(
+      sample_fn(
         tail_names[idx],
         tail_ports[idx],
         port_offsets,
         sizes,
         rankdir,
         nodes_by_name,
-      )
-    let head_x =
-      edge_port_offset(
+      ),
+    )
+    head_samples.push(
+      sample_fn(
         head_names[idx],
         head_ports[idx],
         port_offsets,
         sizes,
         rankdir,
         nodes_by_name,
-      )
-    tail_offsets.push(tail_x)
-    head_offsets.push(head_x)
+      ),
+    )
     idx = idx + 1
   }
-  { tail_values: tail_offsets, head_values: head_offsets }
+  { tail_values: tail_samples, head_values: head_samples }
+}
+
+///|
+/// Graphviz parity: port x offsets for mincross tie-breaks (mincross.c).
+/// Do not change behavior without updating fixtures/tests.
+fn compute_edge_port_positions(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+) -> EdgePortSamples {
+  // Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
+  // sequence order after endpoint-name/port remap.
+  compute_edge_port_samples(
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    sizes,
+    edge_port_offset,
+  )
 }
 
 ///|
@@ -135,51 +156,16 @@ fn compute_edge_port_orders(
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
 ) -> EdgePortSamples {
-  if edges.length() == 0 {
-    return { tail_values: [], head_values: [] }
-  }
-  let rankdir =
-    if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
-  let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
-  for node in nodes {
-    nodes_by_name[node.name()] = node
-  }
-  let sampling_inputs =
-    build_port_sampling_inputs(nodes, edges, edge_tail, edge_head, sizes)
-  let port_offsets = sampling_inputs.port_offsets
-  let tail_names = sampling_inputs.tail_names
-  let head_names = sampling_inputs.head_names
-  let tail_ports = sampling_inputs.tail_ports
-  let head_ports = sampling_inputs.head_ports
   // Graphviz parity: per-edge tail/head port-order samples are emitted in edge
   // sequence order using the same endpoint remap as tie-break x-offsets.
-  let tail_orders : Array[Double] = []
-  let head_orders : Array[Double] = []
-  let mut idx = 0
-  while idx < edges.length() {
-    let tail_order =
-      edge_port_order(
-        tail_names[idx],
-        tail_ports[idx],
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      )
-    let head_order =
-      edge_port_order(
-        head_names[idx],
-        head_ports[idx],
-        port_offsets,
-        sizes,
-        rankdir,
-        nodes_by_name,
-      )
-    tail_orders.push(tail_order)
-    head_orders.push(head_order)
-    idx = idx + 1
-  }
-  { tail_values: tail_orders, head_values: head_orders }
+  compute_edge_port_samples(
+    nodes,
+    edges,
+    edge_tail,
+    edge_head,
+    sizes,
+    edge_port_order,
+  )
 }
 
 ///|
