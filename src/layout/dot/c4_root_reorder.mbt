@@ -1431,34 +1431,6 @@ priv struct ClusterRankOrderBuildInputs {
 }
 
 ///|
-/// Graphviz parity: cluster-rank-order root reorder sources keep root-mincross
-/// and vnode snapshots unchanged before root-only reorder input materialization.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_root_reorder_sources(
-  inputs : ClusterRankOrderBuildInputs,
-) -> RootReorderBuildSources {
-  {
-    order_with_vnodes: inputs.order_with_vnodes,
-    order_rank_keys: inputs.order_rank_keys,
-    order_groups_for_mincross: inputs.order_groups_for_mincross,
-    order_cluster_keys: inputs.order_cluster_keys,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    edges: inputs.edges,
-    edge_tail: inputs.edge_tail,
-    edge_head: inputs.edge_head,
-    cluster_keys: inputs.cluster_meta.cluster_keys,
-    edge_vnodes: inputs.vnode_info.edge_vnodes,
-    vnodes_by_rank: inputs.vnode_info.vnodes_by_rank,
-    vnode_order_keys_for_ordering: inputs.vnode_order_keys_for_ordering,
-    nlist_order: inputs.nlist_order,
-    ranks: inputs.ranks,
-    skeleton_edge_creation: inputs.skeleton_edge_creation,
-    root_edge_creation: inputs.root_edge_creation,
-    flat_rank_constraints: inputs.flat_rank_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -1469,8 +1441,26 @@ fn build_cluster_rank_order(
   if !inputs.order_with_clusters {
     return Map::new()
   }
-  let root_reorder_sources =
-    build_cluster_rank_root_reorder_sources(inputs)
+  let root_reorder_sources : RootReorderBuildSources =
+    {
+      order_with_vnodes: inputs.order_with_vnodes,
+      order_rank_keys: inputs.order_rank_keys,
+      order_groups_for_mincross: inputs.order_groups_for_mincross,
+      order_cluster_keys: inputs.order_cluster_keys,
+      order_cluster_skeleton: inputs.order_cluster_skeleton,
+      edges: inputs.edges,
+      edge_tail: inputs.edge_tail,
+      edge_head: inputs.edge_head,
+      cluster_keys: inputs.cluster_meta.cluster_keys,
+      edge_vnodes: inputs.vnode_info.edge_vnodes,
+      vnodes_by_rank: inputs.vnode_info.vnodes_by_rank,
+      vnode_order_keys_for_ordering: inputs.vnode_order_keys_for_ordering,
+      nlist_order: inputs.nlist_order,
+      ranks: inputs.ranks,
+      skeleton_edge_creation: inputs.skeleton_edge_creation,
+      root_edge_creation: inputs.root_edge_creation,
+      flat_rank_constraints: inputs.flat_rank_constraints,
+    }
   let root_reorder_output =
     build_root_reorder_inputs(
       root_reorder_sources,
