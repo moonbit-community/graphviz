@@ -107,7 +107,7 @@ fn build_order_reorder_context(
   if has_clusters {
     // Graphviz parity: non-cluster root reorder keeps GD_nlist-derived order
     // (world.gv) and does not re-normalize ND_order by rank=same declaration.
-    apply_rank_same_order_to_node_order(
+    apply_rank_same_order_to_nodes(
       order_node_order,
       rank_same_groups,
       rank_same_order,
