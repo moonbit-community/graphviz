@@ -126,12 +126,7 @@ fn build_flat_label_augmentation(
     existing_names[vnode] = true
   }
   if use_vnodes_for_xpos {
-    let (
-      updated_groups,
-      label_nodes,
-      label_edge_vnodes,
-      extra_edges,
-    ) = add_flat_label_vnodes(
+    let flat_label_vnodes = add_flat_label_vnodes(
       prep.edges,
       rank_data.edge_tail,
       rank_data.edge_head,
@@ -146,10 +141,10 @@ fn build_flat_label_augmentation(
       ordering.vnode_info,
       next_x_groups,
     )
-    next_x_groups = updated_groups
-    flat_label_edges = extra_edges
-    flat_label_nodes = label_nodes
-    flat_label_edge_vnodes = label_edge_vnodes
+    next_x_groups = flat_label_vnodes.x_groups
+    flat_label_edges = flat_label_vnodes.flat_label_edges
+    flat_label_nodes = flat_label_vnodes.flat_label_nodes
+    flat_label_edge_vnodes = flat_label_vnodes.flat_label_edge_vnodes
     for name, key in ordering.vnode_info.vnode_clusters {
       next_x_cluster_keys[name] = key
     }

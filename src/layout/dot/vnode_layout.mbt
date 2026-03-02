@@ -223,12 +223,7 @@ fn add_flat_label_vnodes(
   existing_names : Map[String, Bool],
   vnode_info : EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
-) -> (
-  Map[Int, Array[String]],
-  Map[String, FlatLabelNodeInfo],
-  Map[String, String],
-  Array[ConstraintEdge],
-) {
+) -> FlatLabelVnodeResult {
   let order_index = build_order_index(x_groups)
   let vnode_out_heads =
     collect_vnode_out_heads(edges, edge_tail, edge_head, ranks, vnode_info.edge_vnodes)
@@ -418,7 +413,20 @@ fn add_flat_label_vnodes(
       head_port: None,
     })
   }
-  (x_groups, flat_label_nodes, flat_label_edges, extra_edges)
+  {
+    x_groups,
+    flat_label_nodes,
+    flat_label_edge_vnodes: flat_label_edges,
+    flat_label_edges: extra_edges,
+  }
+}
+
+///|
+priv struct FlatLabelVnodeResult {
+  x_groups : Map[Int, Array[String]]
+  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+  flat_label_edge_vnodes : Map[String, String]
+  flat_label_edges : Array[ConstraintEdge]
 }
 
 ///|
