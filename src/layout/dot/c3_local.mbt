@@ -450,15 +450,9 @@ fn build_local_neighbor_maps(
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
   let cluster_node_set : Map[String, Bool] = Map::new()
-  let cluster_key_or_empty = (name : String) => {
-    match intercluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
-  }
   let external_anchor_name = "%0"
   let normalize_external_neighbor = (other : String) => {
-    let other_cluster = cluster_key_or_empty(other)
+    let other_cluster = cluster_key_or_empty(intercluster_keys, other)
     if other_cluster != "" && other_cluster != cluster &&
       expanded_clusters.get(other_cluster) is None {
       external_anchor_name
@@ -470,19 +464,13 @@ fn build_local_neighbor_maps(
     cluster_node_set[name] = true
   }
   let has_source_external_anchor = (name : String) => {
-    let out = match neighbor_sources.source_out_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
+    let out = neighbor_sources.source_out_neighbors.get(name).unwrap_or_default()
     for other in out {
       if cluster_node_set.get(other) is None {
         return true
       }
     }
-    let inn = match neighbor_sources.source_in_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
+    let inn = neighbor_sources.source_in_neighbors.get(name).unwrap_or_default()
     for other in inn {
       if cluster_node_set.get(other) is None {
         return true
@@ -501,7 +489,7 @@ fn build_local_neighbor_maps(
       }
       let normalized = normalize_external_neighbor(other)
       if normalized == external_anchor_name {
-        let external_cluster = cluster_key_or_empty(other)
+        let external_cluster = cluster_key_or_empty(intercluster_keys, other)
         if external_cluster == "" ||
           external_cluster_seen.get(external_cluster) is Some(_) {
           continue
@@ -514,24 +502,14 @@ fn build_local_neighbor_maps(
     }
   }
   for name in cluster_nodes {
-    let out_neighbors = match neighbor_sources.source_out_neighbors.get(name) {
-      Some(list) => list.copy()
-      None => []
-    }
-    let in_neighbors = match neighbor_sources.source_in_neighbors.get(name) {
-      Some(list) => list.copy()
-      None => []
-    }
+    let out_neighbors =
+      neighbor_sources.source_out_neighbors.get(name).unwrap_or_default().copy()
+    let in_neighbors =
+      neighbor_sources.source_in_neighbors.get(name).unwrap_or_default().copy()
     if allow_raw_neighbors && !has_source_external_anchor(name) {
-      let raw_out = match neighbor_sources.raw_out_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
+      let raw_out = neighbor_sources.raw_out_neighbors.get(name).unwrap_or_default()
       append_raw_neighbors_with_external_anchor(out_neighbors, raw_out)
-      let raw_in = match neighbor_sources.raw_in_neighbors.get(name) {
-        Some(list) => list
-        None => []
-      }
+      let raw_in = neighbor_sources.raw_in_neighbors.get(name).unwrap_or_default()
       append_raw_neighbors_with_external_anchor(in_neighbors, raw_in)
     }
     graphviz_out_neighbors[name] = out_neighbors
