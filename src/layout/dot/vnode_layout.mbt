@@ -63,12 +63,13 @@ fn build_edge_vnodes(
   let plain_width = 1.0 + nodesep_pt / 2.0
   for idx in edge_indices {
     let edge = edges[idx]
-    let tail = if idx < edge_tail.length() { edge_tail[idx] } else {
-      edge.tail().name()
-    }
-    let head = if idx < edge_head.length() { edge_head[idx] } else {
-      edge.head().name()
-    }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        idx,
+        edge_tail,
+        edge_head,
+      )
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
     // Graphviz parity: cluster-local parallel chains do not widen class2 vnodes.
@@ -261,14 +262,13 @@ fn add_flat_label_vnodes(
   for edge in edges {
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
-    let tail =
-      if current_idx < edge_tail.length() { edge_tail[current_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if current_idx < edge_head.length() { edge_head[current_idx] } else {
-        edge.head().name()
-      }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        current_idx,
+        edge_tail,
+        edge_head,
+      )
     if tail == head {
       // Graphviz parity: self-edge labels are handled via node spacing, not flat labels.
       continue
