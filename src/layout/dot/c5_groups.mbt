@@ -359,7 +359,7 @@ fn assign_remincross_clusters(
     let tail_cluster = remincross_cluster_key(intercluster_keys, tail)
     let head_cluster = remincross_cluster_key(intercluster_keys, head)
     let vnode_cluster =
-      cluster_lowest_common_ancestor(
+      cluster_lca(
         tail_cluster,
         head_cluster,
         cluster_parents,

@@ -216,7 +216,7 @@ fn cluster_rank_key(cluster : String, rank : Int) -> String {
 /// Graphviz parity: assign intercluster virtual nodes to the lowest common
 /// ancestor cluster (mark_lowclusters + class2).
 /// Do not change behavior without updating fixtures/tests.
-fn cluster_lowest_common_ancestor(
+fn cluster_lca(
   left : String,
   right : String,
   cluster_parents : Map[String, String?],
@@ -269,7 +269,7 @@ fn cluster_lowest_common_ancestor(
 
 ///|
 /// Graphviz parity: cluster skeleton node names encode the cluster key.
-fn cluster_key_from_skeleton_name(name : String) -> String? {
+fn cluster_key_from_skeleton(name : String) -> String? {
   if !name.has_prefix(CLUSTER_SKELETON_PREFIX) {
     return None
   }
@@ -288,7 +288,7 @@ fn cluster_key_from_skeleton_name(name : String) -> String? {
 
 ///|
 /// Graphviz parity: cluster boundary node names preserve the cluster key.
-fn cluster_key_from_boundary_name(
+fn cluster_key_from_boundary(
   name : String,
   cluster_names : Map[String, Bool],
 ) -> String? {

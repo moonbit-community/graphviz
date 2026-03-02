@@ -524,7 +524,7 @@ fn build_cluster_constraints(
   if cluster_members.length() > 0 {
     for _rank, names in groups {
       for name in names {
-        match cluster_key_from_skeleton_name(name) {
+        match cluster_key_from_skeleton(name) {
           Some(cluster_key) =>
             match cluster_members.get(cluster_key) {
               Some(members) => members[name] = true
@@ -767,7 +767,7 @@ fn build_cluster_constraints(
           while i < names.length() {
             let node_name = names[i]
             if members.get(node_name) is Some(_) &&
-              cluster_key_from_skeleton_name(node_name) is None {
+              cluster_key_from_skeleton(node_name) is None {
               if left_idx < 0 {
                 left_idx = i
               }
@@ -979,7 +979,7 @@ fn build_cluster_constraints(
                                     while idx < names.length() &&
                                           (first_i < 0 || first_j < 0) {
                                       let node_name = names[idx]
-                                      if cluster_key_from_skeleton_name(node_name)
+                                      if cluster_key_from_skeleton(node_name)
                                         is Some(_) {
                                         idx = idx + 1
                                         continue

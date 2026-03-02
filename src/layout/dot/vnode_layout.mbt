@@ -125,7 +125,7 @@ fn build_edge_vnodes(
     let plain_width_for_edge = if use_cluster_plain { 1.0 } else { plain_width }
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
-        cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
+        cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
         match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value
@@ -360,7 +360,7 @@ fn add_flat_label_vnodes(
     let head_cluster = node_cluster_key(edge.head())
     let vnode_cluster =
       if tail_cluster != "" || head_cluster != "" {
-        cluster_lowest_common_ancestor(tail_cluster, head_cluster, cluster_parents)
+        cluster_lca(tail_cluster, head_cluster, cluster_parents)
       } else {
         match edge_cluster_keys.get(@dot_shared.edge_key(edge)) {
           Some(value) => value

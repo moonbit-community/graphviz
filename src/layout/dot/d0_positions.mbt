@@ -142,7 +142,7 @@ fn build_cluster_boundary_x(
       for name, pos_x in x_positions {
         if name.has_prefix(CLUSTER_LN_PREFIX) ||
           name.has_prefix(CLUSTER_RN_PREFIX) {
-          match cluster_key_from_boundary_name(name, cluster_names) {
+          match cluster_key_from_boundary(name, cluster_names) {
             Some(cluster_key) =>
               if name.has_prefix(CLUSTER_LN_PREFIX) {
                 cluster_ln_x[cluster_key] = pos_x
@@ -229,7 +229,7 @@ fn build_initial_x_groups(
     for rank, names in x_groups {
       let filtered : Array[String] = []
       for name in names {
-        if cluster_key_from_skeleton_name(name) is None {
+        if cluster_key_from_skeleton(name) is None {
           filtered.push(name)
         }
       }

@@ -1303,7 +1303,7 @@ fn rebuild_root_override_names(
   // Graphviz parity: root-override skeleton checks treat non-skeleton names as
   // empty cluster keys when rebuilding attached-cluster bundles.
   let skeleton_cluster_or_empty = (name : String) =>
-    cluster_key_from_skeleton_name(name).unwrap_or_default()
+    cluster_key_from_skeleton(name).unwrap_or_default()
   // Graphviz parity: any parsed skeleton cluster key is a skeleton marker.
   let is_root_override_skeleton_name = (name : String) =>
     skeleton_cluster_or_empty(name) != ""
