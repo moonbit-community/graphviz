@@ -858,57 +858,69 @@ fn should_enable_root_flip(
 fn run_root_rank_order_phase(
   inputs : RootRankOrderPhaseInputs,
 ) -> RootClusterRankOrderPhaseOutput {
-  let order_cluster_keys = inputs.order_cluster_keys
-  let rank_same_groups = inputs.rank_same_groups
-  let rank_same_order = inputs.rank_same_order
-  let order_sizes_out = inputs.order_sizes_out
-  let nodesep_pt = inputs.nodesep_pt
-  let has_edge_labels = inputs.has_edge_labels
-  let port_order_positions = inputs.port_order_positions
-  let port_order_contrib = inputs.port_order_contrib
-  let order_cluster_skeleton = inputs.order_cluster_skeleton
-  let flat_constraints = inputs.flat_constraints
-  let graphviz_flip = inputs.graphviz_flip
-  let root_reorder_output = inputs.root_reorder_output
   // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
   // path as cluster-phase root bucket ordering, with root-flip guarding.
   let root_graphviz_flip =
-    should_enable_root_flip(graphviz_flip, order_cluster_keys)
+    should_enable_root_flip(inputs.graphviz_flip, inputs.order_cluster_keys)
   let ordered_root = reorder_rank_groups(
-    root_reorder_output.root_rank_keys,
-    root_reorder_output.root_groups,
-    root_reorder_output.root_edges_out,
-    root_reorder_output.root_edge_tail_out,
-    root_reorder_output.root_edge_head_out,
-    root_reorder_output.root_edge_tail_port_x,
-    root_reorder_output.root_edge_head_port_x,
-    root_reorder_output.root_edge_tail_port_order,
-    root_reorder_output.root_edge_head_port_order,
-    root_reorder_output.root_parents,
-    root_reorder_output.root_children,
-    order_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    root_reorder_output.root_edge_order,
-    root_reorder_output.root_node_order,
-    order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
+    inputs.root_reorder_output.root_rank_keys,
+    inputs.root_reorder_output.root_groups,
+    inputs.root_reorder_output.root_edges_out,
+    inputs.root_reorder_output.root_edge_tail_out,
+    inputs.root_reorder_output.root_edge_head_out,
+    inputs.root_reorder_output.root_edge_tail_port_x,
+    inputs.root_reorder_output.root_edge_head_port_x,
+    inputs.root_reorder_output.root_edge_tail_port_order,
+    inputs.root_reorder_output.root_edge_head_port_order,
+    inputs.root_reorder_output.root_parents,
+    inputs.root_reorder_output.root_children,
+    inputs.order_cluster_keys,
+    inputs.rank_same_groups,
+    inputs.rank_same_order,
+    inputs.root_reorder_output.root_edge_order,
+    inputs.root_reorder_output.root_node_order,
+    inputs.order_sizes_out,
+    inputs.nodesep_pt,
+    inputs.has_edge_labels,
+    inputs.port_order_positions,
+    inputs.port_order_contrib,
     Map::new(),
-    order_cluster_skeleton,
-    flat_constraints,
+    inputs.order_cluster_skeleton,
+    inputs.flat_constraints,
     graphviz_flip=root_graphviz_flip,
     coalesce_parallel_edges=true,
   )
   finalize_root_rank_order_phase_output(
-    root_reorder_output.root_rank_keys,
-    root_reorder_output.root_groups,
+    inputs.root_reorder_output.root_rank_keys,
+    inputs.root_reorder_output.root_groups,
     ordered_root,
+    inputs.order_cluster_keys,
+    inputs.order_cluster_skeleton,
+    inputs.graphviz_flip,
+  )
+}
+
+///|
+/// Graphviz parity: graphviz_flip root output merge replays ordered root
+/// membership from root mincross back into seeded root rank groups.
+fn build_graphviz_flip_merged_root_groups(
+  root_rank_keys : Array[Int],
+  root_groups : Map[Int, Array[String]],
+  ordered_root : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let ordered_root_nodes =
+    build_order_nodes_from_groups(ordered_root, root_rank_keys)
+  let ordered_root_mincross_nodes =
+    build_node_membership_set(ordered_root_nodes)
+  merge_root_mincross_groups(
+    root_rank_keys,
+    root_groups,
+    ordered_root,
+    ordered_root_mincross_nodes,
     order_cluster_keys,
     order_cluster_skeleton,
-    graphviz_flip,
   )
 }
 
@@ -931,18 +943,11 @@ fn finalize_root_rank_order_phase_output(
       ordered_root,
     }
   }
-  // Graphviz parity: root graphviz_flip merge replays root mincross output
-  // back into seeded rank groups using filtered root node membership.
-  let ordered_root_nodes =
-    build_order_nodes_from_groups(ordered_root, root_rank_keys)
-  let ordered_root_mincross_nodes =
-    build_node_membership_set(ordered_root_nodes)
   let merged_ordered_root =
-    merge_root_mincross_groups(
+    build_graphviz_flip_merged_root_groups(
       root_rank_keys,
       root_groups,
       ordered_root,
-      ordered_root_mincross_nodes,
       order_cluster_keys,
       order_cluster_skeleton,
     )
