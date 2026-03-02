@@ -104,30 +104,6 @@ priv struct RootClusterRanksRunInputs {
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
-/// Graphviz parity: graphviz_flip root override replay is applied only when
-/// flip mode is on and fixture override groups are present.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_graphviz_flip_root_override(
-  ordered : Map[Int, Array[String]],
-  graphviz_flip : Bool,
-  cluster_keys : Map[String, String],
-) -> Map[Int, Array[String]] {
-  if !graphviz_flip {
-    return ordered
-  }
-  match root_mincross_groups_override.val {
-    Some(override_groups) =>
-      apply_root_groups_override(
-        ordered,
-        override_groups,
-        cluster_keys,
-        graphviz_flip,
-      )
-    None => ordered
-  }
-}
-
-///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -190,11 +166,20 @@ fn run_root_and_cluster_ranks(
   let order_groups_for_mincross =
     root_mincross_reorder_output.order_groups_for_mincross
   let ordered =
-    apply_graphviz_flip_root_override(
-      root_mincross_reorder_output.ordered,
-      inputs.graphviz_flip,
-      inputs.cluster_meta.cluster_keys,
-    )
+    if !inputs.graphviz_flip {
+      root_mincross_reorder_output.ordered
+    } else {
+      match root_mincross_groups_override.val {
+        Some(override_groups) =>
+          apply_root_groups_override(
+            root_mincross_reorder_output.ordered,
+            override_groups,
+            inputs.cluster_meta.cluster_keys,
+            inputs.graphviz_flip,
+          )
+        None => root_mincross_reorder_output.ordered
+      }
+    }
   // Graphviz parity: clustered order pass runs cluster-local build_ranks on
   // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
   if inputs.order_with_clusters {
