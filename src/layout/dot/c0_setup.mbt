@@ -34,27 +34,6 @@ priv struct OrderingReorderSetup {
 /// and dispatch preparation helpers.
 
 ///|
-/// Graphviz parity: explicit-port endpoints are tracked before class2 to keep
-/// port-order constraints available during ordering setup.
-fn build_port_edge_nodes(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> Map[String, Bool] {
-  let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
-      @dot_shared.port_is_explicit(edge.head_port())
-    if ported {
-      port_edge_nodes[edge_tail[edge_idx]] = true
-      port_edge_nodes[edge_head[edge_idx]] = true
-    }
-  }
-  port_edge_nodes
-}
-
-///|
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
 /// in the same position as Graphviz ordering setup, even when only used for
 /// parity diagnostics.
@@ -96,7 +75,18 @@ fn build_ordering_context(
     edge_cluster_keys,
     cluster_meta.cluster_parents,
   )
-  let port_edge_nodes = build_port_edge_nodes(edges, edge_tail, edge_head)
+  // Graphviz parity: explicit-port endpoints are tracked before class2 to keep
+  // port-order constraints available during ordering setup.
+  let port_edge_nodes : Map[String, Bool] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
+      @dot_shared.port_is_explicit(edge.head_port())
+    if ported {
+      port_edge_nodes[edge_tail[edge_idx]] = true
+      port_edge_nodes[edge_head[edge_idx]] = true
+    }
+  }
   let local_cluster_order = build_local_cluster_order(
     nodes,
     cluster_meta.intercluster_keys,
