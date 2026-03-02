@@ -89,22 +89,20 @@ fn compute_ordering_and_vnodes(
     )
   let reorder_setup =
     build_ordering_reorder_setup(
-      {
-        nodes,
-        edges,
-        edge_tail,
-        edge_head,
-        edge_reversed,
-        edge_out_order,
-        ranks,
-        groups,
-        node_order,
-        port_edge_nodes: runtime_context.port_edge_nodes,
-        vnode_count: runtime_context.vnode_count,
-        rankdir,
-        cluster_meta,
-        vnode_info: runtime_context.vnode_info,
-      },
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      runtime_context.port_edge_nodes,
+      runtime_context.vnode_count,
+      rankdir,
+      cluster_meta,
+      runtime_context.vnode_info,
       edge_port_data,
     )
   let dispatch_output =

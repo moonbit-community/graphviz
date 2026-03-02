@@ -31,27 +31,6 @@ priv struct OrderingReorderSetup {
 }
 
 ///|
-/// Graphviz parity: dispatch setup input bundle keeps edge-port/materialization
-/// sources unchanged before class2+mincross reorder setup derivation.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingDispatchSetupInputs {
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
-  port_edge_nodes : Map[String, Bool]
-  vnode_count : Int
-  rankdir : RankDir
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-}
-
-///|
 /// Stage C Phase C0 split: ordering setup context
 /// and dispatch preparation helpers.
 
@@ -201,42 +180,55 @@ fn build_gdnlist_order(
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_reorder_setup(
-  inputs : OrderingDispatchSetupInputs,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  port_edge_nodes : Map[String, Bool],
+  vnode_count : Int,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+  vnode_info : EdgeVnodeInfo,
   edge_port_data : OrderingEdgePortData,
 ) -> OrderingReorderSetup {
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
   // clustered/nonclustered mincross paths diverge.
   let ordering_groups_base = apply_rank_same_order(
-    inputs.groups,
-    inputs.cluster_meta.rank_same_groups,
-    inputs.cluster_meta.rank_same_order,
-    inputs.node_order,
-    inputs.port_edge_nodes,
+    groups,
+    cluster_meta.rank_same_groups,
+    cluster_meta.rank_same_order,
+    node_order,
+    port_edge_nodes,
   )
   let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = inputs.vnode_count > 0
+  let order_with_vnodes = vnode_count > 0
   let order_with_clusters =
-    inputs.cluster_meta.has_clusters &&
-    inputs.cluster_meta.cluster_min_rank.length() > 0
-  let graphviz_flip = inputs.rankdir == RankDir::RL || inputs.rankdir == RankDir::LR
+    cluster_meta.has_clusters &&
+    cluster_meta.cluster_min_rank.length() > 0
+  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
   let flat_rank_constraints =
-    build_flat_rank_constraints(inputs.edge_tail, inputs.edge_head, inputs.ranks)
+    build_flat_rank_constraints(edge_tail, edge_head, ranks)
   let class2_data =
     build_ordering_class2_data(
-      inputs.nodes,
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_out_order,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
       edge_port_data.edge_tail_port_x,
       edge_port_data.edge_head_port_x,
       edge_port_data.edge_tail_port_order,
       edge_port_data.edge_head_port_order,
-      inputs.ranks,
-      inputs.vnode_info.edge_vnodes,
+      ranks,
+      vnode_info.edge_vnodes,
       order_with_vnodes,
       order_with_clusters,
-      inputs.cluster_meta,
+      cluster_meta,
       flat_rank_constraints,
       graphviz_flip,
     )
@@ -244,7 +236,7 @@ fn build_ordering_reorder_setup(
     build_gdnlist_order(
       class2_data,
       graphviz_flip,
-      inputs.cluster_meta.cluster_order,
+      cluster_meta.cluster_order,
     )
   let nlist_order_index : Map[String, Int] = Map::new()
   let mut nlist_idx = 0
@@ -253,25 +245,25 @@ fn build_ordering_reorder_setup(
     nlist_idx = nlist_idx + 1
   }
   let vnode_order_keys_for_ordering =
-    if inputs.vnode_count <= 0 {
+    if vnode_count <= 0 {
       Map::new()
-    } else if inputs.cluster_meta.has_clusters {
+    } else if cluster_meta.has_clusters {
       build_vnode_order_keys(
-        inputs.edges,
-        inputs.edge_tail,
-        inputs.edge_head,
-        inputs.edge_reversed,
-        inputs.ranks,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        ranks,
         base_order_index,
-        inputs.cluster_meta.cluster_keys,
-        inputs.cluster_meta.cluster_parents,
-        inputs.vnode_info.edge_vnodes,
-        inputs.vnode_info.vnode_ranks,
+        cluster_meta.cluster_keys,
+        cluster_meta.cluster_parents,
+        vnode_info.edge_vnodes,
+        vnode_info.vnode_ranks,
       )
     } else {
       build_vnode_keys_from_nlist(
         ordering_groups_base,
-        inputs.vnode_info.vnodes_by_rank,
+        vnode_info.vnodes_by_rank,
         base_order_index,
         nlist_order_index,
         Map::new(),
