@@ -1876,6 +1876,13 @@ priv struct ReverseMergeMetadata {
 }
 
 ///|
+priv struct RankConstraintSeed {
+  rank_adj_constraints : Map[String, ConstraintEdge]
+  rank_adj_order : Array[String]
+  order_in_rank : Map[String, Int]
+}
+
+///|
 fn build_reverse_merge_metadata(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -1934,6 +1941,47 @@ fn build_reverse_merge_metadata(
     }
   }
   { merged_edge_weight_bonus, merged_edge_skip }
+}
+
+///|
+fn build_rank_constraint_seed(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+) -> RankConstraintSeed {
+  let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
+  let rank_adj_order : Array[String] = []
+  let order_in_rank : Map[String, Int] = Map::new()
+  for rank in rank_keys {
+    let names = match groups.get(rank) {
+      Some(list) => list
+      None => []
+    }
+    for i in 0..<names.length() {
+      order_in_rank[names[i]] = i
+    }
+    let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
+    let mut i = 0
+    while i + 1 < names.length() {
+      let tail = names[i]
+      let head = names[i + 1]
+      let minlen = nodesep_minlen(tail, head, sizes, rank_nodesep)
+      let key = "\{tail}|\{head}"
+      rank_adj_constraints[key] = {
+        tail,
+        head,
+        minlen,
+        weight: 0,
+        tail_port: None,
+        head_port: None,
+      }
+      rank_adj_order.push(key)
+      i = i + 1
+    }
+  }
+  { rank_adj_constraints, rank_adj_order, order_in_rank }
 }
 
 ///|
@@ -2056,47 +2104,17 @@ fn build_constraint_graph(
     extra_rank,
     base_positions,
   )
-  let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
-  let rank_adj_order : Array[String] = []
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    let rank_nodesep = rank_nodesep_pt(rank, nodesep_pt, has_edge_labels)
-    let mut i = 0
-    while i + 1 < names.length() {
-      let tail = names[i]
-      let head = names[i + 1]
-      let minlen = nodesep_minlen(
-        tail,
-        head,
-        sizes,
-        rank_nodesep,
-      )
-      let key = "\{tail}|\{head}"
-      rank_adj_constraints[key] = {
-        tail,
-        head,
-        minlen,
-        weight: 0,
-        tail_port: None,
-        head_port: None,
-      }
-      rank_adj_order.push(key)
-      i = i + 1
-    }
-  }
-  let order_in_rank : Map[String, Int] = Map::new()
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
-    for i in 0..<names.length() {
-      order_in_rank[names[i]] = i
-    }
-  }
+  let rank_constraint_seed =
+    build_rank_constraint_seed(
+      rank_keys,
+      groups,
+      sizes,
+      nodesep_pt,
+      has_edge_labels,
+    )
+  let rank_adj_constraints = rank_constraint_seed.rank_adj_constraints
+  let rank_adj_order = rank_constraint_seed.rank_adj_order
+  let order_in_rank = rank_constraint_seed.order_in_rank
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
   let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
   let reverse_merge_metadata =
