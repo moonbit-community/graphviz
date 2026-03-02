@@ -460,12 +460,19 @@ pub fn acyclic_edge_directions_with_order(
 }
 
 ///|
+pub struct AcyclicNameDirections {
+  tail : Array[String]
+  head : Array[String]
+  reversed : Array[Bool]
+}
+
+///|
 pub fn acyclic_edge_directions_for_names(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
   edge_is_active : Array[Bool],
-) -> (Array[String], Array[String], Array[Bool]) {
+) -> AcyclicNameDirections {
   let node_index : Map[String, Int] = Map::new()
   for i in 0..<node_names.length() {
     node_index[node_names[i]] = i
@@ -521,5 +528,5 @@ pub fn acyclic_edge_directions_for_names(
       )
     }
   }
-  (tail, head, edge_reversed)
+  { tail, head, reversed: edge_reversed }
 }

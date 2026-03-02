@@ -89,7 +89,7 @@ pub fn solve_clustered_leader_ranks(
       Array[String],
       Array[String],
       Array[Bool],
-    ) -> (Array[String], Array[String], Array[Bool])
+    ) -> AcyclicNameDirections
   ),
 ) -> Map[String, Int] {
   let rank_graph = @network_simplex.new_graph()
@@ -201,13 +201,14 @@ pub fn solve_clustered_leader_ranks(
     )
     let _ = @network_simplex.add_edge(rank_graph, slack_idx, head_idx, h_len, weight)
   }
-  let (direct_tail_final, direct_head_final, _direct_rev) =
-    orient_edges_for_names(
-      rank_names,
-      direct_tail,
-      direct_head,
-      direct_active,
-    )
+  let direct_oriented = orient_edges_for_names(
+    rank_names,
+    direct_tail,
+    direct_head,
+    direct_active,
+  )
+  let direct_tail_final = direct_oriented.tail
+  let direct_head_final = direct_oriented.head
   let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
   for i in 0..<direct_tail_final.length() {
     let tail_name = direct_tail_final[i]
