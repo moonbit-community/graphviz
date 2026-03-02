@@ -379,7 +379,7 @@ fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
 ///|
 /// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c
 /// and dotgen/position.c (compress_graph input width).
-fn parse_graph_size_pt_for_compress(graph : @cgraph.Graph) -> (Double, Double)? {
+fn parse_graph_size_for_compress(graph : @cgraph.Graph) -> (Double, Double)? {
   match graph.get_attr("size") {
     Some(value) => {
       let parts : Array[String] = []
@@ -418,7 +418,7 @@ fn compress_width_minlen_pt(
   if !graph_ratio_is_compress(graph) {
     return None
   }
-  let (size_w, size_h) = match parse_graph_size_pt_for_compress(graph) {
+  let (size_w, size_h) = match parse_graph_size_for_compress(graph) {
     Some(value) => value
     None => return None
   }
