@@ -1032,7 +1032,19 @@ fn apply_root_margin_x(
 }
 
 ///|
-fn parse_graph_size_pt(graph : @cgraph.Graph) -> (Double, Double)? {
+priv struct GraphSizePt {
+  width_pt : Double
+  height_pt : Double
+}
+
+///|
+priv struct RatioFillScaleFactors {
+  sx : Double
+  sy : Double
+}
+
+///|
+fn parse_graph_size_pt(graph : @cgraph.Graph) -> GraphSizePt? {
   match graph.get_attr("size") {
     Some(value) => {
       let parts : Array[String] = []
@@ -1054,7 +1066,7 @@ fn parse_graph_size_pt(graph : @cgraph.Graph) -> (Double, Double)? {
       if width_in <= 0.0 || height_in <= 0.0 {
         return None
       }
-      Some((width_in * 72.0, height_in * 72.0))
+      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
     }
     None => None
   }
@@ -1067,7 +1079,7 @@ fn ratio_fill_scale_factors(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
   rankdir : RankDir,
-) -> (Double, Double)? {
+) -> RatioFillScaleFactors? {
   let ratio = match graph.get_attr("ratio") {
     Some(value) => value.trim().to_lower()
     None => return None
@@ -1075,7 +1087,7 @@ fn ratio_fill_scale_factors(
   if ratio != "fill" {
     return None
   }
-  let (target_w, target_h) = match parse_graph_size_pt(graph) {
+  let target_size = match parse_graph_size_pt(graph) {
     Some(size) => size
     None => return None
   }
@@ -1090,8 +1102,8 @@ fn ratio_fill_scale_factors(
     span_w = span_h
     span_h = tmp
   }
-  let mut xf = target_w / span_w
-  let mut yf = target_h / span_h
+  let mut xf = target_size.width_pt / span_w
+  let mut yf = target_size.height_pt / span_h
   if xf <= 0.0 || yf <= 0.0 {
     return None
   }
@@ -1109,7 +1121,7 @@ fn ratio_fill_scale_factors(
     xf = yf
     yf = tmp
   }
-  Some((xf, yf))
+  Some({ sx: xf, sy: yf })
 }
 
 ///|
@@ -1232,12 +1244,12 @@ fn apply_ratio_fill_scale(
     return layout
   }
   match ratio_fill_scale_factors(graph, ratio_bbox, rankdir) {
-    Some((sx, sy)) => {
-      if sx == 1.0 && sy == 1.0 {
+    Some(scale_factors) => {
+      if scale_factors.sx == 1.0 && scale_factors.sy == 1.0 {
         layout
       } else {
         // Graphviz parity: set_aspect rounds ND_coord after scaling.
-        scale_layout_graph(layout, sx, sy, true)
+        scale_layout_graph(layout, scale_factors.sx, scale_factors.sy, true)
       }
     }
     None => layout

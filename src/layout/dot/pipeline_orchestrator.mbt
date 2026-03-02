@@ -433,9 +433,9 @@ fn compute_dot_routing_stage(
     )
   let (ratio_sx, ratio_sy) =
     match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
-      Some((sx, sy)) =>
-        if sx != 1.0 || sy != 1.0 {
-          (sx, sy)
+      Some(scale_factors) =>
+        if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
+          (scale_factors.sx, scale_factors.sy)
         } else {
           (1.0, 1.0)
         }
