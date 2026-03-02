@@ -559,12 +559,14 @@ fn build_nonroot_tail_names(
     let rank_ordered =
       if rank == min_rank && rank_ordered_base.length() > 1 && all_input_like {
         rebucket_input_like_order(
-          cluster,
-          rank_ordered_base,
-          heads_by_tail,
-          cluster_order_pos,
-          cluster_order,
-          rem_cluster_keys,
+          {
+            cluster,
+            rank_ordered: rank_ordered_base,
+            heads_by_tail,
+            cluster_order_pos,
+            cluster_order,
+            rem_cluster_keys,
+          },
         )
       } else {
         rank_ordered_base
@@ -575,30 +577,52 @@ fn build_nonroot_tail_names(
 }
 
 ///|
+/// Graphviz parity: input-like rebucketing payload keeps cluster-order and
+/// rematerialized edge snapshots unchanged before category classification.
+/// Do not change behavior without updating fixtures/tests.
+priv struct InputLikeRebucketInputs {
+  cluster : String
+  rank_ordered : Array[String]
+  heads_by_tail : Map[String, Array[String]]
+  cluster_order_pos : Map[String, Int]
+  cluster_order : Array[String]
+  rem_cluster_keys : Map[String, String]
+}
+
+///|
+/// Graphviz parity: input-like category classification context keeps cluster
+/// order positions and rematerialized edge lookups for one rank rebucket pass.
+/// Do not change behavior without updating fixtures/tests.
+priv struct InputLikeBucketContext {
+  cluster : String
+  heads_by_tail : Map[String, Array[String]]
+  cluster_order_pos : Map[String, Int]
+  cluster_end_pos : Int
+  current_cluster_pos : Int
+  rem_cluster_keys : Map[String, String]
+}
+
+///|
 /// Graphviz parity: input-like rebucketing classifies names by outgoing
 /// cross-cluster direction and out-degree priority.
 fn classify_input_like_bucket(
-  cluster : String,
   name : String,
-  heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
-  cluster_end_pos : Int,
-  current_cluster_pos : Int,
-  rem_cluster_keys : Map[String, String],
+  context : InputLikeBucketContext,
 ) -> Int {
-  let heads = heads_by_tail.get(name).unwrap_or_default()
+  let heads = context.heads_by_tail.get(name).unwrap_or_default()
   let mut has_later = false
   let mut has_earlier = false
   for head in heads {
     let head_cluster =
-      cluster_key_for_tail_name(rem_cluster_keys, head)
-    if head_cluster == cluster {
+      cluster_key_for_tail_name(context.rem_cluster_keys, head)
+    if head_cluster == context.cluster {
       continue
     }
-    let head_pos = cluster_order_pos.get(head_cluster).unwrap_or(cluster_end_pos)
-    if head_pos > current_cluster_pos {
+    let head_pos =
+      context.cluster_order_pos.get(head_cluster).unwrap_or(context.cluster_end_pos)
+    if head_pos > context.current_cluster_pos {
       has_later = true
-    } else if head_pos < current_cluster_pos {
+    } else if head_pos < context.current_cluster_pos {
       has_earlier = true
     }
   }
@@ -620,28 +644,26 @@ fn classify_input_like_bucket(
 /// rebucketed by outgoing cross-cluster direction and out-degree priority.
 /// Do not change behavior without updating fixtures/tests.
 fn rebucket_input_like_order(
-  cluster : String,
-  rank_ordered : Array[String],
-  heads_by_tail : Map[String, Array[String]],
-  cluster_order_pos : Map[String, Int],
-  cluster_order : Array[String],
-  rem_cluster_keys : Map[String, String],
+  inputs : InputLikeRebucketInputs,
 ) -> Array[String] {
-  let current_cluster_pos = cluster_order_pos.get(cluster).unwrap_or_default()
-  let cluster_end_pos = cluster_order.length()
+  let context =
+    {
+      cluster: inputs.cluster,
+      heads_by_tail: inputs.heads_by_tail,
+      cluster_order_pos: inputs.cluster_order_pos,
+      cluster_end_pos: inputs.cluster_order.length(),
+      current_cluster_pos:
+        inputs.cluster_order_pos.get(inputs.cluster).unwrap_or_default(),
+      rem_cluster_keys: inputs.rem_cluster_keys,
+    }
   let category0 : Array[String] = []
   let category1 : Array[String] = []
   let category2 : Array[String] = []
   let category3 : Array[String] = []
-  for name in rank_ordered {
+  for name in inputs.rank_ordered {
     match classify_input_like_bucket(
-      cluster,
       name,
-      heads_by_tail,
-      cluster_order_pos,
-      cluster_end_pos,
-      current_cluster_pos,
-      rem_cluster_keys,
+      context,
     ) {
       0 => category0.push(name)
       1 => category1.push(name)
