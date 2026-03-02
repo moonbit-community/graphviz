@@ -1513,6 +1513,60 @@ fn upsert_constraint_with_max(
 }
 
 ///|
+fn add_segment_slack_edges(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  segments : Array[SlackSegment],
+  port_offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  real_by_name : Map[String, @cgraph.Node],
+) -> Unit {
+  for seg in segments {
+    let tail_idx = match index.get(seg.tail) {
+      Some(value) => value
+      None => continue
+    }
+    let head_idx = match index.get(seg.head) {
+      Some(value) => value
+      None => continue
+    }
+    let tail_offset = edge_port_offset(
+      seg.tail,
+      seg.tail_port,
+      port_offsets,
+      sizes,
+      rankdir,
+      real_by_name,
+    )
+    let head_offset = edge_port_offset(
+      seg.head,
+      seg.head_port,
+      port_offsets,
+      sizes,
+      rankdir,
+      real_by_name,
+    )
+    let delta = head_offset - tail_offset
+    let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
+    let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
+    // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
+    let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
+    let tail_rank = @network_simplex.node_rank(graph, tail_idx)
+    let head_rank = @network_simplex.node_rank(graph, head_idx)
+    let base_tail = tail_rank - m0 - 1
+    let base_head = head_rank - m1 - 1
+    @network_simplex.set_node_rank(
+      graph,
+      slack_idx,
+      if base_tail < base_head { base_tail } else { base_head },
+    )
+    let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
+    let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2079,93 +2133,28 @@ fn build_constraint_graph(
       Some(list) => list
       None => []
     }
-    for seg in segments {
-      let tail_idx = match index.get(seg.tail) {
-        Some(value) => value
-        None => continue
-      }
-      let head_idx = match index.get(seg.head) {
-        Some(value) => value
-        None => continue
-      }
-      let tail_offset = edge_port_offset(
-        seg.tail,
-        seg.tail_port,
-        port_offsets,
-        sizes,
-        rankdir,
-        real_by_name,
-      )
-      let head_offset = edge_port_offset(
-        seg.head,
-        seg.head_port,
-        port_offsets,
-        sizes,
-        rankdir,
-        real_by_name,
-      )
-      let delta = head_offset - tail_offset
-      let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-      let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-      // Graphviz parity: make_edge_pairs applies to each virtual edge segment.
-      let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
-      let tail_rank = @network_simplex.node_rank(graph, tail_idx)
-      let head_rank = @network_simplex.node_rank(graph, head_idx)
-      let base_tail = tail_rank - m0 - 1
-      let base_head = head_rank - m1 - 1
-      @network_simplex.set_node_rank(
-        graph,
-        slack_idx,
-        if base_tail < base_head { base_tail } else { base_head },
-      )
-      let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
-      let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
-    }
+    add_segment_slack_edges(
+      graph,
+      index,
+      segments,
+      port_offsets,
+      sizes,
+      rankdir,
+      real_by_name,
+    )
     tail_seen[tail_name] = true
   }
   for tail_name, segments in segments_by_tail {
     if tail_seen.get(tail_name) is None {
-      for seg in segments {
-        let tail_idx = match index.get(seg.tail) {
-          Some(value) => value
-          None => continue
-        }
-        let head_idx = match index.get(seg.head) {
-          Some(value) => value
-          None => continue
-        }
-        let tail_offset = edge_port_offset(
-          seg.tail,
-          seg.tail_port,
-          port_offsets,
-          sizes,
-          rankdir,
-          real_by_name,
-        )
-        let head_offset = edge_port_offset(
-          seg.head,
-          seg.head_port,
-          port_offsets,
-          sizes,
-          rankdir,
-          real_by_name,
-        )
-        let delta = head_offset - tail_offset
-        let m0 = if delta > 0.0 { trunc_int(delta) } else { 0 }
-        let m1 = if delta < 0.0 { trunc_int(-delta) } else { 0 }
-        let slack_idx = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
-        let tail_rank = @network_simplex.node_rank(graph, tail_idx)
-        let head_rank = @network_simplex.node_rank(graph, head_idx)
-        let base_tail = tail_rank - m0 - 1
-        let base_head = head_rank - m1 - 1
-        @network_simplex.set_node_rank(
-          graph,
-          slack_idx,
-          if base_tail < base_head { base_tail } else { base_head },
-        )
-        let _ = @network_simplex.add_edge(graph, slack_idx, tail_idx, m0 + 1, seg.weight)
-        let _ = @network_simplex.add_edge(graph, slack_idx, head_idx, m1 + 1, seg.weight)
-      }
+      add_segment_slack_edges(
+        graph,
+        index,
+        segments,
+        port_offsets,
+        sizes,
+        rankdir,
+        real_by_name,
+      )
     }
   }
   for extra_node in late_extra_nodes {
