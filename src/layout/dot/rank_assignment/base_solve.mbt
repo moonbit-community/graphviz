@@ -295,12 +295,7 @@ pub fn compute_ranks_directed_base(
     let graph = @network_simplex.new_graph()
     let local_index : Map[Int, Int] = Map::new()
     for rep_idx in component {
-      let rep_name =
-        if rep_idx >= 0 && rep_idx < rep_order.length() {
-          rep_order[rep_idx]
-        } else {
-          ""
-        }
+      let rep_name = rep_order[rep_idx]
       local_index[rep_idx] = @network_simplex.add_node(graph, rep_name)
     }
     for key in merged_edge_order {
@@ -346,12 +341,7 @@ pub fn compute_ranks_directed_base(
         Some(value) => value
         None => continue
       }
-      let rep_name =
-        if rep_idx >= 0 && rep_idx < rep_order.length() {
-          rep_order[rep_idx]
-        } else {
-          ""
-        }
+      let rep_name = rep_order[rep_idx]
       rep_ranks[rep_name] = @network_simplex.node_rank(graph, local_idx) - component_min_rank
     }
   }
