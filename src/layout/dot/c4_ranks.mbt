@@ -154,7 +154,7 @@ fn run_root_and_cluster_ranks(
     if graphviz_flip {
       match root_mincross_groups_override.val {
         Some(override_groups) =>
-          apply_root_rank_groups_override(
+          apply_root_groups_override(
             ordered,
             override_groups,
             cluster_meta.cluster_keys,
