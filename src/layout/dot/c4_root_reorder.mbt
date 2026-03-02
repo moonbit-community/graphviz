@@ -457,45 +457,57 @@ fn finalize_root_nlist_order(
 }
 
 ///|
+/// Graphviz parity: root cluster reorder GD_nlist build inputs keep skeleton/
+/// root edge replay payload unchanged before root-tail/nlist reconstruction.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootNlistOrderBuildInputs {
+  nlist_order : Array[String]
+  cluster_keys : Map[String, String]
+  ranks : Map[String, Int]
+  root_nodes : Array[String]
+  root_node_map : Map[String, @cgraph.Node]
+  skeleton_edge_creation : Array[(String, String)]
+  root_edge_creation : Array[(String, String)]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
 /// sequence from input order, prioritizes source tails, then rebuilds nlist via
 /// edge creation order while appending any missing root nodes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_nlist_order(
-  nlist_order : Array[String],
-  cluster_keys : Map[String, String],
-  ranks : Map[String, Int],
-  root_nodes : Array[String],
-  root_node_map : Map[String, @cgraph.Node],
-  skeleton_edge_creation : Array[(String, String)],
-  root_edge_creation : Array[(String, String)],
-  flat_rank_constraints : Map[String, Bool],
+  inputs : RootNlistOrderBuildInputs,
 ) -> Array[String] {
   let tail_order_root =
     build_root_tail_order_seed(
-      nlist_order,
-      cluster_keys,
-      ranks,
+      inputs.nlist_order,
+      inputs.cluster_keys,
+      inputs.ranks,
     )
   let root_edge_creation_order =
     merge_edge_creation_sequences(
-      skeleton_edge_creation,
-      root_edge_creation,
+      inputs.skeleton_edge_creation,
+      inputs.root_edge_creation,
     )
   let root_tail_order =
     build_root_source_first_tail_order(
       tail_order_root,
-      root_nodes,
+      inputs.root_nodes,
       root_edge_creation_order,
     )
   let root_nlist_full =
     @dot_shared.build_graphviz_nlist_order_from_edges(
       root_tail_order,
-      root_nodes,
+      inputs.root_nodes,
       root_edge_creation_order,
-      flat_rank_constraints,
+      inputs.flat_rank_constraints,
     )
-  finalize_root_nlist_order(root_nlist_full, root_nodes, root_node_map)
+  finalize_root_nlist_order(
+    root_nlist_full,
+    inputs.root_nodes,
+    inputs.root_node_map,
+  )
 }
 
 ///|
@@ -1285,14 +1297,16 @@ fn build_root_reorder_context(
   // root-node order map from the same root graph/group membership snapshot.
   let root_nlist_order =
     build_root_nlist_order(
-      sources.nlist_order,
-      sources.cluster_keys,
-      sources.ranks,
-      root_nodes,
-      root_node_map,
-      sources.skeleton_edge_creation,
-      sources.root_edge_creation,
-      sources.flat_rank_constraints,
+      {
+        nlist_order: sources.nlist_order,
+        cluster_keys: sources.cluster_keys,
+        ranks: sources.ranks,
+        root_nodes,
+        root_node_map,
+        skeleton_edge_creation: sources.skeleton_edge_creation,
+        root_edge_creation: sources.root_edge_creation,
+        flat_rank_constraints: sources.flat_rank_constraints,
+      },
     )
   let root_node_order =
     build_root_reorder_node_order(
