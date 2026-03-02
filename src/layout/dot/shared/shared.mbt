@@ -264,6 +264,22 @@ pub fn edge_xpenalty(edge : @cgraph.Edge) -> Int {
 }
 
 ///|
+pub fn parse_flat_constraint_key(key : String) -> (String, String)? {
+  match key.find("|") {
+    Some(pos) => {
+      let len = key.length()
+      let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
+      let head =
+        if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
+          ""
+        }
+      Some((tail, head))
+    }
+    None => None
+  }
+}
+
+///|
 /// Graphviz parity: approximate decompose DFS order over fast graph edges.
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_graphviz_nlist_order_from_edges(
@@ -297,14 +313,8 @@ pub fn build_graphviz_nlist_order_from_edges(
   // within a fixed tail/head, so preserve edge_creation insertion order.
   // Do not change behavior without updating fixtures/tests.
   for key, _ in flat_constraints {
-    match key.find("|") {
-      Some(pos) => {
-        let len = key.length()
-        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-        let head =
-          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-            ""
-          }
+    match parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
         match flat_out.get(tail) {
           Some(list) => list.push(head)
           None => flat_out[tail] = [head]

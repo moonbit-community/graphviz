@@ -574,14 +574,8 @@ fn build_flat_neighbors(
     if !value {
       continue
     }
-    match key.find("|") {
-      Some(pos) => {
-        let len = key.length()
-        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-        let head =
-          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-            ""
-          }
+    match @dot_shared.parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
         if tail == "" || head == "" {
           continue
         }

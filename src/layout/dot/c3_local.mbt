@@ -945,14 +945,8 @@ fn build_local_reorder_inputs(
   }
   let cluster_flat_constraints : Map[String, Bool] = Map::new()
   for key, value in flat_constraints {
-    match key.find("|") {
-      Some(pos) => {
-        let len = key.length()
-        let tail = if pos > 0 { key.unsafe_substring(start=0, end=pos) } else { "" }
-        let head =
-          if pos + 1 < len { key.unsafe_substring(start=pos + 1, end=len) } else {
-            ""
-          }
+    match @dot_shared.parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
         if cluster_node_set.get(tail) is Some(_) &&
           cluster_node_set.get(head) is Some(_) {
           cluster_flat_constraints[key] = value
