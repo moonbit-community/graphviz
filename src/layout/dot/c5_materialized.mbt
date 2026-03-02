@@ -176,15 +176,7 @@ fn build_materialized_arrays(
       cluster_order_index,
     )
   let rem_node_order = build_order_index(rem_groups)
-  let (
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-  ) =
+  let rem_materialized =
     collect_order_edges_for_tails(
       rem_nlist_order,
       rem_order_edges_by_tail,
@@ -193,13 +185,13 @@ fn build_materialized_arrays(
     )
   {
     node_order: rem_node_order,
-    edges_out: rem_edges_out,
-    edge_tail_out: rem_edge_tail_out,
-    edge_head_out: rem_edge_head_out,
-    edge_tail_port_x: rem_edge_tail_port_x,
-    edge_head_port_x: rem_edge_head_port_x,
-    edge_tail_port_order: rem_edge_tail_port_order,
-    edge_head_port_order: rem_edge_head_port_order,
+    edges_out: rem_materialized.order_edges_out,
+    edge_tail_out: rem_materialized.order_edge_tail_out,
+    edge_head_out: rem_materialized.order_edge_head_out,
+    edge_tail_port_x: rem_materialized.order_edge_tail_port_x,
+    edge_head_port_x: rem_materialized.order_edge_head_port_x,
+    edge_tail_port_order: rem_materialized.order_edge_tail_port_order,
+    edge_head_port_order: rem_materialized.order_edge_head_port_order,
   }
 }
 

@@ -1014,75 +1014,41 @@ fn build_root_reorder_inputs(
   // Graphviz parity: root reorder edge bundle keeps tail-sequence
   // materialized edges, synthetic port normalization, and edge index/order
   // maps in one stage.
+  let root_materialized =
+    collect_order_edges_for_tails(
+      root_context.root_nlist_order,
+      order_edges_by_tail_root,
+      root_context.root_graph,
+      root_context.root_node_map,
+    )
   let (
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
     root_edge_tail_port_x,
     root_edge_head_port_x,
     root_edge_tail_port_order,
     root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
   ) =
-    {
-      let (
-        root_edges_out,
-        root_edge_tail_out,
-        root_edge_head_out,
-        root_edge_tail_port_x,
-        root_edge_head_port_x,
-        root_edge_tail_port_order,
-        root_edge_head_port_order,
-      ) =
-        collect_order_edges_for_tails(
-          root_context.root_nlist_order,
-          order_edges_by_tail_root,
-          root_context.root_graph,
-          root_context.root_node_map,
-        )
-      let (
-        root_edge_tail_port_x_norm,
-        root_edge_head_port_x_norm,
-        root_edge_tail_port_order_norm,
-        root_edge_head_port_order_norm,
-      ) =
-        normalize_root_edge_ports(
-          root_edge_tail_out,
-          root_edge_head_out,
-          root_edge_tail_port_x,
-          root_edge_head_port_x,
-          root_edge_tail_port_order,
-          root_edge_head_port_order,
-        )
-      let (root_parents, root_children, root_edge_order) =
-        build_edge_indices_and_order(
-          root_context.root_nodes,
-          root_edge_tail_out,
-          root_edge_head_out,
-          root_context.root_ranks,
-          root_edges_out,
-        )
-      (
-        root_edges_out,
-        root_edge_tail_out,
-        root_edge_head_out,
-        root_edge_tail_port_x_norm,
-        root_edge_head_port_x_norm,
-        root_edge_tail_port_order_norm,
-        root_edge_head_port_order_norm,
-        root_parents,
-        root_children,
-        root_edge_order,
-      )
-    }
+    normalize_root_edge_ports(
+      root_materialized.order_edge_tail_out,
+      root_materialized.order_edge_head_out,
+      root_materialized.order_edge_tail_port_x,
+      root_materialized.order_edge_head_port_x,
+      root_materialized.order_edge_tail_port_order,
+      root_materialized.order_edge_head_port_order,
+    )
+  let (root_parents, root_children, root_edge_order) =
+    build_edge_indices_and_order(
+      root_context.root_nodes,
+      root_materialized.order_edge_tail_out,
+      root_materialized.order_edge_head_out,
+      root_context.root_ranks,
+      root_materialized.order_edges_out,
+    )
   {
     root_groups: root_context.root_groups,
     root_rank_keys: root_context.root_rank_keys,
-    root_edges_out,
-    root_edge_tail_out,
-    root_edge_head_out,
+    root_edges_out: root_materialized.order_edges_out,
+    root_edge_tail_out: root_materialized.order_edge_tail_out,
+    root_edge_head_out: root_materialized.order_edge_head_out,
     root_edge_tail_port_x,
     root_edge_head_port_x,
     root_edge_tail_port_order,

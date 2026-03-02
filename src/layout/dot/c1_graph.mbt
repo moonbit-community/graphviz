@@ -307,20 +307,26 @@ fn build_order_graph_and_nodes(
 /// Graphviz parity: edge arrays are materialized from per-tail lists in exact
 /// nlist tail iteration order (shared root/remincross order-graph builder).
 /// Do not change behavior without updating fixtures/tests.
+priv struct OrderEdgeArrays {
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+}
+
+///|
+/// Graphviz parity: edge arrays are materialized from per-tail lists in exact
+/// nlist tail iteration order (shared root/remincross order-graph builder).
+/// Do not change behavior without updating fixtures/tests.
 fn collect_order_edges_for_tails(
   tail_sequence : Array[String],
   edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
+) -> OrderEdgeArrays {
   let order_edges_out : Array[@cgraph.Edge] = []
   let order_edge_tail_out : Array[String] = []
   let order_edge_head_out : Array[String] = []
@@ -357,7 +363,7 @@ fn collect_order_edges_for_tails(
       )
     }
   }
-  (
+  {
     order_edges_out,
     order_edge_tail_out,
     order_edge_head_out,
@@ -365,7 +371,7 @@ fn collect_order_edges_for_tails(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
-  )
+  }
 }
 
 ///|

@@ -149,74 +149,38 @@ fn build_materialized_inputs(
   nodes : Array[@cgraph.Node],
   order_node_order : Map[String, Int],
 ) -> OrderMaterializationData {
-  let (
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_edges_out_unmapped,
-    order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped,
-  ) =
-    {
-      let (
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-      ) =
-        // Graphviz parity: mapped order-edge arrays are materialized from
-        // GD_nlist tail order against the cluster-remapped order graph.
-        collect_order_edges_for_tails(
-          nlist_order,
-          order_edges_by_tail,
-          order_graph,
-          order_node_map,
-        )
-      let (
-        order_edges_out_unmapped,
-        order_edge_tail_out_unmapped,
-        order_edge_head_out_unmapped,
-        order_edge_tail_port_x_unmapped,
-        order_edge_head_port_x_unmapped,
-        order_edge_tail_port_order_unmapped,
-        order_edge_head_port_order_unmapped,
-      ) =
-        // Graphviz parity: unmapped order-edge arrays are materialized from
-        // GD_nlist tail order against the non-remapped order graph.
-        collect_order_edges_for_tails(
-          nlist_order,
-          order_edges_by_tail_unmapped,
-          order_graph_unmapped,
-          order_node_map_unmapped,
-        )
-      (
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_edge_tail_port_x,
-        order_edge_head_port_x,
-        order_edge_tail_port_order,
-        order_edge_head_port_order,
-        order_edges_out_unmapped,
-        order_edge_tail_out_unmapped,
-        order_edge_head_out_unmapped,
-        order_edge_tail_port_x_unmapped,
-        order_edge_head_port_x_unmapped,
-        order_edge_tail_port_order_unmapped,
-        order_edge_head_port_order_unmapped,
-      )
-    }
+  // Graphviz parity: mapped/unmapped order-edge arrays are materialized from
+  // GD_nlist tail order against remapped and non-remapped order graphs.
+  let mapped_edges =
+    collect_order_edges_for_tails(
+      nlist_order,
+      order_edges_by_tail,
+      order_graph,
+      order_node_map,
+    )
+  let unmapped_edges =
+    collect_order_edges_for_tails(
+      nlist_order,
+      order_edges_by_tail_unmapped,
+      order_graph_unmapped,
+      order_node_map_unmapped,
+    )
+  let order_edges_out = mapped_edges.order_edges_out
+  let order_edge_tail_out = mapped_edges.order_edge_tail_out
+  let order_edge_head_out = mapped_edges.order_edge_head_out
+  let order_edge_tail_port_x = mapped_edges.order_edge_tail_port_x
+  let order_edge_head_port_x = mapped_edges.order_edge_head_port_x
+  let order_edge_tail_port_order = mapped_edges.order_edge_tail_port_order
+  let order_edge_head_port_order = mapped_edges.order_edge_head_port_order
+  let order_edges_out_unmapped = unmapped_edges.order_edges_out
+  let order_edge_tail_out_unmapped = unmapped_edges.order_edge_tail_out
+  let order_edge_head_out_unmapped = unmapped_edges.order_edge_head_out
+  let order_edge_tail_port_x_unmapped = unmapped_edges.order_edge_tail_port_x
+  let order_edge_head_port_x_unmapped = unmapped_edges.order_edge_head_port_x
+  let order_edge_tail_port_order_unmapped =
+    unmapped_edges.order_edge_tail_port_order
+  let order_edge_head_port_order_unmapped =
+    unmapped_edges.order_edge_head_port_order
   // Graphviz parity: ND_out/ND_in neighbor order follows edge insertion (AGSEQ).
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
