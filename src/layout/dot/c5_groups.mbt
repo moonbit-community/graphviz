@@ -441,6 +441,23 @@ fn build_remincross_pass_inputs(
 }
 
 ///|
+/// Graphviz parity: intercluster trailing-vnode checks use inclusive overlap
+/// over each cluster's min/max rank bounds with min-rank fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn cluster_rank_ranges_overlap(
+  tail_cluster : String,
+  head_cluster : String,
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+) -> Bool {
+  let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
+  let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
+  let head_min = cluster_min_rank.get(head_cluster).unwrap_or_default()
+  let head_max = cluster_max_rank.get(head_cluster).unwrap_or(head_min)
+  tail_min <= head_max && head_min <= tail_max
+}
+
+///|
 /// Graphviz parity: trailing-vnode candidate set comes from intercluster edge
 /// vnode chains on edges that satisfy the rank-range overlap gate.
 fn collect_remincross_trailing(
@@ -472,13 +489,12 @@ fn collect_remincross_trailing(
       head_cluster == "" {
       continue
     }
-    // Graphviz parity: intercluster trailing-vnode checks use inclusive
-    // rank-range overlap derived from each cluster's min/max rank bounds.
-    let tail_min = cluster_min_rank.get(tail_cluster).unwrap_or_default()
-    let tail_max = cluster_max_rank.get(tail_cluster).unwrap_or(tail_min)
-    let head_min = cluster_min_rank.get(head_cluster).unwrap_or_default()
-    let head_max = cluster_max_rank.get(head_cluster).unwrap_or(head_min)
-    if tail_min <= head_max && head_min <= tail_max {
+    if cluster_rank_ranges_overlap(
+      tail_cluster,
+      head_cluster,
+      cluster_min_rank,
+      cluster_max_rank,
+    ) {
       continue
     }
     let vnodes =
