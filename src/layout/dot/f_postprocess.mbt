@@ -1032,44 +1032,9 @@ fn apply_root_margin_x(
 }
 
 ///|
-priv struct GraphSizePt {
-  width_pt : Double
-  height_pt : Double
-}
-
-///|
 priv struct RatioFillScaleFactors {
   sx : Double
   sy : Double
-}
-
-///|
-fn parse_graph_size_pt(graph : @cgraph.Graph) -> GraphSizePt? {
-  match graph.get_attr("size") {
-    Some(value) => {
-      let parts : Array[String] = []
-      for part in value.split(",") {
-        let cleaned = part.trim(chars=" \n\r\t!").to_string()
-        if cleaned != "" {
-          parts.push(cleaned)
-        }
-      }
-      if parts.length() == 0 {
-        return None
-      }
-      let width_in = @attrs.parse_double(Some(parts[0]), -1.0)
-      let height_in = if parts.length() > 1 {
-        @attrs.parse_double(Some(parts[1]), -1.0)
-      } else {
-        width_in
-      }
-      if width_in <= 0.0 || height_in <= 0.0 {
-        return None
-      }
-      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
-    }
-    None => None
-  }
 }
 
 ///|
@@ -1087,7 +1052,7 @@ fn ratio_fill_scale_factors(
   if ratio != "fill" {
     return None
   }
-  let target_size = match parse_graph_size_pt(graph) {
+  let target_size = match parse_graph_size_pt_attr(graph) {
     Some(size) => size
     None => return None
   }

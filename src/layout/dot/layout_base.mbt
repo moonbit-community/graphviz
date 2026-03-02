@@ -117,6 +117,43 @@ fn parse_double(value : String, fallback : Double) -> Double {
 }
 
 ///|
+priv struct GraphSizePt {
+  width_pt : Double
+  height_pt : Double
+}
+
+///|
+/// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c.
+fn parse_graph_size_pt_attr(graph : @cgraph.Graph) -> GraphSizePt? {
+  match graph.get_attr("size") {
+    Some(value) => {
+      let parts : Array[String] = []
+      for part in value.split(",") {
+        let cleaned = part.trim(chars=" \n\r\t!").to_string()
+        if cleaned != "" {
+          parts.push(cleaned)
+        }
+      }
+      if parts.length() == 0 {
+        return None
+      }
+      let width_in = parse_double(parts[0], -1.0)
+      let height_in =
+        if parts.length() > 1 {
+          parse_double(parts[1], -1.0)
+        } else {
+          width_in
+        }
+      if width_in <= 0.0 || height_in <= 0.0 {
+        return None
+      }
+      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
+    }
+    None => None
+  }
+}
+
+///|
 fn parse_first_double(value : String, fallback : Double) -> Double {
   let sb = StringBuilder::new()
   let mut seen = false

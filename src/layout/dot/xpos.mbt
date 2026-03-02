@@ -379,42 +379,6 @@ fn graph_ratio_is_compress(graph : @cgraph.Graph) -> Bool {
 ///|
 /// Graphviz parity: size parsing aligned to refs/graphviz/lib/common/input.c
 /// and dotgen/position.c (compress_graph input width).
-priv struct GraphSizeForCompress {
-  width_pt : Double
-  height_pt : Double
-}
-
-///|
-fn parse_graph_size_for_compress(graph : @cgraph.Graph) -> GraphSizeForCompress? {
-  match graph.get_attr("size") {
-    Some(value) => {
-      let parts : Array[String] = []
-      for part in value.split(",") {
-        let cleaned = part.trim(chars=" \n\r\t!").to_string()
-        if cleaned != "" {
-          parts.push(cleaned)
-        }
-      }
-      if parts.length() == 0 {
-        return None
-      }
-      let width_in = parse_double(parts[0], -1.0)
-      let height_in =
-        if parts.length() > 1 {
-          parse_double(parts[1], -1.0)
-        } else {
-          width_in
-        }
-      if width_in <= 0.0 || height_in <= 0.0 {
-        return None
-      }
-      Some({ width_pt: width_in * 72.0, height_pt: height_in * 72.0 })
-    }
-    None => None
-  }
-}
-
-///|
 /// Graphviz parity: compress_graph width clamp aligned to
 /// refs/graphviz/lib/dotgen/position.c (MIN(size, USHRT_MAX)).
 fn compress_width_minlen_pt(
@@ -424,7 +388,7 @@ fn compress_width_minlen_pt(
   if !graph_ratio_is_compress(graph) {
     return None
   }
-  let size = match parse_graph_size_for_compress(graph) {
+  let size = match parse_graph_size_pt_attr(graph) {
     Some(value) => value
     None => return None
   }
