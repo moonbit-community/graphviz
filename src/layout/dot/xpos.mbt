@@ -1567,6 +1567,49 @@ fn add_segment_slack_edges(
 }
 
 ///|
+fn add_segments_in_tail_order(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  segments_by_tail : Map[String, Array[SlackSegment]],
+  nlist_order : Array[String],
+  port_offsets : Map[String, Map[String, RecordPort]],
+  sizes : Map[String, NodeSize],
+  rankdir : RankDir,
+  real_by_name : Map[String, @cgraph.Node],
+) -> Unit {
+  let tail_seen : Map[String, Bool] = Map::new()
+  for tail_name in nlist_order {
+    let segments = match segments_by_tail.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    add_segment_slack_edges(
+      graph,
+      index,
+      segments,
+      port_offsets,
+      sizes,
+      rankdir,
+      real_by_name,
+    )
+    tail_seen[tail_name] = true
+  }
+  for tail_name, segments in segments_by_tail {
+    if tail_seen.get(tail_name) is None {
+      add_segment_slack_edges(
+        graph,
+        index,
+        segments,
+        port_offsets,
+        sizes,
+        rankdir,
+        real_by_name,
+      )
+    }
+  }
+}
+
+///|
 fn add_constraint_edge_if_present(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -2155,36 +2198,16 @@ fn build_constraint_graph(
   for _flat_key, entry in flat_minlen_constraints {
     add_constraint_edge_if_present(graph, index, entry)
   }
-  let tail_seen : Map[String, Bool] = Map::new()
-  for tail_name in nlist_order {
-    let segments = match segments_by_tail.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    add_segment_slack_edges(
-      graph,
-      index,
-      segments,
-      port_offsets,
-      sizes,
-      rankdir,
-      real_by_name,
-    )
-    tail_seen[tail_name] = true
-  }
-  for tail_name, segments in segments_by_tail {
-    if tail_seen.get(tail_name) is None {
-      add_segment_slack_edges(
-        graph,
-        index,
-        segments,
-        port_offsets,
-        sizes,
-        rankdir,
-        real_by_name,
-      )
-    }
-  }
+  add_segments_in_tail_order(
+    graph,
+    index,
+    segments_by_tail,
+    nlist_order,
+    port_offsets,
+    sizes,
+    rankdir,
+    real_by_name,
+  )
   for extra_node in late_extra_nodes {
     let idx = @network_simplex.add_node(
       graph,
