@@ -267,7 +267,7 @@ fn apply_unconstrained_overrides(
 /// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
 /// then applies transpose when crossings remain (port-offset aware tie-breaks).
 /// Do not change behavior without updating fixtures/tests.
-fn build_seeded_groups_for_reorder(
+fn build_seeded_reorder_groups(
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
   order_edge_tail_out : Array[String],
