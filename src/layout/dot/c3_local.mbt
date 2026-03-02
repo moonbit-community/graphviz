@@ -922,6 +922,37 @@ fn build_local_reorder_edge_bundle(
 }
 
 ///|
+fn count_edge_vnodes(names : Array[String]) -> Int {
+  let mut vnode_count = 0
+  for name in names {
+    if is_edge_vnode_name(name) {
+      vnode_count = vnode_count + 1
+    }
+  }
+  vnode_count
+}
+
+///|
+/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
+/// and outgoing crossing edges so median anchors see external slots.
+/// Do not change behavior without updating fixtures/tests.
+fn should_include_external_crossing_edges(
+  cluster_rank_keys : Array[Int],
+  cluster_graph_edge_count : Int,
+  vnode_count : Int,
+) -> Bool {
+  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+    return cluster_rank_keys.length() <= 2
+  }
+  if cluster_rank_keys.length() > 2 &&
+    cluster_graph_edge_count == 0 &&
+    vnode_count == 0 {
+    return false
+  }
+  true
+}
+
+///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
@@ -946,22 +977,13 @@ fn build_local_reorder_inputs(
   intercluster_keys : Map[String, String],
   flat_constraints : Map[String, Bool],
 ) -> ClusterLocalReorderRunInputsOutput {
-  let mut vnode_count = 0
-  for name in cluster_nodes {
-    if is_edge_vnode_name(name) {
-      vnode_count = vnode_count + 1
-    }
-  }
+  let vnode_count = count_edge_vnodes(cluster_nodes)
   let include_external_crossing =
-    if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
-      cluster_rank_keys.length() <= 2
-    } else if cluster_rank_keys.length() > 2 &&
-      cluster_graph_edge_count == 0 &&
-      vnode_count == 0 {
-      false
-    } else {
-      true
-    }
+    should_include_external_crossing_edges(
+      cluster_rank_keys,
+      cluster_graph_edge_count,
+      vnode_count,
+    )
   let edge_bundle =
     build_local_reorder_edge_bundle(
       include_external_crossing,
