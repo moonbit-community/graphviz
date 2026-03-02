@@ -1005,11 +1005,17 @@ fn treeupdate(
 }
 
 ///|
+priv struct LeaveEdgeResult {
+  edge : Int?
+  next_index : Int
+}
+
+///|
 fn leave_edge(
   graph : NsGraph,
   search_index : Int,
   search_size : Int,
-) -> (Int?, Int) {
+) -> LeaveEdgeResult {
   let total = graph.tree_edges.length()
   let mut idx = search_index
   let mut best_edge : Int? = None
@@ -1025,7 +1031,7 @@ fn leave_edge(
       }
       count = count + 1
       if count >= search_size {
-        return (best_edge, idx)
+        return { edge: best_edge, next_index: idx }
       }
     }
     idx = idx + 1
@@ -1042,13 +1048,13 @@ fn leave_edge(
         }
         count = count + 1
         if count >= search_size {
-          return (best_edge, idx)
+          return { edge: best_edge, next_index: idx }
         }
       }
       idx = idx + 1
     }
   }
-  (best_edge, idx)
+  { edge: best_edge, next_index: idx }
 }
 
 ///|
@@ -1344,11 +1350,19 @@ fn merge_sort_nodes_by_rank(
 }
 
 ///|
+priv struct TbBalanceBounds {
+  inweight : Int
+  outweight : Int
+  low : Int
+  high : Int
+}
+
+///|
 fn tb_balance_bounds(
   graph : NsGraph,
   node_idx : Int,
   max_rank : Int,
-) -> (Int, Int, Int, Int) {
+) -> TbBalanceBounds {
   let node = graph.nodes[node_idx]
   let mut inweight = 0
   let mut outweight = 0
@@ -1373,7 +1387,7 @@ fn tb_balance_bounds(
   if low < 0 {
     low = 0
   }
-  (inweight, outweight, low, high)
+  { inweight, outweight, low, high }
 }
 
 ///|
@@ -1429,18 +1443,17 @@ fn tb_adjust_sibling_ties(
         if rank_delta != 1 {
           continue
         }
-        let (inw_a, outw_a, low_a, high_a) =
-          tb_balance_bounds(graph, a, max_rank)
-        let (inw_b, outw_b, low_b, high_b) =
-          tb_balance_bounds(graph, b, max_rank)
-        if inw_a != outw_a || inw_b != outw_b {
+        let bounds_a = tb_balance_bounds(graph, a, max_rank)
+        let bounds_b = tb_balance_bounds(graph, b, max_rank)
+        if bounds_a.inweight != bounds_a.outweight ||
+          bounds_b.inweight != bounds_b.outweight {
           continue
         }
-        if low_a != low_b || high_a == high_b {
+        if bounds_a.low != bounds_b.low || bounds_a.high == bounds_b.high {
           continue
         }
         let should_swap =
-          if high_a < high_b {
+          if bounds_a.high < bounds_b.high {
             rank_a > rank_b
           } else {
             rank_b > rank_a
@@ -1450,10 +1463,10 @@ fn tb_adjust_sibling_ties(
         }
         let next_rank_a = rank_b
         let next_rank_b = rank_a
-        if next_rank_a < low_a || next_rank_a > high_a {
+        if next_rank_a < bounds_a.low || next_rank_a > bounds_a.high {
           continue
         }
-        if next_rank_b < low_b || next_rank_b > high_b {
+        if next_rank_b < bounds_b.low || next_rank_b > bounds_b.high {
           continue
         }
         graph.nodes[a].rank = next_rank_a
@@ -1495,14 +1508,13 @@ fn tb_balance(graph : NsGraph) -> Unit {
     if node.kind != NodeKind::Normal {
       continue
     }
-    let (inweight, outweight, low, high) =
-      tb_balance_bounds(graph, idx, max_rank)
-    if inweight != outweight {
+    let bounds = tb_balance_bounds(graph, idx, max_rank)
+    if bounds.inweight != bounds.outweight {
       continue
     }
-    let mut choice = low
-    let mut r = low + 1
-    while r <= high {
+    let mut choice = bounds.low
+    let mut r = bounds.low + 1
+    while r <= bounds.high {
       if nrank[r] < nrank[choice] {
         choice = r
       }
@@ -1536,9 +1548,9 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
   let mut search_index = 0
   let search_size = 30
   while iter < max_iter {
-    let (leaving, next_index) = leave_edge(graph, search_index, search_size)
-    search_index = next_index
-    match leaving {
+    let leaving_result = leave_edge(graph, search_index, search_size)
+    search_index = leaving_result.next_index
+    match leaving_result.edge {
       None => break
       Some(leaving_idx) => {
         let entering = enter_edge(graph, leaving_idx)
