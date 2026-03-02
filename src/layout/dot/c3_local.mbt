@@ -846,6 +846,82 @@ priv struct ClusterLocalReorderRunInputsOutput {
 }
 
 ///|
+priv struct LocalReorderEdgeBundle {
+  cluster_edges : Array[@cgraph.Edge]
+  cluster_edge_tail : Array[String]
+  cluster_edge_head : Array[String]
+  cluster_edge_tail_port_x : Array[Double]
+  cluster_edge_head_port_x : Array[Double]
+  cluster_edge_tail_port_order : Array[Double]
+  cluster_edge_head_port_order : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  edge_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
+/// and outgoing crossing edges so median anchors see external slots.
+/// Do not change behavior without updating fixtures/tests.
+fn build_local_reorder_edge_bundle(
+  include_external_crossing : Bool,
+  order_edges : Array[@cgraph.Edge],
+  order_edge_tail : Array[String],
+  order_edge_head : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  cluster_node_set : Map[String, Bool],
+  cluster_nodes : Array[String],
+  fixed_ranks : Map[String, Int],
+) -> LocalReorderEdgeBundle {
+  let cluster_edges : Array[@cgraph.Edge] = []
+  let cluster_edge_tail : Array[String] = []
+  let cluster_edge_head : Array[String] = []
+  let cluster_edge_tail_port_x : Array[Double] = []
+  let cluster_edge_head_port_x : Array[Double] = []
+  let cluster_edge_tail_port_order : Array[Double] = []
+  let cluster_edge_head_port_order : Array[Double] = []
+  for i in 0..<order_edges.length() {
+    let tail = order_edge_tail[i]
+    let head = order_edge_head[i]
+    let tail_in = cluster_node_set.get(tail) is Some(_)
+    let head_in = cluster_node_set.get(head) is Some(_)
+    let keep = (tail_in && head_in) ||
+      (include_external_crossing && (tail_in || head_in))
+    if !keep {
+      continue
+    }
+    cluster_edges.push(order_edges[i])
+    cluster_edge_tail.push(tail)
+    cluster_edge_head.push(head)
+    cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
+    cluster_edge_head_port_x.push(order_edge_head_port_x[i])
+    cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
+    cluster_edge_head_port_order.push(order_edge_head_port_order[i])
+  }
+  let edge_index_data = build_edge_index_for_names(
+    cluster_nodes,
+    cluster_edge_tail,
+    cluster_edge_head,
+    fixed_ranks,
+  )
+  {
+    cluster_edges,
+    cluster_edge_tail,
+    cluster_edge_head,
+    cluster_edge_tail_port_x,
+    cluster_edge_head_port_x,
+    cluster_edge_tail_port_order,
+    cluster_edge_head_port_order,
+    parents: edge_index_data.parents,
+    children: edge_index_data.children,
+    edge_order: collect_edge_order(cluster_edges),
+  }
+}
+
+///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
@@ -886,68 +962,20 @@ fn build_local_reorder_inputs(
     } else {
       true
     }
-  let (
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
-    edge_order,
-  ) =
-    {
-      // Graphviz parity: shallow cluster-local reorder (<=2 ranks) needs both
-      // incoming and outgoing crossing edges so median anchors see external slots.
-      let cluster_edges : Array[@cgraph.Edge] = []
-      let cluster_edge_tail : Array[String] = []
-      let cluster_edge_head : Array[String] = []
-      let cluster_edge_tail_port_x : Array[Double] = []
-      let cluster_edge_head_port_x : Array[Double] = []
-      let cluster_edge_tail_port_order : Array[Double] = []
-      let cluster_edge_head_port_order : Array[Double] = []
-      for i in 0..<order_edges.length() {
-        let tail = order_edge_tail[i]
-        let head = order_edge_head[i]
-        let tail_in = cluster_node_set.get(tail) is Some(_)
-        let head_in = cluster_node_set.get(head) is Some(_)
-        let keep = (tail_in && head_in) ||
-          (include_external_crossing && (tail_in || head_in))
-        if !keep {
-          continue
-        }
-        cluster_edges.push(order_edges[i])
-        cluster_edge_tail.push(tail)
-        cluster_edge_head.push(head)
-        cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
-        cluster_edge_head_port_x.push(order_edge_head_port_x[i])
-        cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
-        cluster_edge_head_port_order.push(order_edge_head_port_order[i])
-      }
-      let edge_index_data = build_edge_index_for_names(
-        cluster_nodes,
-        cluster_edge_tail,
-        cluster_edge_head,
-        fixed_ranks,
-      )
-      let parents = edge_index_data.parents
-      let children = edge_index_data.children
-      let edge_order = collect_edge_order(cluster_edges)
-      (
-        cluster_edges,
-        cluster_edge_tail,
-        cluster_edge_head,
-        cluster_edge_tail_port_x,
-        cluster_edge_head_port_x,
-        cluster_edge_tail_port_order,
-        cluster_edge_head_port_order,
-        parents,
-        children,
-        edge_order,
-      )
-    }
+  let edge_bundle =
+    build_local_reorder_edge_bundle(
+      include_external_crossing,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      cluster_node_set,
+      cluster_nodes,
+      fixed_ranks,
+    )
   // Graphviz parity: cluster-local reorder metadata keeps node sizes,
   // local cluster keys, and same-rank flat constraints scoped to the cluster.
   let cluster_sizes =
@@ -975,21 +1003,21 @@ fn build_local_reorder_inputs(
       cluster_nodes,
       neighbor_sources,
       intercluster_keys,
-      cluster_edges.length() >= 5,
+      edge_bundle.cluster_edges.length() >= 5,
     )
   {
-    cluster_edges,
-    cluster_edge_tail,
-    cluster_edge_head,
-    cluster_edge_tail_port_x,
-    cluster_edge_head_port_x,
-    cluster_edge_tail_port_order,
-    cluster_edge_head_port_order,
-    parents,
-    children,
+    cluster_edges: edge_bundle.cluster_edges,
+    cluster_edge_tail: edge_bundle.cluster_edge_tail,
+    cluster_edge_head: edge_bundle.cluster_edge_head,
+    cluster_edge_tail_port_x: edge_bundle.cluster_edge_tail_port_x,
+    cluster_edge_head_port_x: edge_bundle.cluster_edge_head_port_x,
+    cluster_edge_tail_port_order: edge_bundle.cluster_edge_tail_port_order,
+    cluster_edge_head_port_order: edge_bundle.cluster_edge_head_port_order,
+    parents: edge_bundle.parents,
+    children: edge_bundle.children,
     graphviz_out_neighbors: local_neighbor_maps.graphviz_out_neighbors,
     graphviz_in_neighbors: local_neighbor_maps.graphviz_in_neighbors,
-    edge_order,
+    edge_order: edge_bundle.edge_order,
     cluster_sizes,
     cluster_keys,
     cluster_flat_constraints,
