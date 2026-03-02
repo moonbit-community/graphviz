@@ -1220,6 +1220,25 @@ fn capture_root_reorder_pass_snapshot(
 }
 
 ///|
+/// Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
+/// then records the same stage snapshot before resetting capture state.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_rank_reorder_with_pass0_capture(
+  stage_data : RootReorderPassStageData,
+  inputs : RootReorderPassInputs,
+  root_rank_reorder_inputs : RootRankReorderInputs,
+) -> Map[Int, Array[String]] {
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
+  let ordered_mincross =
+    run_root_rank_reorder(root_rank_reorder_inputs)
+  capture_pass0_flat_seed_groups_enabled.val = false
+  capture_root_reorder_pass_snapshot(stage_data, inputs)
+  capture_pass0_flat_seed_groups_value.val = None
+  ordered_mincross
+}
+
+///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -1243,10 +1262,11 @@ fn run_root_reorder_pass(
     )
   }
   let ordered_mincross =
-    run_root_rank_reorder(root_rank_reorder_inputs)
-  capture_pass0_flat_seed_groups_enabled.val = false
-  capture_root_reorder_pass_snapshot(stage_data, inputs)
-  capture_pass0_flat_seed_groups_value.val = None
+    run_root_rank_reorder_with_pass0_capture(
+      stage_data,
+      inputs,
+      root_rank_reorder_inputs,
+    )
   { ordered_mincross, mincross_nodes: stage_data.mincross_nodes }
 }
 
