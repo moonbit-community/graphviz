@@ -20,6 +20,34 @@ fn rect(llx : Double, lly : Double, urx : Double, ury : Double) -> @geom.Rect {
 }
 
 ///|
+fn push_unique_string(list : Array[String], value : String) -> Unit {
+  for item in list {
+    if item == value {
+      return ()
+    }
+  }
+  list.push(value)
+}
+
+///|
+fn edge_endpoints_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (String, String) {
+  let tail =
+    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head =
+    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  (tail, head)
+}
+
+///|
 /// Graphviz parity: ROUND macro semantics (round half away from zero).
 fn round_int(value : Double) -> Int {
   if value >= 0.0 {
@@ -74,14 +102,13 @@ pub fn build_path_adjacency(
       Some(list) => list
       None => []
     }
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        edge_idx,
+        edge_tail,
+        edge_head,
+      )
     let path_nodes : Array[String] = []
     path_nodes.push(tail)
     for name in vnodes {
@@ -99,20 +126,12 @@ pub fn build_path_adjacency(
       // Graphviz path adjacency is based on distinct predecessor/successor
       // links in the virtual chain; parallel multiplicity must not duplicate
       // neighbor entries here, or pathplan ordering drifts.
-      let push_unique = (list : Array[String], value : String) => {
-        for item in list {
-          if item == value {
-            return ()
-          }
-        }
-        list.push(value)
-      }
       match out_edges.get(tail) {
-        Some(list) => push_unique(list, head)
+        Some(list) => push_unique_string(list, head)
         None => out_edges[tail] = [head]
       }
       match in_edges.get(head) {
-        Some(list) => push_unique(list, tail)
+        Some(list) => push_unique_string(list, tail)
         None => in_edges[head] = [tail]
       }
       idx = idx + 1
