@@ -843,7 +843,7 @@ fn build_local_reorder_inputs(
         cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
         cluster_edge_head_port_order.push(order_edge_head_port_order[i])
       }
-      let (parents, children) = build_edge_index_for_order_names(
+      let (parents, children) = build_edge_index_for_names(
         cluster_nodes,
         cluster_edge_tail,
         cluster_edge_head,

@@ -493,7 +493,7 @@ fn apply_clustered_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let (parents, children) = build_edge_index_for_order_names(
+  let (parents, children) = build_edge_index_for_names(
     order_nodes,
     order_edge_tail_out,
     order_edge_head_out,

@@ -26,7 +26,7 @@ fn dedup_ordering_edges(
 }
 
 ///|
-fn build_ordering_flat_constraints(
+fn build_flat_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -179,7 +179,7 @@ fn build_edge_index_for_order(
   for node in nodes {
     node_names.push(node.name())
   }
-  build_edge_index_for_names_impl(
+  build_edge_index_impl(
     node_names,
     edge_tail,
     edge_head,
@@ -189,7 +189,7 @@ fn build_edge_index_for_order(
 }
 
 ///|
-fn build_edge_index_for_names_impl(
+fn build_edge_index_impl(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -229,13 +229,13 @@ fn build_edge_index_for_names_impl(
 }
 
 ///|
-fn build_edge_index_for_order_names(
+fn build_edge_index_for_names(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
 ) -> (Map[String, Array[String]], Map[String, Array[String]]) {
-  build_edge_index_for_names_impl(
+  build_edge_index_impl(
     node_names,
     edge_tail,
     edge_head,

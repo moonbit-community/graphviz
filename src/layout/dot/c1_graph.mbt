@@ -380,7 +380,7 @@ fn build_edge_indices_and_order(
   edges_out : Array[@cgraph.Edge],
 ) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
   let (parents, children) =
-    build_edge_index_for_order_names(
+    build_edge_index_for_names(
       order_nodes,
       edge_tail_out,
       edge_head_out,
