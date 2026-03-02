@@ -14,8 +14,7 @@ fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
 ) -> DotRankStageOutput {
-  // Graphviz parity: rank-data creation emits the same rank trace
-  // points before downstream stage assembly.
+  // Graphviz parity: rank-data creation remains first before downstream stage assembly.
   let rank_data =
     compute_rank_data(
       graph,
@@ -23,13 +22,6 @@ fn compute_dot_rank_stage(
       prep.edges,
       prep.has_edge_labels,
     )
-  dot_trace("layout_dot: ranks computed")
-  dot_trace_edges(
-    prep.edges,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_data.ranks,
-  )
   // Graphviz parity: rank-height stage consumes computed ranks/groups
   // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
@@ -85,8 +77,7 @@ fn compute_dot_rank_stage(
       prep.port_order_contrib,
     )
   // Graphviz parity: rank-stage result object keeps computed
-  // rank/cluster/order artifacts unchanged and emits rank-order trace.
-  dot_trace("layout_dot: rank order computed")
+  // rank/cluster/order artifacts unchanged.
   { rank_data, rank_heights, cluster_meta, ordering }
 }
 
@@ -562,7 +553,6 @@ fn compute_dot_routing_stage(
       edges_routed
     }
   // Graphviz parity: routing stage result object is built directly
-  // from routed edges and computed padding, with trace emission preserved.
-  dot_trace("layout_dot: edges routed")
+  // from routed edges and computed padding.
   { nodes_out, edges_out, port_pad_below, port_pad_above }
 }

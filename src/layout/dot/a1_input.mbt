@@ -336,7 +336,6 @@ fn prepare_layout_inputs(
   let splines = resolve_splines(graph, opts.splines)
   let nodes = graph.nodes()
   let edges = graph.edges()
-  dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
   let (has_dotted_edges, has_port_edges) =
     scan_edge_flags(edges)
   let has_edge_labels = graph_has_edge_labels(edges)

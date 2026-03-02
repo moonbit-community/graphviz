@@ -2178,7 +2178,6 @@ fn x_positions_from_simplex(
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
 ) -> Map[String, Double] {
-  dot_trace("xpos: build constraint graph")
   // Graphviz parity: class2/decompose creation order is the reverse of
   // GD_nlist iteration order consumed by create_aux_edges/position.
   let nlist_source =
@@ -2300,10 +2299,7 @@ fn x_positions_from_simplex(
       build_constraint_snapshot(graph, index, sizes, order_index),
     )
   }
-  dot_trace("xpos: constraint graph built")
-  dot_trace("xpos: network simplex")
   @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::LR)
-  dot_trace("xpos: network simplex done")
   let positions : Map[String, Double] = Map::new()
   for node in nodes {
     let name = node.name()
@@ -2349,7 +2345,6 @@ fn compute_x_positions(
   edge_vnodes : Map[String, Array[String]],
   extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
-  dot_trace("xpos: build cluster constraints")
   let (cluster_nodes, extra_edges, root_ln_targets, root_rn_targets) =
     build_cluster_constraints(
     graph,
@@ -2364,7 +2359,6 @@ fn compute_x_positions(
     has_edge_labels,
     edge_vnodes,
   )
-  dot_trace("xpos: cluster constraints done")
   let all_extra_nodes = extra_nodes.copy()
   for pair in cluster_nodes {
     all_extra_nodes.push(pair)

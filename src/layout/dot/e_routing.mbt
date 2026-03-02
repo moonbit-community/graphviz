@@ -2390,7 +2390,6 @@ fn compute_pathplan_route_points(
 /// Graphviz parity: route point tweaks aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn adjust_route_points(
-  edge : @cgraph.Edge,
   points : Array[@geom.Point],
   base : EdgeRouteBase,
   head_port_rect : @geom.Rect?,
@@ -2455,7 +2454,6 @@ fn adjust_route_points(
       nodesep_pt,
     )
   }
-  dot_trace_route_points(edge, points)
   if has_explicit_port && base.has_side_anchor && points.length() <= 2 &&
     !using_pathplan {
     let offset = max_double(4.0, nodesep_pt * 0.5)
@@ -2724,7 +2722,6 @@ fn build_edge_spline(
       let route_barriers = route_state.route_barriers
       let points =
         adjust_route_points(
-          edge,
           route_state.points,
           base,
           head_port_rect,
@@ -5078,7 +5075,6 @@ fn route_edges(
       vnode_info.vnode_sizes,
       x_groups,
     )
-  dot_trace("layout_dot: routing edges")
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
   let recover_edge_id_by_key =

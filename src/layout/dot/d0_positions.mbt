@@ -447,7 +447,7 @@ fn build_xpos_computation_input(
 
 ///|
 /// Graphviz parity: x-position stage must use identical xpos input assembly,
-/// solver invocation, and trace points as Graphviz-aligned pipeline order.
+/// and solver invocation as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_layout_x_positions(
   graph : @cgraph.Graph,
@@ -492,8 +492,6 @@ fn compute_layout_x_positions(
     xpos_input.x_edge_vnodes,
     xpos_input.x_slack_edges,
   )
-  dot_trace("layout_dot: x positions computed")
-  dot_trace_positions("xpos", x_positions)
   x_positions
 }
 
@@ -818,10 +816,8 @@ fn build_xpos_slack_edges(
       node_singletons,
       cluster_meta.cluster_keys,
     )
-    dot_trace("layout_dot: virtual slack edges=\{edges_out.length()}")
     edges_out
   } else {
-    dot_trace("layout_dot: virtual slack edges=0 (skipped)")
     []
   }
 }
