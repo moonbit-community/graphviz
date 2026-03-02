@@ -1248,8 +1248,6 @@ fn run_root_reorder_pass(
       inputs.order_with_vnodes,
       inputs.vnode_order_keys_for_ordering,
     )
-  capture_pass0_flat_seed_groups_value.val = None
-  capture_pass0_flat_seed_groups_enabled.val = true
   let root_rank_reorder_inputs : RootRankReorderInputs = {
     ..build_root_rank_reorder_inputs_for_pass(
       stage_data,
