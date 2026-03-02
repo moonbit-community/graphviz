@@ -6,7 +6,7 @@
 /// Graphviz parity: port-sampling inputs reuse one endpoint remap + per-node
 /// port offset table so x-offset and order passes share identical edge context.
 /// Do not change behavior without updating fixtures/tests.
-fn build_edge_port_sampling_inputs(
+fn build_port_sampling_inputs(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -78,7 +78,7 @@ fn compute_edge_port_positions(
     nodes_by_name[node.name()] = node
   }
   let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
-    build_edge_port_sampling_inputs(
+    build_port_sampling_inputs(
       nodes,
       edges,
       edge_tail,
@@ -137,7 +137,7 @@ fn compute_edge_port_orders(
     nodes_by_name[node.name()] = node
   }
   let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
-    build_edge_port_sampling_inputs(
+    build_port_sampling_inputs(
       nodes,
       edges,
       edge_tail,
