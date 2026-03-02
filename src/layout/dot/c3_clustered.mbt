@@ -170,7 +170,7 @@ fn run_clustered_root_phase(
   for tail in root_reorder_output.root_edge_tail_out {
     append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
-  let (_root_rank_keys, root_groups_override) =
+  let root_rank_order_phase_output =
     run_root_rank_order_phase(
       pre_root_stage.order_cluster_keys,
       cluster_meta.rank_same_groups,
@@ -185,6 +185,7 @@ fn run_clustered_root_phase(
       reorder_setup.graphviz_flip,
       root_reorder_output,
     )
+  let root_groups_override = root_rank_order_phase_output.ordered_root
   if reorder_setup.order_with_clusters {
     remincross_root_tail_order_override_snapshot.val =
       Some(root_tail_order_override.copy())

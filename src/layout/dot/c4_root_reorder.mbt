@@ -671,12 +671,12 @@ fn anchor_root_bucket(
 }
 
 /// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
-/// and ordered-root groups tuple ordering unchanged before rank transfer.
+/// and ordered-root groups bundled for rank-transfer dispatch.
 /// Do not change behavior without updating fixtures/tests.
-type RootClusterRankOrderPhaseOutput = (
-  Array[Int],
-  Map[Int, Array[String]],
-)
+priv struct RootClusterRankOrderPhaseOutput {
+  root_rank_keys : Array[Int]
+  ordered_root : Map[Int, Array[String]]
+}
 
 ///|
 /// Graphviz parity: root-only graphviz_flip gating enables root flip only when
@@ -756,7 +756,10 @@ fn run_root_rank_order_phase(
     coalesce_parallel_edges=true,
   )
   if !graphviz_flip {
-    return (root_reorder_output.root_rank_keys, ordered_root)
+    return {
+      root_rank_keys: root_reorder_output.root_rank_keys,
+      ordered_root,
+    }
   }
   // Graphviz parity: root graphviz_flip merge replays root mincross output
   // back into seeded rank groups using filtered root node membership.
@@ -773,7 +776,10 @@ fn run_root_rank_order_phase(
       order_cluster_keys,
       order_cluster_skeleton,
     )
-  (root_reorder_output.root_rank_keys, merged_ordered_root)
+  {
+    root_rank_keys: root_reorder_output.root_rank_keys,
+    ordered_root: merged_ordered_root,
+  }
 }
 
 
@@ -1190,7 +1196,7 @@ fn build_cluster_rank_order(
       flat_rank_constraints,
       order_edges_by_tail_root,
     )
-  let (root_rank_keys, ordered_root) =
+  let root_rank_order_phase_output =
     run_root_rank_order_phase(
       order_cluster_keys,
       cluster_meta.rank_same_groups,
@@ -1206,8 +1212,8 @@ fn build_cluster_rank_order(
       root_reorder_output,
     )
   build_cluster_order_from_root(
-    root_rank_keys,
-    ordered_root,
+    root_rank_order_phase_output.root_rank_keys,
+    root_rank_order_phase_output.ordered_root,
     order_cluster_keys,
     order_cluster_skeleton,
     real_nodes,
