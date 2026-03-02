@@ -1477,7 +1477,7 @@ fn reorder_rank_groups(
     count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
   if !graphviz_style && rank_keys.length() > 1 {
-    ordered = build_rank_groups_by_components(
+    ordered = build_component_rank_groups(
       rank_keys,
       groups,
       edge_tail,
@@ -1599,7 +1599,7 @@ fn reorder_rank_groups(
         max_iter
       }
       if pass <= 1 {
-        ordered = build_rank_groups_by_components(
+        ordered = build_component_rank_groups(
           rank_keys,
           groups,
           edge_tail,
@@ -1807,7 +1807,7 @@ fn reorder_rank_groups(
         max_iter
       }
       if pass <= 1 {
-        ordered = build_rank_groups_by_components(
+        ordered = build_component_rank_groups(
           rank_keys,
           groups,
           edge_tail,

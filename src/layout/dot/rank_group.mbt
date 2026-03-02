@@ -335,7 +335,7 @@ fn build_rank_groups(
 ///|
 /// Graphviz parity: decompose/build_ranks operate per connected component.
 /// Do not change behavior without updating fixtures/tests.
-fn build_rank_groups_by_components(
+fn build_component_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -439,7 +439,7 @@ fn resolve_component_order_index(
 }
 
 ///|
-fn build_component_discovery_order(
+fn build_component_order(
   nodes : Array[String],
   node_order : Map[String, Int],
 ) -> (Array[String], Map[String, Int]) {
@@ -537,7 +537,7 @@ fn build_component_neighbors(
 }
 
 ///|
-fn collect_component_skeleton_nodes(
+fn collect_component_skeletons(
   ordered_nodes : Array[String],
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
@@ -661,7 +661,7 @@ fn prepare_component_discovery(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> ComponentDiscoveryPrepared {
-  let (ordered_nodes, fallback_order) = build_component_discovery_order(
+  let (ordered_nodes, fallback_order) = build_component_order(
     nodes,
     node_order,
   )
@@ -673,7 +673,7 @@ fn prepare_component_discovery(
       graphviz_out_neighbors,
       graphviz_in_neighbors,
     )
-  let cluster_skeleton_nodes = collect_component_skeleton_nodes(
+  let cluster_skeleton_nodes = collect_component_skeletons(
     ordered_nodes,
     cluster_keys,
     cluster_skeleton,
