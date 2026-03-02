@@ -22,6 +22,32 @@ priv struct LayoutPrep {
   port_order_contrib : Map[String, Array[(String, Double)]]
 }
 
+priv struct SpacingResolution {
+  nodesep_in : Double
+  ranksep_in : Double
+}
+
+priv struct EdgeFlags {
+  has_dotted_edges : Bool
+  has_port_edges : Bool
+}
+
+priv struct SizeMaps {
+  output_sizes : Map[String, NodeSize]
+  order_sizes : Map[String, NodeSize]
+  sizes : Map[String, NodeSize]
+}
+
+priv struct PortOrderTotal {
+  sum : Double
+  count : Int
+}
+
+priv struct PortOrderMetadata {
+  positions : Map[String, Double]
+  contributions : Map[String, Array[(String, Double)]]
+}
+
 ///|
 /// Stage A Phase A1 split: layout input preparation
 /// logic and canonicalization helper flow.
@@ -56,7 +82,7 @@ fn resolve_spacing(
   graph : @cgraph.Graph,
   option_nodesep : Double?,
   option_ranksep : Double?,
-) -> (Double, Double) raise DotLayoutError {
+) -> SpacingResolution raise DotLayoutError {
   let nodesep_raw = match option_nodesep {
     Some(value) => value
     None =>
@@ -85,7 +111,7 @@ fn resolve_spacing(
   // Graphviz parity: ranksep clamps to MIN_RANKSEP.
   let ranksep_in =
     if ranksep_raw < MIN_RANKSEP_IN { MIN_RANKSEP_IN } else { ranksep_raw }
-  (nodesep_in, ranksep_in)
+  { nodesep_in, ranksep_in }
 }
 
 ///|
@@ -116,7 +142,7 @@ fn resolve_splines(
 /// Do not change behavior without updating fixtures/tests.
 fn scan_edge_flags(
   edges : Array[@cgraph.Edge],
-) -> (Bool, Bool) {
+) -> EdgeFlags {
   let mut has_dotted_edges = false
   let mut has_port_edges = false
   for edge in edges {
@@ -135,7 +161,7 @@ fn scan_edge_flags(
       }
     }
   }
-  (has_dotted_edges, has_port_edges)
+  { has_dotted_edges, has_port_edges }
 }
 
 
@@ -176,7 +202,7 @@ fn build_size_maps(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
-) -> (Map[String, NodeSize], Map[String, NodeSize], Map[String, NodeSize]) {
+) -> SizeMaps {
   let output_sizes : Map[String, NodeSize] = Map::new()
   let order_sizes : Map[String, NodeSize] = Map::new()
   let sizes : Map[String, NodeSize] = Map::new()
@@ -191,7 +217,7 @@ fn build_size_maps(
       size
     }
   }
-  (output_sizes, order_sizes, sizes)
+  { output_sizes, order_sizes, sizes }
 }
 
 ///|
@@ -240,8 +266,8 @@ fn accumulate_port_order_contrib(
   edges : Array[@cgraph.Edge],
   record_port_order : Map[String, Map[String, Double]],
   port_order_contrib : Map[String, Array[(String, Double)]],
-) -> Map[String, (Double, Int)] {
-  let order_sum : Map[String, (Double, Int)] = Map::new()
+) -> Map[String, PortOrderTotal] {
+  let order_sum : Map[String, PortOrderTotal] = Map::new()
   let update_order = (target : String, anchor : String, port : @cgraph.Port?) => {
     match port {
       Some(value) =>
@@ -251,11 +277,14 @@ fn accumulate_port_order_contrib(
               Some(ports) =>
                 match ports.get(port_name) {
                   Some(order) => {
-                    let (sum, count) = match order_sum.get(target) {
+                    let current = match order_sum.get(target) {
                       Some(value) => value
-                      None => (0.0, 0)
+                      None => { sum: 0.0, count: 0 }
                     }
-                    order_sum[target] = (sum + order, count + 1)
+                    order_sum[target] = {
+                      sum: current.sum + order,
+                      count: current.count + 1,
+                    }
                     match port_order_contrib.get(target) {
                       Some(list) => list.push((anchor, order))
                       None => port_order_contrib[target] = [(anchor, order)]
@@ -295,7 +324,7 @@ fn build_port_order_metadata(
   edges : Array[@cgraph.Edge],
   output_sizes : Map[String, NodeSize],
   record_orientation : RecordOrientation,
-) -> (Map[String, Double], Map[String, Array[(String, Double)]]) {
+) -> PortOrderMetadata {
   let port_order_positions : Map[String, Double] = Map::new()
   let port_order_contrib : Map[String, Array[(String, Double)]] = Map::new()
   if (rankdir == RankDir::LR || rankdir == RankDir::RL) && has_port_edges {
@@ -313,13 +342,12 @@ fn build_port_order_metadata(
         port_order_contrib,
       )
     for name, entry in order_sum {
-      let (sum, count) = entry
-      if count > 0 {
-        port_order_positions[name] = sum / count.to_double()
+      if entry.count > 0 {
+        port_order_positions[name] = entry.sum / entry.count.to_double()
       }
     }
   }
-  (port_order_positions, port_order_contrib)
+  { positions: port_order_positions, contributions: port_order_contrib }
 }
 
 
@@ -331,43 +359,43 @@ fn prepare_layout_inputs(
   opts : DotLayoutOptions,
 ) -> LayoutPrep raise DotLayoutError {
   let rankdir = resolve_rankdir(graph, opts.rankdir)
-  let (nodesep_in, ranksep_in) =
+  let spacing =
     resolve_spacing(graph, opts.nodesep, opts.ranksep)
   let splines = resolve_splines(graph, opts.splines)
   let nodes = graph.nodes()
   let edges = graph.edges()
-  let (has_dotted_edges, has_port_edges) =
+  let edge_flags =
     scan_edge_flags(edges)
   let has_edge_labels = graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, rankdir)
   let record_orientation = record_layout_orientation(rankdir)
-  let (output_sizes, order_sizes, sizes) =
+  let size_maps =
     build_size_maps(nodes, rankdir, record_orientation)
-  let (port_order_positions, port_order_contrib) =
+  let port_order_metadata =
     build_port_order_metadata(
       rankdir,
-      has_port_edges,
+      edge_flags.has_port_edges,
       nodes,
       edges,
-      output_sizes,
+      size_maps.output_sizes,
       record_orientation,
     )
   {
     rankdir,
-    nodesep_in,
-    ranksep_in,
+    nodesep_in: spacing.nodesep_in,
+    ranksep_in: spacing.ranksep_in,
     splines,
     nodes,
     edges,
-    has_dotted_edges,
-    has_port_edges,
+    has_dotted_edges: edge_flags.has_dotted_edges,
+    has_port_edges: edge_flags.has_port_edges,
     has_edge_labels,
     node_order,
     record_orientation,
-    output_sizes,
-    order_sizes,
-    sizes,
-    port_order_positions,
-    port_order_contrib,
+    output_sizes: size_maps.output_sizes,
+    order_sizes: size_maps.order_sizes,
+    sizes: size_maps.sizes,
+    port_order_positions: port_order_metadata.positions,
+    port_order_contrib: port_order_metadata.contributions,
   }
 }
