@@ -262,12 +262,20 @@ fn run_remincross_cleanup(
 ///|
 /// Graphviz parity: clustered ReMincross edge endpoint reads prefer oriented
 /// edge_tail/edge_head arrays and fall back to edge object endpoints.
+priv struct ReMincrossEdgeEndpoints {
+  tail : String
+  head : String
+}
+
+///|
+/// Graphviz parity: clustered ReMincross edge endpoint reads prefer oriented
+/// edge_tail/edge_head arrays and fall back to edge object endpoints.
 fn remincross_edge_endpoints_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> (String, String) {
+) -> ReMincrossEdgeEndpoints {
   let tail =
     if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
       edge.tail().name()
@@ -276,7 +284,7 @@ fn remincross_edge_endpoints_at(
     if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
       edge.head().name()
     }
-  (tail, head)
+  { tail, head }
 }
 
 ///|
@@ -337,8 +345,10 @@ fn assign_remincross_clusters(
     if vnodes.length() == 0 {
       continue
     }
-    let (tail, head) =
+    let endpoints =
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let tail = endpoints.tail
+    let head = endpoints.head
     let tail_cluster = remincross_cluster_key(intercluster_keys, tail)
     let head_cluster = remincross_cluster_key(intercluster_keys, head)
     let vnode_cluster =
@@ -430,8 +440,10 @@ fn collect_remincross_trailing(
 ) -> Map[String, Bool] {
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
-    let (tail, head) =
+    let endpoints =
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+    let tail = endpoints.tail
+    let head = endpoints.head
     let tail_cluster = remincross_cluster_key(remincross_cluster_keys, tail)
     let head_cluster = remincross_cluster_key(remincross_cluster_keys, head)
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
