@@ -67,6 +67,20 @@ fn append_neighbor_edge(
 }
 
 ///|
+fn collect_rank_group_nodes(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+) -> Array[String] {
+  let nodes : Array[String] = []
+  for rank in rank_keys {
+    for name in groups.get(rank).unwrap_or_default() {
+      nodes.push(name)
+    }
+  }
+  nodes
+}
+
+///|
 /// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_neighbor_rank_groups(
@@ -87,13 +101,7 @@ fn build_neighbor_rank_groups(
   for rank in rank_keys {
     ordered[rank] = []
   }
-  let nodes : Array[String] = []
-  for rank in rank_keys {
-    let names = groups.get(rank).unwrap_or_default()
-    for name in names {
-      nodes.push(name)
-    }
-  }
+  let nodes = collect_rank_group_nodes(rank_keys, groups)
   let fallback_order : Map[String, Int] = Map::new()
   for i, name in nodes {
     fallback_order[name] = i
@@ -318,13 +326,7 @@ fn build_component_rank_groups(
   graphviz_out_neighbors? : Map[String, Array[String]] = Map::new(),
   graphviz_in_neighbors? : Map[String, Array[String]] = Map::new(),
 ) -> Map[Int, Array[String]] {
-  let nodes : Array[String] = []
-  for rank in rank_keys {
-    let names = groups.get(rank).unwrap_or_default()
-    for name in names {
-      nodes.push(name)
-    }
-  }
+  let nodes = collect_rank_group_nodes(rank_keys, groups)
   if nodes.length() == 0 {
     let empty : Map[Int, Array[String]] = Map::new()
     for rank in rank_keys {
