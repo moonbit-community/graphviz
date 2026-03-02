@@ -49,7 +49,7 @@ priv struct OrderingDispatchSetup {
 /// in the same position as Graphviz ordering setup, even when only used for
 /// parity diagnostics.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_runtime_context(
+fn build_ordering_context(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],

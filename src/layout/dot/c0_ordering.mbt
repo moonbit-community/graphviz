@@ -58,7 +58,7 @@ fn compute_ordering_and_vnodes(
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
   let runtime_context =
-    build_ordering_runtime_context(
+    build_ordering_context(
       graph,
       nodes,
       edges,
