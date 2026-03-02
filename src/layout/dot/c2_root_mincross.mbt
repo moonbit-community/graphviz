@@ -975,24 +975,20 @@ fn build_root_mincross_edge_data(
       inputs.order_edge_tail_port_order,
       inputs.order_edge_head_port_order,
     )
-  let order_edges_out_mincross =
-    mincross_edges_output.order_edges_out_mincross
-  let order_edge_tail_out_mincross =
-    mincross_edges_output.order_edge_tail_out_mincross
-  let order_edge_head_out_mincross =
-    mincross_edges_output.order_edge_head_out_mincross
   let edge_indices =
     build_edge_indices_and_order(
       inputs.order_nodes_for_mincross,
-      order_edge_tail_out_mincross,
-      order_edge_head_out_mincross,
+      mincross_edges_output.order_edge_tail_out_mincross,
+      mincross_edges_output.order_edge_head_out_mincross,
       inputs.order_ranks,
-      order_edges_out_mincross,
+      mincross_edges_output.order_edges_out_mincross,
     )
   {
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
+    order_edges_out_mincross: mincross_edges_output.order_edges_out_mincross,
+    order_edge_tail_out_mincross:
+      mincross_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross:
+      mincross_edges_output.order_edge_head_out_mincross,
     order_edge_tail_port_x_mincross:
       mincross_edges_output.order_edge_tail_port_x_mincross,
     order_edge_head_port_x_mincross:
