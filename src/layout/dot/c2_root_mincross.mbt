@@ -477,6 +477,17 @@ priv struct RootComponentProjectionSources {
 }
 
 ///|
+/// Graphviz parity: component-local neighbor projections are filtered from the
+/// same component membership snapshot before root mincross.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootComponentNeighborMaps {
+  component_parents : Map[String, Array[String]]
+  component_children : Map[String, Array[String]]
+  component_graphviz_out_neighbors : Map[String, Array[String]]
+  component_graphviz_in_neighbors : Map[String, Array[String]]
+}
+
+///|
 /// Graphviz parity: cluster-aware root mincross runs in internal TB
 /// coordinates (like mincross_clust subgraph passes), so flip is off.
 /// Do not change behavior without updating fixtures/tests.
@@ -513,6 +524,43 @@ fn build_root_component_traversal_plan(
 }
 
 ///|
+/// Graphviz parity: component-local parent/child + Graphviz traversal maps are
+/// all filtered through one component-set projection.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_component_neighbor_maps(
+  component_nodes : Array[String],
+  component_set : Map[String, Bool],
+  sources : RootComponentProjectionSources,
+) -> RootComponentNeighborMaps {
+  {
+    component_parents:
+      filter_component_neighbor_map(
+        component_nodes,
+        component_set,
+        sources.parents,
+      ),
+    component_children:
+      filter_component_neighbor_map(
+        component_nodes,
+        component_set,
+        sources.children,
+      ),
+    component_graphviz_out_neighbors:
+      filter_component_neighbor_map(
+        component_nodes,
+        component_set,
+        sources.graphviz_out_neighbors,
+      ),
+    component_graphviz_in_neighbors:
+      filter_component_neighbor_map(
+        component_nodes,
+        component_set,
+        sources.graphviz_in_neighbors,
+      ),
+  }
+}
+
+///|
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
@@ -538,29 +586,11 @@ fn build_root_component_reorder_inputs(
       sources.order_edge_tail_port_order_mincross,
       sources.order_edge_head_port_order_mincross,
     )
-  let component_parents =
-    filter_component_neighbor_map(
+  let component_neighbor_maps =
+    build_root_component_neighbor_maps(
       component_nodes,
       component_set,
-      sources.parents,
-    )
-  let component_children =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      sources.children,
-    )
-  let component_graphviz_out_neighbors =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      sources.graphviz_out_neighbors,
-    )
-  let component_graphviz_in_neighbors =
-    filter_component_neighbor_map(
-      component_nodes,
-      component_set,
-      sources.graphviz_in_neighbors,
+      sources,
     )
   // Graphviz parity: component-local node-position hints are passed to
   // mincross only for nodes belonging to the active connected component.
@@ -595,10 +625,12 @@ fn build_root_component_reorder_inputs(
       component_edges_output.order_edge_tail_port_order_mincross,
     component_edge_head_port_order:
       component_edges_output.order_edge_head_port_order_mincross,
-    component_parents,
-    component_children,
-    component_graphviz_out_neighbors,
-    component_graphviz_in_neighbors,
+    component_parents: component_neighbor_maps.component_parents,
+    component_children: component_neighbor_maps.component_children,
+    component_graphviz_out_neighbors:
+      component_neighbor_maps.component_graphviz_out_neighbors,
+    component_graphviz_in_neighbors:
+      component_neighbor_maps.component_graphviz_in_neighbors,
     component_port_order_positions,
     component_preferred_positions,
     component_port_order_contrib,
