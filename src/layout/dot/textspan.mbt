@@ -50,6 +50,29 @@ const PORT_LABEL_ANGLE_MIN_DEG : Double = -180.0
 const ELLIPSE_LABEL_SCALE : Double = 1.0
 
 ///|
+priv struct TextDimensions {
+  width : Double
+  height : Double
+}
+
+///|
+priv struct TextOffsets {
+  layout : Double
+  centerline : Double
+}
+
+///|
+fn text_offsets(font_name : String, font_size_pt : Double) -> TextOffsets {
+  match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
+    Some((layout, centerline)) => { layout, centerline }
+    None => {
+      layout: 0.0,
+      centerline: font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE,
+    }
+  }
+}
+
+///|
 fn font_width_scale(font_name : String) -> Double {
   let lower = font_name.to_lower()
   if lower.contains("palatino") {
@@ -295,7 +318,7 @@ fn try_multiline_override(
   font_name : String,
   font_size_pt : Double,
   trim_trailing_break~ : Bool,
-) -> (Double, Double)? {
+) -> TextDimensions? {
   let raw_lines = split_label_lines(label, trim_trailing_break=false)
   if raw_lines.length() <= 1 {
     return None
@@ -325,7 +348,7 @@ fn try_multiline_override(
       None => return None
     }
   }
-  Some((max_width, total_height))
+  Some({ width: max_width, height: total_height })
 }
 
 ///|
@@ -352,13 +375,9 @@ pub fn label_text_metrics(
     font_size_pt,
     trim_trailing_break=false,
   ) {
-    Some((width, height)) => {
-      let (yoffset_layout, yoffset_centerline) =
-        match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
-          Some((layout, centerline)) => (layout, centerline)
-          None => (0.0, font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE)
-        }
-      return (width, height, yoffset_layout, yoffset_centerline)
+    Some(dims) => {
+      let offsets = text_offsets(font_name, font_size_pt)
+      return (dims.width, dims.height, offsets.layout, offsets.centerline)
     }
     None => ()
   }
@@ -413,12 +432,8 @@ pub fn label_text_metrics(
       width_scale /
       1000.0
     let height_pt = lines.to_double() * line_height
-    let (yoffset_layout, yoffset_centerline) =
-      match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
-        Some((layout, centerline)) => (layout, centerline)
-        None => (0.0, font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE)
-      }
-    return (width_pt, height_pt, yoffset_layout, yoffset_centerline)
+    let offsets = text_offsets(font_name, font_size_pt)
+    return (width_pt, height_pt, offsets.layout, offsets.centerline)
   }
   let mut has_lowercase = false
   let mut scan_escape = false
@@ -506,12 +521,8 @@ pub fn label_text_metrics(
     width_scale /
     1000.0
   let height_pt = lines.to_double() * line_height
-  let (yoffset_layout, yoffset_centerline) =
-    match @font_metrics.lookup_textspan_offsets(font_name, font_size_pt) {
-      Some((layout, centerline)) => (layout, centerline)
-      None => (0.0, font_size_pt * TEXT_YOFFSET_CENTERLINE_SCALE)
-    }
-  (width_pt, height_pt, yoffset_layout, yoffset_centerline)
+  let offsets = text_offsets(font_name, font_size_pt)
+  (width_pt, height_pt, offsets.layout, offsets.centerline)
 }
 
 ///|
@@ -548,7 +559,7 @@ pub fn record_label_text_dimensions(
     font_size_pt,
     trim_trailing_break=true,
   ) {
-    Some((width, height)) => return (width, height)
+    Some(dims) => return (dims.width, dims.height)
     None => ()
   }
   let line_height = text_line_height(font_name, font_size_pt)
