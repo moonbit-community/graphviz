@@ -22,6 +22,56 @@ fn resolve_root_component_order_index(
 }
 
 ///|
+/// Graphviz parity: flat-constraint adjacency contributes undirected traversal
+/// links for non-cluster connected-component discovery.
+/// Do not change behavior without updating fixtures/tests.
+priv struct FlatConstraintAdjacency {
+  flat_out : Map[String, Array[String]]
+  flat_in : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: enabled flat constraints add traversal links only when
+/// both endpoints exist in the current root node membership projection.
+fn build_flat_constraint_adjacency(
+  order_nodes : Array[String],
+  node_set : Map[String, Bool],
+  flat_constraints : Map[String, Bool],
+) -> FlatConstraintAdjacency {
+  let flat_out : Map[String, Array[String]] = Map::new()
+  let flat_in : Map[String, Array[String]] = Map::new()
+  for name in order_nodes {
+    flat_out[name] = []
+    flat_in[name] = []
+  }
+  for key, enabled in flat_constraints {
+    if !enabled {
+      continue
+    }
+    match @dot_shared.parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
+        if tail == "" || head == "" {
+          continue
+        }
+        if node_set.get(tail) is None || node_set.get(head) is None {
+          continue
+        }
+        match flat_out.get(tail) {
+          Some(list) => list.push(head)
+          None => flat_out[tail] = [head]
+        }
+        match flat_in.get(head) {
+          Some(list) => list.push(tail)
+          None => flat_in[head] = [tail]
+        }
+      }
+      None => ()
+    }
+  }
+  { flat_out, flat_in }
+}
+
+///|
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
@@ -87,36 +137,14 @@ fn collect_noncluster_components(
       node_set,
       graphviz_in_neighbors,
     )
-  let flat_out : Map[String, Array[String]] = Map::new()
-  let flat_in : Map[String, Array[String]] = Map::new()
-  for name in order_nodes {
-    flat_out[name] = []
-    flat_in[name] = []
-  }
-  for key, enabled in flat_constraints {
-    if !enabled {
-      continue
-    }
-    match @dot_shared.parse_flat_constraint_key(key) {
-      Some((tail, head)) => {
-        if tail == "" || head == "" {
-          continue
-        }
-        if node_set.get(tail) is None || node_set.get(head) is None {
-          continue
-        }
-        match flat_out.get(tail) {
-          Some(list) => list.push(head)
-          None => flat_out[tail] = [head]
-        }
-        match flat_in.get(head) {
-          Some(list) => list.push(tail)
-          None => flat_in[head] = [tail]
-        }
-      }
-      None => ()
-    }
-  }
+  let flat_adjacency =
+    build_flat_constraint_adjacency(
+      order_nodes,
+      node_set,
+      flat_constraints,
+    )
+  let flat_out = flat_adjacency.flat_out
+  let flat_in = flat_adjacency.flat_in
 
   let visited : Map[String, Bool] = Map::new()
   for name in order_nodes {
