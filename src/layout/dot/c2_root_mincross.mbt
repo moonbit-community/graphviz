@@ -389,6 +389,36 @@ fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool 
 }
 
 ///|
+priv struct RootRankReorderInputs {
+  order_rank_keys_for_mincross : Array[Int]
+  order_groups_for_mincross : Map[Int, Array[String]]
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  order_cluster_keys : Map[String, String]
+  cluster_meta : ClusterMetadata
+  edge_order : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_sizes_out : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  preferred_positions : Map[String, Double]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  graphviz_flip : Bool
+}
+
+///|
 priv struct RootComponentTraversalPlan {
   components : Array[Array[String]]
   root_graphviz_flip : Bool
@@ -539,33 +569,36 @@ fn build_root_component_reorder_inputs(
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_reorder(
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  order_edges_out_mincross : Array[@cgraph.Edge],
-  order_edge_tail_out_mincross : Array[String],
-  order_edge_head_out_mincross : Array[String],
-  order_edge_tail_port_x_mincross : Array[Double],
-  order_edge_head_port_x_mincross : Array[Double],
-  order_edge_tail_port_order_mincross : Array[Double],
-  order_edge_head_port_order_mincross : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  order_cluster_keys : Map[String, String],
-  cluster_meta : ClusterMetadata,
-  edge_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes_out : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  preferred_positions : Map[String, Double],
-  order_cluster_skeleton : Map[String, Bool],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  graphviz_flip : Bool,
+  inputs : RootRankReorderInputs,
 ) -> Map[Int, Array[String]] {
+  let order_rank_keys_for_mincross = inputs.order_rank_keys_for_mincross
+  let order_groups_for_mincross = inputs.order_groups_for_mincross
+  let order_edges_out_mincross = inputs.order_edges_out_mincross
+  let order_edge_tail_out_mincross = inputs.order_edge_tail_out_mincross
+  let order_edge_head_out_mincross = inputs.order_edge_head_out_mincross
+  let order_edge_tail_port_x_mincross = inputs.order_edge_tail_port_x_mincross
+  let order_edge_head_port_x_mincross = inputs.order_edge_head_port_x_mincross
+  let order_edge_tail_port_order_mincross =
+    inputs.order_edge_tail_port_order_mincross
+  let order_edge_head_port_order_mincross =
+    inputs.order_edge_head_port_order_mincross
+  let parents = inputs.parents
+  let children = inputs.children
+  let order_cluster_keys = inputs.order_cluster_keys
+  let cluster_meta = inputs.cluster_meta
+  let edge_order = inputs.edge_order
+  let order_node_order = inputs.order_node_order
+  let order_sizes_out = inputs.order_sizes_out
+  let nodesep_pt = inputs.nodesep_pt
+  let has_edge_labels = inputs.has_edge_labels
+  let port_order_positions = inputs.port_order_positions
+  let port_order_contrib = inputs.port_order_contrib
+  let preferred_positions = inputs.preferred_positions
+  let order_cluster_skeleton = inputs.order_cluster_skeleton
+  let order_flat_constraints = inputs.order_flat_constraints
+  let graphviz_out_neighbors = inputs.graphviz_out_neighbors
+  let graphviz_in_neighbors = inputs.graphviz_in_neighbors
+  let graphviz_flip = inputs.graphviz_flip
   let has_cluster_keys = has_non_empty_cluster_keys(order_cluster_keys)
   let traversal_plan =
     build_root_component_traversal_plan(
@@ -841,35 +874,36 @@ fn run_root_reorder_pass(
     }
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
+  let root_rank_reorder_inputs : RootRankReorderInputs = {
+    order_rank_keys_for_mincross,
+    order_groups_for_mincross,
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross,
+    parents: mincross_edge_data.parents,
+    children: mincross_edge_data.children,
+    order_cluster_keys,
+    cluster_meta,
+    edge_order: mincross_edge_data.edge_order,
+    order_node_order,
+    order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    preferred_positions,
+    order_cluster_skeleton,
+    order_flat_constraints,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+    graphviz_flip,
+  }
   let ordered_mincross =
-    run_root_rank_reorder(
-      order_rank_keys_for_mincross,
-      order_groups_for_mincross,
-      order_edges_out_mincross,
-      order_edge_tail_out_mincross,
-      order_edge_head_out_mincross,
-      order_edge_tail_port_x_mincross,
-      order_edge_head_port_x_mincross,
-      order_edge_tail_port_order_mincross,
-      order_edge_head_port_order_mincross,
-      mincross_edge_data.parents,
-      mincross_edge_data.children,
-      order_cluster_keys,
-      cluster_meta,
-      mincross_edge_data.edge_order,
-      order_node_order,
-      order_sizes_out,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      preferred_positions,
-      order_cluster_skeleton,
-      order_flat_constraints,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      graphviz_flip,
-    )
+    run_root_rank_reorder(root_rank_reorder_inputs)
   capture_pass0_flat_seed_groups_enabled.val = false
   let root_input_groups = order_groups_for_mincross
   capture_root_snapshot(
