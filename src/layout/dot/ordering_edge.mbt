@@ -374,10 +374,14 @@ fn build_order_edges_by_tail(
         let keyed : Array[(Int, Int, Int, Int, String)] = []
         let mut original_pos = 0
         for idx in indices_raw {
-          let tail =
-            if idx < edge_tail.length() { edge_tail[idx] } else { edges[idx].tail().name() }
-          let head =
-            if idx < edge_head.length() { edge_head[idx] } else { edges[idx].head().name() }
+          let edge = edges[idx]
+          let (tail, head) =
+            edge_endpoints_at(
+              edge,
+              idx,
+              edge_tail,
+              edge_head,
+            )
           let tail_cluster = match cluster_keys.get(tail) {
             Some(value) => value
             None => ""
@@ -501,10 +505,13 @@ fn build_order_edges_by_tail(
       }
     for idx in indices {
       let edge = edges[idx]
-      let tail =
-        if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
-      let head =
-        if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+      let (tail, head) =
+        edge_endpoints_at(
+          edge,
+          idx,
+          edge_tail,
+          edge_head,
+        )
       let tail_cluster =
         if order_with_clusters {
         match cluster_keys.get(tail) {
