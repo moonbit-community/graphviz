@@ -60,7 +60,7 @@ fn port_side_mask_for_self_edge(
 }
 
 ///|
-fn self_edge_right_space_for_edge(
+fn self_edge_extra_right_space(
   edge : @cgraph.Edge,
   rankdir : RankDir,
   port_maps : Map[String, Map[String, RecordPort]],
@@ -115,7 +115,7 @@ fn apply_self_edge_right_space(
     if tail != edge.head().name() {
       continue
     }
-    let extra = self_edge_right_space_for_edge(edge, rankdir, port_maps)
+    let extra = self_edge_extra_right_space(edge, rankdir, port_maps)
     if extra <= 0.0 {
       continue
     }
