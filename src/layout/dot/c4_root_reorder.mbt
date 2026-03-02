@@ -137,16 +137,6 @@ fn collect_mincross_order_edges(
 }
 
 ///|
-/// Graphviz parity: rank-group map lookups in root cluster reorder default to
-/// empty rank lists for ranks absent from the current grouping map.
-fn rank_group_names_or_empty(
-  groups : Map[Int, Array[String]],
-  rank : Int,
-) -> Array[String] {
-  groups.get(rank).unwrap_or_default()
-}
-
-///|
 /// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
 /// merged back into seeded rank lists by replacing only filtered positions.
 /// Do not change behavior without updating fixtures/tests.
@@ -160,8 +150,8 @@ fn merge_root_mincross_groups(
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
-    let names = rank_group_names_or_empty(seeded_groups, rank).copy()
-    let replacements = rank_group_names_or_empty(ordered_mincross, rank)
+    let names = seeded_groups.get(rank).unwrap_or_default().copy()
+    let replacements = ordered_mincross.get(rank).unwrap_or_default()
     if replacements.length() == 0 {
       merged[rank] = names
       continue
@@ -553,7 +543,7 @@ fn build_root_reorder_groups(
   // nodes, and include edge-vnodes only when flagged as root-vnodes.
   let root_groups_base : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
-    let names = rank_group_names_or_empty(order_groups_for_mincross, rank)
+    let names = order_groups_for_mincross.get(rank).unwrap_or_default()
     let root_names : Array[String] = []
     for name in names {
       // Graphviz parity: root reorder rank filtering keeps root-cluster
@@ -1110,7 +1100,7 @@ fn build_cluster_order_from_root(
   let cluster_rank_order : Map[Int, Map[String, Int]] = Map::new()
   let mut previous_order_map : Map[String, Int]? = None
   for rank in root_rank_keys {
-    let names = rank_group_names_or_empty(ordered_root, rank)
+    let names = ordered_root.get(rank).unwrap_or_default()
     // Graphviz parity: root mincross rank map records first-seen cluster
     // skeleton buckets and one root-real bucket in rank-sequence order.
     let order_map : Map[String, Int] = Map::new()
@@ -1233,7 +1223,7 @@ fn collect_real_only_rank_groups(
 ) -> Map[Int, Array[String]] {
   let cleaned_groups : Map[Int, Array[String]] = Map::new()
   for rank in rank_keys {
-    let names = rank_group_names_or_empty(ordered, rank)
+    let names = ordered.get(rank).unwrap_or_default()
     let cleaned : Array[String] = []
     for name in names {
       if real_nodes.get(name) is Some(_) {

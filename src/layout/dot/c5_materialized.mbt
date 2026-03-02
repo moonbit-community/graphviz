@@ -453,16 +453,6 @@ fn build_remincross_order(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross rank lookups use -1 fallback for
-/// names missing from the rematerialized rank map.
-fn remincross_rank_or_missing(
-  rem_ranks : Map[String, Int],
-  name : String,
-) -> Int {
-  rem_ranks.get(name).unwrap_or(-1)
-}
-
-///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
 fn build_nonroot_ordered_names(
@@ -509,7 +499,7 @@ fn build_nonroot_tail_names(
   let rank_keys : Array[Int] = []
   let rank_seen : Map[Int, Bool] = Map::new()
   for name in names {
-    let rank = remincross_rank_or_missing(rem_ranks, name)
+    let rank = rem_ranks.get(name).unwrap_or(-1)
     if rank_seen.get(rank) is None {
       rank_seen[rank] = true
       rank_keys.push(rank)
@@ -535,7 +525,7 @@ fn build_nonroot_tail_names(
     // directional replay and minimum-rank input-like rebucketing.
     let rank_names : Array[String] = []
     for name in names {
-      if remincross_rank_or_missing(rem_ranks, name) == rank {
+      if rem_ranks.get(name).unwrap_or(-1) == rank {
         rank_names.push(name)
       }
     }

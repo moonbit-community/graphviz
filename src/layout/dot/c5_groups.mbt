@@ -295,16 +295,6 @@ priv struct ReMincrossPassInputs {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross cluster-key reads treat missing keys
-/// as root-empty values for intercluster/internal edge classification.
-fn remincross_cluster_key(
-  cluster_keys : Map[String, String],
-  name : String,
-) -> String {
-  cluster_keys.get(name).unwrap_or_default()
-}
-
-///|
 /// Graphviz parity: clustered ReMincross starts from a shallow clone of
 /// intercluster keys before root remapping and vnode LCA assignments.
 fn clone_remincross_cluster_keys(
@@ -315,16 +305,6 @@ fn clone_remincross_cluster_keys(
     cloned[name] = key
   }
   cloned
-}
-
-///|
-/// Graphviz parity: clustered ReMincross vnode lookup is keyed by edge vnode
-/// key and returns empty for edges without vnode expansion.
-fn remincross_edge_vnodes(
-  edge_vnodes : Map[String, Array[String]],
-  edge : @cgraph.Edge,
-) -> Array[String] {
-  edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
 }
 
 ///|
@@ -341,7 +321,8 @@ fn assign_remincross_clusters(
   cluster_parents : Map[String, String?],
 ) -> Unit {
   for edge_idx, edge in edges {
-    let vnodes = remincross_edge_vnodes(edge_vnodes, edge)
+    let vnodes =
+      edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
     if vnodes.length() == 0 {
       continue
     }
@@ -349,8 +330,8 @@ fn assign_remincross_clusters(
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail = endpoints.tail
     let head = endpoints.head
-    let tail_cluster = remincross_cluster_key(intercluster_keys, tail)
-    let head_cluster = remincross_cluster_key(intercluster_keys, head)
+    let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
+    let head_cluster = intercluster_keys.get(head).unwrap_or_default()
     let vnode_cluster =
       cluster_lca(
         tail_cluster,
@@ -444,8 +425,8 @@ fn collect_remincross_trailing(
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail = endpoints.tail
     let head = endpoints.head
-    let tail_cluster = remincross_cluster_key(remincross_cluster_keys, tail)
-    let head_cluster = remincross_cluster_key(remincross_cluster_keys, head)
+    let tail_cluster = remincross_cluster_keys.get(tail).unwrap_or_default()
+    let head_cluster = remincross_cluster_keys.get(head).unwrap_or_default()
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
     let internal =
@@ -466,7 +447,8 @@ fn collect_remincross_trailing(
     if tail_min <= head_max && head_min <= tail_max {
       continue
     }
-    let vnodes = remincross_edge_vnodes(edge_vnodes, edge)
+    let vnodes =
+      edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
     for vnode in vnodes {
       intercluster_vnodes[vnode] = true
     }
