@@ -794,15 +794,6 @@ fn run_single_component_root_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: multi-component root reorder setup keeps component
-/// projection sources and reorder config derived from one root input snapshot.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootComponentReorderSetup {
-  component_projection_sources : RootComponentProjectionSources
-  component_reorder_config : RootComponentReorderConfig
-}
-
-///|
 /// Graphviz parity: component projection sources for multi-component root
 /// reorder keep one-to-one snapshots of root mincross edges and neighbors.
 /// Do not change behavior without updating fixtures/tests.
@@ -858,27 +849,6 @@ fn build_root_component_reorder_config(
 }
 
 ///|
-/// Graphviz parity: multi-component root reorder setup is assembled from one
-/// root reorder input payload and traversal-mode runtime flags.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_component_reorder_setup(
-  inputs : RootRankReorderInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
-) -> RootComponentReorderSetup {
-  {
-    component_projection_sources:
-      build_root_component_projection_sources(inputs),
-    component_reorder_config:
-      build_root_component_reorder_config(
-        inputs,
-        root_graphviz_flip,
-        coalesce_parallel,
-      ),
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -910,16 +880,18 @@ fn run_root_rank_reorder(
     )
   }
 
-  let component_reorder_setup =
-    build_root_component_reorder_setup(
+  let component_projection_sources =
+    build_root_component_projection_sources(inputs)
+  let component_reorder_config =
+    build_root_component_reorder_config(
       inputs,
       root_graphviz_flip,
       coalesce_parallel,
     )
   run_componentwise_root_rank_reorder(
     components,
-    component_reorder_setup.component_projection_sources,
-    component_reorder_setup.component_reorder_config,
+    component_projection_sources,
+    component_reorder_config,
   )
 }
 
