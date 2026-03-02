@@ -16,10 +16,13 @@ fn dedup_ordering_edges(
   let out_tail : Array[String] = []
   let out_head : Array[String] = []
   for i in 0..<edges.length() {
-    let tail =
-      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
-    let head =
-      if i < edge_head.length() { edge_head[i] } else { edges[i].head().name() }
+    let (tail, head) =
+      edge_endpoints_at(
+        edges[i],
+        i,
+        edge_tail,
+        edge_head,
+      )
     let key = "\{tail}|\{head}"
     if seen.get(key) is Some(_) {
       continue
@@ -56,10 +59,13 @@ fn build_flat_constraints(
     in_edges[name] = []
   }
   for i in 0..<edges.length() {
-    let tail =
-      if i < edge_tail.length() { edge_tail[i] } else { edges[i].tail().name() }
-    let head =
-      if i < edge_head.length() { edge_head[i] } else { edges[i].head().name() }
+    let (tail, head) =
+      edge_endpoints_at(
+        edges[i],
+        i,
+        edge_tail,
+        edge_head,
+      )
     let tail_cluster = match cluster_keys.get(tail) {
       Some(value) => value
       None => ""
@@ -115,33 +121,27 @@ fn build_flat_constraints(
     while idx < sorted.length() {
       let (_prev_id, prev_idx) = sorted[idx - 1]
       let (_curr_id, curr_idx) = sorted[idx]
+      let (prev_tail, prev_head) =
+        edge_endpoints_at(
+          edges[prev_idx],
+          prev_idx,
+          edge_tail,
+          edge_head,
+        )
+      let (curr_tail, curr_head) =
+        edge_endpoints_at(
+          edges[curr_idx],
+          curr_idx,
+          edge_tail,
+          edge_head,
+        )
       let left = match mode {
-        OrderingMode::Out =>
-          if prev_idx < edge_head.length() {
-          edge_head[prev_idx]
-        } else {
-          edges[prev_idx].head().name()
-        }
-        OrderingMode::In =>
-          if prev_idx < edge_tail.length() {
-          edge_tail[prev_idx]
-        } else {
-          edges[prev_idx].tail().name()
-        }
+        OrderingMode::Out => prev_head
+        OrderingMode::In => prev_tail
       }
       let right = match mode {
-        OrderingMode::Out =>
-          if curr_idx < edge_head.length() {
-          edge_head[curr_idx]
-        } else {
-          edges[curr_idx].head().name()
-        }
-        OrderingMode::In =>
-          if curr_idx < edge_tail.length() {
-          edge_tail[curr_idx]
-        } else {
-          edges[curr_idx].tail().name()
-        }
+        OrderingMode::Out => curr_head
+        OrderingMode::In => curr_tail
       }
       if left != right {
         flat_constraints["\{left}|\{right}"] = true
