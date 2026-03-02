@@ -339,6 +339,14 @@ fn build_cluster_tail_order(
   let cluster_order_pos = cluster_order_output.cluster_order_pos
   let heads_by_tail =
     build_heads_by_tail_from_edge_creation(rem_edge_creation)
+  let context =
+    {
+      rem_ranks,
+      heads_by_tail,
+      cluster_order_pos,
+      cluster_order,
+      rem_cluster_keys,
+    }
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
     // Graphviz parity: cluster buckets default to empty when absent from
@@ -346,28 +354,7 @@ fn build_cluster_tail_order(
     let names =
       cluster_tail_buckets.names_by_cluster.get(cluster).unwrap_or_default()
     let ordered_names =
-      if cluster == "" {
-        // Graphviz parity: root cluster tail order can apply a temporary
-        // override snapshot before replaying root names into GD_nlist.
-        match remincross_root_tail_order_override_snapshot.val {
-          Some(override_names) =>
-            reorder_names_by_override(
-              names,
-              override_names,
-            )
-          None => names
-        }
-      } else {
-        build_nonroot_tail_names(
-          cluster,
-          names,
-          rem_ranks,
-          heads_by_tail,
-          cluster_order_pos,
-          cluster_order,
-          rem_cluster_keys,
-        )
-      }
+      build_cluster_tail_names_for_cluster(cluster, names, context)
     append_names_in_order(rem_nlist_order, ordered_names)
   }
   rem_nlist_order
@@ -381,6 +368,18 @@ priv struct ClusterTailBuckets {
   cluster_order_seen : Array[String]
   names_by_cluster : Map[String, Array[String]]
   cluster_first_seen : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: cluster tail-order context keeps rematerialized rank and
+/// tail->head adjacency snapshots for per-cluster ordered-name replay.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterTailOrderContext {
+  rem_ranks : Map[String, Int]
+  heads_by_tail : Map[String, Array[String]]
+  cluster_order_pos : Map[String, Int]
+  cluster_order : Array[String]
+  rem_cluster_keys : Map[String, String]
 }
 
 ///|
@@ -436,6 +435,38 @@ fn build_heads_by_tail_from_edge_creation(
     }
   }
   heads_by_tail
+}
+
+///|
+/// Graphviz parity: cluster-tail ordered-name replay keeps root override
+/// behavior and non-root rank replay rules for one cluster bucket.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_tail_names_for_cluster(
+  cluster : String,
+  names : Array[String],
+  context : ClusterTailOrderContext,
+) -> Array[String] {
+  if cluster == "" {
+    // Graphviz parity: root cluster tail order can apply a temporary
+    // override snapshot before replaying root names into GD_nlist.
+    return match remincross_root_tail_order_override_snapshot.val {
+      Some(override_names) =>
+        reorder_names_by_override(
+          names,
+          override_names,
+        )
+      None => names
+    }
+  }
+  build_nonroot_tail_names(
+    cluster,
+    names,
+    context.rem_ranks,
+    context.heads_by_tail,
+    context.cluster_order_pos,
+    context.cluster_order,
+    context.rem_cluster_keys,
+  )
 }
 
 ///|
