@@ -1286,12 +1286,12 @@ fn mirror_layout_points_with_bbox(
 }
 
 ///|
-fn refresh_cluster_label_positions(
+fn refresh_cluster_labels(
   layout : DotLayoutGraph,
 ) -> DotLayoutGraph {
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
-    subgraphs.push(refresh_cluster_label_positions(subgraph))
+    subgraphs.push(refresh_cluster_labels(subgraph))
   }
   let label_pos =
     if @dot_shared.is_cluster_graph(layout.graph) {
@@ -1540,7 +1540,7 @@ fn finalize_layout_graph(
     @dot_shared.graph_has_cluster(graph) &&
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
-      refresh_cluster_label_positions(
+      refresh_cluster_labels(
         mirror_layout_points_with_bbox(
           rotated,
           cluster_mirror_bbox,
