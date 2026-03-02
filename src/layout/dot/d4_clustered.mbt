@@ -6,7 +6,7 @@
 /// Graphviz parity: clustered xpos reorder seed skeleton injection appends
 /// per-rank cluster skeleton vnodes before rank-order/index materialization.
 /// Do not change behavior without updating fixtures/tests.
-fn append_skeleton_nodes_for_xpos_seed(
+fn append_skeleton_nodes_for_xpos(
   order_groups : Map[Int, Array[String]],
   order_sizes : Map[String, NodeSize],
   order_cluster_keys : Map[String, String],
@@ -57,7 +57,7 @@ fn build_clustered_xpos_seed_data(
     order_cluster_keys[name] = key
   }
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
-  append_skeleton_nodes_for_xpos_seed(
+  append_skeleton_nodes_for_xpos(
     order_groups,
     order_sizes,
     order_cluster_keys,
