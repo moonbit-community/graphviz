@@ -125,11 +125,7 @@ fn build_remincross_inputs(
   // (no cluster skeleton mapping).
   let cluster_order_index =
     build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
-  let (
-    rem_order_edges_by_tail,
-    rem_vnode_creation,
-    rem_edge_creation,
-  ) =
+  let materialized_edges =
     build_materialized_edges(
       dispatch_context.creation_order,
       dispatch_context.edges,
@@ -147,21 +143,12 @@ fn build_remincross_inputs(
       dispatch_context.edges_by_tail,
       cluster_order_index,
     )
-  let (
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-  ) =
+  let materialized_arrays =
     build_materialized_arrays(
       dispatch_context.creation_order,
-      rem_vnode_creation,
-      rem_edge_creation,
-      rem_order_edges_by_tail,
+      materialized_edges.vnode_creation,
+      materialized_edges.edge_creation,
+      materialized_edges.order_edges_by_tail,
       rem_graph,
       rem_node_map,
       rem_groups,
@@ -188,14 +175,14 @@ fn build_remincross_inputs(
   {
     rem_nodes,
     rem_ranks,
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
+    rem_node_order: materialized_arrays.node_order,
+    rem_edges_out: materialized_arrays.edges_out,
+    rem_edge_tail_out: materialized_arrays.edge_tail_out,
+    rem_edge_head_out: materialized_arrays.edge_head_out,
+    rem_edge_tail_port_x: materialized_arrays.edge_tail_port_x,
+    rem_edge_head_port_x: materialized_arrays.edge_head_port_x,
+    rem_edge_tail_port_order: materialized_arrays.edge_tail_port_order,
+    rem_edge_head_port_order: materialized_arrays.edge_head_port_order,
     rem_cluster_keys,
     rem_sizes,
     rem_flat_constraints,

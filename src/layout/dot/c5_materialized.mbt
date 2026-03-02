@@ -50,27 +50,27 @@ fn apply_intercluster_bonus(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross rematerialized-order-edge tuple keeps
-/// bonus-adjusted tail buckets, vnode creation, and edge creation replay order.
-type ReMincrossMaterializedOrderEdges = (
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  Map[String, Array[String]],
-  Array[(String, String)],
-)
+/// Graphviz parity: clustered ReMincross rematerialized-order-edge payload
+/// keeps bonus-adjusted tail buckets, vnode creation, and edge creation replay.
+priv struct ReMincrossMaterializedOrderEdges {
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  vnode_creation : Map[String, Array[String]]
+  edge_creation : Array[(String, String)]
+}
 
 ///|
-/// Graphviz parity: clustered ReMincross materialized-edge tuple keeps node
-/// order plus rematerialized edge arrays in fixed return ordering.
-type ReMincrossMaterializedEdgeArrays = (
-  Map[String, Int],
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-)
+/// Graphviz parity: clustered ReMincross materialized-edge payload keeps node
+/// order plus rematerialized edge arrays for cleanup reorder input.
+priv struct ReMincrossMaterializedEdgeArrays {
+  node_order : Map[String, Int]
+  edges_out : Array[@cgraph.Edge]
+  edge_tail_out : Array[String]
+  edge_head_out : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+}
 
 ///|
 /// Graphviz parity: clustered ReMincross order-edge rematerialization applies
@@ -144,7 +144,11 @@ fn build_materialized_edges(
       rem_edge_creation.push((tail, head))
     }
   }
-  (rem_order_edges_by_tail, rem_vnode_creation, rem_edge_creation)
+  {
+    order_edges_by_tail: rem_order_edges_by_tail,
+    vnode_creation: rem_vnode_creation,
+    edge_creation: rem_edge_creation,
+  }
 }
 
 ///|
@@ -187,16 +191,16 @@ fn build_materialized_arrays(
       rem_graph,
       rem_node_map,
     )
-  (
-    rem_node_order,
-    rem_edges_out,
-    rem_edge_tail_out,
-    rem_edge_head_out,
-    rem_edge_tail_port_x,
-    rem_edge_head_port_x,
-    rem_edge_tail_port_order,
-    rem_edge_head_port_order,
-  )
+  {
+    node_order: rem_node_order,
+    edges_out: rem_edges_out,
+    edge_tail_out: rem_edge_tail_out,
+    edge_head_out: rem_edge_head_out,
+    edge_tail_port_x: rem_edge_tail_port_x,
+    edge_head_port_x: rem_edge_head_port_x,
+    edge_tail_port_order: rem_edge_tail_port_order,
+    edge_head_port_order: rem_edge_head_port_order,
+  }
 }
 
 ///|
