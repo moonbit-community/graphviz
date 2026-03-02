@@ -72,7 +72,7 @@ fn run_remincross_pass(
         rem_groups,
       )
     let rem_ordered =
-      run_remincross_cleanup_reorder(
+      run_remincross_cleanup(
         dispatch_context,
         rem_rank_keys,
         rem_groups,
@@ -206,7 +206,7 @@ fn build_remincross_inputs(
 /// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
 /// inputs, builds edge index maps, and executes startpass=2 mincross on the
 /// rematerialized fast-graph edge set.
-fn run_remincross_cleanup_reorder(
+fn run_remincross_cleanup(
   dispatch_context : ReMincrossDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
