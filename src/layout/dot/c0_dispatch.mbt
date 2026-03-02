@@ -61,49 +61,36 @@ fn run_ordering_dispatch(
       }
     run_clustered(dispatch_context)
   } else {
-    run_noncluster_ordering_dispatch(inputs)
-  }
-}
-
-///|
-/// Graphviz parity: non-clustered ordering path still runs a single mincross
-/// pass directly (matching Graphviz control flow).
-/// Do not change behavior without updating fixtures/tests.
-fn run_noncluster_ordering_dispatch(
-  inputs : OrderingDispatchInputs,
-) -> OrderingDispatchOutput {
-  let edge_port_data = inputs.edge_port_data
-  let reorder_setup = inputs.reorder_setup
-  let ordered_groups =
-    run_noncluster_reorder_pass(
-      inputs.nodes,
-      inputs.edges,
-      inputs.edge_head,
-      inputs.edge_out_order,
-      inputs.ranks,
-      inputs.rank_keys,
-      inputs.groups,
-      reorder_setup.class2_data.nlist_order,
-      inputs.node_order,
-      edge_port_data.order_edges,
-      edge_port_data.order_edge_tail,
-      edge_port_data.order_edge_head,
-      edge_port_data.order_edge_tail_port_x,
-      edge_port_data.order_edge_head_port_x,
-      edge_port_data.order_edge_tail_port_order,
-      edge_port_data.order_edge_head_port_order,
-      inputs.cluster_meta,
-      edge_port_data.edge_order,
-      inputs.order_sizes,
-      inputs.nodesep_pt,
-      inputs.has_edge_labels,
-      inputs.port_order_positions,
-      inputs.port_order_contrib,
-      reorder_setup.graphviz_flip,
-    )
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  {
-    ordered_groups,
-    ordered_with_vnodes,
+    let ordered_groups =
+      run_noncluster_reorder_pass(
+        inputs.nodes,
+        inputs.edges,
+        inputs.edge_head,
+        inputs.edge_out_order,
+        inputs.ranks,
+        inputs.rank_keys,
+        inputs.groups,
+        inputs.reorder_setup.class2_data.nlist_order,
+        inputs.node_order,
+        inputs.edge_port_data.order_edges,
+        inputs.edge_port_data.order_edge_tail,
+        inputs.edge_port_data.order_edge_head,
+        inputs.edge_port_data.order_edge_tail_port_x,
+        inputs.edge_port_data.order_edge_head_port_x,
+        inputs.edge_port_data.order_edge_tail_port_order,
+        inputs.edge_port_data.order_edge_head_port_order,
+        inputs.cluster_meta,
+        inputs.edge_port_data.edge_order,
+        inputs.order_sizes,
+        inputs.nodesep_pt,
+        inputs.has_edge_labels,
+        inputs.port_order_positions,
+        inputs.port_order_contrib,
+        inputs.reorder_setup.graphviz_flip,
+      )
+    {
+      ordered_groups,
+      ordered_with_vnodes: Map::new(),
+    }
   }
 }
