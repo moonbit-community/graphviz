@@ -40,8 +40,12 @@ fn compute_rank_data(
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
   let edge_out_order : Map[String, Array[Int]] = Map::new()
-  let (edge_tail, edge_head, edge_reversed, out_edges, _in_edges) =
+  let acyclic_directions =
     @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
+  let edge_tail = acyclic_directions.tail
+  let edge_head = acyclic_directions.head
+  let edge_reversed = acyclic_directions.reversed
+  let out_edges = acyclic_directions.out_edges
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
     edge_out_order[name] = out_edges[i].copy()

@@ -198,8 +198,11 @@ fn collect_label_vnode_actuals(
   for node in nodes {
     existing_names[node.name()] = true
   }
-  let (edge_tail, edge_head, _edge_reversed, out_edges, _in_edges) =
+  let acyclic_directions =
     @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
+  let edge_tail = acyclic_directions.tail
+  let edge_head = acyclic_directions.head
+  let out_edges = acyclic_directions.out_edges
   let edge_out_order : Map[String, Array[Int]] = Map::new()
   for i in 0..<nodes.length() {
     let name = nodes[i].name()
@@ -396,13 +399,9 @@ test "label vnodes match Graphviz fixtures" {
       edges,
       has_edge_labels,
     )
-    let (
-      _edge_tail,
-      _edge_head,
-      edge_reversed,
-      _edge_out_order,
-      _edge_in_order,
-    ) = @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
+    let acyclic_directions =
+      @rank_assignment.acyclic_edge_directions_with_order(graph, nodes, edges)
+    let edge_reversed = acyclic_directions.reversed
     let edge_reversed_by_key : Map[String, Bool] = Map::new()
     for i in 0..<edges.length() {
       edge_reversed_by_key[@dot_shared.edge_key(edges[i])] = edge_reversed[i]

@@ -222,17 +222,20 @@ fn acyclic_dfs_fast(
   }
 }
 
+pub struct AcyclicDirectionsWithOrder {
+  tail : Array[String]
+  head : Array[String]
+  reversed : Array[Bool]
+  out_edges : Array[Array[Int]]
+  in_edges : Array[Array[Int]]
+}
+
+///|
 pub fn acyclic_edge_directions_with_order(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
-) -> (
-  Array[String],
-  Array[String],
-  Array[Bool],
-  Array[Array[Int]],
-  Array[Array[Int]],
-) {
+) -> AcyclicDirectionsWithOrder {
   let _ = graph
   let node_index : Map[String, Int] = Map::new()
   let node_names : Array[String] = []
@@ -456,7 +459,13 @@ pub fn acyclic_edge_directions_with_order(
   }
   // Graphviz parity: class2 processes edges in original tail order
   // (agfstout on cgraph), independent of acyclic reversals.
-  (edge_tail_out, edge_head_out, edge_reversed, out_edges_all_orig, in_edges_all_orig)
+  {
+    tail: edge_tail_out,
+    head: edge_head_out,
+    reversed: edge_reversed,
+    out_edges: out_edges_all_orig,
+    in_edges: in_edges_all_orig,
+  }
 }
 
 ///|
