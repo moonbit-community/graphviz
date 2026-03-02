@@ -132,25 +132,34 @@ fn bezier_controls_near_line(
   dis1 < hw * hw && dis2 < hw * hw
 }
 
+priv struct CubicBezierSegment {
+  p0 : @geom.Point
+  p1 : @geom.Point
+  p2 : @geom.Point
+  p3 : @geom.Point
+}
+
+priv struct SplitBezierHalf {
+  left : CubicBezierSegment
+  right : CubicBezierSegment
+}
+
 fn split_bezier_half(
   p0 : @geom.Point,
   p1 : @geom.Point,
   p2 : @geom.Point,
   p3 : @geom.Point,
-) -> (
-  (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
-  (@geom.Point, @geom.Point, @geom.Point, @geom.Point),
-) {
+) -> SplitBezierHalf {
   let p01 = @edge_spline.point((p0.x + p1.x) / 2.0, (p0.y + p1.y) / 2.0)
   let p12 = @edge_spline.point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0)
   let p23 = @edge_spline.point((p2.x + p3.x) / 2.0, (p2.y + p3.y) / 2.0)
   let p012 = @edge_spline.point((p01.x + p12.x) / 2.0, (p01.y + p12.y) / 2.0)
   let p123 = @edge_spline.point((p12.x + p23.x) / 2.0, (p12.y + p23.y) / 2.0)
   let p0123 = @edge_spline.point((p012.x + p123.x) / 2.0, (p012.y + p123.y) / 2.0)
-  (
-    (p0, p01, p012, p0123),
-    (p0123, p123, p23, p3),
-  )
+  {
+    left: { p0, p1: p01, p2: p012, p3: p0123 },
+    right: { p0: p0123, p1: p123, p2: p23, p3 },
+  }
 }
 
 fn update_bbox_with_bezier(
@@ -171,10 +180,23 @@ fn update_bbox_with_bezier(
       out = expand_bbox_with_point(out, p2)
       out = expand_bbox_with_point(out, p3)
     } else {
-      let ((l0, l1, l2, l3), (r0, r1, r2, r3)) =
-        split_bezier_half(p0, p1, p2, p3)
-      let left = update_bbox_with_bezier(out, l0, l1, l2, l3)
-      out = update_bbox_with_bezier(left, r0, r1, r2, r3)
+      let split = split_bezier_half(p0, p1, p2, p3)
+      let left =
+        update_bbox_with_bezier(
+          out,
+          split.left.p0,
+          split.left.p1,
+          split.left.p2,
+          split.left.p3,
+        )
+      out =
+        update_bbox_with_bezier(
+          left,
+          split.right.p0,
+          split.right.p1,
+          split.right.p2,
+          split.right.p3,
+        )
     }
   }
   out
