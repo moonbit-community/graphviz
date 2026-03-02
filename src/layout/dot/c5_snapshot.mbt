@@ -47,7 +47,7 @@ fn build_ordering_edges_snapshot(
 }
 
 ///|
-fn coalesce_ordering_edges_snapshot(
+fn coalesce_order_edges_snapshot(
   edges : Array[OrderingInputEdgeSnapshot],
 ) -> Array[OrderingInputEdgeSnapshot] {
   let entries_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
@@ -118,7 +118,7 @@ fn capture_root_mincross_snapshot(
     return
   }
   let edges =
-    coalesce_ordering_edges_snapshot(
+    coalesce_order_edges_snapshot(
       build_ordering_edges_snapshot(
         edges_out,
         edge_tail_out,
@@ -153,7 +153,7 @@ fn capture_root_mincross_snapshot(
 }
 
 ///|
-fn capture_remincross_input_snapshot(
+fn capture_remincross_snapshot(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edges_out : Array[@cgraph.Edge],

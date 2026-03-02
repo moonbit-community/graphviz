@@ -237,7 +237,7 @@ fn run_remincross_cleanup_reorder(
     )
   // Graphviz parity: ReMincross clustered reorder executes mincross with
   // startpass=2 on rematerialized fast-graph edges and local flat constraints.
-  capture_remincross_input_snapshot(
+  capture_remincross_snapshot(
     rem_rank_keys,
     rem_groups,
     rem_edges_out,
