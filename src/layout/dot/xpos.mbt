@@ -89,7 +89,7 @@ priv struct ConstraintGraphState {
 
 ///|
 priv struct ClusterConstraintBuild {
-  extra_nodes : Array[(String, Int)]
+  extra_nodes : Array[ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
@@ -99,6 +99,12 @@ priv struct ClusterConstraintBuild {
 priv struct ClusterBoundaryNodes {
   left_node : String
   right_node : String
+}
+
+///|
+priv struct ExtraConstraintNode {
+  name : String
+  rank : Int
 }
 
 ///|
@@ -601,7 +607,7 @@ fn build_cluster_constraints(
   let cluster_border_right : Map[String, Double] = Map::new()
   let cluster_min_rank : Map[String, Int] = Map::new()
   let cluster_max_rank : Map[String, Int] = Map::new()
-  let extra_nodes : Array[(String, Int)] = []
+  let extra_nodes : Array[ExtraConstraintNode] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = cluster_margin_pt(cluster_graph)
@@ -684,8 +690,14 @@ fn build_cluster_constraints(
           Some(value) => value
           None => 0.0
         }
-        extra_nodes.push((ln_name, trunc_int(left - margin - left_border)))
-        extra_nodes.push((rn_name, trunc_int(right + margin + right_border)))
+        extra_nodes.push({
+          name: ln_name,
+          rank: trunc_int(left - margin - left_border),
+        })
+        extra_nodes.push({
+          name: rn_name,
+          rank: trunc_int(right + margin + right_border),
+        })
         match min_rank {
           Some(value) => cluster_min_rank[name] = value
           None => ()
@@ -1494,7 +1506,7 @@ fn build_constraint_graph(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[(String, Int)],
+  extra_nodes : Array[ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
@@ -1542,14 +1554,14 @@ fn build_constraint_graph(
   let base_positions = compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
-  let early_extra_nodes : Array[(String, Int)] = []
-  let late_extra_nodes : Array[(String, Int)] = []
-  for pair in extra_nodes {
-    let (name, _rank) = pair
-    if name.has_prefix(CLUSTER_LN_PREFIX) || name.has_prefix(CLUSTER_RN_PREFIX) {
-      late_extra_nodes.push(pair)
+  let early_extra_nodes : Array[ExtraConstraintNode] = []
+  let late_extra_nodes : Array[ExtraConstraintNode] = []
+  for extra_node in extra_nodes {
+    if extra_node.name.has_prefix(CLUSTER_LN_PREFIX) ||
+      extra_node.name.has_prefix(CLUSTER_RN_PREFIX) {
+      late_extra_nodes.push(extra_node)
     } else {
-      early_extra_nodes.push(pair)
+      early_extra_nodes.push(extra_node)
     }
   }
   let real_by_name : Map[String, @cgraph.Node] = Map::new()
@@ -1557,9 +1569,8 @@ fn build_constraint_graph(
     real_by_name[node.name()] = node
   }
   let extra_rank : Map[String, Int] = Map::new()
-  for pair in early_extra_nodes {
-    let (name, rank) = pair
-    extra_rank[name] = rank
+  for extra_node in early_extra_nodes {
+    extra_rank[extra_node.name] = extra_node.rank
   }
   let ordered_names : Array[String] = []
   let seen : Map[String, Bool] = Map::new()
@@ -2154,10 +2165,13 @@ fn build_constraint_graph(
       }
     }
   }
-  for pair in late_extra_nodes {
-    let (name, _rank) = pair
-    let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
-    index[name] = idx
+  for extra_node in late_extra_nodes {
+    let idx = @network_simplex.add_node(
+      graph,
+      extra_node.name,
+      kind=extra_node_kind(extra_node.name),
+    )
+    index[extra_node.name] = idx
     // Graphviz parity: cluster boundary helpers enter the aux graph at rank 0
     // and are later positioned by constraints, not by seed x ranks.
     @network_simplex.set_node_rank(graph, idx, 0)
@@ -2256,7 +2270,7 @@ fn x_positions_from_simplex(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[(String, Int)],
+  extra_nodes : Array[ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
   extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
@@ -2414,13 +2428,13 @@ fn x_positions_from_simplex(
     }
     positions[name] = @network_simplex.node_rank(reordered.graph, idx).to_double()
   }
-  for pair in extra_nodes {
-    let (name, _rank) = pair
-    let idx = match reordered.index.get(name) {
+  for extra_node in extra_nodes {
+    let idx = match reordered.index.get(extra_node.name) {
       Some(value) => value
       None => 0
     }
-    positions[name] = @network_simplex.node_rank(reordered.graph, idx).to_double()
+    positions[extra_node.name] =
+      @network_simplex.node_rank(reordered.graph, idx).to_double()
   }
   positions
 }
@@ -2445,7 +2459,7 @@ fn compute_x_positions(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[(String, Int)],
+  extra_nodes : Array[ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   extra_slack_edges : Array[ConstraintEdge],

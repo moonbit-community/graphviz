@@ -796,14 +796,14 @@ fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
 fn build_vnode_extra_nodes(
   vnode_order : Array[String],
   vnode_ranks : Map[String, Int],
-) -> Array[(String, Int)] {
-  let extra : Array[(String, Int)] = []
+) -> Array[ExtraConstraintNode] {
+  let extra : Array[ExtraConstraintNode] = []
   let seen : Map[String, Bool] = Map::new()
   if vnode_order.length() > 0 {
     for name in vnode_order {
       match vnode_ranks.get(name) {
         Some(rank) => {
-          extra.push((name, rank))
+          extra.push({ name, rank })
           seen[name] = true
         }
         None => ()
@@ -813,7 +813,7 @@ fn build_vnode_extra_nodes(
   if extra.length() < vnode_ranks.length() {
     for name, rank in vnode_ranks {
       if seen.get(name) is None {
-        extra.push((name, rank))
+        extra.push({ name, rank })
       }
     }
   }

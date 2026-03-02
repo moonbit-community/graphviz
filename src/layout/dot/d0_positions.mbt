@@ -21,7 +21,7 @@ priv struct XposComputationInput {
   x_sizes : Map[String, NodeSize]
   x_rank_keys : Array[Int]
   x_ranks : Map[String, Int]
-  x_extra_nodes : Array[(String, Int)]
+  x_extra_nodes : Array[ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
   x_slack_edges : Array[ConstraintEdge]
 }
