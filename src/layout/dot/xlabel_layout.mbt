@@ -74,7 +74,7 @@ fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
 
 fn xlabel_metrics_for_edge(edge : @cgraph.Edge) -> XLabelMetrics? {
   match edge_label_metrics_for_attr(edge, "xlabel", false) {
-    Some((width, height)) => Some({ width, height })
+    Some(metrics) => Some({ width: metrics.width, height: metrics.height })
     None => None
   }
 }
@@ -993,8 +993,9 @@ fn apply_xlabels(
       match edge_layout.label_pos {
         Some(pos) =>
           match edge_mid_label_metrics(edge) {
-            Some((label_w, label_h)) => {
-              let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+            Some(metrics) => {
+              let (label_w, label_h) =
+                maybe_flip_dims(metrics.width, metrics.height, flip)
               let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
@@ -1008,10 +1009,11 @@ fn apply_xlabels(
         None =>
           if has_geometry {
             match edge_mid_label_metrics(edge) {
-              Some((label_w, label_h)) =>
+              Some(metrics) =>
                 match edge_midpoint_for_layout(edge_layout, splines) {
                   Some(anchor) => {
-                    let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+                    let (label_w, label_h) =
+                      maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeMid(edge_key_value),
@@ -1036,8 +1038,9 @@ fn apply_xlabels(
       match edge_layout.tail_label_pos {
         Some(pos) =>
           match edge_label_metrics_for_attr(edge, "taillabel", true) {
-            Some((label_w, label_h)) => {
-              let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+            Some(metrics) => {
+              let (label_w, label_h) =
+                maybe_flip_dims(metrics.width, metrics.height, flip)
               let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
@@ -1051,10 +1054,11 @@ fn apply_xlabels(
         None =>
           if has_geometry {
             match edge_label_metrics_for_attr(edge, "taillabel", true) {
-              Some((label_w, label_h)) =>
+              Some(metrics) =>
                 match edge_tail_point_for_layout(edge_layout) {
                   Some(anchor) => {
-                    let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+                    let (label_w, label_h) =
+                      maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeTail(edge_key_value),
@@ -1079,8 +1083,9 @@ fn apply_xlabels(
       match edge_layout.head_label_pos {
         Some(pos) =>
           match edge_label_metrics_for_attr(edge, "headlabel", true) {
-            Some((label_w, label_h)) => {
-              let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+            Some(metrics) => {
+              let (label_w, label_h) =
+                maybe_flip_dims(metrics.width, metrics.height, flip)
               let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
               objects.push({
                 pos: pos_ll,
@@ -1094,10 +1099,11 @@ fn apply_xlabels(
         None =>
           if has_geometry {
             match edge_label_metrics_for_attr(edge, "headlabel", true) {
-              Some((label_w, label_h)) =>
+              Some(metrics) =>
                 match edge_head_point_for_layout(edge_layout) {
                   Some(anchor) => {
-                    let (label_w, label_h) = maybe_flip_dims(label_w, label_h, flip)
+                    let (label_w, label_h) =
+                      maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeHead(edge_key_value),

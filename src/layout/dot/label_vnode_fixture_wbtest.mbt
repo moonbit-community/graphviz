@@ -304,7 +304,8 @@ fn collect_flat_label_node_actuals(
       Some(value) => value
       None => continue
     }
-    let (metric_width, metric_height) = metrics
+    let metric_width = metrics.width
+    let metric_height = metrics.height
     let (width, height) =
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
       (metric_height, metric_width)
@@ -455,12 +456,12 @@ test "label vnodes match Graphviz fixtures" {
       }
       let (label_rank, _span) = label_rank_info
       assert_eq(label_rank, entry.label_rank)
-      let (width, height) = match edge_mid_label_metrics(edge) {
+      let metrics = match edge_mid_label_metrics(edge) {
         Some(value) => value
         None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
       }
-      assert_eq(width, entry.dimen_x)
-      assert_eq(height, entry.dimen_y)
+      assert_eq(metrics.width, entry.dimen_x)
+      assert_eq(metrics.height, entry.dimen_y)
       let key = label_vnode_key(entry.tail, entry.head, entry.label, entry.label_rank)
       match fixture_map.get(key) {
         Some(list) => list.push(entry)
@@ -640,12 +641,12 @@ test "flat label node sizes match Graphviz fixtures" {
     }
     assert_eq(tail_rank, head_rank)
     assert_eq(entry.rank, tail_rank - 1)
-    let (width, height) = match edge_mid_label_metrics(edge) {
+    let metrics = match edge_mid_label_metrics(edge) {
       Some(value) => value
       None => fail("missing label metrics for \{entry.tail} -> \{entry.head}")
     }
-    assert_eq(width, entry.dimen_x)
-    assert_eq(height, entry.dimen_y)
+    assert_eq(metrics.width, entry.dimen_x)
+    assert_eq(metrics.height, entry.dimen_y)
     assert_eq(
       flat_label_adjacent(tail_rank, entry.tail, entry.head, ordered_groups),
       false,

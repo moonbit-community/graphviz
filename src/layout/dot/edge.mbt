@@ -6,15 +6,21 @@ fn edge_mid_label_text(edge : @cgraph.Edge) -> String? {
 }
 
 ///|
+priv struct EdgeLabelMetrics {
+  width : Double
+  height : Double
+}
+
+///|
 fn edge_mid_label_width_pt(edge : @cgraph.Edge) -> Double {
   match edge_label_metrics_for_attr(edge, "label", false) {
-    Some((width, _height)) => width
+    Some(metrics) => metrics.width
     None => 0.0
   }
 }
 
 ///|
-fn edge_mid_label_metrics(edge : @cgraph.Edge) -> (Double, Double)? {
+fn edge_mid_label_metrics(edge : @cgraph.Edge) -> EdgeLabelMetrics? {
   edge_label_metrics_for_attr(edge, "label", false)
 }
 
@@ -26,7 +32,7 @@ fn edge_label_metrics_for_attr(
   edge : @cgraph.Edge,
   attr_name : String,
   use_label_font : Bool,
-) -> (Double, Double)? {
+) -> EdgeLabelMetrics? {
   match edge.get_attr(attr_name) {
     Some(text) =>
       if text == "" {
@@ -47,7 +53,7 @@ fn edge_label_metrics_for_attr(
           base_font
         }
         let (width, height) = label_text_dimensions(text, font, font_size_pt)
-        Some((width, height))
+        Some({ width, height })
       }
     None => None
   }
@@ -57,15 +63,15 @@ fn edge_label_metrics_for_attr(
 fn edge_label_height_pt(edge : @cgraph.Edge) -> Double {
   let mut max_height = 0.0
   match edge_label_metrics_for_attr(edge, "label", false) {
-    Some((_width, height)) => if height > max_height { max_height = height }
+    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
     None => ()
   }
   match edge_label_metrics_for_attr(edge, "headlabel", true) {
-    Some((_width, height)) => if height > max_height { max_height = height }
+    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
     None => ()
   }
   match edge_label_metrics_for_attr(edge, "taillabel", true) {
-    Some((_width, height)) => if height > max_height { max_height = height }
+    Some(metrics) => if metrics.height > max_height { max_height = metrics.height }
     None => ()
   }
   max_height
@@ -95,11 +101,11 @@ fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
 ///|
 fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
-    Some((width, height)) =>
+    Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        height
+        metrics.height
       } else {
-        width
+        metrics.width
       }
     None => 0.0
   }

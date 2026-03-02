@@ -217,11 +217,11 @@ priv struct SelfEdgeRoute {
 ///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
-    Some((width, height)) =>
+    Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        width
+        metrics.width
       } else {
-        height
+        metrics.height
       }
     None => 0.0
   }
@@ -3774,12 +3774,12 @@ fn build_edge_layout(
         None
       } else {
         match (label_rank_x, label_rank_y, edge_mid_label_metrics(edge)) {
-          (Some(rank_x), Some(rank_y), Some((width, height))) => {
+          (Some(rank_x), Some(rank_y), Some(metrics)) => {
             Some(
               edge_label_pos_from_vnode(
                 @edge_spline.point(rank_x, rank_y),
-                width,
-                height,
+                metrics.width,
+                metrics.height,
                 base.rankdir,
               ),
             )
@@ -3792,42 +3792,41 @@ fn build_edge_layout(
                     Some(pos) => Some(pos)
                     None =>
                       match edge_mid_label_metrics(edge) {
-                        Some((_width, height)) => {
-                        Some(
-                          flat_edge_label_pos_simple(
+                        Some(metrics) =>
+                          Some(
+                            flat_edge_label_pos_simple(
                               base.out_tail_pos,
                               base.out_head_pos,
                               base.out_tail_size.right_pt,
                               base.out_head_size.left_pt,
-                              height,
+                              metrics.height,
                             ),
                           )
-                        }
                         None =>
-                            edge_label_pos(
-                              edge,
-                              spline,
-                              base.out_tail_clip,
-                              base.out_head_clip,
-                              base.layout_rankdir,
-                              label_rank_y,
-                              label_rank_x,
-                              apply_label_pad,
-                              nodesep_pt,
-                              spline_result.label_pad_boost,
-                            )
+                          edge_label_pos(
+                            edge,
+                            spline,
+                            base.out_tail_clip,
+                            base.out_head_clip,
+                            base.layout_rankdir,
+                            label_rank_y,
+                            label_rank_x,
+                            apply_label_pad,
+                            nodesep_pt,
+                            spline_result.label_pad_boost,
+                          )
                       }
                   }
                 None =>
                   match edge_mid_label_metrics(edge) {
-                    Some((_width, height)) => {
+                    Some(metrics) => {
                       Some(
                         flat_edge_label_pos_simple(
                           base.out_tail_pos,
                           base.out_head_pos,
                           base.out_tail_size.right_pt,
                           base.out_head_size.left_pt,
-                          height,
+                          metrics.height,
                         ),
                       )
                     }

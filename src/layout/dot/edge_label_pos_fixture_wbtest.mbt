@@ -212,12 +212,12 @@ test "flat edge label positions match Graphviz" {
           "missing edge \{fixture.tail} -> \{fixture.head} for flat label fixtures",
         )
     }
-    let (width, height) = match edge_mid_label_metrics(edge) {
+    let metrics = match edge_mid_label_metrics(edge) {
       Some(value) => value
       None => fail("missing label metrics for \{fixture.tail} -> \{fixture.head}")
     }
-    assert_eq(width, fixture.dimen_x)
-    assert_eq(height, fixture.dimen_y)
+    assert_eq(metrics.width, fixture.dimen_x)
+    assert_eq(metrics.height, fixture.dimen_y)
     let actual = flat_edge_label_pos_simple(
       @edge_spline.point(fixture.tp_x, fixture.tp_y),
       @edge_spline.point(fixture.hp_x, fixture.hp_y),

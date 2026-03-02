@@ -151,11 +151,11 @@ fn build_edge_vnodes(
     }
     let label_metrics = edge_mid_label_metrics(edge)
     let (label_width, label_height) = match label_metrics {
-      Some((width, height)) =>
+      Some(metrics) =>
         if rankdir == RankDir::LR || rankdir == RankDir::RL {
-          (height, width)
+          (metrics.height, metrics.width)
         } else {
-          (width, height)
+          (metrics.width, metrics.height)
         }
       None => (0.0, 0.0)
     }
@@ -293,7 +293,8 @@ fn add_flat_label_vnodes(
       Some(value) => value
       None => continue
     }
-    let (metric_width, metric_height) = metrics
+    let metric_width = metrics.width
+    let metric_height = metrics.height
     let (label_width, label_height) =
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
       (metric_height, metric_width)

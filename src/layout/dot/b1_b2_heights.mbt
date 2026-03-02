@@ -32,11 +32,11 @@ fn update_rank_pht_for_label(
   }
   let label_rank = (min_rank + max_rank) / 2
   let half_height = match edge_mid_label_metrics(edge) {
-    Some((width, height)) =>
+    Some(metrics) =>
       if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        width / 2.0
+        metrics.width / 2.0
       } else {
-        height / 2.0
+        metrics.height / 2.0
       }
     None => 0.0
   }

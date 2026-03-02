@@ -39,8 +39,8 @@ fn edge_polyline_points(
                   let half = label_width_pt / 2.0
                   let bend_y =
                     match edge_mid_label_metrics(edge) {
-                      Some((_label_width, label_height)) => {
-                        let label_top = pos.y + label_height / 2.0
+                      Some(metrics) => {
+                        let label_top = pos.y + metrics.height / 2.0
                         let source_y =
                           if tail_anchor.x <= head_anchor.x {
                             tail_anchor.y

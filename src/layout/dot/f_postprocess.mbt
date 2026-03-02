@@ -64,13 +64,13 @@ fn expand_bbox_for_edge_labels(
   // dimensions in pre-rotation space to match compute_bb.
   let rankdir = graph_rankdir(graph)
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
-  let adjust_metrics = (metrics : (Double, Double)?) => {
+  let adjust_metrics = (metrics : EdgeLabelMetrics?) => {
     match metrics {
-      Some((width, height)) =>
+      Some(value) =>
         if flip {
-          Some((height, width))
+          Some((value.height, value.width))
         } else {
-          Some((width, height))
+          Some((value.width, value.height))
         }
       None => None
     }

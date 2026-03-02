@@ -918,10 +918,10 @@ fn edge_label_pos(
   match label_rank_y {
     Some(_) =>
       match edge_mid_label_metrics(edge) {
-        Some((width, height)) => {
+        Some(metrics) => {
           let half_extent = match rankdir {
-            RankDir::LR | RankDir::RL => height / 2.0
-            _ => width / 2.0
+            RankDir::LR | RankDir::RL => metrics.height / 2.0
+            _ => metrics.width / 2.0
           }
           let sign = match rankdir {
             RankDir::RL => -1.0
@@ -931,7 +931,7 @@ fn edge_label_pos(
           if label_rank_x is None {
             if apply_label_pad {
               pad = pad + nodesep_pt * 0.22
-            } else if width >= EDGE_LABEL_PAD_WIDTH_PT {
+            } else if metrics.width >= EDGE_LABEL_PAD_WIDTH_PT {
               pad = pad + nodesep_pt * 0.22
             }
           } else {
@@ -942,8 +942,8 @@ fn edge_label_pos(
         None => Some(base_pos)
       }
     None => {
-      let (width, height) = match edge_mid_label_metrics(edge) {
-        Some((w, h)) => (w, h)
+      let metrics = match edge_mid_label_metrics(edge) {
+        Some(value) => value
         None => return Some(base_pos)
       }
       let normal = @edge_spline.point(-dir.y, dir.x)
@@ -957,9 +957,9 @@ fn edge_label_pos(
       }
       let offset =
         if abs_dx <= axis_threshold {
-          width / 2.0
+          metrics.width / 2.0
         } else if abs_dy <= axis_threshold {
-          height / 2.0
+          metrics.height / 2.0
         } else {
           0.0
         }
@@ -1017,16 +1017,17 @@ fn adjust_edge_label_positions(
     match label_pos {
       Some(pos) =>
         match edge_mid_label_metrics(edge_layout.edge) {
-          Some((width, height)) => {
+          Some(metrics) => {
             let mut current_pos = pos
-            let mut current_rect = rect_from_center(current_pos, width, height, pad)
+            let mut current_rect =
+              rect_from_center(current_pos, metrics.width, metrics.height, pad)
             for rect in label_rects {
               let (next_pos, next_rect) = nudge_label_rect(
                 current_pos,
                 current_rect,
                 rect,
-                width,
-                height,
+                metrics.width,
+                metrics.height,
                 pad,
               )
               current_pos = next_pos
@@ -1167,7 +1168,7 @@ fn adjust_labels_for_overlaps(
     match edge_layout.label_pos {
       Some(pos) =>
         match edge_mid_label_metrics(edge_layout.edge) {
-          Some((width, height)) => {
+          Some(metrics) => {
             let pos_axis = if axis_is_x { pos.x } else { pos.y }
             let tail_axis = match edge_tail_point(edge_layout) {
               Some(point) => if axis_is_x { point.x } else { point.y }
@@ -1175,7 +1176,8 @@ fn adjust_labels_for_overlaps(
             }
             let base_axis =
               if tail_axis + tail_pad > pos_axis { tail_axis + tail_pad } else { pos_axis }
-            let half_axis = if axis_is_x { width / 2.0 } else { height / 2.0 }
+            let half_axis =
+              if axis_is_x { metrics.width / 2.0 } else { metrics.height / 2.0 }
             let entry = {
               key: @dot_shared.edge_key(edge_layout.edge),
               pos,
