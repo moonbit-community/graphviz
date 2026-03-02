@@ -39,10 +39,67 @@ priv struct OrderingDispatchSetup {
   gdnlist_order : Array[String]
 }
 
+///|
+priv struct RealNodeNameSets {
+  real_nodes : Map[String, Bool]
+  existing_names : Map[String, Bool]
+}
 
 ///|
 /// Stage C Phase C0 split: ordering setup context
 /// and dispatch preparation helpers.
+
+///|
+/// Graphviz parity: ordering pre-pass derives real-node/existing-name sets
+/// from the node array before vnode creation and class2 preparation.
+fn build_real_node_name_sets(
+  nodes : Array[@cgraph.Node],
+) -> RealNodeNameSets {
+  let real_nodes : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    real_nodes[name] = true
+    existing_names[name] = true
+  }
+  { real_nodes, existing_names }
+}
+
+///|
+/// Graphviz parity: explicit-port endpoints are tracked before class2 to keep
+/// port-order constraints available during ordering setup.
+fn build_port_edge_nodes(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> Map[String, Bool] {
+  let port_edge_nodes : Map[String, Bool] = Map::new()
+  for edge_idx in 0..<edges.length() {
+    let edge = edges[edge_idx]
+    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
+      @dot_shared.port_is_explicit(edge.head_port())
+    if ported {
+      port_edge_nodes[edge_tail[edge_idx]] = true
+      port_edge_nodes[edge_head[edge_idx]] = true
+    }
+  }
+  port_edge_nodes
+}
+
+///|
+/// Graphviz parity: setup probes vnode tail constraints in setup order even
+/// when the probe output is only used for parity diagnostics.
+fn probe_vnode_tail_constraints(
+  runtime_context : OrderingRuntimeContext,
+  edge_tail : Array[String],
+) -> Unit {
+  let _ =
+    if runtime_context.vnode_count > 0 {
+      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
+    } else {
+      Map::new()
+    }
+}
 
 ///|
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
@@ -62,15 +119,7 @@ fn build_ordering_context(
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
 ) -> OrderingRuntimeContext {
-  // Graphviz parity: ordering pre-pass collects real-node maps, edge cluster
-  // ownership, vnode chains, and local cluster/port constraints before class2.
-  let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    real_nodes[name] = true
-    existing_names[name] = true
-  }
+  let node_name_sets = build_real_node_name_sets(nodes)
   let edge_cluster_keys : Map[String, String] = Map::new()
   collect_edge_cluster_keys(graph, edge_cluster_keys)
   let vnode_info = build_edge_vnodes(
@@ -82,20 +131,11 @@ fn build_ordering_context(
     ranks,
     nodesep_pt,
     rankdir,
-    existing_names,
+    node_name_sets.existing_names,
     edge_cluster_keys,
     cluster_meta.cluster_parents,
   )
-  let port_edge_nodes : Map[String, Bool] = Map::new()
-  for edge_idx in 0..<edges.length() {
-    let edge = edges[edge_idx]
-    let ported = @dot_shared.port_is_explicit(edge.tail_port()) ||
-      @dot_shared.port_is_explicit(edge.head_port())
-    if ported {
-      port_edge_nodes[edge_tail[edge_idx]] = true
-      port_edge_nodes[edge_head[edge_idx]] = true
-    }
-  }
+  let port_edge_nodes = build_port_edge_nodes(edges, edge_tail, edge_head)
   let local_cluster_order = build_local_cluster_order(
     nodes,
     cluster_meta.intercluster_keys,
@@ -106,7 +146,7 @@ fn build_ordering_context(
   let rank_same_constraints : Map[String, Bool] = Map::new()
   let runtime_context =
     {
-      real_nodes,
+      real_nodes: node_name_sets.real_nodes,
       edge_cluster_keys,
       vnode_info,
       port_edge_nodes,
@@ -114,14 +154,7 @@ fn build_ordering_context(
       rank_same_constraints,
       vnode_count: vnode_info.vnode_ranks.length(),
     }
-  // Graphviz parity: probe vnode tail constraints in setup order even though
-  // the result is diagnostic-only.
-  let _ =
-    if runtime_context.vnode_count > 0 {
-      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
-    } else {
-      Map::new()
-    }
+  probe_vnode_tail_constraints(runtime_context, edge_tail)
   runtime_context
 }
 
