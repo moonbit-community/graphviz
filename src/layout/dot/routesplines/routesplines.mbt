@@ -214,11 +214,17 @@ priv struct PathplanCoreResult {
 }
 
 ///|
+pub(all) struct PathplanBounds {
+  left : Double
+  right : Double
+}
+
+///|
 fn compute_horizontal_bounds(
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
-) -> (Double, Double) {
+) -> PathplanBounds {
   let mut min_rank : Int? = None
   let mut max_rank : Int? = None
   for rank, _ in x_groups {
@@ -233,7 +239,7 @@ fn compute_horizontal_bounds(
   }
   let (start_rank, end_rank) = match (min_rank, max_rank) {
     (Some(start), Some(end)) => (start, end)
-    _ => return (0.0, 0.0)
+    _ => return { left: 0.0, right: 0.0 }
   }
   let mut left_bound = 0.0
   let mut right_bound = 0.0
@@ -269,7 +275,7 @@ fn compute_horizontal_bounds(
     right_bound = right_bound + ROUTE_MIN_WIDTH
     rank = rank + 1
   }
-  (left_bound, right_bound)
+  { left: left_bound, right: right_bound }
 }
 
 ///|
@@ -281,7 +287,7 @@ pub fn pathplan_bounds(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
-) -> (Double, Double) {
+) -> PathplanBounds {
   let merged_positions = merge_positions(positions, vnode_positions)
   let route_sizes = pathplan_sizes(sizes, vnode_sizes, 0.0)
   compute_horizontal_bounds(merged_positions, route_sizes, x_groups)

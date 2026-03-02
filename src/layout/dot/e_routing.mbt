@@ -5108,14 +5108,15 @@ fn route_edges(
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   let recovered_slack_keys : Map[String, Bool] = Map::new()
-  let (path_left_bound, path_right_bound) =
-    @routesplines.pathplan_bounds(
-      positions,
-      vnode_positions,
-      sizes,
-      vnode_info.vnode_sizes,
-      x_groups,
-    )
+  let path_bounds = @routesplines.pathplan_bounds(
+    positions,
+    vnode_positions,
+    sizes,
+    vnode_info.vnode_sizes,
+    x_groups,
+  )
+  let path_left_bound = path_bounds.left
+  let path_right_bound = path_bounds.right
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
   let recover_edge_id_by_key =
