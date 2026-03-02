@@ -492,6 +492,23 @@ fn run_root_rank_reorder(
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
+priv struct RootReorderPassOutput {
+  ordered_mincross : Map[Int, Array[String]]
+  mincross_nodes : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: root ReMincross output keeps seeded root-mincross input
+/// groups and merged ordered groups bundled for downstream clustered phases.
+priv struct RootMincrossReorderOutput {
+  order_groups_for_mincross : Map[Int, Array[String]]
+  ordered : Map[Int, Array[String]]
+}
+
+///|
+/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
+/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Do not change behavior without updating fixtures/tests.
 fn run_root_reorder_pass(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
@@ -517,7 +534,7 @@ fn run_root_reorder_pass(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
-) -> (Map[Int, Array[String]], Map[String, Bool]) {
+) -> RootReorderPassOutput {
   let order_rank_keys_for_mincross = collect_rank_keys(order_groups_for_mincross)
   let order_nodes_for_mincross =
     build_order_nodes_from_groups(
@@ -639,7 +656,7 @@ fn run_root_reorder_pass(
     order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  (ordered_mincross, mincross_nodes)
+  { ordered_mincross, mincross_nodes }
 }
 
 ///|
@@ -673,7 +690,7 @@ fn run_root_mincross_reorder(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> RootMincrossReorderOutput {
   // Graphviz parity: root ReMincross only reorders root/skeleton nodes;
   // cluster-internal nodes are handled by cluster-local build_ranks passes.
   let order_groups_for_mincross_base =
@@ -707,7 +724,7 @@ fn run_root_mincross_reorder(
       Some(override_groups) => clone_rank_groups(override_groups)
       None => order_groups_for_mincross_base
     }
-  let (ordered_mincross, mincross_nodes) =
+  let root_reorder_output =
     run_root_reorder_pass(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
@@ -739,13 +756,13 @@ fn run_root_mincross_reorder(
       merge_root_mincross_groups(
         order_rank_keys,
         seeded_groups,
-        ordered_mincross,
-        mincross_nodes,
+        root_reorder_output.ordered_mincross,
+        root_reorder_output.mincross_nodes,
         order_cluster_keys,
         order_cluster_skeleton,
       )
     } else {
-      ordered_mincross
+      root_reorder_output.ordered_mincross
     }
-  (order_groups_for_mincross, ordered)
+  { order_groups_for_mincross, ordered }
 }

@@ -121,7 +121,7 @@ fn run_root_and_cluster_ranks(
       build_ranks_inputs.order_edge_head_port_x,
       flat_rank_constraints,
     )
-  let (order_groups_for_mincross, ordered) =
+  let root_mincross_reorder_output =
     run_root_mincross_reorder(
       order_with_clusters,
       order_with_vnodes,
@@ -150,6 +150,9 @@ fn run_root_and_cluster_ranks(
       build_ranks_inputs.graphviz_in_neighbors,
       graphviz_flip,
     )
+  let order_groups_for_mincross =
+    root_mincross_reorder_output.order_groups_for_mincross
+  let ordered = root_mincross_reorder_output.ordered
   let ordered =
     if graphviz_flip {
       match root_mincross_groups_override.val {
