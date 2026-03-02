@@ -1090,6 +1090,29 @@ priv struct RootReorderPassStageData {
 }
 
 ///|
+/// Graphviz parity: root mincross edge-build input bundle keeps filtered node
+/// membership and root edge snapshots unchanged for one pass-stage projection.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_edge_build_inputs_for_stage(
+  inputs : RootReorderPassInputs,
+  mincross_nodes : Map[String, Bool],
+  order_nodes_for_mincross : Array[String],
+) -> RootMincrossEdgeBuildInputs {
+  {
+    mincross_nodes,
+    order_edges_out: inputs.order_edges_out,
+    order_edge_tail_out: inputs.order_edge_tail_out,
+    order_edge_head_out: inputs.order_edge_head_out,
+    order_edge_tail_port_x: inputs.order_edge_tail_port_x,
+    order_edge_head_port_x: inputs.order_edge_head_port_x,
+    order_edge_tail_port_order: inputs.order_edge_tail_port_order,
+    order_edge_head_port_order: inputs.order_edge_head_port_order,
+    order_nodes_for_mincross,
+    order_ranks: inputs.order_ranks,
+  }
+}
+
+///|
 /// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.
@@ -1106,18 +1129,11 @@ fn build_root_reorder_pass_stage_data(
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
   let mincross_edge_data =
     build_root_mincross_edge_data(
-      {
+      build_root_mincross_edge_build_inputs_for_stage(
+        inputs,
         mincross_nodes,
-        order_edges_out: inputs.order_edges_out,
-        order_edge_tail_out: inputs.order_edge_tail_out,
-        order_edge_head_out: inputs.order_edge_head_out,
-        order_edge_tail_port_x: inputs.order_edge_tail_port_x,
-        order_edge_head_port_x: inputs.order_edge_head_port_x,
-        order_edge_tail_port_order: inputs.order_edge_tail_port_order,
-        order_edge_head_port_order: inputs.order_edge_head_port_order,
         order_nodes_for_mincross,
-        order_ranks: inputs.order_ranks,
-      },
+      ),
     )
   { order_rank_keys_for_mincross, mincross_nodes, mincross_edge_data }
 }
@@ -1243,13 +1259,12 @@ fn run_root_reorder_pass(
       inputs.order_with_vnodes,
       inputs.vnode_order_keys_for_ordering,
     )
-  let root_rank_reorder_inputs : RootRankReorderInputs = {
-    ..build_root_rank_reorder_inputs_for_pass(
+  let root_rank_reorder_inputs =
+    build_root_rank_reorder_inputs_for_pass(
       stage_data,
       inputs,
       preferred_positions,
     )
-  }
   let ordered_mincross =
     run_root_rank_reorder_with_pass0_capture(
       stage_data,
