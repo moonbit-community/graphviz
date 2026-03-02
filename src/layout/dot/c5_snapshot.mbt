@@ -101,7 +101,7 @@ fn coalesce_order_edges_snapshot(
 }
 
 ///|
-fn capture_root_mincross_snapshot(
+fn capture_root_snapshot(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edges_out : Array[@cgraph.Edge],
