@@ -495,6 +495,82 @@ fn run_root_rank_reorder(
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
+priv struct RootMincrossEdgeData {
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  edge_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
+/// before building parent/child + edge-order indices.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_mincross_edge_data(
+  mincross_nodes : Map[String, Bool],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_nodes_for_mincross : Array[String],
+  order_ranks : Map[String, Int],
+) -> RootMincrossEdgeData {
+  let mincross_edges_output =
+    collect_mincross_order_edges(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    )
+  let order_edges_out_mincross =
+    mincross_edges_output.order_edges_out_mincross
+  let order_edge_tail_out_mincross =
+    mincross_edges_output.order_edge_tail_out_mincross
+  let order_edge_head_out_mincross =
+    mincross_edges_output.order_edge_head_out_mincross
+  let edge_indices =
+    build_edge_indices_and_order(
+      order_nodes_for_mincross,
+      order_edge_tail_out_mincross,
+      order_edge_head_out_mincross,
+      order_ranks,
+      order_edges_out_mincross,
+    )
+  {
+    order_edges_out_mincross,
+    order_edge_tail_out_mincross,
+    order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross:
+      mincross_edges_output.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross:
+      mincross_edges_output.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross:
+      mincross_edges_output.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross:
+      mincross_edges_output.order_edge_head_port_order_mincross,
+    parents: edge_indices.parents,
+    children: edge_indices.children,
+    edge_order: edge_indices.edge_order,
+  }
+}
+
+///|
+/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
+/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Do not change behavior without updating fixtures/tests.
 priv struct RootReorderPassOutput {
   ordered_mincross : Map[Int, Array[String]]
   mincross_nodes : Map[String, Bool]
@@ -545,67 +621,30 @@ fn run_root_reorder_pass(
       order_rank_keys_for_mincross,
     )
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
-  let (
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-    parents,
-    children,
-    edge_order,
-  ) =
-    {
-      // Graphviz parity: root ReMincross materializes filtered root/skeleton
-      // edges before building parent/child + edge-order indices.
-      let mincross_edges_output =
-        collect_mincross_order_edges(
-          mincross_nodes,
-          order_edges_out,
-          order_edge_tail_out,
-          order_edge_head_out,
-          order_edge_tail_port_x,
-          order_edge_head_port_x,
-          order_edge_tail_port_order,
-          order_edge_head_port_order,
-        )
-      let order_edges_out_mincross =
-        mincross_edges_output.order_edges_out_mincross
-      let order_edge_tail_out_mincross =
-        mincross_edges_output.order_edge_tail_out_mincross
-      let order_edge_head_out_mincross =
-        mincross_edges_output.order_edge_head_out_mincross
-      let order_edge_tail_port_x_mincross =
-        mincross_edges_output.order_edge_tail_port_x_mincross
-      let order_edge_head_port_x_mincross =
-        mincross_edges_output.order_edge_head_port_x_mincross
-      let order_edge_tail_port_order_mincross =
-        mincross_edges_output.order_edge_tail_port_order_mincross
-      let order_edge_head_port_order_mincross =
-        mincross_edges_output.order_edge_head_port_order_mincross
-      let edge_indices =
-        build_edge_indices_and_order(
-          order_nodes_for_mincross,
-          order_edge_tail_out_mincross,
-          order_edge_head_out_mincross,
-          order_ranks,
-          order_edges_out_mincross,
-        )
-      (
-        order_edges_out_mincross,
-        order_edge_tail_out_mincross,
-        order_edge_head_out_mincross,
-        order_edge_tail_port_x_mincross,
-        order_edge_head_port_x_mincross,
-        order_edge_tail_port_order_mincross,
-        order_edge_head_port_order_mincross,
-        edge_indices.parents,
-        edge_indices.children,
-        edge_indices.edge_order,
-      )
-    }
+  let mincross_edge_data =
+    build_root_mincross_edge_data(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_nodes_for_mincross,
+      order_ranks,
+    )
+  let order_edges_out_mincross = mincross_edge_data.order_edges_out_mincross
+  let order_edge_tail_out_mincross = mincross_edge_data.order_edge_tail_out_mincross
+  let order_edge_head_out_mincross = mincross_edge_data.order_edge_head_out_mincross
+  let order_edge_tail_port_x_mincross =
+    mincross_edge_data.order_edge_tail_port_x_mincross
+  let order_edge_head_port_x_mincross =
+    mincross_edge_data.order_edge_head_port_x_mincross
+  let order_edge_tail_port_order_mincross =
+    mincross_edge_data.order_edge_tail_port_order_mincross
+  let order_edge_head_port_order_mincross =
+    mincross_edge_data.order_edge_head_port_order_mincross
   let preferred_positions : Map[String, Double] =
     if order_with_vnodes {
       let filtered : Map[String, Double] = Map::new()
@@ -631,11 +670,11 @@ fn run_root_reorder_pass(
       order_edge_head_port_x_mincross,
       order_edge_tail_port_order_mincross,
       order_edge_head_port_order_mincross,
-      parents,
-      children,
+      mincross_edge_data.parents,
+      mincross_edge_data.children,
       order_cluster_keys,
       cluster_meta,
-      edge_order,
+      mincross_edge_data.edge_order,
       order_node_order,
       order_sizes_out,
       nodesep_pt,
