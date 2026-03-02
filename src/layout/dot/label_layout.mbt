@@ -445,7 +445,7 @@ fn polyline_point_at_axis(
 }
 
 ///|
-fn spline_label_pos_with_dir_samples(
+fn spline_label_pos_with_samples(
   samples : Array[@geom.Point],
 ) -> (@geom.Point, @geom.Point)? {
   if samples.length() == 0 {
@@ -457,7 +457,7 @@ fn spline_label_pos_with_dir_samples(
 }
 
 ///|
-fn spline_label_pos_at_axis_samples(
+fn spline_label_pos_at_samples(
   samples : Array[@geom.Point],
   axis_value : Double,
   axis_is_x : Bool,
@@ -853,7 +853,7 @@ fn edge_label_pos(
   label_pad_boost : Double,
 ) -> @geom.Point? {
   let samples = sample_spline_points(spline.points, 96)
-  let fallback = match spline_label_pos_with_dir_samples(samples) {
+  let fallback = match spline_label_pos_with_samples(samples) {
     Some((pos, tangent)) => (pos, tangent)
     None => {
       let mid = @edge_spline.point(
@@ -869,7 +869,7 @@ fn edge_label_pos(
   }
   let (raw_pos, dir) = match label_rank_y {
     Some(axis) =>
-      match spline_label_pos_at_axis_samples(
+      match spline_label_pos_at_samples(
         samples,
         axis,
         false,
