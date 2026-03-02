@@ -386,6 +386,43 @@ priv struct LocalNeighborMapsOutput {
 }
 
 ///|
+/// Graphviz parity: cluster-local neighbor sources keep order-graph ND_out/ND_in
+/// together with raw graph AGSEQ ND_out/ND_in for deterministic merge.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalNeighborSources {
+  source_out_neighbors : Map[String, Array[String]]
+  source_in_neighbors : Map[String, Array[String]]
+  raw_out_neighbors : Map[String, Array[String]]
+  raw_in_neighbors : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: raw-graph ND_out/ND_in maps preserve AGSEQ edge replay
+/// order for local cluster median-anchor fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn build_raw_graphviz_neighbor_maps(graph : @cgraph.Graph) -> GraphvizNeighborMaps {
+  let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  for node in graph.nodes() {
+    let name = node.name()
+    raw_graphviz_out_neighbors[name] = []
+    raw_graphviz_in_neighbors[name] = []
+  }
+  for edge in graph.edges() {
+    append_neighbor_edge(
+      raw_graphviz_out_neighbors,
+      raw_graphviz_in_neighbors,
+      edge.tail().name(),
+      edge.head().name(),
+    )
+  }
+  {
+    out_neighbors: raw_graphviz_out_neighbors,
+    in_neighbors: raw_graphviz_in_neighbors,
+  }
+}
+
+///|
 /// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
@@ -394,10 +431,7 @@ fn build_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_nodes : Array[String],
-  source_graphviz_out_neighbors : Map[String, Array[String]],
-  source_graphviz_in_neighbors : Map[String, Array[String]],
-  raw_graphviz_out_neighbors : Map[String, Array[String]],
-  raw_graphviz_in_neighbors : Map[String, Array[String]],
+  neighbor_sources : ClusterLocalNeighborSources,
   intercluster_keys : Map[String, String],
   allow_raw_neighbors : Bool,
 ) -> LocalNeighborMapsOutput {
@@ -436,7 +470,7 @@ fn build_local_neighbor_maps(
     cluster_node_set[name] = true
   }
   let has_source_external_anchor = (name : String) => {
-    let out = match source_graphviz_out_neighbors.get(name) {
+    let out = match neighbor_sources.source_out_neighbors.get(name) {
       Some(list) => list
       None => []
     }
@@ -445,7 +479,7 @@ fn build_local_neighbor_maps(
         return true
       }
     }
-    let inn = match source_graphviz_in_neighbors.get(name) {
+    let inn = match neighbor_sources.source_in_neighbors.get(name) {
       Some(list) => list
       None => []
     }
@@ -480,21 +514,21 @@ fn build_local_neighbor_maps(
     }
   }
   for name in cluster_nodes {
-    let out_neighbors = match source_graphviz_out_neighbors.get(name) {
+    let out_neighbors = match neighbor_sources.source_out_neighbors.get(name) {
       Some(list) => list.copy()
       None => []
     }
-    let in_neighbors = match source_graphviz_in_neighbors.get(name) {
+    let in_neighbors = match neighbor_sources.source_in_neighbors.get(name) {
       Some(list) => list.copy()
       None => []
     }
     if allow_raw_neighbors && !has_source_external_anchor(name) {
-      let raw_out = match raw_graphviz_out_neighbors.get(name) {
+      let raw_out = match neighbor_sources.raw_out_neighbors.get(name) {
         Some(list) => list
         None => []
       }
       append_raw_neighbors_with_external_anchor(out_neighbors, raw_out)
-      let raw_in = match raw_graphviz_in_neighbors.get(name) {
+      let raw_in = match neighbor_sources.raw_in_neighbors.get(name) {
         Some(list) => list
         None => []
       }
@@ -801,10 +835,7 @@ fn build_local_reorder_inputs(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  raw_graphviz_out_neighbors : Map[String, Array[String]],
-  raw_graphviz_in_neighbors : Map[String, Array[String]],
+  neighbor_sources : ClusterLocalNeighborSources,
   cluster_node_set : Map[String, Bool],
   cluster_rank_keys : Array[Int],
   cluster_nodes : Array[String],
@@ -935,10 +966,7 @@ fn build_local_reorder_inputs(
       cluster_name,
       expanded_clusters,
       cluster_nodes,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      raw_graphviz_out_neighbors,
-      raw_graphviz_in_neighbors,
+      neighbor_sources,
       intercluster_keys,
       cluster_edges.length() >= 5,
     )
@@ -978,10 +1006,7 @@ fn reorder_cluster_rank_group(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  raw_graphviz_out_neighbors : Map[String, Array[String]],
-  raw_graphviz_in_neighbors : Map[String, Array[String]],
+  neighbor_sources : ClusterLocalNeighborSources,
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -1041,7 +1066,7 @@ fn reorder_cluster_rank_group(
     groups,
     cluster_node_set,
     cluster_node_order,
-    graphviz_out_neighbors,
+    neighbor_sources.source_out_neighbors,
   )
   let cluster_rank_keys = collect_rank_keys(cluster_groups)
   let cluster_fixed_positions : Map[String, Double] = Map::new()
@@ -1062,10 +1087,7 @@ fn reorder_cluster_rank_group(
       order_edge_head_port_x,
       order_edge_tail_port_order,
       order_edge_head_port_order,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      raw_graphviz_out_neighbors,
-      raw_graphviz_in_neighbors,
+      neighbor_sources,
       cluster_node_set,
       cluster_rank_keys,
       cluster_nodes,
@@ -1150,10 +1172,7 @@ fn reorder_cluster_rank_groups(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  raw_graphviz_out_neighbors : Map[String, Array[String]],
-  raw_graphviz_in_neighbors : Map[String, Array[String]],
+  neighbor_sources : ClusterLocalNeighborSources,
   order_sizes : Map[String, NodeSize],
   nodesep_pt : Double,
   has_edge_labels : Bool,
@@ -1186,10 +1205,7 @@ fn reorder_cluster_rank_groups(
       order_edge_head_port_x,
       order_edge_tail_port_order,
       order_edge_head_port_order,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-      raw_graphviz_out_neighbors,
-      raw_graphviz_in_neighbors,
+      neighbor_sources,
       order_sizes,
       nodesep_pt,
       has_edge_labels,
@@ -1259,24 +1275,12 @@ fn reorder_by_cluster_ranks(
   }
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
-  let raw_graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let raw_graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  for node in graph.nodes() {
-    let name = node.name()
-    raw_graphviz_out_neighbors[name] = []
-    raw_graphviz_in_neighbors[name] = []
-  }
-  for edge in graph.edges() {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    match raw_graphviz_out_neighbors.get(tail) {
-      Some(list) => list.push(head)
-      None => raw_graphviz_out_neighbors[tail] = [head]
-    }
-    match raw_graphviz_in_neighbors.get(head) {
-      Some(list) => list.push(tail)
-      None => raw_graphviz_in_neighbors[head] = [tail]
-    }
+  let raw_graphviz_neighbors = build_raw_graphviz_neighbor_maps(graph)
+  let neighbor_sources : ClusterLocalNeighborSources = {
+    source_out_neighbors: graphviz_out_neighbors,
+    source_in_neighbors: graphviz_in_neighbors,
+    raw_out_neighbors: raw_graphviz_neighbors.out_neighbors,
+    raw_in_neighbors: raw_graphviz_neighbors.in_neighbors,
   }
   reorder_cluster_rank_groups(
     cluster_names,
@@ -1290,10 +1294,7 @@ fn reorder_by_cluster_ranks(
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
-    raw_graphviz_out_neighbors,
-    raw_graphviz_in_neighbors,
+    neighbor_sources,
     order_sizes,
     nodesep_pt,
     has_edge_labels,
