@@ -77,8 +77,18 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let dispatch_setup =
-    build_ordering_dispatch_setup(
+  // Graphviz parity: dispatch setup keeps edge-port extraction and reorder
+  // setup sequence identical to Graphviz class2/mincross preparation.
+  let edge_port_data =
+    build_ordering_edge_port_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
+    )
+  let reorder_setup =
+    build_ordering_reorder_setup(
       {
         nodes,
         edges,
@@ -89,13 +99,13 @@ fn compute_ordering_and_vnodes(
         ranks,
         groups,
         node_order,
-        order_sizes,
         port_edge_nodes: runtime_context.port_edge_nodes,
         vnode_count: runtime_context.vnode_count,
         rankdir,
         cluster_meta,
         vnode_info: runtime_context.vnode_info,
       },
+      edge_port_data,
     )
   let dispatch_output =
     run_ordering_dispatch(
@@ -118,7 +128,8 @@ fn compute_ordering_and_vnodes(
         port_order_positions,
         port_order_contrib,
         runtime_context,
-        dispatch_setup,
+        edge_port_data,
+        reorder_setup,
       },
     )
   {
@@ -126,13 +137,13 @@ fn compute_ordering_and_vnodes(
     ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
     vnode_info: runtime_context.vnode_info,
     vnode_count: runtime_context.vnode_count,
-    order_edges: dispatch_setup.edge_port_data.order_edges,
-    order_edge_tail: dispatch_setup.edge_port_data.order_edge_tail,
-    order_edge_head: dispatch_setup.edge_port_data.order_edge_head,
-    edge_order: dispatch_setup.edge_port_data.edge_order,
+    order_edges: edge_port_data.order_edges,
+    order_edge_tail: edge_port_data.order_edge_tail,
+    order_edge_head: edge_port_data.order_edge_head,
+    edge_order: edge_port_data.edge_order,
     edge_cluster_keys: runtime_context.edge_cluster_keys,
-    nlist_order: dispatch_setup.nlist_order,
-    gdnlist_order: dispatch_setup.gdnlist_order,
-    vnode_creation_order: dispatch_setup.vnode_creation_order,
+    nlist_order: reorder_setup.class2_data.nlist_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
+    vnode_creation_order: reorder_setup.class2_data.vnode_creation_order,
   }
 }

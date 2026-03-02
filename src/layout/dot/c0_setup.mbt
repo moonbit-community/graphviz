@@ -31,15 +31,6 @@ priv struct OrderingReorderSetup {
 }
 
 ///|
-priv struct OrderingDispatchSetup {
-  edge_port_data : OrderingEdgePortData
-  reorder_setup : OrderingReorderSetup
-  nlist_order : Array[String]
-  vnode_creation_order : Array[String]
-  gdnlist_order : Array[String]
-}
-
-///|
 /// Graphviz parity: dispatch setup input bundle keeps edge-port/materialization
 /// sources unchanged before class2+mincross reorder setup derivation.
 /// Do not change behavior without updating fixtures/tests.
@@ -53,7 +44,6 @@ priv struct OrderingDispatchSetupInputs {
   ranks : Map[String, Int]
   groups : Map[Int, Array[String]]
   node_order : Map[String, Int]
-  order_sizes : Map[String, NodeSize]
   port_edge_nodes : Map[String, Bool]
   vnode_count : Int
   rankdir : RankDir
@@ -342,34 +332,5 @@ fn build_ordering_reorder_setup(
     class2_data,
     gdnlist_order,
     vnode_order_keys_for_ordering,
-  }
-}
-
-///|
-/// Graphviz parity: dispatch setup keeps edge-port extraction and reorder setup
-/// sequence identical to Graphviz class2/mincross preparation.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_dispatch_setup(
-  inputs : OrderingDispatchSetupInputs,
-) -> OrderingDispatchSetup {
-  let edge_port_data =
-    build_ordering_edge_port_data(
-      inputs.nodes,
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.order_sizes,
-    )
-  let reorder_setup =
-    build_ordering_reorder_setup(
-      inputs,
-      edge_port_data,
-    )
-  {
-    edge_port_data,
-    reorder_setup,
-    nlist_order: reorder_setup.class2_data.nlist_order,
-    vnode_creation_order: reorder_setup.class2_data.vnode_creation_order,
-    gdnlist_order: reorder_setup.gdnlist_order,
   }
 }

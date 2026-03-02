@@ -25,7 +25,8 @@ priv struct OrderingDispatchInputs {
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   runtime_context : OrderingRuntimeContext
-  dispatch_setup : OrderingDispatchSetup
+  edge_port_data : OrderingEdgePortData
+  reorder_setup : OrderingReorderSetup
 }
 
 ///|
@@ -35,7 +36,7 @@ priv struct OrderingDispatchInputs {
 fn run_ordering_dispatch(
   inputs : OrderingDispatchInputs,
 ) -> OrderingDispatchOutput {
-  let reorder_setup = inputs.dispatch_setup.reorder_setup
+  let reorder_setup = inputs.reorder_setup
   if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
     let dispatch_context : ClusteredDispatchContext =
       {
@@ -54,7 +55,7 @@ fn run_ordering_dispatch(
         port_order_positions: inputs.port_order_positions,
         port_order_contrib: inputs.port_order_contrib,
         runtime_context: inputs.runtime_context,
-        edge_port_data: inputs.dispatch_setup.edge_port_data,
+        edge_port_data: inputs.edge_port_data,
         reorder_setup,
         class2_data: reorder_setup.class2_data,
       }
@@ -71,9 +72,8 @@ fn run_ordering_dispatch(
 fn run_noncluster_ordering_dispatch(
   inputs : OrderingDispatchInputs,
 ) -> OrderingDispatchOutput {
-  let dispatch_setup = inputs.dispatch_setup
-  let edge_port_data = dispatch_setup.edge_port_data
-  let reorder_setup = dispatch_setup.reorder_setup
+  let edge_port_data = inputs.edge_port_data
+  let reorder_setup = inputs.reorder_setup
   let ordered_groups =
     run_noncluster_reorder_pass(
       inputs.nodes,
