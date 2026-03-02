@@ -3265,8 +3265,6 @@ fn spline_is_inside(
   p3 : @geom.Point,
 ) -> Bool {
   let roots : Array[Double] = Array::make(4, 0.0)
-  let trace_spline =
-    LIBM_IS_NATIVE && @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
   for edge in barriers {
     let (l0, l1) = edge
     let rootn = spline_intersects_line(p0, c1, c2, p3, l0, l1, roots)
@@ -3285,11 +3283,6 @@ fn spline_is_inside(
         point_dist2(ip, l1) < ROUTE_SPLINE_EPS1 {
         i = i + 1
         continue
-      }
-      if trace_spline {
-        println(
-          "splinefit reject t=\{t} line=\{l0.x},\{l0.y} -> \{l1.x},\{l1.y} ip=\{ip.x},\{ip.y}",
-        )
       }
       return false
     }
@@ -3394,17 +3387,6 @@ fn route_spline_recursive_range(
     let input_len = total * min_len_ratio
     let mut a = 4.0
     let mut first = true
-    let trace_spline =
-      LIBM_IS_NATIVE && @sys.get_env_var("DOT_TRACE_SPLINE") is Some(_)
-    if trace_spline && has_barriers && inpn == 4 {
-      let parts : Array[String] = []
-      for i in 0..<inpn {
-        let p = points[start + i]
-        parts.push("\{p.x},\{p.y}")
-      }
-      let joined = parts.join(" ")
-      println("splinefit points inpn=4 \{joined}")
-    }
     while true {
       let c1_try = point(
         p0.x + (a * v0.x) / 3.0,
@@ -3414,19 +3396,6 @@ fn route_spline_recursive_range(
         p3.x - (a * v1.x) / 3.0,
         p3.y - (a * v1.y) / 3.0,
       )
-      if trace_spline && has_barriers && first {
-        println("splinefit inpn=\{inpn} a=\{a}")
-        if inpn == 3 {
-          println(
-            "splinefit pts p0=\{p0.x},\{p0.y} c1=\{c1_try.x},\{c1_try.y} c2=\{c2_try.x},\{c2_try.y} p3=\{p3.x},\{p3.y}",
-          )
-        }
-        if inpn == 4 {
-          println(
-            "splinefit pts4 p0=\{p0.x},\{p0.y} c1=\{c1_try.x},\{c1_try.y} c2=\{c2_try.x},\{c2_try.y} p3=\{p3.x},\{p3.y}",
-          )
-        }
-      }
       let control_len = polyline_length([p0, c1_try, c2_try, p3])
       if first && control_len < input_len - shortcut_eps {
         break
@@ -3435,9 +3404,6 @@ fn route_spline_recursive_range(
       if allow_spline_fit {
         if has_barriers {
           if spline_is_inside(route_barriers, p0, c1_try, c2_try, p3) {
-            if trace_spline {
-              println("splinefit ok a=\{a} inpn=\{inpn}")
-            }
             out.push(c1_try)
             out.push(c2_try)
             out.push(p3)

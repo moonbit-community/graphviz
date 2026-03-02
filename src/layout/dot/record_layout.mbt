@@ -1423,7 +1423,6 @@ fn dynamic_port_anchor_for_edge(
   other_pos : @geom.Point,
   rankdir : RankDir,
   record_border_adjust : Double,
-  role : String,
 ) -> (@geom.Point?, Int, Bool) {
   let (resolved_name, effective_compass) =
     resolve_label_port_for_graph(node_name, port, raw_ports_map)
@@ -1453,15 +1452,6 @@ fn dynamic_port_anchor_for_edge(
           // and extra record-border shifts introduce 0.5pt drift in structs/records.
           let adjusted_anchor = anchor
           ignore(record_border_adjust)
-          if @sys.get_env_var("DOT_TRACE_PORT_ANCHOR") is Some(_) {
-            let anchor_text = match adjusted_anchor {
-              Some(point) => "\{point.x},\{point.y}"
-              None => "None"
-            }
-            println(
-              "port_anchor \{role}=\{node_name} port=\{port_name} center=\{raw_port.center.x},\{raw_port.center.y} size=\{raw_port.size.width_pt},\{raw_port.size.height_pt} sides=\{raw_port.sides} anchor=\{anchor_text} side=\{side}",
-            )
-          }
           (adjusted_anchor, effective_side, true)
         }
         None => (None, 0, false)

@@ -1763,7 +1763,6 @@ fn build_edge_route_base(
       head_pos,
       rankdir,
       tail_record_border_adjust,
-      "tail",
     )
   let (head_side_anchor, head_dynamic_side, head_dynamic) =
     dynamic_port_anchor_for_edge(
@@ -1774,7 +1773,6 @@ fn build_edge_route_base(
       tail_pos,
       rankdir,
       head_record_border_adjust,
-      "head",
     )
   let has_side_anchor =
     tail_side_anchor is Some(_) ||
@@ -3589,16 +3587,6 @@ fn build_edge_spline(
       seg_idx = seg_idx + 1
     }
     pathplan_segments = limited_segments
-  }
-  if using_pathplan && raw_bezier.length() > 0 &&
-    @sys.get_env_var("DOT_TRACE_SPLINE_OUTPUT") is Some(_) {
-    let parts : Array[String] = []
-    for point in raw_bezier {
-      parts.push("{\"x\":\{point.x},\"y\":\{point.y}}")
-    }
-    let joined = parts.join(",")
-    println(
-      "{\"event\":\"spline_output\",\"tail\":\"\{base.orig_tail_name}\",\"head\":\"\{base.orig_head_name}\",\"points\":[\{joined}]}",)
   }
   {
     spline,

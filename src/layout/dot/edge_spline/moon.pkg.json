@@ -8,8 +8,7 @@
     "moonbit-community/graphviz/geom",
     "moonbitlang/core/math",
     "moonbitlang/core/bigint",
-    "moonbitlang/core/strconv",
-    "moonbitlang/x/sys"
+    "moonbitlang/core/strconv"
   ],
   "wbtest-import": [
     "moonbitlang/core/json",
