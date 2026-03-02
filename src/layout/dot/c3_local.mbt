@@ -490,7 +490,7 @@ fn build_local_neighbor_maps(
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
-fn run_cluster_local_rank_reorder(
+fn run_cluster_rank_reorder(
   cluster_rank_keys : Array[Int],
   cluster_groups : Map[Int, Array[String]],
   cluster_edges : Array[@cgraph.Edge],
@@ -1064,7 +1064,7 @@ fn reorder_cluster_rank_group(
     cluster_flat_constraints,
   ) = input_phase_output
   let (has_internal_constraints, ordered_cluster) =
-    run_cluster_local_rank_reorder(
+    run_cluster_rank_reorder(
       cluster_rank_keys,
       cluster_groups,
       cluster_edges,
