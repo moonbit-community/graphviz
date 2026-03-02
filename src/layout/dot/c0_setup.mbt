@@ -52,30 +52,8 @@ priv struct OrderingDispatchSetupInputs {
 }
 
 ///|
-priv struct RealNodeNameSets {
-  real_nodes : Map[String, Bool]
-  existing_names : Map[String, Bool]
-}
-
-///|
 /// Stage C Phase C0 split: ordering setup context
 /// and dispatch preparation helpers.
-
-///|
-/// Graphviz parity: ordering pre-pass derives real-node/existing-name sets
-/// from the node array before vnode creation and class2 preparation.
-fn build_real_node_name_sets(
-  nodes : Array[@cgraph.Node],
-) -> RealNodeNameSets {
-  let real_nodes : Map[String, Bool] = Map::new()
-  let existing_names : Map[String, Bool] = Map::new()
-  for node in nodes {
-    let name = node.name()
-    real_nodes[name] = true
-    existing_names[name] = true
-  }
-  { real_nodes, existing_names }
-}
 
 ///|
 /// Graphviz parity: explicit-port endpoints are tracked before class2 to keep
@@ -116,7 +94,15 @@ fn build_ordering_context(
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
 ) -> OrderingRuntimeContext {
-  let node_name_sets = build_real_node_name_sets(nodes)
+  // Graphviz parity: ordering pre-pass derives real-node/existing-name sets
+  // from the node array before vnode creation and class2 preparation.
+  let real_nodes : Map[String, Bool] = Map::new()
+  let existing_names : Map[String, Bool] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    real_nodes[name] = true
+    existing_names[name] = true
+  }
   let edge_cluster_keys : Map[String, String] = Map::new()
   collect_edge_cluster_keys(graph, edge_cluster_keys)
   let vnode_info = build_edge_vnodes(
@@ -128,7 +114,7 @@ fn build_ordering_context(
     ranks,
     nodesep_pt,
     rankdir,
-    node_name_sets.existing_names,
+    existing_names,
     edge_cluster_keys,
     cluster_meta.cluster_parents,
   )
@@ -143,7 +129,7 @@ fn build_ordering_context(
   let rank_same_constraints : Map[String, Bool] = Map::new()
   let runtime_context : OrderingRuntimeContext =
     {
-      real_nodes: node_name_sets.real_nodes,
+      real_nodes,
       edge_cluster_keys,
       vnode_info,
       port_edge_nodes,
