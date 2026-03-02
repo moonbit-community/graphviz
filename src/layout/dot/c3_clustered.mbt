@@ -45,40 +45,48 @@ priv struct ClusteredDispatchContext {
 /// pre-root/root/finalize stage orchestration helpers.
 
 ///|
+/// Graphviz parity: clustered pre-root input bundle keeps order-group seeds,
+/// class2 materialization sources, and runtime maps in one dispatch context.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredPreRootBuildInputs {
+  ordering_groups_base : Map[Int, Array[String]]
+  base_order_index : Map[String, Int]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_sizes : Map[String, NodeSize]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  port_edge_nodes : Map[String, Bool]
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  edge_creation_order : Array[(String, String)]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+}
+
+///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_pre_root(
-  ordering_groups_base : Map[Int, Array[String]],
-  base_order_index : Map[String, Int],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  order_sizes : Map[String, NodeSize],
-  nlist_order : Array[String],
-  gdnlist_order : Array[String],
-  node_order : Map[String, Int],
-  real_nodes : Map[String, Bool],
-  port_edge_nodes : Map[String, Bool],
-  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  order_edges_by_tail_unmapped : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  edge_creation_order : Array[(String, String)],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  nodes : Array[@cgraph.Node],
+  inputs : ClusteredPreRootBuildInputs,
 ) -> ClusteredPreRootData {
   let order_seed_output =
     build_order_seed_groups(
-      ordering_groups_base,
-      base_order_index,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      vnode_info,
-      vnode_order_keys_for_ordering,
-      order_sizes,
+      inputs.ordering_groups_base,
+      inputs.base_order_index,
+      inputs.order_with_vnodes,
+      inputs.order_with_clusters,
+      inputs.cluster_meta,
+      inputs.vnode_info,
+      inputs.vnode_order_keys_for_ordering,
+      inputs.order_sizes,
     )
   let order_groups = order_seed_output.order_groups
   let order_sizes_out = order_seed_output.order_sizes_out
@@ -87,33 +95,33 @@ fn build_clustered_pre_root(
   let reorder_context =
     build_order_reorder_context(
       order_groups,
-      nlist_order,
-      gdnlist_order,
-      node_order,
-      real_nodes,
-      cluster_meta.has_clusters,
-      base_order_index,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      port_edge_nodes,
+      inputs.nlist_order,
+      inputs.gdnlist_order,
+      inputs.node_order,
+      inputs.real_nodes,
+      inputs.cluster_meta.has_clusters,
+      inputs.base_order_index,
+      inputs.cluster_meta.rank_same_groups,
+      inputs.cluster_meta.rank_same_order,
+      inputs.port_edge_nodes,
     )
   let materialized =
     build_materialized_inputs(
-      nlist_order,
-      order_edges_by_tail,
+      inputs.nlist_order,
+      inputs.order_edges_by_tail,
       reorder_context.order_graph,
       reorder_context.order_node_map,
-      order_edges_by_tail_unmapped,
+      inputs.order_edges_by_tail_unmapped,
       reorder_context.order_graph_unmapped,
       reorder_context.order_node_map_unmapped,
-      real_nodes,
+      inputs.real_nodes,
       reorder_context.order_nodes,
-      edge_creation_order,
-      cluster_meta,
-      gdnlist_order,
-      edge_tail,
-      edge_head,
-      nodes,
+      inputs.edge_creation_order,
+      inputs.cluster_meta,
+      inputs.gdnlist_order,
+      inputs.edge_tail,
+      inputs.edge_head,
+      inputs.nodes,
       reorder_context.order_node_order,
     )
   {
@@ -480,27 +488,30 @@ fn run_clustered(
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
+  let pre_root_inputs : ClusteredPreRootBuildInputs = {
+    ordering_groups_base: reorder_setup.ordering_groups_base,
+    base_order_index: reorder_setup.base_order_index,
+    order_with_vnodes: reorder_setup.order_with_vnodes,
+    order_with_clusters: reorder_setup.order_with_clusters,
+    cluster_meta: dispatch_context.cluster_meta,
+    vnode_info: runtime_context.vnode_info,
+    vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
+    order_sizes: dispatch_context.order_sizes,
+    nlist_order: class2_data.nlist_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
+    node_order: dispatch_context.node_order,
+    real_nodes: runtime_context.real_nodes,
+    port_edge_nodes: runtime_context.port_edge_nodes,
+    order_edges_by_tail: class2_data.order_edges_by_tail,
+    order_edges_by_tail_unmapped: class2_data.order_edges_by_tail_unmapped,
+    edge_creation_order: class2_data.edge_creation_order,
+    edge_tail: dispatch_context.edge_tail,
+    edge_head: dispatch_context.edge_head,
+    nodes: dispatch_context.nodes,
+  }
   let pre_root_stage =
     build_clustered_pre_root(
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.order_with_clusters,
-      dispatch_context.cluster_meta,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      dispatch_context.order_sizes,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      dispatch_context.node_order,
-      runtime_context.real_nodes,
-      runtime_context.port_edge_nodes,
-      class2_data.order_edges_by_tail,
-      class2_data.order_edges_by_tail_unmapped,
-      class2_data.edge_creation_order,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.nodes,
+      pre_root_inputs,
     )
   let root_cluster_stage =
     run_clustered_root_phase(
