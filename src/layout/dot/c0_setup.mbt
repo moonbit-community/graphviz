@@ -62,27 +62,6 @@ priv struct OrderingDispatchSetupInputs {
 }
 
 ///|
-/// Graphviz parity: reorder setup input bundle keeps class2/decompose payload
-/// snapshots unchanged before deriving mincross dispatch state.
-/// Do not change behavior without updating fixtures/tests.
-priv struct OrderingReorderBuildInputs {
-  nodes : Array[@cgraph.Node]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  edge_out_order : Map[String, Array[Int]]
-  ranks : Map[String, Int]
-  groups : Map[Int, Array[String]]
-  node_order : Map[String, Int]
-  port_edge_nodes : Map[String, Bool]
-  vnode_count : Int
-  rankdir : RankDir
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-}
-
-///|
 priv struct RealNodeNameSets {
   real_nodes : Map[String, Bool]
   existing_names : Map[String, Bool]
@@ -130,21 +109,6 @@ fn build_port_edge_nodes(
 }
 
 ///|
-/// Graphviz parity: setup probes vnode tail constraints in setup order even
-/// when the probe output is only used for parity diagnostics.
-fn probe_vnode_tail_constraints(
-  runtime_context : OrderingRuntimeContext,
-  edge_tail : Array[String],
-) -> Unit {
-  let _ =
-    if runtime_context.vnode_count > 0 {
-      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
-    } else {
-      Map::new()
-    }
-}
-
-///|
 /// Graphviz parity: ordering runtime prep keeps vnode tail-constraint derivation
 /// in the same position as Graphviz ordering setup, even when only used for
 /// parity diagnostics.
@@ -187,7 +151,7 @@ fn build_ordering_context(
   )
   // Graphviz parity: rank=same does not inject extra flat constraints at this stage.
   let rank_same_constraints : Map[String, Bool] = Map::new()
-  let runtime_context =
+  let runtime_context : OrderingRuntimeContext =
     {
       real_nodes: node_name_sets.real_nodes,
       edge_cluster_keys,
@@ -197,7 +161,14 @@ fn build_ordering_context(
       rank_same_constraints,
       vnode_count: vnode_info.vnode_ranks.length(),
     }
-  probe_vnode_tail_constraints(runtime_context, edge_tail)
+  // Graphviz parity: setup probes vnode tail constraints in setup order even
+  // when the probe output is only used for parity diagnostics.
+  let _ =
+    if runtime_context.vnode_count > 0 {
+      build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
+    } else {
+      Map::new()
+    }
   runtime_context
 }
 
@@ -308,7 +279,7 @@ fn build_vnode_order_keys_for_dispatch(
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_reorder_setup(
-  inputs : OrderingReorderBuildInputs,
+  inputs : OrderingDispatchSetupInputs,
   edge_port_data : OrderingEdgePortData,
 ) -> OrderingReorderSetup {
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
@@ -399,22 +370,7 @@ fn build_ordering_dispatch_setup(
     )
   let reorder_setup =
     build_ordering_reorder_setup(
-      {
-        nodes: inputs.nodes,
-        edges: inputs.edges,
-        edge_tail: inputs.edge_tail,
-        edge_head: inputs.edge_head,
-        edge_reversed: inputs.edge_reversed,
-        edge_out_order: inputs.edge_out_order,
-        ranks: inputs.ranks,
-        groups: inputs.groups,
-        node_order: inputs.node_order,
-        port_edge_nodes: inputs.port_edge_nodes,
-        vnode_count: inputs.vnode_count,
-        rankdir: inputs.rankdir,
-        cluster_meta: inputs.cluster_meta,
-        vnode_info: inputs.vnode_info,
-      },
+      inputs,
       edge_port_data,
     )
   {
