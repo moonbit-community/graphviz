@@ -75,7 +75,7 @@ type ReMincrossMaterializedEdgeArrays = (
 ///|
 /// Graphviz parity: clustered ReMincross order-edge rematerialization applies
 /// ND_out expansion, coalescing, intercluster bonus, then tail-order replay.
-fn build_materialized_order_edges(
+fn build_materialized_edges(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -150,7 +150,7 @@ fn build_materialized_order_edges(
 ///|
 /// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
 /// seeds node order, then materializes edge arrays in nlist tail order.
-fn build_materialized_edge_arrays(
+fn build_materialized_arrays(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
   rem_edge_creation : Array[(String, String)],
