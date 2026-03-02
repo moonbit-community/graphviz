@@ -81,6 +81,27 @@ fn coalesce_order_edges_by_tail(
 }
 
 ///|
+/// Graphviz parity: oriented edge endpoint reads prefer edge_tail/edge_head
+/// arrays and fall back to edge object endpoints when arrays are shorter.
+/// Do not change behavior without updating fixtures/tests.
+fn edge_endpoints_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (String, String) {
+  let tail =
+    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head =
+    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  (tail, head)
+}
+
+///|
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
 /// Do not change behavior without updating fixtures/tests.
@@ -106,10 +127,13 @@ fn collect_intercluster_bonus(
     }
     for idx in indices {
       let edge = edges[idx]
-      let tail =
-        if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
-      let head =
-        if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
+      let (tail, head) =
+        edge_endpoints_at(
+          edge,
+          idx,
+          edge_tail,
+          edge_head,
+        )
       let tail_rank = match ranks.get(tail) {
         Some(value) => value
         None => 0
