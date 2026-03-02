@@ -52,6 +52,14 @@ fn tb_tie_adjust_rank_assignment(graph : @network_simplex.NsGraph) -> Unit {
   }
 }
 
+///|
+priv struct MergedRankEdge {
+  tail_idx : Int
+  head_idx : Int
+  minlen : Int
+  weight : Int
+}
+
 
 ///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/rank.c + common/ns.c + dotgen/acyclic.c (fixtures).
@@ -175,7 +183,7 @@ pub fn compute_ranks_directed_base(
     }
     index[name] = idx
   }
-  let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
+  let merged_edges : Map[String, MergedRankEdge] = Map::new()
   let merged_edge_order : Array[String] = []
   for tail_name in rank_node_names {
     let indices = match edges_by_tail.get(tail_name) {
@@ -210,12 +218,17 @@ pub fn compute_ranks_directed_base(
       let key = "\{tail_idx}:\{head_idx}"
       match merged_edges.get(key) {
         Some(entry) => {
-          let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
-          let next_minlen = if minlen > current_minlen { minlen } else { current_minlen }
-          merged_edges[key] = (tail_idx, head_idx, next_minlen, current_weight + weight)
+          let next_minlen =
+            if minlen > entry.minlen { minlen } else { entry.minlen }
+          merged_edges[key] = {
+            tail_idx,
+            head_idx,
+            minlen: next_minlen,
+            weight: entry.weight + weight,
+          }
         }
         None => {
-          merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+          merged_edges[key] = { tail_idx, head_idx, minlen, weight }
           merged_edge_order.push(key)
         }
       }
@@ -238,11 +251,10 @@ pub fn compute_ranks_directed_base(
         Some(value) => value
         None => continue
       }
-      let (tail_idx, head_idx, _minlen, _weight) = entry
-      if tail_idx >= 0 && tail_idx < adjacency.length() &&
-        head_idx >= 0 && head_idx < adjacency.length() {
-        adjacency[tail_idx].push(head_idx)
-        adjacency[head_idx].push(tail_idx)
+      if entry.tail_idx >= 0 && entry.tail_idx < adjacency.length() &&
+        entry.head_idx >= 0 && entry.head_idx < adjacency.length() {
+        adjacency[entry.tail_idx].push(entry.head_idx)
+        adjacency[entry.head_idx].push(entry.tail_idx)
       }
     }
     let visited : Array[Bool] = []
@@ -300,16 +312,21 @@ pub fn compute_ranks_directed_base(
         Some(value) => value
         None => continue
       }
-      let (tail_idx, head_idx, minlen, weight) = entry
-      let tail_local = match local_index.get(tail_idx) {
+      let tail_local = match local_index.get(entry.tail_idx) {
         Some(value) => value
         None => continue
       }
-      let head_local = match local_index.get(head_idx) {
+      let head_local = match local_index.get(entry.head_idx) {
         Some(value) => value
         None => continue
       }
-      let _ = @network_simplex.add_edge(graph, tail_local, head_local, minlen, weight)
+      let _ = @network_simplex.add_edge(
+        graph,
+        tail_local,
+        head_local,
+        entry.minlen,
+        entry.weight,
+      )
     }
     @network_simplex.network_simplex(graph, 0x7fffffff, @network_simplex.BalanceMode::TB)
     tb_tie_adjust_rank_assignment(graph)
