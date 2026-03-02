@@ -30,7 +30,7 @@ priv struct LayoutPrep {
 /// Graphviz parity: rankdir resolution uses option override first, then
 /// graph attribute parsing with TB fallback (dotinit/input behavior).
 /// Do not change behavior without updating fixtures/tests.
-fn resolve_rankdir_for_layout_inputs(
+fn resolve_rankdir(
   graph : @cgraph.Graph,
   option_rankdir : RankDir?,
 ) -> RankDir {
@@ -52,7 +52,7 @@ fn resolve_rankdir_for_layout_inputs(
 /// Graphviz parity: nodesep/ranksep parse option overrides first, then graph
 /// attributes, reject negatives, and clamp with Graphviz minima.
 /// Do not change behavior without updating fixtures/tests.
-fn resolve_spacing_for_layout_inputs(
+fn resolve_spacing(
   graph : @cgraph.Graph,
   option_nodesep : Double?,
   option_ranksep : Double?,
@@ -92,7 +92,7 @@ fn resolve_spacing_for_layout_inputs(
 /// Graphviz parity: splines mode resolution uses option override first, then
 /// graph attribute parsing with Spline fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn resolve_splines_for_layout_inputs(
+fn resolve_splines(
   graph : @cgraph.Graph,
   option_splines : SplinesMode?,
 ) -> SplinesMode {
@@ -114,7 +114,7 @@ fn resolve_splines_for_layout_inputs(
 /// Graphviz parity: edge flag scan checks dotted style and explicit ports in
 /// edge creation order before downstream ordering setup.
 /// Do not change behavior without updating fixtures/tests.
-fn scan_edge_flags_for_layout_inputs(
+fn scan_edge_flags(
   edges : Array[@cgraph.Edge],
 ) -> (Bool, Bool) {
   let mut has_dotted_edges = false
@@ -172,7 +172,7 @@ fn build_node_order(
 /// Graphviz parity: node size maps for output/order/layout are derived once
 /// per node, with LR/RL swapping only applied to layout-time sizes.
 /// Do not change behavior without updating fixtures/tests.
-fn build_size_maps_for_layout_inputs(
+fn build_size_maps(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
   record_orientation : RecordOrientation,
@@ -330,20 +330,20 @@ fn prepare_layout_inputs(
   graph : @cgraph.Graph,
   opts : DotLayoutOptions,
 ) -> LayoutPrep raise DotLayoutError {
-  let rankdir = resolve_rankdir_for_layout_inputs(graph, opts.rankdir)
+  let rankdir = resolve_rankdir(graph, opts.rankdir)
   let (nodesep_in, ranksep_in) =
-    resolve_spacing_for_layout_inputs(graph, opts.nodesep, opts.ranksep)
-  let splines = resolve_splines_for_layout_inputs(graph, opts.splines)
+    resolve_spacing(graph, opts.nodesep, opts.ranksep)
+  let splines = resolve_splines(graph, opts.splines)
   let nodes = graph.nodes()
   let edges = graph.edges()
   dot_trace("layout_dot: start nodes=\{nodes.length()} edges=\{edges.length()}")
   let (has_dotted_edges, has_port_edges) =
-    scan_edge_flags_for_layout_inputs(edges)
+    scan_edge_flags(edges)
   let has_edge_labels = graph_has_edge_labels(edges)
   let node_order = build_node_order(nodes, rankdir)
   let record_orientation = record_layout_orientation(rankdir)
   let (output_sizes, order_sizes, sizes) =
-    build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
+    build_size_maps(nodes, rankdir, record_orientation)
   let (port_order_positions, port_order_contrib) =
     build_port_order_metadata(
       rankdir,
