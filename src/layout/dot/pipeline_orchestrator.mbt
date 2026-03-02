@@ -1,11 +1,19 @@
 ///|
+priv struct DotRankStageOutput {
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
 /// Graphviz parity: dot rank/order stage mirrors refs/graphviz/lib/dotgen
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_rank_stage(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
-) -> (RankData, RankHeights, ClusterMetadata, OrderingResult) {
+) -> DotRankStageOutput {
   // Graphviz parity: rank-data creation emits the same rank trace
   // points before downstream stage assembly.
   let rank_data =
@@ -79,7 +87,7 @@ fn compute_dot_rank_stage(
   // Graphviz parity: rank-stage result object keeps computed
   // rank/cluster/order artifacts unchanged and emits rank-order trace.
   dot_trace("layout_dot: rank order computed")
-  (rank_data, rank_heights, cluster_meta, ordering)
+  { rank_data, rank_heights, cluster_meta, ordering }
 }
 
 fn scale_point_value(point : @geom.Point, sx : Double, sy : Double) -> @geom.Point {
@@ -242,6 +250,14 @@ fn scale_record_port_maps(
 }
 
 ///|
+priv struct RoutingSpatialData {
+  nodes_out : Array[DotLayoutNode]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -250,7 +266,7 @@ fn build_routing_spatial_data(
   prep : LayoutPrep,
   ranks : Map[String, Int],
   positions_state : PositionResult,
-) -> (Array[DotLayoutNode], Map[String, Map[String, RecordPort]], Map[String, Map[String, RecordPort]], Map[String, @geom.Rect]) {
+) -> RoutingSpatialData {
   // Graphviz parity: node geometry projection and port-map derivation
   // consume stage inputs in the same precompute order.
   let nodes_out =
@@ -289,7 +305,16 @@ fn build_routing_spatial_data(
       positions_state.rank_ht1,
       positions_state.rank_ht2,
     )
-  (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes)
+  { nodes_out, label_ports_map, label_ports_raw, cluster_bboxes }
+}
+
+///|
+priv struct RoutingPrecomputeData {
+  port_pad_below : Double
+  port_pad_above : Double
+  head_port_metrics : HeadPortMetrics
+  path_groups : Map[Int, Array[String]]
+  routing_context : RoutingContext
 }
 
 ///|
@@ -307,7 +332,7 @@ fn build_routing_precompute_data(
   cluster_bboxes : Map[String, @geom.Rect],
   sizes : Map[String, NodeSize],
   enable_complex_tuning : Bool,
-) -> (Double, Double, HeadPortMetrics, Map[Int, Array[String]], RoutingContext) {
+) -> RoutingPrecomputeData {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
   let (port_pad_below, port_pad_above) =
@@ -359,7 +384,21 @@ fn build_routing_precompute_data(
       positions_state.vnode_positions,
       cluster_bboxes,
     )
-  (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context)
+  {
+    port_pad_below,
+    port_pad_above,
+    head_port_metrics,
+    path_groups,
+    routing_context,
+  }
+}
+
+///|
+priv struct DotRoutingStageOutput {
+  nodes_out : Array[DotLayoutNode]
+  edges_out : Array[DotLayoutEdge]
+  port_pad_below : Double
+  port_pad_above : Double
 }
 
 ///|
@@ -374,9 +413,13 @@ fn compute_dot_routing_stage(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
   positions_state : PositionResult,
-) -> (Array[DotLayoutNode], Array[DotLayoutEdge], Double, Double) {
-  let (nodes_out, label_ports_map, label_ports_raw, cluster_bboxes) =
+) -> DotRoutingStageOutput {
+  let spatial_data =
     build_routing_spatial_data(graph, prep, rank_data.ranks, positions_state)
+  let nodes_out = spatial_data.nodes_out
+  let label_ports_map = spatial_data.label_ports_map
+  let label_ports_raw = spatial_data.label_ports_raw
+  let cluster_bboxes = spatial_data.cluster_bboxes
   let routing_bbox =
     compute_dot_bbox(
       nodes_out,
@@ -459,7 +502,7 @@ fn compute_dot_routing_stage(
   let enable_complex_tuning = complex_tuning_enabled()
   // Graphviz parity: routing edge/padding execution consumes typed
   // stage payload while preserving precompute->edge-solve->output order.
-  let (port_pad_below, port_pad_above, head_port_metrics, path_groups, routing_context) =
+  let precompute_data =
     build_routing_precompute_data(
       prep,
       rank_data,
@@ -472,6 +515,11 @@ fn compute_dot_routing_stage(
       routing_sizes,
       enable_complex_tuning,
     )
+  let port_pad_below = precompute_data.port_pad_below
+  let port_pad_above = precompute_data.port_pad_above
+  let head_port_metrics = precompute_data.head_port_metrics
+  let path_groups = precompute_data.path_groups
+  let routing_context = precompute_data.routing_context
   // Graphviz parity: routed-edge solve dispatch reads typed edge/padding
   // inputs plus grouped edge-solve precompute payload without argument reordering.
   // Graphviz parity: edge routing call consumes edge/padding fields plus
@@ -511,8 +559,8 @@ fn compute_dot_routing_stage(
     } else {
       edges_routed
     }
-  // Graphviz parity: routing stage result tuple is built directly
+  // Graphviz parity: routing stage result object is built directly
   // from routed edges and computed padding, with trace emission preserved.
   dot_trace("layout_dot: edges routed")
-  (nodes_out, edges_out, port_pad_below, port_pad_above)
+  { nodes_out, edges_out, port_pad_below, port_pad_above }
 }
