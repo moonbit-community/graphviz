@@ -479,16 +479,16 @@ fn run_clustered_finalize_phase(
 }
 
 ///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
+/// Graphviz parity: clustered pre-root build inputs are assembled directly from
+/// clustered dispatch context + runtime/class2 snapshots without reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered(
+fn build_clustered_pre_root_build_inputs(
   dispatch_context : ClusteredDispatchContext,
-) -> OrderingDispatchOutput {
+) -> ClusteredPreRootBuildInputs {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
-  let pre_root_inputs : ClusteredPreRootBuildInputs = {
+  {
     ordering_groups_base: reorder_setup.ordering_groups_base,
     base_order_index: reorder_setup.base_order_index,
     order_with_vnodes: reorder_setup.order_with_vnodes,
@@ -509,6 +509,17 @@ fn run_clustered(
     edge_head: dispatch_context.edge_head,
     nodes: dispatch_context.nodes,
   }
+}
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let pre_root_inputs =
+    build_clustered_pre_root_build_inputs(dispatch_context)
   let pre_root_stage =
     build_clustered_pre_root(
       pre_root_inputs,
