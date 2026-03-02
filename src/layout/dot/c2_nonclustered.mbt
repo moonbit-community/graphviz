@@ -46,7 +46,7 @@ fn run_noncluster_reorder_pass(
       order_node_order[name] = idx
     }
   }
-  let (parents, children) =
+  let edge_index_data =
     build_edge_index_for_order(
       nodes,
       order_edges,
@@ -54,6 +54,8 @@ fn run_noncluster_reorder_pass(
       order_edge_head,
       ranks,
     )
+  let parents = edge_index_data.parents
+  let children = edge_index_data.children
   // Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
   // edge_out_order and ND_in head order from node-ordered ND_out scans.
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()

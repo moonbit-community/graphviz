@@ -168,13 +168,19 @@ fn build_flat_constraints(
 }
 
 ///|
+priv struct EdgeIndexData {
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+}
+
+///|
 fn build_edge_index_for_order(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> EdgeIndexData {
   let node_names : Array[String] = []
   for node in nodes {
     node_names.push(node.name())
@@ -195,7 +201,7 @@ fn build_edge_index_impl(
   edge_head : Array[String],
   ranks : Map[String, Int],
   edge_count : Int,
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> EdgeIndexData {
   let parents : Map[String, Array[String]] = Map::new()
   let children : Map[String, Array[String]] = Map::new()
   for name in node_names {
@@ -225,7 +231,7 @@ fn build_edge_index_impl(
       None => children[tail] = [head]
     }
   }
-  (parents, children)
+  { parents, children }
 }
 
 ///|
@@ -234,7 +240,7 @@ fn build_edge_index_for_names(
   edge_tail : Array[String],
   edge_head : Array[String],
   ranks : Map[String, Int],
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> EdgeIndexData {
   build_edge_index_impl(
     node_names,
     edge_tail,
@@ -646,7 +652,7 @@ fn build_edge_index_with_vnodes(
   ranks : Map[String, Int],
   edge_vnodes : Map[String, Array[String]],
   vnode_ranks : Map[String, Int],
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> EdgeIndexData {
   let parents : Map[String, Array[String]] = Map::new()
   let children : Map[String, Array[String]] = Map::new()
   for node in nodes {
@@ -698,5 +704,5 @@ fn build_edge_index_with_vnodes(
       None => children[prev] = [high]
     }
   }
-  (parents, children)
+  { parents, children }
 }

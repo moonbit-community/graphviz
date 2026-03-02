@@ -493,12 +493,14 @@ fn apply_clustered_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let (parents, children) = build_edge_index_for_names(
+  let edge_index_data = build_edge_index_for_names(
     order_nodes,
     order_edge_tail_out,
     order_edge_head_out,
     order_ranks,
   )
+  let parents = edge_index_data.parents
+  let children = edge_index_data.children
   let edge_order = collect_edge_order(order_edges_out)
   // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
   // computed for the order graph (mincross median tie-breaking path).

@@ -107,7 +107,7 @@ fn maybe_apply_xpos_transpose(
 ) -> Unit {
   if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
     !cluster_meta.ordering_set {
-    let (parents, children) = build_edge_index_with_vnodes(
+    let edge_index_data = build_edge_index_with_vnodes(
       nodes,
       ordering.order_edges,
       ordering.order_edge_tail,
@@ -116,6 +116,8 @@ fn maybe_apply_xpos_transpose(
       ordering.vnode_info.edge_vnodes,
       ordering.vnode_info.vnode_ranks,
     )
+    let parents = edge_index_data.parents
+    let children = edge_index_data.children
     let tmp_rank_keys = collect_rank_keys(x_groups)
     let tmp_ranks = build_node_ranks(x_groups)
     apply_xpos_transpose_passes(

@@ -404,13 +404,15 @@ fn build_edge_indices_and_order(
   order_ranks : Map[String, Int],
   edges_out : Array[@cgraph.Edge],
 ) -> EdgeIndicesAndOrder {
-  let (parents, children) =
+  let edge_index_data =
     build_edge_index_for_names(
       order_nodes,
       edge_tail_out,
       edge_head_out,
       order_ranks,
     )
+  let parents = edge_index_data.parents
+  let children = edge_index_data.children
   let edge_order = collect_edge_order(edges_out)
   { parents, children, edge_order }
 }
