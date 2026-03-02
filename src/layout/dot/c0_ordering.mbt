@@ -41,6 +41,31 @@ priv struct OrderingResult {
 }
 
 ///|
+/// Graphviz parity: ordering result bundles dispatch output together with vnode
+/// expansion artifacts and class2/GD_nlist snapshots for later stages.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_result(
+  runtime_context : OrderingRuntimeContext,
+  dispatch_setup : OrderingDispatchSetup,
+  dispatch_output : OrderingDispatchOutput,
+) -> OrderingResult {
+  {
+    ordered_groups: dispatch_output.ordered_groups,
+    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
+    vnode_info: runtime_context.vnode_info,
+    vnode_count: runtime_context.vnode_count,
+    order_edges: dispatch_setup.edge_port_data.order_edges,
+    order_edge_tail: dispatch_setup.edge_port_data.order_edge_tail,
+    order_edge_head: dispatch_setup.edge_port_data.order_edge_head,
+    edge_order: dispatch_setup.edge_port_data.edge_order,
+    edge_cluster_keys: runtime_context.edge_cluster_keys,
+    nlist_order: dispatch_setup.nlist_order,
+    gdnlist_order: dispatch_setup.gdnlist_order,
+    vnode_creation_order: dispatch_setup.vnode_creation_order,
+  }
+}
+
+///|
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
@@ -117,18 +142,5 @@ fn compute_ordering_and_vnodes(
       runtime_context,
       dispatch_setup,
     )
-  {
-    ordered_groups: dispatch_output.ordered_groups,
-    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
-    vnode_info: runtime_context.vnode_info,
-    vnode_count: runtime_context.vnode_count,
-    order_edges: dispatch_setup.edge_port_data.order_edges,
-    order_edge_tail: dispatch_setup.edge_port_data.order_edge_tail,
-    order_edge_head: dispatch_setup.edge_port_data.order_edge_head,
-    edge_order: dispatch_setup.edge_port_data.edge_order,
-    edge_cluster_keys: runtime_context.edge_cluster_keys,
-    nlist_order: dispatch_setup.nlist_order,
-    gdnlist_order: dispatch_setup.gdnlist_order,
-    vnode_creation_order: dispatch_setup.vnode_creation_order,
-  }
+  build_ordering_result(runtime_context, dispatch_setup, dispatch_output)
 }
