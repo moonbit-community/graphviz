@@ -623,6 +623,12 @@ fn has_single_rank_incidents(
 }
 
 ///|
+priv struct TransposeRankResult {
+  delta : Int
+  changed : Bool
+}
+
+///|
 fn transpose_rank_port_tiebreak(
   rank : Int,
   ranks : Map[String, Int],
@@ -641,7 +647,7 @@ fn transpose_rank_port_tiebreak(
   flat_constraints : Map[String, Bool],
   reverse : Bool,
   remincross_mode : Bool,
-) -> (Int, Bool) {
+) -> TransposeRankResult {
   let mut changed = false
   let mut delta = 0
   let mut i = 0
@@ -719,7 +725,7 @@ fn transpose_rank_port_tiebreak(
     }
     i = i + 1
   }
-  (delta, changed)
+  { delta, changed }
 }
 
 ///|
@@ -769,7 +775,7 @@ fn transpose_rank_groups_port(
         idx = idx + 1
         continue
       }
-      let (rank_delta, changed) = transpose_rank_port_tiebreak(
+      let transpose_result = transpose_rank_port_tiebreak(
         rank,
         ranks,
         names,
@@ -788,7 +794,7 @@ fn transpose_rank_groups_port(
         reverse,
         remincross_mode,
       )
-      if changed {
+      if transpose_result.changed {
         ordered[rank] = names
         changed_any = true
         candidate[idx] = true
@@ -799,7 +805,7 @@ fn transpose_rank_groups_port(
           candidate[idx + 1] = true
         }
       }
-      delta = delta + rank_delta
+      delta = delta + transpose_result.delta
       idx = idx + 1
     }
     if delta < 1 {
