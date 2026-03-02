@@ -32,7 +32,7 @@ priv struct ClusterHeights {
 /// Graphviz parity: LR/RL cluster label height adjustment aligned to
 /// refs/graphviz/lib/dotgen/position.c (adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
-fn adjust_flip_cluster_rank_heights(
+fn adjust_flip_rank_heights(
   graph : @cgraph.Graph,
   ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -45,7 +45,7 @@ fn adjust_flip_cluster_rank_heights(
   let mut changed = false
   let margin = if graph.is_root() { 0.0 } else { cluster_margin_pt(graph) }
   for child in graph.subgraphs() {
-    if adjust_flip_cluster_rank_heights(
+    if adjust_flip_rank_heights(
       child,
       ranks,
       rank_y,
