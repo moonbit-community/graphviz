@@ -121,29 +121,13 @@ fn run_clustered_root_phase(
 ) -> OrderRootClusterData {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  let reorder_context = pre_root_stage.reorder_context
   remincross_root_tail_order_override_snapshot.val = None
   let root_reorder_sources : RootReorderBuildSources =
-    {
-      order_with_vnodes: reorder_setup.order_with_vnodes,
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_groups_for_mincross: pre_root_stage.order_groups,
-      order_cluster_keys: pre_root_stage.order_cluster_keys,
-      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-      edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-      vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
-      nlist_order: class2_data.nlist_order,
-      ranks: dispatch_context.ranks,
-      skeleton_edge_creation: class2_data.skeleton_edge_creation,
-      root_edge_creation: class2_data.root_edge_creation,
-      flat_rank_constraints: reorder_setup.flat_rank_constraints,
-    }
+    build_root_reorder_sources(
+      dispatch_context,
+      pre_root_stage,
+      pre_root_stage.order_groups,
+    )
   let root_reorder_output : RootClusterReorderInputs =
     build_root_reorder_inputs(
       root_reorder_sources,
