@@ -17,7 +17,7 @@ pub fn compute_local_cluster_ranks_and_leaders(
       @cgraph.Graph,
       Array[@cgraph.Node],
       Array[@cgraph.Edge],
-    ) -> (Map[String, Int])
+    ) -> Map[String, Int]
   ),
 ) -> LocalClusterRankResult {
   let local_ranks : Map[String, Int] = Map::new()
