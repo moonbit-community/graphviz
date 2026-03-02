@@ -127,26 +127,6 @@ fn build_root_phase_tail_order_override(
 }
 
 ///|
-/// Graphviz parity: clustered root phase sets both tail-order and group
-/// overrides only in cluster mode; otherwise both override channels are cleared.
-/// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_root_phase_overrides(
-  order_with_clusters : Bool,
-  root_tail_order_override : Array[String],
-  root_groups_override : Map[Int, Array[String]],
-) -> Unit {
-  if order_with_clusters {
-    remincross_root_tail_order_override_snapshot.val =
-      Some(root_tail_order_override.copy())
-    root_mincross_groups_override.val =
-      Some(clone_rank_groups(root_groups_override))
-  } else {
-    remincross_root_tail_order_override_snapshot.val = None
-    root_mincross_groups_override.val = None
-  }
-}
-
-///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -207,11 +187,18 @@ fn run_clustered_root_phase(
   let root_rank_order_phase_output =
     run_root_rank_order_phase(root_phase_inputs)
   let root_groups_override = root_rank_order_phase_output.ordered_root
-  apply_clustered_root_phase_overrides(
-    reorder_setup.order_with_clusters,
-    root_tail_order_override,
-    root_groups_override,
-  )
+  // Graphviz parity: clustered root phase sets both tail-order and group
+  // overrides only in cluster mode; otherwise both override channels are
+  // cleared.
+  if reorder_setup.order_with_clusters {
+    remincross_root_tail_order_override_snapshot.val =
+      Some(root_tail_order_override.copy())
+    root_mincross_groups_override.val =
+      Some(clone_rank_groups(root_groups_override))
+  } else {
+    remincross_root_tail_order_override_snapshot.val = None
+    root_mincross_groups_override.val = None
+  }
   let build_ranks_inputs : RootClusterBuildRanksInputs =
     {
       order_node_order: reorder_context.order_node_order,
