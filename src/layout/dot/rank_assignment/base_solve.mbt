@@ -81,6 +81,12 @@ pub fn compute_ranks_directed_base(
     node_order_index[name] = tail_order.length()
     tail_order.push(name)
   }
+  let head_order_by_edge : Array[Int] = []
+  for edge_idx in 0..<edges.length() {
+    let head_name =
+      if edge_idx < edge_head.length() { edge_head[edge_idx] } else { "" }
+    head_order_by_edge.push(node_order_index.get(head_name).unwrap_or_default())
+  }
   let edges_by_tail : Map[String, Array[Int]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let tail = edge_tail[edge_idx]
@@ -92,18 +98,18 @@ pub fn compute_ranks_directed_base(
   for _tail, indices in edges_by_tail {
     if indices.length() > 1 {
       indices.sort_by((a, b) => {
-        let head_a =
-          if a >= 0 && a < edge_head.length() { edge_head[a] } else { "" }
-        let head_b =
-          if b >= 0 && b < edge_head.length() { edge_head[b] } else { "" }
-        let idx_a = match node_order_index.get(head_a) {
-          Some(value) => value
-          None => 0
-        }
-        let idx_b = match node_order_index.get(head_b) {
-          Some(value) => value
-          None => 0
-        }
+        let idx_a =
+          if a >= 0 && a < head_order_by_edge.length() {
+            head_order_by_edge[a]
+          } else {
+            0
+          }
+        let idx_b =
+          if b >= 0 && b < head_order_by_edge.length() {
+            head_order_by_edge[b]
+          } else {
+            0
+          }
         if idx_a < idx_b {
           -1
         } else if idx_a > idx_b {
