@@ -855,97 +855,31 @@ priv struct RootRankOrderPhaseInputs {
 }
 
 ///|
-/// Graphviz parity: root rank-order reorder call payload keeps root reorder
-/// edge snapshots and rank-order metadata unchanged before mincross dispatch.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootRankOrderReorderCallInputs {
-  root_rank_keys : Array[Int]
-  root_groups : Map[Int, Array[String]]
-  root_edges_out : Array[@cgraph.Edge]
-  root_edge_tail_out : Array[String]
-  root_edge_head_out : Array[String]
-  root_edge_tail_port_x : Array[Double]
-  root_edge_head_port_x : Array[Double]
-  root_edge_tail_port_order : Array[Double]
-  root_edge_head_port_order : Array[Double]
-  root_parents : Map[String, Array[String]]
-  root_children : Map[String, Array[String]]
-  order_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  root_edge_order : Map[String, Int]
-  root_node_order : Map[String, Int]
-  order_sizes_out : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_cluster_skeleton : Map[String, Bool]
-  flat_constraints : Map[String, Bool]
-  root_graphviz_flip : Bool
-}
-
-///|
-/// Graphviz parity: root rank-order reorder call payload is projected directly
-/// from one root phase input snapshot before mincross dispatch.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_reorder_call_inputs(
-  inputs : RootRankOrderPhaseInputs,
-  root_graphviz_flip : Bool,
-) -> RootRankOrderReorderCallInputs {
-  let root_reorder_output = inputs.root_reorder_output
-  {
-    root_rank_keys: root_reorder_output.root_rank_keys,
-    root_groups: root_reorder_output.root_groups,
-    root_edges_out: root_reorder_output.root_edges_out,
-    root_edge_tail_out: root_reorder_output.root_edge_tail_out,
-    root_edge_head_out: root_reorder_output.root_edge_head_out,
-    root_edge_tail_port_x: root_reorder_output.root_edge_tail_port_x,
-    root_edge_head_port_x: root_reorder_output.root_edge_head_port_x,
-    root_edge_tail_port_order: root_reorder_output.root_edge_tail_port_order,
-    root_edge_head_port_order: root_reorder_output.root_edge_head_port_order,
-    root_parents: root_reorder_output.root_parents,
-    root_children: root_reorder_output.root_children,
-    order_cluster_keys: inputs.order_cluster_keys,
-    rank_same_groups: inputs.rank_same_groups,
-    rank_same_order: inputs.rank_same_order,
-    root_edge_order: root_reorder_output.root_edge_order,
-    root_node_order: root_reorder_output.root_node_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    flat_constraints: inputs.flat_constraints,
-    root_graphviz_flip,
-  }
-}
-
-///|
 /// Graphviz parity: root rank-order phase dispatches reorder_rank_groups with
 /// root-only payload and fixed Graphviz coalesce-parallel behavior.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_order_reorder_call(
-  inputs : RootRankOrderReorderCallInputs,
+  inputs : RootRankOrderPhaseInputs,
+  root_graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
+  let root_reorder_output = inputs.root_reorder_output
   reorder_rank_groups(
-    inputs.root_rank_keys,
-    inputs.root_groups,
-    inputs.root_edges_out,
-    inputs.root_edge_tail_out,
-    inputs.root_edge_head_out,
-    inputs.root_edge_tail_port_x,
-    inputs.root_edge_head_port_x,
-    inputs.root_edge_tail_port_order,
-    inputs.root_edge_head_port_order,
-    inputs.root_parents,
-    inputs.root_children,
+    root_reorder_output.root_rank_keys,
+    root_reorder_output.root_groups,
+    root_reorder_output.root_edges_out,
+    root_reorder_output.root_edge_tail_out,
+    root_reorder_output.root_edge_head_out,
+    root_reorder_output.root_edge_tail_port_x,
+    root_reorder_output.root_edge_head_port_x,
+    root_reorder_output.root_edge_tail_port_order,
+    root_reorder_output.root_edge_head_port_order,
+    root_reorder_output.root_parents,
+    root_reorder_output.root_children,
     inputs.order_cluster_keys,
     inputs.rank_same_groups,
     inputs.rank_same_order,
-    inputs.root_edge_order,
-    inputs.root_node_order,
+    root_reorder_output.root_edge_order,
+    root_reorder_output.root_node_order,
     inputs.order_sizes_out,
     inputs.nodesep_pt,
     inputs.has_edge_labels,
@@ -954,7 +888,7 @@ fn run_root_rank_order_reorder_call(
     Map::new(),
     inputs.order_cluster_skeleton,
     inputs.flat_constraints,
-    graphviz_flip=inputs.root_graphviz_flip,
+    graphviz_flip=root_graphviz_flip,
     coalesce_parallel_edges=true,
   )
 }
@@ -1003,10 +937,8 @@ fn run_root_rank_order_phase(
   // path as cluster-phase root bucket ordering, with root-flip guarding.
   let root_graphviz_flip =
     should_enable_root_flip(inputs.graphviz_flip, inputs.order_cluster_keys)
-  let reorder_call_inputs =
-    build_root_rank_order_reorder_call_inputs(inputs, root_graphviz_flip)
   let ordered_root =
-    run_root_rank_order_reorder_call(reorder_call_inputs)
+    run_root_rank_order_reorder_call(inputs, root_graphviz_flip)
   finalize_root_rank_order_phase_output(
     inputs.root_reorder_output.root_rank_keys,
     inputs.root_reorder_output.root_groups,
