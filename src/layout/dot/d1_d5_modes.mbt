@@ -55,7 +55,7 @@ fn build_x_with_flat_labels(
       ordering,
     )
   let flat_label_augmentation =
-    build_x_flat_label_augmentation(
+    build_x_flat_labels(
       false,
       mode_flags.use_vnodes_for_xpos,
       mode_flags.allow_xpos_reorder,

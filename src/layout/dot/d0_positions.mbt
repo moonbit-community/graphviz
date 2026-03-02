@@ -357,7 +357,7 @@ fn build_x_groups_after_reorder(
 /// Graphviz parity: x-stage reorder + transpose cleanup + flat-label vnode
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_x_flat_label_augmentation(
+fn build_x_flat_labels(
   xpos_reorder_enabled : Bool,
   use_vnodes_for_xpos : Bool,
   allow_xpos_reorder : Bool,
@@ -496,7 +496,7 @@ fn compute_x_positions_for_layout(
 /// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
 /// and these maxima must feed y-rank placement exactly as in Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_flat_label_height_updates(
+fn apply_flat_label_heights(
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
   vnode_sizes : Map[String, NodeSize],
   rank_pht : Map[Int, Double],
@@ -670,7 +670,7 @@ fn build_y_position_data(
     } else {
       Map::new()
     }
-  apply_flat_label_height_updates(
+  apply_flat_label_heights(
     flat_label_nodes,
     ordering.vnode_info.vnode_sizes,
     rank_pht,
