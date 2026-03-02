@@ -646,13 +646,13 @@ fn recover_slack_vnodes(
       let left = new_x - box.llx
       vnode_positions[vnode] = { x: new_x, y: vnode_y }
       vnode_sizes[vnode] =
-        vnode_size_from_widths_with_height(left, size.right_pt, size.height_pt)
+        vnode_size_from_widths_with_h(left, size.right_pt, size.height_pt)
     } else {
       let new_x = (box.llx + box.urx) / 2.0
       let half = (box.urx - box.llx) / 2.0
       vnode_positions[vnode] = { x: new_x, y: vnode_y }
       vnode_sizes[vnode] =
-        vnode_size_from_widths_with_height(half, half, size.height_pt)
+        vnode_size_from_widths_with_h(half, half, size.height_pt)
     }
     if trace_recover {
       let new_pos = match vnode_positions.get(vnode) {

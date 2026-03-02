@@ -455,7 +455,7 @@ fn vnode_size_from_widths(left_pt : Double, right_pt : Double) -> NodeSize {
 }
 
 ///|
-fn vnode_size_from_widths_with_height(
+fn vnode_size_from_widths_with_h(
   left_pt : Double,
   right_pt : Double,
   height_pt : Double,
@@ -471,7 +471,7 @@ fn size_with_extra_right(size : NodeSize, extra_right_pt : Double) -> NodeSize {
   if extra_right_pt <= 0.0 {
     size
   } else {
-    vnode_size_from_widths_with_height(
+    vnode_size_from_widths_with_h(
       size.left_pt,
       size.right_pt + extra_right_pt,
       size.height_pt,
@@ -1839,7 +1839,7 @@ fn points_nearly_equal(a : @geom.Point, b : @geom.Point) -> Bool {
 }
 
 ///|
-fn polygon_outline_vertices_for_size(
+fn polygon_outline_for_size(
   base : Array[@geom.Point],
   outline_pad_pt : Double,
 ) -> Array[@geom.Point] {
@@ -2190,7 +2190,7 @@ fn node_size(
           let outline_pad_pt =
             PERIPHERY_GAP_PT * Double::from_int(peripheries - 1)
           let expanded_vertices =
-            polygon_outline_vertices_for_size(base_vertices, outline_pad_pt)
+            polygon_outline_for_size(base_vertices, outline_pad_pt)
           let mut max_x = polygon_width_pt / 2.0
           let mut max_y = polygon_height_pt / 2.0
           for vertex in expanded_vertices {

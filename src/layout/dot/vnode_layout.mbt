@@ -84,7 +84,7 @@ fn build_edge_vnodes(
               let left = size.left_pt + delta
               let right = size.right_pt + delta
               vnode_sizes[name] =
-                vnode_size_from_widths_with_height(left, right, size.height_pt)
+                vnode_size_from_widths_with_h(left, right, size.height_pt)
             }
             None => ()
           }
@@ -110,7 +110,7 @@ fn build_edge_vnodes(
                 let left = size.left_pt + delta
                 let right = size.right_pt + delta
                 vnode_sizes[name] =
-                  vnode_size_from_widths_with_height(left, right, size.height_pt)
+                  vnode_size_from_widths_with_h(left, right, size.height_pt)
               }
               None => ()
             }
@@ -173,7 +173,7 @@ fn build_edge_vnodes(
       vnode_ranks[name] = rank
       vnode_sizes[name] =
         if is_label_rank {
-        vnode_size_from_widths_with_height(
+        vnode_size_from_widths_with_h(
           nodesep_pt,
           label_width,
           label_height,
@@ -355,7 +355,7 @@ fn add_flat_label_vnodes(
     let half_width = label_width / 2.0
     vnode_info.vnode_ranks[name] = label_rank
     vnode_info.vnode_sizes[name] =
-      vnode_size_from_widths_with_height(half_width, half_width, label_height)
+      vnode_size_from_widths_with_h(half_width, half_width, label_height)
     let tail_cluster = node_cluster_key(edge.tail())
     let head_cluster = node_cluster_key(edge.head())
     let vnode_cluster =
