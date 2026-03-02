@@ -2664,21 +2664,26 @@ fn linear_bezier(
   [tail, c1, c2, head]
 }
 
+priv struct TailHeadPoints {
+  tail : @geom.Point
+  head : @geom.Point
+}
+
 ///|
 fn nudge_endpoints(
   tail : @geom.Point,
   head : @geom.Point,
-) -> (@geom.Point, @geom.Point) {
+) -> TailHeadPoints {
   if head.y < tail.y {
-    (point(tail.x, tail.y - 1.0), point(head.x, head.y + 1.0))
+    { tail: point(tail.x, tail.y - 1.0), head: point(head.x, head.y + 1.0) }
   } else if head.y > tail.y {
-    (point(tail.x, tail.y + 1.0), point(head.x, head.y - 1.0))
+    { tail: point(tail.x, tail.y + 1.0), head: point(head.x, head.y - 1.0) }
   } else if head.x > tail.x {
-    (point(tail.x + 1.0, tail.y), point(head.x - 1.0, head.y))
+    { tail: point(tail.x + 1.0, tail.y), head: point(head.x - 1.0, head.y) }
   } else if head.x < tail.x {
-    (point(tail.x - 1.0, tail.y), point(head.x + 1.0, head.y))
+    { tail: point(tail.x - 1.0, tail.y), head: point(head.x + 1.0, head.y) }
   } else {
-    (tail, head)
+    { tail, head }
   }
 }
 
@@ -2704,35 +2709,35 @@ fn orthogonal_polyline_points(
 fn orthogonal_tb_endpoint_dirs(
   tail_center : @geom.Point,
   head_center : @geom.Point,
-) -> (@geom.Point, @geom.Point) {
+) -> TailHeadPoints {
   let dx = head_center.x - tail_center.x
   let dy = head_center.y - tail_center.y
   let abs_dx = Double::abs(dx)
   let abs_dy = Double::abs(dy)
   if abs_dx <= 0.000001 {
     if dy >= 0.0 {
-      return (point(0.0, 1.0), point(0.0, -1.0))
+      return { tail: point(0.0, 1.0), head: point(0.0, -1.0) }
     } else {
-      return (point(0.0, -1.0), point(0.0, 1.0))
+      return { tail: point(0.0, -1.0), head: point(0.0, 1.0) }
     }
   }
   if abs_dy <= 0.000001 {
     if dx >= 0.0 {
-      return (point(1.0, 0.0), point(-1.0, 0.0))
+      return { tail: point(1.0, 0.0), head: point(-1.0, 0.0) }
     } else {
-      return (point(-1.0, 0.0), point(1.0, 0.0))
+      return { tail: point(-1.0, 0.0), head: point(1.0, 0.0) }
     }
   }
   if dx >= 0.0 && dy < 0.0 {
-    return (point(0.0, -1.0), point(-1.0, 0.0))
+    return { tail: point(0.0, -1.0), head: point(-1.0, 0.0) }
   }
   if dx < 0.0 && dy < 0.0 {
-    return (point(-1.0, 0.0), point(0.0, 1.0))
+    return { tail: point(-1.0, 0.0), head: point(0.0, 1.0) }
   }
   if dx < 0.0 && dy >= 0.0 {
-    return (point(0.0, 1.0), point(1.0, 0.0))
+    return { tail: point(0.0, 1.0), head: point(1.0, 0.0) }
   }
-  (point(1.0, 0.0), point(0.0, -1.0))
+  { tail: point(1.0, 0.0), head: point(0.0, -1.0) }
 }
 
 ///|
@@ -2749,9 +2754,9 @@ fn orthogonal_polyline_points_cardinal(
     @dot_shared.port_is_explicit(edge.head_port()) {
     return None
   }
-  let (tail_dir, head_dir) = orthogonal_tb_endpoint_dirs(tail_center, head_center)
-  let tail_vertical = Double::abs(tail_dir.y) > 0.5
-  let head_vertical = Double::abs(head_dir.y) > 0.5
+  let endpoint_dirs = orthogonal_tb_endpoint_dirs(tail_center, head_center)
+  let tail_vertical = Double::abs(endpoint_dirs.tail.y) > 0.5
+  let head_vertical = Double::abs(endpoint_dirs.head.y) > 0.5
   if tail_vertical && !head_vertical {
     let corner = point(tail_center.x, head_center.y)
     return Some(compact_polyline([tail_center, corner, head_center]))
@@ -4464,14 +4469,14 @@ fn line_bezier_points(
   head_cluster_bbox : @geom.Rect?,
   prefer_linear : Bool,
 ) -> Array[@geom.Point] {
-  let (tail_base, head_base) =
+  let endpoint_base =
     if point_dist(tail_center, head_center) <= 0.000001 {
     nudge_endpoints(tail_center, head_center)
   } else {
-    (tail_center, head_center)
+    { tail: tail_center, head: head_center }
   }
-  let tail_seed = tail_base
-  let head_seed = head_base
+  let tail_seed = endpoint_base.tail
+  let head_seed = endpoint_base.head
   if curve_offset > 0.0 {
     let dx = head_seed.x - tail_seed.x
     let dy = head_seed.y - tail_seed.y
