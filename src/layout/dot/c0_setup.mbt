@@ -14,7 +14,6 @@ priv struct OrderingRuntimeContext {
   port_edge_nodes : Map[String, Bool]
   local_cluster_order : Map[String, Int]
   rank_same_constraints : Map[String, Bool]
-  vnode_count : Int
 }
 
 ///|
@@ -114,12 +113,11 @@ fn build_ordering_context(
       port_edge_nodes,
       local_cluster_order,
       rank_same_constraints,
-      vnode_count: vnode_info.vnode_ranks.length(),
     }
   // Graphviz parity: setup probes vnode tail constraints in setup order even
   // when the probe output is only used for parity diagnostics.
   let _ =
-    if runtime_context.vnode_count > 0 {
+    if runtime_context.vnode_info.vnode_ranks.length() > 0 {
       build_vnode_tail_constraints(runtime_context.vnode_info.vnodes_by_rank, edge_tail)
     } else {
       Map::new()
