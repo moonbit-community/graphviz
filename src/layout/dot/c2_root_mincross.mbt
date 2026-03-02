@@ -632,30 +632,6 @@ priv struct RootComponentTraversalPlan {
 }
 
 ///|
-/// Graphviz parity: component projection source bundle keeps root mincross
-/// input snapshots unchanged before per-component filtering.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootComponentProjectionSources {
-  order_rank_keys_for_mincross : Array[Int]
-  order_groups_for_mincross : Map[Int, Array[String]]
-  order_edges_out_mincross : Array[@cgraph.Edge]
-  order_edge_tail_out_mincross : Array[String]
-  order_edge_head_out_mincross : Array[String]
-  order_edge_tail_port_x_mincross : Array[Double]
-  order_edge_head_port_x_mincross : Array[Double]
-  order_edge_tail_port_order_mincross : Array[Double]
-  order_edge_head_port_order_mincross : Array[Double]
-  parents : Map[String, Array[String]]
-  children : Map[String, Array[String]]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  port_order_positions : Map[String, Double]
-  preferred_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_flat_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: component-local neighbor projections are filtered from the
 /// same component membership snapshot before root mincross.
 /// Do not change behavior without updating fixtures/tests.
@@ -709,32 +685,32 @@ fn build_root_component_traversal_plan(
 fn build_root_component_neighbor_maps(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
-  sources : RootComponentProjectionSources,
+  root_inputs : RootRankReorderInputs,
 ) -> RootComponentNeighborMaps {
   {
     component_parents:
       filter_component_neighbor_map(
         component_nodes,
         component_set,
-        sources.parents,
+        root_inputs.parents,
       ),
     component_children:
       filter_component_neighbor_map(
         component_nodes,
         component_set,
-        sources.children,
+        root_inputs.children,
       ),
     component_graphviz_out_neighbors:
       filter_component_neighbor_map(
         component_nodes,
         component_set,
-        sources.graphviz_out_neighbors,
+        root_inputs.graphviz_out_neighbors,
       ),
     component_graphviz_in_neighbors:
       filter_component_neighbor_map(
         component_nodes,
         component_set,
-        sources.graphviz_in_neighbors,
+        root_inputs.graphviz_in_neighbors,
       ),
   }
 }
@@ -746,50 +722,50 @@ fn build_root_component_neighbor_maps(
 fn build_root_component_reorder_inputs(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
-  sources : RootComponentProjectionSources,
+  root_inputs : RootRankReorderInputs,
 ) -> RootComponentReorderInputs {
   let component_groups =
     filter_component_rank_groups(
-      sources.order_rank_keys_for_mincross,
-      sources.order_groups_for_mincross,
+      root_inputs.order_rank_keys_for_mincross,
+      root_inputs.order_groups_for_mincross,
       component_set,
     )
   let component_edges_output =
     collect_mincross_order_edges(
       component_set,
-      sources.order_edges_out_mincross,
-      sources.order_edge_tail_out_mincross,
-      sources.order_edge_head_out_mincross,
-      sources.order_edge_tail_port_x_mincross,
-      sources.order_edge_head_port_x_mincross,
-      sources.order_edge_tail_port_order_mincross,
-      sources.order_edge_head_port_order_mincross,
+      root_inputs.order_edges_out_mincross,
+      root_inputs.order_edge_tail_out_mincross,
+      root_inputs.order_edge_head_out_mincross,
+      root_inputs.order_edge_tail_port_x_mincross,
+      root_inputs.order_edge_head_port_x_mincross,
+      root_inputs.order_edge_tail_port_order_mincross,
+      root_inputs.order_edge_head_port_order_mincross,
     )
   let component_neighbor_maps =
     build_root_component_neighbor_maps(
       component_nodes,
       component_set,
-      sources,
+      root_inputs,
     )
   // Graphviz parity: component-local node-position hints are passed to
   // mincross only for nodes belonging to the active connected component.
   let component_port_order_positions =
-    filter_component_positions(component_set, sources.port_order_positions)
+    filter_component_positions(component_set, root_inputs.port_order_positions)
   let component_preferred_positions =
-    filter_component_positions(component_set, sources.preferred_positions)
+    filter_component_positions(component_set, root_inputs.preferred_positions)
   // Graphviz parity: component-local port-order contributor lists drop
   // endpoints outside the active connected component before mincross.
   let component_port_order_contrib =
     filter_component_port_order_contrib(
       component_set,
-      sources.port_order_contrib,
+      root_inputs.port_order_contrib,
     )
   // Graphviz parity: component-local flat constraints are forwarded to
   // mincross only when both endpoints belong to the active component.
   let component_flat_constraints =
     filter_component_flat_constraints(
       component_set,
-      sources.order_flat_constraints,
+      root_inputs.order_flat_constraints,
     )
   {
     component_groups,
@@ -823,7 +799,7 @@ fn build_root_component_reorder_inputs(
 /// Do not change behavior without updating fixtures/tests.
 fn run_componentwise_root_rank_reorder(
   components : Array[Array[String]],
-  component_projection_sources : RootComponentProjectionSources,
+  root_inputs : RootRankReorderInputs,
   component_reorder_config : RootComponentReorderConfig,
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
@@ -836,7 +812,7 @@ fn run_componentwise_root_rank_reorder(
       build_root_component_reorder_inputs(
         component_nodes,
         component_set,
-        component_projection_sources,
+        root_inputs,
       )
     let ordered_component =
       run_root_component_rank_reorder(
@@ -916,36 +892,6 @@ fn build_single_root_rank_reorder_call_inputs(
 }
 
 ///|
-/// Graphviz parity: component projection sources for multi-component root
-/// reorder keep one-to-one snapshots of root mincross edges and neighbors.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_component_projection_sources(
-  inputs : RootRankReorderInputs,
-) -> RootComponentProjectionSources {
-  {
-    order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
-    order_groups_for_mincross: inputs.order_groups_for_mincross,
-    order_edges_out_mincross: inputs.order_edges_out_mincross,
-    order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      inputs.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      inputs.order_edge_head_port_order_mincross,
-    parents: inputs.parents,
-    children: inputs.children,
-    graphviz_out_neighbors: inputs.graphviz_out_neighbors,
-    graphviz_in_neighbors: inputs.graphviz_in_neighbors,
-    port_order_positions: inputs.port_order_positions,
-    preferred_positions: inputs.preferred_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_flat_constraints: inputs.order_flat_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: component reorder config keeps rank/cluster ordering
 /// metadata identical to the single-component root reorder dispatch.
 /// Do not change behavior without updating fixtures/tests.
@@ -986,8 +932,6 @@ fn run_root_rank_reorder(
       runtime.coalesce_parallel,
     )
   }
-  let component_projection_sources =
-    build_root_component_projection_sources(inputs)
   let component_reorder_config =
     build_root_component_reorder_config(
       inputs,
@@ -996,7 +940,7 @@ fn run_root_rank_reorder(
     )
   run_componentwise_root_rank_reorder(
     runtime.components,
-    component_projection_sources,
+    inputs,
     component_reorder_config,
   )
 }
