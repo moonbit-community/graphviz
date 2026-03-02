@@ -3,68 +3,9 @@
 /// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
-priv struct PortSamplingInputs {
-  port_offsets : Map[String, Map[String, RecordPort]]
-  tail_names : Array[String]
-  head_names : Array[String]
-  tail_ports : Array[@cgraph.Port?]
-  head_ports : Array[@cgraph.Port?]
-}
-
-///|
 priv struct EdgePortSamples {
   tail_values : Array[Double]
   head_values : Array[Double]
-}
-
-///|
-/// Graphviz parity: port-sampling inputs reuse one endpoint remap + per-node
-/// port offset table so x-offset and order passes share identical edge context.
-/// Do not change behavior without updating fixtures/tests.
-fn build_port_sampling_inputs(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
-) -> PortSamplingInputs {
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
-  let tail_names : Array[String] = []
-  let head_names : Array[String] = []
-  let tail_ports : Array[@cgraph.Port?] = []
-  let head_ports : Array[@cgraph.Port?] = []
-  let mut idx = 0
-  while idx < edges.length() {
-    let edge = edges[idx]
-    let tail_name =
-      if idx < edge_tail.length() { edge_tail[idx] } else { edge.tail().name() }
-    let head_name =
-      if idx < edge_head.length() { edge_head[idx] } else { edge.head().name() }
-    let orig_tail = edge.tail().name()
-    let orig_head = edge.head().name()
-    let tail_port =
-      if tail_name == orig_tail {
-        edge.tail_port()
-      } else if tail_name == orig_head {
-        edge.head_port()
-      } else {
-        edge.tail_port()
-      }
-    let head_port =
-      if head_name == orig_head {
-        edge.head_port()
-      } else if head_name == orig_tail {
-        edge.tail_port()
-      } else {
-        edge.head_port()
-      }
-    tail_names.push(tail_name)
-    head_names.push(head_name)
-    tail_ports.push(tail_port)
-    head_ports.push(head_port)
-    idx = idx + 1
-  }
-  { port_offsets, tail_names, head_names, tail_ports, head_ports }
 }
 
 ///|
@@ -87,13 +28,50 @@ fn compute_edge_port_samples(
   for node in nodes {
     nodes_by_name[node.name()] = node
   }
-  let sampling_inputs =
-    build_port_sampling_inputs(nodes, edges, edge_tail, edge_head, sizes)
-  let port_offsets = sampling_inputs.port_offsets
-  let tail_names = sampling_inputs.tail_names
-  let head_names = sampling_inputs.head_names
-  let tail_ports = sampling_inputs.tail_ports
-  let head_ports = sampling_inputs.head_ports
+  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  let tail_names : Array[String] = []
+  let head_names : Array[String] = []
+  let tail_ports : Array[@cgraph.Port?] = []
+  let head_ports : Array[@cgraph.Port?] = []
+  let mut endpoint_idx = 0
+  while endpoint_idx < edges.length() {
+    let edge = edges[endpoint_idx]
+    let tail_name =
+      if endpoint_idx < edge_tail.length() {
+        edge_tail[endpoint_idx]
+      } else {
+        edge.tail().name()
+      }
+    let head_name =
+      if endpoint_idx < edge_head.length() {
+        edge_head[endpoint_idx]
+      } else {
+        edge.head().name()
+      }
+    let orig_tail = edge.tail().name()
+    let orig_head = edge.head().name()
+    let tail_port =
+      if tail_name == orig_tail {
+        edge.tail_port()
+      } else if tail_name == orig_head {
+        edge.head_port()
+      } else {
+        edge.tail_port()
+      }
+    let head_port =
+      if head_name == orig_head {
+        edge.head_port()
+      } else if head_name == orig_tail {
+        edge.tail_port()
+      } else {
+        edge.head_port()
+      }
+    tail_names.push(tail_name)
+    head_names.push(head_name)
+    tail_ports.push(tail_port)
+    head_ports.push(head_port)
+    endpoint_idx = endpoint_idx + 1
+  }
   let tail_samples : Array[Double] = []
   let head_samples : Array[Double] = []
   let mut idx = 0
