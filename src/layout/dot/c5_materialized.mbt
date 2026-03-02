@@ -315,7 +315,7 @@ fn build_cluster_tail_order(
     cluster_first_seen[cluster] = idx
   }
   let (cluster_order, cluster_order_pos) =
-    build_remincross_cluster_order(
+    build_remincross_order(
       cluster_order_seen,
       cluster_first_seen,
       cluster_order_index,
@@ -396,7 +396,7 @@ fn cluster_key_for_tail_name(
 /// clusters by descending cluster_order_index, then by first-seen sequence.
 /// Root cluster always remains last when present.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_order(
+fn build_remincross_order(
   cluster_order_seen : Array[String],
   cluster_first_seen : Map[String, Int],
   cluster_order_index : Map[String, Int],
@@ -542,7 +542,7 @@ fn build_nonroot_tail_names(
     }
     let rank_ordered =
       if rank == min_rank && rank_ordered_base.length() > 1 && all_input_like {
-        rebucket_input_like_rank_order(
+        rebucket_input_like_order(
           cluster,
           rank_ordered_base,
           heads_by_tail,
@@ -603,7 +603,7 @@ fn classify_input_like_bucket(
 /// Graphviz parity: minimum-rank all-input-like clustered rank blocks are
 /// rebucketed by outgoing cross-cluster direction and out-degree priority.
 /// Do not change behavior without updating fixtures/tests.
-fn rebucket_input_like_rank_order(
+fn rebucket_input_like_order(
   cluster : String,
   rank_ordered : Array[String],
   heads_by_tail : Map[String, Array[String]],
