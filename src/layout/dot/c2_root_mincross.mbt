@@ -31,6 +31,26 @@ priv struct FlatConstraintAdjacency {
 }
 
 ///|
+/// Graphviz parity: component traversal starts keep sorted root order and
+/// preferred non-vnode starts for the first DFS pass.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ComponentTraversalStarts {
+  start_nodes : Array[String]
+  traversal_starts : Array[String]
+}
+
+///|
+/// Graphviz parity: component traversal adjacency combines graphviz in/out
+/// neighbors with flat-constraint links for one node-set projection.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ComponentTraversalAdjacency {
+  out_neighbors : Map[String, Array[String]]
+  in_neighbors : Map[String, Array[String]]
+  flat_out : Map[String, Array[String]]
+  flat_in : Map[String, Array[String]]
+}
+
+///|
 /// Graphviz parity: enabled flat constraints add traversal links only when
 /// both endpoints exist in the current root node membership projection.
 fn build_flat_constraint_adjacency(
@@ -72,22 +92,13 @@ fn build_flat_constraint_adjacency(
 }
 
 ///|
-/// Graphviz parity: non-cluster mincross traverses connected components in
-/// GD_nlist order (real nodes first), then runs mincross on each component.
+/// Graphviz parity: non-cluster traversal starts are sorted by root node order,
+/// then biased to real nodes before edge-vnode starts.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_noncluster_components(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
+fn build_component_traversal_starts(
+  order_nodes : Array[String],
   order_node_order : Map[String, Int],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  flat_constraints : Map[String, Bool],
-) -> Array[Array[String]] {
-  let order_nodes = build_order_nodes_from_groups(groups, rank_keys)
-  if order_nodes.length() == 0 {
-    return []
-  }
-  let node_set = build_node_membership_set(order_nodes)
+) -> ComponentTraversalStarts {
   let fallback_order : Map[String, Int] = Map::new()
   for i, name in order_nodes {
     fallback_order[name] = i
@@ -124,7 +135,20 @@ fn collect_noncluster_components(
   }
   let traversal_starts =
     if preferred_start_nodes.length() > 0 { preferred_start_nodes } else { start_nodes }
+  { start_nodes, traversal_starts }
+}
 
+///|
+/// Graphviz parity: non-cluster component traversal uses graphviz in/out
+/// neighbors plus flat-constraint adjacency over the active node-set.
+/// Do not change behavior without updating fixtures/tests.
+fn build_component_traversal_adjacency(
+  order_nodes : Array[String],
+  node_set : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  flat_constraints : Map[String, Bool],
+) -> ComponentTraversalAdjacency {
   let out_neighbors =
     filter_component_neighbor_map(
       order_nodes,
@@ -143,9 +167,24 @@ fn collect_noncluster_components(
       node_set,
       flat_constraints,
     )
-  let flat_out = flat_adjacency.flat_out
-  let flat_in = flat_adjacency.flat_in
+  {
+    out_neighbors,
+    in_neighbors,
+    flat_out: flat_adjacency.flat_out,
+    flat_in: flat_adjacency.flat_in,
+  }
+}
 
+///|
+/// Graphviz parity: component DFS replays preferred starts first, then full
+/// starts, preserving visit-order within each connected component.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_components_from_traversal(
+  order_nodes : Array[String],
+  node_set : Map[String, Bool],
+  traversal_starts : ComponentTraversalStarts,
+  adjacency : ComponentTraversalAdjacency,
+) -> Array[Array[String]] {
   let visited : Map[String, Bool] = Map::new()
   for name in order_nodes {
     visited[name] = false
@@ -179,10 +218,10 @@ fn collect_noncluster_components(
         }
         visited[current] = true
         component.push(current)
-        let fin = flat_in.get(current).unwrap_or_default()
-        let fout = flat_out.get(current).unwrap_or_default()
-        let inn = in_neighbors.get(current).unwrap_or_default()
-        let out = out_neighbors.get(current).unwrap_or_default()
+        let fin = adjacency.flat_in.get(current).unwrap_or_default()
+        let fout = adjacency.flat_out.get(current).unwrap_or_default()
+        let inn = adjacency.in_neighbors.get(current).unwrap_or_default()
+        let out = adjacency.out_neighbors.get(current).unwrap_or_default()
         push_neighbors(fin)
         push_neighbors(fout)
         push_neighbors(inn)
@@ -193,13 +232,51 @@ fn collect_noncluster_components(
       }
     }
   }
-  for start in traversal_starts {
+  for start in traversal_starts.traversal_starts {
     visit_start(start)
   }
-  for start in start_nodes {
+  for start in traversal_starts.start_nodes {
     visit_start(start)
   }
   components
+}
+
+///|
+/// Graphviz parity: non-cluster mincross traverses connected components in
+/// GD_nlist order (real nodes first), then runs mincross on each component.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_noncluster_components(
+  rank_keys : Array[Int],
+  groups : Map[Int, Array[String]],
+  order_node_order : Map[String, Int],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  flat_constraints : Map[String, Bool],
+) -> Array[Array[String]] {
+  let order_nodes = build_order_nodes_from_groups(groups, rank_keys)
+  if order_nodes.length() == 0 {
+    return []
+  }
+  let node_set = build_node_membership_set(order_nodes)
+  let traversal_starts =
+    build_component_traversal_starts(
+      order_nodes,
+      order_node_order,
+    )
+  let adjacency =
+    build_component_traversal_adjacency(
+      order_nodes,
+      node_set,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      flat_constraints,
+    )
+  collect_components_from_traversal(
+    order_nodes,
+    node_set,
+    traversal_starts,
+    adjacency,
+  )
 }
 
 ///|
