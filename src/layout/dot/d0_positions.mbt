@@ -340,7 +340,7 @@ fn build_x_groups_after_reorder(
       graphviz_flip,
       x_seed.x_groups,
     )
-  maybe_apply_xpos_transpose_cleanup(
+  maybe_apply_xpos_transpose(
     xpos_reorder_enabled,
     use_vnodes_for_xpos,
     allow_xpos_reorder,
