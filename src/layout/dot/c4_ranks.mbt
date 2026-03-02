@@ -73,23 +73,21 @@ fn run_root_and_cluster_ranks(
       graphviz_in_neighbors: materialized.graphviz_in_neighbors,
       graphviz_flip: reorder_setup.graphviz_flip,
     }
-  let root_mincross_reorder_output =
+  let (order_groups_for_mincross, root_ordered_groups) =
     run_root_mincross_reorder(root_mincross_reorder_inputs)
-  let order_groups_for_mincross =
-    root_mincross_reorder_output.order_groups_for_mincross
   let ordered =
     if !reorder_setup.graphviz_flip {
-      root_mincross_reorder_output.ordered
+      root_ordered_groups
     } else {
       match root_mincross_groups_override.val {
         Some(override_groups) =>
           apply_root_groups_override(
-            root_mincross_reorder_output.ordered,
+            root_ordered_groups,
             override_groups,
             dispatch_context.cluster_meta.cluster_keys,
             reorder_setup.graphviz_flip,
           )
-        None => root_mincross_reorder_output.ordered
+        None => root_ordered_groups
       }
     }
   // Graphviz parity: clustered order pass runs cluster-local build_ranks on

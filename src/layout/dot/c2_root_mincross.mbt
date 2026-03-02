@@ -769,14 +769,6 @@ fn build_root_mincross_edge_data(
 }
 
 ///|
-/// Graphviz parity: root ReMincross output keeps seeded root-mincross input
-/// groups and merged ordered groups bundled for downstream clustered phases.
-priv struct RootMincrossReorderOutput {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
-}
-
-///|
 /// Graphviz parity: root ReMincross input bundle keeps seeded groups, edge
 /// snapshots, cluster metadata, and rank-order settings unchanged for replay.
 /// Do not change behavior without updating fixtures/tests.
@@ -1001,7 +993,7 @@ fn finalize_root_mincross_ordered_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
-) -> RootMincrossReorderOutput {
+) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let order_groups_for_mincross =
     resolve_root_mincross_input_groups(inputs)
   let (ordered_mincross, mincross_nodes) =
@@ -1012,5 +1004,5 @@ fn run_root_mincross_reorder(
       ordered_mincross,
       mincross_nodes,
     )
-  { order_groups_for_mincross, ordered }
+  (order_groups_for_mincross, ordered)
 }
