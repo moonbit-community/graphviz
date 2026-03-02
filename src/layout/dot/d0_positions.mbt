@@ -443,7 +443,7 @@ fn build_xpos_computation_input(
 /// Graphviz parity: x-position stage must use identical xpos input assembly,
 /// solver invocation, and trace points as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_x_positions_for_layout(
+fn compute_layout_x_positions(
   graph : @cgraph.Graph,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -842,7 +842,7 @@ fn build_projection_result(
       flat_label_nodes,
     )
   let x_positions =
-    compute_x_positions_for_layout(
+    compute_layout_x_positions(
       graph,
       prep,
       rank_data,
