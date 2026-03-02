@@ -629,7 +629,7 @@ fn flat_limits(
 }
 
 ///|
-fn vnode_positions_from_endpoints(
+fn vnode_positions_from_edges(
   edges : Array[@cgraph.Edge],
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],

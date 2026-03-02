@@ -185,7 +185,7 @@ fn build_vnode_positions(
     }
     positions
   } else {
-    vnode_positions_from_endpoints(
+    vnode_positions_from_edges(
       prep.edges,
       rank_data.ranks,
       ordering.vnode_info.vnode_ranks,
