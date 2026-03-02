@@ -126,13 +126,19 @@ priv struct XposClusteredReorderEdgesData {
 /// for x/y solve assembly and final result wiring.
 
 ///|
+priv struct ClusterBoundaryXOutput {
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+}
+
+///|
 /// Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_boundary_x(
   graph : @cgraph.Graph,
   cluster_meta : ClusterMetadata,
   x_positions : Map[String, Double],
-) -> (Map[String, Double], Map[String, Double]) {
+) -> ClusterBoundaryXOutput {
   let cluster_ln_x : Map[String, Double] = Map::new()
   let cluster_rn_x : Map[String, Double] = Map::new()
   if cluster_meta.has_clusters {
@@ -155,7 +161,7 @@ fn build_cluster_boundary_x(
       }
     }
   }
-  (cluster_ln_x, cluster_rn_x)
+  { cluster_ln_x, cluster_rn_x }
 }
 
 ///|
@@ -595,6 +601,15 @@ fn build_y_positions_from_groups(
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
+priv struct YPositionsWithFlipOutput {
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
+
+///|
+/// Graphviz parity: y-position stage runs fill_rank_positions first, then
+/// optional flip-cluster height correction (cluster.c path) and y rebuild.
+/// Do not change behavior without updating fixtures/tests.
 fn build_y_positions_with_flip(
   graph : @cgraph.Graph,
   rankdir : RankDir,
@@ -607,7 +622,7 @@ fn build_y_positions_with_flip(
   ranksep_pt : Double,
   cluster_bbox_heights : Map[String, (Double, Double)],
   y_all_ranks : Array[Int],
-) -> (Map[String, Double], Map[Int, Double]) {
+) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
@@ -639,7 +654,7 @@ fn build_y_positions_with_flip(
       y_positions = build_y_positions_from_groups(rank_keys, groups, rank_y)
     }
   }
-  (y_positions, rank_y)
+  { y_positions, rank_y }
 }
 
 ///|
@@ -679,7 +694,7 @@ fn build_y_position_data(
   )
   let y_all_ranks =
     build_y_all_ranks_with_flat(rank_data.rank_keys, flat_label_nodes)
-  let (y_positions, rank_y) =
+  let y_position_output =
     build_y_positions_with_flip(
       graph,
       prep.rankdir,
@@ -693,6 +708,8 @@ fn build_y_position_data(
       cluster_bbox_heights,
       y_all_ranks,
     )
+  let y_positions = y_position_output.y_positions
+  let rank_y = y_position_output.rank_y
   { y_positions, rank_y, cluster_bbox_heights }
 }
 
@@ -735,7 +752,7 @@ fn build_position_output_maps(
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
-  let (cluster_ln_x, cluster_rn_x) =
+  let cluster_boundary_x =
     build_cluster_boundary_x(graph, cluster_meta, x_positions)
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
@@ -772,8 +789,8 @@ fn build_position_output_maps(
   {
     positions,
     vnode_positions,
-    cluster_ln_x,
-    cluster_rn_x,
+    cluster_ln_x: cluster_boundary_x.cluster_ln_x,
+    cluster_rn_x: cluster_boundary_x.cluster_rn_x,
   }
 }
 
