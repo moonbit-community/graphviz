@@ -117,51 +117,15 @@ priv struct ClusteredReMincrossMaterializedInputs {
 }
 
 ///|
-/// Graphviz parity: ReMincross order-graph context keeps rematerialized ranks,
-/// node membership, graph handles, and cluster-order index in one snapshot.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossOrderGraphContext {
-  rem_ranks : Map[String, Int]
-  rem_nodes : Array[String]
-  rem_graph : @cgraph.Graph
-  rem_node_map : Map[String, @cgraph.Node]
-  cluster_order_index : Map[String, Int]
-}
-
-///|
-/// Graphviz parity: ReMincross order-graph context is built from current rank
-/// groups before rematerialized edge/array rebuild.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_order_graph_context(
-  dispatch_context : ReMincrossDispatchContext,
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-) -> ReMincrossOrderGraphContext {
-  let rem_ranks = build_node_ranks(rem_groups)
-  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
-  let rem_graph_output =
-    build_order_graph_and_nodes("order_remincross", rem_nodes)
-  // Graphviz parity: ReMincross uses real intercluster edges
-  // (no cluster skeleton mapping).
-  let cluster_order_index =
-    build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
-  {
-    rem_ranks,
-    rem_nodes,
-    rem_graph: rem_graph_output.order_graph,
-    rem_node_map: rem_graph_output.order_node_map,
-    cluster_order_index,
-  }
-}
-
-///|
 /// Graphviz parity: ReMincross rematerialized arrays are rebuilt from one
 /// order-graph context snapshot plus current dispatch payload.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_materialized_arrays(
   dispatch_context : ReMincrossDispatchContext,
   rem_groups : Map[Int, Array[String]],
-  context : ReMincrossOrderGraphContext,
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedEdgeArrays {
   let materialized_edges =
     build_materialized_edges(
@@ -180,7 +144,7 @@ fn build_remincross_materialized_arrays(
         cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
         order_with_clusters: dispatch_context.order_with_clusters,
         edges_by_tail: dispatch_context.edges_by_tail,
-        cluster_order_index: context.cluster_order_index,
+        cluster_order_index,
       },
     )
   build_materialized_arrays(
@@ -189,11 +153,11 @@ fn build_remincross_materialized_arrays(
       rem_vnode_creation: materialized_edges.vnode_creation,
       rem_edge_creation: materialized_edges.edge_creation,
       rem_order_edges_by_tail: materialized_edges.order_edges_by_tail,
-      rem_graph: context.rem_graph,
-      rem_node_map: context.rem_node_map,
+      rem_graph,
+      rem_node_map,
       rem_groups,
       cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      cluster_order_index: context.cluster_order_index,
+      cluster_order_index,
     },
   )
 }
@@ -207,17 +171,21 @@ fn build_remincross_inputs(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> ClusteredReMincrossMaterializedInputs {
-  let context =
-    build_remincross_order_graph_context(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-    )
+  let rem_ranks = build_node_ranks(rem_groups)
+  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+  let rem_graph_output =
+    build_order_graph_and_nodes("order_remincross", rem_nodes)
+  // Graphviz parity: ReMincross uses real intercluster edges
+  // (no cluster skeleton mapping).
+  let cluster_order_index =
+    build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
   let materialized_arrays =
     build_remincross_materialized_arrays(
       dispatch_context,
       rem_groups,
-      context,
+      rem_graph_output.order_graph,
+      rem_graph_output.order_node_map,
+      cluster_order_index,
     )
   let rem_cluster_keys =
     build_remincross_cluster_keys(dispatch_context)
@@ -230,8 +198,8 @@ fn build_remincross_inputs(
   let rem_flat_constraints =
     build_remincross_flat_constraints(dispatch_context)
   {
-    rem_nodes: context.rem_nodes,
-    rem_ranks: context.rem_ranks,
+    rem_nodes,
+    rem_ranks,
     rem_node_order: materialized_arrays.node_order,
     rem_edges_out: materialized_arrays.edges_out,
     rem_edge_tail_out: materialized_arrays.edge_tail_out,
