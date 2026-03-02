@@ -1223,7 +1223,7 @@ fn apply_xlabels(
               expand_bbox_for_label_pos(
                 bbox,
                 Some(pos),
-                Some((dims.width, dims.height)),
+                Some({ width: dims.width, height: dims.height }),
               )
           }
           None => ()
@@ -1242,7 +1242,7 @@ fn apply_xlabels(
               expand_bbox_for_label_pos(
                 bbox,
                 Some(pos),
-                Some((dims.width, dims.height)),
+                Some({ width: dims.width, height: dims.height }),
               )
           }
           None => ()
@@ -1256,7 +1256,11 @@ fn apply_xlabels(
     }
     let center =
       @edge_spline.point(label.pos.x + label.width / 2.0, label.pos.y + label.height / 2.0)
-    bbox = expand_bbox_for_label_pos(bbox, Some(center), Some((label.width, label.height)))
+    bbox = expand_bbox_for_label_pos(
+      bbox,
+      Some(center),
+      Some({ width: label.width, height: label.height }),
+    )
     match label.target {
       XLabelTarget::Node(name) => node_updates[name] = center
       XLabelTarget::EdgeMid(key) => edge_mid_updates[key] = center

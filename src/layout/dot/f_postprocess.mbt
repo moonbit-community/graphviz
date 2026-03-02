@@ -21,6 +21,12 @@ priv struct ClusterLabelPlacementInfo {
 }
 
 ///|
+priv struct LabelExtent {
+  width : Double
+  height : Double
+}
+
+///|
 fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
   let mut count = 0
   for subgraph in graph.subgraphs() {
@@ -35,12 +41,12 @@ fn count_cluster_subgraphs(graph : @cgraph.Graph) -> Int {
 fn expand_bbox_for_label_pos(
   bbox : @geom.Rect,
   pos : @geom.Point?,
-  metrics : (Double, Double)?,
+  metrics : LabelExtent?,
 ) -> @geom.Rect {
   match (pos, metrics) {
-    (Some(center), Some((width, height))) => {
-      let half_w = width / 2.0
-      let half_h = height / 2.0
+    (Some(center), Some(extent)) => {
+      let half_w = extent.width / 2.0
+      let half_h = extent.height / 2.0
       let min_x = center.x - half_w
       let max_x = center.x + half_w
       let min_y = center.y - half_h
@@ -75,12 +81,15 @@ fn expand_bbox_for_edge_labels(
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   let adjust_metrics = (metrics : EdgeLabelMetrics?) => {
     match metrics {
-      Some(value) =>
-        if flip {
-          Some((value.height, value.width))
-        } else {
-          Some((value.width, value.height))
-        }
+      Some(value) => {
+        let extent : LabelExtent =
+          if flip {
+            { width: value.height, height: value.width }
+          } else {
+            { width: value.width, height: value.height }
+          }
+        Some(extent)
+      }
       None => None
     }
   }
