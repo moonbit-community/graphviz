@@ -3968,11 +3968,19 @@ fn port_cmp(
 }
 
 ///|
+priv struct EdgePortCmpInfo {
+  tail_defined : Bool
+  tail_pos : @geom.Point
+  head_defined : Bool
+  head_pos : @geom.Point
+}
+
+///|
 fn edge_port_cmp_info(
   base : EdgeRouteBase,
   edge_type : Int,
   order_index : Map[String, Int],
-) -> (Bool, @geom.Point, Bool, @geom.Point) {
+) -> EdgePortCmpInfo {
   let tail_anchor = if base.swap_ends { base.head_anchor } else { base.tail_anchor }
   let head_anchor = if base.swap_ends { base.tail_anchor } else { base.head_anchor }
   let tail_pos = if base.swap_ends { base.head_pos } else { base.tail_pos }
@@ -3999,10 +4007,20 @@ fn edge_port_cmp_info(
       None => 0
     }
     if tail_order > head_order {
-      return (head_defined, head_rel, tail_defined, tail_rel)
+      return {
+        tail_defined: head_defined,
+        tail_pos: head_rel,
+        head_defined: tail_defined,
+        head_pos: tail_rel,
+      }
     }
   }
-  (tail_defined, tail_rel, head_defined, head_rel)
+  {
+    tail_defined,
+    tail_pos: tail_rel,
+    head_defined,
+    head_pos: head_rel,
+  }
 }
 
 ///|
@@ -4055,15 +4073,25 @@ fn route_edge_cmp(
   if id_cmp != 0 {
     return id_cmp
   }
-  let (tail_defined_a, tail_pos_a, head_defined_a, head_pos_a) =
-    edge_port_cmp_info(base_a, type_a, order_index)
-  let (tail_defined_b, tail_pos_b, head_defined_b, head_pos_b) =
-    edge_port_cmp_info(base_b, type_b, order_index)
-  let tail_cmp = port_cmp(tail_defined_a, tail_pos_a, tail_defined_b, tail_pos_b)
+  let port_info_a = edge_port_cmp_info(base_a, type_a, order_index)
+  let port_info_b = edge_port_cmp_info(base_b, type_b, order_index)
+  let tail_cmp =
+    port_cmp(
+      port_info_a.tail_defined,
+      port_info_a.tail_pos,
+      port_info_b.tail_defined,
+      port_info_b.tail_pos,
+    )
   if tail_cmp != 0 {
     return tail_cmp
   }
-  let head_cmp = port_cmp(head_defined_a, head_pos_a, head_defined_b, head_pos_b)
+  let head_cmp =
+    port_cmp(
+      port_info_a.head_defined,
+      port_info_a.head_pos,
+      port_info_b.head_defined,
+      port_info_b.head_pos,
+    )
   if head_cmp != 0 {
     return head_cmp
   }
