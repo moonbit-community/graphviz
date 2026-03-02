@@ -308,43 +308,16 @@ fn run_clustered_root_phase(
 }
 
 ///|
-/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
-/// boundaries unchanged while delegating each phase to base helpers.
+/// Graphviz parity: clustered finalize dispatch context is assembled from the
+/// same clustered dispatch payload before cluster-rank/finalize phases.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered(
+fn build_cluster_finalize_dispatch_context(
   dispatch_context : ClusteredDispatchContext,
-) -> OrderingDispatchOutput {
+) -> ClusterFinalizeDispatchContext {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
-  let pre_root_stage =
-    build_clustered_pre_root(
-      reorder_setup.ordering_groups_base,
-      reorder_setup.base_order_index,
-      reorder_setup.order_with_vnodes,
-      reorder_setup.order_with_clusters,
-      dispatch_context.cluster_meta,
-      runtime_context.vnode_info,
-      reorder_setup.vnode_order_keys_for_ordering,
-      dispatch_context.order_sizes,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      dispatch_context.node_order,
-      runtime_context.real_nodes,
-      runtime_context.port_edge_nodes,
-      class2_data.order_edges_by_tail,
-      class2_data.order_edges_by_tail_unmapped,
-      class2_data.edge_creation_order,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.nodes,
-    )
-  let root_cluster_stage =
-    run_clustered_root_phase(
-      dispatch_context,
-      pre_root_stage,
-    )
-  let finalize_dispatch_context : ClusterFinalizeDispatchContext = {
+  {
     order_with_clusters: reorder_setup.order_with_clusters,
     order_with_vnodes: reorder_setup.order_with_vnodes,
     graphviz_flip: reorder_setup.graphviz_flip,
@@ -376,9 +349,18 @@ fn run_clustered(
     order_sizes: dispatch_context.order_sizes,
     rank_same_constraints: runtime_context.rank_same_constraints,
   }
+}
+
+///|
+/// Graphviz parity: clustered finalize phase first applies root cluster-rank
+/// ordering, then runs final clustered ReMincross with unchanged call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_finalize_phase(
+  finalize_dispatch_context : ClusterFinalizeDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : OrderRootClusterData,
+) -> OrderingDispatchOutput {
   let reorder_context = pre_root_stage.reorder_context
-  // Graphviz parity: clustered cleanup applies root cluster-rank ordering,
-  // then runs final clustered ReMincross via typed dispatch context.
   let cluster_rank_order =
     build_cluster_rank_order(
       finalize_dispatch_context.order_with_clusters,
@@ -439,9 +421,57 @@ fn run_clustered(
       reorder_context.order_rank_keys,
       root_cluster_stage.ordered,
     )
-  remincross_root_tail_order_override_snapshot.val = None
   {
     ordered_groups: finalize_output.ordered_groups,
     ordered_with_vnodes: finalize_output.ordered_with_vnodes,
   }
+}
+
+///|
+/// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
+/// boundaries unchanged while delegating each phase to base helpers.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered(
+  dispatch_context : ClusteredDispatchContext,
+) -> OrderingDispatchOutput {
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let runtime_context = dispatch_context.runtime_context
+  let pre_root_stage =
+    build_clustered_pre_root(
+      reorder_setup.ordering_groups_base,
+      reorder_setup.base_order_index,
+      reorder_setup.order_with_vnodes,
+      reorder_setup.order_with_clusters,
+      dispatch_context.cluster_meta,
+      runtime_context.vnode_info,
+      reorder_setup.vnode_order_keys_for_ordering,
+      dispatch_context.order_sizes,
+      class2_data.nlist_order,
+      reorder_setup.gdnlist_order,
+      dispatch_context.node_order,
+      runtime_context.real_nodes,
+      runtime_context.port_edge_nodes,
+      class2_data.order_edges_by_tail,
+      class2_data.order_edges_by_tail_unmapped,
+      class2_data.edge_creation_order,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.nodes,
+    )
+  let root_cluster_stage =
+    run_clustered_root_phase(
+      dispatch_context,
+      pre_root_stage,
+    )
+  let finalize_dispatch_context =
+    build_cluster_finalize_dispatch_context(dispatch_context)
+  let output =
+    run_clustered_finalize_phase(
+      finalize_dispatch_context,
+      pre_root_stage,
+      root_cluster_stage,
+    )
+  remincross_root_tail_order_override_snapshot.val = None
+  output
 }
