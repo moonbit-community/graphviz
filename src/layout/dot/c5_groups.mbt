@@ -135,33 +135,37 @@ fn build_remincross_inputs(
     build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
   let materialized_edges =
     build_materialized_edges(
-      dispatch_context.creation_order,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.edge_tail_port_x,
-      dispatch_context.edge_head_port_x,
-      dispatch_context.edge_tail_port_order,
-      dispatch_context.edge_head_port_order,
-      dispatch_context.ranks,
-      dispatch_context.vnode_info.edge_vnodes,
-      dispatch_context.order_with_vnodes,
-      dispatch_context.cluster_meta.intercluster_keys,
-      dispatch_context.order_with_clusters,
-      dispatch_context.edges_by_tail,
-      cluster_order_index,
+      {
+        creation_order: dispatch_context.creation_order,
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        edge_tail_port_x: dispatch_context.edge_tail_port_x,
+        edge_head_port_x: dispatch_context.edge_head_port_x,
+        edge_tail_port_order: dispatch_context.edge_tail_port_order,
+        edge_head_port_order: dispatch_context.edge_head_port_order,
+        ranks: dispatch_context.ranks,
+        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+        order_with_vnodes: dispatch_context.order_with_vnodes,
+        cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        order_with_clusters: dispatch_context.order_with_clusters,
+        edges_by_tail: dispatch_context.edges_by_tail,
+        cluster_order_index,
+      },
     )
   let materialized_arrays =
     build_materialized_arrays(
-      dispatch_context.creation_order,
-      materialized_edges.vnode_creation,
-      materialized_edges.edge_creation,
-      materialized_edges.order_edges_by_tail,
-      rem_graph,
-      rem_node_map,
-      rem_groups,
-      dispatch_context.cluster_meta.intercluster_keys,
-      cluster_order_index,
+      {
+        creation_order: dispatch_context.creation_order,
+        rem_vnode_creation: materialized_edges.vnode_creation,
+        rem_edge_creation: materialized_edges.edge_creation,
+        rem_order_edges_by_tail: materialized_edges.order_edges_by_tail,
+        rem_graph,
+        rem_node_map,
+        rem_groups,
+        cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        cluster_order_index,
+      },
     )
   let pass_inputs =
     build_remincross_pass_inputs(
