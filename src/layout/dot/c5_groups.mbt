@@ -173,7 +173,7 @@ fn build_remincross_inputs(
     rem_sizes,
     rem_flat_constraints,
   ) =
-    build_remincross_reorder_inputs(
+    build_remincross_pass_inputs(
       dispatch_context.graph,
       dispatch_context.edges,
       dispatch_context.edge_tail,
@@ -306,7 +306,7 @@ fn remincross_edge_endpoints_at(
 ///|
 /// Graphviz parity: clustered ReMincross cluster-key reads treat missing keys
 /// as root-empty values for intercluster/internal edge classification.
-fn remincross_cluster_key_or_empty(
+fn remincross_cluster_key(
   cluster_keys : Map[String, String],
   name : String,
 ) -> String {
@@ -329,7 +329,7 @@ fn clone_remincross_cluster_keys(
 ///|
 /// Graphviz parity: clustered ReMincross vnode lookup is keyed by edge vnode
 /// key and returns empty for edges without vnode expansion.
-fn remincross_edge_vnodes_or_empty(
+fn remincross_edge_vnodes(
   edge_vnodes : Map[String, Array[String]],
   edge : @cgraph.Edge,
 ) -> Array[String] {
@@ -339,7 +339,7 @@ fn remincross_edge_vnodes_or_empty(
 ///|
 /// Graphviz parity: mark_lowclusters assigns ReMincross edge-vnodes to the
 /// lowest common ancestor cluster (or root cluster when LCA is empty).
-fn assign_remincross_vnode_clusters(
+fn assign_remincross_clusters(
   rem_cluster_keys : Map[String, String],
   root_cluster : String,
   edges : Array[@cgraph.Edge],
@@ -350,14 +350,14 @@ fn assign_remincross_vnode_clusters(
   cluster_parents : Map[String, String?],
 ) -> Unit {
   for edge_idx, edge in edges {
-    let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
+    let vnodes = remincross_edge_vnodes(edge_vnodes, edge)
     if vnodes.length() == 0 {
       continue
     }
     let (tail, head) =
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-    let tail_cluster = remincross_cluster_key_or_empty(intercluster_keys, tail)
-    let head_cluster = remincross_cluster_key_or_empty(intercluster_keys, head)
+    let tail_cluster = remincross_cluster_key(intercluster_keys, tail)
+    let head_cluster = remincross_cluster_key(intercluster_keys, head)
     let vnode_cluster =
       cluster_lowest_common_ancestor(
         tail_cluster,
@@ -376,7 +376,7 @@ fn assign_remincross_vnode_clusters(
 /// vnode LCA assignments), size map extension, and flat-constraint
 /// augmentation before final reorder pass.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_reorder_inputs(
+fn build_remincross_pass_inputs(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -400,7 +400,7 @@ fn build_remincross_reorder_inputs(
     }
   }
   if order_with_vnodes {
-    assign_remincross_vnode_clusters(
+    assign_remincross_clusters(
       rem_cluster_keys,
       root_cluster,
       edges,
@@ -449,8 +449,8 @@ fn collect_remincross_trailing(
   for edge_idx, edge in edges {
     let (tail, head) =
       remincross_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
-    let tail_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, tail)
-    let head_cluster = remincross_cluster_key_or_empty(remincross_cluster_keys, head)
+    let tail_cluster = remincross_cluster_key(remincross_cluster_keys, tail)
+    let head_cluster = remincross_cluster_key(remincross_cluster_keys, head)
     // Graphviz parity: trailing-vnode tagging applies only to non-internal,
     // non-root, cross-cluster edges whose cluster rank ranges do not overlap.
     let internal =
@@ -471,7 +471,7 @@ fn collect_remincross_trailing(
     if tail_min <= head_max && head_min <= tail_max {
       continue
     }
-    let vnodes = remincross_edge_vnodes_or_empty(edge_vnodes, edge)
+    let vnodes = remincross_edge_vnodes(edge_vnodes, edge)
     for vnode in vnodes {
       intercluster_vnodes[vnode] = true
     }
@@ -482,7 +482,7 @@ fn collect_remincross_trailing(
 ///|
 /// Graphviz parity: trailing intercluster vnodes are floored behind real-node
 /// positions on their rank using stable sequence offsets.
-fn apply_remincross_trailing_floor(
+fn apply_remincross_floor(
   keys : Map[String, Double],
   intercluster_vnodes : Map[String, Bool],
   rem_base_order_index : Map[String, Int],
@@ -572,7 +572,7 @@ fn build_remincross_vnode_keys(
     edge_vnodes,
     vnode_ranks,
   )
-  apply_remincross_trailing_floor(
+  apply_remincross_floor(
     keys,
     intercluster_vnodes,
     rem_base_order_index,
