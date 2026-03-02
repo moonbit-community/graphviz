@@ -27,7 +27,15 @@ fn spacing_parse_point(text : String) -> @geom.Point {
 }
 
 ///|
-fn spacing_parse_rect(text : String) -> (Double, Double, Double, Double) {
+struct SpacingRect {
+  llx : Double
+  lly : Double
+  urx : Double
+  ury : Double
+}
+
+///|
+fn spacing_parse_rect(text : String) -> SpacingRect {
   let parts : Array[String] = []
   for part in text.split(",") {
     parts.push(part.to_string())
@@ -52,7 +60,7 @@ fn spacing_parse_rect(text : String) -> (Double, Double, Double, Double) {
   } else {
     0.0
   }
-  (llx, lly, urx, ury)
+  { llx, lly, urx, ury }
 }
 
 ///|
@@ -123,7 +131,7 @@ test "cluster bbox includes margin and label padding" {
     Some(value) => value
     None => fail("missing cluster bb")
   }
-  let (llx, lly, urx, ury) = spacing_parse_rect(bb_text)
+  let bbox = spacing_parse_rect(bb_text)
   let pos = spacing_node_pos(graph, "a")
   let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
   let margin = cluster_margin_pt(cluster)
@@ -139,17 +147,17 @@ test "cluster bbox includes margin and label padding" {
     margin +
     label_height +
     CLUSTER_LABEL_PAD_PT
-  guard llx <= expected_left + 0.1 else {
-    fail("cluster llx too large: \{llx} expected <= \{expected_left}")
+  guard bbox.llx <= expected_left + 0.1 else {
+    fail("cluster llx too large: \{bbox.llx} expected <= \{expected_left}")
   }
-  guard urx >= expected_right - 0.1 else {
-    fail("cluster urx too small: \{urx} expected >= \{expected_right}")
+  guard bbox.urx >= expected_right - 0.1 else {
+    fail("cluster urx too small: \{bbox.urx} expected >= \{expected_right}")
   }
-  guard lly <= expected_bottom + 0.1 else {
-    fail("cluster lly too large: \{lly} expected <= \{expected_bottom}")
+  guard bbox.lly <= expected_bottom + 0.1 else {
+    fail("cluster lly too large: \{bbox.lly} expected <= \{expected_bottom}")
   }
-  guard ury >= expected_top - 0.1 else {
-    fail("cluster ury too small: \{ury} expected >= \{expected_top}")
+  guard bbox.ury >= expected_top - 0.1 else {
+    fail("cluster ury too small: \{bbox.ury} expected >= \{expected_top}")
   }
 }
 
@@ -171,19 +179,17 @@ test "nested clusters include parent margin" {
     None => fail("missing inner cluster bb")
   }
   let margin = cluster_margin_pt(outer)
-  let (outer_llx, outer_lly, outer_urx, outer_ury) = outer_bb
-  let (inner_llx, inner_lly, inner_urx, inner_ury) = inner_bb
-  guard outer_llx <= inner_llx - margin + 0.1 else {
-    fail("outer llx too large: \{outer_llx} expected <= \{inner_llx - margin}")
+  guard outer_bb.llx <= inner_bb.llx - margin + 0.1 else {
+    fail("outer llx too large: \{outer_bb.llx} expected <= \{inner_bb.llx - margin}")
   }
-  guard outer_lly <= inner_lly - margin + 0.1 else {
-    fail("outer lly too large: \{outer_lly} expected <= \{inner_lly - margin}")
+  guard outer_bb.lly <= inner_bb.lly - margin + 0.1 else {
+    fail("outer lly too large: \{outer_bb.lly} expected <= \{inner_bb.lly - margin}")
   }
-  guard outer_urx >= inner_urx + margin - 0.1 else {
-    fail("outer urx too small: \{outer_urx} expected >= \{inner_urx + margin}")
+  guard outer_bb.urx >= inner_bb.urx + margin - 0.1 else {
+    fail("outer urx too small: \{outer_bb.urx} expected >= \{inner_bb.urx + margin}")
   }
-  guard outer_ury >= inner_ury + margin - 0.1 else {
-    fail("outer ury too small: \{outer_ury} expected >= \{inner_ury + margin}")
+  guard outer_bb.ury >= inner_bb.ury + margin - 0.1 else {
+    fail("outer ury too small: \{outer_bb.ury} expected >= \{inner_bb.ury + margin}")
   }
 }
 

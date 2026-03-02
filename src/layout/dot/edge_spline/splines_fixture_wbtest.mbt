@@ -25,6 +25,12 @@ struct SplineInput {
 }
 
 ///|
+struct SplinePoints {
+  case_id : Int
+  points : Array[FixturePoint]
+}
+
+///|
 fn require_object(json : Json) -> Map[String, Json] raise {
   match json {
     Json::Object(obj) => obj
@@ -51,10 +57,11 @@ fn parse_spline_input(obj : Map[String, Json]) -> SplineInput raise {
 }
 
 ///|
-fn parse_spline_points(obj : Map[String, Json]) -> (Int, Array[FixturePoint]) raise {
-  let case_id : Int = @json.from_json(obj["case"])
-  let points : Array[FixturePoint] = @json.from_json(obj["points"])
-  (case_id, points)
+fn parse_spline_points(obj : Map[String, Json]) -> SplinePoints raise {
+  {
+    case_id: @json.from_json(obj["case"]),
+    points: @json.from_json(obj["points"]),
+  }
 }
 
 ///|
@@ -80,31 +87,31 @@ fn load_spline_fixtures(
         pending_shortest = None
       }
       "spline_shortest" => {
-        let (case_id, points) = parse_spline_points(obj)
+        let parsed = parse_spline_points(obj)
         match pending_input {
           Some(input) => {
-            if input.case_id != case_id {
+            if input.case_id != parsed.case_id {
               fail(
-                "spline shortest case mismatch input=\{input.case_id} shortest=\{case_id}",
+                "spline shortest case mismatch input=\{input.case_id} shortest=\{parsed.case_id}",
               )
             }
-            pending_shortest = Some(points)
+            pending_shortest = Some(parsed.points)
           }
           None => fail("spline_shortest without spline_input")
         }
       }
       "spline_output" => {
-        let (case_id, points) = parse_spline_points(obj)
+        let parsed = parse_spline_points(obj)
         match pending_input {
           Some(input) =>
             match pending_shortest {
               Some(shortest) => {
-                if input.case_id != case_id {
+                if input.case_id != parsed.case_id {
                   fail(
-                    "spline output case mismatch input=\{input.case_id} output=\{case_id}",
+                    "spline output case mismatch input=\{input.case_id} output=\{parsed.case_id}",
                   )
                 }
-                cases.push((input, shortest, points))
+                cases.push((input, shortest, parsed.points))
                 pending_input = None
                 pending_shortest = None
               }
