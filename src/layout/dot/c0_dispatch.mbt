@@ -37,42 +37,30 @@ fn run_ordering_dispatch(
 ) -> OrderingDispatchOutput {
   let reorder_setup = inputs.dispatch_setup.reorder_setup
   if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
-    let dispatch_context =
-      build_clustered_dispatch_context(inputs)
+    let dispatch_context : ClusteredDispatchContext =
+      {
+        graph: inputs.graph,
+        nodes: inputs.nodes,
+        edges: inputs.edges,
+        edge_tail: inputs.edge_tail,
+        edge_head: inputs.edge_head,
+        edge_reversed: inputs.edge_reversed,
+        ranks: inputs.ranks,
+        node_order: inputs.node_order,
+        order_sizes: inputs.order_sizes,
+        nodesep_pt: inputs.nodesep_pt,
+        has_edge_labels: inputs.has_edge_labels,
+        cluster_meta: inputs.cluster_meta,
+        port_order_positions: inputs.port_order_positions,
+        port_order_contrib: inputs.port_order_contrib,
+        runtime_context: inputs.runtime_context,
+        edge_port_data: inputs.dispatch_setup.edge_port_data,
+        reorder_setup,
+        class2_data: reorder_setup.class2_data,
+      }
     run_clustered(dispatch_context)
   } else {
     run_noncluster_ordering_dispatch(inputs)
-  }
-}
-
-///|
-/// Graphviz parity: clustered ordering dispatch context preserves payload field
-/// ordering before clustered stage execution.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_dispatch_context(
-  inputs : OrderingDispatchInputs,
-) -> ClusteredDispatchContext {
-  let dispatch_setup = inputs.dispatch_setup
-  let reorder_setup = dispatch_setup.reorder_setup
-  {
-    graph: inputs.graph,
-    nodes: inputs.nodes,
-    edges: inputs.edges,
-    edge_tail: inputs.edge_tail,
-    edge_head: inputs.edge_head,
-    edge_reversed: inputs.edge_reversed,
-    ranks: inputs.ranks,
-    node_order: inputs.node_order,
-    order_sizes: inputs.order_sizes,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    cluster_meta: inputs.cluster_meta,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    runtime_context: inputs.runtime_context,
-    edge_port_data: dispatch_setup.edge_port_data,
-    reorder_setup,
-    class2_data: reorder_setup.class2_data,
   }
 }
 
