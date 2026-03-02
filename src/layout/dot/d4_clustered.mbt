@@ -102,7 +102,7 @@ fn build_clustered_xpos_seed_data(
 /// Graphviz parity: clustered xpos reorder vnode chain direction follows
 /// rank order (forward/reverse) before segment emission.
 /// Do not change behavior without updating fixtures/tests.
-fn build_xpos_edge_chain_with_vnodes(
+fn build_xpos_chain_with_vnodes(
   ranks : Map[String, Int],
   tail : String,
   head : String,
@@ -238,7 +238,7 @@ fn append_xpos_edge_with_vnodes(
       head_port_order,
     )
   } else {
-    let chain = build_xpos_edge_chain_with_vnodes(
+    let chain = build_xpos_chain_with_vnodes(
       ranks,
       tail,
       head,
@@ -321,7 +321,7 @@ fn append_skeleton_edges_for_xpos(
 /// Graphviz parity: clustered xpos reorder first materializes input
 /// edges in Graphviz iteration order before appending cluster skeleton edges.
 /// Do not change behavior without updating fixtures/tests.
-fn append_clustered_xpos_input_edges(
+fn append_clustered_input_edges(
   prep : LayoutPrep,
   rank_data : RankData,
   ordering : OrderingResult,
@@ -424,7 +424,7 @@ fn build_clustered_xpos_edges(
   let order_edge_head_port_x : Array[Double] = []
   let order_edge_tail_port_order : Array[Double] = []
   let order_edge_head_port_order : Array[Double] = []
-  append_clustered_xpos_input_edges(
+  append_clustered_input_edges(
     prep,
     rank_data,
     ordering,
@@ -470,7 +470,7 @@ fn build_clustered_xpos_edges(
 /// Graphviz parity: clustered xpos reorder consumes order-graph parents/children
 /// plus edge-order hints exactly once before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_clustered_xpos_rank_groups(
+fn apply_clustered_rank_groups(
   order_rank_keys : Array[Int],
   order_groups : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
@@ -570,7 +570,7 @@ fn build_clustered_xpos_groups(
       x_edge_tail_port_order,
       x_edge_head_port_order,
     )
-  apply_clustered_xpos_rank_groups(
+  apply_clustered_rank_groups(
     reorder_seed_data.order_rank_keys,
     reorder_seed_data.order_groups,
     reorder_edges_data.order_edges_out,
