@@ -1,4 +1,10 @@
 ///|
+pub struct LocalClusterRankResult {
+  local_ranks : Map[String, Int]
+  cluster_leaders : Map[String, String]
+}
+
+///|
 pub fn compute_local_cluster_ranks_and_leaders(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -13,7 +19,7 @@ pub fn compute_local_cluster_ranks_and_leaders(
       Array[@cgraph.Edge],
     ) -> (Map[String, Int])
   ),
-) -> (Map[String, Int], Map[String, String]) {
+) -> LocalClusterRankResult {
   let local_ranks : Map[String, Int] = Map::new()
   let cluster_leaders : Map[String, String] = Map::new()
   for cluster_name in top_clusters {
@@ -65,7 +71,7 @@ pub fn compute_local_cluster_ranks_and_leaders(
       }
     cluster_leaders[cluster_name] = leader
   }
-  (local_ranks, cluster_leaders)
+  { local_ranks, cluster_leaders }
 }
 
 ///|

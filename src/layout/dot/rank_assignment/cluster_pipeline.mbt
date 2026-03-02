@@ -75,7 +75,7 @@ fn compute_clustered_ranks(
   }
   let cluster_members = collect_cluster_members(cluster_graphs)
   let node_cluster = build_node_cluster_index(top_clusters, cluster_members)
-  let (local_ranks, cluster_leaders) = compute_local_cluster_ranks_and_leaders(
+  let local_cluster_ranks = compute_local_cluster_ranks_and_leaders(
     source,
     nodes,
     edges,
@@ -100,6 +100,8 @@ fn compute_clustered_ranks(
       )
     },
   )
+  let local_ranks = local_cluster_ranks.local_ranks
+  let cluster_leaders = local_cluster_ranks.cluster_leaders
   let leader_ranks = solve_clustered_leader_ranks(
     nodes,
     edges,
