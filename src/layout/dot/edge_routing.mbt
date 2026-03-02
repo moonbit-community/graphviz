@@ -246,6 +246,18 @@ fn edge_parallel_key(
 }
 
 ///|
+fn edge_has_sameport_mark(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("samehead") {
+    Some(value) => value != ""
+    None =>
+      match edge.get_attr("sametail") {
+        Some(value) => value != ""
+        None => false
+      }
+  }
+}
+
+///|
 /// Graphviz parity: remap pass keeps sameport-tagged edges separate from plain
 /// parallels while preserving class2 endpoint/port grouping.
 /// Do not change behavior without updating fixtures/tests.
@@ -257,15 +269,7 @@ fn edge_parallel_group_key(edge : @cgraph.Edge) -> String {
       edge.tail_port(),
       edge.head_port(),
     )
-  let sameport_mark =
-    match edge.get_attr("samehead") {
-      Some(value) => value != ""
-      None =>
-        match edge.get_attr("sametail") {
-          Some(value) => value != ""
-          None => false
-        }
-    }
+  let sameport_mark = edge_has_sameport_mark(edge)
   if sameport_mark {
     "\{base}|sameport"
   } else {
@@ -330,15 +334,7 @@ fn edge_parallel_offsets(
       Some(value) => value.to_lower()
       None => "forward"
     }
-    let mark =
-      match edge.get_attr("samehead") {
-        Some(value) => value != ""
-        None =>
-          match edge.get_attr("sametail") {
-            Some(value) => value != ""
-            None => false
-          }
-      }
+    let mark = edge_has_sameport_mark(edge)
     sameport_marked[edge.id()] = mark
     match groups.get(key) {
       Some(list) => list.push(edge.id())
