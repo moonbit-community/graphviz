@@ -663,89 +663,97 @@ priv struct ClusterRankReorderOutput {
   ordered_cluster : Map[Int, Array[String]]
 }
 
+///|
+/// Graphviz parity: cluster-local mincross dispatch inputs keep clustered
+/// rank groups, edge bundles, and ordering metadata in one context bundle.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterRankReorderInputs {
+  cluster_rank_keys : Array[Int]
+  cluster_groups : Map[Int, Array[String]]
+  cluster_edges : Array[@cgraph.Edge]
+  cluster_edge_tail : Array[String]
+  cluster_edge_head : Array[String]
+  cluster_edge_tail_port_x : Array[Double]
+  cluster_edge_head_port_x : Array[Double]
+  cluster_edge_tail_port_order : Array[Double]
+  cluster_edge_head_port_order : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_order : Map[String, Int]
+  cluster_node_order : Map[String, Int]
+  cluster_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  empty_cluster_skeleton : Map[String, Bool]
+  cluster_flat_constraints : Map[String, Bool]
+  fixed_positions : Map[String, Double]
+  fixed_ranks : Map[String, Int]
+}
+
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
 /// internal ordering constraints; otherwise the input order is preserved.
 /// Do not change behavior without updating fixtures/tests.
 fn run_cluster_rank_reorder(
-  cluster_rank_keys : Array[Int],
-  cluster_groups : Map[Int, Array[String]],
-  cluster_edges : Array[@cgraph.Edge],
-  cluster_edge_tail : Array[String],
-  cluster_edge_head : Array[String],
-  cluster_edge_tail_port_x : Array[Double],
-  cluster_edge_head_port_x : Array[Double],
-  cluster_edge_tail_port_order : Array[Double],
-  cluster_edge_head_port_order : Array[Double],
-  parents : Map[String, Array[String]],
-  children : Map[String, Array[String]],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  edge_order : Map[String, Int],
-  cluster_node_order : Map[String, Int],
-  cluster_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  empty_cluster_skeleton : Map[String, Bool],
-  cluster_flat_constraints : Map[String, Bool],
-  fixed_positions : Map[String, Double],
-  fixed_ranks : Map[String, Int],
+  inputs : ClusterRankReorderInputs,
 ) -> ClusterRankReorderOutput {
-  if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
+  if inputs.cluster_edges.length() == 0 && inputs.cluster_flat_constraints.length() == 0 {
     return { has_internal_constraints: false, ordered_cluster: Map::new() }
   }
   let seeded_by_vnode_interp =
     seed_local_groups_by_vnode(
-      cluster_rank_keys,
-      cluster_groups,
-      fixed_ranks,
-      parents,
-      children,
+      inputs.cluster_rank_keys,
+      inputs.cluster_groups,
+      inputs.fixed_ranks,
+      inputs.parents,
+      inputs.children,
     )
   // Graphviz parity: mincross_clust() runs flat_reorder before mincross(g,2).
   let seeded_cluster_groups =
     flat_reorder_rank_groups(
-      cluster_rank_keys,
+      inputs.cluster_rank_keys,
       seeded_by_vnode_interp,
-      fixed_ranks,
-      cluster_flat_constraints,
+      inputs.fixed_ranks,
+      inputs.cluster_flat_constraints,
       false,
     )
   let ordered_cluster =
     reorder_rank_groups(
-      cluster_rank_keys,
+      inputs.cluster_rank_keys,
       seeded_cluster_groups,
-      cluster_edges,
-      cluster_edge_tail,
-      cluster_edge_head,
-      cluster_edge_tail_port_x,
-      cluster_edge_head_port_x,
-      cluster_edge_tail_port_order,
-      cluster_edge_head_port_order,
-      parents,
-      children,
-      cluster_keys,
-      rank_same_groups,
-      rank_same_order,
-      edge_order,
-      cluster_node_order,
-      cluster_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
+      inputs.cluster_edges,
+      inputs.cluster_edge_tail,
+      inputs.cluster_edge_head,
+      inputs.cluster_edge_tail_port_x,
+      inputs.cluster_edge_head_port_x,
+      inputs.cluster_edge_tail_port_order,
+      inputs.cluster_edge_head_port_order,
+      inputs.parents,
+      inputs.children,
+      inputs.cluster_keys,
+      inputs.rank_same_groups,
+      inputs.rank_same_order,
+      inputs.edge_order,
+      inputs.cluster_node_order,
+      inputs.cluster_sizes,
+      inputs.nodesep_pt,
+      inputs.has_edge_labels,
+      inputs.port_order_positions,
+      inputs.port_order_contrib,
       Map::new(),
-      empty_cluster_skeleton,
-      cluster_flat_constraints,
-      graphviz_out_neighbors=graphviz_out_neighbors,
-      graphviz_in_neighbors=graphviz_in_neighbors,
+      inputs.empty_cluster_skeleton,
+      inputs.cluster_flat_constraints,
+      graphviz_out_neighbors=inputs.graphviz_out_neighbors,
+      graphviz_in_neighbors=inputs.graphviz_in_neighbors,
       // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
-      fixed_positions=fixed_positions,
-      fixed_ranks=fixed_ranks,
+      fixed_positions=inputs.fixed_positions,
+      fixed_ranks=inputs.fixed_ranks,
       graphviz_flip=false,
       // Graphviz parity: cluster-local startpass=2 mincross coalesces
       // parallel edge segments by endpoint+port order and sums xpenalty.
@@ -1390,33 +1398,35 @@ fn reorder_cluster_rank_group(
     )
   let reorder_output =
     run_cluster_rank_reorder(
-      local_context.cluster_rank_keys,
-      local_context.cluster_groups,
-      input_phase_output.cluster_edges,
-      input_phase_output.cluster_edge_tail,
-      input_phase_output.cluster_edge_head,
-      input_phase_output.cluster_edge_tail_port_x,
-      input_phase_output.cluster_edge_head_port_x,
-      input_phase_output.cluster_edge_tail_port_order,
-      input_phase_output.cluster_edge_head_port_order,
-      input_phase_output.parents,
-      input_phase_output.children,
-      input_phase_output.graphviz_out_neighbors,
-      input_phase_output.graphviz_in_neighbors,
-      input_phase_output.cluster_keys,
-      cluster_meta.rank_same_groups,
-      cluster_meta.rank_same_order,
-      input_phase_output.edge_order,
-      local_context.cluster_node_order,
-      input_phase_output.cluster_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      empty_cluster_skeleton,
-      input_phase_output.cluster_flat_constraints,
-      local_context.cluster_fixed_positions,
-      fixed_ranks,
+      {
+        cluster_rank_keys: local_context.cluster_rank_keys,
+        cluster_groups: local_context.cluster_groups,
+        cluster_edges: input_phase_output.cluster_edges,
+        cluster_edge_tail: input_phase_output.cluster_edge_tail,
+        cluster_edge_head: input_phase_output.cluster_edge_head,
+        cluster_edge_tail_port_x: input_phase_output.cluster_edge_tail_port_x,
+        cluster_edge_head_port_x: input_phase_output.cluster_edge_head_port_x,
+        cluster_edge_tail_port_order: input_phase_output.cluster_edge_tail_port_order,
+        cluster_edge_head_port_order: input_phase_output.cluster_edge_head_port_order,
+        parents: input_phase_output.parents,
+        children: input_phase_output.children,
+        graphviz_out_neighbors: input_phase_output.graphviz_out_neighbors,
+        graphviz_in_neighbors: input_phase_output.graphviz_in_neighbors,
+        cluster_keys: input_phase_output.cluster_keys,
+        rank_same_groups: cluster_meta.rank_same_groups,
+        rank_same_order: cluster_meta.rank_same_order,
+        edge_order: input_phase_output.edge_order,
+        cluster_node_order: local_context.cluster_node_order,
+        cluster_sizes: input_phase_output.cluster_sizes,
+        nodesep_pt,
+        has_edge_labels,
+        port_order_positions,
+        port_order_contrib,
+        empty_cluster_skeleton,
+        cluster_flat_constraints: input_phase_output.cluster_flat_constraints,
+        fixed_positions: local_context.cluster_fixed_positions,
+        fixed_ranks,
+      },
     )
   if !reorder_output.has_internal_constraints {
     return ()
