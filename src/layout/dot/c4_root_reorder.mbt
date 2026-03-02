@@ -1678,6 +1678,25 @@ fn find_cluster_block_bounds(
 }
 
 ///|
+/// Graphviz parity: root/non-cluster presence checks on one side of clustered
+/// blocks scan rank names in-order and stop at first root bucket member.
+fn has_root_node_in_range(
+  names : Array[String],
+  cluster_keys : Map[String, String],
+  start_idx : Int,
+  end_idx : Int,
+) -> Bool {
+  let mut i = start_idx
+  while i < end_idx {
+    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+      return true
+    }
+    i = i + 1
+  }
+  false
+}
+
+///|
 /// Graphviz parity: cluster-rank-order guard keeps original rank order when
 /// root nodes appear on both sides of the clustered node block in one rank.
 fn has_root_nodes_on_both_sides(
@@ -1693,25 +1712,23 @@ fn has_root_nodes_on_both_sides(
   if first_cluster < 0 {
     return false
   }
-  let mut root_before = false
-  for i in 0..<first_cluster {
-    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-      root_before = true
-      break
-    }
-  }
+  let root_before =
+    has_root_node_in_range(
+      names,
+      cluster_keys,
+      0,
+      first_cluster,
+    )
   let root_after =
-    if cluster_block_bounds.last_cluster + 1 < names.length() {
-      let mut found = false
-      for i in (cluster_block_bounds.last_cluster + 1)..<names.length() {
-        if cluster_key_or_empty(cluster_keys, names[i]) == "" {
-          found = true
-          break
-        }
-      }
-      found
-    } else {
+    if cluster_block_bounds.last_cluster + 1 >= names.length() {
       false
+    } else {
+      has_root_node_in_range(
+        names,
+        cluster_keys,
+        cluster_block_bounds.last_cluster + 1,
+        names.length(),
+      )
     }
   root_before && root_after
 }
