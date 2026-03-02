@@ -1800,6 +1800,43 @@ fn push_slack_segment(
 }
 
 ///|
+fn add_ordered_constraint_nodes(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  ordered_names : Array[String],
+  real_by_name : Map[String, @cgraph.Node],
+  extra_rank : Map[String, Int],
+  base_positions : Map[String, Double],
+) -> Unit {
+  for name in ordered_names {
+    match real_by_name.get(name) {
+      Some(node) => {
+        let idx = @network_simplex.add_node(graph, node.name())
+        index[name] = idx
+        let pos = match base_positions.get(name) {
+          Some(value) => value
+          None => 0.0
+        }
+        @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
+      }
+      None =>
+        match extra_rank.get(name) {
+          Some(rank) => {
+            let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
+            index[name] = idx
+            let pos = match base_positions.get(name) {
+              Some(value) => value
+              None => rank.to_double()
+            }
+            @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
+          }
+          None => ()
+        }
+    }
+  }
+}
+
+///|
 priv struct OrientedEdgeEndpoints {
   tail_name : String
   head_name : String
@@ -2011,32 +2048,14 @@ fn build_constraint_graph(
     }
   }
   let index : Map[String, Int] = Map::new()
-  for name in ordered_names {
-    match real_by_name.get(name) {
-      Some(node) => {
-        let idx = @network_simplex.add_node(graph, node.name())
-        index[name] = idx
-        let pos = match base_positions.get(name) {
-          Some(value) => value
-          None => 0.0
-        }
-        @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
-      }
-      None =>
-        match extra_rank.get(name) {
-          Some(rank) => {
-            let idx = @network_simplex.add_node(graph, name, kind=extra_node_kind(name))
-            index[name] = idx
-            let pos = match base_positions.get(name) {
-              Some(value) => value
-              None => rank.to_double()
-            }
-            @network_simplex.set_node_rank(graph, idx, trunc_int(pos))
-          }
-          None => ()
-        }
-    }
-  }
+  add_ordered_constraint_nodes(
+    graph,
+    index,
+    ordered_names,
+    real_by_name,
+    extra_rank,
+    base_positions,
+  )
   let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
   let rank_adj_order : Array[String] = []
   for rank in rank_keys {
