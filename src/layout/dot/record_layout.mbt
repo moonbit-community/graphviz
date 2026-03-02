@@ -1071,16 +1071,6 @@ fn html_cell_size(
   { width_pt: width, height_pt: height }
 }
 
-fn html_cell_size_pair(
-  table : @html_label.HtmlTable,
-  cell : @html_label.HtmlCell,
-  font_name : String,
-  font_size_pt : Double,
-) -> (Double, Double) {
-  let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
-  (cell_size.width_pt, cell_size.height_pt)
-}
-
 ///|
 fn html_table_size(
   table : @html_label.HtmlTable,
@@ -1088,9 +1078,10 @@ fn html_table_size(
   font_size_pt : Double,
 ) -> SizePt {
   let (width_pt, height_pt) =
-    @html_label.html_table_size(table, cell => html_cell_size_pair(
-    table, cell, font_name, font_size_pt,
-  ))
+    @html_label.html_table_size(table, cell => {
+      let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
+      (cell_size.width_pt, cell_size.height_pt)
+    })
   { width_pt, height_pt }
 }
 
@@ -1101,9 +1092,10 @@ fn html_table_layout(
   font_name : String,
   font_size_pt : Double,
 ) -> @html_label.HtmlTableLayout {
-  @html_label.html_table_layout(table, rect, cell => html_cell_size_pair(
-    table, cell, font_name, font_size_pt,
-  ))
+  @html_label.html_table_layout(table, rect, cell => {
+    let cell_size = html_cell_size(table, cell, font_name, font_size_pt)
+    (cell_size.width_pt, cell_size.height_pt)
+  })
 }
 
 ///|
