@@ -205,7 +205,7 @@ fn run_remincross_cleanup(
   rem_groups : Map[Int, Array[String]],
   materialized_inputs : ClusteredReMincrossMaterializedInputs,
 ) -> Map[Int, Array[String]] {
-  let (rem_parents, rem_children, rem_edge_order) =
+  let rem_edge_indices =
     build_edge_indices_and_order(
       materialized_inputs.rem_nodes,
       materialized_inputs.rem_edge_tail_out,
@@ -237,12 +237,12 @@ fn run_remincross_cleanup(
     materialized_inputs.rem_edge_head_port_x,
     materialized_inputs.rem_edge_tail_port_order,
     materialized_inputs.rem_edge_head_port_order,
-    rem_parents,
-    rem_children,
+    rem_edge_indices.parents,
+    rem_edge_indices.children,
     materialized_inputs.rem_cluster_keys,
     dispatch_context.cluster_meta.rank_same_groups,
     dispatch_context.cluster_meta.rank_same_order,
-    rem_edge_order,
+    rem_edge_indices.edge_order,
     materialized_inputs.rem_node_order,
     materialized_inputs.rem_sizes,
     dispatch_context.nodesep_pt,

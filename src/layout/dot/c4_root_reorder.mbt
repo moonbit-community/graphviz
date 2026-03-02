@@ -1035,7 +1035,7 @@ fn build_root_reorder_inputs(
       root_materialized.order_edge_tail_port_order,
       root_materialized.order_edge_head_port_order,
     )
-  let (root_parents, root_children, root_edge_order) =
+  let root_edge_indices =
     build_edge_indices_and_order(
       root_context.root_nodes,
       root_materialized.order_edge_tail_out,
@@ -1053,9 +1053,9 @@ fn build_root_reorder_inputs(
     root_edge_head_port_x,
     root_edge_tail_port_order,
     root_edge_head_port_order,
-    root_parents,
-    root_children,
-    root_edge_order,
+    root_parents: root_edge_indices.parents,
+    root_children: root_edge_indices.children,
+    root_edge_order: root_edge_indices.edge_order,
     root_node_order: root_context.root_node_order,
   }
 }

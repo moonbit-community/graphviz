@@ -576,7 +576,7 @@ fn run_root_reorder_pass(
           order_edge_tail_port_order,
           order_edge_head_port_order,
         )
-      let (parents, children, edge_order) =
+      let edge_indices =
         build_edge_indices_and_order(
           order_nodes_for_mincross,
           order_edge_tail_out_mincross,
@@ -592,9 +592,9 @@ fn run_root_reorder_pass(
         order_edge_head_port_x_mincross,
         order_edge_tail_port_order_mincross,
         order_edge_head_port_order_mincross,
-        parents,
-        children,
-        edge_order,
+        edge_indices.parents,
+        edge_indices.children,
+        edge_indices.edge_order,
       )
     }
   let preferred_positions : Map[String, Double] =

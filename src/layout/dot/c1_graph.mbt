@@ -378,13 +378,23 @@ fn collect_order_edges_for_tails(
 /// Graphviz parity: parent/child adjacency maps and edge-order indices are
 /// derived from the exact materialized edge arrays in current order graph.
 /// Do not change behavior without updating fixtures/tests.
+priv struct EdgeIndicesAndOrder {
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  edge_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: parent/child adjacency maps and edge-order indices are
+/// derived from the exact materialized edge arrays in current order graph.
+/// Do not change behavior without updating fixtures/tests.
 fn build_edge_indices_and_order(
   order_nodes : Array[String],
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
   order_ranks : Map[String, Int],
   edges_out : Array[@cgraph.Edge],
-) -> (Map[String, Array[String]], Map[String, Array[String]], Map[String, Int]) {
+) -> EdgeIndicesAndOrder {
   let (parents, children) =
     build_edge_index_for_names(
       order_nodes,
@@ -393,7 +403,7 @@ fn build_edge_indices_and_order(
       order_ranks,
     )
   let edge_order = collect_edge_order(edges_out)
-  (parents, children, edge_order)
+  { parents, children, edge_order }
 }
 
 ///|
