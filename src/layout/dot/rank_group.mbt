@@ -796,13 +796,6 @@ fn discover_rank_components(
   )
 }
 ///|
-priv struct ComponentMergeInputs {
-  component_groups : Map[Int, Array[String]]
-  filtered_out : Map[String, Array[String]]
-  filtered_in : Map[String, Array[String]]
-}
-
-///|
 /// Graphviz parity: component-local merge inputs preserve rank-group filtering
 /// and in/out neighbor projection constrained to the component node set.
 /// Do not change behavior without updating fixtures/tests.
@@ -812,7 +805,7 @@ fn prepare_merge_inputs(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
   component : Array[String],
-) -> ComponentMergeInputs {
+) -> (Map[Int, Array[String]], Map[String, Array[String]], Map[String, Array[String]]) {
   let component_set : Map[String, Bool] = Map::new()
   for name in component {
     component_set[name] = true
@@ -859,11 +852,7 @@ fn prepare_merge_inputs(
     }
     filtered_in[name] = filtered_in_list
   }
-  {
-    component_groups,
-    filtered_out,
-    filtered_in,
-  }
+  (component_groups, filtered_out, filtered_in)
 }
 
 ///|
@@ -941,7 +930,7 @@ fn merge_rank_groups_components(
     merged[rank] = []
   }
   for component in components {
-    let prepared = prepare_merge_inputs(
+    let (component_groups, filtered_out, filtered_in) = prepare_merge_inputs(
       rank_keys,
       groups,
       graphviz_out_neighbors,
@@ -950,7 +939,7 @@ fn merge_rank_groups_components(
     )
     let ordered_component = build_neighbor_rank_groups(
       rank_keys,
-      prepared.component_groups,
+      component_groups,
       edge_tail,
       edge_head,
       node_ranks,
@@ -959,8 +948,8 @@ fn merge_rank_groups_components(
       cluster_skeleton,
       pass,
       flip=flip,
-      graphviz_out_neighbors=prepared.filtered_out,
-      graphviz_in_neighbors=prepared.filtered_in,
+      graphviz_out_neighbors=filtered_out,
+      graphviz_in_neighbors=filtered_in,
     )
     append_component_order(
       rank_keys,
