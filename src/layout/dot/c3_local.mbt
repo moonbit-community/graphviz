@@ -86,7 +86,7 @@ fn build_local_cluster_order(
 ///|
 /// Graphviz parity: local-cluster stable sorts compare seed order first and
 /// break ties by node name to keep deterministic fixture ordering.
-fn compare_names_by_order_then_name(
+fn compare_by_order_then_name(
   order_map : Map[String, Int],
   a : String,
   b : String,
@@ -183,7 +183,7 @@ fn build_local_cluster_index(
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_graph_order(
+fn build_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
@@ -249,7 +249,7 @@ fn build_local_cluster_graph_order(
 /// seed each rank from previous-rank ND_out reachability before seed-order
 /// fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_rank_groups(
+fn build_local_rank_groups(
   groups : Map[Int, Array[String]],
   cluster_node_set : Map[String, Bool],
   cluster_node_order : Map[String, Int],
@@ -272,7 +272,7 @@ fn build_cluster_local_rank_groups(
       }
       if real_nodes.length() > 1 {
         real_nodes.sort_by((a, b) => {
-          compare_names_by_order_then_name(cluster_node_order, a, b)
+          compare_by_order_then_name(cluster_node_order, a, b)
         })
         let mut real_idx = 0
         for i in 0..<list.length() {
@@ -344,7 +344,7 @@ fn build_cluster_local_rank_groups(
     }
     let fallback_real_nodes = real_nodes.copy()
     fallback_real_nodes.sort_by((a, b) => {
-      compare_names_by_order_then_name(cluster_node_order, a, b)
+      compare_by_order_then_name(cluster_node_order, a, b)
     })
     for name in fallback_real_nodes {
       if seeded_seen.get(name) is None {
@@ -1000,7 +1000,7 @@ fn reorder_cluster_rank_group(
   let cluster_ordered_nodes = cluster_nodes.copy()
   if cluster_ordered_nodes.length() > 1 {
     cluster_ordered_nodes.sort_by((a, b) => {
-      compare_names_by_order_then_name(node_order, a, b)
+      compare_by_order_then_name(node_order, a, b)
     })
   }
   let mut order_idx = 0
@@ -1008,7 +1008,7 @@ fn reorder_cluster_rank_group(
     cluster_node_order[name] = order_idx
     order_idx = order_idx + 1
   }
-  let cluster_groups = build_cluster_local_rank_groups(
+  let cluster_groups = build_local_rank_groups(
     groups,
     cluster_node_set,
     cluster_node_order,
@@ -1226,7 +1226,7 @@ fn reorder_groups_by_cluster_ranks(
     return ()
   }
   let (cluster_graphs, cluster_names) =
-    build_local_cluster_graph_order(
+    build_cluster_graph_order(
       graph,
       cluster_meta.cluster_order,
       cluster_meta.cluster_parents,
