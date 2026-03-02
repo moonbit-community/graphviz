@@ -204,8 +204,16 @@ fn build_remincross_inputs(
       rem_groups,
       context,
     )
-  let pass_inputs =
-    build_remincross_pass_inputs(dispatch_context)
+  let rem_cluster_keys =
+    build_remincross_cluster_keys(dispatch_context)
+  let rem_sizes =
+    build_sizes_for_order_graph(
+      dispatch_context.order_sizes,
+      dispatch_context.order_with_vnodes,
+      dispatch_context.vnode_info.vnode_sizes,
+    )
+  let rem_flat_constraints =
+    build_remincross_flat_constraints(dispatch_context)
   {
     rem_nodes: context.rem_nodes,
     rem_ranks: context.rem_ranks,
@@ -217,9 +225,9 @@ fn build_remincross_inputs(
     rem_edge_head_port_x: materialized_arrays.edge_head_port_x,
     rem_edge_tail_port_order: materialized_arrays.edge_tail_port_order,
     rem_edge_head_port_order: materialized_arrays.edge_head_port_order,
-    rem_cluster_keys: pass_inputs.rem_cluster_keys,
-    rem_sizes: pass_inputs.rem_sizes,
-    rem_flat_constraints: pass_inputs.rem_flat_constraints,
+    rem_cluster_keys,
+    rem_sizes,
+    rem_flat_constraints,
   }
 }
 
@@ -287,13 +295,6 @@ fn run_remincross_cleanup(
     startpass=2,
     remincross_mode=true,
   )
-}
-
-///|
-priv struct ReMincrossPassInputs {
-  rem_cluster_keys : Map[String, String]
-  rem_sizes : Map[String, NodeSize]
-  rem_flat_constraints : Map[String, Bool]
 }
 
 ///|
@@ -403,27 +404,6 @@ fn build_remincross_flat_constraints(
     }
   }
   rem_flat_constraints
-}
-
-///|
-/// Graphviz parity: ReMincross reorder inputs derive cluster keys (including
-/// vnode LCA assignments), size map extension, and flat-constraint
-/// augmentation before final reorder pass.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_pass_inputs(
-  dispatch_context : ReMincrossDispatchContext,
-) -> ReMincrossPassInputs {
-  let rem_cluster_keys =
-    build_remincross_cluster_keys(dispatch_context)
-  let rem_sizes =
-    build_sizes_for_order_graph(
-      dispatch_context.order_sizes,
-      dispatch_context.order_with_vnodes,
-      dispatch_context.vnode_info.vnode_sizes,
-    )
-  let rem_flat_constraints =
-    build_remincross_flat_constraints(dispatch_context)
-  { rem_cluster_keys, rem_sizes, rem_flat_constraints }
 }
 
 ///|
