@@ -569,7 +569,7 @@ fn build_y_all_ranks_with_flat_labels(
 /// Graphviz parity: when flipped cluster-rank heights adjust rank_y, node y
 /// coordinates are rebuilt from rank order/groups without extra transforms.
 /// Do not change behavior without updating fixtures/tests.
-fn build_y_positions_from_rank_groups(
+fn build_y_positions_from_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   rank_y : Map[Int, Double],
@@ -595,7 +595,7 @@ fn build_y_positions_from_rank_groups(
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
-fn build_y_positions_with_cluster_flip(
+fn build_y_positions_with_flip(
   graph : @cgraph.Graph,
   rankdir : RankDir,
   rank_keys : Array[Int],
@@ -636,7 +636,7 @@ fn build_y_positions_with_cluster_flip(
       0.0,
     )
     if adjusted {
-      y_positions = build_y_positions_from_rank_groups(rank_keys, groups, rank_y)
+      y_positions = build_y_positions_from_groups(rank_keys, groups, rank_y)
     }
   }
   (y_positions, rank_y)
@@ -680,7 +680,7 @@ fn build_y_position_data(
   let y_all_ranks =
     build_y_all_ranks_with_flat_labels(rank_data.rank_keys, flat_label_nodes)
   let (y_positions, rank_y) =
-    build_y_positions_with_cluster_flip(
+    build_y_positions_with_flip(
       graph,
       prep.rankdir,
       rank_data.rank_keys,
