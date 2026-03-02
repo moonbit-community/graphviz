@@ -412,7 +412,7 @@ fn build_remincross_reorder_inputs(
     )
   }
   let rem_sizes =
-    build_order_sizes_for_order_graph(
+    build_sizes_for_order_graph(
       order_sizes,
       order_with_vnodes,
       vnode_info.vnode_sizes,

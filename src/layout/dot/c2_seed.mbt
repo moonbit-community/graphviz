@@ -37,7 +37,7 @@ fn build_order_seed_groups(
       out
     }
   let order_sizes_out =
-    build_order_sizes_for_order_graph(
+    build_sizes_for_order_graph(
       order_sizes,
       order_with_vnodes,
       vnode_info.vnode_sizes,

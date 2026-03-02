@@ -218,7 +218,7 @@ fn collect_intercluster_tail_bonus(
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_sizes_for_order_graph(
+fn build_sizes_for_order_graph(
   order_sizes : Map[String, NodeSize],
   order_with_vnodes : Bool,
   vnode_sizes : Map[String, NodeSize],
