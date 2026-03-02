@@ -103,32 +103,6 @@ priv struct ClusteredReMincrossMaterializedInputs {
 }
 
 ///|
-/// Graphviz parity: ReMincross rematerialized arrays are rebuilt from one
-/// order-graph context snapshot plus current dispatch payload.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_materialized_arrays(
-  dispatch_context : ReMincrossDispatchContext,
-  rem_groups : Map[Int, Array[String]],
-  rem_graph : @cgraph.Graph,
-  rem_node_map : Map[String, @cgraph.Node],
-  cluster_order_index : Map[String, Int],
-) -> ReMincrossMaterializedEdgeArrays {
-  let materialized_edges =
-    build_materialized_edges(
-      dispatch_context,
-      cluster_order_index,
-    )
-  build_materialized_arrays(
-    dispatch_context,
-    rem_groups,
-    rem_graph,
-    rem_node_map,
-    cluster_order_index,
-    materialized_edges,
-  )
-}
-
-///|
 /// Graphviz parity: clustered ReMincross multi-rank materialization builds
 /// order graph context, rematerialized edge arrays, and reorder input maps
 /// before cleanup reorder dispatch.
@@ -145,13 +119,21 @@ fn build_remincross_inputs(
   // (no cluster skeleton mapping).
   let cluster_order_index =
     build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
+  // Graphviz parity: ReMincross rematerialization keeps order-edge expansion
+  // and order-graph array materialization on one shared context snapshot.
+  let materialized_edges =
+    build_materialized_edges(
+      dispatch_context,
+      cluster_order_index,
+    )
   let materialized_arrays =
-    build_remincross_materialized_arrays(
+    build_materialized_arrays(
       dispatch_context,
       rem_groups,
       rem_graph_output.order_graph,
       rem_graph_output.order_node_map,
       cluster_order_index,
+      materialized_edges,
     )
   let rem_cluster_keys =
     build_remincross_cluster_keys(dispatch_context)
