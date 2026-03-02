@@ -183,11 +183,20 @@ fn build_local_cluster_index(
 /// Graphviz parity: cluster-local pass iterates cluster subgraphs in
 /// depth-first parent order with cluster_order tie-breaking (cluster.c path).
 /// Do not change behavior without updating fixtures/tests.
+priv struct LocalClusterGraphOrderOutput {
+  cluster_graphs : Map[String, @cgraph.Graph]
+  cluster_names : Array[String]
+}
+
+///|
+/// Graphviz parity: cluster-local pass iterates cluster subgraphs in
+/// depth-first parent order with cluster_order tie-breaking (cluster.c path).
+/// Do not change behavior without updating fixtures/tests.
 fn build_cluster_graph_order(
   graph : @cgraph.Graph,
   cluster_order : Array[String],
   cluster_parents_hint : Map[String, String?],
-) -> (Map[String, @cgraph.Graph], Array[String]) {
+) -> LocalClusterGraphOrderOutput {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @dot_shared.collect_cluster_graphs(graph, None, cluster_graphs, cluster_parents)
@@ -196,7 +205,7 @@ fn build_cluster_graph_order(
     cluster_names.push(name)
   }
   if cluster_graphs.length() == 0 {
-    return (cluster_graphs, cluster_names)
+    return { cluster_graphs, cluster_names }
   }
   let cluster_index = build_local_cluster_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
@@ -241,7 +250,7 @@ fn build_cluster_graph_order(
       }
     })
   }
-  (cluster_graphs, cluster_names)
+  { cluster_graphs, cluster_names }
 }
 
 ///|
@@ -371,6 +380,16 @@ fn build_local_rank_groups(
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
 /// Do not change behavior without updating fixtures/tests.
+priv struct LocalNeighborMapsOutput {
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
+/// neighbors after order-graph replay, skipping duplicates to mirror fixture
+/// out_all/in_all merge behavior.
+/// Do not change behavior without updating fixtures/tests.
 fn build_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
@@ -381,7 +400,7 @@ fn build_local_neighbor_maps(
   raw_graphviz_in_neighbors : Map[String, Array[String]],
   intercluster_keys : Map[String, String],
   allow_raw_neighbors : Bool,
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> LocalNeighborMapsOutput {
   let append_unique = (list : Array[String], value : String) => {
     let mut exists = false
     for item in list {
@@ -484,7 +503,15 @@ fn build_local_neighbor_maps(
     graphviz_out_neighbors[name] = out_neighbors
     graphviz_in_neighbors[name] = in_neighbors
   }
-  (graphviz_out_neighbors, graphviz_in_neighbors)
+  { graphviz_out_neighbors, graphviz_in_neighbors }
+}
+
+/// Graphviz parity: cluster-local mincross runs only when a cluster has
+/// internal ordering constraints; otherwise the input order is preserved.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterRankReorderOutput {
+  has_internal_constraints : Bool
+  ordered_cluster : Map[Int, Array[String]]
 }
 
 /// Graphviz parity: cluster-local mincross runs only when a cluster has
@@ -518,9 +545,9 @@ fn run_cluster_rank_reorder(
   cluster_flat_constraints : Map[String, Bool],
   fixed_positions : Map[String, Double],
   fixed_ranks : Map[String, Int],
-) -> (Bool, Map[Int, Array[String]]) {
+) -> ClusterRankReorderOutput {
   if cluster_edges.length() == 0 && cluster_flat_constraints.length() == 0 {
-    return (false, Map::new())
+    return { has_internal_constraints: false, ordered_cluster: Map::new() }
   }
   let seeded_by_vnode_interp =
     seed_local_groups_by_vnode(
@@ -577,7 +604,7 @@ fn run_cluster_rank_reorder(
       startpass=2,
       startpass_init_infinite=false,
   )
-  (true, ordered_cluster)
+  { has_internal_constraints: true, ordered_cluster }
 }
 
 ///|
@@ -903,7 +930,7 @@ fn build_local_reorder_inputs(
       None => ()
     }
   }
-  let (graphviz_out_neighbors, graphviz_in_neighbors) =
+  let local_neighbor_maps =
     build_local_neighbor_maps(
       cluster_name,
       expanded_clusters,
@@ -925,8 +952,8 @@ fn build_local_reorder_inputs(
     cluster_edge_head_port_order,
     parents,
     children,
-    graphviz_out_neighbors,
-    graphviz_in_neighbors,
+    graphviz_out_neighbors: local_neighbor_maps.graphviz_out_neighbors,
+    graphviz_in_neighbors: local_neighbor_maps.graphviz_in_neighbors,
     edge_order,
     cluster_sizes,
     cluster_keys,
@@ -1048,7 +1075,7 @@ fn reorder_cluster_rank_group(
       cluster_meta.intercluster_keys,
       cluster_meta.flat_constraints,
     )
-  let (has_internal_constraints, ordered_cluster) =
+  let reorder_output =
     run_cluster_rank_reorder(
       cluster_rank_keys,
       cluster_groups,
@@ -1078,13 +1105,13 @@ fn reorder_cluster_rank_group(
       cluster_fixed_positions,
       fixed_ranks,
     )
-  if !has_internal_constraints {
+  if !reorder_output.has_internal_constraints {
     return ()
   }
   // Graphviz parity: cluster-local reorder writes only cluster members back to
   // existing rank slots, preserving non-cluster node positions.
   for rank in cluster_rank_keys {
-    let desired = match ordered_cluster.get(rank) {
+    let desired = match reorder_output.ordered_cluster.get(rank) {
       Some(list) => list
       None => []
     }
@@ -1210,12 +1237,14 @@ fn reorder_by_cluster_ranks(
   if cluster_meta.cluster_order.length() == 0 {
     return ()
   }
-  let (cluster_graphs, cluster_names) =
+  let cluster_graph_order =
     build_cluster_graph_order(
       graph,
       cluster_meta.cluster_order,
       cluster_meta.cluster_parents,
     )
+  let cluster_graphs = cluster_graph_order.cluster_graphs
+  let cluster_names = cluster_graph_order.cluster_names
   if cluster_graphs.length() == 0 {
     return ()
   }
