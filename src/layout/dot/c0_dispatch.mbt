@@ -26,7 +26,7 @@ fn run_ordering_dispatch(
   port_order_contrib : Map[String, Array[(String, Double)]],
   runtime_context : OrderingRuntimeContext,
   dispatch_setup : OrderingDispatchSetup,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> OrderingDispatchOutput {
   let edge_port_data = dispatch_setup.edge_port_data
   let reorder_setup = dispatch_setup.reorder_setup
   let class2_data = reorder_setup.class2_data
@@ -83,6 +83,9 @@ fn run_ordering_dispatch(
         reorder_setup.graphviz_flip,
       )
     let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-    (ordered_groups, ordered_with_vnodes)
+    {
+      ordered_groups,
+      ordered_with_vnodes,
+    }
   }
 }

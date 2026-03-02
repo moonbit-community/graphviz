@@ -37,7 +37,7 @@ fn finalize_order_groups(
   port_order_contrib : Map[String, Array[(String, Double)]],
   order_rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> OrderingDispatchOutput {
   let cleaned_groups =
     collect_real_only_rank_groups(
       order_rank_keys,
@@ -130,8 +130,13 @@ fn finalize_order_groups(
       port_order_positions,
       port_order_contrib,
     }
-    run_remincross_pass(remincross_context)
+    let (ordered_with_vnodes, ordered_groups) =
+      run_remincross_pass(remincross_context)
+    { ordered_groups, ordered_with_vnodes }
   } else {
-    (ordered_with_vnodes, cleaned_groups)
+    {
+      ordered_groups: cleaned_groups,
+      ordered_with_vnodes,
+    }
   }
 }

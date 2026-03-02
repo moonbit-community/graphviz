@@ -254,7 +254,7 @@ fn run_clustered_root_phase(
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered(
   dispatch_context : ClusteredDispatchContext,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
@@ -348,7 +348,7 @@ fn run_clustered(
       finalize_dispatch_context.port_order_positions,
       finalize_dispatch_context.port_order_contrib,
     )
-  let (next_ordered_with_vnodes, final_groups) =
+  let finalize_output =
     finalize_order_groups(
       finalize_dispatch_context.order_with_clusters,
       finalize_dispatch_context.order_with_vnodes,
@@ -381,5 +381,8 @@ fn run_clustered(
       root_cluster_stage.ordered,
     )
   remincross_root_tail_order_override_snapshot.val = None
-  (final_groups, next_ordered_with_vnodes)
+  {
+    ordered_groups: finalize_output.ordered_groups,
+    ordered_with_vnodes: finalize_output.ordered_with_vnodes,
+  }
 }

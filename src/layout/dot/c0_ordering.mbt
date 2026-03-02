@@ -3,6 +3,12 @@
 /// definitions for cluster metadata and ordering outputs.
 
 ///|
+priv struct OrderingDispatchOutput {
+  ordered_groups : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+}
+
+///|
 priv struct ClusterMetadata {
   has_clusters : Bool
   cluster_keys : Map[String, String]
@@ -89,7 +95,7 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
       runtime_context.vnode_info,
     )
-  let (ordered_groups_internal, ordered_with_vnodes) =
+  let dispatch_output =
     run_ordering_dispatch(
       graph,
       nodes,
@@ -112,8 +118,8 @@ fn compute_ordering_and_vnodes(
       dispatch_setup,
     )
   {
-    ordered_groups: ordered_groups_internal,
-    ordered_groups_with_vnodes: ordered_with_vnodes,
+    ordered_groups: dispatch_output.ordered_groups,
+    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
     vnode_info: runtime_context.vnode_info,
     vnode_count: runtime_context.vnode_count,
     order_edges: dispatch_setup.edge_port_data.order_edges,
