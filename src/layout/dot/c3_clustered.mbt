@@ -135,40 +135,6 @@ fn build_clustered_pre_root(
 }
 
 ///|
-/// Graphviz parity: clustered root reorder source bundle is assembled from the
-/// same stage snapshots and runtime payload consumed by root cluster reorder.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_root_reorder_sources(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-) -> RootReorderBuildSources {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  let cluster_meta = dispatch_context.cluster_meta
-  let reorder_context = pre_root_stage.reorder_context
-  {
-    order_with_vnodes: reorder_setup.order_with_vnodes,
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups_for_mincross: pre_root_stage.order_groups,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    edges: dispatch_context.edges,
-    edge_tail: dispatch_context.edge_tail,
-    edge_head: dispatch_context.edge_head,
-    cluster_keys: cluster_meta.cluster_keys,
-    edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-    vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-    vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
-    nlist_order: class2_data.nlist_order,
-    ranks: dispatch_context.ranks,
-    skeleton_edge_creation: class2_data.skeleton_edge_creation,
-    root_edge_creation: class2_data.root_edge_creation,
-    flat_rank_constraints: reorder_setup.flat_rank_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: root-phase tail override keeps first-seen tail replay order
 /// while suppressing duplicate tail names from root-edge replay sequences.
 /// Do not change behavior without updating fixtures/tests.
@@ -204,45 +170,6 @@ fn apply_clustered_root_phase_overrides(
 }
 
 ///|
-/// Graphviz parity: root+cluster build_ranks payload is rebuilt directly from
-/// pre-root reorder/materialized snapshots without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_cluster_build_ranks_inputs(
-  pre_root_stage : ClusteredPreRootData,
-) -> RootClusterBuildRanksInputs {
-  let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
-  let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  {
-    order_node_order: reorder_context.order_node_order,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups: pre_root_stage.order_groups,
-    order_ranks: reorder_context.order_ranks,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    order_flat_constraints: materialized.order_flat_constraints,
-    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-    order_edges_out: materialized.order_edges_out,
-    order_edge_tail_out: materialized.order_edge_tail_out,
-    order_edge_head_out: materialized.order_edge_head_out,
-    order_edge_tail_port_x: materialized.order_edge_tail_port_x,
-    order_edge_head_port_x: materialized.order_edge_head_port_x,
-    order_edge_tail_port_order: materialized.order_edge_tail_port_order,
-    order_edge_head_port_order: materialized.order_edge_head_port_order,
-    order_edges_out_unmapped: materialized.order_edges_out_unmapped,
-    order_edge_tail_out_unmapped: materialized.order_edge_tail_out_unmapped,
-    order_edge_head_out_unmapped: materialized.order_edge_head_out_unmapped,
-    order_edge_tail_port_x_unmapped: materialized.order_edge_tail_port_x_unmapped,
-    order_edge_head_port_x_unmapped: materialized.order_edge_head_port_x_unmapped,
-    order_edge_tail_port_order_unmapped: materialized.order_edge_tail_port_order_unmapped,
-    order_edge_head_port_order_unmapped: materialized.order_edge_head_port_order_unmapped,
-    ordered_with_vnodes,
-  }
-}
-
-///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -253,12 +180,29 @@ fn run_clustered_root_phase(
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
   remincross_root_tail_order_override_snapshot.val = None
-  let root_reorder_sources =
-    build_clustered_root_reorder_sources(
-      dispatch_context,
-      pre_root_stage,
-    )
+  let root_reorder_sources : RootReorderBuildSources =
+    {
+      order_with_vnodes: reorder_setup.order_with_vnodes,
+      order_rank_keys: reorder_context.order_rank_keys,
+      order_groups_for_mincross: pre_root_stage.order_groups,
+      order_cluster_keys: pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+      edges: dispatch_context.edges,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+      edge_vnodes: runtime_context.vnode_info.edge_vnodes,
+      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+      vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
+      nlist_order: class2_data.nlist_order,
+      ranks: dispatch_context.ranks,
+      skeleton_edge_creation: class2_data.skeleton_edge_creation,
+      root_edge_creation: class2_data.root_edge_creation,
+      flat_rank_constraints: reorder_setup.flat_rank_constraints,
+    }
   let root_reorder_output : RootClusterReorderInputs =
     build_root_reorder_inputs(
       root_reorder_sources,
@@ -291,8 +235,36 @@ fn run_clustered_root_phase(
     root_tail_order_override,
     root_groups_override,
   )
-  let build_ranks_inputs =
-    build_root_cluster_build_ranks_inputs(pre_root_stage)
+  let build_ranks_inputs : RootClusterBuildRanksInputs =
+    {
+      order_node_order: reorder_context.order_node_order,
+      order_sizes_out: pre_root_stage.order_sizes_out,
+      order_rank_keys: reorder_context.order_rank_keys,
+      order_groups: pre_root_stage.order_groups,
+      order_ranks: reorder_context.order_ranks,
+      order_cluster_keys: pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+      order_flat_constraints: materialized.order_flat_constraints,
+      graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+      graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+      order_edges_out: materialized.order_edges_out,
+      order_edge_tail_out: materialized.order_edge_tail_out,
+      order_edge_head_out: materialized.order_edge_head_out,
+      order_edge_tail_port_x: materialized.order_edge_tail_port_x,
+      order_edge_head_port_x: materialized.order_edge_head_port_x,
+      order_edge_tail_port_order: materialized.order_edge_tail_port_order,
+      order_edge_head_port_order: materialized.order_edge_head_port_order,
+      order_edges_out_unmapped: materialized.order_edges_out_unmapped,
+      order_edge_tail_out_unmapped: materialized.order_edge_tail_out_unmapped,
+      order_edge_head_out_unmapped: materialized.order_edge_head_out_unmapped,
+      order_edge_tail_port_x_unmapped: materialized.order_edge_tail_port_x_unmapped,
+      order_edge_head_port_x_unmapped: materialized.order_edge_head_port_x_unmapped,
+      order_edge_tail_port_order_unmapped:
+        materialized.order_edge_tail_port_order_unmapped,
+      order_edge_head_port_order_unmapped:
+        materialized.order_edge_head_port_order_unmapped,
+      ordered_with_vnodes: Map::new(),
+    }
   let output =
     run_root_and_cluster_ranks(
       {
@@ -362,89 +334,6 @@ fn build_cluster_finalize_dispatch_context(
 }
 
 ///|
-/// Graphviz parity: cluster-rank-order build inputs are assembled from finalize
-/// dispatch + pre-root/root stage snapshots without argument reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order_build_inputs(
-  finalize_dispatch_context : ClusterFinalizeDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
-) -> ClusterRankOrderBuildInputs {
-  let reorder_context = pre_root_stage.reorder_context
-  {
-    order_with_clusters: finalize_dispatch_context.order_with_clusters,
-    order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
-    graphviz_flip: finalize_dispatch_context.graphviz_flip,
-    edges: finalize_dispatch_context.edges,
-    edge_tail: finalize_dispatch_context.edge_tail,
-    edge_head: finalize_dispatch_context.edge_head,
-    nlist_order: finalize_dispatch_context.nlist_order,
-    ranks: finalize_dispatch_context.ranks,
-    order_rank_keys: reorder_context.order_rank_keys,
-    order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    order_edges_by_tail_root: finalize_dispatch_context.order_edges_by_tail_root,
-    skeleton_edge_creation: finalize_dispatch_context.skeleton_edge_creation,
-    root_edge_creation: finalize_dispatch_context.root_edge_creation,
-    flat_rank_constraints: finalize_dispatch_context.flat_rank_constraints,
-    cluster_meta: finalize_dispatch_context.cluster_meta,
-    vnode_info: finalize_dispatch_context.vnode_info,
-    vnode_order_keys_for_ordering: finalize_dispatch_context.vnode_order_keys_for_ordering,
-    real_nodes: finalize_dispatch_context.real_nodes,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    nodesep_pt: finalize_dispatch_context.nodesep_pt,
-    has_edge_labels: finalize_dispatch_context.has_edge_labels,
-    port_order_positions: finalize_dispatch_context.port_order_positions,
-    port_order_contrib: finalize_dispatch_context.port_order_contrib,
-  }
-}
-
-///|
-/// Graphviz parity: finalize-order dispatch inputs preserve clustered finalize
-/// call ordering while grouping payload in one context bundle.
-/// Do not change behavior without updating fixtures/tests.
-fn build_finalize_order_groups_inputs(
-  finalize_dispatch_context : ClusterFinalizeDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
-  cluster_rank_order : Map[Int, Map[String, Int]],
-) -> FinalizeOrderGroupsInputs {
-  let reorder_context = pre_root_stage.reorder_context
-  {
-    order_with_clusters: finalize_dispatch_context.order_with_clusters,
-    order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
-    cluster_rank_order,
-    cluster_meta: finalize_dispatch_context.cluster_meta,
-    local_cluster_order: finalize_dispatch_context.local_cluster_order,
-    ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-    graph: finalize_dispatch_context.graph,
-    edges: finalize_dispatch_context.edges,
-    edge_tail: finalize_dispatch_context.edge_tail,
-    edge_head: finalize_dispatch_context.edge_head,
-    edge_reversed: finalize_dispatch_context.edge_reversed,
-    edge_tail_port_x: finalize_dispatch_context.edge_tail_port_x,
-    edge_head_port_x: finalize_dispatch_context.edge_head_port_x,
-    edge_tail_port_order: finalize_dispatch_context.edge_tail_port_order,
-    edge_head_port_order: finalize_dispatch_context.edge_head_port_order,
-    ranks: finalize_dispatch_context.ranks,
-    creation_order: reorder_context.creation_order,
-    edges_by_tail: finalize_dispatch_context.edges_by_tail,
-    vnode_info: finalize_dispatch_context.vnode_info,
-    order_sizes: finalize_dispatch_context.order_sizes,
-    rank_same_constraints: finalize_dispatch_context.rank_same_constraints,
-    real_nodes: finalize_dispatch_context.real_nodes,
-    graphviz_flip: finalize_dispatch_context.graphviz_flip,
-    nodesep_pt: finalize_dispatch_context.nodesep_pt,
-    has_edge_labels: finalize_dispatch_context.has_edge_labels,
-    port_order_positions: finalize_dispatch_context.port_order_positions,
-    port_order_contrib: finalize_dispatch_context.port_order_contrib,
-    order_rank_keys: reorder_context.order_rank_keys,
-    ordered: root_cluster_stage.ordered,
-  }
-}
-
-///|
 /// Graphviz parity: clustered finalize phase first applies root cluster-rank
 /// ordering, then runs final clustered ReMincross with unchanged call ordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -453,23 +342,72 @@ fn run_clustered_finalize_phase(
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : OrderRootClusterData,
 ) -> OrderingDispatchOutput {
-  let cluster_rank_order_inputs =
-    build_cluster_rank_order_build_inputs(
-      finalize_dispatch_context,
-      pre_root_stage,
-      root_cluster_stage,
-    )
+  let reorder_context = pre_root_stage.reorder_context
+  let cluster_rank_order_inputs : ClusterRankOrderBuildInputs =
+    {
+      order_with_clusters: finalize_dispatch_context.order_with_clusters,
+      order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
+      graphviz_flip: finalize_dispatch_context.graphviz_flip,
+      edges: finalize_dispatch_context.edges,
+      edge_tail: finalize_dispatch_context.edge_tail,
+      edge_head: finalize_dispatch_context.edge_head,
+      nlist_order: finalize_dispatch_context.nlist_order,
+      ranks: finalize_dispatch_context.ranks,
+      order_rank_keys: reorder_context.order_rank_keys,
+      order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
+      order_cluster_keys: pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+      order_edges_by_tail_root: finalize_dispatch_context.order_edges_by_tail_root,
+      skeleton_edge_creation: finalize_dispatch_context.skeleton_edge_creation,
+      root_edge_creation: finalize_dispatch_context.root_edge_creation,
+      flat_rank_constraints: finalize_dispatch_context.flat_rank_constraints,
+      cluster_meta: finalize_dispatch_context.cluster_meta,
+      vnode_info: finalize_dispatch_context.vnode_info,
+      vnode_order_keys_for_ordering:
+        finalize_dispatch_context.vnode_order_keys_for_ordering,
+      real_nodes: finalize_dispatch_context.real_nodes,
+      order_sizes_out: pre_root_stage.order_sizes_out,
+      nodesep_pt: finalize_dispatch_context.nodesep_pt,
+      has_edge_labels: finalize_dispatch_context.has_edge_labels,
+      port_order_positions: finalize_dispatch_context.port_order_positions,
+      port_order_contrib: finalize_dispatch_context.port_order_contrib,
+    }
   let cluster_rank_order =
     build_cluster_rank_order(
       cluster_rank_order_inputs,
     )
-  let finalize_order_inputs =
-    build_finalize_order_groups_inputs(
-      finalize_dispatch_context,
-      pre_root_stage,
-      root_cluster_stage,
+  let finalize_order_inputs : FinalizeOrderGroupsInputs =
+    {
+      order_with_clusters: finalize_dispatch_context.order_with_clusters,
+      order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
       cluster_rank_order,
-    )
+      cluster_meta: finalize_dispatch_context.cluster_meta,
+      local_cluster_order: finalize_dispatch_context.local_cluster_order,
+      ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
+      graph: finalize_dispatch_context.graph,
+      edges: finalize_dispatch_context.edges,
+      edge_tail: finalize_dispatch_context.edge_tail,
+      edge_head: finalize_dispatch_context.edge_head,
+      edge_reversed: finalize_dispatch_context.edge_reversed,
+      edge_tail_port_x: finalize_dispatch_context.edge_tail_port_x,
+      edge_head_port_x: finalize_dispatch_context.edge_head_port_x,
+      edge_tail_port_order: finalize_dispatch_context.edge_tail_port_order,
+      edge_head_port_order: finalize_dispatch_context.edge_head_port_order,
+      ranks: finalize_dispatch_context.ranks,
+      creation_order: reorder_context.creation_order,
+      edges_by_tail: finalize_dispatch_context.edges_by_tail,
+      vnode_info: finalize_dispatch_context.vnode_info,
+      order_sizes: finalize_dispatch_context.order_sizes,
+      rank_same_constraints: finalize_dispatch_context.rank_same_constraints,
+      real_nodes: finalize_dispatch_context.real_nodes,
+      graphviz_flip: finalize_dispatch_context.graphviz_flip,
+      nodesep_pt: finalize_dispatch_context.nodesep_pt,
+      has_edge_labels: finalize_dispatch_context.has_edge_labels,
+      port_order_positions: finalize_dispatch_context.port_order_positions,
+      port_order_contrib: finalize_dispatch_context.port_order_contrib,
+      order_rank_keys: reorder_context.order_rank_keys,
+      ordered: root_cluster_stage.ordered,
+    }
   let finalize_output =
     finalize_order_groups(
       finalize_order_inputs,
@@ -481,47 +419,37 @@ fn run_clustered_finalize_phase(
 }
 
 ///|
-/// Graphviz parity: clustered pre-root build inputs are assembled directly from
-/// clustered dispatch context + runtime/class2 snapshots without reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_pre_root_build_inputs(
-  dispatch_context : ClusteredDispatchContext,
-) -> ClusteredPreRootBuildInputs {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  {
-    ordering_groups_base: reorder_setup.ordering_groups_base,
-    base_order_index: reorder_setup.base_order_index,
-    order_with_vnodes: reorder_setup.order_with_vnodes,
-    order_with_clusters: reorder_setup.order_with_clusters,
-    cluster_meta: dispatch_context.cluster_meta,
-    vnode_info: runtime_context.vnode_info,
-    vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
-    order_sizes: dispatch_context.order_sizes,
-    nlist_order: class2_data.nlist_order,
-    gdnlist_order: reorder_setup.gdnlist_order,
-    node_order: dispatch_context.node_order,
-    real_nodes: runtime_context.real_nodes,
-    port_edge_nodes: runtime_context.port_edge_nodes,
-    order_edges_by_tail: class2_data.order_edges_by_tail,
-    order_edges_by_tail_unmapped: class2_data.order_edges_by_tail_unmapped,
-    edge_creation_order: class2_data.edge_creation_order,
-    edge_tail: dispatch_context.edge_tail,
-    edge_head: dispatch_context.edge_head,
-    nodes: dispatch_context.nodes,
-  }
-}
-
-///|
 /// Graphviz parity: clustered ordering path keeps build_ranks/mincross phase
 /// boundaries unchanged while delegating each phase to base helpers.
 /// Do not change behavior without updating fixtures/tests.
 fn run_clustered(
   dispatch_context : ClusteredDispatchContext,
 ) -> OrderingDispatchOutput {
-  let pre_root_inputs =
-    build_clustered_pre_root_build_inputs(dispatch_context)
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let runtime_context = dispatch_context.runtime_context
+  let pre_root_inputs : ClusteredPreRootBuildInputs =
+    {
+      ordering_groups_base: reorder_setup.ordering_groups_base,
+      base_order_index: reorder_setup.base_order_index,
+      order_with_vnodes: reorder_setup.order_with_vnodes,
+      order_with_clusters: reorder_setup.order_with_clusters,
+      cluster_meta: dispatch_context.cluster_meta,
+      vnode_info: runtime_context.vnode_info,
+      vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
+      order_sizes: dispatch_context.order_sizes,
+      nlist_order: class2_data.nlist_order,
+      gdnlist_order: reorder_setup.gdnlist_order,
+      node_order: dispatch_context.node_order,
+      real_nodes: runtime_context.real_nodes,
+      port_edge_nodes: runtime_context.port_edge_nodes,
+      order_edges_by_tail: class2_data.order_edges_by_tail,
+      order_edges_by_tail_unmapped: class2_data.order_edges_by_tail_unmapped,
+      edge_creation_order: class2_data.edge_creation_order,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      nodes: dispatch_context.nodes,
+    }
   let pre_root_stage =
     build_clustered_pre_root(
       pre_root_inputs,
