@@ -185,12 +185,13 @@ fn build_vnode_order_keys(
     if vnodes.length() == 0 {
       continue
     }
-    let tail = if current_idx < edge_tail.length() { edge_tail[current_idx] } else {
-      edge.tail().name()
-    }
-    let head = if current_idx < edge_head.length() { edge_head[current_idx] } else {
-      edge.head().name()
-    }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        current_idx,
+        edge_tail,
+        edge_head,
+      )
     let tail_rank = match ranks.get(tail) {
       Some(value) => value
       None => continue
@@ -468,10 +469,13 @@ fn collect_vnode_out_heads(
   let out_heads : Map[String, Array[String]] = Map::new()
   let mut edge_idx = 0
   for edge in edges {
-    let tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else { edge.tail().name() }
-    let head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else { edge.head().name() }
+    let (tail, head) =
+      edge_endpoints_at(
+        edge,
+        edge_idx,
+        edge_tail,
+        edge_head,
+      )
     edge_idx = edge_idx + 1
     let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list

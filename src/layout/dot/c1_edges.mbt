@@ -36,18 +36,13 @@ fn compute_edge_port_samples(
   let mut endpoint_idx = 0
   while endpoint_idx < edges.length() {
     let edge = edges[endpoint_idx]
-    let tail_name =
-      if endpoint_idx < edge_tail.length() {
-        edge_tail[endpoint_idx]
-      } else {
-        edge.tail().name()
-      }
-    let head_name =
-      if endpoint_idx < edge_head.length() {
-        edge_head[endpoint_idx]
-      } else {
-        edge.head().name()
-      }
+    let (tail_name, head_name) =
+      edge_endpoints_at(
+        edge,
+        endpoint_idx,
+        edge_tail,
+        edge_head,
+      )
     let tail_port = edge_tail_port_for_name(edge, tail_name)
     let head_port = edge_head_port_for_name(edge, head_name)
     tail_names.push(tail_name)

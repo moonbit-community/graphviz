@@ -1850,14 +1850,13 @@ fn oriented_edge_endpoints(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> OrientedEdgeEndpoints {
-  let tail_name =
-    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
-    }
-  let head_name =
-    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
+  let (tail_name, head_name) =
+    edge_endpoints_at(
+      edge,
+      edge_idx,
+      edge_tail,
+      edge_head,
+    )
   let is_reversed =
     tail_name == edge.head().name() &&
     head_name == edge.tail().name()
