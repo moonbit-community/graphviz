@@ -327,53 +327,24 @@ fn build_cluster_tail_order(
   rem_edge_creation : Array[(String, String)],
   cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  // Graphviz parity: clustered ReMincross groups names by cluster in
-  // rem_order_creation order and records first-seen cluster sequence.
-  let cluster_order_seen : Array[String] = []
-  let cluster_seen : Map[String, Bool] = Map::new()
-  let names_by_cluster : Map[String, Array[String]] = Map::new()
-  for name in rem_order_creation {
-    let cluster =
-      cluster_key_for_tail_name(
-        rem_cluster_keys,
-        name,
-      )
-    if cluster_seen.get(cluster) is None {
-      cluster_seen[cluster] = true
-      cluster_order_seen.push(cluster)
-    }
-    match names_by_cluster.get(cluster) {
-      Some(list) => list.push(name)
-      None => names_by_cluster[cluster] = [name]
-    }
-  }
-  let cluster_first_seen : Map[String, Int] = Map::new()
-  for idx, cluster in cluster_order_seen {
-    cluster_first_seen[cluster] = idx
-  }
+  let cluster_tail_buckets =
+    build_cluster_tail_buckets(rem_order_creation, rem_cluster_keys)
   let cluster_order_output =
     build_remincross_order(
-      cluster_order_seen,
-      cluster_first_seen,
+      cluster_tail_buckets.cluster_order_seen,
+      cluster_tail_buckets.cluster_first_seen,
       cluster_order_index,
     )
   let cluster_order = cluster_order_output.cluster_order
   let cluster_order_pos = cluster_order_output.cluster_order_pos
-  // Graphviz parity: clustered ReMincross tail->head adjacency keeps
-  // rematerialized edge-creation order for downstream rank/block replay.
-  let heads_by_tail : Map[String, Array[String]] = Map::new()
-  for edge in rem_edge_creation {
-    let (tail, head) = edge
-    match heads_by_tail.get(tail) {
-      Some(list) => list.push(head)
-      None => heads_by_tail[tail] = [head]
-    }
-  }
+  let heads_by_tail =
+    build_heads_by_tail_from_edge_creation(rem_edge_creation)
   let rem_nlist_order : Array[String] = []
   for cluster in cluster_order {
     // Graphviz parity: cluster buckets default to empty when absent from
     // grouped creation-order names.
-    let names = names_by_cluster.get(cluster).unwrap_or_default()
+    let names =
+      cluster_tail_buckets.names_by_cluster.get(cluster).unwrap_or_default()
     let ordered_names =
       if cluster == "" {
         // Graphviz parity: root cluster tail order can apply a temporary
@@ -400,6 +371,71 @@ fn build_cluster_tail_order(
     append_names_in_order(rem_nlist_order, ordered_names)
   }
   rem_nlist_order
+}
+
+///|
+/// Graphviz parity: clustered ReMincross groups names by cluster in
+/// creation-order sequence and records first-seen cluster order.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterTailBuckets {
+  cluster_order_seen : Array[String]
+  names_by_cluster : Map[String, Array[String]]
+  cluster_first_seen : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: clustered ReMincross groups names by cluster in
+/// creation-order sequence and records first-seen cluster order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_tail_buckets(
+  rem_order_creation : Array[String],
+  rem_cluster_keys : Map[String, String],
+) -> ClusterTailBuckets {
+  // Graphviz parity: clustered ReMincross groups names by cluster in
+  // rem_order_creation order and records first-seen cluster sequence.
+  let cluster_order_seen : Array[String] = []
+  let cluster_seen : Map[String, Bool] = Map::new()
+  let names_by_cluster : Map[String, Array[String]] = Map::new()
+  for name in rem_order_creation {
+    let cluster =
+      cluster_key_for_tail_name(
+        rem_cluster_keys,
+        name,
+      )
+    if cluster_seen.get(cluster) is None {
+      cluster_seen[cluster] = true
+      cluster_order_seen.push(cluster)
+    }
+    match names_by_cluster.get(cluster) {
+      Some(list) => list.push(name)
+      None => names_by_cluster[cluster] = [name]
+    }
+  }
+  let cluster_first_seen : Map[String, Int] = Map::new()
+  for idx, cluster in cluster_order_seen {
+    cluster_first_seen[cluster] = idx
+  }
+  { cluster_order_seen, names_by_cluster, cluster_first_seen }
+}
+
+///|
+/// Graphviz parity: clustered ReMincross tail->head adjacency keeps
+/// rematerialized edge-creation order for downstream rank/block replay.
+/// Do not change behavior without updating fixtures/tests.
+fn build_heads_by_tail_from_edge_creation(
+  rem_edge_creation : Array[(String, String)],
+) -> Map[String, Array[String]] {
+  // Graphviz parity: clustered ReMincross tail->head adjacency keeps
+  // rematerialized edge-creation order for downstream rank/block replay.
+  let heads_by_tail : Map[String, Array[String]] = Map::new()
+  for edge in rem_edge_creation {
+    let (tail, head) = edge
+    match heads_by_tail.get(tail) {
+      Some(list) => list.push(head)
+      None => heads_by_tail[tail] = [head]
+    }
+  }
+  heads_by_tail
 }
 
 ///|
