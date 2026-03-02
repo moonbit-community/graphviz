@@ -126,22 +126,20 @@ fn build_clustered_pre_root(
   }
 }
 
-
 ///|
-/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
-/// typed stage context + pre-root output without argument reordering.
+/// Graphviz parity: clustered root reorder source bundle is assembled from the
+/// same stage snapshots and runtime payload consumed by root cluster reorder.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_root_phase(
+fn build_clustered_root_reorder_sources(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-) -> OrderRootClusterData {
+) -> RootReorderBuildSources {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
   let cluster_meta = dispatch_context.cluster_meta
   let reorder_context = pre_root_stage.reorder_context
-  remincross_root_tail_order_override_snapshot.val = None
-  let root_reorder_sources : RootReorderBuildSources = {
+  {
     order_with_vnodes: reorder_setup.order_with_vnodes,
     order_rank_keys: reorder_context.order_rank_keys,
     order_groups_for_mincross: pre_root_stage.order_groups,
@@ -160,50 +158,54 @@ fn run_clustered_root_phase(
     root_edge_creation: class2_data.root_edge_creation,
     flat_rank_constraints: reorder_setup.flat_rank_constraints,
   }
-  let root_reorder_output : RootClusterReorderInputs =
-    build_root_reorder_inputs(
-      root_reorder_sources,
-      class2_data.order_edges_by_tail_root,
-    )
-  // Graphviz parity: root-phase tail override preserves first-seen tail order
-  // while suppressing duplicate tail names in root-edge replay sequences.
+}
+
+///|
+/// Graphviz parity: root-phase tail override keeps first-seen tail replay order
+/// while suppressing duplicate tail names from root-edge replay sequences.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_phase_tail_order_override(
+  root_edge_tail_out : Array[String],
+) -> Array[String] {
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
-  for tail in root_reorder_output.root_edge_tail_out {
+  for tail in root_edge_tail_out {
     append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
-  let root_phase_inputs : RootRankOrderPhaseInputs = {
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    rank_same_groups: cluster_meta.rank_same_groups,
-    rank_same_order: cluster_meta.rank_same_order,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    flat_constraints: cluster_meta.flat_constraints,
-    graphviz_flip: reorder_setup.graphviz_flip,
-    root_reorder_output,
-  }
-  let root_rank_order_phase_output =
-    run_root_rank_order_phase(root_phase_inputs)
-  let root_groups_override = root_rank_order_phase_output.ordered_root
-  if reorder_setup.order_with_clusters {
+  root_tail_order_override
+}
+
+///|
+/// Graphviz parity: clustered root phase sets both tail-order and group
+/// overrides only in cluster mode; otherwise both override channels are cleared.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_clustered_root_phase_overrides(
+  order_with_clusters : Bool,
+  root_tail_order_override : Array[String],
+  root_groups_override : Map[Int, Array[String]],
+) -> Unit {
+  if order_with_clusters {
     remincross_root_tail_order_override_snapshot.val =
       Some(root_tail_order_override.copy())
-  } else {
-    remincross_root_tail_order_override_snapshot.val = None
-  }
-  if reorder_setup.order_with_clusters {
     root_mincross_groups_override.val =
       Some(clone_rank_groups(root_groups_override))
   } else {
+    remincross_root_tail_order_override_snapshot.val = None
     root_mincross_groups_override.val = None
   }
+}
+
+///|
+/// Graphviz parity: root+cluster build_ranks payload is rebuilt directly from
+/// pre-root reorder/materialized snapshots without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_cluster_build_ranks_inputs(
+  pre_root_stage : ClusteredPreRootData,
+) -> RootClusterBuildRanksInputs {
+  let reorder_context = pre_root_stage.reorder_context
   let materialized = pre_root_stage.materialized
   let ordered_with_vnodes : Map[Int, Array[String]] = Map::new()
-  let build_ranks_inputs : RootClusterBuildRanksInputs = {
+  {
     order_node_order: reorder_context.order_node_order,
     order_sizes_out: pre_root_stage.order_sizes_out,
     order_rank_keys: reorder_context.order_rank_keys,
@@ -230,6 +232,60 @@ fn run_clustered_root_phase(
     order_edge_head_port_order_unmapped: materialized.order_edge_head_port_order_unmapped,
     ordered_with_vnodes,
   }
+}
+
+
+///|
+/// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
+/// typed stage context + pre-root output without argument reordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_root_phase(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> OrderRootClusterData {
+  let reorder_setup = dispatch_context.reorder_setup
+  let class2_data = dispatch_context.class2_data
+  let cluster_meta = dispatch_context.cluster_meta
+  let runtime_context = dispatch_context.runtime_context
+  remincross_root_tail_order_override_snapshot.val = None
+  let root_reorder_sources =
+    build_clustered_root_reorder_sources(
+      dispatch_context,
+      pre_root_stage,
+    )
+  let root_reorder_output : RootClusterReorderInputs =
+    build_root_reorder_inputs(
+      root_reorder_sources,
+      class2_data.order_edges_by_tail_root,
+    )
+  let root_tail_order_override =
+    build_root_phase_tail_order_override(
+      root_reorder_output.root_edge_tail_out,
+    )
+  let root_phase_inputs : RootRankOrderPhaseInputs = {
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    rank_same_groups: cluster_meta.rank_same_groups,
+    rank_same_order: cluster_meta.rank_same_order,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    flat_constraints: cluster_meta.flat_constraints,
+    graphviz_flip: reorder_setup.graphviz_flip,
+    root_reorder_output,
+  }
+  let root_rank_order_phase_output =
+    run_root_rank_order_phase(root_phase_inputs)
+  let root_groups_override = root_rank_order_phase_output.ordered_root
+  apply_clustered_root_phase_overrides(
+    reorder_setup.order_with_clusters,
+    root_tail_order_override,
+    root_groups_override,
+  )
+  let build_ranks_inputs =
+    build_root_cluster_build_ranks_inputs(pre_root_stage)
   let output =
     run_root_and_cluster_ranks(
       reorder_setup.order_with_clusters,
