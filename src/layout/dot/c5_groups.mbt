@@ -32,24 +32,9 @@ fn build_remincross_groups(
   }
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
-  build_remincross_vnode_groups(
-    {
-      final_groups: dispatch_context.base_groups,
-      order_with_vnodes: dispatch_context.order_with_vnodes,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      edge_reversed: dispatch_context.edge_reversed,
-      ranks: dispatch_context.ranks,
-      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-      cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-      cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-      edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-      vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
-      vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
-    },
-  )
+  let vnode_groups_inputs =
+    build_remincross_vnode_groups_build_inputs(dispatch_context)
+  build_remincross_vnode_groups(vnode_groups_inputs)
 }
 
 ///|
@@ -248,21 +233,10 @@ fn build_remincross_inputs(
       rem_groups,
       context,
     )
+  let pass_build_inputs =
+    build_remincross_pass_build_inputs(dispatch_context)
   let pass_inputs =
-    build_remincross_pass_inputs(
-      {
-        graph: dispatch_context.graph,
-        edges: dispatch_context.edges,
-        edge_tail: dispatch_context.edge_tail,
-        edge_head: dispatch_context.edge_head,
-        order_with_vnodes: dispatch_context.order_with_vnodes,
-        order_with_clusters: dispatch_context.order_with_clusters,
-        cluster_meta: dispatch_context.cluster_meta,
-        vnode_info: dispatch_context.vnode_info,
-        order_sizes: dispatch_context.order_sizes,
-        rank_same_constraints: dispatch_context.rank_same_constraints,
-      },
-    )
+    build_remincross_pass_inputs(pass_build_inputs)
   {
     rem_nodes: context.rem_nodes,
     rem_ranks: context.rem_ranks,
@@ -506,6 +480,27 @@ priv struct ReMincrossPassBuildInputs {
   vnode_info : EdgeVnodeInfo
   order_sizes : Map[String, NodeSize]
   rank_same_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: ReMincross pass build inputs are projected directly from
+/// clustered dispatch payload before pass key/size/constraint assembly.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_pass_build_inputs(
+  dispatch_context : ReMincrossDispatchContext,
+) -> ReMincrossPassBuildInputs {
+  {
+    graph: dispatch_context.graph,
+    edges: dispatch_context.edges,
+    edge_tail: dispatch_context.edge_tail,
+    edge_head: dispatch_context.edge_head,
+    order_with_vnodes: dispatch_context.order_with_vnodes,
+    order_with_clusters: dispatch_context.order_with_clusters,
+    cluster_meta: dispatch_context.cluster_meta,
+    vnode_info: dispatch_context.vnode_info,
+    order_sizes: dispatch_context.order_sizes,
+    rank_same_constraints: dispatch_context.rank_same_constraints,
+  }
 }
 
 ///|
@@ -822,6 +817,31 @@ fn build_remincross_vnode_groups(
     )
   } else {
     rem_base_groups
+  }
+}
+
+///|
+/// Graphviz parity: vnode-group build inputs are projected directly from
+/// clustered dispatch payload before trailing-vnode adjusted group rebuild.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_vnode_groups_build_inputs(
+  dispatch_context : ReMincrossDispatchContext,
+) -> ReMincrossVnodeGroupsBuildInputs {
+  {
+    final_groups: dispatch_context.base_groups,
+    order_with_vnodes: dispatch_context.order_with_vnodes,
+    edges: dispatch_context.edges,
+    edge_tail: dispatch_context.edge_tail,
+    edge_head: dispatch_context.edge_head,
+    edge_reversed: dispatch_context.edge_reversed,
+    ranks: dispatch_context.ranks,
+    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+    cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+    cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+    edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+    vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
+    vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
   }
 }
 
