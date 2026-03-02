@@ -102,35 +102,6 @@ priv struct ClusteredReMincrossMaterializedInputs {
 }
 
 ///|
-/// Graphviz parity: ReMincross cleanup reorder call inputs keep rematerialized
-/// edge snapshots and rank-order payload unchanged before startpass=2 call.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossCleanupReorderCallInputs {
-  rem_rank_keys : Array[Int]
-  rem_groups : Map[Int, Array[String]]
-  rem_edges_out : Array[@cgraph.Edge]
-  rem_edge_tail_out : Array[String]
-  rem_edge_head_out : Array[String]
-  rem_edge_tail_port_x : Array[Double]
-  rem_edge_head_port_x : Array[Double]
-  rem_edge_tail_port_order : Array[Double]
-  rem_edge_head_port_order : Array[Double]
-  rem_parents : Map[String, Array[String]]
-  rem_children : Map[String, Array[String]]
-  rem_cluster_keys : Map[String, String]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  rem_edge_order : Map[String, Int]
-  rem_node_order : Map[String, Int]
-  rem_sizes : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  rem_flat_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: ReMincross order-graph context keeps rematerialized ranks,
 /// node membership, graph handles, and cluster-order index in one snapshot.
 /// Do not change behavior without updating fixtures/tests.
@@ -253,85 +224,6 @@ fn build_remincross_inputs(
 }
 
 ///|
-/// Graphviz parity: ReMincross cleanup reorder payload is assembled from one
-/// rematerialized snapshot + computed edge-index maps for startpass=2.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cleanup_reorder_call_inputs(
-  dispatch_context : ReMincrossDispatchContext,
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-  materialized_inputs : ClusteredReMincrossMaterializedInputs,
-  rem_edge_indices : EdgeIndicesAndOrder,
-) -> ReMincrossCleanupReorderCallInputs {
-  {
-    rem_rank_keys,
-    rem_groups,
-    rem_edges_out: materialized_inputs.rem_edges_out,
-    rem_edge_tail_out: materialized_inputs.rem_edge_tail_out,
-    rem_edge_head_out: materialized_inputs.rem_edge_head_out,
-    rem_edge_tail_port_x: materialized_inputs.rem_edge_tail_port_x,
-    rem_edge_head_port_x: materialized_inputs.rem_edge_head_port_x,
-    rem_edge_tail_port_order: materialized_inputs.rem_edge_tail_port_order,
-    rem_edge_head_port_order: materialized_inputs.rem_edge_head_port_order,
-    rem_parents: rem_edge_indices.parents,
-    rem_children: rem_edge_indices.children,
-    rem_cluster_keys: materialized_inputs.rem_cluster_keys,
-    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-    rem_edge_order: rem_edge_indices.edge_order,
-    rem_node_order: materialized_inputs.rem_node_order,
-    rem_sizes: materialized_inputs.rem_sizes,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    rem_flat_constraints: materialized_inputs.rem_flat_constraints,
-  }
-}
-
-///|
-/// Graphviz parity: ReMincross cleanup dispatch runs reorder_rank_groups with
-/// startpass=2 + remincross-mode flags on rematerialized edge snapshots.
-/// Do not change behavior without updating fixtures/tests.
-fn run_remincross_cleanup_reorder_call(
-  inputs : ReMincrossCleanupReorderCallInputs,
-  graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
-    inputs.rem_rank_keys,
-    inputs.rem_groups,
-    inputs.rem_edges_out,
-    inputs.rem_edge_tail_out,
-    inputs.rem_edge_head_out,
-    inputs.rem_edge_tail_port_x,
-    inputs.rem_edge_head_port_x,
-    inputs.rem_edge_tail_port_order,
-    inputs.rem_edge_head_port_order,
-    inputs.rem_parents,
-    inputs.rem_children,
-    inputs.rem_cluster_keys,
-    inputs.rank_same_groups,
-    inputs.rank_same_order,
-    inputs.rem_edge_order,
-    inputs.rem_node_order,
-    inputs.rem_sizes,
-    inputs.nodesep_pt,
-    inputs.has_edge_labels,
-    inputs.port_order_positions,
-    inputs.port_order_contrib,
-    Map::new(),
-    Map::new(),
-    inputs.rem_flat_constraints,
-    graphviz_flip=graphviz_flip,
-    // Graphviz parity: ReMincross counts parallel chain segments once
-    // with summed xpenalty before startpass=2 transposition.
-    coalesce_parallel_edges=true,
-    startpass=2,
-    remincross_mode=true,
-  )
-}
-
-///|
 /// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
 /// inputs, builds edge index maps, and executes startpass=2 mincross on the
 /// rematerialized fast-graph edge set.
@@ -363,17 +255,37 @@ fn run_remincross_cleanup(
     materialized_inputs.rem_edge_head_port_order,
     materialized_inputs.rem_cluster_keys,
   )
-  let reorder_call_inputs =
-    build_remincross_cleanup_reorder_call_inputs(
-      dispatch_context,
-      rem_rank_keys,
-      rem_groups,
-      materialized_inputs,
-      rem_edge_indices,
-    )
-  run_remincross_cleanup_reorder_call(
-    reorder_call_inputs,
-    dispatch_context.graphviz_flip,
+  reorder_rank_groups(
+    rem_rank_keys,
+    rem_groups,
+    materialized_inputs.rem_edges_out,
+    materialized_inputs.rem_edge_tail_out,
+    materialized_inputs.rem_edge_head_out,
+    materialized_inputs.rem_edge_tail_port_x,
+    materialized_inputs.rem_edge_head_port_x,
+    materialized_inputs.rem_edge_tail_port_order,
+    materialized_inputs.rem_edge_head_port_order,
+    rem_edge_indices.parents,
+    rem_edge_indices.children,
+    materialized_inputs.rem_cluster_keys,
+    dispatch_context.cluster_meta.rank_same_groups,
+    dispatch_context.cluster_meta.rank_same_order,
+    rem_edge_indices.edge_order,
+    materialized_inputs.rem_node_order,
+    materialized_inputs.rem_sizes,
+    dispatch_context.nodesep_pt,
+    dispatch_context.has_edge_labels,
+    dispatch_context.port_order_positions,
+    dispatch_context.port_order_contrib,
+    Map::new(),
+    Map::new(),
+    materialized_inputs.rem_flat_constraints,
+    graphviz_flip=dispatch_context.graphviz_flip,
+    // Graphviz parity: ReMincross counts parallel chain segments once
+    // with summed xpenalty before startpass=2 transposition.
+    coalesce_parallel_edges=true,
+    startpass=2,
+    remincross_mode=true,
   )
 }
 
