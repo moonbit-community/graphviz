@@ -1023,40 +1023,6 @@ priv struct RootMincrossReorderInputs {
 }
 
 ///|
-/// Graphviz parity: root ReMincross pass stage data keeps rank keys, node
-/// membership, and filtered edge bundle from one root-mincross projection.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootReorderPassStageData {
-  order_rank_keys_for_mincross : Array[Int]
-  mincross_nodes : Map[String, Bool]
-  mincross_edge_data : RootMincrossEdgeData
-}
-
-///|
-/// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
-/// rank keys -> node membership -> filtered mincross edge bundle.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_reorder_pass_stage_data(
-  inputs : RootReorderPassInputs,
-) -> RootReorderPassStageData {
-  let order_rank_keys_for_mincross =
-    collect_rank_keys(inputs.order_groups_for_mincross)
-  let order_nodes_for_mincross =
-    build_order_nodes_from_groups(
-      inputs.order_groups_for_mincross,
-      order_rank_keys_for_mincross,
-    )
-  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
-  let mincross_edge_data =
-    build_root_mincross_edge_data(
-      inputs,
-      mincross_nodes,
-      order_nodes_for_mincross,
-    )
-  { order_rank_keys_for_mincross, mincross_nodes, mincross_edge_data }
-}
-
-///|
 /// Graphviz parity: vnode preferred-position hints are forwarded only for edge
 /// vnodes when vnode ordering is enabled in root ReMincross.
 /// Do not change behavior without updating fixtures/tests.
@@ -1083,19 +1049,32 @@ fn build_root_vnode_preferred_positions(
 fn run_root_reorder_pass(
   inputs : RootReorderPassInputs,
 ) -> RootReorderPassOutput {
-  let stage_data =
-    build_root_reorder_pass_stage_data(inputs)
+  // Graphviz parity: root ReMincross stage data is assembled from one
+  // snapshot: rank keys -> node membership -> filtered mincross edge bundle.
+  let order_rank_keys_for_mincross =
+    collect_rank_keys(inputs.order_groups_for_mincross)
+  let order_nodes_for_mincross =
+    build_order_nodes_from_groups(
+      inputs.order_groups_for_mincross,
+      order_rank_keys_for_mincross,
+    )
+  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  let mincross_edge_data =
+    build_root_mincross_edge_data(
+      inputs,
+      mincross_nodes,
+      order_nodes_for_mincross,
+    )
   let preferred_positions =
     build_root_vnode_preferred_positions(
       inputs.order_with_vnodes,
       inputs.vnode_order_keys_for_ordering,
     )
-  let mincross_edge_data = stage_data.mincross_edge_data
   // Graphviz parity: root ReMincross rank-reorder input preserves the stage
   // edge snapshot and root-order metadata when dispatching reorder_rank_groups.
   let root_rank_reorder_inputs : RootRankReorderInputs =
     {
-      order_rank_keys_for_mincross: stage_data.order_rank_keys_for_mincross,
+      order_rank_keys_for_mincross,
       order_groups_for_mincross: inputs.order_groups_for_mincross,
       order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
       order_edge_tail_out_mincross:
@@ -1138,7 +1117,7 @@ fn run_root_reorder_pass(
   // Graphviz parity: root reorder pass snapshot records the same mincross
   // edge projection and selected rank groups passed to reorder_rank_groups.
   capture_root_snapshot(
-    stage_data.order_rank_keys_for_mincross,
+    order_rank_keys_for_mincross,
     inputs.order_groups_for_mincross,
     mincross_edge_data.order_edges_out_mincross,
     mincross_edge_data.order_edge_tail_out_mincross,
@@ -1151,7 +1130,7 @@ fn run_root_reorder_pass(
     inputs.order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  { ordered_mincross, mincross_nodes: stage_data.mincross_nodes }
+  { ordered_mincross, mincross_nodes }
 }
 
 ///|
