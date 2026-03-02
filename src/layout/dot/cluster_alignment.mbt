@@ -111,7 +111,7 @@ fn adjust_intercluster_alignment(
 
 /// Graphviz parity: within an outer cluster, order local subclusters by minrank/first order.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_groups_by_local_cluster(
+fn reorder_by_local_cluster(
   groups : Map[Int, Array[String]],
   outer_cluster_keys : Map[String, String],
   local_cluster_keys : Map[String, String],

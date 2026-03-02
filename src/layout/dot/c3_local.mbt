@@ -1199,7 +1199,7 @@ fn reorder_cluster_rank_groups(
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn reorder_groups_by_cluster_ranks(
+fn reorder_by_cluster_ranks(
   graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
   cluster_meta : ClusterMetadata,

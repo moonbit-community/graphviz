@@ -168,7 +168,7 @@ fn run_root_and_cluster_ranks(
   // Graphviz parity: clustered order pass runs cluster-local build_ranks on
   // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
   if order_with_clusters {
-    reorder_groups_by_cluster_ranks(
+    reorder_by_cluster_ranks(
       graph,
       ordered,
       cluster_meta,
