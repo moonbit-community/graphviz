@@ -1616,6 +1616,33 @@ fn order_rank_names_by_cluster_buckets(
 }
 
 ///|
+/// Graphviz parity: per-rank cluster replay applies root rank-order only when
+/// an order map exists and root nodes do not straddle clustered block bounds.
+/// Do not change behavior without updating fixtures/tests.
+fn reorder_rank_group_by_cluster_order(
+  names : Array[String],
+  order_map : Map[String, Int]?,
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  match order_map {
+    None => names
+    Some(value) => {
+      // Graphviz parity: per-rank cluster-rank-order replay preserves original
+      // rank order when root nodes straddle clustered block.
+      if has_root_nodes_on_both_sides(names, cluster_keys) {
+        names
+      } else {
+        order_rank_names_by_cluster_buckets(
+          names,
+          value,
+          cluster_keys,
+        )
+      }
+    }
+  }
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1626,23 +1653,10 @@ fn reorder_groups_by_cluster(
 ) -> Map[Int, Array[String]] {
   let ordered_by_cluster : Map[Int, Array[String]] = Map::new()
   for rank, names in final_groups {
-    let order_map = match cluster_rank_order.get(rank) {
-      Some(value) => value
-      None => {
-        ordered_by_cluster[rank] = names
-        continue
-      }
-    }
-    // Graphviz parity: per-rank cluster-rank-order replay preserves original
-    // rank order when root nodes straddle clustered block.
-    if has_root_nodes_on_both_sides(names, cluster_keys) {
-      ordered_by_cluster[rank] = names
-      continue
-    }
     ordered_by_cluster[rank] =
-      order_rank_names_by_cluster_buckets(
+      reorder_rank_group_by_cluster_order(
         names,
-        order_map,
+        cluster_rank_order.get(rank),
         cluster_keys,
       )
   }
