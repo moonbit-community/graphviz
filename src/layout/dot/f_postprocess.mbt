@@ -558,9 +558,9 @@ fn compute_port_padding(
   if has_clusters || !has_port_edges {
     { port_pad_below: 0.0, port_pad_above: 0.0 }
   } else {
-    let (port_pad_below, port_pad_above) =
+    let port_padding =
       record_port_padding_y(edges, positions, label_ports_map)
-    { port_pad_below, port_pad_above }
+    { port_pad_below: port_padding.below, port_pad_above: port_padding.above }
   }
 }
 

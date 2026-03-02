@@ -944,7 +944,7 @@ fn record_port_padding_y(
   edges : Array[@cgraph.Edge],
   positions : Map[String, @geom.Point],
   label_ports_map : Map[String, Map[String, RecordPort]],
-) -> (Double, Double) {
+) -> RecordPortPaddingY {
   let mut extra_below = 0.0
   let mut extra_above = 0.0
   let update_padding = (node_name : String, port : @cgraph.Port?) => {
@@ -994,7 +994,13 @@ fn record_port_padding_y(
       update_padding(edge.head().name(), edge.head_port())
     }
   }
-  (extra_below, extra_above)
+  { below: extra_below, above: extra_above }
+}
+
+///|
+priv struct RecordPortPaddingY {
+  below : Double
+  above : Double
 }
 
 ///|
@@ -1020,8 +1026,7 @@ fn html_cell_content_size(
       { width_pt, height_pt }
     }
     @html_label.HtmlCellContent::Table(table) => {
-      let (width_pt, height_pt) = html_table_size(table, font_name, font_size_pt)
-      { width_pt, height_pt }
+      html_table_size(table, font_name, font_size_pt)
     }
   }
 }
@@ -1071,10 +1076,11 @@ fn html_table_size(
   table : @html_label.HtmlTable,
   font_name : String,
   font_size_pt : Double,
-) -> (Double, Double) {
-  @html_label.html_table_size(table, cell => html_cell_size(
+) -> SizePt {
+  let (width_pt, height_pt) = @html_label.html_table_size(table, cell => html_cell_size(
     table, cell, font_name, font_size_pt,
   ))
+  { width_pt, height_pt }
 }
 
 ///|
@@ -1116,10 +1122,8 @@ fn html_label_size(
         label_text_dimensions(text, font_name, font_size_pt)
       { width_pt, height_pt }
     }
-    @html_label.HtmlLabel::Table(table) => {
-      let (width_pt, height_pt) = html_table_size(table, font_name, font_size_pt)
-      { width_pt, height_pt }
-    }
+    @html_label.HtmlLabel::Table(table) =>
+      html_table_size(table, font_name, font_size_pt)
   }
 }
 
