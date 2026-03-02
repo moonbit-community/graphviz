@@ -352,16 +352,16 @@ fn build_cluster_finalize_dispatch_context(
 }
 
 ///|
-/// Graphviz parity: clustered finalize phase first applies root cluster-rank
-/// ordering, then runs final clustered ReMincross with unchanged call ordering.
+/// Graphviz parity: cluster-rank-order build inputs are assembled from finalize
+/// dispatch + pre-root/root stage snapshots without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
-fn run_clustered_finalize_phase(
+fn build_cluster_rank_order_build_inputs(
   finalize_dispatch_context : ClusterFinalizeDispatchContext,
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : OrderRootClusterData,
-) -> OrderingDispatchOutput {
+) -> ClusterRankOrderBuildInputs {
   let reorder_context = pre_root_stage.reorder_context
-  let cluster_rank_order_inputs : ClusterRankOrderBuildInputs = {
+  {
     order_with_clusters: finalize_dispatch_context.order_with_clusters,
     order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
     graphviz_flip: finalize_dispatch_context.graphviz_flip,
@@ -388,11 +388,20 @@ fn run_clustered_finalize_phase(
     port_order_positions: finalize_dispatch_context.port_order_positions,
     port_order_contrib: finalize_dispatch_context.port_order_contrib,
   }
-  let cluster_rank_order =
-    build_cluster_rank_order(
-      cluster_rank_order_inputs,
-    )
-  let finalize_order_inputs : FinalizeOrderGroupsInputs = {
+}
+
+///|
+/// Graphviz parity: finalize-order dispatch inputs preserve clustered finalize
+/// call ordering while grouping payload in one context bundle.
+/// Do not change behavior without updating fixtures/tests.
+fn build_finalize_order_groups_inputs(
+  finalize_dispatch_context : ClusterFinalizeDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : OrderRootClusterData,
+  cluster_rank_order : Map[Int, Map[String, Int]],
+) -> FinalizeOrderGroupsInputs {
+  let reorder_context = pre_root_stage.reorder_context
+  {
     order_with_clusters: finalize_dispatch_context.order_with_clusters,
     order_with_vnodes: finalize_dispatch_context.order_with_vnodes,
     cluster_rank_order,
@@ -423,6 +432,34 @@ fn run_clustered_finalize_phase(
     order_rank_keys: reorder_context.order_rank_keys,
     ordered: root_cluster_stage.ordered,
   }
+}
+
+///|
+/// Graphviz parity: clustered finalize phase first applies root cluster-rank
+/// ordering, then runs final clustered ReMincross with unchanged call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_finalize_phase(
+  finalize_dispatch_context : ClusterFinalizeDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : OrderRootClusterData,
+) -> OrderingDispatchOutput {
+  let cluster_rank_order_inputs =
+    build_cluster_rank_order_build_inputs(
+      finalize_dispatch_context,
+      pre_root_stage,
+      root_cluster_stage,
+    )
+  let cluster_rank_order =
+    build_cluster_rank_order(
+      cluster_rank_order_inputs,
+    )
+  let finalize_order_inputs =
+    build_finalize_order_groups_inputs(
+      finalize_dispatch_context,
+      pre_root_stage,
+      root_cluster_stage,
+      cluster_rank_order,
+    )
   let finalize_output =
     finalize_order_groups(
       finalize_order_inputs,
