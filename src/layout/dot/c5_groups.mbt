@@ -165,16 +165,18 @@ fn build_remincross_inputs(
     )
   let pass_inputs =
     build_remincross_pass_inputs(
-      dispatch_context.graph,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.order_with_vnodes,
-      dispatch_context.order_with_clusters,
-      dispatch_context.cluster_meta,
-      dispatch_context.vnode_info,
-      dispatch_context.order_sizes,
-      dispatch_context.rank_same_constraints,
+      {
+        graph: dispatch_context.graph,
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        order_with_vnodes: dispatch_context.order_with_vnodes,
+        order_with_clusters: dispatch_context.order_with_clusters,
+        cluster_meta: dispatch_context.cluster_meta,
+        vnode_info: dispatch_context.vnode_info,
+        order_sizes: dispatch_context.order_sizes,
+        rank_same_constraints: dispatch_context.rank_same_constraints,
+      },
     )
   {
     rem_nodes,
@@ -346,39 +348,50 @@ fn assign_remincross_clusters(
 }
 
 ///|
+/// Graphviz parity: ReMincross pass build inputs keep clustered runtime
+/// payload unchanged before assembling cluster keys/sizes/constraints.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ReMincrossPassBuildInputs {
+  graph : @cgraph.Graph
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  order_with_vnodes : Bool
+  order_with_clusters : Bool
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+  order_sizes : Map[String, NodeSize]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: ReMincross cluster-key map starts from intercluster keys,
 /// rewrites empty keys to root graph key, then applies vnode LCA assignments.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_cluster_keys(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_with_vnodes : Bool,
-  cluster_meta : ClusterMetadata,
-  edge_vnodes : Map[String, Array[String]],
+  inputs : ReMincrossPassBuildInputs,
 ) -> Map[String, String] {
   let rem_cluster_keys =
-    clone_remincross_cluster_keys(cluster_meta.intercluster_keys)
+    clone_remincross_cluster_keys(inputs.cluster_meta.intercluster_keys)
   // Graphviz parity: ND_clust is the root graph for nodes outside
   // any cluster (mark_lowclusters). Use a non-empty root key so
   // ReMincross can block swaps across cluster boundaries.
-  let root_cluster = graph.name().unwrap_or("__root__")
+  let root_cluster = inputs.graph.name().unwrap_or("__root__")
   for name, key in rem_cluster_keys {
     if key == "" {
       rem_cluster_keys[name] = root_cluster
     }
   }
-  if order_with_vnodes {
+  if inputs.order_with_vnodes {
     assign_remincross_clusters(
       rem_cluster_keys,
       root_cluster,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_vnodes,
-      cluster_meta.intercluster_keys,
-      cluster_meta.cluster_parents,
+      inputs.edges,
+      inputs.edge_tail,
+      inputs.edge_head,
+      inputs.vnode_info.edge_vnodes,
+      inputs.cluster_meta.intercluster_keys,
+      inputs.cluster_meta.cluster_parents,
     )
   }
   rem_cluster_keys
@@ -389,19 +402,17 @@ fn build_remincross_cluster_keys(
 /// rank=same constraints only for non-cluster reorder path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_flat_constraints(
-  order_with_clusters : Bool,
-  cluster_flat_constraints : Map[String, Bool],
-  rank_same_constraints : Map[String, Bool],
+  inputs : ReMincrossPassBuildInputs,
 ) -> Map[String, Bool] {
   let rem_flat_constraints : Map[String, Bool] = Map::new()
   // Graphviz parity: ReMincross flat constraints combine existing same-rank
   // constraints with local intra-cluster adjacency locks for non-intercluster
   // real-node pairs (flat.c cluster-local reorder guard).
-  if !order_with_clusters {
-    for key, value in cluster_flat_constraints {
+  if !inputs.order_with_clusters {
+    for key, value in inputs.cluster_meta.flat_constraints {
       rem_flat_constraints[key] = value
     }
-    for key, _ in rank_same_constraints {
+    for key, _ in inputs.rank_same_constraints {
       rem_flat_constraints[key] = true
     }
   }
@@ -414,39 +425,18 @@ fn build_remincross_flat_constraints(
 /// augmentation before final reorder pass.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_pass_inputs(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_with_vnodes : Bool,
-  order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
-  order_sizes : Map[String, NodeSize],
-  rank_same_constraints : Map[String, Bool],
+  inputs : ReMincrossPassBuildInputs,
 ) -> ReMincrossPassInputs {
   let rem_cluster_keys =
-    build_remincross_cluster_keys(
-      graph,
-      edges,
-      edge_tail,
-      edge_head,
-      order_with_vnodes,
-      cluster_meta,
-      vnode_info.edge_vnodes,
-    )
+    build_remincross_cluster_keys(inputs)
   let rem_sizes =
     build_sizes_for_order_graph(
-      order_sizes,
-      order_with_vnodes,
-      vnode_info.vnode_sizes,
+      inputs.order_sizes,
+      inputs.order_with_vnodes,
+      inputs.vnode_info.vnode_sizes,
     )
   let rem_flat_constraints =
-    build_remincross_flat_constraints(
-      order_with_clusters,
-      cluster_meta.flat_constraints,
-      rank_same_constraints,
-    )
+    build_remincross_flat_constraints(inputs)
   { rem_cluster_keys, rem_sizes, rem_flat_constraints }
 }
 
