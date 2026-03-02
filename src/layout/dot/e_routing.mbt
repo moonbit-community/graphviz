@@ -1062,7 +1062,7 @@ fn sameport_merge_key(edge : @cgraph.Edge) -> String {
 }
 
 ///|
-fn collect_sameport_merge_classes(
+fn collect_sameport_classes(
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Array[@cgraph.Edge]] {
   let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
@@ -1277,7 +1277,7 @@ fn collect_sameport_overrides(
   let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let samehead_group_order : Array[String] = []
   let sametail_group_order : Array[String] = []
-  let merge_classes = collect_sameport_merge_classes(edges)
+  let merge_classes = collect_sameport_classes(edges)
   for edge in edges {
     if edge.tail().name() == edge.head().name() {
       continue
@@ -4681,7 +4681,7 @@ fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
 ///|
 /// Graphviz parity: recover_slack for regular-edge classes uses the
 /// center-most parallel member (tie: later edge id).
-fn recover_regular_edge_selection(
+fn recover_regular_selection(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Int] {
@@ -5065,7 +5065,7 @@ fn route_edges(
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, order_index)
   let recover_edge_id_by_key =
-    recover_regular_edge_selection(ordered_edges, base_cache)
+    recover_regular_selection(ordered_edges, base_cache)
   let regular_parallel_groups =
     collect_parallel_groups(ordered_edges, base_cache)
   let recover_edge_id_for_routing : Map[String, Int] = Map::new()
