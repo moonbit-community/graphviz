@@ -639,6 +639,41 @@ fn build_root_component_reorder_inputs(
 }
 
 ///|
+/// Graphviz parity: multi-component root reorder runs one component projection
+/// per mincross call, then concatenates per-rank outputs in component order.
+/// Do not change behavior without updating fixtures/tests.
+fn run_componentwise_root_rank_reorder(
+  components : Array[Array[String]],
+  component_projection_sources : RootComponentProjectionSources,
+  component_reorder_config : RootComponentReorderConfig,
+) -> Map[Int, Array[String]] {
+  let merged : Map[Int, Array[String]] = Map::new()
+  for rank in component_reorder_config.order_rank_keys_for_mincross {
+    merged[rank] = []
+  }
+  for component_nodes in components {
+    let component_set = build_node_membership_set(component_nodes)
+    let component_inputs =
+      build_root_component_reorder_inputs(
+        component_nodes,
+        component_set,
+        component_projection_sources,
+      )
+    let ordered_component =
+      run_root_component_rank_reorder(
+        component_inputs,
+        component_reorder_config,
+      )
+    append_component_rank_groups(
+      component_reorder_config.order_rank_keys_for_mincross,
+      merged,
+      ordered_component,
+    )
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -724,10 +759,6 @@ fn run_root_rank_reorder(
     )
   }
 
-  let merged : Map[Int, Array[String]] = Map::new()
-  for rank in order_rank_keys_for_mincross {
-    merged[rank] = []
-  }
   let component_projection_sources : RootComponentProjectionSources = {
     order_rank_keys_for_mincross,
     order_groups_for_mincross,
@@ -761,26 +792,11 @@ fn run_root_rank_reorder(
     root_graphviz_flip,
     coalesce_parallel,
   }
-  for component_nodes in components {
-    let component_set = build_node_membership_set(component_nodes)
-    let component_inputs =
-      build_root_component_reorder_inputs(
-        component_nodes,
-        component_set,
-        component_projection_sources,
-      )
-    let ordered_component =
-      run_root_component_rank_reorder(
-        component_inputs,
-        component_reorder_config,
-      )
-    append_component_rank_groups(
-      order_rank_keys_for_mincross,
-      merged,
-      ordered_component,
-    )
-  }
-  merged
+  run_componentwise_root_rank_reorder(
+    components,
+    component_projection_sources,
+    component_reorder_config,
+  )
 }
 
 ///|
