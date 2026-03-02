@@ -1,9 +1,16 @@
 ///|
+priv struct DedupOrderingEdgesOutput {
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+}
+
+///|
 fn dedup_ordering_edges(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
-) -> (Array[@cgraph.Edge], Array[String], Array[String]) {
+) -> DedupOrderingEdgesOutput {
   let seen : Map[String, Bool] = Map::new()
   let out_edges : Array[@cgraph.Edge] = []
   let out_tail : Array[String] = []
@@ -22,7 +29,13 @@ fn dedup_ordering_edges(
     out_tail.push(tail)
     out_head.push(head)
   }
-  (out_edges, out_tail, out_head)
+  { order_edges: out_edges, order_edge_tail: out_tail, order_edge_head: out_head }
+}
+
+///|
+priv struct FlatConstraintsOutput {
+  flat_constraints : Map[String, Bool]
+  ordering_set : Bool
 }
 
 ///|
@@ -33,7 +46,7 @@ fn build_flat_constraints(
   edge_tail : Array[String],
   edge_head : Array[String],
   cluster_keys : Map[String, String],
-) -> (Map[String, Bool], Bool) {
+) -> FlatConstraintsOutput {
   let flat_constraints : Map[String, Bool] = Map::new()
   let out_edges : Map[String, Array[(Int, Int)]] = Map::new()
   let in_edges : Map[String, Array[(Int, Int)]] = Map::new()
@@ -164,7 +177,7 @@ fn build_flat_constraints(
       }
     }
   }
-  (flat_constraints, ordering_set)
+  { flat_constraints, ordering_set }
 }
 
 ///|
@@ -298,6 +311,15 @@ fn add_order_edge(
 
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
+priv struct OrderEdgesByTailOutput {
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+  vnode_creation_by_tail : Map[String, Array[String]]
+  edge_creation_order : Array[(String, String)]
+}
+
+///|
+/// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
+/// Do not change behavior without updating fixtures/tests.
 fn build_order_edges_by_tail(
   tail_order : Array[String],
   edges : Array[@cgraph.Edge],
@@ -316,11 +338,7 @@ fn build_order_edges_by_tail(
   map_intercluster : Bool,
   edges_by_tail : Map[String, Array[Int]],
   cluster_order_index? : Map[String, Int] = Map::new(),
-) -> (
-  Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  Map[String, Array[String]],
-  Array[(String, String)],
-) {
+) -> OrderEdgesByTailOutput {
   let out : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
     Map::new()
   let vnode_seen : Map[String, Bool] = Map::new()
@@ -640,7 +658,11 @@ fn build_order_edges_by_tail(
       vnode_creation_by_tail[tail_name] = created_for_tail
     }
   }
-  (out, vnode_creation_by_tail, edge_creation)
+  {
+    order_edges_by_tail: out,
+    vnode_creation_by_tail,
+    edge_creation_order: edge_creation,
+  }
 }
 
 ///|

@@ -92,7 +92,7 @@ fn build_materialized_edges(
   edges_by_tail : Map[String, Array[Int]],
   cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedOrderEdges {
-  let (rem_order_edges_by_tail_raw, rem_vnode_creation, _rem_edge_creation_raw) =
+  let rem_order_edges_output =
     build_order_edges_by_tail(
       creation_order,
       edges,
@@ -112,6 +112,8 @@ fn build_materialized_edges(
       edges_by_tail,
       cluster_order_index=cluster_order_index,
     )
+  let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
+  let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
   let rem_order_edges_by_tail_coalesced =
     coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
   let intercluster_bonus =

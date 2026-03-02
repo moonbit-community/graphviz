@@ -194,7 +194,7 @@ fn compute_cluster_metadata(
   let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   // Graphviz parity: flat ordering constraints include Graphviz ordering attrs
   // plus same-rank edge constraints before clustered reorder dispatch.
-  let (flat_constraints, ordering_set) = build_flat_constraints(
+  let flat_constraints_output = build_flat_constraints(
     graph,
     nodes,
     edges,
@@ -202,6 +202,8 @@ fn compute_cluster_metadata(
     edge_head,
     cluster_keys,
   )
+  let flat_constraints = flat_constraints_output.flat_constraints
+  let ordering_set = flat_constraints_output.ordering_set
   // Graphviz parity: same-rank edges are promoted to flat ordering
   // constraints for clustered metadata reorder paths.
   let mut edge_idx = 0

@@ -60,8 +60,11 @@ fn build_ordering_edge_port_data(
   let edge_head_port_order = edge_port_order_samples.head_values
   // Graphviz parity: edge-port dedup phase derives ordering-edge arrays and
   // recomputes port position/order samples on deduplicated ordering edges.
-  let (order_edges, order_edge_tail, order_edge_head) =
+  let dedup_output =
     dedup_ordering_edges(edges, edge_tail, edge_head)
+  let order_edges = dedup_output.order_edges
+  let order_edge_tail = dedup_output.order_edge_tail
+  let order_edge_head = dedup_output.order_edge_head
   let order_edge_port_x_samples =
     compute_edge_port_positions(
       nodes,
@@ -134,7 +137,7 @@ fn build_ordering_class2_data(
       None => edges_by_tail[name] = []
     }
   }
-  let (order_edges_by_tail, vnode_creation_by_tail, order_edge_creation) =
+  let order_edges_by_tail_output =
     build_order_edges_by_tail(
       creation_order,
       edges,
@@ -153,6 +156,9 @@ fn build_ordering_class2_data(
       true,
       edges_by_tail,
     )
+  let order_edges_by_tail = order_edges_by_tail_output.order_edges_by_tail
+  let vnode_creation_by_tail = order_edges_by_tail_output.vnode_creation_by_tail
+  let order_edge_creation = order_edges_by_tail_output.edge_creation_order
   let (
     order_edges_by_tail_root,
     root_edge_creation,
@@ -160,7 +166,7 @@ fn build_ordering_class2_data(
     // Graphviz parity: root order-edge chains use remapped cluster endpoints,
     // while non-cluster graphs reuse the base order_edges_by_tail mapping.
     if order_with_clusters {
-      let (root_edges_by_tail, _root_vnode_creation_by_tail, root_edge_creation) =
+      let root_edges_by_tail_output =
         build_order_edges_by_tail(
           creation_order,
           edges,
@@ -179,6 +185,8 @@ fn build_ordering_class2_data(
           true,
           edges_by_tail,
         )
+      let root_edges_by_tail = root_edges_by_tail_output.order_edges_by_tail
+      let root_edge_creation = root_edges_by_tail_output.edge_creation_order
       (root_edges_by_tail, root_edge_creation)
     } else {
       (order_edges_by_tail, order_edge_creation)
@@ -187,7 +195,7 @@ fn build_ordering_class2_data(
   // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
     if order_with_clusters {
-      let (unmapped_edges_by_tail, _unmapped_vnode_creation, _unmapped_edge_creation) =
+      let unmapped_output =
         build_order_edges_by_tail(
           creation_order,
           edges,
@@ -206,6 +214,7 @@ fn build_ordering_class2_data(
           false,
           edges_by_tail,
         )
+      let unmapped_edges_by_tail = unmapped_output.order_edges_by_tail
       unmapped_edges_by_tail
     } else {
       order_edges_by_tail
