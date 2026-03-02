@@ -210,48 +210,6 @@ fn build_gdnlist_order(
   }
 }
 
-/// Graphviz parity: vnode ordering keys come from cluster-aware class2 walks,
-/// or from GD_nlist fallback ordering when clusters are absent.
-fn build_vnode_order_keys_for_dispatch(
-  vnode_count : Int,
-  cluster_meta : ClusterMetadata,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  ranks : Map[String, Int],
-  base_order_index : Map[String, Int],
-  ordering_groups_base : Map[Int, Array[String]],
-  vnode_info : EdgeVnodeInfo,
-  nlist_order_index : Map[String, Int],
-) -> Map[String, Double] {
-  if vnode_count <= 0 {
-    return Map::new()
-  }
-  if cluster_meta.has_clusters {
-    return build_vnode_order_keys(
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      cluster_meta.cluster_keys,
-      cluster_meta.cluster_parents,
-      vnode_info.edge_vnodes,
-      vnode_info.vnode_ranks,
-    )
-  }
-  build_vnode_keys_from_nlist(
-    ordering_groups_base,
-    vnode_info.vnodes_by_rank,
-    base_order_index,
-    nlist_order_index,
-    Map::new(),
-    false,
-  )
-}
-
 ///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
@@ -309,19 +267,31 @@ fn build_ordering_reorder_setup(
     nlist_idx = nlist_idx + 1
   }
   let vnode_order_keys_for_ordering =
-    build_vnode_order_keys_for_dispatch(
-      inputs.vnode_count,
-      inputs.cluster_meta,
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_reversed,
-      inputs.ranks,
-      base_order_index,
-      ordering_groups_base,
-      inputs.vnode_info,
-      nlist_order_index,
-    )
+    if inputs.vnode_count <= 0 {
+      Map::new()
+    } else if inputs.cluster_meta.has_clusters {
+      build_vnode_order_keys(
+        inputs.edges,
+        inputs.edge_tail,
+        inputs.edge_head,
+        inputs.edge_reversed,
+        inputs.ranks,
+        base_order_index,
+        inputs.cluster_meta.cluster_keys,
+        inputs.cluster_meta.cluster_parents,
+        inputs.vnode_info.edge_vnodes,
+        inputs.vnode_info.vnode_ranks,
+      )
+    } else {
+      build_vnode_keys_from_nlist(
+        ordering_groups_base,
+        inputs.vnode_info.vnodes_by_rank,
+        base_order_index,
+        nlist_order_index,
+        Map::new(),
+        false,
+      )
+    }
   {
     ordering_groups_base,
     base_order_index,
