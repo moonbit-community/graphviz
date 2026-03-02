@@ -98,18 +98,8 @@ pub fn compute_ranks_directed_base(
   for _tail, indices in edges_by_tail {
     if indices.length() > 1 {
       indices.sort_by((a, b) => {
-        let idx_a =
-          if a >= 0 && a < head_order_by_edge.length() {
-            head_order_by_edge[a]
-          } else {
-            0
-          }
-        let idx_b =
-          if b >= 0 && b < head_order_by_edge.length() {
-            head_order_by_edge[b]
-          } else {
-            0
-          }
+        let idx_a = head_order_by_edge[a]
+        let idx_b = head_order_by_edge[b]
         if idx_a < idx_b {
           -1
         } else if idx_a > idx_b {
