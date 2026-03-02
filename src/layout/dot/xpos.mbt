@@ -52,7 +52,7 @@ priv struct XposConstraintSnapshot {
 }
 
 ///|
-fn touch_xpos_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
+fn touch_constraint_snapshot(snapshot : XposConstraintSnapshot) -> Unit {
   let _ = snapshot.nodes
   let _ = snapshot.edges
   for node in snapshot.nodes {
@@ -156,7 +156,7 @@ fn should_capture_xpos_snapshot(graph : @cgraph.Graph) -> Bool {
 }
 
 ///|
-fn build_xpos_constraint_snapshot(
+fn build_constraint_snapshot(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
   sizes : Map[String, NodeSize],
@@ -217,7 +217,7 @@ fn build_xpos_constraint_snapshot(
     })
   }
   let snapshot = { nodes, edges }
-  touch_xpos_constraint_snapshot(snapshot)
+  touch_constraint_snapshot(snapshot)
   snapshot
 }
 
@@ -2327,7 +2327,7 @@ fn x_positions_from_simplex(
   let (graph, index) = reorder_constraint_graph(graph, index, order)
   if should_capture_xpos_snapshot(graph_root) {
     xpos_constraint_snapshot.val = Some(
-      build_xpos_constraint_snapshot(graph, index, sizes, order_index),
+      build_constraint_snapshot(graph, index, sizes, order_index),
     )
   }
   dot_trace("xpos: constraint graph built")
