@@ -474,6 +474,8 @@ priv struct RootRankReorderCallInputs {
   order_flat_constraints : Map[String, Bool]
   graphviz_out_neighbors : Map[String, Array[String]]
   graphviz_in_neighbors : Map[String, Array[String]]
+  root_graphviz_flip : Bool
+  coalesce_parallel : Bool
 }
 
 ///|
@@ -482,8 +484,6 @@ priv struct RootRankReorderCallInputs {
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_reorder_call(
   inputs : RootRankReorderCallInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
   reorder_rank_groups(
     inputs.order_rank_keys_for_mincross,
@@ -512,8 +512,8 @@ fn run_root_rank_reorder_call(
     inputs.order_flat_constraints,
     graphviz_out_neighbors=inputs.graphviz_out_neighbors,
     graphviz_in_neighbors=inputs.graphviz_in_neighbors,
-    graphviz_flip=root_graphviz_flip,
-    coalesce_parallel_edges=coalesce_parallel,
+    graphviz_flip=inputs.root_graphviz_flip,
+    coalesce_parallel_edges=inputs.coalesce_parallel,
   )
 }
 
@@ -554,6 +554,8 @@ fn build_component_rank_reorder_call_inputs(
     order_flat_constraints: component_inputs.component_flat_constraints,
     graphviz_out_neighbors: component_inputs.component_graphviz_out_neighbors,
     graphviz_in_neighbors: component_inputs.component_graphviz_in_neighbors,
+    root_graphviz_flip: config.root_graphviz_flip,
+    coalesce_parallel: config.coalesce_parallel,
   }
 }
 
@@ -570,11 +572,7 @@ fn run_root_component_rank_reorder(
       component_inputs,
       config,
     )
-  run_root_rank_reorder_call(
-    reorder_call_inputs,
-    config.root_graphviz_flip,
-    config.coalesce_parallel,
-  )
+  run_root_rank_reorder_call(reorder_call_inputs)
 }
 
 ///|
@@ -864,14 +862,12 @@ fn run_single_component_root_rank_reorder(
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
   let reorder_call_inputs =
-    build_single_root_rank_reorder_call_inputs(inputs)
-  run_root_rank_reorder_call(
-    reorder_call_inputs,
-    root_graphviz_flip,
-    // Graphviz parity: root mincross (startpass=0) uses original edge
-    // multiplicity; parallel-edge coalescing is a ReMincross concern.
-    coalesce_parallel,
-  )
+    build_single_root_rank_reorder_call_inputs(
+      inputs,
+      root_graphviz_flip,
+      coalesce_parallel,
+    )
+  run_root_rank_reorder_call(reorder_call_inputs)
 }
 
 ///|
@@ -880,6 +876,8 @@ fn run_single_component_root_rank_reorder(
 /// Do not change behavior without updating fixtures/tests.
 fn build_single_root_rank_reorder_call_inputs(
   inputs : RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
 ) -> RootRankReorderCallInputs {
   {
     order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
@@ -910,6 +908,10 @@ fn build_single_root_rank_reorder_call_inputs(
     order_flat_constraints: inputs.order_flat_constraints,
     graphviz_out_neighbors: inputs.graphviz_out_neighbors,
     graphviz_in_neighbors: inputs.graphviz_in_neighbors,
+    root_graphviz_flip,
+    // Graphviz parity: root mincross (startpass=0) uses original edge
+    // multiplicity; parallel-edge coalescing is a ReMincross concern.
+    coalesce_parallel,
   }
 }
 
