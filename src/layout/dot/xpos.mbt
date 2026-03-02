@@ -96,6 +96,12 @@ priv struct ClusterConstraintBuild {
 }
 
 ///|
+priv struct ClusterBoundaryNodes {
+  left_node : String
+  right_node : String
+}
+
+///|
 priv enum EndpointClass {
   Ordinary
   Singleton
@@ -589,7 +595,7 @@ fn build_cluster_constraints(
   for node in nodes {
     existing_names[node.name()] = true
   }
-  let cluster_nodes : Map[String, (String, String)] = Map::new()
+  let cluster_nodes : Map[String, ClusterBoundaryNodes] = Map::new()
   let cluster_margins : Map[String, Double] = Map::new()
   let cluster_border_left : Map[String, Double] = Map::new()
   let cluster_border_right : Map[String, Double] = Map::new()
@@ -665,7 +671,7 @@ fn build_cluster_constraints(
           name,
           existing_names,
         )
-        cluster_nodes[name] = (ln_name, rn_name)
+        cluster_nodes[name] = { left_node: ln_name, right_node: rn_name }
         let margin = match cluster_margins.get(name) {
           Some(value) => value
           None => CLUSTER_MARGIN_PT
@@ -701,7 +707,8 @@ fn build_cluster_constraints(
     }
   }
   for name, pair in cluster_nodes {
-    let (ln_name, rn_name) = pair
+    let ln_name = pair.left_node
+    let rn_name = pair.right_node
     let mut label_minlen : Int? = None
     // Graphviz parity: LR/RL handles cluster label extents via left/right
     // border slack, so do not add standalone label minlen here.
@@ -850,8 +857,10 @@ fn build_cluster_constraints(
           Some(parent_pair) =>
             match cluster_nodes.get(name) {
               Some(child_pair) => {
-                let (parent_ln, parent_rn) = parent_pair
-                let (child_ln, child_rn) = child_pair
+                let parent_ln = parent_pair.left_node
+                let parent_rn = parent_pair.right_node
+                let child_ln = child_pair.left_node
+                let child_rn = child_pair.right_node
                 let margin = match cluster_margins.get(parent_name) {
                   Some(value) => value
                   None => CLUSTER_MARGIN_PT
@@ -1019,8 +1028,8 @@ fn build_cluster_constraints(
                                             continue
                                           }
                                           Some(right_pair) => {
-                                            let (_left_ln, left_rn) = left_pair
-                                            let (right_ln, _right_rn) = right_pair
+                                            let left_rn = left_pair.right_node
+                                            let right_ln = right_pair.left_node
                                             let minlen = round_int(margin)
                                             extra_edges.push({
                                               tail: left_rn,
@@ -1053,9 +1062,9 @@ fn build_cluster_constraints(
   for name, parent in cluster_parents {
     if parent is None {
       match cluster_nodes.get(name) {
-        Some((ln_name, rn_name)) => {
-          root_ln_targets.push(ln_name)
-          root_rn_targets.push(rn_name)
+        Some(pair) => {
+          root_ln_targets.push(pair.left_node)
+          root_rn_targets.push(pair.right_node)
         }
         None => ()
       }
