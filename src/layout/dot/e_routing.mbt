@@ -2253,7 +2253,7 @@ fn sameport_path_port_box(
 ///|
 /// Graphviz parity: pathplan polyline aligned to refs/graphviz/lib/pathplan/* + lib/common/routespl.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn compute_route_points_with_pathplan(
+fn compute_pathplan_route_points(
   base : EdgeRouteBase,
   ranks : Map[String, Int],
   positions : Map[String, @geom.Point],
@@ -2693,7 +2693,7 @@ fn build_edge_spline(
       )
       let guide_points = base_guide_points
       let route_state =
-        compute_route_points_with_pathplan(
+        compute_pathplan_route_points(
           base,
           ranks,
           positions,
