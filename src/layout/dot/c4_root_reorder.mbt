@@ -1267,7 +1267,7 @@ fn collect_real_only_rank_groups(
 /// Graphviz parity: rank-level override reorders only names present in the
 /// current rank while preserving the relative order of unmatched names.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_rank_names_by_override(
+fn reorder_names_by_override(
   names : Array[String],
   override_names : Array[String],
 ) -> Array[String] {
@@ -1368,7 +1368,7 @@ fn apply_root_groups_override(
     match reordered.get(rank) {
       Some(names) => {
         let rank_names =
-          reorder_rank_names_by_override(
+          reorder_names_by_override(
             names,
             override_names,
           )

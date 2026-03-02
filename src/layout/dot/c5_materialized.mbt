@@ -341,7 +341,7 @@ fn build_cluster_tail_order(
         // override snapshot before replaying root names into GD_nlist.
         match remincross_root_tail_order_override_snapshot.val {
           Some(override_names) =>
-            reorder_rank_names_by_override(
+            reorder_names_by_override(
               names,
               override_names,
             )
