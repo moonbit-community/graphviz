@@ -1878,6 +1878,13 @@ priv struct ScaledLabelBBox {
 }
 
 ///|
+priv struct PolygonVerticesResult {
+  bbox_width_pt : Double
+  bbox_height_pt : Double
+  vertices : Array[@geom.Point]
+}
+
+///|
 fn polygon_vertices_for_size(
   width_pt : Double,
   height_pt : Double,
@@ -1885,12 +1892,12 @@ fn polygon_vertices_for_size(
   orientation_deg : Double,
   distortion : Double,
   skew : Double,
-) -> (Double, Double, Array[@geom.Point]) {
+) -> PolygonVerticesResult {
   if sides < 3 {
-    return (width_pt, height_pt, [])
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
   }
   if width_pt <= 0.0 || height_pt <= 0.0 {
-    return (width_pt, height_pt, [])
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
   }
   let sector = 2.0 * @math.PI / sides.to_double()
   let side_len = @math.sin(sector / 2.0)
@@ -1898,7 +1905,7 @@ fn polygon_vertices_for_size(
   let skew_dist = Double::sqrt(abs_mix * abs_mix + 1.0)
   let cos_half = @math.cos(sector / 2.0)
   if Double::abs(cos_half) <= 0.0000001 {
-    return (width_pt, height_pt, [])
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
   }
   let g_distortion = distortion * Double::sqrt(2.0) / cos_half
   let g_skew = skew / 2.0
@@ -1934,7 +1941,7 @@ fn polygon_vertices_for_size(
     base.push(@edge_spline.point(px, py))
   }
   if max_x <= 0.0 || max_y <= 0.0 {
-    return (width_pt, height_pt, [])
+    return { bbox_width_pt: width_pt, bbox_height_pt: height_pt, vertices: [] }
   }
   let xmax = max_x * 2.0
   let ymax = max_y * 2.0
@@ -1946,7 +1953,11 @@ fn polygon_vertices_for_size(
   for vertex in base {
     out.push(@edge_spline.point(vertex.x * scale_x, vertex.y * scale_y))
   }
-  (bbox_width, bbox_height, out)
+  {
+    bbox_width_pt: bbox_width,
+    bbox_height_pt: bbox_height,
+    vertices: out,
+  }
 }
 
 ///|
@@ -2304,7 +2315,7 @@ fn node_size(
           polygon_height_pt = polygon_height_pt + extra
         }
       } else {
-        let (distorted_width_pt, distorted_height_pt, base_vertices) =
+        let polygon_vertices =
           polygon_vertices_for_size(
             polygon_width_pt,
             polygon_height_pt,
@@ -2313,13 +2324,13 @@ fn node_size(
             attrs.distortion,
             attrs.skew,
           )
-        polygon_width_pt = distorted_width_pt
-        polygon_height_pt = distorted_height_pt
-        if attrs.peripheries > 1 && base_vertices.length() > 0 {
+        polygon_width_pt = polygon_vertices.bbox_width_pt
+        polygon_height_pt = polygon_vertices.bbox_height_pt
+        if attrs.peripheries > 1 && polygon_vertices.vertices.length() > 0 {
           let outline_pad_pt =
             PERIPHERY_GAP_PT * Double::from_int(attrs.peripheries - 1)
           let expanded_vertices =
-            polygon_outline_for_size(base_vertices, outline_pad_pt)
+            polygon_outline_for_size(polygon_vertices.vertices, outline_pad_pt)
           let mut max_x = polygon_width_pt / 2.0
           let mut max_y = polygon_height_pt / 2.0
           for vertex in expanded_vertices {
