@@ -56,7 +56,7 @@ fn graph_is_within_cluster_name(graph : @cgraph.Graph, cluster_name : String) ->
   false
 }
 
-fn node_in_rankset_outside_cluster(
+fn node_outside_cluster_rankset(
   root : @cgraph.Graph,
   node : @cgraph.Node,
   cluster_name : String,
@@ -108,7 +108,7 @@ fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   // Graphviz parity: nodes merged into an external rankset are removed
   // from clusters (dotgen/node_induce + mark_clusters).
   if cluster_name != "" &&
-    node_in_rankset_outside_cluster(root_graph_for_node(node), node, cluster_name) {
+    node_outside_cluster_rankset(root_graph_for_node(node), node, cluster_name) {
     return false
   }
   true
