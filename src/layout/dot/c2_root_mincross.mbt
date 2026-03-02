@@ -408,26 +408,6 @@ fn append_component_rank_groups(
 }
 
 ///|
-priv struct RootComponentReorderInputs {
-  component_groups : Map[Int, Array[String]]
-  component_edges : Array[@cgraph.Edge]
-  component_edge_tail : Array[String]
-  component_edge_head : Array[String]
-  component_edge_tail_port_x : Array[Double]
-  component_edge_head_port_x : Array[Double]
-  component_edge_tail_port_order : Array[Double]
-  component_edge_head_port_order : Array[Double]
-  component_parents : Map[String, Array[String]]
-  component_children : Map[String, Array[String]]
-  component_graphviz_out_neighbors : Map[String, Array[String]]
-  component_graphviz_in_neighbors : Map[String, Array[String]]
-  component_port_order_positions : Map[String, Double]
-  component_preferred_positions : Map[String, Double]
-  component_port_order_contrib : Map[String, Array[(String, Double)]]
-  component_flat_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: root mincross reorder call payload keeps rank/edge maps
 /// and cluster/constraint context unchanged before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -501,51 +481,6 @@ fn run_root_rank_reorder_call(
   )
 }
 
-///|
-/// Graphviz parity: component root-reorder call inputs are projected from one
-/// component filter snapshot and shared root reorder runtime flags.
-/// Do not change behavior without updating fixtures/tests.
-fn build_component_rank_reorder_call_inputs(
-  component_inputs : RootComponentReorderInputs,
-  root_inputs : RootRankReorderInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
-) -> RootRankReorderCallInputs {
-  {
-    order_rank_keys_for_mincross: root_inputs.order_rank_keys_for_mincross,
-    order_groups_for_mincross: component_inputs.component_groups,
-    order_edges_out_mincross: component_inputs.component_edges,
-    order_edge_tail_out_mincross: component_inputs.component_edge_tail,
-    order_edge_head_out_mincross: component_inputs.component_edge_head,
-    order_edge_tail_port_x_mincross: component_inputs.component_edge_tail_port_x,
-    order_edge_head_port_x_mincross: component_inputs.component_edge_head_port_x,
-    order_edge_tail_port_order_mincross:
-      component_inputs.component_edge_tail_port_order,
-    order_edge_head_port_order_mincross:
-      component_inputs.component_edge_head_port_order,
-    parents: component_inputs.component_parents,
-    children: component_inputs.component_children,
-    order_cluster_keys: root_inputs.order_cluster_keys,
-    rank_same_groups: root_inputs.cluster_meta.rank_same_groups,
-    rank_same_order: root_inputs.cluster_meta.rank_same_order,
-    edge_order: root_inputs.edge_order,
-    order_node_order: root_inputs.order_node_order,
-    order_sizes_out: root_inputs.order_sizes_out,
-    nodesep_pt: root_inputs.nodesep_pt,
-    has_edge_labels: root_inputs.has_edge_labels,
-    port_order_positions: component_inputs.component_port_order_positions,
-    port_order_contrib: component_inputs.component_port_order_contrib,
-    preferred_positions: component_inputs.component_preferred_positions,
-    order_cluster_skeleton: root_inputs.order_cluster_skeleton,
-    order_flat_constraints: component_inputs.component_flat_constraints,
-    graphviz_out_neighbors: component_inputs.component_graphviz_out_neighbors,
-    graphviz_in_neighbors: component_inputs.component_graphviz_in_neighbors,
-    root_graphviz_flip,
-    coalesce_parallel,
-  }
-}
-
-///|
 fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
   for _name, cluster in order_cluster_keys {
     if cluster != "" {
@@ -645,7 +580,9 @@ fn build_root_component_reorder_inputs(
   component_nodes : Array[String],
   component_set : Map[String, Bool],
   root_inputs : RootRankReorderInputs,
-) -> RootComponentReorderInputs {
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> RootRankReorderCallInputs {
   let component_groups =
     filter_component_rank_groups(
       root_inputs.order_rank_keys_for_mincross,
@@ -710,26 +647,38 @@ fn build_root_component_reorder_inputs(
       root_inputs.order_flat_constraints,
     )
   {
-    component_groups,
-    component_edges: component_edges_output.order_edges_out_mincross,
-    component_edge_tail: component_edges_output.order_edge_tail_out_mincross,
-    component_edge_head: component_edges_output.order_edge_head_out_mincross,
-    component_edge_tail_port_x:
+    order_rank_keys_for_mincross: root_inputs.order_rank_keys_for_mincross,
+    order_groups_for_mincross: component_groups,
+    order_edges_out_mincross: component_edges_output.order_edges_out_mincross,
+    order_edge_tail_out_mincross: component_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: component_edges_output.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross:
       component_edges_output.order_edge_tail_port_x_mincross,
-    component_edge_head_port_x:
+    order_edge_head_port_x_mincross:
       component_edges_output.order_edge_head_port_x_mincross,
-    component_edge_tail_port_order:
+    order_edge_tail_port_order_mincross:
       component_edges_output.order_edge_tail_port_order_mincross,
-    component_edge_head_port_order:
+    order_edge_head_port_order_mincross:
       component_edges_output.order_edge_head_port_order_mincross,
-    component_parents,
-    component_children,
-    component_graphviz_out_neighbors,
-    component_graphviz_in_neighbors,
-    component_port_order_positions,
-    component_preferred_positions,
-    component_port_order_contrib,
-    component_flat_constraints,
+    parents: component_parents,
+    children: component_children,
+    order_cluster_keys: root_inputs.order_cluster_keys,
+    rank_same_groups: root_inputs.cluster_meta.rank_same_groups,
+    rank_same_order: root_inputs.cluster_meta.rank_same_order,
+    edge_order: root_inputs.edge_order,
+    order_node_order: root_inputs.order_node_order,
+    order_sizes_out: root_inputs.order_sizes_out,
+    nodesep_pt: root_inputs.nodesep_pt,
+    has_edge_labels: root_inputs.has_edge_labels,
+    port_order_positions: component_port_order_positions,
+    port_order_contrib: component_port_order_contrib,
+    preferred_positions: component_preferred_positions,
+    order_cluster_skeleton: root_inputs.order_cluster_skeleton,
+    order_flat_constraints: component_flat_constraints,
+    graphviz_out_neighbors: component_graphviz_out_neighbors,
+    graphviz_in_neighbors: component_graphviz_in_neighbors,
+    root_graphviz_flip,
+    coalesce_parallel,
   }
 }
 
@@ -749,15 +698,10 @@ fn run_componentwise_root_rank_reorder(
   }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
-    let component_inputs =
+    let reorder_call_inputs =
       build_root_component_reorder_inputs(
         component_nodes,
         component_set,
-        root_inputs,
-      )
-    let reorder_call_inputs =
-      build_component_rank_reorder_call_inputs(
-        component_inputs,
         root_inputs,
         root_graphviz_flip,
         coalesce_parallel,
@@ -782,11 +726,8 @@ fn run_single_component_root_rank_reorder(
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
-  let component_inputs =
-    build_single_component_reorder_inputs(inputs)
   let reorder_call_inputs =
-    build_component_rank_reorder_call_inputs(
-      component_inputs,
+    build_single_component_reorder_inputs(
       inputs,
       root_graphviz_flip,
       // Graphviz parity: root mincross (startpass=0) uses original edge
@@ -797,29 +738,43 @@ fn run_single_component_root_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: single-component root reorder reuses component-shaped
-/// payload by forwarding full root mincross snapshots without filtering.
+/// Graphviz parity: single-component root reorder forwards full root mincross
+/// snapshots directly into reorder call inputs (no component filtering).
 /// Do not change behavior without updating fixtures/tests.
 fn build_single_component_reorder_inputs(
   inputs : RootRankReorderInputs,
-) -> RootComponentReorderInputs {
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> RootRankReorderCallInputs {
   {
-    component_groups: inputs.order_groups_for_mincross,
-    component_edges: inputs.order_edges_out_mincross,
-    component_edge_tail: inputs.order_edge_tail_out_mincross,
-    component_edge_head: inputs.order_edge_head_out_mincross,
-    component_edge_tail_port_x: inputs.order_edge_tail_port_x_mincross,
-    component_edge_head_port_x: inputs.order_edge_head_port_x_mincross,
-    component_edge_tail_port_order: inputs.order_edge_tail_port_order_mincross,
-    component_edge_head_port_order: inputs.order_edge_head_port_order_mincross,
-    component_parents: inputs.parents,
-    component_children: inputs.children,
-    component_graphviz_out_neighbors: inputs.graphviz_out_neighbors,
-    component_graphviz_in_neighbors: inputs.graphviz_in_neighbors,
-    component_port_order_positions: inputs.port_order_positions,
-    component_preferred_positions: inputs.preferred_positions,
-    component_port_order_contrib: inputs.port_order_contrib,
-    component_flat_constraints: inputs.order_flat_constraints,
+    order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
+    order_groups_for_mincross: inputs.order_groups_for_mincross,
+    order_edges_out_mincross: inputs.order_edges_out_mincross,
+    order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross: inputs.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross: inputs.order_edge_head_port_order_mincross,
+    parents: inputs.parents,
+    children: inputs.children,
+    order_cluster_keys: inputs.order_cluster_keys,
+    rank_same_groups: inputs.cluster_meta.rank_same_groups,
+    rank_same_order: inputs.cluster_meta.rank_same_order,
+    edge_order: inputs.edge_order,
+    order_node_order: inputs.order_node_order,
+    order_sizes_out: inputs.order_sizes_out,
+    nodesep_pt: inputs.nodesep_pt,
+    has_edge_labels: inputs.has_edge_labels,
+    port_order_positions: inputs.port_order_positions,
+    port_order_contrib: inputs.port_order_contrib,
+    preferred_positions: inputs.preferred_positions,
+    order_cluster_skeleton: inputs.order_cluster_skeleton,
+    order_flat_constraints: inputs.order_flat_constraints,
+    graphviz_out_neighbors: inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors: inputs.graphviz_in_neighbors,
+    root_graphviz_flip,
+    coalesce_parallel,
   }
 }
 
