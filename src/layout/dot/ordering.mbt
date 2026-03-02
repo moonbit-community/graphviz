@@ -833,7 +833,7 @@ fn clone_rank_groups(
 
 /// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_rank_same_order_with_ports(
+fn apply_rank_same_order(
   groups : Map[Int, Array[String]],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
