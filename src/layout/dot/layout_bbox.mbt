@@ -59,7 +59,7 @@ fn pt_to_line2(a : @geom.Point, b : @geom.Point, p : @geom.Point) -> Double {
   }
 }
 
-fn bezier_control_points_near_line(
+fn bezier_controls_near_line(
   p0 : @geom.Point,
   p1 : @geom.Point,
   p2 : @geom.Point,
@@ -104,7 +104,7 @@ fn update_bbox_with_bezier(
     p1.x > out.urx || p1.x < out.llx || p1.y > out.ury || p1.y < out.lly ||
     p2.x > out.urx || p2.x < out.llx || p2.y > out.ury || p2.y < out.lly ||
     p3.x > out.urx || p3.x < out.llx || p3.y > out.ury || p3.y < out.lly {
-    if bezier_control_points_near_line(p0, p1, p2, p3) {
+    if bezier_controls_near_line(p0, p1, p2, p3) {
       out = expand_bbox_with_point(out, p0)
       out = expand_bbox_with_point(out, p1)
       out = expand_bbox_with_point(out, p2)
