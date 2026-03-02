@@ -563,7 +563,7 @@ fn count_rank_crossings_port(
 }
 
 ///|
-fn has_single_rank_real_incidents(
+fn has_single_rank_incidents(
   names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -1547,7 +1547,7 @@ fn reorder_rank_groups(
       Some(list) => list
       None => []
     }
-    if !has_single_rank_real_incidents(
+    if !has_single_rank_incidents(
       single_names,
       edge_tail,
       edge_head,
