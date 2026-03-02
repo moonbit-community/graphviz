@@ -89,7 +89,7 @@ fn finalize_order_groups(
       if has_single_cluster_rank_order_bucket {
         cleaned_groups
       } else {
-        reorder_rank_groups_by_cluster(
+        reorder_groups_by_cluster(
           cleaned_groups,
           cluster_rank_order,
           cluster_meta.cluster_keys,

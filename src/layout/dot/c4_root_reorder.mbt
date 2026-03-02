@@ -173,7 +173,7 @@ fn merge_root_mincross_groups(
     // single-root rank, keep the attached cluster node in front via positional
     // replacement (matches biological rank handoff in Graphviz).
     let should_use_positional_merge =
-      should_use_root_position_merge(
+      should_merge_root_positions(
         replacements,
         order_cluster_skeleton,
         attached_by_skeleton,
@@ -284,7 +284,7 @@ fn append_attached_by_skeleton(
 ///|
 /// Graphviz parity: positional root merge triggers only for [root, skeleton]
 /// replacement pairs with exactly one attached member on that skeleton.
-fn should_use_root_position_merge(
+fn should_merge_root_positions(
   replacements : Array[String],
   order_cluster_skeleton : Map[String, Bool],
   attached_by_skeleton : Map[String, Array[String]],
@@ -405,7 +405,7 @@ fn build_root_nlist_order(
 ///|
 /// Graphviz parity: root cluster reorder edge endpoint reads prefer oriented
 /// edge_tail/edge_head arrays and fall back to edge object endpoints.
-fn root_reorder_edge_endpoints_at(
+fn root_edge_endpoints_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],
@@ -440,7 +440,7 @@ fn collect_root_vnodes(
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) =
-      root_reorder_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
+      root_edge_endpoints_at(edge, edge_idx, edge_tail, edge_head)
     let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
     let head_cluster = cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
@@ -1452,7 +1452,7 @@ fn has_root_nodes_on_both_sides(
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_rank_groups_by_cluster(
+fn reorder_groups_by_cluster(
   final_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
