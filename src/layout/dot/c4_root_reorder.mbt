@@ -1400,17 +1400,13 @@ priv struct ClusterRankOrderBuildInputs {
 }
 
 ///|
-/// Graphviz parity: cluster-phase rank-order map is built from root-only
-/// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
-/// reordering in final real-node groups.
+/// Graphviz parity: cluster-rank-order root reorder sources keep root-mincross
+/// and vnode snapshots unchanged before root-only reorder input materialization.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_order(
+fn build_cluster_rank_root_reorder_sources(
   inputs : ClusterRankOrderBuildInputs,
-) -> Map[Int, Map[String, Int]] {
-  if !inputs.order_with_clusters {
-    return Map::new()
-  }
-  let root_reorder_sources : RootReorderBuildSources = {
+) -> RootReorderBuildSources {
+  {
     order_with_vnodes: inputs.order_with_vnodes,
     order_rank_keys: inputs.order_rank_keys,
     order_groups_for_mincross: inputs.order_groups_for_mincross,
@@ -1429,12 +1425,17 @@ fn build_cluster_rank_order(
     root_edge_creation: inputs.root_edge_creation,
     flat_rank_constraints: inputs.flat_rank_constraints,
   }
-  let root_reorder_output =
-    build_root_reorder_inputs(
-      root_reorder_sources,
-      inputs.order_edges_by_tail_root,
-    )
-  let root_phase_inputs : RootRankOrderPhaseInputs = {
+}
+
+///|
+/// Graphviz parity: cluster-rank-order root phase inputs preserve rank/order
+/// payload and root reorder output before root-only rank-order execution.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_root_phase_inputs(
+  inputs : ClusterRankOrderBuildInputs,
+  root_reorder_output : RootClusterReorderInputs,
+) -> RootRankOrderPhaseInputs {
+  {
     order_cluster_keys: inputs.order_cluster_keys,
     rank_same_groups: inputs.cluster_meta.rank_same_groups,
     rank_same_order: inputs.cluster_meta.rank_same_order,
@@ -1448,6 +1449,31 @@ fn build_cluster_rank_order(
     graphviz_flip: inputs.graphviz_flip,
     root_reorder_output,
   }
+}
+
+///|
+/// Graphviz parity: cluster-phase rank-order map is built from root-only
+/// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
+/// reordering in final real-node groups.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_rank_order(
+  inputs : ClusterRankOrderBuildInputs,
+) -> Map[Int, Map[String, Int]] {
+  if !inputs.order_with_clusters {
+    return Map::new()
+  }
+  let root_reorder_sources =
+    build_cluster_rank_root_reorder_sources(inputs)
+  let root_reorder_output =
+    build_root_reorder_inputs(
+      root_reorder_sources,
+      inputs.order_edges_by_tail_root,
+    )
+  let root_phase_inputs =
+    build_cluster_rank_root_phase_inputs(
+      inputs,
+      root_reorder_output,
+    )
   let root_rank_order_phase_output =
     run_root_rank_order_phase(root_phase_inputs)
   build_cluster_order_from_root(
