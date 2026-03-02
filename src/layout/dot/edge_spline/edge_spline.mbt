@@ -1013,6 +1013,11 @@ fn arrow_len_with_override(base : Double, override_len : Double?) -> Double {
   }
 }
 
+pub struct ArrowLengthPair {
+  tail : Double
+  head : Double
+}
+
 ///|
 /// Graphviz parity: arrow length for spline clipping aligned to
 /// refs/graphviz/lib/common/arrows.c.
@@ -1021,7 +1026,7 @@ pub fn arrow_length_for_edge(
   include_tail : Bool,
   include_head : Bool,
   arrow_len_override : Double?,
-) -> (Double, Double) {
+) -> ArrowLengthPair {
   let tail_len =
     if include_tail {
       arrow_len_with_override(
@@ -1040,7 +1045,7 @@ pub fn arrow_length_for_edge(
     } else {
       0.0
     }
-  (tail_len, head_len)
+  { tail: tail_len, head: head_len }
 }
 
 ///|
@@ -1052,7 +1057,7 @@ fn arrow_length_for_edge_oriented(
   include_head : Bool,
   arrow_len_override : Double?,
   swapped : Bool,
-) -> (Double, Double) {
+) -> ArrowLengthPair {
   if !swapped {
     return arrow_length_for_edge(
       edge,
@@ -1079,7 +1084,7 @@ fn arrow_length_for_edge_oriented(
     } else {
       0.0
     }
-  (tail_len, head_len)
+  { tail: tail_len, head: head_len }
 }
 
 ///|
@@ -4221,7 +4226,7 @@ pub fn edge_spline_for_polyline(
   } else {
     [tail, head]
   }
-  let (tail_arrow_len, head_arrow_len) =
+  let arrow_lengths =
     if include_tail || include_head {
       arrow_length_for_edge_oriented(
         edge,
@@ -4231,7 +4236,7 @@ pub fn edge_spline_for_polyline(
         arrow_swapped,
       )
     } else {
-      (0.0, 0.0)
+      { tail: 0.0, head: 0.0 }
     }
   let polyline = compact_polyline(raw_points)
   let bezier_points =
@@ -4262,8 +4267,8 @@ pub fn edge_spline_for_polyline(
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
-      tail_arrow_len,
-      head_arrow_len,
+      arrow_lengths.tail,
+      arrow_lengths.head,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -4313,7 +4318,7 @@ pub fn edge_spline_for_points(
   if points.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let (tail_arrow_len, head_arrow_len) =
+  let arrow_lengths =
     if include_tail || include_head {
       arrow_length_for_edge_oriented(
         edge,
@@ -4323,7 +4328,7 @@ pub fn edge_spline_for_points(
         arrow_swapped,
       )
     } else {
-      (0.0, 0.0)
+      { tail: 0.0, head: 0.0 }
     }
   let bezier =
     apply_parallel_offset(
@@ -4359,8 +4364,8 @@ pub fn edge_spline_for_points(
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
-      tail_arrow_len,
-      head_arrow_len,
+      arrow_lengths.tail,
+      arrow_lengths.head,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -4416,7 +4421,7 @@ pub fn edge_spline_for_bezier_points(
   if bezier.length() == 0 {
     return { start: None, end: None, points: [] }
   }
-  let (tail_arrow_len, head_arrow_len) =
+  let arrow_lengths =
     if include_tail || include_head {
       arrow_length_for_edge_oriented(
         edge,
@@ -4426,7 +4431,7 @@ pub fn edge_spline_for_bezier_points(
         arrow_swapped,
       )
     } else {
-      (0.0, 0.0)
+      { tail: 0.0, head: 0.0 }
     }
   let bezier_points =
     if parallel_offset != 0.0 {
@@ -4455,8 +4460,8 @@ pub fn edge_spline_for_bezier_points(
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
-      tail_arrow_len,
-      head_arrow_len,
+      arrow_lengths.tail,
+      arrow_lengths.head,
       include_tail,
       include_head,
       arrow_clip_eps,
@@ -4666,7 +4671,7 @@ pub fn edge_spline_for_line(
   clip_swapped? : Bool = false,
   arrow_swapped? : Bool = false,
 ) -> @geom.Spline {
-  let (tail_arrow_len, head_arrow_len) =
+  let arrow_lengths =
     if include_tail || include_head {
       arrow_length_for_edge_oriented(
         edge,
@@ -4676,7 +4681,7 @@ pub fn edge_spline_for_line(
         arrow_swapped,
       )
     } else {
-      (0.0, 0.0)
+      { tail: 0.0, head: 0.0 }
     }
   let mut points =
     line_bezier_points(
@@ -4723,8 +4728,8 @@ pub fn edge_spline_for_line(
     if include_tail || include_head {
       clip_spline_arrows(
         points,
-        tail_arrow_len,
-        head_arrow_len,
+        arrow_lengths.tail,
+        arrow_lengths.head,
         include_tail,
         include_head,
         arrow_clip_eps,

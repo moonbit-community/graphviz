@@ -2152,9 +2152,14 @@ fn build_edge_route_base(
   let arrow_len_override : Double? =
     if include_tail || include_head {
     if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-      let (tail_len, head_len) =
+      let arrow_lengths =
         @edge_spline.arrow_length_for_edge(edge, include_tail, include_head, None)
-      let base = if tail_len > head_len { tail_len } else { head_len }
+      let base =
+        if arrow_lengths.tail > arrow_lengths.head {
+          arrow_lengths.tail
+        } else {
+          arrow_lengths.head
+        }
       let span = @edge_spline.point_dist(tail_clip, head_clip)
       let max_len = if span < 12.0 { span * 0.25 } else { span }
       if max_len > 0.0 && max_len < base {
