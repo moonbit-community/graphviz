@@ -993,23 +993,16 @@ fn build_root_vnode_preferred_positions(
 }
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
-/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Graphviz parity: root ReMincross rank-reorder input preserves the stage
+/// edge snapshot and root-order metadata when dispatching reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_reorder_pass(
+fn build_root_rank_reorder_inputs_for_pass(
+  stage_data : RootReorderPassStageData,
   inputs : RootReorderPassInputs,
-) -> RootReorderPassOutput {
-  let stage_data =
-    build_root_reorder_pass_stage_data(inputs)
-  let preferred_positions =
-    build_root_vnode_preferred_positions(
-      inputs.order_with_vnodes,
-      inputs.vnode_order_keys_for_ordering,
-    )
+  preferred_positions : Map[String, Double],
+) -> RootRankReorderInputs {
   let mincross_edge_data = stage_data.mincross_edge_data
-  capture_pass0_flat_seed_groups_value.val = None
-  capture_pass0_flat_seed_groups_enabled.val = true
-  let root_rank_reorder_inputs : RootRankReorderInputs = {
+  {
     order_rank_keys_for_mincross: stage_data.order_rank_keys_for_mincross,
     order_groups_for_mincross: inputs.order_groups_for_mincross,
     order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
@@ -1041,13 +1034,20 @@ fn run_root_reorder_pass(
     graphviz_in_neighbors: inputs.graphviz_in_neighbors,
     graphviz_flip: inputs.graphviz_flip,
   }
-  let ordered_mincross =
-    run_root_rank_reorder(root_rank_reorder_inputs)
-  capture_pass0_flat_seed_groups_enabled.val = false
-  let root_input_groups = inputs.order_groups_for_mincross
+}
+
+///|
+/// Graphviz parity: root reorder pass snapshot records the same mincross edge
+/// projection and selected rank groups that were passed to reorder_rank_groups.
+/// Do not change behavior without updating fixtures/tests.
+fn capture_root_reorder_pass_snapshot(
+  stage_data : RootReorderPassStageData,
+  inputs : RootReorderPassInputs,
+) -> Unit {
+  let mincross_edge_data = stage_data.mincross_edge_data
   capture_root_snapshot(
     stage_data.order_rank_keys_for_mincross,
-    root_input_groups,
+    inputs.order_groups_for_mincross,
     mincross_edge_data.order_edges_out_mincross,
     mincross_edge_data.order_edge_tail_out_mincross,
     mincross_edge_data.order_edge_head_out_mincross,
@@ -1058,6 +1058,35 @@ fn run_root_reorder_pass(
     inputs.order_cluster_keys,
     inputs.order_cluster_skeleton,
   )
+}
+
+///|
+/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
+/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn run_root_reorder_pass(
+  inputs : RootReorderPassInputs,
+) -> RootReorderPassOutput {
+  let stage_data =
+    build_root_reorder_pass_stage_data(inputs)
+  let preferred_positions =
+    build_root_vnode_preferred_positions(
+      inputs.order_with_vnodes,
+      inputs.vnode_order_keys_for_ordering,
+    )
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
+  let root_rank_reorder_inputs : RootRankReorderInputs = {
+    ..build_root_rank_reorder_inputs_for_pass(
+      stage_data,
+      inputs,
+      preferred_positions,
+    )
+  }
+  let ordered_mincross =
+    run_root_rank_reorder(root_rank_reorder_inputs)
+  capture_pass0_flat_seed_groups_enabled.val = false
+  capture_root_reorder_pass_snapshot(stage_data, inputs)
   capture_pass0_flat_seed_groups_value.val = None
   { ordered_mincross, mincross_nodes: stage_data.mincross_nodes }
 }
