@@ -67,7 +67,7 @@ fn build_x_order_edge_port_data(
     } else {
       x_base_sizes
     }
-  let (x_edge_tail_port_x, x_edge_head_port_x) =
+  let x_edge_port_x_samples =
     compute_edge_port_positions(
       prep.nodes,
       prep.edges,
@@ -75,7 +75,9 @@ fn build_x_order_edge_port_data(
       rank_data.edge_head,
       x_order_sizes,
     )
-  let (x_edge_tail_port_order, x_edge_head_port_order) =
+  let x_edge_tail_port_x = x_edge_port_x_samples.tail_values
+  let x_edge_head_port_x = x_edge_port_x_samples.head_values
+  let x_edge_port_order_samples =
     compute_edge_port_orders(
       prep.nodes,
       prep.edges,
@@ -83,6 +85,8 @@ fn build_x_order_edge_port_data(
       rank_data.edge_head,
       x_order_sizes,
     )
+  let x_edge_tail_port_order = x_edge_port_order_samples.tail_values
+  let x_edge_head_port_order = x_edge_port_order_samples.head_values
   {
     x_base_sizes,
     x_order_sizes,

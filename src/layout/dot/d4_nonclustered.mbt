@@ -29,7 +29,7 @@ fn build_nonclustered_groups(
   let tmp_rank_keys = collect_rank_keys(x_groups)
   // Graphviz parity: even non-cluster xpos reorder uses compass/record
   // port-order fractions when mincross scoring ties are evaluated.
-  let (order_edge_tail_port_x, order_edge_head_port_x) =
+  let order_edge_port_x_samples =
     compute_edge_port_positions(
       prep.nodes,
       ordering.order_edges,
@@ -37,7 +37,9 @@ fn build_nonclustered_groups(
       ordering.order_edge_head,
       x_order_sizes,
     )
-  let (order_edge_tail_port_order, order_edge_head_port_order) =
+  let order_edge_tail_port_x = order_edge_port_x_samples.tail_values
+  let order_edge_head_port_x = order_edge_port_x_samples.head_values
+  let order_edge_port_order_samples =
     compute_edge_port_orders(
       prep.nodes,
       ordering.order_edges,
@@ -45,6 +47,8 @@ fn build_nonclustered_groups(
       ordering.order_edge_head,
       x_order_sizes,
     )
+  let order_edge_tail_port_order = order_edge_port_order_samples.tail_values
+  let order_edge_head_port_order = order_edge_port_order_samples.head_values
   reorder_rank_groups(
     tmp_rank_keys,
     x_groups,

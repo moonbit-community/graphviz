@@ -50,44 +50,38 @@ fn build_ordering_edge_port_data(
   // Graphviz parity: edge-port original phase keeps original edge order map and
   // per-edge port position/order arrays before any ordering-edge deduplication.
   let edge_order = collect_edge_order(edges)
-  let (edge_tail_port_x, edge_head_port_x) =
+  let edge_port_x_samples =
     compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
-  let (edge_tail_port_order, edge_head_port_order) =
+  let edge_tail_port_x = edge_port_x_samples.tail_values
+  let edge_head_port_x = edge_port_x_samples.head_values
+  let edge_port_order_samples =
     compute_edge_port_orders(nodes, edges, edge_tail, edge_head, order_sizes)
+  let edge_tail_port_order = edge_port_order_samples.tail_values
+  let edge_head_port_order = edge_port_order_samples.head_values
   // Graphviz parity: edge-port dedup phase derives ordering-edge arrays and
   // recomputes port position/order samples on deduplicated ordering edges.
   let (order_edges, order_edge_tail, order_edge_head) =
     dedup_ordering_edges(edges, edge_tail, edge_head)
-  let (
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-  ) =
-    {
-      let (tail_port_x, head_port_x) =
-        compute_edge_port_positions(
-          nodes,
-          order_edges,
-          order_edge_tail,
-          order_edge_head,
-          order_sizes,
-        )
-      let (tail_port_order, head_port_order) =
-        compute_edge_port_orders(
-          nodes,
-          order_edges,
-          order_edge_tail,
-          order_edge_head,
-          order_sizes,
-        )
-      (
-        tail_port_x,
-        head_port_x,
-        tail_port_order,
-        head_port_order,
-      )
-    }
+  let order_edge_port_x_samples =
+    compute_edge_port_positions(
+      nodes,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_sizes,
+    )
+  let order_edge_tail_port_x = order_edge_port_x_samples.tail_values
+  let order_edge_head_port_x = order_edge_port_x_samples.head_values
+  let order_edge_port_order_samples =
+    compute_edge_port_orders(
+      nodes,
+      order_edges,
+      order_edge_tail,
+      order_edge_head,
+      order_sizes,
+    )
+  let order_edge_tail_port_order = order_edge_port_order_samples.tail_values
+  let order_edge_head_port_order = order_edge_port_order_samples.head_values
   {
     edge_order,
     edge_tail_port_x,

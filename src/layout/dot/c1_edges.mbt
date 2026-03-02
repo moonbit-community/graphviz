@@ -3,6 +3,21 @@
 /// cluster-skeleton seeding, and neighbor-index helpers.
 
 ///|
+priv struct PortSamplingInputs {
+  port_offsets : Map[String, Map[String, RecordPort]]
+  tail_names : Array[String]
+  head_names : Array[String]
+  tail_ports : Array[@cgraph.Port?]
+  head_ports : Array[@cgraph.Port?]
+}
+
+///|
+priv struct EdgePortSamples {
+  tail_values : Array[Double]
+  head_values : Array[Double]
+}
+
+///|
 /// Graphviz parity: port-sampling inputs reuse one endpoint remap + per-node
 /// port offset table so x-offset and order passes share identical edge context.
 /// Do not change behavior without updating fixtures/tests.
@@ -12,13 +27,7 @@ fn build_port_sampling_inputs(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-) -> (
-  Map[String, Map[String, RecordPort]],
-  Array[String],
-  Array[String],
-  Array[@cgraph.Port?],
-  Array[@cgraph.Port?],
-) {
+) -> PortSamplingInputs {
   let port_offsets = port_offsets_for_nodes(nodes, sizes)
   let tail_names : Array[String] = []
   let head_names : Array[String] = []
@@ -55,7 +64,7 @@ fn build_port_sampling_inputs(
     head_ports.push(head_port)
     idx = idx + 1
   }
-  (port_offsets, tail_names, head_names, tail_ports, head_ports)
+  { port_offsets, tail_names, head_names, tail_ports, head_ports }
 }
 
 ///|
@@ -67,9 +76,9 @@ fn compute_edge_port_positions(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-) -> (Array[Double], Array[Double]) {
+) -> EdgePortSamples {
   if edges.length() == 0 {
-    return ([], [])
+    return { tail_values: [], head_values: [] }
   }
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
@@ -77,14 +86,13 @@ fn compute_edge_port_positions(
   for node in nodes {
     nodes_by_name[node.name()] = node
   }
-  let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
-    build_port_sampling_inputs(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      sizes,
-    )
+  let sampling_inputs =
+    build_port_sampling_inputs(nodes, edges, edge_tail, edge_head, sizes)
+  let port_offsets = sampling_inputs.port_offsets
+  let tail_names = sampling_inputs.tail_names
+  let head_names = sampling_inputs.head_names
+  let tail_ports = sampling_inputs.tail_ports
+  let head_ports = sampling_inputs.head_ports
   // Graphviz parity: per-edge tail/head x-offset samples are emitted in edge
   // sequence order after endpoint-name/port remap.
   let tail_offsets : Array[Double] = []
@@ -113,7 +121,7 @@ fn compute_edge_port_positions(
     head_offsets.push(head_x)
     idx = idx + 1
   }
-  (tail_offsets, head_offsets)
+  { tail_values: tail_offsets, head_values: head_offsets }
 }
 
 ///|
@@ -126,9 +134,9 @@ fn compute_edge_port_orders(
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-) -> (Array[Double], Array[Double]) {
+) -> EdgePortSamples {
   if edges.length() == 0 {
-    return ([], [])
+    return { tail_values: [], head_values: [] }
   }
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
@@ -136,14 +144,13 @@ fn compute_edge_port_orders(
   for node in nodes {
     nodes_by_name[node.name()] = node
   }
-  let (port_offsets, tail_names, head_names, tail_ports, head_ports) =
-    build_port_sampling_inputs(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      sizes,
-    )
+  let sampling_inputs =
+    build_port_sampling_inputs(nodes, edges, edge_tail, edge_head, sizes)
+  let port_offsets = sampling_inputs.port_offsets
+  let tail_names = sampling_inputs.tail_names
+  let head_names = sampling_inputs.head_names
+  let tail_ports = sampling_inputs.tail_ports
+  let head_ports = sampling_inputs.head_ports
   // Graphviz parity: per-edge tail/head port-order samples are emitted in edge
   // sequence order using the same endpoint remap as tie-break x-offsets.
   let tail_orders : Array[Double] = []
@@ -172,7 +179,7 @@ fn compute_edge_port_orders(
     head_orders.push(head_order)
     idx = idx + 1
   }
-  (tail_orders, head_orders)
+  { tail_values: tail_orders, head_values: head_orders }
 }
 
 ///|
