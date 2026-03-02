@@ -4168,7 +4168,7 @@ fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
 ///|
 /// Graphviz parity: pathplan recover_slack runs with limitBoxes before vnode updates.
 /// Do not change behavior without updating fixtures/tests.
-fn recover_pathplan_slack_for_edge(
+fn recover_pathplan_slack(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   spline_result : EdgeSplineResult,
@@ -4774,7 +4774,7 @@ fn build_regular_spline_layout(
   )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
   let spline = finalize_edge_spline(base, layout_spline_result)
-  recover_pathplan_slack_for_edge(
+  recover_pathplan_slack(
     edge,
     base,
     spline_result,
