@@ -232,7 +232,7 @@ fn build_ordering_class2_data(
           }
           for rank in min_rank..=max_rank {
             cluster_skeleton_creation.push(
-              cluster_skeleton_name_for_rank(cluster, rank),
+              skeleton_name_for_rank(cluster, rank),
             )
           }
           cluster_seen[cluster] = true
@@ -250,7 +250,7 @@ fn build_ordering_class2_data(
       }
       for rank in min_rank..=max_rank {
         cluster_skeleton_creation.push(
-          cluster_skeleton_name_for_rank(cluster, rank),
+          skeleton_name_for_rank(cluster, rank),
         )
       }
     }
@@ -276,7 +276,7 @@ fn build_ordering_class2_data(
       let order_creation : Array[String] = []
       let order_seen : Map[String, Bool] = Map::new()
       for name in cluster_skeleton_creation {
-        append_creation_name_if_absent(
+        append_creation_name(
           order_creation,
           order_seen,
           name,
@@ -285,7 +285,7 @@ fn build_ordering_class2_data(
       for tail_name in creation_order {
         // Graphviz parity: each real-node tail emits itself first, followed by
         // its per-tail vnode sequence, while preserving first-seen dedup semantics.
-        append_creation_name_if_absent(
+        append_creation_name(
           order_creation,
           order_seen,
           tail_name,
@@ -295,7 +295,7 @@ fn build_ordering_class2_data(
           None => []
         }
         for vnode in vnodes {
-          append_creation_name_if_absent(
+          append_creation_name(
             order_creation,
             order_seen,
             vnode,

@@ -325,13 +325,13 @@ fn build_root_nlist_order(
     if cluster != "" {
       let rank = flat_constraint_rank_or_zero(ranks, name)
       let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-      append_creation_name_if_absent(
+      append_creation_name(
         tail_order_root,
         tail_root_seen,
         skel,
       )
     } else {
-      append_creation_name_if_absent(
+      append_creation_name(
         tail_order_root,
         tail_root_seen,
         name,
@@ -361,7 +361,7 @@ fn build_root_nlist_order(
   let root_tail_seen : Map[String, Bool] = Map::new()
   for name in tail_order_root {
     if root_has_in.get(name) == Some(false) {
-      append_creation_name_if_absent(
+      append_creation_name(
         root_tail_order,
         root_tail_seen,
         name,
@@ -369,7 +369,7 @@ fn build_root_nlist_order(
     }
   }
   for name in tail_order_root {
-    append_creation_name_if_absent(
+    append_creation_name(
       root_tail_order,
       root_tail_seen,
       name,

@@ -200,7 +200,7 @@ fn prepend_order_edge_entry(
 /// Graphviz parity: cluster skeleton node naming uses
 /// CLUSTER_SKELETON_PREFIX + cluster + @rank across all class2 passes.
 /// Do not change behavior without updating fixtures/tests.
-fn cluster_skeleton_name_for_rank(cluster : String, rank : Int) -> String {
+fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
   "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
 }
 
@@ -218,8 +218,8 @@ fn append_cluster_skeleton_edges(
 ) -> Unit {
   let mut rank = min_rank
   while rank < max_rank {
-    let tail_name = cluster_skeleton_name_for_rank(cluster, rank)
-    let head_name = cluster_skeleton_name_for_rank(cluster, rank + 1)
+    let tail_name = skeleton_name_for_rank(cluster, rank)
+    let head_name = skeleton_name_for_rank(cluster, rank + 1)
     let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
     skeleton_edge_creation.push((tail_name, head_name))
     prepend_order_edge_entry(
@@ -240,7 +240,7 @@ fn append_cluster_skeleton_edges(
 /// Graphviz parity: class2 order_creation keeps first-seen insertion order,
 /// suppressing duplicates across skeleton, real-node, and vnode phases.
 /// Do not change behavior without updating fixtures/tests.
-fn append_creation_name_if_absent(
+fn append_creation_name(
   order_creation : Array[String],
   order_seen : Map[String, Bool],
   name : String,

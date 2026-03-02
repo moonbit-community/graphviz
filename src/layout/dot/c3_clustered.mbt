@@ -183,7 +183,7 @@ fn run_clustered_root_phase(
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
   for tail in root_edge_tail_out {
-    append_creation_name_if_absent(root_tail_order_override, seen_root_tail, tail)
+    append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
   let (_root_rank_keys, root_groups_override) =
     run_root_rank_order_phase(
