@@ -98,7 +98,7 @@ fn build_x_order_edge_port_data(
 /// Graphviz parity: flat-label vnode augmentation updates x-groups, injected
 /// label edges, and vnode cluster-key overlay only on vnode-xpos path.
 /// Do not change behavior without updating fixtures/tests.
-fn build_flat_label_vnode_augmentation(
+fn build_flat_label_augmentation(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,

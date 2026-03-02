@@ -382,7 +382,7 @@ fn build_x_flat_label_augmentation(
       ordering,
       x_seed,
     )
-  build_flat_label_vnode_augmentation(
+  build_flat_label_augmentation(
     use_vnodes_for_xpos,
     prep,
     rank_data,
