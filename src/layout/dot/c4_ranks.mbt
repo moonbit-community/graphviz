@@ -10,43 +10,6 @@ priv struct OrderRootClusterData {
 }
 
 ///|
-/// Graphviz parity: finalize-pass dispatch context keeps clustered finalize
-/// runtime payload ordering unchanged across cluster-rank/ReMincross phases.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterFinalizeDispatchContext {
-  order_with_clusters : Bool
-  order_with_vnodes : Bool
-  graphviz_flip : Bool
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  nlist_order : Array[String]
-  ranks : Map[String, Int]
-  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  skeleton_edge_creation : Array[(String, String)]
-  root_edge_creation : Array[(String, String)]
-  flat_rank_constraints : Map[String, Bool]
-  cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
-  vnode_order_keys_for_ordering : Map[String, Double]
-  real_nodes : Map[String, Bool]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  local_cluster_order : Map[String, Int]
-  graph : @cgraph.Graph
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-  edges_by_tail : Map[String, Array[Int]]
-  order_sizes : Map[String, NodeSize]
-  rank_same_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: root+cluster build_ranks stage input payload keeps root
 /// reorder/materialized artifacts and vnode groups unchanged.
 /// Do not change behavior without updating fixtures/tests.
