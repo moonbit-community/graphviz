@@ -894,46 +894,31 @@ priv struct RootMincrossEdgeData {
 }
 
 ///|
-/// Graphviz parity: root ReMincross edge-data sources keep root edge snapshots,
-/// filtered node set, and rank map unchanged for mincross edge projection.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootMincrossEdgeBuildInputs {
-  mincross_nodes : Map[String, Bool]
-  order_edges_out : Array[@cgraph.Edge]
-  order_edge_tail_out : Array[String]
-  order_edge_head_out : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  order_nodes_for_mincross : Array[String]
-  order_ranks : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
 /// before building parent/child + edge-order indices.
 /// Do not change behavior without updating fixtures/tests.
 fn build_root_mincross_edge_data(
-  inputs : RootMincrossEdgeBuildInputs,
+  root_inputs : RootReorderPassInputs,
+  mincross_nodes : Map[String, Bool],
+  order_nodes_for_mincross : Array[String],
 ) -> RootMincrossEdgeData {
   let mincross_edges_output =
     collect_mincross_order_edges(
-      inputs.mincross_nodes,
-      inputs.order_edges_out,
-      inputs.order_edge_tail_out,
-      inputs.order_edge_head_out,
-      inputs.order_edge_tail_port_x,
-      inputs.order_edge_head_port_x,
-      inputs.order_edge_tail_port_order,
-      inputs.order_edge_head_port_order,
+      mincross_nodes,
+      root_inputs.order_edges_out,
+      root_inputs.order_edge_tail_out,
+      root_inputs.order_edge_head_out,
+      root_inputs.order_edge_tail_port_x,
+      root_inputs.order_edge_head_port_x,
+      root_inputs.order_edge_tail_port_order,
+      root_inputs.order_edge_head_port_order,
     )
   let edge_indices =
     build_edge_indices_and_order(
-      inputs.order_nodes_for_mincross,
+      order_nodes_for_mincross,
       mincross_edges_output.order_edge_tail_out_mincross,
       mincross_edges_output.order_edge_head_out_mincross,
-      inputs.order_ranks,
+      root_inputs.order_ranks,
       mincross_edges_output.order_edges_out_mincross,
     )
   {
@@ -1048,29 +1033,6 @@ priv struct RootReorderPassStageData {
 }
 
 ///|
-/// Graphviz parity: root mincross edge-build input bundle keeps filtered node
-/// membership and root edge snapshots unchanged for one pass-stage projection.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_edge_build_inputs_for_stage(
-  inputs : RootReorderPassInputs,
-  mincross_nodes : Map[String, Bool],
-  order_nodes_for_mincross : Array[String],
-) -> RootMincrossEdgeBuildInputs {
-  {
-    mincross_nodes,
-    order_edges_out: inputs.order_edges_out,
-    order_edge_tail_out: inputs.order_edge_tail_out,
-    order_edge_head_out: inputs.order_edge_head_out,
-    order_edge_tail_port_x: inputs.order_edge_tail_port_x,
-    order_edge_head_port_x: inputs.order_edge_head_port_x,
-    order_edge_tail_port_order: inputs.order_edge_tail_port_order,
-    order_edge_head_port_order: inputs.order_edge_head_port_order,
-    order_nodes_for_mincross,
-    order_ranks: inputs.order_ranks,
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.
@@ -1087,11 +1049,9 @@ fn build_root_reorder_pass_stage_data(
   let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
   let mincross_edge_data =
     build_root_mincross_edge_data(
-      build_root_mincross_edge_build_inputs_for_stage(
-        inputs,
-        mincross_nodes,
-        order_nodes_for_mincross,
-      ),
+      inputs,
+      mincross_nodes,
+      order_nodes_for_mincross,
     )
   { order_rank_keys_for_mincross, mincross_nodes, mincross_edge_data }
 }
