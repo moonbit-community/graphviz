@@ -1567,6 +1567,30 @@ fn add_segment_slack_edges(
 }
 
 ///|
+fn add_constraint_edge_if_present(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  edge : ConstraintEdge,
+) -> Unit {
+  match index.get(edge.tail) {
+    Some(tail_idx) =>
+      match index.get(edge.head) {
+        Some(head_idx) => {
+          let _ = @network_simplex.add_edge(
+            graph,
+            tail_idx,
+            head_idx,
+            edge.minlen,
+            edge.weight,
+          )
+        }
+        None => ()
+      }
+    None => ()
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2088,44 +2112,12 @@ fn build_constraint_graph(
   }
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
-      Some(entry) => {
-        match index.get(entry.tail) {
-          Some(tail_idx) =>
-            match index.get(entry.head) {
-              Some(head_idx) => {
-                let _ = @network_simplex.add_edge(
-                  graph,
-                  tail_idx,
-                  head_idx,
-                  entry.minlen,
-                  entry.weight,
-                )
-              }
-              None => ()
-            }
-          None => ()
-        }
-      }
+      Some(entry) => add_constraint_edge_if_present(graph, index, entry)
       None => ()
     }
   }
   for _flat_key, entry in flat_minlen_constraints {
-    match index.get(entry.tail) {
-      Some(tail_idx) =>
-        match index.get(entry.head) {
-          Some(head_idx) => {
-            let _ = @network_simplex.add_edge(
-              graph,
-              tail_idx,
-              head_idx,
-              entry.minlen,
-              entry.weight,
-            )
-          }
-          None => ()
-        }
-      None => ()
-    }
+    add_constraint_edge_if_present(graph, index, entry)
   }
   let tail_seen : Map[String, Bool] = Map::new()
   for tail_name in nlist_order {
