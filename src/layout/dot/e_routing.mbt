@@ -1659,14 +1659,14 @@ fn build_edge_route_base(
     Some(value) => value
     None => node_size(head_node, record_orientation)
   }
-  let (raw_tail_anchor, raw_tail_anchor_size) = port_geometry(
+  let tail_geometry = port_geometry(
     tail_name,
     tail_port,
     label_ports_map,
     tail_pos,
     tail_size,
   )
-  let (raw_head_anchor, raw_head_anchor_size) = port_geometry(
+  let head_geometry = port_geometry(
     head_name,
     head_port,
     label_ports_map,
@@ -1675,14 +1675,14 @@ fn build_edge_route_base(
   )
   let tail_port_rect = port_rect_from_geometry(
     tail_port,
-    raw_tail_anchor,
-    raw_tail_anchor_size,
+    tail_geometry.center,
+    tail_geometry.size,
     tail_size,
   )
   let head_port_rect = port_rect_from_geometry(
     head_port,
-    raw_head_anchor,
-    raw_head_anchor_size,
+    head_geometry.center,
+    head_geometry.size,
     head_size,
   )
   let tail_port_sides = match tail_port_rect {
@@ -1817,7 +1817,7 @@ fn build_edge_route_base(
     None =>
       match tail_side_anchor {
         Some(pos) => pos
-        None => raw_tail_anchor
+        None => tail_geometry.center
       }
   }
   let head_anchor_base = match head_sameport_anchor {
@@ -1825,7 +1825,7 @@ fn build_edge_route_base(
     None =>
       match head_side_anchor {
         Some(pos) => pos
-        None => raw_head_anchor
+        None => head_geometry.center
       }
   }
   let tail_port_side =
@@ -1900,19 +1900,19 @@ fn build_edge_route_base(
         None => size
       }
     }
-  let tail_clip_center = raw_tail_anchor
+  let tail_clip_center = tail_geometry.center
   let tail_clip_size =
     adjust_self_edge_compass_clip_size(
       tail_node,
       tail_port,
-      raw_tail_anchor_size,
+      tail_geometry.size,
     )
-  let head_clip_center = raw_head_anchor
+  let head_clip_center = head_geometry.center
   let head_clip_size =
     adjust_self_edge_compass_clip_size(
       head_node,
       head_port,
-      raw_head_anchor_size,
+      head_geometry.size,
     )
   let resolve_compass_clip_point :
     (@cgraph.Node, @cgraph.Port?, @geom.Point, NodeSize) -> @geom.Point? =

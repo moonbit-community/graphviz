@@ -1167,12 +1167,16 @@ fn compass_uses_shape_clipping(node : @cgraph.Node) -> Bool {
     | "tripleoctagon" =>
       true
     "polygon" => {
-      let (sides, _peripheries, orientation, distortion, skew, _regular) =
-        polygon_shape_attrs(node)
-      if sides < 3 {
+      let attrs = polygon_shape_attrs(node)
+      if attrs.sides < 3 {
         true
       } else {
-        !polygon_is_box_like(sides, orientation, distortion, skew)
+        !polygon_is_box_like(
+          attrs.sides,
+          attrs.orientation,
+          attrs.distortion,
+          attrs.skew,
+        )
       }
     }
     _ => false

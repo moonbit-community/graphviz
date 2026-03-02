@@ -1578,21 +1578,27 @@ fn port_geometry(
   label_ports_map : Map[String, Map[String, RecordPort]],
   node_pos : @geom.Point,
   node_size : NodeSize,
-) -> (@geom.Point, NodeSize) {
+) -> PortGeometry {
   let (resolved_name, _effective_compass) =
     resolve_label_port_for_graph(node_name, port, label_ports_map)
   let name = match resolved_name {
     Some(value) => value
-    None => return (node_pos, node_size)
+    None => return { center: node_pos, size: node_size }
   }
   match label_ports_map.get(node_name) {
     Some(ports) =>
       match ports.get(name) {
-        Some(port_info) => (port_info.center, port_info.size)
-        None => (node_pos, node_size)
+        Some(port_info) => { center: port_info.center, size: port_info.size }
+        None => { center: node_pos, size: node_size }
       }
-    None => (node_pos, node_size)
+    None => { center: node_pos, size: node_size }
   }
+}
+
+///|
+priv struct PortGeometry {
+  center : @geom.Point
+  size : NodeSize
 }
 
 ///|
@@ -1643,7 +1649,7 @@ fn polygon_attr_double(
 ///|
 fn polygon_shape_attrs(
   node : @cgraph.Node,
-) -> (Int, Int, Double, Double, Double, Bool) {
+) -> PolygonShapeAttrs {
   // Graphviz parity (poly_init): polygon shape accepts explicit sides=0 which
   // keeps ellipse behavior; missing sides falls back to 4.
   let mut sides = match node.get_attr("sides") {
@@ -1666,24 +1672,87 @@ fn polygon_shape_attrs(
     sides = 120
   }
   let regular = attr_bool_true(node.get_attr("regular"))
-  (sides, peripheries, orientation, distortion, skew, regular)
+  { sides, peripheries, orientation, distortion, skew, regular }
 }
 
 ///|
 /// Graphviz parity: built-in polygon shape defaults mirror shapes.c polygon_t.
 fn builtin_polygon_shape_attrs(
   shape : String,
-) -> (Int, Int, Double, Double, Double, Bool)? {
+) -> PolygonShapeAttrs? {
   match shape {
-    "diamond" => Some((4, 1, 0.0, 0.0, 0.0, false))
-    "triangle" => Some((3, 1, 0.0, 0.0, 0.0, false))
-    "invtriangle" => Some((3, 1, 180.0, 0.0, 0.0, false))
-    "egg" => Some((120, 1, 0.0, -0.3, 0.0, false))
-    "octagon" => Some((8, 1, 0.0, 0.0, 0.0, false))
-    "doubleoctagon" => Some((8, 2, 0.0, 0.0, 0.0, false))
-    "tripleoctagon" => Some((8, 3, 0.0, 0.0, 0.0, false))
-    "house" => Some((5, 1, 0.0, -0.64, 0.0, false))
-    "invhouse" => Some((5, 1, 180.0, -0.64, 0.0, false))
+    "diamond" => Some({
+      sides: 4,
+      peripheries: 1,
+      orientation: 0.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "triangle" => Some({
+      sides: 3,
+      peripheries: 1,
+      orientation: 0.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "invtriangle" => Some({
+      sides: 3,
+      peripheries: 1,
+      orientation: 180.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "egg" => Some({
+      sides: 120,
+      peripheries: 1,
+      orientation: 0.0,
+      distortion: -0.3,
+      skew: 0.0,
+      regular: false,
+    })
+    "octagon" => Some({
+      sides: 8,
+      peripheries: 1,
+      orientation: 0.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "doubleoctagon" => Some({
+      sides: 8,
+      peripheries: 2,
+      orientation: 0.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "tripleoctagon" => Some({
+      sides: 8,
+      peripheries: 3,
+      orientation: 0.0,
+      distortion: 0.0,
+      skew: 0.0,
+      regular: false,
+    })
+    "house" => Some({
+      sides: 5,
+      peripheries: 1,
+      orientation: 0.0,
+      distortion: -0.64,
+      skew: 0.0,
+      regular: false,
+    })
+    "invhouse" => Some({
+      sides: 5,
+      peripheries: 1,
+      orientation: 180.0,
+      distortion: -0.64,
+      skew: 0.0,
+      regular: false,
+    })
     _ => None
   }
 }
@@ -1694,18 +1763,25 @@ fn builtin_polygon_shape_attrs(
 fn builtin_polygon_attrs(
   node : @cgraph.Node,
   shape : String,
-) -> (Int, Int, Double, Double, Double, Bool)? {
+) -> PolygonShapeAttrs? {
   match builtin_polygon_shape_attrs(shape) {
-    Some((sides, default_peripheries, default_orientation, distortion, skew, regular_base)) => {
+    Some(base) => {
       let mut peripheries =
-        polygon_attr_int(node, "peripheries", default_peripheries)
+        polygon_attr_int(node, "peripheries", base.peripheries)
       if peripheries < 0 {
         peripheries = 0
       }
       let orientation =
-        default_orientation + polygon_attr_double(node, "orientation", 0.0)
-      let regular = regular_base || attr_bool_true(node.get_attr("regular"))
-      Some((sides, peripheries, orientation, distortion, skew, regular))
+        base.orientation + polygon_attr_double(node, "orientation", 0.0)
+      let regular = base.regular || attr_bool_true(node.get_attr("regular"))
+      Some({
+        sides: base.sides,
+        peripheries,
+        orientation,
+        distortion: base.distortion,
+        skew: base.skew,
+        regular,
+      })
     }
     None => None
   }
@@ -1732,9 +1808,9 @@ fn polygon_scaled_label_bbox(
   base_height_pt : Double,
   sides : Int,
   is_box : Bool,
-) -> (Double, Double) {
+) -> ScaledLabelBBox {
   if is_box {
-    return (label_width_pt, label_height_pt)
+    return { width_pt: label_width_pt, height_pt: label_height_pt }
   }
   let sqrt2 = Double::sqrt(2.0)
   let mut bb_width = label_width_pt
@@ -1760,7 +1836,23 @@ fn polygon_scaled_label_bbox(
       bb_height = bb_height / cos_val
     }
   }
-  (bb_width, bb_height)
+  { width_pt: bb_width, height_pt: bb_height }
+}
+
+///|
+priv struct PolygonShapeAttrs {
+  sides : Int
+  peripheries : Int
+  orientation : Double
+  distortion : Double
+  skew : Double
+  regular : Bool
+}
+
+///|
+priv struct ScaledLabelBBox {
+  width_pt : Double
+  height_pt : Double
 }
 
 ///|
@@ -2065,23 +2157,36 @@ fn node_size(
   let mut scaled_label_height_pt = label_height_pt
   if fixedsize_mode == NodeFixedSizeMode::None {
     if polygon_shape is Some(_) && has_label {
-      let (sides, _peripheries, orientation, distortion, skew, _regular) =
+      let polygon_attrs =
         match polygon_shape {
           Some(values) => values
-          None => (4, 1, 0.0, 0.0, 0.0, false)
+          None =>
+            {
+              sides: 4,
+              peripheries: 1,
+              orientation: 0.0,
+              distortion: 0.0,
+              skew: 0.0,
+              regular: false,
+            }
         }
       let is_box = shape != "diamond" &&
-        polygon_is_box_like(sides, orientation, distortion, skew)
-      let (scaled_width_pt, scaled_height_pt) =
+        polygon_is_box_like(
+          polygon_attrs.sides,
+          polygon_attrs.orientation,
+          polygon_attrs.distortion,
+          polygon_attrs.skew,
+        )
+      let scaled_bbox =
         polygon_scaled_label_bbox(
           label_width_pt,
           label_height_pt,
           base_height_pt,
-          sides,
+          polygon_attrs.sides,
           is_box,
         )
-      scaled_label_width_pt = scaled_width_pt
-      scaled_label_height_pt = scaled_height_pt
+      scaled_label_width_pt = scaled_bbox.width_pt
+      scaled_label_height_pt = scaled_bbox.height_pt
     } else if shape == "mdiamond" && has_label {
       let sqrt2 = Double::sqrt(2.0)
       let temp = label_height_pt * sqrt2
@@ -2161,18 +2266,18 @@ fn node_size(
   }
   if fixedsize_mode != NodeFixedSizeMode::Shape {
     match polygon_shape {
-    Some((sides, peripheries, orientation, distortion, skew, regular_polygon)) => {
-      if regular_polygon {
+    Some(attrs) => {
+      if attrs.regular {
         let size_in = if width_in > height_in { width_in } else { height_in }
         width_in = size_in
         height_in = size_in
       }
       let mut polygon_width_pt = width_in * 72.0
       let mut polygon_height_pt = height_in * 72.0
-      if sides < 3 {
-        if peripheries > 1 {
+      if attrs.sides < 3 {
+        if attrs.peripheries > 1 {
           let extra =
-            PERIPHERY_GAP_PT * 2.0 * Double::from_int(peripheries - 1)
+            PERIPHERY_GAP_PT * 2.0 * Double::from_int(attrs.peripheries - 1)
           polygon_width_pt = polygon_width_pt + extra
           polygon_height_pt = polygon_height_pt + extra
         }
@@ -2181,16 +2286,16 @@ fn node_size(
           polygon_vertices_for_size(
             polygon_width_pt,
             polygon_height_pt,
-            sides,
-            orientation,
-            distortion,
-            skew,
+            attrs.sides,
+            attrs.orientation,
+            attrs.distortion,
+            attrs.skew,
           )
         polygon_width_pt = distorted_width_pt
         polygon_height_pt = distorted_height_pt
-        if peripheries > 1 && base_vertices.length() > 0 {
+        if attrs.peripheries > 1 && base_vertices.length() > 0 {
           let outline_pad_pt =
-            PERIPHERY_GAP_PT * Double::from_int(peripheries - 1)
+            PERIPHERY_GAP_PT * Double::from_int(attrs.peripheries - 1)
           let expanded_vertices =
             polygon_outline_for_size(base_vertices, outline_pad_pt)
           let mut max_x = polygon_width_pt / 2.0

@@ -608,22 +608,22 @@ fn collect_head_port_metrics(
         Some(value) => value
         None => node_size(edge.head(), record_orientation)
       }
-      let (tail_anchor, _) = port_geometry(
+      let tail_geometry = port_geometry(
         tail_name,
         edge.tail_port(),
         label_ports_map,
         tail_pos,
         tail_size,
       )
-      let (head_anchor, _) = port_geometry(
+      let head_geometry = port_geometry(
         head_name,
         edge.head_port(),
         label_ports_map,
         head_pos,
         head_size,
       )
-      let dx = head_anchor.x - tail_anchor.x
-      let dy = head_anchor.y - tail_anchor.y
+      let dx = head_geometry.center.x - tail_geometry.center.x
+      let dy = head_geometry.center.y - tail_geometry.center.y
       let dist = Double::sqrt(dx * dx + dy * dy)
       let current = match head_port_counts.get(key) {
         Some(value) => value
