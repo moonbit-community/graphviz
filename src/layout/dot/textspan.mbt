@@ -290,7 +290,7 @@ fn split_label_lines(
 }
 
 ///|
-fn try_multiline_textspan_override(
+fn try_multiline_override(
   label : String,
   font_name : String,
   font_size_pt : Double,
@@ -346,7 +346,7 @@ pub fn label_text_metrics(
       return (width, height, yoffset_layout, yoffset_centerline)
     None => ()
   }
-  match try_multiline_textspan_override(
+  match try_multiline_override(
     label,
     font_name,
     font_size_pt,
@@ -542,7 +542,7 @@ pub fn record_label_text_dimensions(
     Some((width, height)) => return (width, height)
     None => ()
   }
-  match try_multiline_textspan_override(
+  match try_multiline_override(
     label,
     font_name,
     font_size_pt,
