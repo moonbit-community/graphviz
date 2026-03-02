@@ -781,7 +781,7 @@ fn build_position_output_maps(
 /// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
 /// paths and must preserve node-singleton and cluster-key inputs.
 /// Do not change behavior without updating fixtures/tests.
-fn build_xpos_virtual_slack_edges(
+fn build_xpos_slack_edges(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
