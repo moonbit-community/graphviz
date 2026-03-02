@@ -2397,6 +2397,18 @@ fn trim_degenerate_spline_segments(
   out
 }
 
+priv struct SegmentClipResult {
+  points : Array[@geom.Point]
+  idx : Int
+  anchor : @geom.Point
+}
+
+priv struct SplineArrowClipResult {
+  points : Array[@geom.Point]
+  start_point : @geom.Point?
+  end_point : @geom.Point?
+}
+
 ///|
 fn arrow_clip_start_segment(
   points : Array[@geom.Point],
@@ -2404,10 +2416,10 @@ fn arrow_clip_start_segment(
   eps : Double,
   start_idx : Int,
   end_idx : Int,
-) -> (Array[@geom.Point], Int, @geom.Point) {
+) -> SegmentClipResult {
   let start_point = points[start_idx]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return (points, start_idx, start_point)
+    return { points, idx: start_idx, anchor: start_point }
   }
   let len2 = arrow_len * arrow_len
   let mut start = start_idx
@@ -2426,7 +2438,7 @@ fn arrow_clip_start_segment(
   out[start + 1] = clipped.points[1]
   out[start + 2] = clipped.points[2]
   out[start + 3] = clipped.points[3]
-  (out, start, start_point)
+  { points: out, idx: start, anchor: start_point }
 }
 
 ///|
@@ -2436,10 +2448,10 @@ fn arrow_clip_end_segment(
   eps : Double,
   start_idx : Int,
   end_idx : Int,
-) -> (Array[@geom.Point], Int, @geom.Point) {
+) -> SegmentClipResult {
   let end_point = points[end_idx + 3]
   if arrow_len <= 0.0 || points.length() < 4 {
-    return (points, end_idx, end_point)
+    return { points, idx: end_idx, anchor: end_point }
   }
   let len2 = arrow_len * arrow_len
   let mut end = end_idx
@@ -2458,7 +2470,7 @@ fn arrow_clip_end_segment(
   out[end + 1] = clipped.points[1]
   out[end + 2] = clipped.points[2]
   out[end + 3] = clipped.points[3]
-  (out, end, end_point)
+  { points: out, idx: end, anchor: end_point }
 }
 
 ///|
@@ -2468,7 +2480,7 @@ fn clip_spline_arrows_ortho(
   head_len : Double,
   include_tail : Bool,
   include_head : Bool,
-) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
+) -> SplineArrowClipResult {
   let out = points.copy()
   let start_idx = 0
   let end_idx = out.length() - 4
@@ -2505,7 +2517,7 @@ fn clip_spline_arrows_ortho(
     out[end_idx + 1] = s
     out[end_idx + 2] = t
     out[end_idx + 3] = t
-    return (out, start_point, end_point)
+    return { points: out, start_point, end_point }
   }
   if include_head {
     let p = out[end_idx]
@@ -2543,7 +2555,7 @@ fn clip_spline_arrows_ortho(
     out[start_idx + 1] = r
     out[start_idx + 2] = q
   }
-  (out, start_point, end_point)
+  { points: out, start_point, end_point }
 }
 
 ///|
@@ -2555,7 +2567,7 @@ fn clip_spline_arrows(
   include_head : Bool,
   eps : Double,
   orthogonal? : Bool = false,
-) -> (Array[@geom.Point], @geom.Point?, @geom.Point?) {
+) -> SplineArrowClipResult {
   if orthogonal {
     return clip_spline_arrows_ortho(
       points,
@@ -2571,18 +2583,18 @@ fn clip_spline_arrows(
   let mut start_point : @geom.Point? = None
   let mut end_point : @geom.Point? = None
   if include_tail {
-    let (clipped, new_start_idx, start) =
+    let start_clip =
       arrow_clip_start_segment(out, tail_len, eps, start_idx, end_idx)
-    out = clipped
-    start_idx = new_start_idx
-    start_point = Some(start)
+    out = start_clip.points
+    start_idx = start_clip.idx
+    start_point = Some(start_clip.anchor)
   }
   if include_head {
-    let (clipped, new_end_idx, end) =
+    let end_clip =
       arrow_clip_end_segment(out, head_len, eps, start_idx, end_idx)
-    out = clipped
-    end_idx = new_end_idx
-    end_point = Some(end)
+    out = end_clip.points
+    end_idx = end_clip.idx
+    end_point = Some(end_clip.anchor)
   }
   if start_idx > 0 || end_idx < out.length() - 4 {
     let trimmed : Array[@geom.Point] = []
@@ -2592,9 +2604,9 @@ fn clip_spline_arrows(
       trimmed.push(out[idx])
       idx += 1
     }
-    (trimmed, start_point, end_point)
+    { points: trimmed, start_point, end_point }
   } else {
-    (out, start_point, end_point)
+    { points: out, start_point, end_point }
   }
 }
 
@@ -4223,7 +4235,7 @@ pub fn edge_spline_for_polyline(
   let trimmed = trim_degenerate_spline_segments(clipped)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let (points, start_point, end_point) =
+  let arrow_clipped =
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
@@ -4235,17 +4247,17 @@ pub fn edge_spline_for_polyline(
       orthogonal=orthogonal,
     )
   } else {
-    (trimmed, None, None)
+    { points: trimmed, start_point: None, end_point: None }
   }
   let points =
     adjust_tail_cluster_compound_segment(
-      points,
-      end_point,
+      arrow_clipped.points,
+      arrow_clipped.end_point,
       include_tail,
       include_head,
       tail_cluster_bbox,
     )
-  { start: start_point, end: end_point, points }
+  { start: arrow_clipped.start_point, end: arrow_clipped.end_point, points }
 }
 
 ///|
@@ -4320,7 +4332,7 @@ pub fn edge_spline_for_points(
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let (clipped, start_point, end_point) =
+  let arrow_clipped =
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
@@ -4331,12 +4343,12 @@ pub fn edge_spline_for_points(
       arrow_clip_eps,
     )
   } else {
-    (trimmed, None, None)
+    { points: trimmed, start_point: None, end_point: None }
   }
   let clipped =
     adjust_tail_cluster_compound_segment(
-      clipped,
-      end_point,
+      arrow_clipped.points,
+      arrow_clipped.end_point,
       include_tail,
       include_head,
       tail_cluster_bbox,
@@ -4349,7 +4361,11 @@ pub fn edge_spline_for_points(
     }
   }
   let points_out = if has_dupes { clipped } else { dedup_consecutive(clipped) }
-  { start: start_point, end: end_point, points: points_out }
+  {
+    start: arrow_clipped.start_point,
+    end: arrow_clipped.end_point,
+    points: points_out,
+  }
 }
 
 ///|
@@ -4412,7 +4428,7 @@ pub fn edge_spline_for_bezier_points(
   let trimmed = trim_degenerate_spline_segments(spline_points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let (clipped, start_point, end_point) =
+  let arrow_clipped =
     if include_tail || include_head {
     clip_spline_arrows(
       trimmed,
@@ -4423,12 +4439,12 @@ pub fn edge_spline_for_bezier_points(
       arrow_clip_eps,
     )
   } else {
-    (trimmed, None, None)
+    { points: trimmed, start_point: None, end_point: None }
   }
   let clipped =
     adjust_tail_cluster_compound_segment(
-      clipped,
-      end_point,
+      arrow_clipped.points,
+      arrow_clipped.end_point,
       include_tail,
       include_head,
       tail_cluster_bbox,
@@ -4441,7 +4457,11 @@ pub fn edge_spline_for_bezier_points(
     }
   }
   let points_out = if has_dupes { clipped } else { dedup_consecutive(clipped) }
-  { start: start_point, end: end_point, points: points_out }
+  {
+    start: arrow_clipped.start_point,
+    end: arrow_clipped.end_point,
+    points: points_out,
+  }
 }
 
 ///|
@@ -4676,7 +4696,7 @@ pub fn edge_spline_for_line(
   points = trim_degenerate_spline_segments(points)
   // Graphviz parity: arrow clip epsilon is constant across cluster routing.
   let arrow_clip_eps = ARROW_CLIP_EPS
-  let (clipped, start_point, end_point) =
+  let arrow_clipped =
     if include_tail || include_head {
       clip_spline_arrows(
         points,
@@ -4687,15 +4707,19 @@ pub fn edge_spline_for_line(
         arrow_clip_eps,
       )
     } else {
-      (points, None, None)
+      { points, start_point: None, end_point: None }
     }
   points =
     adjust_tail_cluster_compound_segment(
-      clipped,
-      end_point,
+      arrow_clipped.points,
+      arrow_clipped.end_point,
       include_tail,
       include_head,
       tail_cluster_bbox,
     )
-  { start: start_point, end: end_point, points }
+  {
+    start: arrow_clipped.start_point,
+    end: arrow_clipped.end_point,
+    points,
+  }
 }
