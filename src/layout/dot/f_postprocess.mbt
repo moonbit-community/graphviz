@@ -1169,7 +1169,7 @@ fn scale_layout_graph(
 }
 
 ///|
-fn apply_ratio_fill_scale_if_needed(
+fn apply_ratio_fill_scale(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
   rankdir : RankDir,
@@ -1500,7 +1500,7 @@ fn finalize_layout_graph(
     subgraphs: layout_with_root_pad.subgraphs,
   }
   let layout =
-    apply_ratio_fill_scale_if_needed(graph, layout, rankdir, ratio_bbox)
+    apply_ratio_fill_scale(graph, layout, rankdir, ratio_bbox)
   let adjusted = adjust_edge_labels_if_enabled(layout, nodesep_pt, rankdir)
   let labeled =
     expand_bbox_for_edge_labels(
