@@ -533,7 +533,7 @@ fn apply_remincross_trailing_floor(
 /// Graphviz parity: ReMincross vnode order keys come from base vnode-order
 /// scoring plus trailing-vnode floor adjustments for selected intercluster
 /// vnode chains.
-fn build_remincross_vnode_order_keys(
+fn build_remincross_vnode_keys(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -609,7 +609,7 @@ fn build_remincross_vnode_groups(
     if !order_with_vnodes {
       Map::new()
     } else {
-      build_remincross_vnode_order_keys(
+      build_remincross_vnode_keys(
         edges,
         edge_tail,
         edge_head,
