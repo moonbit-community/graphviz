@@ -57,6 +57,16 @@ priv struct XLabelMetrics {
   height : Double
 }
 
+priv struct LabelDims {
+  width : Double
+  height : Double
+}
+
+priv struct EdgeEndpoints {
+  tail : @geom.Point
+  head : @geom.Point
+}
+
 fn xlabel_metrics_for_node(node : @cgraph.Node) -> XLabelMetrics? {
   match node.get_attr("xlabel") {
     Some(text) =>
@@ -83,11 +93,11 @@ fn maybe_flip_dims(
   width : Double,
   height : Double,
   flip : Bool,
-) -> (Double, Double) {
+) -> LabelDims {
   if flip {
-    (height, width)
+    { width: height, height: width }
   } else {
-    (width, height)
+    { width, height }
   }
 }
 
@@ -581,10 +591,10 @@ fn edge_head_point_for_layout(edge_layout : DotLayoutEdge) -> @geom.Point? {
 
 fn edge_endpoints(
   edge_layout : DotLayoutEdge,
-) -> (@geom.Point, @geom.Point)? {
+) -> EdgeEndpoints? {
   match (edge_tail_point_for_layout(edge_layout),
     edge_head_point_for_layout(edge_layout)) {
-    (Some(tail), Some(head)) => Some((tail, head))
+    (Some(tail), Some(head)) => Some({ tail, head })
     _ => None
   }
 }
@@ -701,7 +711,7 @@ fn polyline_midpoint(edge_layout : DotLayoutEdge) -> @geom.Point? {
   }
   if total <= 0.0 {
     match edge_endpoints(edge_layout) {
-      Some((tail, _)) => return Some(tail)
+      Some(endpoints) => return Some(endpoints.tail)
       None => return None
     }
   }
@@ -735,13 +745,17 @@ fn edge_midpoint_for_layout(
   splines : SplinesMode,
 ) -> @geom.Point? {
   match edge_endpoints(edge_layout) {
-    Some((tail, head)) => {
-      if approx_eq_point(tail, head) {
-        return Some(tail)
+    Some(endpoints) => {
+      if approx_eq_point(endpoints.tail, endpoints.head) {
+        return Some(endpoints.tail)
       }
       match splines {
         SplinesMode::Spline | SplinesMode::Curved => {
-          let mid = @edge_spline.point((tail.x + head.x) / 2.0, (tail.y + head.y) / 2.0)
+          let mid =
+            @edge_spline.point(
+              (endpoints.tail.x + endpoints.head.x) / 2.0,
+              (endpoints.tail.y + endpoints.head.y) / 2.0,
+            )
           match dotneato_closest_point(edge_layout, mid) {
             Some(value) => Some(value)
             None => Some(mid)
@@ -888,14 +902,14 @@ fn collect_cluster_label_objects(
       Some(pos) =>
         match graph_label_metrics(subgraph.graph) {
           Some(metrics) => {
-            let (width, height) =
+            let dims =
               maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)
-            let llx = pos.x - width / 2.0
-            let lly = pos.y - height / 2.0
+            let llx = pos.x - dims.width / 2.0
+            let lly = pos.y - dims.height / 2.0
             objects.push({
               pos: @edge_spline.point(llx, lly),
-              width,
-              height,
+              width: dims.width,
+              height: dims.height,
               label_index: None,
             })
           }
@@ -937,22 +951,26 @@ fn apply_xlabels(
     let node = node_layout.node
     let width_pt = node_layout.width_in * 72.0
     let height_pt = node_layout.height_in * 72.0
-    let (obj_w, obj_h) = maybe_flip_dims(width_pt, height_pt, flip)
-    let llx = node_layout.pos.x - obj_w / 2.0
-    let lly = node_layout.pos.y - obj_h / 2.0
+    let obj_dims = maybe_flip_dims(width_pt, height_pt, flip)
+    let llx = node_layout.pos.x - obj_dims.width / 2.0
+    let lly = node_layout.pos.y - obj_dims.height / 2.0
     let mut label_index : Int? = None
     let mut label_object : XObject? = None
     match xlabel_metrics_for_node(node) {
       Some(metrics) => {
-        let (label_w, label_h) =
+        let label_dims =
           maybe_flip_dims(metrics.width, metrics.height, flip)
         match node_layout.xlabel_pos {
           Some(pos) => {
-            let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+            let pos_ll =
+              @edge_spline.point(
+                pos.x - label_dims.width / 2.0,
+                pos.y - label_dims.height / 2.0,
+              )
             label_object = Some({
               pos: pos_ll,
-              width: label_w,
-              height: label_h,
+              width: label_dims.width,
+              height: label_dims.height,
               label_index: None,
             })
           }
@@ -960,8 +978,8 @@ fn apply_xlabels(
             let idx = labels.length()
             labels.push({
               target: XLabelTarget::Node(node.name()),
-              width: label_w,
-              height: label_h,
+              width: label_dims.width,
+              height: label_dims.height,
               pos: @edge_spline.point(0.0, 0.0),
               set: false,
             })
@@ -973,8 +991,8 @@ fn apply_xlabels(
     }
     objects.push({
       pos: @edge_spline.point(llx, lly),
-      width: obj_w,
-      height: obj_h,
+      width: obj_dims.width,
+      height: obj_dims.height,
       label_index,
     })
     match label_object {
@@ -994,13 +1012,17 @@ fn apply_xlabels(
         Some(pos) =>
           match edge_mid_label_metrics(edge) {
             Some(metrics) => {
-              let (label_w, label_h) =
+              let label_dims =
                 maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll =
+                @edge_spline.point(
+                  pos.x - label_dims.width / 2.0,
+                  pos.y - label_dims.height / 2.0,
+                )
               objects.push({
                 pos: pos_ll,
-                width: label_w,
-                height: label_h,
+                width: label_dims.width,
+                height: label_dims.height,
                 label_index: None,
               })
             }
@@ -1012,13 +1034,13 @@ fn apply_xlabels(
               Some(metrics) =>
                 match edge_midpoint_for_layout(edge_layout, splines) {
                   Some(anchor) => {
-                    let (label_w, label_h) =
+                    let label_dims =
                       maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeMid(edge_key_value),
-                      width: label_w,
-                      height: label_h,
+                      width: label_dims.width,
+                      height: label_dims.height,
                       pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
@@ -1039,13 +1061,17 @@ fn apply_xlabels(
         Some(pos) =>
           match edge_label_metrics_for_attr(edge, "taillabel", true) {
             Some(metrics) => {
-              let (label_w, label_h) =
+              let label_dims =
                 maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll =
+                @edge_spline.point(
+                  pos.x - label_dims.width / 2.0,
+                  pos.y - label_dims.height / 2.0,
+                )
               objects.push({
                 pos: pos_ll,
-                width: label_w,
-                height: label_h,
+                width: label_dims.width,
+                height: label_dims.height,
                 label_index: None,
               })
             }
@@ -1057,13 +1083,13 @@ fn apply_xlabels(
               Some(metrics) =>
                 match edge_tail_point_for_layout(edge_layout) {
                   Some(anchor) => {
-                    let (label_w, label_h) =
+                    let label_dims =
                       maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeTail(edge_key_value),
-                      width: label_w,
-                      height: label_h,
+                      width: label_dims.width,
+                      height: label_dims.height,
                       pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
@@ -1084,13 +1110,17 @@ fn apply_xlabels(
         Some(pos) =>
           match edge_label_metrics_for_attr(edge, "headlabel", true) {
             Some(metrics) => {
-              let (label_w, label_h) =
+              let label_dims =
                 maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll =
+                @edge_spline.point(
+                  pos.x - label_dims.width / 2.0,
+                  pos.y - label_dims.height / 2.0,
+                )
               objects.push({
                 pos: pos_ll,
-                width: label_w,
-                height: label_h,
+                width: label_dims.width,
+                height: label_dims.height,
                 label_index: None,
               })
             }
@@ -1102,13 +1132,13 @@ fn apply_xlabels(
               Some(metrics) =>
                 match edge_head_point_for_layout(edge_layout) {
                   Some(anchor) => {
-                    let (label_w, label_h) =
+                    let label_dims =
                       maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeHead(edge_key_value),
-                      width: label_w,
-                      height: label_h,
+                      width: label_dims.width,
+                      height: label_dims.height,
                       pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
@@ -1129,13 +1159,17 @@ fn apply_xlabels(
         Some(pos) =>
           match xlabel_metrics_for_edge(edge) {
             Some(metrics) => {
-              let (label_w, label_h) =
+              let label_dims =
                 maybe_flip_dims(metrics.width, metrics.height, flip)
-              let pos_ll = @edge_spline.point(pos.x - label_w / 2.0, pos.y - label_h / 2.0)
+              let pos_ll =
+                @edge_spline.point(
+                  pos.x - label_dims.width / 2.0,
+                  pos.y - label_dims.height / 2.0,
+                )
               objects.push({
                 pos: pos_ll,
-                width: label_w,
-                height: label_h,
+                width: label_dims.width,
+                height: label_dims.height,
                 label_index: None,
               })
             }
@@ -1147,13 +1181,13 @@ fn apply_xlabels(
               Some(metrics) =>
                 match edge_midpoint_for_layout(edge_layout, splines) {
                   Some(anchor) => {
-                    let (label_w, label_h) =
+                    let label_dims =
                       maybe_flip_dims(metrics.width, metrics.height, flip)
                     let idx = labels.length()
                     labels.push({
                       target: XLabelTarget::EdgeXlabel(edge_key_value),
-                      width: label_w,
-                      height: label_h,
+                      width: label_dims.width,
+                      height: label_dims.height,
                       pos: @edge_spline.point(0.0, 0.0),
                       set: false,
                     })
@@ -1183,9 +1217,14 @@ fn apply_xlabels(
       Some(pos) =>
         match xlabel_metrics_for_node(node_layout.node) {
           Some(metrics) => {
-            let (width, height) =
+            let dims =
               maybe_flip_dims(metrics.width, metrics.height, flip)
-            bbox = expand_bbox_for_label_pos(bbox, Some(pos), Some((width, height)))
+            bbox =
+              expand_bbox_for_label_pos(
+                bbox,
+                Some(pos),
+                Some((dims.width, dims.height)),
+              )
           }
           None => ()
         }
@@ -1197,9 +1236,14 @@ fn apply_xlabels(
       Some(pos) =>
         match xlabel_metrics_for_edge(edge_layout.edge) {
           Some(metrics) => {
-            let (width, height) =
+            let dims =
               maybe_flip_dims(metrics.width, metrics.height, flip)
-            bbox = expand_bbox_for_label_pos(bbox, Some(pos), Some((width, height)))
+            bbox =
+              expand_bbox_for_label_pos(
+                bbox,
+                Some(pos),
+                Some((dims.width, dims.height)),
+              )
           }
           None => ()
         }
