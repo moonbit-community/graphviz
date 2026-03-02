@@ -269,7 +269,7 @@ fn compute_desired_positions(
 }
 
 ///|
-fn compute_scaled_median_positions(
+fn compute_scaled_medians(
   names : Array[String],
   neighbors : Map[String, Array[(String, Double)]],
   x_positions : Map[String, Double],
@@ -507,7 +507,7 @@ fn out_cross_port_tiebreak(
 }
 
 ///|
-fn count_single_rank_crossings_port(
+fn count_rank_crossings_port(
   rank : Int,
   names : Array[String],
   ranks : Map[String, Int],
@@ -1130,7 +1130,7 @@ let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
 let capture_pass0_flat_seed_groups_value : Ref[Map[Int, Array[String]]?] = Ref::new(None)
 
 ///|
-fn maybe_capture_pass0_seed_groups(
+fn maybe_capture_seed_groups(
   pass : Int,
   rank_keys : Array[Int],
   ordered : Map[Int, Array[String]],
@@ -1562,7 +1562,7 @@ fn reorder_rank_groups(
         Some(list) => list
         None => []
       }
-      count_single_rank_crossings_port(
+      count_rank_crossings_port(
         rank,
         names,
         node_ranks,
@@ -1643,7 +1643,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
-        maybe_capture_pass0_seed_groups(pass, rank_keys, ordered)
+        maybe_capture_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross = compute_single_cross()
@@ -1681,13 +1681,13 @@ fn reorder_rank_groups(
         if names.length() > 1 {
           let desired =
             if iter % 2 == 0 {
-              compute_scaled_median_positions(
+              compute_scaled_medians(
                 names,
                 median_parents,
                 order_positions,
               )
             } else {
-              compute_scaled_median_positions(
+              compute_scaled_medians(
                 names,
                 median_children,
                 order_positions,
@@ -1863,7 +1863,7 @@ fn reorder_rank_groups(
           flat_constraints,
           graphviz_flip,
         )
-        maybe_capture_pass0_seed_groups(pass, rank_keys, ordered)
+        maybe_capture_seed_groups(pass, rank_keys, ordered)
         order_positions = order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
@@ -1922,7 +1922,7 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_scaled_median_positions(
+              let desired = compute_scaled_medians(
                 names,
                 median_parents,
                 desired_positions,
@@ -1967,7 +1967,7 @@ fn reorder_rank_groups(
             if names.length() > 1 {
               let desired_positions =
                 if use_sweep_snapshot { sweep_positions } else { order_positions }
-              let desired = compute_scaled_median_positions(
+              let desired = compute_scaled_medians(
                 names,
                 median_children,
                 desired_positions,
@@ -2103,7 +2103,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_scaled_median_positions(
+              let desired = compute_scaled_medians(
                 names,
                 median_parents,
                 order_positions,
@@ -2132,7 +2132,7 @@ fn reorder_rank_groups(
               None => []
             }
             if names.length() > 1 {
-              let desired = compute_scaled_median_positions(
+              let desired = compute_scaled_medians(
                 names,
                 median_children,
                 order_positions,
