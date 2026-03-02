@@ -1524,6 +1524,52 @@ fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+fn port_merge_key(port : @cgraph.Port?) -> String {
+  match port {
+    None => ""
+    Some(value) => {
+      let mut out = ""
+      match value.name {
+        Some(name) => out = name
+        None => ()
+      }
+      match value.compass {
+        Some(compass) => {
+          let side = match compass {
+            @cgraph.Compass::N => "n"
+            @cgraph.Compass::NE => "ne"
+            @cgraph.Compass::E => "e"
+            @cgraph.Compass::SE => "se"
+            @cgraph.Compass::S => "s"
+            @cgraph.Compass::SW => "sw"
+            @cgraph.Compass::W => "w"
+            @cgraph.Compass::NW => "nw"
+            @cgraph.Compass::C => "c"
+          }
+          if out == "" {
+            out = side
+          } else {
+            out = "\{out}:\{side}"
+          }
+        }
+        None => ()
+      }
+      out
+    }
+  }
+}
+
+///|
+fn directed_edge_merge_key(
+  tail : String,
+  head : String,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+) -> String {
+  "\{tail}|\{head}|\{port_merge_key(tail_port)}|\{port_merge_key(head_port)}"
+}
+
+///|
 fn add_segment_slack_edges(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -1920,48 +1966,6 @@ fn build_constraint_graph(
   let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
   let merged_edge_weight_bonus : Map[Int, Int] = Map::new()
   let merged_edge_skip : Map[Int, Bool] = Map::new()
-  let port_merge_key = (port : @cgraph.Port?) => {
-    match port {
-      None => ""
-      Some(value) => {
-        let mut out = ""
-        match value.name {
-          Some(name) => out = name
-          None => ()
-        }
-        match value.compass {
-          Some(compass) => {
-            let side = match compass {
-              @cgraph.Compass::N => "n"
-              @cgraph.Compass::NE => "ne"
-              @cgraph.Compass::E => "e"
-              @cgraph.Compass::SE => "se"
-              @cgraph.Compass::S => "s"
-              @cgraph.Compass::SW => "sw"
-              @cgraph.Compass::W => "w"
-              @cgraph.Compass::NW => "nw"
-              @cgraph.Compass::C => "c"
-            }
-            if out == "" {
-              out = side
-            } else {
-              out = "\{out}:\{side}"
-            }
-          }
-          None => ()
-        }
-        out
-      }
-    }
-  }
-  let merge_key = (
-    tail : String,
-    head : String,
-    tail_port : @cgraph.Port?,
-    head_port : @cgraph.Port?,
-  ) => {
-    "\{tail}|\{head}|\{port_merge_key(tail_port)}|\{port_merge_key(head_port)}"
-  }
   let forward_rep_by_key : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
@@ -1985,13 +1989,12 @@ fn build_constraint_graph(
     if is_reversed {
       continue
     }
-    let key =
-      merge_key(
-        edge.tail().name(),
-        edge.head().name(),
-        edge.tail_port(),
-        edge.head_port(),
-      )
+    let key = directed_edge_merge_key(
+      edge.tail().name(),
+      edge.head().name(),
+      edge.tail_port(),
+      edge.head_port(),
+    )
     if forward_rep_by_key.get(key) is None {
       forward_rep_by_key[key] = edge_idx
     }
@@ -2018,13 +2021,12 @@ fn build_constraint_graph(
     if !is_reversed {
       continue
     }
-    let key =
-      merge_key(
-        edge.head().name(),
-        edge.tail().name(),
-        edge.tail_port(),
-        edge.head_port(),
-      )
+    let key = directed_edge_merge_key(
+      edge.head().name(),
+      edge.tail().name(),
+      edge.tail_port(),
+      edge.head_port(),
+    )
     match forward_rep_by_key.get(key) {
       Some(rep_idx) => {
         if rep_idx == edge_idx {
