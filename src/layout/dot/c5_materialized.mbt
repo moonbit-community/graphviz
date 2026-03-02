@@ -297,7 +297,7 @@ fn build_cluster_tail_order(
   let names_by_cluster : Map[String, Array[String]] = Map::new()
   for name in rem_order_creation {
     let cluster =
-      cluster_key_for_tail_order_name(
+      cluster_key_for_tail_name(
         rem_cluster_keys,
         name,
       )
@@ -367,7 +367,7 @@ fn build_cluster_tail_order(
 /// Graphviz parity: clustered tail-order cluster lookup uses explicit
 /// rem_cluster_keys with skeleton-name fallback parsing.
 /// Do not change behavior without updating fixtures/tests.
-fn cluster_key_for_tail_order_name(
+fn cluster_key_for_tail_name(
   rem_cluster_keys : Map[String, String],
   name : String,
 ) -> String {
@@ -455,7 +455,7 @@ fn remincross_rank_or_missing(
 ///|
 /// Graphviz parity: clustered non-root rank replay is forward for no-outgoing
 /// blocks and reverse insertion order otherwise.
-fn build_nonroot_rank_ordered_names(
+fn build_nonroot_ordered_names(
   rank_names : Array[String],
   heads_by_tail : Map[String, Array[String]],
 ) -> Array[String] {
@@ -530,7 +530,7 @@ fn build_nonroot_tail_names(
       }
     }
     let rank_ordered_base =
-      build_nonroot_rank_ordered_names(rank_names, heads_by_tail)
+      build_nonroot_ordered_names(rank_names, heads_by_tail)
     // Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
     // that satisfy Graphviz's rank+shape preconditions.
     let mut all_input_like = true
@@ -561,7 +561,7 @@ fn build_nonroot_tail_names(
 ///|
 /// Graphviz parity: input-like rebucketing classifies names by outgoing
 /// cross-cluster direction and out-degree priority.
-fn classify_input_like_name_bucket(
+fn classify_input_like_bucket(
   cluster : String,
   name : String,
   heads_by_tail : Map[String, Array[String]],
@@ -575,7 +575,7 @@ fn classify_input_like_name_bucket(
   let mut has_earlier = false
   for head in heads {
     let head_cluster =
-      cluster_key_for_tail_order_name(rem_cluster_keys, head)
+      cluster_key_for_tail_name(rem_cluster_keys, head)
     if head_cluster == cluster {
       continue
     }
@@ -618,7 +618,7 @@ fn rebucket_input_like_rank_order(
   let category2 : Array[String] = []
   let category3 : Array[String] = []
   for name in rank_ordered {
-    match classify_input_like_name_bucket(
+    match classify_input_like_bucket(
       cluster,
       name,
       heads_by_tail,
