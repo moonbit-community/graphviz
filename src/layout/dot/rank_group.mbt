@@ -89,10 +89,7 @@ fn build_neighbor_rank_groups(
   }
   let nodes : Array[String] = []
   for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = groups.get(rank).unwrap_or_default()
     for name in names {
       nodes.push(name)
     }
@@ -137,20 +134,14 @@ fn build_neighbor_rank_groups(
   let cluster_has_skeleton : Map[String, Bool] = Map::new()
   for name in nlist {
     if cluster_skeleton.get(name) == Some(true) {
-      let cluster = match cluster_keys.get(name) {
-        Some(value) => value
-        None => ""
-      }
+      let cluster = cluster_keys.get(name).unwrap_or_default()
       if cluster != "" {
         cluster_has_skeleton[cluster] = true
       }
     }
   }
   for name in nlist {
-    let cluster = match cluster_keys.get(name) {
-      Some(value) => value
-      None => ""
-    }
+    let cluster = cluster_keys.get(name).unwrap_or_default()
     if cluster != "" && cluster_has_skeleton.get(cluster) == Some(true) &&
       cluster_skeleton.get(name) == Some(true) {
       // Graphviz parity: install_cluster only enqueues rankleader (skeleton) nodes,
@@ -164,14 +155,8 @@ fn build_neighbor_rank_groups(
   for _key, list in cluster_nodes {
     if list.length() > 1 {
       list.sort_by((a, b) => {
-        let a_rank = match node_ranks.get(a) {
-          Some(value) => value
-          None => 0
-        }
-        let b_rank = match node_ranks.get(b) {
-          Some(value) => value
-          None => 0
-        }
+        let a_rank = node_ranks.get(a).unwrap_or_default()
+        let b_rank = node_ranks.get(b).unwrap_or_default()
         if a_rank < b_rank {
           -1
         } else if a_rank > b_rank {
@@ -196,15 +181,9 @@ fn build_neighbor_rank_groups(
   for node in nlist {
     let other =
       if pass == 0 {
-        match in_neighbors.get(node) {
-          Some(list) => list
-          None => []
-        }
+        in_neighbors.get(node).unwrap_or_default()
       } else {
-        match out_neighbors.get(node) {
-          Some(list) => list
-          None => []
-        }
+        out_neighbors.get(node).unwrap_or_default()
       }
     if other.length() > 0 {
       continue
@@ -218,24 +197,15 @@ fn build_neighbor_rank_groups(
     while q_idx < queue.length() {
       let current = queue[q_idx]
       q_idx = q_idx + 1
-      let cluster = match cluster_keys.get(current) {
-        Some(value) => value
-        None => ""
-      }
+      let cluster = cluster_keys.get(current).unwrap_or_default()
       if cluster != "" && installed_clusters.get(cluster) != Some(true) {
         // Graphviz parity (fixtures): install_cluster triggers when a cluster node
         // is visited and inserts the pre-collected cluster queue for that cluster.
         installed_clusters[cluster] = true
-        let cluster_list = match cluster_nodes.get(cluster) {
-          Some(list) => list
-          None => []
-        }
+        let cluster_list = cluster_nodes.get(cluster).unwrap_or_default()
         for cluster_node in cluster_list {
           if installed.get(cluster_node) != Some(true) {
-            let rank = match node_ranks.get(cluster_node) {
-              Some(value) => value
-              None => 0
-            }
+            let rank = node_ranks.get(cluster_node).unwrap_or_default()
             match ordered.get(rank) {
               Some(list) => list.push(cluster_node)
               None => ordered[rank] = [cluster_node]
@@ -247,15 +217,9 @@ fn build_neighbor_rank_groups(
         for cluster_node in cluster_list {
           let neighbors =
             if pass == 0 {
-              match out_neighbors.get(cluster_node) {
-                Some(list) => list
-                None => []
-              }
+              out_neighbors.get(cluster_node).unwrap_or_default()
             } else {
-              match in_neighbors.get(cluster_node) {
-                Some(list) => list
-                None => []
-              }
+              in_neighbors.get(cluster_node).unwrap_or_default()
             }
           for neighbor in neighbors {
             if marks.get(neighbor) != Some(true) {
@@ -268,10 +232,7 @@ fn build_neighbor_rank_groups(
       // Graphviz parity: rankleader/skeleton nodes are installed like other
       // nodes once discovered in the component walk.
       if installed.get(current) != Some(true) {
-        let rank = match node_ranks.get(current) {
-          Some(value) => value
-          None => 0
-        }
+        let rank = node_ranks.get(current).unwrap_or_default()
         match ordered.get(rank) {
           Some(list) => list.push(current)
           None => ordered[rank] = [current]
@@ -280,15 +241,9 @@ fn build_neighbor_rank_groups(
       }
       let neighbors =
         if pass == 0 {
-          match out_neighbors.get(current) {
-            Some(list) => list
-            None => []
-          }
+          out_neighbors.get(current).unwrap_or_default()
         } else {
-          match in_neighbors.get(current) {
-            Some(list) => list
-            None => []
-          }
+          in_neighbors.get(current).unwrap_or_default()
         }
       for neighbor in neighbors {
         if marks.get(neighbor) != Some(true) {
@@ -300,10 +255,7 @@ fn build_neighbor_rank_groups(
   }
   for name in nlist {
     if installed.get(name) != Some(true) {
-      let rank = match node_ranks.get(name) {
-        Some(value) => value
-        None => 0
-      }
+      let rank = node_ranks.get(name).unwrap_or_default()
       match ordered.get(rank) {
         Some(list) => list.push(name)
         None => ordered[rank] = [name]
@@ -368,10 +320,7 @@ fn build_component_rank_groups(
 ) -> Map[Int, Array[String]] {
   let nodes : Array[String] = []
   for rank in rank_keys {
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let names = groups.get(rank).unwrap_or_default()
     for name in names {
       nodes.push(name)
     }
