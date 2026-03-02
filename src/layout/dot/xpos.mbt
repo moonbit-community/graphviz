@@ -1800,6 +1800,34 @@ fn push_slack_segment(
 }
 
 ///|
+priv struct OrientedEdgeEndpoints {
+  tail_name : String
+  head_name : String
+  is_reversed : Bool
+}
+
+///|
+fn oriented_edge_endpoints(
+  edge_idx : Int,
+  edge : @cgraph.Edge,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> OrientedEdgeEndpoints {
+  let tail_name =
+    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head_name =
+    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  let is_reversed =
+    tail_name == edge.head().name() &&
+    head_name == edge.tail().name()
+  { tail_name, head_name, is_reversed }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -1991,18 +2019,8 @@ fn build_constraint_graph(
     if edge.tail().name() == edge.head().name() {
       continue
     }
-    let oriented_tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let oriented_head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let is_reversed =
-      oriented_tail == edge.head().name() &&
-      oriented_head == edge.tail().name()
-    if is_reversed {
+    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
+    if oriented.is_reversed {
       continue
     }
     let key = directed_edge_merge_key(
@@ -2023,18 +2041,8 @@ fn build_constraint_graph(
     if edge.tail().name() == edge.head().name() {
       continue
     }
-    let oriented_tail =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let oriented_head =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
-    let is_reversed =
-      oriented_tail == edge.head().name() &&
-      oriented_head == edge.tail().name()
-    if !is_reversed {
+    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
+    if !oriented.is_reversed {
       continue
     }
     let key = directed_edge_merge_key(
@@ -2062,14 +2070,9 @@ fn build_constraint_graph(
     if merged_edge_skip.get(edge_idx) is Some(_) {
       return ()
     }
-    let tail_name =
-      if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-        edge.tail().name()
-      }
-    let head_name =
-      if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-        edge.head().name()
-      }
+    let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
+    let tail_name = oriented.tail_name
+    let head_name = oriented.head_name
     let tail_cluster = match cluster_keys.get(tail_name) {
       Some(value) => value
       None => ""
