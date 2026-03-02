@@ -73,68 +73,31 @@ priv struct ReMincrossMaterializedEdgeArrays {
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross materialized-edge build inputs keep
-/// ND_out expansion/coalescing payload snapshots unchanged before remap.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossMaterializedEdgesBuildInputs {
-  creation_order : Array[String]
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-  ranks : Map[String, Int]
-  edge_vnodes : Map[String, Array[String]]
-  order_with_vnodes : Bool
-  cluster_keys : Map[String, String]
-  order_with_clusters : Bool
-  edges_by_tail : Map[String, Array[Int]]
-  cluster_order_index : Map[String, Int]
-}
-
-///|
-/// Graphviz parity: clustered ReMincross materialized-array build inputs keep
-/// rematerialized edge snapshots and order-graph context unchanged.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossMaterializedArraysBuildInputs {
-  creation_order : Array[String]
-  rem_vnode_creation : Map[String, Array[String]]
-  rem_edge_creation : Array[(String, String)]
-  rem_order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
-  rem_graph : @cgraph.Graph
-  rem_node_map : Map[String, @cgraph.Node]
-  rem_groups : Map[Int, Array[String]]
-  cluster_keys : Map[String, String]
-  cluster_order_index : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: clustered ReMincross order-edge rematerialization applies
 /// ND_out expansion, coalescing, intercluster bonus, then tail-order replay.
 fn build_materialized_edges(
-  inputs : ReMincrossMaterializedEdgesBuildInputs,
+  dispatch_context : ReMincrossDispatchContext,
+  cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedOrderEdges {
   let rem_order_edges_output =
     build_order_edges_by_tail(
-      inputs.creation_order,
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_tail_port_x,
-      inputs.edge_head_port_x,
-      inputs.edge_tail_port_order,
-      inputs.edge_head_port_order,
-      inputs.ranks,
-      inputs.edge_vnodes,
-      inputs.order_with_vnodes,
-      inputs.cluster_keys,
-      inputs.order_with_clusters,
+      dispatch_context.creation_order,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.edge_tail_port_x,
+      dispatch_context.edge_head_port_x,
+      dispatch_context.edge_tail_port_order,
+      dispatch_context.edge_head_port_order,
+      dispatch_context.ranks,
+      dispatch_context.vnode_info.edge_vnodes,
+      dispatch_context.order_with_vnodes,
+      dispatch_context.cluster_meta.intercluster_keys,
+      dispatch_context.order_with_clusters,
       false,
       false,
-      inputs.edges_by_tail,
-      cluster_order_index=inputs.cluster_order_index,
+      dispatch_context.edges_by_tail,
+      cluster_order_index=cluster_order_index,
     )
   let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
   let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
@@ -142,18 +105,18 @@ fn build_materialized_edges(
     coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
   let intercluster_bonus =
     collect_intercluster_bonus(
-      inputs.creation_order,
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_tail_port_order,
-      inputs.edge_head_port_order,
-      inputs.ranks,
-      inputs.edge_vnodes,
-      inputs.order_with_vnodes,
-      inputs.order_with_clusters,
-      inputs.edges_by_tail,
-      inputs.cluster_keys,
+      dispatch_context.creation_order,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.edge_tail_port_order,
+      dispatch_context.edge_head_port_order,
+      dispatch_context.ranks,
+      dispatch_context.vnode_info.edge_vnodes,
+      dispatch_context.order_with_vnodes,
+      dispatch_context.order_with_clusters,
+      dispatch_context.edges_by_tail,
+      dispatch_context.cluster_meta.intercluster_keys,
     )
   let rem_order_edges_by_tail =
     apply_intercluster_bonus(
@@ -163,7 +126,7 @@ fn build_materialized_edges(
   // Graphviz parity: rematerialized ReMincross edge-creation replay walks
   // each tail bucket in creation-order sequence and preserves ND_out order.
   let rem_edge_creation : Array[(String, String)] = []
-  for tail_name in inputs.creation_order {
+  for tail_name in dispatch_context.creation_order {
     let entries = rem_order_edges_by_tail.get(tail_name).unwrap_or_default()
     for entry in entries {
       let (tail, head, _, _, _, _, _, _) = entry
@@ -181,25 +144,30 @@ fn build_materialized_edges(
 /// Graphviz parity: ReMincross order-graph materialization rebuilds GD_nlist,
 /// seeds node order, then materializes edge arrays in nlist tail order.
 fn build_materialized_arrays(
-  inputs : ReMincrossMaterializedArraysBuildInputs,
+  dispatch_context : ReMincrossDispatchContext,
+  rem_groups : Map[Int, Array[String]],
+  rem_graph : @cgraph.Graph,
+  rem_node_map : Map[String, @cgraph.Node],
+  cluster_order_index : Map[String, Int],
+  materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
-  let rem_ranks = build_node_ranks(inputs.rem_groups)
+  let rem_ranks = build_node_ranks(rem_groups)
   let rem_nlist_order =
     build_remincross_nlist_order(
-      inputs.creation_order,
-      inputs.rem_vnode_creation,
-      inputs.rem_edge_creation,
+      dispatch_context.creation_order,
+      materialized_edges.vnode_creation,
+      materialized_edges.edge_creation,
       rem_ranks,
-      inputs.cluster_keys,
-      inputs.cluster_order_index,
+      dispatch_context.cluster_meta.intercluster_keys,
+      cluster_order_index,
     )
-  let rem_node_order = build_order_index(inputs.rem_groups)
+  let rem_node_order = build_order_index(rem_groups)
   let rem_materialized =
     collect_order_edges_for_tails(
       rem_nlist_order,
-      inputs.rem_order_edges_by_tail,
-      inputs.rem_graph,
-      inputs.rem_node_map,
+      materialized_edges.order_edges_by_tail,
+      rem_graph,
+      rem_node_map,
     )
   {
     node_order: rem_node_order,

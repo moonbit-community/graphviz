@@ -115,36 +115,16 @@ fn build_remincross_materialized_arrays(
 ) -> ReMincrossMaterializedEdgeArrays {
   let materialized_edges =
     build_materialized_edges(
-      {
-        creation_order: dispatch_context.creation_order,
-        edges: dispatch_context.edges,
-        edge_tail: dispatch_context.edge_tail,
-        edge_head: dispatch_context.edge_head,
-        edge_tail_port_x: dispatch_context.edge_tail_port_x,
-        edge_head_port_x: dispatch_context.edge_head_port_x,
-        edge_tail_port_order: dispatch_context.edge_tail_port_order,
-        edge_head_port_order: dispatch_context.edge_head_port_order,
-        ranks: dispatch_context.ranks,
-        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-        order_with_vnodes: dispatch_context.order_with_vnodes,
-        cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-        order_with_clusters: dispatch_context.order_with_clusters,
-        edges_by_tail: dispatch_context.edges_by_tail,
-        cluster_order_index,
-      },
+      dispatch_context,
+      cluster_order_index,
     )
   build_materialized_arrays(
-    {
-      creation_order: dispatch_context.creation_order,
-      rem_vnode_creation: materialized_edges.vnode_creation,
-      rem_edge_creation: materialized_edges.edge_creation,
-      rem_order_edges_by_tail: materialized_edges.order_edges_by_tail,
-      rem_graph,
-      rem_node_map,
-      rem_groups,
-      cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      cluster_order_index,
-    },
+    dispatch_context,
+    rem_groups,
+    rem_graph,
+    rem_node_map,
+    cluster_order_index,
+    materialized_edges,
   )
 }
 
