@@ -565,6 +565,59 @@ fn append_raw_neighbors_with_external_anchor(
 }
 
 ///|
+priv struct LocalNeighborLists {
+  out_neighbors : Array[String]
+  in_neighbors : Array[String]
+}
+
+///|
+/// Graphviz parity: per-node local neighbor lists start from order-graph
+/// ND_out/ND_in and only then merge raw AGSEQ neighbors when allowed.
+fn build_local_neighbor_lists_for_name(
+  name : String,
+  cluster : String,
+  cluster_node_set : Map[String, Bool],
+  expanded_clusters : Map[String, Bool],
+  neighbor_sources : ClusterLocalNeighborSources,
+  intercluster_keys : Map[String, String],
+  allow_raw_neighbors : Bool,
+  external_anchor_name : String,
+) -> LocalNeighborLists {
+  let out_neighbors =
+    neighbor_sources.source_out_neighbors.get(name).unwrap_or_default().copy()
+  let in_neighbors =
+    neighbor_sources.source_in_neighbors.get(name).unwrap_or_default().copy()
+  if !allow_raw_neighbors ||
+    has_source_external_anchor(
+      name,
+      cluster_node_set,
+      neighbor_sources.source_out_neighbors,
+      neighbor_sources.source_in_neighbors,
+    ) {
+    return { out_neighbors, in_neighbors }
+  }
+  let raw_out = neighbor_sources.raw_out_neighbors.get(name).unwrap_or_default()
+  append_raw_neighbors_with_external_anchor(
+    out_neighbors,
+    raw_out,
+    cluster,
+    expanded_clusters,
+    intercluster_keys,
+    external_anchor_name,
+  )
+  let raw_in = neighbor_sources.raw_in_neighbors.get(name).unwrap_or_default()
+  append_raw_neighbors_with_external_anchor(
+    in_neighbors,
+    raw_in,
+    cluster,
+    expanded_clusters,
+    intercluster_keys,
+    external_anchor_name,
+  )
+  { out_neighbors, in_neighbors }
+}
+
+///|
 /// Graphviz parity: cluster-local ND_out/ND_in maps append raw graph AGSEQ
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
@@ -585,38 +638,19 @@ fn build_local_neighbor_maps(
     cluster_node_set[name] = true
   }
   for name in cluster_nodes {
-    let out_neighbors =
-      neighbor_sources.source_out_neighbors.get(name).unwrap_or_default().copy()
-    let in_neighbors =
-      neighbor_sources.source_in_neighbors.get(name).unwrap_or_default().copy()
-    if allow_raw_neighbors &&
-      !has_source_external_anchor(
+    let local_neighbor_lists =
+      build_local_neighbor_lists_for_name(
         name,
+        cluster,
         cluster_node_set,
-        neighbor_sources.source_out_neighbors,
-        neighbor_sources.source_in_neighbors,
-      ) {
-      let raw_out = neighbor_sources.raw_out_neighbors.get(name).unwrap_or_default()
-      append_raw_neighbors_with_external_anchor(
-        out_neighbors,
-        raw_out,
-        cluster,
         expanded_clusters,
+        neighbor_sources,
         intercluster_keys,
+        allow_raw_neighbors,
         external_anchor_name,
       )
-      let raw_in = neighbor_sources.raw_in_neighbors.get(name).unwrap_or_default()
-      append_raw_neighbors_with_external_anchor(
-        in_neighbors,
-        raw_in,
-        cluster,
-        expanded_clusters,
-        intercluster_keys,
-        external_anchor_name,
-      )
-    }
-    graphviz_out_neighbors[name] = out_neighbors
-    graphviz_in_neighbors[name] = in_neighbors
+    graphviz_out_neighbors[name] = local_neighbor_lists.out_neighbors
+    graphviz_in_neighbors[name] = local_neighbor_lists.in_neighbors
   }
   { graphviz_out_neighbors, graphviz_in_neighbors }
 }
