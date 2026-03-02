@@ -33,22 +33,8 @@ fn build_remincross_groups(
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
   build_remincross_vnode_groups(
-    {
-      final_groups: dispatch_context.base_groups,
-      order_with_vnodes: dispatch_context.order_with_vnodes,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      edge_reversed: dispatch_context.edge_reversed,
-      ranks: dispatch_context.ranks,
-      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-      cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-      cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-      edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-      vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
-      vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
-    },
+    dispatch_context.base_groups,
+    dispatch_context,
   )
 }
 
@@ -509,85 +495,46 @@ fn apply_remincross_floor(
 }
 
 ///|
-/// Graphviz parity: ReMincross vnode-key build inputs keep edge/rank/cluster
-/// snapshots unchanged before trailing-vnode floor adjustments.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossVnodeKeysBuildInputs {
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
-  rem_base_order_index : Map[String, Int]
-  intercluster_keys : Map[String, String]
-  cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: ReMincross vnode order keys come from base vnode-order
 /// scoring plus trailing-vnode floor adjustments for selected intercluster
 /// vnode chains.
 fn build_remincross_vnode_keys(
-  inputs : ReMincrossVnodeKeysBuildInputs,
+  dispatch_context : ReMincrossDispatchContext,
+  rem_base_order_index : Map[String, Int],
 ) -> Map[String, Double] {
   let remincross_cluster_keys =
-    clone_remincross_cluster_keys(inputs.intercluster_keys)
+    clone_remincross_cluster_keys(dispatch_context.cluster_meta.intercluster_keys)
   let intercluster_vnodes =
     collect_remincross_trailing(
-      inputs.edges,
-      inputs.edge_tail,
-      inputs.edge_head,
-      inputs.edge_vnodes,
+      dispatch_context.edges,
+      dispatch_context.edge_tail,
+      dispatch_context.edge_head,
+      dispatch_context.vnode_info.edge_vnodes,
       remincross_cluster_keys,
-      inputs.cluster_parents,
-      inputs.cluster_min_rank,
-      inputs.cluster_max_rank,
+      dispatch_context.cluster_meta.cluster_parents,
+      dispatch_context.cluster_meta.cluster_min_rank,
+      dispatch_context.cluster_meta.cluster_max_rank,
     )
   let keys = build_vnode_order_keys(
-    inputs.edges,
-    inputs.edge_tail,
-    inputs.edge_head,
-    inputs.edge_reversed,
-    inputs.ranks,
-    inputs.rem_base_order_index,
+    dispatch_context.edges,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.edge_reversed,
+    dispatch_context.ranks,
+    rem_base_order_index,
     remincross_cluster_keys,
-    inputs.cluster_parents,
-    inputs.edge_vnodes,
-    inputs.vnode_ranks,
+    dispatch_context.cluster_meta.cluster_parents,
+    dispatch_context.vnode_info.edge_vnodes,
+    dispatch_context.vnode_info.vnode_ranks,
   )
   apply_remincross_floor(
     keys,
     intercluster_vnodes,
-    inputs.rem_base_order_index,
-    inputs.ranks,
-    inputs.vnode_ranks,
+    rem_base_order_index,
+    dispatch_context.ranks,
+    dispatch_context.vnode_info.vnode_ranks,
   )
   keys
-}
-
-///|
-/// Graphviz parity: ReMincross vnode-group build inputs keep real-group seeds
-/// and vnode/cluster context unchanged before optional vnode injection.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ReMincrossVnodeGroupsBuildInputs {
-  final_groups : Map[Int, Array[String]]
-  order_with_vnodes : Bool
-  edges : Array[@cgraph.Edge]
-  edge_tail : Array[String]
-  edge_head : Array[String]
-  edge_reversed : Array[Bool]
-  ranks : Map[String, Int]
-  intercluster_keys : Map[String, String]
-  cluster_parents : Map[String, String?]
-  cluster_min_rank : Map[String, Int]
-  cluster_max_rank : Map[String, Int]
-  edge_vnodes : Map[String, Array[String]]
-  vnode_ranks : Map[String, Int]
-  vnodes_by_rank : Map[Int, Array[String]]
 }
 
 ///|
@@ -596,36 +543,22 @@ priv struct ReMincrossVnodeGroupsBuildInputs {
 /// trailing-vnode adjustments.
 /// Do not change behavior without updating fixtures/tests.
 fn build_remincross_vnode_groups(
-  inputs : ReMincrossVnodeGroupsBuildInputs,
+  final_groups : Map[Int, Array[String]],
+  dispatch_context : ReMincrossDispatchContext,
 ) -> Map[Int, Array[String]] {
-  let rem_base_groups = clone_rank_groups(inputs.final_groups)
+  let rem_base_groups = clone_rank_groups(final_groups)
   let rem_base_order_index = build_order_index(rem_base_groups)
   let rem_vnode_order_keys =
-    if !inputs.order_with_vnodes {
+    if !dispatch_context.order_with_vnodes {
       Map::new()
     } else {
-      build_remincross_vnode_keys(
-        {
-          edges: inputs.edges,
-          edge_tail: inputs.edge_tail,
-          edge_head: inputs.edge_head,
-          edge_reversed: inputs.edge_reversed,
-          ranks: inputs.ranks,
-          rem_base_order_index,
-          intercluster_keys: inputs.intercluster_keys,
-          cluster_parents: inputs.cluster_parents,
-          cluster_min_rank: inputs.cluster_min_rank,
-          cluster_max_rank: inputs.cluster_max_rank,
-          edge_vnodes: inputs.edge_vnodes,
-          vnode_ranks: inputs.vnode_ranks,
-        },
-      )
+      build_remincross_vnode_keys(dispatch_context, rem_base_order_index)
     }
-  if inputs.order_with_vnodes {
+  if dispatch_context.order_with_vnodes {
     build_x_groups_with_vnodes(
       rem_base_groups,
       rem_base_order_index,
-      inputs.vnodes_by_rank,
+      dispatch_context.vnode_info.vnodes_by_rank,
       rem_vnode_order_keys,
     )
   } else {
