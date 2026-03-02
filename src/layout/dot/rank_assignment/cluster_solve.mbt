@@ -5,6 +5,14 @@ pub struct LocalClusterRankResult {
 }
 
 ///|
+priv struct LeaderRankEdge {
+  tail_idx : Int
+  head_idx : Int
+  minlen : Int
+  weight : Int
+}
+
+///|
 pub fn compute_local_cluster_ranks_and_leaders(
   source : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
@@ -175,8 +183,8 @@ pub fn solve_clustered_leader_ranks(
       None => 0
     }
     let offset = minlen + tail_local - head_local
-    let (t_len, h_len) =
-      if offset > 0 { (0, offset) } else { (-offset, 0) }
+    let tail_slack_len = if offset > 0 { 0 } else { -offset }
+    let head_slack_len = if offset > 0 { offset } else { 0 }
     let slack_name = "_mbt_rank_slack_\{slack_id}"
     slack_id = slack_id + 1
     let slack_idx = @network_simplex.add_node(
@@ -196,10 +204,16 @@ pub fn solve_clustered_leader_ranks(
       rank_graph,
       slack_idx,
       tail_idx,
-      t_len,
+      tail_slack_len,
       weight * back_weight_scale,
     )
-    let _ = @network_simplex.add_edge(rank_graph, slack_idx, head_idx, h_len, weight)
+    let _ = @network_simplex.add_edge(
+      rank_graph,
+      slack_idx,
+      head_idx,
+      head_slack_len,
+      weight,
+    )
   }
   let direct_oriented = orient_edges_for_names(
     rank_names,
@@ -209,7 +223,7 @@ pub fn solve_clustered_leader_ranks(
   )
   let direct_tail_final = direct_oriented.tail
   let direct_head_final = direct_oriented.head
-  let merged_edges : Map[String, (Int, Int, Int, Int)] = Map::new()
+  let merged_edges : Map[String, LeaderRankEdge] = Map::new()
   for i in 0..<direct_tail_final.length() {
     let tail_name = direct_tail_final[i]
     let head_name = direct_head_final[i]
@@ -229,18 +243,26 @@ pub fn solve_clustered_leader_ranks(
     let key = "\{tail_idx}:\{head_idx}"
     match merged_edges.get(key) {
       Some(entry) => {
-        let (_tail_idx, _head_idx, current_minlen, current_weight) = entry
         let next_minlen =
-          if minlen > current_minlen { minlen } else { current_minlen }
-        merged_edges[key] =
-          (tail_idx, head_idx, next_minlen, current_weight + weight)
+          if minlen > entry.minlen { minlen } else { entry.minlen }
+        merged_edges[key] = {
+          tail_idx,
+          head_idx,
+          minlen: next_minlen,
+          weight: entry.weight + weight,
+        }
       }
-      None => merged_edges[key] = (tail_idx, head_idx, minlen, weight)
+      None => merged_edges[key] = { tail_idx, head_idx, minlen, weight }
     }
   }
   for _key, entry in merged_edges {
-    let (tail_idx, head_idx, minlen, weight) = entry
-    let _ = @network_simplex.add_edge(rank_graph, tail_idx, head_idx, minlen, weight)
+    let _ = @network_simplex.add_edge(
+      rank_graph,
+      entry.tail_idx,
+      entry.head_idx,
+      entry.minlen,
+      entry.weight,
+    )
   }
   let _ = @network_simplex.network_simplex_pre_balance(rank_graph, 0x7fffffff)
   let leader_ranks : Map[String, Int] = Map::new()
