@@ -779,6 +779,23 @@ priv struct RootRankOrderPhaseInputs {
 }
 
 ///|
+fn has_multiple_non_empty_cluster_keys(
+  order_cluster_keys : Map[String, String],
+) -> Bool {
+  let seen_cluster_keys : Map[String, Bool] = Map::new()
+  for _name, key in order_cluster_keys {
+    if key == "" || seen_cluster_keys.get(key) is Some(_) {
+      continue
+    }
+    seen_cluster_keys[key] = true
+    if seen_cluster_keys.length() > 1 {
+      return true
+    }
+  }
+  false
+}
+
+///|
 /// Graphviz parity: root-only graphviz_flip gating enables root flip only when
 /// capture-fixture mode is active or when at least two non-empty cluster keys
 /// exist in the current ordering key map.
@@ -792,17 +809,7 @@ fn should_enable_root_flip(
   if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
     return true
   }
-  let seen_cluster_keys : Map[String, Bool] = Map::new()
-  for _name, key in order_cluster_keys {
-    if key == "" || seen_cluster_keys.get(key) is Some(_) {
-      continue
-    }
-    seen_cluster_keys[key] = true
-    if seen_cluster_keys.length() > 1 {
-      return true
-    }
-  }
-  false
+  has_multiple_non_empty_cluster_keys(order_cluster_keys)
 }
 
 ///|
