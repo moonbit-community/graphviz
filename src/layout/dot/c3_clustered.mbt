@@ -163,26 +163,11 @@ fn run_clustered_root_phase(
       reorder_setup.flat_rank_constraints,
       class2_data.order_edges_by_tail_root,
     )
-  let (
-    _root_groups,
-    _root_rank_keys,
-    _root_edges_out,
-    root_edge_tail_out,
-    _root_edge_head_out,
-    _root_edge_tail_port_x,
-    _root_edge_head_port_x,
-    _root_edge_tail_port_order,
-    _root_edge_head_port_order,
-    _root_parents,
-    _root_children,
-    _root_edge_order,
-    _root_node_order,
-  ) = root_reorder_output
   // Graphviz parity: root-phase tail override preserves first-seen tail order
   // while suppressing duplicate tail names in root-edge replay sequences.
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
-  for tail in root_edge_tail_out {
+  for tail in root_reorder_output.root_edge_tail_out {
     append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
   let (_root_rank_keys, root_groups_override) =
