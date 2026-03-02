@@ -15,8 +15,13 @@ fn pos_is_pinned(value : String) -> Bool {
   last == '!'
 }
 
+priv struct NodePosHint {
+  pos : @geom.Point?
+  is_pinned : Bool
+}
+
 ///|
-fn node_pos_hint(node : @cgraph.Node) -> (@geom.Point?, Bool) {
+fn node_pos_hint(node : @cgraph.Node) -> NodePosHint {
   let pin_attr = match node.get_attr("pin") {
     Some(value) => is_pin_value(value)
     None => false
@@ -26,11 +31,11 @@ fn node_pos_hint(node : @cgraph.Node) -> (@geom.Point?, Bool) {
       match parse_point_attr(value) {
         Some(pos) => {
           let pinned = pin_attr || pos_is_pinned(value)
-          (Some(pos), pinned)
+          { pos: Some(pos), is_pinned: pinned }
         }
-        None => (None, false)
+        None => { pos: None, is_pinned: false }
       }
-    None => (None, false)
+    None => { pos: None, is_pinned: false }
   }
 }
 
@@ -235,13 +240,13 @@ pub fn layout_neato(
       x: radius * @math.cos(angle),
       y: radius * @math.sin(angle),
     }
-    let (hint, is_pinned) = node_pos_hint(node)
-    let pos = match hint {
+    let hint_data = node_pos_hint(node)
+    let pos = match hint_data.pos {
       Some(value) => value
       None => base_pos
     }
     positions.push(pos)
-    pinned.push(is_pinned)
+    pinned.push(hint_data.is_pinned)
   }
   let edges : Array[NeatoEdge] = []
   for edge in active_graph.edges() {

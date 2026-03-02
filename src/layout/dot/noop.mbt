@@ -92,19 +92,31 @@ fn line_spline(
 }
 
 ///|
-fn parse_edge_token(token : String) -> (String?, @geom.Point?) {
+priv enum EdgeTokenTag {
+  Start
+  End
+}
+
+///|
+priv struct EdgeTokenParse {
+  tag : EdgeTokenTag?
+  point : @geom.Point?
+}
+
+///|
+fn parse_edge_token(token : String) -> EdgeTokenParse {
   if token == "" {
-    return (None, None)
+    return { tag: None, point: None }
   }
   if token.has_prefix("s,") {
     let rest = token.unsafe_substring(start=2, end=token.length())
-    return (Some("s"), parse_point_attr(rest))
+    return { tag: Some(EdgeTokenTag::Start), point: parse_point_attr(rest) }
   }
   if token.has_prefix("e,") {
     let rest = token.unsafe_substring(start=2, end=token.length())
-    return (Some("e"), parse_point_attr(rest))
+    return { tag: Some(EdgeTokenTag::End), point: parse_point_attr(rest) }
   }
-  (None, parse_point_attr(token))
+  { tag: None, point: parse_point_attr(token) }
 }
 
 ///|
@@ -126,15 +138,14 @@ fn parse_edge_pos(value : String, scale_factor : Double) -> Array[@geom.Spline] 
     let mut end : @geom.Point? = None
     let points : Array[@geom.Point] = []
     for token in segment.split(" ") {
-      let (tag, point) = parse_edge_token(token.to_string())
-      match point {
+      let parsed = parse_edge_token(token.to_string())
+      match parsed.point {
         Some(value) => {
           let scaled = scale_point(value, scale_factor)
-          match tag {
-            Some("s") => start = Some(scaled)
-            Some("e") => end = Some(scaled)
+          match parsed.tag {
+            Some(EdgeTokenTag::Start) => start = Some(scaled)
+            Some(EdgeTokenTag::End) => end = Some(scaled)
             None => points.push(scaled)
-            _ => ()
           }
         }
         None => ()

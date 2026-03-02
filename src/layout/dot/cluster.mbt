@@ -114,7 +114,12 @@ fn graph_contains_node(graph : @cgraph.Graph, node : @cgraph.Node) -> Bool {
   true
 }
 
-fn node_cluster_keys(node : @cgraph.Node) -> (String, String) {
+priv struct NodeClusterKeys {
+  outer : String
+  inner : String
+}
+
+fn node_cluster_keys(node : @cgraph.Node) -> NodeClusterKeys {
   let root = root_graph_for_node(node)
   let mut outer = ""
   let mut inner = ""
@@ -139,7 +144,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> (String, String) {
       stack.push(child)
     }
   }
-  (outer, inner)
+  { outer, inner }
 }
 
 ///|
@@ -147,8 +152,7 @@ fn node_cluster_keys(node : @cgraph.Node) -> (String, String) {
 /// (nodes referenced in a cluster belong to it), not node home graphs.
 /// Do not change behavior without updating fixtures/tests.
 fn node_cluster_key(node : @cgraph.Node) -> String {
-  let (outer, _inner) = node_cluster_keys(node)
-  outer
+  node_cluster_keys(node).outer
 }
 
 ///|
@@ -156,8 +160,7 @@ fn node_cluster_key(node : @cgraph.Node) -> String {
 /// cluster containing the node.
 /// Do not change behavior without updating fixtures/tests.
 fn node_local_cluster_key(node : @cgraph.Node) -> String {
-  let (_outer, inner) = node_cluster_keys(node)
-  inner
+  node_cluster_keys(node).inner
 }
 
 ///|
