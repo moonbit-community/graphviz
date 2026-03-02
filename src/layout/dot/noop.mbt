@@ -446,7 +446,7 @@ pub fn layout_neato_noop(
   let base_bbox = compute_bbox(nodes_out, edges_out)
   let empty_cluster_ln_x : Map[String, Double] = Map::new()
   let empty_cluster_rn_x : Map[String, Double] = Map::new()
-  let empty_cluster_bbox_heights : Map[String, (Double, Double)] = Map::new()
+  let empty_cluster_bbox_heights : Map[String, ClusterBboxHeightPair] = Map::new()
   let empty_ranks : Map[String, Int] = Map::new()
   let empty_rank_y : Map[Int, Double] = Map::new()
   let empty_rank_ht1 : Map[Int, Double] = Map::new()

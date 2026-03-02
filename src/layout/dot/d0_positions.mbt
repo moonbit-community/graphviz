@@ -13,7 +13,7 @@ priv struct PositionResult {
   flat_label_edge_vnodes : Map[String, String]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
-  cluster_bbox_heights : Map[String, (Double, Double)]
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
 }
 
 ///|
@@ -68,7 +68,7 @@ priv struct XposFlatLabelAugmentation {
 priv struct YPositionComputationData {
   y_positions : Map[String, Double]
   rank_y : Map[Int, Double]
-  cluster_bbox_heights : Map[String, (Double, Double)]
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
 }
 
 ///|
@@ -618,7 +618,7 @@ fn build_y_positions_with_flip(
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
   ranksep_pt : Double,
-  cluster_bbox_heights : Map[String, (Double, Double)],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   y_all_ranks : Array[Int],
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()

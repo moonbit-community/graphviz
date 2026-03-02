@@ -167,7 +167,7 @@ fn layout_subgraphs(
   edges_out : Array[DotLayoutEdge],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, (Double, Double)],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   rankdir : RankDir,
   ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -279,9 +279,9 @@ fn layout_subgraphs(
           match subgraph.name() {
             Some(cluster_name) =>
               match cluster_bbox_heights.get(cluster_name) {
-                Some((cluster_ht1, cluster_ht2)) => {
-                  ht1 = cluster_ht1
-                  ht2 = cluster_ht2
+                Some(value) => {
+                  ht1 = value.ht1
+                  ht2 = value.ht2
                 }
                 None => ()
               }
@@ -476,7 +476,7 @@ fn compute_cluster_route_bboxes(
   nodes_out : Array[DotLayoutNode],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, (Double, Double)],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   rankdir : RankDir,
   ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -769,7 +769,7 @@ fn build_subgraphs_and_bbox(
   bbox : @geom.Rect,
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, (Double, Double)],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   rankdir : RankDir,
   ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -1450,7 +1450,7 @@ fn finalize_layout_graph(
   sizes : Map[String, NodeSize],
   cluster_ln_x : Map[String, Double],
   cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, (Double, Double)],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],

@@ -26,6 +26,12 @@ priv struct ClusterLabelPadding {
 }
 
 ///|
+priv struct ClusterBboxHeightPair {
+  ht1 : Double
+  ht2 : Double
+}
+
+///|
 priv struct ClusterHeights {
   min_rank : Int
   max_rank : Int
@@ -48,7 +54,7 @@ fn adjust_flip_rank_heights(
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
-  cluster_heights : Map[String, (Double, Double)],
+  cluster_heights : Map[String, ClusterBboxHeightPair],
   min_root_rank : Int,
   margin_total : Double,
 ) -> Bool {
@@ -119,9 +125,9 @@ fn adjust_flip_rank_heights(
   match graph.name() {
     Some(name) =>
       match cluster_heights.get(name) {
-        Some((value_ht1, value_ht2)) => {
-          ht1 = value_ht1
-          ht2 = value_ht2
+        Some(value) => {
+          ht1 = value.ht1
+          ht2 = value.ht2
         }
         None => ()
       }
@@ -163,7 +169,7 @@ fn adjust_flip_rank_heights(
     let next_ht1 = ht1 + bottom
     let next_ht2 = ht2 + (delta - bottom)
     match graph.name() {
-      Some(name) => cluster_heights[name] = (next_ht1, next_ht2)
+      Some(name) => cluster_heights[name] = { ht1: next_ht1, ht2: next_ht2 }
       None => ()
     }
     let current_ht1 = match rank_ht1.get(max_rank_value) {
@@ -191,7 +197,7 @@ fn collect_cluster_bbox_heights(
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
   rankdir : RankDir,
-  cluster_heights : Map[String, (Double, Double)],
+  cluster_heights : Map[String, ClusterBboxHeightPair],
 ) -> ClusterHeights? {
   let is_cluster = @dot_shared.is_cluster_graph(graph)
   let children = graph.subgraphs()
@@ -290,7 +296,7 @@ fn collect_cluster_bbox_heights(
   ht1 = ht1 + label_padding.bottom
   ht2 = ht2 + label_padding.top
   match graph.name() {
-    Some(name) => cluster_heights[name] = (ht1, ht2)
+    Some(name) => cluster_heights[name] = { ht1, ht2 }
     None => ()
   }
   Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
@@ -306,8 +312,8 @@ fn compute_cluster_bbox_heights(
   sizes : Map[String, NodeSize],
   self_edge_labels : Map[String, Double],
   rankdir : RankDir,
-) -> Map[String, (Double, Double)] {
-  let cluster_heights : Map[String, (Double, Double)] = Map::new()
+) -> Map[String, ClusterBboxHeightPair] {
+  let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
   let _ =
     collect_cluster_bbox_heights(
     graph,
