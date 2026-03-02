@@ -1212,7 +1212,7 @@ fn adjust_edge_labels_if_enabled(
 }
 
 ///|
-fn mirror_layout_points_with_bbox(
+fn mirror_layout_points(
   layout : DotLayoutGraph,
   point_bbox : @geom.Rect,
   bbox_bbox : @geom.Rect,
@@ -1270,7 +1270,7 @@ fn mirror_layout_points_with_bbox(
   let subgraphs : Array[DotLayoutGraph] = []
   for subgraph in layout.subgraphs {
     subgraphs.push(
-      mirror_layout_points_with_bbox(subgraph, point_bbox, bbox_bbox),
+      mirror_layout_points(subgraph, point_bbox, bbox_bbox),
     )
   }
   let mirrored_bbox =
@@ -1327,7 +1327,7 @@ fn refresh_cluster_labels(
 /// Graphviz parity: translate to origin aligned to refs/graphviz/lib/common/postproc.c
 /// (translate_drawing/translate_bb).
 /// Do not change behavior without updating fixtures/tests.
-fn shift_layout_to_origin_if_root(
+fn shift_layout_to_origin(
   graph : @cgraph.Graph,
   layout : DotLayoutGraph,
 ) -> DotLayoutGraph {
@@ -1541,7 +1541,7 @@ fn finalize_layout_graph(
     !use_lr_multi_cluster_creation_order_mode {
     if use_cluster_point_mirror {
       refresh_cluster_labels(
-        mirror_layout_points_with_bbox(
+        mirror_layout_points(
           rotated,
           cluster_mirror_bbox,
           rotated.bbox,
@@ -1562,6 +1562,6 @@ fn finalize_layout_graph(
     subgraphs: rotated.subgraphs,
   }
   refresh_root_label_position(
-    shift_layout_to_origin_if_root(graph, rotated_with_margin),
+    shift_layout_to_origin(graph, rotated_with_margin),
   )
 }
