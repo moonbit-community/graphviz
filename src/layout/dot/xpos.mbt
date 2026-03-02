@@ -1985,6 +1985,36 @@ fn build_rank_constraint_seed(
 }
 
 ///|
+fn for_each_edge_index_in_tail_order(
+  edges : Array[@cgraph.Edge],
+  edge_out_order : Map[String, Array[Int]],
+  nlist_order : Array[String],
+  visit : (Int) -> Unit,
+) -> Unit {
+  let seen_edges : Map[Int, Bool] = Map::new()
+  for tail_name in nlist_order {
+    let indices = match edge_out_order.get(tail_name) {
+      Some(list) => list
+      None => []
+    }
+    for edge_idx in indices {
+      if edge_idx < 0 || edge_idx >= edges.length() {
+        continue
+      }
+      seen_edges[edge_idx] = true
+      visit(edge_idx)
+    }
+  }
+  if seen_edges.length() < edges.length() {
+    for edge_idx in 0..<edges.length() {
+      if seen_edges.get(edge_idx) is None {
+        visit(edge_idx)
+      }
+    }
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2293,27 +2323,12 @@ fn build_constraint_graph(
       }
     }
   }
-  let seen_edges : Map[Int, Bool] = Map::new()
-  for tail_name in nlist_order {
-    let indices = match edge_out_order.get(tail_name) {
-      Some(list) => list
-      None => []
-    }
-    for edge_idx in indices {
-      if edge_idx < 0 || edge_idx >= edges.length() {
-        continue
-      }
-      seen_edges[edge_idx] = true
-      record_edge_segments(edge_idx, edges[edge_idx])
-    }
-  }
-  if seen_edges.length() < edges.length() {
-    for edge_idx in 0..<edges.length() {
-      if seen_edges.get(edge_idx) is None {
-        record_edge_segments(edge_idx, edges[edge_idx])
-      }
-    }
-  }
+  for_each_edge_index_in_tail_order(
+    edges,
+    edge_out_order,
+    nlist_order,
+    edge_idx => record_edge_segments(edge_idx, edges[edge_idx]),
+  )
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
       Some(entry) => add_constraint_edge_if_present(graph, index, entry)
