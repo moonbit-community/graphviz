@@ -534,17 +534,27 @@ fn complex_tuning_enabled() -> Bool {
 ///|
 /// Graphviz parity: port padding aligned to refs/graphviz/lib/dotgen/position.c (sameport/compound spacing).
 /// Do not change behavior without updating fixtures/tests.
+priv struct PortPadding {
+  port_pad_below : Double
+  port_pad_above : Double
+}
+
+///|
+/// Graphviz parity: port padding aligned to refs/graphviz/lib/dotgen/position.c (sameport/compound spacing).
+/// Do not change behavior without updating fixtures/tests.
 fn compute_port_padding(
   has_clusters : Bool,
   has_port_edges : Bool,
   edges : Array[@cgraph.Edge],
   positions : Map[String, @geom.Point],
   label_ports_map : Map[String, Map[String, RecordPort]],
-) -> (Double, Double) {
+) -> PortPadding {
   if has_clusters || !has_port_edges {
-    (0.0, 0.0)
+    { port_pad_below: 0.0, port_pad_above: 0.0 }
   } else {
-    record_port_padding_y(edges, positions, label_ports_map)
+    let (port_pad_below, port_pad_above) =
+      record_port_padding_y(edges, positions, label_ports_map)
+    { port_pad_below, port_pad_above }
   }
 }
 
@@ -703,6 +713,16 @@ fn compute_dot_bbox(
 /// Graphviz parity: base layout bbox aligned to refs/graphviz/lib/dotgen/position.c
 /// (dot_compute_bb).
 /// Do not change behavior without updating fixtures/tests.
+priv struct FinalLayoutGeometry {
+  final_nodes : Array[DotLayoutNode]
+  final_edges : Array[DotLayoutEdge]
+  rank_bbox : @geom.Rect
+}
+
+///|
+/// Graphviz parity: base layout bbox aligned to refs/graphviz/lib/dotgen/position.c
+/// (dot_compute_bb).
+/// Do not change behavior without updating fixtures/tests.
 fn build_final_layout_geometry(
   nodes_out : Array[DotLayoutNode],
   edges_out : Array[DotLayoutEdge],
@@ -711,7 +731,7 @@ fn build_final_layout_geometry(
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
-) -> (Array[DotLayoutNode], Array[DotLayoutEdge], @geom.Rect) {
+) -> FinalLayoutGeometry {
   let base_bbox = compute_dot_bbox(
     nodes_out,
     all_ranks,
@@ -720,7 +740,16 @@ fn build_final_layout_geometry(
     rank_ht1,
     rank_ht2,
   )
-  (nodes_out, edges_out, base_bbox)
+  { final_nodes: nodes_out, final_edges: edges_out, rank_bbox: base_bbox }
+}
+
+///|
+/// Graphviz parity: cluster bbox expansion aligned to refs/graphviz/lib/common/postproc.c
+/// (place_graph_label) + dotgen/position.c (cluster margins).
+/// Do not change behavior without updating fixtures/tests.
+priv struct SubgraphsAndBBox {
+  subgraphs : Array[DotLayoutGraph]
+  base_bbox : @geom.Rect
 }
 
 ///|
@@ -740,7 +769,7 @@ fn build_subgraphs_and_bbox(
   rank_y : Map[Int, Double],
   rank_ht1 : Map[Int, Double],
   rank_ht2 : Map[Int, Double],
-) -> (Array[DotLayoutGraph], @geom.Rect) {
+) -> SubgraphsAndBBox {
   let subgraphs =
     layout_subgraphs(
       graph,
@@ -760,7 +789,16 @@ fn build_subgraphs_and_bbox(
   } else {
     bbox
   }
-  (subgraphs, expanded)
+  { subgraphs, base_bbox: expanded }
+}
+
+///|
+/// Graphviz parity: root cluster padding aligned to refs/graphviz/lib/dotgen/position.c
+/// (clust_ht/adjustRanks).
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootClusterPadding {
+  root_cluster_pad_top : Double
+  root_cluster_pad_bottom : Double
 }
 
 ///|
@@ -772,7 +810,7 @@ fn compute_root_cluster_padding(
   nodes : Array[@cgraph.Node],
   all_ranks : Array[Int],
   ranks : Map[String, Int],
-) -> (Double, Double) {
+) -> RootClusterPadding {
   if graph.is_root() && @dot_shared.graph_has_cluster(graph) && all_ranks.length() > 0 {
     let min_rank = all_ranks[0]
     let max_rank = all_ranks[all_ranks.length() - 1]
@@ -799,12 +837,12 @@ fn compute_root_cluster_padding(
       }
     }
     let pad = cluster_margin_pt(graph)
-    (
-      if cluster_at_min { pad } else { 0.0 },
-      if cluster_at_max { pad } else { 0.0 },
-    )
+    {
+      root_cluster_pad_top: if cluster_at_min { pad } else { 0.0 },
+      root_cluster_pad_bottom: if cluster_at_max { pad } else { 0.0 },
+    }
   } else {
-    (0.0, 0.0)
+    { root_cluster_pad_top: 0.0, root_cluster_pad_bottom: 0.0 }
   }
 }
 
@@ -890,11 +928,20 @@ fn expand_root_bbox_for_label(
 /// Graphviz parity: root label bbox expansion aligned to refs/graphviz/lib/common/postproc.c
 /// (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
+priv struct RootLabelBBoxOutput {
+  bbox : @geom.Rect
+  label_pos : @geom.Point?
+}
+
+///|
+/// Graphviz parity: root label bbox expansion aligned to refs/graphviz/lib/common/postproc.c
+/// (gv_postprocess).
+/// Do not change behavior without updating fixtures/tests.
 fn apply_root_label_bbox(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
   rankdir : RankDir,
-) -> (@geom.Rect, @geom.Point?) {
+) -> RootLabelBBoxOutput {
   let mut bbox = bbox
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
@@ -920,7 +967,7 @@ fn apply_root_label_bbox(
       None => ()
     }
   }
-  (bbox, label_pos)
+  { bbox, label_pos }
 }
 
 ///|
@@ -1429,7 +1476,7 @@ fn finalize_layout_graph(
   port_pad_above : Double,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutGraph {
-  let (final_nodes, final_edges, rank_bbox) =
+  let final_geometry =
     build_final_layout_geometry(
       nodes_out,
       edges_out,
@@ -1439,12 +1486,12 @@ fn finalize_layout_graph(
       rank_ht1,
       rank_ht2,
     )
-  let (subgraphs, base_bbox) =
+  let subgraphs_and_bbox =
     build_subgraphs_and_bbox(
       graph,
-      final_nodes,
-      final_edges,
-      rank_bbox,
+      final_geometry.final_nodes,
+      final_geometry.final_edges,
+      final_geometry.rank_bbox,
       cluster_ln_x,
       cluster_rn_x,
       cluster_bbox_heights,
@@ -1454,19 +1501,25 @@ fn finalize_layout_graph(
       rank_ht1,
       rank_ht2,
     )
-  let (root_cluster_pad_top, root_cluster_pad_bottom) =
+  let root_cluster_padding =
     compute_root_cluster_padding(graph, nodes, all_ranks, ranks)
   // Graphviz parity: rankdir=BT flips top/bottom cluster padding (ranks are inverted).
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     if rankdir == RankDir::BT {
-      (root_cluster_pad_bottom, root_cluster_pad_top)
+      (
+        root_cluster_padding.root_cluster_pad_bottom,
+        root_cluster_padding.root_cluster_pad_top,
+      )
     } else {
-      (root_cluster_pad_top, root_cluster_pad_bottom)
+      (
+        root_cluster_padding.root_cluster_pad_top,
+        root_cluster_padding.root_cluster_pad_bottom,
+      )
     }
   let bbox =
     apply_root_port_padding(
       graph,
-      base_bbox,
+      subgraphs_and_bbox.base_bbox,
       rankdir,
       port_pad_below,
       port_pad_above,
@@ -1478,9 +1531,9 @@ fn finalize_layout_graph(
         graph,
         bbox,
         label_pos: None,
-        nodes: final_nodes,
-        edges: final_edges,
-        subgraphs,
+        nodes: final_geometry.final_nodes,
+        edges: final_geometry.final_edges,
+        subgraphs: subgraphs_and_bbox.subgraphs,
       },
       root_cluster_pad_top,
       root_cluster_pad_bottom,
@@ -1510,12 +1563,12 @@ fn finalize_layout_graph(
       flat_label_edge_vnodes,
     )
   let with_xlabels = apply_xlabels(graph, labeled, splines)
-  let (bbox, label_pos) =
+  let root_label_bbox =
     apply_root_label_bbox(graph, with_xlabels.bbox, rankdir)
   let labeled_with_root = {
     graph: with_xlabels.graph,
-    bbox,
-    label_pos,
+    bbox: root_label_bbox.bbox,
+    label_pos: root_label_bbox.label_pos,
     nodes: with_xlabels.nodes,
     edges: with_xlabels.edges,
     subgraphs: with_xlabels.subgraphs,
@@ -1526,9 +1579,9 @@ fn finalize_layout_graph(
     rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
   }
   let cluster_mirror_bbox =
-    transform_bbox_with_root(rank_bbox, labeled_with_root.bbox, rankdir)
+    transform_bbox_with_root(final_geometry.rank_bbox, labeled_with_root.bbox, rankdir)
   let use_cluster_point_mirror =
-    base_bbox.urx > rank_bbox.urx &&
+    subgraphs_and_bbox.base_bbox.urx > final_geometry.rank_bbox.urx &&
     (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
     @dot_shared.graph_has_cluster(graph)
   let use_lr_multi_cluster_creation_order_mode =

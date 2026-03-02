@@ -335,7 +335,7 @@ fn build_routing_precompute_data(
 ) -> RoutingPrecomputeData {
   // Graphviz parity: port padding and head-port metrics consume
   // routing-stage inputs while preserving compute order before spline routing.
-  let (port_pad_below, port_pad_above) =
+  let port_padding =
     compute_port_padding(
       cluster_meta.has_clusters,
       prep.has_port_edges,
@@ -343,6 +343,8 @@ fn build_routing_precompute_data(
       positions_state.positions,
       label_ports_map,
     )
+  let port_pad_below = port_padding.port_pad_below
+  let port_pad_above = port_padding.port_pad_above
   let head_port_metrics =
     collect_head_port_metrics(
       prep.edges,
