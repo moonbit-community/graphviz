@@ -3,6 +3,16 @@
 /// and early reorder-input materialization helpers.
 
 ///|
+/// Graphviz parity: order-stage seed payload keeps grouped nodes, order-graph
+/// sizes, and cluster metadata maps bundled for clustered pre-root setup.
+priv struct OrderSeedGroupsOutput {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: order-stage groups clone rank groups, optionally merge edge
 /// vnodes, and install cluster skeleton nodes with virtual-node defaults.
 /// Do not change behavior without updating fixtures/tests.
@@ -15,12 +25,7 @@ fn build_order_seed_groups(
   vnode_info : EdgeVnodeInfo,
   vnode_order_keys_for_ordering : Map[String, Double],
   order_sizes : Map[String, NodeSize],
-) -> (
-  Map[Int, Array[String]],
-  Map[String, NodeSize],
-  Map[String, String],
-  Map[String, Bool],
-) {
+) -> OrderSeedGroupsOutput {
   let order_groups =
     if order_with_vnodes {
       build_x_groups_with_vnodes(
@@ -100,12 +105,12 @@ fn build_order_seed_groups(
       )
     }
   }
-  (
+  {
     order_groups,
     order_sizes_out,
     order_cluster_keys,
     order_cluster_skeleton,
-  )
+  }
 }
 
 ///|

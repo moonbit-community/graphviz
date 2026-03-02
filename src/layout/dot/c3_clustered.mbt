@@ -69,12 +69,7 @@ fn build_clustered_pre_root(
   edge_head : Array[String],
   nodes : Array[@cgraph.Node],
 ) -> ClusteredPreRootData {
-  let (
-    order_groups,
-    order_sizes_out,
-    order_cluster_keys,
-    order_cluster_skeleton,
-  ) =
+  let order_seed_output =
     build_order_seed_groups(
       ordering_groups_base,
       base_order_index,
@@ -85,6 +80,10 @@ fn build_clustered_pre_root(
       vnode_order_keys_for_ordering,
       order_sizes,
     )
+  let order_groups = order_seed_output.order_groups
+  let order_sizes_out = order_seed_output.order_sizes_out
+  let order_cluster_keys = order_seed_output.order_cluster_keys
+  let order_cluster_skeleton = order_seed_output.order_cluster_skeleton
   let reorder_context =
     build_order_reorder_context(
       order_groups,
