@@ -276,7 +276,7 @@ fn build_vnode_order_keys(
 ///|
 /// Graphviz parity: seed vnode order from GD_nlist order within each rank.
 /// Do not change behavior without updating fixtures/tests.
-fn build_vnode_order_keys_from_nlist(
+fn build_vnode_keys_from_nlist(
   ordered_groups : Map[Int, Array[String]],
   vnodes_by_rank : Map[Int, Array[String]],
   order_index : Map[String, Int],

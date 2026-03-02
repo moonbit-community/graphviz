@@ -244,7 +244,7 @@ fn build_ordering_dispatch_setup(
           vnode_info.vnode_ranks,
         )
       } else {
-        build_vnode_order_keys_from_nlist(
+        build_vnode_keys_from_nlist(
           ordering_groups_base,
           vnode_info.vnodes_by_rank,
           base_order_index,
