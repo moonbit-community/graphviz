@@ -32,9 +32,24 @@ fn build_remincross_groups(
   }
   // Graphviz parity: clustered ReMincross rebuilt groups come from base real
   // groups plus optional vnode injection with trailing-vnode adjustments.
-  let vnode_groups_inputs =
-    build_remincross_vnode_groups_build_inputs(dispatch_context)
-  build_remincross_vnode_groups(vnode_groups_inputs)
+  build_remincross_vnode_groups(
+    {
+      final_groups: dispatch_context.base_groups,
+      order_with_vnodes: dispatch_context.order_with_vnodes,
+      edges: dispatch_context.edges,
+      edge_tail: dispatch_context.edge_tail,
+      edge_head: dispatch_context.edge_head,
+      edge_reversed: dispatch_context.edge_reversed,
+      ranks: dispatch_context.ranks,
+      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+      cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+      cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+      cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+      edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+      vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
+      vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
+    },
+  )
 }
 
 ///|
@@ -647,31 +662,6 @@ fn build_remincross_vnode_groups(
     )
   } else {
     rem_base_groups
-  }
-}
-
-///|
-/// Graphviz parity: vnode-group build inputs are projected directly from
-/// clustered dispatch payload before trailing-vnode adjusted group rebuild.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_vnode_groups_build_inputs(
-  dispatch_context : ReMincrossDispatchContext,
-) -> ReMincrossVnodeGroupsBuildInputs {
-  {
-    final_groups: dispatch_context.base_groups,
-    order_with_vnodes: dispatch_context.order_with_vnodes,
-    edges: dispatch_context.edges,
-    edge_tail: dispatch_context.edge_tail,
-    edge_head: dispatch_context.edge_head,
-    edge_reversed: dispatch_context.edge_reversed,
-    ranks: dispatch_context.ranks,
-    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-    cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-    cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-    cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-    edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-    vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
-    vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
   }
 }
 
