@@ -113,7 +113,7 @@ fn build_order_seed_groups(
 /// incoming-only local-cluster nodes reversed to match fast_node head-insert
 /// behavior before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_unconstrained_order_overrides(
+fn apply_unconstrained_overrides(
   gdnlist_order : Array[String],
   real_nodes : Map[String, Bool],
   order_nodes : Array[String],
