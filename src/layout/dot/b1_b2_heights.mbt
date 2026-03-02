@@ -6,7 +6,7 @@
 /// Graphviz parity: long-edge label midpoint contributes half height to the
 /// midpoint rank slot before rank height normalization.
 /// Do not change behavior without updating fixtures/tests.
-fn update_rank_pht_for_edge_label(
+fn update_rank_pht_for_label(
   edge : @cgraph.Edge,
   ranks : Map[String, Int],
   rank_pht : Map[Int, Double],
@@ -92,7 +92,7 @@ fn compute_rank_heights(
   // for long edges before vnode rank expansion in rank.c/position.c flow.
   if has_edge_labels {
     for edge in edges {
-      update_rank_pht_for_edge_label(edge, ranks, rank_pht, rankdir)
+      update_rank_pht_for_label(edge, ranks, rank_pht, rankdir)
     }
   }
   // Graphviz parity: long edges reserve vnode half-height across
