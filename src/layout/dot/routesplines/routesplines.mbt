@@ -189,6 +189,31 @@ pub(all) struct PathplanResult {
 }
 
 ///|
+priv struct RankNeighbors {
+  left : String?
+  right : String?
+}
+
+///|
+priv struct EndpathResult {
+  boxes : Array[@geom.Rect]
+  endpoint : @geom.Point
+}
+
+///|
+priv struct PathplanRouteResult {
+  points : Array[@geom.Point]
+  polygon : Array[@geom.Point]
+}
+
+///|
+priv struct PathplanCoreResult {
+  points : Array[@geom.Point]
+  barriers : Array[(@geom.Point, @geom.Point)]
+  boxes : Array[@geom.Rect]
+}
+
+///|
 fn compute_horizontal_bounds(
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
@@ -397,7 +422,7 @@ fn neighbor_names_for_rank(
   order_index : Map[String, Int],
   path_prev : String?,
   path_next : String?,
-) -> (String?, String?) {
+) -> RankNeighbors {
   match x_groups.get(rank) {
     Some(list) => {
       let mut idx = 0
@@ -457,14 +482,14 @@ fn neighbor_names_for_rank(
             }
             right_idx = right_idx + 1
           }
-          return (left, right)
+          return { left, right }
         }
         idx = idx + 1
       }
     }
     None => ()
   }
-  (None, None)
+  { left: None, right: None }
 }
 
 ///|
@@ -547,18 +572,19 @@ fn maximal_bbox_for_name(
   let is_virtual = is_virtual_node(name, vnode_sizes)
   let block_cluster_a = if is_virtual { tail_cluster } else { vn_cluster }
   let block_cluster_b = if is_virtual { head_cluster } else { vn_cluster }
-  let (left_neighbor, right_neighbor) =
-    neighbor_names_for_rank(
-      name,
-      rank,
-      x_groups,
-      vnode_sizes,
-      out_edges,
-      in_edges,
-      order_index,
-      path_prev,
-      path_next,
-    )
+  let rank_neighbors = neighbor_names_for_rank(
+    name,
+    rank,
+    x_groups,
+    vnode_sizes,
+    out_edges,
+    in_edges,
+    order_index,
+    path_prev,
+    path_next,
+  )
+  let left_neighbor = rank_neighbors.left
+  let right_neighbor = rank_neighbors.right
   let neighbor_sep = (neighbor : String, neighbor_size : NodeSize) => {
     let is_virtual =
       vnode_sizes.get(neighbor) is Some(_) || neighbor_size.height_pt <= 0.0
@@ -874,7 +900,7 @@ fn beginpath_boxes_regular(
   side : Int,
   use_port_box : Bool,
   ranksep_pt : Double,
-) -> (Array[@geom.Rect], @geom.Point) {
+) -> EndpathResult {
   let boxes : Array[@geom.Rect] = []
   let mut start = start
   let node_top = node_pos.y + node_size.height_pt / 2.0
@@ -920,7 +946,7 @@ fn beginpath_boxes_regular(
         boxes.push(b)
       }
       start = { x: start.x, y: start.y + 1.0 }
-      return (boxes, start)
+      return { boxes, endpoint: start }
     } else if (side & SIDE_BOTTOM) != 0 {
       let b =
         rect(
@@ -931,29 +957,29 @@ fn beginpath_boxes_regular(
         )
       boxes.push(b)
       start = { x: start.x, y: start.y - 1.0 }
-      return (boxes, start)
+      return { boxes, endpoint: start }
     } else if (side & SIDE_LEFT) != 0 {
       let b = rect(base_box.llx, node_bottom, start.x, start.y)
       boxes.push(b)
       start = { x: start.x - 1.0, y: start.y }
-      return (boxes, start)
+      return { boxes, endpoint: start }
     } else if (side & SIDE_RIGHT) != 0 {
       let b = rect(start.x, node_bottom, base_box.urx, start.y)
       boxes.push(b)
       start = { x: start.x + 1.0, y: start.y }
-      return (boxes, start)
+      return { boxes, endpoint: start }
     }
   }
   if use_port_box {
     // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
     boxes.push(base_box)
-    return (boxes, start)
+    return { boxes, endpoint: start }
   }
   // Graphviz parity: default to bottom side, clamp box to start.y, then offset by -1pt.
   let b = rect(base_box.llx, base_box.lly, base_box.urx, start.y)
   boxes.push(b)
   start = { x: start.x, y: start.y - 1.0 }
-  (boxes, start)
+  { boxes, endpoint: start }
 }
 
 ///|
@@ -965,7 +991,7 @@ fn endpath_boxes_regular(
   side : Int,
   use_port_box : Bool,
   ranksep_pt : Double,
-) -> (Array[@geom.Rect], @geom.Point) {
+) -> EndpathResult {
   let boxes : Array[@geom.Rect] = []
   let mut end = end
   let node_top = node_pos.y + node_size.height_pt / 2.0
@@ -984,7 +1010,7 @@ fn endpath_boxes_regular(
         )
       boxes.push(b)
       end = { x: end.x, y: end.y + 1.0 }
-      return (boxes, end)
+      return { boxes, endpoint: end }
     } else if (side & SIDE_BOTTOM) != 0 {
       if end.x < node_pos.x {
         let b0 =
@@ -1022,29 +1048,29 @@ fn endpath_boxes_regular(
         boxes.push(b)
       }
       end = { x: end.x, y: end.y - 1.0 }
-      return (boxes, end)
+      return { boxes, endpoint: end }
     } else if (side & SIDE_LEFT) != 0 {
       let b = rect(base_box.llx, end.y, end.x, node_top)
       boxes.push(b)
       end = { x: end.x - 1.0, y: end.y }
-      return (boxes, end)
+      return { boxes, endpoint: end }
     } else if (side & SIDE_RIGHT) != 0 {
       let b = rect(end.x, end.y, base_box.urx, node_top)
       boxes.push(b)
       end = { x: end.x + 1.0, y: end.y }
-      return (boxes, end)
+      return { boxes, endpoint: end }
     }
   }
   if use_port_box {
     // Graphviz parity: pboxfn-supplied box skips default clamp/offset.
     boxes.push(base_box)
-    return (boxes, end)
+    return { boxes, endpoint: end }
   }
   // Graphviz parity: default to top side, clamp box to end.y, then offset by +1pt.
   let b = rect(base_box.llx, end.y, base_box.urx, base_box.ury)
   boxes.push(b)
   end = { x: end.x, y: end.y + 1.0 }
-  (boxes, end)
+  { boxes, endpoint: end }
 }
 
 ///|
@@ -1052,7 +1078,7 @@ fn route_pathplan_from_boxes(
   boxes : Array[@geom.Rect],
   start : @geom.Point,
   end : @geom.Point,
-) -> (Array[@geom.Point], Array[@geom.Point])? {
+) -> PathplanRouteResult? {
   if boxes.length() < 2 {
     return None
   }
@@ -1097,7 +1123,7 @@ fn route_pathplan_from_boxes(
   if path.length() < 2 {
     return None
   }
-  Some((dedupe_polyline_points(path), polygon))
+  Some({ points: dedupe_polyline_points(path), polygon })
 }
 
 ///|
@@ -1378,7 +1404,7 @@ fn edge_pathplan_polyline_core(
   splinesep_pt : Double,
   left_bound : Double,
   right_bound : Double,
-) -> (Array[@geom.Point], Array[(@geom.Point, @geom.Point)], Array[@geom.Rect])? {
+) -> PathplanCoreResult? {
   let _ = positions
   let _ = vnode_positions
   let _ = sizes
@@ -1451,7 +1477,7 @@ fn edge_pathplan_polyline_core(
   let path_head_size = size_for_name(path_head_name, mval_route_sizes)
   let use_tail_port_box = path_tail_port_box is Some(_) && path_tail_side == 0
   let use_head_port_box = path_head_port_box is Some(_) && path_head_side == 0
-  let (tail_boxes, route_start) = beginpath_boxes_regular(
+  let tail_endpath = beginpath_boxes_regular(
     tail_box,
     path_tail_pos,
     path_tail_size,
@@ -1460,6 +1486,8 @@ fn edge_pathplan_polyline_core(
     use_tail_port_box,
     ranksep_pt,
   )
+  let tail_boxes = tail_endpath.boxes
+  let route_start = tail_endpath.endpoint
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_tail_box = tail_boxes[tail_boxes.length() - 1]
@@ -1585,7 +1613,7 @@ fn edge_pathplan_polyline_core(
       Some(box) => if path_head_side == 0 { box } else { head_max_box }
       None => head_max_box
     }
-  let (head_boxes, route_end) = endpath_boxes_regular(
+  let head_endpath = endpath_boxes_regular(
     head_box,
     path_head_pos,
     path_head_size,
@@ -1594,6 +1622,8 @@ fn edge_pathplan_polyline_core(
     use_head_port_box,
     ranksep_pt,
   )
+  let head_boxes = head_endpath.boxes
+  let route_end = head_endpath.endpoint
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let last_head_box = head_boxes[head_boxes.length() - 1]
@@ -1637,8 +1667,12 @@ fn edge_pathplan_polyline_core(
     route_start,
     route_end,
   ) {
-    Some((points, polygon)) =>
-      Some((dedupe_polyline_points(points), polygon_edges(polygon), normalized_boxes))
+    Some(route) =>
+      Some({
+        points: dedupe_polyline_points(route.points),
+        barriers: polygon_edges(route.polygon),
+        boxes: normalized_boxes,
+      })
     None => None
   }
 }
@@ -1856,7 +1890,7 @@ pub fn edge_pathplan_polyline(
             left_bound,
             right_bound,
           ) {
-            Some((points, barriers, boxes)) => {
+            Some(core_result) => {
               let seg1_recover_vnodes : Array[String] = []
               if is_virtual_node(current_tail_name, vnode_sizes) {
                 seg1_recover_vnodes.push(current_tail_name)
@@ -1868,9 +1902,9 @@ pub fn edge_pathplan_polyline(
               // straight split segment endpoints are still recover candidates.
               seg1_recover_vnodes.push(seg1_head)
               segments.push({
-                points,
-                barriers,
-                boxes,
+                points: core_result.points,
+                barriers: core_result.barriers,
+                boxes: core_result.boxes,
                 vnodes: seg1_recover_vnodes,
               })
             }
@@ -1925,7 +1959,7 @@ pub fn edge_pathplan_polyline(
             left_bound,
             right_bound,
           ) {
-            Some((points, barriers, boxes)) => {
+            Some(core_result) => {
               let final_recover_vnodes : Array[String] = []
               if is_virtual_node(current_tail_name, vnode_sizes) {
                 final_recover_vnodes.push(current_tail_name)
@@ -1934,9 +1968,9 @@ pub fn edge_pathplan_polyline(
                 final_recover_vnodes.push(vnode)
               }
               segments.push({
-                points,
-                barriers,
-                boxes,
+                points: core_result.points,
+                barriers: core_result.barriers,
+                boxes: core_result.boxes,
                 vnodes: final_recover_vnodes,
               })
             }
@@ -2027,7 +2061,8 @@ pub fn edge_pathplan_polyline(
     left_bound,
     right_bound,
   ) {
-    Some((points, barriers, boxes)) => {
+    Some(core_result) => {
+      let points = core_result.points
       let out_points =
         if swap_path {
           let reversed : Array[@geom.Point] = []
@@ -2042,8 +2077,8 @@ pub fn edge_pathplan_polyline(
         }
       Some({
         points: out_points,
-        barriers,
-        boxes,
+        barriers: core_result.barriers,
+        boxes: core_result.boxes,
         segments: [],
       })
     }
