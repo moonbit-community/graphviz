@@ -2,22 +2,27 @@
 fn cluster_label_padding_pt(
   graph : @cgraph.Graph,
   rankdir : RankDir,
-) -> (Double, Double) {
+) -> ClusterLabelPadding {
   let flip = rankdir == RankDir::LR || rankdir == RankDir::RL
   if flip {
-    return (0.0, 0.0)
+    return { top: 0.0, bottom: 0.0 }
   }
   match graph_label_metrics(graph) {
     Some(metrics) => {
       let loc = graph_label_loc(graph)
       let pad = CLUSTER_LABEL_PAD_PT
       match loc {
-        LabelLoc::Top => (metrics.height_pt + pad, 0.0)
-        LabelLoc::Bottom => (0.0, metrics.height_pt + pad)
+        LabelLoc::Top => { top: metrics.height_pt + pad, bottom: 0.0 }
+        LabelLoc::Bottom => { top: 0.0, bottom: metrics.height_pt + pad }
       }
     }
-    None => (0.0, 0.0)
+    None => { top: 0.0, bottom: 0.0 }
   }
+}
+
+priv struct ClusterLabelPadding {
+  top : Double
+  bottom : Double
 }
 
 ///|
@@ -26,6 +31,11 @@ priv struct ClusterHeights {
   max_rank : Int
   ht1 : Double
   ht2 : Double
+}
+
+priv struct ClusterRankBounds {
+  min_rank : Int?
+  max_rank : Int?
 }
 
 ///|
@@ -201,7 +211,7 @@ fn collect_cluster_bbox_heights(
   }
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
-  let (min_rank, max_rank) = collect_cluster_rank_heights(
+  let rank_bounds = collect_cluster_rank_heights(
     graph,
     ranks,
     sizes,
@@ -211,7 +221,7 @@ fn collect_cluster_bbox_heights(
     None,
     None,
   )
-  let min_rank_value = match min_rank {
+  let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
     None => {
       for child in children {
@@ -228,7 +238,7 @@ fn collect_cluster_bbox_heights(
       return None
     }
   }
-  let max_rank_value = match max_rank {
+  let max_rank_value = match rank_bounds.max_rank {
     Some(value) => value
     None => {
       for child in children {
@@ -283,9 +293,9 @@ fn collect_cluster_bbox_heights(
       None => ()
     }
   }
-  let (label_top, label_bottom) = cluster_label_padding_pt(graph, rankdir)
-  ht1 = ht1 + label_bottom
-  ht2 = ht2 + label_top
+  let label_padding = cluster_label_padding_pt(graph, rankdir)
+  ht1 = ht1 + label_padding.bottom
+  ht2 = ht2 + label_padding.top
   match graph.name() {
     Some(name) => cluster_heights[name] = (ht1, ht2)
     None => ()
@@ -327,7 +337,7 @@ fn collect_cluster_rank_heights(
   rank_heights : Map[Int, Double],
   min_rank : Int?,
   max_rank : Int?,
-) -> (Int?, Int?) {
+) -> ClusterRankBounds {
   let mut next_min = min_rank
   let mut next_max = max_rank
   for node in graph.nodes() {
@@ -364,13 +374,13 @@ fn collect_cluster_rank_heights(
     }
   }
   for child in graph.subgraphs() {
-    let (child_min, child_max) = collect_cluster_rank_heights(
+    let child_bounds = collect_cluster_rank_heights(
       child, ranks, sizes, self_edge_labels, seen, rank_heights, next_min, next_max,
     )
-    next_min = child_min
-    next_max = child_max
+    next_min = child_bounds.min_rank
+    next_max = child_bounds.max_rank
   }
-  (next_min, next_max)
+  { min_rank: next_min, max_rank: next_max }
 }
 
 fn add_cluster_margin_if_nonzero(height : Double, margin : Double) -> Double {
@@ -404,7 +414,7 @@ fn apply_cluster_rank_heights(
   }
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
-  let (min_rank, max_rank) = collect_cluster_rank_heights(
+  let rank_bounds = collect_cluster_rank_heights(
     graph,
     ranks,
     sizes,
@@ -414,7 +424,7 @@ fn apply_cluster_rank_heights(
     None,
     None,
   )
-  let min_rank_value = match min_rank {
+  let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
     None => {
       for child in children {
@@ -426,7 +436,7 @@ fn apply_cluster_rank_heights(
       return None
     }
   }
-  let max_rank_value = match max_rank {
+  let max_rank_value = match rank_bounds.max_rank {
     Some(value) => value
     None => {
       for child in children {
@@ -471,9 +481,9 @@ fn apply_cluster_rank_heights(
       None => ()
     }
   }
-  let (label_top, label_bottom) = cluster_label_padding_pt(graph, rankdir)
-  ht1 = ht1 + label_bottom
-  ht2 = ht2 + label_top
+  let label_padding = cluster_label_padding_pt(graph, rankdir)
+  ht1 = ht1 + label_padding.bottom
+  ht2 = ht2 + label_padding.top
   let current_top = match rank_ht1.get(max_rank_value) {
     Some(value) => value
     None => 0.0
