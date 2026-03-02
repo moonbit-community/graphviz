@@ -1145,25 +1145,6 @@ fn capture_root_reorder_pass_snapshot(
 }
 
 ///|
-/// Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
-/// then records the same stage snapshot before resetting capture state.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_rank_reorder_with_pass0_capture(
-  stage_data : RootReorderPassStageData,
-  inputs : RootReorderPassInputs,
-  root_rank_reorder_inputs : RootRankReorderInputs,
-) -> Map[Int, Array[String]] {
-  capture_pass0_flat_seed_groups_value.val = None
-  capture_pass0_flat_seed_groups_enabled.val = true
-  let ordered_mincross =
-    run_root_rank_reorder(root_rank_reorder_inputs)
-  capture_pass0_flat_seed_groups_enabled.val = false
-  capture_root_reorder_pass_snapshot(stage_data, inputs)
-  capture_pass0_flat_seed_groups_value.val = None
-  ordered_mincross
-}
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -1183,12 +1164,15 @@ fn run_root_reorder_pass(
       inputs,
       preferred_positions,
     )
+  // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
+  // then records the same stage snapshot before resetting capture state.
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
   let ordered_mincross =
-    run_root_rank_reorder_with_pass0_capture(
-      stage_data,
-      inputs,
-      root_rank_reorder_inputs,
-    )
+    run_root_rank_reorder(root_rank_reorder_inputs)
+  capture_pass0_flat_seed_groups_enabled.val = false
+  capture_root_reorder_pass_snapshot(stage_data, inputs)
+  capture_pass0_flat_seed_groups_value.val = None
   { ordered_mincross, mincross_nodes: stage_data.mincross_nodes }
 }
 
@@ -1245,43 +1229,6 @@ fn resolve_root_mincross_input_groups(
 }
 
 ///|
-/// Graphviz parity: root ReMincross pass input is derived directly from one
-/// root mincross input snapshot plus selected root/skeleton groups.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_reorder_pass_inputs(
-  inputs : RootMincrossReorderInputs,
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> RootReorderPassInputs {
-  {
-    order_with_vnodes: inputs.order_with_vnodes,
-    vnode_order_keys_for_ordering:
-      inputs.vnode_order_keys_for_ordering,
-    order_groups_for_mincross,
-    order_edges_out: inputs.order_edges_out,
-    order_edge_tail_out: inputs.order_edge_tail_out,
-    order_edge_head_out: inputs.order_edge_head_out,
-    order_edge_tail_port_x: inputs.order_edge_tail_port_x,
-    order_edge_head_port_x: inputs.order_edge_head_port_x,
-    order_edge_tail_port_order: inputs.order_edge_tail_port_order,
-    order_edge_head_port_order: inputs.order_edge_head_port_order,
-    order_ranks: inputs.order_ranks,
-    order_cluster_keys: inputs.order_cluster_keys,
-    cluster_meta: inputs.cluster_meta,
-    order_node_order: inputs.order_node_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    order_flat_constraints: inputs.order_flat_constraints,
-    graphviz_out_neighbors: inputs.graphviz_out_neighbors,
-    graphviz_in_neighbors: inputs.graphviz_in_neighbors,
-    graphviz_flip: inputs.graphviz_flip,
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross output merges reordered root/skeleton names
 /// back to seeded groups only in cluster-order mode.
 /// Do not change behavior without updating fixtures/tests.
@@ -1311,11 +1258,34 @@ fn run_root_mincross_reorder(
 ) -> RootMincrossReorderOutput {
   let order_groups_for_mincross =
     resolve_root_mincross_input_groups(inputs)
-  let root_reorder_inputs =
-    build_root_reorder_pass_inputs(
-      inputs,
+  let root_reorder_inputs : RootReorderPassInputs =
+    {
+      order_with_vnodes: inputs.order_with_vnodes,
+      vnode_order_keys_for_ordering:
+        inputs.vnode_order_keys_for_ordering,
       order_groups_for_mincross,
-    )
+      order_edges_out: inputs.order_edges_out,
+      order_edge_tail_out: inputs.order_edge_tail_out,
+      order_edge_head_out: inputs.order_edge_head_out,
+      order_edge_tail_port_x: inputs.order_edge_tail_port_x,
+      order_edge_head_port_x: inputs.order_edge_head_port_x,
+      order_edge_tail_port_order: inputs.order_edge_tail_port_order,
+      order_edge_head_port_order: inputs.order_edge_head_port_order,
+      order_ranks: inputs.order_ranks,
+      order_cluster_keys: inputs.order_cluster_keys,
+      cluster_meta: inputs.cluster_meta,
+      order_node_order: inputs.order_node_order,
+      order_sizes_out: inputs.order_sizes_out,
+      nodesep_pt: inputs.nodesep_pt,
+      has_edge_labels: inputs.has_edge_labels,
+      port_order_positions: inputs.port_order_positions,
+      port_order_contrib: inputs.port_order_contrib,
+      order_cluster_skeleton: inputs.order_cluster_skeleton,
+      order_flat_constraints: inputs.order_flat_constraints,
+      graphviz_out_neighbors: inputs.graphviz_out_neighbors,
+      graphviz_in_neighbors: inputs.graphviz_in_neighbors,
+      graphviz_flip: inputs.graphviz_flip,
+    }
   let root_reorder_output =
     run_root_reorder_pass(root_reorder_inputs)
   let ordered =
