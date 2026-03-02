@@ -4716,6 +4716,12 @@ fn recover_regular_selection(
 }
 
 ///|
+priv struct RegularSplineLayoutResult {
+  edge_layout : DotLayoutEdge
+  spline_result : EdgeSplineResult
+}
+
+///|
 /// Graphviz parity: regular-edge routing keeps build/finalize/recover_slack flow.
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_spline_layout(
@@ -4744,7 +4750,7 @@ fn build_regular_spline_layout(
   path_adjacency : @routesplines.PathAdjacency,
   recover_edge_id_by_key : Map[String, Int],
   recovered_slack_keys : Map[String, Bool],
-) -> (DotLayoutEdge, EdgeSplineResult) {
+) -> RegularSplineLayoutResult {
   let spline_result = build_edge_spline(
     base,
     splines,
@@ -4793,7 +4799,7 @@ fn build_regular_spline_layout(
       has_clusters,
       flat_label_edge_vnodes,
     )
-  (layout, spline_result)
+  { edge_layout: layout, spline_result }
 }
 
 ///|
@@ -5113,35 +5119,34 @@ fn route_edges(
     ) {
       continue
     }
-    let (edge_layout, edge_spline_result) =
-      build_regular_spline_layout(
-        edge,
-        base,
-        splines,
-        ranks,
-        sizes,
-        positions,
-        vnode_positions,
-        vnode_info,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
-        x_groups,
-        nodesep_pt,
-        path_left_bound,
-        path_right_bound,
-        ranksep_pt,
-        label_edge_counts,
-        head_port_metrics,
-        routing_context,
-        enable_complex_tuning,
-        has_clusters,
-        flat_label_edge_vnodes,
-        path_adjacency,
-        recover_edge_id_for_routing,
-        recovered_slack_keys,
-      )
-    edges_out_by_id[edge_id] = edge_layout
+    let regular_layout = build_regular_spline_layout(
+      edge,
+      base,
+      splines,
+      ranks,
+      sizes,
+      positions,
+      vnode_positions,
+      vnode_info,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      x_groups,
+      nodesep_pt,
+      path_left_bound,
+      path_right_bound,
+      ranksep_pt,
+      label_edge_counts,
+      head_port_metrics,
+      routing_context,
+      enable_complex_tuning,
+      has_clusters,
+      flat_label_edge_vnodes,
+      path_adjacency,
+      recover_edge_id_for_routing,
+      recovered_slack_keys,
+    )
+    edges_out_by_id[edge_id] = regular_layout.edge_layout
     let regular_key = @dot_shared.edge_vnode_key(edge)
     let group_edges = match regular_parallel_groups.get(regular_key) {
       Some(value) => value
@@ -5149,7 +5154,7 @@ fn route_edges(
     }
     if group_edges.length() <= 1 ||
       group_edges[0].id() != edge_id ||
-      edge_spline_result.raw_bezier.length() == 0 {
+      regular_layout.spline_result.raw_bezier.length() == 0 {
       continue
     }
     for group_edge in group_edges {
@@ -5164,7 +5169,7 @@ fn route_edges(
       let group_layout =
         build_regular_bezier_layout(
           group_base,
-          edge_spline_result,
+          regular_layout.spline_result,
           ranks,
           rank_y,
           vnode_info,
