@@ -4331,7 +4331,7 @@ fn build_self_edge_layout(
 /// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
-fn build_flat_adjacent_edge_layout(
+fn build_flat_adjacent_layout(
   base : EdgeRouteBase,
   bezier : Array[@geom.Point],
   ranks : Map[String, Int],
@@ -4944,7 +4944,7 @@ fn maybe_build_self_edge_layout(
 }
 
 ///|
-fn collect_regular_parallel_groups(
+fn collect_parallel_groups(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Array[@cgraph.Edge]] {
@@ -5067,7 +5067,7 @@ fn route_edges(
   let recover_edge_id_by_key =
     recover_regular_edge_selection(ordered_edges, base_cache)
   let regular_parallel_groups =
-    collect_regular_parallel_groups(ordered_edges, base_cache)
+    collect_parallel_groups(ordered_edges, base_cache)
   let recover_edge_id_for_routing : Map[String, Int] = Map::new()
   for key, edge_id in recover_edge_id_by_key {
     recover_edge_id_for_routing[key] = edge_id
@@ -5090,7 +5090,7 @@ fn route_edges(
     match flat_adjacent_simple_beziers.get(edge_id) {
       Some(bezier) => {
         let edge_layout =
-          build_flat_adjacent_edge_layout(
+          build_flat_adjacent_layout(
             base,
             bezier,
             ranks,
