@@ -209,6 +209,19 @@ fn collect_cluster_bbox_heights(
     }
     return None
   }
+  let collect_children = () => {
+    for child in children {
+      let _ =
+        collect_cluster_bbox_heights(
+          child,
+          ranks,
+          sizes,
+          self_edge_labels,
+          rankdir,
+          cluster_heights,
+        )
+    }
+  }
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
@@ -224,34 +237,14 @@ fn collect_cluster_bbox_heights(
   let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
     None => {
-      for child in children {
-        let _ =
-          collect_cluster_bbox_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rankdir,
-          cluster_heights,
-        )
-      }
+      collect_children()
       return None
     }
   }
   let max_rank_value = match rank_bounds.max_rank {
     Some(value) => value
     None => {
-      for child in children {
-        let _ =
-          collect_cluster_bbox_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rankdir,
-          cluster_heights,
-        )
-      }
+      collect_children()
       return None
     }
   }
@@ -412,6 +405,19 @@ fn apply_cluster_rank_heights(
     }
     return None
   }
+  let apply_children = () => {
+    for child in children {
+      let _ = apply_cluster_rank_heights(
+        child,
+        ranks,
+        sizes,
+        self_edge_labels,
+        rank_ht1,
+        rank_ht2,
+        rankdir,
+      )
+    }
+  }
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
@@ -427,24 +433,14 @@ fn apply_cluster_rank_heights(
   let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
     None => {
-      for child in children {
-        let _ = apply_cluster_rank_heights(
-          child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
-        )
-
-      }
+      apply_children()
       return None
     }
   }
   let max_rank_value = match rank_bounds.max_rank {
     Some(value) => value
     None => {
-      for child in children {
-        let _ = apply_cluster_rank_heights(
-          child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
-        )
-
-      }
+      apply_children()
       return None
     }
   }
