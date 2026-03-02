@@ -99,7 +99,7 @@ fn build_clustered_pre_root(
       port_edge_nodes,
     )
   let materialized =
-    build_materialized_order_inputs(
+    build_materialized_inputs(
       nlist_order,
       order_edges_by_tail,
       reorder_context.order_graph,

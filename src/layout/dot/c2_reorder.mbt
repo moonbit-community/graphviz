@@ -131,7 +131,7 @@ fn build_order_reorder_context(
 /// Graphviz parity: mapped/unmapped order-edge materialization and neighbor
 /// maps must follow GD_nlist/AGSEQ traversal before build_ranks seeding.
 /// Do not change behavior without updating fixtures/tests.
-fn build_materialized_order_inputs(
+fn build_materialized_inputs(
   nlist_order : Array[String],
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph : @cgraph.Graph,
