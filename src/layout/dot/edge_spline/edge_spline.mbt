@@ -2420,12 +2420,12 @@ fn arrow_clip_start_segment(
     points[start + 2],
     points[start + 3],
   ]
-  let (clipped, _) = arrow_start_clip(segment, arrow_len, eps, start_point)
+  let clipped = arrow_start_clip(segment, arrow_len, eps, start_point)
   let out = points.copy()
-  out[start] = clipped[0]
-  out[start + 1] = clipped[1]
-  out[start + 2] = clipped[2]
-  out[start + 3] = clipped[3]
+  out[start] = clipped.points[0]
+  out[start + 1] = clipped.points[1]
+  out[start + 2] = clipped.points[2]
+  out[start + 3] = clipped.points[3]
   (out, start, start_point)
 }
 
@@ -2452,12 +2452,12 @@ fn arrow_clip_end_segment(
     points[end + 2],
     points[end + 3],
   ]
-  let (clipped, _) = arrow_end_clip(segment, arrow_len, eps, end_point)
+  let clipped = arrow_end_clip(segment, arrow_len, eps, end_point)
   let out = points.copy()
-  out[end] = clipped[0]
-  out[end + 1] = clipped[1]
-  out[end + 2] = clipped[2]
-  out[end + 3] = clipped[3]
+  out[end] = clipped.points[0]
+  out[end + 1] = clipped.points[1]
+  out[end + 2] = clipped.points[2]
+  out[end + 3] = clipped.points[3]
   (out, end, end_point)
 }
 
@@ -2601,14 +2601,19 @@ fn clip_spline_arrows(
 ///|
 ///|
 ///|
+priv struct ArrowClipResult {
+  points : Array[@geom.Point]
+}
+
+///|
 fn arrow_end_clip(
   points : Array[@geom.Point],
   arrow_len : Double,
   eps : Double,
   end_point : @geom.Point,
-) -> (Array[@geom.Point], @geom.Point) {
+) -> ArrowClipResult {
   if arrow_len <= 0.0 {
-    return (points, end_point)
+    return { points, }
   }
   let sp = [end_point, points[2], points[1], points[0]]
   let len2 = arrow_len * arrow_len
@@ -2620,7 +2625,7 @@ fn arrow_end_clip(
     clipped[1],
     clipped[0],
   ]
-  (new_points, end_point)
+  { points: new_points }
 }
 
 ///|
@@ -2629,9 +2634,9 @@ fn arrow_start_clip(
   arrow_len : Double,
   eps : Double,
   start_point : @geom.Point,
-) -> (Array[@geom.Point], @geom.Point) {
+) -> ArrowClipResult {
   if arrow_len <= 0.0 {
-    return (points, start_point)
+    return { points, }
   }
   let sp = [points[3], points[2], points[1], start_point]
   let len2 = arrow_len * arrow_len
@@ -2643,7 +2648,7 @@ fn arrow_start_clip(
     clipped[1],
     clipped[0],
   ]
-  (new_points, start_point)
+  { points: new_points }
 }
 
 ///|
