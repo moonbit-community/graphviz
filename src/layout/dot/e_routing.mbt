@@ -234,6 +234,15 @@ priv struct RankBounds {
 }
 
 ///|
+priv struct FlatDetourResult {
+  points : Array[@geom.Point]
+  first_right : Double
+  last_left : Double
+  detour_y : Double
+  vspace : Double
+}
+
+///|
 fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
   let mut min_rank = 0
   let mut max_rank = 0
@@ -266,7 +275,7 @@ fn flat_detour_points_if_blocked(
   rank_ht2 : Map[Int, Double],
   ranksep_pt : Double,
   rankdir : RankDir,
-) -> (Array[@geom.Point], Double, Double, Double, Double)? {
+) -> FlatDetourResult? {
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let min_x = min_double(line_start.x, line_end.x)
@@ -350,8 +359,8 @@ fn flat_detour_points_if_blocked(
           } else {
             blocker_min_left
           }
-        Some((
-          [
+        Some({
+          points: [
           line_start,
           @edge_spline.point(bend1_x, detour_y),
           @edge_spline.point(bend2_x, detour_y),
@@ -361,7 +370,7 @@ fn flat_detour_points_if_blocked(
           last_left,
           detour_y,
           vspace,
-        ))
+        })
       }
     }
     RankDir::LR | RankDir::RL => {
@@ -405,12 +414,18 @@ fn flat_detour_points_if_blocked(
         None
       } else {
         let detour_x = max_right + ranksep_pt / 2.0
-        Some(([
-          line_start,
-          @edge_spline.point(detour_x, line_start.y),
-          @edge_spline.point(detour_x, line_end.y),
-          line_end,
-        ], 0.0, 0.0, 0.0, 0.0))
+        Some({
+          points: [
+            line_start,
+            @edge_spline.point(detour_x, line_start.y),
+            @edge_spline.point(detour_x, line_end.y),
+            line_end,
+          ],
+          first_right: 0.0,
+          last_left: 0.0,
+          detour_y: 0.0,
+          vspace: 0.0,
+        })
       }
     }
   }
@@ -2941,9 +2956,12 @@ fn build_edge_spline(
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,
             )
-          } else if flat_detour is Some(
-            (detour_points, first_right, last_left, detour_y, vspace),
-          ) {
+          } else if flat_detour is Some(detour) {
+            let detour_points = detour.points
+            let first_right = detour.first_right
+            let last_left = detour.last_left
+            let detour_y = detour.detour_y
+            let vspace = detour.vspace
             if using_pathplan {
               raw_bezier =
                 @edge_spline.edge_spline_raw_for_points(
@@ -3386,9 +3404,12 @@ fn build_edge_spline(
             clip_swapped=swap_clip_shapes,
             arrow_swapped=swap_arrow_attrs,
           )
-        } else if flat_detour is Some(
-          (detour_points, first_right, last_left, detour_y, vspace),
-        ) {
+        } else if flat_detour is Some(detour) {
+          let detour_points = detour.points
+          let first_right = detour.first_right
+          let last_left = detour.last_left
+          let detour_y = detour.detour_y
+          let vspace = detour.vspace
           if using_pathplan {
             raw_bezier =
               @edge_spline.edge_spline_raw_for_points(
