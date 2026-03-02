@@ -14,9 +14,15 @@ pub fn collect_cluster_members(
 }
 
 ///|
+pub struct TopClustersCollected {
+  cluster_graphs : Map[String, @cgraph.Graph]
+  top_clusters : Array[String]
+}
+
+///|
 pub fn collect_top_clusters(
   source : @cgraph.Graph,
-) -> (Map[String, @cgraph.Graph], Array[String]) {
+) -> TopClustersCollected {
   let cluster_graphs : Map[String, @cgraph.Graph] = Map::new()
   let cluster_parents : Map[String, String?] = Map::new()
   @shared.collect_cluster_graphs(
@@ -44,5 +50,5 @@ pub fn collect_top_clusters(
       Some(_) => ()
     }
   }
-  (cluster_graphs, top_clusters)
+  { cluster_graphs, top_clusters }
 }

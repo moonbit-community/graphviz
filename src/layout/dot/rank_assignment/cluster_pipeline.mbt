@@ -60,7 +60,9 @@ fn compute_clustered_ranks(
   has_edge_labels : Bool,
   back_weight_scale : Int,
 ) -> Map[String, Int] {
-  let (cluster_graphs, top_clusters) = collect_top_clusters(source)
+  let top_cluster_data = collect_top_clusters(source)
+  let cluster_graphs = top_cluster_data.cluster_graphs
+  let top_clusters = top_cluster_data.top_clusters
   if top_clusters.length() == 0 {
     let (tail, head, _reversed, _out_edges, _in_edges) =
       acyclic_edge_directions_with_order(source, nodes, edges)
