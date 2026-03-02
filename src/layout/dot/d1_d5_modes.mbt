@@ -26,8 +26,8 @@ fn build_position_mode_flags(
 
 ///|
 /// Graphviz parity: x-stage precompute in compute_positions keeps mode flags,
-/// virtual-slack generation, reorder/transpose, and flat-label augmentation in
-/// Graphviz-aligned order and wiring.
+/// reorder/transpose, and flat-label augmentation in Graphviz-aligned order
+/// and wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_with_flat_labels(
   prep : LayoutPrep,
@@ -37,14 +37,6 @@ fn build_x_with_flat_labels(
   ordering : OrderingResult,
 ) -> XWithFlatLabelData {
   let mode_flags = build_position_mode_flags(prep, ordering)
-  let virtual_slack_edges =
-    build_xpos_slack_edges(
-      mode_flags.use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      ordering,
-      cluster_meta,
-    )
   let x_seed =
     build_x_seed_data(
       mode_flags.use_vnodes_for_xpos,
@@ -68,7 +60,6 @@ fn build_x_with_flat_labels(
     )
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-    virtual_slack_edges,
     x_base_sizes: x_seed.x_base_sizes,
     x_groups: flat_label_augmentation.x_groups,
     x_cluster_keys: flat_label_augmentation.x_cluster_keys,

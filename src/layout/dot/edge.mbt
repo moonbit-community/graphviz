@@ -110,28 +110,3 @@ fn self_edge_label_width_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
     None => 0.0
   }
 }
-
-///|
-fn edge_port_name(port : @cgraph.Port?) -> String? {
-  match port {
-    Some(value) => value.name
-    None => None
-  }
-}
-
-///|
-fn endpoint_port_name(
-  node_name : String,
-  tail_name : String,
-  head_name : String,
-  tail_port : String?,
-  head_port : String?,
-) -> String? {
-  if node_name == tail_name {
-    tail_port
-  } else if node_name == head_name {
-    head_port
-  } else {
-    None
-  }
-}

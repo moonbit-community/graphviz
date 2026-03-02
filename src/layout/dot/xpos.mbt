@@ -2036,13 +2036,11 @@ fn build_constraint_graph(
   has_edge_labels : Bool,
   extra_nodes : Array[ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
-  extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
   compress_width_minlen : Int?,
 ) -> ConstraintGraphState {
-  let _ = extra_slack_edges
   let graph = @network_simplex.new_graph()
   let ordered_nodes = nodes
   let mut has_port_edges = false
@@ -2396,7 +2394,6 @@ fn x_positions_from_simplex(
   has_edge_labels : Bool,
   extra_nodes : Array[ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
-  extra_slack_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
   root_rn_targets : Array[String],
@@ -2509,7 +2506,6 @@ fn x_positions_from_simplex(
     has_edge_labels,
     extra_nodes,
     extra_edges,
-    extra_slack_edges,
     edge_vnodes,
     root_ln_targets,
     root_rn_targets,
@@ -2622,7 +2618,6 @@ fn compute_x_positions(
   extra_nodes : Array[ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
-  extra_slack_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
   let cluster_constraints =
     build_cluster_constraints(
@@ -2682,7 +2677,6 @@ fn compute_x_positions(
     has_edge_labels,
     all_extra_nodes,
     all_extra_edges,
-    extra_slack_edges,
     edge_vnodes,
     all_root_ln_targets,
     all_root_rn_targets,

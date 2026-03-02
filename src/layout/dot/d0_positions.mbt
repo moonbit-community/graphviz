@@ -23,7 +23,6 @@ priv struct XposComputationInput {
   x_ranks : Map[String, Int]
   x_extra_nodes : Array[ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
-  x_slack_edges : Array[ConstraintEdge]
 }
 
 ///|
@@ -82,7 +81,6 @@ priv struct PositionOutputMaps {
 ///|
 priv struct XWithFlatLabelData {
   use_vnodes_for_xpos : Bool
-  virtual_slack_edges : Array[ConstraintEdge]
   x_base_sizes : Map[String, NodeSize]
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
@@ -410,7 +408,6 @@ fn build_xpos_computation_input(
   x_base_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
   ordering : OrderingResult,
-  virtual_slack_edges : Array[ConstraintEdge],
 ) -> XposComputationInput {
   let x_sizes =
     if use_vnodes_for_xpos {
@@ -436,13 +433,7 @@ fn build_xpos_computation_input(
     } else {
       Map::new()
     }
-  let x_slack_edges =
-    if use_vnodes_for_xpos {
-      virtual_slack_edges
-    } else {
-      []
-    }
-  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes, x_slack_edges }
+  { x_sizes, x_rank_keys, x_ranks, x_extra_nodes, x_edge_vnodes }
 }
 
 ///|
@@ -459,7 +450,6 @@ fn compute_layout_x_positions(
   x_base_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
   x_cluster_keys : Map[String, String],
-  virtual_slack_edges : Array[ConstraintEdge],
   flat_label_edges : Array[ConstraintEdge],
 ) -> Map[String, Double] {
   let xpos_input =
@@ -468,7 +458,6 @@ fn compute_layout_x_positions(
       x_base_sizes,
       x_groups,
       ordering,
-      virtual_slack_edges,
     )
   let x_positions = compute_x_positions(
     graph,
@@ -490,7 +479,6 @@ fn compute_layout_x_positions(
     xpos_input.x_extra_nodes,
     flat_label_edges,
     xpos_input.x_edge_vnodes,
-    xpos_input.x_slack_edges,
   )
   x_positions
 }
@@ -793,36 +781,6 @@ fn build_position_output_maps(
 }
 
 ///|
-/// Graphviz parity: virtual slack edges are only synthesized on vnode-xpos
-/// paths and must preserve node-singleton and cluster-key inputs.
-/// Do not change behavior without updating fixtures/tests.
-fn build_xpos_slack_edges(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  ordering : OrderingResult,
-  cluster_meta : ClusterMetadata,
-) -> Array[ConstraintEdge] {
-  if use_vnodes_for_xpos {
-    let node_singletons = build_node_singletons(prep.nodes, prep.edges)
-    let edges_out = build_virtual_slack_edges(
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      rank_data.edge_reversed,
-      rank_data.ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
-      node_singletons,
-      cluster_meta.cluster_keys,
-    )
-    edges_out
-  } else {
-    []
-  }
-}
-
-///|
 /// Graphviz parity: final projection stage in compute_positions keeps y/x solve
 /// projection and result assembly sequencing identical to Graphviz-aligned flow.
 /// Do not change behavior without updating fixtures/tests.
@@ -837,7 +795,6 @@ fn build_projection_result(
   x_base_sizes : Map[String, NodeSize],
   x_groups : Map[Int, Array[String]],
   x_cluster_keys : Map[String, String],
-  virtual_slack_edges : Array[ConstraintEdge],
   flat_label_edges : Array[ConstraintEdge],
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
   flat_label_edge_vnodes : Map[String, String],
@@ -865,7 +822,6 @@ fn build_projection_result(
       x_base_sizes,
       x_groups,
       x_cluster_keys,
-      virtual_slack_edges,
       flat_label_edges,
     )
   let position_output_maps =
@@ -925,7 +881,6 @@ fn compute_positions(
     x_data.x_base_sizes,
     x_data.x_groups,
     x_data.x_cluster_keys,
-    x_data.virtual_slack_edges,
     x_data.flat_label_edges,
     x_data.flat_label_nodes,
     x_data.flat_label_edge_vnodes,
