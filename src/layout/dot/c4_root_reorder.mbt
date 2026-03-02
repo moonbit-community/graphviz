@@ -308,22 +308,14 @@ fn should_merge_root_positions(
 }
 
 ///|
-/// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
-/// sequence from input order, prioritizes source tails, then rebuilds nlist via
-/// edge creation order while appending any missing root nodes.
+/// Graphviz parity: root cluster reorder seeds tail order from current nlist,
+/// replacing cluster members with rank-qualified skeleton names and deduping.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_nlist_order(
+fn build_root_tail_order_seed(
   nlist_order : Array[String],
   cluster_keys : Map[String, String],
   ranks : Map[String, Int],
-  root_nodes : Array[String],
-  root_node_map : Map[String, @cgraph.Node],
-  skeleton_edge_creation : Array[(String, String)],
-  root_edge_creation : Array[(String, String)],
-  flat_rank_constraints : Map[String, Bool],
 ) -> Array[String] {
-  // Graphviz parity: root cluster reorder seeds tail order from current nlist,
-  // replacing cluster members with rank-qualified skeleton names and deduping.
   let tail_order_root : Array[String] = []
   let tail_root_seen : Map[String, Bool] = Map::new()
   for name in nlist_order {
@@ -344,13 +336,18 @@ fn build_root_nlist_order(
       )
     }
   }
-  let root_edge_creation_order =
-    merge_edge_creation_sequences(
-      skeleton_edge_creation,
-      root_edge_creation,
-    )
-  // Graphviz parity: root source-first ordering marks incoming heads among
-  // root nodes from merged edge-creation order before tail-order filtering.
+  tail_order_root
+}
+
+///|
+/// Graphviz parity: root tail visit order places source tails (no incoming
+/// edges) first while preserving original deduped tail sequence order.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_source_first_tail_order(
+  tail_order_root : Array[String],
+  root_nodes : Array[String],
+  root_edge_creation_order : Array[(String, String)],
+) -> Array[String] {
   let root_has_in : Map[String, Bool] = Map::new()
   for name in root_nodes {
     root_has_in[name] = false
@@ -361,8 +358,6 @@ fn build_root_nlist_order(
       root_has_in[head] = true
     }
   }
-  // Graphviz parity: root tail visit order places source tails (no incoming
-  // edges) first while preserving original deduped tail sequence order.
   let root_tail_order : Array[String] = []
   let root_tail_seen : Map[String, Bool] = Map::new()
   for name in tail_order_root {
@@ -381,15 +376,18 @@ fn build_root_nlist_order(
       name,
     )
   }
-  let root_nlist_full =
-    @dot_shared.build_graphviz_nlist_order_from_edges(
-      root_tail_order,
-      root_nodes,
-      root_edge_creation_order,
-      flat_rank_constraints,
-    )
-  // Graphviz parity: root GD_nlist output keeps only materialized root nodes,
-  // then appends any missing root names in root_nodes order.
+  root_tail_order
+}
+
+///|
+/// Graphviz parity: root GD_nlist output keeps only materialized root nodes,
+/// then appends any missing root names in root_nodes order.
+/// Do not change behavior without updating fixtures/tests.
+fn finalize_root_nlist_order(
+  root_nlist_full : Array[String],
+  root_nodes : Array[String],
+  root_node_map : Map[String, @cgraph.Node],
+) -> Array[String] {
   let root_nlist_order : Array[String] = []
   let root_seen : Map[String, Bool] = Map::new()
   for name in root_nlist_full {
@@ -406,6 +404,48 @@ fn build_root_nlist_order(
     }
   }
   root_nlist_order
+}
+
+///|
+/// Graphviz parity: root cluster reorder GD_nlist keeps skeleton/root tail
+/// sequence from input order, prioritizes source tails, then rebuilds nlist via
+/// edge creation order while appending any missing root nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_nlist_order(
+  nlist_order : Array[String],
+  cluster_keys : Map[String, String],
+  ranks : Map[String, Int],
+  root_nodes : Array[String],
+  root_node_map : Map[String, @cgraph.Node],
+  skeleton_edge_creation : Array[(String, String)],
+  root_edge_creation : Array[(String, String)],
+  flat_rank_constraints : Map[String, Bool],
+) -> Array[String] {
+  let tail_order_root =
+    build_root_tail_order_seed(
+      nlist_order,
+      cluster_keys,
+      ranks,
+    )
+  let root_edge_creation_order =
+    merge_edge_creation_sequences(
+      skeleton_edge_creation,
+      root_edge_creation,
+    )
+  let root_tail_order =
+    build_root_source_first_tail_order(
+      tail_order_root,
+      root_nodes,
+      root_edge_creation_order,
+    )
+  let root_nlist_full =
+    @dot_shared.build_graphviz_nlist_order_from_edges(
+      root_tail_order,
+      root_nodes,
+      root_edge_creation_order,
+      flat_rank_constraints,
+    )
+  finalize_root_nlist_order(root_nlist_full, root_nodes, root_node_map)
 }
 
 ///|
