@@ -751,6 +751,106 @@ fn run_componentwise_root_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: single-component root reorder dispatch preserves the same
+/// reorder_rank_groups inputs and edge coalescing behavior as the root path.
+/// Do not change behavior without updating fixtures/tests.
+fn run_single_component_root_rank_reorder(
+  inputs : RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    inputs.order_rank_keys_for_mincross,
+    inputs.order_groups_for_mincross,
+    inputs.order_edges_out_mincross,
+    inputs.order_edge_tail_out_mincross,
+    inputs.order_edge_head_out_mincross,
+    inputs.order_edge_tail_port_x_mincross,
+    inputs.order_edge_head_port_x_mincross,
+    inputs.order_edge_tail_port_order_mincross,
+    inputs.order_edge_head_port_order_mincross,
+    inputs.parents,
+    inputs.children,
+    inputs.order_cluster_keys,
+    inputs.cluster_meta.rank_same_groups,
+    inputs.cluster_meta.rank_same_order,
+    inputs.edge_order,
+    inputs.order_node_order,
+    inputs.order_sizes_out,
+    inputs.nodesep_pt,
+    inputs.has_edge_labels,
+    inputs.port_order_positions,
+    inputs.port_order_contrib,
+    inputs.preferred_positions,
+    inputs.order_cluster_skeleton,
+    inputs.order_flat_constraints,
+    graphviz_out_neighbors=inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=inputs.graphviz_in_neighbors,
+    graphviz_flip=root_graphviz_flip,
+    // Graphviz parity: root mincross (startpass=0) uses original edge
+    // multiplicity; parallel-edge coalescing is a ReMincross concern.
+    coalesce_parallel_edges=coalesce_parallel,
+  )
+}
+
+///|
+/// Graphviz parity: multi-component root reorder setup keeps component
+/// projection sources and reorder config derived from one root input snapshot.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootComponentReorderSetup {
+  component_projection_sources : RootComponentProjectionSources
+  component_reorder_config : RootComponentReorderConfig
+}
+
+///|
+/// Graphviz parity: multi-component root reorder setup is assembled from one
+/// root reorder input payload and traversal-mode runtime flags.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_component_reorder_setup(
+  inputs : RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> RootComponentReorderSetup {
+  {
+    component_projection_sources: {
+      order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
+      order_groups_for_mincross: inputs.order_groups_for_mincross,
+      order_edges_out_mincross: inputs.order_edges_out_mincross,
+      order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
+      order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
+      order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
+      order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
+      order_edge_tail_port_order_mincross:
+        inputs.order_edge_tail_port_order_mincross,
+      order_edge_head_port_order_mincross:
+        inputs.order_edge_head_port_order_mincross,
+      parents: inputs.parents,
+      children: inputs.children,
+      graphviz_out_neighbors: inputs.graphviz_out_neighbors,
+      graphviz_in_neighbors: inputs.graphviz_in_neighbors,
+      port_order_positions: inputs.port_order_positions,
+      preferred_positions: inputs.preferred_positions,
+      port_order_contrib: inputs.port_order_contrib,
+      order_flat_constraints: inputs.order_flat_constraints,
+    },
+    component_reorder_config: {
+      order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
+      order_cluster_keys: inputs.order_cluster_keys,
+      rank_same_groups: inputs.cluster_meta.rank_same_groups,
+      rank_same_order: inputs.cluster_meta.rank_same_order,
+      edge_order: inputs.edge_order,
+      order_node_order: inputs.order_node_order,
+      order_sizes_out: inputs.order_sizes_out,
+      nodesep_pt: inputs.nodesep_pt,
+      has_edge_labels: inputs.has_edge_labels,
+      order_cluster_skeleton: inputs.order_cluster_skeleton,
+      root_graphviz_flip,
+      coalesce_parallel,
+    },
+  }
+}
+
+///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -775,79 +875,23 @@ fn run_root_rank_reorder(
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   let root_graphviz_flip = traversal_plan.root_graphviz_flip
   if components.length() <= 1 {
-    return reorder_rank_groups(
-      inputs.order_rank_keys_for_mincross,
-      inputs.order_groups_for_mincross,
-      inputs.order_edges_out_mincross,
-      inputs.order_edge_tail_out_mincross,
-      inputs.order_edge_head_out_mincross,
-      inputs.order_edge_tail_port_x_mincross,
-      inputs.order_edge_head_port_x_mincross,
-      inputs.order_edge_tail_port_order_mincross,
-      inputs.order_edge_head_port_order_mincross,
-      inputs.parents,
-      inputs.children,
-      inputs.order_cluster_keys,
-      inputs.cluster_meta.rank_same_groups,
-      inputs.cluster_meta.rank_same_order,
-      inputs.edge_order,
-      inputs.order_node_order,
-      inputs.order_sizes_out,
-      inputs.nodesep_pt,
-      inputs.has_edge_labels,
-      inputs.port_order_positions,
-      inputs.port_order_contrib,
-      inputs.preferred_positions,
-      inputs.order_cluster_skeleton,
-      inputs.order_flat_constraints,
-      graphviz_out_neighbors=inputs.graphviz_out_neighbors,
-      graphviz_in_neighbors=inputs.graphviz_in_neighbors,
-      graphviz_flip=root_graphviz_flip,
-      // Graphviz parity: root mincross (startpass=0) uses original edge
-      // multiplicity; parallel-edge coalescing is a ReMincross concern.
-      coalesce_parallel_edges=coalesce_parallel,
+    return run_single_component_root_rank_reorder(
+      inputs,
+      root_graphviz_flip,
+      coalesce_parallel,
     )
   }
 
-  let component_projection_sources : RootComponentProjectionSources = {
-    order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
-    order_groups_for_mincross: inputs.order_groups_for_mincross,
-    order_edges_out_mincross: inputs.order_edges_out_mincross,
-    order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      inputs.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      inputs.order_edge_head_port_order_mincross,
-    parents: inputs.parents,
-    children: inputs.children,
-    graphviz_out_neighbors: inputs.graphviz_out_neighbors,
-    graphviz_in_neighbors: inputs.graphviz_in_neighbors,
-    port_order_positions: inputs.port_order_positions,
-    preferred_positions: inputs.preferred_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_flat_constraints: inputs.order_flat_constraints,
-  }
-  let component_reorder_config : RootComponentReorderConfig = {
-    order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
-    order_cluster_keys: inputs.order_cluster_keys,
-    rank_same_groups: inputs.cluster_meta.rank_same_groups,
-    rank_same_order: inputs.cluster_meta.rank_same_order,
-    edge_order: inputs.edge_order,
-    order_node_order: inputs.order_node_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    root_graphviz_flip,
-    coalesce_parallel,
-  }
+  let component_reorder_setup =
+    build_root_component_reorder_setup(
+      inputs,
+      root_graphviz_flip,
+      coalesce_parallel,
+    )
   run_componentwise_root_rank_reorder(
     components,
-    component_projection_sources,
-    component_reorder_config,
+    component_reorder_setup.component_projection_sources,
+    component_reorder_setup.component_reorder_config,
   )
 }
 
