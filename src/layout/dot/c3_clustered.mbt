@@ -251,78 +251,18 @@ fn run_clustered_finalize_phase(
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : OrderRootClusterData,
 ) -> OrderingDispatchOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  let reorder_context = pre_root_stage.reorder_context
-  let cluster_rank_order_inputs : ClusterRankOrderBuildInputs =
-    {
-      order_with_clusters: reorder_setup.order_with_clusters,
-      order_with_vnodes: reorder_setup.order_with_vnodes,
-      graphviz_flip: reorder_setup.graphviz_flip,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      nlist_order: class2_data.nlist_order,
-      ranks: dispatch_context.ranks,
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_groups_for_mincross: root_cluster_stage.order_groups_for_mincross,
-      order_cluster_keys: pre_root_stage.order_cluster_keys,
-      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-      order_edges_by_tail_root: class2_data.order_edges_by_tail_root,
-      skeleton_edge_creation: class2_data.skeleton_edge_creation,
-      root_edge_creation: class2_data.root_edge_creation,
-      flat_rank_constraints: reorder_setup.flat_rank_constraints,
-      cluster_meta: dispatch_context.cluster_meta,
-      vnode_info: runtime_context.vnode_info,
-      vnode_order_keys_for_ordering:
-        reorder_setup.vnode_order_keys_for_ordering,
-      real_nodes: runtime_context.real_nodes,
-      order_sizes_out: pre_root_stage.order_sizes_out,
-      nodesep_pt: dispatch_context.nodesep_pt,
-      has_edge_labels: dispatch_context.has_edge_labels,
-      port_order_positions: dispatch_context.port_order_positions,
-      port_order_contrib: dispatch_context.port_order_contrib,
-    }
   let cluster_rank_order =
     build_cluster_rank_order(
-      cluster_rank_order_inputs,
+      dispatch_context,
+      pre_root_stage,
+      root_cluster_stage,
     )
-  let finalize_order_inputs : FinalizeOrderGroupsInputs =
-    {
-      order_with_clusters: reorder_setup.order_with_clusters,
-      order_with_vnodes: reorder_setup.order_with_vnodes,
-      cluster_rank_order,
-      cluster_meta: dispatch_context.cluster_meta,
-      local_cluster_order: runtime_context.local_cluster_order,
-      ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-      graph: dispatch_context.graph,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      edge_reversed: dispatch_context.edge_reversed,
-      edge_tail_port_x: dispatch_context.edge_port_data.edge_tail_port_x,
-      edge_head_port_x: dispatch_context.edge_port_data.edge_head_port_x,
-      edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
-      edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
-      ranks: dispatch_context.ranks,
-      creation_order: reorder_context.creation_order,
-      edges_by_tail: class2_data.edges_by_tail,
-      vnode_info: runtime_context.vnode_info,
-      order_sizes: dispatch_context.order_sizes,
-      rank_same_constraints: runtime_context.rank_same_constraints,
-      real_nodes: runtime_context.real_nodes,
-      graphviz_flip: reorder_setup.graphviz_flip,
-      nodesep_pt: dispatch_context.nodesep_pt,
-      has_edge_labels: dispatch_context.has_edge_labels,
-      port_order_positions: dispatch_context.port_order_positions,
-      port_order_contrib: dispatch_context.port_order_contrib,
-      order_rank_keys: reorder_context.order_rank_keys,
-      ordered: root_cluster_stage.ordered,
-    }
   let finalize_output =
     finalize_order_groups(
-      finalize_order_inputs,
+      dispatch_context,
+      pre_root_stage,
+      root_cluster_stage,
+      cluster_rank_order,
     )
   {
     ordered_groups: finalize_output.ordered_groups,
