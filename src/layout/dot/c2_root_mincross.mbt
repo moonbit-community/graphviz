@@ -6,6 +6,25 @@
 /// Graphviz parity: non-cluster mincross traverses connected components in
 /// GD_nlist order (real nodes first), then runs mincross on each component.
 /// Do not change behavior without updating fixtures/tests.
+fn resolve_root_component_order_index(
+  name : String,
+  order_node_order : Map[String, Int],
+  fallback_order : Map[String, Int],
+) -> Int {
+  match order_node_order.get(name) {
+    Some(value) => value
+    None =>
+      match fallback_order.get(name) {
+        Some(value) => value
+        None => 0
+      }
+  }
+}
+
+///|
+/// Graphviz parity: non-cluster mincross traverses connected components in
+/// GD_nlist order (real nodes first), then runs mincross on each component.
+/// Do not change behavior without updating fixtures/tests.
 fn collect_noncluster_components(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
@@ -26,22 +45,18 @@ fn collect_noncluster_components(
   let start_nodes = order_nodes.copy()
   if start_nodes.length() > 1 {
     start_nodes.sort_by((a, b) => {
-      let a_idx = match order_node_order.get(a) {
-        Some(value) => value
-        None =>
-          match fallback_order.get(a) {
-            Some(value) => value
-            None => 0
-          }
-      }
-      let b_idx = match order_node_order.get(b) {
-        Some(value) => value
-        None =>
-          match fallback_order.get(b) {
-            Some(value) => value
-            None => 0
-          }
-      }
+      let a_idx =
+        resolve_root_component_order_index(
+          a,
+          order_node_order,
+          fallback_order,
+        )
+      let b_idx =
+        resolve_root_component_order_index(
+          b,
+          order_node_order,
+          fallback_order,
+        )
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -60,34 +75,21 @@ fn collect_noncluster_components(
   let traversal_starts =
     if preferred_start_nodes.length() > 0 { preferred_start_nodes } else { start_nodes }
 
-  let out_neighbors : Map[String, Array[String]] = Map::new()
-  let in_neighbors : Map[String, Array[String]] = Map::new()
+  let out_neighbors =
+    filter_component_neighbor_map(
+      order_nodes,
+      node_set,
+      graphviz_out_neighbors,
+    )
+  let in_neighbors =
+    filter_component_neighbor_map(
+      order_nodes,
+      node_set,
+      graphviz_in_neighbors,
+    )
   let flat_out : Map[String, Array[String]] = Map::new()
   let flat_in : Map[String, Array[String]] = Map::new()
   for name in order_nodes {
-    let out_list = match graphviz_out_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let out_keep : Array[String] = []
-    for other in out_list {
-      if node_set.get(other) is Some(_) {
-        out_keep.push(other)
-      }
-    }
-    out_neighbors[name] = out_keep
-
-    let in_list = match graphviz_in_neighbors.get(name) {
-      Some(list) => list
-      None => []
-    }
-    let in_keep : Array[String] = []
-    for other in in_list {
-      if node_set.get(other) is Some(_) {
-        in_keep.push(other)
-      }
-    }
-    in_neighbors[name] = in_keep
     flat_out[name] = []
     flat_in[name] = []
   }
@@ -149,22 +151,10 @@ fn collect_noncluster_components(
         }
         visited[current] = true
         component.push(current)
-        let fin = match flat_in.get(current) {
-          Some(list) => list
-          None => []
-        }
-        let fout = match flat_out.get(current) {
-          Some(list) => list
-          None => []
-        }
-        let inn = match in_neighbors.get(current) {
-          Some(list) => list
-          None => []
-        }
-        let out = match out_neighbors.get(current) {
-          Some(list) => list
-          None => []
-        }
+        let fin = flat_in.get(current).unwrap_or_default()
+        let fout = flat_out.get(current).unwrap_or_default()
+        let inn = in_neighbors.get(current).unwrap_or_default()
+        let out = out_neighbors.get(current).unwrap_or_default()
         push_neighbors(fin)
         push_neighbors(fout)
         push_neighbors(inn)
