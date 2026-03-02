@@ -335,15 +335,7 @@ fn run_root_rank_reorder(
         component_groups[rank] = keep
       }
     }
-    let (
-      component_edges,
-      component_edge_tail,
-      component_edge_head,
-      component_edge_tail_port_x,
-      component_edge_head_port_x,
-      component_edge_tail_port_order,
-      component_edge_head_port_order,
-    ) =
+    let component_edges_output =
       collect_mincross_order_edges(
         component_set,
         order_edges_out_mincross,
@@ -354,6 +346,17 @@ fn run_root_rank_reorder(
         order_edge_tail_port_order_mincross,
         order_edge_head_port_order_mincross,
       )
+    let component_edges = component_edges_output.order_edges_out_mincross
+    let component_edge_tail = component_edges_output.order_edge_tail_out_mincross
+    let component_edge_head = component_edges_output.order_edge_head_out_mincross
+    let component_edge_tail_port_x =
+      component_edges_output.order_edge_tail_port_x_mincross
+    let component_edge_head_port_x =
+      component_edges_output.order_edge_head_port_x_mincross
+    let component_edge_tail_port_order =
+      component_edges_output.order_edge_tail_port_order_mincross
+    let component_edge_head_port_order =
+      component_edges_output.order_edge_head_port_order_mincross
     let component_parents =
       filter_component_neighbor_map(
         component_nodes,
@@ -557,15 +560,7 @@ fn run_root_reorder_pass(
     {
       // Graphviz parity: root ReMincross materializes filtered root/skeleton
       // edges before building parent/child + edge-order indices.
-      let (
-        order_edges_out_mincross,
-        order_edge_tail_out_mincross,
-        order_edge_head_out_mincross,
-        order_edge_tail_port_x_mincross,
-        order_edge_head_port_x_mincross,
-        order_edge_tail_port_order_mincross,
-        order_edge_head_port_order_mincross,
-      ) =
+      let mincross_edges_output =
         collect_mincross_order_edges(
           mincross_nodes,
           order_edges_out,
@@ -576,6 +571,20 @@ fn run_root_reorder_pass(
           order_edge_tail_port_order,
           order_edge_head_port_order,
         )
+      let order_edges_out_mincross =
+        mincross_edges_output.order_edges_out_mincross
+      let order_edge_tail_out_mincross =
+        mincross_edges_output.order_edge_tail_out_mincross
+      let order_edge_head_out_mincross =
+        mincross_edges_output.order_edge_head_out_mincross
+      let order_edge_tail_port_x_mincross =
+        mincross_edges_output.order_edge_tail_port_x_mincross
+      let order_edge_head_port_x_mincross =
+        mincross_edges_output.order_edge_head_port_x_mincross
+      let order_edge_tail_port_order_mincross =
+        mincross_edges_output.order_edge_tail_port_order_mincross
+      let order_edge_head_port_order_mincross =
+        mincross_edges_output.order_edge_head_port_order_mincross
       let edge_indices =
         build_edge_indices_and_order(
           order_nodes_for_mincross,

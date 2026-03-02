@@ -15,6 +15,14 @@ fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
 }
 
 ///|
+priv struct SyntheticPortValues {
+  tail_port_x : Double
+  head_port_x : Double
+  tail_port_order : Double
+  head_port_order : Double
+}
+
+///|
 /// Graphviz parity: synthetic mincross endpoints keep default port values at
 /// zero when Graphviz treats the endpoint pair as synthetic-only.
 fn normalize_synthetic_ports(
@@ -24,7 +32,7 @@ fn normalize_synthetic_ports(
   head_port_x_raw : Double,
   tail_port_order_raw : Double,
   head_port_order_raw : Double,
-) -> (Double, Double, Double, Double) {
+) -> SyntheticPortValues {
   // Graphviz parity: synthetic ordering nodes keep default mincross ports
   // unless a non-default port survives edge materialization.
   let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
@@ -42,14 +50,30 @@ fn normalize_synthetic_ports(
       (defaultish_x && tail_port_order_raw == 0.0 && head_port_order_raw == 0.0)
     )
   if !zero_synthetic_defaults {
-    return (
-      tail_port_x_raw,
-      head_port_x_raw,
-      tail_port_order_raw,
-      head_port_order_raw,
-    )
+    return {
+      tail_port_x: tail_port_x_raw,
+      head_port_x: head_port_x_raw,
+      tail_port_order: tail_port_order_raw,
+      head_port_order: head_port_order_raw,
+    }
   }
-  (0.0, 0.0, 0.0, 0.0)
+  {
+    tail_port_x: 0.0,
+    head_port_x: 0.0,
+    tail_port_order: 0.0,
+    head_port_order: 0.0,
+  }
+}
+
+///|
+priv struct MincrossOrderEdgesOutput {
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
 }
 
 ///|
@@ -65,15 +89,7 @@ fn collect_mincross_order_edges(
   order_edge_head_port_x : Array[Double],
   order_edge_tail_port_order : Array[Double],
   order_edge_head_port_order : Array[Double],
-) -> (
-  Array[@cgraph.Edge],
-  Array[String],
-  Array[String],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-  Array[Double],
-) {
+) -> MincrossOrderEdgesOutput {
   let order_edges_out_mincross : Array[@cgraph.Edge] = []
   let order_edge_tail_out_mincross : Array[String] = []
   let order_edge_head_out_mincross : Array[String] = []
@@ -90,7 +106,7 @@ fn collect_mincross_order_edges(
       let head_port_x_raw = order_edge_head_port_x[edge_idx]
       let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
       let head_port_order_raw = order_edge_head_port_order[edge_idx]
-      let (tail_port_x, head_port_x, tail_port_order, head_port_order) =
+      let normalized_ports =
         normalize_synthetic_ports(
           tail,
           head,
@@ -102,14 +118,14 @@ fn collect_mincross_order_edges(
       order_edges_out_mincross.push(order_edges_out[edge_idx])
       order_edge_tail_out_mincross.push(tail)
       order_edge_head_out_mincross.push(head)
-      order_edge_tail_port_x_mincross.push(tail_port_x)
-      order_edge_head_port_x_mincross.push(head_port_x)
-      order_edge_tail_port_order_mincross.push(tail_port_order)
-      order_edge_head_port_order_mincross.push(head_port_order)
+      order_edge_tail_port_x_mincross.push(normalized_ports.tail_port_x)
+      order_edge_head_port_x_mincross.push(normalized_ports.head_port_x)
+      order_edge_tail_port_order_mincross.push(normalized_ports.tail_port_order)
+      order_edge_head_port_order_mincross.push(normalized_ports.head_port_order)
     }
     edge_idx = edge_idx + 1
   }
-  (
+  {
     order_edges_out_mincross,
     order_edge_tail_out_mincross,
     order_edge_head_out_mincross,
@@ -117,7 +133,7 @@ fn collect_mincross_order_edges(
     order_edge_head_port_x_mincross,
     order_edge_tail_port_order_mincross,
     order_edge_head_port_order_mincross,
-  )
+  }
 }
 
 ///|
@@ -866,12 +882,7 @@ fn normalize_root_edge_ports(
     let head_port_x_raw = edge_head_port_x[edge_idx]
     let tail_port_order_raw = edge_tail_port_order[edge_idx]
     let head_port_order_raw = edge_head_port_order[edge_idx]
-    let (
-      tail_port_x_norm,
-      head_port_x_norm,
-      tail_port_order_norm,
-      head_port_order_norm,
-    ) =
+    let normalized_ports =
       normalize_synthetic_ports(
         tail,
         head,
@@ -880,10 +891,10 @@ fn normalize_root_edge_ports(
         tail_port_order_raw,
         head_port_order_raw,
       )
-    edge_tail_port_x_norm.push(tail_port_x_norm)
-    edge_head_port_x_norm.push(head_port_x_norm)
-    edge_tail_port_order_norm.push(tail_port_order_norm)
-    edge_head_port_order_norm.push(head_port_order_norm)
+    edge_tail_port_x_norm.push(normalized_ports.tail_port_x)
+    edge_head_port_x_norm.push(normalized_ports.head_port_x)
+    edge_tail_port_order_norm.push(normalized_ports.tail_port_order)
+    edge_head_port_order_norm.push(normalized_ports.head_port_order)
     edge_idx = edge_idx + 1
   }
   (
