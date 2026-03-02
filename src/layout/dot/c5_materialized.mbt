@@ -223,20 +223,13 @@ fn append_names_in_order(target : Array[String], names : Array[String]) -> Unit 
 }
 
 ///|
-/// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
-/// first-seen cluster sequence and replays each cluster block by rank-desc
-/// reverse-order before root-cluster nodes.
+/// Graphviz parity: ReMincross creation-order replay starts from tail creation
+/// order and appends per-tail vnode sequences with stable dedupe.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_nlist_order(
+fn build_remincross_order_creation(
   creation_order : Array[String],
   rem_vnode_creation : Map[String, Array[String]],
-  rem_edge_creation : Array[(String, String)],
-  rem_ranks : Map[String, Int],
-  rem_cluster_keys : Map[String, String],
-  cluster_order_index : Map[String, Int],
 ) -> Array[String] {
-  // Graphviz parity: clustered ReMincross creation order starts from tail
-  // creation order and appends per-tail vnode sequences with stable dedupe.
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
@@ -254,6 +247,47 @@ fn build_remincross_nlist_order(
       )
     }
   }
+  rem_order_creation
+}
+
+///|
+/// Graphviz parity: remincross GD_nlist tail order appends any creation-order
+/// names missing from clustered/single-cluster replay with stable dedupe.
+/// Do not change behavior without updating fixtures/tests.
+fn append_missing_creation_order_names(
+  rem_nlist_order : Array[String],
+  rem_order_creation : Array[String],
+) -> Unit {
+  if rem_nlist_order.length() >= rem_order_creation.length() {
+    return ()
+  }
+  let seen : Map[String, Bool] = Map::new()
+  for name in rem_nlist_order {
+    seen[name] = true
+  }
+  for name in rem_order_creation {
+    append_creation_name(rem_nlist_order, seen, name)
+  }
+}
+
+///|
+/// Graphviz parity: ReMincross GD_nlist order keeps cluster-local blocks in
+/// first-seen cluster sequence and replays each cluster block by rank-desc
+/// reverse-order before root-cluster nodes.
+/// Do not change behavior without updating fixtures/tests.
+fn build_remincross_nlist_order(
+  creation_order : Array[String],
+  rem_vnode_creation : Map[String, Array[String]],
+  rem_edge_creation : Array[(String, String)],
+  rem_ranks : Map[String, Int],
+  rem_cluster_keys : Map[String, String],
+  cluster_order_index : Map[String, Int],
+) -> Array[String] {
+  let rem_order_creation =
+    build_remincross_order_creation(
+      creation_order,
+      rem_vnode_creation,
+    )
   let rem_nlist_order =
     if cluster_order_index.length() <= 2 {
       // Graphviz parity: single-cluster/root-only remincross materialization
@@ -274,18 +308,7 @@ fn build_remincross_nlist_order(
         cluster_order_index,
       )
     }
-  // Graphviz parity: remincross GD_nlist tail order appends any creation-order
-  // names missing from clustered/single-cluster replay result with stable
-  // first-seen dedupe.
-  if rem_nlist_order.length() < rem_order_creation.length() {
-    let seen : Map[String, Bool] = Map::new()
-    for name in rem_nlist_order {
-      seen[name] = true
-    }
-    for name in rem_order_creation {
-      append_creation_name(rem_nlist_order, seen, name)
-    }
-  }
+  append_missing_creation_order_names(rem_nlist_order, rem_order_creation)
   rem_nlist_order
 }
 
