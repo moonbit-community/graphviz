@@ -389,6 +389,48 @@ fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool 
 }
 
 ///|
+priv struct RootComponentTraversalPlan {
+  components : Array[Array[String]]
+  root_graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: cluster-aware root mincross runs in internal TB
+/// coordinates (like mincross_clust subgraph passes), so flip is off.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_component_traversal_plan(
+  has_cluster_keys : Bool,
+  order_rank_keys_for_mincross : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_node_order : Map[String, Int],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_flip : Bool,
+) -> RootComponentTraversalPlan {
+  let components =
+    if has_cluster_keys {
+      []
+    } else {
+      collect_noncluster_components(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        order_node_order,
+        graphviz_out_neighbors,
+        graphviz_in_neighbors,
+        order_flat_constraints,
+      )
+    }
+  let root_graphviz_flip =
+    if has_cluster_keys {
+      false
+    } else {
+      graphviz_flip
+    }
+  { components, root_graphviz_flip }
+}
+
+///|
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
@@ -525,29 +567,21 @@ fn run_root_rank_reorder(
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let has_cluster_keys = has_non_empty_cluster_keys(order_cluster_keys)
-  let components =
-    if has_cluster_keys {
-      []
-    } else {
-      collect_noncluster_components(
-        order_rank_keys_for_mincross,
-        order_groups_for_mincross,
-        order_node_order,
-        graphviz_out_neighbors,
-        graphviz_in_neighbors,
-        order_flat_constraints,
-      )
-    }
+  let traversal_plan =
+    build_root_component_traversal_plan(
+      has_cluster_keys,
+      order_rank_keys_for_mincross,
+      order_groups_for_mincross,
+      order_node_order,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      order_flat_constraints,
+      graphviz_flip,
+    )
+  let components = traversal_plan.components
   let coalesce_parallel =
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
-  let root_graphviz_flip =
-    if has_cluster_keys {
-      // Graphviz parity: cluster-aware root mincross runs in internal TB
-      // coordinates (like mincross_clust subgraph passes), so flip is off.
-      false
-    } else {
-      graphviz_flip
-    }
+  let root_graphviz_flip = traversal_plan.root_graphviz_flip
   if components.length() <= 1 {
     return reorder_rank_groups(
       order_rank_keys_for_mincross,
