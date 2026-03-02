@@ -855,7 +855,7 @@ fn build_root_reorder_node_order(
 ///|
 /// Graphviz parity: root edge-port arrays are normalized with synthetic-endpoint
 /// defaults before root mincross edge-index construction.
-fn normalize_root_reorder_edge_ports(
+fn normalize_root_edge_ports(
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
   edge_tail_port_x : Array[Double],
@@ -1066,7 +1066,7 @@ fn build_root_reorder_inputs(
         root_edge_tail_port_order_norm,
         root_edge_head_port_order_norm,
       ) =
-        normalize_root_reorder_edge_ports(
+        normalize_root_edge_ports(
           root_edge_tail_out,
           root_edge_head_out,
           root_edge_tail_port_x,
