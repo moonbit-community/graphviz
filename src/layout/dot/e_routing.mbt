@@ -1263,6 +1263,14 @@ fn sameport_anchor_for_group(
 }
 
 ///|
+priv struct SameportOverrides {
+  samehead_anchors : Map[Int, @geom.Point]
+  sametail_anchors : Map[Int, @geom.Point]
+  samehead_group_sizes : Map[Int, Int]
+  sametail_group_sizes : Map[Int, Int]
+}
+
+///|
 /// Graphviz parity: samehead/sametail handling aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports).
 /// Do not change behavior without updating fixtures/tests.
@@ -1273,12 +1281,7 @@ fn collect_sameport_overrides(
   record_orientation : RecordOrientation,
   layout_rankdir : RankDir,
   ranksep_pt : Double,
-) -> (
-  Map[Int, @geom.Point],
-  Map[Int, @geom.Point],
-  Map[Int, Int],
-  Map[Int, Int],
-) {
+) -> SameportOverrides {
   let samehead_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let sametail_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   let samehead_group_order : Array[String] = []
@@ -1389,12 +1392,12 @@ fn collect_sameport_overrides(
       None => ()
     }
   }
-  (
-    samehead_overrides,
-    sametail_overrides,
+  {
+    samehead_anchors: samehead_overrides,
+    sametail_anchors: sametail_overrides,
     samehead_group_sizes,
     sametail_group_sizes,
-  )
+  }
 }
 
 ///|
@@ -1557,10 +1560,7 @@ fn build_edge_route_base(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
-  samehead_overrides : Map[Int, @geom.Point],
-  sametail_overrides : Map[Int, @geom.Point],
-  samehead_group_sizes : Map[Int, Int],
-  sametail_group_sizes : Map[Int, Int],
+  sameport_overrides : SameportOverrides,
 ) -> EdgeRouteBase {
   let order_index = routing_context.order_index
   let parallel_offsets = routing_context.parallel_offsets
@@ -1584,13 +1584,17 @@ fn build_edge_route_base(
     } else {
       swap_ends_raw
     }
-  let samehead_anchor = samehead_overrides.get(edge.id())
-  let sametail_anchor = sametail_overrides.get(edge.id())
-  let samehead_group_size = match samehead_group_sizes.get(edge.id()) {
+  let samehead_anchor = sameport_overrides.samehead_anchors.get(edge.id())
+  let sametail_anchor = sameport_overrides.sametail_anchors.get(edge.id())
+  let samehead_group_size = match sameport_overrides.samehead_group_sizes.get(
+    edge.id(),
+  ) {
     Some(value) => value
     None => 0
   }
-  let sametail_group_size = match sametail_group_sizes.get(edge.id()) {
+  let sametail_group_size = match sameport_overrides.sametail_group_sizes.get(
+    edge.id(),
+  ) {
     Some(value) => value
     None => 0
   }
@@ -4116,10 +4120,7 @@ fn build_route_base_cache(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
-  samehead_overrides : Map[Int, @geom.Point],
-  sametail_overrides : Map[Int, @geom.Point],
-  samehead_group_sizes : Map[Int, Int],
-  sametail_group_sizes : Map[Int, Int],
+  sameport_overrides : SameportOverrides,
 ) -> Map[Int, EdgeRouteBase] {
   let base_cache : Map[Int, EdgeRouteBase] = Map::new()
   for edge in edges {
@@ -4139,10 +4140,7 @@ fn build_route_base_cache(
         layout_rankdir,
         enable_complex_tuning,
         edge_vnodes,
-        samehead_overrides,
-        sametail_overrides,
-        samehead_group_sizes,
-        sametail_group_sizes,
+        sameport_overrides,
       )
       base_cache[edge_id] = value
     }
@@ -4408,10 +4406,7 @@ fn ensure_self_edge_routes(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
-  samehead_overrides : Map[Int, @geom.Point],
-  sametail_overrides : Map[Int, @geom.Point],
-  samehead_group_sizes : Map[Int, Int],
-  sametail_group_sizes : Map[Int, Int],
+  sameport_overrides : SameportOverrides,
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
@@ -4443,10 +4438,7 @@ fn ensure_self_edge_routes(
               layout_rankdir,
               enable_complex_tuning,
               edge_vnodes,
-              samehead_overrides,
-              sametail_overrides,
-              samehead_group_sizes,
-              sametail_group_sizes,
+              sameport_overrides,
             )
             base_cache[gid] = value
             value
@@ -4883,10 +4875,7 @@ fn maybe_build_self_edge_layout(
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
-  samehead_overrides : Map[Int, @geom.Point],
-  sametail_overrides : Map[Int, @geom.Point],
-  samehead_group_sizes : Map[Int, Int],
-  sametail_group_sizes : Map[Int, Int],
+  sameport_overrides : SameportOverrides,
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   vnode_info : EdgeVnodeInfo,
@@ -4916,10 +4905,7 @@ fn maybe_build_self_edge_layout(
     layout_rankdir,
     enable_complex_tuning,
     edge_vnodes,
-    samehead_overrides,
-    sametail_overrides,
-    samehead_group_sizes,
-    sametail_group_sizes,
+    sameport_overrides,
     nodesep_pt,
     rank_y,
     self_edge_routes,
@@ -5007,20 +4993,14 @@ fn route_edges(
   let path_adjacency = routing_context.path_adjacency
   let order_index = routing_context.path_order_index
   let self_edge_groups = collect_self_edge_groups(edges)
-  let (
-    samehead_overrides,
-    sametail_overrides,
-    samehead_group_sizes,
-    sametail_group_sizes,
-  ) =
-    collect_sameport_overrides(
-      edges,
-      positions,
-      sizes,
-      record_orientation,
-      layout_rankdir,
-      ranksep_pt,
-    )
+  let sameport_overrides = collect_sameport_overrides(
+    edges,
+    positions,
+    sizes,
+    record_orientation,
+    layout_rankdir,
+    ranksep_pt,
+  )
   let base_cache =
     build_route_base_cache(
       graph,
@@ -5036,10 +5016,7 @@ fn route_edges(
       layout_rankdir,
       enable_complex_tuning,
       vnode_info.edge_vnodes,
-      samehead_overrides,
-      sametail_overrides,
-      samehead_group_sizes,
-      sametail_group_sizes,
+      sameport_overrides,
     )
   let flat_adjacent_simple_beziers =
     if splines == SplinesMode::Spline {
@@ -5124,10 +5101,7 @@ fn route_edges(
       layout_rankdir,
       enable_complex_tuning,
       vnode_info.edge_vnodes,
-      samehead_overrides,
-      sametail_overrides,
-      samehead_group_sizes,
-      sametail_group_sizes,
+      sameport_overrides,
       nodesep_pt,
       rank_y,
       vnode_info,
