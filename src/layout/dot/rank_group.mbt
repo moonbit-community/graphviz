@@ -423,6 +423,25 @@ priv struct ComponentDiscoveryPrepared {
 }
 
 ///|
+priv struct ComponentOrderData {
+  ordered_nodes : Array[String]
+  fallback_order : Map[String, Int]
+}
+
+///|
+priv struct ComponentNeighborsData {
+  out_neighbors : Map[String, Array[String]]
+  in_neighbors : Map[String, Array[String]]
+  node_set : Map[String, Bool]
+}
+
+///|
+priv struct FlatNeighborsData {
+  flat_out : Map[String, Array[String]]
+  flat_in : Map[String, Array[String]]
+}
+
+///|
 fn resolve_component_order_index(
   name : String,
   node_order : Map[String, Int],
@@ -442,7 +461,7 @@ fn resolve_component_order_index(
 fn build_component_order(
   nodes : Array[String],
   node_order : Map[String, Int],
-) -> (Array[String], Map[String, Int]) {
+) -> ComponentOrderData {
   let fallback_order : Map[String, Int] = Map::new()
   for i, name in nodes {
     fallback_order[name] = i
@@ -469,7 +488,7 @@ fn build_component_order(
       }
     })
   }
-  (ordered_nodes, fallback_order)
+  { ordered_nodes, fallback_order }
 }
 
 ///|
@@ -479,11 +498,7 @@ fn build_component_neighbors(
   edge_head : Array[String],
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
-) -> (
-  Map[String, Array[String]],
-  Map[String, Array[String]],
-  Map[String, Bool],
-) {
+) -> ComponentNeighborsData {
   let node_set : Map[String, Bool] = Map::new()
   for name in nodes {
     node_set[name] = true
@@ -533,7 +548,7 @@ fn build_component_neighbors(
       }
     }
   }
-  (out_neighbors, in_neighbors, node_set)
+  { out_neighbors, in_neighbors, node_set }
 }
 
 ///|
@@ -605,7 +620,7 @@ fn build_flat_neighbors(
   nodes : Array[String],
   node_set : Map[String, Bool],
   flat_constraints : Map[String, Bool],
-) -> (Map[String, Array[String]], Map[String, Array[String]]) {
+) -> FlatNeighborsData {
   let flat_out : Map[String, Array[String]] = Map::new()
   let flat_in : Map[String, Array[String]] = Map::new()
   for name in nodes {
@@ -642,7 +657,7 @@ fn build_flat_neighbors(
       None => ()
     }
   }
-  (flat_out, flat_in)
+  { flat_out, flat_in }
 }
 
 ///|
@@ -661,37 +676,36 @@ fn prepare_component_discovery(
   graphviz_out_neighbors : Map[String, Array[String]],
   graphviz_in_neighbors : Map[String, Array[String]],
 ) -> ComponentDiscoveryPrepared {
-  let (ordered_nodes, fallback_order) = build_component_order(
+  let order_data = build_component_order(
     nodes,
     node_order,
   )
-  let (out_neighbors, in_neighbors, node_set) =
-    build_component_neighbors(
-      nodes,
-      edge_tail,
-      edge_head,
-      graphviz_out_neighbors,
-      graphviz_in_neighbors,
-    )
+  let neighbors_data = build_component_neighbors(
+    nodes,
+    edge_tail,
+    edge_head,
+    graphviz_out_neighbors,
+    graphviz_in_neighbors,
+  )
   let cluster_skeleton_nodes = collect_component_skeletons(
-    ordered_nodes,
+    order_data.ordered_nodes,
     cluster_keys,
     cluster_skeleton,
     node_ranks,
     node_order,
-    fallback_order,
+    order_data.fallback_order,
   )
-  let (flat_out, flat_in) = build_flat_neighbors(
+  let flat_neighbors = build_flat_neighbors(
     nodes,
-    node_set,
+    neighbors_data.node_set,
     flat_constraints,
   )
   {
-    ordered_nodes,
-    out_neighbors,
-    in_neighbors,
-    flat_out,
-    flat_in,
+    ordered_nodes: order_data.ordered_nodes,
+    out_neighbors: neighbors_data.out_neighbors,
+    in_neighbors: neighbors_data.in_neighbors,
+    flat_out: flat_neighbors.flat_out,
+    flat_in: flat_neighbors.flat_in,
     cluster_skeleton_nodes,
   }
 }
