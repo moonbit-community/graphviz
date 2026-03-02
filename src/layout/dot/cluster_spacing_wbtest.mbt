@@ -128,7 +128,7 @@ test "cluster bbox includes margin and label padding" {
   let (width_pt, height_pt) = spacing_node_size_pt(graph, "a")
   let margin = cluster_margin_pt(cluster)
   let label_height = match graph_label_metrics(cluster) {
-    Some((_width, height)) => height
+    Some(metrics) => metrics.height_pt
     None => 0.0
   }
   let expected_left = pos.x - width_pt / 2.0 - margin

@@ -879,8 +879,9 @@ fn collect_cluster_label_objects(
     match subgraph.label_pos {
       Some(pos) =>
         match graph_label_metrics(subgraph.graph) {
-          Some((width, height)) => {
-            let (width, height) = maybe_flip_dims(width, height, flip)
+          Some(metrics) => {
+            let (width, height) =
+              maybe_flip_dims(metrics.width_pt, metrics.height_pt, flip)
             let llx = pos.x - width / 2.0
             let lly = pos.y - height / 2.0
             objects.push({

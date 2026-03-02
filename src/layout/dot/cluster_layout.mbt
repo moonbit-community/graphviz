@@ -8,12 +8,12 @@ fn cluster_label_padding_pt(
     return (0.0, 0.0)
   }
   match graph_label_metrics(graph) {
-    Some((_width_pt, height_pt)) => {
+    Some(metrics) => {
       let loc = graph_label_loc(graph)
       let pad = CLUSTER_LABEL_PAD_PT
       match loc {
-        LabelLoc::Top => (height_pt + pad, 0.0)
-        LabelLoc::Bottom => (0.0, height_pt + pad)
+        LabelLoc::Top => (metrics.height_pt + pad, 0.0)
+        LabelLoc::Bottom => (0.0, metrics.height_pt + pad)
       }
     }
     None => (0.0, 0.0)
@@ -62,7 +62,7 @@ fn adjust_flip_rank_heights(
     return changed
   }
   let label_width = match graph_label_metrics(graph) {
-    Some((width_pt, _height_pt)) => width_pt + CLUSTER_LABEL_PAD_PT * 2.0
+    Some(metrics) => metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0
     None => return changed
   }
   let cluster_nodes : Map[String, Bool] = Map::new()

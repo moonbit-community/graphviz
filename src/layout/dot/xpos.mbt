@@ -609,8 +609,8 @@ fn build_cluster_constraints(
     let mut right_border = 0.0
     if flip {
       match graph_label_metrics(cluster_graph) {
-        Some((_width_pt, height_pt)) => {
-          let border = height_pt + CLUSTER_LABEL_PAD_PT
+        Some(metrics) => {
+          let border = metrics.height_pt + CLUSTER_LABEL_PAD_PT
           match graph_label_loc(cluster_graph) {
             LabelLoc::Top => right_border = border
             LabelLoc::Bottom => left_border = border
@@ -710,8 +710,8 @@ fn build_cluster_constraints(
       match cluster_graphs.get(name) {
         Some(cluster_graph) =>
           match graph_label_metrics(cluster_graph) {
-            Some((width_pt, _height_pt)) => {
-              let label_width = width_pt + CLUSTER_LABEL_PAD_PT * 2.0
+            Some(metrics) => {
+              let label_width = metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0
               let minlen = round_int(label_width)
               if minlen > 0 {
                 label_minlen = Some(minlen)

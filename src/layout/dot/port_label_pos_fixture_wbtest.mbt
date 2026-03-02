@@ -150,16 +150,17 @@ test "port label params match Graphviz defaults" {
         )
     }
     assert_port_label_edge(edge, fixture)
-    let (angle_deg, distance_scale) = match port_label_params(edge) {
+    let params = match port_label_params(edge) {
       Some(value) => value
       None =>
         fail(
           "missing port label params for edge \{fixture.tail} -> \{fixture.head}",
         )
     }
-    if angle_deg != fixture.labelangle || distance_scale != fixture.labeldistance {
+    if params.angle_deg != fixture.labelangle ||
+      params.distance_scale != fixture.labeldistance {
       fail(
-        "port label params mismatch (\{fixture.tail}->\{fixture.head}) got (\{angle_deg},\{distance_scale}) expected (\{fixture.labelangle},\{fixture.labeldistance})",
+        "port label params mismatch (\{fixture.tail}->\{fixture.head}) got (\{params.angle_deg},\{params.distance_scale}) expected (\{fixture.labelangle},\{fixture.labeldistance})",
       )
     }
   }

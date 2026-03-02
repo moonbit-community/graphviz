@@ -462,12 +462,24 @@ pub fn layout_neato_noop(
   let mut label_pos : @geom.Point? = None
   if active_graph.is_root() {
     match graph_label_metrics(active_graph) {
-      Some((width_pt, height_pt)) => {
+      Some(metrics) => {
         let loc = graph_label_loc(active_graph)
         let just = graph_label_just(active_graph)
-        final_bbox = expand_bbox_for_label(final_bbox, width_pt, height_pt, loc)
+        final_bbox =
+          expand_bbox_for_label(
+            final_bbox,
+            metrics.width_pt,
+            metrics.height_pt,
+            loc,
+          )
         label_pos = Some(
-          graph_label_pos(final_bbox, width_pt, height_pt, loc, just),
+          graph_label_pos(
+            final_bbox,
+            metrics.width_pt,
+            metrics.height_pt,
+            loc,
+            just,
+          ),
         )
       }
       None => ()

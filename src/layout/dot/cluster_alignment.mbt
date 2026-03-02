@@ -353,9 +353,15 @@ fn adjust_cluster_positions(
       ury: current.ury + pad,
     }
     match graph_label_metrics(graph) {
-      Some((width_pt, height_pt)) => {
+      Some(metrics) => {
         let loc = graph_label_loc(graph)
-        current = expand_bbox_for_label(current, width_pt, height_pt, loc)
+        current =
+          expand_bbox_for_label(
+            current,
+            metrics.width_pt,
+            metrics.height_pt,
+            loc,
+          )
       }
       None => ()
     }

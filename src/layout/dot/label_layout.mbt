@@ -80,7 +80,13 @@ fn graph_label_just(graph : @cgraph.Graph) -> LabelJust {
 }
 
 ///|
-fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
+priv struct GraphLabelMetrics {
+  width_pt : Double
+  height_pt : Double
+}
+
+///|
+fn graph_label_metrics(graph : @cgraph.Graph) -> GraphLabelMetrics? {
   match graph.get_attr("label") {
     Some(value) =>
       if value == "" {
@@ -93,7 +99,7 @@ fn graph_label_metrics(graph : @cgraph.Graph) -> (Double, Double)? {
         let (width_pt, height_pt) = label_text_dimensions(
           value, font, font_size_pt,
         )
-        Some((width_pt, height_pt))
+        Some({ width_pt, height_pt })
       }
     None => None
   }
@@ -687,7 +693,13 @@ fn flat_edge_label_pos_simple(
 }
 
 ///|
-fn port_label_params(edge : @cgraph.Edge) -> (Double, Double)? {
+priv struct PortLabelParams {
+  angle_deg : Double
+  distance_scale : Double
+}
+
+///|
+fn port_label_params(edge : @cgraph.Edge) -> PortLabelParams? {
   let angle_attr = edge.get_attr("labelangle")
   let distance_attr = edge.get_attr("labeldistance")
   let has_angle = match angle_attr {
@@ -719,7 +731,7 @@ fn port_label_params(edge : @cgraph.Edge) -> (Double, Double)? {
       }
     None => 1.0
   }
-  Some((angle_deg, distance_scale))
+  Some({ angle_deg, distance_scale })
 }
 
 fn port_label_points(
@@ -827,10 +839,17 @@ fn edge_port_label_pos(
       }
     }
   match port_label_params(edge) {
-    Some((angle_deg, distance_scale)) =>
+    Some(params) =>
       match port_label_points(spline, head_p, marker_present) {
         Some((pe, pf)) =>
-          Some(port_label_pos_from_points(pe, pf, angle_deg, distance_scale))
+          Some(
+            port_label_pos_from_points(
+              pe,
+              pf,
+              params.angle_deg,
+              params.distance_scale,
+            ),
+          )
         None => None
       }
     None => None
@@ -964,7 +983,15 @@ fn collect_cluster_label_rects(
     match subgraph.label_pos {
       Some(pos) =>
         match graph_label_metrics(subgraph.graph) {
-          Some((width, height)) => rects.push(rect_from_center(pos, width, height, pad))
+          Some(metrics) =>
+            rects.push(
+              rect_from_center(
+                pos,
+                metrics.width_pt,
+                metrics.height_pt,
+                pad,
+              ),
+            )
           None => ()
         }
       None => ()
@@ -1072,8 +1099,10 @@ fn adjust_labels_for_clusters(
   match layout.label_pos {
     Some(pos) =>
       match graph_label_metrics(layout.graph) {
-        Some((width, height)) =>
-          label_rects.push(rect_from_center(pos, width, height, pad))
+        Some(metrics) =>
+          label_rects.push(
+            rect_from_center(pos, metrics.width_pt, metrics.height_pt, pad),
+          )
         None => ()
       }
     None => ()

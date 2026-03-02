@@ -320,12 +320,12 @@ fn layout_subgraphs(
       let ury = bbox.ury + pad_y
       bbox = { llx, lly, urx, ury }
       match graph_label_metrics(subgraph) {
-        Some((width_pt, height_pt)) => {
+        Some(metrics) => {
           let loc = graph_label_loc(subgraph)
           let just = graph_label_just(subgraph)
           let pad = CLUSTER_LABEL_PAD_PT
-          let padded_width = width_pt + pad * 2.0
-          let padded_height = height_pt + pad
+          let padded_width = metrics.width_pt + pad * 2.0
+          let padded_height = metrics.height_pt + pad
           if flip {
             let border_x = padded_height
             let border_y = padded_width
@@ -349,7 +349,13 @@ fn layout_subgraphs(
             label_info = Some((border_x, border_y, loc, just, true))
           } else {
             if !use_rank_bbox {
-              bbox = expand_bbox_for_label(bbox, width_pt, height_pt, loc)
+              bbox =
+                expand_bbox_for_label(
+                  bbox,
+                  metrics.width_pt,
+                  metrics.height_pt,
+                  loc,
+                )
             }
             label_info = Some((padded_width, padded_height, loc, just, false))
           }
@@ -946,12 +952,12 @@ fn apply_root_label_bbox(
   let mut label_pos : @geom.Point? = None
   if graph.is_root() {
     match graph_label_metrics(graph) {
-      Some((width_pt, height_pt)) => {
+      Some(metrics) => {
         let loc = graph_label_loc(graph)
         let just = graph_label_just(graph)
         let pad = CLUSTER_LABEL_PAD_PT
-        let padded_width = width_pt + pad * 2.0
-        let padded_height = height_pt + pad
+        let padded_width = metrics.width_pt + pad * 2.0
+        let padded_height = metrics.height_pt + pad
         bbox =
           expand_root_bbox_for_label(
             bbox,
@@ -980,12 +986,12 @@ fn root_label_pos_for_bbox(
 ) -> @geom.Point? {
   if graph.is_root() {
     match graph_label_metrics(graph) {
-      Some((width_pt, height_pt)) => {
+      Some(metrics) => {
         let loc = graph_label_loc(graph)
         let just = graph_label_just(graph)
         let pad = CLUSTER_LABEL_PAD_PT
-        let padded_width = width_pt + pad * 2.0
-        let padded_height = height_pt + pad
+        let padded_width = metrics.width_pt + pad * 2.0
+        let padded_height = metrics.height_pt + pad
         Some(
           graph_label_pos(bbox, padded_width, padded_height, loc, just),
         )
@@ -1343,13 +1349,13 @@ fn refresh_cluster_labels(
   let label_pos =
     if @dot_shared.is_cluster_graph(layout.graph) {
       match graph_label_metrics(layout.graph) {
-        Some((width_pt, height_pt)) => {
+        Some(metrics) => {
           let pad = CLUSTER_LABEL_PAD_PT
           Some(
             graph_label_pos(
               layout.bbox,
-              width_pt + pad * 2.0,
-              height_pt + pad,
+              metrics.width_pt + pad * 2.0,
+              metrics.height_pt + pad,
               graph_label_loc(layout.graph),
               graph_label_just(layout.graph),
             ),
