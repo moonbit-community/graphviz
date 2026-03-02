@@ -868,6 +868,48 @@ priv struct RootRankOrderPhaseInputs {
 }
 
 ///|
+/// Graphviz parity: root rank-order phase build inputs keep clustered reorder
+/// payload unchanged before dispatching root-only rank-order execution.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootRankOrderPhaseBuildInputs {
+  order_cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  order_sizes_out : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_cluster_skeleton : Map[String, Bool]
+  flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+  root_reorder_output : RootClusterReorderInputs
+}
+
+///|
+/// Graphviz parity: root rank-order phase input is assembled from clustered
+/// reorder payload snapshots without changing Graphviz call ordering.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_rank_order_phase_inputs(
+  inputs : RootRankOrderPhaseBuildInputs,
+) -> RootRankOrderPhaseInputs {
+  {
+    order_cluster_keys: inputs.order_cluster_keys,
+    rank_same_groups: inputs.rank_same_groups,
+    rank_same_order: inputs.rank_same_order,
+    order_sizes_out: inputs.order_sizes_out,
+    nodesep_pt: inputs.nodesep_pt,
+    has_edge_labels: inputs.has_edge_labels,
+    port_order_positions: inputs.port_order_positions,
+    port_order_contrib: inputs.port_order_contrib,
+    order_cluster_skeleton: inputs.order_cluster_skeleton,
+    flat_constraints: inputs.flat_constraints,
+    graphviz_flip: inputs.graphviz_flip,
+    root_reorder_output: inputs.root_reorder_output,
+  }
+}
+
+///|
 fn has_multiple_non_empty_cluster_keys(
   order_cluster_keys : Map[String, String],
 ) -> Bool {
@@ -1428,30 +1470,6 @@ fn build_cluster_rank_root_reorder_sources(
 }
 
 ///|
-/// Graphviz parity: cluster-rank-order root phase inputs preserve rank/order
-/// payload and root reorder output before root-only rank-order execution.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_rank_root_phase_inputs(
-  inputs : ClusterRankOrderBuildInputs,
-  root_reorder_output : RootClusterReorderInputs,
-) -> RootRankOrderPhaseInputs {
-  {
-    order_cluster_keys: inputs.order_cluster_keys,
-    rank_same_groups: inputs.cluster_meta.rank_same_groups,
-    rank_same_order: inputs.cluster_meta.rank_same_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    flat_constraints: inputs.cluster_meta.flat_constraints,
-    graphviz_flip: inputs.graphviz_flip,
-    root_reorder_output,
-  }
-}
-
-///|
 /// Graphviz parity: cluster-phase rank-order map is built from root-only
 /// reorder pass (root/skeleton + root-vnodes) before local cluster bucket
 /// reordering in final real-node groups.
@@ -1470,9 +1488,21 @@ fn build_cluster_rank_order(
       inputs.order_edges_by_tail_root,
     )
   let root_phase_inputs =
-    build_cluster_rank_root_phase_inputs(
-      inputs,
-      root_reorder_output,
+    build_root_rank_order_phase_inputs(
+      {
+        order_cluster_keys: inputs.order_cluster_keys,
+        rank_same_groups: inputs.cluster_meta.rank_same_groups,
+        rank_same_order: inputs.cluster_meta.rank_same_order,
+        order_sizes_out: inputs.order_sizes_out,
+        nodesep_pt: inputs.nodesep_pt,
+        has_edge_labels: inputs.has_edge_labels,
+        port_order_positions: inputs.port_order_positions,
+        port_order_contrib: inputs.port_order_contrib,
+        order_cluster_skeleton: inputs.order_cluster_skeleton,
+        flat_constraints: inputs.cluster_meta.flat_constraints,
+        graphviz_flip: inputs.graphviz_flip,
+        root_reorder_output,
+      },
     )
   let root_rank_order_phase_output =
     run_root_rank_order_phase(root_phase_inputs)

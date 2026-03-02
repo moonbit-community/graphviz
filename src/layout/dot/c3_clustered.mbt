@@ -243,34 +243,6 @@ fn build_root_cluster_build_ranks_inputs(
 }
 
 ///|
-/// Graphviz parity: root rank-order phase input is assembled from clustered
-/// pre-root snapshots and root reorder output without payload reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_phase_inputs(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_reorder_output : RootClusterReorderInputs,
-) -> RootRankOrderPhaseInputs {
-  let reorder_setup = dispatch_context.reorder_setup
-  let cluster_meta = dispatch_context.cluster_meta
-  {
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    rank_same_groups: cluster_meta.rank_same_groups,
-    rank_same_order: cluster_meta.rank_same_order,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    flat_constraints: cluster_meta.flat_constraints,
-    graphviz_flip: reorder_setup.graphviz_flip,
-    root_reorder_output,
-  }
-}
-
-
-///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -298,9 +270,20 @@ fn run_clustered_root_phase(
     )
   let root_phase_inputs =
     build_root_rank_order_phase_inputs(
-      dispatch_context,
-      pre_root_stage,
-      root_reorder_output,
+      {
+        order_cluster_keys: pre_root_stage.order_cluster_keys,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        order_sizes_out: pre_root_stage.order_sizes_out,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        graphviz_flip: reorder_setup.graphviz_flip,
+        root_reorder_output,
+      },
     )
   let root_rank_order_phase_output =
     run_root_rank_order_phase(root_phase_inputs)
