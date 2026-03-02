@@ -1,4 +1,72 @@
 ///|
+priv struct NeighborMaps {
+  out_neighbors : Map[String, Array[String]]
+  in_neighbors : Map[String, Array[String]]
+}
+
+///|
+fn has_graphviz_neighbor_hints(
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+) -> Bool {
+  for _key, _ in graphviz_out_neighbors {
+    return true
+  }
+  for _key, _ in graphviz_in_neighbors {
+    return true
+  }
+  false
+}
+
+///|
+fn create_empty_neighbors(nodes : Array[String]) -> NeighborMaps {
+  let out_neighbors : Map[String, Array[String]] = Map::new()
+  let in_neighbors : Map[String, Array[String]] = Map::new()
+  for name in nodes {
+    out_neighbors[name] = []
+    in_neighbors[name] = []
+  }
+  { out_neighbors, in_neighbors }
+}
+
+///|
+fn copy_graphviz_neighbor_hints(
+  nodes : Array[String],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  out_neighbors : Map[String, Array[String]],
+  in_neighbors : Map[String, Array[String]],
+) -> Unit {
+  for name in nodes {
+    match graphviz_out_neighbors.get(name) {
+      Some(list) => out_neighbors[name] = list.copy()
+      None => ()
+    }
+    match graphviz_in_neighbors.get(name) {
+      Some(list) => in_neighbors[name] = list.copy()
+      None => ()
+    }
+  }
+}
+
+///|
+fn append_neighbor_edge(
+  out_neighbors : Map[String, Array[String]],
+  in_neighbors : Map[String, Array[String]],
+  tail : String,
+  head : String,
+) -> Unit {
+  match out_neighbors.get(tail) {
+    Some(list) => list.push(head)
+    None => out_neighbors[tail] = [head]
+  }
+  match in_neighbors.get(head) {
+    Some(list) => list.push(tail)
+    None => in_neighbors[head] = [tail]
+  }
+}
+
+///|
 /// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_neighbor_rank_groups(
@@ -61,46 +129,22 @@ fn build_neighbor_rank_groups(
       }
     })
   }
-  let out_neighbors : Map[String, Array[String]] = Map::new()
-  let in_neighbors : Map[String, Array[String]] = Map::new()
-  let mut use_graphviz_neighbors = false
-  for _key, _ in graphviz_out_neighbors {
-    use_graphviz_neighbors = true
-    break
-  }
-  if !use_graphviz_neighbors {
-    for _key, _ in graphviz_in_neighbors {
-      use_graphviz_neighbors = true
-      break
-    }
-  }
-  if use_graphviz_neighbors {
-    for name in nlist {
-      match graphviz_out_neighbors.get(name) {
-        Some(list) => out_neighbors[name] = list.copy()
-        None => out_neighbors[name] = []
-      }
-      match graphviz_in_neighbors.get(name) {
-        Some(list) => in_neighbors[name] = list.copy()
-        None => in_neighbors[name] = []
-      }
-    }
+  let neighbors = create_empty_neighbors(nlist)
+  let out_neighbors = neighbors.out_neighbors
+  let in_neighbors = neighbors.in_neighbors
+  if has_graphviz_neighbor_hints(graphviz_out_neighbors, graphviz_in_neighbors) {
+    copy_graphviz_neighbor_hints(
+      nlist,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      out_neighbors,
+      in_neighbors,
+    )
   } else {
-    for name in nlist {
-      out_neighbors[name] = []
-      in_neighbors[name] = []
-    }
     for edge_idx in 0..<edge_tail.length() {
       let tail = edge_tail[edge_idx]
       let head = edge_head[edge_idx]
-      match out_neighbors.get(tail) {
-        Some(list) => list.push(head)
-        None => out_neighbors[tail] = [head]
-      }
-      match in_neighbors.get(head) {
-        Some(list) => list.push(tail)
-        None => in_neighbors[head] = [tail]
-      }
+      append_neighbor_edge(out_neighbors, in_neighbors, tail, head)
     }
   }
   let cluster_nodes : Map[String, Array[String]] = Map::new()
@@ -503,34 +547,17 @@ fn build_component_neighbors(
   for name in nodes {
     node_set[name] = true
   }
-  let mut use_graphviz_neighbors = false
-  for _key, _ in graphviz_out_neighbors {
-    use_graphviz_neighbors = true
-    break
-  }
-  if !use_graphviz_neighbors {
-    for _key, _ in graphviz_in_neighbors {
-      use_graphviz_neighbors = true
-      break
-    }
-  }
-  let out_neighbors : Map[String, Array[String]] = Map::new()
-  let in_neighbors : Map[String, Array[String]] = Map::new()
-  for name in nodes {
-    out_neighbors[name] = []
-    in_neighbors[name] = []
-  }
-  if use_graphviz_neighbors {
-    for name in nodes {
-      match graphviz_out_neighbors.get(name) {
-        Some(list) => out_neighbors[name] = list.copy()
-        None => ()
-      }
-      match graphviz_in_neighbors.get(name) {
-        Some(list) => in_neighbors[name] = list.copy()
-        None => ()
-      }
-    }
+  let neighbors = create_empty_neighbors(nodes)
+  let out_neighbors = neighbors.out_neighbors
+  let in_neighbors = neighbors.in_neighbors
+  if has_graphviz_neighbor_hints(graphviz_out_neighbors, graphviz_in_neighbors) {
+    copy_graphviz_neighbor_hints(
+      nodes,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      out_neighbors,
+      in_neighbors,
+    )
   } else {
     for idx in 0..<edge_tail.length() {
       let tail = edge_tail[idx]
@@ -538,14 +565,7 @@ fn build_component_neighbors(
       if node_set.get(tail) is None || node_set.get(head) is None {
         continue
       }
-      match out_neighbors.get(tail) {
-        Some(list) => list.push(head)
-        None => out_neighbors[tail] = [head]
-      }
-      match in_neighbors.get(head) {
-        Some(list) => list.push(tail)
-        None => in_neighbors[head] = [tail]
-      }
+      append_neighbor_edge(out_neighbors, in_neighbors, tail, head)
     }
   }
   { out_neighbors, in_neighbors, node_set }
