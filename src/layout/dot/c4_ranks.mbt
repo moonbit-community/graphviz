@@ -79,25 +79,6 @@ priv struct RootClusterBuildRanksInputs {
 }
 
 ///|
-/// Graphviz parity: clustered rank-reorder dispatch keeps root+cluster
-/// reorder call settings and build_ranks payload in one context object.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredRankReorderRunInputs {
-  order_with_clusters : Bool
-  graph : @cgraph.Graph
-  ordered : Map[Int, Array[String]]
-  cluster_meta : ClusterMetadata
-  build_ranks_inputs : RootClusterBuildRanksInputs
-  ranks : Map[String, Int]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  vnode_info : EdgeVnodeInfo
-  order_with_vnodes : Bool
-}
-
-///|
 /// Graphviz parity: root+cluster rank-reorder dispatch keeps runtime options,
 /// rank/cluster metadata, and build_ranks snapshots in one context payload.
 /// Do not change behavior without updating fixtures/tests.
@@ -123,55 +104,6 @@ priv struct RootClusterRanksRunInputs {
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
-/// Graphviz parity: root ReMincross payload is assembled directly from one
-/// build_ranks snapshot plus root/cluster ordering runtime settings.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_reorder_inputs(
-  order_with_clusters : Bool,
-  order_with_vnodes : Bool,
-  seeded_groups : Map[Int, Array[String]],
-  cluster_meta : ClusterMetadata,
-  vnode_order_keys_for_ordering : Map[String, Double],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  graphviz_flip : Bool,
-  build_ranks_inputs : RootClusterBuildRanksInputs,
-) -> RootMincrossReorderInputs {
-  {
-    order_with_clusters,
-    order_with_vnodes,
-    seeded_groups,
-    order_rank_keys: build_ranks_inputs.order_rank_keys,
-    order_ranks: build_ranks_inputs.order_ranks,
-    order_edges_out: build_ranks_inputs.order_edges_out,
-    order_edge_tail_out: build_ranks_inputs.order_edge_tail_out,
-    order_edge_head_out: build_ranks_inputs.order_edge_head_out,
-    order_edge_tail_port_x: build_ranks_inputs.order_edge_tail_port_x,
-    order_edge_head_port_x: build_ranks_inputs.order_edge_head_port_x,
-    order_edge_tail_port_order:
-      build_ranks_inputs.order_edge_tail_port_order,
-    order_edge_head_port_order:
-      build_ranks_inputs.order_edge_head_port_order,
-    order_cluster_keys: build_ranks_inputs.order_cluster_keys,
-    order_cluster_skeleton: build_ranks_inputs.order_cluster_skeleton,
-    cluster_meta,
-    vnode_order_keys_for_ordering,
-    order_node_order: build_ranks_inputs.order_node_order,
-    order_sizes_out: build_ranks_inputs.order_sizes_out,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    order_flat_constraints: build_ranks_inputs.order_flat_constraints,
-    graphviz_out_neighbors: build_ranks_inputs.graphviz_out_neighbors,
-    graphviz_in_neighbors: build_ranks_inputs.graphviz_in_neighbors,
-    graphviz_flip,
-  }
-}
-
-///|
 /// Graphviz parity: graphviz_flip root override replay is applied only when
 /// flip mode is on and fixture override groups are present.
 /// Do not change behavior without updating fixtures/tests.
@@ -193,58 +125,6 @@ fn apply_graphviz_flip_root_override(
       )
     None => ordered
   }
-}
-
-///|
-/// Graphviz parity: clustered reorder runs only in cluster mode and uses the
-/// unmapped order graph snapshots to replay cluster-local build_ranks passes.
-/// Do not change behavior without updating fixtures/tests.
-fn run_clustered_rank_reorder_if_enabled(
-  inputs : ClusteredRankReorderRunInputs,
-) -> Unit {
-  // Graphviz parity: clustered order pass runs cluster-local build_ranks on
-  // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
-  if !inputs.order_with_clusters {
-    return
-  }
-  reorder_by_cluster_ranks(
-    inputs.graph,
-    inputs.ordered,
-    inputs.cluster_meta,
-    inputs.build_ranks_inputs.order_node_order,
-    inputs.build_ranks_inputs.order_edges_out_unmapped,
-    inputs.build_ranks_inputs.order_edge_tail_out_unmapped,
-    inputs.build_ranks_inputs.order_edge_head_out_unmapped,
-    inputs.build_ranks_inputs.order_edge_tail_port_x_unmapped,
-    inputs.build_ranks_inputs.order_edge_head_port_x_unmapped,
-    inputs.build_ranks_inputs.order_edge_tail_port_order_unmapped,
-    inputs.build_ranks_inputs.order_edge_head_port_order_unmapped,
-    inputs.build_ranks_inputs.graphviz_out_neighbors,
-    inputs.build_ranks_inputs.graphviz_in_neighbors,
-    inputs.ranks,
-    inputs.build_ranks_inputs.order_sizes_out,
-    inputs.nodesep_pt,
-    inputs.has_edge_labels,
-    inputs.port_order_positions,
-    inputs.port_order_contrib,
-    inputs.vnode_info,
-    inputs.order_with_vnodes,
-  )
-}
-
-///|
-/// Graphviz parity: vnode-inclusive ordered groups are updated only when vnode
-/// ordering mode is enabled; otherwise the prior vnode groups are preserved.
-/// Do not change behavior without updating fixtures/tests.
-fn resolve_ordered_with_vnodes_groups(
-  order_with_vnodes : Bool,
-  ordered : Map[Int, Array[String]],
-  ordered_with_vnodes_prev : Map[Int, Array[String]],
-) -> Map[Int, Array[String]] {
-  if !order_with_vnodes {
-    return ordered_with_vnodes_prev
-  }
-  ordered
 }
 
 ///|
@@ -290,20 +170,37 @@ fn run_root_and_cluster_ranks(
       inputs.flat_rank_constraints,
       build_ranks_inputs,
     )
-  let root_mincross_reorder_inputs =
-    build_root_mincross_reorder_inputs(
-      inputs.order_with_clusters,
-      inputs.order_with_vnodes,
+  let root_mincross_reorder_inputs : RootMincrossReorderInputs =
+    {
+      order_with_clusters: inputs.order_with_clusters,
+      order_with_vnodes: inputs.order_with_vnodes,
       seeded_groups,
-      inputs.cluster_meta,
-      inputs.vnode_order_keys_for_ordering,
-      inputs.nodesep_pt,
-      inputs.has_edge_labels,
-      inputs.port_order_positions,
-      inputs.port_order_contrib,
-      inputs.graphviz_flip,
-      build_ranks_inputs,
-    )
+      order_rank_keys: build_ranks_inputs.order_rank_keys,
+      order_ranks: build_ranks_inputs.order_ranks,
+      order_edges_out: build_ranks_inputs.order_edges_out,
+      order_edge_tail_out: build_ranks_inputs.order_edge_tail_out,
+      order_edge_head_out: build_ranks_inputs.order_edge_head_out,
+      order_edge_tail_port_x: build_ranks_inputs.order_edge_tail_port_x,
+      order_edge_head_port_x: build_ranks_inputs.order_edge_head_port_x,
+      order_edge_tail_port_order:
+        build_ranks_inputs.order_edge_tail_port_order,
+      order_edge_head_port_order:
+        build_ranks_inputs.order_edge_head_port_order,
+      order_cluster_keys: build_ranks_inputs.order_cluster_keys,
+      order_cluster_skeleton: build_ranks_inputs.order_cluster_skeleton,
+      cluster_meta: inputs.cluster_meta,
+      vnode_order_keys_for_ordering: inputs.vnode_order_keys_for_ordering,
+      order_node_order: build_ranks_inputs.order_node_order,
+      order_sizes_out: build_ranks_inputs.order_sizes_out,
+      nodesep_pt: inputs.nodesep_pt,
+      has_edge_labels: inputs.has_edge_labels,
+      port_order_positions: inputs.port_order_positions,
+      port_order_contrib: inputs.port_order_contrib,
+      order_flat_constraints: build_ranks_inputs.order_flat_constraints,
+      graphviz_out_neighbors: build_ranks_inputs.graphviz_out_neighbors,
+      graphviz_in_neighbors: build_ranks_inputs.graphviz_in_neighbors,
+      graphviz_flip: inputs.graphviz_flip,
+    }
   let root_mincross_reorder_output =
     run_root_mincross_reorder(root_mincross_reorder_inputs)
   let order_groups_for_mincross =
@@ -314,28 +211,39 @@ fn run_root_and_cluster_ranks(
       inputs.graphviz_flip,
       inputs.cluster_meta.cluster_keys,
     )
-  run_clustered_rank_reorder_if_enabled(
-    {
-      order_with_clusters: inputs.order_with_clusters,
-      graph: inputs.graph,
+  // Graphviz parity: clustered order pass runs cluster-local build_ranks on
+  // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
+  if inputs.order_with_clusters {
+    reorder_by_cluster_ranks(
+      inputs.graph,
       ordered,
-      cluster_meta: inputs.cluster_meta,
-      build_ranks_inputs,
-      ranks: inputs.ranks,
-      nodesep_pt: inputs.nodesep_pt,
-      has_edge_labels: inputs.has_edge_labels,
-      port_order_positions: inputs.port_order_positions,
-      port_order_contrib: inputs.port_order_contrib,
-      vnode_info: inputs.vnode_info,
-      order_with_vnodes: inputs.order_with_vnodes,
-    },
-  )
-  let next_ordered_with_vnodes =
-    resolve_ordered_with_vnodes_groups(
+      inputs.cluster_meta,
+      build_ranks_inputs.order_node_order,
+      build_ranks_inputs.order_edges_out_unmapped,
+      build_ranks_inputs.order_edge_tail_out_unmapped,
+      build_ranks_inputs.order_edge_head_out_unmapped,
+      build_ranks_inputs.order_edge_tail_port_x_unmapped,
+      build_ranks_inputs.order_edge_head_port_x_unmapped,
+      build_ranks_inputs.order_edge_tail_port_order_unmapped,
+      build_ranks_inputs.order_edge_head_port_order_unmapped,
+      build_ranks_inputs.graphviz_out_neighbors,
+      build_ranks_inputs.graphviz_in_neighbors,
+      inputs.ranks,
+      build_ranks_inputs.order_sizes_out,
+      inputs.nodesep_pt,
+      inputs.has_edge_labels,
+      inputs.port_order_positions,
+      inputs.port_order_contrib,
+      inputs.vnode_info,
       inputs.order_with_vnodes,
-      ordered,
-      build_ranks_inputs.ordered_with_vnodes,
     )
+  }
+  let next_ordered_with_vnodes =
+    if !inputs.order_with_vnodes {
+      build_ranks_inputs.ordered_with_vnodes
+    } else {
+      ordered
+    }
   {
     order_groups_for_mincross,
     ordered,
