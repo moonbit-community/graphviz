@@ -104,22 +104,8 @@ fn build_neighbor_rank_groups(
   let nlist = nodes.copy()
   if nlist.length() > 1 {
     nlist.sort_by((a, b) => {
-      let a_idx = match node_order.get(a) {
-        Some(value) => value
-        None =>
-          match fallback_order.get(a) {
-            Some(value) => value
-            None => 0
-          }
-      }
-      let b_idx = match node_order.get(b) {
-        Some(value) => value
-        None =>
-          match fallback_order.get(b) {
-            Some(value) => value
-            None => 0
-          }
-      }
+      let a_idx = resolve_component_order_index(a, node_order, fallback_order)
+      let b_idx = resolve_component_order_index(b, node_order, fallback_order)
       if a_idx < b_idx {
         -1
       } else if a_idx > b_idx {
@@ -191,22 +177,8 @@ fn build_neighbor_rank_groups(
         } else if a_rank > b_rank {
           1
         } else {
-          let a_idx = match node_order.get(a) {
-            Some(value) => value
-            None =>
-              match fallback_order.get(a) {
-                Some(value) => value
-                None => 0
-              }
-          }
-          let b_idx = match node_order.get(b) {
-            Some(value) => value
-            None =>
-              match fallback_order.get(b) {
-                Some(value) => value
-                None => 0
-              }
-          }
+          let a_idx = resolve_component_order_index(a, node_order, fallback_order)
+          let b_idx = resolve_component_order_index(b, node_order, fallback_order)
           if a_idx < b_idx {
             -1
           } else if a_idx > b_idx {
