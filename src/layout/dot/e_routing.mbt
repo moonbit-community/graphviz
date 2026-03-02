@@ -1260,7 +1260,7 @@ fn sameport_anchor_for_group(
 /// Graphviz parity: samehead/sametail handling aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports).
 /// Do not change behavior without updating fixtures/tests.
-fn collect_sameport_anchor_overrides(
+fn collect_sameport_overrides(
   edges : Array[@cgraph.Edge],
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
@@ -5011,7 +5011,7 @@ fn route_edges(
     samehead_group_sizes,
     sametail_group_sizes,
   ) =
-    collect_sameport_anchor_overrides(
+    collect_sameport_overrides(
       edges,
       positions,
       sizes,
