@@ -379,6 +379,16 @@ fn run_root_component_rank_reorder(
 }
 
 ///|
+fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
+  for _name, cluster in order_cluster_keys {
+    if cluster != "" {
+      return true
+    }
+  }
+  false
+}
+
+///|
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
@@ -514,13 +524,7 @@ fn run_root_rank_reorder(
   graphviz_in_neighbors : Map[String, Array[String]],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let mut has_cluster_keys = false
-  for _name, cluster in order_cluster_keys {
-    if cluster != "" {
-      has_cluster_keys = true
-      break
-    }
-  }
+  let has_cluster_keys = has_non_empty_cluster_keys(order_cluster_keys)
   let components =
     if has_cluster_keys {
       []
