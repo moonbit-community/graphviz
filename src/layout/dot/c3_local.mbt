@@ -371,7 +371,7 @@ fn build_cluster_local_rank_groups(
 /// neighbors after order-graph replay, skipping duplicates to mirror fixture
 /// out_all/in_all merge behavior.
 /// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_neighbor_maps(
+fn build_local_neighbor_maps(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_nodes : Array[String],
@@ -902,7 +902,7 @@ fn build_local_reorder_inputs(
     }
   }
   let (graphviz_out_neighbors, graphviz_in_neighbors) =
-    build_cluster_local_neighbor_maps(
+    build_local_neighbor_maps(
       cluster_name,
       expanded_clusters,
       cluster_nodes,
