@@ -143,7 +143,7 @@ fn scan_edge_flags_for_layout_inputs(
 /// Graphviz parity: node-order seeds follow GD_nlist creation order and apply
 /// RL reversal after seeding (matching Graphviz ordering behavior).
 /// Do not change behavior without updating fixtures/tests.
-fn build_node_order_for_layout_inputs(
+fn build_node_order(
   nodes : Array[@cgraph.Node],
   rankdir : RankDir,
 ) -> Map[String, Int] {
@@ -340,7 +340,7 @@ fn prepare_layout_inputs(
   let (has_dotted_edges, has_port_edges) =
     scan_edge_flags_for_layout_inputs(edges)
   let has_edge_labels = graph_has_edge_labels(edges)
-  let node_order = build_node_order_for_layout_inputs(nodes, rankdir)
+  let node_order = build_node_order(nodes, rankdir)
   let record_orientation = record_layout_orientation(rankdir)
   let (output_sizes, order_sizes, sizes) =
     build_size_maps_for_layout_inputs(nodes, rankdir, record_orientation)
