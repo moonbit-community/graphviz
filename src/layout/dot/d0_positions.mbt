@@ -162,7 +162,7 @@ fn build_cluster_boundary_x(
 /// Graphviz parity: vnode output positions are either direct xpos/rank pairs
 /// (when xpos consumed vnode graph) or endpoint-interpolated fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn build_vnode_positions_for_output(
+fn build_vnode_positions(
   use_vnodes_for_xpos : Bool,
   prep : LayoutPrep,
   rank_data : RankData,
@@ -739,7 +739,7 @@ fn build_position_output_maps(
     build_cluster_boundary_x(graph, cluster_meta, x_positions)
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
-    build_vnode_positions_for_output(
+    build_vnode_positions(
       use_vnodes_for_xpos,
       prep,
       rank_data,
