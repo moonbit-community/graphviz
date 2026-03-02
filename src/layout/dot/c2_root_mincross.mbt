@@ -194,7 +194,7 @@ fn collect_noncluster_components(
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_rank_reorder(
+fn run_root_rank_reorder(
   order_rank_keys_for_mincross : Array[Int],
   order_groups_for_mincross : Map[Int, Array[String]],
   order_edges_out_mincross : Array[@cgraph.Edge],
@@ -492,7 +492,7 @@ fn run_root_mincross_rank_reorder(
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_reorder_pass(
+fn run_root_reorder_pass(
   order_with_vnodes : Bool,
   vnode_order_keys_for_ordering : Map[String, Double],
   order_groups_for_mincross : Map[Int, Array[String]],
@@ -595,7 +595,7 @@ fn run_root_mincross_reorder_pass(
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
   let ordered_mincross =
-    run_root_mincross_rank_reorder(
+    run_root_rank_reorder(
       order_rank_keys_for_mincross,
       order_groups_for_mincross,
       order_edges_out_mincross,
@@ -708,7 +708,7 @@ fn run_root_mincross_reorder(
       None => order_groups_for_mincross_base
     }
   let (ordered_mincross, mincross_nodes) =
-    run_root_mincross_reorder_pass(
+    run_root_reorder_pass(
       order_with_vnodes,
       vnode_order_keys_for_ordering,
       order_groups_for_mincross,
