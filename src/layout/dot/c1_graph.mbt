@@ -102,6 +102,50 @@ fn edge_endpoints_at(
 }
 
 ///|
+/// Graphviz parity: oriented endpoint port lookup follows remapped endpoint
+/// names (including reversed directed edges), with optional fallback for
+/// callers that require original endpoint defaults.
+fn edge_tail_port_for_name(
+  edge : @cgraph.Edge,
+  tail_name : String,
+  fallback_to_original? : Bool = true,
+) -> @cgraph.Port? {
+  let orig_tail = edge.tail().name()
+  let orig_head = edge.head().name()
+  if tail_name == orig_tail {
+    edge.tail_port()
+  } else if tail_name == orig_head {
+    edge.head_port()
+  } else if fallback_to_original {
+    edge.tail_port()
+  } else {
+    None
+  }
+}
+
+///|
+/// Graphviz parity: oriented endpoint port lookup follows remapped endpoint
+/// names (including reversed directed edges), with optional fallback for
+/// callers that require original endpoint defaults.
+fn edge_head_port_for_name(
+  edge : @cgraph.Edge,
+  head_name : String,
+  fallback_to_original? : Bool = true,
+) -> @cgraph.Port? {
+  let orig_tail = edge.tail().name()
+  let orig_head = edge.head().name()
+  if head_name == orig_head {
+    edge.head_port()
+  } else if head_name == orig_tail {
+    edge.tail_port()
+  } else if fallback_to_original {
+    edge.head_port()
+  } else {
+    None
+  }
+}
+
+///|
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
 /// Do not change behavior without updating fixtures/tests.

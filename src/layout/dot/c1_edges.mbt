@@ -48,24 +48,8 @@ fn compute_edge_port_samples(
       } else {
         edge.head().name()
       }
-    let orig_tail = edge.tail().name()
-    let orig_head = edge.head().name()
-    let tail_port =
-      if tail_name == orig_tail {
-        edge.tail_port()
-      } else if tail_name == orig_head {
-        edge.head_port()
-      } else {
-        edge.tail_port()
-      }
-    let head_port =
-      if head_name == orig_head {
-        edge.head_port()
-      } else if head_name == orig_tail {
-        edge.tail_port()
-      } else {
-        edge.head_port()
-      }
+    let tail_port = edge_tail_port_for_name(edge, tail_name)
+    let head_port = edge_head_port_for_name(edge, head_name)
     tail_names.push(tail_name)
     head_names.push(head_name)
     tail_ports.push(tail_port)

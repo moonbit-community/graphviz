@@ -2245,17 +2245,16 @@ fn build_constraint_graph(
                 }
                 reversed
               }
-              let chain : Array[String] = []
-              chain.push(tail_name)
-              for vnode in ordered_vnodes {
-                chain.push(vnode)
-              }
+                let chain : Array[String] = []
+                chain.push(tail_name)
+                for vnode in ordered_vnodes {
+                  chain.push(vnode)
+                }
                 if tail_name != head_name || ordered_vnodes.length() == 0 {
                   chain.push(head_name)
                 }
                 let base_weight = @dot_shared.edge_weight(edge)
                 let orig_tail = edge.tail().name()
-                let orig_head = edge.head().name()
               let mut idx = 0
               while idx + 1 < chain.length() {
                 let seg_tail = chain[idx]
@@ -2271,21 +2270,17 @@ fn build_constraint_graph(
                 }
                 let weight = seg_base_weight + weight_bonus
                 let mut tail_port =
-                  if seg_tail == orig_tail {
-                  edge.tail_port()
-                } else if seg_tail == orig_head {
-                  edge.head_port()
-                } else {
-                  None
-                }
+                  edge_tail_port_for_name(
+                    edge,
+                    seg_tail,
+                    fallback_to_original=false,
+                  )
                 let mut head_port =
-                  if seg_head == orig_head {
-                  edge.head_port()
-                } else if seg_head == orig_tail {
-                  edge.tail_port()
-                } else {
-                  None
-                }
+                  edge_head_port_for_name(
+                    edge,
+                    seg_head,
+                    fallback_to_original=false,
+                  )
                 if tail_rank == head_rank &&
                   edge_mid_label_metrics(edge) is Some(_) &&
                   !@dot_shared.port_is_explicit(edge.tail_port()) &&
