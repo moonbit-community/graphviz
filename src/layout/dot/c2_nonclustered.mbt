@@ -3,6 +3,63 @@
 /// helpers isolated from clustered ordering branches.
 
 ///|
+priv struct GraphvizNeighborMaps {
+  out_neighbors : Map[String, Array[String]]
+  in_neighbors : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
+/// edge_out_order and ND_in head order from node-ordered ND_out scans.
+/// Do not change behavior without updating fixtures/tests.
+fn build_noncluster_graphviz_neighbors(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_head : Array[String],
+  edge_out_order : Map[String, Array[Int]],
+) -> GraphvizNeighborMaps {
+  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
+  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
+  let node_names : Array[String] = []
+  for i in 0..<nodes.length() {
+    let name = nodes[i].name()
+    node_names.push(name)
+    graphviz_out_neighbors[name] = []
+    graphviz_in_neighbors[name] = []
+  }
+  for name, list in edge_out_order {
+    let heads : Array[String] = []
+    for edge_idx in list {
+      let head =
+        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+          edges[edge_idx].head().name()
+        }
+      heads.push(head)
+    }
+    graphviz_out_neighbors[name] = heads
+  }
+  // Graphviz parity: non-cluster ND_in neighbor order follows ND_out traversal
+  // in graph node iteration order (agfstnode/agnxtnode), matching add_fast_edges.
+  let in_entries : Map[String, Array[String]] = Map::new()
+  for tail in node_names {
+    let heads = graphviz_out_neighbors.get(tail).unwrap_or_default()
+    for head in heads {
+      match in_entries.get(head) {
+        Some(list) => list.push(tail)
+        None => in_entries[head] = [tail]
+      }
+    }
+  }
+  for head, entries in in_entries {
+    graphviz_in_neighbors[head] = entries
+  }
+  {
+    out_neighbors: graphviz_out_neighbors,
+    in_neighbors: graphviz_in_neighbors,
+  }
+}
+
+///|
 /// Graphviz parity: non-cluster reorder path seeds node order from GD_nlist,
 /// builds Graphviz-style ND_out/ND_in neighbor order, and runs rank reorder
 /// without cluster remapping.
@@ -56,46 +113,15 @@ fn run_noncluster_reorder_pass(
     )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  // Graphviz parity: non-cluster neighbor maps preserve ND_out tail order from
-  // edge_out_order and ND_in head order from node-ordered ND_out scans.
-  let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
-  let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  let node_names : Array[String] = []
-  for i in 0..<nodes.length() {
-    let name = nodes[i].name()
-    node_names.push(name)
-    graphviz_out_neighbors[name] = []
-    graphviz_in_neighbors[name] = []
-  }
-  for name, list in edge_out_order {
-    let heads : Array[String] = []
-    for edge_idx in list {
-      let head =
-        if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-          edges[edge_idx].head().name()
-        }
-      heads.push(head)
-    }
-    graphviz_out_neighbors[name] = heads
-  }
-  // Graphviz parity: non-cluster ND_in neighbor order follows ND_out traversal
-  // in graph node iteration order (agfstnode/agnxtnode), matching add_fast_edges.
-  let in_entries : Map[String, Array[String]] = Map::new()
-  for tail in node_names {
-    let heads = match graphviz_out_neighbors.get(tail) {
-      Some(list) => list
-      None => []
-    }
-    for head in heads {
-      match in_entries.get(head) {
-        Some(list) => list.push(tail)
-        None => in_entries[head] = [tail]
-      }
-    }
-  }
-  for head, entries in in_entries {
-    graphviz_in_neighbors[head] = entries
-  }
+  let graphviz_neighbors =
+    build_noncluster_graphviz_neighbors(
+      nodes,
+      edges,
+      edge_head,
+      edge_out_order,
+    )
+  let graphviz_out_neighbors = graphviz_neighbors.out_neighbors
+  let graphviz_in_neighbors = graphviz_neighbors.in_neighbors
   reorder_rank_groups(
     rank_keys,
     groups,
