@@ -460,7 +460,7 @@ fn edge_parallel_offsets(
 }
 
 ///|
-fn adjust_intercluster_dotted_points(
+fn adjust_intercluster_dots(
   points : Array[@geom.Point],
   tail_anchor : @geom.Point,
   head_anchor : @geom.Point,
@@ -486,7 +486,7 @@ fn adjust_intercluster_dotted_points(
 }
 
 ///|
-fn adjust_intracluster_dotted_points(
+fn adjust_intracluster_dots(
   points : Array[@geom.Point],
 ) -> Array[@geom.Point] {
   if points.length() <= 3 {

@@ -2441,7 +2441,7 @@ fn adjust_route_points(
     }
   }
   if base.is_dotted && !base.same_outer_cluster && !using_pathplan {
-    points = adjust_intercluster_dotted_points(
+    points = adjust_intercluster_dots(
       points,
       base.tail_anchor,
       base.head_anchor,
@@ -2782,7 +2782,7 @@ fn build_edge_spline(
           }
         let adjusted =
           if !using_pathplan && is_dotted && same_outer_cluster {
-            adjust_intracluster_dotted_points(simplified)
+            adjust_intracluster_dots(simplified)
           } else {
             simplified
           }
