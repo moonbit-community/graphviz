@@ -494,6 +494,16 @@ fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool 
 }
 
 ///|
+/// Graphviz parity: root rank-reorder runtime keeps component traversal output
+/// and coalesce-parallel mode from one root reorder input snapshot.
+/// Do not change behavior without updating fixtures/tests.
+priv struct RootRankReorderRuntime {
+  components : Array[Array[String]]
+  root_graphviz_flip : Bool
+  coalesce_parallel : Bool
+}
+
+///|
 priv struct RootRankReorderInputs {
   order_rank_keys_for_mincross : Array[Int]
   order_groups_for_mincross : Map[Int, Array[String]]
@@ -855,6 +865,37 @@ fn build_root_component_reorder_config(
 fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
 ) -> Map[Int, Array[String]] {
+  let runtime =
+    build_root_rank_reorder_runtime(inputs)
+  if runtime.components.length() <= 1 {
+    return run_single_component_root_rank_reorder(
+      inputs,
+      runtime.root_graphviz_flip,
+      runtime.coalesce_parallel,
+    )
+  }
+  let component_projection_sources =
+    build_root_component_projection_sources(inputs)
+  let component_reorder_config =
+    build_root_component_reorder_config(
+      inputs,
+      runtime.root_graphviz_flip,
+      runtime.coalesce_parallel,
+    )
+  run_componentwise_root_rank_reorder(
+    runtime.components,
+    component_projection_sources,
+    component_reorder_config,
+  )
+}
+
+///|
+/// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
+/// component traversal plan, and coalesce-parallel env mode aligned.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_rank_reorder_runtime(
+  inputs : RootRankReorderInputs,
+) -> RootRankReorderRuntime {
   let has_cluster_keys =
     has_non_empty_cluster_keys(inputs.order_cluster_keys)
   let traversal_plan =
@@ -868,31 +909,13 @@ fn run_root_rank_reorder(
       inputs.order_flat_constraints,
       inputs.graphviz_flip,
     )
-  let components = traversal_plan.components
   let coalesce_parallel =
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
-  let root_graphviz_flip = traversal_plan.root_graphviz_flip
-  if components.length() <= 1 {
-    return run_single_component_root_rank_reorder(
-      inputs,
-      root_graphviz_flip,
-      coalesce_parallel,
-    )
+  {
+    components: traversal_plan.components,
+    root_graphviz_flip: traversal_plan.root_graphviz_flip,
+    coalesce_parallel,
   }
-
-  let component_projection_sources =
-    build_root_component_projection_sources(inputs)
-  let component_reorder_config =
-    build_root_component_reorder_config(
-      inputs,
-      root_graphviz_flip,
-      coalesce_parallel,
-    )
-  run_componentwise_root_rank_reorder(
-    components,
-    component_projection_sources,
-    component_reorder_config,
-  )
 }
 
 ///|
