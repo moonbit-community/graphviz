@@ -916,7 +916,7 @@ fn apply_rank_same_order(
 ///|
 /// Graphviz parity: unported rank=same groups keep subgraph order for ND_order.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_rank_same_order_to_nodes(
+fn apply_rank_same_order_nodes(
   node_order : Map[String, Int],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
