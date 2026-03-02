@@ -86,7 +86,7 @@ priv struct RootClusterBuildRanksInputs {
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
-fn run_root_and_cluster_build_ranks(
+fn run_root_and_cluster_ranks(
   order_with_clusters : Bool,
   order_with_vnodes : Bool,
   graph : @cgraph.Graph,

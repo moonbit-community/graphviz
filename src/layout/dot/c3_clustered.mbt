@@ -242,7 +242,7 @@ fn run_clustered_root_phase(
     ordered_with_vnodes,
   }
   let output =
-    run_root_and_cluster_build_ranks(
+    run_root_and_cluster_ranks(
       reorder_setup.order_with_clusters,
       reorder_setup.order_with_vnodes,
       dispatch_context.graph,
