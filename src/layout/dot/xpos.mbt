@@ -1604,7 +1604,7 @@ fn build_constraint_graph(
         }
     }
   }
-  let rank_adj_constraints : Map[String, (String, String, Int, Int)] = Map::new()
+  let rank_adj_constraints : Map[String, ConstraintEdge] = Map::new()
   let rank_adj_order : Array[String] = []
   for rank in rank_keys {
     let names = match groups.get(rank) {
@@ -1623,7 +1623,14 @@ fn build_constraint_graph(
         rank_nodesep,
       )
       let key = "\{tail}|\{head}"
-      rank_adj_constraints[key] = (tail, head, minlen, 0)
+      rank_adj_constraints[key] = {
+        tail,
+        head,
+        minlen,
+        weight: 0,
+        tail_port: None,
+        head_port: None,
+      }
       rank_adj_order.push(key)
       i = i + 1
     }
@@ -1639,7 +1646,7 @@ fn build_constraint_graph(
     }
   }
   let segments_by_tail : Map[String, Array[SlackSegment]] = Map::new()
-  let flat_minlen_constraints : Map[String, (String, String, Int, Int)] = Map::new()
+  let flat_minlen_constraints : Map[String, ConstraintEdge] = Map::new()
   let merged_edge_weight_bonus : Map[Int, Int] = Map::new()
   let merged_edge_skip : Map[Int, Bool] = Map::new()
   let port_merge_key = (port : @cgraph.Port?) => {
@@ -1849,22 +1856,44 @@ fn build_constraint_graph(
                 let flat_key = "\{left}|\{right}"
                 match rank_adj_constraints.get(flat_key) {
                   Some(entry) => {
-                  let (tail, head, prev_minlen, prev_weight) = entry
-                  let next_minlen = if minlen > prev_minlen { minlen } else { prev_minlen }
-                  let next_weight = if weight > prev_weight { weight } else { prev_weight }
-                  rank_adj_constraints[flat_key] = (tail, head, next_minlen, next_weight)
+                    let next_minlen =
+                      if minlen > entry.minlen { minlen } else { entry.minlen }
+                    let next_weight =
+                      if weight > entry.weight { weight } else { entry.weight }
+                    rank_adj_constraints[flat_key] = {
+                      tail: entry.tail,
+                      head: entry.head,
+                      minlen: next_minlen,
+                      weight: next_weight,
+                      tail_port: None,
+                      head_port: None,
+                    }
                 }
                 None =>
                   match flat_minlen_constraints.get(flat_key) {
                     Some(entry) => {
-                      let (_prev_left, _prev_right, prev_minlen, prev_weight) = entry
-                      let next_minlen = if minlen > prev_minlen { minlen } else { prev_minlen }
-                      let next_weight = if weight > prev_weight { weight } else { prev_weight }
-                      flat_minlen_constraints[flat_key] =
-                        (left, right, next_minlen, next_weight)
+                      let next_minlen =
+                        if minlen > entry.minlen { minlen } else { entry.minlen }
+                      let next_weight =
+                        if weight > entry.weight { weight } else { entry.weight }
+                      flat_minlen_constraints[flat_key] = {
+                        tail: left,
+                        head: right,
+                        minlen: next_minlen,
+                        weight: next_weight,
+                        tail_port: None,
+                        head_port: None,
+                      }
                     }
-                    None => flat_minlen_constraints[flat_key] =
-                      (left, right, minlen, weight)
+                    None =>
+                      flat_minlen_constraints[flat_key] = {
+                        tail: left,
+                        head: right,
+                        minlen,
+                        weight,
+                        tail_port: None,
+                        head_port: None,
+                      }
                   }
               }
             } else {
@@ -1983,12 +2012,17 @@ fn build_constraint_graph(
   for key in rank_adj_order {
     match rank_adj_constraints.get(key) {
       Some(entry) => {
-        let (tail, head, minlen, weight) = entry
-        match index.get(tail) {
+        match index.get(entry.tail) {
           Some(tail_idx) =>
-            match index.get(head) {
+            match index.get(entry.head) {
               Some(head_idx) => {
-                let _ = @network_simplex.add_edge(graph, tail_idx, head_idx, minlen, weight)
+                let _ = @network_simplex.add_edge(
+                  graph,
+                  tail_idx,
+                  head_idx,
+                  entry.minlen,
+                  entry.weight,
+                )
               }
               None => ()
             }
@@ -1999,12 +2033,17 @@ fn build_constraint_graph(
     }
   }
   for _flat_key, entry in flat_minlen_constraints {
-    let (left, right, minlen, weight) = entry
-    match index.get(left) {
+    match index.get(entry.tail) {
       Some(tail_idx) =>
-        match index.get(right) {
+        match index.get(entry.head) {
           Some(head_idx) => {
-            let _ = @network_simplex.add_edge(graph, tail_idx, head_idx, minlen, weight)
+            let _ = @network_simplex.add_edge(
+              graph,
+              tail_idx,
+              head_idx,
+              entry.minlen,
+              entry.weight,
+            )
           }
           None => ()
         }
