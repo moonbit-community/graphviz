@@ -81,6 +81,32 @@ fn coalesce_order_edges_by_tail(
 }
 
 ///|
+/// Graphviz parity: oriented tail endpoint reads prefer edge_tail array and
+/// fall back to edge object endpoint when arrays are shorter.
+fn edge_tail_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+) -> String {
+  if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+    edge.tail().name()
+  }
+}
+
+///|
+/// Graphviz parity: oriented head endpoint reads prefer edge_head array and
+/// fall back to edge object endpoint when arrays are shorter.
+fn edge_head_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_head : Array[String],
+) -> String {
+  if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+    edge.head().name()
+  }
+}
+
+///|
 /// Graphviz parity: oriented edge endpoint reads prefer edge_tail/edge_head
 /// arrays and fall back to edge object endpoints when arrays are shorter.
 /// Do not change behavior without updating fixtures/tests.
@@ -90,14 +116,8 @@ fn edge_endpoints_at(
   edge_tail : Array[String],
   edge_head : Array[String],
 ) -> (String, String) {
-  let tail =
-    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-      edge.tail().name()
-    }
-  let head =
-    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-      edge.head().name()
-    }
+  let tail = edge_tail_at(edge, edge_idx, edge_tail)
+  let head = edge_head_at(edge, edge_idx, edge_head)
   (tail, head)
 }
 
