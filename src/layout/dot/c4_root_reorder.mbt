@@ -854,45 +854,6 @@ priv struct RootRankOrderPhaseInputs {
   root_reorder_output : RootClusterReorderInputs
 }
 
-///|
-/// Graphviz parity: root rank-order phase dispatches reorder_rank_groups with
-/// root-only payload and fixed Graphviz coalesce-parallel behavior.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_rank_order_reorder_call(
-  inputs : RootRankOrderPhaseInputs,
-  root_graphviz_flip : Bool,
-) -> Map[Int, Array[String]] {
-  let root_reorder_output = inputs.root_reorder_output
-  reorder_rank_groups(
-    root_reorder_output.root_rank_keys,
-    root_reorder_output.root_groups,
-    root_reorder_output.root_edges_out,
-    root_reorder_output.root_edge_tail_out,
-    root_reorder_output.root_edge_head_out,
-    root_reorder_output.root_edge_tail_port_x,
-    root_reorder_output.root_edge_head_port_x,
-    root_reorder_output.root_edge_tail_port_order,
-    root_reorder_output.root_edge_head_port_order,
-    root_reorder_output.root_parents,
-    root_reorder_output.root_children,
-    inputs.order_cluster_keys,
-    inputs.rank_same_groups,
-    inputs.rank_same_order,
-    root_reorder_output.root_edge_order,
-    root_reorder_output.root_node_order,
-    inputs.order_sizes_out,
-    inputs.nodesep_pt,
-    inputs.has_edge_labels,
-    inputs.port_order_positions,
-    inputs.port_order_contrib,
-    Map::new(),
-    inputs.order_cluster_skeleton,
-    inputs.flat_constraints,
-    graphviz_flip=root_graphviz_flip,
-    coalesce_parallel_edges=true,
-  )
-}
-
 fn has_multiple_non_empty_cluster_keys(
   order_cluster_keys : Map[String, String],
 ) -> Bool {
@@ -935,13 +896,41 @@ fn run_root_rank_order_phase(
 ) -> RootClusterRankOrderPhaseOutput {
   // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
   // path as cluster-phase root bucket ordering, with root-flip guarding.
+  let root_reorder_output = inputs.root_reorder_output
   let root_graphviz_flip =
     should_enable_root_flip(inputs.graphviz_flip, inputs.order_cluster_keys)
   let ordered_root =
-    run_root_rank_order_reorder_call(inputs, root_graphviz_flip)
+    reorder_rank_groups(
+      root_reorder_output.root_rank_keys,
+      root_reorder_output.root_groups,
+      root_reorder_output.root_edges_out,
+      root_reorder_output.root_edge_tail_out,
+      root_reorder_output.root_edge_head_out,
+      root_reorder_output.root_edge_tail_port_x,
+      root_reorder_output.root_edge_head_port_x,
+      root_reorder_output.root_edge_tail_port_order,
+      root_reorder_output.root_edge_head_port_order,
+      root_reorder_output.root_parents,
+      root_reorder_output.root_children,
+      inputs.order_cluster_keys,
+      inputs.rank_same_groups,
+      inputs.rank_same_order,
+      root_reorder_output.root_edge_order,
+      root_reorder_output.root_node_order,
+      inputs.order_sizes_out,
+      inputs.nodesep_pt,
+      inputs.has_edge_labels,
+      inputs.port_order_positions,
+      inputs.port_order_contrib,
+      Map::new(),
+      inputs.order_cluster_skeleton,
+      inputs.flat_constraints,
+      graphviz_flip=root_graphviz_flip,
+      coalesce_parallel_edges=true,
+    )
   finalize_root_rank_order_phase_output(
-    inputs.root_reorder_output.root_rank_keys,
-    inputs.root_reorder_output.root_groups,
+    root_reorder_output.root_rank_keys,
+    root_reorder_output.root_groups,
     ordered_root,
     inputs.order_cluster_keys,
     inputs.order_cluster_skeleton,
