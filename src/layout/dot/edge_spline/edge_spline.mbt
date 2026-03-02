@@ -201,6 +201,14 @@ pub fn point_dist2(a : @geom.Point, b : @geom.Point) -> Double {
 
 ///|
 ///|
+priv struct BezierSplitResult {
+  point : @geom.Point
+  left : Array[@geom.Point]
+  right : Array[@geom.Point]
+}
+
+///|
+///|
 pub fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
   point_add(a, point_scale(point_sub(b, a), t))
 }
@@ -210,7 +218,7 @@ pub fn point_lerp(a : @geom.Point, b : @geom.Point, t : Double) -> @geom.Point {
 fn bezier_split(
   points : Array[@geom.Point],
   t : Double,
-) -> (@geom.Point, Array[@geom.Point], Array[@geom.Point]) {
+) -> BezierSplitResult {
   let p0 = points[0]
   let p1 = points[1]
   let p2 = points[2]
@@ -223,7 +231,7 @@ fn bezier_split(
   let p0123 = point_lerp(p012, p123, t)
   let left : Array[@geom.Point] = [p0, p01, p012, p0123]
   let right : Array[@geom.Point] = [p0123, p123, p23, p3]
-  (p0123, left, right)
+  { point: p0123, left, right }
 }
 
 ///|
@@ -252,9 +260,9 @@ fn bezier_clip_eps(
   while true {
     opt = pt
     let t = (high + low) / 2.0
-    let (next, left, right) = bezier_split(points, t)
-    pt = next
-    seg = if left_inside { right } else { left }
+    let split = bezier_split(points, t)
+    pt = split.point
+    seg = if left_inside { split.right } else { split.left }
     if inside(pt) {
       if left_inside {
         low = t
@@ -1926,12 +1934,12 @@ fn find_vertical(
     return -1.0
   }
   let mid = (tmin + tmax) / 2.0
-  let (_, left, right) = bezier_split(points, 0.5)
-  let t = find_vertical(left, tmin, mid, xcoord, ymin, ymax)
+  let split = bezier_split(points, 0.5)
+  let t = find_vertical(split.left, tmin, mid, xcoord, ymin, ymax)
   if t >= 0.0 {
     return t
   }
-  find_vertical(right, mid, tmax, xcoord, ymin, ymax)
+  find_vertical(split.right, mid, tmax, xcoord, ymin, ymax)
 }
 
 ///|
@@ -1957,12 +1965,12 @@ fn find_horizontal(
     return -1.0
   }
   let mid = (tmin + tmax) / 2.0
-  let (_, left, right) = bezier_split(points, 0.5)
-  let t = find_horizontal(left, tmin, mid, ycoord, xmin, xmax)
+  let split = bezier_split(points, 0.5)
+  let t = find_horizontal(split.left, tmin, mid, ycoord, xmin, xmax)
   if t >= 0.0 {
     return t
   }
-  find_horizontal(right, mid, tmax, ycoord, xmin, xmax)
+  find_horizontal(split.right, mid, tmax, ycoord, xmin, xmax)
 }
 
 ///|
@@ -1975,9 +1983,9 @@ fn spline_intersect_bbox(
   let mut best : Array[@geom.Point]? = None
   let update = (t : Double) => {
     if t >= 0.0 && t < tmin {
-      let (_, left, _) = bezier_split(orig, t)
+      let split = bezier_split(orig, t)
       tmin = t
-      best = Some(left)
+      best = Some(split.left)
     }
   }
   update(find_vertical(orig, 0.0, 1.0, rect.llx, rect.lly, rect.ury))
