@@ -394,7 +394,7 @@ fn build_edge_indices_and_order(
 /// Graphviz parity: transpose seed maps include all seeded nodes and only
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
-fn build_transpose_seed_edge_maps(
+fn build_transpose_seed_maps(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],

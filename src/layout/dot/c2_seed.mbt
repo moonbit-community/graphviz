@@ -318,7 +318,7 @@ fn build_seeded_reorder_groups(
   )
   if seed_cross > 0 {
     let (edge_penalty, edge_in, edge_out) =
-      build_transpose_seed_edge_maps(
+      build_transpose_seed_maps(
         order_rank_keys,
         seeded_groups,
         order_edges_out,
