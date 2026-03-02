@@ -676,67 +676,6 @@ fn run_componentwise_root_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: single-component root reorder dispatch preserves the same
-/// reorder_rank_groups inputs and edge coalescing behavior as the root path.
-/// Do not change behavior without updating fixtures/tests.
-fn run_single_component_root_rank_reorder(
-  inputs : RootRankReorderInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
-) -> Map[Int, Array[String]] {
-  let reorder_call_inputs =
-    build_single_component_reorder_inputs(
-      inputs,
-      root_graphviz_flip,
-      // Graphviz parity: root mincross (startpass=0) uses original edge
-      // multiplicity; parallel-edge coalescing is a ReMincross concern.
-      coalesce_parallel,
-    )
-  run_root_rank_reorder_call(reorder_call_inputs)
-}
-
-///|
-/// Graphviz parity: single-component root reorder forwards full root mincross
-/// snapshots directly into reorder call inputs (no component filtering).
-/// Do not change behavior without updating fixtures/tests.
-fn build_single_component_reorder_inputs(
-  inputs : RootRankReorderInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
-) -> RootRankReorderCallInputs {
-  {
-    order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
-    order_groups_for_mincross: inputs.order_groups_for_mincross,
-    order_edges_out_mincross: inputs.order_edges_out_mincross,
-    order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross: inputs.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross: inputs.order_edge_head_port_order_mincross,
-    parents: inputs.parents,
-    children: inputs.children,
-    order_cluster_keys: inputs.order_cluster_keys,
-    rank_same_groups: inputs.cluster_meta.rank_same_groups,
-    rank_same_order: inputs.cluster_meta.rank_same_order,
-    edge_order: inputs.edge_order,
-    order_node_order: inputs.order_node_order,
-    order_sizes_out: inputs.order_sizes_out,
-    nodesep_pt: inputs.nodesep_pt,
-    has_edge_labels: inputs.has_edge_labels,
-    port_order_positions: inputs.port_order_positions,
-    port_order_contrib: inputs.port_order_contrib,
-    preferred_positions: inputs.preferred_positions,
-    order_cluster_skeleton: inputs.order_cluster_skeleton,
-    order_flat_constraints: inputs.order_flat_constraints,
-    graphviz_out_neighbors: inputs.graphviz_out_neighbors,
-    graphviz_in_neighbors: inputs.graphviz_in_neighbors,
-    root_graphviz_flip,
-    coalesce_parallel,
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -746,10 +685,43 @@ fn run_root_rank_reorder(
   let runtime =
     build_root_rank_reorder_runtime(inputs)
   if runtime.components.length() <= 1 {
-    return run_single_component_root_rank_reorder(
-      inputs,
-      runtime.root_graphviz_flip,
-      runtime.coalesce_parallel,
+    // Graphviz parity: single-component root reorder forwards full root
+    // mincross snapshots directly into reorder call inputs.
+    return run_root_rank_reorder_call(
+      {
+        order_rank_keys_for_mincross: inputs.order_rank_keys_for_mincross,
+        order_groups_for_mincross: inputs.order_groups_for_mincross,
+        order_edges_out_mincross: inputs.order_edges_out_mincross,
+        order_edge_tail_out_mincross: inputs.order_edge_tail_out_mincross,
+        order_edge_head_out_mincross: inputs.order_edge_head_out_mincross,
+        order_edge_tail_port_x_mincross: inputs.order_edge_tail_port_x_mincross,
+        order_edge_head_port_x_mincross: inputs.order_edge_head_port_x_mincross,
+        order_edge_tail_port_order_mincross:
+          inputs.order_edge_tail_port_order_mincross,
+        order_edge_head_port_order_mincross:
+          inputs.order_edge_head_port_order_mincross,
+        parents: inputs.parents,
+        children: inputs.children,
+        order_cluster_keys: inputs.order_cluster_keys,
+        rank_same_groups: inputs.cluster_meta.rank_same_groups,
+        rank_same_order: inputs.cluster_meta.rank_same_order,
+        edge_order: inputs.edge_order,
+        order_node_order: inputs.order_node_order,
+        order_sizes_out: inputs.order_sizes_out,
+        nodesep_pt: inputs.nodesep_pt,
+        has_edge_labels: inputs.has_edge_labels,
+        port_order_positions: inputs.port_order_positions,
+        port_order_contrib: inputs.port_order_contrib,
+        preferred_positions: inputs.preferred_positions,
+        order_cluster_skeleton: inputs.order_cluster_skeleton,
+        order_flat_constraints: inputs.order_flat_constraints,
+        graphviz_out_neighbors: inputs.graphviz_out_neighbors,
+        graphviz_in_neighbors: inputs.graphviz_in_neighbors,
+        root_graphviz_flip: runtime.root_graphviz_flip,
+        // Graphviz parity: root mincross (startpass=0) uses original edge
+        // multiplicity; parallel-edge coalescing is a ReMincross concern.
+        coalesce_parallel: runtime.coalesce_parallel,
+      },
     )
   }
   run_componentwise_root_rank_reorder(
