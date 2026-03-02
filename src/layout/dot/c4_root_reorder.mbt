@@ -17,7 +17,7 @@ fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
 ///|
 /// Graphviz parity: synthetic mincross endpoints keep default port values at
 /// zero when Graphviz treats the endpoint pair as synthetic-only.
-fn normalize_synthetic_mincross_ports(
+fn normalize_synthetic_ports(
   tail : String,
   head : String,
   tail_port_x_raw : Double,
@@ -91,7 +91,7 @@ fn collect_mincross_order_edges(
       let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
       let head_port_order_raw = order_edge_head_port_order[edge_idx]
       let (tail_port_x, head_port_x, tail_port_order, head_port_order) =
-        normalize_synthetic_mincross_ports(
+        normalize_synthetic_ports(
           tail,
           head,
           tail_port_x_raw,
@@ -881,7 +881,7 @@ fn normalize_root_reorder_edge_ports(
       tail_port_order_norm,
       head_port_order_norm,
     ) =
-      normalize_synthetic_mincross_ports(
+      normalize_synthetic_ports(
         tail,
         head,
         tail_port_x_raw,
@@ -1392,7 +1392,7 @@ fn apply_root_rank_groups_override(
 ///|
 /// Graphviz parity: clustered-block bounds are the first/last clustered-name
 /// positions in the rank, with (-1, -1) when no clustered names exist.
-fn find_cluster_block_bounds_for_rank(
+fn find_cluster_block_bounds(
   names : Array[String],
   cluster_keys : Map[String, String],
 ) -> (Int, Int) {
@@ -1421,7 +1421,7 @@ fn has_root_nodes_on_both_sides(
     return false
   }
   let (first_cluster, last_cluster) =
-    find_cluster_block_bounds_for_rank(names, cluster_keys)
+    find_cluster_block_bounds(names, cluster_keys)
   if first_cluster < 0 {
     return false
   }
@@ -1452,7 +1452,7 @@ fn has_root_nodes_on_both_sides(
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_rank_groups_by_cluster_order(
+fn reorder_rank_groups_by_cluster(
   final_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
