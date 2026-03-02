@@ -365,12 +365,18 @@ fn miter_shape(
 }
 
 ///|
+priv struct ArrowShapePolygon {
+  endpoint : @geom.Point
+  polygon : Array[@geom.Point]
+}
+
+///|
 fn arrow_type_normal0(
   p_in : @geom.Point,
   u : @geom.Point,
   penwidth : Double,
   flag : Int,
-) -> (@geom.Point, Array[@geom.Point]) {
+) -> ArrowShapePolygon {
   let mut arrowwidth = 0.35
   if penwidth > 4.0 {
     arrowwidth = arrowwidth * penwidth / 4.0
@@ -468,7 +474,7 @@ fn arrow_type_normal0(
     a[3] = point_add(q, v)
     q = point_sub(q, delta_base)
   }
-  (q, a)
+  { endpoint: q, polygon: a }
 }
 
 ///|
@@ -478,7 +484,7 @@ fn arrow_type_crow0(
   arrowsize : Double,
   penwidth : Double,
   flag : Int,
-) -> (@geom.Point, Array[@geom.Point]) {
+) -> ArrowShapePolygon {
   let mut p = p_in
   let mut arrowwidth = 0.45
   if penwidth > 4.0 * arrowsize && (flag & ARR_MOD_INV) != 0 {
@@ -617,7 +623,7 @@ fn arrow_type_crow0(
     a[7] = point(p.x + v.x, p.y + v.y)
     q = point_add(q, delta_tip)
   }
-  (q, a)
+  { endpoint: q, polygon: a }
 }
 
 ///|
@@ -626,7 +632,7 @@ fn arrow_type_diamond0(
   u : @geom.Point,
   penwidth : Double,
   flag : Int,
-) -> (@geom.Point, Array[@geom.Point]) {
+) -> ArrowShapePolygon {
   let v = point(-u.y / 3.0, u.x / 3.0)
   let mut p = p_in
   let mut r = point(p.x + u.x / 2.0, p.y + u.y / 2.0)
@@ -657,7 +663,7 @@ fn arrow_type_diamond0(
   a[2] = p
   a[3] = point_sub(r, v)
   q = point_sub(q, delta)
-  (q, a)
+  { endpoint: q, polygon: a }
 }
 
 ///|
@@ -669,11 +675,11 @@ fn arrow_length_normal(
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
-  let (q, a) = arrow_type_normal0(p, u, penwidth, flag)
-  let base1 = a[1]
-  let base2 = a[3]
-  let tip = a[2]
-  let full_length = q.x
+  let shape = arrow_type_normal0(p, u, penwidth, flag)
+  let base1 = shape.polygon[1]
+  let base2 = shape.polygon[3]
+  let tip = shape.polygon[2]
+  let full_length = shape.endpoint.x
   let nominal_length = Double::abs(base1.x - tip.x)
   let nominal_base_width = base2.y - base1.y
   let full_base_width = nominal_base_width * full_length / nominal_length
@@ -873,11 +879,11 @@ fn arrow_length_diamond(
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
-  let (q, a) = arrow_type_diamond0(p, u, penwidth, flag)
-  let base1 = a[3]
-  let base2 = a[1]
-  let tip = a[2]
-  let full_length = q.x / 2.0
+  let shape = arrow_type_diamond0(p, u, penwidth, flag)
+  let base1 = shape.polygon[3]
+  let base2 = shape.polygon[1]
+  let tip = shape.polygon[2]
+  let full_length = shape.endpoint.x / 2.0
   let nominal_length = Double::abs(base1.x - tip.x)
   let nominal_base_width = base2.y - base1.y
   let full_base_width = nominal_base_width * full_length / nominal_length
@@ -919,12 +925,12 @@ fn arrow_length_crow(
 ) -> Double {
   let p = point(0.0, 0.0)
   let u = point(lenfact * arrowsize * ARROW_LENGTH, 0.0)
-  let (q, a) = arrow_type_crow0(p, u, arrowsize, penwidth, flag)
-  let base1 = a[1]
-  let base2 = a[7]
-  let tip = a[0]
-  let shaft1 = a[3]
-  let full_length = q.x
+  let shape = arrow_type_crow0(p, u, arrowsize, penwidth, flag)
+  let base1 = shape.polygon[1]
+  let base2 = shape.polygon[7]
+  let tip = shape.polygon[0]
+  let shaft1 = shape.polygon[3]
+  let full_length = shape.endpoint.x
   let full_length_without_shaft = full_length - (base1.x - shaft1.x)
   let nominal_length = Double::abs(base1.x - tip.x)
   let nominal_base_width = base2.y - base1.y
