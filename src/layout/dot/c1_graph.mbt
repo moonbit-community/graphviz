@@ -372,7 +372,7 @@ fn collect_order_edges_for_tails(
 /// Graphviz parity: parent/child adjacency maps and edge-order indices are
 /// derived from the exact materialized edge arrays in current order graph.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_edge_indices_and_order(
+fn build_edge_indices_and_order(
   order_nodes : Array[String],
   edge_tail_out : Array[String],
   edge_head_out : Array[String],

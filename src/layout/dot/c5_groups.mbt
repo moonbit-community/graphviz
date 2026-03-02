@@ -228,7 +228,7 @@ fn run_remincross_cleanup_reorder(
     rem_flat_constraints,
   ) = materialized_inputs
   let (rem_parents, rem_children, rem_edge_order) =
-    build_order_edge_indices_and_order(
+    build_edge_indices_and_order(
       rem_nodes,
       rem_edge_tail_out,
       rem_edge_head_out,

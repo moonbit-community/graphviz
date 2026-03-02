@@ -1075,7 +1075,7 @@ fn build_root_reorder_inputs(
           root_edge_head_port_order,
         )
       let (root_parents, root_children, root_edge_order) =
-        build_order_edge_indices_and_order(
+        build_edge_indices_and_order(
           root_nodes,
           root_edge_tail_out,
           root_edge_head_out,

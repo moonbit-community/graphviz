@@ -560,7 +560,7 @@ fn run_root_mincross_reorder_pass(
           order_edge_head_port_order,
         )
       let (parents, children, edge_order) =
-        build_order_edge_indices_and_order(
+        build_edge_indices_and_order(
           order_nodes_for_mincross,
           order_edge_tail_out_mincross,
           order_edge_head_out_mincross,
