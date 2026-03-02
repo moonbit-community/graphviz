@@ -33,6 +33,11 @@ priv struct NodePadding {
   pad_y_pt : Double
 }
 
+priv struct SizePt {
+  width_pt : Double
+  height_pt : Double
+}
+
 ///|
 fn parse_margin(value : String) -> MarginValues? {
   let numbers = extract_numbers(value)
@@ -129,11 +134,11 @@ fn apply_label_padding_for_shape(
   height_pt : Double,
   pad_x_pt : Double,
   pad_y_pt : Double,
-) -> (Double, Double) {
+) -> SizePt {
   if shape == "plain" || (width_pt <= 0.0 && height_pt <= 0.0) {
-    (width_pt, height_pt)
+    { width_pt, height_pt }
   } else {
-    (width_pt + pad_x_pt, height_pt + pad_y_pt)
+    { width_pt: width_pt + pad_x_pt, height_pt: height_pt + pad_y_pt }
   }
 }
 
@@ -998,19 +1003,26 @@ fn html_cell_content_size(
   content : @html_label.HtmlCellContent,
   font_name : String,
   font_size_pt : Double,
-) -> (Double, Double) {
+) -> SizePt {
   match content {
-    @html_label.HtmlCellContent::Text(text) =>
-      label_text_dimensions(text, font_name, font_size_pt)
+    @html_label.HtmlCellContent::Text(text) => {
+      let (width_pt, height_pt) =
+        label_text_dimensions(text, font_name, font_size_pt)
+      { width_pt, height_pt }
+    }
     @html_label.HtmlCellContent::StyledText(spans) => {
       let text = StringBuilder::new()
       for span in spans {
         text.write_string(span.text)
       }
-      label_text_dimensions(text.to_string(), font_name, font_size_pt)
+      let (width_pt, height_pt) =
+        label_text_dimensions(text.to_string(), font_name, font_size_pt)
+      { width_pt, height_pt }
     }
-    @html_label.HtmlCellContent::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
+    @html_label.HtmlCellContent::Table(table) => {
+      let (width_pt, height_pt) = html_table_size(table, font_name, font_size_pt)
+      { width_pt, height_pt }
+    }
   }
 }
 
@@ -1033,16 +1045,16 @@ fn html_cell_size(
   font_name : String,
   font_size_pt : Double,
 ) -> (Double, Double) {
-  let (content_width, content_height) = html_cell_content_size(
+  let content_size = html_cell_content_size(
     cell.content,
     font_name,
     font_size_pt,
   )
   let cell_border_pt = html_table_cell_border_pt(table)
   let mut width =
-    content_width + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
+    content_size.width_pt + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
   let mut height =
-    content_height + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
+    content_size.height_pt + table.cell_padding_pt * 2.0 + cell_border_pt * 2.0
   match cell.min_width_pt {
     Some(value) => if value > width { width = value }
     None => ()
@@ -1097,12 +1109,17 @@ fn html_label_size(
   label : @html_label.HtmlLabel,
   font_name : String,
   font_size_pt : Double,
-) -> (Double, Double) {
+) -> SizePt {
   match label {
-    @html_label.HtmlLabel::Text(text) =>
-      label_text_dimensions(text, font_name, font_size_pt)
-    @html_label.HtmlLabel::Table(table) =>
-      html_table_size(table, font_name, font_size_pt)
+    @html_label.HtmlLabel::Text(text) => {
+      let (width_pt, height_pt) =
+        label_text_dimensions(text, font_name, font_size_pt)
+      { width_pt, height_pt }
+    }
+    @html_label.HtmlLabel::Table(table) => {
+      let (width_pt, height_pt) = html_table_size(table, font_name, font_size_pt)
+      { width_pt, height_pt }
+    }
   }
 }
 
@@ -2091,31 +2108,39 @@ fn node_size(
   if @html_label.is_html_label_text(label) {
     match parse_html_label_cached(label) {
       Some(html_label) => {
-        let (html_width_pt, html_height_pt) = html_label_size(
+        let html_dims = html_label_size(
           html_label, font, font_size_pt,
         )
-        let (padded_width_pt, padded_height_pt) =
+        let padded_dims =
           apply_label_padding_for_shape(
             shape,
-            html_width_pt,
-            html_height_pt,
+            html_dims.width_pt,
+            html_dims.height_pt,
             padding.pad_x_pt,
             padding.pad_y_pt,
           )
         let (width_pt, height_pt) = match fixedsize_mode {
           NodeFixedSizeMode::True => (base_width_pt, base_height_pt)
           NodeFixedSizeMode::Shape => (
-            if padded_width_pt > base_width_pt { padded_width_pt } else { base_width_pt },
-            if padded_height_pt > base_height_pt {
-              padded_height_pt
+            if padded_dims.width_pt > base_width_pt {
+              padded_dims.width_pt
+            } else {
+              base_width_pt
+            },
+            if padded_dims.height_pt > base_height_pt {
+              padded_dims.height_pt
             } else {
               base_height_pt
             },
           )
           NodeFixedSizeMode::None => (
-            if padded_width_pt > base_width_pt { padded_width_pt } else { base_width_pt },
-            if padded_height_pt > base_height_pt {
-              padded_height_pt
+            if padded_dims.width_pt > base_width_pt {
+              padded_dims.width_pt
+            } else {
+              base_width_pt
+            },
+            if padded_dims.height_pt > base_height_pt {
+              padded_dims.height_pt
             } else {
               base_height_pt
             },
@@ -2170,7 +2195,7 @@ fn node_size(
     label, font, font_size_pt,
   )
   let has_label = text_width_pt > 0.0 || text_height_pt > 0.0
-  let (label_width_pt, label_height_pt) =
+  let label_dims =
     if has_label {
       apply_label_padding_for_shape(
         shape,
@@ -2180,14 +2205,14 @@ fn node_size(
         padding.pad_y_pt,
       )
     } else {
-      (0.0, 0.0)
+      { width_pt: 0.0, height_pt: 0.0 }
   }
   let polygon_shape = match builtin_polygon_attrs(node, shape) {
     Some(attrs) => Some(attrs)
     None => if shape == "polygon" { Some(polygon_shape_attrs(node)) } else { None }
   }
-  let mut scaled_label_width_pt = label_width_pt
-  let mut scaled_label_height_pt = label_height_pt
+  let mut scaled_label_width_pt = label_dims.width_pt
+  let mut scaled_label_height_pt = label_dims.height_pt
   if fixedsize_mode == NodeFixedSizeMode::None {
     if polygon_shape is Some(_) && has_label {
       let polygon_attrs =
@@ -2212,8 +2237,8 @@ fn node_size(
         )
       let scaled_bbox =
         polygon_scaled_label_bbox(
-          label_width_pt,
-          label_height_pt,
+          label_dims.width_pt,
+          label_dims.height_pt,
           base_height_pt,
           polygon_attrs.sides,
           is_box,
@@ -2222,19 +2247,19 @@ fn node_size(
       scaled_label_height_pt = scaled_bbox.height_pt
     } else if shape == "mdiamond" && has_label {
       let sqrt2 = Double::sqrt(2.0)
-      let temp = label_height_pt * sqrt2
+      let temp = label_dims.height_pt * sqrt2
       if base_height_pt > temp {
-        let ratio = label_height_pt / base_height_pt
+        let ratio = label_dims.height_pt / base_height_pt
         let denom = 1.0 - ratio * ratio
         if denom > 0.0 {
           let scale = Double::sqrt(1.0 / denom)
-          scaled_label_width_pt = label_width_pt * scale
+          scaled_label_width_pt = label_dims.width_pt * scale
         } else {
-          scaled_label_width_pt = label_width_pt * sqrt2
+          scaled_label_width_pt = label_dims.width_pt * sqrt2
           scaled_label_height_pt = temp
         }
       } else {
-        scaled_label_width_pt = label_width_pt * sqrt2
+        scaled_label_width_pt = label_dims.width_pt * sqrt2
         scaled_label_height_pt = temp
       }
       let cos_val = sqrt2 / 2.0
@@ -2242,19 +2267,19 @@ fn node_size(
       scaled_label_height_pt = scaled_label_height_pt / cos_val
     } else if scale_ellipse && has_label {
       let sqrt2 = Double::sqrt(2.0)
-      let temp = label_height_pt * sqrt2
+      let temp = label_dims.height_pt * sqrt2
       if base_height_pt > temp {
-        let ratio = label_height_pt / base_height_pt
+        let ratio = label_dims.height_pt / base_height_pt
         let denom = 1.0 - ratio * ratio
         if denom > 0.0 {
           let scale = Double::sqrt(1.0 / denom)
-          scaled_label_width_pt = label_width_pt * scale
+          scaled_label_width_pt = label_dims.width_pt * scale
         } else {
-          scaled_label_width_pt = label_width_pt * sqrt2
+          scaled_label_width_pt = label_dims.width_pt * sqrt2
           scaled_label_height_pt = temp
         }
       } else {
-        scaled_label_width_pt = label_width_pt * sqrt2
+        scaled_label_width_pt = label_dims.width_pt * sqrt2
         scaled_label_height_pt = temp
       }
       scaled_label_width_pt = scaled_label_width_pt * ELLIPSE_LABEL_SCALE
