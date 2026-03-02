@@ -228,7 +228,13 @@ fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
 }
 
 ///|
-fn rank_bounds(rank_y : Map[Int, Double]) -> (Int, Int) {
+priv struct RankBounds {
+  min_rank : Int
+  max_rank : Int
+}
+
+///|
+fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
   let mut min_rank = 0
   let mut max_rank = 0
   let mut seen = false
@@ -242,7 +248,7 @@ fn rank_bounds(rank_y : Map[Int, Double]) -> (Int, Int) {
       if rank > max_rank { max_rank = rank }
     }
   }
-  (min_rank, max_rank)
+  { min_rank, max_rank }
 }
 
 ///|
@@ -667,15 +673,15 @@ fn build_self_edge_routes(
   }
   let tail_defined = @dot_shared.port_is_explicit(base0.tail_port)
   let head_defined = @dot_shared.port_is_explicit(base0.head_port)
-  let (min_rank, max_rank) = rank_bounds(rank_y)
+  let bounds = rank_bounds(rank_y)
   let sizey =
     self_edge_rank_spacing(
       base0.tail_rank,
       rank_y,
       np.y,
       base0.tail_size.height_pt,
-      min_rank,
-      max_rank,
+      bounds.min_rank,
+      bounds.max_rank,
     )
   let sizey_param = sizey / 2.0
   let cnt = edges.length()
@@ -3640,36 +3646,48 @@ fn finalize_edge_spline(
 }
 
 ///|
+priv struct EdgeSameportDirectFlags {
+  tail_direct : Bool
+  head_direct : Bool
+}
+
+///|
+priv struct EdgeRenderClipFlags {
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+}
+
+///|
 fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
-) -> (Bool, Bool) {
+) -> EdgeSameportDirectFlags {
   let samehead_direct = edge_attr_non_empty(edge, "samehead")
   let sametail_direct = edge_attr_non_empty(edge, "sametail")
   if swap_ends {
-    (samehead_direct, sametail_direct)
+    { tail_direct: samehead_direct, head_direct: sametail_direct }
   } else {
-    (sametail_direct, samehead_direct)
+    { tail_direct: sametail_direct, head_direct: samehead_direct }
   }
 }
 
 ///|
-fn edge_render_clip_flags(base : EdgeRouteBase) -> (Bool, Bool) {
-  let (tail_direct, head_direct) =
+fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
+  let sameport_direct_flags =
     edge_sameport_direct_flags(base.edge, base.swap_ends)
   let tail_clip_enabled =
-    if !base.tail_clip_enabled && !tail_direct {
+    if !base.tail_clip_enabled && !sameport_direct_flags.tail_direct {
       true
     } else {
       base.tail_clip_enabled
     }
   let head_clip_enabled =
-    if !base.head_clip_enabled && !head_direct {
+    if !base.head_clip_enabled && !sameport_direct_flags.head_direct {
       true
     } else {
       base.head_clip_enabled
     }
-  (tail_clip_enabled, head_clip_enabled)
+  { tail_clip_enabled, head_clip_enabled }
 }
 
 ///|
@@ -3677,9 +3695,9 @@ fn rebuild_spline_for_render(
   base : EdgeRouteBase,
   spline_result : EdgeSplineResult,
 ) -> EdgeSplineResult {
-  let (tail_clip_enabled, head_clip_enabled) = edge_render_clip_flags(base)
-  if tail_clip_enabled == base.tail_clip_enabled &&
-    head_clip_enabled == base.head_clip_enabled {
+  let edge_clip_flags = edge_render_clip_flags(base)
+  if edge_clip_flags.tail_clip_enabled == base.tail_clip_enabled &&
+    edge_clip_flags.head_clip_enabled == base.head_clip_enabled {
     return spline_result
   }
   if spline_result.raw_bezier.length() < 4 {
@@ -3695,8 +3713,8 @@ fn rebuild_spline_for_render(
       base.head_clip_size,
       base.route_include_tail,
       base.route_include_head,
-      tail_clip_enabled=tail_clip_enabled,
-      head_clip_enabled=head_clip_enabled,
+      tail_clip_enabled=edge_clip_flags.tail_clip_enabled,
+      head_clip_enabled=edge_clip_flags.head_clip_enabled,
       arrow_len_override=base.arrow_len_override,
       tail_cluster_bbox=base.tail_cluster_bbox,
       head_cluster_bbox=base.head_cluster_bbox,
