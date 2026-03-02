@@ -1601,6 +1601,27 @@ fn rebuild_root_override_names(
 }
 
 ///|
+/// Graphviz parity: rank-level root override first applies explicit override
+/// order, then replays cluster-attached skeleton ordering only in flip mode.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_override_rank_names(
+  names : Array[String],
+  override_names : Array[String],
+  cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+) -> Array[String] {
+  let rank_names =
+    reorder_names_by_override(
+      names,
+      override_names,
+    )
+  if !graphviz_flip {
+    return rank_names
+  }
+  rebuild_root_override_names(rank_names, cluster_keys)
+}
+
+///|
 /// Graphviz parity: root phase can apply a rank-order override from root
 /// mincross output before local cluster passes.
 /// Do not change behavior without updating fixtures/tests.
@@ -1613,23 +1634,14 @@ fn apply_root_groups_override(
   let reordered = clone_rank_groups(groups)
   for rank, override_names in override_groups {
     match reordered.get(rank) {
-      Some(names) => {
-        let rank_names =
-          reorder_names_by_override(
+      Some(names) =>
+        reordered[rank] =
+          build_root_override_rank_names(
             names,
             override_names,
-          )
-        if !graphviz_flip {
-          reordered[rank] = rank_names
-          continue
-        }
-        let next_names =
-          rebuild_root_override_names(
-            rank_names,
             cluster_keys,
+            graphviz_flip,
           )
-        reordered[rank] = next_names
-      }
       None => ()
     }
   }
