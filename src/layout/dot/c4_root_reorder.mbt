@@ -1490,6 +1490,64 @@ fn has_root_nodes_on_both_sides(
 }
 
 ///|
+priv struct ClusterOrderBucket {
+  order : Int
+  seq_idx : Int
+  cluster : String
+}
+
+///|
+/// Graphviz parity: cluster bucket grouping keeps first-seen cluster sequence,
+/// orders buckets by root rank-order map, and preserves intra-bucket order.
+/// Do not change behavior without updating fixtures/tests.
+fn order_rank_names_by_cluster_buckets(
+  names : Array[String],
+  order_map : Map[String, Int],
+  cluster_keys : Map[String, String],
+) -> Array[String] {
+  let cluster_nodes : Map[String, Array[String]] = Map::new()
+  let cluster_seq : Array[String] = []
+  for name in names {
+    let cluster = cluster_key_or_empty(cluster_keys, name)
+    match cluster_nodes.get(cluster) {
+      Some(list) => list.push(name)
+      None => {
+        cluster_nodes[cluster] = [name]
+        cluster_seq.push(cluster)
+      }
+    }
+  }
+  let cluster_ordered : Array[ClusterOrderBucket] = []
+  for idx, cluster in cluster_seq {
+    let base = order_map.get(cluster).unwrap_or(order_map.length() + idx)
+    cluster_ordered.push({ order: base, seq_idx: idx, cluster })
+  }
+  if cluster_ordered.length() > 1 {
+    cluster_ordered.sort_by((a, b) => {
+      if a.order < b.order {
+        -1
+      } else if a.order > b.order {
+        1
+      } else if a.seq_idx < b.seq_idx {
+        -1
+      } else if a.seq_idx > b.seq_idx {
+        1
+      } else {
+        0
+      }
+    })
+  }
+  let ordered_names : Array[String] = []
+  for entry in cluster_ordered {
+    let nodes_in_cluster = cluster_nodes.get(entry.cluster).unwrap_or_default()
+    for name in nodes_in_cluster {
+      ordered_names.push(name)
+    }
+  }
+  ordered_names
+}
+
+///|
 /// Graphviz parity: cluster-phase reorder keeps intra-cluster node order, then
 /// reorders cluster buckets by root mincross rank map with stable tie-breaks.
 /// Do not change behavior without updating fixtures/tests.
@@ -1513,55 +1571,12 @@ fn reorder_groups_by_cluster(
       ordered_by_cluster[rank] = names
       continue
     }
-    // Graphviz parity: cluster bucket grouping keeps first-seen cluster
-    // sequence while preserving per-cluster name order inside each rank.
-    let cluster_nodes : Map[String, Array[String]] = Map::new()
-    let cluster_seq : Array[String] = []
-    for name in names {
-      let cluster = cluster_key_or_empty(cluster_keys, name)
-      match cluster_nodes.get(cluster) {
-        Some(list) => list.push(name)
-        None => {
-          cluster_nodes[cluster] = [name]
-          cluster_seq.push(cluster)
-        }
-      }
-    }
-    // Graphviz parity: cluster bucket sort keys use root rank-order map with
-    // stable first-seen sequence fallback for missing clusters.
-    let cluster_ordered : Array[(Int, Int, String)] = []
-    for idx, cluster in cluster_seq {
-      let base = order_map.get(cluster).unwrap_or(order_map.length() + idx)
-      cluster_ordered.push((base, idx, cluster))
-    }
-    if cluster_ordered.length() > 1 {
-      cluster_ordered.sort_by((a, b) => {
-        let (a_order, a_idx, _a_name) = a
-        let (b_order, b_idx, _b_name) = b
-        if a_order < b_order {
-          -1
-        } else if a_order > b_order {
-          1
-        } else if a_idx < b_idx {
-          -1
-        } else if a_idx > b_idx {
-          1
-        } else {
-          0
-        }
-      })
-    }
-    // Graphviz parity: bucket flattening emits clusters in sorted order while
-    // preserving each cluster's original node sequence.
-    let ordered_names : Array[String] = []
-    for entry in cluster_ordered {
-      let (_order, _idx, cluster) = entry
-      let nodes_in_cluster = cluster_nodes.get(cluster).unwrap_or_default()
-      for name in nodes_in_cluster {
-        ordered_names.push(name)
-      }
-    }
-    ordered_by_cluster[rank] = ordered_names
+    ordered_by_cluster[rank] =
+      order_rank_names_by_cluster_buckets(
+        names,
+        order_map,
+        cluster_keys,
+      )
   }
   ordered_by_cluster
 }
