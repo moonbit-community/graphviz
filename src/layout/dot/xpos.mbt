@@ -140,7 +140,7 @@ fn scaled_edge_weight(
 let xpos_constraint_snapshot : Ref[XposConstraintSnapshot?] = Ref::new(None)
 
 ///|
-fn should_capture_xpos_constraints(graph : @cgraph.Graph) -> Bool {
+fn should_capture_constraint_snapshot(graph : @cgraph.Graph) -> Bool {
   match @sys.get_env_var("DOT_CAPTURE_XPOS_CONSTRAINTS") {
     None => false
     Some(value) => {
@@ -470,7 +470,7 @@ fn collect_cluster_member_nodes(
   }
 }
 
-fn collect_cluster_members_for_xpos(
+fn collect_cluster_members(
   cluster_graphs : Map[String, @cgraph.Graph],
 ) -> Map[String, Map[String, Bool]] {
   let members : Map[String, Map[String, Bool]] = Map::new()
@@ -508,7 +508,7 @@ fn build_cluster_constraints(
   if cluster_graphs.length() == 0 {
     return ([], [], [], [])
   }
-  let cluster_members = collect_cluster_members_for_xpos(cluster_graphs)
+  let cluster_members = collect_cluster_members(cluster_graphs)
   if cluster_members.length() == 0 {
     return ([], [], [], [])
   }
@@ -2325,7 +2325,7 @@ fn x_positions_from_simplex(
   // Graphviz parity: constraint graph reorder follows GD_nlist sequence.
   let order = build_constraint_reorder(graph, index, xpos_nlist_order)
   let (graph, index) = reorder_constraint_graph(graph, index, order)
-  if should_capture_xpos_constraints(graph_root) {
+  if should_capture_constraint_snapshot(graph_root) {
     xpos_constraint_snapshot.val = Some(
       build_xpos_constraint_snapshot(graph, index, sizes, order_index),
     )
