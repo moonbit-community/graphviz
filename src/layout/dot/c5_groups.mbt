@@ -21,7 +21,7 @@ fn build_remincross_groups(
     prefer_seeded_from_ordered_with_vnodes)
   if should_try_seeded {
     let seeded =
-      build_remincross_seeded_groups(
+      build_seeded_remincross_groups(
         dispatch_context.base_groups,
         dispatch_context.ordered_with_vnodes,
         dispatch_context.cluster_meta.cluster_keys,
@@ -814,7 +814,7 @@ fn build_seeded_rank_order(
 /// Graphviz parity: ReMincross can seed from current vnode-inclusive rank
 /// order while keeping real-node relative order from cleaned base groups.
 /// Do not change behavior without updating fixtures/tests.
-fn build_remincross_seeded_groups(
+fn build_seeded_remincross_groups(
   base_groups : Map[Int, Array[String]],
   ordered_with_vnodes : Map[Int, Array[String]],
   cluster_keys : Map[String, String],
