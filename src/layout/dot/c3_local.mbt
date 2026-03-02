@@ -936,7 +936,7 @@ fn build_local_reorder_inputs(
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
-fn reorder_single_cluster_rank_groups(
+fn reorder_cluster_rank_group(
   cluster : String,
   expanded_clusters : Map[String, Bool],
   cluster_graph : @cgraph.Graph,
@@ -1161,7 +1161,7 @@ fn reorder_cluster_rank_groups(
       Some(value) => value
       None => continue
     }
-    reorder_single_cluster_rank_groups(
+    reorder_cluster_rank_group(
       cluster,
       expanded_clusters,
       cluster_graph,
