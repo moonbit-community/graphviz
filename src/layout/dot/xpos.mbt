@@ -1487,6 +1487,32 @@ fn extra_node_kind(name : String) -> @network_simplex.NodeKind {
 }
 
 ///|
+fn upsert_constraint_with_max(
+  constraints : Map[String, ConstraintEdge],
+  key : String,
+  tail : String,
+  head : String,
+  minlen : Int,
+  weight : Int,
+) -> Unit {
+  match constraints.get(key) {
+    Some(entry) => {
+      constraints[key] = {
+        tail: entry.tail,
+        head: entry.head,
+        minlen: if minlen > entry.minlen { minlen } else { entry.minlen },
+        weight: if weight > entry.weight { weight } else { entry.weight },
+        tail_port: None,
+        head_port: None,
+      }
+    }
+    None => {
+      constraints[key] = { tail, head, minlen, weight, tail_port: None, head_port: None }
+    }
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -1874,48 +1900,25 @@ fn build_constraint_graph(
                 let minlen = trunc_int(minlen_value)
                 let weight = @dot_shared.edge_weight(edge)
                 let flat_key = "\{left}|\{right}"
-                match rank_adj_constraints.get(flat_key) {
-                  Some(entry) => {
-                    let next_minlen =
-                      if minlen > entry.minlen { minlen } else { entry.minlen }
-                    let next_weight =
-                      if weight > entry.weight { weight } else { entry.weight }
-                    rank_adj_constraints[flat_key] = {
-                      tail: entry.tail,
-                      head: entry.head,
-                      minlen: next_minlen,
-                      weight: next_weight,
-                      tail_port: None,
-                      head_port: None,
-                    }
+                if rank_adj_constraints.get(flat_key) is Some(_) {
+                  upsert_constraint_with_max(
+                    rank_adj_constraints,
+                    flat_key,
+                    left,
+                    right,
+                    minlen,
+                    weight,
+                  )
+                } else {
+                  upsert_constraint_with_max(
+                    flat_minlen_constraints,
+                    flat_key,
+                    left,
+                    right,
+                    minlen,
+                    weight,
+                  )
                 }
-                None =>
-                  match flat_minlen_constraints.get(flat_key) {
-                    Some(entry) => {
-                      let next_minlen =
-                        if minlen > entry.minlen { minlen } else { entry.minlen }
-                      let next_weight =
-                        if weight > entry.weight { weight } else { entry.weight }
-                      flat_minlen_constraints[flat_key] = {
-                        tail: left,
-                        head: right,
-                        minlen: next_minlen,
-                        weight: next_weight,
-                        tail_port: None,
-                        head_port: None,
-                      }
-                    }
-                    None =>
-                      flat_minlen_constraints[flat_key] = {
-                        tail: left,
-                        head: right,
-                        minlen,
-                        weight,
-                        tail_port: None,
-                        head_port: None,
-                      }
-                  }
-              }
             } else {
               let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
                 Some(list) => list
