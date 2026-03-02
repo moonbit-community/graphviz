@@ -104,21 +104,23 @@ fn compute_ordering_and_vnodes(
     )
   let dispatch_setup =
     build_ordering_dispatch_setup(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      groups,
-      node_order,
-      order_sizes,
-      runtime_context.port_edge_nodes,
-      runtime_context.vnode_count,
-      rankdir,
-      cluster_meta,
-      runtime_context.vnode_info,
+      {
+        nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        edge_out_order,
+        ranks,
+        groups,
+        node_order,
+        order_sizes,
+        port_edge_nodes: runtime_context.port_edge_nodes,
+        vnode_count: runtime_context.vnode_count,
+        rankdir,
+        cluster_meta,
+        vnode_info: runtime_context.vnode_info,
+      },
     )
   let dispatch_output =
     run_ordering_dispatch(

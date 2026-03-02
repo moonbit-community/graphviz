@@ -40,6 +40,28 @@ priv struct OrderingDispatchSetup {
 }
 
 ///|
+/// Graphviz parity: dispatch setup input bundle keeps edge-port/materialization
+/// sources unchanged before class2+mincross reorder setup derivation.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingDispatchSetupInputs {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  port_edge_nodes : Map[String, Bool]
+  vnode_count : Int
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+}
+
+///|
 /// Graphviz parity: reorder setup input bundle keeps class2/decompose payload
 /// snapshots unchanged before deriving mincross dispatch state.
 /// Do not change behavior without updating fixtures/tests.
@@ -365,47 +387,33 @@ fn build_ordering_reorder_setup(
 /// sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
 fn build_ordering_dispatch_setup(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  port_edge_nodes : Map[String, Bool],
-  vnode_count : Int,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  inputs : OrderingDispatchSetupInputs,
 ) -> OrderingDispatchSetup {
   let edge_port_data =
     build_ordering_edge_port_data(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      order_sizes,
+      inputs.nodes,
+      inputs.edges,
+      inputs.edge_tail,
+      inputs.edge_head,
+      inputs.order_sizes,
     )
   let reorder_setup =
     build_ordering_reorder_setup(
       {
-        nodes,
-        edges,
-        edge_tail,
-        edge_head,
-        edge_reversed,
-        edge_out_order,
-        ranks,
-        groups,
-        node_order,
-        port_edge_nodes,
-        vnode_count,
-        rankdir,
-        cluster_meta,
-        vnode_info,
+        nodes: inputs.nodes,
+        edges: inputs.edges,
+        edge_tail: inputs.edge_tail,
+        edge_head: inputs.edge_head,
+        edge_reversed: inputs.edge_reversed,
+        edge_out_order: inputs.edge_out_order,
+        ranks: inputs.ranks,
+        groups: inputs.groups,
+        node_order: inputs.node_order,
+        port_edge_nodes: inputs.port_edge_nodes,
+        vnode_count: inputs.vnode_count,
+        rankdir: inputs.rankdir,
+        cluster_meta: inputs.cluster_meta,
+        vnode_info: inputs.vnode_info,
       },
       edge_port_data,
     )
