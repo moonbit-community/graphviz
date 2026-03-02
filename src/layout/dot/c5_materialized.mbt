@@ -588,6 +588,45 @@ fn build_nonroot_ordered_names(
 }
 
 ///|
+/// Graphviz parity: clustered tail-order rank buckets keep first-seen unique
+/// rank keys in cluster-name order, then sort ascending for reverse replay.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_nonroot_tail_rank_keys(
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+) -> Array[Int] {
+  let rank_keys : Array[Int] = []
+  let rank_seen : Map[Int, Bool] = Map::new()
+  for name in names {
+    let rank = rem_ranks.get(name).unwrap_or(-1)
+    if rank_seen.get(rank) is None {
+      rank_seen[rank] = true
+      rank_keys.push(rank)
+    }
+  }
+  rank_keys.sort()
+  rank_keys
+}
+
+///|
+/// Graphviz parity: clustered tail-order rank replay groups names by exact
+/// rematerialized rank value (including -1 fallback rank bucket).
+/// Do not change behavior without updating fixtures/tests.
+fn collect_nonroot_tail_rank_names(
+  names : Array[String],
+  rem_ranks : Map[String, Int],
+  rank : Int,
+) -> Array[String] {
+  let rank_names : Array[String] = []
+  for name in names {
+    if rem_ranks.get(name).unwrap_or(-1) == rank {
+      rank_names.push(name)
+    }
+  }
+  rank_names
+}
+
+///|
 /// Graphviz parity: clustered tail-order non-root phase preserves rank-key
 /// collection, descending rank replay, and input-like category rebucketing.
 /// Do not change behavior without updating fixtures/tests.
@@ -600,18 +639,8 @@ fn build_nonroot_tail_names(
   cluster_order : Array[String],
   rem_cluster_keys : Map[String, String],
 ) -> Array[String] {
-  // Graphviz parity: clustered tail-order rank buckets keep first-seen unique
-  // rank keys in cluster-name order, then sort ascending for reverse replay.
-  let rank_keys : Array[Int] = []
-  let rank_seen : Map[Int, Bool] = Map::new()
-  for name in names {
-    let rank = rem_ranks.get(name).unwrap_or(-1)
-    if rank_seen.get(rank) is None {
-      rank_seen[rank] = true
-      rank_keys.push(rank)
-    }
-  }
-  rank_keys.sort()
+  let rank_keys =
+    collect_nonroot_tail_rank_keys(names, rem_ranks)
   // Graphviz parity: minimum replay rank for input-like rebucketing ignores
   // missing-name (-1) buckets and falls back to -1 when absent.
   let mut min_rank = -1
@@ -626,15 +655,12 @@ fn build_nonroot_tail_names(
   while rank_idx > 0 {
     rank_idx = rank_idx - 1
     let rank = rank_keys[rank_idx]
-    // Graphviz parity: clustered tail-order rank replay groups names by exact
-    // rematerialized rank value (including -1 fallback bucket), then composes
-    // directional replay and minimum-rank input-like rebucketing.
-    let rank_names : Array[String] = []
-    for name in names {
-      if rem_ranks.get(name).unwrap_or(-1) == rank {
-        rank_names.push(name)
-      }
-    }
+    let rank_names =
+      collect_nonroot_tail_rank_names(
+        names,
+        rem_ranks,
+        rank,
+      )
     let rank_ordered_base =
       build_nonroot_ordered_names(rank_names, heads_by_tail)
     // Graphviz parity: minimum-rank input-like rebucketing runs only on ranks
