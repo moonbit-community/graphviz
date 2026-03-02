@@ -777,6 +777,53 @@ fn seed_local_groups_by_vnode(
 }
 
 ///|
+fn build_cluster_sizes_for_reorder(
+  cluster_node_set : Map[String, Bool],
+  order_sizes : Map[String, NodeSize],
+  vnode_sizes : Map[String, NodeSize],
+) -> Map[String, NodeSize] {
+  // Graphviz parity: cluster-local reorder metadata keeps node sizes scoped to
+  // the filtered cluster node subset.
+  let cluster_sizes : Map[String, NodeSize] = Map::new()
+  for name, _ in cluster_node_set {
+    match order_sizes.get(name) {
+      Some(size) => cluster_sizes[name] = size
+      None =>
+        match vnode_sizes.get(name) {
+          Some(size) => cluster_sizes[name] = size
+          None => ()
+        }
+    }
+  }
+  cluster_sizes
+}
+
+///|
+fn filter_cluster_flat_constraints(
+  cluster_node_set : Map[String, Bool],
+  flat_constraints : Map[String, Bool],
+) -> Map[String, Bool] {
+  // Graphviz parity: local reorder forwards same-rank flat constraints only
+  // when both endpoints belong to the active cluster node subset.
+  let cluster_flat_constraints : Map[String, Bool] = Map::new()
+  for key, value in flat_constraints {
+    if !value {
+      continue
+    }
+    match @dot_shared.parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
+        if cluster_node_set.get(tail) is Some(_) &&
+          cluster_node_set.get(head) is Some(_) {
+          cluster_flat_constraints[key] = value
+        }
+      }
+      None => ()
+    }
+  }
+  cluster_flat_constraints
+}
+
+///|
 /// Graphviz parity: cluster-local reorder run-input payload keeps edge arrays
 /// and metadata maps grouped for dispatch into reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -903,17 +950,12 @@ fn build_local_reorder_inputs(
     }
   // Graphviz parity: cluster-local reorder metadata keeps node sizes,
   // local cluster keys, and same-rank flat constraints scoped to the cluster.
-  let cluster_sizes : Map[String, NodeSize] = Map::new()
-  for name, _ in cluster_node_set {
-    match order_sizes.get(name) {
-      Some(size) => cluster_sizes[name] = size
-      None =>
-        match vnode_sizes.get(name) {
-          Some(size) => cluster_sizes[name] = size
-          None => ()
-        }
-    }
-  }
+  let cluster_sizes =
+    build_cluster_sizes_for_reorder(
+      cluster_node_set,
+      order_sizes,
+      vnode_sizes,
+    )
   let cluster_keys : Map[String, String] = Map::new()
   for name, _ in cluster_node_set {
     // Graphviz parity: mincross_clust() runs on the expanded subgraph where
@@ -921,18 +963,11 @@ fn build_local_reorder_inputs(
     // cross-cluster barriers for these nodes.
     cluster_keys[name] = ""
   }
-  let cluster_flat_constraints : Map[String, Bool] = Map::new()
-  for key, value in flat_constraints {
-    match @dot_shared.parse_flat_constraint_key(key) {
-      Some((tail, head)) => {
-        if cluster_node_set.get(tail) is Some(_) &&
-          cluster_node_set.get(head) is Some(_) {
-          cluster_flat_constraints[key] = value
-        }
-      }
-      None => ()
-    }
-  }
+  let cluster_flat_constraints =
+    filter_cluster_flat_constraints(
+      cluster_node_set,
+      flat_constraints,
+    )
   let local_neighbor_maps =
     build_local_neighbor_maps(
       cluster_name,
