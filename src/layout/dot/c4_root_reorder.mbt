@@ -150,30 +150,18 @@ fn merge_root_mincross_groups(
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys {
-    let names = seeded_groups.get(rank).unwrap_or_default().copy()
+    let names = seeded_groups.get(rank).unwrap_or_default()
     let replacements = ordered_mincross.get(rank).unwrap_or_default()
     if replacements.length() == 0 {
-      merged[rank] = names
+      merged[rank] = names.copy()
       continue
     }
-    // Graphviz parity: keep cluster-internal nodes attached to the rankleader
-    // skeleton position when root mincross reorders cluster skeleton chains.
-    let skeleton_for_cluster =
-      build_skeleton_for_clusters(
-        names,
-        (name) =>
-          if order_cluster_skeleton.get(name) == Some(true) {
-            cluster_key_or_empty(order_cluster_keys, name)
-          } else {
-            ""
-          },
-      )
     let attached_by_skeleton =
-      build_attached_by_skeleton(
+      build_rank_attached_by_skeleton(
         names,
         order_cluster_keys,
-        skeleton_for_cluster,
-        (name) => mincross_nodes.get(name) is Some(_),
+        order_cluster_skeleton,
+        mincross_nodes,
       )
     // Graphviz parity: when root mincross returns [root, skeleton] in a
     // single-root rank, keep the attached cluster node in front via positional
@@ -185,41 +173,103 @@ fn merge_root_mincross_groups(
         attached_by_skeleton,
       )
     if should_use_positional_merge {
-      let mut replace_idx = 0
-      for i in 0..<names.length() {
-        if mincross_nodes.get(names[i]) is Some(_) {
-          if replace_idx < replacements.length() {
-            names[i] = replacements[replace_idx]
-            replace_idx = replace_idx + 1
-          }
-        }
-      }
-      merged[rank] = names
+      merged[rank] =
+        merge_rank_with_positional_replacements(
+          names,
+          replacements,
+          mincross_nodes,
+        )
       continue
     }
-    let next_names : Array[String] = []
-    let seen : Map[String, Bool] = Map::new()
-    for replacement in replacements {
-      next_names.push(replacement)
-      seen[replacement] = true
-      if order_cluster_skeleton.get(replacement) == Some(true) {
-        append_attached_by_skeleton(
-          next_names,
-          seen,
-          attached_by_skeleton,
-          replacement,
-        )
-      }
-    }
-    for name in names {
-      if seen.get(name) is None {
-        next_names.push(name)
-        seen[name] = true
-      }
-    }
-    merged[rank] = next_names
+    merged[rank] =
+      merge_rank_with_attached_skeleton_replacements(
+        names,
+        replacements,
+        attached_by_skeleton,
+        order_cluster_skeleton,
+      )
   }
   merged
+}
+
+///|
+/// Graphviz parity: keep cluster-internal nodes attached to the rankleader
+/// skeleton position when root mincross reorders cluster skeleton chains.
+fn build_rank_attached_by_skeleton(
+  names : Array[String],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  mincross_nodes : Map[String, Bool],
+) -> Map[String, Array[String]] {
+  let skeleton_for_cluster =
+    build_skeleton_for_clusters(
+      names,
+      (name) =>
+        if order_cluster_skeleton.get(name) == Some(true) {
+          cluster_key_or_empty(order_cluster_keys, name)
+        } else {
+          ""
+        },
+    )
+  build_attached_by_skeleton(
+    names,
+    order_cluster_keys,
+    skeleton_for_cluster,
+    (name) => mincross_nodes.get(name) is Some(_),
+  )
+}
+
+///|
+/// Graphviz parity: positional merge replaces only root-mincross membership
+/// slots while preserving non-member positions in seeded rank order.
+fn merge_rank_with_positional_replacements(
+  names : Array[String],
+  replacements : Array[String],
+  mincross_nodes : Map[String, Bool],
+) -> Array[String] {
+  let merged_names = names.copy()
+  let mut replace_idx = 0
+  for i in 0..<merged_names.length() {
+    if mincross_nodes.get(merged_names[i]) is Some(_) {
+      if replace_idx < replacements.length() {
+        merged_names[i] = replacements[replace_idx]
+        replace_idx = replace_idx + 1
+      }
+    }
+  }
+  merged_names
+}
+
+///|
+/// Graphviz parity: attachment merge appends skeleton-attached members after
+/// replacement skeletons before replaying remaining seeded names.
+fn merge_rank_with_attached_skeleton_replacements(
+  names : Array[String],
+  replacements : Array[String],
+  attached_by_skeleton : Map[String, Array[String]],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Array[String] {
+  let next_names : Array[String] = []
+  let seen : Map[String, Bool] = Map::new()
+  for replacement in replacements {
+    next_names.push(replacement)
+    seen[replacement] = true
+    if order_cluster_skeleton.get(replacement) == Some(true) {
+      append_attached_by_skeleton(
+        next_names,
+        seen,
+        attached_by_skeleton,
+        replacement,
+      )
+    }
+  }
+  for name in names {
+    if seen.get(name) is None {
+      next_names.push(name)
+      seen[name] = true
+    }
+  }
+  next_names
 }
 
 ///|
