@@ -1828,6 +1828,11 @@ fn oriented_edge_endpoints(
 }
 
 ///|
+fn edge_excluded_from_reverse_merge(edge : @cgraph.Edge) -> Bool {
+  edge_mid_label_metrics(edge) is Some(_) || edge.tail().name() == edge.head().name()
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2013,10 +2018,7 @@ fn build_constraint_graph(
   let forward_rep_by_key : Map[String, Int] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    if edge_mid_label_metrics(edge) is Some(_) {
-      continue
-    }
-    if edge.tail().name() == edge.head().name() {
+    if edge_excluded_from_reverse_merge(edge) {
       continue
     }
     let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
@@ -2035,10 +2037,7 @@ fn build_constraint_graph(
   }
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    if edge_mid_label_metrics(edge) is Some(_) {
-      continue
-    }
-    if edge.tail().name() == edge.head().name() {
+    if edge_excluded_from_reverse_merge(edge) {
       continue
     }
     let oriented = oriented_edge_endpoints(edge_idx, edge, edge_tail, edge_head)
