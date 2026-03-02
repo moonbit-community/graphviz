@@ -641,23 +641,19 @@ fn build_root_reorder_groups(
 }
 
 ///|
-/// Graphviz parity: root real-node bucket keeps relative left/right anchor
-/// continuity across adjacent ranks when both ranks expose root buckets.
-/// Do not change behavior without updating fixtures/tests.
-fn anchor_root_bucket(
+/// Graphviz parity: root-anchor transfer only applies on the single-left
+/// cluster hand-off shape from the previous rank map.
+fn select_root_left_anchor(
   order_map : Map[String, Int],
   previous_order_map : Map[String, Int]?,
-) -> Unit {
-  if order_map.get("") is None {
-    return ()
-  }
+) -> String? {
   let prev_map = match previous_order_map {
     Some(value) => value
-    None => return ()
+    None => return None
   }
   let prev_root = match prev_map.get("") {
     Some(value) => value
-    None => return ()
+    None => return None
   }
   let mut prev_cluster_count = 0
   let mut left_anchor : String? = None
@@ -685,14 +681,17 @@ fn anchor_root_bucket(
   // Guardrail: only apply this on the simple single-left-anchor shape
   // seen in cluster hand-off ranks (e.g. clust5 rank transition).
   if prev_cluster_count != 1 || !has_left || has_right {
-    return ()
+    return None
   }
-  let left = match left_anchor {
-    Some(value) => value
-    None => return ()
-  }
-  // Graphviz parity: cluster-rank sort keys are normalized into deterministic
-  // non-root order by (order, cluster-name) before root-anchor transfer.
+  left_anchor
+}
+
+///|
+/// Graphviz parity: cluster-rank sort keys are normalized into deterministic
+/// non-root order by (order, cluster-name) before root-anchor transfer.
+fn build_sorted_non_root_clusters(
+  order_map : Map[String, Int],
+) -> Array[String] {
   let entries : Array[(Int, String)] = []
   for cluster, order in order_map {
     if cluster == "" {
@@ -722,14 +721,19 @@ fn anchor_root_bucket(
     let (_order, cluster) = entry
     sorted_clusters.push(cluster)
   }
-  if sorted_clusters.length() == 0 {
-    return ()
-  }
-  // Graphviz parity: root-anchor transfer inserts root bucket immediately
-  // after the selected left-anchor cluster in sorted non-root order.
+  sorted_clusters
+}
+
+///|
+/// Graphviz parity: root-anchor transfer inserts root bucket immediately
+/// after the selected left-anchor cluster in sorted non-root order.
+fn build_root_anchor_reordered_clusters(
+  sorted_clusters : Array[String],
+  left_anchor : String,
+) -> Array[String] {
   let mut insert_idx = sorted_clusters.length()
   for i in 0..<sorted_clusters.length() {
-    if sorted_clusters[i] == left {
+    if sorted_clusters[i] == left_anchor {
       insert_idx = i + 1
       break
     }
@@ -744,11 +748,46 @@ fn anchor_root_bucket(
   if insert_idx >= sorted_clusters.length() {
     reordered.push("")
   }
+  reordered
+}
+
+///|
+fn rewrite_cluster_order_map(
+  order_map : Map[String, Int],
+  ordered_clusters : Array[String],
+) -> Unit {
   let mut idx = 0
-  for cluster in reordered {
+  for cluster in ordered_clusters {
     order_map[cluster] = idx
     idx = idx + 1
   }
+}
+
+///|
+/// Graphviz parity: root real-node bucket keeps relative left/right anchor
+/// continuity across adjacent ranks when both ranks expose root buckets.
+/// Do not change behavior without updating fixtures/tests.
+fn anchor_root_bucket(
+  order_map : Map[String, Int],
+  previous_order_map : Map[String, Int]?,
+) -> Unit {
+  if order_map.get("") is None {
+    return ()
+  }
+  let left_anchor = match select_root_left_anchor(
+    order_map,
+    previous_order_map,
+  ) {
+    Some(value) => value
+    None => return ()
+  }
+  let sorted_clusters = build_sorted_non_root_clusters(order_map)
+  if sorted_clusters.length() == 0 {
+    return ()
+  }
+  let reordered_clusters =
+    build_root_anchor_reordered_clusters(sorted_clusters, left_anchor)
+  rewrite_cluster_order_map(order_map, reordered_clusters)
 }
 
 /// Graphviz parity: root cluster-rank-order phase output keeps root-rank keys
