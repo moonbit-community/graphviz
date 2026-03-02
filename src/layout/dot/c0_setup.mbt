@@ -220,18 +220,6 @@ fn build_gdnlist_order(
   }
 }
 
-///|
-fn build_nlist_order_index(nlist_order : Array[String]) -> Map[String, Int] {
-  let nlist_order_index : Map[String, Int] = Map::new()
-  let mut nlist_idx = 0
-  for name in nlist_order {
-    nlist_order_index[name] = nlist_idx
-    nlist_idx = nlist_idx + 1
-  }
-  nlist_order_index
-}
-
-///|
 /// Graphviz parity: vnode ordering keys come from cluster-aware class2 walks,
 /// or from GD_nlist fallback ordering when clusters are absent.
 fn build_vnode_order_keys_for_dispatch(
@@ -324,8 +312,12 @@ fn build_ordering_reorder_setup(
       graphviz_flip,
       inputs.cluster_meta.cluster_order,
     )
-  let nlist_order_index =
-    build_nlist_order_index(class2_data.nlist_order)
+  let nlist_order_index : Map[String, Int] = Map::new()
+  let mut nlist_idx = 0
+  for name in class2_data.nlist_order {
+    nlist_order_index[name] = nlist_idx
+    nlist_idx = nlist_idx + 1
+  }
   let vnode_order_keys_for_ordering =
     build_vnode_order_keys_for_dispatch(
       inputs.vnode_count,

@@ -112,21 +112,6 @@ fn build_clustered_pre_root(
 }
 
 ///|
-/// Graphviz parity: root-phase tail override keeps first-seen tail replay order
-/// while suppressing duplicate tail names from root-edge replay sequences.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_phase_tail_order_override(
-  root_edge_tail_out : Array[String],
-) -> Array[String] {
-  let root_tail_order_override : Array[String] = []
-  let seen_root_tail : Map[String, Bool] = Map::new()
-  for tail in root_edge_tail_out {
-    append_creation_name(root_tail_order_override, seen_root_tail, tail)
-  }
-  root_tail_order_override
-}
-
-///|
 /// Graphviz parity: clustered ordering root+cluster phase dispatch consumes
 /// typed stage context + pre-root output without argument reordering.
 /// Do not change behavior without updating fixtures/tests.
@@ -165,10 +150,14 @@ fn run_clustered_root_phase(
       root_reorder_sources,
       class2_data.order_edges_by_tail_root,
     )
-  let root_tail_order_override =
-    build_root_phase_tail_order_override(
-      root_reorder_output.root_edge_tail_out,
-    )
+  // Graphviz parity: root-phase tail override keeps first-seen tail replay
+  // order while suppressing duplicate tail names from root-edge replay
+  // sequences.
+  let root_tail_order_override : Array[String] = []
+  let seen_root_tail : Map[String, Bool] = Map::new()
+  for tail in root_reorder_output.root_edge_tail_out {
+    append_creation_name(root_tail_order_override, seen_root_tail, tail)
+  }
   let root_phase_inputs : RootRankOrderPhaseInputs =
     {
       order_cluster_keys: pre_root_stage.order_cluster_keys,
