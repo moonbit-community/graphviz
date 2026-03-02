@@ -312,12 +312,14 @@ fn build_cluster_tail_order(
   for idx, cluster in cluster_order_seen {
     cluster_first_seen[cluster] = idx
   }
-  let (cluster_order, cluster_order_pos) =
+  let cluster_order_output =
     build_remincross_order(
       cluster_order_seen,
       cluster_first_seen,
       cluster_order_index,
     )
+  let cluster_order = cluster_order_output.cluster_order
+  let cluster_order_pos = cluster_order_output.cluster_order_pos
   // Graphviz parity: clustered ReMincross tail->head adjacency keeps
   // rematerialized edge-creation order for downstream rank/block replay.
   let heads_by_tail : Map[String, Array[String]] = Map::new()
@@ -394,11 +396,21 @@ fn cluster_key_for_tail_name(
 /// clusters by descending cluster_order_index, then by first-seen sequence.
 /// Root cluster always remains last when present.
 /// Do not change behavior without updating fixtures/tests.
+priv struct ReMincrossClusterOrder {
+  cluster_order : Array[String]
+  cluster_order_pos : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: clustered tail-order cluster ordering sorts non-root
+/// clusters by descending cluster_order_index, then by first-seen sequence.
+/// Root cluster always remains last when present.
+/// Do not change behavior without updating fixtures/tests.
 fn build_remincross_order(
   cluster_order_seen : Array[String],
   cluster_first_seen : Map[String, Int],
   cluster_order_index : Map[String, Int],
-) -> (Array[String], Map[String, Int]) {
+) -> ReMincrossClusterOrder {
   let cluster_order_non_root : Array[String] = []
   let mut has_root_cluster = false
   for cluster in cluster_order_seen {
@@ -437,7 +449,7 @@ fn build_remincross_order(
   for idx, cluster in cluster_order {
     cluster_order_pos[cluster] = idx
   }
-  (cluster_order, cluster_order_pos)
+  { cluster_order, cluster_order_pos }
 }
 
 ///|

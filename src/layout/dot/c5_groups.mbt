@@ -163,11 +163,7 @@ fn build_remincross_inputs(
       dispatch_context.cluster_meta.intercluster_keys,
       cluster_order_index,
     )
-  let (
-    rem_cluster_keys,
-    rem_sizes,
-    rem_flat_constraints,
-  ) =
+  let pass_inputs =
     build_remincross_pass_inputs(
       dispatch_context.graph,
       dispatch_context.edges,
@@ -191,9 +187,9 @@ fn build_remincross_inputs(
     rem_edge_head_port_x: materialized_arrays.edge_head_port_x,
     rem_edge_tail_port_order: materialized_arrays.edge_tail_port_order,
     rem_edge_head_port_order: materialized_arrays.edge_head_port_order,
-    rem_cluster_keys,
-    rem_sizes,
-    rem_flat_constraints,
+    rem_cluster_keys: pass_inputs.rem_cluster_keys,
+    rem_sizes: pass_inputs.rem_sizes,
+    rem_flat_constraints: pass_inputs.rem_flat_constraints,
   }
 }
 
@@ -284,6 +280,13 @@ fn remincross_edge_endpoints_at(
 }
 
 ///|
+priv struct ReMincrossPassInputs {
+  rem_cluster_keys : Map[String, String]
+  rem_sizes : Map[String, NodeSize]
+  rem_flat_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: clustered ReMincross cluster-key reads treat missing keys
 /// as root-empty values for intercluster/internal edge classification.
 fn remincross_cluster_key(
@@ -367,7 +370,7 @@ fn build_remincross_pass_inputs(
   vnode_info : EdgeVnodeInfo,
   order_sizes : Map[String, NodeSize],
   rank_same_constraints : Map[String, Bool],
-) -> (Map[String, String], Map[String, NodeSize], Map[String, Bool]) {
+) -> ReMincrossPassInputs {
   let rem_cluster_keys =
     clone_remincross_cluster_keys(cluster_meta.intercluster_keys)
   // Graphviz parity: ND_clust is the root graph for nodes outside
@@ -409,7 +412,7 @@ fn build_remincross_pass_inputs(
       rem_flat_constraints[key] = true
     }
   }
-  (rem_cluster_keys, rem_sizes, rem_flat_constraints)
+  { rem_cluster_keys, rem_sizes, rem_flat_constraints }
 }
 
 ///|
@@ -619,10 +622,18 @@ fn build_remincross_vnode_groups(
 ///|
 /// Graphviz parity: seeded vnode-inclusive rank rebuilding anchors synthetic
 /// names between nearest real-node predecessors/successors from base order.
+priv struct NeighborRealIndices {
+  prev_real : Array[Int?]
+  next_real_by_pos : Array[Int?]
+}
+
+///|
+/// Graphviz parity: seeded vnode-inclusive rank rebuilding anchors synthetic
+/// names between nearest real-node predecessors/successors from base order.
 fn build_neighbor_real_indices(
   filtered : Array[String],
   real_order : Map[String, Int],
-) -> (Array[Int?], Array[Int?]) {
+) -> NeighborRealIndices {
   let prev_real : Array[Int?] = []
   let mut last_real : Int? = None
   for name in filtered {
@@ -650,7 +661,7 @@ fn build_neighbor_real_indices(
     idx = idx - 1
     next_real_by_pos.push(next_rev[idx])
   }
-  (prev_real, next_real_by_pos)
+  { prev_real, next_real_by_pos }
 }
 
 ///|
@@ -746,7 +757,7 @@ fn build_seeded_rank_order(
   ) {
     Some(special_order) => special_order
     None => {
-      let (prev_real, next_real_by_pos) =
+      let neighbor_indices =
         build_neighbor_real_indices(filtered, real_order)
       let keyed : Array[(String, Int, Int)] = []
       for i in 0..<filtered.length() {
@@ -756,8 +767,8 @@ fn build_seeded_rank_order(
             i,
             name,
             real_order,
-            prev_real,
-            next_real_by_pos,
+            neighbor_indices.prev_real,
+            neighbor_indices.next_real_by_pos,
           )
         keyed.push((name, key, i))
       }
