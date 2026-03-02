@@ -1529,9 +1529,6 @@ fn network_simplex_core(graph : NsGraph, max_iter : Int) -> Bool {
     init_rank(graph)
   }
   if !feasible_tree(graph) {
-    if @sys.get_env_var("DOT_TRACE") is Some(_) {
-      println("xpos: feasible_tree failed")
-    }
     return false
   }
   init_cutvalues(graph)
