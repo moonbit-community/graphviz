@@ -184,14 +184,32 @@ priv struct EdgeLabelEntry {
 }
 
 ///|
+priv struct RectOverlapAmount {
+  overlap_x : Double
+  overlap_y : Double
+}
+
+///|
+priv struct LabelRectNudge {
+  label_pos : @geom.Point
+  label_rect : @geom.Rect
+}
+
+///|
+priv struct AdjustedEdgeLabels {
+  edges : Array[DotLayoutEdge]
+  updates : Map[String, @geom.Point]
+}
+
+///|
 fn rect_overlap_amount(
   a : @geom.Rect,
   b : @geom.Rect,
-) -> (Double, Double)? {
+) -> RectOverlapAmount? {
   let overlap_x = min_double(a.urx, b.urx) - max_double(a.llx, b.llx)
   let overlap_y = min_double(a.ury, b.ury) - max_double(a.lly, b.lly)
   if overlap_x > 0.0 && overlap_y > 0.0 {
-    Some((overlap_x, overlap_y))
+    Some({ overlap_x, overlap_y })
   } else {
     None
   }
@@ -205,32 +223,38 @@ fn nudge_label_rect(
   label_width : Double,
   label_height : Double,
   pad : Double,
-) -> (@geom.Point, @geom.Rect) {
+) -> LabelRectNudge {
   match rect_overlap_amount(label_rect, other_rect) {
-    Some((overlap_x, overlap_y)) => {
+    Some(overlap) => {
       let other_center : @geom.Point = {
         x: (other_rect.llx + other_rect.urx) / 2.0,
         y: (other_rect.lly + other_rect.ury) / 2.0,
       }
-      if overlap_x < overlap_y {
+      if overlap.overlap_x < overlap.overlap_y {
         let dir = if label_pos.x < other_center.x { -1.0 } else { 1.0 }
-        let shift = overlap_x + pad
+        let shift = overlap.overlap_x + pad
         let new_pos : @geom.Point = {
           x: label_pos.x + dir * shift,
           y: label_pos.y,
         }
-        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
+        {
+          label_pos: new_pos,
+          label_rect: rect_from_center(new_pos, label_width, label_height, pad),
+        }
       } else {
         let dir = if label_pos.y < other_center.y { -1.0 } else { 1.0 }
-        let shift = overlap_y + pad
+        let shift = overlap.overlap_y + pad
         let new_pos : @geom.Point = {
           x: label_pos.x,
           y: label_pos.y + dir * shift,
         }
-        (new_pos, rect_from_center(new_pos, label_width, label_height, pad))
+        {
+          label_pos: new_pos,
+          label_rect: rect_from_center(new_pos, label_width, label_height, pad),
+        }
       }
     }
-    None => (label_pos, label_rect)
+    None => { label_pos, label_rect }
   }
 }
 
@@ -986,7 +1010,7 @@ fn adjust_edge_label_positions(
   edges : Array[DotLayoutEdge],
   label_rects : Array[@geom.Rect],
   pad : Double,
-) -> (Array[DotLayoutEdge], Map[String, @geom.Point]) {
+) -> AdjustedEdgeLabels {
   let adjusted : Array[DotLayoutEdge] = []
   let updates : Map[String, @geom.Point] = Map::new()
   for edge_layout in edges {
@@ -999,7 +1023,7 @@ fn adjust_edge_label_positions(
             let mut current_rect =
               rect_from_center(current_pos, metrics.width, metrics.height, pad)
             for rect in label_rects {
-              let (next_pos, next_rect) = nudge_label_rect(
+              let nudge = nudge_label_rect(
                 current_pos,
                 current_rect,
                 rect,
@@ -1007,8 +1031,8 @@ fn adjust_edge_label_positions(
                 metrics.height,
                 pad,
               )
-              current_pos = next_pos
-              current_rect = next_rect
+              current_pos = nudge.label_pos
+              current_rect = nudge.label_rect
             }
             label_pos = Some(current_pos)
           }
@@ -1029,7 +1053,7 @@ fn adjust_edge_label_positions(
       xlabel_pos: edge_layout.xlabel_pos,
     })
   }
-  (adjusted, updates)
+  { edges: adjusted, updates }
 }
 
 ///|
@@ -1105,12 +1129,13 @@ fn adjust_labels_for_clusters(
       subgraphs,
     }
   } else {
-    let (edges, updates) = adjust_edge_label_positions(
+    let adjusted_labels = adjust_edge_label_positions(
       layout.edges,
       label_rects,
       pad,
     )
-    let updated_subgraphs = apply_edge_label_updates(layout.subgraphs, updates)
+    let updated_subgraphs =
+      apply_edge_label_updates(layout.subgraphs, adjusted_labels.updates)
     let subgraphs : Array[DotLayoutGraph] = []
     for subgraph in updated_subgraphs {
       subgraphs.push(
@@ -1122,7 +1147,7 @@ fn adjust_labels_for_clusters(
       bbox: layout.bbox,
       label_pos: layout.label_pos,
       nodes: layout.nodes,
-      edges,
+      edges: adjusted_labels.edges,
       subgraphs,
     }
   }
