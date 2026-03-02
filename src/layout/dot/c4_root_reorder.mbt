@@ -473,16 +473,24 @@ fn collect_root_vnodes(
 ///|
 /// Graphviz parity: root mincross vnode inputs keep only root-vnodes from
 /// vnode rank buckets and vnode-order key map.
+priv struct RootVnodeInputs {
+  root_vnodes_by_rank : Map[Int, Array[String]]
+  root_vnode_order_keys : Map[String, Double]
+}
+
+///|
+/// Graphviz parity: root mincross vnode inputs keep only root-vnodes from
+/// vnode rank buckets and vnode-order key map.
 fn build_root_vnode_inputs(
   order_with_vnodes : Bool,
   root_vnodes : Map[String, Bool],
   vnodes_by_rank : Map[Int, Array[String]],
   vnode_order_keys_for_ordering : Map[String, Double],
-) -> (Map[Int, Array[String]], Map[String, Double]) {
+) -> RootVnodeInputs {
   let root_vnodes_by_rank : Map[Int, Array[String]] = Map::new()
   let root_vnode_order_keys : Map[String, Double] = Map::new()
   if !order_with_vnodes {
-    return (root_vnodes_by_rank, root_vnode_order_keys)
+    return { root_vnodes_by_rank, root_vnode_order_keys }
   }
   for rank, names in vnodes_by_rank {
     let filtered : Array[String] = []
@@ -500,7 +508,7 @@ fn build_root_vnode_inputs(
       root_vnode_order_keys[name] = key
     }
   }
-  (root_vnodes_by_rank, root_vnode_order_keys)
+  { root_vnodes_by_rank, root_vnode_order_keys }
 }
 
 ///|
@@ -556,7 +564,7 @@ fn build_root_reorder_groups(
     }
   }
   let root_order_index = build_order_index(root_groups_base)
-  let (root_vnodes_by_rank, root_vnode_order_keys) =
+  let root_vnode_inputs =
     build_root_vnode_inputs(
       order_with_vnodes,
       root_vnodes,
@@ -567,8 +575,8 @@ fn build_root_reorder_groups(
     build_x_groups_with_vnodes(
       root_groups_base,
       root_order_index,
-      root_vnodes_by_rank,
-      root_vnode_order_keys,
+      root_vnode_inputs.root_vnodes_by_rank,
+      root_vnode_inputs.root_vnode_order_keys,
     )
   } else {
     root_groups_base
@@ -862,6 +870,16 @@ fn build_root_reorder_node_order(
 ///|
 /// Graphviz parity: root edge-port arrays are normalized with synthetic-endpoint
 /// defaults before root mincross edge-index construction.
+priv struct NormalizedRootEdgePorts {
+  edge_tail_port_x_norm : Array[Double]
+  edge_head_port_x_norm : Array[Double]
+  edge_tail_port_order_norm : Array[Double]
+  edge_head_port_order_norm : Array[Double]
+}
+
+///|
+/// Graphviz parity: root edge-port arrays are normalized with synthetic-endpoint
+/// defaults before root mincross edge-index construction.
 fn normalize_root_edge_ports(
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
@@ -869,7 +887,7 @@ fn normalize_root_edge_ports(
   edge_head_port_x : Array[Double],
   edge_tail_port_order : Array[Double],
   edge_head_port_order : Array[Double],
-) -> (Array[Double], Array[Double], Array[Double], Array[Double]) {
+) -> NormalizedRootEdgePorts {
   let edge_tail_port_x_norm : Array[Double] = []
   let edge_head_port_x_norm : Array[Double] = []
   let edge_tail_port_order_norm : Array[Double] = []
@@ -897,12 +915,12 @@ fn normalize_root_edge_ports(
     edge_head_port_order_norm.push(normalized_ports.head_port_order)
     edge_idx = edge_idx + 1
   }
-  (
+  {
     edge_tail_port_x_norm,
     edge_head_port_x_norm,
     edge_tail_port_order_norm,
     edge_head_port_order_norm,
-  )
+  }
 }
 
 ///|
@@ -1034,12 +1052,7 @@ fn build_root_reorder_inputs(
       root_context.root_graph,
       root_context.root_node_map,
     )
-  let (
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
-  ) =
+  let normalized_root_ports =
     normalize_root_edge_ports(
       root_materialized.order_edge_tail_out,
       root_materialized.order_edge_head_out,
@@ -1062,10 +1075,10 @@ fn build_root_reorder_inputs(
     root_edges_out: root_materialized.order_edges_out,
     root_edge_tail_out: root_materialized.order_edge_tail_out,
     root_edge_head_out: root_materialized.order_edge_head_out,
-    root_edge_tail_port_x,
-    root_edge_head_port_x,
-    root_edge_tail_port_order,
-    root_edge_head_port_order,
+    root_edge_tail_port_x: normalized_root_ports.edge_tail_port_x_norm,
+    root_edge_head_port_x: normalized_root_ports.edge_head_port_x_norm,
+    root_edge_tail_port_order: normalized_root_ports.edge_tail_port_order_norm,
+    root_edge_head_port_order: normalized_root_ports.edge_head_port_order_norm,
     root_parents: root_edge_indices.parents,
     root_children: root_edge_indices.children,
     root_edge_order: root_edge_indices.edge_order,
@@ -1353,10 +1366,18 @@ fn apply_root_groups_override(
 ///|
 /// Graphviz parity: clustered-block bounds are the first/last clustered-name
 /// positions in the rank, with (-1, -1) when no clustered names exist.
+priv struct ClusterBlockBounds {
+  first_cluster : Int
+  last_cluster : Int
+}
+
+///|
+/// Graphviz parity: clustered-block bounds are the first/last clustered-name
+/// positions in the rank, with (-1, -1) when no clustered names exist.
 fn find_cluster_block_bounds(
   names : Array[String],
   cluster_keys : Map[String, String],
-) -> (Int, Int) {
+) -> ClusterBlockBounds {
   let mut first_cluster = -1
   let mut last_cluster = -1
   for i in 0..<names.length() {
@@ -1368,7 +1389,7 @@ fn find_cluster_block_bounds(
       last_cluster = i
     }
   }
-  (first_cluster, last_cluster)
+  { first_cluster, last_cluster }
 }
 
 ///|
@@ -1381,8 +1402,9 @@ fn has_root_nodes_on_both_sides(
   if names.length() <= 2 {
     return false
   }
-  let (first_cluster, last_cluster) =
+  let cluster_block_bounds =
     find_cluster_block_bounds(names, cluster_keys)
+  let first_cluster = cluster_block_bounds.first_cluster
   if first_cluster < 0 {
     return false
   }
@@ -1394,9 +1416,9 @@ fn has_root_nodes_on_both_sides(
     }
   }
   let root_after =
-    if last_cluster + 1 < names.length() {
+    if cluster_block_bounds.last_cluster + 1 < names.length() {
       let mut found = false
-      for i in (last_cluster + 1)..<names.length() {
+      for i in (cluster_block_bounds.last_cluster + 1)..<names.length() {
         if cluster_key_or_empty(cluster_keys, names[i]) == "" {
           found = true
           break
