@@ -1670,6 +1670,63 @@ fn add_root_boundary_target_edges(
 }
 
 ///|
+fn add_root_boundary_constraints(
+  graph : @network_simplex.NsGraph,
+  index : Map[String, Int],
+  root_ln_targets : Array[String],
+  root_rn_targets : Array[String],
+  nodes : Array[@cgraph.Node],
+  sizes : Map[String, NodeSize],
+  compress_width_minlen : Int?,
+) -> Unit {
+  if root_ln_targets.length() == 0 && root_rn_targets.length() == 0 {
+    return ()
+  }
+  let root_ln = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
+  let root_rn = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
+  @network_simplex.set_node_rank(graph, root_ln, 0)
+  @network_simplex.set_node_rank(graph, root_rn, 0)
+  let root_margin = if nodes.length() > 0 {
+    cluster_margin_pt(nodes[0].graph())
+  } else {
+    CLUSTER_MARGIN_PT
+  }
+  let compress_mode = compress_width_minlen is Some(_)
+  add_root_boundary_target_edges(
+    graph,
+    index,
+    root_ln_targets,
+    root_ln,
+    sizes,
+    root_margin,
+    compress_mode,
+    true,
+  )
+  add_root_boundary_target_edges(
+    graph,
+    index,
+    root_rn_targets,
+    root_rn,
+    sizes,
+    root_margin,
+    compress_mode,
+    false,
+  )
+  match compress_width_minlen {
+    Some(width_minlen) => {
+      let _ = @network_simplex.add_edge(
+        graph,
+        root_ln,
+        root_rn,
+        width_minlen,
+        ROOT_COMPRESS_WEIGHT,
+      )
+    }
+    None => ()
+  }
+}
+
+///|
 /// Graphviz parity: constraint graph uses GD_nlist order for existing
 /// nodes and appends aux slack/cluster nodes per create_aux_edges.
 /// Do not change behavior without updating fixtures/tests.
@@ -2219,50 +2276,15 @@ fn build_constraint_graph(
     // and are later positioned by constraints, not by seed x ranks.
     @network_simplex.set_node_rank(graph, idx, 0)
   }
-  if root_ln_targets.length() > 0 || root_rn_targets.length() > 0 {
-    let root_ln = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
-    let root_rn = @network_simplex.add_node(graph, "", kind=@network_simplex.NodeKind::Slack)
-    @network_simplex.set_node_rank(graph, root_ln, 0)
-    @network_simplex.set_node_rank(graph, root_rn, 0)
-    let root_margin = if nodes.length() > 0 {
-      cluster_margin_pt(nodes[0].graph())
-    } else {
-      CLUSTER_MARGIN_PT
-    }
-    let compress_mode = compress_width_minlen is Some(_)
-    add_root_boundary_target_edges(
-      graph,
-      index,
-      root_ln_targets,
-      root_ln,
-      sizes,
-      root_margin,
-      compress_mode,
-      true,
-    )
-    add_root_boundary_target_edges(
-      graph,
-      index,
-      root_rn_targets,
-      root_rn,
-      sizes,
-      root_margin,
-      compress_mode,
-      false,
-    )
-    match compress_width_minlen {
-      Some(width_minlen) => {
-        let _ = @network_simplex.add_edge(
-          graph,
-          root_ln,
-          root_rn,
-          width_minlen,
-          ROOT_COMPRESS_WEIGHT,
-        )
-      }
-      None => ()
-    }
-  }
+  add_root_boundary_constraints(
+    graph,
+    index,
+    root_ln_targets,
+    root_rn_targets,
+    nodes,
+    sizes,
+    compress_width_minlen,
+  )
   for edge in extra_edges {
     let _ = edge.tail_port
     let _ = edge.head_port
