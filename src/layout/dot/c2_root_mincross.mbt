@@ -260,6 +260,49 @@ fn filter_component_flat_constraints(
 }
 
 ///|
+fn filter_component_rank_groups(
+  order_rank_keys_for_mincross : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  component_set : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  // Graphviz parity: component reorder keeps each rank's relative extraction
+  // order from the full group list before running mincross on that component.
+  let component_groups : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys_for_mincross {
+    let names = order_groups_for_mincross.get(rank).unwrap_or_default()
+    let keep : Array[String] = []
+    for name in names {
+      if component_set.get(name) is Some(_) {
+        keep.push(name)
+      }
+    }
+    if keep.length() > 0 {
+      component_groups[rank] = keep
+    }
+  }
+  component_groups
+}
+
+///|
+fn append_component_rank_groups(
+  order_rank_keys_for_mincross : Array[Int],
+  merged : Map[Int, Array[String]],
+  ordered_component : Map[Int, Array[String]],
+) -> Unit {
+  for rank in order_rank_keys_for_mincross {
+    let names = ordered_component.get(rank).unwrap_or_default()
+    if names.length() == 0 {
+      continue
+    }
+    let merged_names = merged.get(rank).unwrap_or_default()
+    for name in names {
+      merged_names.push(name)
+    }
+    merged[rank] = merged_names
+  }
+}
+
+///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -362,24 +405,12 @@ fn run_root_rank_reorder(
   }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
-    // Graphviz parity: component reorder keeps each rank's relative extraction
-    // order from the full group list before running mincross on that component.
-    let component_groups : Map[Int, Array[String]] = Map::new()
-    for rank in order_rank_keys_for_mincross {
-      let names = match order_groups_for_mincross.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      let keep : Array[String] = []
-      for name in names {
-        if component_set.get(name) is Some(_) {
-          keep.push(name)
-        }
-      }
-      if keep.length() > 0 {
-        component_groups[rank] = keep
-      }
-    }
+    let component_groups =
+      filter_component_rank_groups(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        component_set,
+      )
     let component_edges_output =
       collect_mincross_order_edges(
         component_set,
@@ -473,23 +504,11 @@ fn run_root_rank_reorder(
         // multiplicity during startpass=0 ordering.
         coalesce_parallel_edges=coalesce_parallel,
       )
-    for rank in order_rank_keys_for_mincross {
-      let names = match ordered_component.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      if names.length() == 0 {
-        continue
-      }
-      let merged_names = match merged.get(rank) {
-        Some(list) => list
-        None => []
-      }
-      for name in names {
-        merged_names.push(name)
-      }
-      merged[rank] = merged_names
-    }
+    append_component_rank_groups(
+      order_rank_keys_for_mincross,
+      merged,
+      ordered_component,
+    )
   }
   merged
 }
