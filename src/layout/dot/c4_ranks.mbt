@@ -219,6 +219,35 @@ fn resolve_ordered_with_vnodes_groups(
 }
 
 ///|
+/// Graphviz parity: root seeded reorder groups are built from the same
+/// build_ranks snapshots and constraints before root ReMincross dispatch.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_seeded_reorder_groups(
+  graphviz_flip : Bool,
+  flat_rank_constraints : Map[String, Bool],
+  build_ranks_inputs : RootClusterBuildRanksInputs,
+) -> Map[Int, Array[String]] {
+  build_seeded_reorder_groups(
+    build_ranks_inputs.order_rank_keys,
+    build_ranks_inputs.order_groups,
+    build_ranks_inputs.order_edge_tail_out,
+    build_ranks_inputs.order_edge_head_out,
+    build_ranks_inputs.order_ranks,
+    build_ranks_inputs.order_node_order,
+    build_ranks_inputs.order_cluster_keys,
+    build_ranks_inputs.order_cluster_skeleton,
+    build_ranks_inputs.order_flat_constraints,
+    graphviz_flip,
+    build_ranks_inputs.graphviz_out_neighbors,
+    build_ranks_inputs.graphviz_in_neighbors,
+    build_ranks_inputs.order_edges_out,
+    build_ranks_inputs.order_edge_tail_port_x,
+    build_ranks_inputs.order_edge_head_port_x,
+    flat_rank_constraints,
+  )
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -239,23 +268,10 @@ fn run_root_and_cluster_ranks(
   build_ranks_inputs : RootClusterBuildRanksInputs,
 ) -> OrderRootClusterData {
   let seeded_groups =
-    build_seeded_reorder_groups(
-      build_ranks_inputs.order_rank_keys,
-      build_ranks_inputs.order_groups,
-      build_ranks_inputs.order_edge_tail_out,
-      build_ranks_inputs.order_edge_head_out,
-      build_ranks_inputs.order_ranks,
-      build_ranks_inputs.order_node_order,
-      build_ranks_inputs.order_cluster_keys,
-      build_ranks_inputs.order_cluster_skeleton,
-      build_ranks_inputs.order_flat_constraints,
+    build_root_seeded_reorder_groups(
       graphviz_flip,
-      build_ranks_inputs.graphviz_out_neighbors,
-      build_ranks_inputs.graphviz_in_neighbors,
-      build_ranks_inputs.order_edges_out,
-      build_ranks_inputs.order_edge_tail_port_x,
-      build_ranks_inputs.order_edge_head_port_x,
       flat_rank_constraints,
+      build_ranks_inputs,
     )
   let root_mincross_reorder_inputs =
     build_root_mincross_reorder_inputs(
