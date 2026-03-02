@@ -115,7 +115,7 @@ fn build_materialized_order_edges(
   let rem_order_edges_by_tail_coalesced =
     coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
   let intercluster_bonus =
-    collect_intercluster_tail_bonus(
+    collect_intercluster_bonus(
       creation_order,
       edges,
       edge_tail,
