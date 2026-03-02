@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn build_rank_groups_by_neighbors(
+fn build_neighbor_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -367,7 +367,7 @@ fn build_component_rank_groups(
     }
     return empty
   }
-  let components = discover_rank_group_components(
+  let components = discover_rank_components(
     nodes,
     edge_tail,
     edge_head,
@@ -380,7 +380,7 @@ fn build_component_rank_groups(
     graphviz_in_neighbors=graphviz_in_neighbors,
   )
   if components.length() <= 1 {
-    return build_rank_groups_by_neighbors(
+    return build_neighbor_rank_groups(
       rank_keys,
       groups,
       edge_tail,
@@ -601,7 +601,7 @@ fn collect_component_skeletons(
 }
 
 ///|
-fn build_component_flat_neighbors(
+fn build_flat_neighbors(
   nodes : Array[String],
   node_set : Map[String, Bool],
   flat_constraints : Map[String, Bool],
@@ -681,7 +681,7 @@ fn prepare_component_discovery(
     node_order,
     fallback_order,
   )
-  let (flat_out, flat_in) = build_component_flat_neighbors(
+  let (flat_out, flat_in) = build_flat_neighbors(
     nodes,
     node_set,
     flat_constraints,
@@ -808,7 +808,7 @@ fn discover_components(
 /// Graphviz parity: component discovery follows Graphviz's decompose-style DFS
 /// over edge and flat-constraint neighborhoods with cluster rankleader closure.
 /// Do not change behavior without updating fixtures/tests.
-fn discover_rank_group_components(
+fn discover_rank_components(
   nodes : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -855,7 +855,7 @@ priv struct ComponentMergeInputs {
 /// Graphviz parity: component-local merge inputs preserve rank-group filtering
 /// and in/out neighbor projection constrained to the component node set.
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_component_merge_inputs(
+fn prepare_merge_inputs(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   graphviz_out_neighbors : Map[String, Array[String]],
@@ -990,14 +990,14 @@ fn merge_rank_groups_components(
     merged[rank] = []
   }
   for component in components {
-    let prepared = prepare_component_merge_inputs(
+    let prepared = prepare_merge_inputs(
       rank_keys,
       groups,
       graphviz_out_neighbors,
       graphviz_in_neighbors,
       component,
     )
-    let ordered_component = build_rank_groups_by_neighbors(
+    let ordered_component = build_neighbor_rank_groups(
       rank_keys,
       prepared.component_groups,
       edge_tail,

@@ -574,7 +574,7 @@ fn run_mincross_case_with_name_order(
     flat_constraints["\{tail_name}|\{head_name}"] = true
   }
   if @sys.get_env_var("TRACE_MINCROSS_SEED") == Some(input.graph) {
-    let seeded = build_rank_groups_by_neighbors(
+    let seeded = build_neighbor_rank_groups(
       rank_keys,
       groups,
       edge_tail,
