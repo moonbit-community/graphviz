@@ -1787,7 +1787,7 @@ fn build_edge_route_base(
   } else {
     cluster_bboxes.get(head_cluster_name)
   }
-  let (tail_side_anchor, tail_dynamic_side, tail_dynamic) =
+  let tail_dynamic_anchor =
     dynamic_port_anchor_for_edge(
       tail_port,
       tail_name,
@@ -1797,7 +1797,7 @@ fn build_edge_route_base(
       rankdir,
       tail_record_border_adjust,
     )
-  let (head_side_anchor, head_dynamic_side, head_dynamic) =
+  let head_dynamic_anchor =
     dynamic_port_anchor_for_edge(
       head_port,
       head_name,
@@ -1808,14 +1808,14 @@ fn build_edge_route_base(
       head_record_border_adjust,
     )
   let has_side_anchor =
-    tail_side_anchor is Some(_) ||
-      head_side_anchor is Some(_) ||
+    tail_dynamic_anchor.anchor is Some(_) ||
+      head_dynamic_anchor.anchor is Some(_) ||
       tail_sameport_anchor is Some(_) ||
       head_sameport_anchor is Some(_)
   let tail_anchor_base = match tail_sameport_anchor {
     Some(pos) => pos
     None =>
-      match tail_side_anchor {
+      match tail_dynamic_anchor.anchor {
         Some(pos) => pos
         None => tail_geometry.center
       }
@@ -1823,7 +1823,7 @@ fn build_edge_route_base(
   let head_anchor_base = match head_sameport_anchor {
     Some(pos) => pos
     None =>
-      match head_side_anchor {
+      match head_dynamic_anchor.anchor {
         Some(pos) => pos
         None => head_geometry.center
       }
@@ -1831,8 +1831,8 @@ fn build_edge_route_base(
   let tail_port_side =
     if tail_sameport_anchor is Some(_) {
     port_side_mask_from_anchor(tail_anchor_base, tail_pos, tail_size)
-  } else if tail_dynamic {
-    tail_dynamic_side
+  } else if tail_dynamic_anchor.is_dynamic {
+    tail_dynamic_anchor.side
   } else {
     port_side_for_edge(
       tail_port,
@@ -1845,8 +1845,8 @@ fn build_edge_route_base(
   let head_port_side =
     if head_sameport_anchor is Some(_) {
     port_side_mask_from_anchor(head_anchor_base, head_pos, head_size)
-  } else if head_dynamic {
-    head_dynamic_side
+  } else if head_dynamic_anchor.is_dynamic {
+    head_dynamic_anchor.side
   } else {
     port_side_for_edge(
       head_port,
@@ -2020,7 +2020,7 @@ fn build_edge_route_base(
   let mut tail_clip = match tail_cluster_bbox {
     Some(rect) => clip_to_bbox(tail_anchor0, rect, head_anchor0)
     None =>
-      match tail_side_anchor {
+      match tail_dynamic_anchor.anchor {
         Some(pos) => pos
         None =>
           match tail_compass_clip {
@@ -2038,7 +2038,7 @@ fn build_edge_route_base(
   let mut head_clip = match head_cluster_bbox {
     Some(rect) => clip_to_bbox(head_anchor0, rect, tail_anchor0)
     None =>
-      match head_side_anchor {
+      match head_dynamic_anchor.anchor {
         Some(pos) => pos
         None =>
           match head_compass_clip {
@@ -2079,8 +2079,8 @@ fn build_edge_route_base(
         edge_mid_label_width_pt(edge) <= 0.0 &&
         tail_sameport_anchor is None &&
         head_sameport_anchor is None &&
-        tail_side_anchor is None &&
-        head_side_anchor is None &&
+        tail_dynamic_anchor.anchor is None &&
+        head_dynamic_anchor.anchor is None &&
         compass_tail_on_non_record &&
         compass_head_on_non_record &&
         @dot_shared.port_is_explicit(tail_port) &&
@@ -2105,14 +2105,14 @@ fn build_edge_route_base(
     }
   }
   let tail_anchor =
-    if tail_sameport_anchor is None && tail_side_anchor is None &&
+    if tail_sameport_anchor is None && tail_dynamic_anchor.anchor is None &&
       compass_tail_on_non_record {
       tail_clip
     } else {
       tail_anchor0
     }
   let head_anchor =
-    if head_sameport_anchor is None && head_side_anchor is None &&
+    if head_sameport_anchor is None && head_dynamic_anchor.anchor is None &&
       compass_head_on_non_record {
       head_clip
     } else {
