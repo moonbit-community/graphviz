@@ -40,6 +40,27 @@ priv struct OrderingDispatchSetup {
 }
 
 ///|
+/// Graphviz parity: reorder setup input bundle keeps class2/decompose payload
+/// snapshots unchanged before deriving mincross dispatch state.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingReorderBuildInputs {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+  vnode_count : Int
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  vnode_info : EdgeVnodeInfo
+}
+
+///|
 priv struct RealNodeNameSets {
   real_nodes : Map[String, Bool]
   existing_names : Map[String, Bool]
@@ -261,6 +282,85 @@ fn build_vnode_order_keys_for_dispatch(
 }
 
 ///|
+/// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
+/// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
+/// Do not change behavior without updating fixtures/tests.
+fn build_ordering_reorder_setup(
+  inputs : OrderingReorderBuildInputs,
+  edge_port_data : OrderingEdgePortData,
+) -> OrderingReorderSetup {
+  // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
+  // clustered/nonclustered mincross paths diverge.
+  let ordering_groups_base = apply_rank_same_order(
+    inputs.groups,
+    inputs.cluster_meta.rank_same_groups,
+    inputs.cluster_meta.rank_same_order,
+    inputs.node_order,
+    inputs.port_edge_nodes,
+  )
+  let base_order_index = build_order_index(ordering_groups_base)
+  let order_with_vnodes = inputs.vnode_count > 0
+  let order_with_clusters =
+    inputs.cluster_meta.has_clusters &&
+    inputs.cluster_meta.cluster_min_rank.length() > 0
+  let graphviz_flip = inputs.rankdir == RankDir::RL || inputs.rankdir == RankDir::LR
+  let flat_rank_constraints =
+    build_flat_rank_constraints(inputs.edge_tail, inputs.edge_head, inputs.ranks)
+  let class2_data =
+    build_ordering_class2_data(
+      inputs.nodes,
+      inputs.edges,
+      inputs.edge_tail,
+      inputs.edge_head,
+      inputs.edge_out_order,
+      edge_port_data.edge_tail_port_x,
+      edge_port_data.edge_head_port_x,
+      edge_port_data.edge_tail_port_order,
+      edge_port_data.edge_head_port_order,
+      inputs.ranks,
+      inputs.vnode_info.edge_vnodes,
+      order_with_vnodes,
+      order_with_clusters,
+      inputs.cluster_meta,
+      flat_rank_constraints,
+      graphviz_flip,
+    )
+  let gdnlist_order =
+    build_gdnlist_order(
+      class2_data,
+      graphviz_flip,
+      inputs.cluster_meta.cluster_order,
+    )
+  let nlist_order_index =
+    build_nlist_order_index(class2_data.nlist_order)
+  let vnode_order_keys_for_ordering =
+    build_vnode_order_keys_for_dispatch(
+      inputs.vnode_count,
+      inputs.cluster_meta,
+      inputs.edges,
+      inputs.edge_tail,
+      inputs.edge_head,
+      inputs.edge_reversed,
+      inputs.ranks,
+      base_order_index,
+      ordering_groups_base,
+      inputs.vnode_info,
+      nlist_order_index,
+    )
+  {
+    ordering_groups_base,
+    base_order_index,
+    order_with_vnodes,
+    order_with_clusters,
+    graphviz_flip,
+    flat_rank_constraints,
+    class2_data,
+    gdnlist_order,
+    vnode_order_keys_for_ordering,
+  }
+}
+
+///|
 /// Graphviz parity: dispatch setup keeps edge-port extraction and reorder setup
 /// sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
@@ -289,78 +389,31 @@ fn build_ordering_dispatch_setup(
       edge_head,
       order_sizes,
     )
-  // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
-  // clustered/nonclustered mincross paths diverge.
-  let ordering_groups_base = apply_rank_same_order(
-    groups,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    node_order,
-    port_edge_nodes,
-  )
-  let base_order_index = build_order_index(ordering_groups_base)
-  let order_with_vnodes = vnode_count > 0
-  let order_with_clusters =
-    cluster_meta.has_clusters && cluster_meta.cluster_min_rank.length() > 0
-  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
-  let flat_rank_constraints =
-    build_flat_rank_constraints(edge_tail, edge_head, ranks)
-  // Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
-  // vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
-  let class2_data =
-    build_ordering_class2_data(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      edge_port_data.edge_tail_port_x,
-      edge_port_data.edge_head_port_x,
-      edge_port_data.edge_tail_port_order,
-      edge_port_data.edge_head_port_order,
-      ranks,
-      vnode_info.edge_vnodes,
-      order_with_vnodes,
-      order_with_clusters,
-      cluster_meta,
-      flat_rank_constraints,
-      graphviz_flip,
-    )
-  let gdnlist_order =
-    build_gdnlist_order(class2_data, graphviz_flip, cluster_meta.cluster_order)
-  let nlist_order_index =
-    build_nlist_order_index(class2_data.nlist_order)
-  let vnode_order_keys_for_ordering =
-    build_vnode_order_keys_for_dispatch(
-      vnode_count,
-      cluster_meta,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      ranks,
-      base_order_index,
-      ordering_groups_base,
-      vnode_info,
-      nlist_order_index,
-    )
   let reorder_setup =
-    {
-      ordering_groups_base,
-      base_order_index,
-      order_with_vnodes,
-      order_with_clusters,
-      graphviz_flip,
-      flat_rank_constraints,
-      class2_data,
-      gdnlist_order,
-      vnode_order_keys_for_ordering,
-    }
+    build_ordering_reorder_setup(
+      {
+        nodes,
+        edges,
+        edge_tail,
+        edge_head,
+        edge_reversed,
+        edge_out_order,
+        ranks,
+        groups,
+        node_order,
+        port_edge_nodes,
+        vnode_count,
+        rankdir,
+        cluster_meta,
+        vnode_info,
+      },
+      edge_port_data,
+    )
   {
     edge_port_data,
     reorder_setup,
-    nlist_order: class2_data.nlist_order,
-    vnode_creation_order: class2_data.vnode_creation_order,
-    gdnlist_order,
+    nlist_order: reorder_setup.class2_data.nlist_order,
+    vnode_creation_order: reorder_setup.class2_data.vnode_creation_order,
+    gdnlist_order: reorder_setup.gdnlist_order,
   }
 }
