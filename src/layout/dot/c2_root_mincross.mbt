@@ -185,6 +185,91 @@ fn collect_noncluster_components(
 }
 
 ///|
+fn filter_component_neighbor_map(
+  component_nodes : Array[String],
+  component_set : Map[String, Bool],
+  neighbors : Map[String, Array[String]],
+) -> Map[String, Array[String]] {
+  let filtered : Map[String, Array[String]] = Map::new()
+  for name in component_nodes {
+    let values = match neighbors.get(name) {
+      Some(list) => list
+      None => []
+    }
+    let keep : Array[String] = []
+    for other in values {
+      if component_set.get(other) is Some(_) {
+        keep.push(other)
+      }
+    }
+    filtered[name] = keep
+  }
+  filtered
+}
+
+///|
+fn filter_component_positions(
+  component_set : Map[String, Bool],
+  positions : Map[String, Double],
+) -> Map[String, Double] {
+  let filtered : Map[String, Double] = Map::new()
+  for name, value in positions {
+    if component_set.get(name) is Some(_) {
+      filtered[name] = value
+    }
+  }
+  filtered
+}
+
+///|
+fn filter_component_port_order_contrib(
+  component_set : Map[String, Bool],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+) -> Map[String, Array[(String, Double)]] {
+  let component_port_order_contrib : Map[String, Array[(String, Double)]] =
+    Map::new()
+  for name, entries in port_order_contrib {
+    if component_set.get(name) is None {
+      continue
+    }
+    let keep : Array[(String, Double)] = []
+    for entry in entries {
+      let (other, weight) = entry
+      if component_set.get(other) is Some(_) {
+        keep.push((other, weight))
+      }
+    }
+    component_port_order_contrib[name] = keep
+  }
+  component_port_order_contrib
+}
+
+///|
+fn filter_component_flat_constraints(
+  component_set : Map[String, Bool],
+  order_flat_constraints : Map[String, Bool],
+) -> Map[String, Bool] {
+  let component_flat_constraints : Map[String, Bool] = Map::new()
+  for key, enabled in order_flat_constraints {
+    if !enabled {
+      continue
+    }
+    match @dot_shared.parse_flat_constraint_key(key) {
+      Some((tail, head)) => {
+        if tail == "" || head == "" {
+          continue
+        }
+        if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
+          component_flat_constraints[key] = true
+        }
+      }
+      None => ()
+    }
+  }
+  component_flat_constraints
+}
+
+///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
@@ -285,30 +370,6 @@ fn run_root_rank_reorder(
   for rank in order_rank_keys_for_mincross {
     merged[rank] = []
   }
-  // Graphviz parity: per-component neighbor filtering preserves the local
-  // ND_out / ND_in order used when mincross runs each connected component.
-  let filter_component_neighbor_map =
-    (
-      component_nodes : Array[String],
-      component_set : Map[String, Bool],
-      neighbors : Map[String, Array[String]],
-    ) => {
-      let filtered : Map[String, Array[String]] = Map::new()
-      for name in component_nodes {
-        let values = match neighbors.get(name) {
-          Some(list) => list
-          None => []
-        }
-        let keep : Array[String] = []
-        for other in values {
-          if component_set.get(other) is Some(_) {
-            keep.push(other)
-          }
-        }
-        filtered[name] = keep
-      }
-      filtered
-    }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
     // Graphviz parity: component reorder keeps each rank's relative extraction
@@ -377,54 +438,18 @@ fn run_root_rank_reorder(
       )
     // Graphviz parity: component-local node-position hints are passed to
     // mincross only for nodes belonging to the active connected component.
-    let component_port_order_positions : Map[String, Double] = Map::new()
-    for name, value in port_order_positions {
-      if component_set.get(name) is Some(_) {
-        component_port_order_positions[name] = value
-      }
-    }
-    let component_preferred_positions : Map[String, Double] = Map::new()
-    for name, value in preferred_positions {
-      if component_set.get(name) is Some(_) {
-        component_preferred_positions[name] = value
-      }
-    }
+    let component_port_order_positions =
+      filter_component_positions(component_set, port_order_positions)
+    let component_preferred_positions =
+      filter_component_positions(component_set, preferred_positions)
     // Graphviz parity: component-local port-order contributor lists drop
     // endpoints outside the active connected component before mincross.
-    let component_port_order_contrib : Map[String, Array[(String, Double)]] =
-      Map::new()
-    for name, entries in port_order_contrib {
-      if component_set.get(name) is None {
-        continue
-      }
-      let keep : Array[(String, Double)] = []
-      for entry in entries {
-        let (other, weight) = entry
-        if component_set.get(other) is Some(_) {
-          keep.push((other, weight))
-        }
-      }
-      component_port_order_contrib[name] = keep
-    }
+    let component_port_order_contrib =
+      filter_component_port_order_contrib(component_set, port_order_contrib)
     // Graphviz parity: component-local flat constraints are forwarded to
     // mincross only when both endpoints belong to the active component.
-    let component_flat_constraints : Map[String, Bool] = Map::new()
-    for key, enabled in order_flat_constraints {
-      if !enabled {
-        continue
-      }
-      match @dot_shared.parse_flat_constraint_key(key) {
-        Some((tail, head)) => {
-          if tail == "" || head == "" {
-            continue
-          }
-          if component_set.get(tail) is Some(_) && component_set.get(head) is Some(_) {
-            component_flat_constraints[key] = true
-          }
-        }
-        None => ()
-      }
-    }
+    let component_flat_constraints =
+      filter_component_flat_constraints(component_set, order_flat_constraints)
     let ordered_component =
       reorder_rank_groups(
         order_rank_keys_for_mincross,
