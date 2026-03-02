@@ -231,7 +231,7 @@ fn collect_label_vnode_actuals(
       Some(value) => value
       None => continue
     }
-    let (label_rank, _span) = label_rank_info
+    let label_rank = label_rank_info.label_rank
     let mut found = false
     let vnodes = match vnode_info.edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
       Some(list) => list
@@ -454,7 +454,7 @@ test "label vnodes match Graphviz fixtures" {
         Some(value) => value
         None => fail("missing label rank info for \{entry.tail} -> \{entry.head}")
       }
-      let (label_rank, _span) = label_rank_info
+      let label_rank = label_rank_info.label_rank
       assert_eq(label_rank, entry.label_rank)
       let metrics = match edge_mid_label_metrics(edge) {
         Some(value) => value

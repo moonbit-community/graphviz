@@ -202,6 +202,18 @@ priv struct AdjustedEdgeLabels {
 }
 
 ///|
+priv struct PointWithTangent {
+  pos : @geom.Point
+  tangent : @geom.Point
+}
+
+///|
+priv struct EdgeLabelRankInfo {
+  label_rank : Int
+  span : Int
+}
+
+///|
 fn rect_overlap_amount(
   a : @geom.Rect,
   b : @geom.Rect,
@@ -373,12 +385,12 @@ fn sample_spline_points(
 fn polyline_point_with_dir(
   points : Array[@geom.Point],
   target_len : Double,
-) -> (@geom.Point, @geom.Point)? {
+) -> PointWithTangent? {
   if points.length() == 0 {
     return None
   }
   if points.length() == 1 {
-    return Some((points[0], @edge_spline.point(1.0, 0.0)))
+    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0) })
   }
   let mut remaining = target_len
   let mut last_dir = @edge_spline.point(1.0, 0.0)
@@ -405,11 +417,11 @@ fn polyline_point_with_dir(
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
       let dir =
         if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
-      return Some((pos, dir))
+      return Some({ pos, tangent: dir })
     }
     remaining = remaining - seg_len
   }
-  Some((last_pos, last_dir))
+  Some({ pos: last_pos, tangent: last_dir })
 }
 
 ///|
@@ -417,12 +429,12 @@ fn polyline_point_at_axis(
   points : Array[@geom.Point],
   axis_value : Double,
   axis_is_x : Bool,
-) -> (@geom.Point, @geom.Point)? {
+) -> PointWithTangent? {
   if points.length() == 0 {
     return None
   }
   if points.length() == 1 {
-    return Some((points[0], @edge_spline.point(1.0, 0.0)))
+    return Some({ pos: points[0], tangent: @edge_spline.point(1.0, 0.0) })
   }
   let total_len = @edge_spline.polyline_length(points)
   let target = if total_len <= 0.0 { 0.0 } else { total_len / 2.0 }
@@ -467,7 +479,7 @@ fn polyline_point_at_axis(
   match best_pos {
     Some(pos) =>
       match best_dir {
-        Some(dir) => Some((pos, dir))
+        Some(dir) => Some({ pos, tangent: dir })
         None => None
       }
     None => None
@@ -477,7 +489,7 @@ fn polyline_point_at_axis(
 ///|
 fn spline_label_pos_with_samples(
   samples : Array[@geom.Point],
-) -> (@geom.Point, @geom.Point)? {
+) -> PointWithTangent? {
   if samples.length() == 0 {
     return None
   }
@@ -491,7 +503,7 @@ fn spline_label_pos_at_samples(
   samples : Array[@geom.Point],
   axis_value : Double,
   axis_is_x : Bool,
-) -> (@geom.Point, @geom.Point)? {
+) -> PointWithTangent? {
   if samples.length() == 0 {
     return None
   }
@@ -502,7 +514,7 @@ fn spline_label_pos_at_samples(
 fn edge_label_rank_info(
   edge : @cgraph.Edge,
   ranks : Map[String, Int],
-) -> (Int, Int)? {
+) -> EdgeLabelRankInfo? {
   if edge_mid_label_width_pt(edge) <= 0.0 {
     return None
   }
@@ -521,7 +533,7 @@ fn edge_label_rank_info(
     return None
   }
   let label_rank = (min_rank + max_rank) / 2
-  Some((label_rank, span))
+  Some({ label_rank, span })
 }
 
 ///|
@@ -531,7 +543,7 @@ fn edge_label_rank_y(
   rank_y : Map[Int, Double],
 ) -> Double? {
   match edge_label_rank_info(edge, ranks) {
-    Some((label_rank, _span)) => rank_y.get(label_rank)
+    Some(info) => rank_y.get(info.label_rank)
     None => None
   }
 }
@@ -632,7 +644,7 @@ fn recover_slack_vnodes(
     return ()
   }
   let label_rank = match edge_label_rank_info(edge, ranks) {
-    Some((rank, _span)) => rank
+    Some(info) => info.label_rank
     None => -1
   }
   let mut box_idx = 0
@@ -739,7 +751,7 @@ fn port_label_points(
   spline : @geom.Spline,
   head_p : Bool,
   marker_present : Bool,
-) -> (@geom.Point, @geom.Point)? {
+) -> PointWithTangent? {
   // Graphviz parity: place_portlabel uses eflag/sflag to choose marker tangent
   // (marker present => use marker+endpoint tangent, absent => use Bezier sample).
   let points = spline.points
@@ -750,14 +762,14 @@ fn port_label_points(
     match spline.end {
       Some(end_point) =>
         if marker_present {
-          Some((end_point, points[points.length() - 1]))
+          Some({ pos: end_point, tangent: points[points.length() - 1] })
         } else {
           let start = points.length() - 4
           let p0 = points[start]
           let p1 = points[start + 1]
           let p2 = points[start + 2]
           let p3 = points[start + 3]
-          Some((p3, bezier_point_fma(p0, p1, p2, p3, 0.9)))
+          Some({ pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) })
         }
       None => {
         let start = points.length() - 4
@@ -765,27 +777,27 @@ fn port_label_points(
         let p1 = points[start + 1]
         let p2 = points[start + 2]
         let p3 = points[start + 3]
-        Some((p3, bezier_point_fma(p0, p1, p2, p3, 0.9)))
+        Some({ pos: p3, tangent: bezier_point_fma(p0, p1, p2, p3, 0.9) })
       }
     }
   } else {
     match spline.start {
       Some(start_point) =>
         if marker_present {
-          Some((start_point, points[0]))
+          Some({ pos: start_point, tangent: points[0] })
         } else {
           let p0 = points[0]
           let p1 = points[1]
           let p2 = points[2]
           let p3 = points[3]
-          Some((p0, bezier_point_fma(p0, p1, p2, p3, 0.1)))
+          Some({ pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) })
         }
       None => {
         let p0 = points[0]
         let p1 = points[1]
         let p2 = points[2]
         let p3 = points[3]
-        Some((p0, bezier_point_fma(p0, p1, p2, p3, 0.1)))
+        Some({ pos: p0, tangent: bezier_point_fma(p0, p1, p2, p3, 0.1) })
       }
     }
   }
@@ -842,11 +854,11 @@ fn edge_port_label_pos(
   match port_label_params(edge) {
     Some(params) =>
       match port_label_points(spline, head_p, marker_present) {
-        Some((pe, pf)) =>
+        Some(port_points) =>
           Some(
             port_label_pos_from_points(
-              pe,
-              pf,
+              port_points.pos,
+              port_points.tangent,
               params.angle_deg,
               params.distance_scale,
             ),
@@ -874,7 +886,7 @@ fn edge_label_pos(
 ) -> @geom.Point? {
   let samples = sample_spline_points(spline.points, 96)
   let fallback = match spline_label_pos_with_samples(samples) {
-    Some((pos, tangent)) => (pos, tangent)
+    Some(value) => value
     None => {
       let mid = @edge_spline.point(
         (tail_clip.x + head_clip.x) / 2.0,
@@ -884,21 +896,23 @@ fn edge_label_pos(
       let len = Double::sqrt(delta.x * delta.x + delta.y * delta.y)
       let tangent =
         if len <= 0.0 { @edge_spline.point(1.0, 0.0) } else { @edge_spline.point_scale(delta, 1.0 / len) }
-      (mid, tangent)
+      { pos: mid, tangent }
     }
   }
-  let (raw_pos, dir) = match label_rank_y {
+  let label_point = match label_rank_y {
     Some(axis) =>
       match spline_label_pos_at_samples(
         samples,
         axis,
         false,
       ) {
-        Some((pos, tangent)) => (pos, tangent)
+        Some(value) => value
         None => fallback
       }
     None => fallback
   }
+  let raw_pos = label_point.pos
+  let dir = label_point.tangent
   let base_pos =
     match (label_rank_x, label_rank_y) {
       (Some(x_axis), Some(y_axis)) =>

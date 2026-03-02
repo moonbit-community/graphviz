@@ -3784,11 +3784,11 @@ fn build_edge_layout(
   let label_rank_info = edge_label_rank_info(edge, ranks)
   let label_rank_y = edge_label_rank_y(edge, ranks, rank_y)
   let label_rank_x = match label_rank_info {
-    Some((label_rank, span)) =>
-      if span > 1 {
+    Some(info) =>
+      if info.span > 1 {
         edge_label_rank_x(
           edge,
-          label_rank,
+          info.label_rank,
           vnode_info.vnode_ranks,
           vnode_info.edge_vnodes,
           vnode_positions,
