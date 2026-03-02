@@ -6,7 +6,7 @@
 /// Graphviz parity: clustered xpos reorder seed skeleton injection appends
 /// per-rank cluster skeleton vnodes before rank-order/index materialization.
 /// Do not change behavior without updating fixtures/tests.
-fn append_skeleton_nodes_for_xpos(
+fn append_skeleton_nodes(
   order_groups : Map[Int, Array[String]],
   order_sizes : Map[String, NodeSize],
   order_cluster_keys : Map[String, String],
@@ -37,7 +37,7 @@ fn append_skeleton_nodes_for_xpos(
 /// Graphviz parity: clustered xpos reorder seed setup clones x-order groups,
 /// injects cluster skeleton nodes, and materializes rank/order maps.
 /// Do not change behavior without updating fixtures/tests.
-fn build_clustered_xpos_seed_data(
+fn build_clustered_seed_data(
   x_groups : Map[Int, Array[String]],
   x_order_sizes : Map[String, NodeSize],
   x_cluster_keys : Map[String, String],
@@ -57,7 +57,7 @@ fn build_clustered_xpos_seed_data(
     order_cluster_keys[name] = key
   }
   let order_cluster_skeleton : Map[String, Bool] = Map::new()
-  append_skeleton_nodes_for_xpos(
+  append_skeleton_nodes(
     order_groups,
     order_sizes,
     order_cluster_keys,
@@ -271,7 +271,7 @@ fn append_xpos_edge_with_vnodes(
 /// Graphviz parity: clustered xpos reorder appends cluster skeleton chain
 /// edges between consecutive cluster ranks with CL_CROSS penalty.
 /// Do not change behavior without updating fixtures/tests.
-fn append_skeleton_edges_for_xpos(
+fn append_skeleton_edges(
   order_graph : @cgraph.Graph,
   order_node_map : Map[String, @cgraph.Node],
   order_edges_out : Array[@cgraph.Edge],
@@ -442,7 +442,7 @@ fn build_clustered_xpos_edges(
     x_edge_tail_port_order,
     x_edge_head_port_order,
   )
-  append_skeleton_edges_for_xpos(
+  append_skeleton_edges(
     order_graph,
     order_node_map,
     order_edges_out,
@@ -551,7 +551,7 @@ fn build_clustered_xpos_groups(
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let reorder_seed_data =
-    build_clustered_xpos_seed_data(
+    build_clustered_seed_data(
       x_groups,
       x_order_sizes,
       x_cluster_keys,
