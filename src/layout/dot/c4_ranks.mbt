@@ -156,6 +156,69 @@ fn apply_graphviz_flip_root_override(
 }
 
 ///|
+/// Graphviz parity: clustered reorder runs only in cluster mode and uses the
+/// unmapped order graph snapshots to replay cluster-local build_ranks passes.
+/// Do not change behavior without updating fixtures/tests.
+fn run_clustered_rank_reorder_if_enabled(
+  order_with_clusters : Bool,
+  graph : @cgraph.Graph,
+  ordered : Map[Int, Array[String]],
+  cluster_meta : ClusterMetadata,
+  build_ranks_inputs : RootClusterBuildRanksInputs,
+  ranks : Map[String, Int],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  vnode_info : EdgeVnodeInfo,
+  order_with_vnodes : Bool,
+) -> Unit {
+  // Graphviz parity: clustered order pass runs cluster-local build_ranks on
+  // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
+  if !order_with_clusters {
+    return
+  }
+  reorder_by_cluster_ranks(
+    graph,
+    ordered,
+    cluster_meta,
+    build_ranks_inputs.order_node_order,
+    build_ranks_inputs.order_edges_out_unmapped,
+    build_ranks_inputs.order_edge_tail_out_unmapped,
+    build_ranks_inputs.order_edge_head_out_unmapped,
+    build_ranks_inputs.order_edge_tail_port_x_unmapped,
+    build_ranks_inputs.order_edge_head_port_x_unmapped,
+    build_ranks_inputs.order_edge_tail_port_order_unmapped,
+    build_ranks_inputs.order_edge_head_port_order_unmapped,
+    build_ranks_inputs.graphviz_out_neighbors,
+    build_ranks_inputs.graphviz_in_neighbors,
+    ranks,
+    build_ranks_inputs.order_sizes_out,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    vnode_info,
+    order_with_vnodes,
+  )
+}
+
+///|
+/// Graphviz parity: vnode-inclusive ordered groups are updated only when vnode
+/// ordering mode is enabled; otherwise the prior vnode groups are preserved.
+/// Do not change behavior without updating fixtures/tests.
+fn resolve_ordered_with_vnodes_groups(
+  order_with_vnodes : Bool,
+  ordered : Map[Int, Array[String]],
+  ordered_with_vnodes_prev : Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  if !order_with_vnodes {
+    return ordered_with_vnodes_prev
+  }
+  ordered
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -218,37 +281,26 @@ fn run_root_and_cluster_ranks(
       graphviz_flip,
       cluster_meta.cluster_keys,
     )
-  // Graphviz parity: clustered order pass runs cluster-local build_ranks on
-  // the unmapped order graph, then stores vnode-inclusive rank groups for xpos.
-  if order_with_clusters {
-    reorder_by_cluster_ranks(
-      graph,
-      ordered,
-      cluster_meta,
-      build_ranks_inputs.order_node_order,
-      build_ranks_inputs.order_edges_out_unmapped,
-      build_ranks_inputs.order_edge_tail_out_unmapped,
-      build_ranks_inputs.order_edge_head_out_unmapped,
-      build_ranks_inputs.order_edge_tail_port_x_unmapped,
-      build_ranks_inputs.order_edge_head_port_x_unmapped,
-      build_ranks_inputs.order_edge_tail_port_order_unmapped,
-      build_ranks_inputs.order_edge_head_port_order_unmapped,
-      build_ranks_inputs.graphviz_out_neighbors,
-      build_ranks_inputs.graphviz_in_neighbors,
-      ranks,
-      build_ranks_inputs.order_sizes_out,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      vnode_info,
+  run_clustered_rank_reorder_if_enabled(
+    order_with_clusters,
+    graph,
+    ordered,
+    cluster_meta,
+    build_ranks_inputs,
+    ranks,
+    nodesep_pt,
+    has_edge_labels,
+    port_order_positions,
+    port_order_contrib,
+    vnode_info,
+    order_with_vnodes,
+  )
+  let next_ordered_with_vnodes =
+    resolve_ordered_with_vnodes_groups(
       order_with_vnodes,
+      ordered,
+      build_ranks_inputs.ordered_with_vnodes,
     )
-  }
-  let mut next_ordered_with_vnodes = build_ranks_inputs.ordered_with_vnodes
-  if order_with_vnodes {
-    next_ordered_with_vnodes = ordered
-  }
   {
     order_groups_for_mincross,
     ordered,
