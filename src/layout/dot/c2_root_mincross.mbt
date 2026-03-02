@@ -769,15 +769,6 @@ fn build_root_mincross_edge_data(
 }
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
-/// and reorder_rank_groups execution in the same Graphviz call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootReorderPassOutput {
-  ordered_mincross : Map[Int, Array[String]]
-  mincross_nodes : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: root ReMincross output keeps seeded root-mincross input
 /// groups and merged ordered groups bundled for downstream clustered phases.
 priv struct RootMincrossReorderOutput {
@@ -845,7 +836,7 @@ fn build_root_vnode_preferred_positions(
 fn run_root_reorder_pass(
   reorder_inputs : RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
-) -> RootReorderPassOutput {
+) -> (Map[Int, Array[String]], Map[String, Bool]) {
   // Graphviz parity: root ReMincross stage data is assembled from one
   // snapshot: rank keys -> node membership -> filtered mincross edge bundle.
   let order_rank_keys_for_mincross =
@@ -927,7 +918,7 @@ fn run_root_reorder_pass(
     reorder_inputs.order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  { ordered_mincross, mincross_nodes }
+  (ordered_mincross, mincross_nodes)
 }
 
 ///|
@@ -988,16 +979,17 @@ fn resolve_root_mincross_input_groups(
 /// Do not change behavior without updating fixtures/tests.
 fn finalize_root_mincross_ordered_groups(
   inputs : RootMincrossReorderInputs,
-  root_reorder_output : RootReorderPassOutput,
+  ordered_mincross : Map[Int, Array[String]],
+  mincross_nodes : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   if !inputs.order_with_clusters {
-    return root_reorder_output.ordered_mincross
+    return ordered_mincross
   }
   merge_root_mincross_groups(
     inputs.order_rank_keys,
     inputs.seeded_groups,
-    root_reorder_output.ordered_mincross,
-    root_reorder_output.mincross_nodes,
+    ordered_mincross,
+    mincross_nodes,
     inputs.order_cluster_keys,
     inputs.order_cluster_skeleton,
   )
@@ -1012,12 +1004,13 @@ fn run_root_mincross_reorder(
 ) -> RootMincrossReorderOutput {
   let order_groups_for_mincross =
     resolve_root_mincross_input_groups(inputs)
-  let root_reorder_output =
+  let (ordered_mincross, mincross_nodes) =
     run_root_reorder_pass(inputs, order_groups_for_mincross)
   let ordered =
     finalize_root_mincross_ordered_groups(
       inputs,
-      root_reorder_output,
+      ordered_mincross,
+      mincross_nodes,
     )
   { order_groups_for_mincross, ordered }
 }
