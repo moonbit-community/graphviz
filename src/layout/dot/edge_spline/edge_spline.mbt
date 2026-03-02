@@ -727,48 +727,54 @@ fn arrow_names() -> Array[(String, Int)] {
 }
 
 ///|
+priv struct ArrowMatchResult {
+  next : Int
+  flag : Int
+}
+
+///|
 fn arrow_match_name_frag(
   value : String,
   start : Int,
   names : Array[(String, Int)],
   flag : Int,
-) -> (Int, Int) {
+) -> ArrowMatchResult {
   for pair in names {
     let (name, arrow_flag) = pair
     if has_prefix_at(value, start, name) {
-      return (start + name.length(), flag | arrow_flag)
+      return { next: start + name.length(), flag: flag | arrow_flag }
     }
   }
-  (start, flag)
+  { next: start, flag }
 }
 
 ///|
-fn arrow_match_shape(value : String, start : Int) -> (Int, Int) {
+fn arrow_match_shape(value : String, start : Int) -> ArrowMatchResult {
   let type_mask = (1 << BITS_PER_ARROW_TYPE) - 1
-  let (syn_rest, syn_flag) =
+  let syn_match =
     arrow_match_name_frag(value, start, arrow_synonyms(), ARR_TYPE_NONE)
-  if syn_rest != start {
-    return (syn_rest, syn_flag)
+  if syn_match.next != start {
+    return syn_match
   }
   let mut rest = start
   let mut flag = ARR_TYPE_NONE
   while true {
-    let (next, next_flag) =
+    let next_match =
       arrow_match_name_frag(value, rest, arrow_mods(), flag)
-    if next == rest {
+    if next_match.next == rest {
       break
     }
-    rest = next
-    flag = next_flag
+    rest = next_match.next
+    flag = next_match.flag
   }
-  let (name_rest, name_flag) =
+  let name_match =
     arrow_match_name_frag(value, rest, arrow_names(), flag)
-  flag = name_flag
-  rest = name_rest
+  flag = name_match.flag
+  rest = name_match.next
   if flag != ARR_TYPE_NONE && (flag & type_mask) == 0 {
     flag = flag | ARR_TYPE_NORM
   }
-  (rest, flag)
+  { next: rest, flag }
 }
 
 ///|
@@ -785,21 +791,21 @@ fn parse_arrow_flags(value : String?) -> Array[Int] {
   let flags : Array[Int] = []
   let mut idx = 0
   while idx < text.length() && flags.length() < NUMB_OF_ARROW_HEADS {
-    let (next, parsed) = arrow_match_shape(text, idx)
-    if parsed == ARR_TYPE_NONE {
+    let matched = arrow_match_shape(text, idx)
+    if matched.flag == ARR_TYPE_NONE {
       return []
     }
-    let mut flag = parsed
+    let mut flag = matched.flag
     if flag == ARR_TYPE_GAP && flags.length() == NUMB_OF_ARROW_HEADS - 1 {
       flag = ARR_TYPE_NONE
     }
-    if flag == ARR_TYPE_GAP && flags.length() == 0 && next >= text.length() {
+    if flag == ARR_TYPE_GAP && flags.length() == 0 && matched.next >= text.length() {
       flag = ARR_TYPE_NONE
     }
     if flag != ARR_TYPE_NONE {
       flags.push(flag)
     }
-    idx = next
+    idx = matched.next
   }
   flags
 }
@@ -1182,7 +1188,15 @@ fn trim_record_border_for_clip(
 }
 
 ///|
-fn polygon_clip_params(node : @cgraph.Node) -> (Int, Double, Double, Double) {
+priv struct PolygonClipParams {
+  sides : Int
+  orientation : Double
+  distortion : Double
+  skew : Double
+}
+
+///|
+fn polygon_clip_params(node : @cgraph.Node) -> PolygonClipParams {
   // Graphviz parity (poly_init): explicit sides=0 keeps ellipse mode unless
   // skew/distortion force high-sided polygon fallback.
   let mut sides = match node.get_attr("sides") {
@@ -1207,7 +1221,7 @@ fn polygon_clip_params(node : @cgraph.Node) -> (Int, Double, Double, Double) {
   if sides <= 2 && (Double::abs(distortion) > 0.0000001 || Double::abs(skew) > 0.0000001) {
     sides = 120
   }
-  (sides, orientation, distortion, skew)
+  { sides, orientation, distortion, skew }
 }
 
 ///|
@@ -1226,7 +1240,7 @@ fn polygon_peripheries(node : @cgraph.Node, default : Int) -> Int {
 fn builtin_polygon_clip_params(
   node : @cgraph.Node,
   shape : String,
-) -> (Int, Double, Double, Double)? {
+) -> PolygonClipParams? {
   let (sides, default_orientation, default_distortion, default_skew) = match shape {
     "triangle" => (3, 0.0, 0.0, 0.0)
     "invtriangle" => (3, 180.0, 0.0, 0.0)
@@ -1249,7 +1263,7 @@ fn builtin_polygon_clip_params(
     Some(value) => parse_double(value, default_skew)
     None => default_skew
   }
-  Some((sides, orientation, distortion, skew))
+  Some({ sides, orientation, distortion, skew })
 }
 
 ///|
@@ -1295,15 +1309,15 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
       polygon_peripheries(node, 1),
     )
     "polygon" => {
-      let (sides, orientation, distortion, skew) = polygon_clip_params(node)
-      if sides < 3 {
+      let params = polygon_clip_params(node)
+      if params.sides < 3 {
         ClipShape::Ellipse
       } else {
         ClipShape::Polygon(
-          sides,
-          orientation,
-          distortion,
-          skew,
+          params.sides,
+          params.orientation,
+          params.distortion,
+          params.skew,
           polygon_peripheries(node, 1),
         )
       }
@@ -1316,12 +1330,12 @@ fn clip_shape_kind(node : @cgraph.Node, port : @cgraph.Port?) -> ClipShape {
     | "octagon"
     | "egg" =>
       match builtin_polygon_clip_params(node, shape) {
-        Some((sides, orientation, distortion, skew)) =>
+        Some(params) =>
           ClipShape::Polygon(
-            sides,
-            orientation,
-            distortion,
-            skew,
+            params.sides,
+            params.orientation,
+            params.distortion,
+            params.skew,
             polygon_peripheries(node, 1),
           )
         None => ClipShape::None
