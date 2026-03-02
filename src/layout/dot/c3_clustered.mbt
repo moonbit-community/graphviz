@@ -297,20 +297,23 @@ fn run_clustered_root_phase(
     build_root_cluster_build_ranks_inputs(pre_root_stage)
   let output =
     run_root_and_cluster_ranks(
-      reorder_setup.order_with_clusters,
-      reorder_setup.order_with_vnodes,
-      dispatch_context.graph,
-      dispatch_context.cluster_meta,
-      reorder_setup.vnode_order_keys_for_ordering,
-      dispatch_context.nodesep_pt,
-      dispatch_context.has_edge_labels,
-      dispatch_context.port_order_positions,
-      dispatch_context.port_order_contrib,
-      reorder_setup.graphviz_flip,
-      reorder_setup.flat_rank_constraints,
-      dispatch_context.ranks,
-      runtime_context.vnode_info,
-      build_ranks_inputs,
+      {
+        order_with_clusters: reorder_setup.order_with_clusters,
+        order_with_vnodes: reorder_setup.order_with_vnodes,
+        graph: dispatch_context.graph,
+        cluster_meta: dispatch_context.cluster_meta,
+        vnode_order_keys_for_ordering:
+          reorder_setup.vnode_order_keys_for_ordering,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        graphviz_flip: reorder_setup.graphviz_flip,
+        flat_rank_constraints: reorder_setup.flat_rank_constraints,
+        ranks: dispatch_context.ranks,
+        vnode_info: runtime_context.vnode_info,
+        build_ranks_inputs,
+      },
     )
   root_mincross_groups_override.val = None
   output
