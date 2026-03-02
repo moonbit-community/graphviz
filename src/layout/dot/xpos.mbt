@@ -1513,6 +1513,17 @@ fn upsert_constraint_with_max(
 }
 
 ///|
+fn edge_tail_ordering_is_out_or_in(edge : @cgraph.Edge) -> Bool {
+  match root_graph_for_node(edge.tail()).get_attr("ordering") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower == "out" || lower == "in"
+    }
+    None => false
+  }
+}
+
+///|
 fn add_segment_slack_edges(
   graph : @network_simplex.NsGraph,
   index : Map[String, Int],
@@ -2076,6 +2087,7 @@ fn build_constraint_graph(
               Some(value) => value
               None => 0
             }
+            let has_ordering = edge_tail_ordering_is_out_or_in(edge)
             if tail_rank == head_rank && @dot_shared.edge_is_constraint(edge) &&
               edge_mid_label_metrics(edge) is None {
               let (left, right) =
@@ -2098,14 +2110,6 @@ fn build_constraint_graph(
                   Double::from_int(@dot_shared.edge_minlen(edge)) * nodesep_pt + width
                 let is_invis = match edge.get_attr("style") {
                   Some(style) => style.to_lower().contains("invis")
-                  None => false
-                }
-                let has_ordering =
-                  match root_graph_for_node(edge.tail()).get_attr("ordering") {
-                  Some(value) => {
-                    let lower = value.to_lower()
-                    lower == "out" || lower == "in"
-                  }
                   None => false
                 }
                 if is_invis && has_ordering {
@@ -2195,13 +2199,7 @@ fn build_constraint_graph(
                   edge_mid_label_metrics(edge) is Some(_) &&
                   !@dot_shared.port_is_explicit(edge.tail_port()) &&
                   !@dot_shared.port_is_explicit(edge.head_port()) &&
-                  (match root_graph_for_node(edge.tail()).get_attr("ordering") {
-                    Some(value) => {
-                      let lower = value.to_lower()
-                      lower == "out" || lower == "in"
-                    }
-                    None => false
-                  }) &&
+                  has_ordering &&
                   seg_tail == orig_tail &&
                   is_edge_vnode_name(seg_head) {
                   let forward =
