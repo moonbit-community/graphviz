@@ -123,7 +123,6 @@ fn run_clustered_root_phase(
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
   let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
   remincross_root_tail_order_override_snapshot.val = None
   let root_reorder_sources : RootReorderBuildSources =
     {
@@ -188,56 +187,8 @@ fn run_clustered_root_phase(
     remincross_root_tail_order_override_snapshot.val = None
     root_mincross_groups_override.val = None
   }
-  let build_ranks_inputs : RootClusterBuildRanksInputs =
-    {
-      order_node_order: reorder_context.order_node_order,
-      order_sizes_out: pre_root_stage.order_sizes_out,
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_groups: pre_root_stage.order_groups,
-      order_ranks: reorder_context.order_ranks,
-      order_cluster_keys: pre_root_stage.order_cluster_keys,
-      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-      order_flat_constraints: materialized.order_flat_constraints,
-      graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-      graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-      order_edges_out: materialized.order_edges_out,
-      order_edge_tail_out: materialized.order_edge_tail_out,
-      order_edge_head_out: materialized.order_edge_head_out,
-      order_edge_tail_port_x: materialized.order_edge_tail_port_x,
-      order_edge_head_port_x: materialized.order_edge_head_port_x,
-      order_edge_tail_port_order: materialized.order_edge_tail_port_order,
-      order_edge_head_port_order: materialized.order_edge_head_port_order,
-      order_edges_out_unmapped: materialized.order_edges_out_unmapped,
-      order_edge_tail_out_unmapped: materialized.order_edge_tail_out_unmapped,
-      order_edge_head_out_unmapped: materialized.order_edge_head_out_unmapped,
-      order_edge_tail_port_x_unmapped: materialized.order_edge_tail_port_x_unmapped,
-      order_edge_head_port_x_unmapped: materialized.order_edge_head_port_x_unmapped,
-      order_edge_tail_port_order_unmapped:
-        materialized.order_edge_tail_port_order_unmapped,
-      order_edge_head_port_order_unmapped:
-        materialized.order_edge_head_port_order_unmapped,
-      ordered_with_vnodes: Map::new(),
-    }
   let output =
-    run_root_and_cluster_ranks(
-      {
-        order_with_clusters: reorder_setup.order_with_clusters,
-        order_with_vnodes: reorder_setup.order_with_vnodes,
-        graph: dispatch_context.graph,
-        cluster_meta: dispatch_context.cluster_meta,
-        vnode_order_keys_for_ordering:
-          reorder_setup.vnode_order_keys_for_ordering,
-        nodesep_pt: dispatch_context.nodesep_pt,
-        has_edge_labels: dispatch_context.has_edge_labels,
-        port_order_positions: dispatch_context.port_order_positions,
-        port_order_contrib: dispatch_context.port_order_contrib,
-        graphviz_flip: reorder_setup.graphviz_flip,
-        flat_rank_constraints: reorder_setup.flat_rank_constraints,
-        ranks: dispatch_context.ranks,
-        vnode_info: runtime_context.vnode_info,
-        build_ranks_inputs,
-      },
-    )
+    run_root_and_cluster_ranks(dispatch_context, pre_root_stage)
   root_mincross_groups_override.val = None
   output
 }
