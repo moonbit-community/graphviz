@@ -277,7 +277,7 @@ fn build_routing_spatial_data(
   // Graphviz parity: routing cluster bboxes are derived from typed
   // routing-stage inputs, positioned nodes, and rank/cluster maps.
   let cluster_bboxes =
-    compute_cluster_bboxes_for_routing(
+    compute_cluster_route_bboxes(
       graph,
       nodes_out,
       positions_state.cluster_ln_x,

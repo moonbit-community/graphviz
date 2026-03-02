@@ -465,7 +465,7 @@ fn build_port_layout_maps(
 ///|
 /// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
-fn compute_cluster_bboxes_for_routing(
+fn compute_cluster_route_bboxes(
   graph : @cgraph.Graph,
   nodes_out : Array[DotLayoutNode],
   cluster_ln_x : Map[String, Double],
