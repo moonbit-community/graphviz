@@ -102,10 +102,13 @@ fn prepare_routing_context(
   let edge_reversed_by_id : Map[Int, Bool] = Map::new()
   for i in 0..<edges.length() {
     let edge = edges[i]
-    let oriented_tail =
-      if i < edge_tail.length() { edge_tail[i] } else { edge.tail().name() }
-    let oriented_head =
-      if i < edge_head.length() { edge_head[i] } else { edge.head().name() }
+    let (oriented_tail, oriented_head) =
+      edge_endpoints_at(
+        edge,
+        i,
+        edge_tail,
+        edge_head,
+      )
     let reversed =
       oriented_tail == edge.head().name() &&
       oriented_head == edge.tail().name()
