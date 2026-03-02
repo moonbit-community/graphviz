@@ -316,7 +316,7 @@ fn shift_graph_positions(
 }
 
 ///|
-fn adjust_cluster_positions_round(
+fn adjust_cluster_positions(
   graph : @cgraph.Graph,
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
@@ -325,7 +325,7 @@ fn adjust_cluster_positions_round(
 ) -> @geom.Rect? {
   let mut bbox = compute_nodes_bbox(graph, positions, sizes)
   for child in graph.subgraphs() {
-    match adjust_cluster_positions_round(
+    match adjust_cluster_positions(
       child,
       positions,
       vnode_positions,
