@@ -3560,9 +3560,7 @@ fn build_edge_spline(
                 using_pathplan,
                 route_barriers,
               )
-            if using_pathplan {
-              raw_bezier = record_detour_spline.raw_bezier
-            }
+            raw_bezier = record_detour_spline.raw_bezier
             record_detour_spline.spline
           } else if flat_detour is Some(detour) {
             let detour_spline_result =
@@ -3574,9 +3572,7 @@ fn build_edge_spline(
                 head_slope_line,
                 route_barriers,
               )
-            if using_pathplan {
-              raw_bezier = detour_spline_result.raw_bezier
-            }
+            raw_bezier = detour_spline_result.raw_bezier
             detour_spline_result.spline
           } else {
             if using_pathplan {
@@ -3689,9 +3685,7 @@ fn build_edge_spline(
                 using_pathplan,
                 route_barriers,
               )
-            if using_pathplan {
-              raw_bezier = adjusted_points_spline.raw_bezier
-            }
+            raw_bezier = adjusted_points_spline.raw_bezier
             apply_dotted_adjustment = true
             adjusted_points_spline.spline
           }
@@ -3798,9 +3792,7 @@ fn build_edge_spline(
               using_pathplan,
               route_barriers,
             )
-          if using_pathplan {
-            raw_bezier = record_detour_spline.raw_bezier
-          }
+          raw_bezier = record_detour_spline.raw_bezier
           record_detour_spline.spline
         } else if flat_detour is Some(detour) {
           let detour_spline_result =
@@ -3812,9 +3804,7 @@ fn build_edge_spline(
               head_slope_line,
               route_barriers,
             )
-          if using_pathplan {
-            raw_bezier = detour_spline_result.raw_bezier
-          }
+          raw_bezier = detour_spline_result.raw_bezier
           detour_spline_result.spline
         } else {
           let line_start =
