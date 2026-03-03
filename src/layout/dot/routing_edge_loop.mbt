@@ -58,6 +58,32 @@ fn maybe_build_self_edge_layout(
 }
 
 ///|
+/// Graphviz parity: regular-edge routing keeps edge solve + parallel-reuse
+/// expansion together after flat/self branches are skipped.
+/// Do not change behavior without updating fixtures/tests.
+fn build_regular_layouts_for_edge(
+  edge_id : Int,
+  edge : @cgraph.Edge,
+  base : EdgeRouteBase,
+  context : OrderedEdgeRoutingContext,
+  state : OrderedEdgeRoutingState,
+) -> Unit {
+  let regular_layout = build_regular_spline_layout(
+    edge,
+    base,
+    context,
+    state.recovered_slack_keys,
+  )
+  state.edges_out_by_id[edge_id] = regular_layout.edge_layout
+  apply_regular_parallel_reuse_layouts(
+    edge,
+    regular_layout,
+    context,
+    state.edges_out_by_id,
+  )
+}
+
+///|
 /// Graphviz parity: ordered edge routing loop preserves flat-adjacent,
 /// self-edge, regular-edge branch order from dot.
 /// Do not change behavior without updating fixtures/tests.
@@ -90,18 +116,12 @@ fn route_ordered_edge(
   ) {
     return ()
   }
-  let regular_layout = build_regular_spline_layout(
+  build_regular_layouts_for_edge(
+    edge_id,
     edge,
     base,
     context,
-    state.recovered_slack_keys,
-  )
-  state.edges_out_by_id[edge_id] = regular_layout.edge_layout
-  apply_regular_parallel_reuse_layouts(
-    edge,
-    regular_layout,
-    context,
-    state.edges_out_by_id,
+    state,
   )
 }
 
