@@ -87,24 +87,6 @@ fn build_flat_adjacent_layout(
   )
 }
 
-///|
-/// Graphviz parity: routed edge output remains in original edge iteration order.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_edges_in_input_order(
-  edges : Array[@cgraph.Edge],
-  edges_out_by_id : Map[Int, DotLayoutEdge],
-) -> Array[DotLayoutEdge] {
-  let edges_out : Array[DotLayoutEdge] = []
-  for edge in edges {
-    match edges_out_by_id.get(edge.id()) {
-      Some(value) => edges_out.push(value)
-      None => ()
-    }
-  }
-  edges_out
-}
-
-///|
 fn remap_port_label_pos(
   edge : @cgraph.Edge,
   splines : Array[@geom.Spline],
@@ -578,5 +560,17 @@ fn route_edges(
     }
   }
   remap_parallel_edge_layouts(edges, ranks, edges_out_by_id)
-  collect_edges_in_input_order(edges, edges_out_by_id)
+  let ordered_output_edge_ids =
+    @routing.collect_input_order_edge_ids(
+      edges,
+      (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
+    )
+  let edges_out : Array[DotLayoutEdge] = []
+  for edge_id in ordered_output_edge_ids {
+    match edges_out_by_id.get(edge_id) {
+      Some(value) => edges_out.push(value)
+      None => ()
+    }
+  }
+  edges_out
 }
