@@ -180,36 +180,34 @@ fn remap_parallel_edge_layouts(
   ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Unit {
-  let remap_groups =
-    @routing.collect_complete_parallel_remap_groups(
+  let assignments =
+    @routing.build_parallel_remap_assignments(
       edges,
       ranks,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
-  for ids in remap_groups {
-    let layouts : Array[DotLayoutEdge] = []
-    for edge_id in ids {
-      match edges_out_by_id.get(edge_id) {
-        Some(layout) => layouts.push(layout)
-        None => ()
-      }
+  let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
+  for assignment in assignments {
+    match edges_out_by_id.get(assignment.target_edge_id) {
+      Some(layout) => remap_snapshot[assignment.target_edge_id] = layout
+      None => ()
     }
-    let mut out_idx = 0
-    let mut src_idx = layouts.length()
-    while out_idx < ids.length() {
-      src_idx = src_idx - 1
-      let edge_id = ids[out_idx]
-      let edge = match edges_out_by_id.get(edge_id) {
-        Some(layout) => layout.edge
-        None => {
-          out_idx = out_idx + 1
-          continue
-        }
-      }
-      edges_out_by_id[edge_id] =
-        remap_edge_layout_edge(edge, layouts[src_idx])
-      out_idx = out_idx + 1
+    match edges_out_by_id.get(assignment.source_edge_id) {
+      Some(layout) => remap_snapshot[assignment.source_edge_id] = layout
+      None => ()
     }
+  }
+  for assignment in assignments {
+    let target_layout = match remap_snapshot.get(assignment.target_edge_id) {
+      Some(value) => value
+      None => continue
+    }
+    let source_layout = match remap_snapshot.get(assignment.source_edge_id) {
+      Some(value) => value
+      None => continue
+    }
+    edges_out_by_id[assignment.target_edge_id] =
+      remap_edge_layout_edge(target_layout.edge, source_layout)
   }
 }
 

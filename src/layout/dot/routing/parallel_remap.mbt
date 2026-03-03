@@ -97,3 +97,34 @@ pub fn collect_complete_parallel_remap_groups(
   }
   complete_groups
 }
+
+///|
+pub struct ParallelRemapAssignment {
+  target_edge_id : Int
+  source_edge_id : Int
+}
+
+///|
+/// Graphviz parity: each parallel remap group applies reversed source slots
+/// to ascending target ids.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_parallel_remap_assignments(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  has_layout : (Int) -> Bool,
+) -> Array[ParallelRemapAssignment] {
+  let assignments : Array[ParallelRemapAssignment] = []
+  for ids in collect_complete_parallel_remap_groups(edges, ranks, has_layout) {
+    let mut out_idx = 0
+    let mut src_idx = ids.length()
+    while out_idx < ids.length() {
+      src_idx = src_idx - 1
+      assignments.push({
+        target_edge_id: ids[out_idx],
+        source_edge_id: ids[src_idx],
+      })
+      out_idx = out_idx + 1
+    }
+  }
+  assignments
+}
