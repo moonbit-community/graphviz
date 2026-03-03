@@ -368,6 +368,78 @@ pub(all) struct RootMincrossReorderInputs {
 }
 
 ///|
+/// Graphviz parity: root ReMincross reorder input context keeps pre-root
+/// materialized ordering snapshots unchanged before seeded group attachment.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootMincrossReorderBuildContext {
+  order_with_clusters : Bool
+  order_with_vnodes : Bool
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_node_order : Map[String, Int]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: root ReMincross reorder input payload is assembled from the
+/// same seeded groups + pre-root materialized snapshots before root pass call.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_mincross_reorder_inputs(
+  seeded_groups : Map[Int, Array[String]],
+  context : RootMincrossReorderBuildContext,
+) -> RootMincrossReorderInputs {
+  {
+    order_with_clusters: context.order_with_clusters,
+    order_with_vnodes: context.order_with_vnodes,
+    seeded_groups,
+    order_rank_keys: context.order_rank_keys,
+    order_ranks: context.order_ranks,
+    order_edges_out: context.order_edges_out,
+    order_edge_tail_out: context.order_edge_tail_out,
+    order_edge_head_out: context.order_edge_head_out,
+    order_edge_tail_port_x: context.order_edge_tail_port_x,
+    order_edge_head_port_x: context.order_edge_head_port_x,
+    order_edge_tail_port_order: context.order_edge_tail_port_order,
+    order_edge_head_port_order: context.order_edge_head_port_order,
+    order_cluster_keys: context.order_cluster_keys,
+    order_cluster_skeleton: context.order_cluster_skeleton,
+    rank_same_groups: context.rank_same_groups,
+    rank_same_order: context.rank_same_order,
+    vnode_order_keys_for_ordering: context.vnode_order_keys_for_ordering,
+    order_node_order: context.order_node_order,
+    order_sizes_out: context.order_sizes_out,
+    nodesep_pt: context.nodesep_pt,
+    has_edge_labels: context.has_edge_labels,
+    port_order_positions: context.port_order_positions,
+    port_order_contrib: context.port_order_contrib,
+    order_flat_constraints: context.order_flat_constraints,
+    graphviz_out_neighbors: context.graphviz_out_neighbors,
+    graphviz_in_neighbors: context.graphviz_in_neighbors,
+    graphviz_flip: context.graphviz_flip,
+  }
+}
+
+///|
 /// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.
@@ -610,6 +682,87 @@ pub fn run_root_mincross_reorder(
     order_groups_for_mincross,
     ordered,
     reorder_call_data: pass_result.reorder_call_data,
+  }
+}
+
+///|
+/// Graphviz parity: root+cluster rank phase payload keeps root reorder inputs
+/// and root override replay context unchanged before cluster-local pass.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootAndClusterRanksInputs {
+  order_with_clusters : Bool
+  order_with_vnodes : Bool
+  graphviz_flip : Bool
+  cluster_keys : Map[String, String]
+  root_groups_override : Map[Int, Array[String]]?
+  root_mincross_reorder_inputs : RootMincrossReorderInputs
+}
+
+///|
+/// Graphviz parity: root+cluster rank phase output keeps root-mincross input
+/// groups, final ordered groups, and vnode-inclusive groups for xpos.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootAndClusterRanksOutput {
+  order_groups_for_mincross : Map[Int, Array[String]]
+  ordered : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+}
+
+///|
+/// Graphviz parity: graphviz_flip root output merge can replay rank overrides
+/// captured from root phase before cluster-local build_ranks ordering.
+fn resolve_root_phase_ordered_groups(
+  root_ordered_groups : Map[Int, Array[String]],
+  root_groups_override : Map[Int, Array[String]]?,
+  cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  if !graphviz_flip {
+    return root_ordered_groups
+  }
+  match root_groups_override {
+    Some(override_groups) =>
+      apply_root_groups_override(
+        root_ordered_groups,
+        override_groups,
+        cluster_keys,
+        graphviz_flip,
+      )
+    None => root_ordered_groups
+  }
+}
+
+///|
+/// Graphviz parity: root mincross reordering is followed by clustered
+/// build_ranks application and vnode-inclusive output handoff for xpos.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_and_cluster_ranks(
+  inputs : RootAndClusterRanksInputs,
+  run_root_reorder : (RootMincrossReorderInputs) -> (Map[Int, Array[String]], Map[Int, Array[String]]),
+  run_cluster_reorder : (Map[Int, Array[String]]) -> Unit,
+) -> RootAndClusterRanksOutput {
+  let (order_groups_for_mincross, root_ordered_groups) =
+    run_root_reorder(inputs.root_mincross_reorder_inputs)
+  let ordered =
+    resolve_root_phase_ordered_groups(
+      root_ordered_groups,
+      inputs.root_groups_override,
+      inputs.cluster_keys,
+      inputs.graphviz_flip,
+    )
+  if inputs.order_with_clusters {
+    run_cluster_reorder(ordered)
+  }
+  let ordered_with_vnodes =
+    if !inputs.order_with_vnodes {
+      Map::new()
+    } else {
+      ordered
+    }
+  {
+    order_groups_for_mincross,
+    ordered,
+    ordered_with_vnodes,
   }
 }
 
