@@ -171,6 +171,17 @@ fn build_local_cluster_index(
   cluster_index
 }
 
+///|
+fn cluster_order_index_or_end(
+  cluster_index : Map[String, Int],
+  name : String,
+) -> Int {
+  match cluster_index.get(name) {
+    Some(value) => value
+    None => cluster_index.length() + 1
+  }
+}
+
 
 
 ///|
@@ -226,14 +237,8 @@ fn build_cluster_graph_order(
       } else if a_depth > b_depth {
         1
       } else {
-        let a_idx = match cluster_index.get(a) {
-          Some(value) => value
-          None => cluster_index.length() + 1
-        }
-        let b_idx = match cluster_index.get(b) {
-          Some(value) => value
-          None => cluster_index.length() + 1
-        }
+        let a_idx = cluster_order_index_or_end(cluster_index, a)
+        let b_idx = cluster_order_index_or_end(cluster_index, b)
         if a_idx < b_idx {
           -1
         } else if a_idx > b_idx {
