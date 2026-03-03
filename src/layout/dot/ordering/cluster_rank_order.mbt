@@ -432,3 +432,49 @@ pub fn reorder_groups_by_cluster(
   }
   ordered_by_cluster
 }
+
+///|
+/// Graphviz parity: cluster-rank reorder is skipped when root reorder exposes
+/// a single-cluster single-anchor shape (one cluster bucket globally and at
+/// most one clustered node per rank).
+pub fn should_skip_cluster_rank_bucket_reorder(
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cleaned_groups : Map[Int, Array[String]],
+  cluster_keys : Map[String, String],
+) -> Bool {
+  let seen_clusters : Map[String, Bool] = Map::new()
+  let mut has_single_cluster_rank_order_bucket = true
+  for _rank, order_map in cluster_rank_order {
+    if !has_single_cluster_rank_order_bucket {
+      break
+    }
+    for cluster, _order in order_map {
+      if cluster == "" {
+        continue
+      }
+      seen_clusters[cluster] = true
+      if seen_clusters.length() > 1 {
+        has_single_cluster_rank_order_bucket = false
+        break
+      }
+    }
+  }
+  if has_single_cluster_rank_order_bucket && seen_clusters.length() != 1 {
+    return false
+  }
+  if !has_single_cluster_rank_order_bucket {
+    return false
+  }
+  for _rank, names in cleaned_groups {
+    let mut cluster_nodes = 0
+    for name in names {
+      if cluster_key_or_empty(cluster_keys, name) != "" {
+        cluster_nodes = cluster_nodes + 1
+        if cluster_nodes > 1 {
+          return false
+        }
+      }
+    }
+  }
+  true
+}
