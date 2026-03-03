@@ -1,7 +1,7 @@
 ///|
 /// Graphviz parity: self-edge routing groups reuse edge_parallel_key classes.
 /// Do not change behavior without updating fixtures/tests.
-pub fn self_edge_group_key(edge : @cgraph.Edge) -> String {
+fn self_edge_group_key(edge : @cgraph.Edge) -> String {
   @edge_ops.edge_parallel_key(
     edge.tail().name(),
     edge.head().name(),

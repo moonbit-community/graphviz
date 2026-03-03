@@ -2,7 +2,7 @@
 /// Graphviz parity: self-edge route cache reuse keeps grouped self loops
 /// synchronized before layout emission.
 /// Do not change behavior without updating fixtures/tests.
-pub fn ensure_self_edge_routes(
+fn ensure_self_edge_routes(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
   base_cache : Map[Int, EdgeRouteBase],
