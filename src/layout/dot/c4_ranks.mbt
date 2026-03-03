@@ -150,7 +150,7 @@ fn run_root_and_cluster_ranks(
     } else {
       match root_mincross_groups_override.val {
         Some(override_groups) =>
-          apply_root_groups_override(
+          @ordering.apply_root_groups_override(
             root_ordered_groups,
             override_groups,
             dispatch_context.cluster_meta.cluster_keys,
