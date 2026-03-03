@@ -48,6 +48,23 @@ priv struct OrderedEdgeRoutingState {
 }
 
 ///|
+/// Graphviz parity: edge route bases are cached per edge id before routing.
+/// Do not change behavior without updating fixtures/tests.
+fn build_route_base_cache(
+  edges : Array[@cgraph.Edge],
+  build_base : (@cgraph.Edge) -> EdgeRouteBase,
+) -> Map[Int, EdgeRouteBase] {
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  for edge in edges {
+    let edge_id = edge.id()
+    if base_cache.get(edge_id) is None {
+      base_cache[edge_id] = build_base(edge)
+    }
+  }
+  base_cache
+}
+
+///|
 /// Graphviz parity: ordered-edge routing context construction keeps prepass
 /// setup (sameport/base-cache/order/group/bounds) in one place before routing.
 /// Do not change behavior without updating fixtures/tests.
@@ -81,7 +98,7 @@ fn build_ordered_edge_routing_context(
         sameport_overrides,
       )
   let base_cache =
-    @routing.build_route_base_cache(
+    build_route_base_cache(
       input.edges,
       build_base_for_edge,
     )
@@ -397,6 +414,23 @@ fn remap_port_label_pos(
 }
 
 ///|
+/// Graphviz parity: routed edge output stays in original edge iteration order.
+/// Do not change behavior without updating fixtures/tests.
+fn collect_input_order_edge_ids(
+  edges : Array[@cgraph.Edge],
+  has_layout : (Int) -> Bool,
+) -> Array[Int] {
+  let ordered_ids : Array[Int] = []
+  for edge in edges {
+    let edge_id = edge.id()
+    if has_layout(edge_id) {
+      ordered_ids.push(edge_id)
+    }
+  }
+  ordered_ids
+}
+
+///|
 fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
@@ -485,7 +519,7 @@ fn finalize_routed_edges(
 ) -> Array[DotLayoutEdge] {
   remap_parallel_edge_layouts(input, edges_out_by_id)
   let ordered_output_edge_ids =
-    @routing.collect_input_order_edge_ids(
+    collect_input_order_edge_ids(
       input.edges,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
