@@ -1,9 +1,19 @@
+///|
+fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
+  match edge.get_attr(name) {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
 fn remap_port_label_pos(
   edge : @cgraph.Edge,
   splines : Array[@geom.Spline],
   label_attr : String,
   is_head : Bool,
   fallback : @geom.Point?,
+  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
 ) -> @geom.Point? {
   if !edge_attr_non_empty(edge, label_attr) {
     return None
@@ -17,7 +27,7 @@ fn remap_port_label_pos(
     } else {
       splines[0]
     }
-  match edge_port_label_pos(edge, spline, is_head) {
+  match edge_port_label_pos_fn(edge, spline, is_head) {
     Some(pos) => Some(pos)
     None => fallback
   }
@@ -44,6 +54,7 @@ fn collect_input_order_edge_ids(
 fn remap_edge_layout_edge(
   edge : @cgraph.Edge,
   layout : DotLayoutEdge,
+  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
 ) -> DotLayoutEdge {
   let label_pos =
     if edge_attr_non_empty(edge, "label") {
@@ -57,6 +68,7 @@ fn remap_edge_layout_edge(
     "headlabel",
     true,
     layout.head_label_pos,
+    edge_port_label_pos_fn,
   )
   let tail_label_pos = remap_port_label_pos(
     edge,
@@ -64,6 +76,7 @@ fn remap_edge_layout_edge(
     "taillabel",
     false,
     layout.tail_label_pos,
+    edge_port_label_pos_fn,
   )
   let xlabel_pos =
     if edge_attr_non_empty(edge, "xlabel") {
@@ -209,13 +222,15 @@ fn build_parallel_remap_assignments(
 /// pair order after routing, but only within one-direction parallel classes.
 /// Do not change behavior without updating fixtures/tests.
 fn remap_parallel_edge_layouts(
-  input : EdgeRoutingPassInput,
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
+  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
 ) -> Unit {
   let assignments =
     build_parallel_remap_assignments(
-      input.edges,
-      input.ranks,
+      edges,
+      ranks,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
   let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
@@ -239,21 +254,32 @@ fn remap_parallel_edge_layouts(
       None => continue
     }
     edges_out_by_id[assignment.target_edge_id] =
-      remap_edge_layout_edge(target_layout.edge, source_layout)
+      remap_edge_layout_edge(
+        target_layout.edge,
+        source_layout,
+        edge_port_label_pos_fn,
+      )
   }
 }
 
 ///|
 /// Graphviz parity: final routed edge output keeps remap-then-input-order flow.
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_routed_edges(
-  input : EdgeRoutingPassInput,
+pub fn finalize_routed_edges(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
+  edge_port_label_pos_fn : (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?,
 ) -> Array[DotLayoutEdge] {
-  remap_parallel_edge_layouts(input, edges_out_by_id)
+  remap_parallel_edge_layouts(
+    edges,
+    ranks,
+    edges_out_by_id,
+    edge_port_label_pos_fn,
+  )
   let ordered_output_edge_ids =
     collect_input_order_edge_ids(
-      input.edges,
+      edges,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
   let edges_out : Array[DotLayoutEdge] = []

@@ -85,6 +85,16 @@ pub(all) struct SelfEdgeRoute {
 }
 
 ///|
+pub(all) struct DotLayoutEdge {
+  edge : @cgraph.Edge
+  splines : Array[@geom.Spline]
+  label_pos : @geom.Point?
+  head_label_pos : @geom.Point?
+  tail_label_pos : @geom.Point?
+  xlabel_pos : @geom.Point?
+}
+
+///|
 pub(all) struct EdgeVnodeInfo {
   vnode_ranks : Map[String, Int]
   vnode_sizes : Map[String, @dot_shared.NodeSize]
