@@ -12,7 +12,7 @@ priv struct EdgeRoutingPassInput {
   splines : SplinesMode
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @routing.EdgeVnodeInfo
   rank_y : Map[Int, Double]
   rank_ht1 : Map[Int, Double]
   rank_ht2 : Map[Int, Double]
@@ -23,7 +23,7 @@ priv struct EdgeRoutingPassInput {
   label_ports_map : Map[String, Map[String, RecordPort]]
   label_ports_raw : Map[String, Map[String, RecordPort]]
   label_edge_counts : Map[String, Int]
-  head_port_metrics : HeadPortMetrics
+  head_port_metrics : @routing.HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]
   routing_context : @routing.RoutingContext
   enable_complex_tuning : Bool
@@ -35,7 +35,7 @@ priv struct EdgeRoutingPassInput {
 priv struct OrderedEdgeRoutingContext {
   input : EdgeRoutingPassInput
   regular_pass_input : @routing.RegularPassInput
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int, @routing.EdgeRouteBase]
   prepass : @routing.RoutePrepassState
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
 }
@@ -58,9 +58,9 @@ fn self_edge_label_height_pt_for_routes(
 
 ///|
 fn build_edge_layout_for_context(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   spline : @geom.Spline,
-  spline_result : EdgeSplineResult,
+  spline_result : @routing.EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   @routing.build_edge_layout(
@@ -141,8 +141,8 @@ fn build_regular_pass_input(
 fn build_route_base_cache(
   input : EdgeRoutingPassInput,
   sameport_overrides : SameportOverrides,
-) -> Map[Int, EdgeRouteBase] {
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+) -> Map[Int, @routing.EdgeRouteBase] {
+  let base_cache : Map[Int, @routing.EdgeRouteBase] = Map::new()
   for edge in input.edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {

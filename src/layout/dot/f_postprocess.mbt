@@ -609,7 +609,7 @@ fn collect_head_port_metrics(
   label_ports_map : Map[String, Map[String, RecordPort]],
   record_orientation : RecordOrientation,
   enable_complex_tuning : Bool,
-) -> HeadPortMetrics {
+) -> @routing.HeadPortMetrics {
   let head_port_counts : Map[String, Int] = Map::new()
   let head_port_min_dist : Map[String, Double] = Map::new()
   let head_port_max_dist : Map[String, Double] = Map::new()

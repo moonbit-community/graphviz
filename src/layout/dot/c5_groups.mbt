@@ -768,7 +768,7 @@ priv struct ReMincrossDispatchContext {
   creation_order : Array[String]
   edges_by_tail : Map[String, Array[Int]]
   cluster_meta : ClusterMetadata
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @routing.EdgeVnodeInfo
   order_sizes : Map[String, NodeSize]
   rank_same_constraints : Map[String, Bool]
   ordered_with_vnodes : Map[Int, Array[String]]

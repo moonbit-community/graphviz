@@ -1334,7 +1334,7 @@ fn reorder_cluster_rank_group(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
   cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   fixed_positions : Map[String, Double],
   fixed_ranks : Map[String, Int],
   empty_cluster_skeleton : Map[String, Bool],
@@ -1421,7 +1421,7 @@ fn reorder_cluster_rank_groups(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
   cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   fixed_positions : Map[String, Double],
   fixed_ranks : Map[String, Int],
   empty_cluster_skeleton : Map[String, Bool],
@@ -1489,7 +1489,7 @@ fn reorder_by_cluster_ranks(
   has_edge_labels : Bool,
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   order_with_vnodes : Bool,
 ) -> Unit {
   if cluster_meta.cluster_order.length() == 0 {

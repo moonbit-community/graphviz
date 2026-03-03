@@ -303,7 +303,7 @@ fn build_routing_spatial_data(
 priv struct RoutingPrecomputeData {
   port_pad_below : Double
   port_pad_above : Double
-  head_port_metrics : HeadPortMetrics
+  head_port_metrics : @routing.HeadPortMetrics
   path_groups : Map[Int, Array[String]]
   routing_context : @routing.RoutingContext
 }

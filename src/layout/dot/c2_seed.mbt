@@ -22,7 +22,7 @@ fn build_order_seed_groups(
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
   cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   vnode_order_keys_for_ordering : Map[String, Double],
   order_sizes : Map[String, NodeSize],
 ) -> OrderSeedGroupsOutput {

@@ -20,7 +20,7 @@ fn build_edge_vnodes(
   existing_names : Map[String, Bool],
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
-) -> EdgeVnodeInfo {
+) -> @routing.EdgeVnodeInfo {
   let vnode_ranks : Map[String, Int] = Map::new()
   let vnode_sizes : Map[String, NodeSize] = Map::new()
   let vnodes_by_rank : Map[Int, Array[String]] = Map::new()
@@ -213,7 +213,7 @@ fn add_flat_label_vnodes(
   edge_cluster_keys : Map[String, String],
   cluster_parents : Map[String, String?],
   existing_names : Map[String, Bool],
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeResult {
   let order_index = build_order_index(x_groups)

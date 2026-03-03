@@ -10,7 +10,7 @@
 priv struct OrderingRuntimeContext {
   real_nodes : Map[String, Bool]
   edge_cluster_keys : Map[String, String]
-  vnode_info : EdgeVnodeInfo
+  vnode_info : @routing.EdgeVnodeInfo
   port_edge_nodes : Map[String, Bool]
   local_cluster_order : Map[String, Int]
   rank_same_constraints : Map[String, Bool]
@@ -181,7 +181,7 @@ fn build_ordering_reorder_setup(
   vnode_count : Int,
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
-  vnode_info : EdgeVnodeInfo,
+  vnode_info : @routing.EdgeVnodeInfo,
   edge_port_data : OrderingEdgePortData,
 ) -> OrderingReorderSetup {
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
