@@ -1,112 +1,4 @@
 ///|
-/// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
-/// Do not change behavior without updating fixtures/tests.
-fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
-  if base.tail_rank <= base.head_rank {
-    base.vnodes.copy()
-  } else {
-    let reversed : Array[String] = []
-    let mut idx = base.vnodes.length()
-    while idx > 0 {
-      idx = idx - 1
-      reversed.push(base.vnodes[idx])
-    }
-    reversed
-  }
-}
-
-///|
-/// Graphviz parity: pathplan recover_slack runs with limitBoxes before vnode updates.
-/// Do not change behavior without updating fixtures/tests.
-fn recover_pathplan_slack(
-  edge : @cgraph.Edge,
-  base : EdgeRouteBase,
-  spline_result : EdgeSplineResult,
-  ranks : Map[String, Int],
-  vnode_info : EdgeVnodeInfo,
-  rank_y : Map[Int, Double],
-  vnode_positions : Map[String, @geom.Point],
-  path_adjacency : @routesplines.PathAdjacency,
-  recover_edge_id_by_key : Map[String, Int],
-  recovered_slack_keys : Map[String, Bool],
-) -> Unit {
-  if !spline_result.using_pathplan {
-    return ()
-  }
-  let recover_key = @routing.recover_slack_key_for_edge(edge)
-  match recover_edge_id_by_key.get(recover_key) {
-    Some(recover_edge_id) =>
-      if recover_edge_id != edge.id() {
-        return ()
-      }
-    None => ()
-  }
-  if recovered_slack_keys.get(recover_key) is Some(_) {
-    return ()
-  }
-  if spline_result.pathplan_segments.length() > 0 {
-    let mut did_recover = false
-    // Graphviz parity: straight_path recovers slack per routed segment.
-    for segment in spline_result.pathplan_segments {
-      if segment.vnodes.length() == 0 || segment.boxes.length() == 0 {
-        continue
-      }
-      let ordered_vnodes =
-        if base.tail_rank <= base.head_rank {
-          segment.vnodes.copy()
-        } else {
-          let reversed : Array[String] = []
-          let mut idx = segment.vnodes.length()
-          while idx > 0 {
-            idx = idx - 1
-            reversed.push(segment.vnodes[idx])
-          }
-          reversed
-        }
-      recover_slack_vnodes(
-        edge,
-        ordered_vnodes,
-        segment.boxes,
-        ranks,
-        vnode_info.vnode_ranks,
-        rank_y,
-        vnode_positions,
-        vnode_info.vnode_sizes,
-        path_adjacency,
-      )
-      did_recover = true
-    }
-    if did_recover {
-      recovered_slack_keys[recover_key] = true
-    }
-    return ()
-  }
-  if spline_result.pathplan_boxes.length() == 0 ||
-    spline_result.raw_bezier.length() < 4 {
-    return ()
-  }
-  let limited_boxes =
-    @routesplines.limit_boxes_for_spline(
-      spline_result.pathplan_boxes,
-      spline_result.raw_bezier,
-      fallback_polyline=spline_result.pathplan_points,
-    )
-  let ordered_vnodes = ordered_vnodes_for_edge(base)
-  recover_slack_vnodes(
-    edge,
-    ordered_vnodes,
-    limited_boxes,
-    ranks,
-    vnode_info.vnode_ranks,
-    rank_y,
-    vnode_positions,
-    vnode_info.vnode_sizes,
-    path_adjacency,
-  )
-  recovered_slack_keys[recover_key] = true
-}
-
-///|
 /// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_layout(
@@ -520,17 +412,19 @@ fn build_regular_spline_layout(
   )
   let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
   let spline = @routing.finalize_edge_spline(base, layout_spline_result)
-  recover_pathplan_slack(
+  @routing.recover_pathplan_slack(
     edge,
     base,
     spline_result,
     ranks,
-    vnode_info,
+    vnode_info.vnode_ranks,
     rank_y,
     vnode_positions,
+    vnode_info.vnode_sizes,
     path_adjacency,
     recover_edge_id_by_key,
     recovered_slack_keys,
+    recover_slack_vnodes,
   )
   let layout =
     build_edge_layout(

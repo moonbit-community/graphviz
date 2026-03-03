@@ -419,6 +419,7 @@ Main files:
 - `src/layout/dot/routing/parallel_selection.mbt`
 - `src/layout/dot/routing/base_cache.mbt`
 - `src/layout/dot/routing/edge_order.mbt`
+- `src/layout/dot/routing/pathplan_recover.mbt`
 - `src/layout/dot/routing/spline_core.mbt`
 - `src/layout/dot/routing_clip_shape.mbt`
 - `src/layout/dot/routing/routesplines/*`
