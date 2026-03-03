@@ -1,4 +1,29 @@
 ///|
+/// Graphviz parity: flat-adjacent routed spline reuse keeps makeSimpleFlat
+/// branch before self-edge/regular-edge routing.
+/// Do not change behavior without updating fixtures/tests.
+fn maybe_build_flat_adjacent_layout(
+  edge_id : Int,
+  base : EdgeRouteBase,
+  context : OrderedEdgeRoutingContext,
+  state : OrderedEdgeRoutingState,
+) -> Bool {
+  match context.prepass.flat_adjacent_simple_beziers.get(edge_id) {
+    Some(bezier) => {
+      let edge_layout =
+        build_flat_adjacent_layout(
+          base,
+          bezier,
+          context,
+        )
+      state.edges_out_by_id[edge_id] = edge_layout
+      true
+    }
+    None => false
+  }
+}
+
+///|
 /// Graphviz parity: self-edge route cache reuse + self-edge layout finalize path.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_self_edge_layout(
@@ -49,18 +74,13 @@ fn route_ordered_edge(
     Some(value) => value
     None => return ()
   }
-  match context.prepass.flat_adjacent_simple_beziers.get(edge_id) {
-    Some(bezier) => {
-      let edge_layout =
-        build_flat_adjacent_layout(
-          base,
-          bezier,
-          context,
-        )
-      state.edges_out_by_id[edge_id] = edge_layout
-      return ()
-    }
-    None => ()
+  if maybe_build_flat_adjacent_layout(
+    edge_id,
+    base,
+    context,
+    state,
+  ) {
+    return ()
   }
   if maybe_build_self_edge_layout(
     edge,
