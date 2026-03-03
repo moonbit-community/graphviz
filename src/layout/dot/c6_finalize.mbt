@@ -3,26 +3,6 @@
 /// and nlist creation helpers for Stage C outputs.
 
 ///|
-/// Graphviz parity: clustered ReMincross cleanup snapshot capture keeps the
-/// same rematerialized edge arrays passed into startpass=2 reorder.
-fn capture_remincross_cleanup(
-  capture_inputs : @ordering.ReMincrossCleanupCaptureInputs,
-) -> Unit {
-  capture_remincross_snapshot(
-    capture_inputs.rem_rank_keys,
-    capture_inputs.rem_groups,
-    capture_inputs.rem_edges_out,
-    capture_inputs.rem_edge_tail_out,
-    capture_inputs.rem_edge_head_out,
-    capture_inputs.rem_edge_tail_port_x,
-    capture_inputs.rem_edge_head_port_x,
-    capture_inputs.rem_edge_tail_port_order,
-    capture_inputs.rem_edge_head_port_order,
-    capture_inputs.rem_cluster_keys,
-  )
-}
-
-///|
 /// Graphviz parity: clustered ReMincross cleanup reorder executes startpass=2
 /// with coalesced-parallel mode on rematerialized edge arrays.
 fn run_remincross_cleanup_reorder(
@@ -134,7 +114,7 @@ fn finalize_order_groups(
           runtime_context.local_cluster_order,
         ),
       build_vnode_order_keys,
-      capture_remincross_cleanup,
+      capture_remincross_snapshot,
       run_remincross_cleanup_reorder,
     )
   {

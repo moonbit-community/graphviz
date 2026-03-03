@@ -154,35 +154,26 @@ fn capture_root_snapshot(
 
 ///|
 fn capture_remincross_snapshot(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  edges_out : Array[@cgraph.Edge],
-  edge_tail_out : Array[String],
-  edge_head_out : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  cluster_keys : Map[String, String],
+  capture_inputs : @ordering.ReMincrossCleanupCaptureInputs,
 ) -> Unit {
   if @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is None {
     return
   }
   let snapshot_cluster_keys : Map[String, String] = Map::new()
-  for key, value in cluster_keys {
+  for key, value in capture_inputs.rem_cluster_keys {
     snapshot_cluster_keys[key] = value
   }
   let snapshot : RemincrossInputSnapshot = {
-    rank_keys: rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(groups),
+    rank_keys: capture_inputs.rem_rank_keys.copy(),
+    groups: @ordering.clone_rank_groups(capture_inputs.rem_groups),
     edges: build_ordering_edges_snapshot(
-      edges_out,
-      edge_tail_out,
-      edge_head_out,
-      edge_tail_port_x,
-      edge_head_port_x,
-      edge_tail_port_order,
-      edge_head_port_order,
+      capture_inputs.rem_edges_out,
+      capture_inputs.rem_edge_tail_out,
+      capture_inputs.rem_edge_head_out,
+      capture_inputs.rem_edge_tail_port_x,
+      capture_inputs.rem_edge_head_port_x,
+      capture_inputs.rem_edge_tail_port_order,
+      capture_inputs.rem_edge_head_port_order,
     ),
     cluster_keys: snapshot_cluster_keys,
   }
