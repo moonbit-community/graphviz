@@ -975,6 +975,67 @@ fn build_flat_detour_spline(
 }
 
 ///|
+fn detour_spline_if_any(
+  base : EdgeRouteBase,
+  needs_record_detour : Bool,
+  flat_detour : FlatDetourResult?,
+  using_pathplan : Bool,
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_clip_size : NodeSize,
+  head_clip_size : NodeSize,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+  nodesep_pt : Double,
+  layout_rankdir : RankDir,
+  lr_detour_uses_x_axis : Bool,
+) -> PointsSplineResult? {
+  if needs_record_detour {
+    let detour_points =
+      record_port_detour_points(
+        tail_clip_center,
+        head_clip_center,
+        tail_clip_size,
+        head_clip_size,
+        tail_clip,
+        head_clip,
+        nodesep_pt,
+        layout_rankdir,
+        lr_detour_uses_x_axis,
+      )
+    Some(
+      build_points_spline(
+        base,
+        detour_points,
+        tail_slope_line,
+        head_slope_line,
+        true,
+        using_pathplan,
+        route_barriers,
+      ),
+    )
+  } else {
+    match flat_detour {
+      Some(detour) =>
+        Some(
+          build_flat_detour_spline(
+            base,
+            detour,
+            using_pathplan,
+            tail_slope_line,
+            head_slope_line,
+            route_barriers,
+          ),
+        )
+      None => None
+    }
+  }
+}
+
+///|
 fn self_edge_rank_spacing(
   rank : Int,
   rank_y : Map[Int, Double],
@@ -3643,43 +3704,28 @@ fn build_edge_spline(
               ranksep_pt,
               layout_rankdir,
             )
-          if needs_record_detour {
-            let detour_points =
-              record_port_detour_points(
-                tail_clip_center,
-                head_clip_center,
-                tail_clip_size,
-                head_clip_size,
-                tail_clip,
-                head_clip,
-                nodesep_pt,
-                layout_rankdir,
-                true,
-              )
-            let record_detour_spline =
-              build_points_spline(
-                base,
-                detour_points,
-                tail_slope_line,
-                head_slope_line,
-                true,
-                using_pathplan,
-                route_barriers,
-              )
-            raw_bezier = record_detour_spline.raw_bezier
-            record_detour_spline.spline
-          } else if flat_detour is Some(detour) {
-            let detour_spline_result =
-              build_flat_detour_spline(
-                base,
-                detour,
-                using_pathplan,
-                tail_slope_line,
-                head_slope_line,
-                route_barriers,
-              )
-            raw_bezier = detour_spline_result.raw_bezier
-            detour_spline_result.spline
+          let detour_spline =
+            detour_spline_if_any(
+              base,
+              needs_record_detour,
+              flat_detour,
+              using_pathplan,
+              tail_slope_line,
+              head_slope_line,
+              route_barriers,
+              tail_clip_center,
+              head_clip_center,
+              tail_clip_size,
+              head_clip_size,
+              tail_clip,
+              head_clip,
+              nodesep_pt,
+              layout_rankdir,
+              true,
+            )
+          if detour_spline is Some(result) {
+            raw_bezier = result.raw_bezier
+            result.spline
           } else {
             if using_pathplan {
               let line_points_spline =
@@ -3824,43 +3870,28 @@ fn build_edge_spline(
             ranksep_pt,
             layout_rankdir,
           )
-        if needs_record_detour {
-          let detour_points =
-            record_port_detour_points(
-              tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
-              tail_clip,
-              head_clip,
-              nodesep_pt,
-              layout_rankdir,
-              false,
-            )
-          let record_detour_spline =
-            build_points_spline(
-              base,
-              detour_points,
-              tail_slope_line,
-              head_slope_line,
-              true,
-              using_pathplan,
-              route_barriers,
-            )
-          raw_bezier = record_detour_spline.raw_bezier
-          record_detour_spline.spline
-        } else if flat_detour is Some(detour) {
-          let detour_spline_result =
-            build_flat_detour_spline(
-              base,
-              detour,
-              using_pathplan,
-              tail_slope_line,
-              head_slope_line,
-              route_barriers,
-            )
-          raw_bezier = detour_spline_result.raw_bezier
-          detour_spline_result.spline
+        let detour_spline =
+          detour_spline_if_any(
+            base,
+            needs_record_detour,
+            flat_detour,
+            using_pathplan,
+            tail_slope_line,
+            head_slope_line,
+            route_barriers,
+            tail_clip_center,
+            head_clip_center,
+            tail_clip_size,
+            head_clip_size,
+            tail_clip,
+            head_clip,
+            nodesep_pt,
+            layout_rankdir,
+            false,
+          )
+        if detour_spline is Some(result) {
+          raw_bezier = result.raw_bezier
+          result.spline
         } else {
           let line_start =
             if using_pathplan && points.length() >= 2 {
