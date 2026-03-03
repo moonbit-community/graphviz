@@ -306,6 +306,72 @@ fn route_has_single_arrowhead(
 }
 
 ///|
+fn needs_record_port_detour(
+  using_pathplan : Bool,
+  is_flat_edge : Bool,
+  tail_node : @cgraph.Node,
+  head_node : @cgraph.Node,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  layout_rankdir : RankDir,
+) -> Bool {
+  let record_port_edge =
+    (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
+    (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
+  !using_pathplan &&
+  !is_flat_edge &&
+  record_port_edge &&
+  (match layout_rankdir {
+    RankDir::TB | RankDir::BT =>
+      Double::abs(tail_slope_line.x) > 0.01 ||
+      Double::abs(head_slope_line.x) > 0.01
+    RankDir::LR | RankDir::RL =>
+      Double::abs(tail_slope_line.y) > 0.01 ||
+      Double::abs(head_slope_line.y) > 0.01
+  })
+}
+
+///|
+priv struct FlatDetourCandidateFlags {
+  no_arrow : Bool
+  top_single_arrow : Bool
+}
+
+///|
+fn flat_detour_candidate_flags(
+  using_pathplan : Bool,
+  is_flat_edge : Bool,
+  has_explicit_port : Bool,
+  label_width_pt : Double,
+  tail_port_side : Int,
+  head_port_side : Int,
+  layout_rankdir : RankDir,
+  route_include_tail : Bool,
+  route_include_head : Bool,
+) -> FlatDetourCandidateFlags {
+  let no_arrow =
+    !using_pathplan &&
+    is_flat_edge &&
+    !has_explicit_port &&
+    label_width_pt <= 0.0 &&
+    route_has_no_arrowheads(route_include_tail, route_include_head)
+  let top_single_arrow =
+    !using_pathplan &&
+    is_flat_edge &&
+    has_explicit_port &&
+    label_width_pt <= 0.0 &&
+    (tail_port_side & PORT_SIDE_TOP) != 0 &&
+    (head_port_side & PORT_SIDE_TOP) != 0 &&
+    (tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
+    (head_port_side & PORT_SIDE_BOTTOM) == 0 &&
+    (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
+    route_has_single_arrowhead(route_include_tail, route_include_head)
+  { no_arrow, top_single_arrow }
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -2977,38 +3043,33 @@ fn build_edge_spline(
             } else {
               @edge_spline.point(0.0, 0.0)
             }
-          let record_port_edge =
-            (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
-              (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
           let needs_record_detour =
-            !using_pathplan &&
-            !is_flat_edge &&
-            record_port_edge &&
-            (match layout_rankdir {
-              RankDir::TB | RankDir::BT =>
-                Double::abs(tail_slope_line.x) > 0.01 ||
-                  Double::abs(head_slope_line.x) > 0.01
-              RankDir::LR | RankDir::RL =>
-                Double::abs(tail_slope_line.y) > 0.01 ||
-                  Double::abs(head_slope_line.y) > 0.01
-            })
-          let flat_no_arrow_candidate =
-            !using_pathplan &&
-            is_flat_edge &&
-            !has_explicit_port &&
-            label_width_pt <= 0.0 &&
-            route_has_no_arrowheads(route_include_tail, route_include_head)
+            needs_record_port_detour(
+              using_pathplan,
+              is_flat_edge,
+              tail_node,
+              head_node,
+              tail_port,
+              head_port,
+              tail_slope_line,
+              head_slope_line,
+              layout_rankdir,
+            )
+          let flat_detour_flags =
+            flat_detour_candidate_flags(
+              using_pathplan,
+              is_flat_edge,
+              has_explicit_port,
+              label_width_pt,
+              base.tail_port_side,
+              base.head_port_side,
+              layout_rankdir,
+              route_include_tail,
+              route_include_head,
+            )
+          let flat_no_arrow_candidate = flat_detour_flags.no_arrow
           let flat_top_compass_single_arrow_candidate =
-            !using_pathplan &&
-            is_flat_edge &&
-            has_explicit_port &&
-            label_width_pt <= 0.0 &&
-            (base.tail_port_side & PORT_SIDE_TOP) != 0 &&
-            (base.head_port_side & PORT_SIDE_TOP) != 0 &&
-            (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
-            (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
-            (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
-            route_has_single_arrowhead(route_include_tail, route_include_head)
+            flat_detour_flags.top_single_arrow
           let flat_detour =
             if flat_no_arrow_candidate ||
               flat_top_compass_single_arrow_candidate {
@@ -3424,38 +3485,33 @@ fn build_edge_spline(
           } else {
             @edge_spline.point(0.0, 0.0)
           }
-        let record_port_edge =
-          (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
-            (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
         let needs_record_detour =
-          !using_pathplan &&
-          !is_flat_edge &&
-          record_port_edge &&
-          (match layout_rankdir {
-            RankDir::TB | RankDir::BT =>
-              Double::abs(tail_slope_line.x) > 0.01 ||
-                Double::abs(head_slope_line.x) > 0.01
-            RankDir::LR | RankDir::RL =>
-              Double::abs(tail_slope_line.y) > 0.01 ||
-                Double::abs(head_slope_line.y) > 0.01
-          })
-        let flat_no_arrow_candidate =
-          !using_pathplan &&
-          is_flat_edge &&
-          !has_explicit_port &&
-          label_width_pt <= 0.0 &&
-          route_has_no_arrowheads(route_include_tail, route_include_head)
+          needs_record_port_detour(
+            using_pathplan,
+            is_flat_edge,
+            tail_node,
+            head_node,
+            tail_port,
+            head_port,
+            tail_slope_line,
+            head_slope_line,
+            layout_rankdir,
+          )
+        let flat_detour_flags =
+          flat_detour_candidate_flags(
+            using_pathplan,
+            is_flat_edge,
+            has_explicit_port,
+            label_width_pt,
+            base.tail_port_side,
+            base.head_port_side,
+            layout_rankdir,
+            route_include_tail,
+            route_include_head,
+          )
+        let flat_no_arrow_candidate = flat_detour_flags.no_arrow
         let flat_top_compass_single_arrow_candidate =
-          !using_pathplan &&
-          is_flat_edge &&
-          has_explicit_port &&
-          label_width_pt <= 0.0 &&
-          (base.tail_port_side & PORT_SIDE_TOP) != 0 &&
-          (base.head_port_side & PORT_SIDE_TOP) != 0 &&
-          (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
-          (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
-          (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
-          route_has_single_arrowhead(route_include_tail, route_include_head)
+          flat_detour_flags.top_single_arrow
         let flat_detour =
           if flat_no_arrow_candidate ||
             flat_top_compass_single_arrow_candidate {
