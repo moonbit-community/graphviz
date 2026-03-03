@@ -266,9 +266,8 @@ fn cluster_bbox_if_named(
 }
 
 ///|
-fn route_include_arrowheads(
+fn edge_include_arrowheads(
   dir : EdgeDir,
-  swap_ends : Bool,
 ) -> (Bool, Bool) {
   let include_tail = match dir {
     EdgeDir::Back | EdgeDir::Both => true
@@ -278,6 +277,15 @@ fn route_include_arrowheads(
     EdgeDir::Forward | EdgeDir::Both => true
     _ => false
   }
+  (include_tail, include_head)
+}
+
+///|
+fn route_include_arrowheads(
+  include_tail : Bool,
+  include_head : Bool,
+  swap_ends : Bool,
+) -> (Bool, Bool) {
   if swap_ends { (include_head, include_tail) } else { (include_tail, include_head) }
 }
 
@@ -2256,10 +2264,13 @@ fn build_edge_route_base(
       record_orientation,
     )
   let dir = edge_dir_for(edge, graph_kind)
+  let (include_tail, include_head) = edge_include_arrowheads(dir)
   let (route_include_tail, route_include_head) =
-    route_include_arrowheads(dir, swap_ends)
-  let include_tail = route_include_tail
-  let include_head = route_include_head
+    route_include_arrowheads(
+      include_tail,
+      include_head,
+      swap_ends,
+    )
   let arrow_len_override : Double? =
     if include_tail || include_head {
     if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
