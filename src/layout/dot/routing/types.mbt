@@ -15,6 +15,10 @@ pub(all) struct EdgeRouteBase {
   head_pos : @geom.Point
   tail_size : @dot_shared.NodeSize
   head_size : @dot_shared.NodeSize
+  mid_label_width_pt : Double
+  mid_label_height_pt : Double
+  tail_record_path_box : @geom.Rect?
+  head_record_path_box : @geom.Rect?
   tail_anchor : @geom.Point
   head_anchor : @geom.Point
   head_port_rect : @geom.Rect?
@@ -78,4 +82,20 @@ pub(all) struct EdgeSplineResult {
 pub(all) struct SelfEdgeRoute {
   points : Array[@geom.Point]
   label_pos : @geom.Point?
+}
+
+///|
+pub(all) struct EdgeVnodeInfo {
+  vnode_ranks : Map[String, Int]
+  vnode_sizes : Map[String, @dot_shared.NodeSize]
+  vnodes_by_rank : Map[Int, Array[String]]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_clusters : Map[String, String]
+}
+
+///|
+pub(all) struct HeadPortMetrics {
+  head_port_counts : Map[String, Int]
+  head_port_min_dist : Map[String, Double]
+  head_port_max_dist : Map[String, Double]
 }

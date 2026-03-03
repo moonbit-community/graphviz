@@ -5,13 +5,6 @@ priv struct PortLayoutMaps {
 }
 
 ///|
-priv struct HeadPortMetrics {
-  head_port_counts : Map[String, Int]
-  head_port_min_dist : Map[String, Double]
-  head_port_max_dist : Map[String, Double]
-}
-
-///|
 priv struct ClusterLabelPlacementInfo {
   width_pt : Double
   height_pt : Double

@@ -138,9 +138,15 @@ fn build_regular_spline_layout(
   recovered_slack_keys : Map[String, Bool],
 ) -> RegularSplineLayoutResult {
   let input = context.input
-  let spline_result = build_edge_spline(
+  let spline_mode =
+    match input.splines {
+      SplinesMode::None | SplinesMode::Polyline => 0
+      SplinesMode::Ortho => 1
+      _ => 2
+    }
+  let spline_result = @routing.build_edge_spline(
     base,
-    input.splines,
+    spline_mode,
     input.ranks,
     input.sizes,
     input.positions,

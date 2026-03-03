@@ -124,6 +124,27 @@ fn build_edge_route_base(
       head_node,
       record_orientation,
     )
+  let mid_label_width_pt = edge_mid_label_width_pt(edge)
+  let mid_label_height_pt = match edge_mid_label_metrics(edge) {
+    Some(metrics) => metrics.height
+    None => 0.0
+  }
+  let tail_record_path_box =
+    record_port_path_box(
+      tail_node,
+      tail_port,
+      tail_pos,
+      tail_size,
+      rankdir,
+    )
+  let head_record_path_box =
+    record_port_path_box(
+      head_node,
+      head_port,
+      head_pos,
+      head_size,
+      rankdir,
+    )
   let tail_geometry = port_geometry(
     tail_name,
     tail_port,
@@ -206,7 +227,7 @@ fn build_edge_route_base(
   let has_vnodes = vnodes.length() > 0
   let force_segmented =
     force_segmented_base ||
-    (is_flat_edge && has_vnodes && edge_mid_label_width_pt(edge) > 0.0)
+    (is_flat_edge && has_vnodes && mid_label_width_pt > 0.0)
   let use_pathplan = match @sys.get_env_var("DOT_USE_PATHPLAN") {
     Some(value) => {
       let lower = value.to_lower()
@@ -519,7 +540,7 @@ fn build_edge_route_base(
       EdgeDir::Both =>
         is_flat_edge &&
         !has_vnodes &&
-        edge_mid_label_width_pt(edge) <= 0.0 &&
+        mid_label_width_pt <= 0.0 &&
         tail_sameport_anchor is None &&
         head_sameport_anchor is None &&
         tail_dynamic_anchor.anchor is None &&
@@ -643,6 +664,10 @@ fn build_edge_route_base(
     head_pos,
     tail_size,
     head_size,
+    mid_label_width_pt,
+    mid_label_height_pt,
+    tail_record_path_box,
+    head_record_path_box,
     tail_anchor,
     head_anchor,
     head_port_rect,

@@ -11,7 +11,7 @@ priv struct CurveModeRoutePrep {
   pathplan_segments : Array[@routesplines.PathplanSegment]
   route_barriers : Array[(@geom.Point, @geom.Point)]
   points : Array[@geom.Point]
-  short_route_context : @routing.ShortRouteBuildContext
+  short_route_context : ShortRouteBuildContext
 }
 
 ///|
@@ -20,6 +20,244 @@ priv struct CurveModeSplineBuildResult {
   raw_bezier : Array[@geom.Point]
   apply_dotted_adjustment : Bool
 }
+
+///|
+fn curve_max_double(a : Double, b : Double) -> Double {
+  if a > b { a } else { b }
+}
+
+///|
+fn curve_min_double(a : Double, b : Double) -> Double {
+  if a < b { a } else { b }
+}
+
+///|
+fn curve_point_line_distance(
+  point : @geom.Point,
+  a : @geom.Point,
+  b : @geom.Point,
+) -> Double {
+  let dx = b.x - a.x
+  let dy = b.y - a.y
+  if dx == 0.0 && dy == 0.0 {
+    let pdx = point.x - a.x
+    let pdy = point.y - a.y
+    return Double::sqrt(pdx * pdx + pdy * pdy)
+  }
+  let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy)
+  let proj = @geom.Point::{ x: a.x + t * dx, y: a.y + t * dy }
+  let pdx = point.x - proj.x
+  let pdy = point.y - proj.y
+  Double::sqrt(pdx * pdx + pdy * pdy)
+}
+
+///|
+fn segment_intersects_rect(
+  start : @geom.Point,
+  end : @geom.Point,
+  rect : @geom.Rect,
+  eps : Double,
+) -> Bool {
+  let dx = end.x - start.x
+  let dy = end.y - start.y
+  let mut t0 = 0.0
+  let mut t1 = 1.0
+  let update = (p : Double, q : Double) => {
+    if Double::abs(p) < 0.0000001 {
+      if q < 0.0 { return false } else { return true }
+    }
+    let r = q / p
+    if p < 0.0 {
+      if r > t1 { return false }
+      if r > t0 { t0 = r }
+    } else {
+      if r < t0 { return false }
+      if r < t1 { t1 = r }
+    }
+    true
+  }
+  if !update(-dx, start.x - rect.llx) { return false }
+  if !update(dx, rect.urx - start.x) { return false }
+  if !update(-dy, start.y - rect.lly) { return false }
+  if !update(dy, rect.ury - start.y) { return false }
+  if t1 < 0.0 || t0 > 1.0 {
+    return false
+  }
+  let min_t = if t0 < 0.0 { 0.0 } else { t0 }
+  let max_t = if t1 > 1.0 { 1.0 } else { t1 }
+  if max_t <= eps || min_t >= 1.0 - eps {
+    return false
+  }
+  true
+}
+
+///|
+fn detour_polyline_for_rects(
+  tail : @geom.Point,
+  head : @geom.Point,
+  tail_rect : @geom.Rect,
+  head_rect : @geom.Rect,
+  nodesep_pt : Double,
+  rankdir : RankDir,
+) -> Array[@geom.Point] {
+  let detour_margin = curve_max_double(nodesep_pt * 0.75, 8.0)
+  let exit_base = curve_max_double(nodesep_pt * 1.25, 16.0)
+  let entry_base = curve_max_double(nodesep_pt * 0.3, 5.71)
+  match rankdir {
+    RankDir::TB | RankDir::BT => {
+      let dy = head.y - tail.y
+      let total = Double::abs(dy)
+      let exit_turn = if total > 0.0 {
+        curve_min_double(exit_base, total / 2.0)
+      } else {
+        exit_base
+      }
+      let entry_turn = if total > 0.0 {
+        curve_min_double(entry_base, total / 2.0)
+      } else {
+        entry_base
+      }
+      let exit_y =
+        if dy < 0.0 {
+          tail_rect.lly - exit_turn
+        } else {
+          tail_rect.ury + exit_turn
+        }
+      let entry_y =
+        if dy < 0.0 {
+          head_rect.lly - entry_turn
+        } else {
+          head_rect.ury + entry_turn
+        }
+      let left_x = curve_min_double(tail_rect.llx, head_rect.llx) - detour_margin
+      let right_x = curve_max_double(tail_rect.urx, head_rect.urx) + detour_margin
+      let path_len = (detour_x : Double) => {
+        Double::abs(tail.y - exit_y) +
+        Double::abs(tail.x - detour_x) +
+        Double::abs(exit_y - entry_y) +
+        Double::abs(head.x - detour_x) +
+        Double::abs(head.y - entry_y)
+      }
+      let detour_x =
+        if path_len(left_x) <= path_len(right_x) { left_x } else { right_x }
+      [
+        tail,
+        @edge_spline.point(tail.x, exit_y),
+        @edge_spline.point(detour_x, exit_y),
+        @edge_spline.point(detour_x, entry_y),
+        @edge_spline.point(head.x, entry_y),
+        head,
+      ]
+    }
+    RankDir::LR | RankDir::RL => {
+      let dx = head.x - tail.x
+      let total = Double::abs(dx)
+      let exit_turn = if total > 0.0 {
+        curve_min_double(exit_base, total / 2.0)
+      } else {
+        exit_base
+      }
+      let entry_turn = if total > 0.0 {
+        curve_min_double(entry_base, total / 2.0)
+      } else {
+        entry_base
+      }
+      let exit_x =
+        if dx < 0.0 {
+          tail_rect.llx - exit_turn
+        } else {
+          tail_rect.urx + exit_turn
+        }
+      let entry_x =
+        if dx < 0.0 {
+          head_rect.llx - entry_turn
+        } else {
+          head_rect.urx + entry_turn
+        }
+      let lower_y = curve_min_double(tail_rect.lly, head_rect.lly) - detour_margin
+      let upper_y = curve_max_double(tail_rect.ury, head_rect.ury) + detour_margin
+      let path_len = (detour_y : Double) => {
+        Double::abs(tail.x - exit_x) +
+        Double::abs(tail.y - detour_y) +
+        Double::abs(exit_x - entry_x) +
+        Double::abs(head.y - detour_y) +
+        Double::abs(head.x - entry_x)
+      }
+      let detour_y =
+        if path_len(lower_y) <= path_len(upper_y) { lower_y } else { upper_y }
+      [
+        tail,
+        @edge_spline.point(exit_x, tail.y),
+        @edge_spline.point(exit_x, detour_y),
+        @edge_spline.point(entry_x, detour_y),
+        @edge_spline.point(entry_x, head.y),
+        head,
+      ]
+    }
+  }
+}
+
+///|
+fn simplify_polyline(
+  points : Array[@geom.Point],
+  tol : Double,
+) -> Array[@geom.Point] {
+  if tol <= 0.0 || points.length() <= 2 {
+    return points
+  }
+  let last = points.length() - 1
+  let keep = Array::make(points.length(), false)
+  keep[0] = true
+  keep[last] = true
+  let stack : Array[(Int, Int)] = []
+  stack.push((0, last))
+  while stack.length() > 0 {
+    let top = stack.length() - 1
+    let (start, end) = stack[top]
+    let _ = stack.pop()
+    if end - start <= 1 {
+      continue
+    }
+    let mut max_dist = -1.0
+    let mut max_idx = -1
+    let start_point = points[start]
+    let end_point = points[end]
+    for i in (start + 1)..<end {
+      let dist = curve_point_line_distance(points[i], start_point, end_point)
+      if dist > max_dist {
+        max_dist = dist
+        max_idx = i
+      }
+    }
+    if max_idx != -1 && max_dist > tol {
+      keep[max_idx] = true
+      stack.push((start, max_idx))
+      stack.push((max_idx, end))
+    }
+  }
+  let out : Array[@geom.Point] = []
+  for i in 0..<points.length() {
+    if keep[i] {
+      out.push(points[i])
+    }
+  }
+  out
+}
+
+///|
+fn is_record_shape(node : @cgraph.Node) -> Bool {
+  match node.get_attr("shape") {
+    Some(value) =>
+      match value.to_lower() {
+        "record" | "mrecord" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
+const DEFAULT_VNODE_WEIGHT : Double = 1.0
 
 ///|
 fn edge_polyline_points(
@@ -224,17 +462,19 @@ fn prepare_edge_curve_mode_route(
   path_right_bound : Double,
   ranksep_pt : Double,
   head_port_metrics : HeadPortMetrics,
-  routing_context : @routing.RoutingContext,
+  routing_context : RoutingContext,
   enable_complex_tuning : Bool,
 ) -> CurveModeRoutePrep {
   let edge = base.edge
   let tail_anchor = base.tail_anchor
   let head_anchor = base.head_anchor
-  let label_width_pt = edge_mid_label_width_pt(edge)
-  let label_height_pt = match edge_mid_label_metrics(edge) {
-    Some(metrics) => Some(metrics.height)
-    None => None
-  }
+  let label_width_pt = base.mid_label_width_pt
+  let label_height_pt =
+    if base.mid_label_height_pt > 0.0 {
+      Some(base.mid_label_height_pt)
+    } else {
+      None
+    }
   let has_explicit_port =
     @dot_shared.port_is_explicit(base.tail_port) ||
     @dot_shared.port_is_explicit(base.head_port)
@@ -308,7 +548,7 @@ fn prepare_edge_curve_mode_route(
     enable_complex_tuning,
   )
   let short_route_context =
-    @routing.short_route_build_context(
+    short_route_build_context(
       base,
       positions,
       sizes,
@@ -346,10 +586,10 @@ fn prepare_edge_curve_mode_route(
 fn curve_mode_result_for_short_route(
   base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
-  short_route_spec : @routing.ShortRouteBuildSpec,
+  short_route_spec : ShortRouteBuildSpec,
 ) -> CurveModeSplineBuildResult {
   let short_route_spline =
-    @routing.build_short_route_spline_with_detour(
+    build_short_route_spline_with_detour(
       base,
       prepared.short_route_context,
       short_route_spec,
@@ -419,7 +659,7 @@ fn build_curve_mode_spline_from_prepared_route(
       )
     if adjusted.length() <= 2 {
       let short_route_spec =
-        @routing.short_route_spec_for_adjusted_points(adjusted)
+        short_route_spec_for_adjusted_points(adjusted)
       curve_mode_result_for_short_route(base, prepared, short_route_spec)
     } else {
       let multi_point_spline =
@@ -441,7 +681,7 @@ fn build_curve_mode_spline_from_prepared_route(
     }
   } else {
     let short_route_spec =
-      @routing.short_route_spec_for_anchor_or_pathplan_points(
+      short_route_spec_for_anchor_or_pathplan_points(
         points,
         prepared.using_pathplan,
         base.tail_anchor,
@@ -471,7 +711,7 @@ fn build_edge_curve_mode_result(
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
-  routing_context : @routing.RoutingContext,
+  routing_context : RoutingContext,
   enable_complex_tuning : Bool,
 ) -> EdgeSplineResult {
   let prepared =
@@ -526,9 +766,9 @@ fn build_edge_curve_mode_result(
 ///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn build_edge_spline(
+pub fn build_edge_spline(
   base : EdgeRouteBase,
-  splines : SplinesMode,
+  spline_mode : Int,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
   positions : Map[String, @geom.Point],
@@ -544,45 +784,44 @@ fn build_edge_spline(
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
-  routing_context : @routing.RoutingContext,
+  routing_context : RoutingContext,
   enable_complex_tuning : Bool,
 ) -> EdgeSplineResult {
-  match splines {
-    SplinesMode::None | SplinesMode::Polyline =>
-      @routing.edge_spline_result_for_bezier(
-        @routing.edge_polyline_mode_spline(base, false),
-        [],
-        0.0,
-        false,
-      )
-    SplinesMode::Ortho =>
-      @routing.edge_spline_result_for_bezier(
-        @routing.edge_polyline_mode_spline(base, true),
-        [],
-        0.0,
-        false,
-      )
-    _ =>
-      build_edge_curve_mode_result(
-        base,
-        ranks,
-        sizes,
-        positions,
-        vnode_positions,
-        vnode_info,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
-        x_groups,
-        nodesep_pt,
-        path_left_bound,
-        path_right_bound,
-        ranksep_pt,
-        label_edge_counts,
-        head_port_metrics,
-        routing_context,
-        enable_complex_tuning,
-      )
+  if spline_mode == 0 {
+    edge_spline_result_for_bezier(
+      edge_polyline_mode_spline(base, false),
+      [],
+      0.0,
+      false,
+    )
+  } else if spline_mode == 1 {
+    edge_spline_result_for_bezier(
+      edge_polyline_mode_spline(base, true),
+      [],
+      0.0,
+      false,
+    )
+  } else {
+    build_edge_curve_mode_result(
+      base,
+      ranks,
+      sizes,
+      positions,
+      vnode_positions,
+      vnode_info,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      x_groups,
+      nodesep_pt,
+      path_left_bound,
+      path_right_bound,
+      ranksep_pt,
+      label_edge_counts,
+      head_port_metrics,
+      routing_context,
+      enable_complex_tuning,
+    )
   }
 }
 ///|
@@ -644,7 +883,7 @@ fn compute_pathplan_route_points(
   path_left_bound : Double,
   path_right_bound : Double,
   ranksep_pt : Double,
-  routing_context : @routing.RoutingContext,
+  routing_context : RoutingContext,
   guide_points : Array[@geom.Point],
 ) -> RoutePointState {
   let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
@@ -653,7 +892,7 @@ fn compute_pathplan_route_points(
   let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
   let (points, pathplan_used) =
     if base.use_pathplan && !base.is_flat_edge {
-    let has_edge_label = edge_mid_label_width_pt(base.edge) > 0.0
+    let has_edge_label = base.mid_label_width_pt > 0.0
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
     let tail_port_box : @geom.Rect? =
       if !base.tail_clip_enabled {
@@ -665,13 +904,7 @@ fn compute_pathplan_route_points(
           ),
         )
       } else if base.tail_port_side == 0 {
-        record_port_path_box(
-          base.tail_node,
-          base.tail_port,
-          base.tail_pos,
-          base.tail_size,
-          base.rankdir,
-        )
+        base.tail_record_path_box
       } else {
         None
       }
@@ -685,13 +918,7 @@ fn compute_pathplan_route_points(
           ),
         )
       } else if base.head_port_side == 0 {
-        record_port_path_box(
-          base.head_node,
-          base.head_port,
-          base.head_pos,
-          base.head_size,
-          base.rankdir,
-        )
+        base.head_record_path_box
       } else {
         None
       }
@@ -768,7 +995,7 @@ fn adjust_route_points(
   nodesep_pt : Double,
 ) -> Array[@geom.Point] {
   let mut points = points
-  let touch_eps = max_double(@dot_shared.RECORD_BORDER_PT + 0.01, 1.5)
+  let touch_eps = curve_max_double(@dot_shared.RECORD_BORDER_PT + 0.01, 1.5)
   let head_lr_touch =
     match head_port_rect {
       Some(rect) => {
@@ -826,7 +1053,7 @@ fn adjust_route_points(
   }
   if has_explicit_port && base.has_side_anchor && points.length() <= 2 &&
     !using_pathplan {
-    let offset = max_double(4.0, nodesep_pt * 0.5)
+    let offset = curve_max_double(4.0, nodesep_pt * 0.5)
     let kinked : Array[@geom.Point] = [base.tail_anchor]
     if base.tail_slope.x != 0.0 || base.tail_slope.y != 0.0 {
       kinked.push(@edge_spline.point_add(base.tail_anchor, @edge_spline.point_scale(base.tail_slope, offset)))
@@ -926,8 +1153,8 @@ fn route_endpoint_slopes(
   head_slope : @geom.Point,
 ) -> (@geom.Point, @geom.Point) {
   (
-    @routing.edge_port_slope_or_zero(tail_port, tail_slope),
-    @routing.edge_port_slope_or_zero(head_port, head_slope),
+    edge_port_slope_or_zero(tail_port, tail_slope),
+    edge_port_slope_or_zero(head_port, head_slope),
   )
 }
 
@@ -967,7 +1194,7 @@ fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.P
   let vy = end.y - prev2.y
   let wx = prev.x - prev2.x
   let wy = prev.y - prev2.y
-  let span = @math.hypot(vx, vy)
+  let span = Double::sqrt(vx * vx + vy * vy)
   let offset =
     if span > 0.0 {
       Double::abs(vx * wy - vy * wx) / span
@@ -1112,7 +1339,7 @@ fn build_multi_point_routed_spline(
   route_barriers : Array[(@geom.Point, @geom.Point)],
   tail_clip_enabled : Bool,
   head_clip_enabled : Bool,
-) -> @routing.PointsSplineResult {
+) -> PointsSplineResult {
   let (tail_slope_for, head_slope_for) =
     route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
   // Graphviz parity: pathplan edges always allow spline fitting.
@@ -1133,7 +1360,7 @@ fn build_multi_point_routed_spline(
     }
   if segmented_raw.length() > 0 {
     let spline =
-      @routing.build_bezier_points_spline(
+      build_bezier_points_spline(
         base,
         segmented_raw,
         tail_clip_enabled,
@@ -1143,7 +1370,7 @@ fn build_multi_point_routed_spline(
       )
     { spline, raw_bezier: segmented_raw }
   } else {
-    @routing.build_points_spline(
+    build_points_spline(
       base,
       adjusted,
       tail_slope_for,

@@ -1,13 +1,4 @@
 ///|
-priv struct EdgeVnodeInfo {
-  vnode_ranks : Map[String, Int]
-  vnode_sizes : Map[String, NodeSize]
-  vnodes_by_rank : Map[Int, Array[String]]
-  edge_vnodes : Map[String, Array[String]]
-  vnode_clusters : Map[String, String]
-}
-
-///|
 priv struct FlatLabelNodeInfo {
   tail : String
   head : String
