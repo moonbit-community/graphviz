@@ -52,14 +52,30 @@ priv struct OrderedEdgeRoutingState {
 /// Graphviz parity: edge route bases are cached per edge id before routing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
-  edges : Array[@cgraph.Edge],
-  build_base : (@cgraph.Edge) -> EdgeRouteBase,
+  input : EdgeRoutingPassInput,
+  sameport_overrides : SameportOverrides,
 ) -> Map[Int, EdgeRouteBase] {
   let base_cache : Map[Int, EdgeRouteBase] = Map::new()
-  for edge in edges {
+  for edge in input.edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {
-      base_cache[edge_id] = build_base(edge)
+      base_cache[edge_id] =
+        build_edge_route_base(
+          input.graph.kind(),
+          edge,
+          input.ranks,
+          input.sizes,
+          input.positions,
+          input.record_orientation,
+          input.label_ports_map,
+          input.label_ports_raw,
+          input.routing_context,
+          input.rankdir,
+          input.layout_rankdir,
+          input.enable_complex_tuning,
+          input.vnode_info.edge_vnodes,
+          sameport_overrides,
+        )
     }
   }
   base_cache
@@ -80,28 +96,10 @@ fn build_ordered_edge_routing_context(
     input.layout_rankdir,
     input.ranksep_pt,
   )
-  let build_base_for_edge =
-    (edge : @cgraph.Edge) =>
-      build_edge_route_base(
-        input.graph.kind(),
-        edge,
-        input.ranks,
-        input.sizes,
-        input.positions,
-        input.record_orientation,
-        input.label_ports_map,
-        input.label_ports_raw,
-        input.routing_context,
-        input.rankdir,
-        input.layout_rankdir,
-        input.enable_complex_tuning,
-        input.vnode_info.edge_vnodes,
-        sameport_overrides,
-      )
   let base_cache =
     build_route_base_cache(
-      input.edges,
-      build_base_for_edge,
+      input,
+      sameport_overrides,
     )
   let prepass =
     build_route_prepass_state(
