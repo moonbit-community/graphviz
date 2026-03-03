@@ -12,7 +12,7 @@ fn edge_has_label(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
-fn cmp_int(a : Int, b : Int) -> Int {
+fn cmp_edge_id(a : Int, b : Int) -> Int {
   if a < b {
     -1
   } else if a > b {
@@ -117,7 +117,7 @@ pub fn collect_flat_adjacent_beziers(
     if span <= 0.0 {
       continue
     }
-    group_edges.sort_by((a, b) => cmp_int(a.id(), b.id()))
+    group_edges.sort_by((a, b) => cmp_edge_id(a.id(), b.id()))
     let count = group_edges.length()
     let base_one_third = @edge_spline.point(
       tx + (hx - tx) / 3.0,
