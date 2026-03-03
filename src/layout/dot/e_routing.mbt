@@ -372,6 +372,76 @@ fn flat_detour_candidate_flags(
 }
 
 ///|
+fn edge_port_slope_or_zero(
+  port : @cgraph.Port?,
+  slope : @geom.Point,
+) -> @geom.Point {
+  if @dot_shared.port_is_explicit(port) { slope } else { @edge_spline.point(0.0, 0.0) }
+}
+
+///|
+priv struct ShortRouteDetourContext {
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  needs_record_detour : Bool
+  flat_no_arrow_candidate : Bool
+  flat_top_compass_single_arrow_candidate : Bool
+}
+
+///|
+fn short_route_detour_context(
+  using_pathplan : Bool,
+  is_flat_edge : Bool,
+  tail_node : @cgraph.Node,
+  head_node : @cgraph.Node,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+  layout_rankdir : RankDir,
+  has_explicit_port : Bool,
+  label_width_pt : Double,
+  tail_port_side : Int,
+  head_port_side : Int,
+  route_include_tail : Bool,
+  route_include_head : Bool,
+) -> ShortRouteDetourContext {
+  let tail_slope_line = edge_port_slope_or_zero(tail_port, tail_slope)
+  let head_slope_line = edge_port_slope_or_zero(head_port, head_slope)
+  let needs_record_detour =
+    needs_record_port_detour(
+      using_pathplan,
+      is_flat_edge,
+      tail_node,
+      head_node,
+      tail_port,
+      head_port,
+      tail_slope_line,
+      head_slope_line,
+      layout_rankdir,
+    )
+  let flat_detour_flags =
+    flat_detour_candidate_flags(
+      using_pathplan,
+      is_flat_edge,
+      has_explicit_port,
+      label_width_pt,
+      tail_port_side,
+      head_port_side,
+      layout_rankdir,
+      route_include_tail,
+      route_include_head,
+    )
+  {
+    tail_slope_line,
+    head_slope_line,
+    needs_record_detour,
+    flat_no_arrow_candidate: flat_detour_flags.no_arrow,
+    flat_top_compass_single_arrow_candidate: flat_detour_flags.top_single_arrow,
+  }
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -3031,45 +3101,30 @@ fn build_edge_spline(
             simplified
           }
         if adjusted.length() <= 2 {
-          let tail_slope_line =
-            if @dot_shared.port_is_explicit(tail_port) {
-              tail_slope
-            } else {
-              @edge_spline.point(0.0, 0.0)
-            }
-          let head_slope_line =
-            if @dot_shared.port_is_explicit(head_port) {
-              head_slope
-            } else {
-              @edge_spline.point(0.0, 0.0)
-            }
-          let needs_record_detour =
-            needs_record_port_detour(
+          let detour_context =
+            short_route_detour_context(
               using_pathplan,
               is_flat_edge,
               tail_node,
               head_node,
               tail_port,
               head_port,
-              tail_slope_line,
-              head_slope_line,
+              tail_slope,
+              head_slope,
               layout_rankdir,
-            )
-          let flat_detour_flags =
-            flat_detour_candidate_flags(
-              using_pathplan,
-              is_flat_edge,
               has_explicit_port,
               label_width_pt,
               base.tail_port_side,
               base.head_port_side,
-              layout_rankdir,
               route_include_tail,
               route_include_head,
             )
-          let flat_no_arrow_candidate = flat_detour_flags.no_arrow
+          let tail_slope_line = detour_context.tail_slope_line
+          let head_slope_line = detour_context.head_slope_line
+          let needs_record_detour = detour_context.needs_record_detour
+          let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
           let flat_top_compass_single_arrow_candidate =
-            flat_detour_flags.top_single_arrow
+            detour_context.flat_top_compass_single_arrow_candidate
           let flat_detour =
             if flat_no_arrow_candidate ||
               flat_top_compass_single_arrow_candidate {
@@ -3473,45 +3528,30 @@ fn build_edge_spline(
           }
         }
       } else {
-        let tail_slope_line =
-          if @dot_shared.port_is_explicit(tail_port) {
-            tail_slope
-          } else {
-            @edge_spline.point(0.0, 0.0)
-          }
-        let head_slope_line =
-          if @dot_shared.port_is_explicit(head_port) {
-            head_slope
-          } else {
-            @edge_spline.point(0.0, 0.0)
-          }
-        let needs_record_detour =
-          needs_record_port_detour(
+        let detour_context =
+          short_route_detour_context(
             using_pathplan,
             is_flat_edge,
             tail_node,
             head_node,
             tail_port,
             head_port,
-            tail_slope_line,
-            head_slope_line,
+            tail_slope,
+            head_slope,
             layout_rankdir,
-          )
-        let flat_detour_flags =
-          flat_detour_candidate_flags(
-            using_pathplan,
-            is_flat_edge,
             has_explicit_port,
             label_width_pt,
             base.tail_port_side,
             base.head_port_side,
-            layout_rankdir,
             route_include_tail,
             route_include_head,
           )
-        let flat_no_arrow_candidate = flat_detour_flags.no_arrow
+        let tail_slope_line = detour_context.tail_slope_line
+        let head_slope_line = detour_context.head_slope_line
+        let needs_record_detour = detour_context.needs_record_detour
+        let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
         let flat_top_compass_single_arrow_candidate =
-          flat_detour_flags.top_single_arrow
+          detour_context.flat_top_compass_single_arrow_candidate
         let flat_detour =
           if flat_no_arrow_candidate ||
             flat_top_compass_single_arrow_candidate {
