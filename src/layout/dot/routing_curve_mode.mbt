@@ -209,7 +209,7 @@ fn edge_polyline_points(
 
 ///|
 fn prepare_edge_curve_mode_route(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
   positions : Map[String, @geom.Point],
@@ -344,7 +344,7 @@ fn prepare_edge_curve_mode_route(
 
 ///|
 fn curve_mode_result_for_short_route(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   short_route_spec : ShortRouteBuildSpec,
 ) -> CurveModeSplineBuildResult {
@@ -363,7 +363,7 @@ fn curve_mode_result_for_short_route(
 
 ///|
 fn adjusted_curve_mode_points(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   label_edge_counts : Map[String, Int],
   nodesep_pt : Double,
@@ -401,7 +401,7 @@ fn adjusted_curve_mode_points(
 
 ///|
 fn build_curve_mode_spline_from_prepared_route(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   label_edge_counts : Map[String, Int],
   nodesep_pt : Double,
@@ -454,7 +454,7 @@ fn build_curve_mode_spline_from_prepared_route(
 
 ///|
 fn build_edge_curve_mode_result(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
   positions : Map[String, @geom.Point],
@@ -472,7 +472,7 @@ fn build_edge_curve_mode_result(
   head_port_metrics : HeadPortMetrics,
   routing_context : RoutingContext,
   enable_complex_tuning : Bool,
-) -> EdgeSplineResult {
+) -> @routing.EdgeSplineResult {
   let prepared =
     prepare_edge_curve_mode_route(
       base,
@@ -526,7 +526,7 @@ fn build_edge_curve_mode_result(
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   splines : SplinesMode,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
@@ -545,7 +545,7 @@ fn build_edge_spline(
   head_port_metrics : HeadPortMetrics,
   routing_context : RoutingContext,
   enable_complex_tuning : Bool,
-) -> EdgeSplineResult {
+) -> @routing.EdgeSplineResult {
   match splines {
     SplinesMode::None | SplinesMode::Polyline =>
       @routing.edge_spline_result_for_bezier(

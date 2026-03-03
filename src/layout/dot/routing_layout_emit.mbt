@@ -1,7 +1,7 @@
 ///|
 priv struct BezierLayoutSplineResult {
   final_spline : @geom.Spline
-  layout_spline_result : EdgeSplineResult
+  layout_spline_result : @routing.EdgeSplineResult
 }
 
 ///|
@@ -10,7 +10,7 @@ priv struct BezierLayoutSplineResult {
 /// rebuild_spline_for_render -> finalize_edge_spline.
 /// Do not change behavior without updating fixtures/tests.
 fn build_bezier_layout_spline_result(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
@@ -40,7 +40,7 @@ fn build_bezier_layout_spline_result(
 
 ///|
 fn build_bezier_layout_edge(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
@@ -69,8 +69,8 @@ fn build_bezier_layout_edge(
 /// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_layout(
-  base : EdgeRouteBase,
-  route : SelfEdgeRoute,
+  base : @routing.EdgeRouteBase,
+  route : @routing.SelfEdgeRoute,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let mut edge_layout =
@@ -103,7 +103,7 @@ fn build_self_edge_layout(
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
 fn build_flat_adjacent_layout(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   bezier : Array[@geom.Point],
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
@@ -121,8 +121,8 @@ fn build_flat_adjacent_layout(
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
 fn build_regular_bezier_layout(
-  base : EdgeRouteBase,
-  shared_spline_result : EdgeSplineResult,
+  base : @routing.EdgeRouteBase,
+  shared_spline_result : @routing.EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
@@ -140,9 +140,9 @@ fn build_regular_bezier_layout(
 /// Graphviz parity: edge label placement aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/labels.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_layout(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   spline : @geom.Spline,
-  spline_result : EdgeSplineResult,
+  spline_result : @routing.EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let input = context.input

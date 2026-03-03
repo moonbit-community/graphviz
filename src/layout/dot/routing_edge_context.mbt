@@ -34,7 +34,7 @@ priv struct EdgeRoutingPassInput {
 /// inputs, including prepass-derived ordering/grouping state.
 priv struct OrderedEdgeRoutingContext {
   input : EdgeRoutingPassInput
-  base_cache : Map[Int, EdgeRouteBase]
+  base_cache : Map[Int, @routing.EdgeRouteBase]
   prepass : @routing.RoutePrepassState
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
 }
@@ -44,7 +44,7 @@ priv struct OrderedEdgeRoutingContext {
 /// while iterating in Graphviz-compatible route order.
 priv struct OrderedEdgeRoutingState {
   recovered_slack_keys : Map[String, Bool]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
+  self_edge_routes : Map[Int, @routing.SelfEdgeRoute]
   edges_out_by_id : Map[Int, DotLayoutEdge]
 }
 
@@ -53,9 +53,9 @@ priv struct OrderedEdgeRoutingState {
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
   edges : Array[@cgraph.Edge],
-  build_base : (@cgraph.Edge) -> EdgeRouteBase,
-) -> Map[Int, EdgeRouteBase] {
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
+  build_base : (@cgraph.Edge) -> @routing.EdgeRouteBase,
+) -> Map[Int, @routing.EdgeRouteBase] {
+  let base_cache : Map[Int, @routing.EdgeRouteBase] = Map::new()
   for edge in edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {
@@ -104,16 +104,16 @@ fn collect_self_edge_groups(
 fn ensure_self_edge_routes(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, EdgeRouteBase],
+  base_cache : Map[Int, @routing.EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, SelfEdgeRoute],
+  self_edge_routes : Map[Int, @routing.SelfEdgeRoute],
   build_group_routes : (
     Array[@cgraph.Edge],
-    Array[EdgeRouteBase],
+    Array[@routing.EdgeRouteBase],
     Double,
     Map[Int, Double],
-  ) -> Array[SelfEdgeRoute],
+  ) -> Array[@routing.SelfEdgeRoute],
 ) -> Unit {
   let edge_id = edge.id()
   if self_edge_routes.get(edge_id) is Some(_) {
@@ -122,7 +122,7 @@ fn ensure_self_edge_routes(
   let key = self_edge_group_key(edge)
   match self_edge_groups.get(key) {
     Some(group_edges) => {
-      let group_bases : Array[EdgeRouteBase] = []
+      let group_bases : Array[@routing.EdgeRouteBase] = []
       for grouped in group_edges {
         let gid = grouped.id()
         let gbase = match base_cache.get(gid) {
@@ -152,17 +152,17 @@ fn ensure_self_edge_routes(
 fn self_edge_route_for_edge(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, EdgeRouteBase],
+  base_cache : Map[Int, @routing.EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, SelfEdgeRoute],
+  self_edge_routes : Map[Int, @routing.SelfEdgeRoute],
   build_group_routes : (
     Array[@cgraph.Edge],
-    Array[EdgeRouteBase],
+    Array[@routing.EdgeRouteBase],
     Double,
     Map[Int, Double],
-  ) -> Array[SelfEdgeRoute],
-) -> SelfEdgeRoute? {
+  ) -> Array[@routing.SelfEdgeRoute],
+) -> @routing.SelfEdgeRoute? {
   if edge.tail().name() != edge.head().name() {
     return None
   }
@@ -245,7 +245,7 @@ fn build_ordered_edge_routing_context(
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_flat_adjacent_layout(
   edge_id : Int,
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Bool {
@@ -269,7 +269,7 @@ fn maybe_build_flat_adjacent_layout(
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_self_edge_layout(
   edge : @cgraph.Edge,
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Bool {
@@ -302,13 +302,13 @@ fn maybe_build_self_edge_layout(
 ///|
 priv struct RegularSplineLayoutResult {
   edge_layout : DotLayoutEdge
-  spline_result : EdgeSplineResult
+  spline_result : @routing.EdgeSplineResult
 }
 
 ///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
-fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
+fn ordered_vnodes_for_edge(base : @routing.EdgeRouteBase) -> Array[String] {
   if base.tail_rank <= base.head_rank {
     base.vnodes.copy()
   } else {
@@ -327,8 +327,8 @@ fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
 /// Do not change behavior without updating fixtures/tests.
 fn recover_pathplan_slack(
   edge : @cgraph.Edge,
-  base : EdgeRouteBase,
-  spline_result : EdgeSplineResult,
+  base : @routing.EdgeRouteBase,
+  spline_result : @routing.EdgeSplineResult,
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -430,7 +430,7 @@ fn recover_pathplan_slack(
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_spline_layout(
   edge : @cgraph.Edge,
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   recovered_slack_keys : Map[String, Bool],
 ) -> RegularSplineLayoutResult {
@@ -553,7 +553,7 @@ fn apply_regular_parallel_reuse_layouts(
 fn build_regular_layouts_for_edge(
   edge_id : Int,
   edge : @cgraph.Edge,
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Unit {

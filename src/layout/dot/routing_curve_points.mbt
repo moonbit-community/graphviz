@@ -43,7 +43,7 @@ fn sameport_path_port_box(
 /// Graphviz parity: pathplan polyline aligned to refs/graphviz/lib/pathplan/* + lib/common/routespl.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_pathplan_route_points(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   ranks : Map[String, Int],
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
@@ -174,7 +174,7 @@ fn compute_pathplan_route_points(
 /// Do not change behavior without updating fixtures/tests.
 fn adjust_route_points(
   points : Array[@geom.Point],
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   head_port_rect : @geom.Rect?,
   has_explicit_port : Bool,
   using_pathplan : Bool,
@@ -264,7 +264,7 @@ priv struct CurveOffsetParams {
 /// Do not change behavior without updating fixtures/tests.
 fn compute_curve_offset(
   edge : @cgraph.Edge,
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   head_port_metrics : HeadPortMetrics,
   label_width_pt : Double,
   nodesep_pt : Double,
@@ -437,7 +437,7 @@ fn pathplan_segment_raw_bezier(
 
 ///|
 fn limit_pathplan_segment_boxes(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   pathplan_segments : Array[@routesplines.PathplanSegment],
 ) -> Array[@routesplines.PathplanSegment] {
   let (tail_slope_for, head_slope_for) =
@@ -517,7 +517,7 @@ fn segmented_pathplan_raw_bezier(
 
 ///|
 fn build_multi_point_routed_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   adjusted : Array[@geom.Point],
   using_pathplan : Bool,
   force_segmented : Bool,
@@ -570,7 +570,7 @@ fn build_multi_point_routed_spline(
 
 ///|
 fn finalize_pathplan_boxes_and_segments(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_boxes : Array[@geom.Rect],
   pathplan_points : Array[@geom.Point],

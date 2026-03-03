@@ -76,7 +76,7 @@ fn build_edge_route_base(
   enable_complex_tuning : Bool,
   edge_vnodes : Map[String, Array[String]],
   sameport_overrides : SameportOverrides,
-) -> EdgeRouteBase {
+) -> @routing.EdgeRouteBase {
   let order_index = routing_context.order_index
   let parallel_offsets = routing_context.parallel_offsets
   let cluster_bboxes = routing_context.cluster_bboxes

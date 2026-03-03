@@ -111,11 +111,11 @@ fn convert_sides_to_points(tail_side : Int, head_side : Int) -> Int {
 ///|
 fn self_edge_routes_top(
   edges : Array[@cgraph.Edge],
-  base0 : EdgeRouteBase,
+  base0 : @routing.EdgeRouteBase,
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
-) -> Array[SelfEdgeRoute] {
+) -> Array[@routing.SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -163,7 +163,7 @@ fn self_edge_routes_top(
   let mut dy = base0.tail_size.height_pt / 2.0
   let mut ty = min_double(dy, 3.0 * (np.y + dy - tp.y))
   let mut hy = min_double(dy, 3.0 * (np.y + dy - hp.y))
-  let routes : Array[SelfEdgeRoute] = []
+  let routes : Array[@routing.SelfEdgeRoute] = []
   for i in 0..<cnt {
     let edge = edges[i]
     dy = dy + stepy
@@ -195,11 +195,11 @@ fn self_edge_routes_top(
 ///|
 fn self_edge_routes_bottom(
   edges : Array[@cgraph.Edge],
-  base0 : EdgeRouteBase,
+  base0 : @routing.EdgeRouteBase,
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
-) -> Array[SelfEdgeRoute] {
+) -> Array[@routing.SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -215,7 +215,7 @@ fn self_edge_routes_bottom(
   let mut dy = base0.tail_size.height_pt / 2.0
   let mut ty = min_double(dy, 3.0 * (tp.y + dy - np.y))
   let mut hy = min_double(dy, 3.0 * (hp.y + dy - np.y))
-  let routes : Array[SelfEdgeRoute] = []
+  let routes : Array[@routing.SelfEdgeRoute] = []
   for i in 0..<cnt {
     let edge = edges[i]
     dy = dy + stepy
@@ -249,10 +249,10 @@ fn self_edge_routes_bottom(
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_routes(
   edges : Array[@cgraph.Edge],
-  bases : Array[EdgeRouteBase],
+  bases : Array[@routing.EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-) -> Array[SelfEdgeRoute] {
+) -> Array[@routing.SelfEdgeRoute] {
   if edges.length() == 0 {
     return []
   }
@@ -330,7 +330,7 @@ fn build_self_edge_routes(
     let mut dy = 0.0
     let mut tx = min_double(dx, 3.0 * (np.x + dx - tp.x))
     let mut hx = min_double(dx, 3.0 * (np.x + dx - hp.x))
-    let routes : Array[SelfEdgeRoute] = []
+    let routes : Array[@routing.SelfEdgeRoute] = []
     for i in 0..<cnt {
       let edge = edges[i]
       dx = dx + stepx
@@ -379,7 +379,7 @@ fn build_self_edge_routes(
       let mut dy = 0.0
       let mut tx = min_double(dx, 3.0 * (tp.x + dx - np.x))
       let mut hx = min_double(dx, 3.0 * (hp.x + dx - np.x))
-      let routes : Array[SelfEdgeRoute] = []
+      let routes : Array[@routing.SelfEdgeRoute] = []
       for i in 0..<cnt {
         let edge = edges[i]
         dx = dx + stepx

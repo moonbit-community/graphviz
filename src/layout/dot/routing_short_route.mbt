@@ -152,7 +152,7 @@ fn short_route_detour_context(
 
 ///|
 fn short_route_detour_context_for_base(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   using_pathplan : Bool,
   has_explicit_port : Bool,
   label_width_pt : Double,
@@ -178,7 +178,7 @@ fn short_route_detour_context_for_base(
 
 ///|
 fn flat_detour_lookup_context(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   ranks : Map[String, Int],
@@ -608,7 +608,7 @@ fn prefer_linear_for_flat_line(
 
 ///|
 fn build_points_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   points : Array[@geom.Point],
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
@@ -667,7 +667,7 @@ fn pathplan_line_points_or_endpoints(
 
 ///|
 fn build_pathplan_points_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   pathplan_points : Array[@geom.Point],
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
@@ -687,7 +687,7 @@ fn build_pathplan_points_spline(
 
 ///|
 fn build_line_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   line_start : @geom.Point,
   line_end : @geom.Point,
   tail_slope_line : @geom.Point,
@@ -726,7 +726,7 @@ fn build_line_spline(
 }
 
 fn build_short_route_line_or_pathplan_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_points : Array[@geom.Point],
   line_start : @geom.Point,
@@ -772,7 +772,7 @@ fn build_short_route_line_or_pathplan_spline(
 
 ///|
 fn build_flat_detour_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   detour : FlatDetourResult,
   using_pathplan : Bool,
   tail_slope_line : @geom.Point,
@@ -821,7 +821,7 @@ fn build_flat_detour_spline(
 
 ///|
 fn detour_spline_if_any(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   needs_record_detour : Bool,
   flat_detour : FlatDetourResult?,
   using_pathplan : Bool,
@@ -875,7 +875,7 @@ fn detour_spline_if_any(
 
 ///|
 fn resolve_short_route_detour(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   detour_context : ShortRouteDetourContext,
   flat_detour_lookup : FlatDetourLookupContext,
   line_start : @geom.Point,
@@ -917,7 +917,7 @@ fn resolve_short_route_detour(
 
 ///|
 fn resolve_short_route_detour_for_base(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   using_pathplan : Bool,
   has_explicit_port : Bool,
   label_width_pt : Double,
@@ -952,7 +952,7 @@ fn resolve_short_route_detour_for_base(
 
 ///|
 fn build_short_route_fallback_spline(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_points : Array[@geom.Point],
   line_start : @geom.Point,
@@ -995,7 +995,7 @@ fn build_short_route_fallback_spline(
 
 ///|
 fn short_route_build_context(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   ranks : Map[String, Int],
@@ -1111,7 +1111,7 @@ fn short_route_spec_for_anchor_or_pathplan_points(
 
 ///|
 fn build_short_route_spline_with_detour(
-  base : EdgeRouteBase,
+  base : @routing.EdgeRouteBase,
   short_route_context : ShortRouteBuildContext,
   short_route_spec : ShortRouteBuildSpec,
 ) -> PointsSplineResult {
