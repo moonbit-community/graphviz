@@ -1616,10 +1616,7 @@ fn collect_sameport_overrides(
 
 ///|
 fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
-  match edge.get_attr(name) {
-    Some(value) => value != ""
-    None => false
-  }
+  edge_attr_or_empty(edge, name) != ""
 }
 
 ///|
