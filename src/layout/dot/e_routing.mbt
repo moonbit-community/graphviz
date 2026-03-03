@@ -3090,6 +3090,40 @@ fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.P
 }
 
 ///|
+fn pathplan_segment_raw_bezier(
+  segment : @routesplines.PathplanSegment,
+  seg_idx : Int,
+  segment_count : Int,
+  tail_slope_for : @geom.Point,
+  head_slope_for : @geom.Point,
+  join_dir : @geom.Point,
+  force_segmented : Bool,
+  trim_points : Bool,
+) -> Array[@geom.Point] {
+  let segment_points =
+    if trim_points {
+      trimmed_pathplan_segment_points(segment.points)
+    } else {
+      segment.points
+    }
+  let (seg_tail_slope, seg_head_slope) =
+    pathplan_segment_slopes(
+      seg_idx,
+      segment_count,
+      tail_slope_for,
+      head_slope_for,
+      join_dir,
+    )
+  @edge_spline.edge_spline_raw_for_points(
+    segment_points,
+    seg_tail_slope,
+    seg_head_slope,
+    force_segmented,
+    route_barriers=segment.barriers,
+  )
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3521,22 +3555,16 @@ fn build_edge_spline(
             let mut seg_idx = 0
             while seg_idx < pathplan_segments.length() {
               let segment = pathplan_segments[seg_idx]
-              let segment_points = trimmed_pathplan_segment_points(segment.points)
-              let (seg_tail_slope, seg_head_slope) =
-                pathplan_segment_slopes(
+              let seg_raw =
+                pathplan_segment_raw_bezier(
+                  segment,
                   seg_idx,
                   pathplan_segments.length(),
                   tail_slope_for,
                   head_slope_for,
                   join_dir,
-                )
-              let seg_raw =
-                @edge_spline.edge_spline_raw_for_points(
-                  segment_points,
-                  seg_tail_slope,
-                  seg_head_slope,
                   edge_force_segmented,
-                  route_barriers=segment.barriers,
+                  true,
                 )
               if seg_raw.length() > 0 {
                 if segmented_raw.length() > 0 {
@@ -3824,21 +3852,16 @@ fn build_edge_spline(
     let mut seg_idx = 0
     while seg_idx < pathplan_segments.length() {
       let segment = pathplan_segments[seg_idx]
-      let (seg_tail_slope, seg_head_slope) =
-        pathplan_segment_slopes(
+      let segment_raw =
+        pathplan_segment_raw_bezier(
+          segment,
           seg_idx,
           pathplan_segments.length(),
           tail_slope_for,
           head_slope_for,
           join_dir,
-        )
-      let segment_raw =
-        @edge_spline.edge_spline_raw_for_points(
-          segment.points,
-          seg_tail_slope,
-          seg_head_slope,
           false,
-          route_barriers=segment.barriers,
+          false,
         )
       let limited_boxes =
         @routesplines.limit_boxes_for_spline(
