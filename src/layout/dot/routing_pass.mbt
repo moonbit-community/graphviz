@@ -106,80 +106,6 @@ fn build_flat_adjacent_layout(
 }
 
 ///|
-/// Graphviz parity: self-edge groups share generated loop routes in the same pass.
-/// Do not change behavior without updating fixtures/tests.
-fn ensure_self_edge_routes(
-  graph : @cgraph.Graph,
-  edge : @cgraph.Edge,
-  self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, EdgeRouteBase],
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  record_orientation : RecordOrientation,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  label_ports_raw : Map[String, Map[String, RecordPort]],
-  routing_context : RoutingContext,
-  rankdir : RankDir,
-  layout_rankdir : RankDir,
-  enable_complex_tuning : Bool,
-  edge_vnodes : Map[String, Array[String]],
-  sameport_overrides : SameportOverrides,
-  nodesep_pt : Double,
-  rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, SelfEdgeRoute],
-) -> Unit {
-  let edge_id = edge.id()
-  if self_edge_routes.get(edge_id) is Some(_) {
-    return ()
-  }
-  let key = @routing.self_edge_group_key(edge)
-  match self_edge_groups.get(key) {
-    Some(group_edges) => {
-      let group_bases : Array[EdgeRouteBase] = []
-      for grouped in group_edges {
-        let gid = grouped.id()
-        let gbase = match base_cache.get(gid) {
-          Some(value) => value
-          None => {
-            let value = build_edge_route_base(
-              graph.kind(),
-              grouped,
-              ranks,
-              sizes,
-              positions,
-              record_orientation,
-              label_ports_map,
-              label_ports_raw,
-              routing_context,
-              rankdir,
-              layout_rankdir,
-              enable_complex_tuning,
-              edge_vnodes,
-              sameport_overrides,
-            )
-            base_cache[gid] = value
-            value
-          }
-        }
-        group_bases.push(gbase)
-      }
-      let group_routes =
-        build_self_edge_routes(
-          group_edges,
-          group_bases,
-          nodesep_pt,
-          rank_y,
-        )
-      for i in 0..<group_edges.length() {
-        self_edge_routes[group_edges[i].id()] = group_routes[i]
-      }
-    }
-    None => ()
-  }
-}
-
-///|
 /// Graphviz parity: routed edge output remains in original edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
 fn collect_edges_in_input_order(
@@ -522,26 +448,31 @@ fn maybe_build_self_edge_layout(
     return false
   }
   let edge_id = edge.id()
-  ensure_self_edge_routes(
-    graph,
+  @routing.ensure_self_edge_routes(
     edge,
     self_edge_groups,
     base_cache,
-    ranks,
-    sizes,
-    positions,
-    record_orientation,
-    label_ports_map,
-    label_ports_raw,
-    routing_context,
-    rankdir,
-    layout_rankdir,
-    enable_complex_tuning,
-    edge_vnodes,
-    sameport_overrides,
     nodesep_pt,
     rank_y,
     self_edge_routes,
+    (grouped) =>
+      build_edge_route_base(
+        graph.kind(),
+        grouped,
+        ranks,
+        sizes,
+        positions,
+        record_orientation,
+        label_ports_map,
+        label_ports_raw,
+        routing_context,
+        rankdir,
+        layout_rankdir,
+        enable_complex_tuning,
+        edge_vnodes,
+        sameport_overrides,
+      ),
+    build_self_edge_routes,
   )
   match self_edge_routes.get(edge_id) {
     Some(route) => {
