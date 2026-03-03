@@ -926,6 +926,52 @@ fn build_line_spline(
 }
 
 ///|
+fn build_short_route_line_or_pathplan_spline(
+  base : EdgeRouteBase,
+  using_pathplan : Bool,
+  pathplan_points : Array[@geom.Point],
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  force_segmented : Bool,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+  curve_offset : Double,
+  curve_skew : Double,
+  prefer_linear : Bool,
+) -> PointsSplineResult {
+  if using_pathplan {
+    build_pathplan_points_spline(
+      base,
+      pathplan_points,
+      tail_slope_line,
+      head_slope_line,
+      force_segmented,
+      route_barriers,
+    )
+  } else {
+    {
+      spline:
+        build_line_spline(
+          base,
+          line_start,
+          line_end,
+          tail_slope_line,
+          head_slope_line,
+          tail_clip_enabled,
+          head_clip_enabled,
+          curve_offset,
+          curve_skew,
+          prefer_linear,
+        ),
+      raw_bezier: [],
+    }
+  }
+}
+
+///|
 fn build_flat_detour_spline(
   base : EdgeRouteBase,
   detour : FlatDetourResult,
@@ -3713,47 +3759,42 @@ fn build_edge_spline(
             raw_bezier = result.raw_bezier
             result.spline
           } else {
-            if using_pathplan {
-              let line_points_spline =
-                build_pathplan_points_spline(
-                  base,
-                  adjusted,
-                  tail_slope_line,
-                  head_slope_line,
-                  force_segmented,
-                  route_barriers,
-                )
-              raw_bezier = line_points_spline.raw_bezier
-              line_points_spline.spline
-            } else {
-              let (line_start, line_end) =
-                bottom_single_arrow_line_endpoints(
-                  prefer_linear_flat_bottom_single_arrow,
-                  adjusted[0],
-                  adjusted[adjusted.length() - 1],
-                  base.tail_clip_center,
-                  base.head_clip_center,
-                  base.tail_clip_size,
-                  base.head_clip_size,
-                )
-              build_line_spline(
+            let (line_start, line_end) =
+              bottom_single_arrow_line_endpoints(
+                prefer_linear_flat_bottom_single_arrow,
+                adjusted[0],
+                adjusted[adjusted.length() - 1],
+                base.tail_clip_center,
+                base.head_clip_center,
+                base.tail_clip_size,
+                base.head_clip_size,
+              )
+            let prefer_linear_flat_line =
+              prefer_linear_for_flat_line(
+                prefer_linear_flat_invis,
+                flat_no_arrow_candidate,
+                flat_detour is Some(_),
+                prefer_linear_flat_bottom_single_arrow,
+              )
+            let short_route_spline =
+              build_short_route_line_or_pathplan_spline(
                 base,
+                using_pathplan,
+                adjusted,
                 line_start,
                 line_end,
                 tail_slope_line,
                 head_slope_line,
+                force_segmented,
+                route_barriers,
                 true,
                 true,
                 curve_offset,
                 curve_skew,
-                prefer_linear_for_flat_line(
-                  prefer_linear_flat_invis,
-                  flat_no_arrow_candidate,
-                  flat_detour is Some(_),
-                  prefer_linear_flat_bottom_single_arrow,
-                ),
+                prefer_linear_flat_line,
               )
-            }
+            raw_bezier = short_route_spline.raw_bezier
+            short_route_spline.spline
           }
         } else {
           let (tail_slope_for, head_slope_for) =
@@ -3894,39 +3935,34 @@ fn build_edge_spline(
               base.tail_clip_size,
               base.head_clip_size,
             )
-          if using_pathplan {
-            let line_points =
-              pathplan_line_points_or_endpoints(points, line_start, line_end)
-            let line_points_spline =
-              build_pathplan_points_spline(
-                base,
-                line_points,
-                tail_slope_line,
-                head_slope_line,
-                force_segmented,
-                route_barriers,
-              )
-            raw_bezier = line_points_spline.raw_bezier
-            line_points_spline.spline
-          } else {
-            build_line_spline(
+          let line_points =
+            pathplan_line_points_or_endpoints(points, line_start, line_end)
+          let prefer_linear_flat_line =
+            prefer_linear_for_flat_line(
+              prefer_linear_flat_invis,
+              flat_no_arrow_candidate,
+              flat_detour is Some(_),
+              prefer_linear_flat_bottom_single_arrow,
+            )
+          let short_route_spline =
+            build_short_route_line_or_pathplan_spline(
               base,
+              using_pathplan,
+              line_points,
               line_start,
               line_end,
               tail_slope_line,
               head_slope_line,
+              force_segmented,
+              route_barriers,
               tail_clip_enabled,
               head_clip_enabled,
               curve_offset,
               curve_skew,
-              prefer_linear_for_flat_line(
-                prefer_linear_flat_invis,
-                flat_no_arrow_candidate,
-                flat_detour is Some(_),
-                prefer_linear_flat_bottom_single_arrow,
-              ),
+              prefer_linear_flat_line,
             )
-          }
+          raw_bezier = short_route_spline.raw_bezier
+          short_route_spline.spline
         }
       }
       routed_spline
