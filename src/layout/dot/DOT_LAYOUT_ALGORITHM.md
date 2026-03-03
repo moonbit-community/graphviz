@@ -423,6 +423,7 @@ Main files:
 - `src/layout/dot/routing/route_prepass.mbt`
 - `src/layout/dot/routing/self_edge_cache.mbt`
 - `src/layout/dot/routing/edge_order.mbt`
+- `src/layout/dot/routing/bezier_layout_spline.mbt`
 - `src/layout/dot/routing/pathplan_recover.mbt`
 - `src/layout/dot/routing/spline_core.mbt`
 - `src/layout/dot/routing_clip_shape.mbt`

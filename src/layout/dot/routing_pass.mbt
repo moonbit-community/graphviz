@@ -12,29 +12,20 @@ fn build_self_edge_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let spline =
-    @routing.build_bezier_points_spline(
+  let bezier_layout_result =
+    @routing.build_bezier_layout_spline_result(
       base,
-      route.points,
-      base.tail_clip_enabled,
-      base.head_clip_enabled,
-      false,
-      false,
-    )
-  let spline_result =
-    @routing.edge_spline_result_for_bezier(
-      spline,
       route.points,
       0.0,
       false,
+      false,
+      false,
     )
-  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
-  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   let mut edge_layout =
     build_edge_layout(
       base,
-      final_spline,
-      layout_spline_result,
+      bezier_layout_result.final_spline,
+      bezier_layout_result.layout_spline_result,
       ranks,
       rank_y,
       vnode_info,
@@ -73,28 +64,19 @@ fn build_flat_adjacent_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let spline =
-    @routing.build_bezier_points_spline(
+  let bezier_layout_result =
+    @routing.build_bezier_layout_spline_result(
       base,
-      bezier,
-      base.tail_clip_enabled,
-      base.head_clip_enabled,
-      base.swap_ends,
-      base.swap_ends,
-    )
-  let spline_result =
-    @routing.edge_spline_result_for_bezier(
-      spline,
       bezier,
       0.0,
       false,
+      base.swap_ends,
+      base.swap_ends,
     )
-  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
-  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
-    final_spline,
-    layout_spline_result,
+    bezier_layout_result.final_spline,
+    bezier_layout_result.layout_spline_result,
     ranks,
     rank_y,
     vnode_info,
@@ -329,29 +311,19 @@ fn build_regular_bezier_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let spline =
-    @routing.build_bezier_points_spline(
+  let bezier_layout_result =
+    @routing.build_bezier_layout_spline_result(
       base,
-      shared_spline_result.raw_bezier,
-      base.tail_clip_enabled,
-      base.head_clip_enabled,
-      base.swap_ends,
-      base.swap_ends,
-    )
-  let sibling_spline_result =
-    @routing.edge_spline_result_for_bezier(
-      spline,
       shared_spline_result.raw_bezier,
       shared_spline_result.label_pad_boost,
       shared_spline_result.apply_dotted_adjustment,
+      base.swap_ends,
+      base.swap_ends,
     )
-  let layout_spline_result =
-    @routing.rebuild_spline_for_render(base, sibling_spline_result)
-  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
-    final_spline,
-    layout_spline_result,
+    bezier_layout_result.final_spline,
+    bezier_layout_result.layout_spline_result,
     ranks,
     rank_y,
     vnode_info,
