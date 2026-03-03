@@ -248,10 +248,16 @@ fn apply_regular_parallel_reuse_layouts(
       None => continue
     }
     let group_layout =
-      build_regular_bezier_layout(
+      @routing.build_regular_bezier_layout(
         group_base,
         regular_layout.spline_result,
-        context,
+        (route_base, spline, spline_result) =>
+          build_edge_layout(
+            route_base,
+            spline,
+            spline_result,
+            context,
+          ),
       )
     edges_out_by_id[group_edge_id] = group_layout
   }

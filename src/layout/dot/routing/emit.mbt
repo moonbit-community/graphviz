@@ -4,6 +4,9 @@ priv struct BezierLayoutSplineResult {
 }
 
 ///|
+type BuildEdgeLayoutFn = (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
+
+///|
 /// Graphviz parity: bezier route rendering follows
 /// build_bezier_points_spline -> edge_spline_result_for_bezier ->
 /// rebuild_spline_for_render -> finalize_edge_spline.
@@ -17,7 +20,7 @@ fn build_bezier_layout_spline_result(
   head_swap : Bool,
 ) -> BezierLayoutSplineResult {
   let spline =
-    @routing.build_bezier_points_spline(
+    build_bezier_points_spline(
       base,
       raw_bezier,
       base.tail_clip_enabled,
@@ -26,16 +29,16 @@ fn build_bezier_layout_spline_result(
       head_swap,
     )
   let spline_result =
-    @routing.edge_spline_result_for_bezier(
+    edge_spline_result_for_bezier(
       spline,
       raw_bezier,
       label_pad_boost,
       apply_dotted_adjustment,
     )
   let layout_spline_result =
-    @routing.rebuild_spline_for_render(base, spline_result)
+    rebuild_spline_for_render(base, spline_result)
   let final_spline =
-    @routing.finalize_edge_spline(base, layout_spline_result)
+    finalize_edge_spline(base, layout_spline_result)
   { final_spline, layout_spline_result }
 }
 
@@ -47,7 +50,7 @@ fn build_bezier_layout_edge(
   apply_dotted_adjustment : Bool,
   tail_swap : Bool,
   head_swap : Bool,
-  context : OrderedEdgeRoutingContext,
+  build_edge_layout_fn : BuildEdgeLayoutFn,
 ) -> DotLayoutEdge {
   let bezier_layout_result =
     build_bezier_layout_spline_result(
@@ -58,21 +61,20 @@ fn build_bezier_layout_edge(
       tail_swap,
       head_swap,
     )
-  build_edge_layout(
+  build_edge_layout_fn(
     base,
     bezier_layout_result.final_spline,
     bezier_layout_result.layout_spline_result,
-    context,
   )
 }
 
 ///|
 /// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
 /// Do not change behavior without updating fixtures/tests.
-fn build_self_edge_layout(
+pub fn build_self_edge_layout(
   base : EdgeRouteBase,
   route : SelfEdgeRoute,
-  context : OrderedEdgeRoutingContext,
+  build_edge_layout_fn : BuildEdgeLayoutFn,
 ) -> DotLayoutEdge {
   let mut edge_layout =
     build_bezier_layout_edge(
@@ -82,7 +84,7 @@ fn build_self_edge_layout(
       false,
       false,
       false,
-      context,
+      build_edge_layout_fn,
     )
   match route.label_pos {
     Some(pos) =>
@@ -103,10 +105,10 @@ fn build_self_edge_layout(
 /// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
-fn build_flat_adjacent_layout(
+pub fn build_flat_adjacent_layout(
   base : EdgeRouteBase,
   bezier : Array[@geom.Point],
-  context : OrderedEdgeRoutingContext,
+  build_edge_layout_fn : BuildEdgeLayoutFn,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
@@ -115,16 +117,16 @@ fn build_flat_adjacent_layout(
     false,
     base.swap_ends,
     base.swap_ends,
-    context,
+    build_edge_layout_fn,
   )
 }
 
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
-fn build_regular_bezier_layout(
+pub fn build_regular_bezier_layout(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
-  context : OrderedEdgeRoutingContext,
+  build_edge_layout_fn : BuildEdgeLayoutFn,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
@@ -133,6 +135,6 @@ fn build_regular_bezier_layout(
     shared_spline_result.apply_dotted_adjustment,
     base.swap_ends,
     base.swap_ends,
-    context,
+    build_edge_layout_fn,
   )
 }

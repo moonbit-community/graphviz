@@ -153,10 +153,16 @@ fn maybe_build_flat_adjacent_layout(
   match context.prepass.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
       let edge_layout =
-        build_flat_adjacent_layout(
+        @routing.build_flat_adjacent_layout(
           base,
           bezier,
-          context,
+          (route_base, spline, spline_result) =>
+            build_edge_layout(
+              route_base,
+              spline,
+              spline_result,
+              context,
+            ),
         )
       state.edges_out_by_id[edge_id] = edge_layout
       true
@@ -189,10 +195,16 @@ fn maybe_build_self_edge_layout(
   match route {
     Some(route) => {
       let edge_layout =
-        build_self_edge_layout(
+        @routing.build_self_edge_layout(
           base,
           route,
-          context,
+          (route_base, spline, spline_result) =>
+            build_edge_layout(
+              route_base,
+              spline,
+              spline_result,
+              context,
+            ),
         )
       state.edges_out_by_id[edge_id] = edge_layout
       true
