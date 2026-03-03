@@ -548,15 +548,15 @@ fn build_edge_spline(
 ) -> @routing.EdgeSplineResult {
   match splines {
     SplinesMode::None | SplinesMode::Polyline =>
-      @routing.edge_spline_result_for_bezier(
-        @routing.edge_polyline_mode_spline(base, false),
+      edge_spline_result_for_bezier(
+        edge_polyline_mode_spline(base, false),
         [],
         0.0,
         false,
       )
     SplinesMode::Ortho =>
-      @routing.edge_spline_result_for_bezier(
-        @routing.edge_polyline_mode_spline(base, true),
+      edge_spline_result_for_bezier(
+        edge_polyline_mode_spline(base, true),
         [],
         0.0,
         false,
@@ -1132,7 +1132,7 @@ fn build_multi_point_routed_spline(
     }
   if segmented_raw.length() > 0 {
     let spline =
-      @routing.build_bezier_points_spline(
+      build_bezier_points_spline(
         base,
         segmented_raw,
         tail_clip_enabled,

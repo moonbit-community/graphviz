@@ -1,10 +1,10 @@
 ///|
-pub fn edge_spline_result_for_bezier(
+fn edge_spline_result_for_bezier(
   spline : @geom.Spline,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
-) -> EdgeSplineResult {
+) -> @routing.EdgeSplineResult {
   {
     spline,
     label_pad_boost,
@@ -18,8 +18,8 @@ pub fn edge_spline_result_for_bezier(
 }
 
 ///|
-pub fn edge_polyline_mode_spline(
-  base : EdgeRouteBase,
+fn edge_polyline_mode_spline(
+  base : @routing.EdgeRouteBase,
   is_ortho : Bool,
 ) -> @geom.Spline {
   // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
@@ -47,8 +47,8 @@ pub fn edge_polyline_mode_spline(
 }
 
 ///|
-pub fn build_bezier_points_spline(
-  base : EdgeRouteBase,
+fn build_bezier_points_spline(
+  base : @routing.EdgeRouteBase,
   bezier_points : Array[@geom.Point],
   tail_clip_enabled : Bool,
   head_clip_enabled : Bool,
@@ -78,9 +78,9 @@ pub fn build_bezier_points_spline(
 ///|
 /// Graphviz parity: spline finalization aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-pub fn finalize_edge_spline(
-  base : EdgeRouteBase,
-  result : EdgeSplineResult,
+fn finalize_edge_spline(
+  base : @routing.EdgeRouteBase,
+  result : @routing.EdgeSplineResult,
 ) -> @geom.Spline {
   let mut spline = result.spline
   if base.swap_ends {
@@ -118,7 +118,7 @@ priv struct EdgeRenderClipFlags {
 }
 
 ///|
-fn edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
+fn spline_edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
   match edge.get_attr(name) {
     Some(value) => value != ""
     None => false
@@ -130,8 +130,8 @@ fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
 ) -> EdgeSameportDirectFlags {
-  let samehead_direct = edge_attr_non_empty(edge, "samehead")
-  let sametail_direct = edge_attr_non_empty(edge, "sametail")
+  let samehead_direct = spline_edge_attr_non_empty(edge, "samehead")
+  let sametail_direct = spline_edge_attr_non_empty(edge, "sametail")
   if swap_ends {
     { tail_direct: samehead_direct, head_direct: sametail_direct }
   } else {
@@ -140,7 +140,9 @@ fn edge_sameport_direct_flags(
 }
 
 ///|
-fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
+fn edge_render_clip_flags(
+  base : @routing.EdgeRouteBase,
+) -> EdgeRenderClipFlags {
   let sameport_direct_flags =
     edge_sameport_direct_flags(base.edge, base.swap_ends)
   let tail_clip_enabled =
@@ -159,10 +161,10 @@ fn edge_render_clip_flags(base : EdgeRouteBase) -> EdgeRenderClipFlags {
 }
 
 ///|
-pub fn rebuild_spline_for_render(
-  base : EdgeRouteBase,
-  spline_result : EdgeSplineResult,
-) -> EdgeSplineResult {
+fn rebuild_spline_for_render(
+  base : @routing.EdgeRouteBase,
+  spline_result : @routing.EdgeSplineResult,
+) -> @routing.EdgeSplineResult {
   let edge_clip_flags = edge_render_clip_flags(base)
   if edge_clip_flags.tail_clip_enabled == base.tail_clip_enabled &&
     edge_clip_flags.head_clip_enabled == base.head_clip_enabled {

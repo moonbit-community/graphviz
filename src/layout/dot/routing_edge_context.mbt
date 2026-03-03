@@ -456,8 +456,8 @@ fn build_regular_spline_layout(
     input.routing_context,
     input.enable_complex_tuning,
   )
-  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
-  let spline = @routing.finalize_edge_spline(base, layout_spline_result)
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let spline = finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack(
     edge,
     base,
@@ -948,7 +948,7 @@ fn build_bezier_layout_spline_result(
   head_swap : Bool,
 ) -> BezierLayoutSplineResult {
   let spline =
-    @routing.build_bezier_points_spline(
+    build_bezier_points_spline(
       base,
       raw_bezier,
       base.tail_clip_enabled,
@@ -957,14 +957,14 @@ fn build_bezier_layout_spline_result(
       head_swap,
     )
   let spline_result =
-    @routing.edge_spline_result_for_bezier(
+    edge_spline_result_for_bezier(
       spline,
       raw_bezier,
       label_pad_boost,
       apply_dotted_adjustment,
     )
-  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
-  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
+  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let final_spline = finalize_edge_spline(base, layout_spline_result)
   { final_spline, layout_spline_result }
 }
 
