@@ -214,24 +214,20 @@ fn build_cluster_graph_order(
   }
   let cluster_index = build_local_cluster_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
+  for name in cluster_names {
+    let _ =
+      cluster_depth_for_order_inner(
+        name,
+        cluster_parents_hint,
+        cluster_parents,
+        cluster_depth,
+        Map::new(),
+      )
+  }
   if cluster_names.length() > 1 {
     cluster_names.sort_by((a, b) => {
-      let a_depth =
-        cluster_depth_for_order_inner(
-          a,
-          cluster_parents_hint,
-          cluster_parents,
-          cluster_depth,
-          Map::new(),
-        )
-      let b_depth =
-        cluster_depth_for_order_inner(
-          b,
-          cluster_parents_hint,
-          cluster_parents,
-          cluster_depth,
-          Map::new(),
-        )
+      let a_depth = cluster_depth.get(a).unwrap_or_default()
+      let b_depth = cluster_depth.get(b).unwrap_or_default()
       if a_depth < b_depth {
         -1
       } else if a_depth > b_depth {
