@@ -364,6 +364,140 @@ pub fn filter_component_flat_constraints(
   component_flat_constraints
 }
 
+///|
+pub(all) struct RootComponentProjection {
+  order_groups_for_mincross : Map[Int, Array[String]]
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  port_order_positions : Map[String, Double]
+  preferred_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_flat_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: component-local reorder inputs are filtered from root data
+/// so each mincross call only sees one connected component projection.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_component_projection(
+  component_nodes : Array[String],
+  component_set : Map[String, Bool],
+  order_rank_keys_for_mincross : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_edges_out_mincross : Array[@cgraph.Edge],
+  order_edge_tail_out_mincross : Array[String],
+  order_edge_head_out_mincross : Array[String],
+  order_edge_tail_port_x_mincross : Array[Double],
+  order_edge_head_port_x_mincross : Array[Double],
+  order_edge_tail_port_order_mincross : Array[Double],
+  order_edge_head_port_order_mincross : Array[Double],
+  parents : Map[String, Array[String]],
+  children : Map[String, Array[String]],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  port_order_positions : Map[String, Double],
+  preferred_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  order_flat_constraints : Map[String, Bool],
+) -> RootComponentProjection {
+  let component_groups =
+    filter_component_rank_groups(
+      order_rank_keys_for_mincross,
+      order_groups_for_mincross,
+      component_set,
+    )
+  let component_edges_output =
+    collect_mincross_order_edges(
+      component_set,
+      order_edges_out_mincross,
+      order_edge_tail_out_mincross,
+      order_edge_head_out_mincross,
+      order_edge_tail_port_x_mincross,
+      order_edge_head_port_x_mincross,
+      order_edge_tail_port_order_mincross,
+      order_edge_head_port_order_mincross,
+    )
+  // Graphviz parity: component-local parent/child + Graphviz traversal maps
+  // are all filtered through one component-set projection.
+  let component_parents =
+    filter_component_neighbor_map(
+      component_nodes,
+      component_set,
+      parents,
+    )
+  let component_children =
+    filter_component_neighbor_map(
+      component_nodes,
+      component_set,
+      children,
+    )
+  let component_graphviz_out_neighbors =
+    filter_component_neighbor_map(
+      component_nodes,
+      component_set,
+      graphviz_out_neighbors,
+    )
+  let component_graphviz_in_neighbors =
+    filter_component_neighbor_map(
+      component_nodes,
+      component_set,
+      graphviz_in_neighbors,
+    )
+  // Graphviz parity: component-local node-position hints are passed to
+  // mincross only for nodes belonging to the active connected component.
+  let component_port_order_positions =
+    filter_component_positions(component_set, port_order_positions)
+  let component_preferred_positions =
+    filter_component_positions(component_set, preferred_positions)
+  // Graphviz parity: component-local port-order contributor lists drop
+  // endpoints outside the active connected component before mincross.
+  let component_port_order_contrib =
+    filter_component_port_order_contrib(
+      component_set,
+      port_order_contrib,
+    )
+  // Graphviz parity: component-local flat constraints are forwarded to
+  // mincross only when both endpoints belong to the active component.
+  let component_flat_constraints =
+    filter_component_flat_constraints(
+      component_set,
+      order_flat_constraints,
+    )
+  {
+    order_groups_for_mincross: component_groups,
+    order_edges_out_mincross: component_edges_output.order_edges_out_mincross,
+    order_edge_tail_out_mincross:
+      component_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross:
+      component_edges_output.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross:
+      component_edges_output.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross:
+      component_edges_output.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross:
+      component_edges_output.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross:
+      component_edges_output.order_edge_head_port_order_mincross,
+    parents: component_parents,
+    children: component_children,
+    graphviz_out_neighbors: component_graphviz_out_neighbors,
+    graphviz_in_neighbors: component_graphviz_in_neighbors,
+    port_order_positions: component_port_order_positions,
+    preferred_positions: component_preferred_positions,
+    port_order_contrib: component_port_order_contrib,
+    order_flat_constraints: component_flat_constraints,
+  }
+}
+
 pub fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> Bool {
   for _name, cluster in order_cluster_keys {
     if cluster != "" {
