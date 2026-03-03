@@ -577,21 +577,17 @@ fn route_edges(
       recovered_slack_keys,
     )
     edges_out_by_id[edge_id] = regular_layout.edge_layout
-    let regular_key = @dot_shared.edge_vnode_key(edge)
-    let group_edges = match regular_parallel_groups.get(regular_key) {
-      Some(value) => value
-      None => continue
-    }
-    if group_edges.length() <= 1 ||
-      group_edges[0].id() != edge_id ||
-      regular_layout.spline_result.raw_bezier.length() == 0 {
+    let sibling_edges =
+      @routing.collect_parallel_reuse_siblings(
+        edge,
+        regular_layout.spline_result.raw_bezier,
+        regular_parallel_groups,
+      )
+    if sibling_edges.length() == 0 {
       continue
     }
-    for group_edge in group_edges {
+    for group_edge in sibling_edges {
       let group_edge_id = group_edge.id()
-      if group_edge_id == edge_id {
-        continue
-      }
       let group_base = match base_cache.get(group_edge_id) {
         Some(value) => value
         None => continue

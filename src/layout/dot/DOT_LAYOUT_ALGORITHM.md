@@ -418,6 +418,7 @@ Main files:
 - `src/layout/dot/routing/self_edge_grouping.mbt`
 - `src/layout/dot/routing/parallel_selection.mbt`
 - `src/layout/dot/routing/parallel_remap.mbt`
+- `src/layout/dot/routing/parallel_reuse.mbt`
 - `src/layout/dot/routing/base_cache.mbt`
 - `src/layout/dot/routing/route_prepass.mbt`
 - `src/layout/dot/routing/self_edge_cache.mbt`
