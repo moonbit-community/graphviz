@@ -447,7 +447,7 @@ fn route_edges(
   enable_complex_tuning : Bool,
 ) -> Array[DotLayoutEdge] {
   let path_adjacency = routing_context.path_adjacency
-  let order_index = routing_context.path_order_index
+  let path_order_index = routing_context.path_order_index
   let self_edge_groups = @routing.collect_self_edge_groups(edges)
   let sameport_overrides = collect_sameport_overrides(
     edges,
@@ -480,37 +480,29 @@ fn route_edges(
       edges,
       build_base_for_edge,
     )
-  let flat_adjacent_simple_beziers =
-    if splines == SplinesMode::Spline {
-      @routing.collect_flat_adjacent_beziers(
-        edges,
-        base_cache,
-        ranks,
-        routing_context.order_index,
-      )
-    } else {
-      Map::new()
-    }
+  let prepass =
+    @routing.build_route_prepass_state(
+      edges,
+      base_cache,
+      splines == SplinesMode::Spline,
+      ranks,
+      routing_context.order_index,
+      path_order_index,
+      positions,
+      vnode_positions,
+      sizes,
+      vnode_info.vnode_sizes,
+      x_groups,
+    )
+  let flat_adjacent_simple_beziers = prepass.flat_adjacent_simple_beziers
+  let path_left_bound = prepass.path_left_bound
+  let path_right_bound = prepass.path_right_bound
+  let ordered_edges = prepass.ordered_edges
+  let recover_edge_id_for_routing = prepass.recover_edge_id_for_routing
+  let regular_parallel_groups = prepass.regular_parallel_groups
   let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   let recovered_slack_keys : Map[String, Bool] = Map::new()
-  let path_bounds = @routesplines.pathplan_bounds(
-    positions,
-    vnode_positions,
-    sizes,
-    vnode_info.vnode_sizes,
-    x_groups,
-  )
-  let path_left_bound = path_bounds.left
-  let path_right_bound = path_bounds.right
-  let ordered_edges =
-    @routing.sorted_edges_for_routing(edges, base_cache, order_index)
-  let regular_recover_plan =
-    @routing.build_regular_recover_routing_plan(ordered_edges, base_cache)
-  let recover_edge_id_for_routing =
-    regular_recover_plan.recover_edge_id_for_routing
-  let regular_parallel_groups =
-    regular_recover_plan.regular_parallel_groups
   for edge in ordered_edges {
     let edge_id = edge.id()
     if edges_out_by_id.get(edge_id) is Some(_) {
