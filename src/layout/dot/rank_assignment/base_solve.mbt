@@ -347,10 +347,7 @@ pub fn compute_ranks_directed_base(
   }
   let default_rank =
     if rep_order.length() > 0 {
-      match rep_ranks.get(rep_order[0]) {
-        Some(value) => value
-        None => 0
-      }
+      rep_ranks.get(rep_order[0]).unwrap_or_default()
     } else {
       0
     }

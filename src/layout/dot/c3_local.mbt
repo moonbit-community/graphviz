@@ -91,14 +91,8 @@ fn compare_by_order_then_name(
   a : String,
   b : String,
 ) -> Int {
-  let a_idx = match order_map.get(a) {
-    Some(value) => value
-    None => 0
-  }
-  let b_idx = match order_map.get(b) {
-    Some(value) => value
-    None => 0
-  }
+  let a_idx = order_map.get(a).unwrap_or_default()
+  let b_idx = order_map.get(b).unwrap_or_default()
   if a_idx < b_idx {
     -1
   } else if a_idx > b_idx {
