@@ -122,18 +122,37 @@ fn build_remincross_inputs(
   // Graphviz parity: ReMincross rematerialization keeps order-edge expansion
   // and order-graph array materialization on one shared context snapshot.
   let materialized_edges =
-    build_materialized_edges(
-      dispatch_context,
-      cluster_order_index,
+    @ordering.build_remincross_materialized_edges(
+      {
+        creation_order: dispatch_context.creation_order,
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        edge_tail_port_x: dispatch_context.edge_tail_port_x,
+        edge_head_port_x: dispatch_context.edge_head_port_x,
+        edge_tail_port_order: dispatch_context.edge_tail_port_order,
+        edge_head_port_order: dispatch_context.edge_head_port_order,
+        ranks: dispatch_context.ranks,
+        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+        order_with_vnodes: dispatch_context.order_with_vnodes,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        order_with_clusters: dispatch_context.order_with_clusters,
+        edges_by_tail: dispatch_context.edges_by_tail,
+        cluster_order_index,
+      },
     )
   let materialized_arrays =
-    build_materialized_arrays(
-      dispatch_context,
-      rem_groups,
-      rem_graph_output.order_graph,
-      rem_graph_output.order_node_map,
-      cluster_order_index,
-      materialized_edges,
+    @ordering.build_remincross_materialized_arrays(
+      {
+        creation_order: dispatch_context.creation_order,
+        rem_groups,
+        rem_graph: rem_graph_output.order_graph,
+        rem_node_map: rem_graph_output.order_node_map,
+        rem_cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        cluster_order_index,
+        root_tail_order_override: remincross_root_tail_order_override_snapshot.val,
+        materialized_edges,
+      },
     )
   let rem_cluster_keys =
     build_remincross_cluster_keys(dispatch_context)
