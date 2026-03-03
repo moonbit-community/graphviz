@@ -493,7 +493,7 @@ fn normalize_external_neighbor_name(
   intercluster_keys : Map[String, String],
   external_anchor_name : String,
 ) -> String {
-  let other_cluster = cluster_key_or_empty(intercluster_keys, other)
+  let other_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
   if other_cluster != "" && other_cluster != cluster &&
     expanded_clusters.get(other_cluster) is None {
     external_anchor_name
@@ -559,7 +559,7 @@ fn append_raw_neighbors_with_external_anchor(
         external_anchor_name,
       )
     if normalized == external_anchor_name {
-      let external_cluster = cluster_key_or_empty(intercluster_keys, other)
+      let external_cluster = @ordering.cluster_key_or_empty(intercluster_keys, other)
       if external_cluster == "" ||
         external_cluster_seen.get(external_cluster) is Some(_) {
         continue

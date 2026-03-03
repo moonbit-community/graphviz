@@ -37,7 +37,7 @@ fn should_skip_cluster_rank_bucket_reorder(
   for _rank, names in cleaned_groups {
     let mut cluster_nodes = 0
     for name in names {
-      if cluster_key_or_empty(cluster_keys, name) != "" {
+      if @ordering.cluster_key_or_empty(cluster_keys, name) != "" {
         cluster_nodes = cluster_nodes + 1
         if cluster_nodes > 1 {
           return false

@@ -133,7 +133,7 @@ fn run_clustered_root_phase(
   let root_tail_order_override : Array[String] = []
   let seen_root_tail : Map[String, Bool] = Map::new()
   for tail in root_reorder_output.root_edge_tail_out {
-    append_creation_name(root_tail_order_override, seen_root_tail, tail)
+    @ordering.append_creation_name(root_tail_order_override, seen_root_tail, tail)
   }
   let root_groups_override = root_rank_order_phase_output.ordered_root
   // Graphviz parity: clustered root phase sets both tail-order and group

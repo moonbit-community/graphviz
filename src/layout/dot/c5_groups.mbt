@@ -587,7 +587,7 @@ fn try_build_special_seed_order(
   let mut root_real_name = ""
   let cluster_real_names : Array[String] = []
   for name in base_real {
-    if cluster_key_or_empty(cluster_keys, name) == "" {
+    if @ordering.cluster_key_or_empty(cluster_keys, name) == "" {
       root_real_count = root_real_count + 1
       root_real_name = name
     } else {

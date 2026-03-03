@@ -201,14 +201,14 @@ fn build_remincross_order_creation(
   let rem_order_creation : Array[String] = []
   let rem_seen : Map[String, Bool] = Map::new()
   for tail_name in creation_order {
-    append_creation_name(
+    @ordering.append_creation_name(
       rem_order_creation,
       rem_seen,
       tail_name,
     )
     let vnodes = rem_vnode_creation.get(tail_name).unwrap_or_default()
     for vnode in vnodes {
-      append_creation_name(
+      @ordering.append_creation_name(
         rem_order_creation,
         rem_seen,
         vnode,
@@ -234,7 +234,7 @@ fn append_missing_creation_order_names(
     seen[name] = true
   }
   for name in rem_order_creation {
-    append_creation_name(rem_nlist_order, seen, name)
+    @ordering.append_creation_name(rem_nlist_order, seen, name)
   }
 }
 

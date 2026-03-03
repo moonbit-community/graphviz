@@ -129,8 +129,8 @@ fn build_flat_rank_constraints(
     let tail = edge_tail[flat_idx]
     let head = edge_head[flat_idx]
     if tail != head {
-      let tail_rank = flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = flat_constraint_rank_or_zero(ranks, head)
+      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
       if tail_rank == head_rank {
         flat_rank_constraints["\{tail}|\{head}"] = true
       }

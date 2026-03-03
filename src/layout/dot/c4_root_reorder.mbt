@@ -206,7 +206,7 @@ fn build_rank_attached_by_skeleton(
       names,
       (name) =>
         if order_cluster_skeleton.get(name) == Some(true) {
-          cluster_key_or_empty(order_cluster_keys, name)
+          @ordering.cluster_key_or_empty(order_cluster_keys, name)
         } else {
           ""
         },
@@ -303,7 +303,7 @@ fn build_attached_by_skeleton(
     if should_skip(name) {
       continue
     }
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -369,17 +369,17 @@ fn build_root_tail_order_seed(
   let tail_order_root : Array[String] = []
   let tail_root_seen : Map[String, Bool] = Map::new()
   for name in nlist_order {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" {
-      let rank = flat_constraint_rank_or_zero(ranks, name)
+      let rank = @ordering.flat_constraint_rank_or_zero(ranks, name)
       let skel = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
-      append_creation_name(
+      @ordering.append_creation_name(
         tail_order_root,
         tail_root_seen,
         skel,
       )
     } else {
-      append_creation_name(
+      @ordering.append_creation_name(
         tail_order_root,
         tail_root_seen,
         name,
@@ -412,7 +412,7 @@ fn build_root_source_first_tail_order(
   let root_tail_seen : Map[String, Bool] = Map::new()
   for name in tail_order_root {
     if root_has_in.get(name) == Some(false) {
-      append_creation_name(
+      @ordering.append_creation_name(
         root_tail_order,
         root_tail_seen,
         name,
@@ -420,7 +420,7 @@ fn build_root_source_first_tail_order(
     }
   }
   for name in tail_order_root {
-    append_creation_name(
+    @ordering.append_creation_name(
       root_tail_order,
       root_tail_seen,
       name,
@@ -478,7 +478,7 @@ fn build_root_nlist_order(
       ranks,
     )
   let root_edge_creation_order =
-    merge_edge_creation_sequences(
+    @ordering.merge_edge_creation_sequences(
       skeleton_edge_creation,
       root_edge_creation,
     )
@@ -526,8 +526,8 @@ fn collect_root_vnodes(
         edge_tail,
         edge_head,
       )
-    let tail_cluster = cluster_key_or_empty(cluster_keys, tail)
-    let head_cluster = cluster_key_or_empty(cluster_keys, head)
+    let tail_cluster = @ordering.cluster_key_or_empty(cluster_keys, tail)
+    let head_cluster = @ordering.cluster_key_or_empty(cluster_keys, head)
     if tail_cluster != head_cluster {
       let vnodes = edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
       for vnode in vnodes {
@@ -582,7 +582,7 @@ fn should_keep_root_reorder_name(
   order_cluster_skeleton : Map[String, Bool],
   root_vnodes : Map[String, Bool],
 ) -> Bool {
-  let cluster = cluster_key_or_empty(order_cluster_keys, name)
+  let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
   let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
   if !is_skeleton && cluster != "" {
     return false
@@ -1307,7 +1307,7 @@ fn build_rank_cluster_bucket_order_map(
   let mut idx = 0
   for name in names {
     if order_cluster_skeleton.get(name) == Some(true) {
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
       if cluster != "" && order_map.get(cluster) is None {
         order_map[cluster] = idx
         idx = idx + 1
@@ -1315,7 +1315,7 @@ fn build_rank_cluster_bucket_order_map(
       continue
     }
     if real_nodes.get(name) is Some(_) {
-      let cluster = cluster_key_or_empty(order_cluster_keys, name)
+      let cluster = @ordering.cluster_key_or_empty(order_cluster_keys, name)
       if cluster == "" && order_map.get("") is None {
         order_map[""] = idx
         idx = idx + 1
@@ -1517,7 +1517,7 @@ fn rebuild_root_override_names(
       )
       continue
     }
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster != "" && skeleton_for_cluster.get(cluster) is Some(_) {
       continue
     }
@@ -1599,7 +1599,7 @@ fn find_cluster_block_bounds(
   let mut first_cluster = -1
   let mut last_cluster = -1
   for i in 0..<names.length() {
-    let cluster = cluster_key_or_empty(cluster_keys, names[i])
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, names[i])
     if cluster != "" {
       if first_cluster < 0 {
         first_cluster = i
@@ -1621,7 +1621,7 @@ fn has_root_node_in_range(
 ) -> Bool {
   let mut i = start_idx
   while i < end_idx {
-    if cluster_key_or_empty(cluster_keys, names[i]) == "" {
+    if @ordering.cluster_key_or_empty(cluster_keys, names[i]) == "" {
       return true
     }
     i = i + 1
@@ -1685,7 +1685,7 @@ fn order_rank_names_by_cluster_buckets(
   let cluster_nodes : Map[String, Array[String]] = Map::new()
   let cluster_seq : Array[String] = []
   for name in names {
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     match cluster_nodes.get(cluster) {
       Some(list) => list.push(name)
       None => {

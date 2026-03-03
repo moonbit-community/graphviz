@@ -98,7 +98,7 @@ fn compute_cluster_metadata(
   let total_nodes = nodes.length()
   for node in nodes {
     let name = node.name()
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -143,7 +143,7 @@ fn compute_cluster_metadata(
   // from cluster member nodes before clustered reorder setup.
   for node in nodes {
     let name = node.name()
-    let cluster = cluster_key_or_empty(cluster_keys, name)
+    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
     if cluster == "" {
       continue
     }
@@ -215,8 +215,8 @@ fn compute_cluster_metadata(
     let tail = edge_tail[edge_idx]
     let head = edge_head[edge_idx]
     if tail != head {
-      let tail_rank = flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = flat_constraint_rank_or_zero(ranks, head)
+      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
       if tail_rank == head_rank {
         flat_constraints["\{tail}|\{head}"] = true
       }

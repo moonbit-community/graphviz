@@ -268,7 +268,7 @@ fn build_ordering_class2_data(
       order_edges_by_tail_root,
     )
   let edge_creation_order =
-    merge_edge_creation_sequences(
+    @ordering.merge_edge_creation_sequences(
       skeleton_edge_creation,
       order_edge_creation,
     )
@@ -279,7 +279,7 @@ fn build_ordering_class2_data(
       let order_creation : Array[String] = []
       let order_seen : Map[String, Bool] = Map::new()
       for name in cluster_skeleton_creation {
-        append_creation_name(
+        @ordering.append_creation_name(
           order_creation,
           order_seen,
           name,
@@ -288,7 +288,7 @@ fn build_ordering_class2_data(
       for tail_name in creation_order {
         // Graphviz parity: each real-node tail emits itself first, followed by
         // its per-tail vnode sequence, while preserving first-seen dedup semantics.
-        append_creation_name(
+        @ordering.append_creation_name(
           order_creation,
           order_seen,
           tail_name,
@@ -298,7 +298,7 @@ fn build_ordering_class2_data(
           None => []
         }
         for vnode in vnodes {
-          append_creation_name(
+          @ordering.append_creation_name(
             order_creation,
             order_seen,
             vnode,
@@ -329,7 +329,7 @@ fn build_ordering_class2_data(
       flat_rank_constraints,
     )
   let nlist_order =
-    adjust_nlist_order_for_flip(
+    @ordering.adjust_nlist_order_for_flip(
       nlist_order_raw,
       graphviz_flip,
       cluster_meta.has_clusters,
