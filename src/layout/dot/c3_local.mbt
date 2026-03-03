@@ -901,12 +901,11 @@ fn seed_local_groups_by_vnode(
     }
     let items : Array[(Double, Int, String)] = []
     for idx, name in names {
-      let base_order = order_index.get(name).unwrap_or(idx)
       let key =
         compute_vnode_interpolation_key(
           name,
           rank,
-          base_order,
+          idx,
           order_index,
           ranks,
           parents,
