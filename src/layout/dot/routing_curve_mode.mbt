@@ -1,4 +1,27 @@
 ///|
+priv struct CurveModeRoutePrep {
+  label_pad_boost : Double
+  label_width_pt : Double
+  has_explicit_port : Bool
+  abs_dx : Double
+  split_label : Bool
+  using_pathplan : Bool
+  pathplan_boxes : Array[@geom.Rect]
+  pathplan_points : Array[@geom.Point]
+  pathplan_segments : Array[@routesplines.PathplanSegment]
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  points : Array[@geom.Point]
+  short_route_context : ShortRouteBuildContext
+}
+
+///|
+priv struct CurveModeSplineBuildResult {
+  spline : @geom.Spline
+  raw_bezier : Array[@geom.Point]
+  apply_dotted_adjustment : Bool
+}
+
+///|
 fn prepare_edge_curve_mode_route(
   base : EdgeRouteBase,
   ranks : Map[String, Int],
