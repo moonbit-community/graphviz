@@ -926,6 +926,35 @@ fn build_line_spline(
 }
 
 ///|
+fn build_bezier_points_spline(
+  base : EdgeRouteBase,
+  bezier_points : Array[@geom.Point],
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+  clip_swapped : Bool,
+  arrow_swapped : Bool,
+) -> @geom.Spline {
+  @edge_spline.edge_spline_for_bezier_points(
+    base.edge,
+    bezier_points,
+    base.tail_clip_center,
+    base.head_clip_center,
+    base.tail_clip_size,
+    base.head_clip_size,
+    base.route_include_tail,
+    base.route_include_head,
+    tail_clip_enabled=tail_clip_enabled,
+    head_clip_enabled=head_clip_enabled,
+    arrow_len_override=base.arrow_len_override,
+    tail_cluster_bbox=base.tail_cluster_bbox,
+    head_cluster_bbox=base.head_cluster_bbox,
+    parallel_offset=base.parallel_offset,
+    clip_swapped=clip_swapped,
+    arrow_swapped=arrow_swapped,
+  )
+}
+
+///|
 fn build_short_route_line_or_pathplan_spline(
   base : EdgeRouteBase,
   using_pathplan : Bool,
@@ -3818,23 +3847,13 @@ fn build_edge_spline(
           if segmented_raw.length() > 0 {
             raw_bezier = segmented_raw
             let spline =
-              @edge_spline.edge_spline_for_bezier_points(
-                edge,
+              build_bezier_points_spline(
+                base,
                 raw_bezier,
-                tail_clip_center,
-                head_clip_center,
-                tail_clip_size,
-                head_clip_size,
-                route_include_tail,
-                route_include_head,
-                tail_clip_enabled=tail_clip_enabled,
-                head_clip_enabled=head_clip_enabled,
-                arrow_len_override=arrow_len_override,
-                tail_cluster_bbox=tail_cluster_bbox,
-                head_cluster_bbox=head_cluster_bbox,
-                parallel_offset=parallel_offset,
-                clip_swapped=swap_clip_shapes,
-                arrow_swapped=swap_arrow_attrs,
+                tail_clip_enabled,
+                head_clip_enabled,
+                swap_clip_shapes,
+                swap_arrow_attrs,
               )
             apply_dotted_adjustment = true
             spline
@@ -4082,23 +4101,13 @@ fn rebuild_spline_for_render(
     return spline_result
   }
   let rebuilt =
-    @edge_spline.edge_spline_for_bezier_points(
-      base.edge,
+    build_bezier_points_spline(
+      base,
       spline_result.raw_bezier,
-      base.tail_clip_center,
-      base.head_clip_center,
-      base.tail_clip_size,
-      base.head_clip_size,
-      base.route_include_tail,
-      base.route_include_head,
-      tail_clip_enabled=edge_clip_flags.tail_clip_enabled,
-      head_clip_enabled=edge_clip_flags.head_clip_enabled,
-      arrow_len_override=base.arrow_len_override,
-      tail_cluster_bbox=base.tail_cluster_bbox,
-      head_cluster_bbox=base.head_cluster_bbox,
-      parallel_offset=base.parallel_offset,
-      clip_swapped=base.swap_ends,
-      arrow_swapped=base.swap_ends,
+      edge_clip_flags.tail_clip_enabled,
+      edge_clip_flags.head_clip_enabled,
+      base.swap_ends,
+      base.swap_ends,
     )
   {
     spline: rebuilt,
@@ -4682,21 +4691,13 @@ fn build_self_edge_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    @edge_spline.edge_spline_for_bezier_points(
-      base.edge,
+    build_bezier_points_spline(
+      base,
       route.points,
-      base.tail_clip_center,
-      base.head_clip_center,
-      base.tail_clip_size,
-      base.head_clip_size,
-      base.route_include_tail,
-      base.route_include_head,
-      tail_clip_enabled=base.tail_clip_enabled,
-      head_clip_enabled=base.head_clip_enabled,
-      arrow_len_override=base.arrow_len_override,
-      tail_cluster_bbox=base.tail_cluster_bbox,
-      head_cluster_bbox=base.head_cluster_bbox,
-      parallel_offset=base.parallel_offset,
+      base.tail_clip_enabled,
+      base.head_clip_enabled,
+      false,
+      false,
     )
   let spline_result : EdgeSplineResult = {
     spline,
@@ -4754,23 +4755,13 @@ fn build_flat_adjacent_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    @edge_spline.edge_spline_for_bezier_points(
-      base.edge,
+    build_bezier_points_spline(
+      base,
       bezier,
-      base.tail_clip_center,
-      base.head_clip_center,
-      base.tail_clip_size,
-      base.head_clip_size,
-      base.route_include_tail,
-      base.route_include_head,
-      tail_clip_enabled=base.tail_clip_enabled,
-      head_clip_enabled=base.head_clip_enabled,
-      arrow_len_override=base.arrow_len_override,
-      tail_cluster_bbox=base.tail_cluster_bbox,
-      head_cluster_bbox=base.head_cluster_bbox,
-      parallel_offset=base.parallel_offset,
-      clip_swapped=base.swap_ends,
-      arrow_swapped=base.swap_ends,
+      base.tail_clip_enabled,
+      base.head_clip_enabled,
+      base.swap_ends,
+      base.swap_ends,
     )
   let spline_result : EdgeSplineResult = {
     spline,
@@ -5219,23 +5210,13 @@ fn build_regular_bezier_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    @edge_spline.edge_spline_for_bezier_points(
-      base.edge,
+    build_bezier_points_spline(
+      base,
       shared_spline_result.raw_bezier,
-      base.tail_clip_center,
-      base.head_clip_center,
-      base.tail_clip_size,
-      base.head_clip_size,
-      base.route_include_tail,
-      base.route_include_head,
-      tail_clip_enabled=base.tail_clip_enabled,
-      head_clip_enabled=base.head_clip_enabled,
-      arrow_len_override=base.arrow_len_override,
-      tail_cluster_bbox=base.tail_cluster_bbox,
-      head_cluster_bbox=base.head_cluster_bbox,
-      parallel_offset=base.parallel_offset,
-      clip_swapped=base.swap_ends,
-      arrow_swapped=base.swap_ends,
+      base.tail_clip_enabled,
+      base.head_clip_enabled,
+      base.swap_ends,
+      base.swap_ends,
     )
   let sibling_spline_result : EdgeSplineResult = {
     spline,
