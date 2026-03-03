@@ -35,33 +35,6 @@ fn build_root_reorder_sources(
     flat_rank_constraints: reorder_setup.flat_rank_constraints,
   }
 }
-
-
-
-///|
-/// Graphviz parity: root cluster-rank-order input bundle is assembled from the
-/// root reorder output plus clustered dispatch snapshots without reordering.
-fn build_root_rank_order_phase_inputs(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_reorder_output : @ordering.RootClusterReorderInputs,
-) -> @ordering.RootRankOrderPhaseInputs {
-  {
-    root_reorder_output,
-    order_cluster_keys: pre_root_stage.order_cluster_keys,
-    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-    order_sizes_out: pre_root_stage.order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-    graphviz_flip: dispatch_context.reorder_setup.graphviz_flip,
-  }
-}
-
 ///|
 /// Graphviz parity: root cluster-rank-order pass uses reorder_rank_groups with
 /// coalesced-parallel mode on root-only rematerialized edge arrays.
@@ -108,29 +81,33 @@ fn run_root_reorder_and_rank_order_phase(
   pre_root_stage : ClusteredPreRootData,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
+  let reorder_setup = dispatch_context.reorder_setup
   let root_reorder_sources =
     build_root_reorder_sources(
       dispatch_context,
       pre_root_stage,
       order_groups_for_mincross,
     )
-  let root_reorder_output =
-    @ordering.build_root_reorder_inputs(
-      root_reorder_sources,
-      dispatch_context.class2_data.order_edges_by_tail_root,
-    )
-  let root_rank_order_inputs =
-    build_root_rank_order_phase_inputs(
-      dispatch_context,
-      pre_root_stage,
-      root_reorder_output,
-    )
-  let root_rank_order_phase_output =
-    @ordering.run_root_rank_order_phase(
-      root_rank_order_inputs,
-      run_root_rank_order_reorder,
-    )
-  (root_reorder_output, root_rank_order_phase_output)
+  let root_rank_order_context : @ordering.RootRankOrderPhaseContext =
+    {
+      order_cluster_keys: pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+      rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+      rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+      order_sizes_out: pre_root_stage.order_sizes_out,
+      nodesep_pt: dispatch_context.nodesep_pt,
+      has_edge_labels: dispatch_context.has_edge_labels,
+      port_order_positions: dispatch_context.port_order_positions,
+      port_order_contrib: dispatch_context.port_order_contrib,
+      order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+      graphviz_flip: reorder_setup.graphviz_flip,
+    }
+  @ordering.run_root_reorder_and_rank_order_phase(
+    root_reorder_sources,
+    root_rank_order_context,
+    dispatch_context.class2_data.order_edges_by_tail_root,
+    run_root_rank_order_reorder,
+  )
 }
 
 ///|

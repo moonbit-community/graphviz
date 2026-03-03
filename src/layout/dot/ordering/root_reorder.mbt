@@ -611,6 +611,24 @@ pub(all) struct RootRankOrderPhaseOutput {
 }
 
 ///|
+/// Graphviz parity: root cluster-rank-order phase context keeps clustered
+/// dispatch snapshots unchanged before attaching root reorder outputs.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootRankOrderPhaseContext {
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+}
+
+///|
 /// Graphviz parity: root cluster-rank-order phase input bundle keeps root
 /// reorder outputs and clustered dispatch context values unchanged.
 /// Do not change behavior without updating fixtures/tests.
@@ -627,6 +645,30 @@ pub(all) struct RootRankOrderPhaseInputs {
   port_order_contrib : Map[String, Array[(String, Double)]]
   order_flat_constraints : Map[String, Bool]
   graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: root cluster-rank-order phase inputs attach root reorder
+/// outputs to the unchanged clustered context snapshot.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_rank_order_phase_inputs(
+  root_reorder_output : RootClusterReorderInputs,
+  context : RootRankOrderPhaseContext,
+) -> RootRankOrderPhaseInputs {
+  {
+    root_reorder_output,
+    order_cluster_keys: context.order_cluster_keys,
+    order_cluster_skeleton: context.order_cluster_skeleton,
+    rank_same_groups: context.rank_same_groups,
+    rank_same_order: context.rank_same_order,
+    order_sizes_out: context.order_sizes_out,
+    nodesep_pt: context.nodesep_pt,
+    has_edge_labels: context.has_edge_labels,
+    port_order_positions: context.port_order_positions,
+    port_order_contrib: context.port_order_contrib,
+    order_flat_constraints: context.order_flat_constraints,
+    graphviz_flip: context.graphviz_flip,
+  }
 }
 
 ///|
@@ -805,4 +847,26 @@ pub fn run_root_rank_order_phase(
     inputs.order_cluster_skeleton,
     inputs.graphviz_flip,
   )
+}
+
+///|
+/// Graphviz parity: clustered root phase runs root-only edge rematerialization
+/// and root rank-order reorder in one deterministic call sequence.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_reorder_and_rank_order_phase(
+  root_reorder_sources : RootReorderBuildSources,
+  root_rank_order_context : RootRankOrderPhaseContext,
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  run_call : (RootRankOrderCallInputs, Bool) -> Map[Int, Array[String]],
+) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
+  let root_reorder_output =
+    build_root_reorder_inputs(root_reorder_sources, order_edges_by_tail_root)
+  let root_rank_order_inputs =
+    build_root_rank_order_phase_inputs(
+      root_reorder_output,
+      root_rank_order_context,
+    )
+  let root_rank_order_phase_output =
+    run_root_rank_order_phase(root_rank_order_inputs, run_call)
+  (root_reorder_output, root_rank_order_phase_output)
 }
