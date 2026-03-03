@@ -118,20 +118,12 @@ priv struct EdgeRenderClipFlags {
 }
 
 ///|
-fn spline_edge_attr_non_empty(edge : @cgraph.Edge, name : String) -> Bool {
-  match edge.get_attr(name) {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
 ) -> EdgeSameportDirectFlags {
-  let samehead_direct = spline_edge_attr_non_empty(edge, "samehead")
-  let sametail_direct = spline_edge_attr_non_empty(edge, "sametail")
+  let samehead_direct = edge_attr_non_empty(edge, "samehead")
+  let sametail_direct = edge_attr_non_empty(edge, "sametail")
   if swap_ends {
     { tail_direct: samehead_direct, head_direct: sametail_direct }
   } else {
