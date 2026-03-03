@@ -6,18 +6,29 @@ priv struct RegularSplineLayoutResult {
 ///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
-fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
-  if base.tail_rank <= base.head_rank {
-    base.vnodes.copy()
+fn ordered_vnodes_for_rank_direction(
+  vnodes : Array[String],
+  tail_rank : Int,
+  head_rank : Int,
+) -> Array[String] {
+  if tail_rank <= head_rank {
+    vnodes.copy()
   } else {
     let reversed : Array[String] = []
-    let mut idx = base.vnodes.length()
+    let mut idx = vnodes.length()
     while idx > 0 {
       idx = idx - 1
-      reversed.push(base.vnodes[idx])
+      reversed.push(vnodes[idx])
     }
     reversed
   }
+}
+
+///|
+/// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
+/// Do not change behavior without updating fixtures/tests.
+fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
+  ordered_vnodes_for_rank_direction(base.vnodes, base.tail_rank, base.head_rank)
 }
 
 ///|
@@ -69,17 +80,11 @@ fn recover_pathplan_slack(
         continue
       }
       let ordered_vnodes =
-        if base.tail_rank <= base.head_rank {
-          segment.vnodes.copy()
-        } else {
-          let reversed : Array[String] = []
-          let mut idx = segment.vnodes.length()
-          while idx > 0 {
-            idx = idx - 1
-            reversed.push(segment.vnodes[idx])
-          }
-          reversed
-        }
+        ordered_vnodes_for_rank_direction(
+          segment.vnodes,
+          base.tail_rank,
+          base.head_rank,
+        )
       recover_slack_vnodes(
         edge,
         ordered_vnodes,
@@ -269,8 +274,3 @@ fn build_regular_layouts_for_edge(
     state.edges_out_by_id,
   )
 }
-
-///|
-/// Graphviz parity: ordered edge routing loop preserves flat-adjacent,
-/// self-edge, regular-edge branch order from dot.
-/// Do not change behavior without updating fixtures/tests.
