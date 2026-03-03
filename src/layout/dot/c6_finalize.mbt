@@ -68,7 +68,7 @@ fn build_clustered_finalize_groups(
     if should_skip_cluster_rank_reorder {
       cleaned_groups
     } else {
-      reorder_groups_by_cluster(
+      @ordering.reorder_groups_by_cluster(
         cleaned_groups,
         cluster_rank_order,
         cluster_meta.cluster_keys,
@@ -100,7 +100,7 @@ fn finalize_order_groups(
   let runtime_context = dispatch_context.runtime_context
   let reorder_context = pre_root_stage.reorder_context
   let cleaned_groups =
-    collect_real_only_rank_groups(
+    @ordering.collect_real_only_rank_groups(
       reorder_context.order_rank_keys,
       root_cluster_stage.ordered,
       runtime_context.real_nodes,

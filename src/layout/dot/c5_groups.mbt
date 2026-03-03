@@ -70,7 +70,7 @@ fn run_remincross_pass(
         materialized_inputs,
       )
     let rem_cleaned =
-      collect_real_only_rank_groups(
+      @ordering.collect_real_only_rank_groups(
         rem_rank_keys,
         rem_ordered,
         dispatch_context.real_nodes,
