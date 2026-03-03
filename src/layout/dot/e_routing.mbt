@@ -470,7 +470,7 @@ priv struct FlatDetourResult {
 }
 
 ///|
-priv struct FlatDetourSplineResult {
+priv struct PointsSplineResult {
   spline : @geom.Spline
   raw_bezier : Array[@geom.Point]
 }
@@ -724,42 +724,38 @@ fn bottom_single_arrow_line_endpoints(
 }
 
 ///|
-fn build_flat_detour_spline(
+fn build_points_spline(
   base : EdgeRouteBase,
-  detour : FlatDetourResult,
-  using_pathplan : Bool,
+  points : Array[@geom.Point],
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
+  force_segmented : Bool,
+  using_pathplan : Bool,
   route_barriers : Array[(@geom.Point, @geom.Point)],
-) -> FlatDetourSplineResult {
-  let detour_points = detour.points
-  let first_right = detour.first_right
-  let last_left = detour.last_left
-  let detour_y = detour.detour_y
-  let vspace = detour.vspace
+) -> PointsSplineResult {
   let raw_bezier =
     if using_pathplan {
       @edge_spline.edge_spline_raw_for_points(
-        detour_points,
+        points,
         tail_slope_line,
         head_slope_line,
-        true,
+        force_segmented,
         route_barriers=route_barriers,
       )
     } else {
       []
     }
-  let mut detour_spline =
+  let spline =
     @edge_spline.edge_spline_for_points(
       base.edge,
-      detour_points,
+      points,
       base.tail_clip_center,
       base.head_clip_center,
       base.tail_clip_size,
       base.head_clip_size,
       tail_slope_line,
       head_slope_line,
-      true,
+      force_segmented,
       base.route_include_tail,
       base.route_include_head,
       tail_clip_enabled=base.tail_clip_enabled,
@@ -774,6 +770,35 @@ fn build_flat_detour_spline(
       clip_swapped=base.swap_ends,
       arrow_swapped=base.swap_ends,
     )
+  { spline, raw_bezier }
+}
+
+///|
+fn build_flat_detour_spline(
+  base : EdgeRouteBase,
+  detour : FlatDetourResult,
+  using_pathplan : Bool,
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+) -> PointsSplineResult {
+  let detour_points = detour.points
+  let first_right = detour.first_right
+  let last_left = detour.last_left
+  let detour_y = detour.detour_y
+  let vspace = detour.vspace
+  let points_spline =
+    build_points_spline(
+      base,
+      detour_points,
+      tail_slope_line,
+      head_slope_line,
+      true,
+      using_pathplan,
+      route_barriers,
+    )
+  let raw_bezier = points_spline.raw_bezier
+  let mut detour_spline = points_spline.spline
   if detour_spline.points.length() == 10 &&
     (base.layout_rankdir == RankDir::TB || base.layout_rankdir == RankDir::BT) {
     let gap = last_left - first_right
@@ -3331,40 +3356,20 @@ fn build_edge_spline(
                   ]
               }
             }
+            let record_detour_spline =
+              build_points_spline(
+                base,
+                detour_points,
+                tail_slope_line,
+                head_slope_line,
+                true,
+                using_pathplan,
+                route_barriers,
+              )
             if using_pathplan {
-              raw_bezier =
-                @edge_spline.edge_spline_raw_for_points(
-                  detour_points,
-                  tail_slope_line,
-                  head_slope_line,
-                  true,
-                  route_barriers=route_barriers,
-                )
+              raw_bezier = record_detour_spline.raw_bezier
             }
-            @edge_spline.edge_spline_for_points(
-              edge,
-              detour_points,
-              tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
-              tail_slope_line,
-              head_slope_line,
-              true,
-              route_include_tail,
-              route_include_head,
-              tail_clip_enabled=tail_clip_enabled,
-              head_clip_enabled=head_clip_enabled,
-              tail_port_side=base.tail_port_side,
-              head_port_side=base.head_port_side,
-              route_barriers=route_barriers,
-              arrow_len_override=arrow_len_override,
-              tail_cluster_bbox=tail_cluster_bbox,
-              head_cluster_bbox=head_cluster_bbox,
-              parallel_offset=parallel_offset,
-              clip_swapped=swap_clip_shapes,
-              arrow_swapped=swap_arrow_attrs,
-            )
+            record_detour_spline.spline
           } else if flat_detour is Some(detour) {
             let detour_spline_result =
               build_flat_detour_spline(
@@ -3700,40 +3705,20 @@ fn build_edge_spline(
                 ]
               }
             }
+          let record_detour_spline =
+            build_points_spline(
+              base,
+              detour_points,
+              tail_slope_line,
+              head_slope_line,
+              true,
+              using_pathplan,
+              route_barriers,
+            )
           if using_pathplan {
-            raw_bezier =
-              @edge_spline.edge_spline_raw_for_points(
-                detour_points,
-                tail_slope_line,
-                head_slope_line,
-                true,
-                route_barriers=route_barriers,
-              )
+            raw_bezier = record_detour_spline.raw_bezier
           }
-          @edge_spline.edge_spline_for_points(
-            edge,
-            detour_points,
-            tail_clip_center,
-            head_clip_center,
-            tail_clip_size,
-            head_clip_size,
-            tail_slope_line,
-            head_slope_line,
-            true,
-            route_include_tail,
-            route_include_head,
-            tail_clip_enabled=tail_clip_enabled,
-            head_clip_enabled=head_clip_enabled,
-            tail_port_side=base.tail_port_side,
-            head_port_side=base.head_port_side,
-            route_barriers=route_barriers,
-            arrow_len_override=arrow_len_override,
-            tail_cluster_bbox=tail_cluster_bbox,
-            head_cluster_bbox=head_cluster_bbox,
-            parallel_offset=parallel_offset,
-            clip_swapped=swap_clip_shapes,
-            arrow_swapped=swap_arrow_attrs,
-          )
+          record_detour_spline.spline
         } else if flat_detour is Some(detour) {
           let detour_spline_result =
             build_flat_detour_spline(
