@@ -108,7 +108,8 @@ priv struct RootMincrossReorderInputs {
   order_edge_head_port_order : Array[Double]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  cluster_meta : ClusterMetadata
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
   vnode_order_keys_for_ordering : Map[String, Double]
   order_node_order : Map[String, Int]
   order_sizes_out : Map[String, NodeSize]
@@ -142,8 +143,8 @@ fn run_root_reorder_pass(
       reorder_inputs.order_edge_head_port_order,
       reorder_inputs.order_ranks,
       reorder_inputs.order_cluster_keys,
-      reorder_inputs.cluster_meta.rank_same_groups,
-      reorder_inputs.cluster_meta.rank_same_order,
+      reorder_inputs.rank_same_groups,
+      reorder_inputs.rank_same_order,
       reorder_inputs.order_node_order,
       reorder_inputs.order_sizes_out,
       reorder_inputs.nodesep_pt,
