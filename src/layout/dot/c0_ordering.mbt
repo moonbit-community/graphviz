@@ -97,23 +97,51 @@ fn compute_ordering_and_vnodes(
         (samples.tail_values, samples.head_values)
       },
     )
+  let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
   let reorder_setup =
-    build_ordering_reorder_setup(
+    @ordering.build_ordering_reorder_setup(
       nodes,
       edges,
       edge_tail,
       edge_head,
-      edge_reversed,
       edge_out_order,
       ranks,
       groups,
       node_order,
       runtime_context.port_edge_nodes,
       runtime_context.vnode_info.vnode_ranks.length(),
-      rankdir,
-      cluster_meta,
-      runtime_context.vnode_info,
+      graphviz_flip,
+      cluster_meta.has_clusters,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      cluster_meta.cluster_keys,
+      cluster_meta.cluster_order,
+      cluster_meta.rank_same_groups,
+      cluster_meta.rank_same_order,
+      runtime_context.vnode_info.edge_vnodes,
       edge_port_data,
+      (base_order_index) =>
+        build_vnode_order_keys(
+          edges,
+          edge_tail,
+          edge_head,
+          edge_reversed,
+          ranks,
+          base_order_index,
+          cluster_meta.cluster_keys,
+          cluster_meta.cluster_parents,
+          runtime_context.vnode_info.edge_vnodes,
+          runtime_context.vnode_info.vnode_ranks,
+        ),
+      (ordering_groups_base, base_order_index, nlist_order_index) =>
+        build_vnode_keys_from_nlist(
+          ordering_groups_base,
+          runtime_context.vnode_info.vnodes_by_rank,
+          base_order_index,
+          nlist_order_index,
+          Map::new(),
+          false,
+        ),
     )
   let dispatch_context : ClusteredDispatchContext =
     {
