@@ -3,57 +3,6 @@
 /// helpers for focused ReMincross responsibilities.
 
 ///|
-/// Graphviz parity: clustered ReMincross rank groups can seed from current
-/// vnode-inclusive order for single-cluster or ratio=fill scenarios, with
-/// fallback to full rebuild when seeded output is empty.
-fn build_remincross_groups(
-  dispatch_context : ReMincrossDispatchContext,
-) -> Map[Int, Array[String]] {
-  // Graphviz parity: ratio=fill enables seeded vnode-inclusive reorder input
-  // in clustered ReMincross (Graphviz fill-specific branch behavior).
-  let prefer_seeded_from_ordered_with_vnodes =
-    dispatch_context.graph.get_attr("ratio").unwrap_or_default() == "fill"
-  // Graphviz parity: seeded-group path is considered only when vnode ordering
-  // is enabled and graph shape matches single-cluster or ratio=fill scenarios.
-  let should_try_seeded =
-    dispatch_context.order_with_vnodes &&
-    (dispatch_context.cluster_meta.cluster_order.length() == 1 ||
-    prefer_seeded_from_ordered_with_vnodes)
-  if should_try_seeded {
-    let seeded =
-      @ordering.build_seeded_remincross(
-        dispatch_context.base_groups,
-        dispatch_context.ordered_with_vnodes,
-        dispatch_context.cluster_meta.cluster_keys,
-      )
-    if seeded.length() > 0 {
-      return seeded
-    }
-  }
-  // Graphviz parity: clustered ReMincross rebuilt groups come from base real
-  // groups plus optional vnode injection with trailing-vnode adjustments.
-  @ordering.build_remincross_vnode_groups(
-    {
-      final_groups: dispatch_context.base_groups,
-      order_with_vnodes: dispatch_context.order_with_vnodes,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      edge_reversed: dispatch_context.edge_reversed,
-      ranks: dispatch_context.ranks,
-      intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-      cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-      cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-      cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-      edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-      vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
-      vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
-    },
-    build_vnode_order_keys,
-  )
-}
-
-///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
 /// edge vnodes, then materializes/remaps edges and executes final startpass=2
 /// reorder before dropping non-real nodes.
@@ -61,7 +10,32 @@ fn build_remincross_groups(
 fn run_remincross_pass(
   dispatch_context : ReMincrossDispatchContext,
 ) -> OrderingDispatchOutput {
-  let rem_groups = build_remincross_groups(dispatch_context)
+  let rem_groups =
+    @ordering.build_remincross_groups(
+      {
+        ratio: dispatch_context.graph.get_attr("ratio").unwrap_or_default(),
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        ordered_with_vnodes: dispatch_context.ordered_with_vnodes,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        vnode_group_inputs: {
+          final_groups: dispatch_context.base_groups,
+          order_with_vnodes: dispatch_context.order_with_vnodes,
+          edges: dispatch_context.edges,
+          edge_tail: dispatch_context.edge_tail,
+          edge_head: dispatch_context.edge_head,
+          edge_reversed: dispatch_context.edge_reversed,
+          ranks: dispatch_context.ranks,
+          intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+          cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+          cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+          cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+          edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+          vnode_ranks: dispatch_context.vnode_info.vnode_ranks,
+          vnodes_by_rank: dispatch_context.vnode_info.vnodes_by_rank,
+        },
+      },
+      build_vnode_order_keys,
+    )
   let rem_rank_keys = @ordering.collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
