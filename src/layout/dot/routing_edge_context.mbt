@@ -53,7 +53,6 @@ priv struct OrderedEdgeRoutingContext {
   flat_label_edge_vnodes : Map[String, String]
   routing_context : RoutingContext
   enable_complex_tuning : Bool
-  self_edge_groups : Map[String, Array[@cgraph.Edge]]
 }
 
 ///|
@@ -117,7 +116,6 @@ fn build_ordered_edge_routing_context(
       input.vnode_info.vnode_sizes,
       input.x_groups,
     )
-  let self_edge_groups = @routing.collect_self_edge_groups(input.edges)
   {
     base_cache,
     prepass,
@@ -139,7 +137,6 @@ fn build_ordered_edge_routing_context(
     flat_label_edge_vnodes: input.flat_label_edge_vnodes,
     routing_context: input.routing_context,
     enable_complex_tuning: input.enable_complex_tuning,
-    self_edge_groups,
   }
 }
 

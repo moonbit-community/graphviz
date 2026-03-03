@@ -35,7 +35,7 @@ fn maybe_build_self_edge_layout(
   let edge_id = edge.id()
   let route = @routing.self_edge_route_for_edge(
     edge,
-    context.self_edge_groups,
+    context.prepass.self_edge_groups,
     context.base_cache,
     context.nodesep_pt,
     context.rank_y,

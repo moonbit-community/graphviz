@@ -2,6 +2,7 @@
 pub struct RoutePrepassState {
   flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
   ordered_edges : Array[@cgraph.Edge]
+  self_edge_groups : Map[String, Array[@cgraph.Edge]]
   recover_edge_id_for_routing : Map[String, Int]
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
   path_left_bound : Double
@@ -45,11 +46,13 @@ pub fn build_route_prepass_state(
   )
   let ordered_edges =
     sorted_edges_for_routing(edges, base_cache, path_order_index)
+  let self_edge_groups = collect_self_edge_groups(edges)
   let regular_recover_plan =
     build_regular_recover_routing_plan(ordered_edges, base_cache)
   {
     flat_adjacent_simple_beziers,
     ordered_edges,
+    self_edge_groups,
     recover_edge_id_for_routing: regular_recover_plan.recover_edge_id_for_routing,
     regular_parallel_groups: regular_recover_plan.regular_parallel_groups,
     path_left_bound: path_bounds.left,

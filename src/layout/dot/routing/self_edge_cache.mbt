@@ -13,7 +13,7 @@ fn self_edge_group_key(edge : @cgraph.Edge) -> String {
 ///|
 /// Graphviz parity: self-edge groups share generated loop routes in one pass.
 /// Do not change behavior without updating fixtures/tests.
-pub fn collect_self_edge_groups(
+fn collect_self_edge_groups(
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Array[@cgraph.Edge]] {
   let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
