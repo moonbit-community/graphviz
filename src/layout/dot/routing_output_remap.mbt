@@ -103,3 +103,27 @@ fn remap_parallel_edge_layouts(
       remap_edge_layout_edge(target_layout.edge, source_layout)
   }
 }
+
+///|
+/// Graphviz parity: final routed edge output keeps remap-then-input-order flow.
+/// Do not change behavior without updating fixtures/tests.
+fn finalize_routed_edges(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  edges_out_by_id : Map[Int, DotLayoutEdge],
+) -> Array[DotLayoutEdge] {
+  remap_parallel_edge_layouts(edges, ranks, edges_out_by_id)
+  let ordered_output_edge_ids =
+    @routing.collect_input_order_edge_ids(
+      edges,
+      (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
+    )
+  let edges_out : Array[DotLayoutEdge] = []
+  for edge_id in ordered_output_edge_ids {
+    match edges_out_by_id.get(edge_id) {
+      Some(value) => edges_out.push(value)
+      None => ()
+    }
+  }
+  edges_out
+}
