@@ -415,6 +415,7 @@ Main files:
 - `src/layout/dot/routing_self_edge.mbt`
 - `src/layout/dot/routing_sameport.mbt`
 - `src/layout/dot/routing/flat_adjacent.mbt`
+- `src/layout/dot/routing/self_edge_grouping.mbt`
 - `src/layout/dot/routing/parallel_selection.mbt`
 - `src/layout/dot/routing/edge_order.mbt`
 - `src/layout/dot/routing/spline_core.mbt`

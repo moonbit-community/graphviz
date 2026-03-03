@@ -230,3 +230,20 @@ pub fn route_edge_cmp(
   }
   cmp_int(id_a, id_b)
 }
+
+///|
+/// Graphviz parity: edge routing pass order follows dot edgecmp.
+/// Do not change behavior without updating fixtures/tests.
+pub fn sorted_edges_for_routing(
+  edges : Array[@cgraph.Edge],
+  base_cache : Map[Int, EdgeRouteBase],
+  order_index : Map[String, Int],
+) -> Array[@cgraph.Edge] {
+  let ordered_edges = edges.copy()
+  if ordered_edges.length() > 1 {
+    ordered_edges.sort_by((a, b) => {
+      route_edge_cmp(a, b, base_cache, order_index)
+    })
+  }
+  ordered_edges
+}

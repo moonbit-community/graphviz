@@ -429,13 +429,3 @@ fn build_self_edge_routes(
   }
   self_edge_routes_top(edges, base0, nodesep_pt, sizey_param, point_pair)
 }
-
-///|
-fn self_edge_group_key(edge : @cgraph.Edge) -> String {
-  @edge_ops.edge_parallel_key(
-    edge.tail().name(),
-    edge.head().name(),
-    edge.tail_port(),
-    edge.head_port(),
-  )
-}

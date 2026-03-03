@@ -1,22 +1,3 @@
-///|
-fn collect_self_edge_groups(
-  edges : Array[@cgraph.Edge],
-) -> Map[String, Array[@cgraph.Edge]] {
-  let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
-  for edge in edges {
-    if !edge_is_self(edge) {
-      continue
-    }
-    let key = self_edge_group_key(edge)
-    match self_edge_groups.get(key) {
-      Some(list) => list.push(edge)
-      None => self_edge_groups[key] = [edge]
-    }
-  }
-  self_edge_groups
-}
-
-///|
 fn build_route_base_cache(
   graph : @cgraph.Graph,
   edges : Array[@cgraph.Edge],
@@ -302,7 +283,7 @@ fn ensure_self_edge_routes(
   if self_edge_routes.get(edge_id) is Some(_) {
     return ()
   }
-  let key = self_edge_group_key(edge)
+  let key = @routing.self_edge_group_key(edge)
   match self_edge_groups.get(key) {
     Some(group_edges) => {
       let group_bases : Array[EdgeRouteBase] = []
@@ -523,23 +504,6 @@ fn remap_parallel_edge_layouts(
   }
 }
 
-/// Graphviz parity: edge routing pass order follows dot edgecmp.
-/// Do not change behavior without updating fixtures/tests.
-fn sorted_edges_for_routing(
-  edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, EdgeRouteBase],
-  order_index : Map[String, Int],
-) -> Array[@cgraph.Edge] {
-  let ordered_edges = edges.copy()
-  if ordered_edges.length() > 1 {
-    ordered_edges.sort_by((a, b) => {
-      @routing.route_edge_cmp(a, b, base_cache, order_index)
-    })
-  }
-  ordered_edges
-}
-
-///|
 priv struct RegularSplineLayoutResult {
   edge_layout : DotLayoutEdge
   spline_result : EdgeSplineResult
@@ -780,7 +744,7 @@ fn route_edges(
 ) -> Array[DotLayoutEdge] {
   let path_adjacency = routing_context.path_adjacency
   let order_index = routing_context.path_order_index
-  let self_edge_groups = collect_self_edge_groups(edges)
+  let self_edge_groups = @routing.collect_self_edge_groups(edges)
   let sameport_overrides = collect_sameport_overrides(
     edges,
     positions,
@@ -830,7 +794,7 @@ fn route_edges(
   let path_left_bound = path_bounds.left
   let path_right_bound = path_bounds.right
   let ordered_edges =
-    sorted_edges_for_routing(edges, base_cache, order_index)
+    @routing.sorted_edges_for_routing(edges, base_cache, order_index)
   let regular_recover_plan =
     @routing.build_regular_recover_routing_plan(ordered_edges, base_cache)
   let recover_edge_id_for_routing =
