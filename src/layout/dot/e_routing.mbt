@@ -442,6 +442,58 @@ fn short_route_detour_context(
 }
 
 ///|
+fn short_route_detour_context_for_base(
+  base : EdgeRouteBase,
+  using_pathplan : Bool,
+  has_explicit_port : Bool,
+  label_width_pt : Double,
+) -> ShortRouteDetourContext {
+  short_route_detour_context(
+    using_pathplan,
+    base.is_flat_edge,
+    base.tail_node,
+    base.head_node,
+    base.tail_port,
+    base.head_port,
+    base.tail_slope,
+    base.head_slope,
+    base.layout_rankdir,
+    has_explicit_port,
+    label_width_pt,
+    base.tail_port_side,
+    base.head_port_side,
+    base.route_include_tail,
+    base.route_include_head,
+  )
+}
+
+///|
+fn flat_detour_lookup_context(
+  base : EdgeRouteBase,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  ranksep_pt : Double,
+) -> FlatDetourLookupContext {
+  {
+    tail_name: base.tail_name,
+    head_name: base.head_name,
+    rank: base.tail_rank,
+    positions,
+    sizes,
+    ranks,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+    ranksep_pt,
+    rankdir: base.layout_rankdir,
+  }
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -3604,8 +3656,6 @@ fn build_edge_spline(
   let head_name = base.head_name
   let tail_port = base.tail_port
   let head_port = base.head_port
-  let tail_node = base.tail_node
-  let head_node = base.head_node
   let tail_anchor = base.tail_anchor
   let head_anchor = base.head_anchor
   let head_port_rect = base.head_port_rect
@@ -3622,7 +3672,6 @@ fn build_edge_spline(
   let force_segmented = base.force_segmented
   let tail_cluster_bbox = base.tail_cluster_bbox
   let head_cluster_bbox = base.head_cluster_bbox
-  let tail_rank = base.tail_rank
   let is_flat_edge = base.is_flat_edge
   let has_vnodes = base.has_vnodes
   let route_include_tail = base.route_include_tail
@@ -3822,38 +3871,25 @@ fn build_edge_spline(
           }
         if adjusted.length() <= 2 {
           let detour_context =
-            short_route_detour_context(
+            short_route_detour_context_for_base(
+              base,
               using_pathplan,
-              is_flat_edge,
-              tail_node,
-              head_node,
-              tail_port,
-              head_port,
-              tail_slope,
-              head_slope,
-              layout_rankdir,
               has_explicit_port,
               label_width_pt,
-              base.tail_port_side,
-              base.head_port_side,
-              route_include_tail,
-              route_include_head,
             )
           let tail_slope_line = detour_context.tail_slope_line
           let head_slope_line = detour_context.head_slope_line
-          let flat_detour_lookup : FlatDetourLookupContext = {
-            tail_name,
-            head_name,
-            rank: tail_rank,
-            positions,
-            sizes,
-            ranks,
-            rank_y,
-            rank_ht1,
-            rank_ht2,
-            ranksep_pt,
-            rankdir: layout_rankdir,
-          }
+          let flat_detour_lookup =
+            flat_detour_lookup_context(
+              base,
+              positions,
+              sizes,
+              ranks,
+              rank_y,
+              rank_ht1,
+              rank_ht2,
+              ranksep_pt,
+            )
           let detour_resolution =
             resolve_short_route_detour(
               base,
@@ -3957,38 +3993,25 @@ fn build_edge_spline(
         }
       } else {
         let detour_context =
-          short_route_detour_context(
+          short_route_detour_context_for_base(
+            base,
             using_pathplan,
-            is_flat_edge,
-            tail_node,
-            head_node,
-            tail_port,
-            head_port,
-            tail_slope,
-            head_slope,
-            layout_rankdir,
             has_explicit_port,
             label_width_pt,
-            base.tail_port_side,
-            base.head_port_side,
-            route_include_tail,
-            route_include_head,
           )
         let tail_slope_line = detour_context.tail_slope_line
         let head_slope_line = detour_context.head_slope_line
-        let flat_detour_lookup : FlatDetourLookupContext = {
-          tail_name,
-          head_name,
-          rank: tail_rank,
-          positions,
-          sizes,
-          ranks,
-          rank_y,
-          rank_ht1,
-          rank_ht2,
-          ranksep_pt,
-          rankdir: layout_rankdir,
-        }
+        let flat_detour_lookup =
+          flat_detour_lookup_context(
+            base,
+            positions,
+            sizes,
+            ranks,
+            rank_y,
+            rank_ht1,
+            rank_ht2,
+            ranksep_pt,
+          )
         let detour_resolution =
           resolve_short_route_detour(
             base,
