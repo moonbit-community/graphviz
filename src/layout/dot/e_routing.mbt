@@ -249,6 +249,35 @@ fn edge_spline_result_for_bezier(
 }
 
 ///|
+fn build_edge_polyline_mode_spline(
+  base : EdgeRouteBase,
+  is_ortho : Bool,
+) -> @geom.Spline {
+  // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
+  @edge_spline.edge_spline_for_polyline(
+    base.edge,
+    base.tail_clip_center,
+    base.head_clip_center,
+    base.tail_clip_size,
+    base.head_clip_size,
+    base.tail_clip,
+    base.head_clip,
+    base.layout_rankdir,
+    is_ortho,
+    base.route_include_tail,
+    base.route_include_head,
+    tail_clip_enabled=base.tail_clip_enabled,
+    head_clip_enabled=base.head_clip_enabled,
+    arrow_len_override=base.arrow_len_override,
+    tail_cluster_bbox=base.tail_cluster_bbox,
+    head_cluster_bbox=base.head_cluster_bbox,
+    parallel_offset=base.parallel_offset,
+    clip_swapped=base.swap_ends,
+    arrow_swapped=base.swap_ends,
+  )
+}
+
+///|
 fn point_for_name_or_origin(
   positions : Map[String, @geom.Point],
   name : String,
@@ -3979,6 +4008,33 @@ fn build_multi_point_routed_spline(
 }
 
 ///|
+fn finalize_pathplan_boxes_and_segments(
+  base : EdgeRouteBase,
+  using_pathplan : Bool,
+  pathplan_boxes : Array[@geom.Rect],
+  pathplan_points : Array[@geom.Point],
+  raw_bezier : Array[@geom.Point],
+  pathplan_segments : Array[@routesplines.PathplanSegment],
+) -> (Array[@geom.Rect], Array[@routesplines.PathplanSegment]) {
+  let mut limited_boxes = pathplan_boxes
+  let mut limited_segments = pathplan_segments
+  if using_pathplan && limited_boxes.length() > 0 && raw_bezier.length() >= 4 {
+    // Graphviz parity: limit boxes based on routed spline before recover_slack.
+    limited_boxes =
+      @routesplines.limit_boxes_for_spline(
+        limited_boxes,
+        raw_bezier,
+        fallback_polyline=pathplan_points,
+      )
+  }
+  if using_pathplan && limited_segments.length() > 0 {
+    // Graphviz parity: limit segment boxes independently to match straight_path sampling.
+    limited_segments = limit_pathplan_segment_boxes(base, limited_segments)
+  }
+  (limited_boxes, limited_segments)
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -4010,30 +4066,14 @@ fn build_edge_spline(
   let tail_anchor = base.tail_anchor
   let head_anchor = base.head_anchor
   let head_port_rect = base.head_port_rect
-  let tail_clip_center = base.tail_clip_center
-  let head_clip_center = base.head_clip_center
-  let tail_clip_size = base.tail_clip_size
-  let head_clip_size = base.head_clip_size
   let tail_clip_enabled = base.tail_clip_enabled
   let head_clip_enabled = base.head_clip_enabled
-  let tail_clip = base.tail_clip
-  let head_clip = base.head_clip
   let force_segmented = base.force_segmented
-  let tail_cluster_bbox = base.tail_cluster_bbox
-  let head_cluster_bbox = base.head_cluster_bbox
   let has_vnodes = base.has_vnodes
-  let route_include_tail = base.route_include_tail
-  let route_include_head = base.route_include_head
-  let arrow_len_override = base.arrow_len_override
   let is_dotted = base.is_dotted
   let same_outer_cluster = base.same_outer_cluster
   let diff_local_cluster = base.diff_local_cluster
   let same_local_cluster = base.same_local_cluster
-  let layout_rankdir = base.layout_rankdir
-  let parallel_offset = base.parallel_offset
-  // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
-  let swap_clip_shapes = base.swap_ends
-  let swap_arrow_attrs = base.swap_ends
   let orig_tail_name = base.orig_tail_name
   let mut label_pad_boost = 0.0
   let mut using_pathplan = false
@@ -4043,50 +4083,8 @@ fn build_edge_spline(
   let mut raw_bezier : Array[@geom.Point] = []
   let mut apply_dotted_adjustment = false
   let spline = match splines {
-    SplinesMode::None | SplinesMode::Polyline =>
-      @edge_spline.edge_spline_for_polyline(
-        edge,
-        tail_clip_center,
-        head_clip_center,
-        tail_clip_size,
-        head_clip_size,
-        tail_clip,
-        head_clip,
-        layout_rankdir,
-        false,
-        route_include_tail,
-        route_include_head,
-        tail_clip_enabled=tail_clip_enabled,
-        head_clip_enabled=head_clip_enabled,
-        arrow_len_override=arrow_len_override,
-        tail_cluster_bbox=tail_cluster_bbox,
-        head_cluster_bbox=head_cluster_bbox,
-        parallel_offset=parallel_offset,
-        clip_swapped=swap_clip_shapes,
-        arrow_swapped=swap_arrow_attrs,
-      )
-    SplinesMode::Ortho =>
-      @edge_spline.edge_spline_for_polyline(
-        edge,
-        tail_clip_center,
-        head_clip_center,
-        tail_clip_size,
-        head_clip_size,
-        tail_clip,
-        head_clip,
-        layout_rankdir,
-        true,
-        route_include_tail,
-        route_include_head,
-        tail_clip_enabled=tail_clip_enabled,
-        head_clip_enabled=head_clip_enabled,
-        arrow_len_override=arrow_len_override,
-        tail_cluster_bbox=tail_cluster_bbox,
-        head_cluster_bbox=head_cluster_bbox,
-        parallel_offset=parallel_offset,
-        clip_swapped=swap_clip_shapes,
-        arrow_swapped=swap_arrow_attrs,
-      )
+    SplinesMode::None | SplinesMode::Polyline => build_edge_polyline_mode_spline(base, false)
+    SplinesMode::Ortho => build_edge_polyline_mode_spline(base, true)
     _ => {
       let label_width_pt = edge_mid_label_width_pt(edge)
       let has_explicit_port =
@@ -4262,19 +4260,15 @@ fn build_edge_spline(
       routed_spline
     }
   }
-  if using_pathplan && pathplan_boxes.length() > 0 && raw_bezier.length() >= 4 {
-    // Graphviz parity: limit boxes based on routed spline before recover_slack.
-    pathplan_boxes =
-      @routesplines.limit_boxes_for_spline(
-        pathplan_boxes,
-        raw_bezier,
-        fallback_polyline=pathplan_points,
-      )
-  }
-  if using_pathplan && pathplan_segments.length() > 0 {
-    // Graphviz parity: limit segment boxes independently to match straight_path sampling.
-    pathplan_segments = limit_pathplan_segment_boxes(base, pathplan_segments)
-  }
+  let (pathplan_boxes, pathplan_segments) =
+    finalize_pathplan_boxes_and_segments(
+      base,
+      using_pathplan,
+      pathplan_boxes,
+      pathplan_points,
+      raw_bezier,
+      pathplan_segments,
+    )
   {
     spline,
     label_pad_boost,
