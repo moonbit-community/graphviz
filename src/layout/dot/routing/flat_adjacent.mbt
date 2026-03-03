@@ -1,8 +1,32 @@
 ///|
+fn edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
+fn edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+fn cmp_int(a : Int, b : Int) -> Int {
+  if a < b {
+    -1
+  } else if a > b {
+    1
+  } else {
+    0
+  }
+}
+
+///|
 /// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
-fn collect_flat_adjacent_beziers(
+pub fn collect_flat_adjacent_beziers(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
   ranks : Map[String, Int],

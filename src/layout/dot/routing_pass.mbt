@@ -1121,7 +1121,7 @@ fn route_edges(
     )
   let flat_adjacent_simple_beziers =
     if splines == SplinesMode::Spline {
-      collect_flat_adjacent_beziers(
+      @routing.collect_flat_adjacent_beziers(
         edges,
         base_cache,
         ranks,

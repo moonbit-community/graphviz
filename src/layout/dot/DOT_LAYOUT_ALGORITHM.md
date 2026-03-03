@@ -414,7 +414,7 @@ Main files:
 - `src/layout/dot/routing_render_layout.mbt`
 - `src/layout/dot/routing_self_edge.mbt`
 - `src/layout/dot/routing_sameport.mbt`
-- `src/layout/dot/routing_flat_adjacent.mbt`
+- `src/layout/dot/routing/flat_adjacent.mbt`
 - `src/layout/dot/routing_clip_shape.mbt`
 - `src/layout/dot/routing/routesplines/*`
 - `src/layout/dot/routing/pathplan/*`
@@ -568,7 +568,7 @@ Repository guard validates:
 - Crossing helpers:
   - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
 - Routing:
-  - `routing_types.mbt`, `routing_context.mbt`, `routing_pass.mbt`, `routing_base.mbt`, `routing_curve_points.mbt`, `routing_short_route.mbt`, `routing_curve_mode.mbt`, `routing_render_layout.mbt`, `routing_self_edge.mbt`, `routing_sameport.mbt`, `routing_flat_adjacent.mbt`, `routing_clip_shape.mbt`, `routing/*`
+  - `routing_types.mbt`, `routing_context.mbt`, `routing_pass.mbt`, `routing_base.mbt`, `routing_curve_points.mbt`, `routing_short_route.mbt`, `routing_curve_mode.mbt`, `routing_render_layout.mbt`, `routing_self_edge.mbt`, `routing_sameport.mbt`, `routing_clip_shape.mbt`, `routing/*`
 - Final graph writeback:
   - `f_postprocess.mbt`
 
