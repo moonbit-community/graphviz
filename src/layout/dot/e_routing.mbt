@@ -290,6 +290,22 @@ fn route_include_arrowheads(
 }
 
 ///|
+fn route_has_no_arrowheads(
+  route_include_tail : Bool,
+  route_include_head : Bool,
+) -> Bool {
+  !route_include_tail && !route_include_head
+}
+
+///|
+fn route_has_single_arrowhead(
+  route_include_tail : Bool,
+  route_include_head : Bool,
+) -> Bool {
+  route_include_tail != route_include_head
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -2921,7 +2937,7 @@ fn build_edge_spline(
         (base.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
         (base.tail_port_side & PORT_SIDE_TOP) == 0 &&
         (base.head_port_side & PORT_SIDE_TOP) == 0 &&
-        route_include_tail != route_include_head
+        route_has_single_arrowhead(route_include_tail, route_include_head)
       let routed_spline = if points.length() > 2 {
         let clipped = points
         let simplify_tol = nodesep_pt * 0.8
@@ -2984,8 +3000,7 @@ fn build_edge_spline(
             is_flat_edge &&
             !has_explicit_port &&
             label_width_pt <= 0.0 &&
-            !route_include_tail &&
-            !route_include_head
+            route_has_no_arrowheads(route_include_tail, route_include_head)
           let flat_top_compass_single_arrow_candidate =
             !using_pathplan &&
             is_flat_edge &&
@@ -2996,7 +3011,7 @@ fn build_edge_spline(
             (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
             (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
             (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
-            route_include_tail != route_include_head
+            route_has_single_arrowhead(route_include_tail, route_include_head)
           let flat_detour =
             if flat_no_arrow_candidate ||
               flat_top_compass_single_arrow_candidate {
@@ -3432,8 +3447,7 @@ fn build_edge_spline(
           is_flat_edge &&
           !has_explicit_port &&
           label_width_pt <= 0.0 &&
-          !route_include_tail &&
-          !route_include_head
+          route_has_no_arrowheads(route_include_tail, route_include_head)
         let flat_top_compass_single_arrow_candidate =
           !using_pathplan &&
           is_flat_edge &&
@@ -3444,7 +3458,7 @@ fn build_edge_spline(
           (base.tail_port_side & PORT_SIDE_BOTTOM) == 0 &&
           (base.head_port_side & PORT_SIDE_BOTTOM) == 0 &&
           (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT) &&
-          route_include_tail != route_include_head
+          route_has_single_arrowhead(route_include_tail, route_include_head)
         let flat_detour =
           if flat_no_arrow_candidate ||
             flat_top_compass_single_arrow_candidate {
