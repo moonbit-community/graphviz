@@ -3144,14 +3144,15 @@ fn limit_pathplan_segment_boxes(
     route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
   let join_dir = straight_path_join_dir(base.layout_rankdir)
   let limited_segments : Array[@routesplines.PathplanSegment] = []
+  let segment_count = pathplan_segments.length()
   let mut seg_idx = 0
-  while seg_idx < pathplan_segments.length() {
+  while seg_idx < segment_count {
     let segment = pathplan_segments[seg_idx]
     let segment_raw =
       pathplan_segment_raw_bezier(
         segment,
         seg_idx,
-        pathplan_segments.length(),
+        segment_count,
         tail_slope_for,
         head_slope_for,
         join_dir,
@@ -3184,14 +3185,15 @@ fn segmented_pathplan_raw_bezier(
   force_segmented : Bool,
 ) -> Array[@geom.Point] {
   let segmented_raw : Array[@geom.Point] = []
+  let segment_count = pathplan_segments.length()
   let mut seg_idx = 0
-  while seg_idx < pathplan_segments.length() {
+  while seg_idx < segment_count {
     let segment = pathplan_segments[seg_idx]
     let seg_raw =
       pathplan_segment_raw_bezier(
         segment,
         seg_idx,
-        pathplan_segments.length(),
+        segment_count,
         tail_slope_for,
         head_slope_for,
         join_dir,
@@ -3651,7 +3653,7 @@ fn build_edge_spline(
             } else {
               []
             }
-          if use_segmented_pathplan && segmented_raw.length() > 0 {
+          if segmented_raw.length() > 0 {
             raw_bezier = segmented_raw
             let spline =
               @edge_spline.edge_spline_for_bezier_points(
