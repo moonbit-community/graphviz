@@ -58,40 +58,14 @@ fn prepare_routing_context(
   for node in nodes {
     path_cluster_keys[node.name()] = node_local_cluster_key(node)
   }
-  let path_vnode_clusters : Map[String, String] = Map::new()
-  for edge in edges {
-    let key = @dot_shared.edge_vnode_key(edge)
-    let vnodes = match vnode_info.edge_vnodes.get(key) {
-      Some(list) => list
-      None => []
-    }
-    if vnodes.length() == 0 {
-      continue
-    }
-    let tail_cluster = node_local_cluster_key(edge.tail())
-    let head_cluster = node_local_cluster_key(edge.head())
-    for vnode in vnodes {
-      let pos = match vnode_positions.get(vnode) {
-        Some(value) => value
-        None => continue
-      }
-      let mut vnode_cluster =
-        cluster_containing_point_or_empty(
-          tail_cluster,
-          cluster_bboxes,
-          pos,
-        )
-      if vnode_cluster == "" {
-        vnode_cluster =
-          cluster_containing_point_or_empty(
-            head_cluster,
-            cluster_bboxes,
-            pos,
-          )
-      }
-      path_vnode_clusters[vnode] = vnode_cluster
-    }
-  }
+  let path_vnode_clusters =
+    @routing.path_vnode_clusters(
+      edges,
+      vnode_info.edge_vnodes,
+      vnode_positions,
+      path_cluster_keys,
+      cluster_bboxes,
+    )
   let edge_reversed_by_id : Map[Int, Bool] = Map::new()
   let edge_has_label_by_id : Map[Int, Bool] = Map::new()
   for i in 0..<edges.length() {
@@ -130,26 +104,6 @@ fn prepare_routing_context(
   }
 }
 
-///|
-fn cluster_containing_point_or_empty(
-  cluster_name : String,
-  cluster_bboxes : Map[String, @geom.Rect],
-  pos : @geom.Point,
-) -> String {
-  if cluster_name == "" {
-    return ""
-  }
-  match cluster_bboxes.get(cluster_name) {
-    Some(rect) =>
-      if pos.x >= rect.llx && pos.x <= rect.urx &&
-        pos.y >= rect.lly && pos.y <= rect.ury {
-        cluster_name
-      } else {
-        ""
-      }
-    None => ""
-  }
-}
 ///|
 priv struct EdgeRouteBase {
   edge : @cgraph.Edge
