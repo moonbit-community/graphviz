@@ -44,16 +44,6 @@ fn run_root_rank_reorder_call(
 }
 
 ///|
-/// Graphviz parity: root rank-reorder runtime keeps component traversal output
-/// and coalesce-parallel mode from one root reorder input snapshot.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootRankReorderRuntime {
-  components : Array[Array[String]]
-  root_graphviz_flip : Bool
-  coalesce_parallel : Bool
-}
-
-///|
 priv struct RootRankReorderInputs {
   order_rank_keys_for_mincross : Array[Int]
   order_groups_for_mincross : Map[Int, Array[String]]
@@ -147,73 +137,12 @@ fn build_root_component_reorder_inputs(
 }
 
 ///|
-/// Graphviz parity: multi-component root reorder runs one component projection
-/// per mincross call, then concatenates per-rank outputs in component order.
-/// Do not change behavior without updating fixtures/tests.
-fn run_componentwise_root_rank_reorder(
-  components : Array[Array[String]],
-  root_inputs : RootRankReorderInputs,
-  root_graphviz_flip : Bool,
-  coalesce_parallel : Bool,
-) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map::new()
-  for rank in root_inputs.order_rank_keys_for_mincross {
-    merged[rank] = []
-  }
-  for component_nodes in components {
-    let component_set = @ordering.build_node_membership_set(component_nodes)
-    let reorder_call_inputs =
-      build_root_component_reorder_inputs(
-        component_nodes,
-        component_set,
-        root_inputs,
-      )
-    let ordered_component =
-      run_root_rank_reorder_call(
-        reorder_call_inputs,
-        root_graphviz_flip,
-        coalesce_parallel,
-      )
-    @ordering.append_component_rank_groups(
-      root_inputs.order_rank_keys_for_mincross,
-      merged,
-      ordered_component,
-    )
-  }
-  merged
-}
-
-///|
 /// Graphviz parity: root ReMincross runs mincross per connected component
 /// (dot_mincross init_mccomp loop), then concatenates rank output by component.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
 ) -> Map[Int, Array[String]] {
-  let runtime =
-    build_root_rank_reorder_runtime(inputs)
-  if runtime.components.length() <= 1 {
-    return run_root_rank_reorder_call(
-      inputs,
-      runtime.root_graphviz_flip,
-      runtime.coalesce_parallel,
-    )
-  }
-  run_componentwise_root_rank_reorder(
-    runtime.components,
-    inputs,
-    runtime.root_graphviz_flip,
-    runtime.coalesce_parallel,
-  )
-}
-
-///|
-/// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
-/// component traversal plan, and coalesce-parallel env mode aligned.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_reorder_runtime(
-  inputs : RootRankReorderInputs,
-) -> RootRankReorderRuntime {
   let (components, root_graphviz_flip) =
     @ordering.build_root_component_runtime_plan(
       inputs.order_cluster_keys,
@@ -227,11 +156,30 @@ fn build_root_rank_reorder_runtime(
     )
   let coalesce_parallel =
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
-  {
-    components,
-    root_graphviz_flip,
-    coalesce_parallel,
+  if components.length() <= 1 {
+    return run_root_rank_reorder_call(
+      inputs,
+      root_graphviz_flip,
+      coalesce_parallel,
+    )
   }
+  @ordering.run_componentwise_root_rank_reorder(
+    components,
+    inputs.order_rank_keys_for_mincross,
+    (component_nodes, component_set) => {
+      let reorder_call_inputs =
+        build_root_component_reorder_inputs(
+          component_nodes,
+          component_set,
+          inputs,
+        )
+      run_root_rank_reorder_call(
+        reorder_call_inputs,
+        root_graphviz_flip,
+        coalesce_parallel,
+      )
+    },
+  )
 }
 
 ///|

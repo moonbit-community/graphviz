@@ -551,6 +551,31 @@ pub fn append_component_rank_groups(
 }
 
 ///|
+/// Graphviz parity: multi-component root reorder runs one component projection
+/// per mincross call, then concatenates per-rank outputs in component order.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_componentwise_root_rank_reorder(
+  components : Array[Array[String]],
+  order_rank_keys_for_mincross : Array[Int],
+  run_component : (Array[String], Map[String, Bool]) -> Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let merged : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys_for_mincross {
+    merged[rank] = []
+  }
+  for component_nodes in components {
+    let component_set = build_node_membership_set(component_nodes)
+    let ordered_component = run_component(component_nodes, component_set)
+    append_component_rank_groups(
+      order_rank_keys_for_mincross,
+      merged,
+      ordered_component,
+    )
+  }
+  merged
+}
+
+///|
 /// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
 /// component traversal plan, and graphviz_flip mode aligned with Graphviz.
 /// Do not change behavior without updating fixtures/tests.
