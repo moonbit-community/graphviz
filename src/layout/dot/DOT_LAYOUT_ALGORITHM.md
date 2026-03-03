@@ -243,7 +243,6 @@ Supporting files:
 - `src/layout/dot/c2_seed.mbt`
 - `src/layout/dot/c2_reorder.mbt`
 - `src/layout/dot/c2_nonclustered.mbt`
-- `src/layout/dot/c2_root_mincross.mbt`
 - `src/layout/dot/c3_clustered.mbt`
 - `src/layout/dot/c3_local.mbt`
 - `src/layout/dot/c4_root_reorder.mbt`
@@ -564,7 +563,6 @@ Repository guard validates:
   - `c2_seed.mbt`
   - `c2_reorder.mbt`
   - `c2_nonclustered.mbt`
-  - `c2_root_mincross.mbt`
 - Clustered ordering orchestration and rank-order updates:
   - `c3_clustered.mbt`
   - `c3_local.mbt`
