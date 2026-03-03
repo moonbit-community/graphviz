@@ -4084,6 +4084,10 @@ fn prepare_edge_curve_mode_route(
   let tail_anchor = base.tail_anchor
   let head_anchor = base.head_anchor
   let label_width_pt = edge_mid_label_width_pt(edge)
+  let label_height_pt = match edge_mid_label_metrics(edge) {
+    Some(metrics) => Some(metrics.height)
+    None => None
+  }
   let has_explicit_port =
     @dot_shared.port_is_explicit(base.tail_port) ||
     @dot_shared.port_is_explicit(base.head_port)
@@ -4096,7 +4100,7 @@ fn prepare_edge_curve_mode_route(
   let label_pad_boost = if split_label { nodesep_pt * 1.2 } else { 0.0 }
   let dotted_weight = if enable_complex_tuning { 1.0 } else { 0.8 }
   let guide_points =
-    edge_polyline_points(
+    @routing.edge_polyline_points(
       edge,
       base.tail_name,
       base.head_name,
@@ -4112,10 +4116,12 @@ fn prepare_edge_curve_mode_route(
       rank_ht1,
       nodesep_pt,
       label_width_pt,
+      label_height_pt,
       dotted_weight,
       enable_complex_tuning,
       split_label,
       base.same_local_cluster,
+      DEFAULT_VNODE_WEIGHT,
     )
   let route_state =
     compute_pathplan_route_points(

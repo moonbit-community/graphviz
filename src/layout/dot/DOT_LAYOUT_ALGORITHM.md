@@ -410,6 +410,7 @@ Main files:
 - `src/layout/dot/routing/edge_spline/*`
 - `src/layout/dot/routing/edge_ops/*`
 - `src/layout/dot/routing/parallel_offsets.mbt`
+- `src/layout/dot/routing/polyline_points.mbt`
 
 ### What it does
 

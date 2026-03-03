@@ -1,5 +1,5 @@
 ///|
-fn edge_polyline_points(
+pub fn edge_polyline_points(
   edge : @cgraph.Edge,
   tail_name : String,
   head_name : String,
@@ -15,10 +15,12 @@ fn edge_polyline_points(
   rank_ht1 : Map[Int, Double],
   nodesep_pt : Double,
   label_width_pt : Double,
+  label_height_pt : Double?,
   dotted_weight : Double,
   use_cluster_tuning : Bool,
   split_label : Bool,
   same_local_cluster : Bool,
+  default_vnode_weight : Double,
 ) -> Array[@geom.Point] {
   let points : Array[@geom.Point] = [tail_anchor]
   let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
@@ -38,9 +40,9 @@ fn edge_polyline_points(
                 if label_width_pt > 0.0 {
                   let half = label_width_pt / 2.0
                   let bend_y =
-                    match edge_mid_label_metrics(edge) {
-                      Some(metrics) => {
-                        let label_top = pos.y + metrics.height / 2.0
+                    match label_height_pt {
+                      Some(height) => {
+                        let label_top = pos.y + height / 2.0
                         let source_y =
                           if tail_anchor.x <= head_anchor.x {
                             tail_anchor.y
@@ -110,7 +112,7 @@ fn edge_polyline_points(
                 0.0
               }
             } else {
-              DEFAULT_VNODE_WEIGHT
+              default_vnode_weight
             }
           let span_f = Double::from_int(span)
           let push_point = (name : String) => {
