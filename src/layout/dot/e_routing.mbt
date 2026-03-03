@@ -3124,6 +3124,46 @@ fn pathplan_segment_raw_bezier(
 }
 
 ///|
+fn limit_pathplan_segment_boxes(
+  base : EdgeRouteBase,
+  pathplan_segments : Array[@routesplines.PathplanSegment],
+) -> Array[@routesplines.PathplanSegment] {
+  let (tail_slope_for, head_slope_for) =
+    route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
+  let join_dir = straight_path_join_dir(base.layout_rankdir)
+  let limited_segments : Array[@routesplines.PathplanSegment] = []
+  let mut seg_idx = 0
+  while seg_idx < pathplan_segments.length() {
+    let segment = pathplan_segments[seg_idx]
+    let segment_raw =
+      pathplan_segment_raw_bezier(
+        segment,
+        seg_idx,
+        pathplan_segments.length(),
+        tail_slope_for,
+        head_slope_for,
+        join_dir,
+        false,
+        false,
+      )
+    let limited_boxes =
+      @routesplines.limit_boxes_for_spline(
+        segment.boxes,
+        segment_raw,
+        fallback_polyline=segment.points,
+      )
+    limited_segments.push({
+      points: segment.points,
+      barriers: segment.barriers,
+      boxes: limited_boxes,
+      vnodes: segment.vnodes,
+    })
+    seg_idx = seg_idx + 1
+  }
+  limited_segments
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3845,39 +3885,7 @@ fn build_edge_spline(
   }
   if using_pathplan && pathplan_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.
-    let (tail_slope_for, head_slope_for) =
-      route_endpoint_slopes(tail_port, head_port, tail_slope, head_slope)
-    let join_dir = straight_path_join_dir(layout_rankdir)
-    let limited_segments : Array[@routesplines.PathplanSegment] = []
-    let mut seg_idx = 0
-    while seg_idx < pathplan_segments.length() {
-      let segment = pathplan_segments[seg_idx]
-      let segment_raw =
-        pathplan_segment_raw_bezier(
-          segment,
-          seg_idx,
-          pathplan_segments.length(),
-          tail_slope_for,
-          head_slope_for,
-          join_dir,
-          false,
-          false,
-        )
-      let limited_boxes =
-        @routesplines.limit_boxes_for_spline(
-          segment.boxes,
-          segment_raw,
-          fallback_polyline=segment.points,
-        )
-      limited_segments.push({
-        points: segment.points,
-        barriers: segment.barriers,
-        boxes: limited_boxes,
-        vnodes: segment.vnodes,
-      })
-      seg_idx = seg_idx + 1
-    }
-    pathplan_segments = limited_segments
+    pathplan_segments = limit_pathplan_segment_boxes(base, pathplan_segments)
   }
   {
     spline,
