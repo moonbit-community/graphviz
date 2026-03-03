@@ -1,15 +1,24 @@
 ///|
-fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
-  match edge_mid_label_metrics(edge) {
-    Some(metrics) =>
-      if rankdir == RankDir::LR || rankdir == RankDir::RL {
-        metrics.width
-      } else {
-        metrics.height
-      }
-    None => 0.0
-  }
+type RankDir = @dot_shared.RankDir
+
+///|
+fn min_double(a : Double, b : Double) -> Double {
+  if a < b { a } else { b }
 }
+
+///|
+fn max_double(a : Double, b : Double) -> Double {
+  if a > b { a } else { b }
+}
+
+///|
+const PORT_SIDE_BOTTOM : Int = 1
+///|
+const PORT_SIDE_RIGHT : Int = 2
+///|
+const PORT_SIDE_TOP : Int = 4
+///|
+const PORT_SIDE_LEFT : Int = 8
 
 ///|
 priv struct RankBounds {
@@ -115,6 +124,7 @@ fn self_edge_routes_top(
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> Array[SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
@@ -180,7 +190,8 @@ fn self_edge_routes_top(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
+    let label_height =
+      self_edge_label_height_fn(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(@edge_spline.point(np.x, np.y + dy + label_height / 2.0))
       if label_height > stepy {
@@ -199,6 +210,7 @@ fn self_edge_routes_bottom(
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> Array[SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
@@ -232,7 +244,8 @@ fn self_edge_routes_bottom(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_height = self_edge_label_height_pt(edge, base0.layout_rankdir)
+    let label_height =
+      self_edge_label_height_fn(edge, base0.layout_rankdir)
     if label_height > 0.0 {
       label_pos = Some(@edge_spline.point(np.x, np.y - dy - label_height / 2.0))
       if label_height > stepy {
@@ -283,6 +296,7 @@ fn self_edge_routes_horizontal_side(
   flip_pair_b : Int,
   side_width : Double,
   to_right : Bool,
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> Array[SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
@@ -324,7 +338,8 @@ fn self_edge_routes_horizontal_side(
       hp,
     ]
     let mut label_pos : @geom.Point? = None
-    let label_width = self_edge_label_width_pt(edge, base0.rankdir)
+    let label_width =
+      self_edge_label_width_fn(edge, base0.rankdir)
     if label_width > 0.0 {
       label_pos = Some(
         @edge_spline.point(np.x + x_sign * (dx + label_width / 2.0), np.y),
@@ -346,6 +361,8 @@ fn build_self_edge_routes(
   bases : Array[EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> Array[SelfEdgeRoute] {
   if edges.length() == 0 {
     return []
@@ -409,6 +426,7 @@ fn build_self_edge_routes(
       65,
       base0.tail_size.right_pt,
       true,
+      self_edge_label_width_fn,
     )
   }
   if uses_left {
@@ -419,6 +437,7 @@ fn build_self_edge_routes(
         nodesep_pt,
         sizey_param,
         convert_sides_to_points(tail_side, head_side),
+        self_edge_label_height_fn,
       )
     } else {
       let point_pair = convert_sides_to_points(tail_side, head_side)
@@ -435,6 +454,7 @@ fn build_self_edge_routes(
         67,
         base0.tail_size.left_pt,
         false,
+        self_edge_label_width_fn,
       )
     }
   }
@@ -446,6 +466,7 @@ fn build_self_edge_routes(
       nodesep_pt,
       sizey_param,
       point_pair,
+      self_edge_label_height_fn,
     )
   }
   if (tail_side & PORT_SIDE_BOTTOM) != 0 {
@@ -455,9 +476,17 @@ fn build_self_edge_routes(
       nodesep_pt,
       sizey_param,
       point_pair,
+      self_edge_label_height_fn,
     )
   }
-  self_edge_routes_top(edges, base0, nodesep_pt, sizey_param, point_pair)
+  self_edge_routes_top(
+    edges,
+    base0,
+    nodesep_pt,
+    sizey_param,
+    point_pair,
+    self_edge_label_height_fn,
+  )
 }
 
 ///|
@@ -475,7 +504,7 @@ fn self_edge_group_key(edge : @cgraph.Edge) -> String {
 ///|
 /// Graphviz parity: self-edge groups share generated loop routes in one pass.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_self_edge_groups(
+pub fn collect_self_edge_groups(
   edges : Array[@cgraph.Edge],
 ) -> Map[String, Array[@cgraph.Edge]] {
   let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
@@ -503,6 +532,8 @@ fn ensure_self_edge_routes(
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> Unit {
   let edge_id = edge.id()
   if self_edge_routes.get(edge_id) is Some(_) {
@@ -526,6 +557,8 @@ fn ensure_self_edge_routes(
           group_bases,
           nodesep_pt,
           rank_y,
+          self_edge_label_height_fn,
+          self_edge_label_width_fn,
         )
       for i in 0..<group_edges.length() {
         self_edge_routes[group_edges[i].id()] = group_routes[i]
@@ -538,13 +571,15 @@ fn ensure_self_edge_routes(
 ///|
 /// Graphviz parity: self-edge route lookup ensures grouped route cache first.
 /// Do not change behavior without updating fixtures/tests.
-fn self_edge_route_for_edge(
+pub fn self_edge_route_for_edge(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
   base_cache : Map[Int, EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
 ) -> SelfEdgeRoute? {
   if edge.tail().name() != edge.head().name() {
     return None
@@ -556,6 +591,8 @@ fn self_edge_route_for_edge(
     nodesep_pt,
     rank_y,
     self_edge_routes,
+    self_edge_label_height_fn,
+    self_edge_label_width_fn,
   )
   self_edge_routes.get(edge.id())
 }

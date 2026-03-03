@@ -33,7 +33,7 @@ priv struct FlatDetourResult {
 }
 
 ///|
-priv struct FlatDetourLookupContext {
+pub(all) struct FlatDetourLookupContext {
   tail_name : String
   head_name : String
   rank : Int

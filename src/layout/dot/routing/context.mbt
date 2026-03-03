@@ -1,5 +1,8 @@
 ///|
-priv struct RoutingContext {
+type NodeSize = @dot_shared.NodeSize
+
+///|
+pub(all) struct RoutingContext {
   order_index : Map[String, Int]
   path_order_index : Map[String, Int]
   path_adjacency : @routesplines.PathAdjacency
@@ -79,53 +82,57 @@ fn build_path_vnode_clusters(
 /// Graphviz parity: routing context aligned to refs/graphviz/lib/dotgen/dotsplines.c
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn prepare_routing_context(
+pub fn prepare_routing_context(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
   sizes : Map[String, NodeSize],
-  rankdir : RankDir,
-  record_orientation : RecordOrientation,
   ranks : Map[String, Int],
   ordered_groups : Map[Int, Array[String]],
   x_groups : Map[Int, Array[String]],
   nodesep_pt : Double,
-  vnode_info : EdgeVnodeInfo,
+  edge_vnodes : Map[String, Array[String]],
+  vnode_sizes : Map[String, NodeSize],
   vnode_positions : Map[String, @geom.Point],
   cluster_bboxes : Map[String, @geom.Rect],
+  build_order_index_fn : (Map[Int, Array[String]]) -> Map[String, Int],
+  apply_self_edge_right_space_fn : (
+    Array[@cgraph.Node],
+    Array[@cgraph.Edge],
+    Map[String, NodeSize],
+  ) -> Map[String, NodeSize],
+  node_local_cluster_key_fn : (@cgraph.Node) -> String,
 ) -> RoutingContext {
-  let order_index = build_order_index(ordered_groups)
-  let path_order_index = build_order_index(x_groups)
+  let order_index = build_order_index_fn(ordered_groups)
+  let path_order_index = build_order_index_fn(x_groups)
   let path_adjacency =
     @routesplines.build_path_adjacency(
       edges,
-      vnode_info.edge_vnodes,
+      edge_vnodes,
       edge_tail,
       edge_head,
     )
   // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
   let pathplan_sizes =
-    apply_self_edge_right_space(
+    apply_self_edge_right_space_fn(
       nodes,
       edges,
       sizes,
-      rankdir,
-      record_orientation,
     )
   // Graphviz parity: preserve original vnode widths for ND_mval usage.
   let pathplan_vnode_mval_sizes : Map[String, NodeSize] = Map::new()
-  for name, size in vnode_info.vnode_sizes {
+  for name, size in vnode_sizes {
     pathplan_vnode_mval_sizes[name] = size
   }
   let path_cluster_keys : Map[String, String] = Map::new()
   for node in nodes {
-    path_cluster_keys[node.name()] = node_local_cluster_key(node)
+    path_cluster_keys[node.name()] = node_local_cluster_key_fn(node)
   }
   let path_vnode_clusters =
     build_path_vnode_clusters(
       edges,
-      vnode_info.edge_vnodes,
+      edge_vnodes,
       vnode_positions,
       path_cluster_keys,
       cluster_bboxes,

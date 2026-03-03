@@ -30,7 +30,7 @@ fn prefer_linear_for_flat_line(
 }
 
 ///|
-fn build_points_spline(
+pub fn build_points_spline(
   base : EdgeRouteBase,
   points : Array[@geom.Point],
   tail_slope_line : @geom.Point,

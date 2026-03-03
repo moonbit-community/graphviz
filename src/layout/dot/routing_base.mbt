@@ -70,7 +70,7 @@ fn build_edge_route_base(
   record_orientation : RecordOrientation,
   label_ports_map : Map[String, Map[String, RecordPort]],
   label_ports_raw : Map[String, Map[String, RecordPort]],
-  routing_context : RoutingContext,
+  routing_context : @routing.RoutingContext,
   rankdir : RankDir,
   layout_rankdir : RankDir,
   enable_complex_tuning : Bool,

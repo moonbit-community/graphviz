@@ -15,6 +15,18 @@ fn route_has_single_arrowhead(
 }
 
 ///|
+fn short_route_is_record_shape(node : @cgraph.Node) -> Bool {
+  match node.get_attr("shape") {
+    Some(value) =>
+      match value.to_lower() {
+        "record" | "mrecord" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
 fn needs_record_port_detour(
   using_pathplan : Bool,
   is_flat_edge : Bool,
@@ -27,8 +39,14 @@ fn needs_record_port_detour(
   layout_rankdir : RankDir,
 ) -> Bool {
   let record_port_edge =
-    (is_record_shape(tail_node) && @dot_shared.port_is_explicit(tail_port)) ||
-    (is_record_shape(head_node) && @dot_shared.port_is_explicit(head_port))
+    (
+      short_route_is_record_shape(tail_node) &&
+      @dot_shared.port_is_explicit(tail_port)
+    ) ||
+    (
+      short_route_is_record_shape(head_node) &&
+      @dot_shared.port_is_explicit(head_port)
+    )
   !using_pathplan &&
   !is_flat_edge &&
   record_port_edge &&
@@ -81,7 +99,7 @@ fn flat_detour_candidate_flags(
 }
 
 ///|
-fn edge_port_slope_or_zero(
+pub fn edge_port_slope_or_zero(
   port : @cgraph.Port?,
   slope : @geom.Point,
 ) -> @geom.Point {
@@ -177,13 +195,13 @@ fn short_route_detour_context_for_base(
 }
 
 ///|
-priv struct PointsSplineResult {
+pub(all) struct PointsSplineResult {
   spline : @geom.Spline
   raw_bezier : Array[@geom.Point]
 }
 
 ///|
-priv struct ShortRouteBuildSpec {
+pub(all) struct ShortRouteBuildSpec {
   detour_line_start : @geom.Point
   detour_line_end : @geom.Point
   fallback_points : Array[@geom.Point]
@@ -195,7 +213,7 @@ priv struct ShortRouteBuildSpec {
 }
 
 ///|
-priv struct ShortRouteBuildContext {
+pub(all) struct ShortRouteBuildContext {
   using_pathplan : Bool
   has_explicit_port : Bool
   label_width_pt : Double
@@ -253,7 +271,7 @@ fn build_short_route_fallback_spline(
 }
 
 ///|
-fn short_route_build_context(
+pub fn short_route_build_context(
   base : EdgeRouteBase,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
@@ -320,7 +338,7 @@ fn short_route_build_context(
 }
 
 ///|
-fn short_route_spec_for_adjusted_points(
+pub fn short_route_spec_for_adjusted_points(
   adjusted : Array[@geom.Point],
 ) -> ShortRouteBuildSpec {
   {
@@ -336,7 +354,7 @@ fn short_route_spec_for_adjusted_points(
 }
 
 ///|
-fn short_route_spec_for_anchor_or_pathplan_points(
+pub fn short_route_spec_for_anchor_or_pathplan_points(
   points : Array[@geom.Point],
   using_pathplan : Bool,
   tail_anchor : @geom.Point,
@@ -369,7 +387,7 @@ fn short_route_spec_for_anchor_or_pathplan_points(
 }
 
 ///|
-fn build_short_route_spline_with_detour(
+pub fn build_short_route_spline_with_detour(
   base : EdgeRouteBase,
   short_route_context : ShortRouteBuildContext,
   short_route_spec : ShortRouteBuildSpec,

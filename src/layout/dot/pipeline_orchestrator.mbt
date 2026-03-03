@@ -305,7 +305,7 @@ priv struct RoutingPrecomputeData {
   port_pad_above : Double
   head_port_metrics : HeadPortMetrics
   path_groups : Map[Int, Array[String]]
-  routing_context : RoutingContext
+  routing_context : @routing.RoutingContext
 }
 
 ///|
@@ -361,21 +361,30 @@ fn build_routing_precompute_data(
   // Graphviz parity: routing context is assembled from routing-stage
   // inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
-    prepare_routing_context(
+    @routing.prepare_routing_context(
       prep.nodes,
       prep.edges,
       rank_data.edge_tail,
       rank_data.edge_head,
       sizes,
-      prep.rankdir,
-      prep.record_orientation,
       rank_data.ranks,
       ordering.ordered_groups,
       path_groups,
       rank_heights.nodesep_pt,
-      ordering.vnode_info,
+      ordering.vnode_info.edge_vnodes,
+      ordering.vnode_info.vnode_sizes,
       positions_state.vnode_positions,
       cluster_bboxes,
+      build_order_index,
+      (nodes, edges, sizes) =>
+        apply_self_edge_right_space(
+          nodes,
+          edges,
+          sizes,
+          prep.rankdir,
+          prep.record_orientation,
+        ),
+      node_local_cluster_key,
     )
   {
     port_pad_below,

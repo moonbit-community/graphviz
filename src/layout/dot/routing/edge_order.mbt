@@ -59,6 +59,14 @@ fn cmp_double(a : Double, b : Double) -> Int {
 }
 
 ///|
+fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
+  match edge.get_attr(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
 fn port_cmp(
   a_defined : Bool,
   a_pos : @geom.Point,
@@ -229,7 +237,7 @@ fn route_edge_cmp(
 ///|
 /// Graphviz parity: edge routing pass order follows dot edgecmp.
 /// Do not change behavior without updating fixtures/tests.
-fn sorted_edges_for_routing(
+pub fn sorted_edges_for_routing(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
   order_index : Map[String, Int],

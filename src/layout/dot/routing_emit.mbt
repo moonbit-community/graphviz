@@ -17,7 +17,7 @@ fn build_bezier_layout_spline_result(
   head_swap : Bool,
 ) -> BezierLayoutSplineResult {
   let spline =
-    build_bezier_points_spline(
+    @routing.build_bezier_points_spline(
       base,
       raw_bezier,
       base.tail_clip_enabled,
@@ -26,14 +26,16 @@ fn build_bezier_layout_spline_result(
       head_swap,
     )
   let spline_result =
-    edge_spline_result_for_bezier(
+    @routing.edge_spline_result_for_bezier(
       spline,
       raw_bezier,
       label_pad_boost,
       apply_dotted_adjustment,
     )
-  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
-  let final_spline = finalize_edge_spline(base, layout_spline_result)
+  let layout_spline_result =
+    @routing.rebuild_spline_for_render(base, spline_result)
+  let final_spline =
+    @routing.finalize_edge_spline(base, layout_spline_result)
   { final_spline, layout_spline_result }
 }
 
@@ -134,4 +136,3 @@ fn build_regular_bezier_layout(
     context,
   )
 }
-

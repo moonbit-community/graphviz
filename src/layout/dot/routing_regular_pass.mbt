@@ -61,7 +61,7 @@ fn recover_pathplan_slack(
   if !spline_result.using_pathplan {
     return ()
   }
-  let recover_key = recover_slack_key_for_edge(edge)
+  let recover_key = @routing.recover_slack_key_for_edge(edge)
   match recover_edge_id_by_key.get(recover_key) {
     Some(recover_edge_id) =>
       if recover_edge_id != edge.id() {
@@ -159,8 +159,10 @@ fn build_regular_spline_layout(
     input.routing_context,
     input.enable_complex_tuning,
   )
-  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
-  let spline = finalize_edge_spline(base, layout_spline_result)
+  let layout_spline_result =
+    @routing.rebuild_spline_for_render(base, spline_result)
+  let spline =
+    @routing.finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack(
     edge,
     base,

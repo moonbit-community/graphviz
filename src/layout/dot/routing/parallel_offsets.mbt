@@ -2,7 +2,46 @@
 /// Graphviz parity: parallel-offset ordering keeps edge-orientation flags from
 /// staged edge_tail/edge_head arrays.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_parallel_offset_edge_flags(
+fn edge_endpoints_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (String, String) {
+  let tail =
+    if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+      edge.tail().name()
+    }
+  let head =
+    if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+      edge.head().name()
+    }
+  (tail, head)
+}
+
+///|
+fn edge_orientation_is_reversed(
+  edge : @cgraph.Edge,
+  tail_name : String,
+  head_name : String,
+) -> Bool {
+  tail_name == edge.head().name() &&
+  head_name == edge.tail().name()
+}
+
+///|
+fn edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: parallel-offset ordering keeps edge-orientation flags from
+/// staged edge_tail/edge_head arrays.
+/// Do not change behavior without updating fixtures/tests.
+pub fn collect_parallel_offset_edge_flags(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -29,7 +68,7 @@ fn collect_parallel_offset_edge_flags(
 /// Graphviz parity: parallel offsets group by unordered endpoints/ports (set of
 /// tail/head), and only for unlabeled edges (class2 merge_chain).
 /// Do not change behavior without updating fixtures/tests.
-fn build_edge_parallel_offsets(
+pub fn build_edge_parallel_offsets(
   edges : Array[@cgraph.Edge],
   edge_has_label_by_id : Map[Int, Bool],
   ranks : Map[String, Int],

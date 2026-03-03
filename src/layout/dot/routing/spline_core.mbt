@@ -1,5 +1,5 @@
 ///|
-fn edge_spline_result_for_bezier(
+pub fn edge_spline_result_for_bezier(
   spline : @geom.Spline,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
@@ -18,7 +18,7 @@ fn edge_spline_result_for_bezier(
 }
 
 ///|
-fn edge_polyline_mode_spline(
+pub fn edge_polyline_mode_spline(
   base : EdgeRouteBase,
   is_ortho : Bool,
 ) -> @geom.Spline {
@@ -47,7 +47,7 @@ fn edge_polyline_mode_spline(
 }
 
 ///|
-fn build_bezier_points_spline(
+pub fn build_bezier_points_spline(
   base : EdgeRouteBase,
   bezier_points : Array[@geom.Point],
   tail_clip_enabled : Bool,
@@ -78,7 +78,7 @@ fn build_bezier_points_spline(
 ///|
 /// Graphviz parity: spline finalization aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn finalize_edge_spline(
+pub fn finalize_edge_spline(
   base : EdgeRouteBase,
   result : EdgeSplineResult,
 ) -> @geom.Spline {
@@ -122,8 +122,16 @@ fn edge_sameport_direct_flags(
   edge : @cgraph.Edge,
   swap_ends : Bool,
 ) -> EdgeSameportDirectFlags {
-  let samehead_direct = edge_attr_non_empty(edge, "samehead")
-  let sametail_direct = edge_attr_non_empty(edge, "sametail")
+  let samehead_direct =
+    match edge.get_attr("samehead") {
+      Some(value) => value != ""
+      None => false
+    }
+  let sametail_direct =
+    match edge.get_attr("sametail") {
+      Some(value) => value != ""
+      None => false
+    }
   if swap_ends {
     { tail_direct: samehead_direct, head_direct: sametail_direct }
   } else {
@@ -153,7 +161,7 @@ fn edge_render_clip_flags(
 }
 
 ///|
-fn rebuild_spline_for_render(
+pub fn rebuild_spline_for_render(
   base : EdgeRouteBase,
   spline_result : EdgeSplineResult,
 ) -> EdgeSplineResult {

@@ -9,6 +9,19 @@ fn cmp_edge_id(a : Int, b : Int) -> Int {
 }
 
 ///|
+fn edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
+fn prepass_edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
 /// Graphviz parity: adjacent same-rank no-port/no-label multiedges use the
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
@@ -23,7 +36,7 @@ fn collect_flat_adjacent_beziers(
     if edge_is_self(edge) {
       continue
     }
-    if edge_has_label(edge) {
+    if prepass_edge_has_label(edge) {
       continue
     }
     if @dot_shared.port_is_explicit(edge.tail_port()) ||
@@ -139,7 +152,7 @@ fn collect_flat_adjacent_beziers(
 }
 
 ///|
-priv struct RoutePrepassState {
+pub(all) struct RoutePrepassState {
   flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
   ordered_edges : Array[@cgraph.Edge]
   recover_edge_id_for_routing : Map[String, Int]
@@ -152,7 +165,7 @@ priv struct RoutePrepassState {
 /// Graphviz parity: routing prepass order/group/bounds setup runs before the
 /// edge routing loop and follows dot/pathplan sequencing.
 /// Do not change behavior without updating fixtures/tests.
-fn build_route_prepass_state(
+pub fn build_route_prepass_state(
   edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
   build_flat_adjacent_beziers : Bool,

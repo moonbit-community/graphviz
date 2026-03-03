@@ -11,7 +11,7 @@ priv struct CurveModeRoutePrep {
   pathplan_segments : Array[@routesplines.PathplanSegment]
   route_barriers : Array[(@geom.Point, @geom.Point)]
   points : Array[@geom.Point]
-  short_route_context : ShortRouteBuildContext
+  short_route_context : @routing.ShortRouteBuildContext
 }
 
 ///|
@@ -224,7 +224,7 @@ fn prepare_edge_curve_mode_route(
   path_right_bound : Double,
   ranksep_pt : Double,
   head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
+  routing_context : @routing.RoutingContext,
   enable_complex_tuning : Bool,
 ) -> CurveModeRoutePrep {
   let edge = base.edge
@@ -308,7 +308,7 @@ fn prepare_edge_curve_mode_route(
     enable_complex_tuning,
   )
   let short_route_context =
-    short_route_build_context(
+    @routing.short_route_build_context(
       base,
       positions,
       sizes,
@@ -346,10 +346,10 @@ fn prepare_edge_curve_mode_route(
 fn curve_mode_result_for_short_route(
   base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
-  short_route_spec : ShortRouteBuildSpec,
+  short_route_spec : @routing.ShortRouteBuildSpec,
 ) -> CurveModeSplineBuildResult {
   let short_route_spline =
-    build_short_route_spline_with_detour(
+    @routing.build_short_route_spline_with_detour(
       base,
       prepared.short_route_context,
       short_route_spec,
@@ -418,7 +418,8 @@ fn build_curve_mode_spline_from_prepared_route(
         enable_complex_tuning,
       )
     if adjusted.length() <= 2 {
-      let short_route_spec = short_route_spec_for_adjusted_points(adjusted)
+      let short_route_spec =
+        @routing.short_route_spec_for_adjusted_points(adjusted)
       curve_mode_result_for_short_route(base, prepared, short_route_spec)
     } else {
       let multi_point_spline =
@@ -440,7 +441,7 @@ fn build_curve_mode_spline_from_prepared_route(
     }
   } else {
     let short_route_spec =
-      short_route_spec_for_anchor_or_pathplan_points(
+      @routing.short_route_spec_for_anchor_or_pathplan_points(
         points,
         prepared.using_pathplan,
         base.tail_anchor,
@@ -470,7 +471,7 @@ fn build_edge_curve_mode_result(
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
+  routing_context : @routing.RoutingContext,
   enable_complex_tuning : Bool,
 ) -> EdgeSplineResult {
   let prepared =
@@ -543,20 +544,20 @@ fn build_edge_spline(
   ranksep_pt : Double,
   label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
+  routing_context : @routing.RoutingContext,
   enable_complex_tuning : Bool,
 ) -> EdgeSplineResult {
   match splines {
     SplinesMode::None | SplinesMode::Polyline =>
-      edge_spline_result_for_bezier(
-        edge_polyline_mode_spline(base, false),
+      @routing.edge_spline_result_for_bezier(
+        @routing.edge_polyline_mode_spline(base, false),
         [],
         0.0,
         false,
       )
     SplinesMode::Ortho =>
-      edge_spline_result_for_bezier(
-        edge_polyline_mode_spline(base, true),
+      @routing.edge_spline_result_for_bezier(
+        @routing.edge_polyline_mode_spline(base, true),
         [],
         0.0,
         false,
@@ -643,7 +644,7 @@ fn compute_pathplan_route_points(
   path_left_bound : Double,
   path_right_bound : Double,
   ranksep_pt : Double,
-  routing_context : RoutingContext,
+  routing_context : @routing.RoutingContext,
   guide_points : Array[@geom.Point],
 ) -> RoutePointState {
   let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
@@ -925,8 +926,8 @@ fn route_endpoint_slopes(
   head_slope : @geom.Point,
 ) -> (@geom.Point, @geom.Point) {
   (
-    edge_port_slope_or_zero(tail_port, tail_slope),
-    edge_port_slope_or_zero(head_port, head_slope),
+    @routing.edge_port_slope_or_zero(tail_port, tail_slope),
+    @routing.edge_port_slope_or_zero(head_port, head_slope),
   )
 }
 
@@ -1111,7 +1112,7 @@ fn build_multi_point_routed_spline(
   route_barriers : Array[(@geom.Point, @geom.Point)],
   tail_clip_enabled : Bool,
   head_clip_enabled : Bool,
-) -> PointsSplineResult {
+) -> @routing.PointsSplineResult {
   let (tail_slope_for, head_slope_for) =
     route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
   // Graphviz parity: pathplan edges always allow spline fitting.
@@ -1132,7 +1133,7 @@ fn build_multi_point_routed_spline(
     }
   if segmented_raw.length() > 0 {
     let spline =
-      build_bezier_points_spline(
+      @routing.build_bezier_points_spline(
         base,
         segmented_raw,
         tail_clip_enabled,
@@ -1142,7 +1143,7 @@ fn build_multi_point_routed_spline(
       )
     { spline, raw_bezier: segmented_raw }
   } else {
-    build_points_spline(
+    @routing.build_points_spline(
       base,
       adjusted,
       tail_slope_for,

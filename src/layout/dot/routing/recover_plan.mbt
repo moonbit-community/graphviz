@@ -1,9 +1,22 @@
 ///|
+fn recover_edge_has_label(edge : @cgraph.Edge) -> Bool {
+  match edge.get_attr("label") {
+    Some(value) => value != ""
+    None => false
+  }
+}
+
+///|
+fn recover_edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
 /// Graphviz parity: recover_slack class keys collapse reverse-direction
 /// unlabeled edges that share a class2 vnode chain.
-fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
+pub fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
-  if edge_has_label(edge) || !undirected {
+  if recover_edge_has_label(edge) || !undirected {
     "vnode|\{@dot_shared.edge_vnode_key(edge)}"
   } else {
     "parallel|\{@edge_ops.edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
@@ -20,7 +33,7 @@ fn recover_regular_selection(
   let selected_ids : Map[String, Int] = Map::new()
   let selected_scores : Map[String, Double] = Map::new()
   for edge in ordered_edges {
-    if edge_is_self(edge) {
+    if recover_edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
@@ -60,10 +73,10 @@ fn collect_parallel_groups(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in ordered_edges {
-    if edge_has_label(edge) {
+    if recover_edge_has_label(edge) {
       continue
     }
-    if edge_is_self(edge) {
+    if recover_edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
@@ -83,7 +96,7 @@ fn collect_parallel_groups(
 }
 
 ///|
-priv struct RegularRecoverRoutingPlan {
+pub(all) struct RegularRecoverRoutingPlan {
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
   recover_edge_id_for_routing : Map[String, Int]
 }
@@ -91,7 +104,7 @@ priv struct RegularRecoverRoutingPlan {
 ///|
 /// Graphviz parity: recover_slack candidate selection runs before edge routing
 /// and keeps regular classes aligned to ordered-edge grouping.
-fn build_regular_recover_routing_plan(
+pub fn build_regular_recover_routing_plan(
   ordered_edges : Array[@cgraph.Edge],
   base_cache : Map[Int, EdgeRouteBase],
 ) -> RegularRecoverRoutingPlan {
@@ -111,4 +124,3 @@ fn build_regular_recover_routing_plan(
   }
   { regular_parallel_groups, recover_edge_id_for_routing }
 }
-

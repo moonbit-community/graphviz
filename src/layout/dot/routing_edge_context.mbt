@@ -25,7 +25,7 @@ priv struct EdgeRoutingPassInput {
   label_edge_counts : Map[String, Int]
   head_port_metrics : HeadPortMetrics
   flat_label_edge_vnodes : Map[String, String]
-  routing_context : RoutingContext
+  routing_context : @routing.RoutingContext
   enable_complex_tuning : Bool
 }
 
@@ -35,7 +35,7 @@ priv struct EdgeRoutingPassInput {
 priv struct OrderedEdgeRoutingContext {
   input : EdgeRoutingPassInput
   base_cache : Map[Int, EdgeRouteBase]
-  prepass : RoutePrepassState
+  prepass : @routing.RoutePrepassState
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
 }
 
@@ -46,6 +46,22 @@ priv struct OrderedEdgeRoutingState {
   recovered_slack_keys : Map[String, Bool]
   self_edge_routes : Map[Int, SelfEdgeRoute]
   edges_out_by_id : Map[Int, DotLayoutEdge]
+}
+
+///|
+fn self_edge_label_height_pt_for_routes(
+  edge : @cgraph.Edge,
+  rankdir : RankDir,
+) -> Double {
+  match edge_mid_label_metrics(edge) {
+    Some(metrics) =>
+      if rankdir == RankDir::LR || rankdir == RankDir::RL {
+        metrics.width
+      } else {
+        metrics.height
+      }
+    None => 0.0
+  }
 }
 
 ///|
@@ -102,7 +118,7 @@ fn build_ordered_edge_routing_context(
       sameport_overrides,
     )
   let prepass =
-    build_route_prepass_state(
+    @routing.build_route_prepass_state(
       input.edges,
       base_cache,
       input.splines == SplinesMode::Spline,
@@ -115,7 +131,7 @@ fn build_ordered_edge_routing_context(
       input.vnode_info.vnode_sizes,
       input.x_groups,
     )
-  let self_edge_groups = collect_self_edge_groups(input.edges)
+  let self_edge_groups = @routing.collect_self_edge_groups(input.edges)
   {
     input,
     base_cache,
@@ -160,13 +176,15 @@ fn maybe_build_self_edge_layout(
 ) -> Bool {
   let edge_id = edge.id()
   let input = context.input
-  let route = self_edge_route_for_edge(
+  let route = @routing.self_edge_route_for_edge(
     edge,
     context.self_edge_groups,
     context.base_cache,
     input.nodesep_pt,
     input.rank_y,
     state.self_edge_routes,
+    self_edge_label_height_pt_for_routes,
+    self_edge_label_width_pt,
   )
   match route {
     Some(route) => {
