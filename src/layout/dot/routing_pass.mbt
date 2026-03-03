@@ -180,16 +180,19 @@ fn remap_parallel_edge_layouts(
   ranks : Map[String, Int],
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Unit {
-  for ids in @routing.collect_parallel_remap_edge_ids(edges, ranks) {
+  let remap_groups =
+    @routing.collect_complete_parallel_remap_groups(
+      edges,
+      ranks,
+      (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
+    )
+  for ids in remap_groups {
     let layouts : Array[DotLayoutEdge] = []
     for edge_id in ids {
       match edges_out_by_id.get(edge_id) {
         Some(layout) => layouts.push(layout)
         None => ()
       }
-    }
-    if layouts.length() != ids.length() {
-      continue
     }
     let mut out_idx = 0
     let mut src_idx = layouts.length()

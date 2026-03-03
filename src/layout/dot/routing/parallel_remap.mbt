@@ -72,3 +72,28 @@ pub fn collect_parallel_remap_edge_ids(
   }
   remap_groups
 }
+
+///|
+/// Graphviz parity: remap groups are applied only when all grouped ids already
+/// have routed layouts.
+/// Do not change behavior without updating fixtures/tests.
+pub fn collect_complete_parallel_remap_groups(
+  edges : Array[@cgraph.Edge],
+  ranks : Map[String, Int],
+  has_layout : (Int) -> Bool,
+) -> Array[Array[Int]] {
+  let complete_groups : Array[Array[Int]] = []
+  for ids in collect_parallel_remap_edge_ids(edges, ranks) {
+    let mut all_present = true
+    for edge_id in ids {
+      if !has_layout(edge_id) {
+        all_present = false
+        break
+      }
+    }
+    if all_present {
+      complete_groups.push(ids)
+    }
+  }
+  complete_groups
+}
