@@ -3,361 +3,6 @@
 /// cluster-rank-order helpers for global cluster arrangement.
 
 ///|
-/// Graphviz parity: membership checks for mincross subgraph are exact-name set
-/// lookups over the filtered node list.
-/// Do not change behavior without updating fixtures/tests.
-fn build_node_membership_set(names : Array[String]) -> Map[String, Bool] {
-  let membership : Map[String, Bool] = Map::new()
-  for name in names {
-    membership[name] = true
-  }
-  membership
-}
-
-///|
-priv struct SyntheticPortValues {
-  tail_port_x : Double
-  head_port_x : Double
-  tail_port_order : Double
-  head_port_order : Double
-}
-
-///|
-/// Graphviz parity: synthetic mincross endpoints keep default port values at
-/// zero when Graphviz treats the endpoint pair as synthetic-only.
-fn normalize_synthetic_ports(
-  tail : String,
-  head : String,
-  tail_port_x_raw : Double,
-  head_port_x_raw : Double,
-  tail_port_order_raw : Double,
-  head_port_order_raw : Double,
-) -> SyntheticPortValues {
-  // Graphviz parity: synthetic ordering nodes keep default mincross ports
-  // unless a non-default port survives edge materialization.
-  let tail_is_skeleton = tail.has_prefix(CLUSTER_SKELETON_PREFIX)
-  let head_is_skeleton = head.has_prefix(CLUSTER_SKELETON_PREFIX)
-  let synthetic_endpoint =
-    is_edge_vnode_name(tail) || is_edge_vnode_name(head) ||
-    tail_is_skeleton || head_is_skeleton
-  let defaultish_x =
-    (tail_port_x_raw == 0.0 || tail_port_x_raw == 0.5) &&
-    (head_port_x_raw == 0.0 || head_port_x_raw == 0.5)
-  let zero_synthetic_defaults =
-    synthetic_endpoint &&
-    (
-      (tail_is_skeleton && head_is_skeleton) ||
-      (defaultish_x && tail_port_order_raw == 0.0 && head_port_order_raw == 0.0)
-    )
-  if !zero_synthetic_defaults {
-    return {
-      tail_port_x: tail_port_x_raw,
-      head_port_x: head_port_x_raw,
-      tail_port_order: tail_port_order_raw,
-      head_port_order: head_port_order_raw,
-    }
-  }
-  {
-    tail_port_x: 0.0,
-    head_port_x: 0.0,
-    tail_port_order: 0.0,
-    head_port_order: 0.0,
-  }
-}
-
-///|
-priv struct MincrossOrderEdgesOutput {
-  order_edges_out_mincross : Array[@cgraph.Edge]
-  order_edge_tail_out_mincross : Array[String]
-  order_edge_head_out_mincross : Array[String]
-  order_edge_tail_port_x_mincross : Array[Double]
-  order_edge_head_port_x_mincross : Array[Double]
-  order_edge_tail_port_order_mincross : Array[Double]
-  order_edge_head_port_order_mincross : Array[Double]
-}
-
-///|
-/// Graphviz parity: root mincross edge set keeps only edges whose endpoints are
-/// both in the filtered node set, preserving edge and port-order sequence.
-/// Do not change behavior without updating fixtures/tests.
-fn collect_mincross_order_edges(
-  mincross_nodes : Map[String, Bool],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-) -> MincrossOrderEdgesOutput {
-  let order_edges_out_mincross : Array[@cgraph.Edge] = []
-  let order_edge_tail_out_mincross : Array[String] = []
-  let order_edge_head_out_mincross : Array[String] = []
-  let order_edge_tail_port_x_mincross : Array[Double] = []
-  let order_edge_head_port_x_mincross : Array[Double] = []
-  let order_edge_tail_port_order_mincross : Array[Double] = []
-  let order_edge_head_port_order_mincross : Array[Double] = []
-  let mut edge_idx = 0
-  while edge_idx < order_edges_out.length() {
-    let tail = order_edge_tail_out[edge_idx]
-    let head = order_edge_head_out[edge_idx]
-    if mincross_nodes.get(tail) is Some(_) && mincross_nodes.get(head) is Some(_) {
-      let tail_port_x_raw = order_edge_tail_port_x[edge_idx]
-      let head_port_x_raw = order_edge_head_port_x[edge_idx]
-      let tail_port_order_raw = order_edge_tail_port_order[edge_idx]
-      let head_port_order_raw = order_edge_head_port_order[edge_idx]
-      let normalized_ports =
-        normalize_synthetic_ports(
-          tail,
-          head,
-          tail_port_x_raw,
-          head_port_x_raw,
-          tail_port_order_raw,
-          head_port_order_raw,
-        )
-      order_edges_out_mincross.push(order_edges_out[edge_idx])
-      order_edge_tail_out_mincross.push(tail)
-      order_edge_head_out_mincross.push(head)
-      order_edge_tail_port_x_mincross.push(normalized_ports.tail_port_x)
-      order_edge_head_port_x_mincross.push(normalized_ports.head_port_x)
-      order_edge_tail_port_order_mincross.push(normalized_ports.tail_port_order)
-      order_edge_head_port_order_mincross.push(normalized_ports.head_port_order)
-    }
-    edge_idx = edge_idx + 1
-  }
-  {
-    order_edges_out_mincross,
-    order_edge_tail_out_mincross,
-    order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross,
-  }
-}
-
-///|
-/// Graphviz parity: after root-only mincross, reordered root/skeleton nodes are
-/// merged back into seeded rank lists by replacing only filtered positions.
-/// Do not change behavior without updating fixtures/tests.
-fn merge_root_mincross_groups(
-  order_rank_keys : Array[Int],
-  seeded_groups : Map[Int, Array[String]],
-  ordered_mincross : Map[Int, Array[String]],
-  mincross_nodes : Map[String, Bool],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let merged : Map[Int, Array[String]] = Map::new()
-  for rank in order_rank_keys {
-    let names = seeded_groups.get(rank).unwrap_or_default()
-    let replacements = ordered_mincross.get(rank).unwrap_or_default()
-    if replacements.length() == 0 {
-      merged[rank] = names.copy()
-      continue
-    }
-    let attached_by_skeleton =
-      build_rank_attached_by_skeleton(
-        names,
-        order_cluster_keys,
-        order_cluster_skeleton,
-        mincross_nodes,
-      )
-    // Graphviz parity: when root mincross returns [root, skeleton] in a
-    // single-root rank, keep the attached cluster node in front via positional
-    // replacement (matches biological rank handoff in Graphviz).
-    let should_use_positional_merge =
-      should_merge_root_positions(
-        replacements,
-        order_cluster_skeleton,
-        attached_by_skeleton,
-      )
-    if should_use_positional_merge {
-      merged[rank] =
-        merge_rank_with_positional_replacements(
-          names,
-          replacements,
-          mincross_nodes,
-        )
-      continue
-    }
-    merged[rank] =
-      merge_rank_with_attached_skeleton_replacements(
-        names,
-        replacements,
-        attached_by_skeleton,
-        order_cluster_skeleton,
-      )
-  }
-  merged
-}
-
-///|
-/// Graphviz parity: keep cluster-internal nodes attached to the rankleader
-/// skeleton position when root mincross reorders cluster skeleton chains.
-fn build_rank_attached_by_skeleton(
-  names : Array[String],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  mincross_nodes : Map[String, Bool],
-) -> Map[String, Array[String]] {
-  let skeleton_for_cluster =
-    build_skeleton_for_clusters(
-      names,
-      (name) =>
-        if order_cluster_skeleton.get(name) == Some(true) {
-          @ordering.cluster_key_or_empty(order_cluster_keys, name)
-        } else {
-          ""
-        },
-    )
-  build_attached_by_skeleton(
-    names,
-    order_cluster_keys,
-    skeleton_for_cluster,
-    (name) => mincross_nodes.get(name) is Some(_),
-  )
-}
-
-///|
-/// Graphviz parity: positional merge replaces only root-mincross membership
-/// slots while preserving non-member positions in seeded rank order.
-fn merge_rank_with_positional_replacements(
-  names : Array[String],
-  replacements : Array[String],
-  mincross_nodes : Map[String, Bool],
-) -> Array[String] {
-  let merged_names = names.copy()
-  let mut replace_idx = 0
-  for i in 0..<merged_names.length() {
-    if mincross_nodes.get(merged_names[i]) is Some(_) {
-      if replace_idx < replacements.length() {
-        merged_names[i] = replacements[replace_idx]
-        replace_idx = replace_idx + 1
-      }
-    }
-  }
-  merged_names
-}
-
-///|
-/// Graphviz parity: attachment merge appends skeleton-attached members after
-/// replacement skeletons before replaying remaining seeded names.
-fn merge_rank_with_attached_skeleton_replacements(
-  names : Array[String],
-  replacements : Array[String],
-  attached_by_skeleton : Map[String, Array[String]],
-  order_cluster_skeleton : Map[String, Bool],
-) -> Array[String] {
-  let next_names : Array[String] = []
-  let seen : Map[String, Bool] = Map::new()
-  for replacement in replacements {
-    next_names.push(replacement)
-    seen[replacement] = true
-    if order_cluster_skeleton.get(replacement) == Some(true) {
-      append_attached_by_skeleton(
-        next_names,
-        seen,
-        attached_by_skeleton,
-        replacement,
-      )
-    }
-  }
-  for name in names {
-    if seen.get(name) is None {
-      next_names.push(name)
-      seen[name] = true
-    }
-  }
-  next_names
-}
-
-///|
-/// Graphviz parity: cluster->skeleton map keeps last-seen skeleton per cluster
-/// from input order and ignores names without a cluster skeleton key.
-fn build_skeleton_for_clusters(
-  names : Array[String],
-  cluster_for_name : (String) -> String,
-) -> Map[String, String] {
-  let skeleton_for_cluster : Map[String, String] = Map::new()
-  for name in names {
-    let cluster = cluster_for_name(name)
-    if cluster != "" {
-      skeleton_for_cluster[cluster] = name
-    }
-  }
-  skeleton_for_cluster
-}
-
-///|
-/// Graphviz parity: attached-by-skeleton buckets map non-skipped cluster
-/// members to their rankleader skeleton in input order.
-fn build_attached_by_skeleton(
-  names : Array[String],
-  cluster_keys : Map[String, String],
-  skeleton_for_cluster : Map[String, String],
-  should_skip : (String) -> Bool,
-) -> Map[String, Array[String]] {
-  let attached_by_skeleton : Map[String, Array[String]] = Map::new()
-  for name in names {
-    if should_skip(name) {
-      continue
-    }
-    let cluster = @ordering.cluster_key_or_empty(cluster_keys, name)
-    if cluster == "" {
-      continue
-    }
-    match skeleton_for_cluster.get(cluster) {
-      Some(skeleton_name) =>
-        match attached_by_skeleton.get(skeleton_name) {
-          Some(list) => list.push(name)
-          None => attached_by_skeleton[skeleton_name] = [name]
-        }
-      None => ()
-    }
-  }
-  attached_by_skeleton
-}
-
-///|
-/// Graphviz parity: attached cluster members are replayed after their
-/// skeleton only once, preserving original attached list order.
-fn append_attached_by_skeleton(
-  target : Array[String],
-  seen : Map[String, Bool],
-  attached_by_skeleton : Map[String, Array[String]],
-  skeleton_name : String,
-) -> Unit {
-  let attached = attached_by_skeleton.get(skeleton_name).unwrap_or_default()
-  for attached_name in attached {
-    if seen.get(attached_name) is None {
-      target.push(attached_name)
-      seen[attached_name] = true
-    }
-  }
-}
-
-///|
-/// Graphviz parity: positional root merge triggers only for [root, skeleton]
-/// replacement pairs with exactly one attached member on that skeleton.
-fn should_merge_root_positions(
-  replacements : Array[String],
-  order_cluster_skeleton : Map[String, Bool],
-  attached_by_skeleton : Map[String, Array[String]],
-) -> Bool {
-  if replacements.length() != 2 {
-    return false
-  }
-  if order_cluster_skeleton.get(replacements[1]) != Some(true) ||
-    order_cluster_skeleton.get(replacements[0]) == Some(true) {
-    return false
-  }
-  let attached_count =
-    attached_by_skeleton.get(replacements[1]).unwrap_or_default().length()
-  attached_count == 1
-}
-
-///|
 /// Graphviz parity: root cluster reorder seeds tail order from current nlist,
 /// replacing cluster members with rank-qualified skeleton names and deduping.
 /// Do not change behavior without updating fixtures/tests.
@@ -921,8 +566,8 @@ fn build_graphviz_flip_merged_root_groups(
   let ordered_root_nodes =
     @ordering.build_order_nodes_from_groups(ordered_root, root_rank_keys)
   let ordered_root_mincross_nodes =
-    build_node_membership_set(ordered_root_nodes)
-  merge_root_mincross_groups(
+    @ordering.build_node_membership_set(ordered_root_nodes)
+  @ordering.merge_root_mincross_groups(
     root_rank_keys,
     root_groups,
     ordered_root,
@@ -1134,8 +779,8 @@ fn normalize_root_edge_ports(
     let head_port_x_raw = edge_head_port_x[edge_idx]
     let tail_port_order_raw = edge_tail_port_order[edge_idx]
     let head_port_order_raw = edge_head_port_order[edge_idx]
-    let normalized_ports =
-      normalize_synthetic_ports(
+    let (tail_port_x, head_port_x, tail_port_order, head_port_order) =
+      @ordering.normalize_synthetic_ports(
         tail,
         head,
         tail_port_x_raw,
@@ -1143,10 +788,10 @@ fn normalize_root_edge_ports(
         tail_port_order_raw,
         head_port_order_raw,
       )
-    edge_tail_port_x_norm.push(normalized_ports.tail_port_x)
-    edge_head_port_x_norm.push(normalized_ports.head_port_x)
-    edge_tail_port_order_norm.push(normalized_ports.tail_port_order)
-    edge_head_port_order_norm.push(normalized_ports.head_port_order)
+    edge_tail_port_x_norm.push(tail_port_x)
+    edge_head_port_x_norm.push(head_port_x)
+    edge_tail_port_order_norm.push(tail_port_order)
+    edge_head_port_order_norm.push(head_port_order)
     edge_idx = edge_idx + 1
   }
   {
@@ -1488,12 +1133,12 @@ fn rebuild_root_override_names(
   let is_root_override_skeleton_name = (name : String) =>
     skeleton_cluster_or_empty(name) != ""
   let skeleton_for_cluster =
-    build_skeleton_for_clusters(
+    @ordering.build_skeleton_for_clusters(
       rank_names,
       skeleton_cluster_or_empty,
     )
   let attached_by_skeleton =
-    build_attached_by_skeleton(
+    @ordering.build_attached_by_skeleton(
       rank_names,
       cluster_keys,
       skeleton_for_cluster,
@@ -1509,7 +1154,7 @@ fn rebuild_root_override_names(
     if is_skeleton {
       next_names.push(name)
       seen[name] = true
-      append_attached_by_skeleton(
+      @ordering.append_attached_by_skeleton(
         next_names,
         seen,
         attached_by_skeleton,

@@ -257,7 +257,7 @@ fn collect_noncluster_components(
   if order_nodes.length() == 0 {
     return []
   }
-  let node_set = build_node_membership_set(order_nodes)
+  let node_set = @ordering.build_node_membership_set(order_nodes)
   let traversal_starts =
     build_component_traversal_starts(
       order_nodes,
@@ -513,7 +513,7 @@ fn build_root_component_reorder_inputs(
       component_set,
     )
   let component_edges_output =
-    collect_mincross_order_edges(
+    @ordering.collect_mincross_order_edges(
       component_set,
       root_inputs.order_edges_out_mincross,
       root_inputs.order_edge_tail_out_mincross,
@@ -618,7 +618,7 @@ fn run_componentwise_root_rank_reorder(
     merged[rank] = []
   }
   for component_nodes in components {
-    let component_set = build_node_membership_set(component_nodes)
+    let component_set = @ordering.build_node_membership_set(component_nodes)
     let reorder_call_inputs =
       build_root_component_reorder_inputs(
         component_nodes,
@@ -730,7 +730,7 @@ fn build_root_mincross_edge_data(
   order_nodes_for_mincross : Array[String],
 ) -> RootMincrossEdgeData {
   let mincross_edges_output =
-    collect_mincross_order_edges(
+    @ordering.collect_mincross_order_edges(
       mincross_nodes,
       inputs.order_edges_out,
       inputs.order_edge_tail_out,
@@ -838,7 +838,8 @@ fn run_root_reorder_pass(
       order_groups_for_mincross,
       order_rank_keys_for_mincross,
     )
-  let mincross_nodes = build_node_membership_set(order_nodes_for_mincross)
+  let mincross_nodes =
+    @ordering.build_node_membership_set(order_nodes_for_mincross)
   let mincross_edge_data =
     build_root_mincross_edge_data(
       reorder_inputs,
@@ -977,7 +978,7 @@ fn finalize_root_mincross_ordered_groups(
   if !inputs.order_with_clusters {
     return ordered_mincross
   }
-  merge_root_mincross_groups(
+  @ordering.merge_root_mincross_groups(
     inputs.order_rank_keys,
     inputs.seeded_groups,
     ordered_mincross,
