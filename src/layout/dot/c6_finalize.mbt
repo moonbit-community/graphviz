@@ -44,7 +44,7 @@ fn build_clustered_finalize_groups(
 fn build_remincross_pass_inputs(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
   final_groups : Map[Int, Array[String]],
 ) -> @ordering.ReMincrossPassInputs {
   let reorder_setup = dispatch_context.reorder_setup
@@ -162,7 +162,7 @@ fn run_remincross_cleanup_reorder(
 fn finalize_order_groups(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
   cluster_rank_order : Map[Int, Map[String, Int]],
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup

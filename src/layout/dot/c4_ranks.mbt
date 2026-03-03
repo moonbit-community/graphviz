@@ -1,15 +1,4 @@
 ///|
-/// Stage C Phase C4/C6 split: root-cluster and finalize
-/// stage type definitions for clustered ordering flow.
-
-///|
-priv struct OrderRootClusterData {
-  order_groups_for_mincross : Map[Int, Array[String]]
-  ordered : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
-}
-
-///|
 /// Stage C Phase C4 split: root+cluster build_ranks
 /// and reorder helpers for root-cluster arrangement.
 
@@ -107,7 +96,7 @@ fn run_root_mincross_reorder(
 fn run_root_and_cluster_ranks(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-) -> OrderRootClusterData {
+) -> @ordering.RootAndClusterRanksOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
   let reorder_context = pre_root_stage.reorder_context
@@ -201,9 +190,5 @@ fn run_root_and_cluster_ranks(
           reorder_setup.order_with_vnodes,
         ),
     )
-  {
-    order_groups_for_mincross: output.order_groups_for_mincross,
-    ordered: output.ordered,
-    ordered_with_vnodes: output.ordered_with_vnodes,
-  }
+  output
 }

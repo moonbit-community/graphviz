@@ -118,7 +118,7 @@ fn build_clustered_pre_root(
 fn run_clustered_root_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-) -> OrderRootClusterData {
+) -> @ordering.RootAndClusterRanksOutput {
   let reorder_setup = dispatch_context.reorder_setup
   remincross_root_tail_order_override_snapshot.val = None
   let (root_reorder_output, root_rank_order_phase_output) =
@@ -161,7 +161,7 @@ fn run_clustered_root_phase(
 fn run_clustered_finalize_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
 ) -> OrderingDispatchOutput {
   let cluster_rank_order =
     build_cluster_rank_order(

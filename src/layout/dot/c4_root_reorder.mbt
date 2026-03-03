@@ -118,7 +118,7 @@ fn run_root_reorder_and_rank_order_phase(
 fn build_cluster_rank_order(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : OrderRootClusterData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
 ) -> Map[Int, Map[String, Int]] {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
