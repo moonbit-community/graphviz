@@ -640,11 +640,8 @@ fn build_local_neighbor_maps(
 ) -> LocalNeighborMapsOutput {
   let graphviz_out_neighbors : Map[String, Array[String]] = Map::new()
   let graphviz_in_neighbors : Map[String, Array[String]] = Map::new()
-  let cluster_node_set : Map[String, Bool] = Map::new()
+  let cluster_node_set = build_name_set(cluster_nodes)
   let external_anchor_name = "%0"
-  for name in cluster_nodes {
-    cluster_node_set[name] = true
-  }
   for name in cluster_nodes {
     let local_neighbor_lists =
       build_local_neighbor_lists_for_name(
