@@ -4,7 +4,7 @@ fn edge_spline_result_for_bezier(
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
-) -> @routing.EdgeSplineResult {
+) -> EdgeSplineResult {
   {
     spline,
     label_pad_boost,
@@ -19,7 +19,7 @@ fn edge_spline_result_for_bezier(
 
 ///|
 fn edge_polyline_mode_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   is_ortho : Bool,
 ) -> @geom.Spline {
   // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
@@ -48,7 +48,7 @@ fn edge_polyline_mode_spline(
 
 ///|
 fn build_bezier_points_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   bezier_points : Array[@geom.Point],
   tail_clip_enabled : Bool,
   head_clip_enabled : Bool,
@@ -79,8 +79,8 @@ fn build_bezier_points_spline(
 /// Graphviz parity: spline finalization aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn finalize_edge_spline(
-  base : @routing.EdgeRouteBase,
-  result : @routing.EdgeSplineResult,
+  base : EdgeRouteBase,
+  result : EdgeSplineResult,
 ) -> @geom.Spline {
   let mut spline = result.spline
   if base.swap_ends {
@@ -133,7 +133,7 @@ fn edge_sameport_direct_flags(
 
 ///|
 fn edge_render_clip_flags(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
 ) -> EdgeRenderClipFlags {
   let sameport_direct_flags =
     edge_sameport_direct_flags(base.edge, base.swap_ends)
@@ -154,9 +154,9 @@ fn edge_render_clip_flags(
 
 ///|
 fn rebuild_spline_for_render(
-  base : @routing.EdgeRouteBase,
-  spline_result : @routing.EdgeSplineResult,
-) -> @routing.EdgeSplineResult {
+  base : EdgeRouteBase,
+  spline_result : EdgeSplineResult,
+) -> EdgeSplineResult {
   let edge_clip_flags = edge_render_clip_flags(base)
   if edge_clip_flags.tail_clip_enabled == base.tail_clip_enabled &&
     edge_clip_flags.head_clip_enabled == base.head_clip_enabled {

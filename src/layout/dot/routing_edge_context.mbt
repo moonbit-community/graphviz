@@ -34,7 +34,7 @@ priv struct EdgeRoutingPassInput {
 /// inputs, including prepass-derived ordering/grouping state.
 priv struct OrderedEdgeRoutingContext {
   input : EdgeRoutingPassInput
-  base_cache : Map[Int, @routing.EdgeRouteBase]
+  base_cache : Map[Int, EdgeRouteBase]
   prepass : RoutePrepassState
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
 }
@@ -44,7 +44,7 @@ priv struct OrderedEdgeRoutingContext {
 /// while iterating in Graphviz-compatible route order.
 priv struct OrderedEdgeRoutingState {
   recovered_slack_keys : Map[String, Bool]
-  self_edge_routes : Map[Int, @routing.SelfEdgeRoute]
+  self_edge_routes : Map[Int, SelfEdgeRoute]
   edges_out_by_id : Map[Int, DotLayoutEdge]
 }
 
@@ -53,9 +53,9 @@ priv struct OrderedEdgeRoutingState {
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
   edges : Array[@cgraph.Edge],
-  build_base : (@cgraph.Edge) -> @routing.EdgeRouteBase,
-) -> Map[Int, @routing.EdgeRouteBase] {
-  let base_cache : Map[Int, @routing.EdgeRouteBase] = Map::new()
+  build_base : (@cgraph.Edge) -> EdgeRouteBase,
+) -> Map[Int, EdgeRouteBase] {
+  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
   for edge in edges {
     let edge_id = edge.id()
     if base_cache.get(edge_id) is None {
@@ -104,16 +104,16 @@ fn collect_self_edge_groups(
 fn ensure_self_edge_routes(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, @routing.SelfEdgeRoute],
+  self_edge_routes : Map[Int, SelfEdgeRoute],
   build_group_routes : (
     Array[@cgraph.Edge],
-    Array[@routing.EdgeRouteBase],
+    Array[EdgeRouteBase],
     Double,
     Map[Int, Double],
-  ) -> Array[@routing.SelfEdgeRoute],
+  ) -> Array[SelfEdgeRoute],
 ) -> Unit {
   let edge_id = edge.id()
   if self_edge_routes.get(edge_id) is Some(_) {
@@ -122,7 +122,7 @@ fn ensure_self_edge_routes(
   let key = self_edge_group_key(edge)
   match self_edge_groups.get(key) {
     Some(group_edges) => {
-      let group_bases : Array[@routing.EdgeRouteBase] = []
+      let group_bases : Array[EdgeRouteBase] = []
       for grouped in group_edges {
         let gid = grouped.id()
         let gbase = match base_cache.get(gid) {
@@ -152,17 +152,17 @@ fn ensure_self_edge_routes(
 fn self_edge_route_for_edge(
   edge : @cgraph.Edge,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, @routing.SelfEdgeRoute],
+  self_edge_routes : Map[Int, SelfEdgeRoute],
   build_group_routes : (
     Array[@cgraph.Edge],
-    Array[@routing.EdgeRouteBase],
+    Array[EdgeRouteBase],
     Double,
     Map[Int, Double],
-  ) -> Array[@routing.SelfEdgeRoute],
-) -> @routing.SelfEdgeRoute? {
+  ) -> Array[SelfEdgeRoute],
+) -> SelfEdgeRoute? {
   if edge.tail().name() != edge.head().name() {
     return None
   }
@@ -245,7 +245,7 @@ fn build_ordered_edge_routing_context(
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_flat_adjacent_layout(
   edge_id : Int,
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Bool {
@@ -269,7 +269,7 @@ fn maybe_build_flat_adjacent_layout(
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_self_edge_layout(
   edge : @cgraph.Edge,
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Bool {
@@ -302,13 +302,13 @@ fn maybe_build_self_edge_layout(
 ///|
 priv struct RegularSplineLayoutResult {
   edge_layout : DotLayoutEdge
-  spline_result : @routing.EdgeSplineResult
+  spline_result : EdgeSplineResult
 }
 
 ///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
-fn ordered_vnodes_for_edge(base : @routing.EdgeRouteBase) -> Array[String] {
+fn ordered_vnodes_for_edge(base : EdgeRouteBase) -> Array[String] {
   if base.tail_rank <= base.head_rank {
     base.vnodes.copy()
   } else {
@@ -327,8 +327,8 @@ fn ordered_vnodes_for_edge(base : @routing.EdgeRouteBase) -> Array[String] {
 /// Do not change behavior without updating fixtures/tests.
 fn recover_pathplan_slack(
   edge : @cgraph.Edge,
-  base : @routing.EdgeRouteBase,
-  spline_result : @routing.EdgeSplineResult,
+  base : EdgeRouteBase,
+  spline_result : EdgeSplineResult,
   ranks : Map[String, Int],
   vnode_ranks : Map[String, Int],
   rank_y : Map[Int, Double],
@@ -430,7 +430,7 @@ fn recover_pathplan_slack(
 /// Do not change behavior without updating fixtures/tests.
 fn build_regular_spline_layout(
   edge : @cgraph.Edge,
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   recovered_slack_keys : Map[String, Bool],
 ) -> RegularSplineLayoutResult {
@@ -553,7 +553,7 @@ fn apply_regular_parallel_reuse_layouts(
 fn build_regular_layouts_for_edge(
   edge_id : Int,
   edge : @cgraph.Edge,
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   context : OrderedEdgeRoutingContext,
   state : OrderedEdgeRoutingState,
 ) -> Unit {
@@ -923,7 +923,7 @@ fn finalize_routed_edges(
 ///|
 priv struct BezierLayoutSplineResult {
   final_spline : @geom.Spline
-  layout_spline_result : @routing.EdgeSplineResult
+  layout_spline_result : EdgeSplineResult
 }
 
 ///|
@@ -932,7 +932,7 @@ priv struct BezierLayoutSplineResult {
 /// rebuild_spline_for_render -> finalize_edge_spline.
 /// Do not change behavior without updating fixtures/tests.
 fn build_bezier_layout_spline_result(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
@@ -962,7 +962,7 @@ fn build_bezier_layout_spline_result(
 
 ///|
 fn build_bezier_layout_edge(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   raw_bezier : Array[@geom.Point],
   label_pad_boost : Double,
   apply_dotted_adjustment : Bool,
@@ -991,8 +991,8 @@ fn build_bezier_layout_edge(
 /// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_layout(
-  base : @routing.EdgeRouteBase,
-  route : @routing.SelfEdgeRoute,
+  base : EdgeRouteBase,
+  route : SelfEdgeRoute,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let mut edge_layout =
@@ -1025,7 +1025,7 @@ fn build_self_edge_layout(
 /// makeSimpleFlat spindle path (dotsplines.c).
 /// Do not change behavior without updating fixtures/tests.
 fn build_flat_adjacent_layout(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   bezier : Array[@geom.Point],
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
@@ -1043,8 +1043,8 @@ fn build_flat_adjacent_layout(
 ///|
 /// Graphviz parity: regular-edge reuse path keeps clipping/label finalization.
 fn build_regular_bezier_layout(
-  base : @routing.EdgeRouteBase,
-  shared_spline_result : @routing.EdgeSplineResult,
+  base : EdgeRouteBase,
+  shared_spline_result : EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
@@ -1062,9 +1062,9 @@ fn build_regular_bezier_layout(
 /// Graphviz parity: edge label placement aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/labels.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_layout(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   spline : @geom.Spline,
-  spline_result : @routing.EdgeSplineResult,
+  spline_result : EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let input = context.input
@@ -1291,11 +1291,11 @@ fn convert_sides_to_points(tail_side : Int, head_side : Int) -> Int {
 ///|
 fn self_edge_routes_top(
   edges : Array[@cgraph.Edge],
-  base0 : @routing.EdgeRouteBase,
+  base0 : EdgeRouteBase,
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
-) -> Array[@routing.SelfEdgeRoute] {
+) -> Array[SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -1343,7 +1343,7 @@ fn self_edge_routes_top(
   let mut dy = base0.tail_size.height_pt / 2.0
   let mut ty = min_double(dy, 3.0 * (np.y + dy - tp.y))
   let mut hy = min_double(dy, 3.0 * (np.y + dy - hp.y))
-  let routes : Array[@routing.SelfEdgeRoute] = []
+  let routes : Array[SelfEdgeRoute] = []
   for i in 0..<cnt {
     let edge = edges[i]
     dy = dy + stepy
@@ -1375,11 +1375,11 @@ fn self_edge_routes_top(
 ///|
 fn self_edge_routes_bottom(
   edges : Array[@cgraph.Edge],
-  base0 : @routing.EdgeRouteBase,
+  base0 : EdgeRouteBase,
   nodesep_pt : Double,
   sizey_param : Double,
   point_pair : Int,
-) -> Array[@routing.SelfEdgeRoute] {
+) -> Array[SelfEdgeRoute] {
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = max_double(nodesep_pt / 2.0 / cnt_f, 2.0)
@@ -1395,7 +1395,7 @@ fn self_edge_routes_bottom(
   let mut dy = base0.tail_size.height_pt / 2.0
   let mut ty = min_double(dy, 3.0 * (tp.y + dy - np.y))
   let mut hy = min_double(dy, 3.0 * (hp.y + dy - np.y))
-  let routes : Array[@routing.SelfEdgeRoute] = []
+  let routes : Array[SelfEdgeRoute] = []
   for i in 0..<cnt {
     let edge = edges[i]
     dy = dy + stepy
@@ -1429,10 +1429,10 @@ fn self_edge_routes_bottom(
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_routes(
   edges : Array[@cgraph.Edge],
-  bases : Array[@routing.EdgeRouteBase],
+  bases : Array[EdgeRouteBase],
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
-) -> Array[@routing.SelfEdgeRoute] {
+) -> Array[SelfEdgeRoute] {
   if edges.length() == 0 {
     return []
   }
@@ -1510,7 +1510,7 @@ fn build_self_edge_routes(
     let mut dy = 0.0
     let mut tx = min_double(dx, 3.0 * (np.x + dx - tp.x))
     let mut hx = min_double(dx, 3.0 * (np.x + dx - hp.x))
-    let routes : Array[@routing.SelfEdgeRoute] = []
+    let routes : Array[SelfEdgeRoute] = []
     for i in 0..<cnt {
       let edge = edges[i]
       dx = dx + stepx
@@ -1559,7 +1559,7 @@ fn build_self_edge_routes(
       let mut dy = 0.0
       let mut tx = min_double(dx, 3.0 * (tp.x + dx - np.x))
       let mut hx = min_double(dx, 3.0 * (hp.x + dx - np.x))
-      let routes : Array[@routing.SelfEdgeRoute] = []
+      let routes : Array[SelfEdgeRoute] = []
       for i in 0..<cnt {
         let edge = edges[i]
         dx = dx + stepx
@@ -1623,7 +1623,7 @@ const ROUTE_GRAPH_MAIN : Int = 64
 const ROUTE_GRAPH_AUX : Int = 128
 
 ///|
-fn edge_route_type(base : @routing.EdgeRouteBase) -> Int {
+fn edge_route_type(base : EdgeRouteBase) -> Int {
   if base.orig_tail_name == base.orig_head_name {
     if @dot_shared.port_is_explicit(base.tail_port) ||
       @dot_shared.port_is_explicit(base.head_port) {
@@ -1703,7 +1703,7 @@ priv struct EdgePortCmpInfo {
 
 ///|
 fn edge_port_cmp_info(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   edge_type : Int,
   order_index : Map[String, Int],
 ) -> EdgePortCmpInfo {
@@ -1751,7 +1751,7 @@ fn edge_port_cmp_info(
 fn route_edge_cmp(
   a : @cgraph.Edge,
   b : @cgraph.Edge,
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   order_index : Map[String, Int],
 ) -> Int {
   let base_a = match base_cache.get(a.id()) {
@@ -1842,7 +1842,7 @@ fn route_edge_cmp(
 /// Do not change behavior without updating fixtures/tests.
 fn sorted_edges_for_routing(
   edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   order_index : Map[String, Int],
 ) -> Array[@cgraph.Edge] {
   let ordered_edges = edges.copy()
@@ -1871,7 +1871,7 @@ fn cmp_edge_id(a : Int, b : Int) -> Int {
 /// Do not change behavior without updating fixtures/tests.
 fn collect_flat_adjacent_beziers(
   edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   ranks : Map[String, Int],
   order_index : Map[String, Int],
 ) -> Map[Int, Array[@geom.Point]] {
@@ -2012,7 +2012,7 @@ fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
 /// center-most parallel member (tie: later edge id).
 fn recover_regular_selection(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Int] {
   let selected_ids : Map[String, Int] = Map::new()
   let selected_scores : Map[String, Double] = Map::new()
@@ -2053,7 +2053,7 @@ fn recover_regular_selection(
 ///|
 fn collect_parallel_groups(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in ordered_edges {
@@ -2090,7 +2090,7 @@ priv struct RegularRecoverRoutingPlan {
 /// and keeps regular classes aligned to ordered-edge grouping.
 fn build_regular_recover_routing_plan(
   ordered_edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
 ) -> RegularRecoverRoutingPlan {
   let recover_edge_id_by_key =
     recover_regular_selection(ordered_edges, base_cache)
@@ -2125,7 +2125,7 @@ priv struct RoutePrepassState {
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_prepass_state(
   edges : Array[@cgraph.Edge],
-  base_cache : Map[Int, @routing.EdgeRouteBase],
+  base_cache : Map[Int, EdgeRouteBase],
   build_flat_adjacent_beziers : Bool,
   ranks : Map[String, Int],
   order_index : Map[String, Int],

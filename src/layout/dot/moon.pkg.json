@@ -22,7 +22,6 @@
       "alias": "edge_spline"
     },
     "moonbit-community/graphviz/layout/dot/routing/edge_ops",
-    "moonbit-community/graphviz/layout/dot/routing",
     {
       "path": "moonbit-community/graphviz/layout/dot/network_simplex",
       "alias": "network_simplex"

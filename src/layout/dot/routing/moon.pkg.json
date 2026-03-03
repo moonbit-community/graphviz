@@ -1,11 +1,1 @@
-{
-  "import": [
-    {
-      "path": "moonbit-community/graphviz/layout/dot/shared",
-      "alias": "dot_shared"
-    },
-    "moonbit-community/graphviz/layout/dot/routing/routesplines",
-    "moonbit-community/graphviz/cgraph",
-    "moonbit-community/graphviz/geom"
-  ]
-}
+{}

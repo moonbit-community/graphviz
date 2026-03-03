@@ -209,7 +209,7 @@ fn edge_polyline_points(
 
 ///|
 fn prepare_edge_curve_mode_route(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
   positions : Map[String, @geom.Point],
@@ -344,7 +344,7 @@ fn prepare_edge_curve_mode_route(
 
 ///|
 fn curve_mode_result_for_short_route(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   short_route_spec : ShortRouteBuildSpec,
 ) -> CurveModeSplineBuildResult {
@@ -363,7 +363,7 @@ fn curve_mode_result_for_short_route(
 
 ///|
 fn adjusted_curve_mode_points(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   label_edge_counts : Map[String, Int],
   nodesep_pt : Double,
@@ -401,7 +401,7 @@ fn adjusted_curve_mode_points(
 
 ///|
 fn build_curve_mode_spline_from_prepared_route(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
   label_edge_counts : Map[String, Int],
   nodesep_pt : Double,
@@ -454,7 +454,7 @@ fn build_curve_mode_spline_from_prepared_route(
 
 ///|
 fn build_edge_curve_mode_result(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
   positions : Map[String, @geom.Point],
@@ -472,7 +472,7 @@ fn build_edge_curve_mode_result(
   head_port_metrics : HeadPortMetrics,
   routing_context : RoutingContext,
   enable_complex_tuning : Bool,
-) -> @routing.EdgeSplineResult {
+) -> EdgeSplineResult {
   let prepared =
     prepare_edge_curve_mode_route(
       base,
@@ -526,7 +526,7 @@ fn build_edge_curve_mode_result(
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   splines : SplinesMode,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
@@ -545,7 +545,7 @@ fn build_edge_spline(
   head_port_metrics : HeadPortMetrics,
   routing_context : RoutingContext,
   enable_complex_tuning : Bool,
-) -> @routing.EdgeSplineResult {
+) -> EdgeSplineResult {
   match splines {
     SplinesMode::None | SplinesMode::Polyline =>
       edge_spline_result_for_bezier(
@@ -629,7 +629,7 @@ fn sameport_path_port_box(
 /// Graphviz parity: pathplan polyline aligned to refs/graphviz/lib/pathplan/* + lib/common/routespl.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_pathplan_route_points(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   ranks : Map[String, Int],
   positions : Map[String, @geom.Point],
   vnode_positions : Map[String, @geom.Point],
@@ -760,7 +760,7 @@ fn compute_pathplan_route_points(
 /// Do not change behavior without updating fixtures/tests.
 fn adjust_route_points(
   points : Array[@geom.Point],
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   head_port_rect : @geom.Rect?,
   has_explicit_port : Bool,
   using_pathplan : Bool,
@@ -850,7 +850,7 @@ priv struct CurveOffsetParams {
 /// Do not change behavior without updating fixtures/tests.
 fn compute_curve_offset(
   edge : @cgraph.Edge,
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   head_port_metrics : HeadPortMetrics,
   label_width_pt : Double,
   nodesep_pt : Double,
@@ -1023,7 +1023,7 @@ fn pathplan_segment_raw_bezier(
 
 ///|
 fn limit_pathplan_segment_boxes(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   pathplan_segments : Array[@routesplines.PathplanSegment],
 ) -> Array[@routesplines.PathplanSegment] {
   let (tail_slope_for, head_slope_for) =
@@ -1103,7 +1103,7 @@ fn segmented_pathplan_raw_bezier(
 
 ///|
 fn build_multi_point_routed_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   adjusted : Array[@geom.Point],
   using_pathplan : Bool,
   force_segmented : Bool,
@@ -1156,7 +1156,7 @@ fn build_multi_point_routed_spline(
 
 ///|
 fn finalize_pathplan_boxes_and_segments(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_boxes : Array[@geom.Rect],
   pathplan_points : Array[@geom.Point],
@@ -1334,7 +1334,7 @@ fn short_route_detour_context(
 
 ///|
 fn short_route_detour_context_for_base(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   using_pathplan : Bool,
   has_explicit_port : Bool,
   label_width_pt : Double,
@@ -1360,7 +1360,7 @@ fn short_route_detour_context_for_base(
 
 ///|
 fn flat_detour_lookup_context(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   ranks : Map[String, Int],
@@ -1790,7 +1790,7 @@ fn prefer_linear_for_flat_line(
 
 ///|
 fn build_points_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   points : Array[@geom.Point],
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
@@ -1849,7 +1849,7 @@ fn pathplan_line_points_or_endpoints(
 
 ///|
 fn build_pathplan_points_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   pathplan_points : Array[@geom.Point],
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
@@ -1869,7 +1869,7 @@ fn build_pathplan_points_spline(
 
 ///|
 fn build_line_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   line_start : @geom.Point,
   line_end : @geom.Point,
   tail_slope_line : @geom.Point,
@@ -1908,7 +1908,7 @@ fn build_line_spline(
 }
 
 fn build_short_route_line_or_pathplan_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_points : Array[@geom.Point],
   line_start : @geom.Point,
@@ -1954,7 +1954,7 @@ fn build_short_route_line_or_pathplan_spline(
 
 ///|
 fn build_flat_detour_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   detour : FlatDetourResult,
   using_pathplan : Bool,
   tail_slope_line : @geom.Point,
@@ -2003,7 +2003,7 @@ fn build_flat_detour_spline(
 
 ///|
 fn detour_spline_if_any(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   needs_record_detour : Bool,
   flat_detour : FlatDetourResult?,
   using_pathplan : Bool,
@@ -2057,7 +2057,7 @@ fn detour_spline_if_any(
 
 ///|
 fn resolve_short_route_detour(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   detour_context : ShortRouteDetourContext,
   flat_detour_lookup : FlatDetourLookupContext,
   line_start : @geom.Point,
@@ -2099,7 +2099,7 @@ fn resolve_short_route_detour(
 
 ///|
 fn resolve_short_route_detour_for_base(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   using_pathplan : Bool,
   has_explicit_port : Bool,
   label_width_pt : Double,
@@ -2134,7 +2134,7 @@ fn resolve_short_route_detour_for_base(
 
 ///|
 fn build_short_route_fallback_spline(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   using_pathplan : Bool,
   pathplan_points : Array[@geom.Point],
   line_start : @geom.Point,
@@ -2177,7 +2177,7 @@ fn build_short_route_fallback_spline(
 
 ///|
 fn short_route_build_context(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
   ranks : Map[String, Int],
@@ -2293,7 +2293,7 @@ fn short_route_spec_for_anchor_or_pathplan_points(
 
 ///|
 fn build_short_route_spline_with_detour(
-  base : @routing.EdgeRouteBase,
+  base : EdgeRouteBase,
   short_route_context : ShortRouteBuildContext,
   short_route_spec : ShortRouteBuildSpec,
 ) -> PointsSplineResult {
