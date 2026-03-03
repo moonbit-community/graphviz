@@ -201,6 +201,121 @@ pub fn merge_root_mincross_groups(
 }
 
 ///|
+/// Graphviz parity: root ReMincross keeps only root + cluster-skeleton names
+/// from seeded build_ranks groups; cluster-internal names stay cluster-local.
+/// Do not change behavior without updating fixtures/tests.
+pub fn filter_root_mincross_seeded_groups_for_clusters(
+  seeded_groups : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let filtered : Map[Int, Array[String]] = Map::new()
+  for rank, names in seeded_groups {
+    let list : Array[String] = []
+    for name in names {
+      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
+      let cluster = order_cluster_keys.get(name).unwrap_or_default()
+      if is_skeleton || cluster == "" {
+        list.push(name)
+      }
+    }
+    if list.length() > 0 {
+      filtered[rank] = list
+    }
+  }
+  filtered
+}
+
+///|
+pub(all) struct RootMincrossEdgeBundle {
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  edge_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
+/// before building parent/child + edge-order indices.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_mincross_edge_bundle(
+  mincross_nodes : Map[String, Bool],
+  order_nodes_for_mincross : Array[String],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_ranks : Map[String, Int],
+) -> RootMincrossEdgeBundle {
+  let mincross_edges_output =
+    collect_mincross_order_edges(
+      mincross_nodes,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+    )
+  let edge_indices =
+    build_edge_indices_and_order(
+      order_nodes_for_mincross,
+      mincross_edges_output.order_edge_tail_out_mincross,
+      mincross_edges_output.order_edge_head_out_mincross,
+      order_ranks,
+      mincross_edges_output.order_edges_out_mincross,
+    )
+  {
+    order_edges_out_mincross: mincross_edges_output.order_edges_out_mincross,
+    order_edge_tail_out_mincross:
+      mincross_edges_output.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross:
+      mincross_edges_output.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross:
+      mincross_edges_output.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross:
+      mincross_edges_output.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross:
+      mincross_edges_output.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross:
+      mincross_edges_output.order_edge_head_port_order_mincross,
+    parents: edge_indices.parents,
+    children: edge_indices.children,
+    edge_order: edge_indices.edge_order,
+  }
+}
+
+///|
+/// Graphviz parity: vnode preferred-position hints are forwarded only for edge
+/// vnodes when vnode ordering is enabled in root ReMincross.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_vnode_preferred_positions(
+  order_with_vnodes : Bool,
+  vnode_order_keys_for_ordering : Map[String, Double],
+) -> Map[String, Double] {
+  if !order_with_vnodes {
+    return Map::new()
+  }
+  let filtered : Map[String, Double] = Map::new()
+  for name, value in vnode_order_keys_for_ordering {
+    if is_edge_vnode_name(name) {
+      filtered[name] = value
+    }
+  }
+  filtered
+}
+
+///|
 /// Graphviz parity: keep cluster-internal nodes attached to the rankleader
 /// skeleton position when root mincross reorders cluster skeleton chains.
 fn build_rank_attached_by_skeleton(

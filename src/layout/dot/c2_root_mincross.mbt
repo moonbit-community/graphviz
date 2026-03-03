@@ -284,71 +284,6 @@ fn build_root_rank_reorder_runtime(
 }
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
-/// and reorder_rank_groups execution in the same Graphviz call sequence.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootMincrossEdgeData {
-  order_edges_out_mincross : Array[@cgraph.Edge]
-  order_edge_tail_out_mincross : Array[String]
-  order_edge_head_out_mincross : Array[String]
-  order_edge_tail_port_x_mincross : Array[Double]
-  order_edge_head_port_x_mincross : Array[Double]
-  order_edge_tail_port_order_mincross : Array[Double]
-  order_edge_head_port_order_mincross : Array[Double]
-  parents : Map[String, Array[String]]
-  children : Map[String, Array[String]]
-  edge_order : Map[String, Int]
-}
-
-///|
-/// Graphviz parity: root ReMincross materializes filtered root/skeleton edges
-/// before building parent/child + edge-order indices.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_edge_data(
-  inputs : RootMincrossReorderInputs,
-  mincross_nodes : Map[String, Bool],
-  order_nodes_for_mincross : Array[String],
-) -> RootMincrossEdgeData {
-  let mincross_edges_output =
-    @ordering.collect_mincross_order_edges(
-      mincross_nodes,
-      inputs.order_edges_out,
-      inputs.order_edge_tail_out,
-      inputs.order_edge_head_out,
-      inputs.order_edge_tail_port_x,
-      inputs.order_edge_head_port_x,
-      inputs.order_edge_tail_port_order,
-      inputs.order_edge_head_port_order,
-    )
-  let edge_indices =
-    @ordering.build_edge_indices_and_order(
-      order_nodes_for_mincross,
-      mincross_edges_output.order_edge_tail_out_mincross,
-      mincross_edges_output.order_edge_head_out_mincross,
-      inputs.order_ranks,
-      mincross_edges_output.order_edges_out_mincross,
-    )
-  {
-    order_edges_out_mincross: mincross_edges_output.order_edges_out_mincross,
-    order_edge_tail_out_mincross:
-      mincross_edges_output.order_edge_tail_out_mincross,
-    order_edge_head_out_mincross:
-      mincross_edges_output.order_edge_head_out_mincross,
-    order_edge_tail_port_x_mincross:
-      mincross_edges_output.order_edge_tail_port_x_mincross,
-    order_edge_head_port_x_mincross:
-      mincross_edges_output.order_edge_head_port_x_mincross,
-    order_edge_tail_port_order_mincross:
-      mincross_edges_output.order_edge_tail_port_order_mincross,
-    order_edge_head_port_order_mincross:
-      mincross_edges_output.order_edge_head_port_order_mincross,
-    parents: edge_indices.parents,
-    children: edge_indices.children,
-    edge_order: edge_indices.edge_order,
-  }
-}
-
-///|
 /// Graphviz parity: root ReMincross input bundle keeps seeded groups, edge
 /// snapshots, cluster metadata, and rank-order settings unchanged for replay.
 /// Do not change behavior without updating fixtures/tests.
@@ -382,26 +317,6 @@ priv struct RootMincrossReorderInputs {
 }
 
 ///|
-/// Graphviz parity: vnode preferred-position hints are forwarded only for edge
-/// vnodes when vnode ordering is enabled in root ReMincross.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_vnode_preferred_positions(
-  order_with_vnodes : Bool,
-  vnode_order_keys_for_ordering : Map[String, Double],
-) -> Map[String, Double] {
-  if !order_with_vnodes {
-    return Map::new()
-  }
-  let filtered : Map[String, Double] = Map::new()
-  for name, value in vnode_order_keys_for_ordering {
-    if name.has_prefix(EDGE_VNODE_PREFIX) {
-      filtered[name] = value
-    }
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -421,13 +336,20 @@ fn run_root_reorder_pass(
   let mincross_nodes =
     @ordering.build_node_membership_set(order_nodes_for_mincross)
   let mincross_edge_data =
-    build_root_mincross_edge_data(
-      reorder_inputs,
+    @ordering.build_root_mincross_edge_bundle(
       mincross_nodes,
       order_nodes_for_mincross,
+      reorder_inputs.order_edges_out,
+      reorder_inputs.order_edge_tail_out,
+      reorder_inputs.order_edge_head_out,
+      reorder_inputs.order_edge_tail_port_x,
+      reorder_inputs.order_edge_head_port_x,
+      reorder_inputs.order_edge_tail_port_order,
+      reorder_inputs.order_edge_head_port_order,
+      reorder_inputs.order_ranks,
     )
   let preferred_positions =
-    build_root_vnode_preferred_positions(
+    @ordering.build_root_vnode_preferred_positions(
       reorder_inputs.order_with_vnodes,
       reorder_inputs.vnode_order_keys_for_ordering,
     )
@@ -495,32 +417,6 @@ fn run_root_reorder_pass(
 }
 
 ///|
-/// Graphviz parity: root ReMincross keeps only root + cluster-skeleton names
-/// from seeded build_ranks groups; cluster-internal names stay cluster-local.
-/// Do not change behavior without updating fixtures/tests.
-fn filter_root_mincross_seeded_groups_for_clusters(
-  seeded_groups : Map[Int, Array[String]],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  let filtered : Map[Int, Array[String]] = Map::new()
-  for rank, names in seeded_groups {
-    let list : Array[String] = []
-    for name in names {
-      let is_skeleton = order_cluster_skeleton.get(name) == Some(true)
-      let cluster = order_cluster_keys.get(name).unwrap_or_default()
-      if is_skeleton || cluster == "" {
-        list.push(name)
-      }
-    }
-    if list.length() > 0 {
-      filtered[rank] = list
-    }
-  }
-  filtered
-}
-
-///|
 /// Graphviz parity: root ReMincross input groups are cluster-filtered when
 /// cluster ordering is enabled, then optionally overridden for fixture replay.
 /// Do not change behavior without updating fixtures/tests.
@@ -534,7 +430,7 @@ fn resolve_root_mincross_input_groups(
       // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
       // nodes; cluster-internal ordering stays in cluster-local build_ranks
       // passes.
-      filter_root_mincross_seeded_groups_for_clusters(
+      @ordering.filter_root_mincross_seeded_groups_for_clusters(
         inputs.seeded_groups,
         inputs.order_cluster_keys,
         inputs.order_cluster_skeleton,
