@@ -1316,6 +1316,42 @@ priv struct EdgeSameportOrientationInfo {
 }
 
 ///|
+priv struct OrientedEdgeEndpointsForRoute {
+  tail_name : String
+  head_name : String
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+  tail_node : @cgraph.Node
+  head_node : @cgraph.Node
+}
+
+///|
+fn oriented_edge_endpoints_for_route(
+  edge : @cgraph.Edge,
+  swap_ends : Bool,
+) -> OrientedEdgeEndpointsForRoute {
+  if swap_ends {
+    {
+      tail_name: edge.head().name(),
+      head_name: edge.tail().name(),
+      tail_port: edge.head_port(),
+      head_port: edge.tail_port(),
+      tail_node: edge.head(),
+      head_node: edge.tail(),
+    }
+  } else {
+    {
+      tail_name: edge.tail().name(),
+      head_name: edge.head().name(),
+      tail_port: edge.tail_port(),
+      head_port: edge.head_port(),
+      tail_node: edge.tail(),
+      head_node: edge.head(),
+    }
+  }
+}
+
+///|
 fn edge_sameport_orientation_info(
   edge_id : Int,
   sameport_overrides : SameportOverrides,
@@ -1647,12 +1683,13 @@ fn build_edge_route_base(
       swap_ends,
     )
   let parallel_offset = parallel_offsets.get(edge.id()).unwrap_or_default()
-  let (tail_name, head_name, tail_port, head_port, tail_node, head_node) =
-    if swap_ends {
-      (orig_head_name, orig_tail_name, edge.head_port(), edge.tail_port(), edge.head(), edge.tail())
-    } else {
-      (orig_tail_name, orig_head_name, edge.tail_port(), edge.head_port(), edge.tail(), edge.head())
-    }
+  let oriented_endpoints = oriented_edge_endpoints_for_route(edge, swap_ends)
+  let tail_name = oriented_endpoints.tail_name
+  let head_name = oriented_endpoints.head_name
+  let tail_port = oriented_endpoints.tail_port
+  let head_port = oriented_endpoints.head_port
+  let tail_node = oriented_endpoints.tail_node
+  let head_node = oriented_endpoints.head_node
   let tail_sameport_anchor = sameport_info.tail_anchor
   let head_sameport_anchor = sameport_info.head_anchor
   let tail_sameport_group_size = sameport_info.tail_group_size
