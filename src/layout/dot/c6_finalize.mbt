@@ -123,10 +123,7 @@ fn finalize_order_groups(
         order_with_clusters: reorder_setup.order_with_clusters,
         order_rank_keys: reorder_context.order_rank_keys,
         ordered: root_cluster_stage.ordered,
-        ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-        real_nodes: runtime_context.real_nodes,
         cluster_rank_order,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
         remincross_context,
       },
       (groups) =>

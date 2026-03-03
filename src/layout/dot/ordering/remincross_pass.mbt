@@ -158,10 +158,7 @@ pub(all) struct ClusteredFinalizeInputs {
   order_with_clusters : Bool
   order_rank_keys : Array[Int]
   ordered : Map[Int, Array[String]]
-  ordered_with_vnodes : Map[Int, Array[String]]
-  real_nodes : Map[String, Bool]
   cluster_rank_order : Map[Int, Map[String, Int]]
-  cluster_keys : Map[String, String]
   remincross_context : ReMincrossPassBuildContext
 }
 
@@ -181,19 +178,19 @@ pub fn run_clustered_finalize_order_groups(
     collect_real_only_rank_groups(
       inputs.order_rank_keys,
       inputs.ordered,
-      inputs.real_nodes,
+      inputs.remincross_context.real_nodes,
     )
   if !inputs.order_with_clusters {
     return {
       ordered_groups: cleaned_groups,
-      ordered_with_vnodes: inputs.ordered_with_vnodes,
+      ordered_with_vnodes: inputs.remincross_context.ordered_with_vnodes,
     }
   }
   let final_groups =
     build_clustered_finalize_groups(
       cleaned_groups,
       inputs.cluster_rank_order,
-      inputs.cluster_keys,
+      inputs.remincross_context.cluster_keys,
       apply_local_cluster_order,
     )
   run_remincross_pass(
