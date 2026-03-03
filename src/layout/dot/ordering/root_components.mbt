@@ -372,3 +372,85 @@ pub fn has_non_empty_cluster_keys(order_cluster_keys : Map[String, String]) -> B
   }
   false
 }
+
+///|
+/// Graphviz parity: component reorder keeps each rank's relative extraction
+/// order from the full group list before running mincross on that component.
+pub fn filter_component_rank_groups(
+  order_rank_keys_for_mincross : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  component_set : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  let component_groups : Map[Int, Array[String]] = Map::new()
+  for rank in order_rank_keys_for_mincross {
+    let names = order_groups_for_mincross.get(rank).unwrap_or_default()
+    let keep : Array[String] = []
+    for name in names {
+      if component_set.get(name) is Some(_) {
+        keep.push(name)
+      }
+    }
+    if keep.length() > 0 {
+      component_groups[rank] = keep
+    }
+  }
+  component_groups
+}
+
+///|
+pub fn append_component_rank_groups(
+  order_rank_keys_for_mincross : Array[Int],
+  merged : Map[Int, Array[String]],
+  ordered_component : Map[Int, Array[String]],
+) -> Unit {
+  for rank in order_rank_keys_for_mincross {
+    let names = ordered_component.get(rank).unwrap_or_default()
+    if names.length() == 0 {
+      continue
+    }
+    let merged_names = merged.get(rank).unwrap_or_default()
+    for name in names {
+      merged_names.push(name)
+    }
+    merged[rank] = merged_names
+  }
+}
+
+///|
+/// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
+/// component traversal plan, and graphviz_flip mode aligned with Graphviz.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_component_runtime_plan(
+  order_cluster_keys : Map[String, String],
+  graphviz_flip : Bool,
+  order_rank_keys_for_mincross : Array[Int],
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_node_order : Map[String, Int],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  order_flat_constraints : Map[String, Bool],
+) -> (Array[Array[String]], Bool) {
+  let has_cluster_keys = has_non_empty_cluster_keys(order_cluster_keys)
+  // Graphviz parity: cluster-aware root mincross runs in internal TB
+  // coordinates (like mincross_clust subgraph passes), so flip is off.
+  let components =
+    if has_cluster_keys {
+      []
+    } else {
+      collect_noncluster_components(
+        order_rank_keys_for_mincross,
+        order_groups_for_mincross,
+        order_node_order,
+        graphviz_out_neighbors,
+        graphviz_in_neighbors,
+        order_flat_constraints,
+      )
+    }
+  let root_graphviz_flip =
+    if has_cluster_keys {
+      false
+    } else {
+      graphviz_flip
+    }
+  (components, root_graphviz_flip)
+}

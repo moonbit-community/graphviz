@@ -3,49 +3,6 @@
 /// for primary crossing-reduction ordering passes.
 
 ///|
-fn filter_component_rank_groups(
-  order_rank_keys_for_mincross : Array[Int],
-  order_groups_for_mincross : Map[Int, Array[String]],
-  component_set : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  // Graphviz parity: component reorder keeps each rank's relative extraction
-  // order from the full group list before running mincross on that component.
-  let component_groups : Map[Int, Array[String]] = Map::new()
-  for rank in order_rank_keys_for_mincross {
-    let names = order_groups_for_mincross.get(rank).unwrap_or_default()
-    let keep : Array[String] = []
-    for name in names {
-      if component_set.get(name) is Some(_) {
-        keep.push(name)
-      }
-    }
-    if keep.length() > 0 {
-      component_groups[rank] = keep
-    }
-  }
-  component_groups
-}
-
-///|
-fn append_component_rank_groups(
-  order_rank_keys_for_mincross : Array[Int],
-  merged : Map[Int, Array[String]],
-  ordered_component : Map[Int, Array[String]],
-) -> Unit {
-  for rank in order_rank_keys_for_mincross {
-    let names = ordered_component.get(rank).unwrap_or_default()
-    if names.length() == 0 {
-      continue
-    }
-    let merged_names = merged.get(rank).unwrap_or_default()
-    for name in names {
-      merged_names.push(name)
-    }
-    merged[rank] = merged_names
-  }
-}
-
-///|
 /// Graphviz parity: root mincross reorder dispatch funnels both single- and
 /// component-path payloads through one reorder_rank_groups call shape.
 /// Do not change behavior without updating fixtures/tests.
@@ -136,7 +93,7 @@ fn build_root_component_reorder_inputs(
   root_inputs : RootRankReorderInputs,
 ) -> RootRankReorderInputs {
   let component_groups =
-    filter_component_rank_groups(
+    @ordering.filter_component_rank_groups(
       root_inputs.order_rank_keys_for_mincross,
       root_inputs.order_groups_for_mincross,
       component_set,
@@ -266,7 +223,7 @@ fn run_componentwise_root_rank_reorder(
         root_graphviz_flip,
         coalesce_parallel,
       )
-    append_component_rank_groups(
+    @ordering.append_component_rank_groups(
       root_inputs.order_rank_keys_for_mincross,
       merged,
       ordered_component,
@@ -306,29 +263,17 @@ fn run_root_rank_reorder(
 fn build_root_rank_reorder_runtime(
   inputs : RootRankReorderInputs,
 ) -> RootRankReorderRuntime {
-  let has_cluster_keys =
-    @ordering.has_non_empty_cluster_keys(inputs.order_cluster_keys)
-  // Graphviz parity: cluster-aware root mincross runs in internal TB
-  // coordinates (like mincross_clust subgraph passes), so flip is off.
-  let components =
-    if has_cluster_keys {
-      []
-    } else {
-      @ordering.collect_noncluster_components(
-        inputs.order_rank_keys_for_mincross,
-        inputs.order_groups_for_mincross,
-        inputs.order_node_order,
-        inputs.graphviz_out_neighbors,
-        inputs.graphviz_in_neighbors,
-        inputs.order_flat_constraints,
-      )
-    }
-  let root_graphviz_flip =
-    if has_cluster_keys {
-      false
-    } else {
-      inputs.graphviz_flip
-    }
+  let (components, root_graphviz_flip) =
+    @ordering.build_root_component_runtime_plan(
+      inputs.order_cluster_keys,
+      inputs.graphviz_flip,
+      inputs.order_rank_keys_for_mincross,
+      inputs.order_groups_for_mincross,
+      inputs.order_node_order,
+      inputs.graphviz_out_neighbors,
+      inputs.graphviz_in_neighbors,
+      inputs.order_flat_constraints,
+    )
   let coalesce_parallel =
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   {
