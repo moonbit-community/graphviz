@@ -354,19 +354,21 @@ pub fn compute_ranks_directed_base(
     } else {
       0
     }
-  let ranks : Map[String, Int] = Map::new()
-  let mut min_rank = 0
-  let mut seen = false
-  for node in nodes {
-    let name = node.name()
+  let rank_for_name = (name : String) => {
     let rep = match rank_same_reps.get(name) {
       Some(value) => value
       None => name
     }
-    let rank = match rep_ranks.get(rep) {
+    match rep_ranks.get(rep) {
       Some(value) => value
       None => default_rank
     }
+  }
+  let ranks : Map[String, Int] = Map::new()
+  let mut min_rank = 0
+  let mut seen = false
+  for node in nodes {
+    let rank = rank_for_name(node.name())
     if !seen {
       min_rank = rank
       seen = true
@@ -376,15 +378,7 @@ pub fn compute_ranks_directed_base(
   }
   for node in nodes {
     let name = node.name()
-    let rep = match rank_same_reps.get(name) {
-      Some(value) => value
-      None => name
-    }
-    let base_rank = match rep_ranks.get(rep) {
-      Some(value) => value
-      None => default_rank
-    }
-    ranks[name] = base_rank - min_rank
+    ranks[name] = rank_for_name(name) - min_rank
   }
   let min_nodes : Map[String, Bool] = Map::new()
   let max_nodes : Map[String, Bool] = Map::new()
