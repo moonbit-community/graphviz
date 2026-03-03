@@ -1,4 +1,44 @@
 ///|
+priv struct BezierLayoutSplineResult {
+  final_spline : @geom.Spline
+  layout_spline_result : EdgeSplineResult
+}
+
+///|
+/// Graphviz parity: bezier route rendering follows
+/// build_bezier_points_spline -> edge_spline_result_for_bezier ->
+/// rebuild_spline_for_render -> finalize_edge_spline.
+/// Do not change behavior without updating fixtures/tests.
+fn build_bezier_layout_spline_result(
+  base : EdgeRouteBase,
+  raw_bezier : Array[@geom.Point],
+  label_pad_boost : Double,
+  apply_dotted_adjustment : Bool,
+  tail_swap : Bool,
+  head_swap : Bool,
+) -> BezierLayoutSplineResult {
+  let spline =
+    @routing.build_bezier_points_spline(
+      base,
+      raw_bezier,
+      base.tail_clip_enabled,
+      base.head_clip_enabled,
+      tail_swap,
+      head_swap,
+    )
+  let spline_result =
+    @routing.edge_spline_result_for_bezier(
+      spline,
+      raw_bezier,
+      label_pad_boost,
+      apply_dotted_adjustment,
+    )
+  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
+  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
+  { final_spline, layout_spline_result }
+}
+
+///|
 fn build_bezier_layout_edge(
   base : EdgeRouteBase,
   raw_bezier : Array[@geom.Point],
@@ -9,7 +49,7 @@ fn build_bezier_layout_edge(
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let bezier_layout_result =
-    @routing.build_bezier_layout_spline_result(
+    build_bezier_layout_spline_result(
       base,
       raw_bezier,
       label_pad_boost,
