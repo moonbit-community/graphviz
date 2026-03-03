@@ -50,31 +50,23 @@ fn run_root_rank_reorder_call(
 fn run_root_mincross_reorder(
   inputs : @ordering.RootMincrossReorderInputs,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
-  let order_groups_for_mincross =
-    @ordering.resolve_root_mincross_input_groups(
-      inputs.order_with_clusters,
-      inputs.seeded_groups,
-      inputs.order_cluster_keys,
-      inputs.order_cluster_skeleton,
-      root_mincross_groups_override.val,
-    )
   // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
   // then records the same stage snapshot before resetting capture state.
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
-  let pass_result =
-    @ordering.run_root_reorder_for_groups(
+  let result =
+    @ordering.run_root_mincross_reorder(
       inputs,
-      order_groups_for_mincross,
+      root_mincross_groups_override.val,
       run_root_rank_reorder_call,
     )
   capture_pass0_flat_seed_groups_enabled.val = false
-  let reorder_call_data = pass_result.reorder_call_data
+  let reorder_call_data = result.reorder_call_data
   // Graphviz parity: root reorder pass snapshot records the same mincross
   // edge projection and selected rank groups passed to reorder_rank_groups.
   capture_root_snapshot(
     reorder_call_data.order_rank_keys_for_mincross,
-    order_groups_for_mincross,
+    result.order_groups_for_mincross,
     reorder_call_data.mincross_edge_data.order_edges_out_mincross,
     reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
     reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
@@ -86,15 +78,5 @@ fn run_root_mincross_reorder(
     inputs.order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  let ordered =
-    @ordering.finalize_root_mincross_ordered_groups(
-      inputs.order_with_clusters,
-      inputs.order_rank_keys,
-      inputs.seeded_groups,
-      pass_result.ordered_mincross,
-      reorder_call_data.mincross_nodes,
-      inputs.order_cluster_keys,
-      inputs.order_cluster_skeleton,
-    )
-  (order_groups_for_mincross, ordered)
+  (result.order_groups_for_mincross, result.ordered)
 }

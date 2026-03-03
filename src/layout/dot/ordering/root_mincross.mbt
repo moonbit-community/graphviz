@@ -330,6 +330,13 @@ pub(all) struct RootReorderPassResult {
 }
 
 ///|
+pub(all) struct RootMincrossReorderResult {
+  order_groups_for_mincross : Map[Int, Array[String]]
+  ordered : Map[Int, Array[String]]
+  reorder_call_data : RootRankReorderCallData
+}
+
+///|
 pub(all) struct RootMincrossReorderInputs {
   order_with_clusters : Bool
   order_with_vnodes : Bool
@@ -564,6 +571,46 @@ pub fn finalize_root_mincross_ordered_groups(
     order_cluster_keys,
     order_cluster_skeleton,
   )
+}
+
+///|
+/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
+/// then merges reordered root positions back into seeded build_ranks groups.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_mincross_reorder(
+  inputs : RootMincrossReorderInputs,
+  order_groups_override : Map[Int, Array[String]]?,
+  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
+) -> RootMincrossReorderResult {
+  let order_groups_for_mincross =
+    resolve_root_mincross_input_groups(
+      inputs.order_with_clusters,
+      inputs.seeded_groups,
+      inputs.order_cluster_keys,
+      inputs.order_cluster_skeleton,
+      order_groups_override,
+    )
+  let pass_result =
+    run_root_reorder_for_groups(
+      inputs,
+      order_groups_for_mincross,
+      run_call,
+    )
+  let ordered =
+    finalize_root_mincross_ordered_groups(
+      inputs.order_with_clusters,
+      inputs.order_rank_keys,
+      inputs.seeded_groups,
+      pass_result.ordered_mincross,
+      pass_result.reorder_call_data.mincross_nodes,
+      inputs.order_cluster_keys,
+      inputs.order_cluster_skeleton,
+    )
+  {
+    order_groups_for_mincross,
+    ordered,
+    reorder_call_data: pass_result.reorder_call_data,
+  }
 }
 
 ///|
