@@ -9,7 +9,6 @@ pub fn ensure_self_edge_routes(
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
-  build_base : (@cgraph.Edge) -> EdgeRouteBase,
   build_group_routes : (
     Array[@cgraph.Edge],
     Array[EdgeRouteBase],
@@ -29,11 +28,7 @@ pub fn ensure_self_edge_routes(
         let gid = grouped.id()
         let gbase = match base_cache.get(gid) {
           Some(value) => value
-          None => {
-            let value = build_base(grouped)
-            base_cache[gid] = value
-            value
-          }
+          None => return ()
         }
         group_bases.push(gbase)
       }
@@ -62,7 +57,6 @@ pub fn self_edge_route_for_edge(
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
-  build_base : (@cgraph.Edge) -> EdgeRouteBase,
   build_group_routes : (
     Array[@cgraph.Edge],
     Array[EdgeRouteBase],
@@ -80,7 +74,6 @@ pub fn self_edge_route_for_edge(
     nodesep_pt,
     rank_y,
     self_edge_routes,
-    build_base,
     build_group_routes,
   )
   self_edge_routes.get(edge.id())

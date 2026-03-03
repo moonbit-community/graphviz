@@ -54,7 +54,6 @@ priv struct OrderedEdgeRoutingContext {
   routing_context : RoutingContext
   enable_complex_tuning : Bool
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
-  build_base_for_edge : (@cgraph.Edge) -> EdgeRouteBase
 }
 
 ///|
@@ -141,7 +140,6 @@ fn build_ordered_edge_routing_context(
     routing_context: input.routing_context,
     enable_complex_tuning: input.enable_complex_tuning,
     self_edge_groups,
-    build_base_for_edge,
   }
 }
 

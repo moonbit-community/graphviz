@@ -15,7 +15,6 @@ fn maybe_build_self_edge_layout(
     context.nodesep_pt,
     context.rank_y,
     state.self_edge_routes,
-    context.build_base_for_edge,
     build_self_edge_routes,
   )
   match route {
