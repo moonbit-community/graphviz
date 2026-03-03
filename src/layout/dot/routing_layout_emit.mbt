@@ -109,6 +109,7 @@ fn build_edge_layout(
   let label_rank_info = edge_label_rank_info(edge, context.input.ranks)
   let label_rank_y =
     edge_label_rank_y(edge, context.input.ranks, context.input.rank_y)
+  let mid_label_metrics = edge_mid_label_metrics(edge)
   let label_rank_x = match label_rank_info {
     Some(info) =>
       if info.span > 1 {
@@ -125,12 +126,41 @@ fn build_edge_layout(
     None => None
   }
   let apply_label_pad = context.input.has_clusters
+  let default_label_pos =
+    () =>
+      edge_label_pos(
+        edge,
+        spline,
+        base.out_tail_clip,
+        base.out_head_clip,
+        base.layout_rankdir,
+        label_rank_y,
+        label_rank_x,
+        apply_label_pad,
+        context.input.nodesep_pt,
+        spline_result.label_pad_boost,
+      )
+  let flat_simple_or_default =
+    () =>
+      match mid_label_metrics {
+        Some(metrics) =>
+          Some(
+            flat_edge_label_pos_simple(
+              base.out_tail_pos,
+              base.out_head_pos,
+              base.out_tail_size.right_pt,
+              base.out_head_size.left_pt,
+              metrics.height,
+            ),
+          )
+        None => default_label_pos()
+      }
   let label_pos : @geom.Point? = match edge.get_attr("label") {
     Some(value) =>
       if value == "" {
         None
       } else {
-        match (label_rank_x, label_rank_y, edge_mid_label_metrics(edge)) {
+        match (label_rank_x, label_rank_y, mid_label_metrics) {
           (Some(rank_x), Some(rank_y), Some(metrics)) => {
             Some(
               edge_label_pos_from_vnode(
@@ -147,74 +177,12 @@ fn build_edge_layout(
                 Some(vnode_name) =>
                   match context.input.vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)
-                    None =>
-                      match edge_mid_label_metrics(edge) {
-                        Some(metrics) =>
-                          Some(
-                            flat_edge_label_pos_simple(
-                              base.out_tail_pos,
-                              base.out_head_pos,
-                              base.out_tail_size.right_pt,
-                              base.out_head_size.left_pt,
-                              metrics.height,
-                            ),
-                          )
-                        None =>
-                          edge_label_pos(
-                            edge,
-                            spline,
-                            base.out_tail_clip,
-                            base.out_head_clip,
-                            base.layout_rankdir,
-                            label_rank_y,
-                            label_rank_x,
-                            apply_label_pad,
-                            context.input.nodesep_pt,
-                            spline_result.label_pad_boost,
-                          )
-                      }
+                    None => flat_simple_or_default()
                   }
-                None =>
-                  match edge_mid_label_metrics(edge) {
-                    Some(metrics) => {
-                      Some(
-                        flat_edge_label_pos_simple(
-                          base.out_tail_pos,
-                          base.out_head_pos,
-                          base.out_tail_size.right_pt,
-                          base.out_head_size.left_pt,
-                          metrics.height,
-                        ),
-                      )
-                    }
-                    None =>
-                      edge_label_pos(
-                        edge,
-                        spline,
-                        base.out_tail_clip,
-                        base.out_head_clip,
-                        base.layout_rankdir,
-                        label_rank_y,
-                        label_rank_x,
-                        apply_label_pad,
-                        context.input.nodesep_pt,
-                        spline_result.label_pad_boost,
-                      )
-                  }
+                None => flat_simple_or_default()
               }
             } else {
-              edge_label_pos(
-                edge,
-                spline,
-                base.out_tail_clip,
-                base.out_head_clip,
-                base.layout_rankdir,
-                label_rank_y,
-                label_rank_x,
-                apply_label_pad,
-                context.input.nodesep_pt,
-                spline_result.label_pad_boost,
-              )
+              default_label_pos()
             }
         }
       }
