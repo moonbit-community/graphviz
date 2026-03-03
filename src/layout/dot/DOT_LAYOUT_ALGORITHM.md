@@ -407,6 +407,7 @@ Main files:
 - `src/layout/dot/routing_types.mbt`
 - `src/layout/dot/routing_context.mbt`
 - `src/layout/dot/routing_pass.mbt`
+- `src/layout/dot/routing_output_remap.mbt`
 - `src/layout/dot/routing_base.mbt`
 - `src/layout/dot/routing_curve_points.mbt`
 - `src/layout/dot/routing_short_route.mbt`
