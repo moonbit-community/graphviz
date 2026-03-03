@@ -381,11 +381,8 @@ fn maybe_build_self_edge_layout(
   self_edge_routes : Map[Int, SelfEdgeRoute],
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Bool {
-  if !edge_is_self(edge) {
-    return false
-  }
   let edge_id = edge.id()
-  @routing.ensure_self_edge_routes(
+  let route = @routing.self_edge_route_for_edge(
     edge,
     self_edge_groups,
     base_cache,
@@ -395,7 +392,7 @@ fn maybe_build_self_edge_layout(
     build_base,
     build_self_edge_routes,
   )
-  match self_edge_routes.get(edge_id) {
+  match route {
     Some(route) => {
       let edge_layout =
         build_self_edge_layout(
