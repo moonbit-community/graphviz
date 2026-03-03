@@ -324,6 +324,37 @@ pub(all) struct RootRankReorderCallData {
 }
 
 ///|
+pub(all) struct RootMincrossReorderInputs {
+  order_with_clusters : Bool
+  order_with_vnodes : Bool
+  seeded_groups : Map[Int, Array[String]]
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  vnode_order_keys_for_ordering : Map[String, Double]
+  order_node_order : Map[String, Int]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  graphviz_flip : Bool
+}
+
+///|
 /// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
 /// rank keys -> node membership -> filtered mincross edge bundle.
 /// Do not change behavior without updating fixtures/tests.

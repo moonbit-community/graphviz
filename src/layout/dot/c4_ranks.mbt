@@ -44,7 +44,7 @@ fn run_root_and_cluster_ranks(
       materialized.order_edge_head_port_x,
       reorder_setup.flat_rank_constraints,
     )
-  let root_mincross_reorder_inputs : RootMincrossReorderInputs =
+  let root_mincross_reorder_inputs : @ordering.RootMincrossReorderInputs =
     {
       order_with_clusters: reorder_setup.order_with_clusters,
       order_with_vnodes: reorder_setup.order_with_vnodes,

@@ -90,45 +90,11 @@ fn run_root_rank_reorder(
 }
 
 ///|
-/// Graphviz parity: root ReMincross input bundle keeps seeded groups, edge
-/// snapshots, cluster metadata, and rank-order settings unchanged for replay.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootMincrossReorderInputs {
-  order_with_clusters : Bool
-  order_with_vnodes : Bool
-  seeded_groups : Map[Int, Array[String]]
-  order_rank_keys : Array[Int]
-  order_ranks : Map[String, Int]
-  order_edges_out : Array[@cgraph.Edge]
-  order_edge_tail_out : Array[String]
-  order_edge_head_out : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  rank_same_groups : Map[String, Int]
-  rank_same_order : Map[String, Int]
-  vnode_order_keys_for_ordering : Map[String, Double]
-  order_node_order : Map[String, Int]
-  order_sizes_out : Map[String, NodeSize]
-  nodesep_pt : Double
-  has_edge_labels : Bool
-  port_order_positions : Map[String, Double]
-  port_order_contrib : Map[String, Array[(String, Double)]]
-  order_flat_constraints : Map[String, Bool]
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  graphviz_flip : Bool
-}
-
-///|
 /// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
 /// and reorder_rank_groups execution in the same Graphviz call sequence.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_reorder_pass(
-  reorder_inputs : RootMincrossReorderInputs,
+  reorder_inputs : @ordering.RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[String, Bool]) {
   let reorder_call_data =
@@ -190,7 +156,7 @@ fn run_root_reorder_pass(
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_reorder(
-  inputs : RootMincrossReorderInputs,
+  inputs : @ordering.RootMincrossReorderInputs,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let order_groups_for_mincross =
     @ordering.resolve_root_mincross_input_groups(
