@@ -19,6 +19,19 @@ fn is_edge_vnode_name(name : String) -> Bool {
 }
 
 ///|
+/// Graphviz parity: cluster traversal order index is seeded from Graphviz
+/// cluster_order for cluster tie-breaking in ordering passes.
+pub fn build_cluster_order_index(
+  cluster_order : Array[String],
+) -> Map[String, Int] {
+  let cluster_index : Map[String, Int] = Map::new()
+  for idx, name in cluster_order {
+    cluster_index[name] = idx
+  }
+  cluster_index
+}
+
+///|
 pub fn merge_sizes_with_vnodes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],

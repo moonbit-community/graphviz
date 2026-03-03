@@ -165,20 +165,6 @@ fn cluster_depth_for_order(
 }
 
 ///|
-/// Graphviz parity: cluster traversal order index is seeded from Graphviz
-/// cluster_order for tie-breaking during local cluster passes.
-/// Do not change behavior without updating fixtures/tests.
-fn build_local_cluster_index(
-  cluster_order : Array[String],
-) -> Map[String, Int] {
-  let cluster_index : Map[String, Int] = Map::new()
-  for idx, name in cluster_order {
-    cluster_index[name] = idx
-  }
-  cluster_index
-}
-
-///|
 fn cluster_order_index_or_end(
   cluster_index : Map[String, Int],
   name : String,
@@ -219,7 +205,7 @@ fn build_cluster_graph_order(
   if cluster_graphs.length() == 0 {
     return { cluster_graphs, cluster_names }
   }
-  let cluster_index = build_local_cluster_index(cluster_order)
+  let cluster_index = @ordering.build_cluster_order_index(cluster_order)
   let cluster_depth : Map[String, Int] = Map::new()
   for name in cluster_names {
     let _ = cluster_depth_for_order(

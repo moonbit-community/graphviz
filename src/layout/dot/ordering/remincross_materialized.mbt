@@ -304,19 +304,6 @@ pub fn build_remincross_materialized_arrays(
 }
 
 ///|
-/// Graphviz parity: cluster traversal order index is seeded from Graphviz
-/// cluster_order for clustered ReMincross rematerialization tie-breaking.
-fn build_cluster_order_index(
-  cluster_order : Array[String],
-) -> Map[String, Int] {
-  let cluster_index : Map[String, Int] = Map::new()
-  for idx, name in cluster_order {
-    cluster_index[name] = idx
-  }
-  cluster_index
-}
-
-///|
 /// Graphviz parity: clustered ReMincross rematerialization inputs keep
 /// dispatch snapshots unchanged before startpass=2 cleanup reorder setup.
 pub(all) struct ReMincrossMaterializationInputs {
