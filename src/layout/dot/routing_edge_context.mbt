@@ -30,17 +30,6 @@ priv struct EdgeRoutingPassInput {
 }
 
 ///|
-/// Graphviz parity: ordered-edge routing context captures pass-stable routing
-/// inputs, including prepass-derived ordering/grouping state.
-priv struct OrderedEdgeRoutingContext {
-  input : EdgeRoutingPassInput
-  regular_pass_input : @routing.RegularPassInput
-  base_cache : Map[Int, @routing.EdgeRouteBase]
-  prepass : @routing.RoutePrepassState
-  self_edge_groups : Map[String, Array[@cgraph.Edge]]
-}
-
-///|
 fn self_edge_label_height_pt_for_routes(
   edge : @cgraph.Edge,
   rankdir : RankDir,
@@ -57,24 +46,24 @@ fn self_edge_label_height_pt_for_routes(
 }
 
 ///|
-fn build_edge_layout_for_context(
+fn build_edge_layout_for_input(
   base : @routing.EdgeRouteBase,
   spline : @geom.Spline,
   spline_result : @routing.EdgeSplineResult,
-  context : OrderedEdgeRoutingContext,
+  input : EdgeRoutingPassInput,
 ) -> DotLayoutEdge {
   @routing.build_edge_layout(
     base,
     spline,
     spline_result,
     {
-      ranks: context.input.ranks,
-      rank_y: context.input.rank_y,
-      vnode_info: context.input.vnode_info,
-      vnode_positions: context.input.vnode_positions,
-      has_clusters: context.input.has_clusters,
-      nodesep_pt: context.input.nodesep_pt,
-      flat_label_edge_vnodes: context.input.flat_label_edge_vnodes,
+      ranks: input.ranks,
+      rank_y: input.rank_y,
+      vnode_info: input.vnode_info,
+      vnode_positions: input.vnode_positions,
+      has_clusters: input.has_clusters,
+      nodesep_pt: input.nodesep_pt,
+      flat_label_edge_vnodes: input.flat_label_edge_vnodes,
     },
     (edge, ranks, mid_label_width_pt) =>
       match edge_label_rank_info(edge, ranks) {
@@ -112,32 +101,6 @@ fn spline_mode_for_regular_pass(splines : SplinesMode) -> Int {
 }
 
 ///|
-fn build_regular_pass_input(
-  input : EdgeRoutingPassInput,
-) -> @routing.RegularPassInput {
-  {
-    spline_mode: spline_mode_for_regular_pass(input.splines),
-    ranks: input.ranks,
-    sizes: input.sizes,
-    positions: input.positions,
-    vnode_positions: input.vnode_positions,
-    vnode_info: input.vnode_info,
-    rank_y: input.rank_y,
-    rank_ht1: input.rank_ht1,
-    rank_ht2: input.rank_ht2,
-    x_groups: input.x_groups,
-    nodesep_pt: input.nodesep_pt,
-    ranksep_pt: input.ranksep_pt,
-    label_edge_counts: input.label_edge_counts,
-    head_port_metrics: input.head_port_metrics,
-    routing_context: input.routing_context,
-    enable_complex_tuning: input.enable_complex_tuning,
-  }
-}
-
-///|
-/// Graphviz parity: edge route bases are cached per edge id before routing.
-/// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
   input : EdgeRoutingPassInput,
   sameport_overrides : SameportOverrides,
@@ -169,12 +132,41 @@ fn build_route_base_cache(
 }
 
 ///|
-/// Graphviz parity: ordered-edge routing context construction keeps prepass
-/// setup (sameport/base-cache/order/group/bounds) in one place before routing.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordered_edge_routing_context(
+fn build_route_edges_input(
   input : EdgeRoutingPassInput,
-) -> OrderedEdgeRoutingContext {
+  base_cache : Map[Int, @routing.EdgeRouteBase],
+) -> @routing.RouteEdgesInput {
+  {
+    edges: input.edges,
+    ranks: input.ranks,
+    sizes: input.sizes,
+    positions: input.positions,
+    vnode_positions: input.vnode_positions,
+    vnode_info: input.vnode_info,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    x_groups: input.x_groups,
+    nodesep_pt: input.nodesep_pt,
+    ranksep_pt: input.ranksep_pt,
+    label_edge_counts: input.label_edge_counts,
+    head_port_metrics: input.head_port_metrics,
+    flat_label_edge_vnodes: input.flat_label_edge_vnodes,
+    routing_context: input.routing_context,
+    enable_complex_tuning: input.enable_complex_tuning,
+    use_spline_prepass: input.splines == SplinesMode::Spline,
+    spline_mode: spline_mode_for_regular_pass(input.splines),
+    base_cache,
+  }
+}
+
+///|
+/// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c
+/// + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+fn route_edges(
+  input : EdgeRoutingPassInput,
+) -> Array[DotLayoutEdge] {
   let sameport_overrides = collect_sameport_overrides(
     input.edges,
     input.positions,
@@ -188,80 +180,19 @@ fn build_ordered_edge_routing_context(
       input,
       sameport_overrides,
     )
-  let prepass =
-    @routing.build_route_prepass_state(
-      input.edges,
-      base_cache,
-      input.splines == SplinesMode::Spline,
-      input.ranks,
-      input.routing_context.order_index,
-      input.routing_context.path_order_index,
-      input.positions,
-      input.vnode_positions,
-      input.sizes,
-      input.vnode_info.vnode_sizes,
-      input.x_groups,
-    )
-  let self_edge_groups = @routing.collect_self_edge_groups(input.edges)
-  let regular_pass_input = build_regular_pass_input(input)
-  {
-    input,
-    regular_pass_input,
-    base_cache,
-    prepass,
-    self_edge_groups,
-  }
-}
-
-///|
-fn build_ordered_routing_input(
-  context : OrderedEdgeRoutingContext,
-) -> @routing.OrderedRoutingInput {
-  {
-    ordered_edges: context.prepass.ordered_edges,
-    flat_adjacent_simple_beziers: context.prepass.flat_adjacent_simple_beziers,
-    base_cache: context.base_cache,
-    self_edge_groups: context.self_edge_groups,
-    regular_pass_input: context.regular_pass_input,
-    path_left_bound: context.prepass.path_left_bound,
-    path_right_bound: context.prepass.path_right_bound,
-    recover_edge_id_for_routing: context.prepass.recover_edge_id_for_routing,
-    regular_parallel_groups: context.prepass.regular_parallel_groups,
-    rank_y: context.input.rank_y,
-    nodesep_pt: context.input.nodesep_pt,
-  }
-}
-
-///|
-/// Graphviz parity: edge routing aligned to refs/graphviz/lib/dotgen/dotsplines.c
-/// + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-fn route_edges(
-  input : EdgeRoutingPassInput,
-) -> Array[DotLayoutEdge] {
-  let ordered_edge_routing_context =
-    build_ordered_edge_routing_context(input)
-  let ordered_routing_input =
-    build_ordered_routing_input(ordered_edge_routing_context)
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
-  @routing.route_ordered_edges(
-    ordered_routing_input,
-    edges_out_by_id,
+  let route_input = build_route_edges_input(input, base_cache)
+  @routing.route_edges(
+    route_input,
     recover_slack_vnodes,
     (route_base, spline, spline_result) =>
-      build_edge_layout_for_context(
+      build_edge_layout_for_input(
         route_base,
         spline,
         spline_result,
-        ordered_edge_routing_context,
+        input,
       ),
     self_edge_label_height_pt_for_routes,
     self_edge_label_width_pt,
-  )
-  @routing.finalize_routed_edges(
-    input.edges,
-    input.ranks,
-    edges_out_by_id,
     edge_port_label_pos,
   )
 }

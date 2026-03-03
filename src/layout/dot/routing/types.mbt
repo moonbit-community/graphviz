@@ -155,3 +155,27 @@ pub(all) struct OrderedRoutingInput {
   rank_y : Map[Int, Double]
   nodesep_pt : Double
 }
+
+///|
+pub(all) struct RouteEdgesInput {
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  sizes : Map[String, @dot_shared.NodeSize]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : EdgeVnodeInfo
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  ranksep_pt : Double
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : HeadPortMetrics
+  flat_label_edge_vnodes : Map[String, String]
+  routing_context : RoutingContext
+  enable_complex_tuning : Bool
+  use_spline_prepass : Bool
+  spline_mode : Int
+  base_cache : Map[Int, EdgeRouteBase]
+}
