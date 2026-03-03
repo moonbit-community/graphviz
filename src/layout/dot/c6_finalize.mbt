@@ -3,42 +3,6 @@
 /// and nlist creation helpers for Stage C outputs.
 
 ///|
-/// Graphviz parity: clustered finalize groups keep cleaned real-node ranks,
-/// optionally apply cluster-rank bucket reorder, then apply local-cluster
-/// ordering before final ReMincross.
-fn build_clustered_finalize_groups(
-  cleaned_groups : Map[Int, Array[String]],
-  cluster_rank_order : Map[Int, Map[String, Int]],
-  cluster_meta : ClusterMetadata,
-  local_cluster_order : Map[String, Int],
-) -> Map[Int, Array[String]] {
-  let should_skip_cluster_rank_reorder =
-    @ordering.should_skip_cluster_rank_bucket_reorder(
-      cluster_rank_order,
-      cleaned_groups,
-      cluster_meta.cluster_keys,
-    )
-  let final_groups =
-    if should_skip_cluster_rank_reorder {
-      cleaned_groups
-    } else {
-      @ordering.reorder_groups_by_cluster(
-        cleaned_groups,
-        cluster_rank_order,
-        cluster_meta.cluster_keys,
-      )
-    }
-  // Graphviz parity: order local subclusters within outer clusters by minrank/first order.
-  reorder_by_local_cluster(
-    final_groups,
-    cluster_meta.cluster_keys,
-    cluster_meta.intercluster_keys,
-    local_cluster_order,
-  )
-  final_groups
-}
-
-///|
 /// Graphviz parity: clustered ReMincross cleanup snapshot capture keeps the
 /// same rematerialized edge arrays passed into startpass=2 reorder.
 fn capture_remincross_cleanup(
@@ -161,11 +125,17 @@ fn finalize_order_groups(
     )
   if reorder_setup.order_with_clusters {
     let final_groups =
-      build_clustered_finalize_groups(
+      @ordering.build_clustered_finalize_groups(
         cleaned_groups,
         cluster_rank_order,
-        dispatch_context.cluster_meta,
-        runtime_context.local_cluster_order,
+        dispatch_context.cluster_meta.cluster_keys,
+        (groups) =>
+          reorder_by_local_cluster(
+            groups,
+            dispatch_context.cluster_meta.cluster_keys,
+            dispatch_context.cluster_meta.intercluster_keys,
+            runtime_context.local_cluster_order,
+          ),
       )
     let remincross_output =
       @ordering.run_remincross_pass(

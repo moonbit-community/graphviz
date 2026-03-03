@@ -478,3 +478,34 @@ pub fn should_skip_cluster_rank_bucket_reorder(
   }
   true
 }
+
+///|
+/// Graphviz parity: clustered finalize groups keep cleaned real-node ranks,
+/// optionally apply cluster-rank bucket reorder, then apply local-cluster
+/// ordering before final ReMincross.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_finalize_groups(
+  cleaned_groups : Map[Int, Array[String]],
+  cluster_rank_order : Map[Int, Map[String, Int]],
+  cluster_keys : Map[String, String],
+  apply_local_cluster_order : (Map[Int, Array[String]]) -> Unit,
+) -> Map[Int, Array[String]] {
+  let should_skip_cluster_rank_reorder =
+    should_skip_cluster_rank_bucket_reorder(
+      cluster_rank_order,
+      cleaned_groups,
+      cluster_keys,
+    )
+  let final_groups =
+    if should_skip_cluster_rank_reorder {
+      cleaned_groups
+    } else {
+      reorder_groups_by_cluster(
+        cleaned_groups,
+        cluster_rank_order,
+        cluster_keys,
+      )
+    }
+  apply_local_cluster_order(final_groups)
+  final_groups
+}
