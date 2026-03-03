@@ -6,13 +6,7 @@ fn build_bezier_layout_edge(
   apply_dotted_adjustment : Bool,
   tail_swap : Bool,
   head_swap : Bool,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_info : EdgeVnodeInfo,
-  vnode_positions : Map[String, @geom.Point],
-  nodesep_pt : Double,
-  has_clusters : Bool,
-  flat_label_edge_vnodes : Map[String, String],
+  context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let bezier_layout_result =
     @routing.build_bezier_layout_spline_result(
@@ -27,13 +21,13 @@ fn build_bezier_layout_edge(
     base,
     bezier_layout_result.final_spline,
     bezier_layout_result.layout_spline_result,
-    ranks,
-    rank_y,
-    vnode_info,
-    vnode_positions,
-    nodesep_pt,
-    has_clusters,
-    flat_label_edge_vnodes,
+    context.ranks,
+    context.rank_y,
+    context.vnode_info,
+    context.vnode_positions,
+    context.nodesep_pt,
+    context.has_clusters,
+    context.flat_label_edge_vnodes,
   )
 }
 
@@ -43,13 +37,7 @@ fn build_bezier_layout_edge(
 fn build_self_edge_layout(
   base : EdgeRouteBase,
   route : SelfEdgeRoute,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_info : EdgeVnodeInfo,
-  vnode_positions : Map[String, @geom.Point],
-  nodesep_pt : Double,
-  has_clusters : Bool,
-  flat_label_edge_vnodes : Map[String, String],
+  context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let mut edge_layout =
     build_bezier_layout_edge(
@@ -59,13 +47,7 @@ fn build_self_edge_layout(
       false,
       false,
       false,
-      ranks,
-      rank_y,
-      vnode_info,
-      vnode_positions,
-      nodesep_pt,
-      has_clusters,
-      flat_label_edge_vnodes,
+      context,
     )
   match route.label_pos {
     Some(pos) =>
@@ -89,13 +71,7 @@ fn build_self_edge_layout(
 fn build_flat_adjacent_layout(
   base : EdgeRouteBase,
   bezier : Array[@geom.Point],
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_info : EdgeVnodeInfo,
-  vnode_positions : Map[String, @geom.Point],
-  nodesep_pt : Double,
-  has_clusters : Bool,
-  flat_label_edge_vnodes : Map[String, String],
+  context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
@@ -104,13 +80,7 @@ fn build_flat_adjacent_layout(
     false,
     base.swap_ends,
     base.swap_ends,
-    ranks,
-    rank_y,
-    vnode_info,
-    vnode_positions,
-    nodesep_pt,
-    has_clusters,
-    flat_label_edge_vnodes,
+    context,
   )
 }
 
@@ -119,13 +89,7 @@ fn build_flat_adjacent_layout(
 fn build_regular_bezier_layout(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_info : EdgeVnodeInfo,
-  vnode_positions : Map[String, @geom.Point],
-  nodesep_pt : Double,
-  has_clusters : Bool,
-  flat_label_edge_vnodes : Map[String, String],
+  context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
@@ -134,12 +98,6 @@ fn build_regular_bezier_layout(
     shared_spline_result.apply_dotted_adjustment,
     base.swap_ends,
     base.swap_ends,
-    ranks,
-    rank_y,
-    vnode_info,
-    vnode_positions,
-    nodesep_pt,
-    has_clusters,
-    flat_label_edge_vnodes,
+    context,
   )
 }

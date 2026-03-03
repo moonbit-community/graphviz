@@ -94,13 +94,7 @@ fn apply_regular_parallel_reuse_layouts(
       build_regular_bezier_layout(
         group_base,
         regular_layout.spline_result,
-        context.ranks,
-        context.rank_y,
-        context.vnode_info,
-        context.vnode_positions,
-        context.nodesep_pt,
-        context.has_clusters,
-        context.flat_label_edge_vnodes,
+        context,
       )
     edges_out_by_id[group_edge_id] = group_layout
   }

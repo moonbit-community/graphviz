@@ -63,13 +63,7 @@ fn route_ordered_edge(
         build_flat_adjacent_layout(
           base,
           bezier,
-          context.ranks,
-          context.rank_y,
-          context.vnode_info,
-          context.vnode_positions,
-          context.nodesep_pt,
-          context.has_clusters,
-          context.flat_label_edge_vnodes,
+          context,
         )
       state.edges_out_by_id[edge_id] = edge_layout
       return ()
@@ -79,18 +73,8 @@ fn route_ordered_edge(
   if maybe_build_self_edge_layout(
     edge,
     base,
-    context.self_edge_groups,
-    context.base_cache,
-    context.build_base_for_edge,
-    context.ranks,
-    context.nodesep_pt,
-    context.rank_y,
-    context.vnode_info,
-    context.vnode_positions,
-    context.has_clusters,
-    context.flat_label_edge_vnodes,
-    state.self_edge_routes,
-    state.edges_out_by_id,
+    context,
+    state,
   ) {
     return ()
   }
