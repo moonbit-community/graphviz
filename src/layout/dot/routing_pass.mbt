@@ -82,9 +82,7 @@ fn route_edges(
   let ordered_edges = prepass.ordered_edges
   let recover_edge_id_for_routing = prepass.recover_edge_id_for_routing
   let regular_parallel_groups = prepass.regular_parallel_groups
-  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
-  route_ordered_edges(
-    ordered_edges,
+  let ordered_edge_routing_context : OrderedEdgeRoutingContext = {
     base_cache,
     flat_adjacent_simple_beziers,
     ranks,
@@ -112,6 +110,11 @@ fn route_edges(
     regular_parallel_groups,
     self_edge_groups,
     build_base_for_edge,
+  }
+  let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
+  route_ordered_edges(
+    ordered_edges,
+    ordered_edge_routing_context,
     edges_out_by_id,
   )
   finalize_routed_edges(edges, ranks, edges_out_by_id)
