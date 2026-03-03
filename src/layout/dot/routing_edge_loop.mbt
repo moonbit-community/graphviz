@@ -37,8 +37,8 @@ fn maybe_build_self_edge_layout(
     edge,
     context.prepass.self_edge_groups,
     context.base_cache,
-    context.nodesep_pt,
-    context.rank_y,
+    context.input.nodesep_pt,
+    context.input.rank_y,
     state.self_edge_routes,
     build_self_edge_routes,
   )

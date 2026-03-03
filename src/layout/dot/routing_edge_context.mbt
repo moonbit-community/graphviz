@@ -33,26 +33,9 @@ priv struct EdgeRoutingPassInput {
 /// Graphviz parity: ordered-edge routing context captures pass-stable routing
 /// inputs, including prepass-derived ordering/grouping state.
 priv struct OrderedEdgeRoutingContext {
+  input : EdgeRoutingPassInput
   base_cache : Map[Int, EdgeRouteBase]
   prepass : @routing.RoutePrepassState
-  ranks : Map[String, Int]
-  splines : SplinesMode
-  sizes : Map[String, NodeSize]
-  positions : Map[String, @geom.Point]
-  vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
-  nodesep_pt : Double
-  ranksep_pt : Double
-  has_clusters : Bool
-  label_edge_counts : Map[String, Int]
-  head_port_metrics : HeadPortMetrics
-  flat_label_edge_vnodes : Map[String, String]
-  routing_context : RoutingContext
-  enable_complex_tuning : Bool
 }
 
 ///|
@@ -117,26 +100,9 @@ fn build_ordered_edge_routing_context(
       input.x_groups,
     )
   {
+    input,
     base_cache,
     prepass,
-    ranks: input.ranks,
-    splines: input.splines,
-    sizes: input.sizes,
-    positions: input.positions,
-    vnode_positions: input.vnode_positions,
-    vnode_info: input.vnode_info,
-    rank_y: input.rank_y,
-    rank_ht1: input.rank_ht1,
-    rank_ht2: input.rank_ht2,
-    x_groups: input.x_groups,
-    nodesep_pt: input.nodesep_pt,
-    ranksep_pt: input.ranksep_pt,
-    has_clusters: input.has_clusters,
-    label_edge_counts: input.label_edge_counts,
-    head_port_metrics: input.head_port_metrics,
-    flat_label_edge_vnodes: input.flat_label_edge_vnodes,
-    routing_context: input.routing_context,
-    enable_complex_tuning: input.enable_complex_tuning,
   }
 }
 
