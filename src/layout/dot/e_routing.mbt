@@ -470,6 +470,21 @@ priv struct FlatDetourResult {
 }
 
 ///|
+priv struct FlatDetourLookupContext {
+  tail_name : String
+  head_name : String
+  rank : Int
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, NodeSize]
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  rankdir : RankDir
+}
+
+///|
 priv struct PointsSplineResult {
   spline : @geom.Spline
   raw_bezier : Array[@geom.Point]
@@ -701,6 +716,33 @@ fn maybe_flat_detour_points_if_blocked(
   } else {
     None
   }
+}
+
+///|
+fn flat_detour_points_for_line(
+  context : FlatDetourLookupContext,
+  flat_no_arrow_candidate : Bool,
+  flat_top_compass_single_arrow_candidate : Bool,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+) -> FlatDetourResult? {
+  maybe_flat_detour_points_if_blocked(
+    flat_no_arrow_candidate,
+    flat_top_compass_single_arrow_candidate,
+    context.tail_name,
+    context.head_name,
+    context.rank,
+    line_start,
+    line_end,
+    context.positions,
+    context.sizes,
+    context.ranks,
+    context.rank_y,
+    context.rank_ht1,
+    context.rank_ht2,
+    context.ranksep_pt,
+    context.rankdir,
+  )
 }
 
 ///|
@@ -3754,23 +3796,26 @@ fn build_edge_spline(
           let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
           let flat_top_compass_single_arrow_candidate =
             detour_context.flat_top_compass_single_arrow_candidate
+          let flat_detour_lookup : FlatDetourLookupContext = {
+            tail_name,
+            head_name,
+            rank: tail_rank,
+            positions,
+            sizes,
+            ranks,
+            rank_y,
+            rank_ht1,
+            rank_ht2,
+            ranksep_pt,
+            rankdir: layout_rankdir,
+          }
           let flat_detour =
-            maybe_flat_detour_points_if_blocked(
+            flat_detour_points_for_line(
+              flat_detour_lookup,
               flat_no_arrow_candidate,
               flat_top_compass_single_arrow_candidate,
-              tail_name,
-              head_name,
-              tail_rank,
               adjusted[0],
               adjusted[adjusted.length() - 1],
-              positions,
-              sizes,
-              ranks,
-              rank_y,
-              rank_ht1,
-              rank_ht2,
-              ranksep_pt,
-              layout_rankdir,
             )
           let detour_spline =
             detour_spline_if_any(
@@ -3898,23 +3943,26 @@ fn build_edge_spline(
         let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
         let flat_top_compass_single_arrow_candidate =
           detour_context.flat_top_compass_single_arrow_candidate
+        let flat_detour_lookup : FlatDetourLookupContext = {
+          tail_name,
+          head_name,
+          rank: tail_rank,
+          positions,
+          sizes,
+          ranks,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+          ranksep_pt,
+          rankdir: layout_rankdir,
+        }
         let flat_detour =
-          maybe_flat_detour_points_if_blocked(
+          flat_detour_points_for_line(
+            flat_detour_lookup,
             flat_no_arrow_candidate,
             flat_top_compass_single_arrow_candidate,
-            tail_name,
-            head_name,
-            tail_rank,
             tail_anchor,
             head_anchor,
-            positions,
-            sizes,
-            ranks,
-            rank_y,
-            rank_ht1,
-            rank_ht2,
-            ranksep_pt,
-            layout_rankdir,
           )
         let detour_spline =
           detour_spline_if_any(
