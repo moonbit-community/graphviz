@@ -404,7 +404,18 @@ Entry:
 
 Main files:
 
-- `src/layout/dot/e_routing.mbt`
+- `src/layout/dot/routing_types.mbt`
+- `src/layout/dot/routing_context.mbt`
+- `src/layout/dot/routing_pass.mbt`
+- `src/layout/dot/routing_base.mbt`
+- `src/layout/dot/routing_curve_points.mbt`
+- `src/layout/dot/routing_short_route.mbt`
+- `src/layout/dot/routing_curve_mode.mbt`
+- `src/layout/dot/routing_render_layout.mbt`
+- `src/layout/dot/routing_self_edge.mbt`
+- `src/layout/dot/routing_sameport.mbt`
+- `src/layout/dot/routing_flat_adjacent.mbt`
+- `src/layout/dot/routing_clip_shape.mbt`
 - `src/layout/dot/routing/routesplines/*`
 - `src/layout/dot/routing/pathplan/*`
 - `src/layout/dot/routing/edge_spline/*`
@@ -557,7 +568,7 @@ Repository guard validates:
 - Crossing helpers:
   - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
 - Routing:
-  - `e_routing.mbt`, `routesplines/*`, `pathplan/*`, `edge_spline/*`
+  - `routing_types.mbt`, `routing_context.mbt`, `routing_pass.mbt`, `routing_base.mbt`, `routing_curve_points.mbt`, `routing_short_route.mbt`, `routing_curve_mode.mbt`, `routing_render_layout.mbt`, `routing_self_edge.mbt`, `routing_sameport.mbt`, `routing_flat_adjacent.mbt`, `routing_clip_shape.mbt`, `routing/*`
 - Final graph writeback:
   - `f_postprocess.mbt`
 
@@ -574,7 +585,7 @@ If you are new to layout algorithms, read in this order:
 5. `c1_edges.mbt` + `c1_graph.mbt` — understand order graph construction.
 6. `c3_local.mbt` + `c4_root_reorder.mbt` + `c5_*` — understand clustered reorder/refinement.
 7. `c0_ordering.mbt` + `d*_` — understand Stage C dispatch handoff and Stage D position internals.
-8. `e_routing.mbt` — understand edge geometry generation.
+8. `routing_context.mbt` + `routing_pass.mbt` + `routing_curve_mode.mbt` — understand edge geometry generation.
 9. `f_postprocess.mbt` — understand output attribute mapping.
 
 This order follows data flow and keeps the learning curve manageable.
