@@ -88,6 +88,17 @@ fn self_edge_extra_right_space(
 }
 
 ///|
+fn collect_self_edges(edges : Array[@cgraph.Edge]) -> Array[@cgraph.Edge] {
+  let self_edges : Array[@cgraph.Edge] = []
+  for edge in edges {
+    if edge_is_self(edge) {
+      self_edges.push(edge)
+    }
+  }
+  self_edges
+}
+
+///|
 /// Graphviz parity: self-edge right-side spacing aligned to
 /// refs/graphviz/lib/dotgen/position.c (self-edge width padding).
 /// Do not change behavior without updating fixtures/tests.
@@ -98,23 +109,14 @@ fn apply_self_edge_right_space(
   rankdir : RankDir,
   record_orientation : RecordOrientation,
 ) -> Map[String, NodeSize] {
-  let mut has_self_edges = false
-  for edge in edges {
-    if edge_is_self(edge) {
-      has_self_edges = true
-      break
-    }
-  }
-  if !has_self_edges {
+  let self_edges = collect_self_edges(edges)
+  if self_edges.length() == 0 {
     return sizes
   }
   let port_maps = build_port_maps_for_nodes(nodes, sizes, record_orientation)
   let extra_right : Map[String, Double] = Map::new()
-  for edge in edges {
+  for edge in self_edges {
     let tail = edge.tail().name()
-    if !edge_is_self(edge) {
-      continue
-    }
     let extra = self_edge_extra_right_space(edge, rankdir, port_maps)
     if extra <= 0.0 {
       continue
@@ -144,11 +146,10 @@ fn self_edge_label_half_heights(
 ) -> Map[String, Double] {
   let heights : Map[String, Double] = Map::new()
   for edge in edges {
-    let tail = edge.tail().name()
-    let head = edge.head().name()
-    if tail != head {
+    if !edge_is_self(edge) {
       continue
     }
+    let tail = edge.tail().name()
     let half_height = edge_label_height_pt(edge) / 2.0
     let current = match heights.get(tail) {
       Some(value) => value
