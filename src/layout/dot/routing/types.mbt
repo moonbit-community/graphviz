@@ -109,3 +109,14 @@ pub(all) struct HeadPortMetrics {
   head_port_min_dist : Map[String, Double]
   head_port_max_dist : Map[String, Double]
 }
+
+///|
+pub(all) struct EdgeLayoutInput {
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  vnode_info : EdgeVnodeInfo
+  vnode_positions : Map[String, @geom.Point]
+  has_clusters : Bool
+  nodesep_pt : Double
+  flat_label_edge_vnodes : Map[String, String]
+}

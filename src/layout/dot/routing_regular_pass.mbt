@@ -184,7 +184,7 @@ fn build_regular_spline_layout(
     recover_slack_vnodes,
   )
   let layout =
-    build_edge_layout(
+    build_edge_layout_for_context(
       base,
       spline,
       layout_spline_result,
@@ -252,7 +252,7 @@ fn apply_regular_parallel_reuse_layouts(
         group_base,
         regular_layout.spline_result,
         (route_base, spline, spline_result) =>
-          build_edge_layout(
+          build_edge_layout_for_context(
             route_base,
             spline,
             spline_result,

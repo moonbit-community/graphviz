@@ -65,6 +65,52 @@ fn self_edge_label_height_pt_for_routes(
 }
 
 ///|
+fn build_edge_layout_for_context(
+  base : EdgeRouteBase,
+  spline : @geom.Spline,
+  spline_result : EdgeSplineResult,
+  context : OrderedEdgeRoutingContext,
+) -> DotLayoutEdge {
+  @routing.build_edge_layout(
+    base,
+    spline,
+    spline_result,
+    {
+      ranks: context.input.ranks,
+      rank_y: context.input.rank_y,
+      vnode_info: context.input.vnode_info,
+      vnode_positions: context.input.vnode_positions,
+      has_clusters: context.input.has_clusters,
+      nodesep_pt: context.input.nodesep_pt,
+      flat_label_edge_vnodes: context.input.flat_label_edge_vnodes,
+    },
+    (edge, ranks, mid_label_width_pt) =>
+      match edge_label_rank_info(edge, ranks) {
+        Some(info) =>
+          if mid_label_width_pt > 0.0 {
+            Some((info.label_rank, info.span))
+          } else {
+            None
+          }
+        None => None
+      },
+    edge_label_rank_y,
+    (edge, label_rank, vnode_info, vnode_positions) =>
+      edge_label_rank_x(
+        edge,
+        label_rank,
+        vnode_info.vnode_ranks,
+        vnode_info.edge_vnodes,
+        vnode_positions,
+      ),
+    edge_label_pos_from_vnode,
+    flat_edge_label_pos_simple,
+    edge_label_pos,
+    edge_port_label_pos,
+  )
+}
+
+///|
 /// Graphviz parity: edge route bases are cached per edge id before routing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
@@ -157,7 +203,7 @@ fn maybe_build_flat_adjacent_layout(
           base,
           bezier,
           (route_base, spline, spline_result) =>
-            build_edge_layout(
+            build_edge_layout_for_context(
               route_base,
               spline,
               spline_result,
@@ -199,7 +245,7 @@ fn maybe_build_self_edge_layout(
           base,
           route,
           (route_base, spline, spline_result) =>
-            build_edge_layout(
+            build_edge_layout_for_context(
               route_base,
               spline,
               spline_result,
