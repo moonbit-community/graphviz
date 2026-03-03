@@ -704,6 +704,77 @@ fn maybe_flat_detour_points_if_blocked(
 }
 
 ///|
+fn record_port_detour_points(
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_clip_size : NodeSize,
+  head_clip_size : NodeSize,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+  nodesep_pt : Double,
+  layout_rankdir : RankDir,
+  lr_detour_uses_x_axis : Bool,
+) -> Array[@geom.Point] {
+  let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
+  let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
+  let detour_offset = nodesep_pt * 0.5
+  match layout_rankdir {
+    RankDir::TB | RankDir::BT => {
+      let mut side = tail_clip.x - tail_clip_center.x
+      if Double::abs(side) <= 0.01 {
+        side = head_clip.x - head_clip_center.x
+      }
+      if Double::abs(side) <= 0.01 {
+        side = head_clip.x - tail_clip.x
+      }
+      let detour_x =
+        if side < 0.0 {
+          min_double(tail_rect.llx, head_rect.llx) - detour_offset
+        } else {
+          max_double(tail_rect.urx, head_rect.urx) + detour_offset
+        }
+      [
+        tail_clip,
+        @edge_spline.point(detour_x, tail_clip.y),
+        @edge_spline.point(detour_x, head_clip.y),
+        head_clip,
+      ]
+    }
+    RankDir::LR | RankDir::RL => {
+      let mut side = tail_clip.y - tail_clip_center.y
+      if Double::abs(side) <= 0.01 {
+        side = head_clip.y - head_clip_center.y
+      }
+      if Double::abs(side) <= 0.01 {
+        side = head_clip.y - tail_clip.y
+      }
+      let detour_y =
+        if side < 0.0 {
+          min_double(tail_rect.lly, head_rect.lly) - detour_offset
+        } else {
+          max_double(tail_rect.ury, head_rect.ury) + detour_offset
+        }
+      if lr_detour_uses_x_axis {
+        // Graphviz parity: keep legacy short-route LR detour axis mapping in this branch.
+        [
+          tail_clip,
+          @edge_spline.point(detour_y, tail_clip.y),
+          @edge_spline.point(detour_y, head_clip.y),
+          head_clip,
+        ]
+      } else {
+        [
+          tail_clip,
+          @edge_spline.point(tail_clip.x, detour_y),
+          @edge_spline.point(head_clip.x, detour_y),
+          head_clip,
+        ]
+      }
+    }
+  }
+}
+
+///|
 fn bottom_single_arrow_line_endpoints(
   prefer_linear_flat_bottom_single_arrow : Bool,
   line_start : @geom.Point,
@@ -3573,54 +3644,18 @@ fn build_edge_spline(
               layout_rankdir,
             )
           if needs_record_detour {
-            let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
-            let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
-            let detour_offset = nodesep_pt * 0.5
             let detour_points =
-              match layout_rankdir {
-                RankDir::TB | RankDir::BT => {
-                  let mut side = tail_clip.x - tail_clip_center.x
-                  if Double::abs(side) <= 0.01 {
-                    side = head_clip.x - head_clip_center.x
-                  }
-                  if Double::abs(side) <= 0.01 {
-                    side = head_clip.x - tail_clip.x
-                  }
-                  let detour_x =
-                    if side < 0.0 {
-                      min_double(tail_rect.llx, head_rect.llx) - detour_offset
-                    } else {
-                      max_double(tail_rect.urx, head_rect.urx) + detour_offset
-                    }
-                  [
-                    tail_clip,
-                    @edge_spline.point(detour_x, tail_clip.y),
-                    @edge_spline.point(detour_x, head_clip.y),
-                    head_clip,
-                  ]
-                }
-                RankDir::LR | RankDir::RL => {
-                  let mut side = tail_clip.y - tail_clip_center.y
-                  if Double::abs(side) <= 0.01 {
-                    side = head_clip.y - head_clip_center.y
-                  }
-                  if Double::abs(side) <= 0.01 {
-                    side = head_clip.y - tail_clip.y
-                  }
-                  let detour_y =
-                    if side < 0.0 {
-                      min_double(tail_rect.lly, head_rect.lly) - detour_offset
-                    } else {
-                      max_double(tail_rect.ury, head_rect.ury) + detour_offset
-                    }
-                  [
-                    tail_clip,
-                    @edge_spline.point(detour_y, tail_clip.y),
-                    @edge_spline.point(detour_y, head_clip.y),
-                    head_clip,
-                  ]
-              }
-            }
+              record_port_detour_points(
+                tail_clip_center,
+                head_clip_center,
+                tail_clip_size,
+                head_clip_size,
+                tail_clip,
+                head_clip,
+                nodesep_pt,
+                layout_rankdir,
+                true,
+              )
             let record_detour_spline =
               build_points_spline(
                 base,
@@ -3790,54 +3825,18 @@ fn build_edge_spline(
             layout_rankdir,
           )
         if needs_record_detour {
-          let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
-          let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
-          let detour_offset = nodesep_pt * 0.5
           let detour_points =
-            match layout_rankdir {
-              RankDir::TB | RankDir::BT => {
-                let mut side = tail_clip.x - tail_clip_center.x
-                if Double::abs(side) <= 0.01 {
-                  side = head_clip.x - head_clip_center.x
-                }
-                if Double::abs(side) <= 0.01 {
-                  side = head_clip.x - tail_clip.x
-                }
-                let detour_x =
-                  if side < 0.0 {
-                    min_double(tail_rect.llx, head_rect.llx) - detour_offset
-                  } else {
-                    max_double(tail_rect.urx, head_rect.urx) + detour_offset
-                  }
-                [
-                  tail_clip,
-                  @edge_spline.point(detour_x, tail_clip.y),
-                  @edge_spline.point(detour_x, head_clip.y),
-                  head_clip,
-                ]
-              }
-              RankDir::LR | RankDir::RL => {
-                let mut side = tail_clip.y - tail_clip_center.y
-                if Double::abs(side) <= 0.01 {
-                  side = head_clip.y - head_clip_center.y
-                }
-                if Double::abs(side) <= 0.01 {
-                  side = head_clip.y - tail_clip.y
-                }
-                let detour_y =
-                  if side < 0.0 {
-                    min_double(tail_rect.lly, head_rect.lly) - detour_offset
-                  } else {
-                    max_double(tail_rect.ury, head_rect.ury) + detour_offset
-                  }
-                [
-                  tail_clip,
-                  @edge_spline.point(tail_clip.x, detour_y),
-                  @edge_spline.point(head_clip.x, detour_y),
-                  head_clip,
-                ]
-              }
-            }
+            record_port_detour_points(
+              tail_clip_center,
+              head_clip_center,
+              tail_clip_size,
+              head_clip_size,
+              tail_clip,
+              head_clip,
+              nodesep_pt,
+              layout_rankdir,
+              false,
+            )
           let record_detour_spline =
             build_points_spline(
               base,
