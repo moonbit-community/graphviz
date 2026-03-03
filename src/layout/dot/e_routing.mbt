@@ -3164,6 +3164,44 @@ fn limit_pathplan_segment_boxes(
 }
 
 ///|
+fn segmented_pathplan_raw_bezier(
+  pathplan_segments : Array[@routesplines.PathplanSegment],
+  tail_slope_for : @geom.Point,
+  head_slope_for : @geom.Point,
+  join_dir : @geom.Point,
+  force_segmented : Bool,
+) -> Array[@geom.Point] {
+  let segmented_raw : Array[@geom.Point] = []
+  let mut seg_idx = 0
+  while seg_idx < pathplan_segments.length() {
+    let segment = pathplan_segments[seg_idx]
+    let seg_raw =
+      pathplan_segment_raw_bezier(
+        segment,
+        seg_idx,
+        pathplan_segments.length(),
+        tail_slope_for,
+        head_slope_for,
+        join_dir,
+        force_segmented,
+        true,
+      )
+    if seg_raw.length() > 0 {
+      if segmented_raw.length() > 0 {
+        let last = segmented_raw[segmented_raw.length() - 1]
+        segmented_raw.push(last)
+        segmented_raw.push(last)
+      }
+      for point in seg_raw {
+        segmented_raw.push(point)
+      }
+    }
+    seg_idx = seg_idx + 1
+  }
+  segmented_raw
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3588,37 +3626,20 @@ fn build_edge_spline(
           let edge_force_segmented = if using_pathplan { false } else { force_segmented }
           let use_segmented_pathplan =
             using_pathplan && pathplan_segments.length() > 0
-          let segmented_raw : Array[@geom.Point] = []
-          if use_segmented_pathplan {
-            // Graphviz parity: straight_path segment joins constrain slope along rankdir.
-            let join_dir = straight_path_join_dir(layout_rankdir)
-            let mut seg_idx = 0
-            while seg_idx < pathplan_segments.length() {
-              let segment = pathplan_segments[seg_idx]
-              let seg_raw =
-                pathplan_segment_raw_bezier(
-                  segment,
-                  seg_idx,
-                  pathplan_segments.length(),
-                  tail_slope_for,
-                  head_slope_for,
-                  join_dir,
-                  edge_force_segmented,
-                  true,
-                )
-              if seg_raw.length() > 0 {
-                if segmented_raw.length() > 0 {
-                  let last = segmented_raw[segmented_raw.length() - 1]
-                  segmented_raw.push(last)
-                  segmented_raw.push(last)
-                }
-                for point in seg_raw {
-                  segmented_raw.push(point)
-                }
-              }
-              seg_idx = seg_idx + 1
+          let segmented_raw : Array[@geom.Point] =
+            if use_segmented_pathplan {
+              // Graphviz parity: straight_path segment joins constrain slope along rankdir.
+              let join_dir = straight_path_join_dir(layout_rankdir)
+              segmented_pathplan_raw_bezier(
+                pathplan_segments,
+                tail_slope_for,
+                head_slope_for,
+                join_dir,
+                edge_force_segmented,
+              )
+            } else {
+              []
             }
-          }
           if use_segmented_pathplan && segmented_raw.length() > 0 {
             raw_bezier = segmented_raw
             let spline =
