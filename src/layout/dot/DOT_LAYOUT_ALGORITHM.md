@@ -407,6 +407,7 @@ Main files:
 - `src/layout/dot/routing_types.mbt`
 - `src/layout/dot/routing_context.mbt`
 - `src/layout/dot/routing_pass.mbt`
+- `src/layout/dot/routing_edge_loop.mbt`
 - `src/layout/dot/routing_layout_emit.mbt`
 - `src/layout/dot/routing_regular_layout.mbt`
 - `src/layout/dot/routing_self_edge_apply.mbt`
