@@ -82,43 +82,37 @@ fn route_edges(
   let ordered_edges = prepass.ordered_edges
   let recover_edge_id_for_routing = prepass.recover_edge_id_for_routing
   let regular_parallel_groups = prepass.regular_parallel_groups
-  let self_edge_routes : Map[Int, SelfEdgeRoute] = Map::new()
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
-  let recovered_slack_keys : Map[String, Bool] = Map::new()
-  for edge in ordered_edges {
-    route_ordered_edge(
-      edge,
-      base_cache,
-      flat_adjacent_simple_beziers,
-      ranks,
-      splines,
-      sizes,
-      positions,
-      vnode_positions,
-      vnode_info,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      x_groups,
-      nodesep_pt,
-      path_left_bound,
-      path_right_bound,
-      ranksep_pt,
-      has_clusters,
-      label_edge_counts,
-      head_port_metrics,
-      flat_label_edge_vnodes,
-      routing_context,
-      enable_complex_tuning,
-      path_adjacency,
-      recover_edge_id_for_routing,
-      recovered_slack_keys,
-      regular_parallel_groups,
-      self_edge_groups,
-      self_edge_routes,
-      build_base_for_edge,
-      edges_out_by_id,
-    )
-  }
+  route_ordered_edges(
+    ordered_edges,
+    base_cache,
+    flat_adjacent_simple_beziers,
+    ranks,
+    splines,
+    sizes,
+    positions,
+    vnode_positions,
+    vnode_info,
+    rank_y,
+    rank_ht1,
+    rank_ht2,
+    x_groups,
+    nodesep_pt,
+    path_left_bound,
+    path_right_bound,
+    ranksep_pt,
+    has_clusters,
+    label_edge_counts,
+    head_port_metrics,
+    flat_label_edge_vnodes,
+    routing_context,
+    enable_complex_tuning,
+    path_adjacency,
+    recover_edge_id_for_routing,
+    regular_parallel_groups,
+    self_edge_groups,
+    build_base_for_edge,
+    edges_out_by_id,
+  )
   finalize_routed_edges(edges, ranks, edges_out_by_id)
 }
