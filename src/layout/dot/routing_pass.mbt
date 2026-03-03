@@ -1,4 +1,43 @@
 ///|
+fn build_bezier_layout_edge(
+  base : EdgeRouteBase,
+  raw_bezier : Array[@geom.Point],
+  label_pad_boost : Double,
+  apply_dotted_adjustment : Bool,
+  tail_swap : Bool,
+  head_swap : Bool,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  vnode_info : EdgeVnodeInfo,
+  vnode_positions : Map[String, @geom.Point],
+  nodesep_pt : Double,
+  has_clusters : Bool,
+  flat_label_edge_vnodes : Map[String, String],
+) -> DotLayoutEdge {
+  let bezier_layout_result =
+    @routing.build_bezier_layout_spline_result(
+      base,
+      raw_bezier,
+      label_pad_boost,
+      apply_dotted_adjustment,
+      tail_swap,
+      head_swap,
+    )
+  build_edge_layout(
+    base,
+    bezier_layout_result.final_spline,
+    bezier_layout_result.layout_spline_result,
+    ranks,
+    rank_y,
+    vnode_info,
+    vnode_positions,
+    nodesep_pt,
+    has_clusters,
+    flat_label_edge_vnodes,
+  )
+}
+
+///|
 /// Graphviz parity: self-edge routes reuse finalize/build_edge_layout path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_layout(
@@ -12,20 +51,14 @@ fn build_self_edge_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let bezier_layout_result =
-    @routing.build_bezier_layout_spline_result(
+  let mut edge_layout =
+    build_bezier_layout_edge(
       base,
       route.points,
       0.0,
       false,
       false,
       false,
-    )
-  let mut edge_layout =
-    build_edge_layout(
-      base,
-      bezier_layout_result.final_spline,
-      bezier_layout_result.layout_spline_result,
       ranks,
       rank_y,
       vnode_info,
@@ -64,19 +97,13 @@ fn build_flat_adjacent_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let bezier_layout_result =
-    @routing.build_bezier_layout_spline_result(
-      base,
-      bezier,
-      0.0,
-      false,
-      base.swap_ends,
-      base.swap_ends,
-    )
-  build_edge_layout(
+  build_bezier_layout_edge(
     base,
-    bezier_layout_result.final_spline,
-    bezier_layout_result.layout_spline_result,
+    bezier,
+    0.0,
+    false,
+    base.swap_ends,
+    base.swap_ends,
     ranks,
     rank_y,
     vnode_info,
@@ -294,19 +321,13 @@ fn build_regular_bezier_layout(
   has_clusters : Bool,
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
-  let bezier_layout_result =
-    @routing.build_bezier_layout_spline_result(
-      base,
-      shared_spline_result.raw_bezier,
-      shared_spline_result.label_pad_boost,
-      shared_spline_result.apply_dotted_adjustment,
-      base.swap_ends,
-      base.swap_ends,
-    )
-  build_edge_layout(
+  build_bezier_layout_edge(
     base,
-    bezier_layout_result.final_spline,
-    bezier_layout_result.layout_spline_result,
+    shared_spline_result.raw_bezier,
+    shared_spline_result.label_pad_boost,
+    shared_spline_result.apply_dotted_adjustment,
+    base.swap_ends,
+    base.swap_ends,
     ranks,
     rank_y,
     vnode_info,
