@@ -140,3 +140,18 @@ pub(all) struct RegularPassInput {
   routing_context : RoutingContext
   enable_complex_tuning : Bool
 }
+
+///|
+pub(all) struct OrderedRoutingInput {
+  ordered_edges : Array[@cgraph.Edge]
+  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
+  base_cache : Map[Int, EdgeRouteBase]
+  self_edge_groups : Map[String, Array[@cgraph.Edge]]
+  regular_pass_input : RegularPassInput
+  path_left_bound : Double
+  path_right_bound : Double
+  recover_edge_id_for_routing : Map[String, Int]
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
+  rank_y : Map[Int, Double]
+  nodesep_pt : Double
+}

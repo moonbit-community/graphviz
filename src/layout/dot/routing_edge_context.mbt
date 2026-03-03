@@ -41,15 +41,6 @@ priv struct OrderedEdgeRoutingContext {
 }
 
 ///|
-/// Graphviz parity: ordered-edge routing mutates only shared pass-level maps
-/// while iterating in Graphviz-compatible route order.
-priv struct OrderedEdgeRoutingState {
-  recovered_slack_keys : Map[String, Bool]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
-}
-
-///|
 fn self_edge_label_height_pt_for_routes(
   edge : @cgraph.Edge,
   rankdir : RankDir,
@@ -223,150 +214,21 @@ fn build_ordered_edge_routing_context(
 }
 
 ///|
-/// Graphviz parity: flat-adjacent routed spline reuse keeps makeSimpleFlat
-/// branch before self-edge/regular-edge routing.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_build_flat_adjacent_layout(
-  edge_id : Int,
-  base : EdgeRouteBase,
+fn build_ordered_routing_input(
   context : OrderedEdgeRoutingContext,
-  state : OrderedEdgeRoutingState,
-) -> Bool {
-  match context.prepass.flat_adjacent_simple_beziers.get(edge_id) {
-    Some(bezier) => {
-      let edge_layout =
-        @routing.build_flat_adjacent_layout(
-          base,
-          bezier,
-          (route_base, spline, spline_result) =>
-            build_edge_layout_for_context(
-              route_base,
-              spline,
-              spline_result,
-              context,
-            ),
-        )
-      state.edges_out_by_id[edge_id] = edge_layout
-      true
-    }
-    None => false
-  }
-}
-
-///|
-/// Graphviz parity: self-edge route cache reuse + self-edge layout finalize path.
-/// Do not change behavior without updating fixtures/tests.
-fn maybe_build_self_edge_layout(
-  edge : @cgraph.Edge,
-  base : EdgeRouteBase,
-  context : OrderedEdgeRoutingContext,
-  state : OrderedEdgeRoutingState,
-) -> Bool {
-  let edge_id = edge.id()
-  let input = context.input
-  let route = @routing.self_edge_route_for_edge(
-    edge,
-    context.self_edge_groups,
-    context.base_cache,
-    input.nodesep_pt,
-    input.rank_y,
-    state.self_edge_routes,
-    self_edge_label_height_pt_for_routes,
-    self_edge_label_width_pt,
-  )
-  match route {
-    Some(route) => {
-      let edge_layout =
-        @routing.build_self_edge_layout(
-          base,
-          route,
-          (route_base, spline, spline_result) =>
-            build_edge_layout_for_context(
-              route_base,
-              spline,
-              spline_result,
-              context,
-            ),
-        )
-      state.edges_out_by_id[edge_id] = edge_layout
-      true
-    }
-    None => false
-  }
-}
-
-///|
-fn route_ordered_edge(
-  edge : @cgraph.Edge,
-  context : OrderedEdgeRoutingContext,
-  state : OrderedEdgeRoutingState,
-) -> Unit {
-  let edge_id = edge.id()
-  if state.edges_out_by_id.get(edge_id) is Some(_) {
-    return ()
-  }
-  let base = match context.base_cache.get(edge_id) {
-    Some(value) => value
-    None => return ()
-  }
-  if maybe_build_flat_adjacent_layout(
-    edge_id,
-    base,
-    context,
-    state,
-  ) {
-    return ()
-  }
-  if maybe_build_self_edge_layout(
-    edge,
-    base,
-    context,
-    state,
-  ) {
-    return ()
-  }
-  @routing.build_regular_layouts_for_edge(
-    edge_id,
-    edge,
-    base,
-    context.regular_pass_input,
-    context.prepass.path_left_bound,
-    context.prepass.path_right_bound,
-    context.prepass.recover_edge_id_for_routing,
-    context.prepass.regular_parallel_groups,
-    context.base_cache,
-    state.recovered_slack_keys,
-    state.edges_out_by_id,
-    recover_slack_vnodes,
-    (route_base, spline, spline_result) =>
-      build_edge_layout_for_context(
-        route_base,
-        spline,
-        spline_result,
-        context,
-      ),
-  )
-}
-
-///|
-/// Graphviz parity: ordered-edge routing loop keeps mutable self-edge and
-/// recover-slack state shared across edges in pass order.
-/// Do not change behavior without updating fixtures/tests.
-fn route_ordered_edges(
-  context : OrderedEdgeRoutingContext,
-  edges_out_by_id : Map[Int, DotLayoutEdge],
-) -> Unit {
-  let state : OrderedEdgeRoutingState = {
-    recovered_slack_keys: Map::new(),
-    self_edge_routes: Map::new(),
-    edges_out_by_id,
-  }
-  for edge in context.prepass.ordered_edges {
-    route_ordered_edge(
-      edge,
-      context,
-      state,
-    )
+) -> @routing.OrderedRoutingInput {
+  {
+    ordered_edges: context.prepass.ordered_edges,
+    flat_adjacent_simple_beziers: context.prepass.flat_adjacent_simple_beziers,
+    base_cache: context.base_cache,
+    self_edge_groups: context.self_edge_groups,
+    regular_pass_input: context.regular_pass_input,
+    path_left_bound: context.prepass.path_left_bound,
+    path_right_bound: context.prepass.path_right_bound,
+    recover_edge_id_for_routing: context.prepass.recover_edge_id_for_routing,
+    regular_parallel_groups: context.prepass.regular_parallel_groups,
+    rank_y: context.input.rank_y,
+    nodesep_pt: context.input.nodesep_pt,
   }
 }
 
@@ -379,10 +241,22 @@ fn route_edges(
 ) -> Array[DotLayoutEdge] {
   let ordered_edge_routing_context =
     build_ordered_edge_routing_context(input)
+  let ordered_routing_input =
+    build_ordered_routing_input(ordered_edge_routing_context)
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
-  route_ordered_edges(
-    ordered_edge_routing_context,
+  @routing.route_ordered_edges(
+    ordered_routing_input,
     edges_out_by_id,
+    recover_slack_vnodes,
+    (route_base, spline, spline_result) =>
+      build_edge_layout_for_context(
+        route_base,
+        spline,
+        spline_result,
+        ordered_edge_routing_context,
+      ),
+    self_edge_label_height_pt_for_routes,
+    self_edge_label_width_pt,
   )
   @routing.finalize_routed_edges(
     input.edges,
