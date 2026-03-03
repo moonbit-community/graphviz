@@ -75,26 +75,19 @@ fn prepare_routing_context(
         Some(value) => value
         None => continue
       }
-      let mut vnode_cluster = ""
-      if tail_cluster != "" {
-        match cluster_bboxes.get(tail_cluster) {
-          Some(rect) =>
-            if pos.x >= rect.llx && pos.x <= rect.urx &&
-              pos.y >= rect.lly && pos.y <= rect.ury {
-              vnode_cluster = tail_cluster
-            }
-          None => ()
-        }
-      }
-      if vnode_cluster == "" && head_cluster != "" {
-        match cluster_bboxes.get(head_cluster) {
-          Some(rect) =>
-            if pos.x >= rect.llx && pos.x <= rect.urx &&
-              pos.y >= rect.lly && pos.y <= rect.ury {
-              vnode_cluster = head_cluster
-            }
-          None => ()
-        }
+      let mut vnode_cluster =
+        cluster_containing_point_or_empty(
+          tail_cluster,
+          cluster_bboxes,
+          pos,
+        )
+      if vnode_cluster == "" {
+        vnode_cluster =
+          cluster_containing_point_or_empty(
+            head_cluster,
+            cluster_bboxes,
+            pos,
+          )
       }
       path_vnode_clusters[vnode] = vnode_cluster
     }
@@ -131,6 +124,27 @@ fn prepare_routing_context(
     path_vnode_clusters,
     parallel_offsets,
     cluster_bboxes,
+  }
+}
+
+///|
+fn cluster_containing_point_or_empty(
+  cluster_name : String,
+  cluster_bboxes : Map[String, @geom.Rect],
+  pos : @geom.Point,
+) -> String {
+  if cluster_name == "" {
+    return ""
+  }
+  match cluster_bboxes.get(cluster_name) {
+    Some(rect) =>
+      if pos.x >= rect.llx && pos.x <= rect.urx &&
+        pos.y >= rect.lly && pos.y <= rect.ury {
+        cluster_name
+      } else {
+        ""
+      }
+    None => ""
   }
 }
 ///|
