@@ -520,7 +520,7 @@ fn collect_root_vnodes(
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         edge_idx,
         edge_tail,
@@ -919,7 +919,7 @@ fn build_graphviz_flip_merged_root_groups(
   order_cluster_skeleton : Map[String, Bool],
 ) -> Map[Int, Array[String]] {
   let ordered_root_nodes =
-    build_order_nodes_from_groups(ordered_root, root_rank_keys)
+    @ordering.build_order_nodes_from_groups(ordered_root, root_rank_keys)
   let ordered_root_mincross_nodes =
     build_node_membership_set(ordered_root_nodes)
   merge_root_mincross_groups(
@@ -1166,7 +1166,7 @@ fn build_root_reorder_edge_data(
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) -> RootReorderEdgeData {
   let root_materialized =
-    collect_order_edges_for_tails(
+    @ordering.collect_order_edges_for_tails(
       root_context.root_nlist_order,
       order_edges_by_tail_root,
       root_context.root_graph,
@@ -1182,7 +1182,7 @@ fn build_root_reorder_edge_data(
       root_materialized.order_edge_head_port_order,
     )
   let root_edge_indices =
-    build_edge_indices_and_order(
+    @ordering.build_edge_indices_and_order(
       root_context.root_nodes,
       root_materialized.order_edge_tail_out,
       root_materialized.order_edge_head_out,
@@ -1226,9 +1226,9 @@ fn build_root_reorder_context(
     )
   let root_rank_keys = @ordering.collect_rank_keys(root_groups)
   let root_ranks = @ordering.build_node_ranks(root_groups)
-  let root_nodes = build_order_nodes_from_groups(root_groups, root_rank_keys)
+  let root_nodes = @ordering.build_order_nodes_from_groups(root_groups, root_rank_keys)
   let root_graph_output =
-    build_order_graph_and_nodes("order_root", root_nodes)
+    @ordering.build_order_graph_and_nodes("order_root", root_nodes)
   let root_graph = root_graph_output.order_graph
   let root_node_map = root_graph_output.order_node_map
   // Graphviz parity: root cluster-reorder derives root GD_nlist walk order and

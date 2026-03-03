@@ -24,7 +24,7 @@ fn apply_intercluster_bonus(
       let (tail, head, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
         entry
       let key =
-        order_edge_merge_key(
+        @ordering.order_edge_merge_key(
           tail,
           head,
           constraint,
@@ -102,9 +102,9 @@ fn build_materialized_edges(
   let rem_order_edges_by_tail_raw = rem_order_edges_output.order_edges_by_tail
   let rem_vnode_creation = rem_order_edges_output.vnode_creation_by_tail
   let rem_order_edges_by_tail_coalesced =
-    coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
+    @ordering.coalesce_order_edges_by_tail(rem_order_edges_by_tail_raw)
   let intercluster_bonus =
-    collect_intercluster_bonus(
+    @ordering.collect_intercluster_bonus(
       dispatch_context.creation_order,
       dispatch_context.edges,
       dispatch_context.edge_tail,
@@ -163,7 +163,7 @@ fn build_materialized_arrays(
     )
   let rem_node_order = @ordering.build_order_index(rem_groups)
   let rem_materialized =
-    collect_order_edges_for_tails(
+    @ordering.collect_order_edges_for_tails(
       rem_nlist_order,
       materialized_edges.order_edges_by_tail,
       rem_graph,

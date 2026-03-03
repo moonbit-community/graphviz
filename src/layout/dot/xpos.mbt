@@ -1845,13 +1845,13 @@ fn oriented_edge_endpoints(
   edge_head : Array[String],
 ) -> OrientedEdgeEndpoints {
   let (tail_name, head_name) =
-    edge_endpoints_at(
+    @ordering.edge_endpoints_at(
       edge,
       edge_idx,
       edge_tail,
       edge_head,
     )
-  let is_reversed = edge_orientation_is_reversed(edge, tail_name, head_name)
+  let is_reversed = @ordering.edge_orientation_is_reversed(edge, tail_name, head_name)
   { tail_name, head_name, is_reversed }
 }
 
@@ -2261,13 +2261,13 @@ fn build_constraint_graph(
                 }
                 let weight = seg_base_weight + weight_bonus
                 let mut tail_port =
-                  edge_tail_port_for_name(
+                  @ordering.edge_tail_port_for_name(
                     edge,
                     seg_tail,
                     fallback_to_original=false,
                   )
                 let mut head_port =
-                  edge_head_port_for_name(
+                  @ordering.edge_head_port_for_name(
                     edge,
                     seg_head,
                     fallback_to_original=false,

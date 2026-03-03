@@ -42,7 +42,7 @@ fn build_order_seed_groups(
       out
     }
   let order_sizes_out =
-    build_sizes_for_order_graph(
+    @ordering.build_sizes_for_order_graph(
       order_sizes,
       order_with_vnodes,
       vnode_info.vnode_sizes,
@@ -70,7 +70,7 @@ fn build_order_seed_groups(
             Some(value) => value
             None => min_rank
           }
-          append_cluster_skeleton_range(
+          @ordering.append_cluster_skeleton_range(
             cluster,
             min_rank,
             max_rank,
@@ -93,7 +93,7 @@ fn build_order_seed_groups(
         Some(value) => value
         None => min_rank
       }
-      append_cluster_skeleton_range(
+      @ordering.append_cluster_skeleton_range(
         cluster,
         min_rank,
         max_rank,
@@ -323,7 +323,7 @@ fn build_seeded_reorder_groups(
   )
   if seed_cross > 0 {
     let transpose_seed_maps =
-      build_transpose_seed_maps(
+      @ordering.build_transpose_seed_maps(
         order_rank_keys,
         seeded_groups,
         order_edges_out,

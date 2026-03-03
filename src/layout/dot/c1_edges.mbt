@@ -37,14 +37,14 @@ fn compute_edge_port_samples(
   while endpoint_idx < edges.length() {
     let edge = edges[endpoint_idx]
     let (tail_name, head_name) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         endpoint_idx,
         edge_tail,
         edge_head,
       )
-    let tail_port = edge_tail_port_for_name(edge, tail_name)
-    let head_port = edge_head_port_for_name(edge, head_name)
+    let tail_port = @ordering.edge_tail_port_for_name(edge, tail_name)
+    let head_port = @ordering.edge_head_port_for_name(edge, head_name)
     tail_names.push(tail_name)
     head_names.push(head_name)
     tail_ports.push(tail_port)

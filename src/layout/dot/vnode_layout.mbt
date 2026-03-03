@@ -55,7 +55,7 @@ fn build_edge_vnodes(
   for idx in edge_indices {
     let edge = edges[idx]
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         idx,
         edge_tail,
@@ -254,7 +254,7 @@ fn add_flat_label_vnodes(
     let current_idx = edge_idx
     edge_idx = edge_idx + 1
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         current_idx,
         edge_tail,

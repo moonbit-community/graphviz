@@ -253,7 +253,7 @@ fn collect_noncluster_components(
   graphviz_in_neighbors : Map[String, Array[String]],
   flat_constraints : Map[String, Bool],
 ) -> Array[Array[String]] {
-  let order_nodes = build_order_nodes_from_groups(groups, rank_keys)
+  let order_nodes = @ordering.build_order_nodes_from_groups(groups, rank_keys)
   if order_nodes.length() == 0 {
     return []
   }
@@ -741,7 +741,7 @@ fn build_root_mincross_edge_data(
       inputs.order_edge_head_port_order,
     )
   let edge_indices =
-    build_edge_indices_and_order(
+    @ordering.build_edge_indices_and_order(
       order_nodes_for_mincross,
       mincross_edges_output.order_edge_tail_out_mincross,
       mincross_edges_output.order_edge_head_out_mincross,
@@ -834,7 +834,7 @@ fn run_root_reorder_pass(
   let order_rank_keys_for_mincross =
     @ordering.collect_rank_keys(order_groups_for_mincross)
   let order_nodes_for_mincross =
-    build_order_nodes_from_groups(
+    @ordering.build_order_nodes_from_groups(
       order_groups_for_mincross,
       order_rank_keys_for_mincross,
     )

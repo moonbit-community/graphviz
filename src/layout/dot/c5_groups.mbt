@@ -112,9 +112,9 @@ fn build_remincross_inputs(
   rem_groups : Map[Int, Array[String]],
 ) -> ClusteredReMincrossMaterializedInputs {
   let rem_ranks = @ordering.build_node_ranks(rem_groups)
-  let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
+  let rem_nodes = @ordering.build_order_nodes_from_groups(rem_groups, rem_rank_keys)
   let rem_graph_output =
-    build_order_graph_and_nodes("order_remincross", rem_nodes)
+    @ordering.build_order_graph_and_nodes("order_remincross", rem_nodes)
   // Graphviz parity: ReMincross uses real intercluster edges
   // (no cluster skeleton mapping).
   let cluster_order_index =
@@ -138,7 +138,7 @@ fn build_remincross_inputs(
   let rem_cluster_keys =
     build_remincross_cluster_keys(dispatch_context)
   let rem_sizes =
-    build_sizes_for_order_graph(
+    @ordering.build_sizes_for_order_graph(
       dispatch_context.order_sizes,
       dispatch_context.order_with_vnodes,
       dispatch_context.vnode_info.vnode_sizes,
@@ -173,7 +173,7 @@ fn run_remincross_cleanup(
   materialized_inputs : ClusteredReMincrossMaterializedInputs,
 ) -> Map[Int, Array[String]] {
   let rem_edge_indices =
-    build_edge_indices_and_order(
+    @ordering.build_edge_indices_and_order(
       materialized_inputs.rem_nodes,
       materialized_inputs.rem_edge_tail_out,
       materialized_inputs.rem_edge_head_out,
@@ -261,7 +261,7 @@ fn assign_remincross_clusters(
       continue
     }
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         edge_idx,
         edge_tail,
@@ -370,7 +370,7 @@ fn collect_remincross_trailing(
   let intercluster_vnodes : Map[String, Bool] = Map::new()
   for edge_idx, edge in edges {
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         edge_idx,
         edge_tail,

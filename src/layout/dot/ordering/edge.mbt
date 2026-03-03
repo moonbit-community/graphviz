@@ -17,7 +17,7 @@ fn parse_ordering_mode(value : String) -> OrderingMode? {
 }
 
 ///|
-fn edge_tail_at(
+pub fn edge_tail_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],
@@ -28,7 +28,7 @@ fn edge_tail_at(
 }
 
 ///|
-fn edge_head_at(
+pub fn edge_head_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_head : Array[String],
@@ -39,7 +39,7 @@ fn edge_head_at(
 }
 
 ///|
-fn edge_endpoints_at(
+pub fn edge_endpoints_at(
   edge : @cgraph.Edge,
   edge_idx : Int,
   edge_tail : Array[String],

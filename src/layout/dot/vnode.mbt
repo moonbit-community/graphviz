@@ -186,7 +186,7 @@ fn build_vnode_order_keys(
       continue
     }
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         current_idx,
         edge_tail,
@@ -470,7 +470,7 @@ fn collect_vnode_out_heads(
   let mut edge_idx = 0
   for edge in edges {
     let (tail, head) =
-      edge_endpoints_at(
+      @ordering.edge_endpoints_at(
         edge,
         edge_idx,
         edge_tail,

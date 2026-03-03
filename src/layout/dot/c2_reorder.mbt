@@ -59,13 +59,13 @@ fn build_order_reorder_context(
   let order_rank_keys = @ordering.collect_rank_keys(order_groups)
   let order_ranks = @ordering.build_node_ranks(order_groups)
   let order_nodes =
-    build_order_nodes_from_groups(order_groups, order_rank_keys)
+    @ordering.build_order_nodes_from_groups(order_groups, order_rank_keys)
   let order_graph_output =
-    build_order_graph_and_nodes("order_graph", order_nodes)
+    @ordering.build_order_graph_and_nodes("order_graph", order_nodes)
   let order_graph = order_graph_output.order_graph
   let order_node_map = order_graph_output.order_node_map
   let order_graph_unmapped_output =
-    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+    @ordering.build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
   let order_graph_unmapped = order_graph_unmapped_output.order_graph
   let order_node_map_unmapped = order_graph_unmapped_output.order_node_map
   let creation_order : Array[String] = []
@@ -198,14 +198,14 @@ fn build_materialized_inputs(
   // Graphviz parity: mapped/unmapped order-edge arrays are materialized from
   // GD_nlist tail order against remapped and non-remapped order graphs.
   let mapped_edges =
-    collect_order_edges_for_tails(
+    @ordering.collect_order_edges_for_tails(
       nlist_order,
       order_edges_by_tail,
       order_graph,
       order_node_map,
     )
   let unmapped_edges =
-    collect_order_edges_for_tails(
+    @ordering.collect_order_edges_for_tails(
       nlist_order,
       order_edges_by_tail_unmapped,
       order_graph_unmapped,

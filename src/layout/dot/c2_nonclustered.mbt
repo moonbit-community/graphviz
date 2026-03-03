@@ -30,7 +30,7 @@ fn build_noncluster_graphviz_neighbors(
   for name, list in edge_out_order {
     let heads : Array[String] = []
     for edge_idx in list {
-      let head = edge_head_at(edges[edge_idx], edge_idx, edge_head)
+      let head = @ordering.edge_head_at(edges[edge_idx], edge_idx, edge_head)
       heads.push(head)
     }
     graphviz_out_neighbors[name] = heads

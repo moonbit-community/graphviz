@@ -76,7 +76,7 @@ fn coalesce_order_edges_snapshot(
       None => ()
     }
   }
-  let coalesced_by_tail = coalesce_order_edges_by_tail(entries_by_tail)
+  let coalesced_by_tail = @ordering.coalesce_order_edges_by_tail(entries_by_tail)
   let coalesced : Array[OrderingInputEdgeSnapshot] = []
   for tail in tail_order {
     let entries = match coalesced_by_tail.get(tail) {

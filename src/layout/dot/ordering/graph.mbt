@@ -1,9 +1,16 @@
 ///|
-/// Stage C Phase C1 split: class2/order-graph
-/// construction helpers for ordering-graph assembly.
+/// Ordering domain: order-graph construction and materialization helpers.
 
 ///|
-fn order_edge_merge_key(
+fn cluster_key_or_empty(cluster_keys : Map[String, String], name : String) -> String {
+  match cluster_keys.get(name) {
+    Some(value) => value
+    None => ""
+  }
+}
+
+///|
+pub fn order_edge_merge_key(
   tail : String,
   head : String,
   constraint : Bool,
@@ -69,7 +76,7 @@ fn coalesce_order_edges_for_tail(
 /// Graphviz parity: class2 merge_chain compacts adjacent mergeable ND_out
 /// segments per tail after chain materialization.
 /// Do not change behavior without updating fixtures/tests.
-fn coalesce_order_edges_by_tail(
+pub fn coalesce_order_edges_by_tail(
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
 ) -> Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] {
   let coalesced : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]] =
@@ -81,50 +88,9 @@ fn coalesce_order_edges_by_tail(
 }
 
 ///|
-/// Graphviz parity: oriented tail endpoint reads prefer edge_tail array and
-/// fall back to edge object endpoint when arrays are shorter.
-fn edge_tail_at(
-  edge : @cgraph.Edge,
-  edge_idx : Int,
-  edge_tail : Array[String],
-) -> String {
-  if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
-    edge.tail().name()
-  }
-}
-
-///|
-/// Graphviz parity: oriented head endpoint reads prefer edge_head array and
-/// fall back to edge object endpoint when arrays are shorter.
-fn edge_head_at(
-  edge : @cgraph.Edge,
-  edge_idx : Int,
-  edge_head : Array[String],
-) -> String {
-  if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
-    edge.head().name()
-  }
-}
-
-///|
-/// Graphviz parity: oriented edge endpoint reads prefer edge_tail/edge_head
-/// arrays and fall back to edge object endpoints when arrays are shorter.
-/// Do not change behavior without updating fixtures/tests.
-fn edge_endpoints_at(
-  edge : @cgraph.Edge,
-  edge_idx : Int,
-  edge_tail : Array[String],
-  edge_head : Array[String],
-) -> (String, String) {
-  let tail = edge_tail_at(edge, edge_idx, edge_tail)
-  let head = edge_head_at(edge, edge_idx, edge_head)
-  (tail, head)
-}
-
-///|
 /// Graphviz parity: oriented endpoint names represent a reversed edge when
 /// they swap the original tail/head names.
-fn edge_orientation_is_reversed(
+pub fn edge_orientation_is_reversed(
   edge : @cgraph.Edge,
   tail_name : String,
   head_name : String,
@@ -137,7 +103,7 @@ fn edge_orientation_is_reversed(
 /// Graphviz parity: oriented endpoint port lookup follows remapped endpoint
 /// names (including reversed directed edges), with optional fallback for
 /// callers that require original endpoint defaults.
-fn edge_tail_port_for_name(
+pub fn edge_tail_port_for_name(
   edge : @cgraph.Edge,
   tail_name : String,
   fallback_to_original? : Bool = true,
@@ -159,7 +125,7 @@ fn edge_tail_port_for_name(
 /// Graphviz parity: oriented endpoint port lookup follows remapped endpoint
 /// names (including reversed directed edges), with optional fallback for
 /// callers that require original endpoint defaults.
-fn edge_head_port_for_name(
+pub fn edge_head_port_for_name(
   edge : @cgraph.Edge,
   head_name : String,
   fallback_to_original? : Bool = true,
@@ -181,7 +147,7 @@ fn edge_head_port_for_name(
 /// Graphviz parity: nested class2 passes on intercluster multi-edges preserve
 /// extra xpenalty on vnode-tail segments in clustered ReMincross rematerialize.
 /// Do not change behavior without updating fixtures/tests.
-fn collect_intercluster_bonus(
+pub fn collect_intercluster_bonus(
   creation_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -236,7 +202,7 @@ fn collect_intercluster_bonus(
       let intercluster =
         order_with_clusters && tail_cluster != head_cluster &&
         (tail_cluster != "" || head_cluster != "")
-      if !intercluster || !@dot_shared.edge_is_constraint(edge) || @dot_shared.edge_xpenalty(edge) <= 0 {
+      if !intercluster || !@shared.edge_is_constraint(edge) || @shared.edge_xpenalty(edge) <= 0 {
         continue
       }
       let tail_port_order =
@@ -249,7 +215,7 @@ fn collect_intercluster_bonus(
         }
       let vnodes =
         if order_with_vnodes {
-          match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+          match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
             Some(list) => list
             None => []
           }
@@ -318,7 +284,7 @@ fn collect_intercluster_bonus(
 /// Graphviz parity: order graph starts from measured node sizes and augments
 /// with vnode virtual sizes when vnode ordering is enabled.
 /// Do not change behavior without updating fixtures/tests.
-fn build_sizes_for_order_graph(
+pub fn build_sizes_for_order_graph(
   order_sizes : Map[String, NodeSize],
   order_with_vnodes : Bool,
   vnode_sizes : Map[String, NodeSize],
@@ -339,7 +305,7 @@ fn build_sizes_for_order_graph(
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.
-fn append_cluster_skeleton_range(
+pub fn append_cluster_skeleton_range(
   cluster : String,
   min_rank : Int,
   max_rank : Int,
@@ -365,7 +331,7 @@ fn append_cluster_skeleton_range(
 /// Graphviz parity: order-graph node creation follows collected rank key order
 /// and per-rank node sequence (including appended virtual skeleton/vnodes).
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_nodes_from_groups(
+pub fn build_order_nodes_from_groups(
   order_groups : Map[Int, Array[String]],
   order_rank_keys : Array[Int],
 ) -> Array[String] {
@@ -386,7 +352,7 @@ fn build_order_nodes_from_groups(
 /// Graphviz parity: order graph node table is built by creating each name in
 /// order_nodes sequence, matching agnode creation iteration order.
 /// Do not change behavior without updating fixtures/tests.
-priv struct OrderGraphAndNodes {
+pub(all) struct OrderGraphAndNodes {
   order_graph : @cgraph.Graph
   order_node_map : Map[String, @cgraph.Node]
 }
@@ -395,7 +361,7 @@ priv struct OrderGraphAndNodes {
 /// Graphviz parity: order graph node table is built by creating each name in
 /// order_nodes sequence, matching agnode creation iteration order.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_graph_and_nodes(
+pub fn build_order_graph_and_nodes(
   graph_name : String,
   order_nodes : Array[String],
 ) -> OrderGraphAndNodes {
@@ -416,7 +382,7 @@ fn build_order_graph_and_nodes(
 /// Graphviz parity: edge arrays are materialized from per-tail lists in exact
 /// nlist tail iteration order (shared root/remincross order-graph builder).
 /// Do not change behavior without updating fixtures/tests.
-priv struct OrderEdgeArrays {
+pub(all) struct OrderEdgeArrays {
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -430,7 +396,7 @@ priv struct OrderEdgeArrays {
 /// Graphviz parity: edge arrays are materialized from per-tail lists in exact
 /// nlist tail iteration order (shared root/remincross order-graph builder).
 /// Do not change behavior without updating fixtures/tests.
-fn collect_order_edges_for_tails(
+pub fn collect_order_edges_for_tails(
   tail_sequence : Array[String],
   edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
   order_graph : @cgraph.Graph,
@@ -451,7 +417,7 @@ fn collect_order_edges_for_tails(
     for entry in list {
       let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
         entry
-      @ordering.add_order_edge(
+      add_order_edge(
         order_graph,
         order_node_map,
         order_edges_out,
@@ -487,7 +453,7 @@ fn collect_order_edges_for_tails(
 /// Graphviz parity: parent/child adjacency maps and edge-order indices are
 /// derived from the exact materialized edge arrays in current order graph.
 /// Do not change behavior without updating fixtures/tests.
-priv struct EdgeIndicesAndOrder {
+pub(all) struct EdgeIndicesAndOrder {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
   edge_order : Map[String, Int]
@@ -497,7 +463,7 @@ priv struct EdgeIndicesAndOrder {
 /// Graphviz parity: parent/child adjacency maps and edge-order indices are
 /// derived from the exact materialized edge arrays in current order graph.
 /// Do not change behavior without updating fixtures/tests.
-fn build_edge_indices_and_order(
+pub fn build_edge_indices_and_order(
   order_nodes : Array[String],
   edge_tail_out : Array[String],
   edge_head_out : Array[String],
@@ -505,7 +471,7 @@ fn build_edge_indices_and_order(
   edges_out : Array[@cgraph.Edge],
 ) -> EdgeIndicesAndOrder {
   let edge_index_data =
-    @ordering.build_edge_index_for_names(
+    build_edge_index_for_names(
       order_nodes,
       edge_tail_out,
       edge_head_out,
@@ -513,7 +479,7 @@ fn build_edge_indices_and_order(
     )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = @ordering.collect_edge_order(edges_out)
+  let edge_order = collect_edge_order(edges_out)
   { parents, children, edge_order }
 }
 
@@ -521,7 +487,7 @@ fn build_edge_indices_and_order(
 /// Graphviz parity: transpose seed maps include all seeded nodes and only
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
-priv struct TransposeSeedMapsOutput {
+pub(all) struct TransposeSeedMapsOutput {
   edge_penalty : Array[Int]
   edge_in : Map[String, Array[Int]]
   edge_out : Map[String, Array[Int]]
@@ -531,7 +497,7 @@ priv struct TransposeSeedMapsOutput {
 /// Graphviz parity: transpose seed maps include all seeded nodes and only
 /// positive-penalty constrained edges that cross ranks.
 /// Do not change behavior without updating fixtures/tests.
-fn build_transpose_seed_maps(
+pub fn build_transpose_seed_maps(
   order_rank_keys : Array[Int],
   seeded_groups : Map[Int, Array[String]],
   order_edges_out : Array[@cgraph.Edge],
@@ -554,9 +520,9 @@ fn build_transpose_seed_maps(
   }
   for edge_idx in 0..<order_edges_out.length() {
     let edge = order_edges_out[edge_idx]
-    let penalty = @dot_shared.edge_xpenalty(edge)
+    let penalty = @shared.edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if penalty <= 0 || !@dot_shared.edge_is_constraint(edge) {
+    if penalty <= 0 || !@shared.edge_is_constraint(edge) {
       continue
     }
     let tail = order_edge_tail_out[edge_idx]
