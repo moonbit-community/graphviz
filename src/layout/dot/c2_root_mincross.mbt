@@ -185,54 +185,6 @@ fn run_root_reorder_pass(
 }
 
 ///|
-/// Graphviz parity: root ReMincross input groups are cluster-filtered when
-/// cluster ordering is enabled, then optionally overridden for fixture replay.
-/// Do not change behavior without updating fixtures/tests.
-fn resolve_root_mincross_input_groups(
-  inputs : RootMincrossReorderInputs,
-) -> Map[Int, Array[String]] {
-  let order_groups_for_mincross_base =
-    if !inputs.order_with_clusters {
-      inputs.seeded_groups
-    } else {
-      // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
-      // nodes; cluster-internal ordering stays in cluster-local build_ranks
-      // passes.
-      @ordering.filter_root_mincross_seeded_groups_for_clusters(
-        inputs.seeded_groups,
-        inputs.order_cluster_keys,
-        inputs.order_cluster_skeleton,
-      )
-    }
-  match root_mincross_groups_override.val {
-    Some(override_groups) => @ordering.clone_rank_groups(override_groups)
-    None => order_groups_for_mincross_base
-  }
-}
-
-///|
-/// Graphviz parity: root ReMincross output merges reordered root/skeleton names
-/// back to seeded groups only in cluster-order mode.
-/// Do not change behavior without updating fixtures/tests.
-fn finalize_root_mincross_ordered_groups(
-  inputs : RootMincrossReorderInputs,
-  ordered_mincross : Map[Int, Array[String]],
-  mincross_nodes : Map[String, Bool],
-) -> Map[Int, Array[String]] {
-  if !inputs.order_with_clusters {
-    return ordered_mincross
-  }
-  @ordering.merge_root_mincross_groups(
-    inputs.order_rank_keys,
-    inputs.seeded_groups,
-    ordered_mincross,
-    mincross_nodes,
-    inputs.order_cluster_keys,
-    inputs.order_cluster_skeleton,
-  )
-}
-
-///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -240,14 +192,24 @@ fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
 ) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
   let order_groups_for_mincross =
-    resolve_root_mincross_input_groups(inputs)
+    @ordering.resolve_root_mincross_input_groups(
+      inputs.order_with_clusters,
+      inputs.seeded_groups,
+      inputs.order_cluster_keys,
+      inputs.order_cluster_skeleton,
+      root_mincross_groups_override.val,
+    )
   let (ordered_mincross, mincross_nodes) =
     run_root_reorder_pass(inputs, order_groups_for_mincross)
   let ordered =
-    finalize_root_mincross_ordered_groups(
-      inputs,
+    @ordering.finalize_root_mincross_ordered_groups(
+      inputs.order_with_clusters,
+      inputs.order_rank_keys,
+      inputs.seeded_groups,
       ordered_mincross,
       mincross_nodes,
+      inputs.order_cluster_keys,
+      inputs.order_cluster_skeleton,
     )
   (order_groups_for_mincross, ordered)
 }

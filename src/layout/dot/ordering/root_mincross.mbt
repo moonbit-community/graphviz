@@ -426,6 +426,62 @@ pub fn build_root_rank_reorder_call_data(
 }
 
 ///|
+/// Graphviz parity: root ReMincross input groups are cluster-filtered when
+/// cluster ordering is enabled, then optionally overridden for fixture replay.
+/// Do not change behavior without updating fixtures/tests.
+pub fn resolve_root_mincross_input_groups(
+  order_with_clusters : Bool,
+  seeded_groups : Map[Int, Array[String]],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+  order_groups_override : Map[Int, Array[String]]?,
+) -> Map[Int, Array[String]] {
+  let order_groups_for_mincross_base =
+    if !order_with_clusters {
+      seeded_groups
+    } else {
+      // Graphviz parity: root ReMincross keeps only root and cluster-skeleton
+      // nodes; cluster-internal ordering stays in cluster-local build_ranks
+      // passes.
+      filter_root_mincross_seeded_groups_for_clusters(
+        seeded_groups,
+        order_cluster_keys,
+        order_cluster_skeleton,
+      )
+    }
+  match order_groups_override {
+    Some(override_groups) => clone_rank_groups(override_groups)
+    None => order_groups_for_mincross_base
+  }
+}
+
+///|
+/// Graphviz parity: root ReMincross output merges reordered root/skeleton names
+/// back to seeded groups only in cluster-order mode.
+/// Do not change behavior without updating fixtures/tests.
+pub fn finalize_root_mincross_ordered_groups(
+  order_with_clusters : Bool,
+  order_rank_keys : Array[Int],
+  seeded_groups : Map[Int, Array[String]],
+  ordered_mincross : Map[Int, Array[String]],
+  mincross_nodes : Map[String, Bool],
+  order_cluster_keys : Map[String, String],
+  order_cluster_skeleton : Map[String, Bool],
+) -> Map[Int, Array[String]] {
+  if !order_with_clusters {
+    return ordered_mincross
+  }
+  merge_root_mincross_groups(
+    order_rank_keys,
+    seeded_groups,
+    ordered_mincross,
+    mincross_nodes,
+    order_cluster_keys,
+    order_cluster_skeleton,
+  )
+}
+
+///|
 /// Graphviz parity: keep cluster-internal nodes attached to the rankleader
 /// skeleton position when root mincross reorders cluster skeleton chains.
 fn build_rank_attached_by_skeleton(
