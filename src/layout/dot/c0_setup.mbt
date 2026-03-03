@@ -182,7 +182,7 @@ fn build_ordering_reorder_setup(
   rankdir : RankDir,
   cluster_meta : ClusterMetadata,
   vnode_info : @routing.EdgeVnodeInfo,
-  edge_port_data : OrderingEdgePortData,
+  edge_port_data : @ordering.OrderingEdgePortData,
 ) -> OrderingReorderSetup {
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
   // clustered/nonclustered mincross paths diverge.

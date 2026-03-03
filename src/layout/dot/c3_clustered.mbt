@@ -35,7 +35,7 @@ priv struct ClusteredDispatchContext {
   port_order_positions : Map[String, Double]
   port_order_contrib : Map[String, Array[(String, Double)]]
   runtime_context : OrderingRuntimeContext
-  edge_port_data : OrderingEdgePortData
+  edge_port_data : @ordering.OrderingEdgePortData
   reorder_setup : OrderingReorderSetup
   class2_data : @ordering.OrderingClass2Data
 }

@@ -80,12 +80,22 @@ fn compute_ordering_and_vnodes(
   // Graphviz parity: dispatch setup keeps edge-port extraction and reorder
   // setup sequence identical to Graphviz class2/mincross preparation.
   let edge_port_data =
-    build_ordering_edge_port_data(
+    @ordering.build_ordering_edge_port_data(
       nodes,
       edges,
       edge_tail,
       edge_head,
       order_sizes,
+      (nodes, edges, edge_tail, edge_head, sizes) => {
+        let samples =
+          compute_edge_port_positions(nodes, edges, edge_tail, edge_head, sizes)
+        (samples.tail_values, samples.head_values)
+      },
+      (nodes, edges, edge_tail, edge_head, sizes) => {
+        let samples =
+          compute_edge_port_orders(nodes, edges, edge_tail, edge_head, sizes)
+        (samples.tail_values, samples.head_values)
+      },
     )
   let reorder_setup =
     build_ordering_reorder_setup(
