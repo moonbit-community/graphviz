@@ -725,36 +725,6 @@ fn build_line_spline(
   )
 }
 
-///|
-fn build_bezier_points_spline(
-  base : EdgeRouteBase,
-  bezier_points : Array[@geom.Point],
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
-  clip_swapped : Bool,
-  arrow_swapped : Bool,
-) -> @geom.Spline {
-  @edge_spline.edge_spline_for_bezier_points(
-    base.edge,
-    bezier_points,
-    base.tail_clip_center,
-    base.head_clip_center,
-    base.tail_clip_size,
-    base.head_clip_size,
-    base.route_include_tail,
-    base.route_include_head,
-    tail_clip_enabled=tail_clip_enabled,
-    head_clip_enabled=head_clip_enabled,
-    arrow_len_override=base.arrow_len_override,
-    tail_cluster_bbox=base.tail_cluster_bbox,
-    head_cluster_bbox=base.head_cluster_bbox,
-    parallel_offset=base.parallel_offset,
-    clip_swapped=clip_swapped,
-    arrow_swapped=arrow_swapped,
-  )
-}
-
-///|
 fn build_short_route_line_or_pathplan_spline(
   base : EdgeRouteBase,
   using_pathplan : Bool,

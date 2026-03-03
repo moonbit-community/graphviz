@@ -57,7 +57,7 @@ fn rebuild_spline_for_render(
     return spline_result
   }
   let rebuilt =
-    build_bezier_points_spline(
+    @routing.build_bezier_points_spline(
       base,
       spline_result.raw_bezier,
       edge_clip_flags.tail_clip_enabled,

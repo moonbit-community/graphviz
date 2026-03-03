@@ -411,7 +411,7 @@ fn build_self_edge_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    build_bezier_points_spline(
+    @routing.build_bezier_points_spline(
       base,
       route.points,
       base.tail_clip_enabled,
@@ -472,7 +472,7 @@ fn build_flat_adjacent_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    build_bezier_points_spline(
+    @routing.build_bezier_points_spline(
       base,
       bezier,
       base.tail_clip_enabled,
@@ -924,7 +924,7 @@ fn build_regular_bezier_layout(
   flat_label_edge_vnodes : Map[String, String],
 ) -> DotLayoutEdge {
   let spline =
-    build_bezier_points_spline(
+    @routing.build_bezier_points_spline(
       base,
       shared_spline_result.raw_bezier,
       base.tail_clip_enabled,

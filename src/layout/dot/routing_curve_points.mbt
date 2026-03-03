@@ -546,7 +546,7 @@ fn build_multi_point_routed_spline(
     }
   if segmented_raw.length() > 0 {
     let spline =
-      build_bezier_points_spline(
+      @routing.build_bezier_points_spline(
         base,
         segmented_raw,
         tail_clip_enabled,
