@@ -1308,6 +1308,35 @@ priv struct SameportOverrides {
 }
 
 ///|
+priv struct EdgeSameportOrientationInfo {
+  tail_anchor : @geom.Point?
+  head_anchor : @geom.Point?
+  tail_group_size : Int
+  head_group_size : Int
+}
+
+///|
+fn edge_sameport_orientation_info(
+  edge_id : Int,
+  sameport_overrides : SameportOverrides,
+  swap_ends : Bool,
+) -> EdgeSameportOrientationInfo {
+  let samehead_anchor = sameport_overrides.samehead_anchors.get(edge_id)
+  let sametail_anchor = sameport_overrides.sametail_anchors.get(edge_id)
+  let samehead_group_size =
+    sameport_overrides.samehead_group_sizes.get(edge_id).unwrap_or_default()
+  let sametail_group_size =
+    sameport_overrides.sametail_group_sizes.get(edge_id).unwrap_or_default()
+  let tail_anchor = if swap_ends { samehead_anchor } else { sametail_anchor }
+  let head_anchor = if swap_ends { sametail_anchor } else { samehead_anchor }
+  let tail_group_size =
+    if swap_ends { samehead_group_size } else { sametail_group_size }
+  let head_group_size =
+    if swap_ends { sametail_group_size } else { samehead_group_size }
+  { tail_anchor, head_anchor, tail_group_size, head_group_size }
+}
+
+///|
 fn apply_sameport_group_overrides(
   groups : Map[String, Array[@cgraph.Edge]],
   group_order : Array[String],
@@ -1611,12 +1640,12 @@ fn build_edge_route_base(
     } else {
       swap_ends_raw
     }
-  let samehead_anchor = sameport_overrides.samehead_anchors.get(edge.id())
-  let sametail_anchor = sameport_overrides.sametail_anchors.get(edge.id())
-  let samehead_group_size =
-    sameport_overrides.samehead_group_sizes.get(edge.id()).unwrap_or_default()
-  let sametail_group_size =
-    sameport_overrides.sametail_group_sizes.get(edge.id()).unwrap_or_default()
+  let sameport_info =
+    edge_sameport_orientation_info(
+      edge.id(),
+      sameport_overrides,
+      swap_ends,
+    )
   let parallel_offset = parallel_offsets.get(edge.id()).unwrap_or_default()
   let (tail_name, head_name, tail_port, head_port, tail_node, head_node) =
     if swap_ends {
@@ -1624,12 +1653,10 @@ fn build_edge_route_base(
     } else {
       (orig_tail_name, orig_head_name, edge.tail_port(), edge.head_port(), edge.tail(), edge.head())
     }
-  let tail_sameport_anchor = if swap_ends { samehead_anchor } else { sametail_anchor }
-  let head_sameport_anchor = if swap_ends { sametail_anchor } else { samehead_anchor }
-  let tail_sameport_group_size =
-    if swap_ends { samehead_group_size } else { sametail_group_size }
-  let head_sameport_group_size =
-    if swap_ends { sametail_group_size } else { samehead_group_size }
+  let tail_sameport_anchor = sameport_info.tail_anchor
+  let head_sameport_anchor = sameport_info.head_anchor
+  let tail_sameport_group_size = sameport_info.tail_group_size
+  let head_sameport_group_size = sameport_info.head_group_size
   let tail_pos = match positions.get(tail_name) {
     Some(value) => value
     None => { x: 0.0, y: 0.0 }
