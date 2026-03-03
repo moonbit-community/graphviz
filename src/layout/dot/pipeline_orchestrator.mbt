@@ -527,34 +527,164 @@ fn compute_dot_routing_stage(
   // Graphviz parity: edge routing call consumes edge/padding fields plus
   // grouped precompute payload while preserving Graphviz-aligned argument mapping.
   let layout_rankdir = RankDir::TB
+  let spline_mode = match prep.splines {
+    SplinesMode::None | SplinesMode::Polyline => 0
+    SplinesMode::Ortho => 1
+    _ => 2
+  }
+  let edge_layout_input : @routing.EdgeLayoutInput = {
+    ranks: rank_data.ranks,
+    rank_y: routing_positions_state.rank_y,
+    vnode_info: ordering.vnode_info,
+    vnode_positions: routing_positions_state.vnode_positions,
+    has_clusters: cluster_meta.has_clusters,
+    nodesep_pt: rank_heights.nodesep_pt,
+    flat_label_edge_vnodes: routing_positions_state.flat_label_edge_vnodes,
+  }
   let edges_routed =
-    route_edges({
-      graph,
-      edges: prep.edges,
-      ranks: rank_data.ranks,
-      sizes: routing_sizes,
-      record_orientation: prep.record_orientation,
-      rankdir: prep.rankdir,
-      layout_rankdir,
-      splines: prep.splines,
-      positions: routing_positions_state.positions,
-      vnode_positions: routing_positions_state.vnode_positions,
-      vnode_info: ordering.vnode_info,
-      rank_y: routing_positions_state.rank_y,
-      rank_ht1: routing_positions_state.rank_ht1,
-      rank_ht2: routing_positions_state.rank_ht2,
-      x_groups: path_groups,
-      nodesep_pt: rank_heights.nodesep_pt,
-      ranksep_pt: rank_heights.ranksep_pt,
-      has_clusters: cluster_meta.has_clusters,
-      label_ports_map: routing_label_ports_map,
-      label_ports_raw: routing_label_ports_raw,
-      label_edge_counts,
-      head_port_metrics,
-      flat_label_edge_vnodes: routing_positions_state.flat_label_edge_vnodes,
-      routing_context,
-      enable_complex_tuning,
-    })
+    @routing.route_edges_pipeline(
+      {
+        graph_kind: graph.kind(),
+        rankdir: prep.rankdir,
+        layout_rankdir,
+        edges: prep.edges,
+        ranks: rank_data.ranks,
+        sizes: routing_sizes,
+        positions: routing_positions_state.positions,
+        vnode_positions: routing_positions_state.vnode_positions,
+        vnode_info: ordering.vnode_info,
+        rank_y: routing_positions_state.rank_y,
+        rank_ht1: routing_positions_state.rank_ht1,
+        rank_ht2: routing_positions_state.rank_ht2,
+        x_groups: path_groups,
+        nodesep_pt: rank_heights.nodesep_pt,
+        ranksep_pt: rank_heights.ranksep_pt,
+        label_edge_counts,
+        head_port_metrics,
+        flat_label_edge_vnodes: routing_positions_state.flat_label_edge_vnodes,
+        routing_context,
+        enable_complex_tuning,
+        use_spline_prepass: prep.splines == SplinesMode::Spline,
+        spline_mode,
+      },
+      {
+        node_size_for_missing: (node) => node_size(node, prep.record_orientation),
+        edge_mid_label_metrics:
+          (edge) =>
+            match edge_mid_label_metrics(edge) {
+              Some(metrics) => Some({ width: metrics.width, height: metrics.height })
+              None => None
+            },
+        record_port_path_box:
+          (node, port, pos, size, rankdir) =>
+            record_port_path_box(
+              node,
+              port,
+              pos,
+              size,
+              rankdir,
+            ),
+        port_geometry:
+          (node_name, port, node_pos, node_size) => {
+            let geometry =
+              port_geometry(
+                node_name,
+                port,
+                routing_label_ports_map,
+                node_pos,
+                node_size,
+              )
+            { center: geometry.center, size: geometry.size }
+          },
+        port_rect_from_geometry:
+          (port, center, port_size, node_size) =>
+            port_rect_from_geometry(port, center, port_size, node_size),
+        port_is_label_port:
+          (node_name, port) =>
+            port_is_label_port(node_name, port, routing_label_ports_raw),
+        is_record_shape,
+        record_border_adjust:
+          (node) =>
+            if is_record_shape(node) &&
+              !@html_label.is_html_label_text(label_text(node)) {
+              @dot_shared.RECORD_BORDER_PT
+            } else {
+              0.0
+            },
+        dynamic_port_anchor_for_edge:
+          (port, node_name, node_pos, other_pos, rankdir, record_border_adjust) => {
+            let anchor =
+              dynamic_port_anchor_for_edge(
+                port,
+                node_name,
+                routing_label_ports_raw,
+                node_pos,
+                other_pos,
+                rankdir,
+                record_border_adjust,
+              )
+            { anchor: anchor.anchor, side: anchor.side, is_dynamic: anchor.is_dynamic }
+          },
+        port_side_mask_from_anchor,
+        port_side_for_edge:
+          (port, port_rect, node_pos, node_size) =>
+            port_side_for_edge(port, port_rect, node_pos, node_size, None),
+        layout_port_offset,
+        edge_dir_for:
+          (edge, kind) =>
+            match edge_dir_for(edge, kind) {
+              EdgeDir::Forward => @routing.RouteEdgeDir::Forward
+              EdgeDir::Back => @routing.RouteEdgeDir::Back
+              EdgeDir::Both => @routing.RouteEdgeDir::Both
+              EdgeDir::None => @routing.RouteEdgeDir::None
+            },
+        node_cluster_key,
+        node_local_cluster_key,
+      },
+      recover_slack_vnodes,
+      (base, spline, spline_result) =>
+        @routing.build_edge_layout(
+          base,
+          spline,
+          spline_result,
+          edge_layout_input,
+          (edge, ranks, mid_label_width_pt) =>
+            match edge_label_rank_info(edge, ranks) {
+              Some(info) =>
+                if mid_label_width_pt > 0.0 {
+                  Some((info.label_rank, info.span))
+                } else {
+                  None
+                }
+              None => None
+            },
+          edge_label_rank_y,
+          (edge, label_rank, vnode_info, vnode_positions) =>
+            edge_label_rank_x(
+              edge,
+              label_rank,
+              vnode_info.vnode_ranks,
+              vnode_info.edge_vnodes,
+              vnode_positions,
+            ),
+          edge_label_pos_from_vnode,
+          flat_edge_label_pos_simple,
+          edge_label_pos,
+          edge_port_label_pos,
+        ),
+      (edge, rankdir) =>
+        match edge_mid_label_metrics(edge) {
+          Some(metrics) =>
+            if rankdir == RankDir::LR || rankdir == RankDir::RL {
+              metrics.width
+            } else {
+              metrics.height
+            }
+          None => 0.0
+        },
+      self_edge_label_width_pt,
+      edge_port_label_pos,
+    )
   let edges_out =
     if ratio_scaled {
       scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)

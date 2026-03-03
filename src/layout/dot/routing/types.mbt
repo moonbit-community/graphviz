@@ -67,6 +67,80 @@ pub(all) struct EdgeRouteBase {
 }
 
 ///|
+pub(all) enum RouteEdgeDir {
+  Forward
+  Back
+  Both
+  None
+}
+
+///|
+pub(all) struct RouteLabelMetrics {
+  width : Double
+  height : Double
+}
+
+///|
+pub(all) struct RoutePortGeometry {
+  center : @geom.Point
+  size : @dot_shared.NodeSize
+}
+
+///|
+pub(all) struct RouteDynamicPortAnchor {
+  anchor : @geom.Point?
+  side : Int
+  is_dynamic : Bool
+}
+
+///|
+pub(all) struct RouteBaseDeps {
+  node_size_for_missing : (@cgraph.Node) -> @dot_shared.NodeSize
+  edge_mid_label_metrics : (@cgraph.Edge) -> RouteLabelMetrics?
+  record_port_path_box : (
+    @cgraph.Node,
+    @cgraph.Port?,
+    @geom.Point,
+    @dot_shared.NodeSize,
+    @dot_shared.RankDir,
+  ) -> @geom.Rect?
+  port_geometry : (
+    String,
+    @cgraph.Port?,
+    @geom.Point,
+    @dot_shared.NodeSize,
+  ) -> RoutePortGeometry
+  port_rect_from_geometry : (
+    @cgraph.Port?,
+    @geom.Point,
+    @dot_shared.NodeSize,
+    @dot_shared.NodeSize,
+  ) -> @geom.Rect?
+  port_is_label_port : (String, @cgraph.Port?) -> Bool
+  is_record_shape : (@cgraph.Node) -> Bool
+  record_border_adjust : (@cgraph.Node) -> Double
+  dynamic_port_anchor_for_edge : (
+    @cgraph.Port?,
+    String,
+    @geom.Point,
+    @geom.Point,
+    @dot_shared.RankDir,
+    Double,
+  ) -> RouteDynamicPortAnchor
+  port_side_mask_from_anchor : (@geom.Point, @geom.Point, @dot_shared.NodeSize) -> Int
+  port_side_for_edge : (
+    @cgraph.Port?,
+    @geom.Rect?,
+    @geom.Point,
+    @dot_shared.NodeSize,
+  ) -> Int
+  layout_port_offset : (@geom.Point, @dot_shared.RankDir) -> @geom.Point
+  edge_dir_for : (@cgraph.Edge, @cgraph.GraphKind) -> RouteEdgeDir
+  node_cluster_key : (@cgraph.Node) -> String
+  node_local_cluster_key : (@cgraph.Node) -> String
+}
+
+///|
 pub(all) struct EdgeSplineResult {
   spline : @geom.Spline
   label_pad_boost : Double
@@ -178,4 +252,30 @@ pub(all) struct RouteEdgesInput {
   use_spline_prepass : Bool
   spline_mode : Int
   base_cache : Map[Int, EdgeRouteBase]
+}
+
+///|
+pub(all) struct RouteEdgesPipelineInput {
+  graph_kind : @cgraph.GraphKind
+  rankdir : @dot_shared.RankDir
+  layout_rankdir : @dot_shared.RankDir
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  sizes : Map[String, @dot_shared.NodeSize]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : EdgeVnodeInfo
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  ranksep_pt : Double
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : HeadPortMetrics
+  flat_label_edge_vnodes : Map[String, String]
+  routing_context : RoutingContext
+  enable_complex_tuning : Bool
+  use_spline_prepass : Bool
+  spline_mode : Int
 }

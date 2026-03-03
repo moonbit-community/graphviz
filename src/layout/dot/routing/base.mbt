@@ -14,11 +14,11 @@ fn size_for_name_or_node(
   sizes : Map[String, NodeSize],
   name : String,
   node : @cgraph.Node,
-  record_orientation : RecordOrientation,
+  node_size_for_missing : (@cgraph.Node) -> NodeSize,
 ) -> NodeSize {
   match sizes.get(name) {
     Some(value) => value
-    None => node_size(node, record_orientation)
+    None => node_size_for_missing(node)
   }
 }
 
@@ -36,14 +36,14 @@ fn cluster_bbox_if_named(
 
 ///|
 fn edge_include_arrowheads(
-  dir : EdgeDir,
+  dir : RouteEdgeDir,
 ) -> (Bool, Bool) {
   let include_tail = match dir {
-    EdgeDir::Back | EdgeDir::Both => true
+    RouteEdgeDir::Back | RouteEdgeDir::Both => true
     _ => false
   }
   let include_head = match dir {
-    EdgeDir::Forward | EdgeDir::Both => true
+    RouteEdgeDir::Forward | RouteEdgeDir::Both => true
     _ => false
   }
   (include_tail, include_head)
@@ -59,27 +59,159 @@ fn route_include_arrowheads(
 }
 
 ///|
+fn parse_double(value : String, fallback : Double) -> Double {
+  try @strconv.parse_double(value) catch {
+    _ => fallback
+  } noraise {
+    parsed => parsed
+  }
+}
+
+///|
+fn clip_to_rect(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  let tx = if dx == 0.0 { 1000000000.0 } else { half_w / Double::abs(dx) }
+  let ty = if dy == 0.0 { 1000000000.0 } else { half_h / Double::abs(dy) }
+  let t = if tx < ty { tx } else { ty }
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
+fn clip_to_ellipse(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let rx = size.width_pt / 2.0
+  let ry = size.height_pt / 2.0
+  if rx <= 0.0 || ry <= 0.0 {
+    return center
+  }
+  let denom = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)
+  if denom <= 0.0 {
+    return center
+  }
+  let t = 1.0 / Double::sqrt(denom)
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
+fn clip_to_diamond(
+  center : @geom.Point,
+  size : NodeSize,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - center.x
+  let dy = target.y - center.y
+  if dx == 0.0 && dy == 0.0 {
+    return center
+  }
+  let half_w = size.width_pt / 2.0
+  let half_h = size.height_pt / 2.0
+  if half_w <= 0.0 || half_h <= 0.0 {
+    return center
+  }
+  let denom = Double::abs(dx) / half_w + Double::abs(dy) / half_h
+  if denom <= 0.0 {
+    return center
+  }
+  let t = 1.0 / denom
+  { x: center.x + dx * t, y: center.y + dy * t }
+}
+
+///|
+fn point_inside_bbox(point : @geom.Point, rect : @geom.Rect) -> Bool {
+  point.x >= rect.llx &&
+  point.x <= rect.urx &&
+  point.y >= rect.lly &&
+  point.y <= rect.ury
+}
+
+///|
+fn clip_to_bbox(
+  from : @geom.Point,
+  rect : @geom.Rect,
+  target : @geom.Point,
+) -> @geom.Point {
+  let dx = target.x - from.x
+  let dy = target.y - from.y
+  if dx == 0.0 && dy == 0.0 {
+    return from
+  }
+  if point_inside_bbox(target, rect) {
+    return target
+  }
+  let eps = 0.000001
+  let mut best : Double? = None
+  let consider = (t : Double) => {
+    if t <= 0.0 || t > 1.0 + eps {
+      return
+    }
+    let x = from.x + dx * t
+    let y = from.y + dy * t
+    if x + eps < rect.llx || x - eps > rect.urx {
+      return
+    }
+    if y + eps < rect.lly || y - eps > rect.ury {
+      return
+    }
+    match best {
+      Some(value) =>
+        if t < value {
+          best = Some(t)
+        }
+      None => best = Some(t)
+    }
+  }
+  if dx != 0.0 {
+    consider((rect.llx - from.x) / dx)
+    consider((rect.urx - from.x) / dx)
+  }
+  if dy != 0.0 {
+    consider((rect.lly - from.y) / dy)
+    consider((rect.ury - from.y) / dy)
+  }
+  match best {
+    Some(t) => @edge_spline.point(from.x + dx * t, from.y + dy * t)
+    None => from
+  }
+}
+
+///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_route_base(
-  graph_kind : @cgraph.GraphKind,
+  input : RouteEdgesPipelineInput,
   edge : @cgraph.Edge,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  record_orientation : RecordOrientation,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  label_ports_raw : Map[String, Map[String, RecordPort]],
-  routing_context : @routing.RoutingContext,
-  rankdir : RankDir,
-  layout_rankdir : RankDir,
-  enable_complex_tuning : Bool,
-  edge_vnodes : Map[String, Array[String]],
+  route_base_deps : RouteBaseDeps,
   sameport_overrides : SameportOverrides,
-) -> @routing.EdgeRouteBase {
-  let order_index = routing_context.order_index
-  let parallel_offsets = routing_context.parallel_offsets
-  let cluster_bboxes = routing_context.cluster_bboxes
+) -> EdgeRouteBase {
+  let ranks = input.ranks
+  let sizes = input.sizes
+  let positions = input.positions
+  let rankdir = input.rankdir
+  let layout_rankdir = input.layout_rankdir
+  let enable_complex_tuning = input.enable_complex_tuning
+  let edge_vnodes = input.vnode_info.edge_vnodes
+  let graph_kind = input.graph_kind
+  let order_index = input.routing_context.order_index
+  let parallel_offsets = input.routing_context.parallel_offsets
+  let cluster_bboxes = input.routing_context.cluster_bboxes
   let orig_tail_name = edge.tail().name()
   let orig_head_name = edge.head().name()
   let swap_ends =
@@ -89,6 +221,7 @@ fn build_edge_route_base(
       orig_head_name,
       ranks,
       order_index,
+      route_base_deps.node_local_cluster_key,
     )
   let sameport_info =
     edge_sameport_orientation_info(
@@ -115,22 +248,26 @@ fn build_edge_route_base(
       sizes,
       tail_name,
       tail_node,
-      record_orientation,
+      route_base_deps.node_size_for_missing,
     )
   let head_size =
     size_for_name_or_node(
       sizes,
       head_name,
       head_node,
-      record_orientation,
+      route_base_deps.node_size_for_missing,
     )
-  let mid_label_width_pt = edge_mid_label_width_pt(edge)
-  let mid_label_height_pt = match edge_mid_label_metrics(edge) {
+  let mid_label_metrics = (route_base_deps.edge_mid_label_metrics)(edge)
+  let mid_label_width_pt = match mid_label_metrics {
+    Some(metrics) => metrics.width
+    None => 0.0
+  }
+  let mid_label_height_pt = match mid_label_metrics {
     Some(metrics) => metrics.height
     None => 0.0
   }
   let tail_record_path_box =
-    record_port_path_box(
+    (route_base_deps.record_port_path_box)(
       tail_node,
       tail_port,
       tail_pos,
@@ -138,34 +275,32 @@ fn build_edge_route_base(
       rankdir,
     )
   let head_record_path_box =
-    record_port_path_box(
+    (route_base_deps.record_port_path_box)(
       head_node,
       head_port,
       head_pos,
       head_size,
       rankdir,
     )
-  let tail_geometry = port_geometry(
+  let tail_geometry = (route_base_deps.port_geometry)(
     tail_name,
     tail_port,
-    label_ports_map,
     tail_pos,
     tail_size,
   )
-  let head_geometry = port_geometry(
+  let head_geometry = (route_base_deps.port_geometry)(
     head_name,
     head_port,
-    label_ports_map,
     head_pos,
     head_size,
   )
-  let tail_port_rect = port_rect_from_geometry(
+  let tail_port_rect = (route_base_deps.port_rect_from_geometry)(
     tail_port,
     tail_geometry.center,
     tail_geometry.size,
     tail_size,
   )
-  let head_port_rect = port_rect_from_geometry(
+  let head_port_rect = (route_base_deps.port_rect_from_geometry)(
     head_port,
     head_geometry.center,
     head_geometry.size,
@@ -179,8 +314,8 @@ fn build_edge_route_base(
     Some(rect) => @edge_spline.port_side_count(rect, head_pos, head_size)
     None => 0
   }
-  let tail_label_port = port_is_label_port(tail_name, tail_port, label_ports_raw)
-  let head_label_port = port_is_label_port(head_name, head_port, label_ports_raw)
+  let tail_label_port = (route_base_deps.port_is_label_port)(tail_name, tail_port)
+  let head_label_port = (route_base_deps.port_is_label_port)(head_name, head_port)
   // Graphviz parity: label ports should not force segmented edge splines.
   let force_segmented_base =
     (!tail_label_port && tail_port_sides >= 3) ||
@@ -193,20 +328,8 @@ fn build_edge_route_base(
     Some(value) => value
     None => ""
   }
-  let tail_record_border_adjust =
-    if is_record_shape(tail_node) &&
-      !@html_label.is_html_label_text(label_text(tail_node)) {
-      @dot_shared.RECORD_BORDER_PT
-    } else {
-      0.0
-    }
-  let head_record_border_adjust =
-    if is_record_shape(head_node) &&
-      !@html_label.is_html_label_text(label_text(head_node)) {
-      @dot_shared.RECORD_BORDER_PT
-    } else {
-      0.0
-    }
+  let tail_record_border_adjust = (route_base_deps.record_border_adjust)(tail_node)
+  let head_record_border_adjust = (route_base_deps.record_border_adjust)(head_node)
   let tail_rank = ranks.get(tail_name).unwrap_or_default()
   let head_rank = ranks.get(head_name).unwrap_or_default()
   let is_flat_edge = tail_rank == head_rank
@@ -243,8 +366,8 @@ fn build_edge_route_base(
     !use_pathplan
   let (tail_offset, head_offset) = if allow_offset {
     (
-      layout_port_offset(@edge_spline.point(0.0, -1.0), layout_rankdir),
-      layout_port_offset(@edge_spline.point(0.0, 1.0), layout_rankdir),
+      (route_base_deps.layout_port_offset)(@edge_spline.point(0.0, -1.0), layout_rankdir),
+      (route_base_deps.layout_port_offset)(@edge_spline.point(0.0, 1.0), layout_rankdir),
     )
   } else {
     (@edge_spline.point(0.0, 0.0), @edge_spline.point(0.0, 0.0))
@@ -252,20 +375,18 @@ fn build_edge_route_base(
   let tail_cluster_bbox = cluster_bbox_if_named(cluster_bboxes, tail_cluster_name)
   let head_cluster_bbox = cluster_bbox_if_named(cluster_bboxes, head_cluster_name)
   let tail_dynamic_anchor =
-    dynamic_port_anchor_for_edge(
+    (route_base_deps.dynamic_port_anchor_for_edge)(
       tail_port,
       tail_name,
-      label_ports_raw,
       tail_pos,
       head_pos,
       rankdir,
       tail_record_border_adjust,
     )
   let head_dynamic_anchor =
-    dynamic_port_anchor_for_edge(
+    (route_base_deps.dynamic_port_anchor_for_edge)(
       head_port,
       head_name,
-      label_ports_raw,
       head_pos,
       tail_pos,
       rankdir,
@@ -294,30 +415,28 @@ fn build_edge_route_base(
   }
   let tail_port_side =
     if tail_sameport_anchor is Some(_) {
-    port_side_mask_from_anchor(tail_anchor_base, tail_pos, tail_size)
+    (route_base_deps.port_side_mask_from_anchor)(tail_anchor_base, tail_pos, tail_size)
   } else if tail_dynamic_anchor.is_dynamic {
     tail_dynamic_anchor.side
   } else {
-    port_side_for_edge(
+    (route_base_deps.port_side_for_edge)(
       tail_port,
       tail_port_rect,
       tail_pos,
       tail_size,
-      None,
     )
   }
   let head_port_side =
     if head_sameport_anchor is Some(_) {
-    port_side_mask_from_anchor(head_anchor_base, head_pos, head_size)
+    (route_base_deps.port_side_mask_from_anchor)(head_anchor_base, head_pos, head_size)
   } else if head_dynamic_anchor.is_dynamic {
     head_dynamic_anchor.side
   } else {
-    port_side_for_edge(
+    (route_base_deps.port_side_for_edge)(
       head_port,
       head_port_rect,
       head_pos,
       head_size,
-      None,
     )
   }
   let tail_anchor0 = @edge_spline.point_add(tail_anchor_base, tail_offset)
@@ -325,7 +444,7 @@ fn build_edge_route_base(
   let self_edge = orig_tail_name == orig_head_name
   let adjust_self_edge_compass_clip_size =
     (node : @cgraph.Node, port : @cgraph.Port?, size : NodeSize) => {
-      if !self_edge || is_record_shape(node) {
+      if !self_edge || (route_base_deps.is_record_shape)(node) {
         return size
       }
       match port {
@@ -381,7 +500,7 @@ fn build_edge_route_base(
   let resolve_compass_clip_point :
     (@cgraph.Node, @cgraph.Port?, @geom.Point, NodeSize) -> @geom.Point? =
     (node, port, center, size) => {
-      if self_edge || is_record_shape(node) {
+      if self_edge || (route_base_deps.is_record_shape)(node) {
         return None
       }
       match port {
@@ -433,7 +552,8 @@ fn build_edge_route_base(
         Some(value) =>
           match value.compass {
             Some(@cgraph.Compass::C) => layout_rankdir
-            Some(_) => if is_record_shape(node) { layout_rankdir } else { rankdir }
+            Some(_) =>
+              if (route_base_deps.is_record_shape)(node) { layout_rankdir } else { rankdir }
             None => layout_rankdir
           }
         None => layout_rankdir
@@ -521,7 +641,7 @@ fn build_edge_route_base(
     Some(value) =>
       match value.compass {
         Some(@cgraph.Compass::C) => false
-        Some(_) => !is_record_shape(tail_node)
+        Some(_) => !(route_base_deps.is_record_shape)(tail_node)
         None => false
       }
     None => false
@@ -530,14 +650,14 @@ fn build_edge_route_base(
     Some(value) =>
       match value.compass {
         Some(@cgraph.Compass::C) => false
-        Some(_) => !is_record_shape(head_node)
+        Some(_) => !(route_base_deps.is_record_shape)(head_node)
         None => false
       }
     None => false
   }
   let flat_bottom_dirboth_x_nudge =
-    match edge_dir_for(edge, graph_kind) {
-      EdgeDir::Both =>
+    match (route_base_deps.edge_dir_for)(edge, graph_kind) {
+      RouteEdgeDir::Both =>
         is_flat_edge &&
         !has_vnodes &&
         mid_label_width_pt <= 0.0 &&
@@ -593,16 +713,16 @@ fn build_edge_route_base(
       sizes,
       orig_tail_name,
       edge.tail(),
-      record_orientation,
+      route_base_deps.node_size_for_missing,
     )
   let out_head_size =
     size_for_name_or_node(
       sizes,
       orig_head_name,
       edge.head(),
-      record_orientation,
+      route_base_deps.node_size_for_missing,
     )
-  let dir = edge_dir_for(edge, graph_kind)
+  let dir = (route_base_deps.edge_dir_for)(edge, graph_kind)
   let (include_tail, include_head) = edge_include_arrowheads(dir)
   let (route_include_tail, route_include_head) =
     route_include_arrowheads(
@@ -644,9 +764,11 @@ fn build_edge_route_base(
   }
   let is_dotted = enable_complex_tuning && style_value.contains("dotted")
   let same_outer_cluster =
-    node_cluster_key(tail_node) == node_cluster_key(head_node)
+    (route_base_deps.node_cluster_key)(tail_node) ==
+      (route_base_deps.node_cluster_key)(head_node)
   let diff_local_cluster =
-    node_local_cluster_key(tail_node) != node_local_cluster_key(head_node)
+    (route_base_deps.node_local_cluster_key)(tail_node) !=
+      (route_base_deps.node_local_cluster_key)(head_node)
   let same_local_cluster = !diff_local_cluster
   {
     edge,
@@ -845,7 +967,7 @@ fn sameport_anchor_for_group(
   head_group : Bool,
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
+  node_size_for_missing : (@cgraph.Node) -> NodeSize,
   layout_rankdir : RankDir,
   ranksep_pt : Double,
 ) -> @geom.Point? {
@@ -859,7 +981,7 @@ fn sameport_anchor_for_group(
       sizes,
       node_name,
       node,
-      record_orientation,
+      node_size_for_missing,
     )
   let base_clip_size =
     match layout_rankdir {
@@ -1009,13 +1131,14 @@ fn edge_swap_ends_for_route_base(
   orig_head_name : String,
   ranks : Map[String, Int],
   order_index : Map[String, Int],
+  node_local_cluster_key_fn : (@cgraph.Node) -> String,
 ) -> Bool {
   let swap_ends_raw =
     @edge_ops.edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
   let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
   let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
   if tail_rank_for_swap == head_rank_for_swap &&
-    node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head()) {
+    node_local_cluster_key_fn(edge.tail()) != node_local_cluster_key_fn(edge.head()) {
     false
   } else {
     swap_ends_raw
@@ -1053,7 +1176,7 @@ fn apply_sameport_group_overrides(
   merge_classes : Map[String, Array[@cgraph.Edge]],
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
+  node_size_for_missing : (@cgraph.Node) -> NodeSize,
   layout_rankdir : RankDir,
   ranksep_pt : Double,
 ) -> Unit {
@@ -1073,7 +1196,7 @@ fn apply_sameport_group_overrides(
       head_group,
       positions,
       sizes,
-      record_orientation,
+      node_size_for_missing,
       layout_rankdir,
       ranksep_pt,
     ) {
@@ -1100,7 +1223,7 @@ fn collect_sameport_overrides(
   edges : Array[@cgraph.Edge],
   positions : Map[String, @geom.Point],
   sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
+  node_size_for_missing : (@cgraph.Node) -> NodeSize,
   layout_rankdir : RankDir,
   ranksep_pt : Double,
 ) -> SameportOverrides {
@@ -1143,7 +1266,7 @@ fn collect_sameport_overrides(
     merge_classes,
     positions,
     sizes,
-    record_orientation,
+    node_size_for_missing,
     layout_rankdir,
     ranksep_pt,
   )
@@ -1158,7 +1281,7 @@ fn collect_sameport_overrides(
     merge_classes,
     positions,
     sizes,
-    record_orientation,
+    node_size_for_missing,
     layout_rankdir,
     ranksep_pt,
   )
@@ -1170,13 +1293,6 @@ fn collect_sameport_overrides(
   }
 }
 
-///|
-fn edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
-  match edge.get_attr(name) {
-    Some(value) => value
-    None => ""
-  }
-}
 ///|
 fn clip_polygon_attr_int(
   node : @cgraph.Node,
