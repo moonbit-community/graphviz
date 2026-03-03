@@ -1,45 +1,3 @@
-fn build_route_base_cache(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  record_orientation : RecordOrientation,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  label_ports_raw : Map[String, Map[String, RecordPort]],
-  routing_context : RoutingContext,
-  rankdir : RankDir,
-  layout_rankdir : RankDir,
-  enable_complex_tuning : Bool,
-  edge_vnodes : Map[String, Array[String]],
-  sameport_overrides : SameportOverrides,
-) -> Map[Int, EdgeRouteBase] {
-  let base_cache : Map[Int, EdgeRouteBase] = Map::new()
-  for edge in edges {
-    let edge_id = edge.id()
-    if base_cache.get(edge_id) is None {
-      let value = build_edge_route_base(
-        graph.kind(),
-        edge,
-        ranks,
-        sizes,
-        positions,
-        record_orientation,
-        label_ports_map,
-        label_ports_raw,
-        routing_context,
-        rankdir,
-        layout_rankdir,
-        enable_complex_tuning,
-        edge_vnodes,
-        sameport_overrides,
-      )
-      base_cache[edge_id] = value
-    }
-  }
-  base_cache
-}
-
 ///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
@@ -754,21 +712,25 @@ fn route_edges(
     ranksep_pt,
   )
   let base_cache =
-    build_route_base_cache(
-      graph,
+    @routing.build_route_base_cache(
       edges,
-      ranks,
-      sizes,
-      positions,
-      record_orientation,
-      label_ports_map,
-      label_ports_raw,
-      routing_context,
-      rankdir,
-      layout_rankdir,
-      enable_complex_tuning,
-      vnode_info.edge_vnodes,
-      sameport_overrides,
+      (edge) =>
+        build_edge_route_base(
+          graph.kind(),
+          edge,
+          ranks,
+          sizes,
+          positions,
+          record_orientation,
+          label_ports_map,
+          label_ports_raw,
+          routing_context,
+          rankdir,
+          layout_rankdir,
+          enable_complex_tuning,
+          vnode_info.edge_vnodes,
+          sameport_overrides,
+        ),
     )
   let flat_adjacent_simple_beziers =
     if splines == SplinesMode::Spline {
