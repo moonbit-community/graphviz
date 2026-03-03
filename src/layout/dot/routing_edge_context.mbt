@@ -34,6 +34,7 @@ priv struct EdgeRoutingPassInput {
 /// inputs, including prepass-derived ordering/grouping state.
 priv struct OrderedEdgeRoutingContext {
   input : EdgeRoutingPassInput
+  regular_pass_input : @routing.RegularPassInput
   base_cache : Map[Int, EdgeRouteBase]
   prepass : @routing.RoutePrepassState
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
@@ -111,6 +112,39 @@ fn build_edge_layout_for_context(
 }
 
 ///|
+fn spline_mode_for_regular_pass(splines : SplinesMode) -> Int {
+  match splines {
+    SplinesMode::None | SplinesMode::Polyline => 0
+    SplinesMode::Ortho => 1
+    _ => 2
+  }
+}
+
+///|
+fn build_regular_pass_input(
+  input : EdgeRoutingPassInput,
+) -> @routing.RegularPassInput {
+  {
+    spline_mode: spline_mode_for_regular_pass(input.splines),
+    ranks: input.ranks,
+    sizes: input.sizes,
+    positions: input.positions,
+    vnode_positions: input.vnode_positions,
+    vnode_info: input.vnode_info,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    x_groups: input.x_groups,
+    nodesep_pt: input.nodesep_pt,
+    ranksep_pt: input.ranksep_pt,
+    label_edge_counts: input.label_edge_counts,
+    head_port_metrics: input.head_port_metrics,
+    routing_context: input.routing_context,
+    enable_complex_tuning: input.enable_complex_tuning,
+  }
+}
+
+///|
 /// Graphviz parity: edge route bases are cached per edge id before routing.
 /// Do not change behavior without updating fixtures/tests.
 fn build_route_base_cache(
@@ -178,8 +212,10 @@ fn build_ordered_edge_routing_context(
       input.x_groups,
     )
   let self_edge_groups = @routing.collect_self_edge_groups(input.edges)
+  let regular_pass_input = build_regular_pass_input(input)
   {
     input,
+    regular_pass_input,
     base_cache,
     prepass,
     self_edge_groups,
@@ -289,12 +325,26 @@ fn route_ordered_edge(
   ) {
     return ()
   }
-  build_regular_layouts_for_edge(
+  @routing.build_regular_layouts_for_edge(
     edge_id,
     edge,
     base,
-    context,
-    state,
+    context.regular_pass_input,
+    context.prepass.path_left_bound,
+    context.prepass.path_right_bound,
+    context.prepass.recover_edge_id_for_routing,
+    context.prepass.regular_parallel_groups,
+    context.base_cache,
+    state.recovered_slack_keys,
+    state.edges_out_by_id,
+    recover_slack_vnodes,
+    (route_base, spline, spline_result) =>
+      build_edge_layout_for_context(
+        route_base,
+        spline,
+        spline_result,
+        context,
+      ),
   )
 }
 

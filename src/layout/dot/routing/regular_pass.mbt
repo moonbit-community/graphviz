@@ -4,6 +4,23 @@ priv struct RegularSplineLayoutResult {
 }
 
 ///|
+type RecoverSlackVnodesFn = (
+  @cgraph.Edge,
+  Array[String],
+  Array[@geom.Rect],
+  Map[String, Int],
+  Map[String, Int],
+  Map[Int, Double],
+  Map[String, @geom.Point],
+  Map[String, @dot_shared.NodeSize],
+  @routesplines.PathAdjacency,
+) -> Unit
+
+///|
+type RegularPassBuildEdgeLayoutFn =
+  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
+
+///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
 fn ordered_vnodes_for_rank_direction(
@@ -38,30 +55,15 @@ fn recover_pathplan_slack(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   spline_result : EdgeSplineResult,
-  ranks : Map[String, Int],
-  vnode_ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_sizes : Map[String, @dot_shared.NodeSize],
-  path_adjacency : @routesplines.PathAdjacency,
+  input : RegularPassInput,
   recover_edge_id_by_key : Map[String, Int],
   recovered_slack_keys : Map[String, Bool],
-  recover_slack_vnodes : (
-    @cgraph.Edge,
-    Array[String],
-    Array[@geom.Rect],
-    Map[String, Int],
-    Map[String, Int],
-    Map[Int, Double],
-    Map[String, @geom.Point],
-    Map[String, @dot_shared.NodeSize],
-    @routesplines.PathAdjacency,
-  ) -> Unit,
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
 ) -> Unit {
   if !spline_result.using_pathplan {
     return ()
   }
-  let recover_key = @routing.recover_slack_key_for_edge(edge)
+  let recover_key = recover_slack_key_for_edge(edge)
   match recover_edge_id_by_key.get(recover_key) {
     Some(recover_edge_id) =>
       if recover_edge_id != edge.id() {
@@ -85,16 +87,16 @@ fn recover_pathplan_slack(
           base.tail_rank,
           base.head_rank,
         )
-      recover_slack_vnodes(
+      recover_slack_vnodes_fn(
         edge,
         ordered_vnodes,
         segment.boxes,
-        ranks,
-        vnode_ranks,
-        rank_y,
-        vnode_positions,
-        vnode_sizes,
-        path_adjacency,
+        input.ranks,
+        input.vnode_info.vnode_ranks,
+        input.rank_y,
+        input.vnode_positions,
+        input.vnode_info.vnode_sizes,
+        input.routing_context.path_adjacency,
       )
       did_recover = true
     }
@@ -114,16 +116,16 @@ fn recover_pathplan_slack(
       fallback_polyline=spline_result.pathplan_points,
     )
   let ordered_vnodes = ordered_vnodes_for_edge(base)
-  recover_slack_vnodes(
+  recover_slack_vnodes_fn(
     edge,
     ordered_vnodes,
     limited_boxes,
-    ranks,
-    vnode_ranks,
-    rank_y,
-    vnode_positions,
-    vnode_sizes,
-    path_adjacency,
+    input.ranks,
+    input.vnode_info.vnode_ranks,
+    input.rank_y,
+    input.vnode_positions,
+    input.vnode_info.vnode_sizes,
+    input.routing_context.path_adjacency,
   )
   recovered_slack_keys[recover_key] = true
 }
@@ -134,19 +136,17 @@ fn recover_pathplan_slack(
 fn build_regular_spline_layout(
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
-  context : OrderedEdgeRoutingContext,
+  input : RegularPassInput,
+  path_left_bound : Double,
+  path_right_bound : Double,
+  recover_edge_id_by_key : Map[String, Int],
   recovered_slack_keys : Map[String, Bool],
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
 ) -> RegularSplineLayoutResult {
-  let input = context.input
-  let spline_mode =
-    match input.splines {
-      SplinesMode::None | SplinesMode::Polyline => 0
-      SplinesMode::Ortho => 1
-      _ => 2
-    }
-  let spline_result = @routing.build_edge_spline(
+  let spline_result = build_edge_spline(
     base,
-    spline_mode,
+    input.spline_mode,
     input.ranks,
     input.sizes,
     input.positions,
@@ -157,8 +157,8 @@ fn build_regular_spline_layout(
     input.rank_ht2,
     input.x_groups,
     input.nodesep_pt,
-    context.prepass.path_left_bound,
-    context.prepass.path_right_bound,
+    path_left_bound,
+    path_right_bound,
     input.ranksep_pt,
     input.label_edge_counts,
     input.head_port_metrics,
@@ -166,29 +166,23 @@ fn build_regular_spline_layout(
     input.enable_complex_tuning,
   )
   let layout_spline_result =
-    @routing.rebuild_spline_for_render(base, spline_result)
+    rebuild_spline_for_render(base, spline_result)
   let spline =
-    @routing.finalize_edge_spline(base, layout_spline_result)
+    finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack(
     edge,
     base,
     spline_result,
-    input.ranks,
-    input.vnode_info.vnode_ranks,
-    input.rank_y,
-    input.vnode_positions,
-    input.vnode_info.vnode_sizes,
-    input.routing_context.path_adjacency,
-    context.prepass.recover_edge_id_for_routing,
+    input,
+    recover_edge_id_by_key,
     recovered_slack_keys,
-    recover_slack_vnodes,
+    recover_slack_vnodes_fn,
   )
   let layout =
-    build_edge_layout_for_context(
+    build_edge_layout_fn(
       base,
       spline,
       layout_spline_result,
-      context,
     )
   { edge_layout: layout, spline_result }
 }
@@ -229,35 +223,31 @@ fn collect_parallel_reuse_siblings(
 fn apply_regular_parallel_reuse_layouts(
   edge : @cgraph.Edge,
   regular_layout : RegularSplineLayoutResult,
-  context : OrderedEdgeRoutingContext,
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]],
+  base_cache : Map[Int, EdgeRouteBase],
   edges_out_by_id : Map[Int, DotLayoutEdge],
+  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
 ) -> Unit {
   let sibling_edges =
     collect_parallel_reuse_siblings(
       edge,
       regular_layout.spline_result.raw_bezier,
-      context.prepass.regular_parallel_groups,
+      regular_parallel_groups,
     )
   if sibling_edges.length() == 0 {
     return ()
   }
   for group_edge in sibling_edges {
     let group_edge_id = group_edge.id()
-    let group_base = match context.base_cache.get(group_edge_id) {
+    let group_base = match base_cache.get(group_edge_id) {
       Some(value) => value
       None => continue
     }
     let group_layout =
-      @routing.build_regular_bezier_layout(
+      build_regular_bezier_layout(
         group_base,
         regular_layout.spline_result,
-        (route_base, spline, spline_result) =>
-          build_edge_layout_for_context(
-            route_base,
-            spline,
-            spline_result,
-            context,
-          ),
+        build_edge_layout_fn,
       )
     edges_out_by_id[group_edge_id] = group_layout
   }
@@ -267,24 +257,39 @@ fn apply_regular_parallel_reuse_layouts(
 /// Graphviz parity: regular-edge routing keeps edge solve + parallel-reuse
 /// expansion together after flat/self branches are skipped.
 /// Do not change behavior without updating fixtures/tests.
-fn build_regular_layouts_for_edge(
+pub fn build_regular_layouts_for_edge(
   edge_id : Int,
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
-  context : OrderedEdgeRoutingContext,
-  state : OrderedEdgeRoutingState,
+  input : RegularPassInput,
+  path_left_bound : Double,
+  path_right_bound : Double,
+  recover_edge_id_by_key : Map[String, Int],
+  regular_parallel_groups : Map[String, Array[@cgraph.Edge]],
+  base_cache : Map[Int, EdgeRouteBase],
+  recovered_slack_keys : Map[String, Bool],
+  edges_out_by_id : Map[Int, DotLayoutEdge],
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
 ) -> Unit {
   let regular_layout = build_regular_spline_layout(
     edge,
     base,
-    context,
-    state.recovered_slack_keys,
+    input,
+    path_left_bound,
+    path_right_bound,
+    recover_edge_id_by_key,
+    recovered_slack_keys,
+    recover_slack_vnodes_fn,
+    build_edge_layout_fn,
   )
-  state.edges_out_by_id[edge_id] = regular_layout.edge_layout
+  edges_out_by_id[edge_id] = regular_layout.edge_layout
   apply_regular_parallel_reuse_layouts(
     edge,
     regular_layout,
-    context,
-    state.edges_out_by_id,
+    regular_parallel_groups,
+    base_cache,
+    edges_out_by_id,
+    build_edge_layout_fn,
   )
 }
