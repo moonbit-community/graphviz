@@ -39,6 +39,67 @@ fn build_root_reorder_sources(
 
 
 ///|
+/// Graphviz parity: root cluster-rank-order input bundle is assembled from the
+/// root reorder output plus clustered dispatch snapshots without reordering.
+fn build_root_rank_order_phase_inputs(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_reorder_output : @ordering.RootClusterReorderInputs,
+) -> @ordering.RootRankOrderPhaseInputs {
+  {
+    root_reorder_output,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+    graphviz_flip: dispatch_context.reorder_setup.graphviz_flip,
+  }
+}
+
+///|
+/// Graphviz parity: root cluster-rank-order pass uses reorder_rank_groups with
+/// coalesced-parallel mode on root-only rematerialized edge arrays.
+fn run_root_rank_order_reorder(
+  call_inputs : @ordering.RootRankOrderCallInputs,
+  root_graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.root_rank_keys,
+    call_inputs.root_groups,
+    call_inputs.root_edges_out,
+    call_inputs.root_edge_tail_out,
+    call_inputs.root_edge_head_out,
+    call_inputs.root_edge_tail_port_x,
+    call_inputs.root_edge_head_port_x,
+    call_inputs.root_edge_tail_port_order,
+    call_inputs.root_edge_head_port_order,
+    call_inputs.root_parents,
+    call_inputs.root_children,
+    call_inputs.order_cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.root_edge_order,
+    call_inputs.root_node_order,
+    call_inputs.order_sizes_out,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    call_inputs.order_cluster_skeleton,
+    call_inputs.order_flat_constraints,
+    graphviz_flip=root_graphviz_flip,
+    coalesce_parallel_edges=true,
+  )
+}
+
+///|
 /// Graphviz parity: root cluster-reorder phase keeps root input assembly and
 /// root rank-order execution in one sequence for shared clustered consumers.
 /// Do not change behavior without updating fixtures/tests.
@@ -58,51 +119,16 @@ fn run_root_reorder_and_rank_order_phase(
       root_reorder_sources,
       dispatch_context.class2_data.order_edges_by_tail_root,
     )
+  let root_rank_order_inputs =
+    build_root_rank_order_phase_inputs(
+      dispatch_context,
+      pre_root_stage,
+      root_reorder_output,
+    )
   let root_rank_order_phase_output =
     @ordering.run_root_rank_order_phase(
-      {
-        root_reorder_output,
-        order_cluster_keys: pre_root_stage.order_cluster_keys,
-        order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-        order_sizes_out: pre_root_stage.order_sizes_out,
-        nodesep_pt: dispatch_context.nodesep_pt,
-        has_edge_labels: dispatch_context.has_edge_labels,
-        port_order_positions: dispatch_context.port_order_positions,
-        port_order_contrib: dispatch_context.port_order_contrib,
-        order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-        graphviz_flip: dispatch_context.reorder_setup.graphviz_flip,
-      },
-      (call_inputs, root_graphviz_flip) =>
-        reorder_rank_groups(
-          call_inputs.root_rank_keys,
-          call_inputs.root_groups,
-          call_inputs.root_edges_out,
-          call_inputs.root_edge_tail_out,
-          call_inputs.root_edge_head_out,
-          call_inputs.root_edge_tail_port_x,
-          call_inputs.root_edge_head_port_x,
-          call_inputs.root_edge_tail_port_order,
-          call_inputs.root_edge_head_port_order,
-          call_inputs.root_parents,
-          call_inputs.root_children,
-          call_inputs.order_cluster_keys,
-          call_inputs.rank_same_groups,
-          call_inputs.rank_same_order,
-          call_inputs.root_edge_order,
-          call_inputs.root_node_order,
-          call_inputs.order_sizes_out,
-          call_inputs.nodesep_pt,
-          call_inputs.has_edge_labels,
-          call_inputs.port_order_positions,
-          call_inputs.port_order_contrib,
-          Map::new(),
-          call_inputs.order_cluster_skeleton,
-          call_inputs.order_flat_constraints,
-          graphviz_flip=root_graphviz_flip,
-          coalesce_parallel_edges=true,
-        ),
+      root_rank_order_inputs,
+      run_root_rank_order_reorder,
     )
   (root_reorder_output, root_rank_order_phase_output)
 }
