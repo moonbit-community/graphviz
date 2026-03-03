@@ -245,6 +245,100 @@ fn self_edge_routes_bottom(
 }
 
 ///|
+fn resolve_self_edge_port_side(
+  port_side : Int,
+  port : @cgraph.Port?,
+  all_sides : Int,
+) -> Int {
+  if port_side != 0 {
+    return port_side
+  }
+  match port {
+    Some(value) =>
+      if value.compass is None {
+        // Graphviz parity: side-less label ports on self-edges still behave
+        // like fully-open sides when dynamic side resolution is unavailable.
+        all_sides
+      } else {
+        0
+      }
+    None => 0
+  }
+}
+
+///|
+/// Graphviz parity: left/right horizontal self-edge route shapes share one
+/// control-point construction, with only side-specific sign/seed differences.
+/// Do not change behavior without updating fixtures/tests.
+fn self_edge_routes_horizontal_side(
+  edges : Array[@cgraph.Edge],
+  base0 : EdgeRouteBase,
+  nodesep_pt : Double,
+  sizey_param : Double,
+  np : @geom.Point,
+  tp : @geom.Point,
+  hp : @geom.Point,
+  point_pair : Int,
+  flip_pair_a : Int,
+  flip_pair_b : Int,
+  side_width : Double,
+  to_right : Bool,
+) -> Array[SelfEdgeRoute] {
+  let cnt = edges.length()
+  let cnt_f = Double::from_int(cnt)
+  let stepx = nodesep_pt
+  let stepy = max_double(sizey_param / 2.0 / cnt_f, 2.0)
+  let mut sgn = if tp.y >= hp.y { 1.0 } else { -1.0 }
+  if (point_pair == flip_pair_a || point_pair == flip_pair_b) && tp.y == hp.y {
+    sgn = -sgn
+  }
+  let mut dx = side_width
+  let mut dy = 0.0
+  let mut tx =
+    if to_right {
+      min_double(dx, 3.0 * (np.x + dx - tp.x))
+    } else {
+      min_double(dx, 3.0 * (tp.x + dx - np.x))
+    }
+  let mut hx =
+    if to_right {
+      min_double(dx, 3.0 * (np.x + dx - hp.x))
+    } else {
+      min_double(dx, 3.0 * (hp.x + dx - np.x))
+    }
+  let x_sign = if to_right { 1.0 } else { -1.0 }
+  let routes : Array[SelfEdgeRoute] = []
+  for i in 0..<cnt {
+    let edge = edges[i]
+    dx = dx + stepx
+    tx = tx + stepx
+    hx = hx + stepx
+    dy = dy + sgn * stepy
+    let points = [
+      tp,
+      @edge_spline.point(tp.x + x_sign * tx / 3.0, tp.y + dy),
+      @edge_spline.point(np.x + x_sign * dx, tp.y + dy),
+      @edge_spline.point(np.x + x_sign * dx, (tp.y + hp.y) / 2.0),
+      @edge_spline.point(np.x + x_sign * dx, hp.y - dy),
+      @edge_spline.point(hp.x + x_sign * hx / 3.0, hp.y - dy),
+      hp,
+    ]
+    let mut label_pos : @geom.Point? = None
+    let label_width = self_edge_label_width_pt(edge, base0.rankdir)
+    if label_width > 0.0 {
+      label_pos = Some(
+        @edge_spline.point(np.x + x_sign * (dx + label_width / 2.0), np.y),
+      )
+      if label_width > stepx {
+        dx = dx + (label_width - stepx)
+      }
+    }
+    routes.push({ points, label_pos })
+  }
+  routes
+}
+
+///|
 /// Graphviz parity: self-edge routing aligned to refs/graphviz/lib/common/splines.c.
 /// Do not change behavior without updating fixtures/tests.
 fn build_self_edge_routes(
@@ -262,34 +356,18 @@ fn build_self_edge_routes(
   let hp = base0.head_anchor
   let all_sides =
     PORT_SIDE_BOTTOM | PORT_SIDE_RIGHT | PORT_SIDE_TOP | PORT_SIDE_LEFT
-  let tail_side = if base0.tail_port_side == 0 {
-    match base0.tail_port {
-      Some(value) =>
-        if value.compass is None {
-          // Graphviz parity: side-less label ports on self-edges still behave
-          // like fully-open sides when dynamic side resolution is unavailable.
-          all_sides
-        } else {
-          0
-        }
-      None => 0
-    }
-  } else {
-    base0.tail_port_side
-  }
-  let head_side = if base0.head_port_side == 0 {
-    match base0.head_port {
-      Some(value) =>
-        if value.compass is None {
-          all_sides
-        } else {
-          0
-        }
-      None => 0
-    }
-  } else {
-    base0.head_port_side
-  }
+  let tail_side =
+    resolve_self_edge_port_side(
+      base0.tail_port_side,
+      base0.tail_port,
+      all_sides,
+    )
+  let head_side =
+    resolve_self_edge_port_side(
+      base0.head_port_side,
+      base0.head_port,
+      all_sides,
+    )
   let tail_defined = @dot_shared.port_is_explicit(base0.tail_port)
   let head_defined = @dot_shared.port_is_explicit(base0.head_port)
   let bounds = rank_bounds(rank_y)
@@ -303,8 +381,6 @@ fn build_self_edge_routes(
       bounds.max_rank,
     )
   let sizey_param = sizey / 2.0
-  let cnt = edges.length()
-  let cnt_f = Double::from_int(cnt)
   let same_side = tail_side == head_side
   let tail_tb = (tail_side & (PORT_SIDE_TOP | PORT_SIDE_BOTTOM)) != 0
   let go_right =
@@ -319,44 +395,21 @@ fn build_self_edge_routes(
   let uses_right =
     (tail_side & PORT_SIDE_RIGHT) != 0 || (head_side & PORT_SIDE_RIGHT) != 0
   if go_right {
-    let stepx = nodesep_pt
-    let stepy = max_double(sizey_param / 2.0 / cnt_f, 2.0)
-    let mut sgn = if tp.y >= hp.y { 1.0 } else { -1.0 }
     let point_pair = convert_sides_to_points(tail_side, head_side)
-    if (point_pair == 32 || point_pair == 65) && tp.y == hp.y {
-      sgn = -sgn
-    }
-    let mut dx = base0.tail_size.right_pt
-    let mut dy = 0.0
-    let mut tx = min_double(dx, 3.0 * (np.x + dx - tp.x))
-    let mut hx = min_double(dx, 3.0 * (np.x + dx - hp.x))
-    let routes : Array[SelfEdgeRoute] = []
-    for i in 0..<cnt {
-      let edge = edges[i]
-      dx = dx + stepx
-      tx = tx + stepx
-      hx = hx + stepx
-      dy = dy + sgn * stepy
-      let points = [
-        tp,
-        @edge_spline.point(tp.x + tx / 3.0, tp.y + dy),
-        @edge_spline.point(np.x + dx, tp.y + dy),
-        @edge_spline.point(np.x + dx, (tp.y + hp.y) / 2.0),
-        @edge_spline.point(np.x + dx, hp.y - dy),
-        @edge_spline.point(hp.x + hx / 3.0, hp.y - dy),
-        hp,
-      ]
-      let mut label_pos : @geom.Point? = None
-      let label_width = self_edge_label_width_pt(edge, base0.rankdir)
-      if label_width > 0.0 {
-        label_pos = Some(@edge_spline.point(np.x + dx + label_width / 2.0, np.y))
-        if label_width > stepx {
-          dx = dx + (label_width - stepx)
-        }
-      }
-      routes.push({ points, label_pos })
-    }
-    return routes
+    return self_edge_routes_horizontal_side(
+      edges,
+      base0,
+      nodesep_pt,
+      sizey_param,
+      np,
+      tp,
+      hp,
+      point_pair,
+      32,
+      65,
+      base0.tail_size.right_pt,
+      true,
+    )
   }
   if uses_left {
     if uses_right {
@@ -368,44 +421,21 @@ fn build_self_edge_routes(
         convert_sides_to_points(tail_side, head_side),
       )
     } else {
-      let stepx = nodesep_pt
-      let stepy = max_double(sizey_param / 2.0 / cnt_f, 2.0)
-      let mut sgn = if tp.y >= hp.y { 1.0 } else { -1.0 }
       let point_pair = convert_sides_to_points(tail_side, head_side)
-      if (point_pair == 12 || point_pair == 67) && tp.y == hp.y {
-        sgn = -sgn
-      }
-      let mut dx = base0.tail_size.left_pt
-      let mut dy = 0.0
-      let mut tx = min_double(dx, 3.0 * (tp.x + dx - np.x))
-      let mut hx = min_double(dx, 3.0 * (hp.x + dx - np.x))
-      let routes : Array[SelfEdgeRoute] = []
-      for i in 0..<cnt {
-        let edge = edges[i]
-        dx = dx + stepx
-        tx = tx + stepx
-        hx = hx + stepx
-        dy = dy + sgn * stepy
-        let points = [
-          tp,
-          @edge_spline.point(tp.x - tx / 3.0, tp.y + dy),
-          @edge_spline.point(np.x - dx, tp.y + dy),
-          @edge_spline.point(np.x - dx, (tp.y + hp.y) / 2.0),
-          @edge_spline.point(np.x - dx, hp.y - dy),
-          @edge_spline.point(hp.x - hx / 3.0, hp.y - dy),
-          hp,
-        ]
-        let mut label_pos : @geom.Point? = None
-        let label_width = self_edge_label_width_pt(edge, base0.rankdir)
-        if label_width > 0.0 {
-          label_pos = Some(@edge_spline.point(np.x - dx - label_width / 2.0, np.y))
-          if label_width > stepx {
-            dx = dx + (label_width - stepx)
-          }
-        }
-        routes.push({ points, label_pos })
-      }
-      return routes
+      return self_edge_routes_horizontal_side(
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        np,
+        tp,
+        hp,
+        point_pair,
+        12,
+        67,
+        base0.tail_size.left_pt,
+        false,
+      )
     }
   }
   let point_pair = convert_sides_to_points(tail_side, head_side)
