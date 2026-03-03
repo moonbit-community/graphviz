@@ -69,14 +69,13 @@ fn remap_edge_layout_edge(
 /// pair order after routing, but only within one-direction parallel classes.
 /// Do not change behavior without updating fixtures/tests.
 fn remap_parallel_edge_layouts(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  input : EdgeRoutingPassInput,
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Unit {
   let assignments =
     @routing.build_parallel_remap_assignments(
-      edges,
-      ranks,
+      input.edges,
+      input.ranks,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
   let remap_snapshot : Map[Int, DotLayoutEdge] = Map::new()
@@ -108,14 +107,13 @@ fn remap_parallel_edge_layouts(
 /// Graphviz parity: final routed edge output keeps remap-then-input-order flow.
 /// Do not change behavior without updating fixtures/tests.
 fn finalize_routed_edges(
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
+  input : EdgeRoutingPassInput,
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Array[DotLayoutEdge] {
-  remap_parallel_edge_layouts(edges, ranks, edges_out_by_id)
+  remap_parallel_edge_layouts(input, edges_out_by_id)
   let ordered_output_edge_ids =
     @routing.collect_input_order_edge_ids(
-      edges,
+      input.edges,
       (edge_id) => edges_out_by_id.get(edge_id) is Some(_),
     )
   let edges_out : Array[DotLayoutEdge] = []

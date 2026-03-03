@@ -157,5 +157,5 @@ fn route_edges(
     ordered_edge_routing_context,
     edges_out_by_id,
   )
-  finalize_routed_edges(input.edges, input.ranks, edges_out_by_id)
+  finalize_routed_edges(input, edges_out_by_id)
 }
