@@ -786,6 +786,35 @@ fn build_points_spline(
 }
 
 ///|
+fn pathplan_line_points_or_endpoints(
+  points : Array[@geom.Point],
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+) -> Array[@geom.Point] {
+  if points.length() >= 2 { points } else { [line_start, line_end] }
+}
+
+///|
+fn build_pathplan_points_spline(
+  base : EdgeRouteBase,
+  pathplan_points : Array[@geom.Point],
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  force_segmented : Bool,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+) -> PointsSplineResult {
+  build_points_spline(
+    base,
+    pathplan_points,
+    tail_slope_line,
+    head_slope_line,
+    force_segmented,
+    true,
+    route_barriers,
+  )
+}
+
+///|
 fn build_flat_detour_spline(
   base : EdgeRouteBase,
   detour : FlatDetourResult,
@@ -3578,15 +3607,13 @@ fn build_edge_spline(
             detour_spline_result.spline
           } else {
             if using_pathplan {
-              let line_points = adjusted
               let line_points_spline =
-                build_points_spline(
+                build_pathplan_points_spline(
                   base,
-                  line_points,
+                  adjusted,
                   tail_slope_line,
                   head_slope_line,
                   force_segmented,
-                  using_pathplan,
                   route_barriers,
                 )
               raw_bezier = line_points_spline.raw_bezier
@@ -3832,16 +3859,15 @@ fn build_edge_spline(
               base.head_clip_size,
             )
           if using_pathplan {
-            let line_points : Array[@geom.Point] =
-              if points.length() >= 2 { points } else { [line_start, line_end] }
+            let line_points =
+              pathplan_line_points_or_endpoints(points, line_start, line_end)
             let line_points_spline =
-              build_points_spline(
+              build_pathplan_points_spline(
                 base,
                 line_points,
                 tail_slope_line,
                 head_slope_line,
                 force_segmented,
-                using_pathplan,
                 route_barriers,
               )
             raw_bezier = line_points_spline.raw_bezier
