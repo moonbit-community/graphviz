@@ -96,6 +96,7 @@ fn run_root_mincross_reorder(
 fn run_root_and_cluster_ranks(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
+  root_groups_override : Map[Int, Array[String]]?,
 ) -> @ordering.RootAndClusterRanksOutput {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
@@ -161,7 +162,7 @@ fn run_root_and_cluster_ranks(
         order_with_vnodes: reorder_setup.order_with_vnodes,
         graphviz_flip: reorder_setup.graphviz_flip,
         cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        root_groups_override: root_mincross_groups_override.val,
+        root_groups_override,
         root_mincross_reorder_inputs,
       },
       run_root_mincross_reorder,

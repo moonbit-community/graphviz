@@ -139,18 +139,21 @@ fn run_clustered_root_phase(
   // Graphviz parity: clustered root phase sets both tail-order and group
   // overrides only in cluster mode; otherwise both override channels are
   // cleared.
-  if reorder_setup.order_with_clusters {
-    remincross_root_tail_order_override_snapshot.val =
-      Some(root_tail_order_override.copy())
-    root_mincross_groups_override.val =
+  let root_groups_override_for_root_pass : Map[Int, Array[String]]? =
+    if reorder_setup.order_with_clusters {
+      remincross_root_tail_order_override_snapshot.val =
+        Some(root_tail_order_override.copy())
       Some(@ordering.clone_rank_groups(root_groups_override))
-  } else {
-    remincross_root_tail_order_override_snapshot.val = None
-    root_mincross_groups_override.val = None
-  }
+    } else {
+      remincross_root_tail_order_override_snapshot.val = None
+      None
+    }
   let output =
-    run_root_and_cluster_ranks(dispatch_context, pre_root_stage)
-  root_mincross_groups_override.val = None
+    run_root_and_cluster_ranks(
+      dispatch_context,
+      pre_root_stage,
+      root_groups_override_for_root_pass,
+    )
   output
 }
 
