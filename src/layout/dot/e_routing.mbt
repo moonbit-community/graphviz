@@ -815,6 +815,46 @@ fn build_pathplan_points_spline(
 }
 
 ///|
+fn build_line_spline(
+  base : EdgeRouteBase,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  tail_slope_line : @geom.Point,
+  head_slope_line : @geom.Point,
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+  curve_offset : Double,
+  curve_skew : Double,
+  prefer_linear : Bool,
+) -> @geom.Spline {
+  @edge_spline.edge_spline_for_line(
+    base.edge,
+    line_start,
+    line_end,
+    base.tail_clip_center,
+    base.head_clip_center,
+    base.tail_clip_size,
+    base.head_clip_size,
+    tail_slope_line,
+    head_slope_line,
+    base.route_include_tail,
+    base.route_include_head,
+    tail_clip_enabled=tail_clip_enabled,
+    head_clip_enabled=head_clip_enabled,
+    base.layout_rankdir,
+    curve_offset,
+    curve_skew,
+    arrow_len_override=base.arrow_len_override,
+    tail_cluster_bbox=base.tail_cluster_bbox,
+    head_cluster_bbox=base.head_cluster_bbox,
+    prefer_linear=prefer_linear,
+    parallel_offset=base.parallel_offset,
+    clip_swapped=base.swap_ends,
+    arrow_swapped=base.swap_ends,
+  )
+}
+
+///|
 fn build_flat_detour_spline(
   base : EdgeRouteBase,
   detour : FlatDetourResult,
@@ -3629,33 +3669,22 @@ fn build_edge_spline(
                   base.tail_clip_size,
                   base.head_clip_size,
                 )
-              @edge_spline.edge_spline_for_line(
-                edge,
+              build_line_spline(
+                base,
                 line_start,
                 line_end,
-                tail_clip_center,
-                head_clip_center,
-                tail_clip_size,
-                head_clip_size,
                 tail_slope_line,
                 head_slope_line,
-                route_include_tail,
-                route_include_head,
-                layout_rankdir,
+                true,
+                true,
                 curve_offset,
                 curve_skew,
-                arrow_len_override=arrow_len_override,
-                tail_cluster_bbox=tail_cluster_bbox,
-                head_cluster_bbox=head_cluster_bbox,
-                prefer_linear=prefer_linear_for_flat_line(
+                prefer_linear_for_flat_line(
                   prefer_linear_flat_invis,
                   flat_no_arrow_candidate,
                   flat_detour is Some(_),
                   prefer_linear_flat_bottom_single_arrow,
                 ),
-                parallel_offset=parallel_offset,
-                clip_swapped=swap_clip_shapes,
-                arrow_swapped=swap_arrow_attrs,
               )
             }
           }
@@ -3871,35 +3900,22 @@ fn build_edge_spline(
             raw_bezier = line_points_spline.raw_bezier
             line_points_spline.spline
           } else {
-            @edge_spline.edge_spline_for_line(
-              edge,
+            build_line_spline(
+              base,
               line_start,
               line_end,
-              tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
               tail_slope_line,
               head_slope_line,
-              route_include_tail,
-              route_include_head,
-              tail_clip_enabled=tail_clip_enabled,
-              head_clip_enabled=head_clip_enabled,
-              layout_rankdir,
+              tail_clip_enabled,
+              head_clip_enabled,
               curve_offset,
               curve_skew,
-              arrow_len_override=arrow_len_override,
-              tail_cluster_bbox=tail_cluster_bbox,
-              head_cluster_bbox=head_cluster_bbox,
-              prefer_linear=prefer_linear_for_flat_line(
+              prefer_linear_for_flat_line(
                 prefer_linear_flat_invis,
                 flat_no_arrow_candidate,
                 flat_detour is Some(_),
                 prefer_linear_flat_bottom_single_arrow,
               ),
-              parallel_offset=parallel_offset,
-              clip_swapped=swap_clip_shapes,
-              arrow_swapped=swap_arrow_attrs,
             )
           }
         }
