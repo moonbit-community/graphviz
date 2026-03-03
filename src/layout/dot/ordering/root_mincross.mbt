@@ -738,11 +738,16 @@ fn resolve_root_phase_ordered_groups(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_root_and_cluster_ranks(
   inputs : RootAndClusterRanksInputs,
-  run_root_reorder : (RootMincrossReorderInputs) -> (Map[Int, Array[String]], Map[Int, Array[String]]),
+  run_root_reorder : (RootMincrossReorderInputs, Map[Int, Array[String]]?) -> RootMincrossReorderResult,
   run_cluster_reorder : (Map[Int, Array[String]]) -> Unit,
 ) -> RootAndClusterRanksOutput {
-  let (order_groups_for_mincross, root_ordered_groups) =
-    run_root_reorder(inputs.root_mincross_reorder_inputs)
+  let root_reorder_result =
+    run_root_reorder(
+      inputs.root_mincross_reorder_inputs,
+      inputs.root_groups_override,
+    )
+  let order_groups_for_mincross = root_reorder_result.order_groups_for_mincross
+  let root_ordered_groups = root_reorder_result.ordered
   let ordered =
     resolve_root_phase_ordered_groups(
       root_ordered_groups,

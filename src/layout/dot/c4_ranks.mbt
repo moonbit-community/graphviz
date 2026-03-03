@@ -82,7 +82,8 @@ fn capture_root_mincross_pass_snapshot(
 /// Do not change behavior without updating fixtures/tests.
 fn run_root_mincross_reorder(
   inputs : @ordering.RootMincrossReorderInputs,
-) -> (Map[Int, Array[String]], Map[Int, Array[String]]) {
+  order_groups_override : Map[Int, Array[String]]?,
+) -> @ordering.RootMincrossReorderResult {
   // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
   // then records the same stage snapshot before resetting capture state.
   capture_pass0_flat_seed_groups_value.val = None
@@ -90,13 +91,13 @@ fn run_root_mincross_reorder(
   let result =
     @ordering.run_root_mincross_reorder(
       inputs,
-      root_mincross_groups_override.val,
+      order_groups_override,
       run_root_mincross_reorder_call,
     )
   capture_pass0_flat_seed_groups_enabled.val = false
   capture_root_mincross_pass_snapshot(result, inputs)
   capture_pass0_flat_seed_groups_value.val = None
-  (result.order_groups_for_mincross, result.ordered)
+  result
 }
 
 ///|
