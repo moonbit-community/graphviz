@@ -75,11 +75,65 @@ fn run_remincross_pass(
         },
       )
     let rem_ordered =
-      run_remincross_cleanup(
-        dispatch_context,
-        rem_rank_keys,
-        rem_groups,
-        materialized_inputs,
+      @ordering.run_remincross_cleanup(
+        {
+          rem_rank_keys,
+          rem_groups,
+          materialized_inputs,
+          rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+          rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+          nodesep_pt: dispatch_context.nodesep_pt,
+          has_edge_labels: dispatch_context.has_edge_labels,
+          port_order_positions: dispatch_context.port_order_positions,
+          port_order_contrib: dispatch_context.port_order_contrib,
+          graphviz_flip: dispatch_context.graphviz_flip,
+        },
+        capture_inputs =>
+          capture_remincross_snapshot(
+            capture_inputs.rem_rank_keys,
+            capture_inputs.rem_groups,
+            capture_inputs.rem_edges_out,
+            capture_inputs.rem_edge_tail_out,
+            capture_inputs.rem_edge_head_out,
+            capture_inputs.rem_edge_tail_port_x,
+            capture_inputs.rem_edge_head_port_x,
+            capture_inputs.rem_edge_tail_port_order,
+            capture_inputs.rem_edge_head_port_order,
+            capture_inputs.rem_cluster_keys,
+          ),
+        reorder_inputs =>
+          reorder_rank_groups(
+            reorder_inputs.rem_rank_keys,
+            reorder_inputs.rem_groups,
+            reorder_inputs.rem_edges_out,
+            reorder_inputs.rem_edge_tail_out,
+            reorder_inputs.rem_edge_head_out,
+            reorder_inputs.rem_edge_tail_port_x,
+            reorder_inputs.rem_edge_head_port_x,
+            reorder_inputs.rem_edge_tail_port_order,
+            reorder_inputs.rem_edge_head_port_order,
+            reorder_inputs.rem_parents,
+            reorder_inputs.rem_children,
+            reorder_inputs.rem_cluster_keys,
+            reorder_inputs.rank_same_groups,
+            reorder_inputs.rank_same_order,
+            reorder_inputs.rem_edge_order,
+            reorder_inputs.rem_node_order,
+            reorder_inputs.rem_sizes,
+            reorder_inputs.nodesep_pt,
+            reorder_inputs.has_edge_labels,
+            reorder_inputs.port_order_positions,
+            reorder_inputs.port_order_contrib,
+            Map::new(),
+            Map::new(),
+            reorder_inputs.rem_flat_constraints,
+            graphviz_flip=reorder_inputs.graphviz_flip,
+            // Graphviz parity: ReMincross counts parallel chain segments once
+            // with summed xpenalty before startpass=2 transposition.
+            coalesce_parallel_edges=true,
+            startpass=2,
+            remincross_mode=true,
+          ),
       )
     let rem_cleaned =
       @ordering.collect_real_only_rank_groups(
@@ -92,72 +146,6 @@ fn run_remincross_pass(
       ordered_with_vnodes: rem_ordered,
     }
   }
-}
-
-///|
-/// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
-/// inputs, builds edge index maps, and executes startpass=2 mincross on the
-/// rematerialized fast-graph edge set.
-fn run_remincross_cleanup(
-  dispatch_context : ReMincrossDispatchContext,
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-  materialized_inputs : @ordering.ReMincrossCleanupMaterializedInputs,
-) -> Map[Int, Array[String]] {
-  let rem_edge_indices =
-    @ordering.build_edge_indices_and_order(
-      materialized_inputs.rem_nodes,
-      materialized_inputs.rem_edge_tail_out,
-      materialized_inputs.rem_edge_head_out,
-      materialized_inputs.rem_ranks,
-      materialized_inputs.rem_edges_out,
-    )
-  // Graphviz parity: ReMincross clustered reorder executes mincross with
-  // startpass=2 on rematerialized fast-graph edges and local flat constraints.
-  capture_remincross_snapshot(
-    rem_rank_keys,
-    rem_groups,
-    materialized_inputs.rem_edges_out,
-    materialized_inputs.rem_edge_tail_out,
-    materialized_inputs.rem_edge_head_out,
-    materialized_inputs.rem_edge_tail_port_x,
-    materialized_inputs.rem_edge_head_port_x,
-    materialized_inputs.rem_edge_tail_port_order,
-    materialized_inputs.rem_edge_head_port_order,
-    materialized_inputs.rem_cluster_keys,
-  )
-  reorder_rank_groups(
-    rem_rank_keys,
-    rem_groups,
-    materialized_inputs.rem_edges_out,
-    materialized_inputs.rem_edge_tail_out,
-    materialized_inputs.rem_edge_head_out,
-    materialized_inputs.rem_edge_tail_port_x,
-    materialized_inputs.rem_edge_head_port_x,
-    materialized_inputs.rem_edge_tail_port_order,
-    materialized_inputs.rem_edge_head_port_order,
-    rem_edge_indices.parents,
-    rem_edge_indices.children,
-    materialized_inputs.rem_cluster_keys,
-    dispatch_context.cluster_meta.rank_same_groups,
-    dispatch_context.cluster_meta.rank_same_order,
-    rem_edge_indices.edge_order,
-    materialized_inputs.rem_node_order,
-    materialized_inputs.rem_sizes,
-    dispatch_context.nodesep_pt,
-    dispatch_context.has_edge_labels,
-    dispatch_context.port_order_positions,
-    dispatch_context.port_order_contrib,
-    Map::new(),
-    Map::new(),
-    materialized_inputs.rem_flat_constraints,
-    graphviz_flip=dispatch_context.graphviz_flip,
-    // Graphviz parity: ReMincross counts parallel chain segments once
-    // with summed xpenalty before startpass=2 transposition.
-    coalesce_parallel_edges=true,
-    startpass=2,
-    remincross_mode=true,
-  )
 }
 
 ///|
