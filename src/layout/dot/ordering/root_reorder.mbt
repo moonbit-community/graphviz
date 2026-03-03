@@ -870,3 +870,51 @@ pub fn run_root_reorder_and_rank_order_phase(
     run_root_rank_order_phase(root_rank_order_inputs, run_call)
   (root_reorder_output, root_rank_order_phase_output)
 }
+
+///|
+/// Graphviz parity: clustered root phase derives tail-order replay and
+/// root-group override snapshots from root reorder outputs only in cluster mode.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredRootPhaseOverrides {
+  root_tail_order_override : Array[String]?
+  root_groups_override_for_root_pass : Map[Int, Array[String]]?
+}
+
+///|
+/// Graphviz parity: root-phase tail override keeps first-seen tail replay order
+/// while suppressing duplicate tail names from root-edge replay sequences.
+fn build_root_tail_order_override(
+  root_reorder_output : RootClusterReorderInputs,
+) -> Array[String] {
+  let root_tail_order_override : Array[String] = []
+  let seen_root_tail : Map[String, Bool] = Map::new()
+  for tail in root_reorder_output.root_edge_tail_out {
+    append_creation_name(root_tail_order_override, seen_root_tail, tail)
+  }
+  root_tail_order_override
+}
+
+///|
+/// Graphviz parity: clustered root phase sets both tail-order and group
+/// overrides only in cluster mode; otherwise both override channels are empty.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_root_phase_overrides(
+  order_with_clusters : Bool,
+  root_reorder_output : RootClusterReorderInputs,
+  root_rank_order_phase_output : RootRankOrderPhaseOutput,
+) -> ClusteredRootPhaseOverrides {
+  if !order_with_clusters {
+    return {
+      root_tail_order_override: None,
+      root_groups_override_for_root_pass: None,
+    }
+  }
+  {
+    root_tail_order_override: Some(
+      build_root_tail_order_override(root_reorder_output),
+    ),
+    root_groups_override_for_root_pass: Some(
+      clone_rank_groups(root_rank_order_phase_output.ordered_root),
+    ),
+  }
+}

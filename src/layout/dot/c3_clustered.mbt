@@ -135,39 +135,21 @@ fn run_clustered_root_phase(
       pre_root_stage,
       pre_root_stage.order_groups,
     )
-  // Graphviz parity: root-phase tail override keeps first-seen tail replay
-  // order while suppressing duplicate tail names from root-edge replay
-  // sequences.
-  let root_tail_order_override : Array[String] = []
-  let seen_root_tail : Map[String, Bool] = Map::new()
-  for tail in root_reorder_output.root_edge_tail_out {
-    @ordering.append_creation_name(root_tail_order_override, seen_root_tail, tail)
-  }
-  let root_groups_override = root_rank_order_phase_output.ordered_root
-  // Graphviz parity: clustered root phase sets both tail-order and group
-  // overrides only in cluster mode; otherwise both override channels are
-  // cleared.
-  let (
-    root_tail_order_override_for_finalize,
-    root_groups_override_for_root_pass,
-  ) : (Array[String]?, Map[Int, Array[String]]?) =
-    if reorder_setup.order_with_clusters {
-      (
-        Some(root_tail_order_override.copy()),
-        Some(@ordering.clone_rank_groups(root_groups_override)),
-      )
-    } else {
-      (None, None)
-    }
+  let root_phase_overrides =
+    @ordering.build_clustered_root_phase_overrides(
+      reorder_setup.order_with_clusters,
+      root_reorder_output,
+      root_rank_order_phase_output,
+    )
   let root_cluster_stage =
     run_root_and_cluster_ranks(
       dispatch_context,
       pre_root_stage,
-      root_groups_override_for_root_pass,
+      root_phase_overrides.root_groups_override_for_root_pass,
     )
   {
     root_cluster_stage,
-    root_tail_order_override: root_tail_order_override_for_finalize,
+    root_tail_order_override: root_phase_overrides.root_tail_order_override,
   }
 }
 
