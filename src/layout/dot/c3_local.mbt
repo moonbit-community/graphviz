@@ -24,19 +24,13 @@ fn build_local_cluster_order(
     if cluster == "" {
       continue
     }
-    let rank = match ranks.get(name) {
-      Some(value) => value
-      None => 0
-    }
+    let rank = ranks.get(name).unwrap_or_default()
     match min_rank.get(cluster) {
       Some(current) => if rank < current { min_rank[cluster] = rank }
       None => min_rank[cluster] = rank
     }
     if first_order.get(cluster) is None {
-      let order_value = match node_order.get(name) {
-        Some(value) => value
-        None => 0
-      }
+      let order_value = node_order.get(name).unwrap_or_default()
       first_order[cluster] = order_value
     }
   }
@@ -44,10 +38,7 @@ fn build_local_cluster_order(
   // first node order, then cluster name for deterministic stable ordering.
   let entries : Array[(String, Int, Int)] = []
   for cluster, rank in min_rank {
-    let order = match first_order.get(cluster) {
-      Some(value) => value
-      None => 0
-    }
+    let order = first_order.get(cluster).unwrap_or_default()
     entries.push((cluster, rank, order))
   }
   entries.sort_by((a, b) => {
@@ -328,10 +319,7 @@ fn build_cluster_out_heads_by_tail(
 ) -> Map[String, Array[String]] {
   let out_heads_by_tail : Map[String, Array[String]] = Map::new()
   for tail, _ in cluster_node_set {
-    let heads = match source_graphviz_out_neighbors.get(tail) {
-      Some(value) => value
-      None => []
-    }
+    let heads = source_graphviz_out_neighbors.get(tail).unwrap_or_default()
     let filtered : Array[String] = []
     for head in heads {
       if cluster_node_set.get(head) is Some(_) {
@@ -365,10 +353,7 @@ fn seed_rank_real_nodes_from_previous_rank(
   let seeded_real_nodes : Array[String] = []
   let seeded_seen : Map[String, Bool] = Map::new()
   for tail in prev_names {
-    let heads = match out_heads_by_tail.get(tail) {
-      Some(value) => value
-      None => []
-    }
+    let heads = out_heads_by_tail.get(tail).unwrap_or_default()
     for head in heads {
       if real_set.get(head) is Some(_) && seeded_seen.get(head) is None {
         seeded_real_nodes.push(head)
@@ -424,10 +409,7 @@ fn build_local_rank_groups(
       Some(value) => value
       None => continue
     }
-    let prev_names = match cluster_groups.get(rank - 1) {
-      Some(value) => value
-      None => []
-    }
+    let prev_names = cluster_groups.get(rank - 1).unwrap_or_default()
     seed_rank_real_nodes_from_previous_rank(
       list,
       prev_names,
@@ -1308,10 +1290,7 @@ fn apply_cluster_rank_reorder_output(
   cluster_node_set : Map[String, Bool],
 ) -> Unit {
   for rank in cluster_rank_keys {
-    let desired = match ordered_cluster.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let desired = ordered_cluster.get(rank).unwrap_or_default()
     if desired.length() <= 1 {
       continue
     }
