@@ -45,6 +45,7 @@ fn build_remincross_pass_inputs(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  root_tail_order_override : Array[String]?,
   final_groups : Map[Int, Array[String]],
 ) -> @ordering.ReMincrossPassInputs {
   let reorder_setup = dispatch_context.reorder_setup
@@ -84,7 +85,7 @@ fn build_remincross_pass_inputs(
     ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
     base_groups: final_groups,
     real_nodes: runtime_context.real_nodes,
-    root_tail_order_override: remincross_root_tail_order_override_snapshot.val,
+    root_tail_order_override,
     root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
     graphviz_flip: reorder_setup.graphviz_flip,
     nodesep_pt: dispatch_context.nodesep_pt,
@@ -163,6 +164,7 @@ fn finalize_order_groups(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  root_tail_order_override : Array[String]?,
   cluster_rank_order : Map[Int, Map[String, Int]],
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
@@ -188,6 +190,7 @@ fn finalize_order_groups(
           dispatch_context,
           pre_root_stage,
           root_cluster_stage,
+          root_tail_order_override,
           final_groups,
         ),
         build_vnode_order_keys,

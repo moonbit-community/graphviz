@@ -45,6 +45,15 @@ priv struct ClusteredDispatchContext {
 /// pre-root/root/finalize stage orchestration helpers.
 
 ///|
+/// Graphviz parity: clustered root phase output carries root+cluster rank
+/// groups together with optional root tail-order override for ReMincross.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredRootPhaseOutput {
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput
+  root_tail_order_override : Array[String]?
+}
+
+///|
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
@@ -118,9 +127,8 @@ fn build_clustered_pre_root(
 fn run_clustered_root_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-) -> @ordering.RootAndClusterRanksOutput {
+) -> ClusteredRootPhaseOutput {
   let reorder_setup = dispatch_context.reorder_setup
-  remincross_root_tail_order_override_snapshot.val = None
   let (root_reorder_output, root_rank_order_phase_output) =
     run_root_reorder_and_rank_order_phase(
       dispatch_context,
@@ -139,22 +147,28 @@ fn run_clustered_root_phase(
   // Graphviz parity: clustered root phase sets both tail-order and group
   // overrides only in cluster mode; otherwise both override channels are
   // cleared.
-  let root_groups_override_for_root_pass : Map[Int, Array[String]]? =
+  let (
+    root_tail_order_override_for_finalize,
+    root_groups_override_for_root_pass,
+  ) : (Array[String]?, Map[Int, Array[String]]?) =
     if reorder_setup.order_with_clusters {
-      remincross_root_tail_order_override_snapshot.val =
-        Some(root_tail_order_override.copy())
-      Some(@ordering.clone_rank_groups(root_groups_override))
+      (
+        Some(root_tail_order_override.copy()),
+        Some(@ordering.clone_rank_groups(root_groups_override)),
+      )
     } else {
-      remincross_root_tail_order_override_snapshot.val = None
-      None
+      (None, None)
     }
-  let output =
+  let root_cluster_stage =
     run_root_and_cluster_ranks(
       dispatch_context,
       pre_root_stage,
       root_groups_override_for_root_pass,
     )
-  output
+  {
+    root_cluster_stage,
+    root_tail_order_override: root_tail_order_override_for_finalize,
+  }
 }
 
 ///|
@@ -164,8 +178,9 @@ fn run_clustered_root_phase(
 fn run_clustered_finalize_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  root_phase_output : ClusteredRootPhaseOutput,
 ) -> OrderingDispatchOutput {
+  let root_cluster_stage = root_phase_output.root_cluster_stage
   let cluster_rank_order =
     build_cluster_rank_order(
       dispatch_context,
@@ -177,6 +192,7 @@ fn run_clustered_finalize_phase(
       dispatch_context,
       pre_root_stage,
       root_cluster_stage,
+      root_phase_output.root_tail_order_override,
       cluster_rank_order,
     )
   {
@@ -193,7 +209,7 @@ fn run_clustered(
   dispatch_context : ClusteredDispatchContext,
 ) -> OrderingDispatchOutput {
   let pre_root_stage = build_clustered_pre_root(dispatch_context)
-  let root_cluster_stage =
+  let root_phase_output =
     run_clustered_root_phase(
       dispatch_context,
       pre_root_stage,
@@ -202,8 +218,7 @@ fn run_clustered(
     run_clustered_finalize_phase(
       dispatch_context,
       pre_root_stage,
-      root_cluster_stage,
+      root_phase_output,
     )
-  remincross_root_tail_order_override_snapshot.val = None
   output
 }

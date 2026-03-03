@@ -225,7 +225,3 @@ let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(No
 
 ///|
 let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
-
-///|
-let remincross_root_tail_order_override_snapshot : Ref[Array[String]?] =
-  Ref::new(None)
