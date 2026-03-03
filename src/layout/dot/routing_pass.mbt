@@ -426,7 +426,7 @@ fn build_self_edge_layout(
       0.0,
       false,
     )
-  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
   let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   let mut edge_layout =
     build_edge_layout(
@@ -487,7 +487,7 @@ fn build_flat_adjacent_layout(
       0.0,
       false,
     )
-  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
   let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
@@ -880,7 +880,7 @@ fn build_regular_spline_layout(
     routing_context,
     enable_complex_tuning,
   )
-  let layout_spline_result = rebuild_spline_for_render(base, spline_result)
+  let layout_spline_result = @routing.rebuild_spline_for_render(base, spline_result)
   let spline = @routing.finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack(
     edge,
@@ -940,7 +940,7 @@ fn build_regular_bezier_layout(
       shared_spline_result.apply_dotted_adjustment,
     )
   let layout_spline_result =
-    rebuild_spline_for_render(base, sibling_spline_result)
+    @routing.rebuild_spline_for_render(base, sibling_spline_result)
   let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
