@@ -1,29 +1,8 @@
 ///|
-/// Stage C Phase C1 split: ordering class2
-/// preprocessing helpers for order-graph construction.
+/// Ordering domain: class2 preprocessing helpers for order-graph assembly.
 
 ///|
-/// Stage C Phase C1 split: ordering edge-port/class2
-/// runtime data types produced by class2 preprocessing.
-
-///|
-priv struct OrderingEdgePortData {
-  edge_order : Map[String, Int]
-  edge_tail_port_x : Array[Double]
-  edge_head_port_x : Array[Double]
-  edge_tail_port_order : Array[Double]
-  edge_head_port_order : Array[Double]
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-}
-
-///|
-priv struct OrderingClass2Data {
+pub(all) struct OrderingClass2Data {
   edges_by_tail : Map[String, Array[Int]]
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
@@ -37,75 +16,119 @@ priv struct OrderingClass2Data {
 }
 
 ///|
-/// Graphviz parity: order-graph edge arrays preserve original edge sequence,
-/// then reuse deduplicated order edges for mincross-specific port sampling.
-/// Do not change behavior without updating fixtures/tests.
-fn build_ordering_edge_port_data(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  order_sizes : Map[String, NodeSize],
-) -> OrderingEdgePortData {
-  // Graphviz parity: edge-port original phase keeps original edge order map and
-  // per-edge port position/order arrays before any ordering-edge deduplication.
-  let edge_order = @ordering.collect_edge_order(edges)
-  let edge_port_x_samples =
-    compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
-  let edge_tail_port_x = edge_port_x_samples.tail_values
-  let edge_head_port_x = edge_port_x_samples.head_values
-  let edge_port_order_samples =
-    compute_edge_port_orders(nodes, edges, edge_tail, edge_head, order_sizes)
-  let edge_tail_port_order = edge_port_order_samples.tail_values
-  let edge_head_port_order = edge_port_order_samples.head_values
-  // Graphviz parity: edge-port dedup phase derives ordering-edge arrays and
-  // recomputes port position/order samples on deduplicated ordering edges.
-  let dedup_output =
-    @ordering.dedup_ordering_edges(edges, edge_tail, edge_head)
-  let order_edges = dedup_output.order_edges
-  let order_edge_tail = dedup_output.order_edge_tail
-  let order_edge_head = dedup_output.order_edge_head
-  let order_edge_port_x_samples =
-    compute_edge_port_positions(
-      nodes,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_sizes,
-    )
-  let order_edge_tail_port_x = order_edge_port_x_samples.tail_values
-  let order_edge_head_port_x = order_edge_port_x_samples.head_values
-  let order_edge_port_order_samples =
-    compute_edge_port_orders(
-      nodes,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_sizes,
-    )
-  let order_edge_tail_port_order = order_edge_port_order_samples.tail_values
-  let order_edge_head_port_order = order_edge_port_order_samples.head_values
-  {
-    edge_order,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
+const CL_CROSS : Int = 1000
+
+///|
+fn skeleton_name_for_rank(cluster : String, rank : Int) -> String {
+  "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
+}
+
+///| 
+fn prepend_order_edge_entry(
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  tail_name : String,
+  entry : (String, String, Int, Bool, Double, Double, Double, Double),
+) -> Unit {
+  match order_edges_by_tail.get(tail_name) {
+    Some(list) => {
+      let updated : Array[(String, String, Int, Bool, Double, Double, Double, Double)] = [entry]
+      for item in list {
+        updated.push(item)
+      }
+      order_edges_by_tail[tail_name] = updated
+    }
+    None => order_edges_by_tail[tail_name] = [entry]
   }
+}
+
+///|
+fn append_cluster_skeleton_edges(
+  cluster : String,
+  min_rank : Int,
+  max_rank : Int,
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  skeleton_edge_creation : Array[(String, String)],
+) -> Unit {
+  let mut rank = min_rank
+  while rank < max_rank {
+    let tail_name = skeleton_name_for_rank(cluster, rank)
+    let head_name = skeleton_name_for_rank(cluster, rank + 1)
+    let entry = (tail_name, head_name, CL_CROSS, true, 0.0, 0.0, 0.5, 0.5)
+    skeleton_edge_creation.push((tail_name, head_name))
+    prepend_order_edge_entry(
+      order_edges_by_tail,
+      tail_name,
+      entry,
+    )
+    prepend_order_edge_entry(
+      order_edges_by_tail_root,
+      tail_name,
+      entry,
+    )
+    rank = rank + 1
+  }
+}
+
+///|
+fn build_skeleton_edge_creation(
+  order_with_clusters : Bool,
+  cluster_order : Array[String],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
+) -> Array[(String, String)] {
+  let skeleton_edge_creation : Array[(String, String)] = []
+  if !order_with_clusters {
+    return skeleton_edge_creation
+  }
+  let cluster_seen : Map[String, Bool] = Map::new()
+  for cluster in cluster_order {
+    match cluster_min_rank.get(cluster) {
+      Some(min_rank) => {
+        let max_rank = match cluster_max_rank.get(cluster) {
+          Some(value) => value
+          None => min_rank
+        }
+        append_cluster_skeleton_edges(
+          cluster,
+          min_rank,
+          max_rank,
+          order_edges_by_tail,
+          order_edges_by_tail_root,
+          skeleton_edge_creation,
+        )
+        cluster_seen[cluster] = true
+      }
+      None => ()
+    }
+  }
+  for cluster, min_rank in cluster_min_rank {
+    if cluster_seen.get(cluster) is Some(_) {
+      continue
+    }
+    let max_rank = match cluster_max_rank.get(cluster) {
+      Some(value) => value
+      None => min_rank
+    }
+    append_cluster_skeleton_edges(
+      cluster,
+      min_rank,
+      max_rank,
+      order_edges_by_tail,
+      order_edges_by_tail_root,
+      skeleton_edge_creation,
+    )
+  }
+  skeleton_edge_creation
 }
 
 ///|
 /// Graphviz parity: class2/decompose ordering prep follows creation order,
 /// ND_out traversal, cluster skeleton insertion, then GD_nlist construction.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_class2_data(
+pub fn build_ordering_class2_data(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -119,16 +142,18 @@ fn build_ordering_class2_data(
   edge_vnodes : Map[String, Array[String]],
   order_with_vnodes : Bool,
   order_with_clusters : Bool,
-  cluster_meta : ClusterMetadata,
+  cluster_keys : Map[String, String],
+  cluster_order : Array[String],
+  cluster_min_rank : Map[String, Int],
+  cluster_max_rank : Map[String, Int],
+  has_clusters : Bool,
   flat_rank_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> OrderingClass2Data {
-  // Graphviz parity: class2 iterates agfstnode order (creation order) for edge traversal.
   let creation_order : Array[String] = []
   for node in nodes {
     creation_order.push(node.name())
   }
-  // Graphviz parity: order-graph edges follow ND_out ordering after acyclic.
   let edges_by_tail : Map[String, Array[Int]] = Map::new()
   for node in nodes {
     let name = node.name()
@@ -138,7 +163,7 @@ fn build_ordering_class2_data(
     }
   }
   let order_edges_by_tail_output =
-    @ordering.build_order_edges_by_tail(
+    build_order_edges_by_tail(
       creation_order,
       edges,
       edge_tail,
@@ -150,7 +175,7 @@ fn build_ordering_class2_data(
       ranks,
       edge_vnodes,
       order_with_vnodes,
-      cluster_meta.cluster_keys,
+      cluster_keys,
       order_with_clusters,
       false,
       true,
@@ -163,11 +188,9 @@ fn build_ordering_class2_data(
     order_edges_by_tail_root,
     root_edge_creation,
   ) =
-    // Graphviz parity: root order-edge chains use remapped cluster endpoints,
-    // while non-cluster graphs reuse the base order_edges_by_tail mapping.
     if order_with_clusters {
       let root_edges_by_tail_output =
-        @ordering.build_order_edges_by_tail(
+        build_order_edges_by_tail(
           creation_order,
           edges,
           edge_tail,
@@ -179,7 +202,7 @@ fn build_ordering_class2_data(
           ranks,
           edge_vnodes,
           order_with_vnodes,
-          cluster_meta.cluster_keys,
+          cluster_keys,
           order_with_clusters,
           true,
           true,
@@ -191,12 +214,10 @@ fn build_ordering_class2_data(
     } else {
       (order_edges_by_tail, order_edge_creation)
     }
-  // Graphviz parity: cluster-local build_ranks uses edge chains before
-  // root/cluster remapping so local passes see original cluster endpoints.
   let order_edges_by_tail_unmapped =
     if order_with_clusters {
       let unmapped_output =
-        @ordering.build_order_edges_by_tail(
+        build_order_edges_by_tail(
           creation_order,
           edges,
           edge_tail,
@@ -208,7 +229,7 @@ fn build_ordering_class2_data(
           ranks,
           edge_vnodes,
           order_with_vnodes,
-          cluster_meta.cluster_keys,
+          cluster_keys,
           order_with_clusters,
           false,
           false,
@@ -219,17 +240,13 @@ fn build_ordering_class2_data(
     } else {
       order_edges_by_tail
     }
-  // Graphviz parity: class2 creation sequences build cluster skeleton edges,
-  // then edge creation order and GD_nlist ordering in Graphviz pass order.
-  // Graphviz parity: cluster skeleton creation follows cluster_order first,
-  // then remaining cluster_min_rank iteration order.
   let cluster_skeleton_creation : Array[String] = []
   if order_with_clusters {
     let cluster_seen : Map[String, Bool] = Map::new()
-    for cluster in cluster_meta.cluster_order {
-      match cluster_meta.cluster_min_rank.get(cluster) {
+    for cluster in cluster_order {
+      match cluster_min_rank.get(cluster) {
         Some(min_rank) => {
-          let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+          let max_rank = match cluster_max_rank.get(cluster) {
             Some(value) => value
             None => min_rank
           }
@@ -243,11 +260,11 @@ fn build_ordering_class2_data(
         None => ()
       }
     }
-    for cluster, min_rank in cluster_meta.cluster_min_rank {
+    for cluster, min_rank in cluster_min_rank {
       if cluster_seen.get(cluster) is Some(_) {
         continue
       }
-      let max_rank = match cluster_meta.cluster_max_rank.get(cluster) {
+      let max_rank = match cluster_max_rank.get(cluster) {
         Some(value) => value
         None => min_rank
       }
@@ -261,34 +278,30 @@ fn build_ordering_class2_data(
   let skeleton_edge_creation =
     build_skeleton_edge_creation(
       order_with_clusters,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_min_rank,
-      cluster_meta.cluster_max_rank,
+      cluster_order,
+      cluster_min_rank,
+      cluster_max_rank,
       order_edges_by_tail,
       order_edges_by_tail_root,
     )
   let edge_creation_order =
-    @ordering.merge_edge_creation_sequences(
+    merge_edge_creation_sequences(
       skeleton_edge_creation,
       order_edge_creation,
     )
-  // Graphviz parity: class2 order_creation starts with cluster skeletons, then
-  // agfstnode real nodes interleaved with edge-vnodes per tail.
   let (order_creation, vnode_creation_order) =
     {
       let order_creation : Array[String] = []
       let order_seen : Map[String, Bool] = Map::new()
       for name in cluster_skeleton_creation {
-        @ordering.append_creation_name(
+        append_creation_name(
           order_creation,
           order_seen,
           name,
         )
       }
       for tail_name in creation_order {
-        // Graphviz parity: each real-node tail emits itself first, followed by
-        // its per-tail vnode sequence, while preserving first-seen dedup semantics.
-        @ordering.append_creation_name(
+        append_creation_name(
           order_creation,
           order_seen,
           tail_name,
@@ -298,7 +311,7 @@ fn build_ordering_class2_data(
           None => []
         }
         for vnode in vnodes {
-          @ordering.append_creation_name(
+          append_creation_name(
             order_creation,
             order_seen,
             vnode,
@@ -313,27 +326,25 @@ fn build_ordering_class2_data(
       }
       (order_creation, vnode_creation_order)
     }
-  // Graphviz parity: decompose DFS starts from agfstnode (creation) order
-  // regardless of rankdir flip.
   let nlist_tail_order =
-    if cluster_meta.has_clusters {
+    if has_clusters {
       creation_order
     } else {
       order_creation
     }
   let nlist_order_raw =
-    @dot_shared.build_graphviz_nlist_order_from_edges(
+    @shared.build_graphviz_nlist_order_from_edges(
       nlist_tail_order,
       order_creation,
       edge_creation_order,
       flat_rank_constraints,
     )
   let nlist_order =
-    @ordering.adjust_nlist_order_for_flip(
+    adjust_nlist_order_for_flip(
       nlist_order_raw,
       graphviz_flip,
-      cluster_meta.has_clusters,
-      cluster_meta.cluster_keys,
+      has_clusters,
+      cluster_keys,
     )
   {
     edges_by_tail,

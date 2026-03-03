@@ -24,7 +24,7 @@ priv struct OrderingReorderSetup {
   order_with_clusters : Bool
   graphviz_flip : Bool
   flat_rank_constraints : Map[String, Bool]
-  class2_data : OrderingClass2Data
+  class2_data : @ordering.OrderingClass2Data
   gdnlist_order : Array[String]
   vnode_order_keys_for_ordering : Map[String, Double]
 }
@@ -145,7 +145,7 @@ fn build_flat_rank_constraints(
 /// edges, with optional creation-order reverse debug/flip override.
 /// Do not change behavior without updating fixtures/tests.
 fn build_gdnlist_order(
-  class2_data : OrderingClass2Data,
+  class2_data : @ordering.OrderingClass2Data,
   graphviz_flip : Bool,
   cluster_order : Array[String],
 ) -> Array[String] {
@@ -202,7 +202,7 @@ fn build_ordering_reorder_setup(
   let flat_rank_constraints =
     build_flat_rank_constraints(edge_tail, edge_head, ranks)
   let class2_data =
-    build_ordering_class2_data(
+    @ordering.build_ordering_class2_data(
       nodes,
       edges,
       edge_tail,
@@ -216,7 +216,11 @@ fn build_ordering_reorder_setup(
       vnode_info.edge_vnodes,
       order_with_vnodes,
       order_with_clusters,
-      cluster_meta,
+      cluster_meta.cluster_keys,
+      cluster_meta.cluster_order,
+      cluster_meta.cluster_min_rank,
+      cluster_meta.cluster_max_rank,
+      cluster_meta.has_clusters,
       flat_rank_constraints,
       graphviz_flip,
     )

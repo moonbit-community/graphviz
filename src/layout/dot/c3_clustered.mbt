@@ -37,7 +37,7 @@ priv struct ClusteredDispatchContext {
   runtime_context : OrderingRuntimeContext
   edge_port_data : OrderingEdgePortData
   reorder_setup : OrderingReorderSetup
-  class2_data : OrderingClass2Data
+  class2_data : @ordering.OrderingClass2Data
 }
 
 ///|
