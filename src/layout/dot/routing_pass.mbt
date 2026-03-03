@@ -420,14 +420,14 @@ fn build_self_edge_layout(
       false,
     )
   let spline_result =
-    edge_spline_result_for_bezier(
+    @routing.edge_spline_result_for_bezier(
       spline,
       route.points,
       0.0,
       false,
     )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
-  let final_spline = finalize_edge_spline(base, layout_spline_result)
+  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   let mut edge_layout =
     build_edge_layout(
       base,
@@ -481,14 +481,14 @@ fn build_flat_adjacent_layout(
       base.swap_ends,
     )
   let spline_result =
-    edge_spline_result_for_bezier(
+    @routing.edge_spline_result_for_bezier(
       spline,
       bezier,
       0.0,
       false,
     )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
-  let final_spline = finalize_edge_spline(base, layout_spline_result)
+  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
     final_spline,
@@ -881,7 +881,7 @@ fn build_regular_spline_layout(
     enable_complex_tuning,
   )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
-  let spline = finalize_edge_spline(base, layout_spline_result)
+  let spline = @routing.finalize_edge_spline(base, layout_spline_result)
   recover_pathplan_slack(
     edge,
     base,
@@ -933,7 +933,7 @@ fn build_regular_bezier_layout(
       base.swap_ends,
     )
   let sibling_spline_result =
-    edge_spline_result_for_bezier(
+    @routing.edge_spline_result_for_bezier(
       spline,
       shared_spline_result.raw_bezier,
       shared_spline_result.label_pad_boost,
@@ -941,7 +941,7 @@ fn build_regular_bezier_layout(
     )
   let layout_spline_result =
     rebuild_spline_for_render(base, sibling_spline_result)
-  let final_spline = finalize_edge_spline(base, layout_spline_result)
+  let final_spline = @routing.finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
     base,
     final_spline,

@@ -1,0 +1,77 @@
+///|
+pub fn edge_spline_result_for_bezier(
+  spline : @geom.Spline,
+  raw_bezier : Array[@geom.Point],
+  label_pad_boost : Double,
+  apply_dotted_adjustment : Bool,
+) -> EdgeSplineResult {
+  {
+    spline,
+    label_pad_boost,
+    using_pathplan: false,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier,
+    pathplan_segments: [],
+    apply_dotted_adjustment,
+  }
+}
+
+///|
+pub fn edge_polyline_mode_spline(
+  base : EdgeRouteBase,
+  is_ortho : Bool,
+) -> @geom.Spline {
+  // Graphviz parity: swapped routing orientation must swap clip/arrow semantics.
+  @edge_spline.edge_spline_for_polyline(
+    base.edge,
+    base.tail_clip_center,
+    base.head_clip_center,
+    base.tail_clip_size,
+    base.head_clip_size,
+    base.tail_clip,
+    base.head_clip,
+    base.layout_rankdir,
+    is_ortho,
+    base.route_include_tail,
+    base.route_include_head,
+    tail_clip_enabled=base.tail_clip_enabled,
+    head_clip_enabled=base.head_clip_enabled,
+    arrow_len_override=base.arrow_len_override,
+    tail_cluster_bbox=base.tail_cluster_bbox,
+    head_cluster_bbox=base.head_cluster_bbox,
+    parallel_offset=base.parallel_offset,
+    clip_swapped=base.swap_ends,
+    arrow_swapped=base.swap_ends,
+  )
+}
+
+///|
+/// Graphviz parity: spline finalization aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+pub fn finalize_edge_spline(
+  base : EdgeRouteBase,
+  result : EdgeSplineResult,
+) -> @geom.Spline {
+  let mut spline = result.spline
+  if base.swap_ends {
+    spline = @edge_ops.reverse_spline(spline)
+  }
+  if result.apply_dotted_adjustment && base.is_dotted && !base.same_outer_cluster &&
+    spline.points.length() > 1 {
+    let tuned = spline.points.copy()
+    let tail_bias = 0.7
+    tuned[1] = {
+      x: tuned[1].x,
+      y: tuned[1].y * (1.0 - tail_bias) + base.out_tail_anchor.y * tail_bias,
+    }
+    let head_bias = 0.7
+    let last = tuned.length() - 2
+    tuned[last] = {
+      x: tuned[last].x,
+      y: tuned[last].y * (1.0 - head_bias) + base.out_head_anchor.y * head_bias,
+    }
+    spline = { start: spline.start, end: spline.end, points: tuned }
+  }
+  spline
+}

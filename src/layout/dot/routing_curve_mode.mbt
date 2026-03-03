@@ -362,15 +362,15 @@ fn build_edge_spline(
 ) -> EdgeSplineResult {
   match splines {
     SplinesMode::None | SplinesMode::Polyline =>
-      edge_spline_result_for_bezier(
-        build_edge_polyline_mode_spline(base, false),
+      @routing.edge_spline_result_for_bezier(
+        @routing.edge_polyline_mode_spline(base, false),
         [],
         0.0,
         false,
       )
     SplinesMode::Ortho =>
-      edge_spline_result_for_bezier(
-        build_edge_polyline_mode_spline(base, true),
+      @routing.edge_spline_result_for_bezier(
+        @routing.edge_polyline_mode_spline(base, true),
         [],
         0.0,
         false,
