@@ -14,6 +14,69 @@ priv struct OrderRootClusterData {
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
+/// Graphviz parity: root ReMincross rank reorder call uses the same
+/// reorder_rank_groups wiring as Graphviz root mincross pass.
+fn run_root_mincross_reorder_call(
+  reorder_inputs : @ordering.RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    reorder_inputs.order_rank_keys_for_mincross,
+    reorder_inputs.order_groups_for_mincross,
+    reorder_inputs.order_edges_out_mincross,
+    reorder_inputs.order_edge_tail_out_mincross,
+    reorder_inputs.order_edge_head_out_mincross,
+    reorder_inputs.order_edge_tail_port_x_mincross,
+    reorder_inputs.order_edge_head_port_x_mincross,
+    reorder_inputs.order_edge_tail_port_order_mincross,
+    reorder_inputs.order_edge_head_port_order_mincross,
+    reorder_inputs.parents,
+    reorder_inputs.children,
+    reorder_inputs.order_cluster_keys,
+    reorder_inputs.rank_same_groups,
+    reorder_inputs.rank_same_order,
+    reorder_inputs.edge_order,
+    reorder_inputs.order_node_order,
+    reorder_inputs.order_sizes_out,
+    reorder_inputs.nodesep_pt,
+    reorder_inputs.has_edge_labels,
+    reorder_inputs.port_order_positions,
+    reorder_inputs.port_order_contrib,
+    reorder_inputs.preferred_positions,
+    reorder_inputs.order_cluster_skeleton,
+    reorder_inputs.order_flat_constraints,
+    graphviz_out_neighbors=reorder_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=reorder_inputs.graphviz_in_neighbors,
+    graphviz_flip=root_graphviz_flip,
+    coalesce_parallel_edges=coalesce_parallel,
+  )
+}
+
+///|
+/// Graphviz parity: root reorder pass snapshot records the same mincross edge
+/// projection and selected rank groups passed to reorder_rank_groups.
+fn capture_root_mincross_pass_snapshot(
+  result : @ordering.RootMincrossReorderResult,
+  inputs : @ordering.RootMincrossReorderInputs,
+) -> Unit {
+  let reorder_call_data = result.reorder_call_data
+  capture_root_snapshot(
+    reorder_call_data.order_rank_keys_for_mincross,
+    result.order_groups_for_mincross,
+    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+    inputs.order_cluster_keys,
+    inputs.order_cluster_skeleton,
+  )
+}
+
+///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -28,57 +91,54 @@ fn run_root_mincross_reorder(
     @ordering.run_root_mincross_reorder(
       inputs,
       root_mincross_groups_override.val,
-      (reorder_inputs, root_graphviz_flip, coalesce_parallel) =>
-        reorder_rank_groups(
-          reorder_inputs.order_rank_keys_for_mincross,
-          reorder_inputs.order_groups_for_mincross,
-          reorder_inputs.order_edges_out_mincross,
-          reorder_inputs.order_edge_tail_out_mincross,
-          reorder_inputs.order_edge_head_out_mincross,
-          reorder_inputs.order_edge_tail_port_x_mincross,
-          reorder_inputs.order_edge_head_port_x_mincross,
-          reorder_inputs.order_edge_tail_port_order_mincross,
-          reorder_inputs.order_edge_head_port_order_mincross,
-          reorder_inputs.parents,
-          reorder_inputs.children,
-          reorder_inputs.order_cluster_keys,
-          reorder_inputs.rank_same_groups,
-          reorder_inputs.rank_same_order,
-          reorder_inputs.edge_order,
-          reorder_inputs.order_node_order,
-          reorder_inputs.order_sizes_out,
-          reorder_inputs.nodesep_pt,
-          reorder_inputs.has_edge_labels,
-          reorder_inputs.port_order_positions,
-          reorder_inputs.port_order_contrib,
-          reorder_inputs.preferred_positions,
-          reorder_inputs.order_cluster_skeleton,
-          reorder_inputs.order_flat_constraints,
-          graphviz_out_neighbors=reorder_inputs.graphviz_out_neighbors,
-          graphviz_in_neighbors=reorder_inputs.graphviz_in_neighbors,
-          graphviz_flip=root_graphviz_flip,
-          coalesce_parallel_edges=coalesce_parallel,
-        ),
+      run_root_mincross_reorder_call,
     )
   capture_pass0_flat_seed_groups_enabled.val = false
-  let reorder_call_data = result.reorder_call_data
-  // Graphviz parity: root reorder pass snapshot records the same mincross
-  // edge projection and selected rank groups passed to reorder_rank_groups.
-  capture_root_snapshot(
-    reorder_call_data.order_rank_keys_for_mincross,
-    result.order_groups_for_mincross,
-    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-    inputs.order_cluster_keys,
-    inputs.order_cluster_skeleton,
-  )
+  capture_root_mincross_pass_snapshot(result, inputs)
   capture_pass0_flat_seed_groups_value.val = None
   (result.order_groups_for_mincross, result.ordered)
+}
+
+///|
+/// Graphviz parity: root ReMincross reorder input payload is assembled from the
+/// same seeded groups + pre-root materialized snapshots before root pass call.
+fn build_root_mincross_reorder_inputs(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  seeded_groups : Map[Int, Array[String]],
+) -> @ordering.RootMincrossReorderInputs {
+  let reorder_setup = dispatch_context.reorder_setup
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
+  {
+    order_with_clusters: reorder_setup.order_with_clusters,
+    order_with_vnodes: reorder_setup.order_with_vnodes,
+    seeded_groups,
+    order_rank_keys: reorder_context.order_rank_keys,
+    order_ranks: reorder_context.order_ranks,
+    order_edges_out: materialized.order_edges_out,
+    order_edge_tail_out: materialized.order_edge_tail_out,
+    order_edge_head_out: materialized.order_edge_head_out,
+    order_edge_tail_port_x: materialized.order_edge_tail_port_x,
+    order_edge_head_port_x: materialized.order_edge_head_port_x,
+    order_edge_tail_port_order: materialized.order_edge_tail_port_order,
+    order_edge_head_port_order: materialized.order_edge_head_port_order,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+    vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
+    order_node_order: reorder_context.order_node_order,
+    order_sizes_out: pre_root_stage.order_sizes_out,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    order_flat_constraints: materialized.order_flat_constraints,
+    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+    graphviz_flip: reorder_setup.graphviz_flip,
+  }
 }
 
 ///|
@@ -113,35 +173,11 @@ fn run_root_and_cluster_ranks(
       reorder_setup.flat_rank_constraints,
     )
   let root_mincross_reorder_inputs : @ordering.RootMincrossReorderInputs =
-    {
-      order_with_clusters: reorder_setup.order_with_clusters,
-      order_with_vnodes: reorder_setup.order_with_vnodes,
+    build_root_mincross_reorder_inputs(
+      dispatch_context,
+      pre_root_stage,
       seeded_groups,
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_ranks: reorder_context.order_ranks,
-      order_edges_out: materialized.order_edges_out,
-      order_edge_tail_out: materialized.order_edge_tail_out,
-      order_edge_head_out: materialized.order_edge_head_out,
-      order_edge_tail_port_x: materialized.order_edge_tail_port_x,
-      order_edge_head_port_x: materialized.order_edge_head_port_x,
-      order_edge_tail_port_order: materialized.order_edge_tail_port_order,
-      order_edge_head_port_order: materialized.order_edge_head_port_order,
-      order_cluster_keys: pre_root_stage.order_cluster_keys,
-      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-      rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-      rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-      vnode_order_keys_for_ordering: reorder_setup.vnode_order_keys_for_ordering,
-      order_node_order: reorder_context.order_node_order,
-      order_sizes_out: pre_root_stage.order_sizes_out,
-      nodesep_pt: dispatch_context.nodesep_pt,
-      has_edge_labels: dispatch_context.has_edge_labels,
-      port_order_positions: dispatch_context.port_order_positions,
-      port_order_contrib: dispatch_context.port_order_contrib,
-      order_flat_constraints: materialized.order_flat_constraints,
-      graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-      graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-      graphviz_flip: reorder_setup.graphviz_flip,
-    }
+    )
   let (order_groups_for_mincross, root_ordered_groups) =
     run_root_mincross_reorder(root_mincross_reorder_inputs)
   let ordered =
