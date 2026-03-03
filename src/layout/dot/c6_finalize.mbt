@@ -117,44 +117,31 @@ fn finalize_order_groups(
       port_order_positions: dispatch_context.port_order_positions,
       port_order_contrib: dispatch_context.port_order_contrib,
     }
-  let cleaned_groups =
-    @ordering.collect_real_only_rank_groups(
-      reorder_context.order_rank_keys,
-      root_cluster_stage.ordered,
-      runtime_context.real_nodes,
-    )
-  if reorder_setup.order_with_clusters {
-    let final_groups =
-      @ordering.build_clustered_finalize_groups(
-        cleaned_groups,
+  let finalize_output =
+    @ordering.run_clustered_finalize_order_groups(
+      {
+        order_with_clusters: reorder_setup.order_with_clusters,
+        order_rank_keys: reorder_context.order_rank_keys,
+        ordered: root_cluster_stage.ordered,
+        ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
+        real_nodes: runtime_context.real_nodes,
         cluster_rank_order,
-        dispatch_context.cluster_meta.cluster_keys,
-        (groups) =>
-          reorder_by_local_cluster(
-            groups,
-            dispatch_context.cluster_meta.cluster_keys,
-            dispatch_context.cluster_meta.intercluster_keys,
-            runtime_context.local_cluster_order,
-          ),
-      )
-    let remincross_output =
-      @ordering.run_remincross_pass(
-        @ordering.build_remincross_pass_inputs(
-          remincross_context,
-          final_groups,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        remincross_context,
+      },
+      (groups) =>
+        reorder_by_local_cluster(
+          groups,
+          dispatch_context.cluster_meta.cluster_keys,
+          dispatch_context.cluster_meta.intercluster_keys,
+          runtime_context.local_cluster_order,
         ),
-        build_vnode_order_keys,
-        capture_remincross_cleanup,
-        run_remincross_cleanup_reorder,
-      )
-    {
-      ordered_groups: remincross_output.ordered_groups,
-      ordered_with_vnodes: remincross_output.ordered_with_vnodes,
-    }
-  } else {
-    {
-      ordered_groups: cleaned_groups,
-      ordered_with_vnodes: root_cluster_stage.ordered_with_vnodes,
-    }
+      build_vnode_order_keys,
+      capture_remincross_cleanup,
+      run_remincross_cleanup_reorder,
+    )
+  {
+    ordered_groups: finalize_output.ordered_groups,
+    ordered_with_vnodes: finalize_output.ordered_with_vnodes,
   }
 }

@@ -151,6 +151,60 @@ pub(all) struct ReMincrossPassOutput {
 }
 
 ///|
+/// Graphviz parity: Stage C finalize payload keeps root-cleanup sources,
+/// cluster-rank replay maps, and ReMincross context snapshots unchanged.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredFinalizeInputs {
+  order_with_clusters : Bool
+  order_rank_keys : Array[Int]
+  ordered : Map[Int, Array[String]]
+  ordered_with_vnodes : Map[Int, Array[String]]
+  real_nodes : Map[String, Bool]
+  cluster_rank_order : Map[Int, Map[String, Int]]
+  cluster_keys : Map[String, String]
+  remincross_context : ReMincrossPassBuildContext
+}
+
+///|
+/// Graphviz parity: final group cleanup keeps only real nodes, applies
+/// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
+/// refinement before returning final groups.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_clustered_finalize_order_groups(
+  inputs : ClusteredFinalizeInputs,
+  apply_local_cluster_order : (Map[Int, Array[String]]) -> Unit,
+  build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
+  capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
+  reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
+) -> ReMincrossPassOutput {
+  let cleaned_groups =
+    collect_real_only_rank_groups(
+      inputs.order_rank_keys,
+      inputs.ordered,
+      inputs.real_nodes,
+    )
+  if !inputs.order_with_clusters {
+    return {
+      ordered_groups: cleaned_groups,
+      ordered_with_vnodes: inputs.ordered_with_vnodes,
+    }
+  }
+  let final_groups =
+    build_clustered_finalize_groups(
+      cleaned_groups,
+      inputs.cluster_rank_order,
+      inputs.cluster_keys,
+      apply_local_cluster_order,
+    )
+  run_remincross_pass(
+    build_remincross_pass_inputs(inputs.remincross_context, final_groups),
+    build_vnode_order_keys,
+    capture_call,
+    reorder_call,
+  )
+}
+
+///|
 /// Graphviz parity: clustered ReMincross pass runs on real-node groups plus
 /// edge vnodes, then materializes/remaps edges and executes final startpass=2
 /// reorder before dropping non-real nodes.
