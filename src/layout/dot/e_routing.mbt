@@ -3628,6 +3628,59 @@ fn segmented_pathplan_raw_bezier(
 }
 
 ///|
+fn build_multi_point_routed_spline(
+  base : EdgeRouteBase,
+  adjusted : Array[@geom.Point],
+  using_pathplan : Bool,
+  force_segmented : Bool,
+  pathplan_segments : Array[@routesplines.PathplanSegment],
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+) -> PointsSplineResult {
+  let (tail_slope_for, head_slope_for) =
+    route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
+  // Graphviz parity: pathplan edges always allow spline fitting.
+  let edge_force_segmented = if using_pathplan { false } else { force_segmented }
+  let segmented_raw : Array[@geom.Point] =
+    if using_pathplan && pathplan_segments.length() > 0 {
+      // Graphviz parity: straight_path segment joins constrain slope along rankdir.
+      let join_dir = straight_path_join_dir(base.layout_rankdir)
+      segmented_pathplan_raw_bezier(
+        pathplan_segments,
+        tail_slope_for,
+        head_slope_for,
+        join_dir,
+        edge_force_segmented,
+      )
+    } else {
+      []
+    }
+  if segmented_raw.length() > 0 {
+    let spline =
+      build_bezier_points_spline(
+        base,
+        segmented_raw,
+        tail_clip_enabled,
+        head_clip_enabled,
+        base.swap_ends,
+        base.swap_ends,
+      )
+    { spline, raw_bezier: segmented_raw }
+  } else {
+    build_points_spline(
+      base,
+      adjusted,
+      tail_slope_for,
+      head_slope_for,
+      edge_force_segmented,
+      using_pathplan,
+      route_barriers,
+    )
+  }
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3667,8 +3720,6 @@ fn build_edge_spline(
   let head_clip_enabled = base.head_clip_enabled
   let tail_clip = base.tail_clip
   let head_clip = base.head_clip
-  let tail_slope = base.tail_slope
-  let head_slope = base.head_slope
   let force_segmented = base.force_segmented
   let tail_cluster_bbox = base.tail_cluster_bbox
   let head_cluster_bbox = base.head_cluster_bbox
@@ -3944,52 +3995,20 @@ fn build_edge_spline(
             short_route_spline.spline
           }
         } else {
-          let (tail_slope_for, head_slope_for) =
-            route_endpoint_slopes(tail_port, head_port, tail_slope, head_slope)
-          // Graphviz parity: pathplan edges always allow spline fitting.
-          let edge_force_segmented = if using_pathplan { false } else { force_segmented }
-          let segmented_raw : Array[@geom.Point] =
-            if using_pathplan && pathplan_segments.length() > 0 {
-              // Graphviz parity: straight_path segment joins constrain slope along rankdir.
-              let join_dir = straight_path_join_dir(layout_rankdir)
-              segmented_pathplan_raw_bezier(
-                pathplan_segments,
-                tail_slope_for,
-                head_slope_for,
-                join_dir,
-                edge_force_segmented,
-              )
-            } else {
-              []
-            }
-          if segmented_raw.length() > 0 {
-            raw_bezier = segmented_raw
-            let spline =
-              build_bezier_points_spline(
-                base,
-                raw_bezier,
-                tail_clip_enabled,
-                head_clip_enabled,
-                swap_clip_shapes,
-                swap_arrow_attrs,
-              )
-            apply_dotted_adjustment = true
-            spline
-          } else {
-            let adjusted_points_spline =
-              build_points_spline(
-                base,
-                adjusted,
-                tail_slope_for,
-                head_slope_for,
-                edge_force_segmented,
-                using_pathplan,
-                route_barriers,
-              )
-            raw_bezier = adjusted_points_spline.raw_bezier
-            apply_dotted_adjustment = true
-            adjusted_points_spline.spline
-          }
+          let multi_point_spline =
+            build_multi_point_routed_spline(
+              base,
+              adjusted,
+              using_pathplan,
+              force_segmented,
+              pathplan_segments,
+              route_barriers,
+              tail_clip_enabled,
+              head_clip_enabled,
+            )
+          raw_bezier = multi_point_spline.raw_bezier
+          apply_dotted_adjustment = true
+          multi_point_spline.spline
         }
       } else {
         let detour_context =
