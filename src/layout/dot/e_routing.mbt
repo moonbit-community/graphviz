@@ -724,6 +724,18 @@ fn bottom_single_arrow_line_endpoints(
 }
 
 ///|
+fn prefer_linear_for_flat_line(
+  prefer_linear_flat_invis : Bool,
+  flat_no_arrow_candidate : Bool,
+  has_flat_detour : Bool,
+  prefer_linear_flat_bottom_single_arrow : Bool,
+) -> Bool {
+  prefer_linear_flat_invis ||
+  (flat_no_arrow_candidate && !has_flat_detour) ||
+  prefer_linear_flat_bottom_single_arrow
+}
+
+///|
 fn build_points_spline(
   base : EdgeRouteBase,
   points : Array[@geom.Point],
@@ -3610,9 +3622,12 @@ fn build_edge_spline(
                 arrow_len_override=arrow_len_override,
                 tail_cluster_bbox=tail_cluster_bbox,
                 head_cluster_bbox=head_cluster_bbox,
-                prefer_linear=prefer_linear_flat_invis ||
-                  (flat_no_arrow_candidate && flat_detour is None) ||
+                prefer_linear=prefer_linear_for_flat_line(
+                  prefer_linear_flat_invis,
+                  flat_no_arrow_candidate,
+                  flat_detour is Some(_),
                   prefer_linear_flat_bottom_single_arrow,
+                ),
                 parallel_offset=parallel_offset,
                 clip_swapped=swap_clip_shapes,
                 arrow_swapped=swap_arrow_attrs,
@@ -3860,9 +3875,12 @@ fn build_edge_spline(
               arrow_len_override=arrow_len_override,
               tail_cluster_bbox=tail_cluster_bbox,
               head_cluster_bbox=head_cluster_bbox,
-              prefer_linear=prefer_linear_flat_invis ||
-                (flat_no_arrow_candidate && flat_detour is None) ||
+              prefer_linear=prefer_linear_for_flat_line(
+                prefer_linear_flat_invis,
+                flat_no_arrow_candidate,
+                flat_detour is Some(_),
                 prefer_linear_flat_bottom_single_arrow,
+              ),
               parallel_offset=parallel_offset,
               clip_swapped=swap_clip_shapes,
               arrow_swapped=swap_arrow_attrs,
