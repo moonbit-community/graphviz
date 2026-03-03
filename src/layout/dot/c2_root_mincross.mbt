@@ -130,21 +130,9 @@ fn run_root_reorder_pass(
   reorder_inputs : RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (Map[Int, Array[String]], Map[String, Bool]) {
-  // Graphviz parity: root ReMincross stage data is assembled from one
-  // snapshot: rank keys -> node membership -> filtered mincross edge bundle.
-  let order_rank_keys_for_mincross =
-    @ordering.collect_rank_keys(order_groups_for_mincross)
-  let order_nodes_for_mincross =
-    @ordering.build_order_nodes_from_groups(
+  let reorder_call_data =
+    @ordering.build_root_rank_reorder_call_data(
       order_groups_for_mincross,
-      order_rank_keys_for_mincross,
-    )
-  let mincross_nodes =
-    @ordering.build_node_membership_set(order_nodes_for_mincross)
-  let mincross_edge_data =
-    @ordering.build_root_mincross_edge_bundle(
-      mincross_nodes,
-      order_nodes_for_mincross,
       reorder_inputs.order_edges_out,
       reorder_inputs.order_edge_tail_out,
       reorder_inputs.order_edge_head_out,
@@ -153,74 +141,47 @@ fn run_root_reorder_pass(
       reorder_inputs.order_edge_tail_port_order,
       reorder_inputs.order_edge_head_port_order,
       reorder_inputs.order_ranks,
-    )
-  let preferred_positions =
-    @ordering.build_root_vnode_preferred_positions(
-      reorder_inputs.order_with_vnodes,
+      reorder_inputs.order_cluster_keys,
+      reorder_inputs.cluster_meta.rank_same_groups,
+      reorder_inputs.cluster_meta.rank_same_order,
+      reorder_inputs.order_node_order,
+      reorder_inputs.order_sizes_out,
+      reorder_inputs.nodesep_pt,
+      reorder_inputs.has_edge_labels,
+      reorder_inputs.port_order_positions,
+      reorder_inputs.port_order_contrib,
       reorder_inputs.vnode_order_keys_for_ordering,
+      reorder_inputs.order_with_vnodes,
+      reorder_inputs.order_cluster_skeleton,
+      reorder_inputs.order_flat_constraints,
+      reorder_inputs.graphviz_out_neighbors,
+      reorder_inputs.graphviz_in_neighbors,
+      reorder_inputs.graphviz_flip,
     )
-  // Graphviz parity: root ReMincross rank-reorder input preserves the stage
-  // edge snapshot and root-order metadata when dispatching reorder_rank_groups.
-  let root_rank_reorder_inputs : @ordering.RootRankReorderInputs =
-    {
-      order_rank_keys_for_mincross,
-      order_groups_for_mincross,
-      order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
-      order_edge_tail_out_mincross:
-        mincross_edge_data.order_edge_tail_out_mincross,
-      order_edge_head_out_mincross:
-        mincross_edge_data.order_edge_head_out_mincross,
-      order_edge_tail_port_x_mincross:
-        mincross_edge_data.order_edge_tail_port_x_mincross,
-      order_edge_head_port_x_mincross:
-        mincross_edge_data.order_edge_head_port_x_mincross,
-      order_edge_tail_port_order_mincross:
-        mincross_edge_data.order_edge_tail_port_order_mincross,
-      order_edge_head_port_order_mincross:
-        mincross_edge_data.order_edge_head_port_order_mincross,
-      parents: mincross_edge_data.parents,
-      children: mincross_edge_data.children,
-      order_cluster_keys: reorder_inputs.order_cluster_keys,
-      rank_same_groups: reorder_inputs.cluster_meta.rank_same_groups,
-      rank_same_order: reorder_inputs.cluster_meta.rank_same_order,
-      edge_order: mincross_edge_data.edge_order,
-      order_node_order: reorder_inputs.order_node_order,
-      order_sizes_out: reorder_inputs.order_sizes_out,
-      nodesep_pt: reorder_inputs.nodesep_pt,
-      has_edge_labels: reorder_inputs.has_edge_labels,
-      port_order_positions: reorder_inputs.port_order_positions,
-      port_order_contrib: reorder_inputs.port_order_contrib,
-      preferred_positions,
-      order_cluster_skeleton: reorder_inputs.order_cluster_skeleton,
-      order_flat_constraints: reorder_inputs.order_flat_constraints,
-      graphviz_out_neighbors: reorder_inputs.graphviz_out_neighbors,
-      graphviz_in_neighbors: reorder_inputs.graphviz_in_neighbors,
-      graphviz_flip: reorder_inputs.graphviz_flip,
-    }
   // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
   // then records the same stage snapshot before resetting capture state.
   capture_pass0_flat_seed_groups_value.val = None
   capture_pass0_flat_seed_groups_enabled.val = true
   let ordered_mincross =
-    run_root_rank_reorder(root_rank_reorder_inputs)
+    run_root_rank_reorder(reorder_call_data.root_rank_reorder_inputs)
   capture_pass0_flat_seed_groups_enabled.val = false
   // Graphviz parity: root reorder pass snapshot records the same mincross
   // edge projection and selected rank groups passed to reorder_rank_groups.
   capture_root_snapshot(
-    order_rank_keys_for_mincross,
+    reorder_call_data.order_rank_keys_for_mincross,
     order_groups_for_mincross,
-    mincross_edge_data.order_edges_out_mincross,
-    mincross_edge_data.order_edge_tail_out_mincross,
-    mincross_edge_data.order_edge_head_out_mincross,
-    mincross_edge_data.order_edge_tail_port_x_mincross,
-    mincross_edge_data.order_edge_head_port_x_mincross,
-    mincross_edge_data.order_edge_tail_port_order_mincross,
-    mincross_edge_data.order_edge_head_port_order_mincross,
+    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
     reorder_inputs.order_cluster_keys,
     reorder_inputs.order_cluster_skeleton,
   )
   capture_pass0_flat_seed_groups_value.val = None
-  (ordered_mincross, mincross_nodes)
+  (ordered_mincross, reorder_call_data.mincross_nodes)
 }
 
 ///|

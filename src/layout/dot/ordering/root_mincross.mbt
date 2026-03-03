@@ -316,6 +316,116 @@ pub fn build_root_vnode_preferred_positions(
 }
 
 ///|
+pub(all) struct RootRankReorderCallData {
+  order_rank_keys_for_mincross : Array[Int]
+  mincross_nodes : Map[String, Bool]
+  mincross_edge_data : RootMincrossEdgeBundle
+  root_rank_reorder_inputs : RootRankReorderInputs
+}
+
+///|
+/// Graphviz parity: root ReMincross stage data is assembled from one snapshot:
+/// rank keys -> node membership -> filtered mincross edge bundle.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_rank_reorder_call_data(
+  order_groups_for_mincross : Map[Int, Array[String]],
+  order_edges_out : Array[@cgraph.Edge],
+  order_edge_tail_out : Array[String],
+  order_edge_head_out : Array[String],
+  order_edge_tail_port_x : Array[Double],
+  order_edge_head_port_x : Array[Double],
+  order_edge_tail_port_order : Array[Double],
+  order_edge_head_port_order : Array[Double],
+  order_ranks : Map[String, Int],
+  order_cluster_keys : Map[String, String],
+  rank_same_groups : Map[String, Int],
+  rank_same_order : Map[String, Int],
+  order_node_order : Map[String, Int],
+  order_sizes_out : Map[String, @shared.NodeSize],
+  nodesep_pt : Double,
+  has_edge_labels : Bool,
+  port_order_positions : Map[String, Double],
+  port_order_contrib : Map[String, Array[(String, Double)]],
+  preferred_positions_source : Map[String, Double],
+  order_with_vnodes : Bool,
+  order_cluster_skeleton : Map[String, Bool],
+  order_flat_constraints : Map[String, Bool],
+  graphviz_out_neighbors : Map[String, Array[String]],
+  graphviz_in_neighbors : Map[String, Array[String]],
+  graphviz_flip : Bool,
+) -> RootRankReorderCallData {
+  let order_rank_keys_for_mincross =
+    collect_rank_keys(order_groups_for_mincross)
+  let order_nodes_for_mincross =
+    build_order_nodes_from_groups(
+      order_groups_for_mincross,
+      order_rank_keys_for_mincross,
+    )
+  let mincross_nodes =
+    build_node_membership_set(order_nodes_for_mincross)
+  let mincross_edge_data =
+    build_root_mincross_edge_bundle(
+      mincross_nodes,
+      order_nodes_for_mincross,
+      order_edges_out,
+      order_edge_tail_out,
+      order_edge_head_out,
+      order_edge_tail_port_x,
+      order_edge_head_port_x,
+      order_edge_tail_port_order,
+      order_edge_head_port_order,
+      order_ranks,
+    )
+  let preferred_positions =
+    build_root_vnode_preferred_positions(
+      order_with_vnodes,
+      preferred_positions_source,
+    )
+  let root_rank_reorder_inputs : RootRankReorderInputs =
+    {
+      order_rank_keys_for_mincross,
+      order_groups_for_mincross,
+      order_edges_out_mincross: mincross_edge_data.order_edges_out_mincross,
+      order_edge_tail_out_mincross:
+        mincross_edge_data.order_edge_tail_out_mincross,
+      order_edge_head_out_mincross:
+        mincross_edge_data.order_edge_head_out_mincross,
+      order_edge_tail_port_x_mincross:
+        mincross_edge_data.order_edge_tail_port_x_mincross,
+      order_edge_head_port_x_mincross:
+        mincross_edge_data.order_edge_head_port_x_mincross,
+      order_edge_tail_port_order_mincross:
+        mincross_edge_data.order_edge_tail_port_order_mincross,
+      order_edge_head_port_order_mincross:
+        mincross_edge_data.order_edge_head_port_order_mincross,
+      parents: mincross_edge_data.parents,
+      children: mincross_edge_data.children,
+      order_cluster_keys,
+      rank_same_groups,
+      rank_same_order,
+      edge_order: mincross_edge_data.edge_order,
+      order_node_order,
+      order_sizes_out,
+      nodesep_pt,
+      has_edge_labels,
+      port_order_positions,
+      port_order_contrib,
+      preferred_positions,
+      order_cluster_skeleton,
+      order_flat_constraints,
+      graphviz_out_neighbors,
+      graphviz_in_neighbors,
+      graphviz_flip,
+    }
+  {
+    order_rank_keys_for_mincross,
+    mincross_nodes,
+    mincross_edge_data,
+    root_rank_reorder_inputs,
+  }
+}
+
+///|
 /// Graphviz parity: keep cluster-internal nodes attached to the rankleader
 /// skeleton position when root mincross reorders cluster skeleton chains.
 fn build_rank_attached_by_skeleton(
