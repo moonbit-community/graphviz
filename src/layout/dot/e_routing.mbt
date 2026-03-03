@@ -3020,6 +3020,37 @@ fn straight_path_join_dir(rankdir : RankDir) -> @geom.Point {
 }
 
 ///|
+fn route_endpoint_slopes(
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+  tail_slope : @geom.Point,
+  head_slope : @geom.Point,
+) -> (@geom.Point, @geom.Point) {
+  (
+    edge_port_slope_or_zero(tail_port, tail_slope),
+    edge_port_slope_or_zero(head_port, head_slope),
+  )
+}
+
+///|
+fn pathplan_segment_slopes(
+  seg_idx : Int,
+  segment_count : Int,
+  tail_slope_for : @geom.Point,
+  head_slope_for : @geom.Point,
+  join_dir : @geom.Point,
+) -> (@geom.Point, @geom.Point) {
+  let seg_tail_slope = if seg_idx == 0 { tail_slope_for } else { join_dir }
+  let seg_head_slope =
+    if seg_idx + 1 == segment_count {
+      head_slope_for
+    } else {
+      join_dir
+    }
+  (seg_tail_slope, seg_head_slope)
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3438,18 +3469,8 @@ fn build_edge_spline(
             }
           }
         } else {
-          let tail_slope_for =
-            if @dot_shared.port_is_explicit(tail_port) {
-              tail_slope
-            } else {
-              @edge_spline.point(0.0, 0.0)
-            }
-          let head_slope_for =
-            if @dot_shared.port_is_explicit(head_port) {
-              head_slope
-            } else {
-              @edge_spline.point(0.0, 0.0)
-            }
+          let (tail_slope_for, head_slope_for) =
+            route_endpoint_slopes(tail_port, head_port, tail_slope, head_slope)
           // Graphviz parity: pathplan edges always allow spline fitting.
           let edge_force_segmented = if using_pathplan { false } else { force_segmented }
           let use_segmented_pathplan =
@@ -3458,8 +3479,6 @@ fn build_edge_spline(
           if use_segmented_pathplan {
             // Graphviz parity: straight_path segment joins constrain slope along rankdir.
             let join_dir = straight_path_join_dir(layout_rankdir)
-            let join_tail = join_dir
-            let join_head = join_dir
             let mut seg_idx = 0
             while seg_idx < pathplan_segments.length() {
               let segment = pathplan_segments[seg_idx]
@@ -3501,14 +3520,14 @@ fn build_edge_spline(
                 } else {
                   segment.points
                 }
-              let seg_tail_slope =
-                if seg_idx == 0 { tail_slope_for } else { join_tail }
-              let seg_head_slope =
-                if seg_idx + 1 == pathplan_segments.length() {
-                  head_slope_for
-                } else {
-                  join_head
-                }
+              let (seg_tail_slope, seg_head_slope) =
+                pathplan_segment_slopes(
+                  seg_idx,
+                  pathplan_segments.length(),
+                  tail_slope_for,
+                  head_slope_for,
+                  join_dir,
+                )
               let seg_raw =
                 @edge_spline.edge_spline_raw_for_points(
                   segment_points,
@@ -3796,25 +3815,21 @@ fn build_edge_spline(
   }
   if using_pathplan && pathplan_segments.length() > 0 {
     // Graphviz parity: limit segment boxes independently to match straight_path sampling.
-    let tail_slope_for =
-      if @dot_shared.port_is_explicit(tail_port) { tail_slope } else { @edge_spline.point(0.0, 0.0) }
-    let head_slope_for =
-      if @dot_shared.port_is_explicit(head_port) { head_slope } else { @edge_spline.point(0.0, 0.0) }
+    let (tail_slope_for, head_slope_for) =
+      route_endpoint_slopes(tail_port, head_port, tail_slope, head_slope)
     let join_dir = straight_path_join_dir(layout_rankdir)
-    let join_tail = join_dir
-    let join_head = join_dir
     let limited_segments : Array[@routesplines.PathplanSegment] = []
     let mut seg_idx = 0
     while seg_idx < pathplan_segments.length() {
       let segment = pathplan_segments[seg_idx]
-      let seg_tail_slope =
-        if seg_idx == 0 { tail_slope_for } else { join_tail }
-      let seg_head_slope =
-        if seg_idx + 1 == pathplan_segments.length() {
-          head_slope_for
-        } else {
-          join_head
-        }
+      let (seg_tail_slope, seg_head_slope) =
+        pathplan_segment_slopes(
+          seg_idx,
+          pathplan_segments.length(),
+          tail_slope_for,
+          head_slope_for,
+          join_dir,
+        )
       let segment_raw =
         @edge_spline.edge_spline_raw_for_points(
           segment.points,
