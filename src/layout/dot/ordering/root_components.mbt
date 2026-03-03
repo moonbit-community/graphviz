@@ -385,6 +385,37 @@ pub(all) struct RootComponentProjection {
 }
 
 ///|
+pub(all) struct RootRankReorderInputs {
+  order_rank_keys_for_mincross : Array[Int]
+  order_groups_for_mincross : Map[Int, Array[String]]
+  order_edges_out_mincross : Array[@cgraph.Edge]
+  order_edge_tail_out_mincross : Array[String]
+  order_edge_head_out_mincross : Array[String]
+  order_edge_tail_port_x_mincross : Array[Double]
+  order_edge_head_port_x_mincross : Array[Double]
+  order_edge_tail_port_order_mincross : Array[Double]
+  order_edge_head_port_order_mincross : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  order_cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_order : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  preferred_positions : Map[String, Double]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  graphviz_flip : Bool
+}
+
+///|
 /// Graphviz parity: component-local reorder inputs are filtered from root data
 /// so each mincross call only sees one connected component projection.
 /// Do not change behavior without updating fixtures/tests.
@@ -495,6 +526,70 @@ pub fn build_root_component_projection(
     preferred_positions: component_preferred_positions,
     port_order_contrib: component_port_order_contrib,
     order_flat_constraints: component_flat_constraints,
+  }
+}
+
+///|
+/// Graphviz parity: component-local reorder inputs are filtered from root data
+/// so each mincross call only sees one connected component projection.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_component_reorder_inputs(
+  component_nodes : Array[String],
+  component_set : Map[String, Bool],
+  root_inputs : RootRankReorderInputs,
+) -> RootRankReorderInputs {
+  let projection =
+    build_root_component_projection(
+      component_nodes,
+      component_set,
+      root_inputs.order_rank_keys_for_mincross,
+      root_inputs.order_groups_for_mincross,
+      root_inputs.order_edges_out_mincross,
+      root_inputs.order_edge_tail_out_mincross,
+      root_inputs.order_edge_head_out_mincross,
+      root_inputs.order_edge_tail_port_x_mincross,
+      root_inputs.order_edge_head_port_x_mincross,
+      root_inputs.order_edge_tail_port_order_mincross,
+      root_inputs.order_edge_head_port_order_mincross,
+      root_inputs.parents,
+      root_inputs.children,
+      root_inputs.graphviz_out_neighbors,
+      root_inputs.graphviz_in_neighbors,
+      root_inputs.port_order_positions,
+      root_inputs.preferred_positions,
+      root_inputs.port_order_contrib,
+      root_inputs.order_flat_constraints,
+    )
+  {
+    order_rank_keys_for_mincross: root_inputs.order_rank_keys_for_mincross,
+    order_groups_for_mincross: projection.order_groups_for_mincross,
+    order_edges_out_mincross: projection.order_edges_out_mincross,
+    order_edge_tail_out_mincross: projection.order_edge_tail_out_mincross,
+    order_edge_head_out_mincross: projection.order_edge_head_out_mincross,
+    order_edge_tail_port_x_mincross: projection.order_edge_tail_port_x_mincross,
+    order_edge_head_port_x_mincross: projection.order_edge_head_port_x_mincross,
+    order_edge_tail_port_order_mincross:
+      projection.order_edge_tail_port_order_mincross,
+    order_edge_head_port_order_mincross:
+      projection.order_edge_head_port_order_mincross,
+    parents: projection.parents,
+    children: projection.children,
+    order_cluster_keys: root_inputs.order_cluster_keys,
+    rank_same_groups: root_inputs.rank_same_groups,
+    rank_same_order: root_inputs.rank_same_order,
+    edge_order: root_inputs.edge_order,
+    order_node_order: root_inputs.order_node_order,
+    order_sizes_out: root_inputs.order_sizes_out,
+    nodesep_pt: root_inputs.nodesep_pt,
+    has_edge_labels: root_inputs.has_edge_labels,
+    port_order_positions: projection.port_order_positions,
+    port_order_contrib: projection.port_order_contrib,
+    preferred_positions: projection.preferred_positions,
+    order_cluster_skeleton: root_inputs.order_cluster_skeleton,
+    order_flat_constraints: projection.order_flat_constraints,
+    graphviz_out_neighbors: projection.graphviz_out_neighbors,
+    graphviz_in_neighbors: projection.graphviz_in_neighbors,
+    graphviz_flip: root_inputs.graphviz_flip,
   }
 }
 
