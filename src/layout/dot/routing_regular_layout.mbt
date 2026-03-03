@@ -44,7 +44,7 @@ fn build_regular_spline_layout(
     context.rank_y,
     context.vnode_positions,
     context.vnode_info.vnode_sizes,
-    context.path_adjacency,
+    context.routing_context.path_adjacency,
     context.prepass.recover_edge_id_for_routing,
     recovered_slack_keys,
     recover_slack_vnodes,

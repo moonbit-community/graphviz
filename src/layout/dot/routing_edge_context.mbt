@@ -53,7 +53,6 @@ priv struct OrderedEdgeRoutingContext {
   flat_label_edge_vnodes : Map[String, String]
   routing_context : RoutingContext
   enable_complex_tuning : Bool
-  path_adjacency : @routesplines.PathAdjacency
   self_edge_groups : Map[String, Array[@cgraph.Edge]]
   build_base_for_edge : (@cgraph.Edge) -> EdgeRouteBase
 }
@@ -141,7 +140,6 @@ fn build_ordered_edge_routing_context(
     flat_label_edge_vnodes: input.flat_label_edge_vnodes,
     routing_context: input.routing_context,
     enable_complex_tuning: input.enable_complex_tuning,
-    path_adjacency: input.routing_context.path_adjacency,
     self_edge_groups,
     build_base_for_edge,
   }
