@@ -216,6 +216,30 @@ priv struct SelfEdgeRoute {
 }
 
 ///|
+fn point_for_name_or_origin(
+  positions : Map[String, @geom.Point],
+  name : String,
+) -> @geom.Point {
+  match positions.get(name) {
+    Some(value) => value
+    None => { x: 0.0, y: 0.0 }
+  }
+}
+
+///|
+fn size_for_name_or_node(
+  sizes : Map[String, NodeSize],
+  name : String,
+  node : @cgraph.Node,
+  record_orientation : RecordOrientation,
+) -> NodeSize {
+  match sizes.get(name) {
+    Some(value) => value
+    None => node_size(node, record_orientation)
+  }
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -1208,10 +1232,13 @@ fn sameport_anchor_for_group(
     Some(value) => value
     None => return None
   }
-  let node_size = match sizes.get(node_name) {
-    Some(value) => value
-    None => node_size(node, record_orientation)
-  }
+  let node_size =
+    size_for_name_or_node(
+      sizes,
+      node_name,
+      node,
+      record_orientation,
+    )
   let base_clip_size =
     match layout_rankdir {
       RankDir::LR | RankDir::RL =>
@@ -1694,22 +1721,22 @@ fn build_edge_route_base(
   let head_sameport_anchor = sameport_info.head_anchor
   let tail_sameport_group_size = sameport_info.tail_group_size
   let head_sameport_group_size = sameport_info.head_group_size
-  let tail_pos = match positions.get(tail_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let head_pos = match positions.get(head_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let tail_size = match sizes.get(tail_name) {
-    Some(value) => value
-    None => node_size(tail_node, record_orientation)
-  }
-  let head_size = match sizes.get(head_name) {
-    Some(value) => value
-    None => node_size(head_node, record_orientation)
-  }
+  let tail_pos = point_for_name_or_origin(positions, tail_name)
+  let head_pos = point_for_name_or_origin(positions, head_name)
+  let tail_size =
+    size_for_name_or_node(
+      sizes,
+      tail_name,
+      tail_node,
+      record_orientation,
+    )
+  let head_size =
+    size_for_name_or_node(
+      sizes,
+      head_name,
+      head_node,
+      record_orientation,
+    )
   let tail_geometry = port_geometry(
     tail_name,
     tail_port,
@@ -2161,22 +2188,22 @@ fn build_edge_route_base(
   let out_head_anchor = if swap_ends { tail_anchor } else { head_anchor }
   let out_tail_clip = if swap_ends { head_clip } else { tail_clip }
   let out_head_clip = if swap_ends { tail_clip } else { head_clip }
-  let out_tail_pos = match positions.get(orig_tail_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let out_head_pos = match positions.get(orig_head_name) {
-    Some(value) => value
-    None => { x: 0.0, y: 0.0 }
-  }
-  let out_tail_size = match sizes.get(orig_tail_name) {
-    Some(value) => value
-    None => node_size(edge.tail(), record_orientation)
-  }
-  let out_head_size = match sizes.get(orig_head_name) {
-    Some(value) => value
-    None => node_size(edge.head(), record_orientation)
-  }
+  let out_tail_pos = point_for_name_or_origin(positions, orig_tail_name)
+  let out_head_pos = point_for_name_or_origin(positions, orig_head_name)
+  let out_tail_size =
+    size_for_name_or_node(
+      sizes,
+      orig_tail_name,
+      edge.tail(),
+      record_orientation,
+    )
+  let out_head_size =
+    size_for_name_or_node(
+      sizes,
+      orig_head_name,
+      edge.head(),
+      record_orientation,
+    )
   let dir = edge_dir_for(edge, graph_kind)
   let include_tail = match dir {
     EdgeDir::Back | EdgeDir::Both => true
