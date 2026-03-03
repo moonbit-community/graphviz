@@ -105,10 +105,11 @@ fn build_edge_layout(
   spline_result : EdgeSplineResult,
   context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
+  let input = context.input
   let edge = base.edge
-  let label_rank_info = edge_label_rank_info(edge, context.input.ranks)
+  let label_rank_info = edge_label_rank_info(edge, input.ranks)
   let label_rank_y =
-    edge_label_rank_y(edge, context.input.ranks, context.input.rank_y)
+    edge_label_rank_y(edge, input.ranks, input.rank_y)
   let mid_label_metrics = edge_mid_label_metrics(edge)
   let label_rank_x = match label_rank_info {
     Some(info) =>
@@ -116,16 +117,16 @@ fn build_edge_layout(
         edge_label_rank_x(
           edge,
           info.label_rank,
-          context.input.vnode_info.vnode_ranks,
-          context.input.vnode_info.edge_vnodes,
-          context.input.vnode_positions,
+          input.vnode_info.vnode_ranks,
+          input.vnode_info.edge_vnodes,
+          input.vnode_positions,
         )
       } else {
         None
       }
     None => None
   }
-  let apply_label_pad = context.input.has_clusters
+  let apply_label_pad = input.has_clusters
   let default_label_pos =
     () =>
       edge_label_pos(
@@ -137,7 +138,7 @@ fn build_edge_layout(
         label_rank_y,
         label_rank_x,
         apply_label_pad,
-        context.input.nodesep_pt,
+        input.nodesep_pt,
         spline_result.label_pad_boost,
       )
   let flat_simple_or_default =
@@ -173,9 +174,9 @@ fn build_edge_layout(
           }
           _ =>
             if base.is_flat_edge {
-              match context.input.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+              match input.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
                 Some(vnode_name) =>
-                  match context.input.vnode_positions.get(vnode_name) {
+                  match input.vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)
                     None => flat_simple_or_default()
                   }
