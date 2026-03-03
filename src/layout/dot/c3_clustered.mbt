@@ -171,25 +171,21 @@ fn run_clustered_finalize_phase(
   pre_root_stage : ClusteredPreRootData,
   root_phase_output : ClusteredRootPhaseOutput,
 ) -> OrderingDispatchOutput {
+  let runtime_context = dispatch_context.runtime_context
   let root_cluster_stage = root_phase_output.root_cluster_stage
   let cluster_rank_order =
     build_cluster_rank_order(
-      dispatch_context,
       pre_root_stage,
       root_cluster_stage,
+      runtime_context.real_nodes,
     )
-  let finalize_output =
-    finalize_order_groups(
-      dispatch_context,
-      pre_root_stage,
-      root_cluster_stage,
-      root_phase_output.root_tail_order_override,
-      cluster_rank_order,
-    )
-  {
-    ordered_groups: finalize_output.ordered_groups,
-    ordered_with_vnodes: finalize_output.ordered_with_vnodes,
-  }
+  finalize_order_groups(
+    dispatch_context,
+    pre_root_stage,
+    root_cluster_stage,
+    root_phase_output.root_tail_order_override,
+    cluster_rank_order,
+  )
 }
 
 ///|

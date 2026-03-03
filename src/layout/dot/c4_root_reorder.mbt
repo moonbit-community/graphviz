@@ -190,11 +190,10 @@ fn run_root_reorder_and_rank_order_phase(
 /// reordering in final real-node groups.
 /// Do not change behavior without updating fixtures/tests.
 fn build_cluster_rank_order(
-  dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  real_nodes : Map[String, Bool],
 ) -> Map[Int, Map[String, Int]] {
-  let runtime_context = dispatch_context.runtime_context
   if !pre_root_stage.root_rank_order_phase_base.order_with_clusters {
     return Map::new()
   }
@@ -208,6 +207,6 @@ fn build_cluster_rank_order(
     root_rank_order_phase_output.ordered_root,
     pre_root_stage.order_cluster_keys,
     pre_root_stage.order_cluster_skeleton,
-    runtime_context.real_nodes,
+    real_nodes,
   )
 }
