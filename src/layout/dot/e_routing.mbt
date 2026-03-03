@@ -3051,6 +3051,45 @@ fn pathplan_segment_slopes(
 }
 
 ///|
+fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.Point] {
+  if points.length() < 3 {
+    return points
+  }
+  let last_idx = points.length() - 1
+  let end = points[last_idx]
+  let prev = points[last_idx - 1]
+  let dx = end.x - prev.x
+  let dy = end.y - prev.y
+  if dx * dx + dy * dy > 0.0004 {
+    return points
+  }
+  let prev2 = points[last_idx - 2]
+  let vx = end.x - prev2.x
+  let vy = end.y - prev2.y
+  let wx = prev.x - prev2.x
+  let wy = prev.y - prev2.y
+  let span = @math.hypot(vx, vy)
+  let offset =
+    if span > 0.0 {
+      Double::abs(vx * wy - vy * wx) / span
+    } else {
+      0.0
+    }
+  if offset > 0.02 {
+    return points
+  }
+  let trimmed : Array[@geom.Point] = []
+  let mut i = 0
+  while i < points.length() {
+    if i != last_idx - 1 {
+      trimmed.push(points[i])
+    }
+    i = i + 1
+  }
+  trimmed
+}
+
+///|
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_edge_spline(
@@ -3482,44 +3521,7 @@ fn build_edge_spline(
             let mut seg_idx = 0
             while seg_idx < pathplan_segments.length() {
               let segment = pathplan_segments[seg_idx]
-              let segment_points =
-                if segment.points.length() >= 3 {
-                  let last_idx = segment.points.length() - 1
-                  let end = segment.points[last_idx]
-                  let prev = segment.points[last_idx - 1]
-                  let dx = end.x - prev.x
-                  let dy = end.y - prev.y
-                  if dx * dx + dy * dy <= 0.0004 {
-                    let prev2 = segment.points[last_idx - 2]
-                    let vx = end.x - prev2.x
-                    let vy = end.y - prev2.y
-                    let wx = prev.x - prev2.x
-                    let wy = prev.y - prev2.y
-                    let span = @math.hypot(vx, vy)
-                    let offset = if span > 0.0 {
-                      Double::abs(vx * wy - vy * wx) / span
-                    } else {
-                      0.0
-                    }
-                    if offset <= 0.02 {
-                      let trimmed : Array[@geom.Point] = []
-                      let mut i = 0
-                      while i < segment.points.length() {
-                        if i != last_idx - 1 {
-                          trimmed.push(segment.points[i])
-                        }
-                        i = i + 1
-                      }
-                      trimmed
-                    } else {
-                      segment.points
-                    }
-                  } else {
-                    segment.points
-                  }
-                } else {
-                  segment.points
-                }
+              let segment_points = trimmed_pathplan_segment_points(segment.points)
               let (seg_tail_slope, seg_head_slope) =
                 pathplan_segment_slopes(
                   seg_idx,
