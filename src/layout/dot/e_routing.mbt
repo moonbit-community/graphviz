@@ -1602,14 +1602,8 @@ fn build_edge_route_base(
   let orig_head_name = edge.head().name()
   let swap_ends_raw =
     edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
-  let tail_rank_for_swap = match ranks.get(orig_tail_name) {
-    Some(v) => v
-    None => 0
-  }
-  let head_rank_for_swap = match ranks.get(orig_head_name) {
-    Some(v) => v
-    None => 0
-  }
+  let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
+  let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
   let swap_ends =
     if tail_rank_for_swap == head_rank_for_swap &&
       node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head()) {
@@ -1619,22 +1613,11 @@ fn build_edge_route_base(
     }
   let samehead_anchor = sameport_overrides.samehead_anchors.get(edge.id())
   let sametail_anchor = sameport_overrides.sametail_anchors.get(edge.id())
-  let samehead_group_size = match sameport_overrides.samehead_group_sizes.get(
-    edge.id(),
-  ) {
-    Some(value) => value
-    None => 0
-  }
-  let sametail_group_size = match sameport_overrides.sametail_group_sizes.get(
-    edge.id(),
-  ) {
-    Some(value) => value
-    None => 0
-  }
-  let parallel_offset = match parallel_offsets.get(edge.id()) {
-    Some(value) => value
-    None => 0.0
-  }
+  let samehead_group_size =
+    sameport_overrides.samehead_group_sizes.get(edge.id()).unwrap_or_default()
+  let sametail_group_size =
+    sameport_overrides.sametail_group_sizes.get(edge.id()).unwrap_or_default()
+  let parallel_offset = parallel_offsets.get(edge.id()).unwrap_or_default()
   let (tail_name, head_name, tail_port, head_port, tail_node, head_node) =
     if swap_ends {
       (orig_head_name, orig_tail_name, edge.head_port(), edge.tail_port(), edge.head(), edge.tail())
@@ -1725,25 +1708,13 @@ fn build_edge_route_base(
     } else {
       0.0
     }
-  let tail_rank = match ranks.get(tail_name) {
-    Some(value) => value
-    None => 0
-  }
-  let head_rank = match ranks.get(head_name) {
-    Some(value) => value
-    None => 0
-  }
+  let tail_rank = ranks.get(tail_name).unwrap_or_default()
+  let head_rank = ranks.get(head_name).unwrap_or_default()
   let is_flat_edge = tail_rank == head_rank
   let is_flat_adjacent =
     if is_flat_edge {
-      let tail_order = match order_index.get(orig_tail_name) {
-        Some(value) => value
-        None => 0
-      }
-      let head_order = match order_index.get(orig_head_name) {
-        Some(value) => value
-        None => 0
-      }
+      let tail_order = order_index.get(orig_tail_name).unwrap_or_default()
+      let head_order = order_index.get(orig_head_name).unwrap_or_default()
       let delta = tail_order - head_order
       delta == 1 || delta == -1
     } else {
@@ -2538,10 +2509,7 @@ fn compute_curve_offset(
       "\{base.orig_head_name}:\{head_port_key}"
     }
     if key != "" {
-      let count = match head_port_metrics.head_port_counts.get(key) {
-        Some(value) => value
-        None => 0
-      }
+      let count = head_port_metrics.head_port_counts.get(key).unwrap_or_default()
       if count > 1 {
         let dx = base.head_anchor.x - base.tail_anchor.x
         let dy = base.head_anchor.y - base.tail_anchor.y
@@ -4049,14 +4017,8 @@ fn edge_port_cmp_info(
   let head_rel =
     @edge_spline.point(head_anchor.x - head_pos.x, head_anchor.y - head_pos.y)
   if edge_type == ROUTE_EDGE_FLAT {
-    let tail_order = match order_index.get(base.orig_tail_name) {
-      Some(value) => value
-      None => 0
-    }
-    let head_order = match order_index.get(base.orig_head_name) {
-      Some(value) => value
-      None => 0
-    }
+    let tail_order = order_index.get(base.orig_tail_name).unwrap_or_default()
+    let head_order = order_index.get(base.orig_head_name).unwrap_or_default()
     if tail_order > head_order {
       return {
         tail_defined: head_defined,
@@ -4645,14 +4607,8 @@ fn remap_parallel_edge_layouts(
     if tail == head {
       continue
     }
-    let tail_rank = match ranks.get(tail) {
-      Some(value) => value
-      None => 0
-    }
-    let head_rank = match ranks.get(head) {
-      Some(value) => value
-      None => 0
-    }
+    let tail_rank = ranks.get(tail).unwrap_or_default()
+    let head_rank = ranks.get(head).unwrap_or_default()
     if tail_rank == head_rank {
       continue
     }
