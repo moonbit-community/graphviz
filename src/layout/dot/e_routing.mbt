@@ -240,6 +240,34 @@ fn size_for_name_or_node(
 }
 
 ///|
+fn cluster_bbox_if_named(
+  cluster_bboxes : Map[String, @geom.Rect],
+  cluster_name : String,
+) -> @geom.Rect? {
+  if cluster_name == "" {
+    None
+  } else {
+    cluster_bboxes.get(cluster_name)
+  }
+}
+
+///|
+fn route_include_arrowheads(
+  dir : EdgeDir,
+  swap_ends : Bool,
+) -> (Bool, Bool) {
+  let include_tail = match dir {
+    EdgeDir::Back | EdgeDir::Both => true
+    _ => false
+  }
+  let include_head = match dir {
+    EdgeDir::Forward | EdgeDir::Both => true
+    _ => false
+  }
+  if swap_ends { (include_head, include_tail) } else { (include_tail, include_head) }
+}
+
+///|
 fn self_edge_label_height_pt(edge : @cgraph.Edge, rankdir : RankDir) -> Double {
   match edge_mid_label_metrics(edge) {
     Some(metrics) =>
@@ -1379,6 +1407,28 @@ fn oriented_edge_endpoints_for_route(
 }
 
 ///|
+/// Graphviz parity: same-rank intercluster edges keep original direction in
+/// route base setup even when edgecmp would otherwise swap endpoints.
+fn edge_swap_ends_for_route_base(
+  edge : @cgraph.Edge,
+  orig_tail_name : String,
+  orig_head_name : String,
+  ranks : Map[String, Int],
+  order_index : Map[String, Int],
+) -> Bool {
+  let swap_ends_raw =
+    edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+  let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
+  let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
+  if tail_rank_for_swap == head_rank_for_swap &&
+    node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head()) {
+    false
+  } else {
+    swap_ends_raw
+  }
+}
+
+///|
 fn edge_sameport_orientation_info(
   edge_id : Int,
   sameport_overrides : SameportOverrides,
@@ -1692,17 +1742,14 @@ fn build_edge_route_base(
   let cluster_bboxes = routing_context.cluster_bboxes
   let orig_tail_name = edge.tail().name()
   let orig_head_name = edge.head().name()
-  let swap_ends_raw =
-    edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
-  let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
-  let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
   let swap_ends =
-    if tail_rank_for_swap == head_rank_for_swap &&
-      node_local_cluster_key(edge.tail()) != node_local_cluster_key(edge.head()) {
-      false
-    } else {
-      swap_ends_raw
-    }
+    edge_swap_ends_for_route_base(
+      edge,
+      orig_tail_name,
+      orig_head_name,
+      ranks,
+      order_index,
+    )
   let sameport_info =
     edge_sameport_orientation_info(
       edge.id(),
@@ -1841,18 +1888,8 @@ fn build_edge_route_base(
   } else {
     (@edge_spline.point(0.0, 0.0), @edge_spline.point(0.0, 0.0))
   }
-  let tail_cluster_bbox : @geom.Rect? =
-    if tail_cluster_name == "" {
-    None
-  } else {
-    cluster_bboxes.get(tail_cluster_name)
-  }
-  let head_cluster_bbox : @geom.Rect? =
-    if head_cluster_name == "" {
-    None
-  } else {
-    cluster_bboxes.get(head_cluster_name)
-  }
+  let tail_cluster_bbox = cluster_bbox_if_named(cluster_bboxes, tail_cluster_name)
+  let head_cluster_bbox = cluster_bbox_if_named(cluster_bboxes, head_cluster_name)
   let tail_dynamic_anchor =
     dynamic_port_anchor_for_edge(
       tail_port,
@@ -2205,16 +2242,10 @@ fn build_edge_route_base(
       record_orientation,
     )
   let dir = edge_dir_for(edge, graph_kind)
-  let include_tail = match dir {
-    EdgeDir::Back | EdgeDir::Both => true
-    _ => false
-  }
-  let include_head = match dir {
-    EdgeDir::Forward | EdgeDir::Both => true
-    _ => false
-  }
   let (route_include_tail, route_include_head) =
-    if swap_ends { (include_head, include_tail) } else { (include_tail, include_head) }
+    route_include_arrowheads(dir, swap_ends)
+  let include_tail = route_include_tail
+  let include_head = route_include_head
   let arrow_len_override : Double? =
     if include_tail || include_head {
     if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
