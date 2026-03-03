@@ -3387,38 +3387,18 @@ fn build_edge_spline(
           } else {
             if using_pathplan {
               let line_points = adjusted
-              raw_bezier =
-                @edge_spline.edge_spline_raw_for_points(
+              let line_points_spline =
+                build_points_spline(
+                  base,
                   line_points,
                   tail_slope_line,
                   head_slope_line,
                   force_segmented,
-                  route_barriers=route_barriers,
+                  using_pathplan,
+                  route_barriers,
                 )
-              @edge_spline.edge_spline_for_points(
-                edge,
-                line_points,
-                tail_clip_center,
-                head_clip_center,
-                tail_clip_size,
-                head_clip_size,
-                tail_slope_line,
-                head_slope_line,
-                force_segmented,
-                route_include_tail,
-                route_include_head,
-                tail_clip_enabled=tail_clip_enabled,
-                head_clip_enabled=head_clip_enabled,
-                tail_port_side=base.tail_port_side,
-                head_port_side=base.head_port_side,
-                route_barriers=route_barriers,
-                arrow_len_override=arrow_len_override,
-                tail_cluster_bbox=tail_cluster_bbox,
-                head_cluster_bbox=head_cluster_bbox,
-                parallel_offset=parallel_offset,
-                clip_swapped=swap_clip_shapes,
-                arrow_swapped=swap_arrow_attrs,
-              )
+              raw_bezier = line_points_spline.raw_bezier
+              line_points_spline.spline
             } else {
               let (line_start, line_end) =
                 bottom_single_arrow_line_endpoints(
@@ -3759,38 +3739,18 @@ fn build_edge_spline(
           if using_pathplan {
             let line_points : Array[@geom.Point] =
               if points.length() >= 2 { points } else { [line_start, line_end] }
-            raw_bezier =
-              @edge_spline.edge_spline_raw_for_points(
+            let line_points_spline =
+              build_points_spline(
+                base,
                 line_points,
                 tail_slope_line,
                 head_slope_line,
                 force_segmented,
-                route_barriers=route_barriers,
+                using_pathplan,
+                route_barriers,
               )
-            @edge_spline.edge_spline_for_points(
-              edge,
-              line_points,
-              tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
-              tail_slope_line,
-              head_slope_line,
-              force_segmented,
-              route_include_tail,
-              route_include_head,
-              tail_clip_enabled=tail_clip_enabled,
-              head_clip_enabled=head_clip_enabled,
-              tail_port_side=base.tail_port_side,
-              head_port_side=base.head_port_side,
-              route_barriers=route_barriers,
-              arrow_len_override=arrow_len_override,
-              tail_cluster_bbox=tail_cluster_bbox,
-              head_cluster_bbox=head_cluster_bbox,
-              parallel_offset=parallel_offset,
-              clip_swapped=swap_clip_shapes,
-              arrow_swapped=swap_arrow_attrs,
-            )
+            raw_bezier = line_points_spline.raw_bezier
+            line_points_spline.spline
           } else {
             @edge_spline.edge_spline_for_line(
               edge,
