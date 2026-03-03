@@ -93,6 +93,7 @@ fn prepare_routing_context(
     }
   }
   let edge_reversed_by_id : Map[Int, Bool] = Map::new()
+  let edge_has_label_by_id : Map[Int, Bool] = Map::new()
   for i in 0..<edges.length() {
     let edge = edges[i]
     let (oriented_tail, oriented_head) =
@@ -104,10 +105,12 @@ fn prepare_routing_context(
       )
     let reversed = edge_orientation_is_reversed(edge, oriented_tail, oriented_head)
     edge_reversed_by_id[edge.id()] = reversed
+    edge_has_label_by_id[edge.id()] = edge_has_label(edge)
   }
   let parallel_offsets =
-    edge_parallel_offsets(
+    @parallel_offsets.edge_parallel_offsets(
       edges,
+      edge_has_label_by_id,
       ranks,
       order_index,
       nodesep_pt,

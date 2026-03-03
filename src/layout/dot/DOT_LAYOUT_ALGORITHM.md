@@ -408,6 +408,8 @@ Main files:
 - `src/layout/dot/routing/routesplines/*`
 - `src/layout/dot/routing/pathplan/*`
 - `src/layout/dot/routing/edge_spline/*`
+- `src/layout/dot/routing/edge_ops/*`
+- `src/layout/dot/routing/parallel_offsets/*`
 
 ### What it does
 
