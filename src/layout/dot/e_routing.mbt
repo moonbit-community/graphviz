@@ -1301,6 +1301,55 @@ priv struct SameportOverrides {
 }
 
 ///|
+fn apply_sameport_group_overrides(
+  groups : Map[String, Array[@cgraph.Edge]],
+  group_order : Array[String],
+  head_group : Bool,
+  overrides : Map[Int, @geom.Point],
+  group_sizes : Map[Int, Int],
+  merge_classes : Map[String, Array[@cgraph.Edge]],
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  record_orientation : RecordOrientation,
+  layout_rankdir : RankDir,
+  ranksep_pt : Double,
+) -> Unit {
+  for key in group_order {
+    let group_edges = match groups.get(key) {
+      Some(value) => value
+      None => continue
+    }
+    if group_edges.length() <= 1 {
+      continue
+    }
+    let anchor_node =
+      if head_group { group_edges[0].head() } else { group_edges[0].tail() }
+    match sameport_anchor_for_group(
+      anchor_node,
+      group_edges,
+      head_group,
+      positions,
+      sizes,
+      record_orientation,
+      layout_rankdir,
+      ranksep_pt,
+    ) {
+      Some(anchor) =>
+        for edge in group_edges {
+          assign_sameport_override(overrides, merge_classes, edge, anchor)
+          assign_sameport_group_size(
+            group_sizes,
+            merge_classes,
+            edge,
+            group_edges.length(),
+          )
+        }
+      None => ()
+    }
+  }
+}
+
+///|
 /// Graphviz parity: samehead/sametail handling aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (dot_sameports).
 /// Do not change behavior without updating fixtures/tests.
@@ -1321,107 +1370,55 @@ fn collect_sameport_overrides(
     if edge.tail().name() == edge.head().name() {
       continue
     }
-    match edge.get_attr("samehead") {
-      Some(id) =>
-        if id != "" {
-          add_sameport_group_edge(
-            samehead_groups,
-            samehead_group_order,
-            "\{edge.head().name()}|\{id}",
-            edge,
-          )
-        }
-      None => ()
+    let samehead_id = edge_attr_or_empty(edge, "samehead")
+    if samehead_id != "" {
+      add_sameport_group_edge(
+        samehead_groups,
+        samehead_group_order,
+        "\{edge.head().name()}|\{samehead_id}",
+        edge,
+      )
     }
-    match edge.get_attr("sametail") {
-      Some(id) =>
-        if id != "" {
-          add_sameport_group_edge(
-            sametail_groups,
-            sametail_group_order,
-            "\{edge.tail().name()}|\{id}",
-            edge,
-          )
-        }
-      None => ()
+    let sametail_id = edge_attr_or_empty(edge, "sametail")
+    if sametail_id != "" {
+      add_sameport_group_edge(
+        sametail_groups,
+        sametail_group_order,
+        "\{edge.tail().name()}|\{sametail_id}",
+        edge,
+      )
     }
   }
   let samehead_overrides : Map[Int, @geom.Point] = Map::new()
   let samehead_group_sizes : Map[Int, Int] = Map::new()
-  for key in samehead_group_order {
-    let group_edges = match samehead_groups.get(key) {
-      Some(value) => value
-      None => continue
-    }
-    if group_edges.length() <= 1 {
-      continue
-    }
-    match sameport_anchor_for_group(
-      group_edges[0].head(),
-      group_edges,
-      true,
-      positions,
-      sizes,
-      record_orientation,
-      layout_rankdir,
-      ranksep_pt,
-    ) {
-      Some(anchor) =>
-        for edge in group_edges {
-          assign_sameport_override(
-            samehead_overrides,
-            merge_classes,
-            edge,
-            anchor,
-          )
-          assign_sameport_group_size(
-            samehead_group_sizes,
-            merge_classes,
-            edge,
-            group_edges.length(),
-          )
-        }
-      None => ()
-    }
-  }
+  apply_sameport_group_overrides(
+    samehead_groups,
+    samehead_group_order,
+    true,
+    samehead_overrides,
+    samehead_group_sizes,
+    merge_classes,
+    positions,
+    sizes,
+    record_orientation,
+    layout_rankdir,
+    ranksep_pt,
+  )
   let sametail_overrides : Map[Int, @geom.Point] = Map::new()
   let sametail_group_sizes : Map[Int, Int] = Map::new()
-  for key in sametail_group_order {
-    let group_edges = match sametail_groups.get(key) {
-      Some(value) => value
-      None => continue
-    }
-    if group_edges.length() <= 1 {
-      continue
-    }
-    match sameport_anchor_for_group(
-      group_edges[0].tail(),
-      group_edges,
-      false,
-      positions,
-      sizes,
-      record_orientation,
-      layout_rankdir,
-      ranksep_pt,
-    ) {
-      Some(anchor) =>
-        for edge in group_edges {
-          assign_sameport_override(
-            sametail_overrides,
-            merge_classes,
-            edge,
-            anchor,
-          )
-          assign_sameport_group_size(
-            sametail_group_sizes,
-            merge_classes,
-            edge,
-            group_edges.length(),
-          )
-        }
-      None => ()
-    }
-  }
+  apply_sameport_group_overrides(
+    sametail_groups,
+    sametail_group_order,
+    false,
+    sametail_overrides,
+    sametail_group_sizes,
+    merge_classes,
+    positions,
+    sizes,
+    record_orientation,
+    layout_rankdir,
+    ranksep_pt,
+  )
   {
     samehead_anchors: samehead_overrides,
     sametail_anchors: sametail_overrides,
@@ -4654,9 +4651,7 @@ fn remap_parallel_edge_layouts(
       continue
     }
     let key = edge_parallel_group_key(edge)
-    let sameport_mark =
-      edge_attr_non_empty(edge, "samehead") ||
-      edge_attr_non_empty(edge, "sametail")
+    let sameport_mark = edge_has_sameport_mark(edge)
     let dir_key = match edge.get_attr("dir") {
       Some(value) => value.to_lower()
       None => "forward"
