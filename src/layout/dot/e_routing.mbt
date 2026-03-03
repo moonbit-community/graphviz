@@ -698,6 +698,26 @@ fn maybe_flat_detour_points_if_blocked(
 }
 
 ///|
+fn bottom_single_arrow_line_endpoints(
+  prefer_linear_flat_bottom_single_arrow : Bool,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  tail_clip_center : @geom.Point,
+  head_clip_center : @geom.Point,
+  tail_clip_size : NodeSize,
+  head_clip_size : NodeSize,
+) -> (@geom.Point, @geom.Point) {
+  if prefer_linear_flat_bottom_single_arrow {
+    let tail_bottom = tail_clip_center.y - tail_clip_size.height_pt / 2.0
+    let head_bottom = head_clip_center.y - head_clip_size.height_pt / 2.0
+    let line_y = min_double(tail_bottom, head_bottom)
+    (@edge_spline.point(line_start.x, line_y), @edge_spline.point(line_end.x, line_y))
+  } else {
+    (line_start, line_end)
+  }
+}
+
+///|
 fn self_edge_rank_spacing(
   rank : Int,
   rank_y : Map[Int, Double],
@@ -3364,22 +3384,15 @@ fn build_edge_spline(
               )
             } else {
               let (line_start, line_end) =
-                if prefer_linear_flat_bottom_single_arrow {
-                  let tail_bottom =
-                    base.tail_clip_center.y - base.tail_clip_size.height_pt / 2.0
-                  let head_bottom =
-                    base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
-                  let line_y = min_double(tail_bottom, head_bottom)
-                  (
-                    @edge_spline.point(adjusted[0].x, line_y),
-                    @edge_spline.point(adjusted[adjusted.length() - 1].x, line_y),
-                  )
-                } else {
-                  (
-                    adjusted[0],
-                    adjusted[adjusted.length() - 1],
-                  )
-                }
+                bottom_single_arrow_line_endpoints(
+                  prefer_linear_flat_bottom_single_arrow,
+                  adjusted[0],
+                  adjusted[adjusted.length() - 1],
+                  base.tail_clip_center,
+                  base.head_clip_center,
+                  base.tail_clip_size,
+                  base.head_clip_size,
+                )
               @edge_spline.edge_spline_for_line(
                 edge,
                 line_start,
@@ -3765,16 +3778,15 @@ fn build_edge_spline(
               head_anchor
             }
           let (line_start, line_end) =
-            if prefer_linear_flat_bottom_single_arrow {
-              let tail_bottom =
-                base.tail_clip_center.y - base.tail_clip_size.height_pt / 2.0
-              let head_bottom =
-                base.head_clip_center.y - base.head_clip_size.height_pt / 2.0
-              let line_y = min_double(tail_bottom, head_bottom)
-              (@edge_spline.point(line_start.x, line_y), @edge_spline.point(line_end.x, line_y))
-            } else {
-              (line_start, line_end)
-            }
+            bottom_single_arrow_line_endpoints(
+              prefer_linear_flat_bottom_single_arrow,
+              line_start,
+              line_end,
+              base.tail_clip_center,
+              base.head_clip_center,
+              base.tail_clip_size,
+              base.head_clip_size,
+            )
           if using_pathplan {
             let line_points : Array[@geom.Point] =
               if points.length() >= 2 { points } else { [line_start, line_end] }
