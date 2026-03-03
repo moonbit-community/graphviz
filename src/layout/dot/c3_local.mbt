@@ -266,6 +266,26 @@ fn rewrite_rank_real_slots(
 }
 
 ///|
+fn collect_rank_real_nodes(list : Array[String]) -> Array[String] {
+  let real_nodes : Array[String] = []
+  for name in list {
+    if !is_edge_vnode_name(name) {
+      real_nodes.push(name)
+    }
+  }
+  real_nodes
+}
+
+///|
+fn build_name_set(names : Array[String]) -> Map[String, Bool] {
+  let out : Map[String, Bool] = Map::new()
+  for name in names {
+    out[name] = true
+  }
+  out
+}
+
+///|
 /// Graphviz parity: each rank list normalizes real-node order by seeded
 /// cluster node order before previous-rank reachability seeding.
 fn normalize_rank_real_nodes(
@@ -275,12 +295,7 @@ fn normalize_rank_real_nodes(
   if list.length() <= 1 {
     return ()
   }
-  let real_nodes : Array[String] = []
-  for name in list {
-    if !is_edge_vnode_name(name) {
-      real_nodes.push(name)
-    }
-  }
+  let real_nodes = collect_rank_real_nodes(list)
   if real_nodes.length() <= 1 {
     return ()
   }
@@ -328,14 +343,8 @@ fn seed_rank_real_nodes_from_previous_rank(
   if list.length() <= 1 {
     return ()
   }
-  let real_nodes : Array[String] = []
-  let real_set : Map[String, Bool] = Map::new()
-  for name in list {
-    if !is_edge_vnode_name(name) {
-      real_nodes.push(name)
-      real_set[name] = true
-    }
-  }
+  let real_nodes = collect_rank_real_nodes(list)
+  let real_set = build_name_set(real_nodes)
   if real_nodes.length() <= 1 {
     return ()
   }
