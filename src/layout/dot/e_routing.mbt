@@ -4187,6 +4187,63 @@ fn prepare_edge_curve_mode_route(
 }
 
 ///|
+fn curve_mode_result_for_short_route(
+  base : EdgeRouteBase,
+  prepared : CurveModeRoutePrep,
+  short_route_spec : ShortRouteBuildSpec,
+) -> CurveModeSplineBuildResult {
+  let short_route_spline =
+    build_short_route_spline_with_detour(
+      base,
+      prepared.short_route_context,
+      short_route_spec,
+    )
+  {
+    spline: short_route_spline.spline,
+    raw_bezier: short_route_spline.raw_bezier,
+    apply_dotted_adjustment: false,
+  }
+}
+
+///|
+fn adjusted_curve_mode_points(
+  base : EdgeRouteBase,
+  prepared : CurveModeRoutePrep,
+  label_edge_counts : Map[String, Int],
+  nodesep_pt : Double,
+  enable_complex_tuning : Bool,
+) -> Array[@geom.Point] {
+  let points = prepared.points
+  let simplify_tol = nodesep_pt * 0.8
+  let tail_label_edges = match label_edge_counts.get(base.orig_tail_name) {
+    Some(value) => value > 1
+    None => false
+  }
+  let keep_label_kink =
+    prepared.label_width_pt > 0.0 &&
+    (prepared.has_explicit_port ||
+      (base.same_outer_cluster &&
+          (prepared.abs_dx < nodesep_pt ||
+            (tail_label_edges && prepared.abs_dx < prepared.label_width_pt))))
+  let simplified =
+    if prepared.using_pathplan {
+      points
+    } else if enable_complex_tuning &&
+      base.has_vnodes &&
+      !prepared.split_label &&
+      !keep_label_kink {
+      simplify_polyline(points, simplify_tol)
+    } else {
+      points
+    }
+  if !prepared.using_pathplan && base.is_dotted && base.same_outer_cluster {
+    adjust_intracluster_dots(simplified)
+  } else {
+    simplified
+  }
+}
+
+///|
 fn build_curve_mode_spline_from_prepared_route(
   base : EdgeRouteBase,
   prepared : CurveModeRoutePrep,
@@ -4196,48 +4253,17 @@ fn build_curve_mode_spline_from_prepared_route(
 ) -> CurveModeSplineBuildResult {
   let points = prepared.points
   if points.length() > 2 {
-    let clipped = points
-    let simplify_tol = nodesep_pt * 0.8
-    let tail_label_edges = match label_edge_counts.get(base.orig_tail_name) {
-      Some(value) => value > 1
-      None => false
-    }
-    let keep_label_kink =
-      prepared.label_width_pt > 0.0 &&
-      (prepared.has_explicit_port ||
-        (base.same_outer_cluster &&
-            (prepared.abs_dx < nodesep_pt ||
-              (tail_label_edges && prepared.abs_dx < prepared.label_width_pt))))
-    let simplified =
-      if prepared.using_pathplan {
-        clipped
-      } else if enable_complex_tuning &&
-        base.has_vnodes &&
-        !prepared.split_label &&
-        !keep_label_kink {
-        simplify_polyline(clipped, simplify_tol)
-      } else {
-        clipped
-      }
     let adjusted =
-      if !prepared.using_pathplan && base.is_dotted && base.same_outer_cluster {
-        adjust_intracluster_dots(simplified)
-      } else {
-        simplified
-      }
+      adjusted_curve_mode_points(
+        base,
+        prepared,
+        label_edge_counts,
+        nodesep_pt,
+        enable_complex_tuning,
+      )
     if adjusted.length() <= 2 {
       let short_route_spec = short_route_spec_for_adjusted_points(adjusted)
-      let short_route_spline =
-        build_short_route_spline_with_detour(
-          base,
-          prepared.short_route_context,
-          short_route_spec,
-        )
-      {
-        spline: short_route_spline.spline,
-        raw_bezier: short_route_spline.raw_bezier,
-        apply_dotted_adjustment: false,
-      }
+      curve_mode_result_for_short_route(base, prepared, short_route_spec)
     } else {
       let multi_point_spline =
         build_multi_point_routed_spline(
@@ -4266,17 +4292,7 @@ fn build_curve_mode_spline_from_prepared_route(
         base.tail_clip_enabled,
         base.head_clip_enabled,
       )
-    let short_route_spline =
-      build_short_route_spline_with_detour(
-        base,
-        prepared.short_route_context,
-        short_route_spec,
-      )
-    {
-      spline: short_route_spline.spline,
-      raw_bezier: short_route_spline.raw_bezier,
-      apply_dotted_adjustment: false,
-    }
+    curve_mode_result_for_short_route(base, prepared, short_route_spec)
   }
 }
 
