@@ -625,6 +625,29 @@ priv struct ShortRouteBuildContext {
 }
 
 ///|
+priv struct CurveModeRoutePrep {
+  label_pad_boost : Double
+  label_width_pt : Double
+  has_explicit_port : Bool
+  abs_dx : Double
+  split_label : Bool
+  using_pathplan : Bool
+  pathplan_boxes : Array[@geom.Rect]
+  pathplan_points : Array[@geom.Point]
+  pathplan_segments : Array[@routesplines.PathplanSegment]
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  points : Array[@geom.Point]
+  short_route_context : ShortRouteBuildContext
+}
+
+///|
+priv struct CurveModeSplineBuildResult {
+  spline : @geom.Spline
+  raw_bezier : Array[@geom.Point]
+  apply_dotted_adjustment : Bool
+}
+
+///|
 fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
   let mut min_rank = 0
   let mut max_rank = 0
@@ -4035,7 +4058,7 @@ fn finalize_pathplan_boxes_and_segments(
 }
 
 ///|
-fn build_edge_curve_mode_result(
+fn prepare_edge_curve_mode_route(
   base : EdgeRouteBase,
   ranks : Map[String, Int],
   sizes : Map[String, NodeSize],
@@ -4050,49 +4073,32 @@ fn build_edge_curve_mode_result(
   path_left_bound : Double,
   path_right_bound : Double,
   ranksep_pt : Double,
-  label_edge_counts : Map[String, Int],
   head_port_metrics : HeadPortMetrics,
   routing_context : RoutingContext,
   enable_complex_tuning : Bool,
-) -> EdgeSplineResult {
+) -> CurveModeRoutePrep {
   let edge = base.edge
-  let tail_name = base.tail_name
-  let head_name = base.head_name
-  let tail_port = base.tail_port
-  let head_port = base.head_port
   let tail_anchor = base.tail_anchor
   let head_anchor = base.head_anchor
-  let head_port_rect = base.head_port_rect
-  let tail_clip_enabled = base.tail_clip_enabled
-  let head_clip_enabled = base.head_clip_enabled
-  let force_segmented = base.force_segmented
-  let has_vnodes = base.has_vnodes
-  let is_dotted = base.is_dotted
-  let same_outer_cluster = base.same_outer_cluster
-  let diff_local_cluster = base.diff_local_cluster
-  let same_local_cluster = base.same_local_cluster
-  let orig_tail_name = base.orig_tail_name
-  let mut label_pad_boost = 0.0
   let label_width_pt = edge_mid_label_width_pt(edge)
   let has_explicit_port =
-    @dot_shared.port_is_explicit(tail_port) || @dot_shared.port_is_explicit(head_port)
+    @dot_shared.port_is_explicit(base.tail_port) ||
+    @dot_shared.port_is_explicit(base.head_port)
   let abs_dx = Double::abs(head_anchor.x - tail_anchor.x)
   let split_label = enable_complex_tuning &&
     label_width_pt > 0.0 &&
-    same_outer_cluster &&
-    diff_local_cluster &&
+    base.same_outer_cluster &&
+    base.diff_local_cluster &&
     abs_dx > label_width_pt
-  if split_label {
-    label_pad_boost = nodesep_pt * 1.2
-  }
+  let label_pad_boost = if split_label { nodesep_pt * 1.2 } else { 0.0 }
   let dotted_weight = if enable_complex_tuning { 1.0 } else { 0.8 }
   let guide_points =
     edge_polyline_points(
       edge,
-      tail_name,
-      head_name,
-      tail_port,
-      head_port,
+      base.tail_name,
+      base.head_name,
+      base.tail_port,
+      base.head_port,
       tail_anchor,
       head_anchor,
       ranks,
@@ -4106,7 +4112,7 @@ fn build_edge_curve_mode_result(
       dotted_weight,
       enable_complex_tuning,
       split_label,
-      same_local_cluster,
+      base.same_local_cluster,
     )
   let route_state =
     compute_pathplan_route_points(
@@ -4128,12 +4134,11 @@ fn build_edge_curve_mode_result(
       guide_points,
     )
   let using_pathplan = route_state.using_pathplan
-  let route_barriers = route_state.route_barriers
   let points =
     adjust_route_points(
       route_state.points,
       base,
-      head_port_rect,
+      base.head_port_rect,
       has_explicit_port,
       using_pathplan,
       nodesep_pt,
@@ -4146,8 +4151,6 @@ fn build_edge_curve_mode_result(
     nodesep_pt,
     enable_complex_tuning,
   )
-  let curve_offset = curve_offset_params.curve_offset
-  let curve_skew = curve_offset_params.curve_skew
   let short_route_context =
     short_route_build_context(
       base,
@@ -4158,42 +4161,66 @@ fn build_edge_curve_mode_result(
       rank_ht1,
       rank_ht2,
       ranksep_pt,
-      route_barriers,
+      route_state.route_barriers,
       using_pathplan,
       has_explicit_port,
       label_width_pt,
       nodesep_pt,
-      force_segmented,
-      curve_offset,
-      curve_skew,
+      base.force_segmented,
+      curve_offset_params.curve_offset,
+      curve_offset_params.curve_skew,
     )
-  let mut raw_bezier : Array[@geom.Point] = []
-  let mut apply_dotted_adjustment = false
-  let spline = if points.length() > 2 {
+  {
+    label_pad_boost,
+    label_width_pt,
+    has_explicit_port,
+    abs_dx,
+    split_label,
+    using_pathplan,
+    pathplan_boxes: route_state.pathplan_boxes,
+    pathplan_points: route_state.pathplan_points,
+    pathplan_segments: route_state.pathplan_segments,
+    route_barriers: route_state.route_barriers,
+    points,
+    short_route_context,
+  }
+}
+
+///|
+fn build_curve_mode_spline_from_prepared_route(
+  base : EdgeRouteBase,
+  prepared : CurveModeRoutePrep,
+  label_edge_counts : Map[String, Int],
+  nodesep_pt : Double,
+  enable_complex_tuning : Bool,
+) -> CurveModeSplineBuildResult {
+  let points = prepared.points
+  if points.length() > 2 {
     let clipped = points
     let simplify_tol = nodesep_pt * 0.8
-    let tail_label_edges = match label_edge_counts.get(orig_tail_name) {
+    let tail_label_edges = match label_edge_counts.get(base.orig_tail_name) {
       Some(value) => value > 1
       None => false
     }
     let keep_label_kink =
-      label_width_pt > 0.0 &&
-      (has_explicit_port ||
-        (same_outer_cluster &&
-            (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
+      prepared.label_width_pt > 0.0 &&
+      (prepared.has_explicit_port ||
+        (base.same_outer_cluster &&
+            (prepared.abs_dx < nodesep_pt ||
+              (tail_label_edges && prepared.abs_dx < prepared.label_width_pt))))
     let simplified =
-      if using_pathplan {
+      if prepared.using_pathplan {
         clipped
       } else if enable_complex_tuning &&
-        has_vnodes &&
-        !split_label &&
+        base.has_vnodes &&
+        !prepared.split_label &&
         !keep_label_kink {
         simplify_polyline(clipped, simplify_tol)
       } else {
         clipped
       }
     let adjusted =
-      if !using_pathplan && is_dotted && same_outer_cluster {
+      if !prepared.using_pathplan && base.is_dotted && base.same_outer_cluster {
         adjust_intracluster_dots(simplified)
       } else {
         simplified
@@ -4203,64 +4230,123 @@ fn build_edge_curve_mode_result(
       let short_route_spline =
         build_short_route_spline_with_detour(
           base,
-          short_route_context,
+          prepared.short_route_context,
           short_route_spec,
         )
-      raw_bezier = short_route_spline.raw_bezier
-      short_route_spline.spline
+      {
+        spline: short_route_spline.spline,
+        raw_bezier: short_route_spline.raw_bezier,
+        apply_dotted_adjustment: false,
+      }
     } else {
       let multi_point_spline =
         build_multi_point_routed_spline(
           base,
           adjusted,
-          using_pathplan,
-          force_segmented,
-          route_state.pathplan_segments,
-          route_barriers,
-          tail_clip_enabled,
-          head_clip_enabled,
+          prepared.using_pathplan,
+          base.force_segmented,
+          prepared.pathplan_segments,
+          prepared.route_barriers,
+          base.tail_clip_enabled,
+          base.head_clip_enabled,
         )
-      raw_bezier = multi_point_spline.raw_bezier
-      apply_dotted_adjustment = true
-      multi_point_spline.spline
+      {
+        spline: multi_point_spline.spline,
+        raw_bezier: multi_point_spline.raw_bezier,
+        apply_dotted_adjustment: true,
+      }
     }
   } else {
     let short_route_spec =
       short_route_spec_for_anchor_or_pathplan_points(
         points,
-        using_pathplan,
-        tail_anchor,
-        head_anchor,
-        tail_clip_enabled,
-        head_clip_enabled,
+        prepared.using_pathplan,
+        base.tail_anchor,
+        base.head_anchor,
+        base.tail_clip_enabled,
+        base.head_clip_enabled,
       )
     let short_route_spline =
       build_short_route_spline_with_detour(
         base,
-        short_route_context,
+        prepared.short_route_context,
         short_route_spec,
       )
-    raw_bezier = short_route_spline.raw_bezier
-    short_route_spline.spline
+    {
+      spline: short_route_spline.spline,
+      raw_bezier: short_route_spline.raw_bezier,
+      apply_dotted_adjustment: false,
+    }
   }
+}
+
+///|
+fn build_edge_curve_mode_result(
+  base : EdgeRouteBase,
+  ranks : Map[String, Int],
+  sizes : Map[String, NodeSize],
+  positions : Map[String, @geom.Point],
+  vnode_positions : Map[String, @geom.Point],
+  vnode_info : EdgeVnodeInfo,
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  x_groups : Map[Int, Array[String]],
+  nodesep_pt : Double,
+  path_left_bound : Double,
+  path_right_bound : Double,
+  ranksep_pt : Double,
+  label_edge_counts : Map[String, Int],
+  head_port_metrics : HeadPortMetrics,
+  routing_context : RoutingContext,
+  enable_complex_tuning : Bool,
+) -> EdgeSplineResult {
+  let prepared =
+    prepare_edge_curve_mode_route(
+      base,
+      ranks,
+      sizes,
+      positions,
+      vnode_positions,
+      vnode_info,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      x_groups,
+      nodesep_pt,
+      path_left_bound,
+      path_right_bound,
+      ranksep_pt,
+      head_port_metrics,
+      routing_context,
+      enable_complex_tuning,
+    )
+  let spline_result =
+    build_curve_mode_spline_from_prepared_route(
+      base,
+      prepared,
+      label_edge_counts,
+      nodesep_pt,
+      enable_complex_tuning,
+    )
   let (pathplan_boxes, pathplan_segments) =
     finalize_pathplan_boxes_and_segments(
       base,
-      using_pathplan,
-      route_state.pathplan_boxes,
-      route_state.pathplan_points,
-      raw_bezier,
-      route_state.pathplan_segments,
+      prepared.using_pathplan,
+      prepared.pathplan_boxes,
+      prepared.pathplan_points,
+      spline_result.raw_bezier,
+      prepared.pathplan_segments,
     )
   {
-    spline,
-    label_pad_boost,
-    using_pathplan,
+    spline: spline_result.spline,
+    label_pad_boost: prepared.label_pad_boost,
+    using_pathplan: prepared.using_pathplan,
     pathplan_boxes,
-    pathplan_points: route_state.pathplan_points,
-    raw_bezier,
+    pathplan_points: prepared.pathplan_points,
+    raw_bezier: spline_result.raw_bezier,
     pathplan_segments,
-    apply_dotted_adjustment,
+    apply_dotted_adjustment: spline_result.apply_dotted_adjustment,
   }
 }
 
