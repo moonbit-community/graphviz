@@ -1116,23 +1116,36 @@ fn collect_sameport_classes(
 }
 
 ///|
+fn for_each_sameport_class_member_edge_id(
+  merge_classes : Map[String, Array[@cgraph.Edge]],
+  edge : @cgraph.Edge,
+  apply_id : (Int) -> Unit,
+) -> Unit {
+  if edge_has_label(edge) {
+    apply_id(edge.id())
+    return ()
+  }
+  match merge_classes.get(sameport_merge_key(edge)) {
+    Some(class_edges) =>
+      for member_edge in class_edges {
+        apply_id(member_edge.id())
+      }
+    None => apply_id(edge.id())
+  }
+}
+
+///|
 fn assign_sameport_override(
   overrides : Map[Int, @geom.Point],
   merge_classes : Map[String, Array[@cgraph.Edge]],
   edge : @cgraph.Edge,
   anchor : @geom.Point,
 ) -> Unit {
-  if edge_has_label(edge) {
-    overrides[edge.id()] = anchor
-    return ()
-  }
-  match merge_classes.get(sameport_merge_key(edge)) {
-    Some(class_edges) =>
-      for member_edge in class_edges {
-        overrides[member_edge.id()] = anchor
-      }
-    None => overrides[edge.id()] = anchor
-  }
+  for_each_sameport_class_member_edge_id(
+    merge_classes,
+    edge,
+    (member_edge_id) => overrides[member_edge_id] = anchor,
+  )
 }
 
 ///|
@@ -1142,17 +1155,11 @@ fn assign_sameport_group_size(
   edge : @cgraph.Edge,
   group_size : Int,
 ) -> Unit {
-  if edge_has_label(edge) {
-    group_sizes[edge.id()] = group_size
-    return ()
-  }
-  match merge_classes.get(sameport_merge_key(edge)) {
-    Some(class_edges) =>
-      for member_edge in class_edges {
-        group_sizes[member_edge.id()] = group_size
-      }
-    None => group_sizes[edge.id()] = group_size
-  }
+  for_each_sameport_class_member_edge_id(
+    merge_classes,
+    edge,
+    (member_edge_id) => group_sizes[member_edge_id] = group_size,
+  )
 }
 
 ///|
@@ -1461,8 +1468,7 @@ fn collect_flat_adjacent_beziers(
     if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
       continue
     }
-    if edge_attr_non_empty(edge, "samehead") ||
-      edge_attr_non_empty(edge, "sametail") {
+    if edge_has_sameport_mark(edge) {
       continue
     }
     let tail_rank = match ranks.get(edge.tail().name()) {
