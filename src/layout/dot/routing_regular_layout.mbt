@@ -54,13 +54,7 @@ fn build_regular_spline_layout(
       base,
       spline,
       layout_spline_result,
-      context.ranks,
-      context.rank_y,
-      context.vnode_info,
-      context.vnode_positions,
-      context.nodesep_pt,
-      context.has_clusters,
-      context.flat_label_edge_vnodes,
+      context,
     )
   { edge_layout: layout, spline_result }
 }

@@ -21,13 +21,7 @@ fn build_bezier_layout_edge(
     base,
     bezier_layout_result.final_spline,
     bezier_layout_result.layout_spline_result,
-    context.ranks,
-    context.rank_y,
-    context.vnode_info,
-    context.vnode_positions,
-    context.nodesep_pt,
-    context.has_clusters,
-    context.flat_label_edge_vnodes,
+    context,
   )
 }
 
@@ -109,33 +103,27 @@ fn build_edge_layout(
   base : EdgeRouteBase,
   spline : @geom.Spline,
   spline_result : EdgeSplineResult,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  vnode_info : EdgeVnodeInfo,
-  vnode_positions : Map[String, @geom.Point],
-  nodesep_pt : Double,
-  has_clusters : Bool,
-  flat_label_edge_vnodes : Map[String, String],
+  context : OrderedEdgeRoutingContext,
 ) -> DotLayoutEdge {
   let edge = base.edge
-  let label_rank_info = edge_label_rank_info(edge, ranks)
-  let label_rank_y = edge_label_rank_y(edge, ranks, rank_y)
+  let label_rank_info = edge_label_rank_info(edge, context.ranks)
+  let label_rank_y = edge_label_rank_y(edge, context.ranks, context.rank_y)
   let label_rank_x = match label_rank_info {
     Some(info) =>
       if info.span > 1 {
         edge_label_rank_x(
           edge,
           info.label_rank,
-          vnode_info.vnode_ranks,
-          vnode_info.edge_vnodes,
-          vnode_positions,
+          context.vnode_info.vnode_ranks,
+          context.vnode_info.edge_vnodes,
+          context.vnode_positions,
         )
       } else {
         None
       }
     None => None
   }
-  let apply_label_pad = has_clusters
+  let apply_label_pad = context.has_clusters
   let label_pos : @geom.Point? = match edge.get_attr("label") {
     Some(value) =>
       if value == "" {
@@ -154,9 +142,9 @@ fn build_edge_layout(
           }
           _ =>
             if base.is_flat_edge {
-              match flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
+              match context.flat_label_edge_vnodes.get(@dot_shared.edge_key(edge)) {
                 Some(vnode_name) =>
-                  match vnode_positions.get(vnode_name) {
+                  match context.vnode_positions.get(vnode_name) {
                     Some(pos) => Some(pos)
                     None =>
                       match edge_mid_label_metrics(edge) {
@@ -180,7 +168,7 @@ fn build_edge_layout(
                             label_rank_y,
                             label_rank_x,
                             apply_label_pad,
-                            nodesep_pt,
+                            context.nodesep_pt,
                             spline_result.label_pad_boost,
                           )
                       }
@@ -208,7 +196,7 @@ fn build_edge_layout(
                         label_rank_y,
                         label_rank_x,
                         apply_label_pad,
-                        nodesep_pt,
+                        context.nodesep_pt,
                         spline_result.label_pad_boost,
                       )
                   }
@@ -223,7 +211,7 @@ fn build_edge_layout(
                 label_rank_y,
                 label_rank_x,
                 apply_label_pad,
-                nodesep_pt,
+                context.nodesep_pt,
                 spline_result.label_pad_boost,
               )
             }
