@@ -3664,10 +3664,8 @@ fn build_edge_spline(
             route_endpoint_slopes(tail_port, head_port, tail_slope, head_slope)
           // Graphviz parity: pathplan edges always allow spline fitting.
           let edge_force_segmented = if using_pathplan { false } else { force_segmented }
-          let use_segmented_pathplan =
-            using_pathplan && pathplan_segments.length() > 0
           let segmented_raw : Array[@geom.Point] =
-            if use_segmented_pathplan {
+            if using_pathplan && pathplan_segments.length() > 0 {
               // Graphviz parity: straight_path segment joins constrain slope along rankdir.
               let join_dir = straight_path_join_dir(layout_rankdir)
               segmented_pathplan_raw_bezier(
