@@ -1,7 +1,7 @@
 {
   "import": [
     {
-      "path": "moonbit-community/graphviz/layout/dot/pathplan",
+      "path": "moonbit-community/graphviz/layout/dot/routing/pathplan",
       "alias": "pathplan"
     },
     {

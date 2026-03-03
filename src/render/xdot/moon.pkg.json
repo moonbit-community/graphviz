@@ -5,7 +5,7 @@
       "alias": "layout_dot"
     },
     {
-      "path": "moonbit-community/graphviz/layout/dot/edge_spline",
+      "path": "moonbit-community/graphviz/layout/dot/routing/edge_spline",
       "alias": "edge_spline"
     },
     {

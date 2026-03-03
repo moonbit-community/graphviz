@@ -405,9 +405,9 @@ Entry:
 Main files:
 
 - `src/layout/dot/e_routing.mbt`
-- `src/layout/dot/routesplines/*`
-- `src/layout/dot/pathplan/*`
-- `src/layout/dot/edge_spline/*`
+- `src/layout/dot/routing/routesplines/*`
+- `src/layout/dot/routing/pathplan/*`
+- `src/layout/dot/routing/edge_spline/*`
 
 ### What it does
 

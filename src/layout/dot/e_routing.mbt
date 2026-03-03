@@ -1993,7 +1993,7 @@ fn build_self_edge_routes(
 
 ///|
 fn self_edge_group_key(edge : @cgraph.Edge) -> String {
-  edge_parallel_key(
+  @edge_ops.edge_parallel_key(
     edge.tail().name(),
     edge.head().name(),
     edge.tail_port(),
@@ -2529,7 +2529,7 @@ fn edge_swap_ends_for_route_base(
   order_index : Map[String, Int],
 ) -> Bool {
   let swap_ends_raw =
-    edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
+    @edge_ops.edge_swap_ends(orig_tail_name, orig_head_name, ranks, order_index)
   let tail_rank_for_swap = ranks.get(orig_tail_name).unwrap_or_default()
   let head_rank_for_swap = ranks.get(orig_head_name).unwrap_or_default()
   if tail_rank_for_swap == head_rank_for_swap &&
@@ -2719,7 +2719,7 @@ fn collect_flat_adjacent_beziers(
     if @dot_shared.port_is_explicit(edge.tail_port()) || @dot_shared.port_is_explicit(edge.head_port()) {
       continue
     }
-    if edge_has_sameport_mark(edge) {
+    if @edge_ops.edge_has_sameport_mark(edge) {
       continue
     }
     let tail_rank = match ranks.get(edge.tail().name()) {
@@ -3691,7 +3691,7 @@ fn adjust_route_points(
     }
   }
   if base.is_dotted && !base.same_outer_cluster && !using_pathplan {
-    points = adjust_intercluster_dots(
+    points = @edge_ops.adjust_intercluster_dots(
       points,
       base.tail_anchor,
       base.head_anchor,
@@ -4237,7 +4237,7 @@ fn adjusted_curve_mode_points(
       points
     }
   if !prepared.using_pathplan && base.is_dotted && base.same_outer_cluster {
-    adjust_intracluster_dots(simplified)
+    @edge_ops.adjust_intracluster_dots(simplified)
   } else {
     simplified
   }
@@ -4438,7 +4438,7 @@ fn finalize_edge_spline(
 ) -> @geom.Spline {
   let mut spline = result.spline
   if base.swap_ends {
-    spline = reverse_spline(spline)
+    spline = @edge_ops.reverse_spline(spline)
   }
   if result.apply_dotted_adjustment && base.is_dotted && !base.same_outer_cluster &&
     spline.points.length() > 1 {
@@ -5384,8 +5384,8 @@ fn remap_parallel_edge_layouts(
     if tail_rank == head_rank {
       continue
     }
-    let key = edge_parallel_group_key(edge)
-    let sameport_mark = edge_has_sameport_mark(edge)
+    let key = @edge_ops.edge_parallel_group_key(edge)
+    let sameport_mark = @edge_ops.edge_has_sameport_mark(edge)
     let dir_key = match edge.get_attr("dir") {
       Some(value) => value.to_lower()
       None => "forward"
@@ -5473,7 +5473,7 @@ fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   if edge_has_label(edge) || !undirected {
     "vnode|\{@dot_shared.edge_vnode_key(edge)}"
   } else {
-    "parallel|\{edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
+    "parallel|\{@edge_ops.edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
   }
 }
 
