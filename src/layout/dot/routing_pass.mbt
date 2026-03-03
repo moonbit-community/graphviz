@@ -366,23 +366,12 @@ fn build_regular_bezier_layout(
 /// Graphviz parity: self-edge route cache reuse + self-edge layout finalize path.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_build_self_edge_layout(
-  graph : @cgraph.Graph,
   edge : @cgraph.Edge,
   base : EdgeRouteBase,
   self_edge_groups : Map[String, Array[@cgraph.Edge]],
   base_cache : Map[Int, EdgeRouteBase],
+  build_base : (@cgraph.Edge) -> EdgeRouteBase,
   ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  record_orientation : RecordOrientation,
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  label_ports_raw : Map[String, Map[String, RecordPort]],
-  routing_context : RoutingContext,
-  rankdir : RankDir,
-  layout_rankdir : RankDir,
-  enable_complex_tuning : Bool,
-  edge_vnodes : Map[String, Array[String]],
-  sameport_overrides : SameportOverrides,
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   vnode_info : EdgeVnodeInfo,
@@ -403,23 +392,7 @@ fn maybe_build_self_edge_layout(
     nodesep_pt,
     rank_y,
     self_edge_routes,
-    (grouped) =>
-      build_edge_route_base(
-        graph.kind(),
-        grouped,
-        ranks,
-        sizes,
-        positions,
-        record_orientation,
-        label_ports_map,
-        label_ports_raw,
-        routing_context,
-        rankdir,
-        layout_rankdir,
-        enable_complex_tuning,
-        edge_vnodes,
-        sameport_overrides,
-      ),
+    build_base,
     build_self_edge_routes,
   )
   match self_edge_routes.get(edge_id) {
@@ -484,26 +457,28 @@ fn route_edges(
     layout_rankdir,
     ranksep_pt,
   )
+  let build_base_for_edge =
+    (edge : @cgraph.Edge) =>
+      build_edge_route_base(
+        graph.kind(),
+        edge,
+        ranks,
+        sizes,
+        positions,
+        record_orientation,
+        label_ports_map,
+        label_ports_raw,
+        routing_context,
+        rankdir,
+        layout_rankdir,
+        enable_complex_tuning,
+        vnode_info.edge_vnodes,
+        sameport_overrides,
+      )
   let base_cache =
     @routing.build_route_base_cache(
       edges,
-      (edge) =>
-        build_edge_route_base(
-          graph.kind(),
-          edge,
-          ranks,
-          sizes,
-          positions,
-          record_orientation,
-          label_ports_map,
-          label_ports_raw,
-          routing_context,
-          rankdir,
-          layout_rankdir,
-          enable_complex_tuning,
-          vnode_info.edge_vnodes,
-          sameport_overrides,
-        ),
+      build_base_for_edge,
     )
   let flat_adjacent_simple_beziers =
     if splines == SplinesMode::Spline {
@@ -565,23 +540,12 @@ fn route_edges(
       None => ()
     }
     if maybe_build_self_edge_layout(
-      graph,
       edge,
       base,
       self_edge_groups,
       base_cache,
+      build_base_for_edge,
       ranks,
-      sizes,
-      positions,
-      record_orientation,
-      label_ports_map,
-      label_ports_raw,
-      routing_context,
-      rankdir,
-      layout_rankdir,
-      enable_complex_tuning,
-      vnode_info.edge_vnodes,
-      sameport_overrides,
       nodesep_pt,
       rank_y,
       vnode_info,
