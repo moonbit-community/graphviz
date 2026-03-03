@@ -983,27 +983,20 @@ fn detour_spline_if_any(
   tail_slope_line : @geom.Point,
   head_slope_line : @geom.Point,
   route_barriers : Array[(@geom.Point, @geom.Point)],
-  tail_clip_center : @geom.Point,
-  head_clip_center : @geom.Point,
-  tail_clip_size : NodeSize,
-  head_clip_size : NodeSize,
-  tail_clip : @geom.Point,
-  head_clip : @geom.Point,
   nodesep_pt : Double,
-  layout_rankdir : RankDir,
   lr_detour_uses_x_axis : Bool,
 ) -> PointsSplineResult? {
   if needs_record_detour {
     let detour_points =
       record_port_detour_points(
-        tail_clip_center,
-        head_clip_center,
-        tail_clip_size,
-        head_clip_size,
-        tail_clip,
-        head_clip,
+        base.tail_clip_center,
+        base.head_clip_center,
+        base.tail_clip_size,
+        base.head_clip_size,
+        base.tail_clip,
+        base.head_clip,
         nodesep_pt,
-        layout_rankdir,
+        base.layout_rankdir,
         lr_detour_uses_x_axis,
       )
     Some(
@@ -3713,14 +3706,7 @@ fn build_edge_spline(
               tail_slope_line,
               head_slope_line,
               route_barriers,
-              tail_clip_center,
-              head_clip_center,
-              tail_clip_size,
-              head_clip_size,
-              tail_clip,
-              head_clip,
               nodesep_pt,
-              layout_rankdir,
               true,
             )
           if detour_spline is Some(result) {
@@ -3879,14 +3865,7 @@ fn build_edge_spline(
             tail_slope_line,
             head_slope_line,
             route_barriers,
-            tail_clip_center,
-            head_clip_center,
-            tail_clip_size,
-            head_clip_size,
-            tail_clip,
-            head_clip,
             nodesep_pt,
-            layout_rankdir,
             false,
           )
         if detour_spline is Some(result) {
