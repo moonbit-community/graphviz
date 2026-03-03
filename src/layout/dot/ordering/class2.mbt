@@ -16,6 +16,54 @@ pub(all) struct OrderingClass2Data {
 }
 
 ///|
+/// Graphviz parity: flat edge constraints include same-rank non-self edges
+/// and use missing-rank fallback 0 exactly as class2 input pre-pass.
+pub fn build_flat_rank_constraints(
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  ranks : Map[String, Int],
+) -> Map[String, Bool] {
+  let flat_rank_constraints : Map[String, Bool] = Map::new()
+  let mut flat_idx = 0
+  while flat_idx < edge_tail.length() {
+    let tail = edge_tail[flat_idx]
+    let head = edge_head[flat_idx]
+    if tail != head {
+      let tail_rank = flat_constraint_rank_or_zero(ranks, tail)
+      let head_rank = flat_constraint_rank_or_zero(ranks, head)
+      if tail_rank == head_rank {
+        flat_rank_constraints["\{tail}|\{head}"] = true
+      }
+    }
+    flat_idx = flat_idx + 1
+  }
+  flat_rank_constraints
+}
+
+///|
+/// Graphviz parity: GD_nlist follows decompose DFS order over fast graph
+/// edges, with optional creation-order reverse debug/flip override.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_gdnlist_order(
+  class2_data : OrderingClass2Data,
+  graphviz_flip : Bool,
+  cluster_order : Array[String],
+) -> Array[String] {
+  if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
+    (graphviz_flip && cluster_order.length() > 1) {
+    let reversed_creation_order : Array[String] = []
+    let mut creation_idx = class2_data.creation_order.length()
+    while creation_idx > 0 {
+      creation_idx = creation_idx - 1
+      reversed_creation_order.push(class2_data.creation_order[creation_idx])
+    }
+    reversed_creation_order
+  } else {
+    class2_data.nlist_order
+  }
+}
+
+///|
 const CL_CROSS : Int = 1000
 
 ///|

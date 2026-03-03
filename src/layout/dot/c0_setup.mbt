@@ -116,54 +116,6 @@ fn build_ordering_context(
 }
 
 ///|
-/// Graphviz parity: flat edge constraints include same-rank non-self edges
-/// and use missing-rank fallback 0 exactly as class2 input pre-pass.
-fn build_flat_rank_constraints(
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-) -> Map[String, Bool] {
-  let flat_rank_constraints : Map[String, Bool] = Map::new()
-  let mut flat_idx = 0
-  while flat_idx < edge_tail.length() {
-    let tail = edge_tail[flat_idx]
-    let head = edge_head[flat_idx]
-    if tail != head {
-      let tail_rank = @ordering.flat_constraint_rank_or_zero(ranks, tail)
-      let head_rank = @ordering.flat_constraint_rank_or_zero(ranks, head)
-      if tail_rank == head_rank {
-        flat_rank_constraints["\{tail}|\{head}"] = true
-      }
-    }
-    flat_idx = flat_idx + 1
-  }
-  flat_rank_constraints
-}
-
-///|
-/// Graphviz parity: GD_nlist follows decompose DFS order over fast graph
-/// edges, with optional creation-order reverse debug/flip override.
-/// Do not change behavior without updating fixtures/tests.
-fn build_gdnlist_order(
-  class2_data : @ordering.OrderingClass2Data,
-  graphviz_flip : Bool,
-  cluster_order : Array[String],
-) -> Array[String] {
-  if @sys.get_env_var("DOT_DEBUG_GDNLIST_FROM_CREATION_REV") is Some(_) ||
-    (graphviz_flip && cluster_order.length() > 1) {
-    let reversed_creation_order : Array[String] = []
-    let mut creation_idx = class2_data.creation_order.length()
-    while creation_idx > 0 {
-      creation_idx = creation_idx - 1
-      reversed_creation_order.push(class2_data.creation_order[creation_idx])
-    }
-    reversed_creation_order
-  } else {
-    class2_data.nlist_order
-  }
-}
-
-///|
 /// Graphviz parity: reorder setup derives class2 data, GD_nlist order, and
 /// vnode ordering keys in Graphviz class2->decompose->vnode-key sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -200,7 +152,7 @@ fn build_ordering_reorder_setup(
     cluster_meta.cluster_min_rank.length() > 0
   let graphviz_flip = rankdir == RankDir::RL || rankdir == RankDir::LR
   let flat_rank_constraints =
-    build_flat_rank_constraints(edge_tail, edge_head, ranks)
+    @ordering.build_flat_rank_constraints(edge_tail, edge_head, ranks)
   let class2_data =
     @ordering.build_ordering_class2_data(
       nodes,
@@ -225,7 +177,7 @@ fn build_ordering_reorder_setup(
       graphviz_flip,
     )
   let gdnlist_order =
-    build_gdnlist_order(
+    @ordering.build_gdnlist_order(
       class2_data,
       graphviz_flip,
       cluster_meta.cluster_order,
