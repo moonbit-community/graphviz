@@ -837,6 +837,9 @@ fn compute_vnode_interpolation_key(
 }
 
 ///|
+const SEEDED_RANK_KEY_EPS : Double = 0.000000001
+
+///|
 fn sort_seeded_rank_items(
   items : Array[(Double, Int, String)],
 ) -> Unit {
@@ -844,9 +847,9 @@ fn sort_seeded_rank_items(
     let (a_key, a_idx, _a_name) = a
     let (b_key, b_idx, _b_name) = b
     let diff = a_key - b_key
-    if diff < -0.000000001 {
+    if diff < -SEEDED_RANK_KEY_EPS {
       -1
-    } else if diff > 0.000000001 {
+    } else if diff > SEEDED_RANK_KEY_EPS {
       1
     } else if a_idx < b_idx {
       -1
