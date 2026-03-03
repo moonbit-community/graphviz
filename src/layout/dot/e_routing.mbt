@@ -1266,6 +1266,84 @@ fn resolve_short_route_detour(
 }
 
 ///|
+fn resolve_short_route_detour_for_base(
+  base : EdgeRouteBase,
+  using_pathplan : Bool,
+  has_explicit_port : Bool,
+  label_width_pt : Double,
+  flat_detour_lookup : FlatDetourLookupContext,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  nodesep_pt : Double,
+  lr_detour_uses_x_axis : Bool,
+) -> (ShortRouteDetourContext, ShortRouteDetourResolution) {
+  let detour_context =
+    short_route_detour_context_for_base(
+      base,
+      using_pathplan,
+      has_explicit_port,
+      label_width_pt,
+    )
+  let detour_resolution =
+    resolve_short_route_detour(
+      base,
+      detour_context,
+      flat_detour_lookup,
+      line_start,
+      line_end,
+      using_pathplan,
+      route_barriers,
+      nodesep_pt,
+      lr_detour_uses_x_axis,
+    )
+  (detour_context, detour_resolution)
+}
+
+///|
+fn build_short_route_fallback_spline(
+  base : EdgeRouteBase,
+  using_pathplan : Bool,
+  pathplan_points : Array[@geom.Point],
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  detour_context : ShortRouteDetourContext,
+  detour_resolution : ShortRouteDetourResolution,
+  force_segmented : Bool,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+  curve_offset : Double,
+  curve_skew : Double,
+  prefer_linear_flat_invis : Bool,
+  prefer_linear_flat_bottom_single_arrow : Bool,
+) -> PointsSplineResult {
+  let prefer_linear_flat_line =
+    prefer_linear_for_flat_line(
+      prefer_linear_flat_invis,
+      detour_resolution.flat_no_arrow_candidate,
+      detour_resolution.has_flat_detour,
+      prefer_linear_flat_bottom_single_arrow,
+    )
+  build_short_route_line_or_pathplan_spline(
+    base,
+    using_pathplan,
+    pathplan_points,
+    line_start,
+    line_end,
+    detour_context.tail_slope_line,
+    detour_context.head_slope_line,
+    force_segmented,
+    route_barriers,
+    tail_clip_enabled,
+    head_clip_enabled,
+    curve_offset,
+    curve_skew,
+    prefer_linear_flat_line,
+  )
+}
+
+///|
 fn self_edge_rank_spacing(
   rank : Int,
   rank_y : Map[Int, Double],
@@ -3910,6 +3988,17 @@ fn build_edge_spline(
         (base.tail_port_side & PORT_SIDE_TOP) == 0 &&
         (base.head_port_side & PORT_SIDE_TOP) == 0 &&
         route_has_single_arrowhead(route_include_tail, route_include_head)
+      let flat_detour_lookup =
+        flat_detour_lookup_context(
+          base,
+          positions,
+          sizes,
+          ranks,
+          rank_y,
+          rank_ht1,
+          rank_ht2,
+          ranksep_pt,
+        )
       let routed_spline = if points.length() > 2 {
         let clipped = points
         let simplify_tol = nodesep_pt * 0.8
@@ -3917,11 +4006,11 @@ fn build_edge_spline(
           Some(value) => value > 1
           None => false
         }
-      let keep_label_kink =
-        label_width_pt > 0.0 &&
-        (has_explicit_port ||
-          (same_outer_cluster &&
-              (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
+        let keep_label_kink =
+          label_width_pt > 0.0 &&
+          (has_explicit_port ||
+            (same_outer_cluster &&
+                (abs_dx < nodesep_pt || (tail_label_edges && abs_dx < label_width_pt))))
         let simplified =
           if using_pathplan {
             clipped
@@ -3940,34 +4029,15 @@ fn build_edge_spline(
             simplified
           }
         if adjusted.length() <= 2 {
-          let detour_context =
-            short_route_detour_context_for_base(
+          let (detour_context, detour_resolution) =
+            resolve_short_route_detour_for_base(
               base,
               using_pathplan,
               has_explicit_port,
               label_width_pt,
-            )
-          let tail_slope_line = detour_context.tail_slope_line
-          let head_slope_line = detour_context.head_slope_line
-          let flat_detour_lookup =
-            flat_detour_lookup_context(
-              base,
-              positions,
-              sizes,
-              ranks,
-              rank_y,
-              rank_ht1,
-              rank_ht2,
-              ranksep_pt,
-            )
-          let detour_resolution =
-            resolve_short_route_detour(
-              base,
-              detour_context,
               flat_detour_lookup,
               adjusted[0],
               adjusted[adjusted.length() - 1],
-              using_pathplan,
               route_barriers,
               nodesep_pt,
               true,
@@ -3986,29 +4056,23 @@ fn build_edge_spline(
                 base.tail_clip_size,
                 base.head_clip_size,
               )
-            let prefer_linear_flat_line =
-              prefer_linear_for_flat_line(
-                prefer_linear_flat_invis,
-                detour_resolution.flat_no_arrow_candidate,
-                detour_resolution.has_flat_detour,
-                prefer_linear_flat_bottom_single_arrow,
-              )
             let short_route_spline =
-              build_short_route_line_or_pathplan_spline(
+              build_short_route_fallback_spline(
                 base,
                 using_pathplan,
                 adjusted,
                 line_start,
                 line_end,
-                tail_slope_line,
-                head_slope_line,
+                detour_context,
+                detour_resolution,
                 force_segmented,
                 route_barriers,
                 true,
                 true,
                 curve_offset,
                 curve_skew,
-                prefer_linear_flat_line,
+                prefer_linear_flat_invis,
+                prefer_linear_flat_bottom_single_arrow,
               )
             raw_bezier = short_route_spline.raw_bezier
             short_route_spline.spline
@@ -4030,34 +4094,15 @@ fn build_edge_spline(
           multi_point_spline.spline
         }
       } else {
-        let detour_context =
-          short_route_detour_context_for_base(
+        let (detour_context, detour_resolution) =
+          resolve_short_route_detour_for_base(
             base,
             using_pathplan,
             has_explicit_port,
             label_width_pt,
-          )
-        let tail_slope_line = detour_context.tail_slope_line
-        let head_slope_line = detour_context.head_slope_line
-        let flat_detour_lookup =
-          flat_detour_lookup_context(
-            base,
-            positions,
-            sizes,
-            ranks,
-            rank_y,
-            rank_ht1,
-            rank_ht2,
-            ranksep_pt,
-          )
-        let detour_resolution =
-          resolve_short_route_detour(
-            base,
-            detour_context,
             flat_detour_lookup,
             tail_anchor,
             head_anchor,
-            using_pathplan,
             route_barriers,
             nodesep_pt,
             false,
@@ -4090,29 +4135,23 @@ fn build_edge_spline(
             )
           let line_points =
             pathplan_line_points_or_endpoints(points, line_start, line_end)
-          let prefer_linear_flat_line =
-            prefer_linear_for_flat_line(
-              prefer_linear_flat_invis,
-              detour_resolution.flat_no_arrow_candidate,
-              detour_resolution.has_flat_detour,
-              prefer_linear_flat_bottom_single_arrow,
-            )
           let short_route_spline =
-            build_short_route_line_or_pathplan_spline(
+            build_short_route_fallback_spline(
               base,
               using_pathplan,
               line_points,
               line_start,
               line_end,
-              tail_slope_line,
-              head_slope_line,
+              detour_context,
+              detour_resolution,
               force_segmented,
               route_barriers,
               tail_clip_enabled,
               head_clip_enabled,
               curve_offset,
               curve_skew,
-              prefer_linear_flat_line,
+              prefer_linear_flat_invis,
+              prefer_linear_flat_bottom_single_arrow,
             )
           raw_bezier = short_route_spline.raw_bezier
           short_route_spline.spline
