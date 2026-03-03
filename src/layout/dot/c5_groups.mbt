@@ -72,10 +72,33 @@ fn run_remincross_pass(
     // Graphviz parity: clustered ReMincross multi-rank branch materializes
     // remapped edges and executes clustered cleanup reorder in startpass=2.
     let materialized_inputs =
-      build_remincross_inputs(
-        dispatch_context,
-        rem_rank_keys,
-        rem_groups,
+      @ordering.build_remincross_materialized_inputs(
+        {
+          rem_rank_keys,
+          rem_groups,
+          creation_order: dispatch_context.creation_order,
+          edges: dispatch_context.edges,
+          edge_tail: dispatch_context.edge_tail,
+          edge_head: dispatch_context.edge_head,
+          edge_tail_port_x: dispatch_context.edge_tail_port_x,
+          edge_head_port_x: dispatch_context.edge_head_port_x,
+          edge_tail_port_order: dispatch_context.edge_tail_port_order,
+          edge_head_port_order: dispatch_context.edge_head_port_order,
+          ranks: dispatch_context.ranks,
+          edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+          order_with_vnodes: dispatch_context.order_with_vnodes,
+          intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+          cluster_order: dispatch_context.cluster_meta.cluster_order,
+          order_with_clusters: dispatch_context.order_with_clusters,
+          edges_by_tail: dispatch_context.edges_by_tail,
+          root_tail_order_override: remincross_root_tail_order_override_snapshot.val,
+          root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
+          cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+          order_sizes: dispatch_context.order_sizes,
+          vnode_sizes: dispatch_context.vnode_info.vnode_sizes,
+          cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+          rank_same_constraints: dispatch_context.rank_same_constraints,
+        },
       )
     let rem_ordered =
       run_remincross_cleanup(
@@ -98,122 +121,6 @@ fn run_remincross_pass(
 }
 
 ///|
-/// Graphviz parity: clustered ReMincross materialized-input payload keeps
-/// graph node/rank context, rematerialized edge arrays, and final reorder
-/// maps for cleanup reorder dispatch.
-priv struct ClusteredReMincrossMaterializedInputs {
-  rem_nodes : Array[String]
-  rem_ranks : Map[String, Int]
-  rem_node_order : Map[String, Int]
-  rem_edges_out : Array[@cgraph.Edge]
-  rem_edge_tail_out : Array[String]
-  rem_edge_head_out : Array[String]
-  rem_edge_tail_port_x : Array[Double]
-  rem_edge_head_port_x : Array[Double]
-  rem_edge_tail_port_order : Array[Double]
-  rem_edge_head_port_order : Array[Double]
-  rem_cluster_keys : Map[String, String]
-  rem_sizes : Map[String, NodeSize]
-  rem_flat_constraints : Map[String, Bool]
-}
-
-///|
-/// Graphviz parity: clustered ReMincross multi-rank materialization builds
-/// order graph context, rematerialized edge arrays, and reorder input maps
-/// before cleanup reorder dispatch.
-fn build_remincross_inputs(
-  dispatch_context : ReMincrossDispatchContext,
-  rem_rank_keys : Array[Int],
-  rem_groups : Map[Int, Array[String]],
-) -> ClusteredReMincrossMaterializedInputs {
-  let rem_ranks = @ordering.build_node_ranks(rem_groups)
-  let rem_nodes = @ordering.build_order_nodes_from_groups(rem_groups, rem_rank_keys)
-  let rem_graph_output =
-    @ordering.build_order_graph_and_nodes("order_remincross", rem_nodes)
-  // Graphviz parity: ReMincross uses real intercluster edges
-  // (no cluster skeleton mapping).
-  let cluster_order_index =
-    build_local_cluster_index(dispatch_context.cluster_meta.cluster_order)
-  // Graphviz parity: ReMincross rematerialization keeps order-edge expansion
-  // and order-graph array materialization on one shared context snapshot.
-  let materialized_edges =
-    @ordering.build_remincross_materialized_edges(
-      {
-        creation_order: dispatch_context.creation_order,
-        edges: dispatch_context.edges,
-        edge_tail: dispatch_context.edge_tail,
-        edge_head: dispatch_context.edge_head,
-        edge_tail_port_x: dispatch_context.edge_tail_port_x,
-        edge_head_port_x: dispatch_context.edge_head_port_x,
-        edge_tail_port_order: dispatch_context.edge_tail_port_order,
-        edge_head_port_order: dispatch_context.edge_head_port_order,
-        ranks: dispatch_context.ranks,
-        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-        order_with_vnodes: dispatch_context.order_with_vnodes,
-        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-        order_with_clusters: dispatch_context.order_with_clusters,
-        edges_by_tail: dispatch_context.edges_by_tail,
-        cluster_order_index,
-      },
-    )
-  let materialized_arrays =
-    @ordering.build_remincross_materialized_arrays(
-      {
-        creation_order: dispatch_context.creation_order,
-        rem_groups,
-        rem_graph: rem_graph_output.order_graph,
-        rem_node_map: rem_graph_output.order_node_map,
-        rem_cluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-        cluster_order_index,
-        root_tail_order_override: remincross_root_tail_order_override_snapshot.val,
-        materialized_edges,
-      },
-    )
-  let rem_cluster_keys =
-    @ordering.build_remincross_cluster_keys(
-      {
-        root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
-        edges: dispatch_context.edges,
-        edge_tail: dispatch_context.edge_tail,
-        edge_head: dispatch_context.edge_head,
-        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
-        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
-        order_with_vnodes: dispatch_context.order_with_vnodes,
-      },
-    )
-  let rem_sizes =
-    @ordering.build_sizes_for_order_graph(
-      dispatch_context.order_sizes,
-      dispatch_context.order_with_vnodes,
-      dispatch_context.vnode_info.vnode_sizes,
-    )
-  let rem_flat_constraints =
-    @ordering.build_remincross_flat_constraints(
-      {
-        order_with_clusters: dispatch_context.order_with_clusters,
-        cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-        rank_same_constraints: dispatch_context.rank_same_constraints,
-      },
-    )
-  {
-    rem_nodes,
-    rem_ranks,
-    rem_node_order: materialized_arrays.node_order,
-    rem_edges_out: materialized_arrays.edges_out,
-    rem_edge_tail_out: materialized_arrays.edge_tail_out,
-    rem_edge_head_out: materialized_arrays.edge_head_out,
-    rem_edge_tail_port_x: materialized_arrays.edge_tail_port_x,
-    rem_edge_head_port_x: materialized_arrays.edge_head_port_x,
-    rem_edge_tail_port_order: materialized_arrays.edge_tail_port_order,
-    rem_edge_head_port_order: materialized_arrays.edge_head_port_order,
-    rem_cluster_keys,
-    rem_sizes,
-    rem_flat_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: ReMincross clustered cleanup reorder captures rematerialized
 /// inputs, builds edge index maps, and executes startpass=2 mincross on the
 /// rematerialized fast-graph edge set.
@@ -221,7 +128,7 @@ fn run_remincross_cleanup(
   dispatch_context : ReMincrossDispatchContext,
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
-  materialized_inputs : ClusteredReMincrossMaterializedInputs,
+  materialized_inputs : @ordering.ReMincrossCleanupMaterializedInputs,
 ) -> Map[Int, Array[String]] {
   let rem_edge_indices =
     @ordering.build_edge_indices_and_order(
