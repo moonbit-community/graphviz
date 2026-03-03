@@ -1,46 +1,4 @@
 ///|
-/// Graphviz parity: ordered-edge routing context captures one pass snapshot
-/// so per-edge routing only mutates shared pass state.
-priv struct OrderedEdgeRoutingContext {
-  base_cache : Map[Int, EdgeRouteBase]
-  flat_adjacent_simple_beziers : Map[Int, Array[@geom.Point]]
-  ranks : Map[String, Int]
-  splines : SplinesMode
-  sizes : Map[String, NodeSize]
-  positions : Map[String, @geom.Point]
-  vnode_positions : Map[String, @geom.Point]
-  vnode_info : EdgeVnodeInfo
-  rank_y : Map[Int, Double]
-  rank_ht1 : Map[Int, Double]
-  rank_ht2 : Map[Int, Double]
-  x_groups : Map[Int, Array[String]]
-  nodesep_pt : Double
-  path_left_bound : Double
-  path_right_bound : Double
-  ranksep_pt : Double
-  has_clusters : Bool
-  label_edge_counts : Map[String, Int]
-  head_port_metrics : HeadPortMetrics
-  flat_label_edge_vnodes : Map[String, String]
-  routing_context : RoutingContext
-  enable_complex_tuning : Bool
-  path_adjacency : @routesplines.PathAdjacency
-  recover_edge_id_for_routing : Map[String, Int]
-  regular_parallel_groups : Map[String, Array[@cgraph.Edge]]
-  self_edge_groups : Map[String, Array[@cgraph.Edge]]
-  build_base_for_edge : (@cgraph.Edge) -> EdgeRouteBase
-}
-
-///|
-/// Graphviz parity: ordered-edge routing mutates only these shared maps while
-/// walking edges in graphviz-compatible order.
-priv struct OrderedEdgeRoutingState {
-  recovered_slack_keys : Map[String, Bool]
-  self_edge_routes : Map[Int, SelfEdgeRoute]
-  edges_out_by_id : Map[Int, DotLayoutEdge]
-}
-
-///|
 /// Graphviz parity: ordered edge routing loop preserves flat-adjacent,
 /// self-edge, regular-edge branch order from dot.
 /// Do not change behavior without updating fixtures/tests.
@@ -57,7 +15,7 @@ fn route_ordered_edge(
     Some(value) => value
     None => return ()
   }
-  match context.flat_adjacent_simple_beziers.get(edge_id) {
+  match context.prepass.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
       let edge_layout =
         build_flat_adjacent_layout(
@@ -98,7 +56,6 @@ fn route_ordered_edge(
 /// recover-slack state shared across edges in pass order.
 /// Do not change behavior without updating fixtures/tests.
 fn route_ordered_edges(
-  ordered_edges : Array[@cgraph.Edge],
   context : OrderedEdgeRoutingContext,
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Unit {
@@ -107,7 +64,7 @@ fn route_ordered_edges(
     self_edge_routes: Map::new(),
     edges_out_by_id,
   }
-  for edge in ordered_edges {
+  for edge in context.prepass.ordered_edges {
     route_ordered_edge(
       edge,
       context,

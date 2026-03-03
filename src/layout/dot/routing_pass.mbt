@@ -76,15 +76,9 @@ fn route_edges(
       vnode_info.vnode_sizes,
       x_groups,
     )
-  let flat_adjacent_simple_beziers = prepass.flat_adjacent_simple_beziers
-  let path_left_bound = prepass.path_left_bound
-  let path_right_bound = prepass.path_right_bound
-  let ordered_edges = prepass.ordered_edges
-  let recover_edge_id_for_routing = prepass.recover_edge_id_for_routing
-  let regular_parallel_groups = prepass.regular_parallel_groups
   let ordered_edge_routing_context : OrderedEdgeRoutingContext = {
     base_cache,
-    flat_adjacent_simple_beziers,
+    prepass,
     ranks,
     splines,
     sizes,
@@ -96,8 +90,6 @@ fn route_edges(
     rank_ht2,
     x_groups,
     nodesep_pt,
-    path_left_bound,
-    path_right_bound,
     ranksep_pt,
     has_clusters,
     label_edge_counts,
@@ -106,14 +98,11 @@ fn route_edges(
     routing_context,
     enable_complex_tuning,
     path_adjacency,
-    recover_edge_id_for_routing,
-    regular_parallel_groups,
     self_edge_groups,
     build_base_for_edge,
   }
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   route_ordered_edges(
-    ordered_edges,
     ordered_edge_routing_context,
     edges_out_by_id,
   )

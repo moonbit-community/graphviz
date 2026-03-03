@@ -25,8 +25,8 @@ fn build_regular_spline_layout(
     context.rank_ht2,
     context.x_groups,
     context.nodesep_pt,
-    context.path_left_bound,
-    context.path_right_bound,
+    context.prepass.path_left_bound,
+    context.prepass.path_right_bound,
     context.ranksep_pt,
     context.label_edge_counts,
     context.head_port_metrics,
@@ -45,7 +45,7 @@ fn build_regular_spline_layout(
     context.vnode_positions,
     context.vnode_info.vnode_sizes,
     context.path_adjacency,
-    context.recover_edge_id_for_routing,
+    context.prepass.recover_edge_id_for_routing,
     recovered_slack_keys,
     recover_slack_vnodes,
   )
@@ -79,7 +79,7 @@ fn apply_regular_parallel_reuse_layouts(
     @routing.collect_parallel_reuse_siblings(
       edge,
       regular_layout.spline_result.raw_bezier,
-      context.regular_parallel_groups,
+      context.prepass.regular_parallel_groups,
     )
   if sibling_edges.length() == 0 {
     return ()
