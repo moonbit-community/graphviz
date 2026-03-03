@@ -1371,6 +1371,122 @@ fn build_short_route_fallback_spline(
 }
 
 ///|
+fn short_route_build_context(
+  base : EdgeRouteBase,
+  positions : Map[String, @geom.Point],
+  sizes : Map[String, NodeSize],
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+  ranksep_pt : Double,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  using_pathplan : Bool,
+  has_explicit_port : Bool,
+  label_width_pt : Double,
+  nodesep_pt : Double,
+  force_segmented : Bool,
+  curve_offset : Double,
+  curve_skew : Double,
+) -> ShortRouteBuildContext {
+  let style_value = match base.edge.get_attr("style") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  // Graphviz parity: flat invisible edges use linear control points in
+  // line routing (matches proc3d rank=same invis edge snapshots).
+  let prefer_linear_flat_invis =
+    base.is_flat_edge &&
+    !has_explicit_port &&
+    label_width_pt <= 0.0 &&
+    style_value.contains("invis")
+  let prefer_linear_flat_bottom_single_arrow =
+    base.is_flat_edge &&
+    !base.is_flat_adjacent &&
+    !base.swap_ends &&
+    has_explicit_port &&
+    label_width_pt <= 0.0 &&
+    (base.tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
+    (base.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
+    (base.tail_port_side & PORT_SIDE_TOP) == 0 &&
+    (base.head_port_side & PORT_SIDE_TOP) == 0 &&
+    route_has_single_arrowhead(base.route_include_tail, base.route_include_head)
+  let flat_detour_lookup =
+    flat_detour_lookup_context(
+      base,
+      positions,
+      sizes,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+      ranksep_pt,
+    )
+  {
+    using_pathplan,
+    has_explicit_port,
+    label_width_pt,
+    flat_detour_lookup,
+    route_barriers,
+    nodesep_pt,
+    force_segmented,
+    curve_offset,
+    curve_skew,
+    prefer_linear_flat_invis,
+    prefer_linear_flat_bottom_single_arrow,
+  }
+}
+
+///|
+fn short_route_spec_for_adjusted_points(
+  adjusted : Array[@geom.Point],
+) -> ShortRouteBuildSpec {
+  {
+    detour_line_start: adjusted[0],
+    detour_line_end: adjusted[adjusted.length() - 1],
+    fallback_points: adjusted,
+    fallback_line_start: adjusted[0],
+    fallback_line_end: adjusted[adjusted.length() - 1],
+    tail_clip_enabled: true,
+    head_clip_enabled: true,
+    lr_detour_uses_x_axis: true,
+  }
+}
+
+///|
+fn short_route_spec_for_anchor_or_pathplan_points(
+  points : Array[@geom.Point],
+  using_pathplan : Bool,
+  tail_anchor : @geom.Point,
+  head_anchor : @geom.Point,
+  tail_clip_enabled : Bool,
+  head_clip_enabled : Bool,
+) -> ShortRouteBuildSpec {
+  let fallback_line_start =
+    if using_pathplan && points.length() >= 2 {
+      points[0]
+    } else {
+      tail_anchor
+    }
+  let fallback_line_end =
+    if using_pathplan && points.length() >= 2 {
+      points[points.length() - 1]
+    } else {
+      head_anchor
+    }
+  {
+    detour_line_start: tail_anchor,
+    detour_line_end: head_anchor,
+    fallback_points: points,
+    fallback_line_start,
+    fallback_line_end,
+    tail_clip_enabled,
+    head_clip_enabled,
+    lr_detour_uses_x_axis: false,
+  }
+}
+
+///|
 fn build_short_route_spline_with_detour(
   base : EdgeRouteBase,
   short_route_context : ShortRouteBuildContext,
@@ -3905,7 +4021,6 @@ fn build_edge_spline(
   let force_segmented = base.force_segmented
   let tail_cluster_bbox = base.tail_cluster_bbox
   let head_cluster_bbox = base.head_cluster_bbox
-  let is_flat_edge = base.is_flat_edge
   let has_vnodes = base.has_vnodes
   let route_include_tail = base.route_include_tail
   let route_include_head = base.route_include_head
@@ -4051,30 +4166,8 @@ fn build_edge_spline(
       )
       let curve_offset = curve_offset_params.curve_offset
       let curve_skew = curve_offset_params.curve_skew
-      let style_value = match edge.get_attr("style") {
-        Some(value) => value.to_lower()
-        None => ""
-      }
-      // Graphviz parity: flat invisible edges use linear control points in
-      // line routing (matches proc3d rank=same invis edge snapshots).
-      let prefer_linear_flat_invis =
-        is_flat_edge &&
-        !has_explicit_port &&
-        label_width_pt <= 0.0 &&
-        style_value.contains("invis")
-      let prefer_linear_flat_bottom_single_arrow =
-        is_flat_edge &&
-        !base.is_flat_adjacent &&
-        !base.swap_ends &&
-        has_explicit_port &&
-        label_width_pt <= 0.0 &&
-        (base.tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
-        (base.head_port_side & PORT_SIDE_BOTTOM) != 0 &&
-        (base.tail_port_side & PORT_SIDE_TOP) == 0 &&
-        (base.head_port_side & PORT_SIDE_TOP) == 0 &&
-        route_has_single_arrowhead(route_include_tail, route_include_head)
-      let flat_detour_lookup =
-        flat_detour_lookup_context(
+      let short_route_context =
+        short_route_build_context(
           base,
           positions,
           sizes,
@@ -4083,20 +4176,15 @@ fn build_edge_spline(
           rank_ht1,
           rank_ht2,
           ranksep_pt,
+          route_barriers,
+          using_pathplan,
+          has_explicit_port,
+          label_width_pt,
+          nodesep_pt,
+          force_segmented,
+          curve_offset,
+          curve_skew,
         )
-      let short_route_context : ShortRouteBuildContext = {
-        using_pathplan,
-        has_explicit_port,
-        label_width_pt,
-        flat_detour_lookup,
-        route_barriers,
-        nodesep_pt,
-        force_segmented,
-        curve_offset,
-        curve_skew,
-        prefer_linear_flat_invis,
-        prefer_linear_flat_bottom_single_arrow,
-      }
       let routed_spline = if points.length() > 2 {
         let clipped = points
         let simplify_tol = nodesep_pt * 0.8
@@ -4127,16 +4215,7 @@ fn build_edge_spline(
             simplified
           }
         if adjusted.length() <= 2 {
-          let short_route_spec : ShortRouteBuildSpec = {
-            detour_line_start: adjusted[0],
-            detour_line_end: adjusted[adjusted.length() - 1],
-            fallback_points: adjusted,
-            fallback_line_start: adjusted[0],
-            fallback_line_end: adjusted[adjusted.length() - 1],
-            tail_clip_enabled: true,
-            head_clip_enabled: true,
-            lr_detour_uses_x_axis: true,
-          }
+          let short_route_spec = short_route_spec_for_adjusted_points(adjusted)
           let short_route_spline =
             build_short_route_spline_with_detour(
               base,
@@ -4162,28 +4241,15 @@ fn build_edge_spline(
           multi_point_spline.spline
         }
       } else {
-        let fallback_line_start =
-          if using_pathplan && points.length() >= 2 {
-            points[0]
-          } else {
-            tail_anchor
-          }
-        let fallback_line_end =
-          if using_pathplan && points.length() >= 2 {
-            points[points.length() - 1]
-          } else {
-            head_anchor
-          }
-        let short_route_spec : ShortRouteBuildSpec = {
-          detour_line_start: tail_anchor,
-          detour_line_end: head_anchor,
-          fallback_points: points,
-          fallback_line_start,
-          fallback_line_end,
-          tail_clip_enabled,
-          head_clip_enabled,
-          lr_detour_uses_x_axis: false,
-        }
+        let short_route_spec =
+          short_route_spec_for_anchor_or_pathplan_points(
+            points,
+            using_pathplan,
+            tail_anchor,
+            head_anchor,
+            tail_clip_enabled,
+            head_clip_enabled,
+          )
         let short_route_spline =
           build_short_route_spline_with_detour(
             base,
