@@ -44,71 +44,6 @@ fn run_root_rank_reorder_call(
 }
 
 ///|
-/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
-/// and reorder_rank_groups execution in the same Graphviz call sequence.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_reorder_pass(
-  reorder_inputs : @ordering.RootMincrossReorderInputs,
-  order_groups_for_mincross : Map[Int, Array[String]],
-) -> (Map[Int, Array[String]], Map[String, Bool]) {
-  let reorder_call_data =
-    @ordering.build_root_rank_reorder_call_data(
-      order_groups_for_mincross,
-      reorder_inputs.order_edges_out,
-      reorder_inputs.order_edge_tail_out,
-      reorder_inputs.order_edge_head_out,
-      reorder_inputs.order_edge_tail_port_x,
-      reorder_inputs.order_edge_head_port_x,
-      reorder_inputs.order_edge_tail_port_order,
-      reorder_inputs.order_edge_head_port_order,
-      reorder_inputs.order_ranks,
-      reorder_inputs.order_cluster_keys,
-      reorder_inputs.rank_same_groups,
-      reorder_inputs.rank_same_order,
-      reorder_inputs.order_node_order,
-      reorder_inputs.order_sizes_out,
-      reorder_inputs.nodesep_pt,
-      reorder_inputs.has_edge_labels,
-      reorder_inputs.port_order_positions,
-      reorder_inputs.port_order_contrib,
-      reorder_inputs.vnode_order_keys_for_ordering,
-      reorder_inputs.order_with_vnodes,
-      reorder_inputs.order_cluster_skeleton,
-      reorder_inputs.order_flat_constraints,
-      reorder_inputs.graphviz_out_neighbors,
-      reorder_inputs.graphviz_in_neighbors,
-      reorder_inputs.graphviz_flip,
-    )
-  // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
-  // then records the same stage snapshot before resetting capture state.
-  capture_pass0_flat_seed_groups_value.val = None
-  capture_pass0_flat_seed_groups_enabled.val = true
-  let ordered_mincross =
-    @ordering.run_root_rank_reorder(
-      reorder_call_data.root_rank_reorder_inputs,
-      run_root_rank_reorder_call,
-    )
-  capture_pass0_flat_seed_groups_enabled.val = false
-  // Graphviz parity: root reorder pass snapshot records the same mincross
-  // edge projection and selected rank groups passed to reorder_rank_groups.
-  capture_root_snapshot(
-    reorder_call_data.order_rank_keys_for_mincross,
-    order_groups_for_mincross,
-    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-    reorder_inputs.order_cluster_keys,
-    reorder_inputs.order_cluster_skeleton,
-  )
-  capture_pass0_flat_seed_groups_value.val = None
-  (ordered_mincross, reorder_call_data.mincross_nodes)
-}
-
-///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -123,15 +58,41 @@ fn run_root_mincross_reorder(
       inputs.order_cluster_skeleton,
       root_mincross_groups_override.val,
     )
-  let (ordered_mincross, mincross_nodes) =
-    run_root_reorder_pass(inputs, order_groups_for_mincross)
+  // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
+  // then records the same stage snapshot before resetting capture state.
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
+  let pass_result =
+    @ordering.run_root_reorder_for_groups(
+      inputs,
+      order_groups_for_mincross,
+      run_root_rank_reorder_call,
+    )
+  capture_pass0_flat_seed_groups_enabled.val = false
+  let reorder_call_data = pass_result.reorder_call_data
+  // Graphviz parity: root reorder pass snapshot records the same mincross
+  // edge projection and selected rank groups passed to reorder_rank_groups.
+  capture_root_snapshot(
+    reorder_call_data.order_rank_keys_for_mincross,
+    order_groups_for_mincross,
+    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+    inputs.order_cluster_keys,
+    inputs.order_cluster_skeleton,
+  )
+  capture_pass0_flat_seed_groups_value.val = None
   let ordered =
     @ordering.finalize_root_mincross_ordered_groups(
       inputs.order_with_clusters,
       inputs.order_rank_keys,
       inputs.seeded_groups,
-      ordered_mincross,
-      mincross_nodes,
+      pass_result.ordered_mincross,
+      reorder_call_data.mincross_nodes,
       inputs.order_cluster_keys,
       inputs.order_cluster_skeleton,
     )

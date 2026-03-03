@@ -324,6 +324,12 @@ pub(all) struct RootRankReorderCallData {
 }
 
 ///|
+pub(all) struct RootReorderPassResult {
+  ordered_mincross : Map[Int, Array[String]]
+  reorder_call_data : RootRankReorderCallData
+}
+
+///|
 pub(all) struct RootMincrossReorderInputs {
   order_with_clusters : Bool
   order_with_vnodes : Bool
@@ -453,6 +459,54 @@ pub fn build_root_rank_reorder_call_data(
     mincross_nodes,
     mincross_edge_data,
     root_rank_reorder_inputs,
+  }
+}
+
+///|
+/// Graphviz parity: root ReMincross rank-reorder pass keeps input preparation
+/// and reorder_rank_groups execution in the same Graphviz call sequence.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_reorder_for_groups(
+  reorder_inputs : RootMincrossReorderInputs,
+  order_groups_for_mincross : Map[Int, Array[String]],
+  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
+) -> RootReorderPassResult {
+  let reorder_call_data =
+    build_root_rank_reorder_call_data(
+      order_groups_for_mincross,
+      reorder_inputs.order_edges_out,
+      reorder_inputs.order_edge_tail_out,
+      reorder_inputs.order_edge_head_out,
+      reorder_inputs.order_edge_tail_port_x,
+      reorder_inputs.order_edge_head_port_x,
+      reorder_inputs.order_edge_tail_port_order,
+      reorder_inputs.order_edge_head_port_order,
+      reorder_inputs.order_ranks,
+      reorder_inputs.order_cluster_keys,
+      reorder_inputs.rank_same_groups,
+      reorder_inputs.rank_same_order,
+      reorder_inputs.order_node_order,
+      reorder_inputs.order_sizes_out,
+      reorder_inputs.nodesep_pt,
+      reorder_inputs.has_edge_labels,
+      reorder_inputs.port_order_positions,
+      reorder_inputs.port_order_contrib,
+      reorder_inputs.vnode_order_keys_for_ordering,
+      reorder_inputs.order_with_vnodes,
+      reorder_inputs.order_cluster_skeleton,
+      reorder_inputs.order_flat_constraints,
+      reorder_inputs.graphviz_out_neighbors,
+      reorder_inputs.graphviz_in_neighbors,
+      reorder_inputs.graphviz_flip,
+    )
+  let ordered_mincross =
+    run_root_rank_reorder(
+      reorder_call_data.root_rank_reorder_inputs,
+      run_call,
+    )
+  {
+    ordered_mincross,
+    reorder_call_data,
   }
 }
 
