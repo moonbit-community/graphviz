@@ -230,6 +230,25 @@ priv struct SelfEdgeRoute {
 }
 
 ///|
+fn edge_spline_result_for_bezier(
+  spline : @geom.Spline,
+  raw_bezier : Array[@geom.Point],
+  label_pad_boost : Double,
+  apply_dotted_adjustment : Bool,
+) -> EdgeSplineResult {
+  {
+    spline,
+    label_pad_boost,
+    using_pathplan: false,
+    pathplan_boxes: [],
+    pathplan_points: [],
+    raw_bezier,
+    pathplan_segments: [],
+    apply_dotted_adjustment,
+  }
+}
+
+///|
 fn point_for_name_or_origin(
   positions : Map[String, @geom.Point],
   name : String,
@@ -4814,16 +4833,13 @@ fn build_self_edge_layout(
       false,
       false,
     )
-  let spline_result : EdgeSplineResult = {
-    spline,
-    label_pad_boost: 0.0,
-    using_pathplan: false,
-    pathplan_boxes: [],
-    pathplan_points: [],
-    raw_bezier: route.points,
-    pathplan_segments: [],
-    apply_dotted_adjustment: false,
-  }
+  let spline_result =
+    edge_spline_result_for_bezier(
+      spline,
+      route.points,
+      0.0,
+      false,
+    )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
   let final_spline = finalize_edge_spline(base, layout_spline_result)
   let mut edge_layout =
@@ -4878,16 +4894,13 @@ fn build_flat_adjacent_layout(
       base.swap_ends,
       base.swap_ends,
     )
-  let spline_result : EdgeSplineResult = {
-    spline,
-    label_pad_boost: 0.0,
-    using_pathplan: false,
-    pathplan_boxes: [],
-    pathplan_points: [],
-    raw_bezier: bezier,
-    pathplan_segments: [],
-    apply_dotted_adjustment: false,
-  }
+  let spline_result =
+    edge_spline_result_for_bezier(
+      spline,
+      bezier,
+      0.0,
+      false,
+    )
   let layout_spline_result = rebuild_spline_for_render(base, spline_result)
   let final_spline = finalize_edge_spline(base, layout_spline_result)
   build_edge_layout(
@@ -5333,16 +5346,13 @@ fn build_regular_bezier_layout(
       base.swap_ends,
       base.swap_ends,
     )
-  let sibling_spline_result : EdgeSplineResult = {
-    spline,
-    label_pad_boost: shared_spline_result.label_pad_boost,
-    using_pathplan: false,
-    pathplan_boxes: [],
-    pathplan_points: [],
-    raw_bezier: shared_spline_result.raw_bezier,
-    pathplan_segments: [],
-    apply_dotted_adjustment: shared_spline_result.apply_dotted_adjustment,
-  }
+  let sibling_spline_result =
+    edge_spline_result_for_bezier(
+      spline,
+      shared_spline_result.raw_bezier,
+      shared_spline_result.label_pad_boost,
+      shared_spline_result.apply_dotted_adjustment,
+    )
   let layout_spline_result =
     rebuild_spline_for_render(base, sibling_spline_result)
   let final_spline = finalize_edge_spline(base, layout_spline_result)
