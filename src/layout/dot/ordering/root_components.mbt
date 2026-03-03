@@ -671,6 +671,53 @@ pub fn run_componentwise_root_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: root ReMincross runs mincross per connected component
+/// (dot_mincross init_mccomp loop), then concatenates rank output by component.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_rank_reorder(
+  inputs : RootRankReorderInputs,
+  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
+) -> Map[Int, Array[String]] {
+  let (components, root_graphviz_flip) =
+    build_root_component_runtime_plan(
+      inputs.order_cluster_keys,
+      inputs.graphviz_flip,
+      inputs.order_rank_keys_for_mincross,
+      inputs.order_groups_for_mincross,
+      inputs.order_node_order,
+      inputs.graphviz_out_neighbors,
+      inputs.graphviz_in_neighbors,
+      inputs.order_flat_constraints,
+    )
+  let coalesce_parallel =
+    @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
+  if components.length() <= 1 {
+    return run_call(
+      inputs,
+      root_graphviz_flip,
+      coalesce_parallel,
+    )
+  }
+  run_componentwise_root_rank_reorder(
+    components,
+    inputs.order_rank_keys_for_mincross,
+    (component_nodes, component_set) => {
+      let reorder_call_inputs =
+        build_root_component_reorder_inputs(
+          component_nodes,
+          component_set,
+          inputs,
+        )
+      run_call(
+        reorder_call_inputs,
+        root_graphviz_flip,
+        coalesce_parallel,
+      )
+    },
+  )
+}
+
+///|
 /// Graphviz parity: root rank-reorder runtime setup keeps cluster-key gating,
 /// component traversal plan, and graphviz_flip mode aligned with Graphviz.
 /// Do not change behavior without updating fixtures/tests.
