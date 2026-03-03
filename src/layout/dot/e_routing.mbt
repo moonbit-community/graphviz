@@ -108,7 +108,7 @@ fn prepare_routing_context(
     edge_has_label_by_id[edge.id()] = edge_has_label(edge)
   }
   let parallel_offsets =
-    @parallel_offsets.edge_parallel_offsets(
+    @routing.edge_parallel_offsets(
       edges,
       edge_has_label_by_id,
       ranks,

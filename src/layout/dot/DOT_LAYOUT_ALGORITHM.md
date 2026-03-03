@@ -409,7 +409,7 @@ Main files:
 - `src/layout/dot/routing/pathplan/*`
 - `src/layout/dot/routing/edge_spline/*`
 - `src/layout/dot/routing/edge_ops/*`
-- `src/layout/dot/routing/parallel_offsets/*`
+- `src/layout/dot/routing/parallel_offsets.mbt`
 
 ### What it does
 
