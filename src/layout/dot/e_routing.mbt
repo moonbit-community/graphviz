@@ -491,6 +491,13 @@ priv struct PointsSplineResult {
 }
 
 ///|
+priv struct ShortRouteDetourResolution {
+  detour_spline : PointsSplineResult?
+  flat_no_arrow_candidate : Bool
+  has_flat_detour : Bool
+}
+
+///|
 fn rank_bounds(rank_y : Map[Int, Double]) -> RankBounds {
   let mut min_rank = 0
   let mut max_rank = 0
@@ -1142,6 +1149,48 @@ fn detour_spline_if_any(
         )
       None => None
     }
+  }
+}
+
+///|
+fn resolve_short_route_detour(
+  base : EdgeRouteBase,
+  detour_context : ShortRouteDetourContext,
+  flat_detour_lookup : FlatDetourLookupContext,
+  line_start : @geom.Point,
+  line_end : @geom.Point,
+  using_pathplan : Bool,
+  route_barriers : Array[(@geom.Point, @geom.Point)],
+  nodesep_pt : Double,
+  lr_detour_uses_x_axis : Bool,
+) -> ShortRouteDetourResolution {
+  let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
+  let flat_top_compass_single_arrow_candidate =
+    detour_context.flat_top_compass_single_arrow_candidate
+  let flat_detour =
+    flat_detour_points_for_line(
+      flat_detour_lookup,
+      flat_no_arrow_candidate,
+      flat_top_compass_single_arrow_candidate,
+      line_start,
+      line_end,
+    )
+  let detour_spline =
+    detour_spline_if_any(
+      base,
+      detour_context.needs_record_detour,
+      flat_detour,
+      using_pathplan,
+      detour_context.tail_slope_line,
+      detour_context.head_slope_line,
+      route_barriers,
+      nodesep_pt,
+      lr_detour_uses_x_axis,
+    )
+  {
+    detour_spline,
+    flat_no_arrow_candidate,
+    has_flat_detour: flat_detour is Some(_),
   }
 }
 
@@ -3792,10 +3841,6 @@ fn build_edge_spline(
             )
           let tail_slope_line = detour_context.tail_slope_line
           let head_slope_line = detour_context.head_slope_line
-          let needs_record_detour = detour_context.needs_record_detour
-          let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
-          let flat_top_compass_single_arrow_candidate =
-            detour_context.flat_top_compass_single_arrow_candidate
           let flat_detour_lookup : FlatDetourLookupContext = {
             tail_name,
             head_name,
@@ -3809,27 +3854,19 @@ fn build_edge_spline(
             ranksep_pt,
             rankdir: layout_rankdir,
           }
-          let flat_detour =
-            flat_detour_points_for_line(
+          let detour_resolution =
+            resolve_short_route_detour(
+              base,
+              detour_context,
               flat_detour_lookup,
-              flat_no_arrow_candidate,
-              flat_top_compass_single_arrow_candidate,
               adjusted[0],
               adjusted[adjusted.length() - 1],
-            )
-          let detour_spline =
-            detour_spline_if_any(
-              base,
-              needs_record_detour,
-              flat_detour,
               using_pathplan,
-              tail_slope_line,
-              head_slope_line,
               route_barriers,
               nodesep_pt,
               true,
             )
-          if detour_spline is Some(result) {
+          if detour_resolution.detour_spline is Some(result) {
             raw_bezier = result.raw_bezier
             result.spline
           } else {
@@ -3846,8 +3883,8 @@ fn build_edge_spline(
             let prefer_linear_flat_line =
               prefer_linear_for_flat_line(
                 prefer_linear_flat_invis,
-                flat_no_arrow_candidate,
-                flat_detour is Some(_),
+                detour_resolution.flat_no_arrow_candidate,
+                detour_resolution.has_flat_detour,
                 prefer_linear_flat_bottom_single_arrow,
               )
             let short_route_spline =
@@ -3939,10 +3976,6 @@ fn build_edge_spline(
           )
         let tail_slope_line = detour_context.tail_slope_line
         let head_slope_line = detour_context.head_slope_line
-        let needs_record_detour = detour_context.needs_record_detour
-        let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
-        let flat_top_compass_single_arrow_candidate =
-          detour_context.flat_top_compass_single_arrow_candidate
         let flat_detour_lookup : FlatDetourLookupContext = {
           tail_name,
           head_name,
@@ -3956,27 +3989,19 @@ fn build_edge_spline(
           ranksep_pt,
           rankdir: layout_rankdir,
         }
-        let flat_detour =
-          flat_detour_points_for_line(
+        let detour_resolution =
+          resolve_short_route_detour(
+            base,
+            detour_context,
             flat_detour_lookup,
-            flat_no_arrow_candidate,
-            flat_top_compass_single_arrow_candidate,
             tail_anchor,
             head_anchor,
-          )
-        let detour_spline =
-          detour_spline_if_any(
-            base,
-            needs_record_detour,
-            flat_detour,
             using_pathplan,
-            tail_slope_line,
-            head_slope_line,
             route_barriers,
             nodesep_pt,
             false,
           )
-        if detour_spline is Some(result) {
+        if detour_resolution.detour_spline is Some(result) {
           raw_bezier = result.raw_bezier
           result.spline
         } else {
@@ -4007,8 +4032,8 @@ fn build_edge_spline(
           let prefer_linear_flat_line =
             prefer_linear_for_flat_line(
               prefer_linear_flat_invis,
-              flat_no_arrow_candidate,
-              flat_detour is Some(_),
+              detour_resolution.flat_no_arrow_candidate,
+              detour_resolution.has_flat_detour,
               prefer_linear_flat_bottom_single_arrow,
             )
           let short_route_spline =
