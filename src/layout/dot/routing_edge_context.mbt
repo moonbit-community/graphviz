@@ -169,7 +169,6 @@ fn maybe_build_self_edge_layout(
     input.nodesep_pt,
     input.rank_y,
     state.self_edge_routes,
-    build_self_edge_routes,
   )
   match route {
     Some(route) => {

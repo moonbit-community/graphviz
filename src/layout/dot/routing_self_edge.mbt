@@ -473,12 +473,6 @@ fn ensure_self_edge_routes(
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
-  build_group_routes : (
-    Array[@cgraph.Edge],
-    Array[EdgeRouteBase],
-    Double,
-    Map[Int, Double],
-  ) -> Array[SelfEdgeRoute],
 ) -> Unit {
   let edge_id = edge.id()
   if self_edge_routes.get(edge_id) is Some(_) {
@@ -497,7 +491,7 @@ fn ensure_self_edge_routes(
         group_bases.push(gbase)
       }
       let group_routes =
-        build_group_routes(
+        build_self_edge_routes(
           group_edges,
           group_bases,
           nodesep_pt,
@@ -521,12 +515,6 @@ fn self_edge_route_for_edge(
   nodesep_pt : Double,
   rank_y : Map[Int, Double],
   self_edge_routes : Map[Int, SelfEdgeRoute],
-  build_group_routes : (
-    Array[@cgraph.Edge],
-    Array[EdgeRouteBase],
-    Double,
-    Map[Int, Double],
-  ) -> Array[SelfEdgeRoute],
 ) -> SelfEdgeRoute? {
   if edge.tail().name() != edge.head().name() {
     return None
@@ -538,7 +526,6 @@ fn self_edge_route_for_edge(
     nodesep_pt,
     rank_y,
     self_edge_routes,
-    build_group_routes,
   )
   self_edge_routes.get(edge.id())
 }
