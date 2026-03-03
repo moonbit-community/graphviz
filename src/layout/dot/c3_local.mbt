@@ -499,6 +499,21 @@ fn normalize_external_neighbor_name(
 ///|
 /// Graphviz parity: raw AGSEQ neighbors are merged only when source ND_out/in
 /// does not already expose an external anchor.
+fn has_external_neighbor(
+  neighbors : Array[String],
+  cluster_node_set : Map[String, Bool],
+) -> Bool {
+  for other in neighbors {
+    if cluster_node_set.get(other) is None {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// Graphviz parity: raw AGSEQ neighbors are merged only when source ND_out/in
+/// does not already expose an external anchor.
 fn has_source_external_anchor(
   name : String,
   cluster_node_set : Map[String, Bool],
@@ -506,18 +521,11 @@ fn has_source_external_anchor(
   source_in_neighbors : Map[String, Array[String]],
 ) -> Bool {
   let out = source_out_neighbors.get(name).unwrap_or_default()
-  for other in out {
-    if cluster_node_set.get(other) is None {
-      return true
-    }
+  if has_external_neighbor(out, cluster_node_set) {
+    return true
   }
   let inn = source_in_neighbors.get(name).unwrap_or_default()
-  for other in inn {
-    if cluster_node_set.get(other) is None {
-      return true
-    }
-  }
-  false
+  has_external_neighbor(inn, cluster_node_set)
 }
 
 ///|
