@@ -189,7 +189,13 @@ fn build_remincross_inputs(
       dispatch_context.vnode_info.vnode_sizes,
     )
   let rem_flat_constraints =
-    build_remincross_flat_constraints(dispatch_context)
+    @ordering.build_remincross_flat_constraints(
+      {
+        order_with_clusters: dispatch_context.order_with_clusters,
+        cluster_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        rank_same_constraints: dispatch_context.rank_same_constraints,
+      },
+    )
   {
     rem_nodes,
     rem_ranks,
@@ -271,28 +277,6 @@ fn run_remincross_cleanup(
     startpass=2,
     remincross_mode=true,
   )
-}
-
-///|
-/// Graphviz parity: ReMincross flat constraints combine cluster flat locks and
-/// rank=same constraints only for non-cluster reorder path.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_flat_constraints(
-  dispatch_context : ReMincrossDispatchContext,
-) -> Map[String, Bool] {
-  let rem_flat_constraints : Map[String, Bool] = Map::new()
-  // Graphviz parity: ReMincross flat constraints combine existing same-rank
-  // constraints with local intra-cluster adjacency locks for non-intercluster
-  // real-node pairs (flat.c cluster-local reorder guard).
-  if !dispatch_context.order_with_clusters {
-    for key, value in dispatch_context.cluster_meta.flat_constraints {
-      rem_flat_constraints[key] = value
-    }
-    for key, _ in dispatch_context.rank_same_constraints {
-      rem_flat_constraints[key] = true
-    }
-  }
-  rem_flat_constraints
 }
 
 ///|

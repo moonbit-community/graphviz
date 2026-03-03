@@ -155,3 +155,34 @@ pub fn build_remincross_cluster_keys(
   }
   rem_cluster_keys
 }
+
+///|
+/// Graphviz parity: clustered ReMincross flat-constraint inputs combine
+/// cluster-local and rank=same constraint snapshots before cleanup reorder.
+pub(all) struct ReMincrossFlatConstraintInputs {
+  order_with_clusters : Bool
+  cluster_flat_constraints : Map[String, Bool]
+  rank_same_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: ReMincross flat constraints combine cluster flat locks and
+/// rank=same constraints only for non-cluster reorder path.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_remincross_flat_constraints(
+  inputs : ReMincrossFlatConstraintInputs,
+) -> Map[String, Bool] {
+  let rem_flat_constraints : Map[String, Bool] = Map::new()
+  // Graphviz parity: ReMincross flat constraints combine existing same-rank
+  // constraints with local intra-cluster adjacency locks for non-intercluster
+  // real-node pairs (flat.c cluster-local reorder guard).
+  if !inputs.order_with_clusters {
+    for key, value in inputs.cluster_flat_constraints {
+      rem_flat_constraints[key] = value
+    }
+    for key, _ in inputs.rank_same_constraints {
+      rem_flat_constraints[key] = true
+    }
+  }
+  rem_flat_constraints
+}
