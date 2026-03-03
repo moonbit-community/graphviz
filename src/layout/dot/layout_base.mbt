@@ -270,21 +270,6 @@ fn parse_splines(value : String) -> SplinesMode? {
 }
 
 ///|
-priv enum OrderingMode {
-  Out
-  In
-}
-
-///|
-fn parse_ordering_mode(value : String) -> OrderingMode? {
-  match value.to_lower() {
-    "out" => Some(OrderingMode::Out)
-    "in" => Some(OrderingMode::In)
-    _ => None
-  }
-}
-
-///|
 priv enum EdgeDir {
   Forward
   Back
@@ -326,6 +311,3 @@ const MAX_XPOS_VNODES : Int = 100000
 
 ///|
 const MAX_XPOS_REORDER_VNODES : Int = 5000
-
-///|
-const LARGE_SORT_THRESHOLD : Int = 128

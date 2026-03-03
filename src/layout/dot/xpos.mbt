@@ -89,7 +89,7 @@ priv struct ConstraintGraphState {
 
 ///|
 priv struct ClusterConstraintBuild {
-  extra_nodes : Array[ExtraConstraintNode]
+  extra_nodes : Array[@ordering.ExtraConstraintNode]
   extra_edges : Array[ConstraintEdge]
   root_ln_targets : Array[String]
   root_rn_targets : Array[String]
@@ -99,12 +99,6 @@ priv struct ClusterConstraintBuild {
 priv struct ClusterBoundaryNodes {
   left_node : String
   right_node : String
-}
-
-///|
-priv struct ExtraConstraintNode {
-  name : String
-  rank : Int
 }
 
 ///|
@@ -607,7 +601,7 @@ fn build_cluster_constraints(
   let cluster_border_right : Map[String, Double] = Map::new()
   let cluster_min_rank : Map[String, Int] = Map::new()
   let cluster_max_rank : Map[String, Int] = Map::new()
-  let extra_nodes : Array[ExtraConstraintNode] = []
+  let extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   let extra_edges : Array[ConstraintEdge] = []
   for name, cluster_graph in cluster_graphs {
     cluster_margins[name] = cluster_margin_pt(cluster_graph)
@@ -2031,7 +2025,7 @@ fn build_constraint_graph(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[ExtraConstraintNode],
+  extra_nodes : Array[@ordering.ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
@@ -2077,8 +2071,8 @@ fn build_constraint_graph(
   let base_positions = compute_rank_positions(
     rank_keys, groups, sizes, nodesep_pt, has_edge_labels,
   )
-  let early_extra_nodes : Array[ExtraConstraintNode] = []
-  let late_extra_nodes : Array[ExtraConstraintNode] = []
+  let early_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
+  let late_extra_nodes : Array[@ordering.ExtraConstraintNode] = []
   for extra_node in extra_nodes {
     if extra_node.name.has_prefix(CLUSTER_LN_PREFIX) ||
       extra_node.name.has_prefix(CLUSTER_RN_PREFIX) {
@@ -2384,7 +2378,7 @@ fn x_positions_from_simplex(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[ExtraConstraintNode],
+  extra_nodes : Array[@ordering.ExtraConstraintNode],
   extra_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
   root_ln_targets : Array[String],
@@ -2479,7 +2473,7 @@ fn x_positions_from_simplex(
       }
     }
   }
-  let order_index = build_order_index(groups)
+  let order_index = @ordering.build_order_index(groups)
   let constraint_graph = build_constraint_graph(
     nodes,
     edges,
@@ -2607,7 +2601,7 @@ fn compute_x_positions(
   cluster_keys : Map[String, String],
   nodesep_pt : Double,
   has_edge_labels : Bool,
-  extra_nodes : Array[ExtraConstraintNode],
+  extra_nodes : Array[@ordering.ExtraConstraintNode],
   flat_label_edges : Array[ConstraintEdge],
   edge_vnodes : Map[String, Array[String]],
 ) -> Map[String, Double] {

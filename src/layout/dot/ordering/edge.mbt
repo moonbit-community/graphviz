@@ -1,12 +1,64 @@
 ///|
-priv struct DedupOrderingEdgesOutput {
+const CLUSTER_SKELETON_PREFIX : String = "_mbt_cluster_skel_"
+
+///|
+priv enum OrderingMode {
+  Out
+  In
+}
+
+///|
+fn parse_ordering_mode(value : String) -> OrderingMode? {
+  match value.to_lower() {
+    "out" => Some(OrderingMode::Out)
+    "in" => Some(OrderingMode::In)
+    _ => None
+  }
+}
+
+///|
+fn edge_tail_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+) -> String {
+  if edge_idx < edge_tail.length() { edge_tail[edge_idx] } else {
+    edge.tail().name()
+  }
+}
+
+///|
+fn edge_head_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_head : Array[String],
+) -> String {
+  if edge_idx < edge_head.length() { edge_head[edge_idx] } else {
+    edge.head().name()
+  }
+}
+
+///|
+fn edge_endpoints_at(
+  edge : @cgraph.Edge,
+  edge_idx : Int,
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> (String, String) {
+  let tail = edge_tail_at(edge, edge_idx, edge_tail)
+  let head = edge_head_at(edge, edge_idx, edge_head)
+  (tail, head)
+}
+
+///|
+pub(all) struct DedupOrderingEdgesOutput {
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
   order_edge_head : Array[String]
 }
 
 ///|
-fn dedup_ordering_edges(
+pub fn dedup_ordering_edges(
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -36,13 +88,13 @@ fn dedup_ordering_edges(
 }
 
 ///|
-priv struct FlatConstraintsOutput {
+pub(all) struct FlatConstraintsOutput {
   flat_constraints : Map[String, Bool]
   ordering_set : Bool
 }
 
 ///|
-fn build_flat_constraints(
+pub fn build_flat_constraints(
   graph : @cgraph.Graph,
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -181,13 +233,13 @@ fn build_flat_constraints(
 }
 
 ///|
-priv struct EdgeIndexData {
+pub(all) struct EdgeIndexData {
   parents : Map[String, Array[String]]
   children : Map[String, Array[String]]
 }
 
 ///|
-fn build_edge_index_for_order(
+pub fn build_edge_index_for_order(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -248,7 +300,7 @@ fn build_edge_index_impl(
 }
 
 ///|
-fn build_edge_index_for_names(
+pub fn build_edge_index_for_names(
   node_names : Array[String],
   edge_tail : Array[String],
   edge_head : Array[String],
@@ -264,7 +316,7 @@ fn build_edge_index_for_names(
 }
 
 ///|
-fn add_order_edge(
+pub fn add_order_edge(
   graph : @cgraph.Graph,
   node_map : Map[String, @cgraph.Node],
   edges : Array[@cgraph.Edge],
@@ -311,7 +363,7 @@ fn add_order_edge(
 
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
-priv struct OrderEdgesByTailOutput {
+pub(all) struct OrderEdgesByTailOutput {
   order_edges_by_tail : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
   vnode_creation_by_tail : Map[String, Array[String]]
   edge_creation_order : Array[(String, String)]
@@ -320,7 +372,7 @@ priv struct OrderEdgesByTailOutput {
 ///|
 /// Graphviz parity: build order-graph edges in class2 tail/edge iteration order.
 /// Do not change behavior without updating fixtures/tests.
-fn build_order_edges_by_tail(
+pub fn build_order_edges_by_tail(
   tail_order : Array[String],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -562,8 +614,8 @@ fn build_order_edges_by_tail(
       } else {
         head
       }
-      let penalty = @dot_shared.edge_xpenalty(edge)
-      let constraint = @dot_shared.edge_is_constraint(edge)
+      let penalty = @shared.edge_xpenalty(edge)
+      let constraint = @shared.edge_is_constraint(edge)
       let tail_port_x =
         if idx < edge_tail_port_x.length() { edge_tail_port_x[idx] } else {
           0.0
@@ -582,7 +634,7 @@ fn build_order_edges_by_tail(
         }
       let vnodes =
         if order_with_vnodes {
-        match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
+        match edge_vnodes.get(@shared.edge_vnode_key(edge)) {
           Some(list) => list
           None => []
         }
@@ -673,7 +725,7 @@ fn build_order_edges_by_tail(
 }
 
 ///|
-fn build_edge_index_with_vnodes(
+pub fn build_edge_index_with_vnodes(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -708,7 +760,7 @@ fn build_edge_index_with_vnodes(
       continue
     }
     let (low, high) = if tail_rank <= head_rank { (tail, head) } else { (head, tail) }
-    let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edges[edge_idx])) {
+    let vnodes = match edge_vnodes.get(@shared.edge_vnode_key(edges[edge_idx])) {
       Some(list) => list
       None => []
     }

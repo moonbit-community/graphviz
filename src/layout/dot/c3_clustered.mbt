@@ -143,7 +143,7 @@ fn run_clustered_root_phase(
     remincross_root_tail_order_override_snapshot.val =
       Some(root_tail_order_override.copy())
     root_mincross_groups_override.val =
-      Some(clone_rank_groups(root_groups_override))
+      Some(@ordering.clone_rank_groups(root_groups_override))
   } else {
     remincross_root_tail_order_override_snapshot.val = None
     root_mincross_groups_override.val = None

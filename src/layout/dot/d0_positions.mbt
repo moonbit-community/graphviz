@@ -21,7 +21,7 @@ priv struct XposComputationInput {
   x_sizes : Map[String, NodeSize]
   x_rank_keys : Array[Int]
   x_ranks : Map[String, Int]
-  x_extra_nodes : Array[ExtraConstraintNode]
+  x_extra_nodes : Array[@ordering.ExtraConstraintNode]
   x_edge_vnodes : Map[String, Array[String]]
 }
 
@@ -216,9 +216,9 @@ fn build_initial_x_groups(
   let mut x_groups =
     if use_vnodes_for_xpos {
       if ordered_groups_with_vnodes.length() > 0 {
-        clone_rank_groups(ordered_groups_with_vnodes)
+        @ordering.clone_rank_groups(ordered_groups_with_vnodes)
       } else {
-        build_x_groups_with_vnodes(
+        @ordering.build_x_groups_with_vnodes(
           ordered_groups,
           order_index,
           vnodes_by_rank,
@@ -257,7 +257,7 @@ fn build_x_seed_data(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
 ) -> XPositionSeedData {
-  let order_index = build_order_index(ordering.ordered_groups)
+  let order_index = @ordering.build_order_index(ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state(
       use_vnodes_for_xpos,
@@ -411,15 +411,15 @@ fn build_xpos_computation_input(
 ) -> XposComputationInput {
   let x_sizes =
     if use_vnodes_for_xpos {
-      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
+      @ordering.merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
     } else {
       x_base_sizes
     }
-  let x_rank_keys = collect_rank_keys(x_groups)
-  let x_ranks = build_node_ranks(x_groups)
+  let x_rank_keys = @ordering.collect_rank_keys(x_groups)
+  let x_ranks = @ordering.build_node_ranks(x_groups)
   let vnode_extra_nodes =
     if use_vnodes_for_xpos {
-      build_vnode_extra_nodes(
+      @ordering.build_vnode_extra_nodes(
         ordering.vnode_creation_order,
         ordering.vnode_info.vnode_ranks,
       )

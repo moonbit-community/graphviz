@@ -216,7 +216,7 @@ fn build_routing_precompute_data(
       ordering.vnode_info.vnode_sizes,
       positions_state.vnode_positions,
       cluster_bboxes,
-      build_order_index,
+      @ordering.build_order_index,
       (nodes, edges, sizes) =>
         apply_self_edge_right_space(
           nodes,

@@ -451,7 +451,7 @@ fn collect_order_edges_for_tails(
     for entry in list {
       let (edge_tail_name, edge_head_name, penalty, constraint, tail_port_x, head_port_x, tail_port_order, head_port_order) =
         entry
-      add_order_edge(
+      @ordering.add_order_edge(
         order_graph,
         order_node_map,
         order_edges_out,
@@ -505,7 +505,7 @@ fn build_edge_indices_and_order(
   edges_out : Array[@cgraph.Edge],
 ) -> EdgeIndicesAndOrder {
   let edge_index_data =
-    build_edge_index_for_names(
+    @ordering.build_edge_index_for_names(
       order_nodes,
       edge_tail_out,
       edge_head_out,
@@ -513,7 +513,7 @@ fn build_edge_indices_and_order(
     )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = collect_edge_order(edges_out)
+  let edge_order = @ordering.collect_edge_order(edges_out)
   { parents, children, edge_order }
 }
 

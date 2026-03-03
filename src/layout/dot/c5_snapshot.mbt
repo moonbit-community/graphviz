@@ -139,7 +139,7 @@ fn capture_root_snapshot(
   }
   let snapshot : RootMincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
-    groups: clone_rank_groups(groups),
+    groups: @ordering.clone_rank_groups(groups),
     edges,
     cluster_keys: snapshot_cluster_keys,
     cluster_skeleton: snapshot_cluster_skeleton,
@@ -174,7 +174,7 @@ fn capture_remincross_snapshot(
   }
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
-    groups: clone_rank_groups(groups),
+    groups: @ordering.clone_rank_groups(groups),
     edges: build_ordering_edges_snapshot(
       edges_out,
       edge_tail_out,

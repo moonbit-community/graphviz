@@ -47,7 +47,7 @@ fn run_remincross_pass(
   dispatch_context : ReMincrossDispatchContext,
 ) -> OrderingDispatchOutput {
   let rem_groups = build_remincross_groups(dispatch_context)
-  let rem_rank_keys = collect_rank_keys(rem_groups)
+  let rem_rank_keys = @ordering.collect_rank_keys(rem_groups)
   if rem_rank_keys.length() <= 1 {
     {
       ordered_groups: dispatch_context.base_groups,
@@ -111,7 +111,7 @@ fn build_remincross_inputs(
   rem_rank_keys : Array[Int],
   rem_groups : Map[Int, Array[String]],
 ) -> ClusteredReMincrossMaterializedInputs {
-  let rem_ranks = build_node_ranks(rem_groups)
+  let rem_ranks = @ordering.build_node_ranks(rem_groups)
   let rem_nodes = build_order_nodes_from_groups(rem_groups, rem_rank_keys)
   let rem_graph_output =
     build_order_graph_and_nodes("order_remincross", rem_nodes)
@@ -508,8 +508,8 @@ fn build_remincross_vnode_groups(
   final_groups : Map[Int, Array[String]],
   dispatch_context : ReMincrossDispatchContext,
 ) -> Map[Int, Array[String]] {
-  let rem_base_groups = clone_rank_groups(final_groups)
-  let rem_base_order_index = build_order_index(rem_base_groups)
+  let rem_base_groups = @ordering.clone_rank_groups(final_groups)
+  let rem_base_order_index = @ordering.build_order_index(rem_base_groups)
   let rem_vnode_order_keys =
     if !dispatch_context.order_with_vnodes {
       Map::new()
@@ -517,7 +517,7 @@ fn build_remincross_vnode_groups(
       build_remincross_vnode_keys(dispatch_context, rem_base_order_index)
     }
   if dispatch_context.order_with_vnodes {
-    build_x_groups_with_vnodes(
+    @ordering.build_x_groups_with_vnodes(
       rem_base_groups,
       rem_base_order_index,
       dispatch_context.vnode_info.vnodes_by_rank,

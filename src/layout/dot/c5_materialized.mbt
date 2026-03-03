@@ -80,7 +80,7 @@ fn build_materialized_edges(
   cluster_order_index : Map[String, Int],
 ) -> ReMincrossMaterializedOrderEdges {
   let rem_order_edges_output =
-    build_order_edges_by_tail(
+    @ordering.build_order_edges_by_tail(
       dispatch_context.creation_order,
       dispatch_context.edges,
       dispatch_context.edge_tail,
@@ -151,7 +151,7 @@ fn build_materialized_arrays(
   cluster_order_index : Map[String, Int],
   materialized_edges : ReMincrossMaterializedOrderEdges,
 ) -> ReMincrossMaterializedEdgeArrays {
-  let rem_ranks = build_node_ranks(rem_groups)
+  let rem_ranks = @ordering.build_node_ranks(rem_groups)
   let rem_nlist_order =
     build_remincross_nlist_order(
       dispatch_context.creation_order,
@@ -161,7 +161,7 @@ fn build_materialized_arrays(
       dispatch_context.cluster_meta.intercluster_keys,
       cluster_order_index,
     )
-  let rem_node_order = build_order_index(rem_groups)
+  let rem_node_order = @ordering.build_order_index(rem_groups)
   let rem_materialized =
     collect_order_edges_for_tails(
       rem_nlist_order,

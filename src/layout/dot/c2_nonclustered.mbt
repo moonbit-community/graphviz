@@ -101,7 +101,7 @@ fn run_noncluster_reorder_pass(
     }
   }
   let edge_index_data =
-    build_edge_index_for_order(
+    @ordering.build_edge_index_for_order(
       nodes,
       order_edges,
       order_edge_tail,

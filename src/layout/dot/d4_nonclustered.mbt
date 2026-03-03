@@ -17,7 +17,7 @@ fn build_nonclustered_groups(
   graphviz_flip : Bool,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  let edge_index_data = build_edge_index_with_vnodes(
+  let edge_index_data = @ordering.build_edge_index_with_vnodes(
     prep.nodes,
     ordering.order_edges,
     ordering.order_edge_tail,
@@ -28,7 +28,7 @@ fn build_nonclustered_groups(
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let tmp_rank_keys = collect_rank_keys(x_groups)
+  let tmp_rank_keys = @ordering.collect_rank_keys(x_groups)
   // Graphviz parity: even non-cluster xpos reorder uses compass/record
   // port-order fractions when mincross scoring ties are evaluated.
   let order_edge_port_x_samples =

@@ -832,7 +832,7 @@ fn run_root_reorder_pass(
   // Graphviz parity: root ReMincross stage data is assembled from one
   // snapshot: rank keys -> node membership -> filtered mincross edge bundle.
   let order_rank_keys_for_mincross =
-    collect_rank_keys(order_groups_for_mincross)
+    @ordering.collect_rank_keys(order_groups_for_mincross)
   let order_nodes_for_mincross =
     build_order_nodes_from_groups(
       order_groups_for_mincross,
@@ -960,7 +960,7 @@ fn resolve_root_mincross_input_groups(
       )
     }
   match root_mincross_groups_override.val {
-    Some(override_groups) => clone_rank_groups(override_groups)
+    Some(override_groups) => @ordering.clone_rank_groups(override_groups)
     None => order_groups_for_mincross_base
   }
 }

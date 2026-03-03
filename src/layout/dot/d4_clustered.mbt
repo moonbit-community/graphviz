@@ -68,14 +68,14 @@ fn build_clustered_seed_data(
   for name, value in node_order {
     order_node_order[name] = value
   }
-  let order_index = build_order_index(order_groups)
+  let order_index = @ordering.build_order_index(order_groups)
   for name, idx in order_index {
     if order_node_order.get(name) is None {
       order_node_order[name] = idx
     }
   }
-  let order_rank_keys = collect_rank_keys(order_groups)
-  let order_ranks = build_node_ranks(order_groups)
+  let order_rank_keys = @ordering.collect_rank_keys(order_groups)
+  let order_ranks = @ordering.build_node_ranks(order_groups)
   let order_nodes : Array[String] = []
   for rank in order_rank_keys {
     let names = match order_groups.get(rank) {
@@ -169,7 +169,7 @@ fn append_xpos_chain_segments(
       if chain[idx] == tail { tail_port_order } else { 0.5 }
     let seg_head_order =
       if chain[idx + 1] == head { head_port_order } else { 0.5 }
-    add_order_edge(
+    @ordering.add_order_edge(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -218,7 +218,7 @@ fn append_xpos_edge_with_vnodes(
   vnodes : Array[String],
 ) -> Unit {
   if vnodes.length() == 0 {
-    add_order_edge(
+    @ordering.add_order_edge(
       order_graph,
       order_node_map,
       order_edges_out,
@@ -293,7 +293,7 @@ fn append_skeleton_edges(
     while rank < max_rank {
       let tail_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank}"
       let head_name = "\{CLUSTER_SKELETON_PREFIX}\{cluster}@\{rank + 1}"
-      add_order_edge(
+      @ordering.add_order_edge(
         order_graph,
         order_node_map,
         order_edges_out,
@@ -493,7 +493,7 @@ fn apply_clustered_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let edge_index_data = build_edge_index_for_names(
+  let edge_index_data = @ordering.build_edge_index_for_names(
     order_nodes,
     order_edge_tail_out,
     order_edge_head_out,
@@ -501,7 +501,7 @@ fn apply_clustered_rank_groups(
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
-  let edge_order = collect_edge_order(order_edges_out)
+  let edge_order = @ordering.collect_edge_order(order_edges_out)
   // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
   // computed for the order graph (mincross median tie-breaking path).
   reorder_rank_groups(

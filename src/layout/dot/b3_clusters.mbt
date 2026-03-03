@@ -191,10 +191,10 @@ fn compute_cluster_metadata(
   // ordering constraints, matching Graphviz same-rank preprocessing.
   let rank_same_groups : Map[String, Int] = Map::new()
   let rank_same_order : Map[String, Int] = Map::new()
-  let _ = collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
+  let _ = @ordering.collect_rank_same_order(graph, rank_same_groups, rank_same_order, 0)
   // Graphviz parity: flat ordering constraints include Graphviz ordering attrs
   // plus same-rank edge constraints before clustered reorder dispatch.
-  let flat_constraints_output = build_flat_constraints(
+  let flat_constraints_output = @ordering.build_flat_constraints(
     graph,
     nodes,
     edges,

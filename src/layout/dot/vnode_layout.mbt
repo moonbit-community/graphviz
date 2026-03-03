@@ -216,7 +216,7 @@ fn add_flat_label_vnodes(
   vnode_info : @routing.EdgeVnodeInfo,
   x_groups : Map[Int, Array[String]],
 ) -> FlatLabelVnodeResult {
-  let order_index = build_order_index(x_groups)
+  let order_index = @ordering.build_order_index(x_groups)
   let vnode_out_heads =
     collect_vnode_out_heads(edges, edge_tail, edge_head, ranks, vnode_info.edge_vnodes)
   let flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()

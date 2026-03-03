@@ -186,14 +186,14 @@ fn build_ordering_reorder_setup(
 ) -> OrderingReorderSetup {
   // Graphviz parity: reorder setup preserves class2/GD_nlist prep order before
   // clustered/nonclustered mincross paths diverge.
-  let ordering_groups_base = apply_rank_same_order(
+  let ordering_groups_base = @ordering.apply_rank_same_order(
     groups,
     cluster_meta.rank_same_groups,
     cluster_meta.rank_same_order,
     node_order,
     port_edge_nodes,
   )
-  let base_order_index = build_order_index(ordering_groups_base)
+  let base_order_index = @ordering.build_order_index(ordering_groups_base)
   let order_with_vnodes = vnode_count > 0
   let order_with_clusters =
     cluster_meta.has_clusters &&

@@ -28,7 +28,7 @@ fn build_order_seed_groups(
 ) -> OrderSeedGroupsOutput {
   let order_groups =
     if order_with_vnodes {
-      build_x_groups_with_vnodes(
+      @ordering.build_x_groups_with_vnodes(
         ordering_groups_base,
         base_order_index,
         vnode_info.vnodes_by_rank,
@@ -312,7 +312,7 @@ fn build_seeded_reorder_groups(
   )
   // Graphviz parity: build_ranks applies transpose if crossings remain;
   // crossing count uses endpoint port x offsets for tie-correct ordering.
-  let seed_cross = count_crossings_port_aware(
+  let seed_cross = @ordering.count_crossings_port_aware(
     seeded_groups,
     order_ranks,
     order_edges_out,

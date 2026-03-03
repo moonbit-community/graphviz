@@ -403,7 +403,7 @@ fn build_local_rank_groups(
       cluster_node_set,
       source_graphviz_out_neighbors,
     )
-  let cluster_rank_keys = collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
   for rank in cluster_rank_keys {
     let list = match cluster_groups.get(rank) {
       Some(value) => value
@@ -1045,7 +1045,7 @@ fn build_local_reorder_edge_bundle(
     cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
     cluster_edge_head_port_order.push(order_edge_head_port_order[i])
   }
-  let edge_index_data = build_edge_index_for_names(
+  let edge_index_data = @ordering.build_edge_index_for_names(
     cluster_nodes,
     cluster_edge_tail,
     cluster_edge_head,
@@ -1061,7 +1061,7 @@ fn build_local_reorder_edge_bundle(
     cluster_edge_head_port_order,
     parents: edge_index_data.parents,
     children: edge_index_data.children,
-    edge_order: collect_edge_order(cluster_edges),
+    edge_order: @ordering.collect_edge_order(cluster_edges),
   }
 }
 
@@ -1263,7 +1263,7 @@ fn build_cluster_local_reorder_context(
     cluster_node_order,
     source_out_neighbors,
   )
-  let cluster_rank_keys = collect_rank_keys(cluster_groups)
+  let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
   let cluster_fixed_positions : Map[String, Double] = Map::new()
   for name, value in fixed_positions {
     if cluster_node_set.get(name) is None {
@@ -1461,7 +1461,7 @@ fn reorder_cluster_rank_groups(
       order_with_vnodes,
     )
     expanded_clusters[cluster] = true
-    current_fixed_positions = order_positions_from_groups(groups)
+    current_fixed_positions = @ordering.order_positions_from_groups(groups)
   }
 }
 
@@ -1507,7 +1507,7 @@ fn reorder_by_cluster_ranks(
     return ()
   }
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
-  let fixed_positions = order_positions_from_groups(groups)
+  let fixed_positions = @ordering.order_positions_from_groups(groups)
   let fixed_ranks : Map[String, Int] = Map::new()
   for name, rank in ranks {
     fixed_ranks[name] = rank

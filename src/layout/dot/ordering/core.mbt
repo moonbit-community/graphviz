@@ -1,5 +1,25 @@
 ///|
-fn merge_sizes_with_vnodes(
+type NodeSize = @shared.NodeSize
+
+///|
+const EDGE_VNODE_PREFIX : String = "_mbt_edge_vn_"
+
+///|
+const LARGE_SORT_THRESHOLD : Int = 128
+
+///|
+pub(all) struct ExtraConstraintNode {
+  name : String
+  rank : Int
+}
+
+///|
+fn is_edge_vnode_name(name : String) -> Bool {
+  name.has_prefix(EDGE_VNODE_PREFIX)
+}
+
+///|
+pub fn merge_sizes_with_vnodes(
   sizes : Map[String, NodeSize],
   vnode_sizes : Map[String, NodeSize],
 ) -> Map[String, NodeSize] {
@@ -14,7 +34,7 @@ fn merge_sizes_with_vnodes(
 }
 
 ///|
-fn collect_rank_same_order(
+pub fn collect_rank_same_order(
   graph : @cgraph.Graph,
   group_ids : Map[String, Int],
   order_ids : Map[String, Int],
@@ -326,7 +346,7 @@ fn sort_by_positions_large(
 }
 
 ///|
-fn sort_by_positions(
+pub fn sort_by_positions(
   names : Array[String],
   desired : Map[String, Double],
   x_positions : Map[String, Double],
@@ -584,7 +604,7 @@ fn sort_by_positions(
 }
 
 ///|
-fn median_value(values : Array[Double]) -> Double? {
+pub fn median_value(values : Array[Double]) -> Double? {
   if values.length() == 0 {
     return None
   }
@@ -599,7 +619,7 @@ fn median_value(values : Array[Double]) -> Double? {
 }
 
 ///|
-fn median_value_mc_scale(values : Array[Double]) -> Double? {
+pub fn median_value_mc_scale(values : Array[Double]) -> Double? {
   if values.length() == 0 {
     return None
   }
@@ -636,7 +656,7 @@ fn median_value_mc_scale(values : Array[Double]) -> Double? {
 }
 
 ///|
-fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
+pub fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
   let order : Map[String, Int] = Map::new()
   let mut idx = 0
   for edge in edges {
@@ -654,7 +674,7 @@ fn collect_edge_order(edges : Array[@cgraph.Edge]) -> Map[String, Int] {
 }
 
 ///|
-fn left2right_constraint(
+pub fn left2right_constraint(
   left : String,
   right : String,
   cluster_keys : Map[String, String],
@@ -720,7 +740,7 @@ fn sort_rank_items(items : Array[(Double, Int, String)]) -> Array[String] {
 }
 
 ///|
-fn build_x_groups_with_vnodes(
+pub fn build_x_groups_with_vnodes(
   ordered_groups : Map[Int, Array[String]],
   order_index : Map[String, Int],
   vnodes_by_rank : Map[Int, Array[String]],
@@ -780,7 +800,7 @@ fn build_x_groups_with_vnodes(
 }
 
 ///|
-fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
+pub fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
   let keys : Array[Int] = []
   for rank, _ in groups {
     keys.push(rank)
@@ -793,7 +813,7 @@ fn collect_rank_keys(groups : Map[Int, Array[String]]) -> Array[Int] {
 /// Graphviz parity: preserve vnode insertion order when seeding extra nodes
 /// for xpos constraints (nlist-driven ordering), with map-order fallback.
 /// Do not change behavior without updating fixtures/tests.
-fn build_vnode_extra_nodes(
+pub fn build_vnode_extra_nodes(
   vnode_order : Array[String],
   vnode_ranks : Map[String, Int],
 ) -> Array[ExtraConstraintNode] {
@@ -821,7 +841,7 @@ fn build_vnode_extra_nodes(
 }
 
 ///|
-fn clone_rank_groups(
+pub fn clone_rank_groups(
   groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let cloned : Map[Int, Array[String]] = Map::new()
@@ -833,7 +853,7 @@ fn clone_rank_groups(
 
 /// Graphviz parity: rank=same ordering applies only for unported groups.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_rank_same_order(
+pub fn apply_rank_same_order(
   groups : Map[Int, Array[String]],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
@@ -916,7 +936,7 @@ fn apply_rank_same_order(
 ///|
 /// Graphviz parity: unported rank=same groups keep subgraph order for ND_order.
 /// Do not change behavior without updating fixtures/tests.
-fn apply_rank_same_order_nodes(
+pub fn apply_rank_same_order_nodes(
   node_order : Map[String, Int],
   rank_same_groups : Map[String, Int],
   rank_same_order : Map[String, Int],
@@ -985,7 +1005,7 @@ fn apply_rank_same_order_nodes(
 }
 
 ///|
-fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
+pub fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let ranks : Map[String, Int] = Map::new()
   for rank, names in groups {
     for name in names {
@@ -996,7 +1016,7 @@ fn build_node_ranks(groups : Map[Int, Array[String]]) -> Map[String, Int] {
 }
 
 ///|
-fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
+pub fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
   let order : Map[String, Int] = Map::new()
   for _rank, names in groups {
     for i in 0..<names.length() {
@@ -1007,7 +1027,7 @@ fn build_order_index(groups : Map[Int, Array[String]]) -> Map[String, Int] {
 }
 
 ///|
-fn order_positions_from_groups(
+pub fn order_positions_from_groups(
   groups : Map[Int, Array[String]],
 ) -> Map[String, Double] {
   let positions : Map[String, Double] = Map::new()
@@ -1076,7 +1096,7 @@ fn count_inversions(values : Array[Int]) -> Int {
 }
 
 ///|
-fn count_crossings(
+pub fn count_crossings(
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
   edges : Array[@cgraph.Edge],
@@ -1087,7 +1107,7 @@ fn count_crossings(
   let edge_groups : Map[(Int, Int), Array[(Int, Int)]] = Map::new()
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    if !@dot_shared.edge_is_constraint(edge) {
+    if !@shared.edge_is_constraint(edge) {
       continue
     }
     let tail = edge_tail[edge_idx]
@@ -1269,7 +1289,7 @@ fn local_cross_in_port_aware(
 ///|
 /// Graphviz parity: rcross-style crossing count with local port-order ties.
 /// Do not change behavior without updating fixtures/tests.
-fn count_crossings_port_aware(
+pub fn count_crossings_port_aware(
   groups : Map[Int, Array[String]],
   ranks : Map[String, Int],
   edges : Array[@cgraph.Edge],
@@ -1303,9 +1323,9 @@ fn count_crossings_port_aware(
   let edge_penalty : Array[Int] = []
   for edge_idx in 0..<edges.length() {
     let edge = edges[edge_idx]
-    let penalty = @dot_shared.edge_xpenalty(edge)
+    let penalty = @shared.edge_xpenalty(edge)
     edge_penalty.push(penalty)
-    if !@dot_shared.edge_is_constraint(edge) {
+    if !@shared.edge_is_constraint(edge) {
       continue
     }
     if penalty <= 0 {
@@ -1489,7 +1509,7 @@ fn count_pairs_greater(left : Array[Int], right : Array[Int]) -> Int {
 }
 
 ///|
-fn build_neighbor_order_index(
+pub fn build_neighbor_order_index(
   names : Array[String],
   neighbors : Map[String, Array[String]],
   ranks : Map[String, Int],
@@ -1521,7 +1541,7 @@ fn build_neighbor_order_index(
 }
 
 ///|
-fn crossing_for_pair(
+pub fn crossing_for_pair(
   left : String,
   right : String,
   parent_orders : Map[String, Array[Int]],

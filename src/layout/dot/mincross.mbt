@@ -64,7 +64,7 @@ fn order_rank_by_cluster(
         None => ()
       }
     }
-    let value = match median_value(values) {
+    let value = match @ordering.median_value(values) {
       Some(val) => val
       None => 0.0
     }
@@ -114,7 +114,7 @@ fn order_rank_by_cluster(
   let result : Array[String] = []
   for idx in order {
     let group = group_nodes[idx]
-    let ordered_group = sort_by_positions(
+    let ordered_group = @ordering.sort_by_positions(
       group, desired, x_positions, primary, secondary, node_penalty, parents_map,
       rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
       edge_pair_order, port_order_positions,
@@ -165,7 +165,7 @@ fn reorder_by_medians(
           rp = rp + 1
           continue
         }
-        if left2right_constraint(
+        if @ordering.left2right_constraint(
           sorted[lp],
           sorted[rp],
           cluster_keys,
@@ -260,7 +260,7 @@ fn compute_desired_positions(
         None => ()
       }
     }
-    match median_value(values) {
+    match @ordering.median_value(values) {
       Some(value) => desired[name] = value
       None => ()
     }
@@ -288,7 +288,7 @@ fn compute_scaled_medians(
         None => ()
       }
     }
-    match median_value_mc_scale(values) {
+    match @ordering.median_value_mc_scale(values) {
       Some(value) => desired[name] = value
       None => ()
     }
@@ -307,17 +307,17 @@ fn transpose_rank(
 ) -> Bool {
   let mut changed = false
   let parent_orders =
-    build_neighbor_order_index(names, parents, ranks, order, rank - 1)
+    @ordering.build_neighbor_order_index(names, parents, ranks, order, rank - 1)
   let child_orders =
-    build_neighbor_order_index(names, children, ranks, order, rank + 1)
+    @ordering.build_neighbor_order_index(names, children, ranks, order, rank + 1)
   let mut i = 0
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    let c0 = crossing_for_pair(
+    let c0 = @ordering.crossing_for_pair(
       left, right, parent_orders, child_orders,
     )
-    let c1 = crossing_for_pair(
+    let c1 = @ordering.crossing_for_pair(
       right, left, parent_orders, child_orders,
     )
     if c1 < c0 || (reverse && c1 == c0 && c0 > 0) {
@@ -351,7 +351,7 @@ fn transpose_rank_groups_limited(
     }
     passes = passes + 1
     changed = false
-    let order = build_order_index(ordered)
+    let order = @ordering.build_order_index(ordered)
     for rank in rank_keys {
       let names = match ordered.get(rank) {
         Some(list) => list
@@ -654,7 +654,7 @@ fn transpose_rank_port_tiebreak(
   while i + 1 < names.length() {
     let left = names[i]
     let right = names[i + 1]
-    if left2right_constraint(
+    if @ordering.left2right_constraint(
       left,
       right,
       cluster_keys,
@@ -757,7 +757,7 @@ fn transpose_rank_groups_port(
       break
     }
     passes = passes + 1
-    let order = build_order_index(ordered)
+    let order = @ordering.build_order_index(ordered)
     let mut delta = 0
     let mut idx = 0
     while idx < rank_len {
@@ -957,7 +957,7 @@ fn flat_reorder_rank_groups(
   flat_constraints : Map[String, Bool],
   graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
-  let ordered = clone_rank_groups(groups)
+  let ordered = @ordering.clone_rank_groups(groups)
   if flat_constraints.length() == 0 {
     return ordered
   }
@@ -1243,7 +1243,7 @@ fn reorder_rank_groups(
     node_penalty[tail] = tail_sum + penalty
     node_penalty[head] = head_sum + penalty
   }
-  let node_ranks = build_node_ranks(ordered)
+  let node_ranks = @ordering.build_node_ranks(ordered)
   // Graphviz parity: cluster-local mincross uses merged rank map including
   // virtual nodes that may not be in the local rank groups.
   for name, rank in fixed_ranks {
@@ -1251,8 +1251,8 @@ fn reorder_rank_groups(
       node_ranks[name] = rank
     }
   }
-  let mut best_ordered = clone_rank_groups(ordered)
-  let mut order_positions = order_positions_from_groups(ordered)
+  let mut best_ordered = @ordering.clone_rank_groups(ordered)
+  let mut order_positions = @ordering.order_positions_from_groups(ordered)
   let fixed_order : Map[String, Int] = Map::new()
   for name, pos in fixed_positions {
     fixed_order[name] = pos.to_int()
@@ -1457,7 +1457,7 @@ fn reorder_rank_groups(
   } else if graphviz_style && startpass <= 1 {
     2147483647
   } else if graphviz_style {
-    count_crossings_port_aware(
+    @ordering.count_crossings_port_aware(
       ordered,
       node_ranks,
       edges,
@@ -1468,7 +1468,7 @@ fn reorder_rank_groups(
       fixed_order=fixed_order,
     )
   } else {
-    count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+    @ordering.count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
   if !graphviz_style && rank_keys.length() > 1 {
     ordered = build_component_rank_groups(
@@ -1493,10 +1493,10 @@ fn reorder_rank_groups(
       flat_constraints,
       graphviz_flip,
     )
-    order_positions = order_positions_from_groups(ordered)
+    order_positions = @ordering.order_positions_from_groups(ordered)
     merge_fixed_positions()
     let seed_cross =
-      count_crossings_port_aware(
+      @ordering.count_crossings_port_aware(
         ordered,
         node_ranks,
         edges,
@@ -1526,11 +1526,11 @@ fn reorder_rank_groups(
         0,
         remincross_mode=remincross_mode,
       )
-      order_positions = order_positions_from_groups(ordered)
+      order_positions = @ordering.order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
-    best_ordered = clone_rank_groups(ordered)
-    best_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+    best_ordered = @ordering.clone_rank_groups(ordered)
+    best_cross = @ordering.count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
   }
   if graphviz_style && rank_keys.length() == 1 {
     let max_iter = 24
@@ -1573,7 +1573,7 @@ fn reorder_rank_groups(
     let mut force_single_rank_probe = false
     if startpass > 1 {
       best_cross = compute_single_cross()
-      best_ordered = clone_rank_groups(ordered)
+      best_ordered = @ordering.clone_rank_groups(ordered)
       if best_cross == 0 && has_graphviz_neighbor_hints {
         // Graphviz parity: ND_in/ND_out driven medians can still reorder even
         // when local crossing count is zero.
@@ -1638,12 +1638,12 @@ fn reorder_rank_groups(
           graphviz_flip,
         )
         maybe_capture_seed_groups(pass, rank_keys, ordered)
-        order_positions = order_positions_from_groups(ordered)
+        order_positions = @ordering.order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross = compute_single_cross()
         if cur_cross <= best_cross {
           best_cross = cur_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
         }
       } else {
         if cur_cross > best_cross {
@@ -1654,7 +1654,7 @@ fn reorder_rank_groups(
             }
             ordered[rank] = names
           }
-          order_positions = order_positions_from_groups(ordered)
+          order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
         cur_cross = best_cross
@@ -1704,7 +1704,7 @@ fn reorder_rank_groups(
             flat_constraints,
             remincross_mode=remincross_mode,
           )
-          order_positions = order_positions_from_groups(ordered)
+          order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
         let _ = transpose_rank_groups_port(
@@ -1726,13 +1726,13 @@ fn reorder_rank_groups(
           0,
           remincross_mode=remincross_mode,
         )
-        order_positions = order_positions_from_groups(ordered)
+        order_positions = @ordering.order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross = compute_single_cross()
         if cur_cross <= best_cross {
           let prev_best = best_cross
           best_cross = cur_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
           if prev_best > 0 &&
             cur_cross.to_double() < convergence * prev_best.to_double() {
             trying = 0
@@ -1753,7 +1753,7 @@ fn reorder_rank_groups(
         }
         ordered[rank] = names
       }
-      order_positions = order_positions_from_groups(ordered)
+      order_positions = @ordering.order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
     if best_cross > 0 {
@@ -1819,7 +1819,7 @@ fn reorder_rank_groups(
         // Graphviz parity: seed transpose probe runs before flat reorder in
         // each graphviz-style pass, independent of port-order hints.
         let seed_cross =
-          count_crossings_port_aware(
+          @ordering.count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -1858,10 +1858,10 @@ fn reorder_rank_groups(
           graphviz_flip,
         )
         maybe_capture_seed_groups(pass, rank_keys, ordered)
-        order_positions = order_positions_from_groups(ordered)
+        order_positions = @ordering.order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
-          count_crossings_port_aware(
+          @ordering.count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -1873,7 +1873,7 @@ fn reorder_rank_groups(
           )
         if cur_cross <= best_cross {
           best_cross = cur_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
         }
       } else {
         if cur_cross > best_cross {
@@ -1884,7 +1884,7 @@ fn reorder_rank_groups(
             }
             ordered[rank] = names
           }
-          order_positions = order_positions_from_groups(ordered)
+          order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
         cur_cross = best_cross
@@ -1939,7 +1939,7 @@ fn reorder_rank_groups(
                 remincross_mode=remincross_mode,
               )
               if !use_sweep_snapshot {
-                order_positions = order_positions_from_groups(ordered)
+                order_positions = @ordering.order_positions_from_groups(ordered)
                 merge_fixed_positions()
               }
             }
@@ -1984,7 +1984,7 @@ fn reorder_rank_groups(
                 remincross_mode=remincross_mode,
               )
               if !use_sweep_snapshot {
-                order_positions = order_positions_from_groups(ordered)
+                order_positions = @ordering.order_positions_from_groups(ordered)
                 merge_fixed_positions()
               }
             }
@@ -1995,7 +1995,7 @@ fn reorder_rank_groups(
           }
         }
         if use_sweep_snapshot {
-          order_positions = order_positions_from_groups(ordered)
+          order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
         // Graphviz parity: transpose remains active with port-order hints;
@@ -2019,10 +2019,10 @@ fn reorder_rank_groups(
           0,
           remincross_mode=remincross_mode,
         )
-        order_positions = order_positions_from_groups(ordered)
+        order_positions = @ordering.order_positions_from_groups(ordered)
         merge_fixed_positions()
         cur_cross =
-          count_crossings_port_aware(
+          @ordering.count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -2035,7 +2035,7 @@ fn reorder_rank_groups(
         if cur_cross <= best_cross {
           let prev_best = best_cross
           best_cross = cur_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
           if prev_best > 0 &&
             cur_cross.to_double() < convergence * prev_best.to_double() {
             trying = 0
@@ -2056,7 +2056,7 @@ fn reorder_rank_groups(
         }
         ordered[rank] = names
       }
-      order_positions = order_positions_from_groups(ordered)
+      order_positions = @ordering.order_positions_from_groups(ordered)
       merge_fixed_positions()
     }
     if best_cross > 0 {
@@ -2112,7 +2112,7 @@ fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode=remincross_mode,
               )
-              order_positions = order_positions_from_groups(ordered)
+              order_positions = @ordering.order_positions_from_groups(ordered)
               merge_fixed_positions()
             }
             idx = idx + 1
@@ -2141,7 +2141,7 @@ fn reorder_rank_groups(
                 flat_constraints,
                 remincross_mode=remincross_mode,
               )
-              order_positions = order_positions_from_groups(ordered)
+              order_positions = @ordering.order_positions_from_groups(ordered)
               merge_fixed_positions()
             }
             if idx == 0 {
@@ -2170,11 +2170,11 @@ fn reorder_rank_groups(
             0,
             remincross_mode=remincross_mode,
           )
-          order_positions = order_positions_from_groups(ordered)
+          order_positions = @ordering.order_positions_from_groups(ordered)
           merge_fixed_positions()
         }
         let cross =
-          count_crossings_port_aware(
+          @ordering.count_crossings_port_aware(
             ordered,
             node_ranks,
             edges,
@@ -2186,7 +2186,7 @@ fn reorder_rank_groups(
           )
         if cross <= best_cross {
           best_cross = cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
         }
       } else {
         let mut idx = rank_keys.length() - 1
@@ -2210,7 +2210,7 @@ fn reorder_rank_groups(
               rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
               edge_pair_order, port_order_positions, reverse_ties,
             )
-            order_positions = order_positions_from_groups(ordered)
+            order_positions = @ordering.order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
           idx = idx - 1
@@ -2239,14 +2239,14 @@ fn reorder_rank_groups(
               rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
               edge_pair_order, port_order_positions, reverse_ties,
             )
-            order_positions = order_positions_from_groups(ordered)
+            order_positions = @ordering.order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
         }
-        let down_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+        let down_cross = @ordering.count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
         if down_cross < best_cross {
           best_cross = down_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
         }
         let mut j = 1
         while j < rank_keys.length() {
@@ -2269,7 +2269,7 @@ fn reorder_rank_groups(
               rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
               edge_pair_order, port_order_positions, reverse_ties,
             )
-            order_positions = order_positions_from_groups(ordered)
+            order_positions = @ordering.order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
           j = j + 1
@@ -2298,14 +2298,14 @@ fn reorder_rank_groups(
               rank_same_groups, rank_same_order, edge_order, node_order, port_edge_nodes,
               edge_pair_order, port_order_positions, reverse_ties,
             )
-            order_positions = order_positions_from_groups(ordered)
+            order_positions = @ordering.order_positions_from_groups(ordered)
             merge_fixed_positions()
           }
         }
-        let up_cross = count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
+        let up_cross = @ordering.count_crossings(ordered, node_ranks, edges, edge_tail, edge_head)
         if up_cross < best_cross {
           best_cross = up_cross
-          best_ordered = clone_rank_groups(ordered)
+          best_ordered = @ordering.clone_rank_groups(ordered)
         }
       }
       iter = iter + 1

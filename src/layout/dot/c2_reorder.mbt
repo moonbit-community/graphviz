@@ -56,8 +56,8 @@ fn build_order_reorder_context(
   rank_same_order : Map[String, Int],
   port_edge_nodes : Map[String, Bool],
 ) -> OrderReorderContext {
-  let order_rank_keys = collect_rank_keys(order_groups)
-  let order_ranks = build_node_ranks(order_groups)
+  let order_rank_keys = @ordering.collect_rank_keys(order_groups)
+  let order_ranks = @ordering.build_node_ranks(order_groups)
   let order_nodes =
     build_order_nodes_from_groups(order_groups, order_rank_keys)
   let order_graph_output =
@@ -95,7 +95,7 @@ fn build_order_reorder_context(
       order_node_order[name] = idx
     }
   }
-  let order_index = build_order_index(order_groups)
+  let order_index = @ordering.build_order_index(order_groups)
   for name, idx in order_index {
     if order_node_order.get(name) is None {
       order_node_order[name] = idx
@@ -111,7 +111,7 @@ fn build_order_reorder_context(
   if has_clusters {
     // Graphviz parity: non-cluster root reorder keeps GD_nlist-derived order
     // (world.gv) and does not re-normalize ND_order by rank=same declaration.
-    apply_rank_same_order_nodes(
+    @ordering.apply_rank_same_order_nodes(
       order_node_order,
       rank_same_groups,
       rank_same_order,

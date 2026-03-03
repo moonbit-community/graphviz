@@ -68,17 +68,7 @@ test "graph_rankdir walks parent chain" {
 }
 
 ///|
-test "base ordering and edge dir parsers" {
-  guard parse_ordering_mode("out") is Some(OrderingMode::Out) else {
-    fail("expected ordering=out")
-  }
-  guard parse_ordering_mode("IN") is Some(OrderingMode::In) else {
-    fail("expected ordering=in")
-  }
-  guard parse_ordering_mode("sideways") is None else {
-    fail("expected invalid ordering to return None")
-  }
-
+test "base edge dir parser" {
   guard parse_edge_dir("forward") is Some(EdgeDir::Forward) else {
     fail("expected dir=forward")
   }

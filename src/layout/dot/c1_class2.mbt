@@ -49,7 +49,7 @@ fn build_ordering_edge_port_data(
 ) -> OrderingEdgePortData {
   // Graphviz parity: edge-port original phase keeps original edge order map and
   // per-edge port position/order arrays before any ordering-edge deduplication.
-  let edge_order = collect_edge_order(edges)
+  let edge_order = @ordering.collect_edge_order(edges)
   let edge_port_x_samples =
     compute_edge_port_positions(nodes, edges, edge_tail, edge_head, order_sizes)
   let edge_tail_port_x = edge_port_x_samples.tail_values
@@ -61,7 +61,7 @@ fn build_ordering_edge_port_data(
   // Graphviz parity: edge-port dedup phase derives ordering-edge arrays and
   // recomputes port position/order samples on deduplicated ordering edges.
   let dedup_output =
-    dedup_ordering_edges(edges, edge_tail, edge_head)
+    @ordering.dedup_ordering_edges(edges, edge_tail, edge_head)
   let order_edges = dedup_output.order_edges
   let order_edge_tail = dedup_output.order_edge_tail
   let order_edge_head = dedup_output.order_edge_head
@@ -138,7 +138,7 @@ fn build_ordering_class2_data(
     }
   }
   let order_edges_by_tail_output =
-    build_order_edges_by_tail(
+    @ordering.build_order_edges_by_tail(
       creation_order,
       edges,
       edge_tail,
@@ -167,7 +167,7 @@ fn build_ordering_class2_data(
     // while non-cluster graphs reuse the base order_edges_by_tail mapping.
     if order_with_clusters {
       let root_edges_by_tail_output =
-        build_order_edges_by_tail(
+        @ordering.build_order_edges_by_tail(
           creation_order,
           edges,
           edge_tail,
@@ -196,7 +196,7 @@ fn build_ordering_class2_data(
   let order_edges_by_tail_unmapped =
     if order_with_clusters {
       let unmapped_output =
-        build_order_edges_by_tail(
+        @ordering.build_order_edges_by_tail(
           creation_order,
           edges,
           edge_tail,

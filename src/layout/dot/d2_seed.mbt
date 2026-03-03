@@ -63,7 +63,7 @@ fn build_x_order_edge_port_data(
   )
   let x_order_sizes =
     if use_vnodes_for_xpos {
-      merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
+      @ordering.merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
     } else {
       x_base_sizes
     }
