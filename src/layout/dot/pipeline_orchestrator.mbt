@@ -519,33 +519,33 @@ fn compute_dot_routing_stage(
   // grouped precompute payload while preserving Graphviz-aligned argument mapping.
   let layout_rankdir = RankDir::TB
   let edges_routed =
-    route_edges(
+    route_edges({
       graph,
-      prep.edges,
-      rank_data.ranks,
-      routing_sizes,
-      prep.record_orientation,
-      prep.rankdir,
+      edges: prep.edges,
+      ranks: rank_data.ranks,
+      sizes: routing_sizes,
+      record_orientation: prep.record_orientation,
+      rankdir: prep.rankdir,
       layout_rankdir,
-      prep.splines,
-      routing_positions_state.positions,
-      routing_positions_state.vnode_positions,
-      ordering.vnode_info,
-      routing_positions_state.rank_y,
-      routing_positions_state.rank_ht1,
-      routing_positions_state.rank_ht2,
-      path_groups,
-      rank_heights.nodesep_pt,
-      rank_heights.ranksep_pt,
-      cluster_meta.has_clusters,
-      routing_label_ports_map,
-      routing_label_ports_raw,
+      splines: prep.splines,
+      positions: routing_positions_state.positions,
+      vnode_positions: routing_positions_state.vnode_positions,
+      vnode_info: ordering.vnode_info,
+      rank_y: routing_positions_state.rank_y,
+      rank_ht1: routing_positions_state.rank_ht1,
+      rank_ht2: routing_positions_state.rank_ht2,
+      x_groups: path_groups,
+      nodesep_pt: rank_heights.nodesep_pt,
+      ranksep_pt: rank_heights.ranksep_pt,
+      has_clusters: cluster_meta.has_clusters,
+      label_ports_map: routing_label_ports_map,
+      label_ports_raw: routing_label_ports_raw,
       label_edge_counts,
       head_port_metrics,
-      routing_positions_state.flat_label_edge_vnodes,
+      flat_label_edge_vnodes: routing_positions_state.flat_label_edge_vnodes,
       routing_context,
       enable_complex_tuning,
-    )
+    })
   let edges_out =
     if ratio_scaled {
       scale_edge_layout_output(edges_routed, 1.0 / ratio_sx, 1.0 / ratio_sy)
