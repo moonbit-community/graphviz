@@ -1863,7 +1863,7 @@ fn oriented_edge_endpoints(
 
 ///|
 fn edge_excluded_from_reverse_merge(edge : @cgraph.Edge) -> Bool {
-  edge_mid_label_metrics(edge) is Some(_) || edge.tail().name() == edge.head().name()
+  edge_mid_label_metrics(edge) is Some(_) || edge_is_self(edge)
 }
 
 ///|

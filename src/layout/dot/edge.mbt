@@ -89,6 +89,11 @@ fn edge_has_label(edge : @cgraph.Edge) -> Bool {
 }
 
 ///|
+fn edge_is_self(edge : @cgraph.Edge) -> Bool {
+  edge.tail().name() == edge.head().name()
+}
+
+///|
 fn graph_has_edge_labels(edges : Array[@cgraph.Edge]) -> Bool {
   for edge in edges {
     if edge_has_label(edge) {

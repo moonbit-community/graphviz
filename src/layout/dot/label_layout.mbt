@@ -927,7 +927,7 @@ fn edge_label_pos(
         }
       _ => raw_pos
     }
-  if edge.tail().name() == edge.head().name() {
+  if edge_is_self(edge) {
     return Some(base_pos)
   }
   match label_rank_y {

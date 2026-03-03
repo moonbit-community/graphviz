@@ -100,7 +100,7 @@ fn apply_self_edge_right_space(
 ) -> Map[String, NodeSize] {
   let mut has_self_edges = false
   for edge in edges {
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       has_self_edges = true
       break
     }
@@ -112,7 +112,7 @@ fn apply_self_edge_right_space(
   let extra_right : Map[String, Double] = Map::new()
   for edge in edges {
     let tail = edge.tail().name()
-    if tail != edge.head().name() {
+    if !edge_is_self(edge) {
       continue
     }
     let extra = self_edge_extra_right_space(edge, rankdir, port_maps)

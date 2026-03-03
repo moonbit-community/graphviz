@@ -1103,7 +1103,7 @@ fn collect_sameport_classes(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let classes : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       continue
     }
     let key = sameport_merge_key(edge)
@@ -1374,7 +1374,7 @@ fn collect_sameport_overrides(
   let sametail_group_order : Array[String] = []
   let merge_classes = collect_sameport_classes(edges)
   for edge in edges {
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       continue
     }
     let samehead_id = edge_attr_or_empty(edge, "samehead")
@@ -1459,7 +1459,7 @@ fn collect_flat_adjacent_beziers(
 ) -> Map[Int, Array[@geom.Point]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       continue
     }
     if edge_has_label(edge) {
@@ -4172,7 +4172,7 @@ fn collect_self_edge_groups(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let self_edge_groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if edge.tail().name() != edge.head().name() {
+    if !edge_is_self(edge) {
       continue
     }
     let key = self_edge_group_key(edge)
@@ -4759,7 +4759,7 @@ fn recover_regular_selection(
   let selected_ids : Map[String, Int] = Map::new()
   let selected_scores : Map[String, Double] = Map::new()
   for edge in ordered_edges {
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
@@ -4968,7 +4968,7 @@ fn maybe_build_self_edge_layout(
   self_edge_routes : Map[Int, SelfEdgeRoute],
   edges_out_by_id : Map[Int, DotLayoutEdge],
 ) -> Bool {
-  if edge.tail().name() != edge.head().name() {
+  if !edge_is_self(edge) {
     return false
   }
   let edge_id = edge.id()
@@ -5024,7 +5024,7 @@ fn collect_parallel_groups(
     if edge_has_label(edge) {
       continue
     }
-    if edge.tail().name() == edge.head().name() {
+    if edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
