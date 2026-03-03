@@ -737,14 +737,6 @@ fn remap_edge_layout_edge(
 }
 
 ///|
-fn parallel_remap_edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 /// Graphviz parity: duplicate regular-edge remap groups follow one-direction
 /// parallel classes only.
 /// Do not change behavior without updating fixtures/tests.
@@ -756,7 +748,7 @@ fn collect_parallel_remap_edge_ids(
   let group_first_direction : Map[String, String] = Map::new()
   let group_has_mixed_direction : Map[String, Bool] = Map::new()
   for edge in edges {
-    if parallel_remap_edge_has_label(edge) {
+    if edge_has_label(edge) {
       continue
     }
     let tail = edge.tail().name()
@@ -1678,14 +1670,6 @@ fn cmp_double(a : Double, b : Double) -> Int {
 }
 
 ///|
-fn prepass_edge_attr_or_empty(edge : @cgraph.Edge, name : String) -> String {
-  match edge.get_attr(name) {
-    Some(value) => value
-    None => ""
-  }
-}
-
-///|
 fn port_cmp(
   a_defined : Bool,
   a_pos : @geom.Point,
@@ -1841,8 +1825,8 @@ fn route_edge_cmp(
     return graph_cmp
   }
   if type_a == ROUTE_EDGE_FLAT {
-    let label_a = prepass_edge_attr_or_empty(a, "label")
-    let label_b = prepass_edge_attr_or_empty(b, "label")
+    let label_a = edge_attr_or_empty(a, "label")
+    let label_b = edge_attr_or_empty(b, "label")
     if label_a < label_b {
       return -1
     }
@@ -1871,19 +1855,6 @@ fn sorted_edges_for_routing(
 }
 
 ///|
-fn flat_adjacent_edge_is_self(edge : @cgraph.Edge) -> Bool {
-  edge.tail().name() == edge.head().name()
-}
-
-///|
-fn flat_adjacent_edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 fn cmp_edge_id(a : Int, b : Int) -> Int {
   if a < b {
     -1
@@ -1906,10 +1877,10 @@ fn collect_flat_adjacent_beziers(
 ) -> Map[Int, Array[@geom.Point]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in edges {
-    if flat_adjacent_edge_is_self(edge) {
+    if edge_is_self(edge) {
       continue
     }
-    if flat_adjacent_edge_has_label(edge) {
+    if edge_has_label(edge) {
       continue
     }
     if @dot_shared.port_is_explicit(edge.tail_port()) ||
@@ -2025,24 +1996,11 @@ fn collect_flat_adjacent_beziers(
 }
 
 ///|
-fn parallel_edge_is_self(edge : @cgraph.Edge) -> Bool {
-  edge.tail().name() == edge.head().name()
-}
-
-///|
-fn parallel_edge_has_label(edge : @cgraph.Edge) -> Bool {
-  match edge.get_attr("label") {
-    Some(value) => value != ""
-    None => false
-  }
-}
-
-///|
 /// Graphviz parity: recover_slack class keys collapse reverse-direction
 /// unlabeled edges that share a class2 vnode chain.
 fn recover_slack_key_for_edge(edge : @cgraph.Edge) -> String {
   let undirected = edge.tail().graph().kind() is @cgraph.GraphKind::Undirected
-  if parallel_edge_has_label(edge) || !undirected {
+  if edge_has_label(edge) || !undirected {
     "vnode|\{@dot_shared.edge_vnode_key(edge)}"
   } else {
     "parallel|\{@edge_ops.edge_parallel_key(edge.tail().name(), edge.head().name(), edge.tail_port(), edge.head_port())}"
@@ -2059,7 +2017,7 @@ fn recover_regular_selection(
   let selected_ids : Map[String, Int] = Map::new()
   let selected_scores : Map[String, Double] = Map::new()
   for edge in ordered_edges {
-    if parallel_edge_is_self(edge) {
+    if edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
@@ -2099,10 +2057,10 @@ fn collect_parallel_groups(
 ) -> Map[String, Array[@cgraph.Edge]] {
   let groups : Map[String, Array[@cgraph.Edge]] = Map::new()
   for edge in ordered_edges {
-    if parallel_edge_has_label(edge) {
+    if edge_has_label(edge) {
       continue
     }
-    if parallel_edge_is_self(edge) {
+    if edge_is_self(edge) {
       continue
     }
     let base = match base_cache.get(edge.id()) {
