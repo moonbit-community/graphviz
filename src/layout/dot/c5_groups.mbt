@@ -155,7 +155,18 @@ fn build_remincross_inputs(
       },
     )
   let rem_cluster_keys =
-    build_remincross_cluster_keys(dispatch_context)
+    @ordering.build_remincross_cluster_keys(
+      {
+        root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        edge_vnodes: dispatch_context.vnode_info.edge_vnodes,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        cluster_parents: dispatch_context.cluster_meta.cluster_parents,
+        order_with_vnodes: dispatch_context.order_with_vnodes,
+      },
+    )
   let rem_sizes =
     @ordering.build_sizes_for_order_graph(
       dispatch_context.order_sizes,
@@ -245,93 +256,6 @@ fn run_remincross_cleanup(
     startpass=2,
     remincross_mode=true,
   )
-}
-
-///|
-/// Graphviz parity: clustered ReMincross starts from a shallow clone of
-/// intercluster keys before root remapping and vnode LCA assignments.
-fn clone_remincross_cluster_keys(
-  intercluster_keys : Map[String, String],
-) -> Map[String, String] {
-  let cloned : Map[String, String] = Map::new()
-  for name, key in intercluster_keys {
-    cloned[name] = key
-  }
-  cloned
-}
-
-///|
-/// Graphviz parity: mark_lowclusters assigns ReMincross edge-vnodes to the
-/// lowest common ancestor cluster (or root cluster when LCA is empty).
-fn assign_remincross_clusters(
-  rem_cluster_keys : Map[String, String],
-  root_cluster : String,
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_vnodes : Map[String, Array[String]],
-  intercluster_keys : Map[String, String],
-  cluster_parents : Map[String, String?],
-) -> Unit {
-  for edge_idx, edge in edges {
-    let vnodes =
-      edge_vnodes.get(@dot_shared.edge_vnode_key(edge)).unwrap_or_default()
-    if vnodes.length() == 0 {
-      continue
-    }
-    let (tail, head) =
-      @ordering.edge_endpoints_at(
-        edge,
-        edge_idx,
-        edge_tail,
-        edge_head,
-      )
-    let tail_cluster = intercluster_keys.get(tail).unwrap_or_default()
-    let head_cluster = intercluster_keys.get(head).unwrap_or_default()
-    let vnode_cluster =
-      cluster_lca(
-        tail_cluster,
-        head_cluster,
-        cluster_parents,
-      )
-    let rem_cluster = if vnode_cluster == "" { root_cluster } else { vnode_cluster }
-    for vnode in vnodes {
-      rem_cluster_keys[vnode] = rem_cluster
-    }
-  }
-}
-
-///|
-/// Graphviz parity: ReMincross cluster-key map starts from intercluster keys,
-/// rewrites empty keys to root graph key, then applies vnode LCA assignments.
-/// Do not change behavior without updating fixtures/tests.
-fn build_remincross_cluster_keys(
-  dispatch_context : ReMincrossDispatchContext,
-) -> Map[String, String] {
-  let rem_cluster_keys =
-    clone_remincross_cluster_keys(dispatch_context.cluster_meta.intercluster_keys)
-  // Graphviz parity: ND_clust is the root graph for nodes outside
-  // any cluster (mark_lowclusters). Use a non-empty root key so
-  // ReMincross can block swaps across cluster boundaries.
-  let root_cluster = dispatch_context.graph.name().unwrap_or("__root__")
-  for name, key in rem_cluster_keys {
-    if key == "" {
-      rem_cluster_keys[name] = root_cluster
-    }
-  }
-  if dispatch_context.order_with_vnodes {
-    assign_remincross_clusters(
-      rem_cluster_keys,
-      root_cluster,
-      dispatch_context.edges,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.vnode_info.edge_vnodes,
-      dispatch_context.cluster_meta.intercluster_keys,
-      dispatch_context.cluster_meta.cluster_parents,
-    )
-  }
-  rem_cluster_keys
 }
 
 ///|
@@ -483,8 +407,10 @@ fn build_remincross_vnode_keys(
   dispatch_context : ReMincrossDispatchContext,
   rem_base_order_index : Map[String, Int],
 ) -> Map[String, Double] {
-  let remincross_cluster_keys =
-    clone_remincross_cluster_keys(dispatch_context.cluster_meta.intercluster_keys)
+  let remincross_cluster_keys : Map[String, String] = Map::new()
+  for name, key in dispatch_context.cluster_meta.intercluster_keys {
+    remincross_cluster_keys[name] = key
+  }
   let intercluster_vnodes =
     collect_remincross_trailing(
       dispatch_context.edges,
