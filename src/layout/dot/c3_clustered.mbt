@@ -13,6 +13,7 @@ priv struct ClusteredPreRootData {
   order_cluster_skeleton : Map[String, Bool]
   reorder_context : OrderReorderContext
   materialized : OrderMaterializationData
+  root_rank_order_phase_base : RootRankOrderPhaseBase
 }
 
 ///|
@@ -110,6 +111,14 @@ fn build_clustered_pre_root(
       dispatch_context.nodes,
       reorder_context.order_node_order,
     )
+  let root_rank_order_phase_base =
+    build_root_rank_order_phase_base(
+      dispatch_context,
+      order_sizes_out,
+      order_cluster_keys,
+      order_cluster_skeleton,
+      reorder_context,
+    )
   {
     order_groups,
     order_sizes_out,
@@ -117,6 +126,7 @@ fn build_clustered_pre_root(
     order_cluster_skeleton,
     reorder_context,
     materialized,
+    root_rank_order_phase_base,
   }
 }
 
@@ -131,7 +141,6 @@ fn run_clustered_root_phase(
   let reorder_setup = dispatch_context.reorder_setup
   let (root_reorder_output, root_rank_order_phase_output) =
     run_root_reorder_and_rank_order_phase(
-      dispatch_context,
       pre_root_stage,
       pre_root_stage.order_groups,
     )
