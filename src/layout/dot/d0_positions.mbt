@@ -163,6 +163,19 @@ priv struct PositionOutputBuildInput {
 }
 
 ///|
+/// Graphviz parity: vnode position projection input keeps x/y rank maps and
+/// vnode context grouped so direct/fallback vnode projection follows the same
+/// branch gating and data sources as Graphviz.
+priv struct VnodePositionBuildInput {
+  use_vnodes_for_xpos : Bool
+  prep : LayoutPrep
+  rank_data : RankData
+  ordering : OrderingResult
+  x_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
+
+///|
 priv struct XWithFlatLabelData {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, NodeSize]
@@ -672,35 +685,24 @@ fn build_cluster_boundary_x(
 /// (when xpos consumed vnode graph) or endpoint-interpolated fallback.
 /// Do not change behavior without updating fixtures/tests.
 fn build_vnode_positions(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  ordering : OrderingResult,
-  x_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
+  input : VnodePositionBuildInput,
 ) -> Map[String, @geom.Point] {
-  if use_vnodes_for_xpos {
+  if input.use_vnodes_for_xpos {
     let positions : Map[String, @geom.Point] = Map::new()
-    for name, rank in ordering.vnode_info.vnode_ranks {
-      let pos_x = match x_positions.get(name) {
-        Some(value) => value
-        None => 0.0
-      }
-      let pos_y = match rank_y.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
+    for name, rank in input.ordering.vnode_info.vnode_ranks {
+      let pos_x = input.x_positions.get(name).unwrap_or_default()
+      let pos_y = input.rank_y.get(rank).unwrap_or_default()
       positions[name] = { x: pos_x, y: pos_y }
     }
     positions
   } else {
     vnode_positions_from_edges(
-      prep.edges,
-      rank_data.ranks,
-      ordering.vnode_info.vnode_ranks,
-      ordering.vnode_info.edge_vnodes,
-      x_positions,
-      rank_y,
+      input.prep.edges,
+      input.rank_data.ranks,
+      input.ordering.vnode_info.vnode_ranks,
+      input.ordering.vnode_info.edge_vnodes,
+      input.x_positions,
+      input.rank_y,
     )
   }
 }
@@ -1212,12 +1214,14 @@ fn build_position_output_maps(
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
     build_vnode_positions(
-      input.use_vnodes_for_xpos,
-      input.prep,
-      input.rank_data,
-      input.ordering,
-      input.x_positions,
-      input.rank_y,
+      {
+        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        prep: input.prep,
+        rank_data: input.rank_data,
+        ordering: input.ordering,
+        x_positions: input.x_positions,
+        rank_y: input.rank_y,
+      },
     )
   let positions =
     build_node_positions_map(input.prep.nodes, input.x_positions, input.y_positions)
