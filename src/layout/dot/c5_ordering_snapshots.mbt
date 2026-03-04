@@ -142,18 +142,23 @@ fn coalesce_order_edges_snapshot(
 }
 
 ///|
+priv struct RootSnapshotCaptureInput {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  edges_out : Array[@cgraph.Edge]
+  edge_tail_out : Array[String]
+  edge_head_out : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+}
+
+///|
 fn capture_root_snapshot(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  edges_out : Array[@cgraph.Edge],
-  edge_tail_out : Array[String],
-  edge_head_out : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  cluster_keys : Map[String, String],
-  cluster_skeleton : Map[String, Bool],
+  input : RootSnapshotCaptureInput,
 ) -> Unit {
   if !should_capture_ordering_inputs() {
     return
@@ -162,22 +167,22 @@ fn capture_root_snapshot(
     coalesce_order_edges_snapshot(
       build_ordering_edges_snapshot(
         {
-          edges_out,
-          edge_tail_out,
-          edge_head_out,
-          edge_tail_port_x,
-          edge_head_port_x,
-          edge_tail_port_order,
-          edge_head_port_order,
+          edges_out: input.edges_out,
+          edge_tail_out: input.edge_tail_out,
+          edge_head_out: input.edge_head_out,
+          edge_tail_port_x: input.edge_tail_port_x,
+          edge_head_port_x: input.edge_head_port_x,
+          edge_tail_port_order: input.edge_tail_port_order,
+          edge_head_port_order: input.edge_head_port_order,
         },
       ),
     )
   let snapshot : RootMincrossInputSnapshot = {
-    rank_keys: rank_keys.copy(),
-    groups: @ordering.clone_rank_groups(groups),
+    rank_keys: input.rank_keys.copy(),
+    groups: @ordering.clone_rank_groups(input.groups),
     edges,
-    cluster_keys: clone_string_map(cluster_keys),
-    cluster_skeleton: clone_bool_map(cluster_skeleton),
+    cluster_keys: clone_string_map(input.cluster_keys),
+    cluster_skeleton: clone_bool_map(input.cluster_skeleton),
   }
   set_root_mincross_input_snapshot(snapshot)
 }
@@ -191,17 +196,21 @@ fn capture_root_mincross_pass_snapshot(
 ) -> Unit {
   let reorder_call_data = result.reorder_call_data
   capture_root_snapshot(
-    reorder_call_data.order_rank_keys_for_mincross,
-    result.order_groups_for_mincross,
-    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-    inputs.order_cluster_keys,
-    inputs.order_cluster_skeleton,
+    {
+      rank_keys: reorder_call_data.order_rank_keys_for_mincross,
+      groups: result.order_groups_for_mincross,
+      edges_out: reorder_call_data.mincross_edge_data.order_edges_out_mincross,
+      edge_tail_out: reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
+      edge_head_out: reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
+      edge_tail_port_x: reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
+      edge_head_port_x: reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
+      edge_tail_port_order:
+        reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
+      edge_head_port_order:
+        reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
+      cluster_keys: inputs.order_cluster_keys,
+      cluster_skeleton: inputs.order_cluster_skeleton,
+    },
   )
 }
 
