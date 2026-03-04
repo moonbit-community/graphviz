@@ -2,6 +2,19 @@
 /// Stage E routing-stage orchestrator.
 
 ///|
+/// Graphviz parity: routing stage payload keeps stage outputs and context maps
+/// grouped so Stage E wiring remains explicit and stable.
+priv struct DotRoutingStageInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  positions_state : PositionResult
+}
+
+///|
 priv struct DotRoutingStageOutput {
   nodes_out : Array[DotLayoutNode]
   edges_out : Array[DotLayoutEdge]
@@ -14,27 +27,37 @@ priv struct DotRoutingStageOutput {
 /// + lib/common/routespl.c + lib/pathplan/* (fixtures), with typed stage payload.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_routing_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  positions_state : PositionResult,
+  input : DotRoutingStageInput,
 ) -> DotRoutingStageOutput {
+  let graph = input.graph
+  let prep = input.prep
+  let rank_data = input.rank_data
+  let rank_heights = input.rank_heights
+  let cluster_meta = input.cluster_meta
+  let ordering = input.ordering
+  let positions_state = input.positions_state
   let spatial_data =
-    build_routing_spatial_data(graph, prep, rank_data.ranks, positions_state)
+    build_routing_spatial_data(
+      {
+        graph,
+        prep,
+        ranks: rank_data.ranks,
+        positions_state,
+      },
+    )
   let nodes_out = spatial_data.nodes_out
   let ratio_adjusted_data =
     build_routing_ratio_adjusted_data(
-      graph,
-      prep,
-      rank_data,
-      nodes_out,
-      positions_state,
-      spatial_data.cluster_bboxes,
-      spatial_data.label_ports_map,
-      spatial_data.label_ports_raw,
+      {
+        graph,
+        prep,
+        rank_data,
+        nodes_out,
+        positions_state,
+        cluster_bboxes: spatial_data.cluster_bboxes,
+        label_ports_map: spatial_data.label_ports_map,
+        label_ports_raw: spatial_data.label_ports_raw,
+      },
     )
   let ratio_scaled = ratio_adjusted_data.ratio_scaled
   let ratio_sx = ratio_adjusted_data.ratio_sx

@@ -32,13 +32,15 @@ pub fn layout_dot(
     )
   let routing_stage_output =
     compute_dot_routing_stage(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      positions_state,
+      {
+        graph,
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+        positions_state,
+      },
     )
   finalize_layout_graph({
     graph,

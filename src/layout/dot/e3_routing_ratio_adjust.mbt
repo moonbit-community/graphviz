@@ -2,6 +2,20 @@
 /// Stage E ratio=fill routing adjustment helpers.
 
 ///|
+/// Graphviz parity: ratio-adjust payload keeps ratio inputs grouped so the
+/// pre-routing scaling boundary remains explicit and stable.
+priv struct RoutingRatioAdjustInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  nodes_out : Array[DotLayoutNode]
+  positions_state : PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+}
+
+///|
 priv struct RoutingRatioAdjustedData {
   ratio_scaled : Bool
   ratio_sx : Double
@@ -17,15 +31,13 @@ priv struct RoutingRatioAdjustedData {
 /// precompute/edge solve and keeps position/cluster/port maps in sync.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_ratio_adjusted_data(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  nodes_out : Array[DotLayoutNode],
-  positions_state : PositionResult,
-  cluster_bboxes : Map[String, @geom.Rect],
-  label_ports_map : Map[String, Map[String, RecordPort]],
-  label_ports_raw : Map[String, Map[String, RecordPort]],
+  input : RoutingRatioAdjustInput,
 ) -> RoutingRatioAdjustedData {
+  let graph = input.graph
+  let prep = input.prep
+  let rank_data = input.rank_data
+  let nodes_out = input.nodes_out
+  let positions_state = input.positions_state
   let routing_bbox =
     compute_dot_bbox(
       nodes_out,
@@ -52,9 +64,9 @@ fn build_routing_ratio_adjusted_data(
       ratio_sx,
       ratio_sy,
       positions_state,
-      cluster_bboxes,
-      label_ports_map,
-      label_ports_raw,
+      cluster_bboxes: input.cluster_bboxes,
+      label_ports_map: input.label_ports_map,
+      label_ports_raw: input.label_ports_raw,
     }
   }
   let adjusted_positions_state : PositionResult = {
@@ -79,9 +91,10 @@ fn build_routing_ratio_adjusted_data(
     ratio_sx,
     ratio_sy,
     positions_state: adjusted_positions_state,
-    cluster_bboxes: scale_rect_map(cluster_bboxes, ratio_sx, ratio_sy),
-    label_ports_map: scale_record_port_maps(label_ports_map, ratio_sx, ratio_sy),
-    label_ports_raw: scale_record_port_maps(label_ports_raw, ratio_sx, ratio_sy),
+    cluster_bboxes: scale_rect_map(input.cluster_bboxes, ratio_sx, ratio_sy),
+    label_ports_map:
+      scale_record_port_maps(input.label_ports_map, ratio_sx, ratio_sy),
+    label_ports_raw:
+      scale_record_port_maps(input.label_ports_raw, ratio_sx, ratio_sy),
   }
 }
-

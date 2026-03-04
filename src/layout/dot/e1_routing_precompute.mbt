@@ -132,15 +132,25 @@ priv struct RoutingSpatialData {
 }
 
 ///|
+/// Graphviz parity: routing spatial payload keeps stage context grouped so
+/// node/port and cluster-bbox precompute wiring stays explicit and stable.
+priv struct RoutingSpatialInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  ranks : Map[String, Int]
+  positions_state : PositionResult
+}
+
+///|
 /// Graphviz parity: routing spatial precompute consumes typed routing-stage
 /// inputs and keeps node/port + cluster-bbox computation order unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_routing_spatial_data(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  ranks : Map[String, Int],
-  positions_state : PositionResult,
+  input : RoutingSpatialInput,
 ) -> RoutingSpatialData {
+  let graph = input.graph
+  let prep = input.prep
+  let positions_state = input.positions_state
   // Graphviz parity: node geometry projection and port-map derivation
   // consume stage inputs in the same precompute order.
   let nodes_out =
@@ -174,11 +184,10 @@ fn build_routing_spatial_data(
       positions_state.cluster_rn_x,
       positions_state.cluster_bbox_heights,
       prep.rankdir,
-      ranks,
+      input.ranks,
       positions_state.rank_y,
       positions_state.rank_ht1,
       positions_state.rank_ht2,
     )
   { nodes_out, label_ports_map, label_ports_raw, cluster_bboxes }
 }
-
