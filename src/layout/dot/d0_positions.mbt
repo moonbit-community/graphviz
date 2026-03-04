@@ -107,6 +107,15 @@ priv struct XposReorderControl {
 }
 
 ///|
+/// Graphviz parity: clustered/non-clustered xpos reorder branch gates are
+/// derived once from reorder control+context and reused unchanged by reorder
+/// and transpose cleanup routing.
+priv struct XposReorderPathFlags {
+  clustered_reorder_enabled : Bool
+  nonclustered_reorder_enabled : Bool
+}
+
+///|
 /// Graphviz parity: xpos reorder branch keeps shared graph/rank/ordering
 /// inputs grouped together so clustered/non-clustered paths consume the same
 /// payload without argument reordering.
@@ -421,19 +430,37 @@ fn build_nonclustered_groups(
 }
 
 ///|
+/// Graphviz parity: reorder branch gating is evaluated once so clustered and
+/// non-clustered paths consume identical predicates as transpose cleanup.
+/// Do not change behavior without updating fixtures/tests.
+fn build_xpos_reorder_path_flags(
+  reorder_control : XposReorderControl,
+  reorder_context : XposReorderContext,
+) -> XposReorderPathFlags {
+  let base_reorder_enabled =
+    reorder_control.xpos_reorder_enabled &&
+    reorder_control.allow_xpos_reorder &&
+    !reorder_context.cluster_meta.ordering_set
+  {
+    clustered_reorder_enabled:
+      base_reorder_enabled && reorder_control.use_vnodes_for_xpos,
+    nonclustered_reorder_enabled:
+      base_reorder_enabled &&
+      !reorder_control.has_vnode_order &&
+      !reorder_context.cluster_meta.has_clusters,
+  }
+}
+
+///|
 /// Graphviz parity: non-cluster xpos reorder fallback runs only when clustered
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_apply_nonclustered_xpos(
-  reorder_control : XposReorderControl,
+  path_flags : XposReorderPathFlags,
   reorder_context : XposReorderContext,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if reorder_control.xpos_reorder_enabled &&
-    reorder_control.allow_xpos_reorder &&
-    !reorder_context.cluster_meta.ordering_set &&
-    !reorder_control.has_vnode_order &&
-    !reorder_context.cluster_meta.has_clusters {
+  if path_flags.nonclustered_reorder_enabled {
     build_nonclustered_groups(reorder_context, x_groups)
   } else {
     x_groups
@@ -446,15 +473,12 @@ fn maybe_apply_nonclustered_xpos(
 /// routing unchanged before transpose-cleanup stage.
 /// Do not change behavior without updating fixtures/tests.
 fn build_xpos_reordered_groups(
-  reorder_control : XposReorderControl,
+  path_flags : XposReorderPathFlags,
   reorder_context : XposReorderContext,
   reorder_port_data : XposReorderPortData,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if reorder_control.xpos_reorder_enabled &&
-    reorder_control.use_vnodes_for_xpos &&
-    reorder_control.allow_xpos_reorder &&
-    !reorder_context.cluster_meta.ordering_set {
+  if path_flags.clustered_reorder_enabled {
     @positioning.build_clustered_xpos_groups(
       @positioning.build_clustered_xpos_reorder_input(
         x_groups,
@@ -485,7 +509,7 @@ fn build_xpos_reordered_groups(
     )
   } else {
     maybe_apply_nonclustered_xpos(
-      reorder_control,
+      path_flags,
       reorder_context,
       x_groups,
     )
@@ -497,14 +521,11 @@ fn build_xpos_reordered_groups(
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_apply_xpos_transpose(
-  reorder_control : XposReorderControl,
+  path_flags : XposReorderPathFlags,
   reorder_context : XposReorderContext,
   x_groups : Map[Int, Array[String]],
 ) -> Unit {
-  if reorder_control.xpos_reorder_enabled &&
-    reorder_control.use_vnodes_for_xpos &&
-    reorder_control.allow_xpos_reorder &&
-    !reorder_context.cluster_meta.ordering_set {
+  if path_flags.clustered_reorder_enabled {
     @positioning.apply_xpos_transpose_cleanup(
       x_groups,
       @positioning.build_xpos_transpose_cleanup_input(
@@ -748,15 +769,16 @@ fn build_x_groups_after_reorder(
     edge_tail_port_order: x_seed.x_edge_tail_port_order,
     edge_head_port_order: x_seed.x_edge_head_port_order,
   }
+  let path_flags = build_xpos_reorder_path_flags(reorder_control, reorder_context)
   let x_groups =
     build_xpos_reordered_groups(
-      reorder_control,
+      path_flags,
       reorder_context,
       reorder_port_data,
       x_seed.x_groups,
     )
   maybe_apply_xpos_transpose(
-    reorder_control,
+    path_flags,
     reorder_context,
     x_groups,
   )
