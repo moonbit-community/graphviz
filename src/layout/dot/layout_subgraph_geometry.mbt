@@ -275,41 +275,48 @@ priv struct SubgraphsAndBBox {
 }
 
 ///|
+/// Graphviz parity: subgraph-bbox payload keeps cluster/rank snapshots grouped
+/// so final cluster-bbox assembly wiring remains explicit and stable.
+priv struct SubgraphsAndBBoxInput {
+  graph : @cgraph.Graph
+  nodes : Array[DotLayoutNode]
+  edges : Array[DotLayoutEdge]
+  bbox : @geom.Rect
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
+  rankdir : RankDir
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+///|
 /// Graphviz parity: cluster bbox expansion aligned to refs/graphviz/lib/common/postproc.c
 /// (place_graph_label) + dotgen/position.c (cluster margins).
 /// Do not change behavior without updating fixtures/tests.
 fn build_subgraphs_and_bbox(
-  graph : @cgraph.Graph,
-  nodes : Array[DotLayoutNode],
-  edges : Array[DotLayoutEdge],
-  bbox : @geom.Rect,
-  cluster_ln_x : Map[String, Double],
-  cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
-  rankdir : RankDir,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  input : SubgraphsAndBBoxInput,
 ) -> SubgraphsAndBBox {
   let subgraphs =
     layout_subgraphs(
-      graph,
-      nodes,
-      edges,
-      cluster_ln_x,
-      cluster_rn_x,
-      cluster_bbox_heights,
-      rankdir,
-      ranks,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
+      input.graph,
+      input.nodes,
+      input.edges,
+      input.cluster_ln_x,
+      input.cluster_rn_x,
+      input.cluster_bbox_heights,
+      input.rankdir,
+      input.ranks,
+      input.rank_y,
+      input.rank_ht1,
+      input.rank_ht2,
     )
   let expanded = if subgraphs.length() > 0 {
-    expand_bbox_with_clusters(bbox, subgraphs)
+    expand_bbox_with_clusters(input.bbox, subgraphs)
   } else {
-    bbox
+    input.bbox
   }
   { subgraphs, base_bbox: expanded }
 }

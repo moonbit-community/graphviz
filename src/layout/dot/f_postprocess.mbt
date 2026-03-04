@@ -74,18 +74,20 @@ fn build_pre_rotation_layout_data(
     )
   let subgraphs_and_bbox =
     build_subgraphs_and_bbox(
-      graph,
-      final_geometry.final_nodes,
-      final_geometry.final_edges,
-      final_geometry.rank_bbox,
-      input.cluster_ln_x,
-      input.cluster_rn_x,
-      input.cluster_bbox_heights,
-      rankdir,
-      input.ranks,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
+      {
+        graph,
+        nodes: final_geometry.final_nodes,
+        edges: final_geometry.final_edges,
+        bbox: final_geometry.rank_bbox,
+        cluster_ln_x: input.cluster_ln_x,
+        cluster_rn_x: input.cluster_rn_x,
+        cluster_bbox_heights: input.cluster_bbox_heights,
+        rankdir,
+        ranks: input.ranks,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+      },
     )
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     root_cluster_padding_for_rankdir(
