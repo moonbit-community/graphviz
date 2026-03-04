@@ -913,18 +913,33 @@ fn edge_port_label_pos(
 ///|
 /// Graphviz parity: edge label midpoint placement aligned to refs/graphviz/lib/common/labels.c.
 /// Do not change behavior without updating fixtures/tests.
-fn edge_label_pos(
-  edge : @cgraph.Edge,
-  spline : @geom.Spline,
-  tail_clip : @geom.Point,
-  head_clip : @geom.Point,
-  rankdir : RankDir,
-  label_rank_y : Double?,
-  label_rank_x : Double?,
-  apply_label_pad : Bool,
-  nodesep_pt : Double,
-  label_pad_boost : Double,
+priv struct EdgeLabelPosInput {
+  edge : @cgraph.Edge
+  spline : @geom.Spline
+  tail_clip : @geom.Point
+  head_clip : @geom.Point
+  rankdir : RankDir
+  label_rank_y : Double?
+  label_rank_x : Double?
+  apply_label_pad : Bool
+  nodesep_pt : Double
+  label_pad_boost : Double
+}
+
+///|
+fn edge_label_pos_from_input(
+  input : EdgeLabelPosInput,
 ) -> @geom.Point? {
+  let edge = input.edge
+  let spline = input.spline
+  let tail_clip = input.tail_clip
+  let head_clip = input.head_clip
+  let rankdir = input.rankdir
+  let label_rank_y = input.label_rank_y
+  let label_rank_x = input.label_rank_x
+  let apply_label_pad = input.apply_label_pad
+  let nodesep_pt = input.nodesep_pt
+  let label_pad_boost = input.label_pad_boost
   let samples = sample_spline_points(spline.points, 96)
   let fallback = match spline_label_pos_with_samples(samples) {
     Some(value) => value
@@ -1027,6 +1042,35 @@ fn edge_label_pos(
       }
     }
   }
+}
+
+///|
+fn edge_label_pos(
+  edge : @cgraph.Edge,
+  spline : @geom.Spline,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+  rankdir : RankDir,
+  label_rank_y : Double?,
+  label_rank_x : Double?,
+  apply_label_pad : Bool,
+  nodesep_pt : Double,
+  label_pad_boost : Double,
+) -> @geom.Point? {
+  edge_label_pos_from_input(
+    {
+      edge,
+      spline,
+      tail_clip,
+      head_clip,
+      rankdir,
+      label_rank_y,
+      label_rank_x,
+      apply_label_pad,
+      nodesep_pt,
+      label_pad_boost,
+    },
+  )
 }
 
 ///|
