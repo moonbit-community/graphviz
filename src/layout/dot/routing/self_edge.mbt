@@ -283,21 +283,39 @@ fn resolve_self_edge_port_side(
 /// Graphviz parity: left/right horizontal self-edge route shapes share one
 /// control-point construction, with only side-specific sign/seed differences.
 /// Do not change behavior without updating fixtures/tests.
+priv struct HorizontalSelfEdgeRoutesInput {
+  edges : Array[@cgraph.Edge]
+  base0 : EdgeRouteBase
+  nodesep_pt : Double
+  sizey_param : Double
+  np : @geom.Point
+  tp : @geom.Point
+  hp : @geom.Point
+  point_pair : Int
+  flip_pair_a : Int
+  flip_pair_b : Int
+  side_width : Double
+  to_right : Bool
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 fn self_edge_routes_horizontal_side(
-  edges : Array[@cgraph.Edge],
-  base0 : EdgeRouteBase,
-  nodesep_pt : Double,
-  sizey_param : Double,
-  np : @geom.Point,
-  tp : @geom.Point,
-  hp : @geom.Point,
-  point_pair : Int,
-  flip_pair_a : Int,
-  flip_pair_b : Int,
-  side_width : Double,
-  to_right : Bool,
-  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : HorizontalSelfEdgeRoutesInput,
 ) -> Array[SelfEdgeRoute] {
+  let edges = input.edges
+  let base0 = input.base0
+  let nodesep_pt = input.nodesep_pt
+  let sizey_param = input.sizey_param
+  let np = input.np
+  let tp = input.tp
+  let hp = input.hp
+  let point_pair = input.point_pair
+  let flip_pair_a = input.flip_pair_a
+  let flip_pair_b = input.flip_pair_b
+  let side_width = input.side_width
+  let to_right = input.to_right
+  let self_edge_label_width_fn = input.self_edge_label_width_fn
   let cnt = edges.length()
   let cnt_f = Double::from_int(cnt)
   let stepx = nodesep_pt
@@ -414,19 +432,21 @@ fn build_self_edge_routes(
   if go_right {
     let point_pair = convert_sides_to_points(tail_side, head_side)
     return self_edge_routes_horizontal_side(
-      edges,
-      base0,
-      nodesep_pt,
-      sizey_param,
-      np,
-      tp,
-      hp,
-      point_pair,
-      32,
-      65,
-      base0.tail_size.right_pt,
-      true,
-      self_edge_label_width_fn,
+      {
+        edges,
+        base0,
+        nodesep_pt,
+        sizey_param,
+        np,
+        tp,
+        hp,
+        point_pair,
+        flip_pair_a: 32,
+        flip_pair_b: 65,
+        side_width: base0.tail_size.right_pt,
+        to_right: true,
+        self_edge_label_width_fn,
+      },
     )
   }
   if uses_left {
@@ -442,19 +462,21 @@ fn build_self_edge_routes(
     } else {
       let point_pair = convert_sides_to_points(tail_side, head_side)
       return self_edge_routes_horizontal_side(
-        edges,
-        base0,
-        nodesep_pt,
-        sizey_param,
-        np,
-        tp,
-        hp,
-        point_pair,
-        12,
-        67,
-        base0.tail_size.left_pt,
-        false,
-        self_edge_label_width_fn,
+        {
+          edges,
+          base0,
+          nodesep_pt,
+          sizey_param,
+          np,
+          tp,
+          hp,
+          point_pair,
+          flip_pair_a: 12,
+          flip_pair_b: 67,
+          side_width: base0.tail_size.left_pt,
+          to_right: false,
+          self_edge_label_width_fn,
+        },
       )
     }
   }
