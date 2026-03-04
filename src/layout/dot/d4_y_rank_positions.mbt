@@ -143,14 +143,16 @@ fn build_y_positions_with_flip(
       if input.y_all_ranks.length() > 0 { input.y_all_ranks[0] } else { 0 }
     let adjusted =
       adjust_flip_rank_heights(
-      input.graph,
-      input.ranks,
-      rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
-      input.cluster_bbox_heights,
-      min_root_rank,
-      0.0,
+      {
+        graph: input.graph,
+        ranks: input.ranks,
+        rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        cluster_heights: input.cluster_bbox_heights,
+        min_root_rank,
+        margin_total: 0.0,
+      },
     )
     if adjusted {
       y_positions =

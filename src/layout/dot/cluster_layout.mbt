@@ -45,48 +45,58 @@ priv struct ClusterRankBounds {
 }
 
 ///|
+/// Graphviz parity: flip-rank height adjustment input keeps recursive cluster
+/// walk payload grouped so rank_y propagation stays explicit and stable.
+priv struct FlipRankHeightsAdjustInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  cluster_heights : Map[String, ClusterBboxHeightPair]
+  min_root_rank : Int
+  margin_total : Double
+}
+
+///|
 /// Graphviz parity: LR/RL cluster label height adjustment aligned to
 /// refs/graphviz/lib/dotgen/position.c (adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
 fn adjust_flip_rank_heights(
-  graph : @cgraph.Graph,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  cluster_heights : Map[String, ClusterBboxHeightPair],
-  min_root_rank : Int,
-  margin_total : Double,
+  input : FlipRankHeightsAdjustInput,
 ) -> Bool {
   let mut changed = false
-  let margin = if graph.is_root() { 0.0 } else { cluster_margin_pt(graph) }
-  for child in graph.subgraphs() {
+  let margin =
+    if input.graph.is_root() { 0.0 } else { cluster_margin_pt(input.graph) }
+  for child in input.graph.subgraphs() {
     if adjust_flip_rank_heights(
-      child,
-      ranks,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      cluster_heights,
-      min_root_rank,
-      margin_total + margin,
+      {
+        graph: child,
+        ranks: input.ranks,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        cluster_heights: input.cluster_heights,
+        min_root_rank: input.min_root_rank,
+        margin_total: input.margin_total + margin,
+      },
     ) {
       changed = true
     }
   }
-  if !@dot_shared.is_cluster_graph(graph) {
+  if !@dot_shared.is_cluster_graph(input.graph) {
     return changed
   }
-  let label_width = match graph_label_metrics(graph) {
+  let label_width = match graph_label_metrics(input.graph) {
     Some(metrics) => metrics.width_pt + CLUSTER_LABEL_PAD_PT * 2.0
     None => return changed
   }
   let cluster_nodes : Map[String, Bool] = Map::new()
-  @dot_shared.collect_graph_nodes(graph, cluster_nodes)
+  @dot_shared.collect_graph_nodes(input.graph, cluster_nodes)
   let mut min_rank : Int? = None
   let mut max_rank : Int? = None
   for name, _ in cluster_nodes {
-    match ranks.get(name) {
+    match input.ranks.get(name) {
       Some(rank) => {
         match min_rank {
           Some(value) => if rank < value { min_rank = Some(rank) }
@@ -104,27 +114,27 @@ fn adjust_flip_rank_heights(
     (Some(min_value), Some(max_value)) => (min_value, max_value)
     _ => return changed
   }
-  let min_rank_y = match rank_y.get(min_rank_value) {
+  let min_rank_y = match input.rank_y.get(min_rank_value) {
     Some(value) => value
     None => return changed
   }
-  let max_rank_y = match rank_y.get(max_rank_value) {
+  let max_rank_y = match input.rank_y.get(max_rank_value) {
     Some(value) => value
     None => return changed
   }
-  let base_ht1 = match rank_ht1.get(max_rank_value) {
+  let base_ht1 = match input.rank_ht1.get(max_rank_value) {
     Some(value) => value
     None => 0.0
   }
-  let base_ht2 = match rank_ht2.get(min_rank_value) {
+  let base_ht2 = match input.rank_ht2.get(min_rank_value) {
     Some(value) => value
     None => 0.0
   }
   let mut ht1 = base_ht1
   let mut ht2 = base_ht2
-  match graph.name() {
+  match input.graph.name() {
     Some(name) =>
-      match cluster_heights.get(name) {
+      match input.cluster_heights.get(name) {
         Some(value) => {
           ht1 = value.ht1
           ht2 = value.ht2
@@ -137,12 +147,12 @@ fn adjust_flip_rank_heights(
   let delta = label_width - (rht + ht1 + ht2)
   if delta > 0.0 {
     let bottom = (delta + 1.0) / 2.0
-    let delbottom = ht1 + bottom - (base_ht1 - margin_total)
+    let delbottom = ht1 + bottom - (base_ht1 - input.margin_total)
     if delbottom > 0.0 {
       let mut r = max_rank_value
       while true {
-        match rank_y.get(r) {
-          Some(value) => rank_y[r] = value + delbottom
+        match input.rank_y.get(r) {
+          Some(value) => input.rank_y[r] = value + delbottom
           None => ()
         }
         if r == min_rank_value {
@@ -152,15 +162,15 @@ fn adjust_flip_rank_heights(
       }
     }
     let deltop =
-      ht2 + (delta - bottom) + delbottom - (base_ht2 - margin_total)
+      ht2 + (delta - bottom) + delbottom - (base_ht2 - input.margin_total)
     if deltop > 0.0 {
       let mut r = min_rank_value - 1
-      while r >= min_root_rank {
-        match rank_y.get(r) {
-          Some(value) => rank_y[r] = value + deltop
+      while r >= input.min_root_rank {
+        match input.rank_y.get(r) {
+          Some(value) => input.rank_y[r] = value + deltop
           None => ()
         }
-        if r == min_root_rank {
+        if r == input.min_root_rank {
           break
         }
         r = r - 1
@@ -168,23 +178,24 @@ fn adjust_flip_rank_heights(
     }
     let next_ht1 = ht1 + bottom
     let next_ht2 = ht2 + (delta - bottom)
-    match graph.name() {
-      Some(name) => cluster_heights[name] = { ht1: next_ht1, ht2: next_ht2 }
+    match input.graph.name() {
+      Some(name) =>
+        input.cluster_heights[name] = { ht1: next_ht1, ht2: next_ht2 }
       None => ()
     }
-    let current_ht1 = match rank_ht1.get(max_rank_value) {
+    let current_ht1 = match input.rank_ht1.get(max_rank_value) {
       Some(value) => value
       None => 0.0
     }
     if next_ht1 > current_ht1 {
-      rank_ht1[max_rank_value] = next_ht1
+      input.rank_ht1[max_rank_value] = next_ht1
     }
-    let current_ht2 = match rank_ht2.get(min_rank_value) {
+    let current_ht2 = match input.rank_ht2.get(min_rank_value) {
       Some(value) => value
       None => 0.0
     }
     if next_ht2 > current_ht2 {
-      rank_ht2[min_rank_value] = next_ht2
+      input.rank_ht2[min_rank_value] = next_ht2
     }
     changed = true
   }
