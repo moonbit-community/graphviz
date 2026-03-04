@@ -9,26 +9,50 @@ priv struct EdgePortSamples {
 }
 
 ///|
-/// Graphviz parity: shared edge-port sampling setup keeps endpoint remap and
-/// per-edge iteration order identical for both x-offset and port-order passes.
-fn compute_edge_port_samples(
+/// Graphviz parity: edge-port sampling context keeps rankdir lookup, node index,
+/// and per-node port offsets fixed before edge endpoint iteration.
+/// Do not change behavior without updating fixtures/tests.
+priv struct EdgePortSamplingContext {
+  rankdir : RankDir
+  nodes_by_name : Map[String, @cgraph.Node]
+  port_offsets : Map[String, Map[String, RecordPort]]
+}
+
+///|
+/// Graphviz parity: edge endpoint projection caches tail/head names and ports
+/// in edge traversal order shared by both x-offset and port-order passes.
+/// Do not change behavior without updating fixtures/tests.
+priv struct EdgeEndpointPortProjection {
+  tail_names : Array[String]
+  head_names : Array[String]
+  tail_ports : Array[@cgraph.Port?]
+  head_ports : Array[@cgraph.Port?]
+}
+
+///|
+fn build_edge_port_sampling_context(
   nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
   sizes : Map[String, NodeSize],
-  sample_fn : (String, @cgraph.Port?, Map[String, Map[String, RecordPort]], Map[String, NodeSize], RankDir, Map[String, @cgraph.Node]) -> Double,
-) -> EdgePortSamples {
-  if edges.length() == 0 {
-    return { tail_values: [], head_values: [] }
-  }
+) -> EdgePortSamplingContext {
   let rankdir =
     if nodes.length() > 0 { graph_rankdir(nodes[0].graph()) } else { RankDir::TB }
   let nodes_by_name : Map[String, @cgraph.Node] = Map::new()
   for node in nodes {
     nodes_by_name[node.name()] = node
   }
-  let port_offsets = port_offsets_for_nodes(nodes, sizes)
+  {
+    rankdir,
+    nodes_by_name,
+    port_offsets: port_offsets_for_nodes(nodes, sizes),
+  }
+}
+
+///|
+fn build_edge_endpoint_port_projection(
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+) -> EdgeEndpointPortProjection {
   let tail_names : Array[String] = []
   let head_names : Array[String] = []
   let tail_ports : Array[@cgraph.Port?] = []
@@ -51,28 +75,52 @@ fn compute_edge_port_samples(
     head_ports.push(head_port)
     endpoint_idx = endpoint_idx + 1
   }
+  { tail_names, head_names, tail_ports, head_ports }
+}
+
+///|
+/// Graphviz parity: shared edge-port sampling setup keeps endpoint remap and
+/// per-edge iteration order identical for both x-offset and port-order passes.
+fn compute_edge_port_samples(
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  sizes : Map[String, NodeSize],
+  sample_fn : (String, @cgraph.Port?, Map[String, Map[String, RecordPort]], Map[String, NodeSize], RankDir, Map[String, @cgraph.Node]) -> Double,
+) -> EdgePortSamples {
+  if edges.length() == 0 {
+    return { tail_values: [], head_values: [] }
+  }
+  let sampling_context = build_edge_port_sampling_context(nodes, sizes)
+  let endpoint_projection =
+    build_edge_endpoint_port_projection(
+      edges,
+      edge_tail,
+      edge_head,
+    )
   let tail_samples : Array[Double] = []
   let head_samples : Array[Double] = []
   let mut idx = 0
   while idx < edges.length() {
     tail_samples.push(
       sample_fn(
-        tail_names[idx],
-        tail_ports[idx],
-        port_offsets,
+        endpoint_projection.tail_names[idx],
+        endpoint_projection.tail_ports[idx],
+        sampling_context.port_offsets,
         sizes,
-        rankdir,
-        nodes_by_name,
+        sampling_context.rankdir,
+        sampling_context.nodes_by_name,
       ),
     )
     head_samples.push(
       sample_fn(
-        head_names[idx],
-        head_ports[idx],
-        port_offsets,
+        endpoint_projection.head_names[idx],
+        endpoint_projection.head_ports[idx],
+        sampling_context.port_offsets,
         sizes,
-        rankdir,
-        nodes_by_name,
+        sampling_context.rankdir,
+        sampling_context.nodes_by_name,
       ),
     )
     idx = idx + 1
