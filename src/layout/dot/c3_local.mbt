@@ -1587,6 +1587,41 @@ priv struct ClusterLocalRankReplayContext {
 }
 
 ///|
+/// Graphviz parity: root mincross output is replayed into clustered
+/// build_ranks using unmapped order-edge snapshots before local cluster pass.
+/// Do not change behavior without updating fixtures/tests.
+fn build_cluster_local_rank_replay_context(
+  dispatch_context : ClusteredDispatchContext,
+  reorder_context : @ordering.OrderReorderContext,
+  materialized : @ordering.OrderMaterializationData,
+  order_sizes_out : Map[String, NodeSize],
+) -> ClusterLocalRankReplayContext {
+  let runtime_context = dispatch_context.runtime_context
+  {
+    graph: dispatch_context.graph,
+    cluster_meta: dispatch_context.cluster_meta,
+    node_order: reorder_context.order_node_order,
+    order_edges: materialized.order_edges_out_unmapped,
+    order_edge_tail: materialized.order_edge_tail_out_unmapped,
+    order_edge_head: materialized.order_edge_head_out_unmapped,
+    order_edge_tail_port_x: materialized.order_edge_tail_port_x_unmapped,
+    order_edge_head_port_x: materialized.order_edge_head_port_x_unmapped,
+    order_edge_tail_port_order: materialized.order_edge_tail_port_order_unmapped,
+    order_edge_head_port_order: materialized.order_edge_head_port_order_unmapped,
+    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+    ranks: dispatch_context.ranks,
+    order_sizes: order_sizes_out,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    vnode_info: runtime_context.vnode_info,
+    order_with_vnodes: dispatch_context.reorder_setup.order_with_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: cluster-local replay preparation keeps cluster traversal
 /// order, fixed-slot snapshots, and dispatch payload assembled in one bundle.
 /// Do not change behavior without updating fixtures/tests.
