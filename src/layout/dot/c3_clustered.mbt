@@ -13,7 +13,7 @@ priv struct ClusteredPreRootData {
   order_cluster_skeleton : Map[String, Bool]
   reorder_context : @ordering.OrderReorderContext
   materialized : @ordering.OrderMaterializationData
-  root_rank_order_phase_base : RootRankOrderPhaseBase
+  root_rank_order_phase_base : @ordering.RootRankOrderPhaseBase
 }
 
 ///|

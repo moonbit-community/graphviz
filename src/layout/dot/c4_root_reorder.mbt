@@ -3,23 +3,6 @@
 /// cluster-rank-order helpers for global cluster arrangement.
 
 ///|
-type OrderEdgeListsByTail = Map[
-  String,
-  Array[(String, String, Int, Bool, Double, Double, Double, Double)],
-]
-
-///|
-/// Graphviz parity: root cluster-rank-order base reuses one static source
-/// payload plus one static rank-order context across both stage callers.
-/// Do not change behavior without updating fixtures/tests.
-priv struct RootRankOrderPhaseBase {
-  order_with_clusters : Bool
-  root_reorder_sources_base : @ordering.RootReorderBuildSources
-  root_rank_order_context : @ordering.RootRankOrderPhaseContext
-  order_edges_by_tail_root : OrderEdgeListsByTail
-}
-
-///|
 /// Graphviz parity: root cluster-rank-order static source/context assembly is
 /// shared by root-phase override derivation and finalize-time cluster replay.
 /// Do not change behavior without updating fixtures/tests.
@@ -29,7 +12,7 @@ fn build_root_rank_order_phase_base(
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
   reorder_context : @ordering.OrderReorderContext,
-) -> RootRankOrderPhaseBase {
+) -> @ordering.RootRankOrderPhaseBase {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data
   let runtime_context = dispatch_context.runtime_context
@@ -81,16 +64,9 @@ fn run_root_reorder_and_rank_order_phase(
   pre_root_stage : ClusteredPreRootData,
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
-  let root_rank_order_phase_base = pre_root_stage.root_rank_order_phase_base
-  let root_reorder_sources =
-    @ordering.with_root_reorder_groups(
-      root_rank_order_phase_base.root_reorder_sources_base,
-      order_groups_for_mincross,
-    )
-  @ordering.run_root_reorder_and_rank_order_phase(
-    root_reorder_sources,
-    root_rank_order_phase_base.root_rank_order_context,
-    root_rank_order_phase_base.order_edges_by_tail_root,
+  @ordering.run_root_reorder_and_rank_order_from_base(
+    pre_root_stage.root_rank_order_phase_base,
+    order_groups_for_mincross,
   )
 }
 

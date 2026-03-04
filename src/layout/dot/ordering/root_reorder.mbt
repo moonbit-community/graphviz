@@ -658,6 +658,18 @@ pub(all) struct RootRankOrderPhaseContext {
 }
 
 ///|
+/// Graphviz parity: clustered root rank-order base keeps one static source
+/// payload plus one static rank-order context reused across root/finalize
+/// callers, with only rank groups varying per pass.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootRankOrderPhaseBase {
+  order_with_clusters : Bool
+  root_reorder_sources_base : RootReorderBuildSources
+  root_rank_order_context : RootRankOrderPhaseContext
+  order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]]
+}
+
+///|
 /// Graphviz parity: root cluster-rank-order call payload preserves the exact
 /// argument order expected by reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -860,6 +872,26 @@ pub fn run_root_reorder_and_rank_order_phase(
       root_rank_order_context,
     )
   (root_reorder_output, root_rank_order_phase_output)
+}
+
+///|
+/// Graphviz parity: clustered root rank-order pass reuses one static base
+/// snapshot and only swaps rank groups before root reorder/rank-order run.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_reorder_and_rank_order_from_base(
+  phase_base : RootRankOrderPhaseBase,
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
+  let root_reorder_sources =
+    with_root_reorder_groups(
+      phase_base.root_reorder_sources_base,
+      order_groups_for_mincross,
+    )
+  run_root_reorder_and_rank_order_phase(
+    root_reorder_sources,
+    phase_base.root_rank_order_context,
+    phase_base.order_edges_by_tail_root,
+  )
 }
 
 ///|
