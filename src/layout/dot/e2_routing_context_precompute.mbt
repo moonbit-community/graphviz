@@ -38,22 +38,26 @@ fn build_routing_precompute_data(
   // routing-stage inputs while preserving compute order before spline routing.
   let port_padding =
     compute_port_padding(
-      input.cluster_meta.has_clusters,
-      prep.has_port_edges,
-      prep.edges,
-      input.positions_state.positions,
-      input.label_ports_map,
+      {
+        has_clusters: input.cluster_meta.has_clusters,
+        has_port_edges: prep.has_port_edges,
+        edges: prep.edges,
+        positions: input.positions_state.positions,
+        label_ports_map: input.label_ports_map,
+      },
     )
   let port_pad_below = port_padding.port_pad_below
   let port_pad_above = port_padding.port_pad_above
   let head_port_metrics =
     collect_head_port_metrics(
-      prep.edges,
-      input.positions_state.positions,
-      input.sizes,
-      input.label_ports_map,
-      prep.record_orientation,
-      input.enable_complex_tuning,
+      {
+        edges: prep.edges,
+        positions: input.positions_state.positions,
+        sizes: input.sizes,
+        label_ports_map: input.label_ports_map,
+        record_orientation: prep.record_orientation,
+        enable_complex_tuning: input.enable_complex_tuning,
+      },
     )
   // Graphviz parity: routing path-context execution consumes routing-stage
   // fields while preserving path-group selection then context-assembly order.
