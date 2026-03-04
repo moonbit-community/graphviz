@@ -190,6 +190,49 @@ pub fn build_clustered_finalize_inputs_from_sources(
 }
 
 ///|
+/// Graphviz parity: clustered finalize source bundle keeps root-phase replay
+/// snapshots paired with finalize cleanup/context inputs before dispatch.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredFinalizeInputsBuildRootPhaseSources {
+  phase_base : RootRankOrderPhaseBase
+  root_cluster_stage : RootAndClusterRanksOutput
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  real_nodes : Map[String, Bool]
+  reorder_setup : OrderingReorderSetup
+  order_rank_keys : Array[Int]
+  remincross_sources : ReMincrossPassBuildSources
+}
+
+///|
+/// Graphviz parity: clustered finalize inputs derive cluster-rank replay maps
+/// from root phase outputs before final group cleanup/ReMincross assembly.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_finalize_inputs_from_root_phase_sources(
+  sources : ClusteredFinalizeInputsBuildRootPhaseSources,
+) -> ClusteredFinalizeInputs {
+  let cluster_rank_order =
+    build_cluster_rank_order_from_root_phase(
+      {
+        phase_base: sources.phase_base,
+        root_cluster_stage: sources.root_cluster_stage,
+        order_cluster_keys: sources.order_cluster_keys,
+        order_cluster_skeleton: sources.order_cluster_skeleton,
+        real_nodes: sources.real_nodes,
+      },
+    )
+  build_clustered_finalize_inputs_from_sources(
+    {
+      reorder_setup: sources.reorder_setup,
+      order_rank_keys: sources.order_rank_keys,
+      ordered: sources.root_cluster_stage.ordered,
+      cluster_rank_order,
+      remincross_sources: sources.remincross_sources,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
