@@ -32,12 +32,6 @@ fn run_root_and_cluster_ranks(
       },
     )
   let reorder_setup = dispatch_context.reorder_setup
-  let root_reorder_result =
-    @ordering.run_root_mincross_reorder_with_pass0_capture(
-      call_inputs.root_mincross_reorder_inputs,
-      root_groups_override,
-      capture_root_mincross_pass_snapshot,
-    )
   let replay_context =
     build_cluster_local_rank_replay_context(
       dispatch_context,
@@ -46,9 +40,9 @@ fn run_root_and_cluster_ranks(
       pre_root_stage.order_sizes_out,
     )
   let root_cluster_stage =
-    @ordering.run_root_and_cluster_ranks(
-      call_inputs.root_and_cluster_inputs,
-      root_reorder_result,
+    @ordering.run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
+      call_inputs,
+      capture_root_mincross_pass_snapshot,
     )
   if reorder_setup.order_with_clusters {
     reorder_by_cluster_ranks(root_cluster_stage.ordered, replay_context)

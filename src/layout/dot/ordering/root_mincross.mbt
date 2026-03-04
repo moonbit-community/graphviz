@@ -864,6 +864,26 @@ pub fn build_root_and_cluster_ranks_call_inputs_from_sources(
 }
 
 ///|
+/// Graphviz parity: root+cluster stage run keeps root mincross capture/replay
+/// ordering unchanged, then applies root-override merge before local replay.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
+  call_inputs : RootAndClusterRanksCallInputs,
+  capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
+) -> RootAndClusterRanksOutput {
+  let root_reorder_result =
+    run_root_mincross_reorder_with_pass0_capture(
+      call_inputs.root_mincross_reorder_inputs,
+      call_inputs.root_and_cluster_inputs.root_groups_override,
+      capture_call,
+    )
+  run_root_and_cluster_ranks(
+    call_inputs.root_and_cluster_inputs,
+    root_reorder_result,
+  )
+}
+
+///|
 /// Graphviz parity: root+cluster rank phase output keeps root-mincross input
 /// groups, final ordered groups, and vnode-inclusive groups for xpos.
 /// Do not change behavior without updating fixtures/tests.
