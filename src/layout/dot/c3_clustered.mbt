@@ -26,6 +26,17 @@ priv struct ClusteredMaterializedStage {
 }
 
 ///|
+/// Graphviz parity: clustered pre-root seed stage keeps grouped rank lists,
+/// size overrides, and cluster skeleton metadata paired for later phases.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredOrderSeedStage {
+  order_groups : Map[Int, Array[String]]
+  order_sizes_out : Map[String, NodeSize]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: clustered ordering stage dispatch context keeps complete
 /// clustered ordering payload ordering unchanged before stage execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -70,33 +81,11 @@ priv struct ClusteredRootPhaseOutput {
 fn build_clustered_pre_root(
   dispatch_context : ClusteredDispatchContext,
 ) -> ClusteredPreRootData {
-  let reorder_setup = dispatch_context.reorder_setup
-  let runtime_context = dispatch_context.runtime_context
-  let order_seed_output =
-    @ordering.build_order_seed_groups(
-      {
-        ordering_groups_base: reorder_setup.ordering_groups_base,
-        base_order_index: reorder_setup.base_order_index,
-        order_with_vnodes: reorder_setup.order_with_vnodes,
-        order_with_clusters: reorder_setup.order_with_clusters,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        cluster_order: dispatch_context.cluster_meta.cluster_order,
-        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-        vnode_order_keys_for_ordering:
-          reorder_setup.vnode_order_keys_for_ordering,
-        order_sizes: dispatch_context.order_sizes,
-        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-        skeleton_size: vnode_size_from_widths(1.0, 1.0),
-      },
-    )
-  let order_groups = order_seed_output.order_groups
-  let order_sizes_out = order_seed_output.order_sizes_out
-  let order_cluster_keys = order_seed_output.order_cluster_keys
-  let order_cluster_skeleton = order_seed_output.order_cluster_skeleton
+  let order_seed_stage = build_clustered_order_seed_stage(dispatch_context)
+  let order_groups = order_seed_stage.order_groups
+  let order_sizes_out = order_seed_stage.order_sizes_out
+  let order_cluster_keys = order_seed_stage.order_cluster_keys
+  let order_cluster_skeleton = order_seed_stage.order_cluster_skeleton
   let materialized_stage =
     build_clustered_materialized_stage(
       dispatch_context,
@@ -120,6 +109,44 @@ fn build_clustered_pre_root(
     reorder_context,
     materialized,
     root_rank_order_phase_base,
+  }
+}
+
+///|
+/// Graphviz parity: clustered pre-root seed stage mirrors Graphviz order seed
+/// expansion for groups, cluster skeleton keys, and vnode size fallback.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_order_seed_stage(
+  dispatch_context : ClusteredDispatchContext,
+) -> ClusteredOrderSeedStage {
+  let reorder_setup = dispatch_context.reorder_setup
+  let runtime_context = dispatch_context.runtime_context
+  let order_seed_output =
+    @ordering.build_order_seed_groups(
+      {
+        ordering_groups_base: reorder_setup.ordering_groups_base,
+        base_order_index: reorder_setup.base_order_index,
+        order_with_vnodes: reorder_setup.order_with_vnodes,
+        order_with_clusters: reorder_setup.order_with_clusters,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        vnode_order_keys_for_ordering:
+          reorder_setup.vnode_order_keys_for_ordering,
+        order_sizes: dispatch_context.order_sizes,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+        skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      },
+    )
+  {
+    order_groups: order_seed_output.order_groups,
+    order_sizes_out: order_seed_output.order_sizes_out,
+    order_cluster_keys: order_seed_output.order_cluster_keys,
+    order_cluster_skeleton: order_seed_output.order_cluster_skeleton,
   }
 }
 
