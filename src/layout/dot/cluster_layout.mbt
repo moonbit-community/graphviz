@@ -202,26 +202,36 @@ fn adjust_flip_rank_heights(
   changed
 }
 
+///|
+/// Graphviz parity: cluster bbox-height collection input keeps recursive graph
+/// walk payload grouped so child height aggregation remains explicit and stable.
+priv struct ClusterBBoxHeightsCollectInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  self_edge_labels : Map[String, Double]
+  rankdir : RankDir
+  cluster_heights : Map[String, ClusterBboxHeightPair]
+}
+
+///|
 fn collect_cluster_bbox_heights(
-  graph : @cgraph.Graph,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-  rankdir : RankDir,
-  cluster_heights : Map[String, ClusterBboxHeightPair],
+  input : ClusterBBoxHeightsCollectInput,
 ) -> ClusterHeights? {
-  let is_cluster = @dot_shared.is_cluster_graph(graph)
-  let children = graph.subgraphs()
+  let is_cluster = @dot_shared.is_cluster_graph(input.graph)
+  let children = input.graph.subgraphs()
   if !is_cluster {
     for child in children {
       let _ =
         collect_cluster_bbox_heights(
-        child,
-        ranks,
-        sizes,
-        self_edge_labels,
-        rankdir,
-        cluster_heights,
+        {
+          graph: child,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rankdir: input.rankdir,
+          cluster_heights: input.cluster_heights,
+        },
       )
     }
     return None
@@ -229,10 +239,10 @@ fn collect_cluster_bbox_heights(
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
-    graph,
-    ranks,
-    sizes,
-    self_edge_labels,
+    input.graph,
+    input.ranks,
+    input.sizes,
+    input.self_edge_labels,
     seen,
     rank_heights,
     None,
@@ -244,12 +254,14 @@ fn collect_cluster_bbox_heights(
       for child in children {
         let _ =
           collect_cluster_bbox_heights(
-            child,
-            ranks,
-            sizes,
-            self_edge_labels,
-            rankdir,
-            cluster_heights,
+            {
+              graph: child,
+              ranks: input.ranks,
+              sizes: input.sizes,
+              self_edge_labels: input.self_edge_labels,
+              rankdir: input.rankdir,
+              cluster_heights: input.cluster_heights,
+            },
           )
       }
       return None
@@ -261,18 +273,20 @@ fn collect_cluster_bbox_heights(
       for child in children {
         let _ =
           collect_cluster_bbox_heights(
-            child,
-            ranks,
-            sizes,
-            self_edge_labels,
-            rankdir,
-            cluster_heights,
+            {
+              graph: child,
+              ranks: input.ranks,
+              sizes: input.sizes,
+              self_edge_labels: input.self_edge_labels,
+              rankdir: input.rankdir,
+              cluster_heights: input.cluster_heights,
+            },
           )
       }
       return None
     }
   }
-  let margin = cluster_margin_pt(graph)
+  let margin = cluster_margin_pt(input.graph)
   let base_top = match rank_heights.get(max_rank_value) {
     Some(value) => value
     None => 0.0
@@ -286,12 +300,14 @@ fn collect_cluster_bbox_heights(
   for child in children {
     match
       collect_cluster_bbox_heights(
-        child,
-        ranks,
-        sizes,
-        self_edge_labels,
-        rankdir,
-        cluster_heights,
+        {
+          graph: child,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rankdir: input.rankdir,
+          cluster_heights: input.cluster_heights,
+        },
       ) {
       Some(info) => {
         if info.max_rank == max_rank_value {
@@ -310,11 +326,11 @@ fn collect_cluster_bbox_heights(
       None => ()
     }
   }
-  let label_padding = cluster_label_padding_pt(graph, rankdir)
+  let label_padding = cluster_label_padding_pt(input.graph, input.rankdir)
   ht1 = ht1 + label_padding.bottom
   ht2 = ht2 + label_padding.top
-  match graph.name() {
-    Some(name) => cluster_heights[name] = { ht1, ht2 }
+  match input.graph.name() {
+    Some(name) => input.cluster_heights[name] = { ht1, ht2 }
     None => ()
   }
   Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
@@ -342,12 +358,14 @@ fn compute_cluster_bbox_heights(
   let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
   let _ =
     collect_cluster_bbox_heights(
-    input.graph,
-    input.ranks,
-    input.sizes,
-    input.self_edge_labels,
-    input.rankdir,
-    cluster_heights,
+    {
+      graph: input.graph,
+      ranks: input.ranks,
+      sizes: input.sizes,
+      self_edge_labels: input.self_edge_labels,
+      rankdir: input.rankdir,
+      cluster_heights,
+    },
   )
   cluster_heights
 }
