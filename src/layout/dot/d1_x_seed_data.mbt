@@ -49,6 +49,14 @@ priv struct VnodeOrderBuildInput {
 }
 
 ///|
+/// Graphviz parity: x-order edge-port payload keeps vnode-mode and stage
+/// pipeline context grouped before port sampling and vnode-size merge.
+priv struct XOrderEdgePortBuildInput {
+  use_vnodes_for_xpos : Bool
+  pipeline : PositionPipelineContext
+}
+
+///|
 /// Graphviz parity: initial x-group assembly input keeps ordered groups,
 /// vnode order, and cluster cleanup gate together before xpos constraints.
 priv struct InitialXGroupsBuildInput {
@@ -101,11 +109,12 @@ fn build_vnode_order_state(
 /// derived from layout-coordinate sizes before any xpos reorder pass.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_order_edge_port_data(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  ordering : OrderingResult,
+  input : XOrderEdgePortBuildInput,
 ) -> XposOrderEdgePortData {
+  let pipeline = input.pipeline
+  let prep = pipeline.prep
+  let rank_data = pipeline.rank_data
+  let ordering = pipeline.ordering
   // Graphviz parity: x-positioning uses layout-coordinate node sizes,
   // so rankdir flip is handled via prep.sizes (not ordering-space widths).
   let x_base_sizes = apply_self_edge_right_space(
@@ -116,7 +125,7 @@ fn build_x_order_edge_port_data(
     prep.record_orientation,
   )
   let x_order_sizes =
-    if use_vnodes_for_xpos {
+    if input.use_vnodes_for_xpos {
       @ordering.merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
     } else {
       x_base_sizes
@@ -212,10 +221,10 @@ fn build_x_seed_data(
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
     build_x_order_edge_port_data(
-      input.use_vnodes_for_xpos,
-      pipeline.prep,
-      pipeline.rank_data,
-      pipeline.ordering,
+      {
+        use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+        pipeline,
+      },
     )
   let x_groups =
     build_initial_x_groups(
