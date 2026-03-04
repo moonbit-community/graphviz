@@ -3,6 +3,30 @@
 /// definitions for cluster metadata and ordering outputs.
 
 ///|
+/// Graphviz parity: ordering stage payload keeps rank and order-context maps
+/// grouped so Stage C wiring stays explicit and stable.
+priv struct OrderingStageInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_reversed : Array[Bool]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  node_order : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  rankdir : RankDir
+  cluster_meta : ClusterMetadata
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+}
+
+///|
 priv struct OrderingDispatchOutput {
   ordered_groups : Map[Int, Array[String]]
   ordered_with_vnodes : Map[Int, Array[String]]
@@ -108,25 +132,22 @@ fn run_ordering_dispatch(
 /// Graphviz parity: ordering + vnode expansion aligned to refs/graphviz/lib/dotgen/mincross.c + dotgen/flat.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_ordering_and_vnodes(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_reversed : Array[Bool],
-  edge_out_order : Map[String, Array[Int]],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  node_order : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  rankdir : RankDir,
-  cluster_meta : ClusterMetadata,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
+  input : OrderingStageInput,
 ) -> OrderingResult {
+  let graph = input.graph
+  let nodes = input.nodes
+  let edges = input.edges
+  let edge_tail = input.edge_tail
+  let edge_head = input.edge_head
+  let edge_reversed = input.edge_reversed
+  let edge_out_order = input.edge_out_order
+  let ranks = input.ranks
+  let groups = input.groups
+  let node_order = input.node_order
+  let order_sizes = input.order_sizes
+  let nodesep_pt = input.nodesep_pt
+  let rankdir = input.rankdir
+  let cluster_meta = input.cluster_meta
   let pipeline_context =
     build_ordering_pipeline_context(
       graph,
@@ -153,16 +174,16 @@ fn compute_ordering_and_vnodes(
       edge_head,
       edge_reversed,
       edge_out_order,
-      rank_keys,
+      input.rank_keys,
       groups,
       ranks,
       node_order,
       order_sizes,
       nodesep_pt,
-      has_edge_labels,
+      input.has_edge_labels,
       cluster_meta,
-      port_order_positions,
-      port_order_contrib,
+      input.port_order_positions,
+      input.port_order_contrib,
       pipeline_context,
     )
   let dispatch_output =
