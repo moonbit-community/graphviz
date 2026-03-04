@@ -55,6 +55,23 @@ priv struct XPositionSeedData {
 }
 
 ///|
+/// Graphviz parity: x-stage flat-label augmentation input keeps reorder flags,
+/// stage contexts, and seed snapshots grouped for one reorder+augmentation
+/// pass.
+priv struct XFlatLabelBuildInput {
+  xpos_reorder_enabled : Bool
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  graphviz_flip : Bool
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  x_seed : XPositionSeedData
+}
+
+///|
 priv struct XposFlatLabelAugmentation {
   x_groups : Map[Int, Array[String]]
   x_cluster_keys : Map[String, String]
@@ -232,16 +249,18 @@ fn build_x_with_flat_labels(
     )
   let flat_label_augmentation =
     build_x_flat_labels(
-      false,
-      mode_flags.use_vnodes_for_xpos,
-      mode_flags.allow_xpos_reorder,
-      mode_flags.graphviz_flip,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      x_seed,
+      {
+        xpos_reorder_enabled: false,
+        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+        allow_xpos_reorder: mode_flags.allow_xpos_reorder,
+        graphviz_flip: mode_flags.graphviz_flip,
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+        x_seed,
+      },
     )
   {
     use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
@@ -807,40 +826,31 @@ fn build_x_groups_after_reorder(
 /// augmentation must run in the same order and with the same inputs as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_flat_labels(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  graphviz_flip : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_seed : XPositionSeedData,
+  input : XFlatLabelBuildInput,
 ) -> XposFlatLabelAugmentation {
   let x_groups =
     build_x_groups_after_reorder(
-      xpos_reorder_enabled,
-      use_vnodes_for_xpos,
-      allow_xpos_reorder,
-      graphviz_flip,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      x_seed,
+      input.xpos_reorder_enabled,
+      input.use_vnodes_for_xpos,
+      input.allow_xpos_reorder,
+      input.graphviz_flip,
+      input.prep,
+      input.rank_data,
+      input.rank_heights,
+      input.cluster_meta,
+      input.ordering,
+      input.x_seed,
     )
   build_flat_label_augmentation(
-    use_vnodes_for_xpos,
-    prep,
-    rank_data,
-    ordering,
-    rank_heights,
-    cluster_meta,
-    x_seed.x_base_sizes,
+    input.use_vnodes_for_xpos,
+    input.prep,
+    input.rank_data,
+    input.ordering,
+    input.rank_heights,
+    input.cluster_meta,
+    input.x_seed.x_base_sizes,
     x_groups,
-    x_seed.x_cluster_keys,
+    input.x_seed.x_cluster_keys,
   )
 }
 
