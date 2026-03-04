@@ -580,7 +580,6 @@ pub fn run_root_reorder_for_groups(
   let ordered_mincross =
     run_root_rank_reorder(
       reorder_call_data.root_rank_reorder_inputs,
-      run_root_rank_reorder_call,
     )
   {
     ordered_mincross,

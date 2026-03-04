@@ -649,10 +649,12 @@ pub fn append_component_rank_groups(
 /// Graphviz parity: multi-component root reorder runs one component projection
 /// per mincross call, then concatenates per-rank outputs in component order.
 /// Do not change behavior without updating fixtures/tests.
-pub fn run_componentwise_root_rank_reorder(
+fn run_componentwise_root_rank_reorder(
   components : Array[Array[String]],
   order_rank_keys_for_mincross : Array[Int],
-  run_component : (Array[String], Map[String, Bool]) -> Map[Int, Array[String]],
+  inputs : RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
   let merged : Map[Int, Array[String]] = Map::new()
   for rank in order_rank_keys_for_mincross {
@@ -660,7 +662,18 @@ pub fn run_componentwise_root_rank_reorder(
   }
   for component_nodes in components {
     let component_set = build_node_membership_set(component_nodes)
-    let ordered_component = run_component(component_nodes, component_set)
+    let reorder_call_inputs =
+      build_root_component_reorder_inputs(
+        component_nodes,
+        component_set,
+        inputs,
+      )
+    let ordered_component =
+      run_root_rank_reorder_call(
+        reorder_call_inputs,
+        root_graphviz_flip,
+        coalesce_parallel,
+      )
     append_component_rank_groups(
       order_rank_keys_for_mincross,
       merged,
@@ -676,7 +689,6 @@ pub fn run_componentwise_root_rank_reorder(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_root_rank_reorder(
   inputs : RootRankReorderInputs,
-  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let (components, root_graphviz_flip) =
     build_root_component_runtime_plan(
@@ -692,7 +704,7 @@ pub fn run_root_rank_reorder(
   let coalesce_parallel =
     @sys.get_env_var("DOT_NO_COALESCE_PARALLEL") is None
   if components.length() <= 1 {
-    return run_call(
+    return run_root_rank_reorder_call(
       inputs,
       root_graphviz_flip,
       coalesce_parallel,
@@ -701,19 +713,9 @@ pub fn run_root_rank_reorder(
   run_componentwise_root_rank_reorder(
     components,
     inputs.order_rank_keys_for_mincross,
-    (component_nodes, component_set) => {
-      let reorder_call_inputs =
-        build_root_component_reorder_inputs(
-          component_nodes,
-          component_set,
-          inputs,
-        )
-      run_call(
-        reorder_call_inputs,
-        root_graphviz_flip,
-        coalesce_parallel,
-      )
-    },
+    inputs,
+    root_graphviz_flip,
+    coalesce_parallel,
   )
 }
 
