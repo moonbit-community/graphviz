@@ -97,6 +97,41 @@ priv struct PositionModeFlags {
 }
 
 ///|
+/// Graphviz parity: xpos reorder control flags are evaluated once and then
+/// reused by clustered/non-clustered branch and transpose cleanup gates.
+priv struct XposReorderControl {
+  xpos_reorder_enabled : Bool
+  use_vnodes_for_xpos : Bool
+  allow_xpos_reorder : Bool
+  has_vnode_order : Bool
+}
+
+///|
+/// Graphviz parity: xpos reorder branch keeps shared graph/rank/ordering
+/// inputs grouped together so clustered/non-clustered paths consume the same
+/// payload without argument reordering.
+priv struct XposReorderContext {
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  x_order_sizes : Map[String, NodeSize]
+  x_cluster_keys : Map[String, String]
+  graphviz_flip : Bool
+}
+
+///|
+/// Graphviz parity: clustered xpos reorder keeps edge-port x/order samples in
+/// one payload for order-graph edge materialization.
+priv struct XposReorderPortData {
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+}
+
+///|
 priv struct XposClusteredReorderSeedData {
   order_groups : Map[Int, Array[String]]
   order_sizes : Map[String, NodeSize]
@@ -886,39 +921,29 @@ fn apply_clustered_rank_groups(
 /// edge materialization, and reorder_rank_groups invocation sequence as Graphviz.
 /// Do not change behavior without updating fixtures/tests.
 fn build_clustered_xpos_groups(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  reorder_context : XposReorderContext,
+  port_data : XposReorderPortData,
   x_groups : Map[Int, Array[String]],
-  x_order_sizes : Map[String, NodeSize],
-  x_cluster_keys : Map[String, String],
-  x_edge_tail_port_x : Array[Double],
-  x_edge_head_port_x : Array[Double],
-  x_edge_tail_port_order : Array[Double],
-  x_edge_head_port_order : Array[Double],
-  graphviz_flip : Bool,
 ) -> Map[Int, Array[String]] {
   let reorder_seed_data =
     build_clustered_seed_data(
       x_groups,
-      x_order_sizes,
-      x_cluster_keys,
-      cluster_meta,
-      prep.node_order,
+      reorder_context.x_order_sizes,
+      reorder_context.x_cluster_keys,
+      reorder_context.cluster_meta,
+      reorder_context.prep.node_order,
     )
   let reorder_edges_data =
     build_clustered_xpos_edges(
-      prep,
-      rank_data,
-      ordering,
-      cluster_meta,
+      reorder_context.prep,
+      reorder_context.rank_data,
+      reorder_context.ordering,
+      reorder_context.cluster_meta,
       reorder_seed_data.order_nodes,
-      x_edge_tail_port_x,
-      x_edge_head_port_x,
-      x_edge_tail_port_order,
-      x_edge_head_port_order,
+      port_data.edge_tail_port_x,
+      port_data.edge_head_port_x,
+      port_data.edge_tail_port_order,
+      port_data.edge_head_port_order,
     )
   apply_clustered_rank_groups(
     reorder_seed_data.order_rank_keys,
@@ -933,15 +958,15 @@ fn build_clustered_xpos_groups(
     reorder_seed_data.order_nodes,
     reorder_seed_data.order_ranks,
     reorder_seed_data.order_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
+    reorder_context.cluster_meta.rank_same_groups,
+    reorder_context.cluster_meta.rank_same_order,
     reorder_seed_data.order_node_order,
     reorder_seed_data.order_sizes,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
+    reorder_context.rank_heights.nodesep_pt,
+    reorder_context.prep.has_edge_labels,
     reorder_seed_data.order_cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_flip,
+    reorder_context.cluster_meta.flat_constraints,
+    reorder_context.graphviz_flip,
   )
 }
 
@@ -951,24 +976,17 @@ fn build_clustered_xpos_groups(
 /// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
 fn build_nonclustered_groups(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_order_sizes : Map[String, NodeSize],
-  x_cluster_keys : Map[String, String],
-  graphviz_flip : Bool,
+  reorder_context : XposReorderContext,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let edge_index_data = @ordering.build_edge_index_with_vnodes(
-    prep.nodes,
-    ordering.order_edges,
-    ordering.order_edge_tail,
-    ordering.order_edge_head,
-    rank_data.ranks,
-    ordering.vnode_info.edge_vnodes,
-    ordering.vnode_info.vnode_ranks,
+    reorder_context.prep.nodes,
+    reorder_context.ordering.order_edges,
+    reorder_context.ordering.order_edge_tail,
+    reorder_context.ordering.order_edge_head,
+    reorder_context.rank_data.ranks,
+    reorder_context.ordering.vnode_info.edge_vnodes,
+    reorder_context.ordering.vnode_info.vnode_ranks,
   )
   let parents = edge_index_data.parents
   let children = edge_index_data.children
@@ -977,50 +995,50 @@ fn build_nonclustered_groups(
   // port-order fractions when mincross scoring ties are evaluated.
   let order_edge_port_x_samples =
     compute_edge_port_positions(
-      prep.nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      x_order_sizes,
+      reorder_context.prep.nodes,
+      reorder_context.ordering.order_edges,
+      reorder_context.ordering.order_edge_tail,
+      reorder_context.ordering.order_edge_head,
+      reorder_context.x_order_sizes,
     )
   let order_edge_tail_port_x = order_edge_port_x_samples.tail_values
   let order_edge_head_port_x = order_edge_port_x_samples.head_values
   let order_edge_port_order_samples =
     compute_edge_port_orders(
-      prep.nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      x_order_sizes,
+      reorder_context.prep.nodes,
+      reorder_context.ordering.order_edges,
+      reorder_context.ordering.order_edge_tail,
+      reorder_context.ordering.order_edge_head,
+      reorder_context.x_order_sizes,
     )
   let order_edge_tail_port_order = order_edge_port_order_samples.tail_values
   let order_edge_head_port_order = order_edge_port_order_samples.head_values
   @ordering.reorder_rank_groups(
     tmp_rank_keys,
     x_groups,
-    ordering.order_edges,
-    ordering.order_edge_tail,
-    ordering.order_edge_head,
+    reorder_context.ordering.order_edges,
+    reorder_context.ordering.order_edge_tail,
+    reorder_context.ordering.order_edge_head,
     order_edge_tail_port_x,
     order_edge_head_port_x,
     order_edge_tail_port_order,
     order_edge_head_port_order,
     parents,
     children,
-    x_cluster_keys,
-    cluster_meta.rank_same_groups,
-    cluster_meta.rank_same_order,
-    ordering.edge_order,
-    prep.node_order,
-    x_order_sizes,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
-    prep.port_order_positions,
-    prep.port_order_contrib,
+    reorder_context.x_cluster_keys,
+    reorder_context.cluster_meta.rank_same_groups,
+    reorder_context.cluster_meta.rank_same_order,
+    reorder_context.ordering.edge_order,
+    reorder_context.prep.node_order,
+    reorder_context.x_order_sizes,
+    reorder_context.rank_heights.nodesep_pt,
+    reorder_context.prep.has_edge_labels,
+    reorder_context.prep.port_order_positions,
+    reorder_context.prep.port_order_contrib,
     Map::new(),
-    cluster_meta.cluster_skeleton,
-    cluster_meta.flat_constraints,
-    graphviz_flip=graphviz_flip,
+    reorder_context.cluster_meta.cluster_skeleton,
+    reorder_context.cluster_meta.flat_constraints,
+    graphviz_flip=reorder_context.graphviz_flip,
   )
 }
 
@@ -1029,32 +1047,16 @@ fn build_nonclustered_groups(
 /// vnode reorder path is not taken, matching Graphviz branch structure.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_apply_nonclustered_xpos(
-  xpos_reorder_enabled : Bool,
-  allow_xpos_reorder : Bool,
-  has_vnode_order : Bool,
-  cluster_meta : ClusterMetadata,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  ordering : OrderingResult,
-  x_order_sizes : Map[String, NodeSize],
-  x_cluster_keys : Map[String, String],
-  graphviz_flip : Bool,
+  reorder_control : XposReorderControl,
+  reorder_context : XposReorderContext,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if xpos_reorder_enabled && allow_xpos_reorder && !cluster_meta.ordering_set &&
-    !has_vnode_order && !cluster_meta.has_clusters {
-    build_nonclustered_groups(
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      x_order_sizes,
-      x_cluster_keys,
-      graphviz_flip,
-      x_groups,
-    )
+  if reorder_control.xpos_reorder_enabled &&
+    reorder_control.allow_xpos_reorder &&
+    !reorder_context.cluster_meta.ordering_set &&
+    !reorder_control.has_vnode_order &&
+    !reorder_context.cluster_meta.has_clusters {
+    build_nonclustered_groups(reorder_context, x_groups)
   } else {
     x_groups
   }
@@ -1066,54 +1068,24 @@ fn maybe_apply_nonclustered_xpos(
 /// routing unchanged before transpose-cleanup stage.
 /// Do not change behavior without updating fixtures/tests.
 fn build_xpos_reordered_groups(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  has_vnode_order : Bool,
-  cluster_meta : ClusterMetadata,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  ordering : OrderingResult,
-  x_order_sizes : Map[String, NodeSize],
-  x_cluster_keys : Map[String, String],
-  x_edge_tail_port_x : Array[Double],
-  x_edge_head_port_x : Array[Double],
-  x_edge_tail_port_order : Array[Double],
-  x_edge_head_port_order : Array[Double],
-  graphviz_flip : Bool,
+  reorder_control : XposReorderControl,
+  reorder_context : XposReorderContext,
+  reorder_port_data : XposReorderPortData,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
+  if reorder_control.xpos_reorder_enabled &&
+    reorder_control.use_vnodes_for_xpos &&
+    reorder_control.allow_xpos_reorder &&
+    !reorder_context.cluster_meta.ordering_set {
     build_clustered_xpos_groups(
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
+      reorder_context,
+      reorder_port_data,
       x_groups,
-      x_order_sizes,
-      x_cluster_keys,
-      x_edge_tail_port_x,
-      x_edge_head_port_x,
-      x_edge_tail_port_order,
-      x_edge_head_port_order,
-      graphviz_flip,
     )
   } else {
     maybe_apply_nonclustered_xpos(
-      xpos_reorder_enabled,
-      allow_xpos_reorder,
-      has_vnode_order,
-      cluster_meta,
-      prep,
-      rank_data,
-      rank_heights,
-      ordering,
-      x_order_sizes,
-      x_cluster_keys,
-      graphviz_flip,
+      reorder_control,
+      reorder_context,
       x_groups,
     )
   }
@@ -1155,25 +1127,22 @@ fn apply_xpos_transpose_passes(
 /// mode after reorder_rank_groups, and mutates x_groups in-place.
 /// Do not change behavior without updating fixtures/tests.
 fn maybe_apply_xpos_transpose(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  cluster_meta : ClusterMetadata,
-  nodes : Array[@cgraph.Node],
-  ordering : OrderingResult,
-  ranks : Map[String, Int],
+  reorder_control : XposReorderControl,
+  reorder_context : XposReorderContext,
   x_groups : Map[Int, Array[String]],
 ) -> Unit {
-  if xpos_reorder_enabled && use_vnodes_for_xpos && allow_xpos_reorder &&
-    !cluster_meta.ordering_set {
+  if reorder_control.xpos_reorder_enabled &&
+    reorder_control.use_vnodes_for_xpos &&
+    reorder_control.allow_xpos_reorder &&
+    !reorder_context.cluster_meta.ordering_set {
     let edge_index_data = @ordering.build_edge_index_with_vnodes(
-      nodes,
-      ordering.order_edges,
-      ordering.order_edge_tail,
-      ordering.order_edge_head,
-      ranks,
-      ordering.vnode_info.edge_vnodes,
-      ordering.vnode_info.vnode_ranks,
+      reorder_context.prep.nodes,
+      reorder_context.ordering.order_edges,
+      reorder_context.ordering.order_edge_tail,
+      reorder_context.ordering.order_edge_head,
+      reorder_context.rank_data.ranks,
+      reorder_context.ordering.vnode_info.edge_vnodes,
+      reorder_context.ordering.vnode_info.vnode_ranks,
     )
     let parents = edge_index_data.parents
     let children = edge_index_data.children
@@ -1394,34 +1363,38 @@ fn build_x_groups_after_reorder(
   ordering : OrderingResult,
   x_seed : XPositionSeedData,
 ) -> Map[Int, Array[String]] {
-  let x_groups =
-    build_xpos_reordered_groups(
-      xpos_reorder_enabled,
-      use_vnodes_for_xpos,
-      allow_xpos_reorder,
-      x_seed.has_vnode_order,
-      cluster_meta,
-      prep,
-      rank_data,
-      rank_heights,
-      ordering,
-      x_seed.x_order_sizes,
-      x_seed.x_cluster_keys,
-      x_seed.x_edge_tail_port_x,
-      x_seed.x_edge_head_port_x,
-      x_seed.x_edge_tail_port_order,
-      x_seed.x_edge_head_port_order,
-      graphviz_flip,
-      x_seed.x_groups,
-    )
-  maybe_apply_xpos_transpose(
+  let reorder_control : XposReorderControl = {
     xpos_reorder_enabled,
     use_vnodes_for_xpos,
     allow_xpos_reorder,
+    has_vnode_order: x_seed.has_vnode_order,
+  }
+  let reorder_context : XposReorderContext = {
+    prep,
+    rank_data,
+    rank_heights,
     cluster_meta,
-    prep.nodes,
     ordering,
-    rank_data.ranks,
+    x_order_sizes: x_seed.x_order_sizes,
+    x_cluster_keys: x_seed.x_cluster_keys,
+    graphviz_flip,
+  }
+  let reorder_port_data : XposReorderPortData = {
+    edge_tail_port_x: x_seed.x_edge_tail_port_x,
+    edge_head_port_x: x_seed.x_edge_head_port_x,
+    edge_tail_port_order: x_seed.x_edge_tail_port_order,
+    edge_head_port_order: x_seed.x_edge_head_port_order,
+  }
+  let x_groups =
+    build_xpos_reordered_groups(
+      reorder_control,
+      reorder_context,
+      reorder_port_data,
+      x_seed.x_groups,
+    )
+  maybe_apply_xpos_transpose(
+    reorder_control,
+    reorder_context,
     x_groups,
   )
   x_groups
