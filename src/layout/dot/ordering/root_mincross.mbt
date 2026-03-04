@@ -548,7 +548,6 @@ pub fn build_root_rank_reorder_call_data(
 pub fn run_root_reorder_for_groups(
   reorder_inputs : RootMincrossReorderInputs,
   order_groups_for_mincross : Map[Int, Array[String]],
-  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
 ) -> RootReorderPassResult {
   let reorder_call_data =
     build_root_rank_reorder_call_data(
@@ -581,7 +580,7 @@ pub fn run_root_reorder_for_groups(
   let ordered_mincross =
     run_root_rank_reorder(
       reorder_call_data.root_rank_reorder_inputs,
-      run_call,
+      run_root_rank_reorder_call,
     )
   {
     ordered_mincross,
@@ -652,7 +651,6 @@ pub fn finalize_root_mincross_ordered_groups(
 pub fn run_root_mincross_reorder(
   inputs : RootMincrossReorderInputs,
   order_groups_override : Map[Int, Array[String]]?,
-  run_call : (RootRankReorderInputs, Bool, Bool) -> Map[Int, Array[String]],
 ) -> RootMincrossReorderResult {
   let order_groups_for_mincross =
     resolve_root_mincross_input_groups(
@@ -666,7 +664,6 @@ pub fn run_root_mincross_reorder(
     run_root_reorder_for_groups(
       inputs,
       order_groups_for_mincross,
-      run_call,
     )
   let ordered =
     finalize_root_mincross_ordered_groups(

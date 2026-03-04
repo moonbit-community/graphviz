@@ -153,7 +153,6 @@ fn build_noncluster_graphviz_neighbors(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_noncluster_reorder_pass(
   inputs : NonclusterReorderInputs,
-  run_call : (NonclusterRankReorderInputs) -> Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
   let order_node_order =
     build_noncluster_order_node_order(inputs.nlist_order, inputs.node_order)
@@ -201,5 +200,5 @@ pub fn run_noncluster_reorder_pass(
       graphviz_in_neighbors: graphviz_neighbors.in_neighbors,
       graphviz_flip: inputs.graphviz_flip,
     }
-  run_call(call_inputs)
+  run_noncluster_rank_reorder(call_inputs)
 }

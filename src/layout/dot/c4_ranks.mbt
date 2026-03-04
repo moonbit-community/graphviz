@@ -156,7 +156,6 @@ fn run_root_mincross_reorder(
       @ordering.run_root_mincross_reorder(
         inputs,
         order_groups_override,
-        @ordering.run_root_rank_reorder_call,
       )
     )
   capture_root_mincross_pass_snapshot(result, inputs)

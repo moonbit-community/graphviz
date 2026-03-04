@@ -71,10 +71,7 @@ fn run_ordering_dispatch(
         groups,
       )
     let ordered_groups =
-      @ordering.run_noncluster_reorder_pass(
-        noncluster_inputs,
-        @ordering.run_noncluster_rank_reorder,
-      )
+      @ordering.run_noncluster_reorder_pass(noncluster_inputs)
     {
       ordered_groups,
       ordered_with_vnodes: Map::new(),

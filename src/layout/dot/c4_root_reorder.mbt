@@ -128,7 +128,6 @@ fn run_root_reorder_and_rank_order_phase(
     root_reorder_sources,
     root_rank_order_phase_base.root_rank_order_context,
     root_rank_order_phase_base.order_edges_by_tail_root,
-    @ordering.run_root_rank_order_reorder,
   )
 }
 

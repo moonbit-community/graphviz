@@ -828,7 +828,6 @@ fn finalize_root_rank_order_phase_output(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_root_rank_order_phase(
   inputs : RootRankOrderPhaseInputs,
-  run_call : (RootRankOrderCallInputs, Bool) -> Map[Int, Array[String]],
 ) -> RootRankOrderPhaseOutput {
   // Graphviz parity: root-only reorder pass uses the same reorder_rank_groups
   // path as cluster-phase root bucket ordering, with root-flip guarding.
@@ -838,7 +837,11 @@ pub fn run_root_rank_order_phase(
       inputs.order_cluster_keys,
     )
   let call_inputs = build_root_rank_order_call_inputs(inputs)
-  let ordered_root = run_call(call_inputs, root_graphviz_flip)
+  let ordered_root =
+    run_root_rank_order_reorder(
+      call_inputs,
+      root_graphviz_flip,
+    )
   finalize_root_rank_order_phase_output(
     call_inputs.root_rank_keys,
     call_inputs.root_groups,
@@ -857,7 +860,6 @@ pub fn run_root_reorder_and_rank_order_phase(
   root_reorder_sources : RootReorderBuildSources,
   root_rank_order_context : RootRankOrderPhaseContext,
   order_edges_by_tail_root : Map[String, Array[(String, String, Int, Bool, Double, Double, Double, Double)]],
-  run_call : (RootRankOrderCallInputs, Bool) -> Map[Int, Array[String]],
 ) -> (RootClusterReorderInputs, RootRankOrderPhaseOutput) {
   let root_reorder_output =
     build_root_reorder_inputs(root_reorder_sources, order_edges_by_tail_root)
@@ -867,7 +869,7 @@ pub fn run_root_reorder_and_rank_order_phase(
       root_rank_order_context,
     )
   let root_rank_order_phase_output =
-    run_root_rank_order_phase(root_rank_order_inputs, run_call)
+    run_root_rank_order_phase(root_rank_order_inputs)
   (root_reorder_output, root_rank_order_phase_output)
 }
 
