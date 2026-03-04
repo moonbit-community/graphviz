@@ -2582,49 +2582,57 @@ fn append_missing_rank_boundary_targets(
 }
 
 ///|
+/// Graphviz parity: xpos payload keeps rank/group/cluster snapshots grouped so
+/// position.c/cluster.c constraint wiring remains explicit and stable.
+priv struct XPositionsInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  sizes : Map[String, NodeSize]
+  output_sizes : Map[String, NodeSize]
+  cluster_keys : Map[String, String]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  extra_nodes : Array[@ordering.ExtraConstraintNode]
+  flat_label_edges : Array[ConstraintEdge]
+  edge_vnodes : Map[String, Array[String]]
+}
+
+///|
 /// Graphviz parity: aligned to refs/graphviz/lib/dotgen/position.c + cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_x_positions(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  edge_out_order : Map[String, Array[Int]],
-  nlist_order : Array[String],
-  gdnlist_order : Array[String],
-  ranks : Map[String, Int],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  sizes : Map[String, NodeSize],
-  output_sizes : Map[String, NodeSize],
-  cluster_keys : Map[String, String],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  extra_nodes : Array[@ordering.ExtraConstraintNode],
-  flat_label_edges : Array[ConstraintEdge],
-  edge_vnodes : Map[String, Array[String]],
+  input : XPositionsInput,
 ) -> Map[String, Double] {
+  let graph = input.graph
   let cluster_constraints =
     build_cluster_constraints(
     graph,
-    nodes,
-    edges,
-    ranks,
-    rank_keys,
-    groups,
-    sizes,
-    cluster_keys,
-    nodesep_pt,
-    has_edge_labels,
-    edge_vnodes,
+    input.nodes,
+    input.edges,
+    input.ranks,
+    input.rank_keys,
+    input.groups,
+    input.sizes,
+    input.cluster_keys,
+    input.nodesep_pt,
+    input.has_edge_labels,
+    input.edge_vnodes,
   )
-  let all_extra_nodes = extra_nodes.copy()
+  let all_extra_nodes = input.extra_nodes.copy()
   for pair in cluster_constraints.extra_nodes {
     all_extra_nodes.push(pair)
   }
   let all_extra_edges = cluster_constraints.extra_edges.copy()
-  for edge in flat_label_edges {
+  for edge in input.flat_label_edges {
     all_extra_edges.push(edge)
   }
   let rankdir = graph_rankdir(graph)
@@ -2636,8 +2644,8 @@ fn compute_x_positions(
       // Graphviz parity: contain_nodes constrains per-rank leftmost/rightmost
       // nodes against root ln/rn before adding the compress edge.
       append_missing_rank_boundary_targets(
-        rank_keys,
-        groups,
+        input.rank_keys,
+        input.groups,
         all_root_ln_targets,
         all_root_rn_targets,
       )
@@ -2646,24 +2654,24 @@ fn compute_x_positions(
   }
   x_positions_from_simplex(
     graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_out_order,
-    nlist_order,
-    gdnlist_order,
-    ranks,
-    rank_keys,
-    groups,
-    sizes,
-    output_sizes,
-    cluster_keys,
-    nodesep_pt,
-    has_edge_labels,
+    input.nodes,
+    input.edges,
+    input.edge_tail,
+    input.edge_head,
+    input.edge_out_order,
+    input.nlist_order,
+    input.gdnlist_order,
+    input.ranks,
+    input.rank_keys,
+    input.groups,
+    input.sizes,
+    input.output_sizes,
+    input.cluster_keys,
+    input.nodesep_pt,
+    input.has_edge_labels,
     all_extra_nodes,
     all_extra_edges,
-    edge_vnodes,
+    input.edge_vnodes,
     all_root_ln_targets,
     all_root_rn_targets,
     compress_width_minlen,
