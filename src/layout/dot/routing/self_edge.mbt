@@ -619,16 +619,29 @@ fn ensure_self_edge_routes(
 ///|
 /// Graphviz parity: self-edge route lookup ensures grouped route cache first.
 /// Do not change behavior without updating fixtures/tests.
+pub(all) struct SelfEdgeRouteLookupInput {
+  edge : @cgraph.Edge
+  self_edge_groups : Map[String, Array[@cgraph.Edge]]
+  base_cache : Map[Int, EdgeRouteBase]
+  nodesep_pt : Double
+  rank_y : Map[Int, Double]
+  self_edge_routes : Map[Int, SelfEdgeRoute]
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 pub fn self_edge_route_for_edge(
-  edge : @cgraph.Edge,
-  self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, EdgeRouteBase],
-  nodesep_pt : Double,
-  rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, SelfEdgeRoute],
-  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
-  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : SelfEdgeRouteLookupInput,
 ) -> SelfEdgeRoute? {
+  let edge = input.edge
+  let self_edge_groups = input.self_edge_groups
+  let base_cache = input.base_cache
+  let nodesep_pt = input.nodesep_pt
+  let rank_y = input.rank_y
+  let self_edge_routes = input.self_edge_routes
+  let self_edge_label_height_fn = input.self_edge_label_height_fn
+  let self_edge_label_width_fn = input.self_edge_label_width_fn
   if edge.tail().name() != edge.head().name() {
     return None
   }

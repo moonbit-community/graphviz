@@ -38,14 +38,16 @@ fn maybe_build_self_edge_layout(
 ) -> Bool {
   let edge_id = edge.id()
   let route = self_edge_route_for_edge(
-    edge,
-    input.self_edge_groups,
-    input.base_cache,
-    input.nodesep_pt,
-    input.rank_y,
-    state.self_edge_routes,
-    callbacks.self_edge_label_height_fn,
-    callbacks.self_edge_label_width_fn,
+    {
+      edge,
+      self_edge_groups: input.self_edge_groups,
+      base_cache: input.base_cache,
+      nodesep_pt: input.nodesep_pt,
+      rank_y: input.rank_y,
+      self_edge_routes: state.self_edge_routes,
+      self_edge_label_height_fn: callbacks.self_edge_label_height_fn,
+      self_edge_label_width_fn: callbacks.self_edge_label_width_fn,
+    },
   )
   match route {
     Some(route) => {
