@@ -369,19 +369,18 @@ fn reorder_cluster_rank_group(
   }
   let input_phase_output =
     build_local_reorder_inputs(input_context)
-  let reorder_output =
-    run_cluster_rank_reorder(
-      local_context,
-      input_phase_output,
-      dispatch_context,
-    )
-  if !reorder_output.has_internal_constraints {
-    return ()
+  let ordered_cluster = match run_cluster_rank_reorder(
+    local_context,
+    input_phase_output,
+    dispatch_context,
+  ) {
+    Some(value) => value
+    None => return ()
   }
   apply_cluster_rank_reorder_output(
     groups,
     local_context.cluster_rank_keys,
-    reorder_output.ordered_cluster,
+    ordered_cluster,
     local_context.cluster_node_set,
   )
 }

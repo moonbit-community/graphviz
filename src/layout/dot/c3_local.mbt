@@ -599,14 +599,6 @@ fn build_local_neighbor_maps(
   { graphviz_out_neighbors, graphviz_in_neighbors }
 }
 
-/// Graphviz parity: cluster-local mincross runs only when a cluster has
-/// internal ordering constraints; otherwise the input order is preserved.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterRankReorderOutput {
-  has_internal_constraints : Bool
-  ordered_cluster : Map[Int, Array[String]]
-}
-
 ///|
 /// Graphviz parity: cluster-local mincross seeds ND_order by vnode
 /// interpolation, then applies same-rank flat constraints before startpass=2.
@@ -640,10 +632,10 @@ fn run_cluster_rank_reorder(
   local_context : ClusterLocalReorderContext,
   input_phase_output : ClusterLocalReorderRunInputsOutput,
   dispatch_context : ClusterLocalReorderDispatchContext,
-) -> ClusterRankReorderOutput {
+) -> Map[Int, Array[String]]? {
   if input_phase_output.cluster_edges.length() == 0 &&
     input_phase_output.cluster_flat_constraints.length() == 0 {
-    return { has_internal_constraints: false, ordered_cluster: Map::new() }
+    return None
   }
   let seeded_cluster_groups =
     build_cluster_rank_seeded_groups(
@@ -682,7 +674,7 @@ fn run_cluster_rank_reorder(
         fixed_ranks: dispatch_context.fixed_ranks,
       },
     )
-  { has_internal_constraints: true, ordered_cluster }
+  Some(ordered_cluster)
 }
 
 ///|
