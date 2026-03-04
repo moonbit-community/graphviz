@@ -697,15 +697,17 @@ test "flat label node sizes match Graphviz fixtures" {
   let y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
-    rank_keys,
-    groups,
-    y_all_ranks,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-    ranksep_pt,
-    y_positions,
-    rank_y,
+    {
+      rank_keys,
+      groups,
+      all_ranks: y_all_ranks,
+      rank_pht,
+      rank_ht1,
+      rank_ht2,
+      ranksep_pt,
+      y_positions,
+      rank_y,
+    },
   )
   for entry in fixtures {
     let rank_y_value = match rank_y.get(entry.rank) {

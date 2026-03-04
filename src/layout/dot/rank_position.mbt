@@ -12,67 +12,74 @@ fn rank_nodesep_pt(
 }
 
 ///|
+/// Graphviz parity: rank-y fill input keeps rank-order, rank-height maps, and
+/// output maps grouped for one deterministic downward sweep.
+priv struct FillRankPositionsInput {
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  all_ranks : Array[Int]
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
+
+///|
 fn fill_rank_positions(
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  all_ranks : Array[Int],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  ranksep_pt : Double,
-  y_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
+  input : FillRankPositionsInput,
 ) -> Unit {
-  if all_ranks.length() == 0 {
+  if input.all_ranks.length() == 0 {
     return ()
   }
-  let max_rank = all_ranks[all_ranks.length() - 1]
-  let start_y = match rank_ht1.get(max_rank) {
+  let max_rank = input.all_ranks[input.all_ranks.length() - 1]
+  let start_y = match input.rank_ht1.get(max_rank) {
     Some(value) => value
     None => 0.0
   }
-  rank_y[max_rank] = start_y
-  let mut idx = all_ranks.length() - 1
+  input.rank_y[max_rank] = start_y
+  let mut idx = input.all_ranks.length() - 1
   while idx > 0 {
-    let upper = all_ranks[idx]
-    let lower = all_ranks[idx - 1]
-    let upper_pht = match rank_pht.get(upper) {
+    let upper = input.all_ranks[idx]
+    let lower = input.all_ranks[idx - 1]
+    let upper_pht = match input.rank_pht.get(upper) {
       Some(value) => value
       None => 0.0
     }
-    let lower_pht = match rank_pht.get(lower) {
+    let lower_pht = match input.rank_pht.get(lower) {
       Some(value) => value
       None => 0.0
     }
-    let upper_ht2 = match rank_ht2.get(upper) {
+    let upper_ht2 = match input.rank_ht2.get(upper) {
       Some(value) => value
       None => 0.0
     }
-    let lower_ht1 = match rank_ht1.get(lower) {
+    let lower_ht1 = match input.rank_ht1.get(lower) {
       Some(value) => value
       None => 0.0
     }
-    let d0 = upper_pht + lower_pht + ranksep_pt
+    let d0 = upper_pht + lower_pht + input.ranksep_pt
     let d1 = upper_ht2 + lower_ht1 + CLUSTER_MARGIN_PT
     let delta = if d0 > d1 { d0 } else { d1 }
-    let base_y = match rank_y.get(upper) {
+    let base_y = match input.rank_y.get(upper) {
       Some(value) => value
       None => 0.0
     }
-    rank_y[lower] = base_y + delta
+    input.rank_y[lower] = base_y + delta
     idx = idx - 1
   }
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
+  for rank in input.rank_keys {
+    let names = match input.groups.get(rank) {
       Some(list) => list
       None => []
     }
-    let pos_y = match rank_y.get(rank) {
+    let pos_y = match input.rank_y.get(rank) {
       Some(value) => value
       None => 0.0
     }
     for name in names {
-      y_positions[name] = pos_y
+      input.y_positions[name] = pos_y
     }
   }
 }

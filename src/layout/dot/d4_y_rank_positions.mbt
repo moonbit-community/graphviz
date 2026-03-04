@@ -127,15 +127,17 @@ fn build_y_positions_with_flip(
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
-    input.rank_keys,
-    input.groups,
-    input.y_all_ranks,
-    input.rank_pht,
-    input.rank_ht1,
-    input.rank_ht2,
-    input.ranksep_pt,
-    y_positions,
-    rank_y,
+    {
+      rank_keys: input.rank_keys,
+      groups: input.groups,
+      all_ranks: input.y_all_ranks,
+      rank_pht: input.rank_pht,
+      rank_ht1: input.rank_ht1,
+      rank_ht2: input.rank_ht2,
+      ranksep_pt: input.ranksep_pt,
+      y_positions,
+      rank_y,
+    },
   )
   if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
     @dot_shared.graph_has_cluster(input.graph) {
