@@ -57,6 +57,106 @@ fn route_include_arrowheads(
 ) -> (Bool, Bool) {
   if swap_ends { (include_head, include_tail) } else { (include_tail, include_head) }
 }
+
+///|
+fn adjusted_self_edge_compass_clip_size(
+  self_edge : Bool,
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  size : NodeSize,
+  is_record_shape : (@cgraph.Node) -> Bool,
+) -> NodeSize {
+  if !self_edge || is_record_shape(node) {
+    return size
+  }
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => size
+        Some(compass) =>
+          if sameport_shape_has_outline(node) {
+            let penwidth = sameport_node_penwidth_pt(node)
+            if penwidth > 0.0 {
+              let pad = penwidth * 0.33055
+              let width_pt =
+                match compass {
+                  @cgraph.Compass::NE
+                  | @cgraph.Compass::NW
+                  | @cgraph.Compass::SE
+                  | @cgraph.Compass::SW =>
+                    max_double(
+                      size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
+                      size.height_pt,
+                    )
+                  _ => size.width_pt
+                }
+              @dot_shared.node_size_from_points(
+                width_pt,
+                size.height_pt + pad * 2.0,
+              )
+            } else {
+              size
+            }
+          } else {
+            size
+          }
+        None => size
+      }
+    None => size
+  }
+}
+
+///|
+fn compass_clip_point_if_needed(
+  self_edge : Bool,
+  is_record_shape : (@cgraph.Node) -> Bool,
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  center : @geom.Point,
+  size : NodeSize,
+  rankdir : RankDir,
+) -> @geom.Point? {
+  if self_edge || is_record_shape(node) {
+    return None
+  }
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => None
+        Some(compass) =>
+          Some(
+            @edge_spline.compass_port_point_on_shape(
+              node,
+              center,
+              size,
+              compass,
+              rankdir,
+            ),
+          )
+        None => None
+      }
+    None => None
+  }
+}
+
+///|
+fn slope_rankdir_for_endpoint(
+  node : @cgraph.Node,
+  port : @cgraph.Port?,
+  is_record_shape : (@cgraph.Node) -> Bool,
+  layout_rankdir : RankDir,
+  rankdir : RankDir,
+) -> RankDir {
+  match port {
+    Some(value) =>
+      match value.compass {
+        Some(@cgraph.Compass::C) => layout_rankdir
+        Some(_) => if is_record_shape(node) { layout_rankdir } else { rankdir }
+        None => layout_rankdir
+      }
+    None => layout_rankdir
+  }
+}
 ///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -307,99 +407,43 @@ fn build_edge_route_base(
   let tail_anchor0 = @edge_spline.point_add(tail_anchor_base, tail_offset)
   let head_anchor0 = @edge_spline.point_add(head_anchor_base, head_offset)
   let self_edge = orig_tail_name == orig_head_name
-  let adjust_self_edge_compass_clip_size =
-    (node : @cgraph.Node, port : @cgraph.Port?, size : NodeSize) => {
-      if !self_edge || (route_base_deps.is_record_shape)(node) {
-        return size
-      }
-      match port {
-        Some(value) =>
-          match value.compass {
-            Some(@cgraph.Compass::C) => size
-            Some(compass) =>
-              if sameport_shape_has_outline(node) {
-                let penwidth = sameport_node_penwidth_pt(node)
-                if penwidth > 0.0 {
-                  let pad = penwidth * 0.33055
-                  let width_pt =
-                    match compass {
-                      @cgraph.Compass::NE
-                      | @cgraph.Compass::NW
-                      | @cgraph.Compass::SE
-                      | @cgraph.Compass::SW =>
-                        max_double(
-                          size.width_pt - (size.height_pt / 3.0 + penwidth * 0.05),
-                          size.height_pt,
-                        )
-                      _ => size.width_pt
-                    }
-                  @dot_shared.node_size_from_points(
-                    width_pt,
-                    size.height_pt + pad * 2.0,
-                  )
-                } else {
-                  size
-                }
-              } else {
-                size
-              }
-            None => size
-          }
-        None => size
-      }
-    }
   let tail_clip_center = tail_geometry.center
   let tail_clip_size =
-    adjust_self_edge_compass_clip_size(
+    adjusted_self_edge_compass_clip_size(
+      self_edge,
       tail_node,
       tail_port,
       tail_geometry.size,
+      route_base_deps.is_record_shape,
     )
   let head_clip_center = head_geometry.center
   let head_clip_size =
-    adjust_self_edge_compass_clip_size(
+    adjusted_self_edge_compass_clip_size(
+      self_edge,
       head_node,
       head_port,
       head_geometry.size,
+      route_base_deps.is_record_shape,
     )
-  let resolve_compass_clip_point :
-    (@cgraph.Node, @cgraph.Port?, @geom.Point, NodeSize) -> @geom.Point? =
-    (node, port, center, size) => {
-      if self_edge || (route_base_deps.is_record_shape)(node) {
-        return None
-      }
-      match port {
-        Some(value) =>
-          match value.compass {
-            Some(@cgraph.Compass::C) => None
-            Some(compass) =>
-              Some(
-                @edge_spline.compass_port_point_on_shape(
-                  node,
-                  center,
-                  size,
-                  compass,
-                  rankdir,
-                ),
-              )
-            None => None
-          }
-        None => None
-      }
-    }
   let tail_compass_clip =
-    resolve_compass_clip_point(
+    compass_clip_point_if_needed(
+      self_edge,
+      route_base_deps.is_record_shape,
       tail_node,
       tail_port,
       tail_clip_center,
       tail_clip_size,
+      rankdir,
     )
   let head_compass_clip =
-    resolve_compass_clip_point(
+    compass_clip_point_if_needed(
+      self_edge,
+      route_base_deps.is_record_shape,
       head_node,
       head_port,
       head_clip_center,
       head_clip_size,
+      rankdir,
     )
   let tail_clip_enabled = tail_sameport_anchor is None
   let head_clip_enabled = head_sameport_anchor is None
@@ -411,21 +455,22 @@ fn build_edge_route_base(
     Some(_) => tail_pos
     None => head_anchor0
   }
-  let slope_rankdir_for_endpoint =
-    (node : @cgraph.Node, port : @cgraph.Port?) => {
-      match port {
-        Some(value) =>
-          match value.compass {
-            Some(@cgraph.Compass::C) => layout_rankdir
-            Some(_) =>
-              if (route_base_deps.is_record_shape)(node) { layout_rankdir } else { rankdir }
-            None => layout_rankdir
-          }
-        None => layout_rankdir
-      }
-    }
-  let tail_slope_rankdir = slope_rankdir_for_endpoint(tail_node, tail_port)
-  let head_slope_rankdir = slope_rankdir_for_endpoint(head_node, head_port)
+  let tail_slope_rankdir =
+    slope_rankdir_for_endpoint(
+      tail_node,
+      tail_port,
+      route_base_deps.is_record_shape,
+      layout_rankdir,
+      rankdir,
+    )
+  let head_slope_rankdir =
+    slope_rankdir_for_endpoint(
+      head_node,
+      head_port,
+      route_base_deps.is_record_shape,
+      layout_rankdir,
+      rankdir,
+    )
   let tail_slope = @edge_spline.endpoint_slope_for_anchor(
     tail_port,
     tail_port_side,
