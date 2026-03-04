@@ -675,7 +675,7 @@ fn run_cluster_rank_reorder(
       dispatch_context.port_order_positions,
       dispatch_context.port_order_contrib,
       Map::new(),
-      dispatch_context.empty_cluster_skeleton,
+      Map::new(),
       input_phase_output.cluster_flat_constraints,
       graphviz_out_neighbors=input_phase_output.graphviz_out_neighbors,
       graphviz_in_neighbors=input_phase_output.graphviz_in_neighbors,

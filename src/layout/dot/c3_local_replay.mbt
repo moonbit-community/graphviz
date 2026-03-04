@@ -24,7 +24,6 @@ priv struct ClusterLocalReorderDispatchContext {
   cluster_meta : ClusterMetadata
   vnode_info : @routing.EdgeVnodeInfo
   fixed_ranks : Map[String, Int]
-  empty_cluster_skeleton : Map[String, Bool]
   order_with_vnodes : Bool
 }
 
@@ -229,7 +228,6 @@ fn build_cluster_replay_dispatch_context(
   neighbor_sources : ClusterLocalNeighborSources,
   fixed_ranks : Map[String, Int],
 ) -> ClusterLocalReorderDispatchContext {
-  let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   {
     node_order: replay_context.node_order,
     order_edges: replay_context.order_edges,
@@ -248,7 +246,6 @@ fn build_cluster_replay_dispatch_context(
     cluster_meta: replay_context.cluster_meta,
     vnode_info: replay_context.vnode_info,
     fixed_ranks,
-    empty_cluster_skeleton,
     order_with_vnodes: replay_context.order_with_vnodes,
   }
 }
