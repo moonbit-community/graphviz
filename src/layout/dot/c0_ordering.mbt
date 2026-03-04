@@ -144,43 +144,28 @@ fn compute_ordering_and_vnodes(
       rankdir,
       cluster_meta,
     )
-  let dispatch_context : ClusteredDispatchContext = {
-    graph,
-    nodes,
-    edges,
-    edge_tail,
-    edge_head,
-    edge_reversed,
-    edge_out_order,
-    rank_keys,
-    groups,
-    ranks,
-    node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    cluster_meta,
-    port_order_positions,
-    port_order_contrib,
-    runtime_context: pipeline_context.runtime_context,
-    edge_port_data: pipeline_context.edge_port_data,
-    reorder_setup: pipeline_context.reorder_setup,
-  }
+  let dispatch_context =
+    build_clustered_dispatch_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      rank_keys,
+      groups,
+      ranks,
+      node_order,
+      order_sizes,
+      nodesep_pt,
+      has_edge_labels,
+      cluster_meta,
+      port_order_positions,
+      port_order_contrib,
+      pipeline_context,
+    )
   let dispatch_output =
     run_ordering_dispatch(dispatch_context)
-  {
-    ordered_groups: dispatch_output.ordered_groups,
-    ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
-    vnode_info: pipeline_context.runtime_context.vnode_info,
-    vnode_count: pipeline_context.runtime_context.vnode_info.vnode_ranks.length(),
-    order_edges: pipeline_context.edge_port_data.order_edges,
-    order_edge_tail: pipeline_context.edge_port_data.order_edge_tail,
-    order_edge_head: pipeline_context.edge_port_data.order_edge_head,
-    edge_order: pipeline_context.edge_port_data.edge_order,
-    edge_cluster_keys: pipeline_context.runtime_context.edge_cluster_keys,
-    nlist_order: pipeline_context.reorder_setup.class2_data.nlist_order,
-    gdnlist_order: pipeline_context.reorder_setup.gdnlist_order,
-    vnode_creation_order:
-      pipeline_context.reorder_setup.class2_data.vnode_creation_order,
-  }
+  build_ordering_result(pipeline_context, dispatch_output)
 }
