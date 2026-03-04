@@ -548,6 +548,51 @@ pub fn build_order_seed_groups(
 }
 
 ///|
+/// Graphviz parity: clustered pre-root seed source bundle keeps reorder setup,
+/// cluster metadata, and vnode snapshots paired before grouped seed expansion.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredOrderSeedStageBuildSources {
+  reorder_setup : OrderingReorderSetup
+  cluster_keys : Map[String, String]
+  cluster_order : Array[String]
+  cluster_min_rank : Map[String, Int]
+  cluster_max_rank : Map[String, Int]
+  vnode_clusters : Map[String, String]
+  vnodes_by_rank : Map[Int, Array[String]]
+  order_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, NodeSize]
+  skeleton_size : NodeSize
+}
+
+///|
+/// Graphviz parity: clustered pre-root seed stage is assembled from one source
+/// snapshot before root/local reorder context materialization.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_order_seed_stage_from_sources(
+  sources : ClusteredOrderSeedStageBuildSources,
+) -> OrderSeedGroupsOutput {
+  build_order_seed_groups(
+    {
+      ordering_groups_base: sources.reorder_setup.ordering_groups_base,
+      base_order_index: sources.reorder_setup.base_order_index,
+      order_with_vnodes: sources.reorder_setup.order_with_vnodes,
+      order_with_clusters: sources.reorder_setup.order_with_clusters,
+      cluster_keys: sources.cluster_keys,
+      cluster_order: sources.cluster_order,
+      cluster_min_rank: sources.cluster_min_rank,
+      cluster_max_rank: sources.cluster_max_rank,
+      vnode_clusters: sources.vnode_clusters,
+      vnodes_by_rank: sources.vnodes_by_rank,
+      vnode_order_keys_for_ordering:
+        sources.reorder_setup.vnode_order_keys_for_ordering,
+      order_sizes: sources.order_sizes,
+      vnode_sizes: sources.vnode_sizes,
+      skeleton_size: sources.skeleton_size,
+    },
+  )
+}
+
+///|
 /// Graphviz parity: class2 cluster skeleton nodes use virtual_node() defaults
 /// and are appended into every covered rank in cluster order.
 /// Do not change behavior without updating fixtures/tests.
@@ -1101,6 +1146,95 @@ pub fn apply_unconstrained_order_overrides(
       order_node_order[desired[idx]] = orders[idx]
       idx = idx + 1
     }
+  }
+}
+
+///|
+/// Graphviz parity: clustered pre-root materialized stage source bundle keeps
+/// reorder setup, class2 snapshots, and unconstrained-override inputs paired.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredMaterializedStageBuildSources {
+  reorder_setup : OrderingReorderSetup
+  class2_data : OrderingClass2Data
+  order_groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  has_clusters : Bool
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+  flat_constraints : Map[String, Bool]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  nodes : Array[@cgraph.Node]
+  intercluster_keys : Map[String, String]
+}
+
+///|
+/// Graphviz parity: clustered pre-root materialized stage output keeps reorder
+/// context and mapped/unmapped materialization snapshots paired.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredMaterializedStageOutput {
+  reorder_context : OrderReorderContext
+  materialized : OrderMaterializationData
+}
+
+///|
+/// Graphviz parity: clustered pre-root materialized stage builds reorder
+/// context, materializes mapped/unmapped edges, then applies unconstrained
+/// seed-order overrides before root phase orchestration.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_materialized_stage_from_sources(
+  sources : ClusteredMaterializedStageBuildSources,
+) -> ClusteredMaterializedStageOutput {
+  let reorder_context =
+    build_order_reorder_context(
+      {
+        order_groups: sources.order_groups,
+        nlist_order: sources.class2_data.nlist_order,
+        gdnlist_order: sources.reorder_setup.gdnlist_order,
+        node_order: sources.node_order,
+        real_nodes: sources.real_nodes,
+        has_clusters: sources.has_clusters,
+        base_order_index: sources.reorder_setup.base_order_index,
+        rank_same_groups: sources.rank_same_groups,
+        rank_same_order: sources.rank_same_order,
+        port_edge_nodes: sources.port_edge_nodes,
+      },
+    )
+  let materialized =
+    build_order_materialization_data(
+      {
+        nlist_order: sources.class2_data.nlist_order,
+        order_edges_by_tail: sources.class2_data.order_edges_by_tail,
+        order_graph: reorder_context.order_graph,
+        order_node_map: reorder_context.order_node_map,
+        order_edges_by_tail_unmapped: sources.class2_data.order_edges_by_tail_unmapped,
+        order_graph_unmapped: reorder_context.order_graph_unmapped,
+        order_node_map_unmapped: reorder_context.order_node_map_unmapped,
+        order_nodes: reorder_context.order_nodes,
+        edge_creation_order: sources.class2_data.edge_creation_order,
+        flat_constraints: sources.flat_constraints,
+      },
+    )
+  // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
+  // before unconstrained-node seed-order overrides for build_ranks seeding.
+  apply_unconstrained_order_overrides(
+    sources.reorder_setup.gdnlist_order,
+    sources.real_nodes,
+    reorder_context.order_nodes,
+    materialized.graphviz_out_neighbors,
+    materialized.graphviz_in_neighbors,
+    sources.rank_same_groups,
+    sources.edge_tail,
+    sources.edge_head,
+    sources.nodes,
+    sources.intercluster_keys,
+    reorder_context.order_node_order,
+  )
+  {
+    reorder_context,
+    materialized,
   }
 }
 

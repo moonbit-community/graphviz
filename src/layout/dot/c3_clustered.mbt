@@ -17,26 +17,6 @@ priv struct ClusteredPreRootData {
 }
 
 ///|
-/// Graphviz parity: clustered pre-root materialized stage keeps reorder context
-/// and mapped/unmapped order-edge snapshots paired after seed-order overrides.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredMaterializedStage {
-  reorder_context : @ordering.OrderReorderContext
-  materialized : @ordering.OrderMaterializationData
-}
-
-///|
-/// Graphviz parity: clustered pre-root seed stage keeps grouped rank lists,
-/// size overrides, and cluster skeleton metadata paired for later phases.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredOrderSeedStage {
-  order_groups : Map[Int, Array[String]]
-  order_sizes_out : Map[String, NodeSize]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: clustered ordering stage dispatch context keeps complete
 /// clustered ordering payload ordering unchanged before stage execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -81,15 +61,45 @@ priv struct ClusteredRootPhaseOutput {
 fn build_clustered_pre_root(
   dispatch_context : ClusteredDispatchContext,
 ) -> ClusteredPreRootData {
-  let order_seed_stage = build_clustered_order_seed_stage(dispatch_context)
+  let runtime_context = dispatch_context.runtime_context
+  let order_seed_stage =
+    @ordering.build_clustered_order_seed_stage_from_sources(
+      {
+        reorder_setup: dispatch_context.reorder_setup,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        cluster_order: dispatch_context.cluster_meta.cluster_order,
+        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
+        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
+        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
+        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
+        order_sizes: dispatch_context.order_sizes,
+        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
+        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
+        skeleton_size: vnode_size_from_widths(1.0, 1.0),
+      },
+    )
   let order_groups = order_seed_stage.order_groups
   let order_sizes_out = order_seed_stage.order_sizes_out
   let order_cluster_keys = order_seed_stage.order_cluster_keys
   let order_cluster_skeleton = order_seed_stage.order_cluster_skeleton
   let materialized_stage =
-    build_clustered_materialized_stage(
-      dispatch_context,
-      order_groups,
+    @ordering.build_clustered_materialized_stage_from_sources(
+      {
+        reorder_setup: dispatch_context.reorder_setup,
+        class2_data: dispatch_context.class2_data,
+        order_groups,
+        node_order: dispatch_context.node_order,
+        real_nodes: runtime_context.real_nodes,
+        has_clusters: dispatch_context.cluster_meta.has_clusters,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        port_edge_nodes: runtime_context.port_edge_nodes,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        nodes: dispatch_context.nodes,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+      },
     )
   let reorder_context = materialized_stage.reorder_context
   let materialized = materialized_stage.materialized
@@ -126,107 +136,6 @@ fn build_clustered_pre_root(
     reorder_context,
     materialized,
     root_rank_order_phase_base,
-  }
-}
-
-///|
-/// Graphviz parity: clustered pre-root seed stage mirrors Graphviz order seed
-/// expansion for groups, cluster skeleton keys, and vnode size fallback.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_order_seed_stage(
-  dispatch_context : ClusteredDispatchContext,
-) -> ClusteredOrderSeedStage {
-  let reorder_setup = dispatch_context.reorder_setup
-  let runtime_context = dispatch_context.runtime_context
-  let order_seed_output =
-    @ordering.build_order_seed_groups(
-      {
-        ordering_groups_base: reorder_setup.ordering_groups_base,
-        base_order_index: reorder_setup.base_order_index,
-        order_with_vnodes: reorder_setup.order_with_vnodes,
-        order_with_clusters: reorder_setup.order_with_clusters,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-        cluster_order: dispatch_context.cluster_meta.cluster_order,
-        cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
-        cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
-        vnode_clusters: runtime_context.vnode_info.vnode_clusters,
-        vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-        vnode_order_keys_for_ordering:
-          reorder_setup.vnode_order_keys_for_ordering,
-        order_sizes: dispatch_context.order_sizes,
-        vnode_sizes: runtime_context.vnode_info.vnode_sizes,
-        // Graphviz parity: cluster skeleton vnodes use virtual_node() defaults.
-        skeleton_size: vnode_size_from_widths(1.0, 1.0),
-      },
-    )
-  {
-    order_groups: order_seed_output.order_groups,
-    order_sizes_out: order_seed_output.order_sizes_out,
-    order_cluster_keys: order_seed_output.order_cluster_keys,
-    order_cluster_skeleton: order_seed_output.order_cluster_skeleton,
-  }
-}
-
-///|
-/// Graphviz parity: clustered pre-root materialized stage builds reorder
-/// context, materializes mapped/unmapped edges, then applies unconstrained
-/// seed-order overrides before root phase orchestration.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_materialized_stage(
-  dispatch_context : ClusteredDispatchContext,
-  order_groups : Map[Int, Array[String]],
-) -> ClusteredMaterializedStage {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  let reorder_context =
-    @ordering.build_order_reorder_context(
-      {
-        order_groups,
-        nlist_order: class2_data.nlist_order,
-        gdnlist_order: reorder_setup.gdnlist_order,
-        node_order: dispatch_context.node_order,
-        real_nodes: runtime_context.real_nodes,
-        has_clusters: dispatch_context.cluster_meta.has_clusters,
-        base_order_index: reorder_setup.base_order_index,
-        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-        port_edge_nodes: runtime_context.port_edge_nodes,
-      },
-    )
-  let materialized =
-    @ordering.build_order_materialization_data(
-      {
-        nlist_order: class2_data.nlist_order,
-        order_edges_by_tail: class2_data.order_edges_by_tail,
-        order_graph: reorder_context.order_graph,
-        order_node_map: reorder_context.order_node_map,
-        order_edges_by_tail_unmapped: class2_data.order_edges_by_tail_unmapped,
-        order_graph_unmapped: reorder_context.order_graph_unmapped,
-        order_node_map_unmapped: reorder_context.order_node_map_unmapped,
-        order_nodes: reorder_context.order_nodes,
-        edge_creation_order: class2_data.edge_creation_order,
-        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-      },
-    )
-  // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
-  // before unconstrained-node seed-order overrides for build_ranks seeding.
-  @ordering.apply_unconstrained_order_overrides(
-    reorder_setup.gdnlist_order,
-    runtime_context.real_nodes,
-    reorder_context.order_nodes,
-    materialized.graphviz_out_neighbors,
-    materialized.graphviz_in_neighbors,
-    dispatch_context.cluster_meta.rank_same_groups,
-    dispatch_context.edge_tail,
-    dispatch_context.edge_head,
-    dispatch_context.nodes,
-    dispatch_context.cluster_meta.intercluster_keys,
-    reorder_context.order_node_order,
-  )
-  {
-    reorder_context,
-    materialized,
   }
 }
 
