@@ -107,30 +107,35 @@ fn adjusted_self_edge_compass_clip_size(
 }
 
 ///|
+priv struct CompassClipPointInput {
+  self_edge : Bool
+  is_record_shape : (@cgraph.Node) -> Bool
+  node : @cgraph.Node
+  port : @cgraph.Port?
+  center : @geom.Point
+  size : NodeSize
+  rankdir : RankDir
+}
+
+///|
 fn compass_clip_point_if_needed(
-  self_edge : Bool,
-  is_record_shape : (@cgraph.Node) -> Bool,
-  node : @cgraph.Node,
-  port : @cgraph.Port?,
-  center : @geom.Point,
-  size : NodeSize,
-  rankdir : RankDir,
+  input : CompassClipPointInput,
 ) -> @geom.Point? {
-  if self_edge || is_record_shape(node) {
+  if input.self_edge || (input.is_record_shape)(input.node) {
     return None
   }
-  match port {
+  match input.port {
     Some(value) =>
       match value.compass {
         Some(@cgraph.Compass::C) => None
         Some(compass) =>
           Some(
             @edge_spline.compass_port_point_on_shape(
-              node,
-              center,
-              size,
+              input.node,
+              input.center,
+              input.size,
               compass,
-              rankdir,
+              input.rankdir,
             ),
           )
         None => None
@@ -218,29 +223,40 @@ fn compass_port_on_non_record_shape(
 }
 
 ///|
+priv struct ClusteredArrowLenOverrideInput {
+  edge : @cgraph.Edge
+  include_tail : Bool
+  include_head : Bool
+  tail_cluster_bbox : @geom.Rect?
+  head_cluster_bbox : @geom.Rect?
+  tail_clip : @geom.Point
+  head_clip : @geom.Point
+}
+
+///|
 fn clustered_edge_arrow_len_override(
-  edge : @cgraph.Edge,
-  include_tail : Bool,
-  include_head : Bool,
-  tail_cluster_bbox : @geom.Rect?,
-  head_cluster_bbox : @geom.Rect?,
-  tail_clip : @geom.Point,
-  head_clip : @geom.Point,
+  input : ClusteredArrowLenOverrideInput,
 ) -> Double? {
-  if !(include_tail || include_head) {
+  if !(input.include_tail || input.include_head) {
     return None
   }
-  if tail_cluster_bbox is None && head_cluster_bbox is None {
+  if input.tail_cluster_bbox is None && input.head_cluster_bbox is None {
     return None
   }
-  let arrow_lengths = @edge_spline.arrow_length_for_edge(edge, include_tail, include_head, None)
+  let arrow_lengths =
+    @edge_spline.arrow_length_for_edge(
+      input.edge,
+      input.include_tail,
+      input.include_head,
+      None,
+    )
   let base =
     if arrow_lengths.tail > arrow_lengths.head {
       arrow_lengths.tail
     } else {
       arrow_lengths.head
     }
-  let span = @edge_spline.point_dist(tail_clip, head_clip)
+  let span = @edge_spline.point_dist(input.tail_clip, input.head_clip)
   let max_len = if span < 12.0 { span * 0.25 } else { span }
   if max_len > 0.0 && max_len < base {
     Some(max_len)
@@ -613,23 +629,27 @@ fn build_edge_route_base(
     )
   let tail_compass_clip =
     compass_clip_point_if_needed(
-      self_edge,
-      route_base_deps.is_record_shape,
-      tail_node,
-      tail_port,
-      tail_clip_center,
-      tail_clip_size,
-      rankdir,
+      {
+        self_edge,
+        is_record_shape: route_base_deps.is_record_shape,
+        node: tail_node,
+        port: tail_port,
+        center: tail_clip_center,
+        size: tail_clip_size,
+        rankdir,
+      },
     )
   let head_compass_clip =
     compass_clip_point_if_needed(
-      self_edge,
-      route_base_deps.is_record_shape,
-      head_node,
-      head_port,
-      head_clip_center,
-      head_clip_size,
-      rankdir,
+      {
+        self_edge,
+        is_record_shape: route_base_deps.is_record_shape,
+        node: head_node,
+        port: head_port,
+        center: head_clip_center,
+        size: head_clip_size,
+        rankdir,
+      },
     )
   let tail_clip_enabled = tail_sameport_anchor is None
   let head_clip_enabled = head_sameport_anchor is None
@@ -813,13 +833,15 @@ fn build_edge_route_base(
     )
   let arrow_len_override =
     clustered_edge_arrow_len_override(
-      edge,
-      include_tail,
-      include_head,
-      tail_cluster_bbox,
-      head_cluster_bbox,
-      tail_clip,
-      head_clip,
+      {
+        edge,
+        include_tail,
+        include_head,
+        tail_cluster_bbox,
+        head_cluster_bbox,
+        tail_clip,
+        head_clip,
+      },
     )
   let is_dotted = edge_style_is_dotted(edge, enable_complex_tuning)
   let same_outer_cluster =
