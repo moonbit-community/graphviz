@@ -547,16 +547,29 @@ pub fn collect_self_edge_groups(
 /// Graphviz parity: self-edge route cache reuse keeps grouped self loops
 /// synchronized before layout emission.
 /// Do not change behavior without updating fixtures/tests.
+priv struct EnsureSelfEdgeRoutesInput {
+  edge : @cgraph.Edge
+  self_edge_groups : Map[String, Array[@cgraph.Edge]]
+  base_cache : Map[Int, EdgeRouteBase]
+  nodesep_pt : Double
+  rank_y : Map[Int, Double]
+  self_edge_routes : Map[Int, SelfEdgeRoute]
+  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double
+  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double
+}
+
+///|
 fn ensure_self_edge_routes(
-  edge : @cgraph.Edge,
-  self_edge_groups : Map[String, Array[@cgraph.Edge]],
-  base_cache : Map[Int, EdgeRouteBase],
-  nodesep_pt : Double,
-  rank_y : Map[Int, Double],
-  self_edge_routes : Map[Int, SelfEdgeRoute],
-  self_edge_label_height_fn : (@cgraph.Edge, RankDir) -> Double,
-  self_edge_label_width_fn : (@cgraph.Edge, RankDir) -> Double,
+  input : EnsureSelfEdgeRoutesInput,
 ) -> Unit {
+  let edge = input.edge
+  let self_edge_groups = input.self_edge_groups
+  let base_cache = input.base_cache
+  let nodesep_pt = input.nodesep_pt
+  let rank_y = input.rank_y
+  let self_edge_routes = input.self_edge_routes
+  let self_edge_label_height_fn = input.self_edge_label_height_fn
+  let self_edge_label_width_fn = input.self_edge_label_width_fn
   let edge_id = edge.id()
   if self_edge_routes.get(edge_id) is Some(_) {
     return ()
@@ -607,14 +620,16 @@ pub fn self_edge_route_for_edge(
     return None
   }
   ensure_self_edge_routes(
-    edge,
-    self_edge_groups,
-    base_cache,
-    nodesep_pt,
-    rank_y,
-    self_edge_routes,
-    self_edge_label_height_fn,
-    self_edge_label_width_fn,
+    {
+      edge,
+      self_edge_groups,
+      base_cache,
+      nodesep_pt,
+      rank_y,
+      self_edge_routes,
+      self_edge_label_height_fn,
+      self_edge_label_width_fn,
+    },
   )
   self_edge_routes.get(edge.id())
 }
