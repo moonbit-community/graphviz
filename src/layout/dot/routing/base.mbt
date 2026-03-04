@@ -258,6 +258,38 @@ fn edge_style_is_dotted(
   }
   style_value.contains("dotted")
 }
+
+///|
+fn clip_point_for_route_endpoint(
+  anchor : @geom.Point,
+  opposite_anchor : @geom.Point,
+  cluster_bbox : @geom.Rect?,
+  dynamic_anchor : RouteDynamicPortAnchor,
+  compass_clip : @geom.Point?,
+  node : @cgraph.Node,
+  clip_center : @geom.Point,
+  clip_size : NodeSize,
+  clip_target : @geom.Point,
+) -> @geom.Point {
+  match cluster_bbox {
+    Some(rect) => clip_to_bbox(anchor, rect, opposite_anchor)
+    None =>
+      match dynamic_anchor.anchor {
+        Some(pos) => pos
+        None =>
+          match compass_clip {
+            Some(pos) => pos
+            None =>
+              clip_to_node_shape(
+                node,
+                clip_center,
+                clip_size,
+                clip_target,
+              )
+          }
+      }
+  }
+}
 ///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -606,42 +638,30 @@ fn build_edge_route_base(
     } else {
       tail_anchor0
     }
-  let mut tail_clip = match tail_cluster_bbox {
-    Some(rect) => clip_to_bbox(tail_anchor0, rect, head_anchor0)
-    None =>
-      match tail_dynamic_anchor.anchor {
-        Some(pos) => pos
-        None =>
-          match tail_compass_clip {
-            Some(pos) => pos
-            None =>
-              clip_to_node_shape(
-                tail_node,
-                tail_clip_center,
-                tail_clip_size,
-                tail_clip_target,
-              )
-          }
-      }
-  }
-  let mut head_clip = match head_cluster_bbox {
-    Some(rect) => clip_to_bbox(head_anchor0, rect, tail_anchor0)
-    None =>
-      match head_dynamic_anchor.anchor {
-        Some(pos) => pos
-        None =>
-          match head_compass_clip {
-            Some(pos) => pos
-            None =>
-              clip_to_node_shape(
-                head_node,
-                head_clip_center,
-                head_clip_size,
-                head_clip_target,
-              )
-          }
-      }
-  }
+  let mut tail_clip =
+    clip_point_for_route_endpoint(
+      tail_anchor0,
+      head_anchor0,
+      tail_cluster_bbox,
+      tail_dynamic_anchor,
+      tail_compass_clip,
+      tail_node,
+      tail_clip_center,
+      tail_clip_size,
+      tail_clip_target,
+    )
+  let mut head_clip =
+    clip_point_for_route_endpoint(
+      head_anchor0,
+      tail_anchor0,
+      head_cluster_bbox,
+      head_dynamic_anchor,
+      head_compass_clip,
+      head_node,
+      head_clip_center,
+      head_clip_size,
+      head_clip_target,
+    )
   let compass_tail_on_non_record =
     compass_port_on_non_record_shape(
       tail_node,
