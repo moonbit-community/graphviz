@@ -31,21 +31,15 @@ fn run_root_and_cluster_ranks(
         root_groups_override,
       },
     )
-  let reorder_setup = dispatch_context.reorder_setup
-  let replay_context =
-    build_cluster_local_rank_replay_context(
-      dispatch_context,
-      pre_root_stage.reorder_context,
-      pre_root_stage.materialized,
-      pre_root_stage.order_sizes_out,
-    )
   let root_cluster_stage =
     @ordering.run_root_and_cluster_ranks_from_call_inputs_with_pass0_capture(
       call_inputs,
       capture_root_mincross_pass_snapshot,
     )
-  if reorder_setup.order_with_clusters {
-    reorder_by_cluster_ranks(root_cluster_stage.ordered, replay_context)
-  }
+  apply_cluster_local_rank_replay_after_root(
+    dispatch_context,
+    pre_root_stage,
+    root_cluster_stage,
+  )
   root_cluster_stage
 }

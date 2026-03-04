@@ -1760,3 +1760,25 @@ fn reorder_by_cluster_ranks(
     preparation.dispatch_context,
   )
 }
+
+///|
+/// Graphviz parity: local cluster replay applies only when clustered ordering
+/// is enabled and uses pre-root unmapped order-graph snapshots.
+/// Do not change behavior without updating fixtures/tests.
+fn apply_cluster_local_rank_replay_after_root(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+) -> Unit {
+  if !dispatch_context.reorder_setup.order_with_clusters {
+    return ()
+  }
+  let replay_context =
+    build_cluster_local_rank_replay_context(
+      dispatch_context,
+      pre_root_stage.reorder_context,
+      pre_root_stage.materialized,
+      pre_root_stage.order_sizes_out,
+    )
+  reorder_by_cluster_ranks(root_cluster_stage.ordered, replay_context)
+}
