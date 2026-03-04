@@ -1099,6 +1099,71 @@ fn should_include_external_crossing_edges(
 }
 
 ///|
+/// Graphviz parity: local cluster keys are cleared for all active cluster
+/// nodes so cluster-local reorder ignores cross-cluster barriers.
+fn build_local_reorder_cluster_keys(
+  cluster_node_set : Map[String, Bool],
+) -> Map[String, String] {
+  let cluster_keys : Map[String, String] = Map::new()
+  for name, _ in cluster_node_set {
+    // Graphviz parity: mincross_clust() runs on the expanded subgraph where
+    // ND_clust is cleared, so local reorder/transpose should not see
+    // cross-cluster barriers for these nodes.
+    cluster_keys[name] = ""
+  }
+  cluster_keys
+}
+
+///|
+/// Graphviz parity: cluster-local reorder metadata keeps node sizes, local
+/// cluster-key resets, flat constraints, and neighbor maps scoped together.
+priv struct ClusterLocalReorderMetadata {
+  cluster_sizes : Map[String, NodeSize]
+  cluster_keys : Map[String, String]
+  cluster_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+}
+
+///|
+/// Graphviz parity: cluster-local reorder metadata is assembled from one
+/// cluster-node subset and one filtered edge bundle snapshot.
+fn build_cluster_local_reorder_metadata(
+  input_context : ClusterLocalReorderInputBuildContext,
+  edge_bundle : LocalReorderEdgeBundle,
+) -> ClusterLocalReorderMetadata {
+  let cluster_sizes =
+    build_cluster_sizes_for_reorder(
+      input_context.cluster_node_set,
+      input_context.order_sizes,
+      input_context.vnode_sizes,
+    )
+  let cluster_keys =
+    build_local_reorder_cluster_keys(input_context.cluster_node_set)
+  let cluster_flat_constraints =
+    filter_cluster_flat_constraints(
+      input_context.cluster_node_set,
+      input_context.flat_constraints,
+    )
+  let local_neighbor_maps =
+    build_local_neighbor_maps(
+      input_context.cluster_name,
+      input_context.expanded_clusters,
+      input_context.cluster_nodes,
+      input_context.neighbor_sources,
+      input_context.intercluster_keys,
+      edge_bundle.cluster_edges.length() >= 5,
+    )
+  {
+    cluster_sizes,
+    cluster_keys,
+    cluster_flat_constraints,
+    graphviz_out_neighbors: local_neighbor_maps.graphviz_out_neighbors,
+    graphviz_in_neighbors: local_neighbor_maps.graphviz_in_neighbors,
+  }
+}
+
+///|
 /// Graphviz parity: cluster-local reorder input build context keeps the
 /// per-cluster node subset together with shared edge/neighbor snapshots.
 /// Do not change behavior without updating fixtures/tests.
@@ -1152,35 +1217,8 @@ fn build_local_reorder_inputs(
       input_context.cluster_nodes,
       input_context.fixed_ranks,
     )
-  // Graphviz parity: cluster-local reorder metadata keeps node sizes,
-  // local cluster keys, and same-rank flat constraints scoped to the cluster.
-  let cluster_sizes =
-    build_cluster_sizes_for_reorder(
-      input_context.cluster_node_set,
-      input_context.order_sizes,
-      input_context.vnode_sizes,
-    )
-  let cluster_keys : Map[String, String] = Map::new()
-  for name, _ in input_context.cluster_node_set {
-    // Graphviz parity: mincross_clust() runs on the expanded subgraph where
-    // ND_clust is cleared, so local reorder/transpose should not see
-    // cross-cluster barriers for these nodes.
-    cluster_keys[name] = ""
-  }
-  let cluster_flat_constraints =
-    filter_cluster_flat_constraints(
-      input_context.cluster_node_set,
-      input_context.flat_constraints,
-    )
-  let local_neighbor_maps =
-    build_local_neighbor_maps(
-      input_context.cluster_name,
-      input_context.expanded_clusters,
-      input_context.cluster_nodes,
-      input_context.neighbor_sources,
-      input_context.intercluster_keys,
-      edge_bundle.cluster_edges.length() >= 5,
-    )
+  let metadata =
+    build_cluster_local_reorder_metadata(input_context, edge_bundle)
   {
     cluster_edges: edge_bundle.cluster_edges,
     cluster_edge_tail: edge_bundle.cluster_edge_tail,
@@ -1191,12 +1229,12 @@ fn build_local_reorder_inputs(
     cluster_edge_head_port_order: edge_bundle.cluster_edge_head_port_order,
     parents: edge_bundle.parents,
     children: edge_bundle.children,
-    graphviz_out_neighbors: local_neighbor_maps.graphviz_out_neighbors,
-    graphviz_in_neighbors: local_neighbor_maps.graphviz_in_neighbors,
+    graphviz_out_neighbors: metadata.graphviz_out_neighbors,
+    graphviz_in_neighbors: metadata.graphviz_in_neighbors,
     edge_order: edge_bundle.edge_order,
-    cluster_sizes,
-    cluster_keys,
-    cluster_flat_constraints,
+    cluster_sizes: metadata.cluster_sizes,
+    cluster_keys: metadata.cluster_keys,
+    cluster_flat_constraints: metadata.cluster_flat_constraints,
   }
 }
 
