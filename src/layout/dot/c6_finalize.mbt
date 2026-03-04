@@ -14,7 +14,8 @@ fn build_remincross_pass_context(
 ) -> @ordering.ReMincrossPassBuildContext {
   let reorder_setup = dispatch_context.reorder_setup
   let runtime_context = dispatch_context.runtime_context
-  {
+  @ordering.build_remincross_pass_context_from_sources(
+    {
     ratio: dispatch_context.graph.get_attr("ratio").unwrap_or_default(),
     edges: dispatch_context.edges,
     edge_tail: dispatch_context.edge_tail,
@@ -25,7 +26,7 @@ fn build_remincross_pass_context(
     edge_tail_port_order: dispatch_context.edge_port_data.edge_tail_port_order,
     edge_head_port_order: dispatch_context.edge_port_data.edge_head_port_order,
     ranks: dispatch_context.ranks,
-    order_with_vnodes: reorder_setup.order_with_vnodes,
+    reorder_setup,
     creation_order: pre_root_stage.reorder_context.creation_order,
     edges_by_tail: dispatch_context.class2_data.edges_by_tail,
     cluster_order: dispatch_context.cluster_meta.cluster_order,
@@ -48,12 +49,12 @@ fn build_remincross_pass_context(
     real_nodes: runtime_context.real_nodes,
     root_tail_order_override,
     root_cluster: dispatch_context.graph.name().unwrap_or("__root__"),
-    graphviz_flip: reorder_setup.graphviz_flip,
     nodesep_pt: dispatch_context.nodesep_pt,
     has_edge_labels: dispatch_context.has_edge_labels,
     port_order_positions: dispatch_context.port_order_positions,
     port_order_contrib: dispatch_context.port_order_contrib,
-  }
+    },
+  )
 }
 
 ///|
