@@ -1487,37 +1487,44 @@ fn reorder_cluster_rank_groups(
 ///|
 /// Graphviz parity: apply cluster-local mincross ordering before ReMincross
 /// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalRankReplayContext {
+  graph : @cgraph.Graph
+  cluster_meta : ClusterMetadata
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  ranks : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  vnode_info : @routing.EdgeVnodeInfo
+  order_with_vnodes : Bool
+}
+
+///|
+/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
+/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
 fn reorder_by_cluster_ranks(
-  graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
-  cluster_meta : ClusterMetadata,
-  node_order : Map[String, Int],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  ranks : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  vnode_info : @routing.EdgeVnodeInfo,
-  order_with_vnodes : Bool,
+  replay_context : ClusterLocalRankReplayContext,
 ) -> Unit {
-  if cluster_meta.cluster_order.length() == 0 {
+  if replay_context.cluster_meta.cluster_order.length() == 0 {
     return ()
   }
   let cluster_graph_order =
     build_cluster_graph_order(
-      graph,
-      cluster_meta.cluster_order,
-      cluster_meta.cluster_parents,
+      replay_context.graph,
+      replay_context.cluster_meta.cluster_order,
+      replay_context.cluster_meta.cluster_parents,
     )
   let cluster_graphs = cluster_graph_order.cluster_graphs
   let cluster_names = cluster_graph_order.cluster_names
@@ -1527,41 +1534,41 @@ fn reorder_by_cluster_ranks(
   let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   let fixed_positions = @ordering.order_positions_from_groups(groups)
   let fixed_ranks : Map[String, Int] = Map::new()
-  for name, rank in ranks {
+  for name, rank in replay_context.ranks {
     fixed_ranks[name] = rank
   }
-  for name, rank in vnode_info.vnode_ranks {
+  for name, rank in replay_context.vnode_info.vnode_ranks {
     fixed_ranks[name] = rank
   }
   // Graphviz parity: cluster-local ND_out/ND_in maps keep raw graph
   // tail/head AGSEQ replay order for startpass=2 median anchors.
-  let raw_graphviz_neighbors = build_raw_graphviz_neighbor_maps(graph)
+  let raw_graphviz_neighbors = build_raw_graphviz_neighbor_maps(replay_context.graph)
   let neighbor_sources : ClusterLocalNeighborSources = {
-    source_out_neighbors: graphviz_out_neighbors,
-    source_in_neighbors: graphviz_in_neighbors,
+    source_out_neighbors: replay_context.graphviz_out_neighbors,
+    source_in_neighbors: replay_context.graphviz_in_neighbors,
     raw_out_neighbors: raw_graphviz_neighbors.out_neighbors,
     raw_in_neighbors: raw_graphviz_neighbors.in_neighbors,
   }
   let dispatch_context : ClusterLocalReorderDispatchContext = {
-    node_order,
-    order_edges,
-    order_edge_tail,
-    order_edge_head,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
+    node_order: replay_context.node_order,
+    order_edges: replay_context.order_edges,
+    order_edge_tail: replay_context.order_edge_tail,
+    order_edge_head: replay_context.order_edge_head,
+    order_edge_tail_port_x: replay_context.order_edge_tail_port_x,
+    order_edge_head_port_x: replay_context.order_edge_head_port_x,
+    order_edge_tail_port_order: replay_context.order_edge_tail_port_order,
+    order_edge_head_port_order: replay_context.order_edge_head_port_order,
     neighbor_sources,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    port_order_positions,
-    port_order_contrib,
-    cluster_meta,
-    vnode_info,
+    order_sizes: replay_context.order_sizes,
+    nodesep_pt: replay_context.nodesep_pt,
+    has_edge_labels: replay_context.has_edge_labels,
+    port_order_positions: replay_context.port_order_positions,
+    port_order_contrib: replay_context.port_order_contrib,
+    cluster_meta: replay_context.cluster_meta,
+    vnode_info: replay_context.vnode_info,
     fixed_ranks,
     empty_cluster_skeleton,
-    order_with_vnodes,
+    order_with_vnodes: replay_context.order_with_vnodes,
   }
   reorder_cluster_rank_groups(
     cluster_names,
