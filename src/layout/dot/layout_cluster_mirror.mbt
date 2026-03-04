@@ -124,3 +124,43 @@ fn refresh_cluster_labels(
     subgraphs,
   }
 }
+
+///|
+/// Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
+/// rotation (dotgen cluster decompose + postproc map_point ordering).
+/// Do not change behavior without updating fixtures/tests.
+fn apply_cluster_lr_mirror_after_rotation(
+  graph : @cgraph.Graph,
+  rankdir : RankDir,
+  rotated : DotLayoutGraph,
+  pre_rotation_bbox : @geom.Rect,
+  rank_bbox : @geom.Rect,
+  subgraph_base_bbox : @geom.Rect,
+) -> DotLayoutGraph {
+  let use_cluster_point_mirror =
+    subgraph_base_bbox.urx > rank_bbox.urx &&
+    (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    @dot_shared.graph_has_cluster(graph)
+  let use_lr_multi_cluster_creation_order_mode =
+    (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    count_cluster_subgraphs(graph) > 1
+  if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
+    @dot_shared.graph_has_cluster(graph) &&
+    !use_lr_multi_cluster_creation_order_mode {
+    if use_cluster_point_mirror {
+      let cluster_mirror_bbox =
+        transform_bbox_with_root(rank_bbox, pre_rotation_bbox, rankdir)
+      refresh_cluster_labels(
+        mirror_layout_points(
+          rotated,
+          cluster_mirror_bbox,
+          rotated.bbox,
+        ),
+      )
+    } else {
+      rotate_layout_graph(rotated, rotated.bbox, RankDir::BT)
+    }
+  } else {
+    rotated
+  }
+}

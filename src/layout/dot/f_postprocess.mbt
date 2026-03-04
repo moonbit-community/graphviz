@@ -145,43 +145,17 @@ fn finalize_layout_graph(
   } else {
     rotate_layout_graph(labeled_with_root, labeled_with_root.bbox, rankdir)
   }
-  let cluster_mirror_bbox =
-    transform_bbox_with_root(final_geometry.rank_bbox, labeled_with_root.bbox, rankdir)
-  let use_cluster_point_mirror =
-    subgraphs_and_bbox.base_bbox.urx > final_geometry.rank_bbox.urx &&
-    (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(graph)
-  let use_lr_multi_cluster_creation_order_mode =
-    (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    count_cluster_subgraphs(graph) > 1
-  // Graphviz parity: clustered LR/RL layouts are mirrored back after rankdir
-  // rotation (dotgen cluster decompose + postproc map_point ordering).
-  let rotated = if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(graph) &&
-    !use_lr_multi_cluster_creation_order_mode {
-    if use_cluster_point_mirror {
-      refresh_cluster_labels(
-        mirror_layout_points(
-          rotated,
-          cluster_mirror_bbox,
-          rotated.bbox,
-        ),
-      )
-    } else {
-      rotate_layout_graph(rotated, rotated.bbox, RankDir::BT)
-    }
-  } else {
-    rotated
-  }
-  let rotated_with_margin = {
-    graph: rotated.graph,
-    bbox: apply_root_margin_x(graph, rotated.bbox),
-    label_pos: rotated.label_pos,
-    nodes: rotated.nodes,
-    edges: rotated.edges,
-    subgraphs: rotated.subgraphs,
-  }
-  refresh_root_label_position(
-    shift_layout_to_origin(graph, rotated_with_margin),
+  let rotated =
+    apply_cluster_lr_mirror_after_rotation(
+      graph,
+      rankdir,
+      rotated,
+      labeled_with_root.bbox,
+      final_geometry.rank_bbox,
+      subgraphs_and_bbox.base_bbox,
+    )
+  finalize_root_coordinates(
+    graph,
+    rotated,
   )
 }

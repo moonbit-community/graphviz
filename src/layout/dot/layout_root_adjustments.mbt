@@ -81,3 +81,24 @@ fn refresh_root_label_position(
     layout
   }
 }
+
+///|
+/// Graphviz parity: final root-coordinate frame applies margin, then origin
+/// translation, then root label refresh.
+/// Do not change behavior without updating fixtures/tests.
+fn finalize_root_coordinates(
+  graph : @cgraph.Graph,
+  layout : DotLayoutGraph,
+) -> DotLayoutGraph {
+  let with_margin = {
+    graph: layout.graph,
+    bbox: apply_root_margin_x(graph, layout.bbox),
+    label_pos: layout.label_pos,
+    nodes: layout.nodes,
+    edges: layout.edges,
+    subgraphs: layout.subgraphs,
+  }
+  refresh_root_label_position(
+    shift_layout_to_origin(graph, with_margin),
+  )
+}
