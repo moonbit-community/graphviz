@@ -11,7 +11,7 @@ priv struct ClusteredPreRootData {
   order_sizes_out : Map[String, NodeSize]
   order_cluster_keys : Map[String, String]
   order_cluster_skeleton : Map[String, Bool]
-  reorder_context : OrderReorderContext
+  reorder_context : @ordering.OrderReorderContext
   materialized : OrderMaterializationData
   root_rank_order_phase_base : RootRankOrderPhaseBase
 }
@@ -90,17 +90,19 @@ fn build_clustered_pre_root(
   let order_cluster_keys = order_seed_output.order_cluster_keys
   let order_cluster_skeleton = order_seed_output.order_cluster_skeleton
   let reorder_context =
-    build_order_reorder_context(
-      order_groups,
-      class2_data.nlist_order,
-      reorder_setup.gdnlist_order,
-      dispatch_context.node_order,
-      runtime_context.real_nodes,
-      dispatch_context.cluster_meta.has_clusters,
-      reorder_setup.base_order_index,
-      dispatch_context.cluster_meta.rank_same_groups,
-      dispatch_context.cluster_meta.rank_same_order,
-      runtime_context.port_edge_nodes,
+    @ordering.build_order_reorder_context(
+      {
+        order_groups,
+        nlist_order: class2_data.nlist_order,
+        gdnlist_order: reorder_setup.gdnlist_order,
+        node_order: dispatch_context.node_order,
+        real_nodes: runtime_context.real_nodes,
+        has_clusters: dispatch_context.cluster_meta.has_clusters,
+        base_order_index: reorder_setup.base_order_index,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        port_edge_nodes: runtime_context.port_edge_nodes,
+      },
     )
   let materialized =
     build_materialized_inputs(

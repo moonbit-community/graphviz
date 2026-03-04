@@ -51,7 +51,7 @@ fn build_root_rank_order_phase_base(
   order_sizes_out : Map[String, NodeSize],
   order_cluster_keys : Map[String, String],
   order_cluster_skeleton : Map[String, Bool],
-  reorder_context : OrderReorderContext,
+  reorder_context : @ordering.OrderReorderContext,
 ) -> RootRankOrderPhaseBase {
   let reorder_setup = dispatch_context.reorder_setup
   let class2_data = dispatch_context.class2_data

@@ -594,6 +594,119 @@ pub fn build_order_nodes_from_groups(
   order_nodes
 }
 
+///| Graphviz parity: clustered pre-root reorder context keeps build_ranks seed
+/// ranks, order-graph snapshots, and node-order seed maps unchanged.
+pub(all) struct OrderReorderContext {
+  order_rank_keys : Array[Int]
+  order_ranks : Map[String, Int]
+  order_nodes : Array[String]
+  order_graph : @cgraph.Graph
+  order_node_map : Map[String, @cgraph.Node]
+  order_graph_unmapped : @cgraph.Graph
+  order_node_map_unmapped : Map[String, @cgraph.Node]
+  creation_order : Array[String]
+  order_node_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: reorder-context seed input keeps GD_nlist/nlist snapshots,
+/// rank=same metadata, and base order maps unchanged before order-graph build.
+pub(all) struct OrderReorderContextInputs {
+  order_groups : Map[Int, Array[String]]
+  nlist_order : Array[String]
+  gdnlist_order : Array[String]
+  node_order : Map[String, Int]
+  real_nodes : Map[String, Bool]
+  has_clusters : Bool
+  base_order_index : Map[String, Int]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  port_edge_nodes : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: order-graph rebuild uses GD_nlist-derived creation order
+/// and build_ranks seed order before mapped/unmapped edge materialization.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_order_reorder_context(
+  inputs : OrderReorderContextInputs,
+) -> OrderReorderContext {
+  let order_rank_keys = collect_rank_keys(inputs.order_groups)
+  let order_ranks = build_node_ranks(inputs.order_groups)
+  let order_nodes =
+    build_order_nodes_from_groups(inputs.order_groups, order_rank_keys)
+  let order_graph_output =
+    build_order_graph_and_nodes("order_graph", order_nodes)
+  let order_graph = order_graph_output.order_graph
+  let order_node_map = order_graph_output.order_node_map
+  let order_graph_unmapped_output =
+    build_order_graph_and_nodes("order_graph_unmapped", order_nodes)
+  let order_graph_unmapped = order_graph_unmapped_output.order_graph
+  let order_node_map_unmapped = order_graph_unmapped_output.order_node_map
+  let creation_order : Array[String] = []
+  let mut creation_idx = inputs.nlist_order.length()
+  while creation_idx > 0 {
+    creation_idx = creation_idx - 1
+    creation_order.push(inputs.nlist_order[creation_idx])
+  }
+  // Graphviz parity: build_ranks node-order seed prioritizes GD_nlist then
+  // fills with nlist/order_groups/base order; rank=same ND_order normalization
+  // is applied only on clustered reorder paths.
+  let order_node_order : Map[String, Int] = Map::new()
+  let mut order_idx = 0
+  for name in inputs.gdnlist_order {
+    order_node_order[name] = order_idx
+    order_idx = order_idx + 1
+  }
+  for name in inputs.nlist_order {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = order_idx
+      order_idx = order_idx + 1
+    }
+  }
+  // Graphviz parity: fall back to GD_nlist order for real nodes missing from nlist.
+  for name, idx in inputs.node_order {
+    if inputs.real_nodes.get(name) is Some(_) && order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  let order_index = build_order_index(inputs.order_groups)
+  for name, idx in order_index {
+    if order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  // Graphviz parity: seed missing real-node order from initial rank order;
+  // GD_nlist order remains the primary source.
+  for name, idx in inputs.base_order_index {
+    if inputs.real_nodes.get(name) is Some(_) &&
+      order_node_order.get(name) is None {
+      order_node_order[name] = idx
+    }
+  }
+  if inputs.has_clusters {
+    // Graphviz parity: non-cluster root reorder keeps GD_nlist-derived order
+    // (world.gv) and does not re-normalize ND_order by rank=same declaration.
+    apply_rank_same_order_nodes(
+      order_node_order,
+      inputs.rank_same_groups,
+      inputs.rank_same_order,
+      inputs.port_edge_nodes,
+    )
+  }
+  {
+    order_rank_keys,
+    order_ranks,
+    order_nodes,
+    order_graph,
+    order_node_map,
+    order_graph_unmapped,
+    order_node_map_unmapped,
+    creation_order,
+    order_node_order,
+  }
+}
+
 ///|
 /// Graphviz parity: order graph node table is built by creating each name in
 /// order_nodes sequence, matching agnode creation iteration order.
