@@ -148,45 +148,53 @@ fn build_line_spline(
   )
 }
 
+///|
+/// Graphviz parity: short-route line/pathplan build input keeps line points,
+/// slopes, clip flags, and tuning controls grouped for one fallback dispatch.
+priv struct ShortRouteLineOrPathplanBuildInput {
+  base : EdgeRouteBase
+  using_pathplan : Bool
+  pathplan_points : Array[@geom.Point]
+  line_start : @geom.Point
+  line_end : @geom.Point
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  force_segmented : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  curve_offset : Double
+  curve_skew : Double
+  prefer_linear : Bool
+}
+
+///|
 fn build_short_route_line_or_pathplan_spline(
-  base : EdgeRouteBase,
-  using_pathplan : Bool,
-  pathplan_points : Array[@geom.Point],
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  force_segmented : Bool,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
-  curve_offset : Double,
-  curve_skew : Double,
-  prefer_linear : Bool,
+  input : ShortRouteLineOrPathplanBuildInput,
 ) -> PointsSplineResult {
-  if using_pathplan {
+  if input.using_pathplan {
     build_pathplan_points_spline(
-      base,
-      pathplan_points,
-      tail_slope_line,
-      head_slope_line,
-      force_segmented,
-      route_barriers,
+      input.base,
+      input.pathplan_points,
+      input.tail_slope_line,
+      input.head_slope_line,
+      input.force_segmented,
+      input.route_barriers,
     )
   } else {
     {
       spline:
         build_line_spline(
-          base,
-          line_start,
-          line_end,
-          tail_slope_line,
-          head_slope_line,
-          tail_clip_enabled,
-          head_clip_enabled,
-          curve_offset,
-          curve_skew,
-          prefer_linear,
+          input.base,
+          input.line_start,
+          input.line_end,
+          input.tail_slope_line,
+          input.head_slope_line,
+          input.tail_clip_enabled,
+          input.head_clip_enabled,
+          input.curve_offset,
+          input.curve_skew,
+          input.prefer_linear,
         ),
       raw_bezier: [],
     }

@@ -300,20 +300,22 @@ fn build_short_route_fallback_spline(
       input.prefer_linear_flat_bottom_single_arrow,
     )
   build_short_route_line_or_pathplan_spline(
-    input.base,
-    input.using_pathplan,
-    input.pathplan_points,
-    input.line_start,
-    input.line_end,
-    input.detour_context.tail_slope_line,
-    input.detour_context.head_slope_line,
-    input.force_segmented,
-    input.route_barriers,
-    input.tail_clip_enabled,
-    input.head_clip_enabled,
-    input.curve_offset,
-    input.curve_skew,
-    prefer_linear_flat_line,
+    {
+      base: input.base,
+      using_pathplan: input.using_pathplan,
+      pathplan_points: input.pathplan_points,
+      line_start: input.line_start,
+      line_end: input.line_end,
+      tail_slope_line: input.detour_context.tail_slope_line,
+      head_slope_line: input.detour_context.head_slope_line,
+      force_segmented: input.force_segmented,
+      route_barriers: input.route_barriers,
+      tail_clip_enabled: input.tail_clip_enabled,
+      head_clip_enabled: input.head_clip_enabled,
+      curve_offset: input.curve_offset,
+      curve_skew: input.curve_skew,
+      prefer_linear: prefer_linear_flat_line,
+    },
   )
 }
 
