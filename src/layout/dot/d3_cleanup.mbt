@@ -71,7 +71,7 @@ fn apply_xpos_transpose_passes(
   children : Map[String, Array[String]],
   tmp_ranks : Map[String, Int],
 ) -> Unit {
-  let _ = transpose_rank_groups_limited(
+  let _ = @ordering.transpose_rank_groups_limited(
     tmp_rank_keys,
     x_groups,
     parents,
@@ -80,7 +80,7 @@ fn apply_xpos_transpose_passes(
     false,
     4,
   )
-  let _ = transpose_rank_groups_limited(
+  let _ = @ordering.transpose_rank_groups_limited(
     tmp_rank_keys,
     x_groups,
     parents,
