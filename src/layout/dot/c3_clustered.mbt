@@ -121,7 +121,7 @@ fn build_clustered_pre_root(
     )
   // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
   // before unconstrained-node seed-order overrides for build_ranks seeding.
-  apply_unconstrained_overrides(
+  @ordering.apply_unconstrained_order_overrides(
     reorder_setup.gdnlist_order,
     runtime_context.real_nodes,
     reorder_context.order_nodes,
