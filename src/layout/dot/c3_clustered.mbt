@@ -221,17 +221,10 @@ fn run_clustered_root_phase(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
 ) -> ClusteredRootPhaseOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  let (root_reorder_output, root_rank_order_phase_output) =
-    run_root_reorder_and_rank_order_phase(
-      pre_root_stage,
-      pre_root_stage.order_groups,
-    )
   let root_phase_overrides =
-    @ordering.build_clustered_root_phase_overrides(
-      reorder_setup.order_with_clusters,
-      root_reorder_output,
-      root_rank_order_phase_output,
+    build_clustered_root_phase_reorder_overrides(
+      dispatch_context,
+      pre_root_stage,
     )
   let root_cluster_stage =
     run_root_and_cluster_ranks(
@@ -243,6 +236,27 @@ fn run_clustered_root_phase(
     root_cluster_stage,
     root_tail_order_override: root_phase_overrides.root_tail_order_override,
   }
+}
+
+///|
+/// Graphviz parity: clustered root-phase overrides are derived from the
+/// root-only reorder/rank-order pass before root+cluster rank replay.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_root_phase_reorder_overrides(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> @ordering.ClusteredRootPhaseOverrides {
+  let reorder_setup = dispatch_context.reorder_setup
+  let (root_reorder_output, root_rank_order_phase_output) =
+    run_root_reorder_and_rank_order_phase(
+      pre_root_stage,
+      pre_root_stage.order_groups,
+    )
+  @ordering.build_clustered_root_phase_overrides(
+    reorder_setup.order_with_clusters,
+    root_reorder_output,
+    root_rank_order_phase_output,
+  )
 }
 
 ///|
@@ -284,11 +298,9 @@ fn run_clustered(
       dispatch_context,
       pre_root_stage,
     )
-  let output =
-    run_clustered_finalize_phase(
-      dispatch_context,
-      pre_root_stage,
-      root_phase_output,
-    )
-  output
+  run_clustered_finalize_phase(
+    dispatch_context,
+    pre_root_stage,
+    root_phase_output,
+  )
 }
