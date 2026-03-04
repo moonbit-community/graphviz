@@ -765,6 +765,26 @@ pub fn run_root_mincross_reorder(
 }
 
 ///|
+/// Graphviz parity: pass0 flat-seed capture wraps the root mincross call,
+/// then records the same stage snapshot before resetting capture state.
+/// Do not change behavior without updating fixtures/tests.
+pub fn run_root_mincross_reorder_with_pass0_capture(
+  inputs : RootMincrossReorderInputs,
+  order_groups_override : Map[Int, Array[String]]?,
+  capture_call : (RootMincrossReorderResult, RootMincrossReorderInputs) -> Unit,
+) -> RootMincrossReorderResult {
+  let result =
+    run_with_pass0_flat_seed_capture(() =>
+      run_root_mincross_reorder(
+        inputs,
+        order_groups_override,
+      )
+    )
+  capture_call(result, inputs)
+  result
+}
+
+///|
 /// Graphviz parity: root+cluster rank phase payload keeps root reorder inputs
 /// and root override replay context unchanged before cluster-local pass.
 /// Do not change behavior without updating fixtures/tests.

@@ -3,27 +3,6 @@
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
-/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
-/// then merges reordered root positions back into seeded build_ranks groups.
-/// Do not change behavior without updating fixtures/tests.
-fn run_root_mincross_reorder(
-  inputs : @ordering.RootMincrossReorderInputs,
-  order_groups_override : Map[Int, Array[String]]?,
-) -> @ordering.RootMincrossReorderResult {
-  // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
-  // then records the same stage snapshot before resetting capture state.
-  let result =
-    @ordering.run_with_pass0_flat_seed_capture(() =>
-      @ordering.run_root_mincross_reorder(
-        inputs,
-        order_groups_override,
-      )
-    )
-  capture_root_mincross_pass_snapshot(result, inputs)
-  result
-}
-
-///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -58,9 +37,10 @@ fn run_root_and_cluster_ranks(
     root_groups_override,
   }
   let root_reorder_result =
-    run_root_mincross_reorder(
+    @ordering.run_root_mincross_reorder_with_pass0_capture(
       root_mincross_reorder_inputs,
       root_groups_override,
+      capture_root_mincross_pass_snapshot,
     )
   let replay_context =
     build_cluster_local_rank_replay_context(
