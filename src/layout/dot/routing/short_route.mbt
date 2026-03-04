@@ -27,36 +27,41 @@ fn short_route_is_record_shape(node : @cgraph.Node) -> Bool {
 }
 
 ///|
+priv struct RecordPortDetourNeedInput {
+  using_pathplan : Bool
+  is_flat_edge : Bool
+  tail_node : @cgraph.Node
+  head_node : @cgraph.Node
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  layout_rankdir : RankDir
+}
+
+///|
 fn needs_record_port_detour(
-  using_pathplan : Bool,
-  is_flat_edge : Bool,
-  tail_node : @cgraph.Node,
-  head_node : @cgraph.Node,
-  tail_port : @cgraph.Port?,
-  head_port : @cgraph.Port?,
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  layout_rankdir : RankDir,
+  input : RecordPortDetourNeedInput,
 ) -> Bool {
   let record_port_edge =
     (
-      short_route_is_record_shape(tail_node) &&
-      @dot_shared.port_is_explicit(tail_port)
+      short_route_is_record_shape(input.tail_node) &&
+      @dot_shared.port_is_explicit(input.tail_port)
     ) ||
     (
-      short_route_is_record_shape(head_node) &&
-      @dot_shared.port_is_explicit(head_port)
+      short_route_is_record_shape(input.head_node) &&
+      @dot_shared.port_is_explicit(input.head_port)
     )
-  !using_pathplan &&
-  !is_flat_edge &&
+  !input.using_pathplan &&
+  !input.is_flat_edge &&
   record_port_edge &&
-  (match layout_rankdir {
+  (match input.layout_rankdir {
     RankDir::TB | RankDir::BT =>
-      Double::abs(tail_slope_line.x) > 0.01 ||
-      Double::abs(head_slope_line.x) > 0.01
+      Double::abs(input.tail_slope_line.x) > 0.01 ||
+      Double::abs(input.head_slope_line.x) > 0.01
     RankDir::LR | RankDir::RL =>
-      Double::abs(tail_slope_line.y) > 0.01 ||
-      Double::abs(head_slope_line.y) > 0.01
+      Double::abs(input.tail_slope_line.y) > 0.01 ||
+      Double::abs(input.head_slope_line.y) > 0.01
   })
 }
 
@@ -151,15 +156,17 @@ fn short_route_detour_context(
   let head_slope_line = edge_port_slope_or_zero(input.head_port, input.head_slope)
   let needs_record_detour =
     needs_record_port_detour(
-      input.using_pathplan,
-      input.is_flat_edge,
-      input.tail_node,
-      input.head_node,
-      input.tail_port,
-      input.head_port,
-      tail_slope_line,
-      head_slope_line,
-      input.layout_rankdir,
+      {
+        using_pathplan: input.using_pathplan,
+        is_flat_edge: input.is_flat_edge,
+        tail_node: input.tail_node,
+        head_node: input.head_node,
+        tail_port: input.tail_port,
+        head_port: input.head_port,
+        tail_slope_line,
+        head_slope_line,
+        layout_rankdir: input.layout_rankdir,
+      },
     )
   let flat_detour_flags =
     flat_detour_candidate_flags(
