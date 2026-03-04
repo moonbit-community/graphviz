@@ -455,13 +455,16 @@ pub fn build_short_route_spline_with_detour(
   } else {
     let (line_start, line_end) =
       bottom_single_arrow_line_endpoints(
-        short_route_context.prefer_linear_flat_bottom_single_arrow,
-        short_route_spec.fallback_line_start,
-        short_route_spec.fallback_line_end,
-        base.tail_clip_center,
-        base.head_clip_center,
-        base.tail_clip_size,
-        base.head_clip_size,
+        {
+          prefer_linear_flat_bottom_single_arrow:
+            short_route_context.prefer_linear_flat_bottom_single_arrow,
+          line_start: short_route_spec.fallback_line_start,
+          line_end: short_route_spec.fallback_line_end,
+          tail_clip_center: base.tail_clip_center,
+          head_clip_center: base.head_clip_center,
+          tail_clip_size: base.tail_clip_size,
+          head_clip_size: base.head_clip_size,
+        },
       )
     let line_points =
       pathplan_line_points_or_endpoints(

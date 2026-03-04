@@ -1,19 +1,27 @@
+priv struct BottomSingleArrowLineEndpointsInput {
+  prefer_linear_flat_bottom_single_arrow : Bool
+  line_start : @geom.Point
+  line_end : @geom.Point
+  tail_clip_center : @geom.Point
+  head_clip_center : @geom.Point
+  tail_clip_size : NodeSize
+  head_clip_size : NodeSize
+}
+
+///|
 fn bottom_single_arrow_line_endpoints(
-  prefer_linear_flat_bottom_single_arrow : Bool,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  tail_clip_center : @geom.Point,
-  head_clip_center : @geom.Point,
-  tail_clip_size : NodeSize,
-  head_clip_size : NodeSize,
+  input : BottomSingleArrowLineEndpointsInput,
 ) -> (@geom.Point, @geom.Point) {
-  if prefer_linear_flat_bottom_single_arrow {
-    let tail_bottom = tail_clip_center.y - tail_clip_size.height_pt / 2.0
-    let head_bottom = head_clip_center.y - head_clip_size.height_pt / 2.0
+  if input.prefer_linear_flat_bottom_single_arrow {
+    let tail_bottom = input.tail_clip_center.y - input.tail_clip_size.height_pt / 2.0
+    let head_bottom = input.head_clip_center.y - input.head_clip_size.height_pt / 2.0
     let line_y = min_double(tail_bottom, head_bottom)
-    (@edge_spline.point(line_start.x, line_y), @edge_spline.point(line_end.x, line_y))
+    (
+      @edge_spline.point(input.line_start.x, line_y),
+      @edge_spline.point(input.line_end.x, line_y),
+    )
   } else {
-    (line_start, line_end)
+    (input.line_start, input.line_end)
   }
 }
 
