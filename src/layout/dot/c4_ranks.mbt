@@ -6,23 +6,31 @@
 /// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
 /// then applies transpose when crossings remain (port-offset aware tie-breaks).
 /// Do not change behavior without updating fixtures/tests.
+priv struct SeededReorderBuildContext {
+  order_rank_keys : Array[Int]
+  order_groups : Map[Int, Array[String]]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_ranks : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
+/// then applies transpose when crossings remain (port-offset aware tie-breaks).
+/// Do not change behavior without updating fixtures/tests.
 fn build_seeded_reorder_groups(
-  order_rank_keys : Array[Int],
-  order_groups : Map[Int, Array[String]],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_ranks : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  order_flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-  graphviz_out_neighbors : Map[String, Array[String]],
-  graphviz_in_neighbors : Map[String, Array[String]],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  flat_rank_constraints : Map[String, Bool],
+  build_context : SeededReorderBuildContext,
 ) -> Map[Int, Array[String]] {
   // Graphviz parity: seed build_ranks from component-scoped walk,
   // matching decompose/install traversal used by remincross with
@@ -30,55 +38,55 @@ fn build_seeded_reorder_groups(
   let seed_pass =
     if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
   let seeded_groups = build_component_rank_groups(
-    order_rank_keys,
-    order_groups,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_ranks,
-    order_node_order,
-    order_cluster_keys,
-    order_cluster_skeleton,
+    build_context.order_rank_keys,
+    build_context.order_groups,
+    build_context.order_edge_tail_out,
+    build_context.order_edge_head_out,
+    build_context.order_ranks,
+    build_context.order_node_order,
+    build_context.order_cluster_keys,
+    build_context.order_cluster_skeleton,
     seed_pass,
-    order_flat_constraints,
-    flip=graphviz_flip,
-    graphviz_out_neighbors=graphviz_out_neighbors,
-    graphviz_in_neighbors=graphviz_in_neighbors,
+    build_context.order_flat_constraints,
+    flip=build_context.graphviz_flip,
+    graphviz_out_neighbors=build_context.graphviz_out_neighbors,
+    graphviz_in_neighbors=build_context.graphviz_in_neighbors,
   )
   // Graphviz parity: build_ranks applies transpose if crossings remain;
   // crossing count uses endpoint port x offsets for tie-correct ordering.
   let seed_cross = @ordering.count_crossings_port_aware(
     seeded_groups,
-    order_ranks,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    edge_tail_port_x=order_edge_tail_port_x,
-    edge_head_port_x=order_edge_head_port_x,
+    build_context.order_ranks,
+    build_context.order_edges_out,
+    build_context.order_edge_tail_out,
+    build_context.order_edge_head_out,
+    edge_tail_port_x=build_context.order_edge_tail_port_x,
+    edge_head_port_x=build_context.order_edge_head_port_x,
   )
   if seed_cross > 0 {
     let transpose_seed_maps =
       @ordering.build_transpose_seed_maps(
-        order_rank_keys,
+        build_context.order_rank_keys,
         seeded_groups,
-        order_edges_out,
-        order_edge_tail_out,
-        order_edge_head_out,
-        order_ranks,
+        build_context.order_edges_out,
+        build_context.order_edge_tail_out,
+        build_context.order_edge_head_out,
+        build_context.order_ranks,
       )
     let _ = transpose_rank_groups_port(
-      order_rank_keys,
+      build_context.order_rank_keys,
       seeded_groups,
-      order_ranks,
+      build_context.order_ranks,
       transpose_seed_maps.edge_in,
       transpose_seed_maps.edge_out,
-      order_edge_tail_out,
-      order_edge_head_out,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
+      build_context.order_edge_tail_out,
+      build_context.order_edge_head_out,
+      build_context.order_edge_tail_port_x,
+      build_context.order_edge_head_port_x,
       transpose_seed_maps.edge_penalty,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      flat_rank_constraints,
+      build_context.order_cluster_keys,
+      build_context.order_cluster_skeleton,
+      build_context.flat_rank_constraints,
       false,
       0,
     )
@@ -249,22 +257,24 @@ fn build_seeded_groups_for_root_and_cluster(
   let reorder_context = pre_root_stage.reorder_context
   let materialized = pre_root_stage.materialized
   build_seeded_reorder_groups(
-    reorder_context.order_rank_keys,
-    pre_root_stage.order_groups,
-    materialized.order_edge_tail_out,
-    materialized.order_edge_head_out,
-    reorder_context.order_ranks,
-    reorder_context.order_node_order,
-    pre_root_stage.order_cluster_keys,
-    pre_root_stage.order_cluster_skeleton,
-    materialized.order_flat_constraints,
-    reorder_setup.graphviz_flip,
-    materialized.graphviz_out_neighbors,
-    materialized.graphviz_in_neighbors,
-    materialized.order_edges_out,
-    materialized.order_edge_tail_port_x,
-    materialized.order_edge_head_port_x,
-    reorder_setup.flat_rank_constraints,
+    {
+      order_rank_keys: reorder_context.order_rank_keys,
+      order_groups: pre_root_stage.order_groups,
+      order_edge_tail_out: materialized.order_edge_tail_out,
+      order_edge_head_out: materialized.order_edge_head_out,
+      order_ranks: reorder_context.order_ranks,
+      order_node_order: reorder_context.order_node_order,
+      order_cluster_keys: pre_root_stage.order_cluster_keys,
+      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+      order_flat_constraints: materialized.order_flat_constraints,
+      graphviz_flip: reorder_setup.graphviz_flip,
+      graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+      graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+      order_edges_out: materialized.order_edges_out,
+      order_edge_tail_port_x: materialized.order_edge_tail_port_x,
+      order_edge_head_port_x: materialized.order_edge_head_port_x,
+      flat_rank_constraints: reorder_setup.flat_rank_constraints,
+    },
   )
 }
 
