@@ -118,18 +118,33 @@ fn build_pathplan_points_spline(
 }
 
 ///|
+priv struct LineSplineBuildInput {
+  base : EdgeRouteBase
+  line_start : @geom.Point
+  line_end : @geom.Point
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+  curve_offset : Double
+  curve_skew : Double
+  prefer_linear : Bool
+}
+
+///|
 fn build_line_spline(
-  base : EdgeRouteBase,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
-  curve_offset : Double,
-  curve_skew : Double,
-  prefer_linear : Bool,
+  input : LineSplineBuildInput,
 ) -> @geom.Spline {
+  let base = input.base
+  let line_start = input.line_start
+  let line_end = input.line_end
+  let tail_slope_line = input.tail_slope_line
+  let head_slope_line = input.head_slope_line
+  let tail_clip_enabled = input.tail_clip_enabled
+  let head_clip_enabled = input.head_clip_enabled
+  let curve_offset = input.curve_offset
+  let curve_skew = input.curve_skew
+  let prefer_linear = input.prefer_linear
   @edge_spline.edge_spline_for_line(
     base.edge,
     line_start,
@@ -194,16 +209,18 @@ fn build_short_route_line_or_pathplan_spline(
     {
       spline:
         build_line_spline(
-          input.base,
-          input.line_start,
-          input.line_end,
-          input.tail_slope_line,
-          input.head_slope_line,
-          input.tail_clip_enabled,
-          input.head_clip_enabled,
-          input.curve_offset,
-          input.curve_skew,
-          input.prefer_linear,
+          {
+            base: input.base,
+            line_start: input.line_start,
+            line_end: input.line_end,
+            tail_slope_line: input.tail_slope_line,
+            head_slope_line: input.head_slope_line,
+            tail_clip_enabled: input.tail_clip_enabled,
+            head_clip_enabled: input.head_clip_enabled,
+            curve_offset: input.curve_offset,
+            curve_skew: input.curve_skew,
+            prefer_linear: input.prefer_linear,
+          },
         ),
       raw_bezier: [],
     }
