@@ -94,29 +94,40 @@ fn build_pre_rotation_layout_data(
   let (root_cluster_pad_top, root_cluster_pad_bottom) =
     root_cluster_padding_for_rankdir(
       rankdir,
-      compute_root_cluster_padding(graph, input.nodes, input.all_ranks, input.ranks),
+      compute_root_cluster_padding(
+        {
+          graph,
+          nodes: input.nodes,
+          all_ranks: input.all_ranks,
+          ranks: input.ranks,
+        },
+      ),
     )
   let bbox =
     apply_root_port_padding(
-      graph,
-      subgraphs_and_bbox.base_bbox,
-      rankdir,
-      input.port_pad_below,
-      input.port_pad_above,
+      {
+        graph,
+        bbox: subgraphs_and_bbox.base_bbox,
+        rankdir,
+        port_pad_below: input.port_pad_below,
+        port_pad_above: input.port_pad_above,
+      },
     )
   let layout_with_root_pad =
     apply_root_cluster_padding(
-      graph,
       {
         graph,
-        bbox,
-        label_pos: None,
-        nodes: final_geometry.final_nodes,
-        edges: final_geometry.final_edges,
-        subgraphs: subgraphs_and_bbox.subgraphs,
+        layout: {
+          graph,
+          bbox,
+          label_pos: None,
+          nodes: final_geometry.final_nodes,
+          edges: final_geometry.final_edges,
+          subgraphs: subgraphs_and_bbox.subgraphs,
+        },
+        root_cluster_pad_top,
+        root_cluster_pad_bottom,
       },
-      root_cluster_pad_top,
-      root_cluster_pad_bottom,
     )
   // Graphviz parity: ratio=fill uses pre-spline bbox; include rank/cluster
   // padding that is part of set_ycoords before final edge bbox expansion.
