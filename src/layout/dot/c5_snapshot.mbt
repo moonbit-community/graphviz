@@ -2,15 +2,56 @@
 /// Stage C Phase C5 split: remincross snapshot
 /// helpers for focused ReMincross responsibilities.
 
+///|
+/// Graphviz parity: snapshot edge projection keeps raw edge arrays and optional
+/// port metadata aligned by index before coalescing/materialization.
+/// Do not change behavior without updating fixtures/tests.
+priv struct OrderingEdgeSnapshotBuildInputs {
+  edges_out : Array[@cgraph.Edge]
+  edge_tail_out : Array[String]
+  edge_head_out : Array[String]
+  edge_tail_port_x : Array[Double]
+  edge_head_port_x : Array[Double]
+  edge_tail_port_order : Array[Double]
+  edge_head_port_order : Array[Double]
+}
+
+///|
+/// Graphviz parity: ordering-input snapshot capture gates on the same
+/// DOT_CAPTURE_ORDERING_INPUTS env flag used by fixture capture workflows.
+/// Do not change behavior without updating fixtures/tests.
+fn should_capture_ordering_inputs() -> Bool {
+  @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is Some(_)
+}
+
+///|
+fn clone_string_map(source : Map[String, String]) -> Map[String, String] {
+  let out : Map[String, String] = Map::new()
+  for key, value in source {
+    out[key] = value
+  }
+  out
+}
+
+///|
+fn clone_bool_map(source : Map[String, Bool]) -> Map[String, Bool] {
+  let out : Map[String, Bool] = Map::new()
+  for key, value in source {
+    out[key] = value
+  }
+  out
+}
+
 fn build_ordering_edges_snapshot(
-  edges_out : Array[@cgraph.Edge],
-  edge_tail_out : Array[String],
-  edge_head_out : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
+  build_inputs : OrderingEdgeSnapshotBuildInputs,
 ) -> Array[OrderingInputEdgeSnapshot] {
+  let edges_out = build_inputs.edges_out
+  let edge_tail_out = build_inputs.edge_tail_out
+  let edge_head_out = build_inputs.edge_head_out
+  let edge_tail_port_x = build_inputs.edge_tail_port_x
+  let edge_head_port_x = build_inputs.edge_head_port_x
+  let edge_tail_port_order = build_inputs.edge_tail_port_order
+  let edge_head_port_order = build_inputs.edge_head_port_order
   let edges : Array[OrderingInputEdgeSnapshot] = []
   let mut idx = 0
   while idx < edges_out.length() {
@@ -114,35 +155,29 @@ fn capture_root_snapshot(
   cluster_keys : Map[String, String],
   cluster_skeleton : Map[String, Bool],
 ) -> Unit {
-  if @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is None {
+  if !should_capture_ordering_inputs() {
     return
   }
   let edges =
     coalesce_order_edges_snapshot(
       build_ordering_edges_snapshot(
-        edges_out,
-        edge_tail_out,
-        edge_head_out,
-        edge_tail_port_x,
-        edge_head_port_x,
-        edge_tail_port_order,
-        edge_head_port_order,
+        {
+          edges_out,
+          edge_tail_out,
+          edge_head_out,
+          edge_tail_port_x,
+          edge_head_port_x,
+          edge_tail_port_order,
+          edge_head_port_order,
+        },
       ),
     )
-  let snapshot_cluster_keys : Map[String, String] = Map::new()
-  for key, value in cluster_keys {
-    snapshot_cluster_keys[key] = value
-  }
-  let snapshot_cluster_skeleton : Map[String, Bool] = Map::new()
-  for key, value in cluster_skeleton {
-    snapshot_cluster_skeleton[key] = value
-  }
   let snapshot : RootMincrossInputSnapshot = {
     rank_keys: rank_keys.copy(),
     groups: @ordering.clone_rank_groups(groups),
     edges,
-    cluster_keys: snapshot_cluster_keys,
-    cluster_skeleton: snapshot_cluster_skeleton,
+    cluster_keys: clone_string_map(cluster_keys),
+    cluster_skeleton: clone_bool_map(cluster_skeleton),
   }
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
@@ -179,26 +214,24 @@ fn capture_root_mincross_pass_snapshot(
 fn capture_remincross_snapshot(
   capture_inputs : @ordering.ReMincrossCleanupCaptureInputs,
 ) -> Unit {
-  if @sys.get_env_var("DOT_CAPTURE_ORDERING_INPUTS") is None {
+  if !should_capture_ordering_inputs() {
     return
-  }
-  let snapshot_cluster_keys : Map[String, String] = Map::new()
-  for key, value in capture_inputs.rem_cluster_keys {
-    snapshot_cluster_keys[key] = value
   }
   let snapshot : RemincrossInputSnapshot = {
     rank_keys: capture_inputs.rem_rank_keys.copy(),
     groups: @ordering.clone_rank_groups(capture_inputs.rem_groups),
     edges: build_ordering_edges_snapshot(
-      capture_inputs.rem_edges_out,
-      capture_inputs.rem_edge_tail_out,
-      capture_inputs.rem_edge_head_out,
-      capture_inputs.rem_edge_tail_port_x,
-      capture_inputs.rem_edge_head_port_x,
-      capture_inputs.rem_edge_tail_port_order,
-      capture_inputs.rem_edge_head_port_order,
+      {
+        edges_out: capture_inputs.rem_edges_out,
+        edge_tail_out: capture_inputs.rem_edge_tail_out,
+        edge_head_out: capture_inputs.rem_edge_head_out,
+        edge_tail_port_x: capture_inputs.rem_edge_tail_port_x,
+        edge_head_port_x: capture_inputs.rem_edge_head_port_x,
+        edge_tail_port_order: capture_inputs.rem_edge_tail_port_order,
+        edge_head_port_order: capture_inputs.rem_edge_head_port_order,
+      },
     ),
-    cluster_keys: snapshot_cluster_keys,
+    cluster_keys: clone_string_map(capture_inputs.rem_cluster_keys),
   }
   let _ = snapshot.rank_keys
   let _ = snapshot.groups
