@@ -1303,23 +1303,32 @@ fn build_cluster_fixed_positions(
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReorderContextBuildInputs {
+  cluster : String
+  cluster_graph : @cgraph.Graph
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  source_out_neighbors : Map[String, Array[String]]
+  vnode_clusters : Map[String, String]
+  fixed_positions : Map[String, Double]
+  order_with_vnodes : Bool
+}
+
+///|
+/// Graphviz parity: cluster-local reorder only considers nodes that are
+/// present in rank groups and belong to the current cluster (plus local
+/// virtual nodes when enabled).
 fn build_cluster_local_reorder_context(
-  cluster : String,
-  cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  source_out_neighbors : Map[String, Array[String]],
-  vnode_clusters : Map[String, String],
-  fixed_positions : Map[String, Double],
-  order_with_vnodes : Bool,
+  inputs : ClusterLocalReorderContextBuildInputs,
 ) -> ClusterLocalReorderContext? {
   let cluster_node_set =
     build_cluster_node_set_for_reorder(
-      cluster,
-      cluster_graph,
-      groups,
-      vnode_clusters,
-      order_with_vnodes,
+      inputs.cluster,
+      inputs.cluster_graph,
+      inputs.groups,
+      inputs.vnode_clusters,
+      inputs.order_with_vnodes,
     )
   if cluster_node_set.length() <= 1 {
     return None
@@ -1327,19 +1336,19 @@ fn build_cluster_local_reorder_context(
   let node_order_context =
     build_cluster_node_order_context(
       cluster_node_set,
-      node_order,
+      inputs.node_order,
     )
   let cluster_nodes = node_order_context.cluster_nodes
   let cluster_node_order = node_order_context.cluster_node_order
   let cluster_groups = build_local_rank_groups(
-    groups,
+    inputs.groups,
     cluster_node_set,
     cluster_node_order,
-    source_out_neighbors,
+    inputs.source_out_neighbors,
   )
   let cluster_rank_keys = @ordering.collect_rank_keys(cluster_groups)
   let cluster_fixed_positions =
-    build_cluster_fixed_positions(fixed_positions, cluster_node_set)
+    build_cluster_fixed_positions(inputs.fixed_positions, cluster_node_set)
   Some({
     cluster_node_set,
     cluster_nodes,
@@ -1418,16 +1427,16 @@ fn reorder_cluster_rank_group(
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
-  let local_context = match build_cluster_local_reorder_context(
+  let local_context = match build_cluster_local_reorder_context({
     cluster,
     cluster_graph,
     groups,
-    dispatch_context.node_order,
-    dispatch_context.neighbor_sources.source_out_neighbors,
-    dispatch_context.vnode_info.vnode_clusters,
+    node_order: dispatch_context.node_order,
+    source_out_neighbors: dispatch_context.neighbor_sources.source_out_neighbors,
+    vnode_clusters: dispatch_context.vnode_info.vnode_clusters,
     fixed_positions,
-    dispatch_context.order_with_vnodes,
-  ) {
+    order_with_vnodes: dispatch_context.order_with_vnodes,
+  }) {
     Some(value) => value
     None => return ()
   }
