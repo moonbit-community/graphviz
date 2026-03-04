@@ -225,6 +225,12 @@ pub(all) struct RoutingCallbacks {
 }
 
 ///|
+pub(all) struct RouteEdgesPipelineDeps {
+  route_base_deps : RouteBaseDeps
+  callbacks : RoutingCallbacks
+}
+
+///|
 pub(all) struct RegularPassInput {
   spline_mode : Int
   ranks : Map[String, Int]

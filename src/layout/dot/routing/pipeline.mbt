@@ -55,27 +55,26 @@ fn build_route_edges_input(
 /// Do not change behavior without updating fixtures/tests.
 pub fn route_edges_pipeline(
   input : RouteEdgesPipelineInput,
-  route_base_deps : RouteBaseDeps,
-  callbacks : RoutingCallbacks,
+  deps : RouteEdgesPipelineDeps,
 ) -> Array[DotLayoutEdge] {
   let sameport_overrides =
     collect_sameport_overrides(
       input.edges,
       input.positions,
       input.sizes,
-      route_base_deps.node_size_for_missing,
+      deps.route_base_deps.node_size_for_missing,
       input.layout_rankdir,
       input.ranksep_pt,
     )
   let base_cache =
     build_route_base_cache(
       input,
-      route_base_deps,
+      deps.route_base_deps,
       sameport_overrides,
     )
   let route_input = build_route_edges_input(input, base_cache)
   route_edges(
     route_input,
-    callbacks,
+    deps.callbacks,
   )
 }

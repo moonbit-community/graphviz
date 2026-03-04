@@ -199,23 +199,26 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
       use_spline_prepass: input.prep.splines == SplinesMode::Spline,
       spline_mode: routing_spline_mode(input.prep.splines),
     },
-    build_route_base_deps_for_dot(
-      input.prep.record_orientation,
-      input.routing_label_ports_map,
-      input.routing_label_ports_raw,
-    ),
     {
-      recover_slack_vnodes_fn: recover_slack_vnodes,
-      build_edge_layout_fn: (base, spline, spline_result) =>
-        build_routing_edge_layout_for_dot(
-          base,
-          spline,
-          spline_result,
-          edge_layout_input,
+      route_base_deps:
+        build_route_base_deps_for_dot(
+          input.prep.record_orientation,
+          input.routing_label_ports_map,
+          input.routing_label_ports_raw,
         ),
-      self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
-      self_edge_label_width_fn: self_edge_label_width_pt,
-      edge_port_label_pos_fn: edge_port_label_pos,
+      callbacks: {
+        recover_slack_vnodes_fn: recover_slack_vnodes,
+        build_edge_layout_fn: (base, spline, spline_result) =>
+          build_routing_edge_layout_for_dot(
+            base,
+            spline,
+            spline_result,
+            edge_layout_input,
+          ),
+        self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
+        self_edge_label_width_fn: self_edge_label_width_pt,
+        edge_port_label_pos_fn: edge_port_label_pos,
+      },
     },
   )
 }
