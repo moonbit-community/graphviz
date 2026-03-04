@@ -45,6 +45,72 @@ pub(all) struct NonclusterReorderInputs {
 }
 
 ///|
+/// Graphviz parity: non-cluster reorder input-source bundle keeps dispatch
+/// snapshots paired with class2/edge-port setup outputs before call assembly.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct NonclusterReorderInputsBuildSources {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_head : Array[String]
+  edge_out_order : Map[String, Array[Int]]
+  ranks : Map[String, Int]
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  node_order : Map[String, Int]
+  cluster_keys : Map[String, String]
+  cluster_skeleton : Map[String, Bool]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  order_sizes : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  flat_constraints : Map[String, Bool]
+  reorder_setup : OrderingReorderSetup
+  edge_port_data : OrderingEdgePortData
+}
+
+///|
+/// Graphviz parity: non-cluster reorder call payload is assembled from one
+/// dispatch snapshot plus reorder-setup and edge-port materialization outputs.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_noncluster_reorder_inputs_from_sources(
+  sources : NonclusterReorderInputsBuildSources,
+) -> NonclusterReorderInputs {
+  {
+    nodes: sources.nodes,
+    edges: sources.edges,
+    edge_head: sources.edge_head,
+    edge_out_order: sources.edge_out_order,
+    ranks: sources.ranks,
+    rank_keys: sources.rank_keys,
+    groups: sources.groups,
+    nlist_order: sources.reorder_setup.class2_data.nlist_order,
+    node_order: sources.node_order,
+    order_edges: sources.edge_port_data.order_edges,
+    order_edge_tail: sources.edge_port_data.order_edge_tail,
+    order_edge_head: sources.edge_port_data.order_edge_head,
+    order_edge_tail_port_x: sources.edge_port_data.order_edge_tail_port_x,
+    order_edge_head_port_x: sources.edge_port_data.order_edge_head_port_x,
+    order_edge_tail_port_order: sources.edge_port_data.order_edge_tail_port_order,
+    order_edge_head_port_order: sources.edge_port_data.order_edge_head_port_order,
+    cluster_keys: sources.cluster_keys,
+    cluster_skeleton: sources.cluster_skeleton,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    edge_order: sources.edge_port_data.edge_order,
+    order_sizes: sources.order_sizes,
+    nodesep_pt: sources.nodesep_pt,
+    has_edge_labels: sources.has_edge_labels,
+    port_order_positions: sources.port_order_positions,
+    port_order_contrib: sources.port_order_contrib,
+    flat_constraints: sources.flat_constraints,
+    graphviz_flip: sources.reorder_setup.graphviz_flip,
+  }
+}
+
+///|
 /// Graphviz parity: non-cluster reorder call payload preserves exact
 /// reorder_rank_groups argument order and precomputed graphviz neighbors.
 /// Do not change behavior without updating fixtures/tests.
