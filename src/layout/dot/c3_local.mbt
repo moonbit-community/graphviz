@@ -1091,61 +1091,69 @@ fn should_include_external_crossing_edges(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder input build context keeps the
+/// per-cluster node subset together with shared edge/neighbor snapshots.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReorderInputBuildContext {
+  cluster_name : String
+  cluster_graph_edge_count : Int
+  expanded_clusters : Map[String, Bool]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  neighbor_sources : ClusterLocalNeighborSources
+  cluster_node_set : Map[String, Bool]
+  cluster_rank_keys : Array[Int]
+  cluster_nodes : Array[String]
+  fixed_ranks : Map[String, Int]
+  order_sizes : Map[String, NodeSize]
+  vnode_sizes : Map[String, NodeSize]
+  intercluster_keys : Map[String, String]
+  flat_constraints : Map[String, Bool]
+}
+
+///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
 fn build_local_reorder_inputs(
-  cluster_name : String,
-  cluster_graph_edge_count : Int,
-  expanded_clusters : Map[String, Bool],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  neighbor_sources : ClusterLocalNeighborSources,
-  cluster_node_set : Map[String, Bool],
-  cluster_rank_keys : Array[Int],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
-  order_sizes : Map[String, NodeSize],
-  vnode_sizes : Map[String, NodeSize],
-  intercluster_keys : Map[String, String],
-  flat_constraints : Map[String, Bool],
+  input_context : ClusterLocalReorderInputBuildContext,
 ) -> ClusterLocalReorderRunInputsOutput {
-  let vnode_count = count_edge_vnodes(cluster_nodes)
+  let vnode_count = count_edge_vnodes(input_context.cluster_nodes)
   let include_external_crossing =
     should_include_external_crossing_edges(
-      cluster_rank_keys,
-      cluster_graph_edge_count,
+      input_context.cluster_rank_keys,
+      input_context.cluster_graph_edge_count,
       vnode_count,
     )
   let edge_bundle =
     build_local_reorder_edge_bundle(
       include_external_crossing,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      cluster_node_set,
-      cluster_nodes,
-      fixed_ranks,
+      input_context.order_edges,
+      input_context.order_edge_tail,
+      input_context.order_edge_head,
+      input_context.order_edge_tail_port_x,
+      input_context.order_edge_head_port_x,
+      input_context.order_edge_tail_port_order,
+      input_context.order_edge_head_port_order,
+      input_context.cluster_node_set,
+      input_context.cluster_nodes,
+      input_context.fixed_ranks,
     )
   // Graphviz parity: cluster-local reorder metadata keeps node sizes,
   // local cluster keys, and same-rank flat constraints scoped to the cluster.
   let cluster_sizes =
     build_cluster_sizes_for_reorder(
-      cluster_node_set,
-      order_sizes,
-      vnode_sizes,
+      input_context.cluster_node_set,
+      input_context.order_sizes,
+      input_context.vnode_sizes,
     )
   let cluster_keys : Map[String, String] = Map::new()
-  for name, _ in cluster_node_set {
+  for name, _ in input_context.cluster_node_set {
     // Graphviz parity: mincross_clust() runs on the expanded subgraph where
     // ND_clust is cleared, so local reorder/transpose should not see
     // cross-cluster barriers for these nodes.
@@ -1153,16 +1161,16 @@ fn build_local_reorder_inputs(
   }
   let cluster_flat_constraints =
     filter_cluster_flat_constraints(
-      cluster_node_set,
-      flat_constraints,
+      input_context.cluster_node_set,
+      input_context.flat_constraints,
     )
   let local_neighbor_maps =
     build_local_neighbor_maps(
-      cluster_name,
-      expanded_clusters,
-      cluster_nodes,
-      neighbor_sources,
-      intercluster_keys,
+      input_context.cluster_name,
+      input_context.expanded_clusters,
+      input_context.cluster_nodes,
+      input_context.neighbor_sources,
+      input_context.intercluster_keys,
       edge_bundle.cluster_edges.length() >= 5,
     )
   {
@@ -1357,25 +1365,27 @@ fn reorder_cluster_rank_group(
   }
   let input_phase_output =
     build_local_reorder_inputs(
-      cluster,
-      cluster_graph.edges().length(),
-      expanded_clusters,
-      dispatch_context.order_edges,
-      dispatch_context.order_edge_tail,
-      dispatch_context.order_edge_head,
-      dispatch_context.order_edge_tail_port_x,
-      dispatch_context.order_edge_head_port_x,
-      dispatch_context.order_edge_tail_port_order,
-      dispatch_context.order_edge_head_port_order,
-      dispatch_context.neighbor_sources,
-      local_context.cluster_node_set,
-      local_context.cluster_rank_keys,
-      local_context.cluster_nodes,
-      dispatch_context.fixed_ranks,
-      dispatch_context.order_sizes,
-      dispatch_context.vnode_info.vnode_sizes,
-      dispatch_context.cluster_meta.intercluster_keys,
-      dispatch_context.cluster_meta.flat_constraints,
+      {
+        cluster_name: cluster,
+        cluster_graph_edge_count: cluster_graph.edges().length(),
+        expanded_clusters,
+        order_edges: dispatch_context.order_edges,
+        order_edge_tail: dispatch_context.order_edge_tail,
+        order_edge_head: dispatch_context.order_edge_head,
+        order_edge_tail_port_x: dispatch_context.order_edge_tail_port_x,
+        order_edge_head_port_x: dispatch_context.order_edge_head_port_x,
+        order_edge_tail_port_order: dispatch_context.order_edge_tail_port_order,
+        order_edge_head_port_order: dispatch_context.order_edge_head_port_order,
+        neighbor_sources: dispatch_context.neighbor_sources,
+        cluster_node_set: local_context.cluster_node_set,
+        cluster_rank_keys: local_context.cluster_rank_keys,
+        cluster_nodes: local_context.cluster_nodes,
+        fixed_ranks: dispatch_context.fixed_ranks,
+        order_sizes: dispatch_context.order_sizes,
+        vnode_sizes: dispatch_context.vnode_info.vnode_sizes,
+        intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+      },
     )
   let reorder_output =
     run_cluster_rank_reorder(
