@@ -313,21 +313,29 @@ fn collect_cluster_bbox_heights(
 /// Graphviz parity: cluster bbox heights aligned to refs/graphviz/lib/dotgen/position.c
 /// (clust_ht/adjustRanks).
 /// Do not change behavior without updating fixtures/tests.
+priv struct ClusterBBoxHeightsInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  self_edge_labels : Map[String, Double]
+  rankdir : RankDir
+}
+
+///|
+/// Graphviz parity: cluster bbox heights aligned to refs/graphviz/lib/dotgen/position.c
+/// (clust_ht/adjustRanks).
+/// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_bbox_heights(
-  graph : @cgraph.Graph,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-  rankdir : RankDir,
+  input : ClusterBBoxHeightsInput,
 ) -> Map[String, ClusterBboxHeightPair] {
   let cluster_heights : Map[String, ClusterBboxHeightPair] = Map::new()
   let _ =
     collect_cluster_bbox_heights(
-    graph,
-    ranks,
-    sizes,
-    self_edge_labels,
-    rankdir,
+    input.graph,
+    input.ranks,
+    input.sizes,
+    input.self_edge_labels,
+    input.rankdir,
     cluster_heights,
   )
   cluster_heights

@@ -30,11 +30,13 @@ fn build_y_position_data(
   let cluster_bbox_heights =
     if input.pipeline.cluster_meta.has_clusters {
       compute_cluster_bbox_heights(
-        input.pipeline.graph,
-        input.pipeline.rank_data.ranks,
-        input.pipeline.prep.sizes,
-        input.pipeline.rank_data.self_edge_labels,
-        input.pipeline.prep.rankdir,
+        {
+          graph: input.pipeline.graph,
+          ranks: input.pipeline.rank_data.ranks,
+          sizes: input.pipeline.prep.sizes,
+          self_edge_labels: input.pipeline.rank_data.self_edge_labels,
+          rankdir: input.pipeline.prep.rankdir,
+        },
       )
     } else {
       Map::new()
