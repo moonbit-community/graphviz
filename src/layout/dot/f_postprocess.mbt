@@ -64,13 +64,15 @@ fn build_pre_rotation_layout_data(
   let rankdir = input.rankdir
   let final_geometry =
     build_final_layout_geometry(
-      input.nodes_out,
-      input.edges_out,
-      input.all_ranks,
-      input.sizes,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
+      {
+        nodes_out: input.nodes_out,
+        edges_out: input.edges_out,
+        all_ranks: input.all_ranks,
+        sizes: input.sizes,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+      },
     )
   let subgraphs_and_bbox =
     build_subgraphs_and_bbox(
