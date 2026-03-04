@@ -266,15 +266,27 @@ fn clip_polygon_for_shape(
 }
 
 ///|
+priv struct PolygonShapeClipInput {
+  center : @geom.Point
+  size : NodeSize
+  target : @geom.Point
+  sides : Int
+  orientation_deg : Double
+  distortion : Double
+  skew : Double
+}
+
+///|
 fn clip_to_polygon_shape(
-  center : @geom.Point,
-  size : NodeSize,
-  target : @geom.Point,
-  sides : Int,
-  orientation_deg : Double,
-  distortion : Double,
-  skew : Double,
+  input : PolygonShapeClipInput,
 ) -> @geom.Point {
+  let center = input.center
+  let size = input.size
+  let target = input.target
+  let sides = input.sides
+  let orientation_deg = input.orientation_deg
+  let distortion = input.distortion
+  let skew = input.skew
   let vertices =
     clip_polygon_for_shape(
       size,
@@ -342,13 +354,15 @@ fn clip_to_node_shape(
       match clip_polygon_shape_params(node, shape) {
         Some(params) =>
           clip_to_polygon_shape(
-            center,
-            size,
-            target,
-            params.sides,
-            params.orientation,
-            params.distortion,
-            params.skew,
+            {
+              center,
+              size,
+              target,
+              sides: params.sides,
+              orientation_deg: params.orientation,
+              distortion: params.distortion,
+              skew: params.skew,
+            },
           )
         None => clip_to_rect(center, size, target)
       }
