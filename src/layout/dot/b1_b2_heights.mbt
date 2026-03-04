@@ -3,6 +3,24 @@
 /// helpers for layered spacing preparation.
 
 ///|
+/// Graphviz parity: rank-height payload keeps rank and spacing snapshots
+/// grouped so Stage B height wiring remains explicit and stable.
+priv struct RankHeightsInput {
+  graph : @cgraph.Graph
+  edges : Array[@cgraph.Edge]
+  ranks : Map[String, Int]
+  groups : Map[Int, Array[String]]
+  rank_keys : Array[Int]
+  all_ranks : Array[Int]
+  sizes : Map[String, NodeSize]
+  self_edge_labels : Map[String, Double]
+  rankdir : RankDir
+  nodesep_in : Double
+  ranksep_in : Double
+  has_edge_labels : Bool
+}
+
+///|
 /// Graphviz parity: long-edge label midpoint contributes half height to the
 /// midpoint rank slot before rank height normalization.
 /// Do not change behavior without updating fixtures/tests.
@@ -55,27 +73,21 @@ fn update_rank_pht_for_label(
 /// Graphviz parity: rank height/spacing aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_heights(
-  graph : @cgraph.Graph,
-  edges : Array[@cgraph.Edge],
-  ranks : Map[String, Int],
-  groups : Map[Int, Array[String]],
-  rank_keys : Array[Int],
-  all_ranks : Array[Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-  rankdir : RankDir,
-  nodesep_in : Double,
-  ranksep_in : Double,
-  has_edge_labels : Bool,
+  input : RankHeightsInput,
 ) -> RankHeights {
+  let graph = input.graph
+  let edges = input.edges
+  let ranks = input.ranks
+  let sizes = input.sizes
+  let self_edge_labels = input.self_edge_labels
   // Graphviz parity: initial per-rank half-heights come from the tallest
   // real node (plus self-edge label inflation) in each rank.
   let rank_pht : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
+  for rank in input.all_ranks {
     rank_pht[rank] = 0.0
   }
-  for rank in rank_keys {
-    let names = match groups.get(rank) {
+  for rank in input.rank_keys {
+    let names = match input.groups.get(rank) {
       Some(list) => list
       None => []
     }
@@ -90,9 +102,9 @@ fn compute_rank_heights(
   }
   // Graphviz parity: edge labels can raise intermediate rank half-heights
   // for long edges before vnode rank expansion in rank.c/position.c flow.
-  if has_edge_labels {
+  if input.has_edge_labels {
     for edge in edges {
-      update_rank_pht_for_label(edge, ranks, rank_pht, rankdir)
+      update_rank_pht_for_label(edge, ranks, rank_pht, input.rankdir)
     }
   }
   // Graphviz parity: long edges reserve vnode half-height across
@@ -128,7 +140,7 @@ fn compute_rank_heights(
   // before cluster-specific adjustments.
   let rank_ht1 : Map[Int, Double] = Map::new()
   let rank_ht2 : Map[Int, Double] = Map::new()
-  for rank in all_ranks {
+  for rank in input.all_ranks {
     let half_height = match rank_pht.get(rank) {
       Some(value) => value
       None => 0.0
@@ -137,11 +149,17 @@ fn compute_rank_heights(
     rank_ht2[rank] = half_height
   }
   let _ = apply_cluster_rank_heights(
-    graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
+    graph,
+    ranks,
+    sizes,
+    self_edge_labels,
+    rank_ht1,
+    rank_ht2,
+    input.rankdir,
   )
-  let nodesep_pt = round_int(nodesep_in * 72.0).to_double()
-  let mut ranksep_pt_int = round_int(ranksep_in * 72.0)
-  if has_edge_labels {
+  let nodesep_pt = round_int(input.nodesep_in * 72.0).to_double()
+  let mut ranksep_pt_int = round_int(input.ranksep_in * 72.0)
+  if input.has_edge_labels {
     ranksep_pt_int = (ranksep_pt_int + 1) / 2
   }
   let ranksep_pt = ranksep_pt_int.to_double()

@@ -29,18 +29,20 @@ fn compute_dot_rank_stage(
   // and spacing inputs with unchanged Graphviz argument wiring.
   let rank_heights =
     compute_rank_heights(
-      graph,
-      prep.edges,
-      rank_data.ranks,
-      rank_data.groups,
-      rank_data.rank_keys,
-      rank_data.all_ranks,
-      prep.sizes,
-      rank_data.self_edge_labels,
-      prep.rankdir,
-      prep.nodesep_in,
-      prep.ranksep_in,
-      prep.has_edge_labels,
+      {
+        graph,
+        edges: prep.edges,
+        ranks: rank_data.ranks,
+        groups: rank_data.groups,
+        rank_keys: rank_data.rank_keys,
+        all_ranks: rank_data.all_ranks,
+        sizes: prep.sizes,
+        self_edge_labels: rank_data.self_edge_labels,
+        rankdir: prep.rankdir,
+        nodesep_in: prep.nodesep_in,
+        ranksep_in: prep.ranksep_in,
+        has_edge_labels: prep.has_edge_labels,
+      },
     )
   // Graphviz parity: cluster metadata in rank/order stage uses
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
