@@ -144,3 +144,22 @@ fn expand_bbox_for_edge_labels(
   }
 }
 
+///|
+/// Exterior edge-label nudge heuristic (DOT_ADJUST_EDGE_LABELS only).
+fn adjust_edge_labels_if_enabled(
+  layout : DotLayoutGraph,
+  nodesep_pt : Double,
+  rankdir : RankDir,
+) -> DotLayoutGraph {
+  if edge_label_adjust_enabled() {
+    let adjusted_for_clusters =
+      adjust_labels_for_clusters(layout, nodesep_pt)
+    adjust_labels_for_overlaps(
+      adjusted_for_clusters,
+      nodesep_pt,
+      rankdir,
+    )
+  } else {
+    layout
+  }
+}
