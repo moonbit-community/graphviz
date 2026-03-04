@@ -96,19 +96,28 @@ fn build_remincross_pass_context(
 }
 
 ///|
-/// Graphviz parity: clustered finalize local cluster reorder uses captured
-/// local-cluster traversal order after cluster-rank bucket replay.
-fn apply_local_cluster_order(
+/// Graphviz parity: clustered finalize local-order context keeps cluster keys
+/// and captured local-cluster traversal order for final bucket replay.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusteredFinalizeOrderContext {
+  cluster_keys : Map[String, String]
+  intercluster_keys : Map[String, String]
+  local_cluster_order : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: clustered finalize local-order context mirrors captured
+/// cluster key maps and local-cluster traversal snapshots.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_finalize_order_context(
   dispatch_context : ClusteredDispatchContext,
-  groups : Map[Int, Array[String]],
-) -> Unit {
+) -> ClusteredFinalizeOrderContext {
   let runtime_context = dispatch_context.runtime_context
-  reorder_by_local_cluster(
-    groups,
-    dispatch_context.cluster_meta.cluster_keys,
-    dispatch_context.cluster_meta.intercluster_keys,
-    runtime_context.local_cluster_order,
-  )
+  {
+    cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    local_cluster_order: runtime_context.local_cluster_order,
+  }
 }
 
 ///|
@@ -158,13 +167,16 @@ fn finalize_order_groups(
       root_tail_order_override,
       cluster_rank_order,
     )
+  let local_order_context = build_clustered_finalize_order_context(dispatch_context)
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
       finalize_inputs,
       (groups) =>
-        apply_local_cluster_order(
-          dispatch_context,
+        reorder_by_local_cluster(
           groups,
+          local_order_context.cluster_keys,
+          local_order_context.intercluster_keys,
+          local_order_context.local_cluster_order,
         ),
       build_vnode_order_keys,
       capture_remincross_snapshot,
