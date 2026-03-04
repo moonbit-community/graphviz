@@ -1174,40 +1174,6 @@ priv struct ClusterLocalReorderInputBuildContext {
 }
 
 ///|
-/// Graphviz parity: cluster-local reorder input context pulls all shared edge/
-/// neighbor snapshots from dispatch context and all cluster subset data from
-/// local context before edge/metadata materialization.
-fn build_cluster_local_reorder_input_build_context(
-  cluster : String,
-  cluster_graph_edge_count : Int,
-  expanded_clusters : Map[String, Bool],
-  local_context : ClusterLocalReorderContext,
-  dispatch_context : ClusterLocalReorderDispatchContext,
-) -> ClusterLocalReorderInputBuildContext {
-  {
-    cluster_name: cluster,
-    cluster_graph_edge_count,
-    expanded_clusters,
-    order_edges: dispatch_context.order_edges,
-    order_edge_tail: dispatch_context.order_edge_tail,
-    order_edge_head: dispatch_context.order_edge_head,
-    order_edge_tail_port_x: dispatch_context.order_edge_tail_port_x,
-    order_edge_head_port_x: dispatch_context.order_edge_head_port_x,
-    order_edge_tail_port_order: dispatch_context.order_edge_tail_port_order,
-    order_edge_head_port_order: dispatch_context.order_edge_head_port_order,
-    neighbor_sources: dispatch_context.neighbor_sources,
-    cluster_node_set: local_context.cluster_node_set,
-    cluster_rank_keys: local_context.cluster_rank_keys,
-    cluster_nodes: local_context.cluster_nodes,
-    fixed_ranks: dispatch_context.fixed_ranks,
-    order_sizes: dispatch_context.order_sizes,
-    vnode_sizes: dispatch_context.vnode_info.vnode_sizes,
-    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-    flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: cluster-local reorder builds internal edge bundle and
 /// metadata maps from the same filtered cluster node subset.
 /// Do not change behavior without updating fixtures/tests.
@@ -1350,28 +1316,6 @@ priv struct ClusterLocalReorderContextBuildInputs {
   vnode_clusters : Map[String, String]
   fixed_positions : Map[String, Double]
   order_with_vnodes : Bool
-}
-
-///|
-/// Graphviz parity: cluster-local reorder context inputs pair the active
-/// cluster graph/group slice with dispatch-level ordering/vnode snapshots.
-fn build_cluster_local_reorder_context_build_inputs(
-  cluster : String,
-  cluster_graph : @cgraph.Graph,
-  groups : Map[Int, Array[String]],
-  fixed_positions : Map[String, Double],
-  dispatch_context : ClusterLocalReorderDispatchContext,
-) -> ClusterLocalReorderContextBuildInputs {
-  {
-    cluster,
-    cluster_graph,
-    groups,
-    node_order: dispatch_context.node_order,
-    source_out_neighbors: dispatch_context.neighbor_sources.source_out_neighbors,
-    vnode_clusters: dispatch_context.vnode_info.vnode_clusters,
-    fixed_positions,
-    order_with_vnodes: dispatch_context.order_with_vnodes,
-  }
 }
 
 ///|
