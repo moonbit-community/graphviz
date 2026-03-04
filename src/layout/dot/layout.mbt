@@ -40,27 +40,27 @@ pub fn layout_dot(
       ordering,
       positions_state,
     )
-  finalize_layout_graph(
+  finalize_layout_graph({
     graph,
-    prep.nodes,
-    routing_stage_output.nodes_out,
-    routing_stage_output.edges_out,
-    prep.rankdir,
-    prep.splines,
-    rank_data.all_ranks,
-    rank_data.ranks,
-    prep.sizes,
-    positions_state.cluster_ln_x,
-    positions_state.cluster_rn_x,
-    positions_state.cluster_bbox_heights,
-    positions_state.rank_y,
-    positions_state.rank_ht1,
-    positions_state.rank_ht2,
-    rank_heights.nodesep_pt,
-    routing_stage_output.port_pad_below,
-    routing_stage_output.port_pad_above,
-    positions_state.flat_label_edge_vnodes,
-  )
+    nodes: prep.nodes,
+    nodes_out: routing_stage_output.nodes_out,
+    edges_out: routing_stage_output.edges_out,
+    rankdir: prep.rankdir,
+    splines: prep.splines,
+    all_ranks: rank_data.all_ranks,
+    ranks: rank_data.ranks,
+    sizes: prep.sizes,
+    cluster_ln_x: positions_state.cluster_ln_x,
+    cluster_rn_x: positions_state.cluster_rn_x,
+    cluster_bbox_heights: positions_state.cluster_bbox_heights,
+    rank_y: positions_state.rank_y,
+    rank_ht1: positions_state.rank_ht1,
+    rank_ht2: positions_state.rank_ht2,
+    nodesep_pt: rank_heights.nodesep_pt,
+    port_pad_below: routing_stage_output.port_pad_below,
+    port_pad_above: routing_stage_output.port_pad_above,
+    flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
+  })
 }
 
 ///|
