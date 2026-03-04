@@ -63,6 +63,37 @@ priv struct RootLabelBBoxOutput {
 }
 
 ///|
+priv struct RootLabelPlacementSpec {
+  padded_width : Double
+  padded_height : Double
+  loc : LabelLoc
+  just : LabelJust
+}
+
+///|
+/// Graphviz parity: root-label placement spec reads graph label metrics + attrs
+/// once per call path before bbox/position emission.
+fn root_label_placement_spec(
+  graph : @cgraph.Graph,
+) -> RootLabelPlacementSpec? {
+  if !graph.is_root() {
+    return None
+  }
+  match graph_label_metrics(graph) {
+    Some(metrics) => {
+      let pad = CLUSTER_LABEL_PAD_PT
+      Some({
+        padded_width: metrics.width_pt + pad * 2.0,
+        padded_height: metrics.height_pt + pad,
+        loc: graph_label_loc(graph),
+        just: graph_label_just(graph),
+      })
+    }
+    None => None
+  }
+}
+
+///|
 /// Graphviz parity: root label bbox expansion aligned to refs/graphviz/lib/common/postproc.c
 /// (gv_postprocess).
 /// Do not change behavior without updating fixtures/tests.
@@ -73,28 +104,27 @@ fn apply_root_label_bbox(
 ) -> RootLabelBBoxOutput {
   let mut bbox = bbox
   let mut label_pos : @geom.Point? = None
-  if graph.is_root() {
-    match graph_label_metrics(graph) {
-      Some(metrics) => {
-        let loc = graph_label_loc(graph)
-        let just = graph_label_just(graph)
-        let pad = CLUSTER_LABEL_PAD_PT
-        let padded_width = metrics.width_pt + pad * 2.0
-        let padded_height = metrics.height_pt + pad
-        bbox =
-          expand_root_bbox_for_label(
-            bbox,
-            padded_width,
-            padded_height,
-            loc,
-            rankdir,
-          )
-        label_pos = Some(
-          graph_label_pos(bbox, padded_width, padded_height, loc, just),
+  match root_label_placement_spec(graph) {
+    Some(spec) => {
+      bbox =
+        expand_root_bbox_for_label(
+          bbox,
+          spec.padded_width,
+          spec.padded_height,
+          spec.loc,
+          rankdir,
         )
-      }
-      None => ()
+      label_pos = Some(
+        graph_label_pos(
+          bbox,
+          spec.padded_width,
+          spec.padded_height,
+          spec.loc,
+          spec.just,
+        ),
+      )
     }
+    None => ()
   }
   { bbox, label_pos }
 }
@@ -107,22 +137,18 @@ fn root_label_pos_for_bbox(
   graph : @cgraph.Graph,
   bbox : @geom.Rect,
 ) -> @geom.Point? {
-  if graph.is_root() {
-    match graph_label_metrics(graph) {
-      Some(metrics) => {
-        let loc = graph_label_loc(graph)
-        let just = graph_label_just(graph)
-        let pad = CLUSTER_LABEL_PAD_PT
-        let padded_width = metrics.width_pt + pad * 2.0
-        let padded_height = metrics.height_pt + pad
-        Some(
-          graph_label_pos(bbox, padded_width, padded_height, loc, just),
-        )
-      }
-      None => None
-    }
-  } else {
-    None
+  match root_label_placement_spec(graph) {
+    Some(spec) =>
+      Some(
+        graph_label_pos(
+          bbox,
+          spec.padded_width,
+          spec.padded_height,
+          spec.loc,
+          spec.just,
+        ),
+      )
+    None => None
   }
 }
 
@@ -153,4 +179,3 @@ fn apply_root_margin_x(
     bbox
   }
 }
-
