@@ -127,29 +127,6 @@ fn run_root_mincross_reorder_call(
 }
 
 ///|
-/// Graphviz parity: root reorder pass snapshot records the same mincross edge
-/// projection and selected rank groups passed to reorder_rank_groups.
-fn capture_root_mincross_pass_snapshot(
-  result : @ordering.RootMincrossReorderResult,
-  inputs : @ordering.RootMincrossReorderInputs,
-) -> Unit {
-  let reorder_call_data = result.reorder_call_data
-  capture_root_snapshot(
-    reorder_call_data.order_rank_keys_for_mincross,
-    result.order_groups_for_mincross,
-    reorder_call_data.mincross_edge_data.order_edges_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_out_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_x_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_tail_port_order_mincross,
-    reorder_call_data.mincross_edge_data.order_edge_head_port_order_mincross,
-    inputs.order_cluster_keys,
-    inputs.order_cluster_skeleton,
-  )
-}
-
-///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
