@@ -891,6 +891,21 @@ fn compute_layout_x_positions(
 /// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
 /// and these maxima must feed y-rank placement exactly as in Graphviz.
 /// Do not change behavior without updating fixtures/tests.
+fn update_rank_height_max(
+  rank_heights : Map[Int, Double],
+  rank : Int,
+  candidate : Double,
+) -> Unit {
+  let current = rank_heights.get(rank).unwrap_or_default()
+  if candidate > current {
+    rank_heights[rank] = candidate
+  }
+}
+
+///|
+/// Graphviz parity: flat-edge label vnodes can raise per-rank half-heights,
+/// and these maxima must feed y-rank placement exactly as in Graphviz.
+/// Do not change behavior without updating fixtures/tests.
 fn apply_flat_label_heights(
   flat_label_nodes : Map[String, FlatLabelNodeInfo],
   vnode_sizes : Map[String, NodeSize],
@@ -906,27 +921,9 @@ fn apply_flat_label_heights(
       }
       let half_height = size.height_pt / 2.0
       let rank = info.rank
-      let current = match rank_pht.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current {
-        rank_pht[rank] = half_height
-      }
-      let current_ht1 = match rank_ht1.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current_ht1 {
-        rank_ht1[rank] = half_height
-      }
-      let current_ht2 = match rank_ht2.get(rank) {
-        Some(value) => value
-        None => 0.0
-      }
-      if half_height > current_ht2 {
-        rank_ht2[rank] = half_height
-      }
+      update_rank_height_max(rank_pht, rank, half_height)
+      update_rank_height_max(rank_ht1, rank, half_height)
+      update_rank_height_max(rank_ht2, rank, half_height)
     }
   }
 }
@@ -971,14 +968,8 @@ fn build_y_positions_from_groups(
 ) -> Map[String, Double] {
   let y_positions : Map[String, Double] = Map::new()
   for rank in rank_keys {
-    let pos_y = match rank_y.get(rank) {
-      Some(value) => value
-      None => 0.0
-    }
-    let names = match groups.get(rank) {
-      Some(list) => list
-      None => []
-    }
+    let pos_y = rank_y.get(rank).unwrap_or_default()
+    let names = groups.get(rank).unwrap_or_default()
     for name in names {
       y_positions[name] = pos_y
     }
@@ -996,51 +987,60 @@ priv struct YPositionsWithFlipOutput {
 }
 
 ///|
+/// Graphviz parity: y-position flip solve input keeps rank maps, rank spacing,
+/// cluster heights, and traversal bounds grouped for one fill+adjust pass.
+priv struct YPositionsWithFlipInput {
+  graph : @cgraph.Graph
+  rankdir : RankDir
+  rank_keys : Array[Int]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  rank_pht : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
+  y_all_ranks : Array[Int]
+}
+
+///|
 /// Graphviz parity: y-position stage runs fill_rank_positions first, then
 /// optional flip-cluster height correction (cluster.c path) and y rebuild.
 /// Do not change behavior without updating fixtures/tests.
 fn build_y_positions_with_flip(
-  graph : @cgraph.Graph,
-  rankdir : RankDir,
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  rank_pht : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  ranksep_pt : Double,
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
-  y_all_ranks : Array[Int],
+  input : YPositionsWithFlipInput,
 ) -> YPositionsWithFlipOutput {
   let mut y_positions : Map[String, Double] = Map::new()
   let rank_y : Map[Int, Double] = Map::new()
   fill_rank_positions(
-    rank_keys,
-    groups,
-    y_all_ranks,
-    rank_pht,
-    rank_ht1,
-    rank_ht2,
-    ranksep_pt,
+    input.rank_keys,
+    input.groups,
+    input.y_all_ranks,
+    input.rank_pht,
+    input.rank_ht1,
+    input.rank_ht2,
+    input.ranksep_pt,
     y_positions,
     rank_y,
   )
-  if (rankdir == RankDir::LR || rankdir == RankDir::RL) &&
-    @dot_shared.graph_has_cluster(graph) {
-    let min_root_rank = if y_all_ranks.length() > 0 { y_all_ranks[0] } else { 0 }
+  if (input.rankdir == RankDir::LR || input.rankdir == RankDir::RL) &&
+    @dot_shared.graph_has_cluster(input.graph) {
+    let min_root_rank =
+      if input.y_all_ranks.length() > 0 { input.y_all_ranks[0] } else { 0 }
     let adjusted =
       adjust_flip_rank_heights(
-      graph,
-      ranks,
+      input.graph,
+      input.ranks,
       rank_y,
-      rank_ht1,
-      rank_ht2,
-      cluster_bbox_heights,
+      input.rank_ht1,
+      input.rank_ht2,
+      input.cluster_bbox_heights,
       min_root_rank,
       0.0,
     )
     if adjusted {
-      y_positions = build_y_positions_from_groups(rank_keys, groups, rank_y)
+      y_positions =
+        build_y_positions_from_groups(input.rank_keys, input.groups, rank_y)
     }
   }
   { y_positions, rank_y }
@@ -1085,17 +1085,19 @@ fn build_y_position_data(
     build_y_all_ranks_with_flat(rank_data.rank_keys, flat_label_nodes)
   let y_position_output =
     build_y_positions_with_flip(
-      graph,
-      prep.rankdir,
-      rank_data.rank_keys,
-      rank_data.groups,
-      rank_data.ranks,
-      rank_pht,
-      rank_ht1,
-      rank_ht2,
-      rank_heights.ranksep_pt,
-      cluster_bbox_heights,
-      y_all_ranks,
+      {
+        graph,
+        rankdir: prep.rankdir,
+        rank_keys: rank_data.rank_keys,
+        groups: rank_data.groups,
+        ranks: rank_data.ranks,
+        rank_pht,
+        rank_ht1,
+        rank_ht2,
+        ranksep_pt: rank_heights.ranksep_pt,
+        cluster_bbox_heights,
+        y_all_ranks,
+      },
     )
   let y_positions = y_position_output.y_positions
   let rank_y = y_position_output.rank_y
