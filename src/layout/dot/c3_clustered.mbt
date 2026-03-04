@@ -78,56 +78,6 @@ priv struct ClusteredRootPhaseOutput {
 /// Graphviz parity: clustered pre-root ordering preparation keeps order-group
 /// expansion, reorder context, and materialization sequence aligned to Graphviz.
 /// Do not change behavior without updating fixtures/tests.
-fn build_root_rank_order_phase_base_inputs(
-  dispatch_context : ClusteredDispatchContext,
-  order_sizes_out : Map[String, NodeSize],
-  order_cluster_keys : Map[String, String],
-  order_cluster_skeleton : Map[String, Bool],
-  reorder_context : @ordering.OrderReorderContext,
-) -> @ordering.RootRankOrderPhaseBaseInputs {
-  let reorder_setup = dispatch_context.reorder_setup
-  let class2_data = dispatch_context.class2_data
-  let runtime_context = dispatch_context.runtime_context
-  {
-    order_with_clusters: reorder_setup.order_with_clusters,
-    source_base_inputs: {
-      order_with_vnodes: reorder_setup.order_with_vnodes,
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      edges: dispatch_context.edges,
-      edge_tail: dispatch_context.edge_tail,
-      edge_head: dispatch_context.edge_head,
-      cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-      edge_vnodes: runtime_context.vnode_info.edge_vnodes,
-      vnodes_by_rank: runtime_context.vnode_info.vnodes_by_rank,
-      vnode_order_keys_for_ordering:
-        reorder_setup.vnode_order_keys_for_ordering,
-      nlist_order: class2_data.nlist_order,
-      ranks: dispatch_context.ranks,
-      skeleton_edge_creation: class2_data.skeleton_edge_creation,
-      root_edge_creation: class2_data.root_edge_creation,
-      flat_rank_constraints: reorder_setup.flat_rank_constraints,
-    },
-    order_cluster_keys,
-    order_cluster_skeleton,
-    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-    order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
-    graphviz_flip: reorder_setup.graphviz_flip,
-    order_edges_by_tail_root: class2_data.order_edges_by_tail_root,
-  }
-}
-
-///|
-/// Graphviz parity: clustered pre-root ordering preparation keeps order-group
-/// expansion, reorder context, and materialization sequence aligned to Graphviz.
-/// Do not change behavior without updating fixtures/tests.
 fn build_clustered_pre_root(
   dispatch_context : ClusteredDispatchContext,
 ) -> ClusteredPreRootData {
@@ -143,17 +93,30 @@ fn build_clustered_pre_root(
     )
   let reorder_context = materialized_stage.reorder_context
   let materialized = materialized_stage.materialized
-  let root_rank_order_phase_base_inputs =
-    build_root_rank_order_phase_base_inputs(
-      dispatch_context,
-      order_sizes_out,
-      order_cluster_keys,
-      order_cluster_skeleton,
-      reorder_context,
-    )
   let root_rank_order_phase_base =
-    @ordering.build_root_rank_order_phase_base(
-      root_rank_order_phase_base_inputs,
+    @ordering.build_root_rank_order_phase_base_from_sources(
+      {
+        reorder_setup: dispatch_context.reorder_setup,
+        class2_data: dispatch_context.class2_data,
+        order_rank_keys: reorder_context.order_rank_keys,
+        order_cluster_keys,
+        order_cluster_skeleton,
+        edges: dispatch_context.edges,
+        edge_tail: dispatch_context.edge_tail,
+        edge_head: dispatch_context.edge_head,
+        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+        edge_vnodes: dispatch_context.runtime_context.vnode_info.edge_vnodes,
+        vnodes_by_rank: dispatch_context.runtime_context.vnode_info.vnodes_by_rank,
+        ranks: dispatch_context.ranks,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        order_sizes_out,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        order_flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+      },
     )
   {
     order_groups,

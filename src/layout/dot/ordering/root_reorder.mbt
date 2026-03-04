@@ -742,6 +742,77 @@ pub(all) struct RootRankOrderPhaseBaseInputs {
 }
 
 ///|
+/// Graphviz parity: root rank-order phase source bundle keeps pre-root
+/// materialization and clustered metadata snapshots paired before base assembly.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct RootRankOrderPhaseBaseBuildSources {
+  reorder_setup : OrderingReorderSetup
+  class2_data : OrderingClass2Data
+  order_rank_keys : Array[Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  cluster_keys : Map[String, String]
+  edge_vnodes : Map[String, Array[String]]
+  vnodes_by_rank : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  order_sizes_out : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  order_flat_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: root rank-order phase base is assembled from one source
+/// snapshot and reused by both root pass and finalize replay.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_root_rank_order_phase_base_from_sources(
+  sources : RootRankOrderPhaseBaseBuildSources,
+) -> RootRankOrderPhaseBase {
+  let inputs : RootRankOrderPhaseBaseInputs = {
+    order_with_clusters: sources.reorder_setup.order_with_clusters,
+    source_base_inputs: {
+      order_with_vnodes: sources.reorder_setup.order_with_vnodes,
+      order_rank_keys: sources.order_rank_keys,
+      order_cluster_keys: sources.order_cluster_keys,
+      order_cluster_skeleton: sources.order_cluster_skeleton,
+      edges: sources.edges,
+      edge_tail: sources.edge_tail,
+      edge_head: sources.edge_head,
+      cluster_keys: sources.cluster_keys,
+      edge_vnodes: sources.edge_vnodes,
+      vnodes_by_rank: sources.vnodes_by_rank,
+      vnode_order_keys_for_ordering:
+        sources.reorder_setup.vnode_order_keys_for_ordering,
+      nlist_order: sources.class2_data.nlist_order,
+      ranks: sources.ranks,
+      skeleton_edge_creation: sources.class2_data.skeleton_edge_creation,
+      root_edge_creation: sources.class2_data.root_edge_creation,
+      flat_rank_constraints: sources.reorder_setup.flat_rank_constraints,
+    },
+    order_cluster_keys: sources.order_cluster_keys,
+    order_cluster_skeleton: sources.order_cluster_skeleton,
+    rank_same_groups: sources.rank_same_groups,
+    rank_same_order: sources.rank_same_order,
+    order_sizes_out: sources.order_sizes_out,
+    nodesep_pt: sources.nodesep_pt,
+    has_edge_labels: sources.has_edge_labels,
+    port_order_positions: sources.port_order_positions,
+    port_order_contrib: sources.port_order_contrib,
+    order_flat_constraints: sources.order_flat_constraints,
+    graphviz_flip: sources.reorder_setup.graphviz_flip,
+    order_edges_by_tail_root: sources.class2_data.order_edges_by_tail_root,
+  }
+  build_root_rank_order_phase_base(inputs)
+}
+
+///|
 /// Graphviz parity: root rank-order phase base reuses one static source
 /// payload plus one static rank-order context across both stage callers.
 /// Do not change behavior without updating fixtures/tests.
