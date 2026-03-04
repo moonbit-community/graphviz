@@ -96,43 +96,19 @@ fn build_remincross_pass_context(
 }
 
 ///|
-/// Graphviz parity: clustered finalize local-order context keeps cluster keys
-/// and captured local-cluster traversal order for final bucket replay.
+/// Graphviz parity: final group cleanup keeps only real nodes, applies
+/// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
+/// refinement before returning final groups.
 /// Do not change behavior without updating fixtures/tests.
-priv struct ClusteredFinalizeOrderContext {
-  cluster_keys : Map[String, String]
-  intercluster_keys : Map[String, String]
-  local_cluster_order : Map[String, Int]
-}
-
-///|
-/// Graphviz parity: clustered finalize local-order context mirrors captured
-/// cluster key maps and local-cluster traversal snapshots.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_finalize_order_context(
-  dispatch_context : ClusteredDispatchContext,
-) -> ClusteredFinalizeOrderContext {
-  let runtime_context = dispatch_context.runtime_context
-  {
-    cluster_keys: dispatch_context.cluster_meta.cluster_keys,
-    intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
-    local_cluster_order: runtime_context.local_cluster_order,
-  }
-}
-
-///|
-/// Graphviz parity: clustered finalize input payload keeps cluster-rank replay
-/// maps and remincross context unchanged before ordering finalize execution.
-/// Do not change behavior without updating fixtures/tests.
-fn build_clustered_finalize_inputs(
+fn finalize_order_groups(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
   root_cluster_stage : @ordering.RootAndClusterRanksOutput,
   root_tail_order_override : Array[String]?,
   cluster_rank_order : Map[Int, Map[String, Int]],
-) -> @ordering.ClusteredFinalizeInputs {
+) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
-  {
+  let finalize_inputs : @ordering.ClusteredFinalizeInputs = {
     order_with_clusters: reorder_setup.order_with_clusters,
     order_rank_keys: pre_root_stage.reorder_context.order_rank_keys,
     ordered: root_cluster_stage.ordered,
@@ -145,38 +121,19 @@ fn build_clustered_finalize_inputs(
         root_tail_order_override,
       ),
   }
-}
-
-///|
-/// Graphviz parity: final group cleanup keeps only real nodes, applies
-/// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
-/// refinement before returning final groups.
-/// Do not change behavior without updating fixtures/tests.
-fn finalize_order_groups(
-  dispatch_context : ClusteredDispatchContext,
-  pre_root_stage : ClusteredPreRootData,
-  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
-  root_tail_order_override : Array[String]?,
-  cluster_rank_order : Map[Int, Map[String, Int]],
-) -> OrderingDispatchOutput {
-  let finalize_inputs =
-    build_clustered_finalize_inputs(
-      dispatch_context,
-      pre_root_stage,
-      root_cluster_stage,
-      root_tail_order_override,
-      cluster_rank_order,
-    )
-  let local_order_context = build_clustered_finalize_order_context(dispatch_context)
+  let runtime_context = dispatch_context.runtime_context
+  let cluster_keys = dispatch_context.cluster_meta.cluster_keys
+  let intercluster_keys = dispatch_context.cluster_meta.intercluster_keys
+  let local_cluster_order = runtime_context.local_cluster_order
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
       finalize_inputs,
       (groups) =>
         reorder_by_local_cluster(
           groups,
-          local_order_context.cluster_keys,
-          local_order_context.intercluster_keys,
-          local_order_context.local_cluster_order,
+          cluster_keys,
+          intercluster_keys,
+          local_cluster_order,
         ),
       build_vnode_order_keys,
       capture_remincross_snapshot,
