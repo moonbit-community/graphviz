@@ -86,7 +86,8 @@ flowchart TD
 Pipeline orchestrator files:
 
 - `src/layout/dot/layout.mbt`
-- `src/layout/dot/pipeline_orchestrator.mbt`
+- `src/layout/dot/b0_rank_stage.mbt`
+- `src/layout/dot/e0_routing_stage.mbt`
 
 Why this design:
 
@@ -176,7 +177,7 @@ Later stages assume a clean canonical view of the graph. If option parsing or si
 
 Orchestrator:
 
-- `compute_dot_rank_stage` in `src/layout/dot/pipeline_orchestrator.mbt`
+- `compute_dot_rank_stage` in `src/layout/dot/b0_rank_stage.mbt`
 
 This stage decides vertical layering and ordering inputs.
 
@@ -403,7 +404,7 @@ Final geometry needs both coordinates and cluster envelope data for routing/fina
 
 Entry:
 
-- `compute_dot_routing_stage` in `src/layout/dot/pipeline_orchestrator.mbt`
+- `compute_dot_routing_stage` in `src/layout/dot/e0_routing_stage.mbt`
 
 Main files:
 
@@ -547,7 +548,7 @@ Repository guard validates:
 ## 12) Source Map by Responsibility
 
 - Entry + stage orchestration:
-  - `layout.mbt`, `pipeline_orchestrator.mbt`
+  - `layout.mbt`, `b0_rank_stage.mbt`, `e0_routing_stage.mbt`
 - Input canonicalization:
   - `a1_input.mbt`
 - Rank assignment and rank heights:
@@ -601,7 +602,7 @@ Repository guard validates:
 If you are new to layout algorithms, read in this order:
 
 1. `layout.mbt` (`layout_dot`) — understand end-to-end call sequence.
-2. `pipeline_orchestrator.mbt` — understand stage boundaries.
+2. `b0_rank_stage.mbt` + `e0_routing_stage.mbt` — understand rank/routing stage boundaries.
 3. `a1_input.mbt` — understand canonical input formation.
 4. `b1_b2_ranks.mbt` + `b1_b2_heights.mbt` — understand rank and spacing foundations.
 5. `c1_edges.mbt` + `c1_graph.mbt` — understand order graph construction.
