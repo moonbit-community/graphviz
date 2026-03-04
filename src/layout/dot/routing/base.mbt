@@ -290,6 +290,46 @@ fn clip_point_for_route_endpoint(
       }
   }
 }
+
+///|
+fn should_apply_flat_bottom_dirboth_x_nudge(
+  dir : RouteEdgeDir,
+  is_flat_edge : Bool,
+  has_vnodes : Bool,
+  mid_label_width_pt : Double,
+  tail_sameport_anchor : @geom.Point?,
+  head_sameport_anchor : @geom.Point?,
+  tail_dynamic_anchor : RouteDynamicPortAnchor,
+  head_dynamic_anchor : RouteDynamicPortAnchor,
+  compass_tail_on_non_record : Bool,
+  compass_head_on_non_record : Bool,
+  tail_port : @cgraph.Port?,
+  head_port : @cgraph.Port?,
+  tail_port_side : Int,
+  head_port_side : Int,
+  layout_rankdir : RankDir,
+) -> Bool {
+  match dir {
+    RouteEdgeDir::Both =>
+      is_flat_edge &&
+      !has_vnodes &&
+      mid_label_width_pt <= 0.0 &&
+      tail_sameport_anchor is None &&
+      head_sameport_anchor is None &&
+      tail_dynamic_anchor.anchor is None &&
+      head_dynamic_anchor.anchor is None &&
+      compass_tail_on_non_record &&
+      compass_head_on_non_record &&
+      @dot_shared.port_is_explicit(tail_port) &&
+      @dot_shared.port_is_explicit(head_port) &&
+      (tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
+      (head_port_side & PORT_SIDE_BOTTOM) != 0 &&
+      (tail_port_side & PORT_SIDE_TOP) == 0 &&
+      (head_port_side & PORT_SIDE_TOP) == 0 &&
+      (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT)
+    _ => false
+  }
+}
 ///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -674,27 +714,25 @@ fn build_edge_route_base(
       head_port,
       route_base_deps.is_record_shape,
     )
+  let dir = (route_base_deps.edge_dir_for)(edge, graph_kind)
   let flat_bottom_dirboth_x_nudge =
-    match (route_base_deps.edge_dir_for)(edge, graph_kind) {
-      RouteEdgeDir::Both =>
-        is_flat_edge &&
-        !has_vnodes &&
-        mid_label_width_pt <= 0.0 &&
-        tail_sameport_anchor is None &&
-        head_sameport_anchor is None &&
-        tail_dynamic_anchor.anchor is None &&
-        head_dynamic_anchor.anchor is None &&
-        compass_tail_on_non_record &&
-        compass_head_on_non_record &&
-        @dot_shared.port_is_explicit(tail_port) &&
-        @dot_shared.port_is_explicit(head_port) &&
-        (tail_port_side & PORT_SIDE_BOTTOM) != 0 &&
-        (head_port_side & PORT_SIDE_BOTTOM) != 0 &&
-        (tail_port_side & PORT_SIDE_TOP) == 0 &&
-        (head_port_side & PORT_SIDE_TOP) == 0 &&
-        (layout_rankdir == RankDir::TB || layout_rankdir == RankDir::BT)
-      _ => false
-    }
+    should_apply_flat_bottom_dirboth_x_nudge(
+      dir,
+      is_flat_edge,
+      has_vnodes,
+      mid_label_width_pt,
+      tail_sameport_anchor,
+      head_sameport_anchor,
+      tail_dynamic_anchor,
+      head_dynamic_anchor,
+      compass_tail_on_non_record,
+      compass_head_on_non_record,
+      tail_port,
+      head_port,
+      tail_port_side,
+      head_port_side,
+      layout_rankdir,
+    )
   if flat_bottom_dirboth_x_nudge {
     let delta =
       max_double(
@@ -741,7 +779,6 @@ fn build_edge_route_base(
       edge.head(),
       route_base_deps.node_size_for_missing,
     )
-  let dir = (route_base_deps.edge_dir_for)(edge, graph_kind)
   let (include_tail, include_head) = edge_include_arrowheads(dir)
   let (route_include_tail, route_include_head) =
     route_include_arrowheads(
