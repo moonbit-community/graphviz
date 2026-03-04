@@ -204,16 +204,18 @@ fn route_edges_for_dot(input : RouteEdgesForDotInput) -> Array[DotLayoutEdge] {
       input.routing_label_ports_map,
       input.routing_label_ports_raw,
     ),
-    recover_slack_vnodes,
-    (base, spline, spline_result) =>
-      build_routing_edge_layout_for_dot(
-        base,
-        spline,
-        spline_result,
-        edge_layout_input,
-      ),
-    self_edge_label_height_pt_for_routing,
-    self_edge_label_width_pt,
-    edge_port_label_pos,
+    {
+      recover_slack_vnodes_fn: recover_slack_vnodes,
+      build_edge_layout_fn: (base, spline, spline_result) =>
+        build_routing_edge_layout_for_dot(
+          base,
+          spline,
+          spline_result,
+          edge_layout_input,
+        ),
+      self_edge_label_height_fn: self_edge_label_height_pt_for_routing,
+      self_edge_label_width_fn: self_edge_label_width_pt,
+      edge_port_label_pos_fn: edge_port_label_pos,
+    },
   )
 }

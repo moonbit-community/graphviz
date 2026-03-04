@@ -56,11 +56,7 @@ fn build_route_edges_input(
 pub fn route_edges_pipeline(
   input : RouteEdgesPipelineInput,
   route_base_deps : RouteBaseDeps,
-  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
-  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
-  edge_port_label_pos_fn : EdgePortLabelPosFn,
+  callbacks : RoutingCallbacks,
 ) -> Array[DotLayoutEdge] {
   let sameport_overrides =
     collect_sameport_overrides(
@@ -80,10 +76,6 @@ pub fn route_edges_pipeline(
   let route_input = build_route_edges_input(input, base_cache)
   route_edges(
     route_input,
-    recover_slack_vnodes_fn,
-    build_edge_layout_fn,
-    self_edge_label_height_fn,
-    self_edge_label_width_fn,
-    edge_port_label_pos_fn,
+    callbacks,
   )
 }

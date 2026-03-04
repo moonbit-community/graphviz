@@ -62,26 +62,22 @@ fn build_ordered_routing_input(
 /// Do not change behavior without updating fixtures/tests.
 pub fn route_edges(
   input : RouteEdgesInput,
-  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
-  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
-  edge_port_label_pos_fn : EdgePortLabelPosFn,
+  callbacks : RoutingCallbacks,
 ) -> Array[DotLayoutEdge] {
   let ordered_routing_input = build_ordered_routing_input(input)
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()
   route_ordered_edges(
     ordered_routing_input,
     edges_out_by_id,
-    recover_slack_vnodes_fn,
-    build_edge_layout_fn,
-    self_edge_label_height_fn,
-    self_edge_label_width_fn,
+    callbacks.recover_slack_vnodes_fn,
+    callbacks.build_edge_layout_fn,
+    callbacks.self_edge_label_height_fn,
+    callbacks.self_edge_label_width_fn,
   )
   finalize_routed_edges(
     input.edges,
     input.ranks,
     edges_out_by_id,
-    edge_port_label_pos_fn,
+    callbacks.edge_port_label_pos_fn,
   )
 }
