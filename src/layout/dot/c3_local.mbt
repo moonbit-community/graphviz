@@ -1021,53 +1021,15 @@ fn build_local_reorder_edge_bundle(
 }
 
 ///|
-fn count_edge_vnodes(names : Array[String]) -> Int {
-  let mut vnode_count = 0
-  for name in names {
-    if is_edge_vnode_name(name) {
-      vnode_count = vnode_count + 1
-    }
-  }
-  vnode_count
-}
-
-///|
-/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
-/// and outgoing crossing edges so median anchors see external slots.
-/// Do not change behavior without updating fixtures/tests.
-fn should_include_external_crossing_edges(
-  cluster_rank_keys : Array[Int],
-  cluster_graph_edge_count : Int,
-  vnode_count : Int,
-) -> Bool {
-  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
-    return cluster_rank_keys.length() <= 2
-  }
-  if cluster_rank_keys.length() > 2 &&
-    cluster_graph_edge_count == 0 &&
-    vnode_count == 0 {
-    return false
-  }
-  true
-}
-
-///|
 /// Graphviz parity: local edge-bundle policy derives external-crossing
 /// inclusion from rank depth, cluster edge presence, vnode density, and
 /// fixture-capture mode before filtering order edges.
 fn build_local_reorder_edge_bundle_for_context(
   input_context : ClusterLocalReorderInputBuildContext,
 ) -> LocalReorderEdgeBundle {
-  let vnode_count = count_edge_vnodes(input_context.cluster_nodes)
-  let include_external_crossing =
-    should_include_external_crossing_edges(
-      input_context.cluster_rank_keys,
-      input_context.cluster_graph_edge_count,
-      vnode_count,
-    )
   build_local_reorder_edge_bundle(
     {
-      include_external_crossing,
+      include_external_crossing: input_context.include_external_crossing,
       order_edges: input_context.order_edges,
       order_edge_tail: input_context.order_edge_tail,
       order_edge_head: input_context.order_edge_head,
@@ -1153,7 +1115,7 @@ fn build_cluster_local_reorder_metadata(
 /// Do not change behavior without updating fixtures/tests.
 priv struct ClusterLocalReorderInputBuildContext {
   cluster_name : String
-  cluster_graph_edge_count : Int
+  include_external_crossing : Bool
   expanded_clusters : Map[String, Bool]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
@@ -1164,7 +1126,6 @@ priv struct ClusterLocalReorderInputBuildContext {
   order_edge_head_port_order : Array[Double]
   neighbor_sources : ClusterLocalNeighborSources
   cluster_node_set : Map[String, Bool]
-  cluster_rank_keys : Array[Int]
   cluster_nodes : Array[String]
   fixed_ranks : Map[String, Int]
   order_sizes : Map[String, NodeSize]

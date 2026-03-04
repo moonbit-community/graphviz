@@ -28,6 +28,37 @@ priv struct ClusterLocalReorderDispatchContext {
 }
 
 ///|
+fn count_edge_vnodes(names : Array[String]) -> Int {
+  let mut vnode_count = 0
+  for name in names {
+    if is_edge_vnode_name(name) {
+      vnode_count = vnode_count + 1
+    }
+  }
+  vnode_count
+}
+
+///|
+/// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
+/// and outgoing crossing edges so median anchors see external slots.
+/// Do not change behavior without updating fixtures/tests.
+fn should_include_external_crossing_edges(
+  cluster_rank_keys : Array[Int],
+  cluster_graph_edge_count : Int,
+  vnode_count : Int,
+) -> Bool {
+  if @sys.get_env_var("DOT_CAPTURE_ORDERING_FIXTURE_MODE") is Some(_) {
+    return cluster_rank_keys.length() <= 2
+  }
+  if cluster_rank_keys.length() > 2 &&
+    cluster_graph_edge_count == 0 &&
+    vnode_count == 0 {
+    return false
+  }
+  true
+}
+
+///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -55,9 +86,15 @@ fn reorder_cluster_rank_group(
     None => return ()
   }
   let cluster_graph_edge_count = cluster_graph.edges().length()
+  let include_external_crossing =
+    should_include_external_crossing_edges(
+      local_context.cluster_rank_keys,
+      cluster_graph_edge_count,
+      count_edge_vnodes(local_context.cluster_nodes),
+    )
   let input_context : ClusterLocalReorderInputBuildContext = {
     cluster_name: cluster,
-    cluster_graph_edge_count,
+    include_external_crossing,
     expanded_clusters,
     order_edges: dispatch_context.order_edges,
     order_edge_tail: dispatch_context.order_edge_tail,
@@ -68,7 +105,6 @@ fn reorder_cluster_rank_group(
     order_edge_head_port_order: dispatch_context.order_edge_head_port_order,
     neighbor_sources: dispatch_context.neighbor_sources,
     cluster_node_set: local_context.cluster_node_set,
-    cluster_rank_keys: local_context.cluster_rank_keys,
     cluster_nodes: local_context.cluster_nodes,
     fixed_ranks: dispatch_context.fixed_ranks,
     order_sizes: dispatch_context.order_sizes,
