@@ -20,41 +20,6 @@ pub struct ClusteredXposEdgeMaterializationInput {
 }
 
 ///|
-pub fn build_clustered_xpos_edge_materialization_input(
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  order_nodes : Array[String],
-  edge_tail_port_x : Array[Double],
-  edge_head_port_x : Array[Double],
-  edge_tail_port_order : Array[Double],
-  edge_head_port_order : Array[Double],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  cluster_skeleton_prefix : String,
-  cluster_skeleton_penalty : Int,
-) -> ClusteredXposEdgeMaterializationInput {
-  {
-    edges,
-    edge_tail,
-    edge_head,
-    ranks,
-    edge_vnodes,
-    order_nodes,
-    edge_tail_port_x,
-    edge_head_port_x,
-    edge_tail_port_order,
-    edge_head_port_order,
-    cluster_min_rank,
-    cluster_max_rank,
-    cluster_skeleton_prefix,
-    cluster_skeleton_penalty,
-  }
-}
-
-///|
 /// Graphviz parity: clustered xpos edge materialization output preserves edge
 /// sequence and endpoint metadata arrays consumed by reorder_rank_groups.
 pub struct ClusteredXposEdgeMaterializationOutput {

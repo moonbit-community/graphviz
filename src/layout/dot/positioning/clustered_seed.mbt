@@ -14,29 +14,6 @@ pub struct ClusteredXposSeedInput {
 }
 
 ///|
-pub fn build_clustered_xpos_seed_input(
-  x_groups : Map[Int, Array[String]],
-  x_order_sizes : Map[String, @shared.NodeSize],
-  x_cluster_keys : Map[String, String],
-  cluster_min_rank : Map[String, Int],
-  cluster_max_rank : Map[String, Int],
-  node_order : Map[String, Int],
-  cluster_skeleton_prefix : String,
-  cluster_skeleton_size : @shared.NodeSize,
-) -> ClusteredXposSeedInput {
-  {
-    x_groups,
-    x_order_sizes,
-    x_cluster_keys,
-    cluster_min_rank,
-    cluster_max_rank,
-    node_order,
-    cluster_skeleton_prefix,
-    cluster_skeleton_size,
-  }
-}
-
-///|
 /// Graphviz parity: clustered xpos reorder seed output preserves the same
 /// order-group/rank/node-order snapshots consumed by edge materialization and
 /// reorder_rank_groups.

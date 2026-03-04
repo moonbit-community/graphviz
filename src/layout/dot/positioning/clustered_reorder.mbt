@@ -1,5 +1,4 @@
 ///|
-///|
 /// Graphviz parity: clustered xpos reorder pipeline input keeps seed material,
 /// order-graph edge materialization data, and reorder constraints grouped for a
 /// single clustered xpos pass.
@@ -94,60 +93,60 @@ pub fn build_clustered_xpos_groups(
 ) -> Map[Int, Array[String]] {
   let reorder_seed_data =
     build_clustered_xpos_seed(
-      build_clustered_xpos_seed_input(
-        input.x_groups,
-        input.x_order_sizes,
-        input.x_cluster_keys,
-        input.cluster_min_rank,
-        input.cluster_max_rank,
-        input.node_order,
-        input.cluster_skeleton_prefix,
-        input.cluster_skeleton_size,
-      ),
+      {
+        x_groups: input.x_groups,
+        x_order_sizes: input.x_order_sizes,
+        x_cluster_keys: input.x_cluster_keys,
+        cluster_min_rank: input.cluster_min_rank,
+        cluster_max_rank: input.cluster_max_rank,
+        node_order: input.node_order,
+        cluster_skeleton_prefix: input.cluster_skeleton_prefix,
+        cluster_skeleton_size: input.cluster_skeleton_size,
+      },
     )
   let reorder_edges_data =
     build_clustered_xpos_edges(
-      build_clustered_xpos_edge_materialization_input(
-        input.edges,
-        input.edge_tail,
-        input.edge_head,
-        input.ranks,
-        input.edge_vnodes,
-        reorder_seed_data.order_nodes,
-        input.edge_tail_port_x,
-        input.edge_head_port_x,
-        input.edge_tail_port_order,
-        input.edge_head_port_order,
-        input.cluster_min_rank,
-        input.cluster_max_rank,
-        input.cluster_skeleton_prefix,
-        input.cluster_skeleton_penalty,
-      ),
+      {
+        edges: input.edges,
+        edge_tail: input.edge_tail,
+        edge_head: input.edge_head,
+        ranks: input.ranks,
+        edge_vnodes: input.edge_vnodes,
+        order_nodes: reorder_seed_data.order_nodes,
+        edge_tail_port_x: input.edge_tail_port_x,
+        edge_head_port_x: input.edge_head_port_x,
+        edge_tail_port_order: input.edge_tail_port_order,
+        edge_head_port_order: input.edge_head_port_order,
+        cluster_min_rank: input.cluster_min_rank,
+        cluster_max_rank: input.cluster_max_rank,
+        cluster_skeleton_prefix: input.cluster_skeleton_prefix,
+        cluster_skeleton_penalty: input.cluster_skeleton_penalty,
+      },
     )
   apply_clustered_xpos_reorder(
-    build_clustered_xpos_reorder_apply_input(
-      reorder_seed_data.order_rank_keys,
-      reorder_seed_data.order_groups,
-      reorder_edges_data.order_edges_out,
-      reorder_edges_data.order_edge_tail_out,
-      reorder_edges_data.order_edge_head_out,
-      reorder_edges_data.order_edge_tail_port_x,
-      reorder_edges_data.order_edge_head_port_x,
-      reorder_edges_data.order_edge_tail_port_order,
-      reorder_edges_data.order_edge_head_port_order,
-      reorder_seed_data.order_nodes,
-      reorder_seed_data.order_ranks,
-      reorder_seed_data.order_cluster_keys,
-      input.rank_same_groups,
-      input.rank_same_order,
-      reorder_seed_data.order_node_order,
-      reorder_seed_data.order_sizes,
-      input.nodesep_pt,
-      input.has_edge_labels,
-      reorder_seed_data.order_cluster_skeleton,
-      input.flat_constraints,
-      input.graphviz_flip,
-    ),
+    {
+      order_rank_keys: reorder_seed_data.order_rank_keys,
+      order_groups: reorder_seed_data.order_groups,
+      order_edges_out: reorder_edges_data.order_edges_out,
+      order_edge_tail_out: reorder_edges_data.order_edge_tail_out,
+      order_edge_head_out: reorder_edges_data.order_edge_head_out,
+      order_edge_tail_port_x: reorder_edges_data.order_edge_tail_port_x,
+      order_edge_head_port_x: reorder_edges_data.order_edge_head_port_x,
+      order_edge_tail_port_order: reorder_edges_data.order_edge_tail_port_order,
+      order_edge_head_port_order: reorder_edges_data.order_edge_head_port_order,
+      order_nodes: reorder_seed_data.order_nodes,
+      order_ranks: reorder_seed_data.order_ranks,
+      order_cluster_keys: reorder_seed_data.order_cluster_keys,
+      rank_same_groups: input.rank_same_groups,
+      rank_same_order: input.rank_same_order,
+      order_node_order: reorder_seed_data.order_node_order,
+      order_sizes: reorder_seed_data.order_sizes,
+      nodesep_pt: input.nodesep_pt,
+      has_edge_labels: input.has_edge_labels,
+      order_cluster_skeleton: reorder_seed_data.order_cluster_skeleton,
+      flat_constraints: input.flat_constraints,
+      graphviz_flip: input.graphviz_flip,
+    },
   )
 }
 
@@ -177,55 +176,6 @@ pub struct ClusteredXposReorderApplyInput {
   order_cluster_skeleton : Map[String, Bool]
   flat_constraints : Map[String, Bool]
   graphviz_flip : Bool
-}
-
-///|
-pub fn build_clustered_xpos_reorder_apply_input(
-  order_rank_keys : Array[Int],
-  order_groups : Map[Int, Array[String]],
-  order_edges_out : Array[@cgraph.Edge],
-  order_edge_tail_out : Array[String],
-  order_edge_head_out : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  order_nodes : Array[String],
-  order_ranks : Map[String, Int],
-  order_cluster_keys : Map[String, String],
-  rank_same_groups : Map[String, Int],
-  rank_same_order : Map[String, Int],
-  order_node_order : Map[String, Int],
-  order_sizes : Map[String, @shared.NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  order_cluster_skeleton : Map[String, Bool],
-  flat_constraints : Map[String, Bool],
-  graphviz_flip : Bool,
-) -> ClusteredXposReorderApplyInput {
-  {
-    order_rank_keys,
-    order_groups,
-    order_edges_out,
-    order_edge_tail_out,
-    order_edge_head_out,
-    order_edge_tail_port_x,
-    order_edge_head_port_x,
-    order_edge_tail_port_order,
-    order_edge_head_port_order,
-    order_nodes,
-    order_ranks,
-    order_cluster_keys,
-    rank_same_groups,
-    rank_same_order,
-    order_node_order,
-    order_sizes,
-    nodesep_pt,
-    has_edge_labels,
-    order_cluster_skeleton,
-    flat_constraints,
-    graphviz_flip,
-  }
 }
 
 ///|
