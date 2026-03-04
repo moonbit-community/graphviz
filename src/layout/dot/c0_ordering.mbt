@@ -41,10 +41,19 @@ priv struct OrderingResult {
 }
 
 ///|
+/// Graphviz parity: ordering pipeline context keeps runtime expansion, edge-port
+/// extraction, and reorder-setup snapshots together for C0 dispatch/replay.
+priv struct OrderingPipelineContext {
+  runtime_context : OrderingRuntimeContext
+  edge_port_data : @ordering.OrderingEdgePortData
+  reorder_setup : @ordering.OrderingReorderSetup
+}
+
+///|
 /// Graphviz parity: ordering dispatch setup keeps edge-port extraction and
 /// reorder setup sequence identical to Graphviz class2/mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_edge_port_data_for_dispatch(
+fn build_ordering_edge_port_data(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -74,7 +83,7 @@ fn build_ordering_edge_port_data_for_dispatch(
 /// Graphviz parity: reorder setup keeps vnode-key derivation and class2 wiring
 /// in the same order as Graphviz clustered/noncluster mincross preparation.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_reorder_setup_for_dispatch(
+fn build_ordering_reorder_setup(
   nodes : Array[@cgraph.Node],
   edges : Array[@cgraph.Edge],
   edge_tail : Array[String],
@@ -185,26 +194,85 @@ fn build_clustered_dispatch_context_for_ordering(
 /// Graphviz parity: ordering result payload preserves stage-dispatch outputs
 /// and class2/vnode snapshots used by downstream layout phases.
 /// Do not change behavior without updating fixtures/tests.
-fn build_ordering_result_from_dispatch(
+fn build_ordering_result(
   dispatch_output : OrderingDispatchOutput,
-  runtime_context : OrderingRuntimeContext,
-  edge_port_data : @ordering.OrderingEdgePortData,
-  reorder_setup : @ordering.OrderingReorderSetup,
+  pipeline_context : OrderingPipelineContext,
 ) -> OrderingResult {
   {
     ordered_groups: dispatch_output.ordered_groups,
     ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
-    vnode_info: runtime_context.vnode_info,
-    vnode_count: runtime_context.vnode_info.vnode_ranks.length(),
-    order_edges: edge_port_data.order_edges,
-    order_edge_tail: edge_port_data.order_edge_tail,
-    order_edge_head: edge_port_data.order_edge_head,
-    edge_order: edge_port_data.edge_order,
-    edge_cluster_keys: runtime_context.edge_cluster_keys,
-    nlist_order: reorder_setup.class2_data.nlist_order,
-    gdnlist_order: reorder_setup.gdnlist_order,
-    vnode_creation_order: reorder_setup.class2_data.vnode_creation_order,
+    vnode_info: pipeline_context.runtime_context.vnode_info,
+    vnode_count: pipeline_context.runtime_context.vnode_info.vnode_ranks.length(),
+    order_edges: pipeline_context.edge_port_data.order_edges,
+    order_edge_tail: pipeline_context.edge_port_data.order_edge_tail,
+    order_edge_head: pipeline_context.edge_port_data.order_edge_head,
+    edge_order: pipeline_context.edge_port_data.edge_order,
+    edge_cluster_keys: pipeline_context.runtime_context.edge_cluster_keys,
+    nlist_order: pipeline_context.reorder_setup.class2_data.nlist_order,
+    gdnlist_order: pipeline_context.reorder_setup.gdnlist_order,
+    vnode_creation_order:
+      pipeline_context.reorder_setup.class2_data.vnode_creation_order,
   }
+}
+
+///|
+/// Graphviz parity: ordering pipeline context assembles runtime expansion,
+/// edge-port snapshots, and reorder setup in the same sequence as Graphviz.
+fn build_ordering_pipeline_context(
+  graph : @cgraph.Graph,
+  nodes : Array[@cgraph.Node],
+  edges : Array[@cgraph.Edge],
+  edge_tail : Array[String],
+  edge_head : Array[String],
+  edge_reversed : Array[Bool],
+  edge_out_order : Map[String, Array[Int]],
+  ranks : Map[String, Int],
+  groups : Map[Int, Array[String]],
+  node_order : Map[String, Int],
+  order_sizes : Map[String, NodeSize],
+  nodesep_pt : Double,
+  rankdir : RankDir,
+  cluster_meta : ClusterMetadata,
+) -> OrderingPipelineContext {
+  let runtime_context =
+    build_ordering_context(
+      graph,
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_out_order,
+      ranks,
+      node_order,
+      nodesep_pt,
+      rankdir,
+      cluster_meta,
+    )
+  let edge_port_data =
+    build_ordering_edge_port_data(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      order_sizes,
+    )
+  let reorder_setup =
+    build_ordering_reorder_setup(
+      nodes,
+      edges,
+      edge_tail,
+      edge_head,
+      edge_reversed,
+      edge_out_order,
+      ranks,
+      groups,
+      node_order,
+      cluster_meta,
+      rankdir,
+      runtime_context,
+      edge_port_data,
+    )
+  { runtime_context, edge_port_data, reorder_setup }
 }
 
 ///|
@@ -230,30 +298,9 @@ fn compute_ordering_and_vnodes(
   port_order_positions : Map[String, Double],
   port_order_contrib : Map[String, Array[(String, Double)]],
 ) -> OrderingResult {
-  let runtime_context =
-    build_ordering_context(
+  let pipeline_context =
+    build_ordering_pipeline_context(
       graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_out_order,
-      ranks,
-      node_order,
-      nodesep_pt,
-      rankdir,
-      cluster_meta,
-    )
-  let edge_port_data =
-    build_ordering_edge_port_data_for_dispatch(
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      order_sizes,
-    )
-  let reorder_setup =
-    build_ordering_reorder_setup_for_dispatch(
       nodes,
       edges,
       edge_tail,
@@ -263,10 +310,10 @@ fn compute_ordering_and_vnodes(
       ranks,
       groups,
       node_order,
-      cluster_meta,
+      order_sizes,
+      nodesep_pt,
       rankdir,
-      runtime_context,
-      edge_port_data,
+      cluster_meta,
     )
   let dispatch_context =
     build_clustered_dispatch_context_for_ordering(
@@ -284,9 +331,9 @@ fn compute_ordering_and_vnodes(
       cluster_meta,
       port_order_positions,
       port_order_contrib,
-      runtime_context,
-      edge_port_data,
-      reorder_setup,
+      pipeline_context.runtime_context,
+      pipeline_context.edge_port_data,
+      pipeline_context.reorder_setup,
     )
   let dispatch_output =
     run_ordering_dispatch(
@@ -295,10 +342,8 @@ fn compute_ordering_and_vnodes(
       rank_keys,
       groups,
     )
-  build_ordering_result_from_dispatch(
+  build_ordering_result(
     dispatch_output,
-    runtime_context,
-    edge_port_data,
-    reorder_setup,
+    pipeline_context,
   )
 }
