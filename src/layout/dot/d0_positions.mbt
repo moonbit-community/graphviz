@@ -120,6 +120,18 @@ priv struct XWithFlatLabelData {
 }
 
 ///|
+/// Graphviz parity: x-position solve input keeps x-stage bundle plus ordering
+/// and rank context grouped for one compute_x_positions invocation.
+priv struct XPositionBuildInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  ordering : OrderingResult
+  x_data : XWithFlatLabelData
+}
+
+///|
 priv struct PositionModeFlags {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
@@ -874,43 +886,34 @@ fn build_xpos_computation_input(
 /// and solver invocation as Graphviz-aligned pipeline order.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_layout_x_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_base_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  x_cluster_keys : Map[String, String],
-  flat_label_edges : Array[ConstraintEdge],
+  input : XPositionBuildInput,
 ) -> Map[String, Double] {
   let xpos_input =
     build_xpos_computation_input(
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      ordering,
+      input.x_data.use_vnodes_for_xpos,
+      input.x_data.x_base_sizes,
+      input.x_data.x_groups,
+      input.ordering,
     )
   let x_positions = compute_x_positions(
-    graph,
-    prep.nodes,
-    prep.edges,
-    rank_data.edge_tail,
-    rank_data.edge_head,
-    rank_data.edge_out_order,
-    ordering.nlist_order,
-    ordering.gdnlist_order,
+    input.graph,
+    input.prep.nodes,
+    input.prep.edges,
+    input.rank_data.edge_tail,
+    input.rank_data.edge_head,
+    input.rank_data.edge_out_order,
+    input.ordering.nlist_order,
+    input.ordering.gdnlist_order,
     xpos_input.x_ranks,
     xpos_input.x_rank_keys,
-    x_groups,
+    input.x_data.x_groups,
     xpos_input.x_sizes,
-    prep.output_sizes,
-    x_cluster_keys,
-    rank_heights.nodesep_pt,
-    prep.has_edge_labels,
+    input.prep.output_sizes,
+    input.x_data.x_cluster_keys,
+    input.rank_heights.nodesep_pt,
+    input.prep.has_edge_labels,
     xpos_input.x_extra_nodes,
-    flat_label_edges,
+    input.x_data.flat_label_edges,
     xpos_input.x_edge_vnodes,
   )
   x_positions
@@ -1239,16 +1242,14 @@ fn build_projection_result(
     )
   let x_positions =
     compute_layout_x_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      ordering,
-      x_data.use_vnodes_for_xpos,
-      x_data.x_base_sizes,
-      x_data.x_groups,
-      x_data.x_cluster_keys,
-      x_data.flat_label_edges,
+      {
+        graph,
+        prep,
+        rank_data,
+        rank_heights,
+        ordering,
+        x_data,
+      },
     )
   let position_output_maps =
     build_position_output_maps(
