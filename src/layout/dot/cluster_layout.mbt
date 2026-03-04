@@ -239,14 +239,16 @@ fn collect_cluster_bbox_heights(
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
-    input.graph,
-    input.ranks,
-    input.sizes,
-    input.self_edge_labels,
-    seen,
-    rank_heights,
-    None,
-    None,
+    {
+      graph: input.graph,
+      ranks: input.ranks,
+      sizes: input.sizes,
+      self_edge_labels: input.self_edge_labels,
+      seen,
+      rank_heights,
+      min_rank: None,
+      max_rank: None,
+    },
   )
   let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
@@ -371,37 +373,45 @@ fn compute_cluster_bbox_heights(
 }
 
 ///|
+/// Graphviz parity: cluster rank-height collection input keeps recursive walk
+/// state grouped so rank bounds and per-rank maxima remain in sync.
+priv struct ClusterRankHeightsCollectInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  self_edge_labels : Map[String, Double]
+  seen : Map[String, Bool]
+  rank_heights : Map[Int, Double]
+  min_rank : Int?
+  max_rank : Int?
+}
+
+///|
 fn collect_cluster_rank_heights(
-  graph : @cgraph.Graph,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-  seen : Map[String, Bool],
-  rank_heights : Map[Int, Double],
-  min_rank : Int?,
-  max_rank : Int?,
+  input : ClusterRankHeightsCollectInput,
 ) -> ClusterRankBounds {
-  let mut next_min = min_rank
-  let mut next_max = max_rank
-  for node in graph.nodes() {
+  let mut next_min = input.min_rank
+  let mut next_max = input.max_rank
+  for node in input.graph.nodes() {
     let name = node.name()
-    if seen.get(name) is Some(_) {
+    if input.seen.get(name) is Some(_) {
       continue
     }
-    seen[name] = true
-    match ranks.get(name) {
+    input.seen[name] = true
+    match input.ranks.get(name) {
       Some(rank) => {
         // Graphviz parity: external ranksets can delete cluster membership
         // for a node while the cluster rank span still reflects subgraph
         // structure (node_induce + mark_clusters behavior).
-        if graph_contains_node(graph, node) {
-          let half_height = node_half_height_pt(name, sizes, self_edge_labels)
-          let current = match rank_heights.get(rank) {
+        if graph_contains_node(input.graph, node) {
+          let half_height =
+            node_half_height_pt(name, input.sizes, input.self_edge_labels)
+          let current = match input.rank_heights.get(rank) {
             Some(value) => value
             None => 0.0
           }
           if half_height > current {
-            rank_heights[rank] = half_height
+            input.rank_heights[rank] = half_height
           }
         }
         match next_min {
@@ -416,9 +426,18 @@ fn collect_cluster_rank_heights(
       None => ()
     }
   }
-  for child in graph.subgraphs() {
+  for child in input.graph.subgraphs() {
     let child_bounds = collect_cluster_rank_heights(
-      child, ranks, sizes, self_edge_labels, seen, rank_heights, next_min, next_max,
+      {
+        graph: child,
+        ranks: input.ranks,
+        sizes: input.sizes,
+        self_edge_labels: input.self_edge_labels,
+        seen: input.seen,
+        rank_heights: input.rank_heights,
+        min_rank: next_min,
+        max_rank: next_max,
+      },
     )
     next_min = child_bounds.min_rank
     next_max = child_bounds.max_rank
@@ -472,14 +491,16 @@ fn apply_cluster_rank_heights(
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
-    input.graph,
-    input.ranks,
-    input.sizes,
-    input.self_edge_labels,
-    seen,
-    rank_heights,
-    None,
-    None,
+    {
+      graph: input.graph,
+      ranks: input.ranks,
+      sizes: input.sizes,
+      self_edge_labels: input.self_edge_labels,
+      seen,
+      rank_heights,
+      min_rank: None,
+      max_rank: None,
+    },
   )
   let min_rank_value = match rank_bounds.min_rank {
     Some(value) => value
