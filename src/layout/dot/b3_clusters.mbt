@@ -3,6 +3,21 @@
 /// and rank-same helper flow for clustered ordering inputs.
 
 ///|
+/// Graphviz parity: cluster-metadata payload keeps rank and cluster snapshots
+/// grouped so Stage B clustered-ordering wiring remains explicit and stable.
+priv struct ClusterMetadataInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  groups : Map[Int, Array[String]]
+  ranks : Map[String, Int]
+  node_order : Map[String, Int]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  graphviz_flip : Bool
+}
+
+///|
 /// Graphviz parity: optional cluster order base expansion follows the
 /// DOT_CLUSTER_ORDER_BASE debug path used for deterministic cluster spacing.
 /// Do not change behavior without updating fixtures/tests.
@@ -72,16 +87,16 @@ fn apply_cluster_order_metadata(
 /// Graphviz parity: cluster metadata/order aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/compound.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_metadata(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  groups : Map[Int, Array[String]],
-  ranks : Map[String, Int],
-  node_order : Map[String, Int],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  graphviz_flip : Bool,
+  input : ClusterMetadataInput,
 ) -> ClusterMetadata {
+  let graph = input.graph
+  let nodes = input.nodes
+  let edges = input.edges
+  let groups = input.groups
+  let ranks = input.ranks
+  let node_order = input.node_order
+  let edge_tail = input.edge_tail
+  let edge_head = input.edge_head
   let has_clusters = @dot_shared.graph_has_cluster(graph)
   // Graphviz parity: cluster key map comes from per-node cluster ownership
   // used throughout clustered ordering and compound-edge setup.
@@ -107,7 +122,7 @@ fn compute_cluster_metadata(
       None => 0
     }
     let order_value =
-      if graphviz_flip {
+      if input.graphviz_flip {
         total_nodes - 1 - base_order
       } else {
         base_order

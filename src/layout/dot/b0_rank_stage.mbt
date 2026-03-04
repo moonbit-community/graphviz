@@ -48,15 +48,17 @@ fn compute_dot_rank_stage(
   // the same rank-group and edge endpoint wiring as Graphviz ordering setup.
   let cluster_meta =
     compute_cluster_metadata(
-      graph,
-      prep.nodes,
-      prep.edges,
-      rank_data.groups,
-      rank_data.ranks,
-      prep.node_order,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
+      {
+        graph,
+        nodes: prep.nodes,
+        edges: prep.edges,
+        groups: rank_data.groups,
+        ranks: rank_data.ranks,
+        node_order: prep.node_order,
+        edge_tail: rank_data.edge_tail,
+        edge_head: rank_data.edge_head,
+        graphviz_flip: prep.rankdir == RankDir::LR || prep.rankdir == RankDir::RL,
+      },
     )
   // Graphviz parity: ordering/vnode stage consumes rank data, rank heights,
   // and cluster metadata with unchanged Graphviz call wiring.
