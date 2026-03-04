@@ -860,32 +860,32 @@ fn build_x_flat_labels(
 /// rank-map/key derivation, and vnode-edge/slack toggles.
 /// Do not change behavior without updating fixtures/tests.
 fn build_xpos_computation_input(
-  use_vnodes_for_xpos : Bool,
-  x_base_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  ordering : OrderingResult,
+  input : XPositionBuildInput,
 ) -> XposComputationInput {
   let x_sizes =
-    if use_vnodes_for_xpos {
-      @ordering.merge_sizes_with_vnodes(x_base_sizes, ordering.vnode_info.vnode_sizes)
+    if input.x_data.use_vnodes_for_xpos {
+      @ordering.merge_sizes_with_vnodes(
+        input.x_data.x_base_sizes,
+        input.ordering.vnode_info.vnode_sizes,
+      )
     } else {
-      x_base_sizes
+      input.x_data.x_base_sizes
     }
-  let x_rank_keys = @ordering.collect_rank_keys(x_groups)
-  let x_ranks = @ordering.build_node_ranks(x_groups)
+  let x_rank_keys = @ordering.collect_rank_keys(input.x_data.x_groups)
+  let x_ranks = @ordering.build_node_ranks(input.x_data.x_groups)
   let vnode_extra_nodes =
-    if use_vnodes_for_xpos {
+    if input.x_data.use_vnodes_for_xpos {
       @ordering.build_vnode_extra_nodes(
-        ordering.vnode_creation_order,
-        ordering.vnode_info.vnode_ranks,
+        input.ordering.vnode_creation_order,
+        input.ordering.vnode_info.vnode_ranks,
       )
     } else {
       []
     }
   let x_extra_nodes = vnode_extra_nodes.copy()
   let x_edge_vnodes =
-    if use_vnodes_for_xpos {
-      ordering.vnode_info.edge_vnodes
+    if input.x_data.use_vnodes_for_xpos {
+      input.ordering.vnode_info.edge_vnodes
     } else {
       Map::new()
     }
@@ -899,13 +899,7 @@ fn build_xpos_computation_input(
 fn compute_layout_x_positions(
   input : XPositionBuildInput,
 ) -> Map[String, Double] {
-  let xpos_input =
-    build_xpos_computation_input(
-      input.x_data.use_vnodes_for_xpos,
-      input.x_data.x_base_sizes,
-      input.x_data.x_groups,
-      input.ordering,
-    )
+  let xpos_input = build_xpos_computation_input(input)
   let x_positions = compute_x_positions(
     input.graph,
     input.prep.nodes,
