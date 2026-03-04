@@ -179,12 +179,7 @@ fn capture_root_snapshot(
     cluster_keys: clone_string_map(cluster_keys),
     cluster_skeleton: clone_bool_map(cluster_skeleton),
   }
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-  let _ = snapshot.cluster_skeleton
-  root_mincross_input_snapshot.val = Some(snapshot)
+  set_root_mincross_input_snapshot(snapshot)
 }
 
 ///|
@@ -233,11 +228,7 @@ fn capture_remincross_snapshot(
     ),
     cluster_keys: clone_string_map(capture_inputs.rem_cluster_keys),
   }
-  let _ = snapshot.rank_keys
-  let _ = snapshot.groups
-  let _ = snapshot.edges
-  let _ = snapshot.cluster_keys
-  remincross_input_snapshot.val = Some(snapshot)
+  set_remincross_input_snapshot(snapshot)
 }
 
 ///|
@@ -272,3 +263,22 @@ let root_mincross_input_snapshot : Ref[RootMincrossInputSnapshot?] = Ref::new(No
 
 ///|
 let remincross_input_snapshot : Ref[RemincrossInputSnapshot?] = Ref::new(None)
+
+///|
+fn set_root_mincross_input_snapshot(snapshot : RootMincrossInputSnapshot) -> Unit {
+  let _ = snapshot.rank_keys
+  let _ = snapshot.groups
+  let _ = snapshot.edges
+  let _ = snapshot.cluster_keys
+  let _ = snapshot.cluster_skeleton
+  root_mincross_input_snapshot.val = Some(snapshot)
+}
+
+///|
+fn set_remincross_input_snapshot(snapshot : RemincrossInputSnapshot) -> Unit {
+  let _ = snapshot.rank_keys
+  let _ = snapshot.groups
+  let _ = snapshot.edges
+  let _ = snapshot.cluster_keys
+  remincross_input_snapshot.val = Some(snapshot)
+}
