@@ -350,19 +350,35 @@ fn edge_sameport_orientation_info(
 }
 
 ///|
+priv struct SameportGroupOverridesApplyInput {
+  groups : Map[String, Array[@cgraph.Edge]]
+  group_order : Array[String]
+  head_group : Bool
+  overrides : Map[Int, @geom.Point]
+  group_sizes : Map[Int, Int]
+  merge_classes : Map[String, Array[@cgraph.Edge]]
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, NodeSize]
+  node_size_for_missing : (@cgraph.Node) -> NodeSize
+  layout_rankdir : RankDir
+  ranksep_pt : Double
+}
+
+///|
 fn apply_sameport_group_overrides(
-  groups : Map[String, Array[@cgraph.Edge]],
-  group_order : Array[String],
-  head_group : Bool,
-  overrides : Map[Int, @geom.Point],
-  group_sizes : Map[Int, Int],
-  merge_classes : Map[String, Array[@cgraph.Edge]],
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  node_size_for_missing : (@cgraph.Node) -> NodeSize,
-  layout_rankdir : RankDir,
-  ranksep_pt : Double,
+  input : SameportGroupOverridesApplyInput,
 ) -> Unit {
+  let groups = input.groups
+  let group_order = input.group_order
+  let head_group = input.head_group
+  let overrides = input.overrides
+  let group_sizes = input.group_sizes
+  let merge_classes = input.merge_classes
+  let positions = input.positions
+  let sizes = input.sizes
+  let node_size_for_missing = input.node_size_for_missing
+  let layout_rankdir = input.layout_rankdir
+  let ranksep_pt = input.ranksep_pt
   for key in group_order {
     let group_edges = match groups.get(key) {
       Some(value) => value
@@ -443,32 +459,36 @@ fn collect_sameport_overrides(
   let samehead_overrides : Map[Int, @geom.Point] = Map::new()
   let samehead_group_sizes : Map[Int, Int] = Map::new()
   apply_sameport_group_overrides(
-    samehead_groups,
-    samehead_group_order,
-    true,
-    samehead_overrides,
-    samehead_group_sizes,
-    merge_classes,
-    positions,
-    sizes,
-    node_size_for_missing,
-    layout_rankdir,
-    ranksep_pt,
+    {
+      groups: samehead_groups,
+      group_order: samehead_group_order,
+      head_group: true,
+      overrides: samehead_overrides,
+      group_sizes: samehead_group_sizes,
+      merge_classes,
+      positions,
+      sizes,
+      node_size_for_missing,
+      layout_rankdir,
+      ranksep_pt,
+    },
   )
   let sametail_overrides : Map[Int, @geom.Point] = Map::new()
   let sametail_group_sizes : Map[Int, Int] = Map::new()
   apply_sameport_group_overrides(
-    sametail_groups,
-    sametail_group_order,
-    false,
-    sametail_overrides,
-    sametail_group_sizes,
-    merge_classes,
-    positions,
-    sizes,
-    node_size_for_missing,
-    layout_rankdir,
-    ranksep_pt,
+    {
+      groups: sametail_groups,
+      group_order: sametail_group_order,
+      head_group: false,
+      overrides: sametail_overrides,
+      group_sizes: sametail_group_sizes,
+      merge_classes,
+      positions,
+      sizes,
+      node_size_for_missing,
+      layout_rankdir,
+      ranksep_pt,
+    },
   )
   {
     samehead_anchors: samehead_overrides,
