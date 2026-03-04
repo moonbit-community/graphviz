@@ -794,38 +794,29 @@ fn build_x_seed_data(
 /// fixed order before flat-label augmentation consumes updated x_groups.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_groups_after_reorder(
-  xpos_reorder_enabled : Bool,
-  use_vnodes_for_xpos : Bool,
-  allow_xpos_reorder : Bool,
-  graphviz_flip : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  x_seed : XPositionSeedData,
+  input : XFlatLabelBuildInput,
 ) -> Map[Int, Array[String]] {
   let reorder_control : XposReorderControl = {
-    xpos_reorder_enabled,
-    use_vnodes_for_xpos,
-    allow_xpos_reorder,
-    has_vnode_order: x_seed.has_vnode_order,
+    xpos_reorder_enabled: input.xpos_reorder_enabled,
+    use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+    allow_xpos_reorder: input.allow_xpos_reorder,
+    has_vnode_order: input.x_seed.has_vnode_order,
   }
   let reorder_context : XposReorderContext = {
-    prep,
-    rank_data,
-    rank_heights,
-    cluster_meta,
-    ordering,
-    x_order_sizes: x_seed.x_order_sizes,
-    x_cluster_keys: x_seed.x_cluster_keys,
-    graphviz_flip,
+    prep: input.prep,
+    rank_data: input.rank_data,
+    rank_heights: input.rank_heights,
+    cluster_meta: input.cluster_meta,
+    ordering: input.ordering,
+    x_order_sizes: input.x_seed.x_order_sizes,
+    x_cluster_keys: input.x_seed.x_cluster_keys,
+    graphviz_flip: input.graphviz_flip,
   }
   let reorder_port_data : XposReorderPortData = {
-    edge_tail_port_x: x_seed.x_edge_tail_port_x,
-    edge_head_port_x: x_seed.x_edge_head_port_x,
-    edge_tail_port_order: x_seed.x_edge_tail_port_order,
-    edge_head_port_order: x_seed.x_edge_head_port_order,
+    edge_tail_port_x: input.x_seed.x_edge_tail_port_x,
+    edge_head_port_x: input.x_seed.x_edge_head_port_x,
+    edge_tail_port_order: input.x_seed.x_edge_tail_port_order,
+    edge_head_port_order: input.x_seed.x_edge_head_port_order,
   }
   let path_flags = build_xpos_reorder_path_flags(reorder_control, reorder_context)
   let x_groups =
@@ -833,7 +824,7 @@ fn build_x_groups_after_reorder(
       path_flags,
       reorder_context,
       reorder_port_data,
-      x_seed.x_groups,
+      input.x_seed.x_groups,
     )
   maybe_apply_xpos_transpose(
     path_flags,
@@ -850,19 +841,7 @@ fn build_x_groups_after_reorder(
 fn build_x_flat_labels(
   input : XFlatLabelBuildInput,
 ) -> XposFlatLabelAugmentation {
-  let x_groups =
-    build_x_groups_after_reorder(
-      input.xpos_reorder_enabled,
-      input.use_vnodes_for_xpos,
-      input.allow_xpos_reorder,
-      input.graphviz_flip,
-      input.prep,
-      input.rank_data,
-      input.rank_heights,
-      input.cluster_meta,
-      input.ordering,
-      input.x_seed,
-    )
+  let x_groups = build_x_groups_after_reorder(input)
   build_flat_label_augmentation(
     input.use_vnodes_for_xpos,
     input.prep,
