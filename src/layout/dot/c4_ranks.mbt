@@ -279,32 +279,48 @@ fn run_clustered_rank_reorder(
 /// Graphviz parity: clustered root phase seeds build_ranks using mapped order
 /// edges plus Graphviz ND_out/ND_in neighbors before root-mincross reorder.
 /// Do not change behavior without updating fixtures/tests.
+fn build_seeded_reorder_build_context(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> SeededReorderBuildContext {
+  let reorder_setup = dispatch_context.reorder_setup
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
+  {
+    order_rank_keys: reorder_context.order_rank_keys,
+    order_groups: pre_root_stage.order_groups,
+    order_edge_tail_out: materialized.order_edge_tail_out,
+    order_edge_head_out: materialized.order_edge_head_out,
+    order_ranks: reorder_context.order_ranks,
+    order_node_order: reorder_context.order_node_order,
+    order_cluster_keys: pre_root_stage.order_cluster_keys,
+    order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
+    order_flat_constraints: materialized.order_flat_constraints,
+    graphviz_flip: reorder_setup.graphviz_flip,
+    graphviz_out_neighbors: materialized.graphviz_out_neighbors,
+    graphviz_in_neighbors: materialized.graphviz_in_neighbors,
+    order_edges_out: materialized.order_edges_out,
+    order_edge_tail_port_x: materialized.order_edge_tail_port_x,
+    order_edge_head_port_x: materialized.order_edge_head_port_x,
+    flat_rank_constraints: reorder_setup.flat_rank_constraints,
+  }
+}
+
+///|
+/// Graphviz parity: clustered root phase seeds build_ranks using mapped order
+/// edges plus Graphviz ND_out/ND_in neighbors before root-mincross reorder.
+/// Do not change behavior without updating fixtures/tests.
 fn build_seeded_groups_for_root_and_cluster(
   dispatch_context : ClusteredDispatchContext,
   pre_root_stage : ClusteredPreRootData,
 ) -> Map[Int, Array[String]] {
-  let reorder_setup = dispatch_context.reorder_setup
-  let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
+  let build_context =
+    build_seeded_reorder_build_context(
+      dispatch_context,
+      pre_root_stage,
+    )
   build_seeded_reorder_groups(
-    {
-      order_rank_keys: reorder_context.order_rank_keys,
-      order_groups: pre_root_stage.order_groups,
-      order_edge_tail_out: materialized.order_edge_tail_out,
-      order_edge_head_out: materialized.order_edge_head_out,
-      order_ranks: reorder_context.order_ranks,
-      order_node_order: reorder_context.order_node_order,
-      order_cluster_keys: pre_root_stage.order_cluster_keys,
-      order_cluster_skeleton: pre_root_stage.order_cluster_skeleton,
-      order_flat_constraints: materialized.order_flat_constraints,
-      graphviz_flip: reorder_setup.graphviz_flip,
-      graphviz_out_neighbors: materialized.graphviz_out_neighbors,
-      graphviz_in_neighbors: materialized.graphviz_in_neighbors,
-      order_edges_out: materialized.order_edges_out,
-      order_edge_tail_port_x: materialized.order_edge_tail_port_x,
-      order_edge_head_port_x: materialized.order_edge_head_port_x,
-      flat_rank_constraints: reorder_setup.flat_rank_constraints,
-    },
+    build_context,
   )
 }
 
@@ -348,20 +364,18 @@ fn run_root_and_cluster_ranks(
       pre_root_stage,
       seeded_groups,
     )
-  let output =
-    @ordering.run_root_and_cluster_ranks(
-      build_root_and_cluster_ranks_inputs(
+  @ordering.run_root_and_cluster_ranks(
+    build_root_and_cluster_ranks_inputs(
+      dispatch_context,
+      root_groups_override,
+      root_mincross_reorder_inputs,
+    ),
+    run_root_mincross_reorder,
+    (ordered) =>
+      run_clustered_rank_reorder(
         dispatch_context,
-        root_groups_override,
-        root_mincross_reorder_inputs,
+        pre_root_stage,
+        ordered,
       ),
-      run_root_mincross_reorder,
-      (ordered) =>
-        run_clustered_rank_reorder(
-          dispatch_context,
-          pre_root_stage,
-          ordered,
-        ),
-    )
-  output
+  )
 }
