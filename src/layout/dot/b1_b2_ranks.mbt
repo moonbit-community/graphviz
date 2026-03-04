@@ -59,7 +59,7 @@ fn compute_rank_data(
     edge_head,
     CL_BACK,
   )
-  let groups = build_rank_groups(nodes, ranks)
+  let groups = @ordering.build_rank_groups(nodes, ranks)
   let rank_keys : Array[Int] = []
   for key, _ in groups {
     rank_keys.push(key)

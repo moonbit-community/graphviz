@@ -528,7 +528,7 @@ test "flat label node sizes match Graphviz fixtures" {
       size
     }
   }
-  let groups = build_rank_groups(nodes, ranks)
+  let groups = @ordering.build_rank_groups(nodes, ranks)
   let ordered_groups = groups
   let rank_keys : Array[Int] = []
   for key, _ in groups {

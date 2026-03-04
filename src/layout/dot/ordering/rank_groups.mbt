@@ -83,7 +83,7 @@ fn collect_rank_group_nodes(
 ///|
 /// Graphviz parity: build_ranks/enqueue_neighbors ordering from ND_out/ND_in lists (fixtures).
 /// Do not change behavior without updating fixtures/tests.
-fn build_neighbor_rank_groups(
+pub fn build_neighbor_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -289,7 +289,7 @@ fn build_neighbor_rank_groups(
 }
 
 ///|
-fn build_rank_groups(
+pub fn build_rank_groups(
   nodes : Array[@cgraph.Node],
   ranks : Map[String, Int],
 ) -> Map[Int, Array[String]] {
@@ -311,7 +311,7 @@ fn build_rank_groups(
 ///|
 /// Graphviz parity: decompose/build_ranks operate per connected component.
 /// Do not change behavior without updating fixtures/tests.
-fn build_component_rank_groups(
+pub fn build_component_rank_groups(
   rank_keys : Array[Int],
   groups : Map[Int, Array[String]],
   edge_tail : Array[String],
@@ -574,7 +574,7 @@ fn build_flat_neighbors(
     if !value {
       continue
     }
-    match @dot_shared.parse_flat_constraint_key(key) {
+    match @shared.parse_flat_constraint_key(key) {
       Some((tail, head)) => {
         if tail == "" || head == "" {
           continue

@@ -438,6 +438,23 @@ priv struct GraphvizNeighborMaps {
 }
 
 ///|
+fn append_neighbor_edge(
+  out_neighbors : Map[String, Array[String]],
+  in_neighbors : Map[String, Array[String]],
+  tail : String,
+  head : String,
+) -> Unit {
+  match out_neighbors.get(tail) {
+    Some(list) => list.push(head)
+    None => out_neighbors[tail] = [head]
+  }
+  match in_neighbors.get(head) {
+    Some(list) => list.push(tail)
+    None => in_neighbors[head] = [tail]
+  }
+}
+
+///|
 /// Graphviz parity: raw-graph ND_out/ND_in maps preserve AGSEQ edge replay
 /// order for local cluster median-anchor fallback.
 /// Do not change behavior without updating fixtures/tests.
