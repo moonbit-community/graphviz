@@ -704,14 +704,16 @@ fn build_curve_mode_spline_from_prepared_route(
     } else {
       let multi_point_spline =
         build_multi_point_routed_spline(
-          base,
-          adjusted,
-          prepared.using_pathplan,
-          base.force_segmented,
-          prepared.pathplan_segments,
-          prepared.route_barriers,
-          base.tail_clip_enabled,
-          base.head_clip_enabled,
+          {
+            base,
+            adjusted,
+            using_pathplan: prepared.using_pathplan,
+            force_segmented: base.force_segmented,
+            pathplan_segments: prepared.pathplan_segments,
+            route_barriers: prepared.route_barriers,
+            tail_clip_enabled: base.tail_clip_enabled,
+            head_clip_enabled: base.head_clip_enabled,
+          },
         )
       {
         spline: multi_point_spline.spline,
@@ -1240,16 +1242,29 @@ fn trimmed_pathplan_segment_points(points : Array[@geom.Point]) -> Array[@geom.P
 }
 
 ///|
+priv struct PathplanSegmentRawBezierInput {
+  segment : @routesplines.PathplanSegment
+  seg_idx : Int
+  segment_count : Int
+  tail_slope_for : @geom.Point
+  head_slope_for : @geom.Point
+  join_dir : @geom.Point
+  force_segmented : Bool
+  trim_points : Bool
+}
+
+///|
 fn pathplan_segment_raw_bezier(
-  segment : @routesplines.PathplanSegment,
-  seg_idx : Int,
-  segment_count : Int,
-  tail_slope_for : @geom.Point,
-  head_slope_for : @geom.Point,
-  join_dir : @geom.Point,
-  force_segmented : Bool,
-  trim_points : Bool,
+  input : PathplanSegmentRawBezierInput,
 ) -> Array[@geom.Point] {
+  let segment = input.segment
+  let seg_idx = input.seg_idx
+  let segment_count = input.segment_count
+  let tail_slope_for = input.tail_slope_for
+  let head_slope_for = input.head_slope_for
+  let join_dir = input.join_dir
+  let force_segmented = input.force_segmented
+  let trim_points = input.trim_points
   let segment_points =
     if trim_points {
       trimmed_pathplan_segment_points(segment.points)
@@ -1288,14 +1303,16 @@ fn limit_pathplan_segment_boxes(
     let segment = pathplan_segments[seg_idx]
     let segment_raw =
       pathplan_segment_raw_bezier(
-        segment,
-        seg_idx,
-        segment_count,
-        tail_slope_for,
-        head_slope_for,
-        join_dir,
-        false,
-        false,
+        {
+          segment,
+          seg_idx,
+          segment_count,
+          tail_slope_for,
+          head_slope_for,
+          join_dir,
+          force_segmented: false,
+          trim_points: false,
+        },
       )
     let limited_boxes =
       @routesplines.limit_boxes_for_spline(
@@ -1329,14 +1346,16 @@ fn segmented_pathplan_raw_bezier(
     let segment = pathplan_segments[seg_idx]
     let seg_raw =
       pathplan_segment_raw_bezier(
-        segment,
-        seg_idx,
-        segment_count,
-        tail_slope_for,
-        head_slope_for,
-        join_dir,
-        force_segmented,
-        true,
+        {
+          segment,
+          seg_idx,
+          segment_count,
+          tail_slope_for,
+          head_slope_for,
+          join_dir,
+          force_segmented,
+          trim_points: true,
+        },
       )
     if seg_raw.length() > 0 {
       if segmented_raw.length() > 0 {
@@ -1354,16 +1373,29 @@ fn segmented_pathplan_raw_bezier(
 }
 
 ///|
+priv struct MultiPointRoutedSplineInput {
+  base : EdgeRouteBase
+  adjusted : Array[@geom.Point]
+  using_pathplan : Bool
+  force_segmented : Bool
+  pathplan_segments : Array[@routesplines.PathplanSegment]
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  tail_clip_enabled : Bool
+  head_clip_enabled : Bool
+}
+
+///|
 fn build_multi_point_routed_spline(
-  base : EdgeRouteBase,
-  adjusted : Array[@geom.Point],
-  using_pathplan : Bool,
-  force_segmented : Bool,
-  pathplan_segments : Array[@routesplines.PathplanSegment],
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  tail_clip_enabled : Bool,
-  head_clip_enabled : Bool,
+  input : MultiPointRoutedSplineInput,
 ) -> PointsSplineResult {
+  let base = input.base
+  let adjusted = input.adjusted
+  let using_pathplan = input.using_pathplan
+  let force_segmented = input.force_segmented
+  let pathplan_segments = input.pathplan_segments
+  let route_barriers = input.route_barriers
+  let tail_clip_enabled = input.tail_clip_enabled
+  let head_clip_enabled = input.head_clip_enabled
   let (tail_slope_for, head_slope_for) =
     route_endpoint_slopes(base.tail_port, base.head_port, base.tail_slope, base.head_slope)
   // Graphviz parity: pathplan edges always allow spline fitting.
