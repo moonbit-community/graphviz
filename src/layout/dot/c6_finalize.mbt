@@ -3,46 +3,6 @@
 /// and nlist creation helpers for Stage C outputs.
 
 ///|
-/// Graphviz parity: clustered ReMincross cleanup reorder executes startpass=2
-/// with coalesced-parallel mode on rematerialized edge arrays.
-fn run_remincross_cleanup_reorder(
-  reorder_inputs : @ordering.ReMincrossCleanupReorderInputs,
-) -> Map[Int, Array[String]] {
-  @ordering.reorder_rank_groups(
-    reorder_inputs.rem_rank_keys,
-    reorder_inputs.rem_groups,
-    reorder_inputs.rem_edges_out,
-    reorder_inputs.rem_edge_tail_out,
-    reorder_inputs.rem_edge_head_out,
-    reorder_inputs.rem_edge_tail_port_x,
-    reorder_inputs.rem_edge_head_port_x,
-    reorder_inputs.rem_edge_tail_port_order,
-    reorder_inputs.rem_edge_head_port_order,
-    reorder_inputs.rem_parents,
-    reorder_inputs.rem_children,
-    reorder_inputs.rem_cluster_keys,
-    reorder_inputs.rank_same_groups,
-    reorder_inputs.rank_same_order,
-    reorder_inputs.rem_edge_order,
-    reorder_inputs.rem_node_order,
-    reorder_inputs.rem_sizes,
-    reorder_inputs.nodesep_pt,
-    reorder_inputs.has_edge_labels,
-    reorder_inputs.port_order_positions,
-    reorder_inputs.port_order_contrib,
-    Map::new(),
-    Map::new(),
-    reorder_inputs.rem_flat_constraints,
-    graphviz_flip=reorder_inputs.graphviz_flip,
-    // Graphviz parity: ReMincross counts parallel chain segments once
-    // with summed xpenalty before startpass=2 transposition.
-    coalesce_parallel_edges=true,
-    startpass=2,
-    remincross_mode=true,
-  )
-}
-
-///|
 /// Graphviz parity: clustered finalize pass context keeps pre-root creation
 /// order and cluster/vnode snapshots unchanged before ReMincross execution.
 /// Do not change behavior without updating fixtures/tests.
@@ -137,7 +97,7 @@ fn finalize_order_groups(
         ),
       build_vnode_order_keys,
       capture_remincross_snapshot,
-      run_remincross_cleanup_reorder,
+      @ordering.run_remincross_cleanup_reorder,
     )
   {
     ordered_groups: finalize_output.ordered_groups,

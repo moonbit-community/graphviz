@@ -2314,3 +2314,157 @@ pub fn reorder_rank_groups(
   }
   best_ordered
 }
+
+///|
+/// Graphviz parity: non-cluster rank reorder call uses the same
+/// reorder_rank_groups wiring as Graphviz non-cluster mincross pass.
+pub fn run_noncluster_rank_reorder(
+  call_inputs : NonclusterRankReorderInputs,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.rank_keys,
+    call_inputs.groups,
+    call_inputs.order_edges,
+    call_inputs.order_edge_tail,
+    call_inputs.order_edge_head,
+    call_inputs.order_edge_tail_port_x,
+    call_inputs.order_edge_head_port_x,
+    call_inputs.order_edge_tail_port_order,
+    call_inputs.order_edge_head_port_order,
+    call_inputs.parents,
+    call_inputs.children,
+    call_inputs.cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.edge_order,
+    call_inputs.order_node_order,
+    call_inputs.order_sizes,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    call_inputs.cluster_skeleton,
+    call_inputs.flat_constraints,
+    graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=call_inputs.graphviz_in_neighbors,
+    graphviz_flip=call_inputs.graphviz_flip,
+  )
+}
+
+///|
+/// Graphviz parity: root ReMincross rank reorder call uses the same
+/// reorder_rank_groups wiring as Graphviz root mincross pass.
+pub fn run_root_rank_reorder_call(
+  reorder_inputs : RootRankReorderInputs,
+  root_graphviz_flip : Bool,
+  coalesce_parallel : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    reorder_inputs.order_rank_keys_for_mincross,
+    reorder_inputs.order_groups_for_mincross,
+    reorder_inputs.order_edges_out_mincross,
+    reorder_inputs.order_edge_tail_out_mincross,
+    reorder_inputs.order_edge_head_out_mincross,
+    reorder_inputs.order_edge_tail_port_x_mincross,
+    reorder_inputs.order_edge_head_port_x_mincross,
+    reorder_inputs.order_edge_tail_port_order_mincross,
+    reorder_inputs.order_edge_head_port_order_mincross,
+    reorder_inputs.parents,
+    reorder_inputs.children,
+    reorder_inputs.order_cluster_keys,
+    reorder_inputs.rank_same_groups,
+    reorder_inputs.rank_same_order,
+    reorder_inputs.edge_order,
+    reorder_inputs.order_node_order,
+    reorder_inputs.order_sizes_out,
+    reorder_inputs.nodesep_pt,
+    reorder_inputs.has_edge_labels,
+    reorder_inputs.port_order_positions,
+    reorder_inputs.port_order_contrib,
+    reorder_inputs.preferred_positions,
+    reorder_inputs.order_cluster_skeleton,
+    reorder_inputs.order_flat_constraints,
+    graphviz_out_neighbors=reorder_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=reorder_inputs.graphviz_in_neighbors,
+    graphviz_flip=root_graphviz_flip,
+    coalesce_parallel_edges=coalesce_parallel,
+  )
+}
+
+///|
+/// Graphviz parity: root cluster-rank-order pass uses reorder_rank_groups with
+/// coalesced-parallel mode on root-only rematerialized edge arrays.
+pub fn run_root_rank_order_reorder(
+  call_inputs : RootRankOrderCallInputs,
+  root_graphviz_flip : Bool,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.root_rank_keys,
+    call_inputs.root_groups,
+    call_inputs.root_edges_out,
+    call_inputs.root_edge_tail_out,
+    call_inputs.root_edge_head_out,
+    call_inputs.root_edge_tail_port_x,
+    call_inputs.root_edge_head_port_x,
+    call_inputs.root_edge_tail_port_order,
+    call_inputs.root_edge_head_port_order,
+    call_inputs.root_parents,
+    call_inputs.root_children,
+    call_inputs.order_cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.root_edge_order,
+    call_inputs.root_node_order,
+    call_inputs.order_sizes_out,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    call_inputs.order_cluster_skeleton,
+    call_inputs.order_flat_constraints,
+    graphviz_flip=root_graphviz_flip,
+    coalesce_parallel_edges=true,
+  )
+}
+
+///|
+/// Graphviz parity: clustered ReMincross cleanup reorder executes startpass=2
+/// with coalesced-parallel mode on rematerialized edge arrays.
+pub fn run_remincross_cleanup_reorder(
+  reorder_inputs : ReMincrossCleanupReorderInputs,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    reorder_inputs.rem_rank_keys,
+    reorder_inputs.rem_groups,
+    reorder_inputs.rem_edges_out,
+    reorder_inputs.rem_edge_tail_out,
+    reorder_inputs.rem_edge_head_out,
+    reorder_inputs.rem_edge_tail_port_x,
+    reorder_inputs.rem_edge_head_port_x,
+    reorder_inputs.rem_edge_tail_port_order,
+    reorder_inputs.rem_edge_head_port_order,
+    reorder_inputs.rem_parents,
+    reorder_inputs.rem_children,
+    reorder_inputs.rem_cluster_keys,
+    reorder_inputs.rank_same_groups,
+    reorder_inputs.rank_same_order,
+    reorder_inputs.rem_edge_order,
+    reorder_inputs.rem_node_order,
+    reorder_inputs.rem_sizes,
+    reorder_inputs.nodesep_pt,
+    reorder_inputs.has_edge_labels,
+    reorder_inputs.port_order_positions,
+    reorder_inputs.port_order_contrib,
+    Map::new(),
+    Map::new(),
+    reorder_inputs.rem_flat_constraints,
+    graphviz_flip=reorder_inputs.graphviz_flip,
+    // Graphviz parity: ReMincross counts parallel chain segments once
+    // with summed xpenalty before startpass=2 transposition.
+    coalesce_parallel_edges=true,
+    startpass=2,
+    remincross_mode=true,
+  )
+}
