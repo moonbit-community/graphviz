@@ -1,24 +1,30 @@
+priv struct FlatDetourLookupInput {
+  base : EdgeRouteBase
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, NodeSize]
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  ranksep_pt : Double
+}
+
+///|
 fn flat_detour_lookup_context(
-  base : EdgeRouteBase,
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  ranksep_pt : Double,
+  input : FlatDetourLookupInput,
 ) -> FlatDetourLookupContext {
+  let base = input.base
   {
     tail_name: base.tail_name,
     head_name: base.head_name,
     rank: base.tail_rank,
-    positions,
-    sizes,
-    ranks,
-    rank_y,
-    rank_ht1,
-    rank_ht2,
-    ranksep_pt,
+    positions: input.positions,
+    sizes: input.sizes,
+    ranks: input.ranks,
+    rank_y: input.rank_y,
+    rank_ht1: input.rank_ht1,
+    rank_ht2: input.rank_ht2,
+    ranksep_pt: input.ranksep_pt,
     rankdir: base.layout_rankdir,
   }
 }

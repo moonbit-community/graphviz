@@ -354,14 +354,16 @@ pub fn short_route_build_context(
     route_has_single_arrowhead(input.base.route_include_tail, input.base.route_include_head)
   let flat_detour_lookup =
     flat_detour_lookup_context(
-      input.base,
-      input.positions,
-      input.sizes,
-      input.ranks,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
-      input.ranksep_pt,
+      {
+        base: input.base,
+        positions: input.positions,
+        sizes: input.sizes,
+        ranks: input.ranks,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        ranksep_pt: input.ranksep_pt,
+      },
     )
   {
     using_pathplan: input.using_pathplan,
