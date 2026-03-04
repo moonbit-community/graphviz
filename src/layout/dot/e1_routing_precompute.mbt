@@ -2,6 +2,16 @@
 /// Stage E spatial precompute helpers for routing.
 
 ///|
+/// Graphviz parity: layout-node payload keeps node-size and position snapshots
+/// grouped so node geometry projection wiring remains explicit and stable.
+priv struct LayoutNodesInput {
+  nodes : Array[@cgraph.Node]
+  positions : Map[String, @geom.Point]
+  output_sizes : Map[String, NodeSize]
+  record_orientation : RecordOrientation
+}
+
+///|
 priv struct PortLayoutMaps {
   label_ports_map : Map[String, Map[String, RecordPort]]
   label_ports_raw : Map[String, Map[String, RecordPort]]
@@ -11,21 +21,18 @@ priv struct PortLayoutMaps {
 /// Graphviz parity: node layout assembly aligned to refs/graphviz/lib/dotgen/position.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn build_layout_nodes(
-  nodes : Array[@cgraph.Node],
-  positions : Map[String, @geom.Point],
-  output_sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
+  input : LayoutNodesInput,
 ) -> Array[DotLayoutNode] {
   let nodes_out : Array[DotLayoutNode] = []
-  for node in nodes {
+  for node in input.nodes {
     let name = node.name()
-    let pos = match positions.get(name) {
+    let pos = match input.positions.get(name) {
       Some(value) => value
       None => { x: 0.0, y: 0.0 }
     }
-    let size = match output_sizes.get(name) {
+    let size = match input.output_sizes.get(name) {
       Some(value) => value
-      None => node_size(node, record_orientation)
+      None => node_size(node, input.record_orientation)
     }
     nodes_out.push({
       node,
@@ -40,23 +47,30 @@ fn build_layout_nodes(
 }
 
 ///|
+/// Graphviz parity: port-layout payload keeps node geometry and routing flags
+/// grouped so record/html port map wiring remains explicit and stable.
+priv struct PortLayoutMapsInput {
+  nodes_out : Array[DotLayoutNode]
+  output_sizes : Map[String, NodeSize]
+  record_orientation : RecordOrientation
+  rankdir : RankDir
+  has_port_edges : Bool
+}
+
+///|
 /// Graphviz parity: port layout maps aligned to refs/graphviz/lib/common/shapes.c (record/html ports).
 /// Do not change behavior without updating fixtures/tests.
 fn build_port_layout_maps(
-  nodes_out : Array[DotLayoutNode],
-  output_sizes : Map[String, NodeSize],
-  record_orientation : RecordOrientation,
-  rankdir : RankDir,
-  has_port_edges : Bool,
+  input : PortLayoutMapsInput,
 ) -> PortLayoutMaps {
   let label_ports_map : Map[String, Map[String, RecordPort]] = Map::new()
   let label_ports_raw : Map[String, Map[String, RecordPort]] = Map::new()
-  if has_port_edges {
-    for node_layout in nodes_out {
+  if input.has_port_edges {
+    for node_layout in input.nodes_out {
       let name = node_layout.node.name()
-      let final_size = match output_sizes.get(name) {
+      let final_size = match input.output_sizes.get(name) {
         Some(value) => value
-        None => node_size(node_layout.node, record_orientation)
+        None => node_size(node_layout.node, input.record_orientation)
       }
       let label = label_text(node_layout.node)
       let has_html = @html_label.is_html_label_text(label)
@@ -68,18 +82,18 @@ fn build_port_layout_maps(
         )
         label_ports_raw[name] = raw_ports
         let ports =
-          layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+          layout_ports_from_final(raw_ports, node_layout.pos, input.rankdir)
         label_ports_map[name] = ports
       } else if is_record_shape(node_layout.node) {
         let raw_ports = record_ports(
           node_layout.node,
           { x: 0.0, y: 0.0 },
           final_size,
-          record_orientation,
+          input.record_orientation,
         )
         label_ports_raw[name] = raw_ports
         let ports =
-          layout_ports_from_final(raw_ports, node_layout.pos, rankdir)
+          layout_ports_from_final(raw_ports, node_layout.pos, input.rankdir)
         label_ports_map[name] = ports
       }
     }
@@ -162,20 +176,24 @@ fn build_routing_spatial_data(
   // consume stage inputs in the same precompute order.
   let nodes_out =
     build_layout_nodes(
-      prep.nodes,
-      positions_state.positions,
-      prep.output_sizes,
-      prep.record_orientation,
+      {
+        nodes: prep.nodes,
+        positions: positions_state.positions,
+        output_sizes: prep.output_sizes,
+        record_orientation: prep.record_orientation,
+      },
     )
   // Graphviz parity: routing port maps are built from final node
   // geometry and rankdir/port-edge flags before padding and edge routing.
   let port_maps =
     build_port_layout_maps(
-      nodes_out,
-      prep.output_sizes,
-      prep.record_orientation,
-      prep.rankdir,
-      prep.has_port_edges,
+      {
+        nodes_out,
+        output_sizes: prep.output_sizes,
+        record_orientation: prep.record_orientation,
+        rankdir: prep.rankdir,
+        has_port_edges: prep.has_port_edges,
+      },
     )
   let label_ports_map = port_maps.label_ports_map
   let label_ports_raw = port_maps.label_ports_raw
