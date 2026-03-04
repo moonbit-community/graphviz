@@ -131,16 +131,29 @@ fn sameport_shape_has_outline(node : @cgraph.Node) -> Bool {
 /// Graphviz parity: sameport anchor construction aligned to
 /// refs/graphviz/lib/dotgen/sameport.c (sameport).
 /// Do not change behavior without updating fixtures/tests.
+priv struct SameportAnchorInput {
+  node : @cgraph.Node
+  group_edges : Array[@cgraph.Edge]
+  head_group : Bool
+  positions : Map[String, @geom.Point]
+  sizes : Map[String, NodeSize]
+  node_size_for_missing : (@cgraph.Node) -> NodeSize
+  layout_rankdir : RankDir
+  ranksep_pt : Double
+}
+
+///|
 fn sameport_anchor_for_group(
-  node : @cgraph.Node,
-  group_edges : Array[@cgraph.Edge],
-  head_group : Bool,
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  node_size_for_missing : (@cgraph.Node) -> NodeSize,
-  layout_rankdir : RankDir,
-  ranksep_pt : Double,
+  input : SameportAnchorInput,
 ) -> @geom.Point? {
+  let node = input.node
+  let group_edges = input.group_edges
+  let head_group = input.head_group
+  let positions = input.positions
+  let sizes = input.sizes
+  let node_size_for_missing = input.node_size_for_missing
+  let layout_rankdir = input.layout_rankdir
+  let ranksep_pt = input.ranksep_pt
   let node_name = node.name()
   let node_pos = match positions.get(node_name) {
     Some(value) => value
@@ -361,14 +374,16 @@ fn apply_sameport_group_overrides(
     let anchor_node =
       if head_group { group_edges[0].head() } else { group_edges[0].tail() }
     match sameport_anchor_for_group(
-      anchor_node,
-      group_edges,
-      head_group,
-      positions,
-      sizes,
-      node_size_for_missing,
-      layout_rankdir,
-      ranksep_pt,
+      {
+        node: anchor_node,
+        group_edges,
+        head_group,
+        positions,
+        sizes,
+        node_size_for_missing,
+        layout_rankdir,
+        ranksep_pt,
+      },
     ) {
       Some(anchor) =>
         for edge in group_edges {
