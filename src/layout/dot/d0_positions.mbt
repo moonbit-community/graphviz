@@ -3,6 +3,18 @@
 /// definitions used by x/y/output helper files.
 
 ///|
+/// Graphviz parity: position stage payload keeps stage B/C outputs grouped so
+/// Stage D wiring remains explicit and stable.
+priv struct PositionStageInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
 priv struct PositionResult {
   x_groups : Map[Int, Array[String]]
   rank_y : Map[Int, Double]
@@ -87,13 +99,14 @@ fn build_projection_result(
 /// Graphviz parity: x-positioning aligned to refs/graphviz/lib/dotgen/position.c + dotgen/cluster.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_positions(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  input : PositionStageInput,
 ) -> PositionResult {
+  let graph = input.graph
+  let prep = input.prep
+  let rank_data = input.rank_data
+  let rank_heights = input.rank_heights
+  let cluster_meta = input.cluster_meta
+  let ordering = input.ordering
   let pipeline : PositionPipelineContext = {
     graph,
     prep,

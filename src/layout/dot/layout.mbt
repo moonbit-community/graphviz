@@ -23,12 +23,14 @@ pub fn layout_dot(
   let ordering = rank_stage_output.ordering
   let positions_state =
     compute_positions(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
+      {
+        graph,
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+      },
     )
   let routing_stage_output =
     compute_dot_routing_stage(
