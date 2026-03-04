@@ -11,7 +11,7 @@ fn maybe_build_flat_adjacent_layout(
   base : EdgeRouteBase,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
+  callbacks : RoutingCallbacks,
 ) -> Bool {
   match input.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
@@ -19,7 +19,7 @@ fn maybe_build_flat_adjacent_layout(
         build_flat_adjacent_layout(
           base,
           bezier,
-          build_edge_layout_fn,
+          callbacks.build_edge_layout_fn,
         )
       state.edges_out_by_id[edge_id] = edge_layout
       true
@@ -34,9 +34,7 @@ fn maybe_build_self_edge_layout(
   base : EdgeRouteBase,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
-  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
+  callbacks : RoutingCallbacks,
 ) -> Bool {
   let edge_id = edge.id()
   let route = self_edge_route_for_edge(
@@ -46,8 +44,8 @@ fn maybe_build_self_edge_layout(
     input.nodesep_pt,
     input.rank_y,
     state.self_edge_routes,
-    self_edge_label_height_fn,
-    self_edge_label_width_fn,
+    callbacks.self_edge_label_height_fn,
+    callbacks.self_edge_label_width_fn,
   )
   match route {
     Some(route) => {
@@ -55,7 +53,7 @@ fn maybe_build_self_edge_layout(
         build_self_edge_layout(
           base,
           route,
-          build_edge_layout_fn,
+          callbacks.build_edge_layout_fn,
         )
       state.edges_out_by_id[edge_id] = edge_layout
       true
@@ -69,10 +67,7 @@ fn route_ordered_edge(
   edge : @cgraph.Edge,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
-  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
+  callbacks : RoutingCallbacks,
 ) -> Unit {
   let edge_id = edge.id()
   if state.edges_out_by_id.get(edge_id) is Some(_) {
@@ -87,7 +82,7 @@ fn route_ordered_edge(
     base,
     input,
     state,
-    build_edge_layout_fn,
+    callbacks,
   ) {
     return ()
   }
@@ -96,9 +91,7 @@ fn route_ordered_edge(
     base,
     input,
     state,
-    build_edge_layout_fn,
-    self_edge_label_height_fn,
-    self_edge_label_width_fn,
+    callbacks,
   ) {
     return ()
   }
@@ -114,8 +107,8 @@ fn route_ordered_edge(
     input.base_cache,
     state.recovered_slack_keys,
     state.edges_out_by_id,
-    recover_slack_vnodes_fn,
-    build_edge_layout_fn,
+    callbacks.recover_slack_vnodes_fn,
+    callbacks.build_edge_layout_fn,
   )
 }
 
@@ -126,10 +119,7 @@ fn route_ordered_edge(
 pub fn route_ordered_edges(
   input : OrderedRoutingInput,
   edges_out_by_id : Map[Int, DotLayoutEdge],
-  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeLayoutBuilderFn,
-  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
+  callbacks : RoutingCallbacks,
 ) -> Unit {
   let state : OrderedEdgeRoutingState = {
     recovered_slack_keys: Map::new(),
@@ -141,10 +131,7 @@ pub fn route_ordered_edges(
       edge,
       input,
       state,
-      recover_slack_vnodes_fn,
-      build_edge_layout_fn,
-      self_edge_label_height_fn,
-      self_edge_label_width_fn,
+      callbacks,
     )
   }
 }

@@ -71,10 +71,7 @@ pub fn route_edges(
   route_ordered_edges(
     ordered_routing_input,
     edges_out_by_id,
-    callbacks.recover_slack_vnodes_fn,
-    callbacks.build_edge_layout_fn,
-    callbacks.self_edge_label_height_fn,
-    callbacks.self_edge_label_width_fn,
+    callbacks,
   )
   finalize_routed_edges(
     input.edges,
