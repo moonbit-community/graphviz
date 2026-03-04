@@ -25,12 +25,14 @@ fn build_final_layout_geometry(
   rank_ht2 : Map[Int, Double],
 ) -> FinalLayoutGeometry {
   let base_bbox = compute_dot_bbox(
-    nodes_out,
-    all_ranks,
-    sizes,
-    rank_y,
-    rank_ht1,
-    rank_ht2,
+    {
+      nodes_out,
+      all_ranks,
+      sizes,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+    },
   )
   { final_nodes: nodes_out, final_edges: edges_out, rank_bbox: base_bbox }
 }
