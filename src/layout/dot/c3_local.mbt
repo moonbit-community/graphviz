@@ -1622,17 +1622,6 @@ fn build_cluster_local_rank_replay_context(
 }
 
 ///|
-/// Graphviz parity: cluster-local replay preparation keeps cluster traversal
-/// order, fixed-slot snapshots, and dispatch payload assembled in one bundle.
-/// Do not change behavior without updating fixtures/tests.
-priv struct ClusterLocalReplayPreparation {
-  cluster_names : Array[String]
-  cluster_graphs : Map[String, @cgraph.Graph]
-  fixed_positions : Map[String, Double]
-  dispatch_context : ClusterLocalReorderDispatchContext
-}
-
-///|
 /// Graphviz parity: local replay fixed-rank map overlays vnode ranks on top of
 /// base node ranks before any per-cluster reorder calls.
 fn build_cluster_replay_fixed_ranks(
@@ -1672,8 +1661,8 @@ fn build_cluster_replay_dispatch_context(
   replay_context : ClusterLocalRankReplayContext,
   neighbor_sources : ClusterLocalNeighborSources,
   fixed_ranks : Map[String, Int],
-  empty_cluster_skeleton : Map[String, Bool],
 ) -> ClusterLocalReorderDispatchContext {
+  let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   {
     node_order: replay_context.node_order,
     order_edges: replay_context.order_edges,
@@ -1698,15 +1687,14 @@ fn build_cluster_replay_dispatch_context(
 }
 
 ///|
-/// Graphviz parity: cluster-local replay preparation mirrors Graphviz
-/// cluster-order traversal and AGSEQ neighbor-source assembly before reordering.
-/// Do not change behavior without updating fixtures/tests.
-fn build_cluster_local_replay_preparation(
+/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
+/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
+fn run_cluster_local_rank_replay(
   groups : Map[Int, Array[String]],
   replay_context : ClusterLocalRankReplayContext,
-) -> ClusterLocalReplayPreparation? {
+) -> Unit {
   if replay_context.cluster_meta.cluster_order.length() == 0 {
-    return None
+    return ()
   }
   let cluster_graph_order =
     build_cluster_graph_order(
@@ -1717,9 +1705,8 @@ fn build_cluster_local_replay_preparation(
   let cluster_graphs = cluster_graph_order.cluster_graphs
   let cluster_names = cluster_graph_order.cluster_names
   if cluster_graphs.length() == 0 {
-    return None
+    return ()
   }
-  let empty_cluster_skeleton : Map[String, Bool] = Map::new()
   let fixed_positions = @ordering.order_positions_from_groups(groups)
   let fixed_ranks = build_cluster_replay_fixed_ranks(replay_context)
   let neighbor_sources = build_cluster_replay_neighbor_sources(replay_context)
@@ -1728,36 +1715,13 @@ fn build_cluster_local_replay_preparation(
       replay_context,
       neighbor_sources,
       fixed_ranks,
-      empty_cluster_skeleton,
     )
-  Some({
+  reorder_cluster_rank_groups(
     cluster_names,
     cluster_graphs,
+    groups,
     fixed_positions,
     dispatch_context,
-  })
-}
-
-///|
-/// Graphviz parity: apply cluster-local mincross ordering before ReMincross
-/// (mincross_clust + cluster.c). Do not change behavior without updating fixtures/tests.
-fn reorder_by_cluster_ranks(
-  groups : Map[Int, Array[String]],
-  replay_context : ClusterLocalRankReplayContext,
-) -> Unit {
-  let preparation = match build_cluster_local_replay_preparation(
-    groups,
-    replay_context,
-  ) {
-    Some(value) => value
-    None => return ()
-  }
-  reorder_cluster_rank_groups(
-    preparation.cluster_names,
-    preparation.cluster_graphs,
-    groups,
-    preparation.fixed_positions,
-    preparation.dispatch_context,
   )
 }
 
@@ -1780,5 +1744,5 @@ fn apply_cluster_local_rank_replay_after_root(
       pre_root_stage.materialized,
       pre_root_stage.order_sizes_out,
     )
-  reorder_by_cluster_ranks(root_cluster_stage.ordered, replay_context)
+  run_cluster_local_rank_replay(root_cluster_stage.ordered, replay_context)
 }
