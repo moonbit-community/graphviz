@@ -36,38 +36,47 @@ fn cluster_containing_point_or_empty(
 }
 
 ///|
+/// Graphviz parity: vnode-cluster assignment input keeps edge/vnode and
+/// cluster-geometry maps grouped for deterministic containment probing.
+priv struct PathVnodeClustersInput {
+  edges : Array[@cgraph.Edge]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_keys : Map[String, String]
+  cluster_bboxes : Map[String, @geom.Rect]
+}
+
+///|
 fn build_path_vnode_clusters(
-  edges : Array[@cgraph.Edge],
-  edge_vnodes : Map[String, Array[String]],
-  vnode_positions : Map[String, @geom.Point],
-  cluster_keys : Map[String, String],
-  cluster_bboxes : Map[String, @geom.Rect],
+  input : PathVnodeClustersInput,
 ) -> Map[String, String] {
   let vnode_clusters : Map[String, String] = Map::new()
-  for edge in edges {
+  for edge in input.edges {
     let key = @dot_shared.edge_vnode_key(edge)
-    let vnodes = edge_vnodes.get(key).unwrap_or_default()
+    let vnodes = input.edge_vnodes.get(key).unwrap_or_default()
     if vnodes.length() == 0 {
       continue
     }
-    let tail_cluster = cluster_keys.get(edge.tail().name()).unwrap_or_default()
-    let head_cluster = cluster_keys.get(edge.head().name()).unwrap_or_default()
+    let tail_cluster =
+      input.cluster_keys.get(edge.tail().name()).unwrap_or_default()
+    let head_cluster =
+      input.cluster_keys.get(edge.head().name()).unwrap_or_default()
     for vnode in vnodes {
-      let pos = match vnode_positions.get(vnode) {
+      let pos = match input.vnode_positions.get(vnode) {
         Some(value) => value
         None => continue
       }
       let mut vnode_cluster =
         cluster_containing_point_or_empty(
           tail_cluster,
-          cluster_bboxes,
+          input.cluster_bboxes,
           pos,
         )
       if vnode_cluster == "" {
         vnode_cluster =
           cluster_containing_point_or_empty(
             head_cluster,
-            cluster_bboxes,
+            input.cluster_bboxes,
             pos,
           )
       }
@@ -79,72 +88,81 @@ fn build_path_vnode_clusters(
 
 
 ///|
-/// Graphviz parity: routing context aligned to refs/graphviz/lib/dotgen/dotsplines.c
-/// + lib/common/routespl.c + lib/pathplan/* (fixtures).
-/// Do not change behavior without updating fixtures/tests.
-pub fn prepare_routing_context(
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  edge_tail : Array[String],
-  edge_head : Array[String],
-  sizes : Map[String, NodeSize],
-  ranks : Map[String, Int],
-  ordered_groups : Map[Int, Array[String]],
-  x_groups : Map[Int, Array[String]],
-  nodesep_pt : Double,
-  edge_vnodes : Map[String, Array[String]],
-  vnode_sizes : Map[String, NodeSize],
-  vnode_positions : Map[String, @geom.Point],
-  cluster_bboxes : Map[String, @geom.Rect],
-  build_order_index_fn : (Map[Int, Array[String]]) -> Map[String, Int],
+/// Graphviz parity: routing-context input keeps pathplan/rank/cluster snapshots
+/// and callback dependencies grouped at one pre-routing boundary.
+pub(all) struct PrepareRoutingContextInput {
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  edge_tail : Array[String]
+  edge_head : Array[String]
+  sizes : Map[String, NodeSize]
+  ranks : Map[String, Int]
+  ordered_groups : Map[Int, Array[String]]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  edge_vnodes : Map[String, Array[String]]
+  vnode_sizes : Map[String, NodeSize]
+  vnode_positions : Map[String, @geom.Point]
+  cluster_bboxes : Map[String, @geom.Rect]
+  build_order_index_fn : (Map[Int, Array[String]]) -> Map[String, Int]
   apply_self_edge_right_space_fn : (
     Array[@cgraph.Node],
     Array[@cgraph.Edge],
     Map[String, NodeSize],
-  ) -> Map[String, NodeSize],
-  node_local_cluster_key_fn : (@cgraph.Node) -> String,
+  ) -> Map[String, NodeSize]
+  node_local_cluster_key_fn : (@cgraph.Node) -> String
+}
+
+///|
+/// Graphviz parity: routing context aligned to refs/graphviz/lib/dotgen/dotsplines.c
+/// + lib/common/routespl.c + lib/pathplan/* (fixtures).
+/// Do not change behavior without updating fixtures/tests.
+pub fn prepare_routing_context(
+  input : PrepareRoutingContextInput,
 ) -> RoutingContext {
-  let order_index = build_order_index_fn(ordered_groups)
-  let path_order_index = build_order_index_fn(x_groups)
+  let order_index = (input.build_order_index_fn)(input.ordered_groups)
+  let path_order_index = (input.build_order_index_fn)(input.x_groups)
   let path_adjacency =
     @routesplines.build_path_adjacency(
-      edges,
-      edge_vnodes,
-      edge_tail,
-      edge_head,
+      input.edges,
+      input.edge_vnodes,
+      input.edge_tail,
+      input.edge_head,
     )
   // Graphviz parity: pathplan neighbor widths use ND_mval (self-edge right space).
   let pathplan_sizes =
-    apply_self_edge_right_space_fn(
-      nodes,
-      edges,
-      sizes,
+    (input.apply_self_edge_right_space_fn)(
+      input.nodes,
+      input.edges,
+      input.sizes,
     )
   // Graphviz parity: preserve original vnode widths for ND_mval usage.
   let pathplan_vnode_mval_sizes : Map[String, NodeSize] = Map::new()
-  for name, size in vnode_sizes {
+  for name, size in input.vnode_sizes {
     pathplan_vnode_mval_sizes[name] = size
   }
   let path_cluster_keys : Map[String, String] = Map::new()
-  for node in nodes {
-    path_cluster_keys[node.name()] = node_local_cluster_key_fn(node)
+  for node in input.nodes {
+    path_cluster_keys[node.name()] = (input.node_local_cluster_key_fn)(node)
   }
   let path_vnode_clusters =
     build_path_vnode_clusters(
-      edges,
-      edge_vnodes,
-      vnode_positions,
-      path_cluster_keys,
-      cluster_bboxes,
+      {
+        edges: input.edges,
+        edge_vnodes: input.edge_vnodes,
+        vnode_positions: input.vnode_positions,
+        cluster_keys: path_cluster_keys,
+        cluster_bboxes: input.cluster_bboxes,
+      },
     )
   let (edge_reversed_by_id, edge_has_label_by_id) =
-    collect_parallel_offset_edge_flags(edges, edge_tail, edge_head)
+    collect_parallel_offset_edge_flags(input.edges, input.edge_tail, input.edge_head)
   let parallel_offsets =
     build_edge_parallel_offsets(
-      edges,
+      input.edges,
       edge_has_label_by_id,
-      ranks,
-      nodesep_pt,
+      input.ranks,
+      input.nodesep_pt,
       edge_reversed_by_id,
       path_cluster_keys,
     )
@@ -157,6 +175,6 @@ pub fn prepare_routing_context(
     path_cluster_keys,
     path_vnode_clusters,
     parallel_offsets,
-    cluster_bboxes,
+    cluster_bboxes: input.cluster_bboxes,
   }
 }

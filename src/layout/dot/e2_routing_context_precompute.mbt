@@ -76,29 +76,31 @@ fn build_routing_precompute_data(
   // inputs, final ordering, vnode/rank, and cluster bboxes.
   let routing_context =
     @routing.prepare_routing_context(
-      prep.nodes,
-      prep.edges,
-      input.rank_data.edge_tail,
-      input.rank_data.edge_head,
-      input.sizes,
-      input.rank_data.ranks,
-      input.ordering.ordered_groups,
-      path_groups,
-      input.rank_heights.nodesep_pt,
-      input.ordering.vnode_info.edge_vnodes,
-      input.ordering.vnode_info.vnode_sizes,
-      input.positions_state.vnode_positions,
-      input.cluster_bboxes,
-      @ordering.build_order_index,
-      (nodes, edges, sizes) =>
-        apply_self_edge_right_space(
-          nodes,
-          edges,
-          sizes,
-          prep.rankdir,
-          prep.record_orientation,
-        ),
-      node_local_cluster_key,
+      {
+        nodes: prep.nodes,
+        edges: prep.edges,
+        edge_tail: input.rank_data.edge_tail,
+        edge_head: input.rank_data.edge_head,
+        sizes: input.sizes,
+        ranks: input.rank_data.ranks,
+        ordered_groups: input.ordering.ordered_groups,
+        x_groups: path_groups,
+        nodesep_pt: input.rank_heights.nodesep_pt,
+        edge_vnodes: input.ordering.vnode_info.edge_vnodes,
+        vnode_sizes: input.ordering.vnode_info.vnode_sizes,
+        vnode_positions: input.positions_state.vnode_positions,
+        cluster_bboxes: input.cluster_bboxes,
+        build_order_index_fn: @ordering.build_order_index,
+        apply_self_edge_right_space_fn: (nodes, edges, sizes) =>
+          apply_self_edge_right_space(
+            nodes,
+            edges,
+            sizes,
+            prep.rankdir,
+            prep.record_orientation,
+          ),
+        node_local_cluster_key_fn: node_local_cluster_key,
+      },
     )
   {
     port_pad_below,
