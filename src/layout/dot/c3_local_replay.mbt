@@ -313,6 +313,58 @@ fn build_local_reorder_inputs(
   }
 }
 
+/// Graphviz parity: cluster-local mincross runs only when a cluster has
+/// internal ordering constraints; otherwise the input order is preserved.
+/// Do not change behavior without updating fixtures/tests.
+fn run_cluster_rank_reorder(
+  local_context : ClusterLocalReorderContext,
+  input_phase_output : ClusterLocalReorderRunInputsOutput,
+  dispatch_context : ClusterLocalReorderDispatchContext,
+) -> Map[Int, Array[String]]? {
+  if input_phase_output.cluster_edges.length() == 0 &&
+    input_phase_output.cluster_flat_constraints.length() == 0 {
+    return None
+  }
+  let seeded_cluster_groups =
+    build_cluster_rank_seeded_groups(
+      local_context,
+      input_phase_output,
+      dispatch_context.fixed_ranks,
+    )
+  let ordered_cluster =
+    @ordering.run_cluster_local_rank_reorder_call(
+      {
+        cluster_rank_keys: local_context.cluster_rank_keys,
+        seeded_cluster_groups,
+        cluster_edges: input_phase_output.cluster_edges,
+        cluster_edge_tail: input_phase_output.cluster_edge_tail,
+        cluster_edge_head: input_phase_output.cluster_edge_head,
+        cluster_edge_tail_port_x: input_phase_output.cluster_edge_tail_port_x,
+        cluster_edge_head_port_x: input_phase_output.cluster_edge_head_port_x,
+        cluster_edge_tail_port_order: input_phase_output.cluster_edge_tail_port_order,
+        cluster_edge_head_port_order: input_phase_output.cluster_edge_head_port_order,
+        parents: input_phase_output.parents,
+        children: input_phase_output.children,
+        cluster_keys: input_phase_output.cluster_keys,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        edge_order: input_phase_output.edge_order,
+        cluster_node_order: local_context.cluster_node_order,
+        cluster_sizes: input_phase_output.cluster_sizes,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        cluster_flat_constraints: input_phase_output.cluster_flat_constraints,
+        graphviz_out_neighbors: input_phase_output.graphviz_out_neighbors,
+        graphviz_in_neighbors: input_phase_output.graphviz_in_neighbors,
+        cluster_fixed_positions: local_context.cluster_fixed_positions,
+        fixed_ranks: dispatch_context.fixed_ranks,
+      },
+    )
+  Some(ordered_cluster)
+}
+
 ///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
