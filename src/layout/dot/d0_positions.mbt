@@ -71,6 +71,19 @@ priv struct YPositionComputationData {
 }
 
 ///|
+/// Graphviz parity: y-position pre-solve input keeps rank metadata, cluster
+/// gates, and flat-label adjustments grouped before y sweep.
+priv struct YPositionBuildInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  flat_label_nodes : Map[String, FlatLabelNodeInfo]
+}
+
+///|
 priv struct PositionOutputMaps {
   positions : Map[String, @geom.Point]
   vnode_positions : Map[String, @geom.Point]
@@ -1068,50 +1081,44 @@ fn build_y_positions_with_flip(
 /// derivation, flat-label rank-height updates, and y-sweep wiring unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_y_position_data(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  flat_label_nodes : Map[String, FlatLabelNodeInfo],
+  input : YPositionBuildInput,
 ) -> YPositionComputationData {
-  let rank_pht = rank_heights.rank_pht
-  let rank_ht1 = rank_heights.rank_ht1
-  let rank_ht2 = rank_heights.rank_ht2
+  let rank_pht = input.rank_heights.rank_pht
+  let rank_ht1 = input.rank_heights.rank_ht1
+  let rank_ht2 = input.rank_heights.rank_ht2
   let cluster_bbox_heights =
-    if cluster_meta.has_clusters {
+    if input.cluster_meta.has_clusters {
       compute_cluster_bbox_heights(
-        graph,
-        rank_data.ranks,
-        prep.sizes,
-        rank_data.self_edge_labels,
-        prep.rankdir,
+        input.graph,
+        input.rank_data.ranks,
+        input.prep.sizes,
+        input.rank_data.self_edge_labels,
+        input.prep.rankdir,
       )
     } else {
       Map::new()
     }
   apply_flat_label_heights(
-    flat_label_nodes,
-    ordering.vnode_info.vnode_sizes,
+    input.flat_label_nodes,
+    input.ordering.vnode_info.vnode_sizes,
     rank_pht,
     rank_ht1,
     rank_ht2,
   )
   let y_all_ranks =
-    build_y_all_ranks_with_flat(rank_data.rank_keys, flat_label_nodes)
+    build_y_all_ranks_with_flat(input.rank_data.rank_keys, input.flat_label_nodes)
   let y_position_output =
     build_y_positions_with_flip(
       {
-        graph,
-        rankdir: prep.rankdir,
-        rank_keys: rank_data.rank_keys,
-        groups: rank_data.groups,
-        ranks: rank_data.ranks,
+        graph: input.graph,
+        rankdir: input.prep.rankdir,
+        rank_keys: input.rank_data.rank_keys,
+        groups: input.rank_data.groups,
+        ranks: input.rank_data.ranks,
         rank_pht,
         rank_ht1,
         rank_ht2,
-        ranksep_pt: rank_heights.ranksep_pt,
+        ranksep_pt: input.rank_heights.ranksep_pt,
         cluster_bbox_heights,
         y_all_ranks,
       },
@@ -1220,13 +1227,15 @@ fn build_projection_result(
 ) -> PositionResult {
   let y_position_data =
     build_y_position_data(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      x_data.flat_label_nodes,
+      {
+        graph,
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+        flat_label_nodes: x_data.flat_label_nodes,
+      },
     )
   let x_positions =
     compute_layout_x_positions(
