@@ -105,24 +105,35 @@ fn build_clustered_pre_root(
       },
     )
   let materialized =
-    build_materialized_inputs(
-      class2_data.nlist_order,
-      class2_data.order_edges_by_tail,
-      reorder_context.order_graph,
-      reorder_context.order_node_map,
-      class2_data.order_edges_by_tail_unmapped,
-      reorder_context.order_graph_unmapped,
-      reorder_context.order_node_map_unmapped,
-      runtime_context.real_nodes,
-      reorder_context.order_nodes,
-      class2_data.edge_creation_order,
-      dispatch_context.cluster_meta,
-      reorder_setup.gdnlist_order,
-      dispatch_context.edge_tail,
-      dispatch_context.edge_head,
-      dispatch_context.nodes,
-      reorder_context.order_node_order,
+    @ordering.build_order_materialization_data(
+      {
+        nlist_order: class2_data.nlist_order,
+        order_edges_by_tail: class2_data.order_edges_by_tail,
+        order_graph: reorder_context.order_graph,
+        order_node_map: reorder_context.order_node_map,
+        order_edges_by_tail_unmapped: class2_data.order_edges_by_tail_unmapped,
+        order_graph_unmapped: reorder_context.order_graph_unmapped,
+        order_node_map_unmapped: reorder_context.order_node_map_unmapped,
+        order_nodes: reorder_context.order_nodes,
+        edge_creation_order: class2_data.edge_creation_order,
+        flat_constraints: dispatch_context.cluster_meta.flat_constraints,
+      },
     )
+  // Graphviz parity: Graphviz neighbor maps and flat constraints are derived
+  // before unconstrained-node seed-order overrides for build_ranks seeding.
+  apply_unconstrained_overrides(
+    reorder_setup.gdnlist_order,
+    runtime_context.real_nodes,
+    reorder_context.order_nodes,
+    materialized.graphviz_out_neighbors,
+    materialized.graphviz_in_neighbors,
+    dispatch_context.cluster_meta.rank_same_groups,
+    dispatch_context.edge_tail,
+    dispatch_context.edge_head,
+    dispatch_context.nodes,
+    dispatch_context.cluster_meta.intercluster_keys,
+    reorder_context.order_node_order,
+  )
   let root_rank_order_phase_base =
     build_root_rank_order_phase_base(
       dispatch_context,

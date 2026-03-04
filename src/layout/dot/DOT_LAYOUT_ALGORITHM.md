@@ -241,7 +241,7 @@ Supporting files:
 - `src/layout/dot/c1_graph.mbt`
 - `src/layout/dot/c1_class2.mbt`
 - `src/layout/dot/c2_seed.mbt`
-- `src/layout/dot/c2_reorder.mbt`
+- `src/layout/dot/ordering/graph.mbt`
 - `src/layout/dot/ordering/noncluster_reorder.mbt`
 - `src/layout/dot/c3_clustered.mbt`
 - `src/layout/dot/c3_local.mbt`
@@ -565,7 +565,7 @@ Repository guard validates:
   - `c1_class2.mbt`
 - Stage C ordering seed/reorder helpers:
   - `c2_seed.mbt`
-  - `c2_reorder.mbt`
+  - `ordering/graph.mbt`
   - `ordering/noncluster_reorder.mbt`
 - Clustered ordering orchestration and rank-order updates:
   - `c3_clustered.mbt`
