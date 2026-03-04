@@ -79,6 +79,23 @@ priv struct PositionOutputMaps {
 }
 
 ///|
+/// Graphviz parity: final output map assembly input keeps cluster/rank/xpos
+/// snapshots grouped so intercluster alignment, boundary capture, vnode
+/// projection, and rounding run in Graphviz-equivalent order.
+priv struct PositionOutputBuildInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+  use_vnodes_for_xpos : Bool
+  x_positions : Map[String, Double]
+  y_positions : Map[String, Double]
+  rank_y : Map[Int, Double]
+}
+
+///|
 priv struct XWithFlatLabelData {
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, NodeSize]
@@ -1104,77 +1121,80 @@ fn build_y_position_data(
   { y_positions, rank_y, cluster_bbox_heights }
 }
 
+///|
+/// Graphviz parity: intercluster x alignment gate uses DOT_INTERCLUSTER_ALIGN
+/// env parsing once, preserving Graphviz-compatible truthy/falsy semantics.
+fn intercluster_alignment_enabled() -> Bool {
+  match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
+    Some(value) => {
+      let lower = value.to_lower()
+      lower != "0" && lower != "false" && lower != "no"
+    }
+    None => false
+  }
+}
+
+///|
+/// Graphviz parity: final node position projection maps x/y by graph node list
+/// order and defaults missing coordinates to 0.0 exactly as before.
+fn build_node_positions_map(
+  nodes : Array[@cgraph.Node],
+  x_positions : Map[String, Double],
+  y_positions : Map[String, Double],
+) -> Map[String, @geom.Point] {
+  let positions : Map[String, @geom.Point] = Map::new()
+  for node in nodes {
+    let name = node.name()
+    let pos_x = x_positions.get(name).unwrap_or_default()
+    let pos_y = y_positions.get(name).unwrap_or_default()
+    positions[name] = { x: pos_x, y: pos_y }
+  }
+  positions
+}
+
 
 ///|
 /// Graphviz parity: final output map assembly keeps intercluster alignment,
 /// cluster boundary capture, vnode projection, and rounding adjustment order.
 /// Do not change behavior without updating fixtures/tests.
 fn build_position_output_maps(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_positions : Map[String, Double],
-  y_positions : Map[String, Double],
-  rank_y : Map[Int, Double],
+  input : PositionOutputBuildInput,
 ) -> PositionOutputMaps {
-  let intercluster_alignment_enabled =
-    match @sys.get_env_var("DOT_INTERCLUSTER_ALIGN") {
-      Some(value) => {
-        let lower = value.to_lower()
-        lower != "0" && lower != "false" && lower != "no"
-      }
-      None => false
-    }
-  if cluster_meta.has_clusters && prep.has_dotted_edges &&
-    intercluster_alignment_enabled {
+  if input.cluster_meta.has_clusters && input.prep.has_dotted_edges &&
+    intercluster_alignment_enabled() {
     adjust_intercluster_alignment(
-      prep.nodes,
-      prep.edges,
-      rank_data.ranks,
-      x_positions,
-      cluster_meta.cluster_keys,
-      cluster_meta.intercluster_keys,
-      rank_heights.nodesep_pt,
-      prep.has_edge_labels,
+      input.prep.nodes,
+      input.prep.edges,
+      input.rank_data.ranks,
+      input.x_positions,
+      input.cluster_meta.cluster_keys,
+      input.cluster_meta.intercluster_keys,
+      input.rank_heights.nodesep_pt,
+      input.prep.has_edge_labels,
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_boundary_x =
-    build_cluster_boundary_x(graph, cluster_meta, x_positions)
+    build_cluster_boundary_x(input.graph, input.cluster_meta, input.x_positions)
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
     build_vnode_positions(
-      use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      ordering,
-      x_positions,
-      rank_y,
+      input.use_vnodes_for_xpos,
+      input.prep,
+      input.rank_data,
+      input.ordering,
+      input.x_positions,
+      input.rank_y,
     )
-  let positions : Map[String, @geom.Point] = Map::new()
-  for node in prep.nodes {
-    let name = node.name()
-    let pos_x = match x_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    let pos_y = match y_positions.get(name) {
-      Some(value) => value
-      None => 0.0
-    }
-    positions[name] = { x: pos_x, y: pos_y }
-  }
-  if cluster_meta.has_clusters && cluster_rounding_enabled() {
+  let positions =
+    build_node_positions_map(input.prep.nodes, input.x_positions, input.y_positions)
+  if input.cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions(
-      graph,
+      input.graph,
       positions,
       vnode_positions,
-      ordering.vnode_info.vnode_clusters,
-      prep.sizes,
+      input.ordering.vnode_info.vnode_clusters,
+      input.prep.sizes,
     )
   }
   {
@@ -1231,16 +1251,18 @@ fn build_projection_result(
     )
   let position_output_maps =
     build_position_output_maps(
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-      use_vnodes_for_xpos,
-      x_positions,
-      y_position_data.y_positions,
-      y_position_data.rank_y,
+      {
+        graph,
+        prep,
+        rank_data,
+        rank_heights,
+        cluster_meta,
+        ordering,
+        use_vnodes_for_xpos,
+        x_positions,
+        y_positions: y_position_data.y_positions,
+        rank_y: y_position_data.rank_y,
+      },
     )
   {
     x_groups,
