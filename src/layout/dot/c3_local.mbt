@@ -1305,6 +1305,32 @@ fn apply_cluster_rank_reorder_output(
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder dispatch context keeps shared
+/// arrays/maps together so each cluster pass reuses one immutable payload.
+/// Do not change behavior without updating fixtures/tests.
+priv struct ClusterLocalReorderDispatchContext {
+  node_order : Map[String, Int]
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  neighbor_sources : ClusterLocalNeighborSources
+  order_sizes : Map[String, NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_meta : ClusterMetadata
+  vnode_info : @routing.EdgeVnodeInfo
+  fixed_ranks : Map[String, Int]
+  empty_cluster_skeleton : Map[String, Bool]
+  order_with_vnodes : Bool
+}
+
+///|
 /// Graphviz parity: each cluster-local reorder pass reuses global fixed slots,
 /// but only mutates rank entries that belong to that cluster.
 /// Do not change behavior without updating fixtures/tests.
@@ -1313,36 +1339,18 @@ fn reorder_cluster_rank_group(
   expanded_clusters : Map[String, Bool],
   cluster_graph : @cgraph.Graph,
   groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  neighbor_sources : ClusterLocalNeighborSources,
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  cluster_meta : ClusterMetadata,
-  vnode_info : @routing.EdgeVnodeInfo,
   fixed_positions : Map[String, Double],
-  fixed_ranks : Map[String, Int],
-  empty_cluster_skeleton : Map[String, Bool],
-  order_with_vnodes : Bool,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
   let local_context = match build_cluster_local_reorder_context(
     cluster,
     cluster_graph,
     groups,
-    node_order,
-    neighbor_sources.source_out_neighbors,
-    vnode_info.vnode_clusters,
+    dispatch_context.node_order,
+    dispatch_context.neighbor_sources.source_out_neighbors,
+    dispatch_context.vnode_info.vnode_clusters,
     fixed_positions,
-    order_with_vnodes,
+    dispatch_context.order_with_vnodes,
   ) {
     Some(value) => value
     None => return ()
@@ -1352,34 +1360,34 @@ fn reorder_cluster_rank_group(
       cluster,
       cluster_graph.edges().length(),
       expanded_clusters,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      neighbor_sources,
+      dispatch_context.order_edges,
+      dispatch_context.order_edge_tail,
+      dispatch_context.order_edge_head,
+      dispatch_context.order_edge_tail_port_x,
+      dispatch_context.order_edge_head_port_x,
+      dispatch_context.order_edge_tail_port_order,
+      dispatch_context.order_edge_head_port_order,
+      dispatch_context.neighbor_sources,
       local_context.cluster_node_set,
       local_context.cluster_rank_keys,
       local_context.cluster_nodes,
-      fixed_ranks,
-      order_sizes,
-      vnode_info.vnode_sizes,
-      cluster_meta.intercluster_keys,
-      cluster_meta.flat_constraints,
+      dispatch_context.fixed_ranks,
+      dispatch_context.order_sizes,
+      dispatch_context.vnode_info.vnode_sizes,
+      dispatch_context.cluster_meta.intercluster_keys,
+      dispatch_context.cluster_meta.flat_constraints,
     )
   let reorder_output =
     run_cluster_rank_reorder(
       local_context,
       input_phase_output,
-      cluster_meta,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      empty_cluster_skeleton,
-      fixed_ranks,
+      dispatch_context.cluster_meta,
+      dispatch_context.nodesep_pt,
+      dispatch_context.has_edge_labels,
+      dispatch_context.port_order_positions,
+      dispatch_context.port_order_contrib,
+      dispatch_context.empty_cluster_skeleton,
+      dispatch_context.fixed_ranks,
     )
   if !reorder_output.has_internal_constraints {
     return ()
@@ -1400,26 +1408,8 @@ fn reorder_cluster_rank_groups(
   cluster_names : Array[String],
   cluster_graphs : Map[String, @cgraph.Graph],
   groups : Map[Int, Array[String]],
-  node_order : Map[String, Int],
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  neighbor_sources : ClusterLocalNeighborSources,
-  order_sizes : Map[String, NodeSize],
-  nodesep_pt : Double,
-  has_edge_labels : Bool,
-  port_order_positions : Map[String, Double],
-  port_order_contrib : Map[String, Array[(String, Double)]],
-  cluster_meta : ClusterMetadata,
-  vnode_info : @routing.EdgeVnodeInfo,
   fixed_positions : Map[String, Double],
-  fixed_ranks : Map[String, Int],
-  empty_cluster_skeleton : Map[String, Bool],
-  order_with_vnodes : Bool,
+  dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map::new()
   let mut current_fixed_positions = fixed_positions
@@ -1433,26 +1423,8 @@ fn reorder_cluster_rank_groups(
       expanded_clusters,
       cluster_graph,
       groups,
-      node_order,
-      order_edges,
-      order_edge_tail,
-      order_edge_head,
-      order_edge_tail_port_x,
-      order_edge_head_port_x,
-      order_edge_tail_port_order,
-      order_edge_head_port_order,
-      neighbor_sources,
-      order_sizes,
-      nodesep_pt,
-      has_edge_labels,
-      port_order_positions,
-      port_order_contrib,
-      cluster_meta,
-      vnode_info,
       current_fixed_positions,
-      fixed_ranks,
-      empty_cluster_skeleton,
-      order_with_vnodes,
+      dispatch_context,
     )
     expanded_clusters[cluster] = true
     current_fixed_positions = @ordering.order_positions_from_groups(groups)
@@ -1518,10 +1490,7 @@ fn reorder_by_cluster_ranks(
     raw_out_neighbors: raw_graphviz_neighbors.out_neighbors,
     raw_in_neighbors: raw_graphviz_neighbors.in_neighbors,
   }
-  reorder_cluster_rank_groups(
-    cluster_names,
-    cluster_graphs,
-    groups,
+  let dispatch_context : ClusterLocalReorderDispatchContext = {
     node_order,
     order_edges,
     order_edge_tail,
@@ -1538,9 +1507,15 @@ fn reorder_by_cluster_ranks(
     port_order_contrib,
     cluster_meta,
     vnode_info,
-    fixed_positions,
     fixed_ranks,
     empty_cluster_skeleton,
     order_with_vnodes,
+  }
+  reorder_cluster_rank_groups(
+    cluster_names,
+    cluster_graphs,
+    groups,
+    fixed_positions,
+    dispatch_context,
   )
 }
