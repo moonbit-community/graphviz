@@ -691,7 +691,6 @@ pub(all) struct RootAndClusterRanksInputs {
   graphviz_flip : Bool
   cluster_keys : Map[String, String]
   root_groups_override : Map[Int, Array[String]]?
-  root_mincross_reorder_inputs : RootMincrossReorderInputs
 }
 
 ///|
@@ -734,14 +733,9 @@ fn resolve_root_phase_ordered_groups(
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_root_and_cluster_ranks(
   inputs : RootAndClusterRanksInputs,
-  run_root_reorder : (RootMincrossReorderInputs, Map[Int, Array[String]]?) -> RootMincrossReorderResult,
+  root_reorder_result : RootMincrossReorderResult,
   run_cluster_reorder : (Map[Int, Array[String]]) -> Unit,
 ) -> RootAndClusterRanksOutput {
-  let root_reorder_result =
-    run_root_reorder(
-      inputs.root_mincross_reorder_inputs,
-      inputs.root_groups_override,
-    )
   let order_groups_for_mincross = root_reorder_result.order_groups_for_mincross
   let root_ordered_groups = root_reorder_result.ordered
   let ordered =

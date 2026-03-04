@@ -195,8 +195,12 @@ fn run_root_and_cluster_ranks(
     graphviz_flip: reorder_setup.graphviz_flip,
     cluster_keys: dispatch_context.cluster_meta.cluster_keys,
     root_groups_override,
-    root_mincross_reorder_inputs,
   }
+  let root_reorder_result =
+    run_root_mincross_reorder(
+      root_mincross_reorder_inputs,
+      root_groups_override,
+    )
   let replay_context =
     build_cluster_local_rank_replay_context(
       dispatch_context,
@@ -204,7 +208,7 @@ fn run_root_and_cluster_ranks(
     )
   @ordering.run_root_and_cluster_ranks(
     root_and_cluster_inputs,
-    run_root_mincross_reorder,
+    root_reorder_result,
     (ordered) => reorder_by_cluster_ranks(ordered, replay_context),
   )
 }
