@@ -31,6 +31,7 @@ fn build_remincross_pass_context(
     cluster_order: dispatch_context.cluster_meta.cluster_order,
     cluster_keys: dispatch_context.cluster_meta.cluster_keys,
     intercluster_keys: dispatch_context.cluster_meta.intercluster_keys,
+    local_cluster_order: runtime_context.local_cluster_order,
     cluster_parents: dispatch_context.cluster_meta.cluster_parents,
     cluster_min_rank: dispatch_context.cluster_meta.cluster_min_rank,
     cluster_max_rank: dispatch_context.cluster_meta.cluster_max_rank,
@@ -81,20 +82,9 @@ fn finalize_order_groups(
         root_tail_order_override,
       ),
   }
-  let runtime_context = dispatch_context.runtime_context
-  let cluster_keys = dispatch_context.cluster_meta.cluster_keys
-  let intercluster_keys = dispatch_context.cluster_meta.intercluster_keys
-  let local_cluster_order = runtime_context.local_cluster_order
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
       finalize_inputs,
-      (groups) =>
-        reorder_by_local_cluster(
-          groups,
-          cluster_keys,
-          intercluster_keys,
-          local_cluster_order,
-        ),
       build_vnode_order_keys,
       capture_remincross_snapshot,
       @ordering.run_remincross_cleanup_reorder,

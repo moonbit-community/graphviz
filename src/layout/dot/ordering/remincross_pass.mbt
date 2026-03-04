@@ -23,6 +23,7 @@ pub(all) struct ReMincrossPassBuildContext {
   cluster_order : Array[String]
   cluster_keys : Map[String, String]
   intercluster_keys : Map[String, String]
+  local_cluster_order : Map[String, Int]
   cluster_parents : Map[String, String?]
   cluster_min_rank : Map[String, Int]
   cluster_max_rank : Map[String, Int]
@@ -73,7 +74,6 @@ pub(all) struct ClusteredFinalizeInputs {
 /// Do not change behavior without updating fixtures/tests.
 pub fn run_clustered_finalize_order_groups(
   inputs : ClusteredFinalizeInputs,
-  apply_local_cluster_order : (Map[Int, Array[String]]) -> Unit,
   build_vnode_order_keys : (Array[@cgraph.Edge], Array[String], Array[String], Array[Bool], Map[String, Int], Map[String, Int], Map[String, String], Map[String, String?], Map[String, Array[String]], Map[String, Int]) -> Map[String, Double],
   capture_call : (ReMincrossCleanupCaptureInputs) -> Unit,
   reorder_call : (ReMincrossCleanupReorderInputs) -> Map[Int, Array[String]],
@@ -95,7 +95,8 @@ pub fn run_clustered_finalize_order_groups(
       cleaned_groups,
       inputs.cluster_rank_order,
       inputs.remincross_context.cluster_keys,
-      apply_local_cluster_order,
+      inputs.remincross_context.intercluster_keys,
+      inputs.remincross_context.local_cluster_order,
     )
   run_remincross_pass(
     inputs.remincross_context,

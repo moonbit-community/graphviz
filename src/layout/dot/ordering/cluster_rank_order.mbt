@@ -243,6 +243,106 @@ pub fn collect_real_only_rank_groups(
 }
 
 ///|
+/// Graphviz parity: within each outer-cluster rank bucket, local subclusters
+/// are ordered by local-cluster rank order with stable in-rank tie-breaks.
+/// Do not change behavior without updating fixtures/tests.
+pub fn reorder_groups_by_local_cluster(
+  groups : Map[Int, Array[String]],
+  outer_cluster_keys : Map[String, String],
+  local_cluster_keys : Map[String, String],
+  local_cluster_order : Map[String, Int],
+) -> Unit {
+  if local_cluster_order.length() == 0 {
+    return ()
+  }
+  for _rank, names in groups {
+    if names.length() <= 1 {
+      continue
+    }
+    let positions_by_outer : Map[String, Array[Int]] = Map::new()
+    let nodes_by_outer : Map[String, Array[String]] = Map::new()
+    for i in 0..<names.length() {
+      let name = names[i]
+      let outer = cluster_key_or_empty(outer_cluster_keys, name)
+      if outer == "" {
+        continue
+      }
+      match positions_by_outer.get(outer) {
+        Some(list) => list.push(i)
+        None => positions_by_outer[outer] = [i]
+      }
+      match nodes_by_outer.get(outer) {
+        Some(list) => list.push(name)
+        None => nodes_by_outer[outer] = [name]
+      }
+    }
+    for outer, positions in positions_by_outer {
+      let outer_nodes = nodes_by_outer.get(outer).unwrap_or_default()
+      if outer_nodes.length() <= 1 {
+        continue
+      }
+      let local_groups : Map[String, Array[String]] = Map::new()
+      let local_seen : Map[String, Bool] = Map::new()
+      let local_order_in_rank : Array[String] = []
+      let local_order_index : Map[String, Int] = Map::new()
+      for name in outer_nodes {
+        let local_key = cluster_key_or_empty(local_cluster_keys, name)
+        if local_key == "" {
+          continue
+        }
+        if local_seen.get(local_key) is None {
+          local_seen[local_key] = true
+          local_order_in_rank.push(local_key)
+          local_order_index[local_key] = local_order_in_rank.length() - 1
+          local_groups[local_key] = []
+        }
+        match local_groups.get(local_key) {
+          Some(list) => list.push(name)
+          None => local_groups[local_key] = [name]
+        }
+      }
+      if local_groups.length() <= 1 {
+        continue
+      }
+      let local_sorted = local_order_in_rank.copy()
+      local_sorted.sort_by((a, b) => {
+        let a_order = local_cluster_order.get(a).unwrap_or_default()
+        let b_order = local_cluster_order.get(b).unwrap_or_default()
+        if a_order < b_order {
+          -1
+        } else if a_order > b_order {
+          1
+        } else {
+          let a_idx = local_order_index.get(a).unwrap_or_default()
+          let b_idx = local_order_index.get(b).unwrap_or_default()
+          if a_idx < b_idx {
+            -1
+          } else if a_idx > b_idx {
+            1
+          } else {
+            0
+          }
+        }
+      })
+      let merged : Array[String] = []
+      for key in local_sorted {
+        let list = local_groups.get(key).unwrap_or_default()
+        for name in list {
+          merged.push(name)
+        }
+      }
+      let pos_sorted = positions.copy()
+      pos_sorted.sort()
+      let mut idx = 0
+      while idx < pos_sorted.length() && idx < merged.length() {
+        names[pos_sorted[idx]] = merged[idx]
+        idx = idx + 1
+      }
+    }
+  }
+}
+
+///|
 /// Graphviz parity: clustered-block bounds are the first/last clustered-name
 /// positions in the rank, with (-1, -1) when no clustered names exist.
 priv struct ClusterBlockBounds {
@@ -488,7 +588,8 @@ pub fn build_clustered_finalize_groups(
   cleaned_groups : Map[Int, Array[String]],
   cluster_rank_order : Map[Int, Map[String, Int]],
   cluster_keys : Map[String, String],
-  apply_local_cluster_order : (Map[Int, Array[String]]) -> Unit,
+  local_cluster_keys : Map[String, String],
+  local_cluster_order : Map[String, Int],
 ) -> Map[Int, Array[String]] {
   let should_skip_cluster_rank_reorder =
     should_skip_cluster_rank_bucket_reorder(
@@ -506,6 +607,11 @@ pub fn build_clustered_finalize_groups(
         cluster_keys,
       )
     }
-  apply_local_cluster_order(final_groups)
+  reorder_groups_by_local_cluster(
+    final_groups,
+    cluster_keys,
+    local_cluster_keys,
+    local_cluster_order,
+  )
   final_groups
 }
