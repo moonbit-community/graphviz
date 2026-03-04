@@ -8,7 +8,7 @@
 fn run_noncluster_rank_reorder(
   call_inputs : @ordering.NonclusterRankReorderInputs,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     call_inputs.rank_keys,
     call_inputs.groups,
     call_inputs.order_edges,

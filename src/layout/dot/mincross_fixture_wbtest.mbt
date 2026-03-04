@@ -606,7 +606,7 @@ fn run_mincross_case_with_name_order(
       idx = idx + 1
     }
   }
-  let ordered = reorder_rank_groups(
+  let ordered = @ordering.reorder_rank_groups(
     rank_keys,
     groups,
     edges,

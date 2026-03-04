@@ -504,7 +504,7 @@ fn apply_clustered_rank_groups(
   let edge_order = @ordering.collect_edge_order(order_edges_out)
   // Graphviz parity: xpos reorder uses the same edge-segment port-order hints
   // computed for the order graph (mincross median tie-breaking path).
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     order_rank_keys,
     order_groups,
     order_edges_out,

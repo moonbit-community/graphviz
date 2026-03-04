@@ -255,7 +255,8 @@ Supporting files:
 - `src/layout/dot/ordering/remincross_seeded.mbt`
 - `src/layout/dot/ordering/remincross_vnode_groups.mbt`
 - `src/layout/dot/ordering.mbt`
-- `src/layout/dot/mincross.mbt`
+- `src/layout/dot/ordering/rank_reorder.mbt`
+- `src/layout/dot/ordering/rank_groups.mbt`
 
 This is the most complex stage.
 
@@ -587,7 +588,7 @@ Repository guard validates:
   - `d4_clustered.mbt`
   - `d4_nonclustered.mbt`
 - Crossing helpers:
-  - `xpos.mbt`, `ordering.mbt`, `mincross.mbt`
+  - `xpos.mbt`, `ordering/core.mbt`, `ordering/rank_reorder.mbt`, `ordering/rank_groups.mbt`
 - Routing:
   - `routing_types.mbt`, `routing_context.mbt`, `routing_pass.mbt`, `routing_base.mbt`, `routing_curve_points.mbt`, `routing_short_route.mbt`, `routing_curve_mode.mbt`, `routing_render_layout.mbt`, `routing_self_edge.mbt`, `routing_sameport.mbt`, `routing_clip_shape.mbt`, `routing/*`
 - Final graph writeback:

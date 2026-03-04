@@ -724,7 +724,7 @@ fn run_cluster_rank_reorder(
       dispatch_context.fixed_ranks,
     )
   let ordered_cluster =
-    reorder_rank_groups(
+    @ordering.reorder_rank_groups(
       local_context.cluster_rank_keys,
       seeded_cluster_groups,
       input_phase_output.cluster_edges,

@@ -8,7 +8,7 @@
 fn run_remincross_cleanup_reorder(
   reorder_inputs : @ordering.ReMincrossCleanupReorderInputs,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     reorder_inputs.rem_rank_keys,
     reorder_inputs.rem_groups,
     reorder_inputs.rem_edges_out,

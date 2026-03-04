@@ -19,7 +19,7 @@ Graphviz source map (layout/dot parity)
   - MoonBit: `src/layout/dot/network_simplex/network_simplex.mbt` + `src/layout/dot/layout.mbt` (rank build/merge)
   - Graphviz: `refs/graphviz/lib/dotgen/rank.c`, `refs/graphviz/lib/common/ns.c`, `refs/graphviz/lib/dotgen/acyclic.c`
 - Crossing reduction (mincross / ordering)
-  - MoonBit: `src/layout/dot/mincross.mbt` + `src/layout/dot/ordering/rank_reorder.mbt` + `src/layout/dot/ordering/core.mbt`
+  - MoonBit: `src/layout/dot/ordering/rank_reorder.mbt` + `src/layout/dot/ordering/rank_groups.mbt` + `src/layout/dot/ordering/core.mbt`
   - Graphviz: `refs/graphviz/lib/dotgen/mincross.c`, `refs/graphviz/lib/dotgen/flat.c`
 - X-position constraints (class2 / position)
   - MoonBit: `src/layout/dot/xpos.mbt` + `src/layout/dot/layout.mbt` (order index, vnode ordering)

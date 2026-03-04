@@ -134,7 +134,7 @@ fn run_root_mincross_reorder_call(
   root_graphviz_flip : Bool,
   coalesce_parallel : Bool,
 ) -> Map[Int, Array[String]] {
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     reorder_inputs.order_rank_keys_for_mincross,
     reorder_inputs.order_groups_for_mincross,
     reorder_inputs.order_edges_out_mincross,
@@ -173,11 +173,11 @@ fn run_root_mincross_reorder_call(
 fn run_with_pass0_flat_seed_capture(
   run_phase : () -> @ordering.RootMincrossReorderResult,
 ) -> @ordering.RootMincrossReorderResult {
-  capture_pass0_flat_seed_groups_value.val = None
-  capture_pass0_flat_seed_groups_enabled.val = true
+  @ordering.capture_pass0_flat_seed_groups_value.val = None
+  @ordering.capture_pass0_flat_seed_groups_enabled.val = true
   let result = run_phase()
-  capture_pass0_flat_seed_groups_enabled.val = false
-  capture_pass0_flat_seed_groups_value.val = None
+  @ordering.capture_pass0_flat_seed_groups_enabled.val = false
+  @ordering.capture_pass0_flat_seed_groups_value.val = None
   result
 }
 

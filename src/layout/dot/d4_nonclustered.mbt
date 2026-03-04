@@ -51,7 +51,7 @@ fn build_nonclustered_groups(
     )
   let order_edge_tail_port_order = order_edge_port_order_samples.tail_values
   let order_edge_head_port_order = order_edge_port_order_samples.head_values
-  reorder_rank_groups(
+  @ordering.reorder_rank_groups(
     tmp_rank_keys,
     x_groups,
     ordering.order_edges,
