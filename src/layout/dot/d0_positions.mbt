@@ -55,6 +55,17 @@ priv struct XPositionSeedData {
 }
 
 ///|
+/// Graphviz parity: x-stage seed input keeps vnode mode plus ordering/rank
+/// context grouped before order-index, vnode-order, and edge-port precompute.
+priv struct XSeedBuildInput {
+  use_vnodes_for_xpos : Bool
+  prep : LayoutPrep
+  rank_data : RankData
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
 /// Graphviz parity: x-stage flat-label augmentation input keeps reorder flags,
 /// stage contexts, and seed snapshots grouped for one reorder+augmentation
 /// pass.
@@ -254,11 +265,13 @@ fn build_x_with_flat_labels(
   let mode_flags = build_position_mode_flags(prep, ordering)
   let x_seed =
     build_x_seed_data(
-      mode_flags.use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      cluster_meta,
-      ordering,
+      {
+        use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
+        prep,
+        rank_data,
+        cluster_meta,
+        ordering,
+      },
     )
   let flat_label_augmentation =
     build_x_flat_labels(
@@ -723,47 +736,43 @@ fn build_initial_x_groups(
 /// order probing, edge-port metadata, and initial group/cluster maps unchanged.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_seed_data(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  input : XSeedBuildInput,
 ) -> XPositionSeedData {
-  let order_index = @ordering.build_order_index(ordering.ordered_groups)
+  let order_index = @ordering.build_order_index(input.ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state(
-      use_vnodes_for_xpos,
-      ordering.ordered_groups_with_vnodes,
-      prep,
-      rank_data,
+      input.use_vnodes_for_xpos,
+      input.ordering.ordered_groups_with_vnodes,
+      input.prep,
+      input.rank_data,
       order_index,
-      cluster_meta,
-      ordering,
+      input.cluster_meta,
+      input.ordering,
     )
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
     build_x_order_edge_port_data(
-      use_vnodes_for_xpos,
-      prep,
-      rank_data,
-      ordering,
+      input.use_vnodes_for_xpos,
+      input.prep,
+      input.rank_data,
+      input.ordering,
     )
   let x_groups =
     build_initial_x_groups(
-      use_vnodes_for_xpos,
-      ordering.ordered_groups,
-      ordering.ordered_groups_with_vnodes,
+      input.use_vnodes_for_xpos,
+      input.ordering.ordered_groups,
+      input.ordering.ordered_groups_with_vnodes,
       order_index,
-      ordering.vnode_info.vnodes_by_rank,
+      input.ordering.vnode_info.vnodes_by_rank,
       vnode_order_state.vnode_order_keys,
-      cluster_meta,
+      input.cluster_meta,
     )
   let x_cluster_keys : Map[String, String] = Map::new()
-  for name, key in cluster_meta.cluster_keys {
+  for name, key in input.cluster_meta.cluster_keys {
     x_cluster_keys[name] = key
   }
-  if use_vnodes_for_xpos {
-    for name, key in ordering.vnode_info.vnode_clusters {
+  if input.use_vnodes_for_xpos {
+    for name, key in input.ordering.vnode_info.vnode_clusters {
       x_cluster_keys[name] = key
     }
   }
