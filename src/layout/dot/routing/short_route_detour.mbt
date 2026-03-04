@@ -54,21 +54,30 @@ priv struct ShortRouteDetourResolution {
 }
 
 ///|
+priv struct FlatDetourScanInput {
+  lookup : FlatDetourLookupContext
+  line_start : @geom.Point
+  line_end : @geom.Point
+}
+
+///|
 fn flat_detour_points_if_blocked(
-  tail_name : String,
-  head_name : String,
-  rank : Int,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  ranksep_pt : Double,
-  rankdir : RankDir,
+  input : FlatDetourScanInput,
 ) -> FlatDetourResult? {
+  let lookup = input.lookup
+  let line_start = input.line_start
+  let line_end = input.line_end
+  let tail_name = lookup.tail_name
+  let head_name = lookup.head_name
+  let rank = lookup.rank
+  let positions = lookup.positions
+  let sizes = lookup.sizes
+  let ranks = lookup.ranks
+  let rank_y = lookup.rank_y
+  let rank_ht1 = lookup.rank_ht1
+  let rank_ht2 = lookup.rank_ht2
+  let ranksep_pt = lookup.ranksep_pt
+  let rankdir = lookup.rankdir
   match rankdir {
     RankDir::TB | RankDir::BT => {
       let min_x = min_double(line_start.x, line_end.x)
@@ -228,35 +237,11 @@ fn flat_detour_points_if_blocked(
 fn maybe_flat_detour_points_if_blocked(
   flat_no_arrow_candidate : Bool,
   flat_top_compass_single_arrow_candidate : Bool,
-  tail_name : String,
-  head_name : String,
-  rank : Int,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  positions : Map[String, @geom.Point],
-  sizes : Map[String, NodeSize],
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  ranksep_pt : Double,
-  rankdir : RankDir,
+  flat_detour_scan_input : FlatDetourScanInput,
 ) -> FlatDetourResult? {
   if flat_no_arrow_candidate || flat_top_compass_single_arrow_candidate {
     flat_detour_points_if_blocked(
-      tail_name,
-      head_name,
-      rank,
-      line_start,
-      line_end,
-      positions,
-      sizes,
-      ranks,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      ranksep_pt,
-      rankdir,
+      flat_detour_scan_input,
     )
   } else {
     None
@@ -271,22 +256,11 @@ fn flat_detour_points_for_line(
   line_start : @geom.Point,
   line_end : @geom.Point,
 ) -> FlatDetourResult? {
+  let flat_detour_scan_input = { lookup: context, line_start, line_end }
   maybe_flat_detour_points_if_blocked(
     flat_no_arrow_candidate,
     flat_top_compass_single_arrow_candidate,
-    context.tail_name,
-    context.head_name,
-    context.rank,
-    line_start,
-    line_end,
-    context.positions,
-    context.sizes,
-    context.ranks,
-    context.rank_y,
-    context.rank_ht1,
-    context.rank_ht2,
-    context.ranksep_pt,
-    context.rankdir,
+    flat_detour_scan_input,
   )
 }
 
@@ -362,40 +336,45 @@ fn record_port_detour_points(
 }
 
 ///|
+priv struct ShortRouteDetourResolveInput {
+  base : EdgeRouteBase
+  detour_context : ShortRouteDetourContext
+  flat_detour_lookup : FlatDetourLookupContext
+  line_start : @geom.Point
+  line_end : @geom.Point
+  using_pathplan : Bool
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  nodesep_pt : Double
+  lr_detour_uses_x_axis : Bool
+}
+
+///|
 fn resolve_short_route_detour(
-  base : EdgeRouteBase,
-  detour_context : ShortRouteDetourContext,
-  flat_detour_lookup : FlatDetourLookupContext,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  using_pathplan : Bool,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  nodesep_pt : Double,
-  lr_detour_uses_x_axis : Bool,
+  input : ShortRouteDetourResolveInput,
 ) -> ShortRouteDetourResolution {
-  let flat_no_arrow_candidate = detour_context.flat_no_arrow_candidate
+  let flat_no_arrow_candidate = input.detour_context.flat_no_arrow_candidate
   let flat_top_compass_single_arrow_candidate =
-    detour_context.flat_top_compass_single_arrow_candidate
+    input.detour_context.flat_top_compass_single_arrow_candidate
   let flat_detour =
     flat_detour_points_for_line(
-      flat_detour_lookup,
+      input.flat_detour_lookup,
       flat_no_arrow_candidate,
       flat_top_compass_single_arrow_candidate,
-      line_start,
-      line_end,
+      input.line_start,
+      input.line_end,
     )
   let detour_spline =
     detour_spline_if_any(
       {
-        base,
-        needs_record_detour: detour_context.needs_record_detour,
+        base: input.base,
+        needs_record_detour: input.detour_context.needs_record_detour,
         flat_detour,
-        using_pathplan,
-        tail_slope_line: detour_context.tail_slope_line,
-        head_slope_line: detour_context.head_slope_line,
-        route_barriers,
-        nodesep_pt,
-        lr_detour_uses_x_axis,
+        using_pathplan: input.using_pathplan,
+        tail_slope_line: input.detour_context.tail_slope_line,
+        head_slope_line: input.detour_context.head_slope_line,
+        route_barriers: input.route_barriers,
+        nodesep_pt: input.nodesep_pt,
+        lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
       },
     )
   {
@@ -406,36 +385,43 @@ fn resolve_short_route_detour(
 }
 
 ///|
+priv struct ShortRouteDetourResolveForBaseInput {
+  base : EdgeRouteBase
+  using_pathplan : Bool
+  has_explicit_port : Bool
+  label_width_pt : Double
+  flat_detour_lookup : FlatDetourLookupContext
+  line_start : @geom.Point
+  line_end : @geom.Point
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  nodesep_pt : Double
+  lr_detour_uses_x_axis : Bool
+}
+
+///|
 fn resolve_short_route_detour_for_base(
-  base : EdgeRouteBase,
-  using_pathplan : Bool,
-  has_explicit_port : Bool,
-  label_width_pt : Double,
-  flat_detour_lookup : FlatDetourLookupContext,
-  line_start : @geom.Point,
-  line_end : @geom.Point,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  nodesep_pt : Double,
-  lr_detour_uses_x_axis : Bool,
+  input : ShortRouteDetourResolveForBaseInput,
 ) -> (ShortRouteDetourContext, ShortRouteDetourResolution) {
   let detour_context =
     short_route_detour_context_for_base(
-      base,
-      using_pathplan,
-      has_explicit_port,
-      label_width_pt,
+      input.base,
+      input.using_pathplan,
+      input.has_explicit_port,
+      input.label_width_pt,
     )
   let detour_resolution =
     resolve_short_route_detour(
-      base,
-      detour_context,
-      flat_detour_lookup,
-      line_start,
-      line_end,
-      using_pathplan,
-      route_barriers,
-      nodesep_pt,
-      lr_detour_uses_x_axis,
+      {
+        base: input.base,
+        detour_context,
+        flat_detour_lookup: input.flat_detour_lookup,
+        line_start: input.line_start,
+        line_end: input.line_end,
+        using_pathplan: input.using_pathplan,
+        route_barriers: input.route_barriers,
+        nodesep_pt: input.nodesep_pt,
+        lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
+      },
     )
   (detour_context, detour_resolution)
 }

@@ -428,16 +428,18 @@ pub fn build_short_route_spline_with_detour(
 ) -> PointsSplineResult {
   let (detour_context, detour_resolution) =
     resolve_short_route_detour_for_base(
-      base,
-      short_route_context.using_pathplan,
-      short_route_context.has_explicit_port,
-      short_route_context.label_width_pt,
-      short_route_context.flat_detour_lookup,
-      short_route_spec.detour_line_start,
-      short_route_spec.detour_line_end,
-      short_route_context.route_barriers,
-      short_route_context.nodesep_pt,
-      short_route_spec.lr_detour_uses_x_axis,
+      {
+        base,
+        using_pathplan: short_route_context.using_pathplan,
+        has_explicit_port: short_route_context.has_explicit_port,
+        label_width_pt: short_route_context.label_width_pt,
+        flat_detour_lookup: short_route_context.flat_detour_lookup,
+        line_start: short_route_spec.detour_line_start,
+        line_end: short_route_spec.detour_line_end,
+        route_barriers: short_route_context.route_barriers,
+        nodesep_pt: short_route_context.nodesep_pt,
+        lr_detour_uses_x_axis: short_route_spec.lr_detour_uses_x_axis,
+      },
     )
   if detour_resolution.detour_spline is Some(result) {
     result
