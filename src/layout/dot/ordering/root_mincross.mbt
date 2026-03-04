@@ -686,7 +686,6 @@ pub fn run_root_mincross_reorder(
 /// and root override replay context unchanged before cluster-local pass.
 /// Do not change behavior without updating fixtures/tests.
 pub(all) struct RootAndClusterRanksInputs {
-  order_with_clusters : Bool
   order_with_vnodes : Bool
   graphviz_flip : Bool
   cluster_keys : Map[String, String]

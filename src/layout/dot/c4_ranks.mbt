@@ -190,7 +190,6 @@ fn run_root_and_cluster_ranks(
     )
   let reorder_setup = dispatch_context.reorder_setup
   let root_and_cluster_inputs : @ordering.RootAndClusterRanksInputs = {
-    order_with_clusters: reorder_setup.order_with_clusters,
     order_with_vnodes: reorder_setup.order_with_vnodes,
     graphviz_flip: reorder_setup.graphviz_flip,
     cluster_keys: dispatch_context.cluster_meta.cluster_keys,
