@@ -16,7 +16,7 @@ pub fn layout_dot(
   reset_label_caches()
   let prep = prepare_layout_inputs(graph, opts)
   let rank_stage_output =
-    compute_dot_rank_stage(graph, prep)
+    compute_dot_rank_stage({ graph, prep })
   let rank_data = rank_stage_output.rank_data
   let rank_heights = rank_stage_output.rank_heights
   let cluster_meta = rank_stage_output.cluster_meta

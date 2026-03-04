@@ -2,6 +2,14 @@
 /// Stage B rank-stage orchestrator and output payload.
 
 ///|
+/// Graphviz parity: rank stage payload keeps Stage A-prepared inputs grouped
+/// so Stage B wiring remains explicit and stable.
+priv struct DotRankStageInput {
+  graph : @cgraph.Graph
+  prep : LayoutPrep
+}
+
+///|
 priv struct DotRankStageOutput {
   rank_data : RankData
   rank_heights : RankHeights
@@ -14,9 +22,10 @@ priv struct DotRankStageOutput {
 /// (dotinit.c, rank.c, mincross.c, flat.c, position.c), with typed stage inputs.
 /// Do not change behavior without updating fixtures/tests.
 fn compute_dot_rank_stage(
-  graph : @cgraph.Graph,
-  prep : LayoutPrep,
+  input : DotRankStageInput,
 ) -> DotRankStageOutput {
+  let graph = input.graph
+  let prep = input.prep
   // Graphviz parity: rank-data creation remains first before downstream stage assembly.
   let rank_data =
     compute_rank_data(
