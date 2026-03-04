@@ -84,7 +84,6 @@ pub fn build_clustered_xpos_reorder_input(
   }
 }
 
-///|
 /// Graphviz parity: clustered xpos reorder runs seed build, order-edge
 /// materialization, and reorder_rank_groups in Graphviz-equivalent sequence.
 /// Do not change behavior without updating fixtures/tests.
@@ -154,7 +153,7 @@ pub fn build_clustered_xpos_groups(
 /// Graphviz parity: clustered xpos reorder apply inputs keep order-graph edge
 /// snapshots, rank metadata, and cluster constraints grouped for one
 /// reorder_rank_groups invocation.
-pub struct ClusteredXposReorderApplyInput {
+priv struct ClusteredXposReorderApplyInput {
   order_rank_keys : Array[Int]
   order_groups : Map[Int, Array[String]]
   order_edges_out : Array[@cgraph.Edge]
@@ -183,7 +182,7 @@ pub struct ClusteredXposReorderApplyInput {
 /// parents/children plus edge-order hints exactly once before
 /// reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-pub fn apply_clustered_xpos_reorder(
+fn apply_clustered_xpos_reorder(
   input : ClusteredXposReorderApplyInput,
 ) -> Map[Int, Array[String]] {
   let edge_index_data = @ordering.build_edge_index_for_names(
@@ -232,7 +231,7 @@ pub fn apply_clustered_xpos_reorder(
 /// Graphviz parity: clustered xpos reorder seed inputs keep x-order rank
 /// groups, cluster bounds, and node-order seeds together before skeleton
 /// injection and rank/order materialization.
-pub struct ClusteredXposSeedInput {
+priv struct ClusteredXposSeedInput {
   x_groups : Map[Int, Array[String]]
   x_order_sizes : Map[String, @shared.NodeSize]
   x_cluster_keys : Map[String, String]
@@ -247,7 +246,7 @@ pub struct ClusteredXposSeedInput {
 /// Graphviz parity: clustered xpos reorder seed output preserves the same
 /// order-group/rank/node-order snapshots consumed by edge materialization and
 /// reorder_rank_groups.
-pub struct ClusteredXposSeedOutput {
+priv struct ClusteredXposSeedOutput {
   order_groups : Map[Int, Array[String]]
   order_sizes : Map[String, @shared.NodeSize]
   order_cluster_keys : Map[String, String]
@@ -285,7 +284,7 @@ fn append_skeleton_nodes(
 /// Graphviz parity: clustered xpos reorder seed setup clones x-order groups,
 /// injects cluster skeleton nodes, and materializes rank/order maps.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_xpos_seed(
+fn build_clustered_xpos_seed(
   input : ClusteredXposSeedInput,
 ) -> ClusteredXposSeedOutput {
   let order_groups : Map[Int, Array[String]] = Map::new()
@@ -343,7 +342,7 @@ pub fn build_clustered_xpos_seed(
 /// Graphviz parity: clustered xpos edge materialization inputs keep order-graph
 /// node set, expanded edge/vnode chains, and cluster skeleton range metadata
 /// together before reorder_rank_groups.
-pub struct ClusteredXposEdgeMaterializationInput {
+priv struct ClusteredXposEdgeMaterializationInput {
   edges : Array[@cgraph.Edge]
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -363,7 +362,7 @@ pub struct ClusteredXposEdgeMaterializationInput {
 ///|
 /// Graphviz parity: clustered xpos edge materialization output preserves edge
 /// sequence and endpoint metadata arrays consumed by reorder_rank_groups.
-pub struct ClusteredXposEdgeMaterializationOutput {
+priv struct ClusteredXposEdgeMaterializationOutput {
   order_edges_out : Array[@cgraph.Edge]
   order_edge_tail_out : Array[String]
   order_edge_head_out : Array[String]
@@ -631,7 +630,7 @@ fn append_skeleton_edges(
 /// Graphviz parity: clustered xpos reorder edge materialization preserves vnode
 /// chain splitting and cluster skeleton linking before reorder_rank_groups.
 /// Do not change behavior without updating fixtures/tests.
-pub fn build_clustered_xpos_edges(
+fn build_clustered_xpos_edges(
   input : ClusteredXposEdgeMaterializationInput,
 ) -> ClusteredXposEdgeMaterializationOutput {
   let order_graph =

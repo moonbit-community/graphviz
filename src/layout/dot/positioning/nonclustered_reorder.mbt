@@ -74,11 +74,10 @@ pub fn build_nonclustered_xpos_group_build_input(
   }
 }
 
-///|
 /// Graphviz parity: non-cluster xpos reorder inputs keep vnode-expanded edge
 /// index data, precomputed port hints, and rank-order metadata together for a
 /// single reorder_rank_groups call.
-pub struct NonclusteredXposReorderInput {
+priv struct NonclusteredXposReorderInput {
   nodes : Array[@cgraph.Node]
   order_edges : Array[@cgraph.Edge]
   order_edge_tail : Array[String]
@@ -109,7 +108,7 @@ pub struct NonclusteredXposReorderInput {
 /// Graphviz parity: non-cluster xpos reorder keeps vnode-edge input,
 /// port-hint derivation, and reorder apply wiring identical to Graphviz flow.
 /// Do not change behavior without updating fixtures/tests.
-pub fn reorder_nonclustered_x_groups(
+fn reorder_nonclustered_x_groups(
   input : NonclusteredXposReorderInput,
   x_groups : Map[Int, Array[String]],
 ) -> Map[Int, Array[String]] {
