@@ -161,6 +161,35 @@ pub(all) struct ClusteredFinalizeInputs {
 }
 
 ///|
+/// Graphviz parity: clustered finalize input-source bundle keeps root rank
+/// groups and ReMincross context snapshots paired before cleanup dispatch.
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct ClusteredFinalizeInputsBuildSources {
+  reorder_setup : OrderingReorderSetup
+  order_rank_keys : Array[Int]
+  ordered : Map[Int, Array[String]]
+  cluster_rank_order : Map[Int, Map[String, Int]]
+  remincross_sources : ReMincrossPassBuildSources
+}
+
+///|
+/// Graphviz parity: clustered finalize payload is assembled from one source
+/// bundle before final group cleanup and ReMincross pass.
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_clustered_finalize_inputs_from_sources(
+  sources : ClusteredFinalizeInputsBuildSources,
+) -> ClusteredFinalizeInputs {
+  {
+    order_with_clusters: sources.reorder_setup.order_with_clusters,
+    order_rank_keys: sources.order_rank_keys,
+    ordered: sources.ordered,
+    cluster_rank_order: sources.cluster_rank_order,
+    remincross_context:
+      build_remincross_pass_context_from_sources(sources.remincross_sources),
+  }
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
