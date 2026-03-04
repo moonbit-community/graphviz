@@ -1021,21 +1021,28 @@ priv struct LocalReorderEdgeBundle {
 }
 
 ///|
+/// Graphviz parity: local edge-bundle build reads one immutable snapshot of
+/// order-edge arrays together with the cluster node subset/filter mode.
+priv struct LocalReorderEdgeBuildInputs {
+  include_external_crossing : Bool
+  order_edges : Array[@cgraph.Edge]
+  order_edge_tail : Array[String]
+  order_edge_head : Array[String]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  order_edge_tail_port_order : Array[Double]
+  order_edge_head_port_order : Array[Double]
+  cluster_node_set : Map[String, Bool]
+  cluster_nodes : Array[String]
+  fixed_ranks : Map[String, Int]
+}
+
+///|
 /// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
 /// and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
 fn build_local_reorder_edge_bundle(
-  include_external_crossing : Bool,
-  order_edges : Array[@cgraph.Edge],
-  order_edge_tail : Array[String],
-  order_edge_head : Array[String],
-  order_edge_tail_port_x : Array[Double],
-  order_edge_head_port_x : Array[Double],
-  order_edge_tail_port_order : Array[Double],
-  order_edge_head_port_order : Array[Double],
-  cluster_node_set : Map[String, Bool],
-  cluster_nodes : Array[String],
-  fixed_ranks : Map[String, Int],
+  inputs : LocalReorderEdgeBuildInputs,
 ) -> LocalReorderEdgeBundle {
   let cluster_edges : Array[@cgraph.Edge] = []
   let cluster_edge_tail : Array[String] = []
@@ -1044,29 +1051,29 @@ fn build_local_reorder_edge_bundle(
   let cluster_edge_head_port_x : Array[Double] = []
   let cluster_edge_tail_port_order : Array[Double] = []
   let cluster_edge_head_port_order : Array[Double] = []
-  for i in 0..<order_edges.length() {
-    let tail = order_edge_tail[i]
-    let head = order_edge_head[i]
-    let tail_in = cluster_node_set.get(tail) is Some(_)
-    let head_in = cluster_node_set.get(head) is Some(_)
+  for i in 0..<inputs.order_edges.length() {
+    let tail = inputs.order_edge_tail[i]
+    let head = inputs.order_edge_head[i]
+    let tail_in = inputs.cluster_node_set.get(tail) is Some(_)
+    let head_in = inputs.cluster_node_set.get(head) is Some(_)
     let keep = (tail_in && head_in) ||
-      (include_external_crossing && (tail_in || head_in))
+      (inputs.include_external_crossing && (tail_in || head_in))
     if !keep {
       continue
     }
-    cluster_edges.push(order_edges[i])
+    cluster_edges.push(inputs.order_edges[i])
     cluster_edge_tail.push(tail)
     cluster_edge_head.push(head)
-    cluster_edge_tail_port_x.push(order_edge_tail_port_x[i])
-    cluster_edge_head_port_x.push(order_edge_head_port_x[i])
-    cluster_edge_tail_port_order.push(order_edge_tail_port_order[i])
-    cluster_edge_head_port_order.push(order_edge_head_port_order[i])
+    cluster_edge_tail_port_x.push(inputs.order_edge_tail_port_x[i])
+    cluster_edge_head_port_x.push(inputs.order_edge_head_port_x[i])
+    cluster_edge_tail_port_order.push(inputs.order_edge_tail_port_order[i])
+    cluster_edge_head_port_order.push(inputs.order_edge_head_port_order[i])
   }
   let edge_index_data = @ordering.build_edge_index_for_names(
-    cluster_nodes,
+    inputs.cluster_nodes,
     cluster_edge_tail,
     cluster_edge_head,
-    fixed_ranks,
+    inputs.fixed_ranks,
   )
   {
     cluster_edges,
@@ -1220,17 +1227,19 @@ fn build_local_reorder_inputs(
     )
   let edge_bundle =
     build_local_reorder_edge_bundle(
-      include_external_crossing,
-      input_context.order_edges,
-      input_context.order_edge_tail,
-      input_context.order_edge_head,
-      input_context.order_edge_tail_port_x,
-      input_context.order_edge_head_port_x,
-      input_context.order_edge_tail_port_order,
-      input_context.order_edge_head_port_order,
-      input_context.cluster_node_set,
-      input_context.cluster_nodes,
-      input_context.fixed_ranks,
+      {
+        include_external_crossing,
+        order_edges: input_context.order_edges,
+        order_edge_tail: input_context.order_edge_tail,
+        order_edge_head: input_context.order_edge_head,
+        order_edge_tail_port_x: input_context.order_edge_tail_port_x,
+        order_edge_head_port_x: input_context.order_edge_head_port_x,
+        order_edge_tail_port_order: input_context.order_edge_tail_port_order,
+        order_edge_head_port_order: input_context.order_edge_head_port_order,
+        cluster_node_set: input_context.cluster_node_set,
+        cluster_nodes: input_context.cluster_nodes,
+        fixed_ranks: input_context.fixed_ranks,
+      },
     )
   let metadata =
     build_cluster_local_reorder_metadata(input_context, edge_bundle)
@@ -1479,6 +1488,7 @@ fn reorder_cluster_rank_group(
   groups : Map[Int, Array[String]],
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
+  run_config : ClusterLocalReorderRunConfig,
 ) -> Unit {
   let local_context = match build_cluster_local_reorder_context({
     cluster,
@@ -1517,15 +1527,6 @@ fn reorder_cluster_rank_group(
         flat_constraints: dispatch_context.cluster_meta.flat_constraints,
       },
     )
-  let run_config : ClusterLocalReorderRunConfig = {
-    cluster_meta: dispatch_context.cluster_meta,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    empty_cluster_skeleton: dispatch_context.empty_cluster_skeleton,
-    fixed_ranks: dispatch_context.fixed_ranks,
-  }
   let reorder_output =
     run_cluster_rank_reorder(
       local_context,
@@ -1556,6 +1557,15 @@ fn reorder_cluster_rank_groups(
 ) -> Unit {
   let expanded_clusters : Map[String, Bool] = Map::new()
   let mut current_fixed_positions = fixed_positions
+  let run_config : ClusterLocalReorderRunConfig = {
+    cluster_meta: dispatch_context.cluster_meta,
+    nodesep_pt: dispatch_context.nodesep_pt,
+    has_edge_labels: dispatch_context.has_edge_labels,
+    port_order_positions: dispatch_context.port_order_positions,
+    port_order_contrib: dispatch_context.port_order_contrib,
+    empty_cluster_skeleton: dispatch_context.empty_cluster_skeleton,
+    fixed_ranks: dispatch_context.fixed_ranks,
+  }
   for cluster in cluster_names {
     let cluster_graph = match cluster_graphs.get(cluster) {
       Some(value) => value
@@ -1568,6 +1578,7 @@ fn reorder_cluster_rank_groups(
       groups,
       current_fixed_positions,
       dispatch_context,
+      run_config,
     )
     expanded_clusters[cluster] = true
     current_fixed_positions = @ordering.order_positions_from_groups(groups)
