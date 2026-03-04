@@ -945,28 +945,11 @@ priv struct LocalReorderEdgeBundle {
 }
 
 ///|
-/// Graphviz parity: local edge-bundle build reads one immutable snapshot of
-/// order-edge arrays together with the cluster node subset/filter mode.
-priv struct LocalReorderEdgeBuildInputs {
-  include_external_crossing : Bool
-  order_edges : Array[@cgraph.Edge]
-  order_edge_tail : Array[String]
-  order_edge_head : Array[String]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  order_edge_tail_port_order : Array[Double]
-  order_edge_head_port_order : Array[Double]
-  cluster_node_set : Map[String, Bool]
-  cluster_nodes : Array[String]
-  fixed_ranks : Map[String, Int]
-}
-
-///|
 /// Graphviz parity: shallow cluster-local reorder (<=2 ranks) keeps incoming
 /// and outgoing crossing edges so median anchors see external slots.
 /// Do not change behavior without updating fixtures/tests.
 fn build_local_reorder_edge_bundle(
-  inputs : LocalReorderEdgeBuildInputs,
+  input_context : ClusterLocalReorderInputBuildContext,
 ) -> LocalReorderEdgeBundle {
   let cluster_edges : Array[@cgraph.Edge] = []
   let cluster_edge_tail : Array[String] = []
@@ -975,29 +958,29 @@ fn build_local_reorder_edge_bundle(
   let cluster_edge_head_port_x : Array[Double] = []
   let cluster_edge_tail_port_order : Array[Double] = []
   let cluster_edge_head_port_order : Array[Double] = []
-  for i in 0..<inputs.order_edges.length() {
-    let tail = inputs.order_edge_tail[i]
-    let head = inputs.order_edge_head[i]
-    let tail_in = inputs.cluster_node_set.get(tail) is Some(_)
-    let head_in = inputs.cluster_node_set.get(head) is Some(_)
+  for i in 0..<input_context.order_edges.length() {
+    let tail = input_context.order_edge_tail[i]
+    let head = input_context.order_edge_head[i]
+    let tail_in = input_context.cluster_node_set.get(tail) is Some(_)
+    let head_in = input_context.cluster_node_set.get(head) is Some(_)
     let keep = (tail_in && head_in) ||
-      (inputs.include_external_crossing && (tail_in || head_in))
+      (input_context.include_external_crossing && (tail_in || head_in))
     if !keep {
       continue
     }
-    cluster_edges.push(inputs.order_edges[i])
+    cluster_edges.push(input_context.order_edges[i])
     cluster_edge_tail.push(tail)
     cluster_edge_head.push(head)
-    cluster_edge_tail_port_x.push(inputs.order_edge_tail_port_x[i])
-    cluster_edge_head_port_x.push(inputs.order_edge_head_port_x[i])
-    cluster_edge_tail_port_order.push(inputs.order_edge_tail_port_order[i])
-    cluster_edge_head_port_order.push(inputs.order_edge_head_port_order[i])
+    cluster_edge_tail_port_x.push(input_context.order_edge_tail_port_x[i])
+    cluster_edge_head_port_x.push(input_context.order_edge_head_port_x[i])
+    cluster_edge_tail_port_order.push(input_context.order_edge_tail_port_order[i])
+    cluster_edge_head_port_order.push(input_context.order_edge_head_port_order[i])
   }
   let edge_index_data = @ordering.build_edge_index_for_names(
-    inputs.cluster_nodes,
+    input_context.cluster_nodes,
     cluster_edge_tail,
     cluster_edge_head,
-    inputs.fixed_ranks,
+    input_context.fixed_ranks,
   )
   {
     cluster_edges,
@@ -1011,30 +994,6 @@ fn build_local_reorder_edge_bundle(
     children: edge_index_data.children,
     edge_order: @ordering.collect_edge_order(cluster_edges),
   }
-}
-
-///|
-/// Graphviz parity: local edge-bundle policy derives external-crossing
-/// inclusion from rank depth, cluster edge presence, vnode density, and
-/// fixture-capture mode before filtering order edges.
-fn build_local_reorder_edge_bundle_for_context(
-  input_context : ClusterLocalReorderInputBuildContext,
-) -> LocalReorderEdgeBundle {
-  build_local_reorder_edge_bundle(
-    {
-      include_external_crossing: input_context.include_external_crossing,
-      order_edges: input_context.order_edges,
-      order_edge_tail: input_context.order_edge_tail,
-      order_edge_head: input_context.order_edge_head,
-      order_edge_tail_port_x: input_context.order_edge_tail_port_x,
-      order_edge_head_port_x: input_context.order_edge_head_port_x,
-      order_edge_tail_port_order: input_context.order_edge_tail_port_order,
-      order_edge_head_port_order: input_context.order_edge_head_port_order,
-      cluster_node_set: input_context.cluster_node_set,
-      cluster_nodes: input_context.cluster_nodes,
-      fixed_ranks: input_context.fixed_ranks,
-    },
-  )
 }
 
 ///|
@@ -1135,7 +1094,7 @@ fn build_local_reorder_inputs(
   input_context : ClusterLocalReorderInputBuildContext,
 ) -> ClusterLocalReorderRunInputsOutput {
   let edge_bundle =
-    build_local_reorder_edge_bundle_for_context(input_context)
+    build_local_reorder_edge_bundle(input_context)
   let metadata =
     build_cluster_local_reorder_metadata(input_context, edge_bundle)
   {
