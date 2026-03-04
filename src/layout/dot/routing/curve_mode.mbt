@@ -446,88 +446,96 @@ fn edge_polyline_points(
 }
 
 ///|
+/// Graphviz parity: curve-mode route input keeps rank/geometry/pathplan
+/// snapshots grouped before guide-point and short-route preparation.
+priv struct CurveModeRouteInput {
+  base : EdgeRouteBase
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : EdgeVnodeInfo
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  path_left_bound : Double
+  path_right_bound : Double
+  ranksep_pt : Double
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : HeadPortMetrics
+  routing_context : RoutingContext
+  enable_complex_tuning : Bool
+}
+
+///|
 fn prepare_edge_curve_mode_route(
-  base : EdgeRouteBase,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_info : EdgeVnodeInfo,
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  x_groups : Map[Int, Array[String]],
-  nodesep_pt : Double,
-  path_left_bound : Double,
-  path_right_bound : Double,
-  ranksep_pt : Double,
-  head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
-  enable_complex_tuning : Bool,
+  input : CurveModeRouteInput,
 ) -> CurveModeRoutePrep {
-  let edge = base.edge
-  let tail_anchor = base.tail_anchor
-  let head_anchor = base.head_anchor
-  let label_width_pt = base.mid_label_width_pt
+  let edge = input.base.edge
+  let tail_anchor = input.base.tail_anchor
+  let head_anchor = input.base.head_anchor
+  let label_width_pt = input.base.mid_label_width_pt
   let label_height_pt =
-    if base.mid_label_height_pt > 0.0 {
-      Some(base.mid_label_height_pt)
+    if input.base.mid_label_height_pt > 0.0 {
+      Some(input.base.mid_label_height_pt)
     } else {
       None
     }
   let has_explicit_port =
-    @dot_shared.port_is_explicit(base.tail_port) ||
-    @dot_shared.port_is_explicit(base.head_port)
+    @dot_shared.port_is_explicit(input.base.tail_port) ||
+    @dot_shared.port_is_explicit(input.base.head_port)
   let abs_dx = Double::abs(head_anchor.x - tail_anchor.x)
-  let split_label = enable_complex_tuning &&
+  let split_label = input.enable_complex_tuning &&
     label_width_pt > 0.0 &&
-    base.same_outer_cluster &&
-    base.diff_local_cluster &&
+    input.base.same_outer_cluster &&
+    input.base.diff_local_cluster &&
     abs_dx > label_width_pt
-  let label_pad_boost = if split_label { nodesep_pt * 1.2 } else { 0.0 }
-  let dotted_weight = if enable_complex_tuning { 1.0 } else { 0.8 }
+  let label_pad_boost = if split_label { input.nodesep_pt * 1.2 } else { 0.0 }
+  let dotted_weight = if input.enable_complex_tuning { 1.0 } else { 0.8 }
   let guide_points =
     edge_polyline_points(
       edge,
-      base.tail_name,
-      base.head_name,
-      base.tail_port,
-      base.head_port,
+      input.base.tail_name,
+      input.base.head_name,
+      input.base.tail_port,
+      input.base.head_port,
       tail_anchor,
       head_anchor,
-      ranks,
-      vnode_info.edge_vnodes,
-      vnode_info.vnode_ranks,
-      vnode_positions,
-      rank_y,
-      rank_ht1,
-      nodesep_pt,
+      input.ranks,
+      input.vnode_info.edge_vnodes,
+      input.vnode_info.vnode_ranks,
+      input.vnode_positions,
+      input.rank_y,
+      input.rank_ht1,
+      input.nodesep_pt,
       label_width_pt,
       label_height_pt,
       dotted_weight,
-      enable_complex_tuning,
+      input.enable_complex_tuning,
       split_label,
-      base.same_local_cluster,
+      input.base.same_local_cluster,
       DEFAULT_VNODE_WEIGHT,
     )
   let route_state =
     compute_pathplan_route_points(
       {
-        base,
-        ranks,
-        positions,
-        vnode_positions,
-        vnode_info,
-        sizes,
-        x_groups,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
-        nodesep_pt,
-        path_left_bound,
-        path_right_bound,
-        ranksep_pt,
-        routing_context,
+        base: input.base,
+        ranks: input.ranks,
+        positions: input.positions,
+        vnode_positions: input.vnode_positions,
+        vnode_info: input.vnode_info,
+        sizes: input.sizes,
+        x_groups: input.x_groups,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        nodesep_pt: input.nodesep_pt,
+        path_left_bound: input.path_left_bound,
+        path_right_bound: input.path_right_bound,
+        ranksep_pt: input.ranksep_pt,
+        routing_context: input.routing_context,
         guide_points,
       },
     )
@@ -535,37 +543,37 @@ fn prepare_edge_curve_mode_route(
   let points =
     adjust_route_points(
       route_state.points,
-      base,
-      base.head_port_rect,
+      input.base,
+      input.base.head_port_rect,
       has_explicit_port,
       using_pathplan,
-      nodesep_pt,
+      input.nodesep_pt,
     )
   let curve_offset_params = compute_curve_offset(
     edge,
-    base,
-    head_port_metrics,
+    input.base,
+    input.head_port_metrics,
     label_width_pt,
-    nodesep_pt,
-    enable_complex_tuning,
+    input.nodesep_pt,
+    input.enable_complex_tuning,
   )
   let short_route_context =
     short_route_build_context(
       {
-        base,
-        positions,
-        sizes,
-        ranks,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
-        ranksep_pt,
+        base: input.base,
+        positions: input.positions,
+        sizes: input.sizes,
+        ranks: input.ranks,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        ranksep_pt: input.ranksep_pt,
         route_barriers: route_state.route_barriers,
         using_pathplan,
         has_explicit_port,
         label_width_pt,
-        nodesep_pt,
-        force_segmented: base.force_segmented,
+        nodesep_pt: input.nodesep_pt,
+        force_segmented: input.base.force_segmented,
         curve_offset: curve_offset_params.curve_offset,
         curve_skew: curve_offset_params.curve_skew,
       },
@@ -699,56 +707,23 @@ fn build_curve_mode_spline_from_prepared_route(
 
 ///|
 fn build_edge_curve_mode_result(
-  base : EdgeRouteBase,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_info : EdgeVnodeInfo,
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  x_groups : Map[Int, Array[String]],
-  nodesep_pt : Double,
-  path_left_bound : Double,
-  path_right_bound : Double,
-  ranksep_pt : Double,
-  label_edge_counts : Map[String, Int],
-  head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
-  enable_complex_tuning : Bool,
+  input : CurveModeRouteInput,
 ) -> EdgeSplineResult {
   let prepared =
     prepare_edge_curve_mode_route(
-      base,
-      ranks,
-      sizes,
-      positions,
-      vnode_positions,
-      vnode_info,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      x_groups,
-      nodesep_pt,
-      path_left_bound,
-      path_right_bound,
-      ranksep_pt,
-      head_port_metrics,
-      routing_context,
-      enable_complex_tuning,
+      input,
     )
   let spline_result =
     build_curve_mode_spline_from_prepared_route(
-      base,
+      input.base,
       prepared,
-      label_edge_counts,
-      nodesep_pt,
-      enable_complex_tuning,
+      input.label_edge_counts,
+      input.nodesep_pt,
+      input.enable_complex_tuning,
     )
   let (pathplan_boxes, pathplan_segments) =
     finalize_pathplan_boxes_and_segments(
-      base,
+      input.base,
       prepared.using_pathplan,
       prepared.pathplan_boxes,
       prepared.pathplan_points,
@@ -789,24 +764,26 @@ pub fn build_edge_spline(
     )
   } else {
     build_edge_curve_mode_result(
-      input.base,
-      input.ranks,
-      input.sizes,
-      input.positions,
-      input.vnode_positions,
-      input.vnode_info,
-      input.rank_y,
-      input.rank_ht1,
-      input.rank_ht2,
-      input.x_groups,
-      input.nodesep_pt,
-      input.path_left_bound,
-      input.path_right_bound,
-      input.ranksep_pt,
-      input.label_edge_counts,
-      input.head_port_metrics,
-      input.routing_context,
-      input.enable_complex_tuning,
+      {
+        base: input.base,
+        ranks: input.ranks,
+        sizes: input.sizes,
+        positions: input.positions,
+        vnode_positions: input.vnode_positions,
+        vnode_info: input.vnode_info,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        rank_ht2: input.rank_ht2,
+        x_groups: input.x_groups,
+        nodesep_pt: input.nodesep_pt,
+        path_left_bound: input.path_left_bound,
+        path_right_bound: input.path_right_bound,
+        ranksep_pt: input.ranksep_pt,
+        label_edge_counts: input.label_edge_counts,
+        head_port_metrics: input.head_port_metrics,
+        routing_context: input.routing_context,
+        enable_complex_tuning: input.enable_complex_tuning,
+      },
     )
   }
 }
