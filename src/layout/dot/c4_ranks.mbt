@@ -56,45 +56,6 @@ fn run_root_mincross_reorder(
 }
 
 ///|
-/// Graphviz parity: root-mincross reorder payload is assembled from clustered
-/// pre-root snapshots after seeded build_ranks groups are produced.
-/// Do not change behavior without updating fixtures/tests.
-fn build_root_mincross_reorder_build_context(
-  dispatch_context : ClusteredDispatchContext,
-  stage_views : ClusteredReorderStageViews,
-) -> @ordering.RootMincrossReorderBuildContext {
-  {
-    order_with_clusters: stage_views.reorder_setup.order_with_clusters,
-    order_with_vnodes: stage_views.reorder_setup.order_with_vnodes,
-    order_rank_keys: stage_views.reorder_context.order_rank_keys,
-    order_ranks: stage_views.reorder_context.order_ranks,
-    order_edges_out: stage_views.materialized.order_edges_out,
-    order_edge_tail_out: stage_views.materialized.order_edge_tail_out,
-    order_edge_head_out: stage_views.materialized.order_edge_head_out,
-    order_edge_tail_port_x: stage_views.materialized.order_edge_tail_port_x,
-    order_edge_head_port_x: stage_views.materialized.order_edge_head_port_x,
-    order_edge_tail_port_order: stage_views.materialized.order_edge_tail_port_order,
-    order_edge_head_port_order: stage_views.materialized.order_edge_head_port_order,
-    order_cluster_keys: stage_views.order_cluster_keys,
-    order_cluster_skeleton: stage_views.order_cluster_skeleton,
-    rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
-    rank_same_order: dispatch_context.cluster_meta.rank_same_order,
-    vnode_order_keys_for_ordering:
-      stage_views.reorder_setup.vnode_order_keys_for_ordering,
-    order_node_order: stage_views.reorder_context.order_node_order,
-    order_sizes_out: stage_views.order_sizes_out,
-    nodesep_pt: dispatch_context.nodesep_pt,
-    has_edge_labels: dispatch_context.has_edge_labels,
-    port_order_positions: dispatch_context.port_order_positions,
-    port_order_contrib: dispatch_context.port_order_contrib,
-    order_flat_constraints: stage_views.materialized.order_flat_constraints,
-    graphviz_out_neighbors: stage_views.materialized.graphviz_out_neighbors,
-    graphviz_in_neighbors: stage_views.materialized.graphviz_in_neighbors,
-    graphviz_flip: stage_views.reorder_setup.graphviz_flip,
-  }
-}
-
-///|
 /// Graphviz parity: root mincross output is replayed into clustered build_ranks
 /// using unmapped order-edge arrays before final clustered cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -130,33 +91,6 @@ fn build_cluster_local_rank_replay_context(
 }
 
 ///|
-/// Graphviz parity: clustered root phase seeds build_ranks using mapped order
-/// edges plus Graphviz ND_out/ND_in neighbors before root-mincross reorder.
-/// Do not change behavior without updating fixtures/tests.
-fn build_seeded_reorder_build_context(
-  stage_views : ClusteredReorderStageViews,
-) -> @ordering.SeededReorderBuildContext {
-  {
-    order_rank_keys: stage_views.reorder_context.order_rank_keys,
-    order_groups: stage_views.order_groups,
-    order_edge_tail_out: stage_views.materialized.order_edge_tail_out,
-    order_edge_head_out: stage_views.materialized.order_edge_head_out,
-    order_ranks: stage_views.reorder_context.order_ranks,
-    order_node_order: stage_views.reorder_context.order_node_order,
-    order_cluster_keys: stage_views.order_cluster_keys,
-    order_cluster_skeleton: stage_views.order_cluster_skeleton,
-    order_flat_constraints: stage_views.materialized.order_flat_constraints,
-    graphviz_flip: stage_views.reorder_setup.graphviz_flip,
-    graphviz_out_neighbors: stage_views.materialized.graphviz_out_neighbors,
-    graphviz_in_neighbors: stage_views.materialized.graphviz_in_neighbors,
-    order_edges_out: stage_views.materialized.order_edges_out,
-    order_edge_tail_port_x: stage_views.materialized.order_edge_tail_port_x,
-    order_edge_head_port_x: stage_views.materialized.order_edge_head_port_x,
-    flat_rank_constraints: stage_views.reorder_setup.flat_rank_constraints,
-  }
-}
-
-///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -170,23 +104,23 @@ fn run_root_and_cluster_ranks(
       dispatch_context,
       pre_root_stage,
     )
-  let seeded_build_context =
-    build_seeded_reorder_build_context(
-      stage_views,
-    )
-  let seeded_groups =
-    @ordering.build_seeded_reorder_groups(
-      seeded_build_context,
-    )
-  let root_reorder_context =
-    build_root_mincross_reorder_build_context(
-      dispatch_context,
-      stage_views,
-    )
   let root_mincross_reorder_inputs =
-    @ordering.build_root_mincross_reorder_inputs(
-      seeded_groups,
-      root_reorder_context,
+    @ordering.build_root_mincross_reorder_inputs_from_sources(
+      {
+        reorder_setup: stage_views.reorder_setup,
+        reorder_context: stage_views.reorder_context,
+        materialized: stage_views.materialized,
+        order_groups: stage_views.order_groups,
+        order_cluster_keys: stage_views.order_cluster_keys,
+        order_cluster_skeleton: stage_views.order_cluster_skeleton,
+        order_sizes_out: stage_views.order_sizes_out,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+      },
     )
   let reorder_setup = dispatch_context.reorder_setup
   let root_and_cluster_inputs : @ordering.RootAndClusterRanksInputs = {
