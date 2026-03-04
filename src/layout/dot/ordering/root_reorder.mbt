@@ -350,6 +350,35 @@ pub(all) struct RootReorderBuildSources {
   flat_rank_constraints : Map[String, Bool]
 }
 
+///|
+/// Graphviz parity: root reorder sources for each pass reuse one immutable
+/// source snapshot and only swap the rank-group payload for that pass.
+/// Do not change behavior without updating fixtures/tests.
+pub fn with_root_reorder_groups(
+  base : RootReorderBuildSources,
+  order_groups_for_mincross : Map[Int, Array[String]],
+) -> RootReorderBuildSources {
+  {
+    order_with_vnodes: base.order_with_vnodes,
+    order_rank_keys: base.order_rank_keys,
+    order_groups_for_mincross,
+    order_cluster_keys: base.order_cluster_keys,
+    order_cluster_skeleton: base.order_cluster_skeleton,
+    edges: base.edges,
+    edge_tail: base.edge_tail,
+    edge_head: base.edge_head,
+    cluster_keys: base.cluster_keys,
+    edge_vnodes: base.edge_vnodes,
+    vnodes_by_rank: base.vnodes_by_rank,
+    vnode_order_keys_for_ordering: base.vnode_order_keys_for_ordering,
+    nlist_order: base.nlist_order,
+    ranks: base.ranks,
+    skeleton_edge_creation: base.skeleton_edge_creation,
+    root_edge_creation: base.root_edge_creation,
+    flat_rank_constraints: base.flat_rank_constraints,
+  }
+}
+
 
 ///|
 /// Graphviz parity: root reorder context keeps root groups, ranks, graph

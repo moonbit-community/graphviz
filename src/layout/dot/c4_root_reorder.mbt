@@ -82,26 +82,11 @@ fn run_root_reorder_and_rank_order_phase(
   order_groups_for_mincross : Map[Int, Array[String]],
 ) -> (@ordering.RootClusterReorderInputs, @ordering.RootRankOrderPhaseOutput) {
   let root_rank_order_phase_base = pre_root_stage.root_rank_order_phase_base
-  let base = root_rank_order_phase_base.root_reorder_sources_base
-  let root_reorder_sources : @ordering.RootReorderBuildSources = {
-    order_with_vnodes: base.order_with_vnodes,
-    order_rank_keys: base.order_rank_keys,
-    order_groups_for_mincross,
-    order_cluster_keys: base.order_cluster_keys,
-    order_cluster_skeleton: base.order_cluster_skeleton,
-    edges: base.edges,
-    edge_tail: base.edge_tail,
-    edge_head: base.edge_head,
-    cluster_keys: base.cluster_keys,
-    edge_vnodes: base.edge_vnodes,
-    vnodes_by_rank: base.vnodes_by_rank,
-    vnode_order_keys_for_ordering: base.vnode_order_keys_for_ordering,
-    nlist_order: base.nlist_order,
-    ranks: base.ranks,
-    skeleton_edge_creation: base.skeleton_edge_creation,
-    root_edge_creation: base.root_edge_creation,
-    flat_rank_constraints: base.flat_rank_constraints,
-  }
+  let root_reorder_sources =
+    @ordering.with_root_reorder_groups(
+      root_rank_order_phase_base.root_reorder_sources_base,
+      order_groups_for_mincross,
+    )
   @ordering.run_root_reorder_and_rank_order_phase(
     root_reorder_sources,
     root_rank_order_phase_base.root_rank_order_context,
