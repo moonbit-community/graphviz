@@ -265,3 +265,51 @@ fn layout_subgraphs(
   result
 }
 
+///|
+/// Graphviz parity: cluster bbox expansion aligned to refs/graphviz/lib/common/postproc.c
+/// (place_graph_label) + dotgen/position.c (cluster margins).
+/// Do not change behavior without updating fixtures/tests.
+priv struct SubgraphsAndBBox {
+  subgraphs : Array[DotLayoutGraph]
+  base_bbox : @geom.Rect
+}
+
+///|
+/// Graphviz parity: cluster bbox expansion aligned to refs/graphviz/lib/common/postproc.c
+/// (place_graph_label) + dotgen/position.c (cluster margins).
+/// Do not change behavior without updating fixtures/tests.
+fn build_subgraphs_and_bbox(
+  graph : @cgraph.Graph,
+  nodes : Array[DotLayoutNode],
+  edges : Array[DotLayoutEdge],
+  bbox : @geom.Rect,
+  cluster_ln_x : Map[String, Double],
+  cluster_rn_x : Map[String, Double],
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
+  rankdir : RankDir,
+  ranks : Map[String, Int],
+  rank_y : Map[Int, Double],
+  rank_ht1 : Map[Int, Double],
+  rank_ht2 : Map[Int, Double],
+) -> SubgraphsAndBBox {
+  let subgraphs =
+    layout_subgraphs(
+      graph,
+      nodes,
+      edges,
+      cluster_ln_x,
+      cluster_rn_x,
+      cluster_bbox_heights,
+      rankdir,
+      ranks,
+      rank_y,
+      rank_ht1,
+      rank_ht2,
+    )
+  let expanded = if subgraphs.length() > 0 {
+    expand_bbox_with_clusters(bbox, subgraphs)
+  } else {
+    bbox
+  }
+  { subgraphs, base_bbox: expanded }
+}
