@@ -512,22 +512,24 @@ fn prepare_edge_curve_mode_route(
     )
   let route_state =
     compute_pathplan_route_points(
-      base,
-      ranks,
-      positions,
-      vnode_positions,
-      vnode_info,
-      sizes,
-      x_groups,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      nodesep_pt,
-      path_left_bound,
-      path_right_bound,
-      ranksep_pt,
-      routing_context,
-      guide_points,
+      {
+        base,
+        ranks,
+        positions,
+        vnode_positions,
+        vnode_info,
+        sizes,
+        x_groups,
+        rank_y,
+        rank_ht1,
+        rank_ht2,
+        nodesep_pt,
+        path_left_bound,
+        path_right_bound,
+        ranksep_pt,
+        routing_context,
+        guide_points,
+      },
     )
   let using_pathplan = route_state.using_pathplan
   let points =
@@ -769,60 +771,42 @@ fn build_edge_curve_mode_result(
 /// Graphviz parity: spline routing aligned to refs/graphviz/lib/dotgen/dotsplines.c + lib/common/routespl.c + lib/pathplan/* + lib/common/splines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 pub fn build_edge_spline(
-  base : EdgeRouteBase,
-  spline_mode : Int,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_info : EdgeVnodeInfo,
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  x_groups : Map[Int, Array[String]],
-  nodesep_pt : Double,
-  path_left_bound : Double,
-  path_right_bound : Double,
-  ranksep_pt : Double,
-  label_edge_counts : Map[String, Int],
-  head_port_metrics : HeadPortMetrics,
-  routing_context : RoutingContext,
-  enable_complex_tuning : Bool,
+  input : EdgeSplineBuildInput,
 ) -> EdgeSplineResult {
-  if spline_mode == 0 {
+  if input.spline_mode == 0 {
     edge_spline_result_for_bezier(
-      edge_polyline_mode_spline(base, false),
+      edge_polyline_mode_spline(input.base, false),
       [],
       0.0,
       false,
     )
-  } else if spline_mode == 1 {
+  } else if input.spline_mode == 1 {
     edge_spline_result_for_bezier(
-      edge_polyline_mode_spline(base, true),
+      edge_polyline_mode_spline(input.base, true),
       [],
       0.0,
       false,
     )
   } else {
     build_edge_curve_mode_result(
-      base,
-      ranks,
-      sizes,
-      positions,
-      vnode_positions,
-      vnode_info,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      x_groups,
-      nodesep_pt,
-      path_left_bound,
-      path_right_bound,
-      ranksep_pt,
-      label_edge_counts,
-      head_port_metrics,
-      routing_context,
-      enable_complex_tuning,
+      input.base,
+      input.ranks,
+      input.sizes,
+      input.positions,
+      input.vnode_positions,
+      input.vnode_info,
+      input.rank_y,
+      input.rank_ht1,
+      input.rank_ht2,
+      input.x_groups,
+      input.nodesep_pt,
+      input.path_left_bound,
+      input.path_right_bound,
+      input.ranksep_pt,
+      input.label_edge_counts,
+      input.head_port_metrics,
+      input.routing_context,
+      input.enable_complex_tuning,
     )
   }
 }
@@ -834,6 +818,31 @@ priv struct RoutePointState {
   pathplan_points : Array[@geom.Point]
   route_barriers : Array[(@geom.Point, @geom.Point)]
   pathplan_segments : Array[@routesplines.PathplanSegment]
+}
+
+///|
+/// Graphviz parity: spline-build input keeps route geometry/rank snapshots
+/// grouped for one spline-mode dispatch boundary.
+pub(all) struct EdgeSplineBuildInput {
+  base : EdgeRouteBase
+  spline_mode : Int
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : EdgeVnodeInfo
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  x_groups : Map[Int, Array[String]]
+  nodesep_pt : Double
+  path_left_bound : Double
+  path_right_bound : Double
+  ranksep_pt : Double
+  label_edge_counts : Map[String, Int]
+  head_port_metrics : HeadPortMetrics
+  routing_context : RoutingContext
+  enable_complex_tuning : Bool
 }
 
 ///|
@@ -870,94 +879,102 @@ fn sameport_path_port_box(
 ///|
 /// Graphviz parity: pathplan polyline aligned to refs/graphviz/lib/pathplan/* + lib/common/routespl.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
+priv struct PathplanRoutePointsInput {
+  base : EdgeRouteBase
+  ranks : Map[String, Int]
+  positions : Map[String, @geom.Point]
+  vnode_positions : Map[String, @geom.Point]
+  vnode_info : EdgeVnodeInfo
+  sizes : Map[String, NodeSize]
+  x_groups : Map[Int, Array[String]]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  nodesep_pt : Double
+  path_left_bound : Double
+  path_right_bound : Double
+  ranksep_pt : Double
+  routing_context : RoutingContext
+  guide_points : Array[@geom.Point]
+}
+
+///|
+/// Graphviz parity: pathplan route-point input keeps route geometry/rank maps
+/// grouped so pathplan invocation and fallback order remain explicit.
+/// Do not change behavior without updating fixtures/tests.
 fn compute_pathplan_route_points(
-  base : EdgeRouteBase,
-  ranks : Map[String, Int],
-  positions : Map[String, @geom.Point],
-  vnode_positions : Map[String, @geom.Point],
-  vnode_info : EdgeVnodeInfo,
-  sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  nodesep_pt : Double,
-  path_left_bound : Double,
-  path_right_bound : Double,
-  ranksep_pt : Double,
-  routing_context : RoutingContext,
-  guide_points : Array[@geom.Point],
+  input : PathplanRoutePointsInput,
 ) -> RoutePointState {
   let mut route_barriers : Array[(@geom.Point, @geom.Point)] = []
   let mut pathplan_boxes : Array[@geom.Rect] = []
   let mut pathplan_points : Array[@geom.Point] = []
   let mut pathplan_segments : Array[@routesplines.PathplanSegment] = []
   let (points, pathplan_used) =
-    if base.use_pathplan && !base.is_flat_edge {
-    let has_edge_label = base.mid_label_width_pt > 0.0
+    if input.base.use_pathplan && !input.base.is_flat_edge {
+    let has_edge_label = input.base.mid_label_width_pt > 0.0
     // Graphviz parity: record_path port boxes narrow pathplan bounds (shapes.c).
     let tail_port_box : @geom.Rect? =
-      if !base.tail_clip_enabled {
+      if !input.base.tail_clip_enabled {
         Some(
           sameport_path_port_box(
-            base.tail_pos,
-            base.tail_anchor,
-            base.tail_sameport_group_size,
+            input.base.tail_pos,
+            input.base.tail_anchor,
+            input.base.tail_sameport_group_size,
           ),
         )
-      } else if base.tail_port_side == 0 {
-        base.tail_record_path_box
+      } else if input.base.tail_port_side == 0 {
+        input.base.tail_record_path_box
       } else {
         None
       }
     let head_port_box : @geom.Rect? =
-      if !base.head_clip_enabled {
+      if !input.base.head_clip_enabled {
         Some(
           sameport_path_port_box(
-            base.head_pos,
-            base.head_anchor,
-            base.head_sameport_group_size,
+            input.base.head_pos,
+            input.base.head_anchor,
+            input.base.head_sameport_group_size,
           ),
         )
-      } else if base.head_port_side == 0 {
-        base.head_record_path_box
+      } else if input.base.head_port_side == 0 {
+        input.base.head_record_path_box
       } else {
         None
       }
     match @routesplines.edge_pathplan_polyline(
-      base.edge,
-      base.tail_name,
-      base.head_name,
-      base.tail_anchor,
-      base.head_anchor,
-      base.layout_rankdir,
-      base.tail_port_side,
-      base.head_port_side,
+      input.base.edge,
+      input.base.tail_name,
+      input.base.head_name,
+      input.base.tail_anchor,
+      input.base.head_anchor,
+      input.base.layout_rankdir,
+      input.base.tail_port_side,
+      input.base.head_port_side,
       tail_port_box,
       head_port_box,
-      ranksep_pt,
-      ranks,
-      vnode_info.vnode_ranks,
-      vnode_info.edge_vnodes,
-      positions,
-      vnode_positions,
-      sizes,
-      routing_context.pathplan_sizes,
-      routing_context.pathplan_vnode_mval_sizes,
-      vnode_info.vnode_sizes,
-      routing_context.path_cluster_keys,
-      routing_context.path_vnode_clusters,
-      routing_context.cluster_bboxes,
-      x_groups,
-      routing_context.path_order_index,
-      routing_context.path_adjacency.out_edges,
-      routing_context.path_adjacency.in_edges,
-      rank_y,
-      rank_ht1,
-      rank_ht2,
-      nodesep_pt,
-      path_left_bound,
-      path_right_bound,
+      input.ranksep_pt,
+      input.ranks,
+      input.vnode_info.vnode_ranks,
+      input.vnode_info.edge_vnodes,
+      input.positions,
+      input.vnode_positions,
+      input.sizes,
+      input.routing_context.pathplan_sizes,
+      input.routing_context.pathplan_vnode_mval_sizes,
+      input.vnode_info.vnode_sizes,
+      input.routing_context.path_cluster_keys,
+      input.routing_context.path_vnode_clusters,
+      input.routing_context.cluster_bboxes,
+      input.x_groups,
+      input.routing_context.path_order_index,
+      input.routing_context.path_adjacency.out_edges,
+      input.routing_context.path_adjacency.in_edges,
+      input.rank_y,
+      input.rank_ht1,
+      input.rank_ht2,
+      input.nodesep_pt,
+      input.path_left_bound,
+      input.path_right_bound,
       has_edge_label,
     ) {
       Some(result) => {
@@ -967,11 +984,11 @@ fn compute_pathplan_route_points(
         pathplan_segments = result.segments
         (result.points, true)
       }
-      None => (guide_points, false)
+      None => (input.guide_points, false)
     }
   } else {
     (
-      guide_points,
+      input.guide_points,
       false,
     )
   }
