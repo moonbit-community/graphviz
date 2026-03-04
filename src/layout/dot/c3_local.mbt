@@ -1398,6 +1398,28 @@ priv struct ClusterLocalReorderContextBuildInputs {
 }
 
 ///|
+/// Graphviz parity: cluster-local reorder context inputs pair the active
+/// cluster graph/group slice with dispatch-level ordering/vnode snapshots.
+fn build_cluster_local_reorder_context_build_inputs(
+  cluster : String,
+  cluster_graph : @cgraph.Graph,
+  groups : Map[Int, Array[String]],
+  fixed_positions : Map[String, Double],
+  dispatch_context : ClusterLocalReorderDispatchContext,
+) -> ClusterLocalReorderContextBuildInputs {
+  {
+    cluster,
+    cluster_graph,
+    groups,
+    node_order: dispatch_context.node_order,
+    source_out_neighbors: dispatch_context.neighbor_sources.source_out_neighbors,
+    vnode_clusters: dispatch_context.vnode_info.vnode_clusters,
+    fixed_positions,
+    order_with_vnodes: dispatch_context.order_with_vnodes,
+  }
+}
+
+///|
 /// Graphviz parity: cluster-local reorder only considers nodes that are
 /// present in rank groups and belong to the current cluster (plus local
 /// virtual nodes when enabled).
@@ -1509,16 +1531,17 @@ fn reorder_cluster_rank_group(
   fixed_positions : Map[String, Double],
   dispatch_context : ClusterLocalReorderDispatchContext,
 ) -> Unit {
-  let local_context = match build_cluster_local_reorder_context({
-    cluster,
-    cluster_graph,
-    groups,
-    node_order: dispatch_context.node_order,
-    source_out_neighbors: dispatch_context.neighbor_sources.source_out_neighbors,
-    vnode_clusters: dispatch_context.vnode_info.vnode_clusters,
-    fixed_positions,
-    order_with_vnodes: dispatch_context.order_with_vnodes,
-  }) {
+  let local_context_inputs =
+    build_cluster_local_reorder_context_build_inputs(
+      cluster,
+      cluster_graph,
+      groups,
+      fixed_positions,
+      dispatch_context,
+    )
+  let local_context = match build_cluster_local_reorder_context(
+    local_context_inputs,
+  ) {
     Some(value) => value
     None => return ()
   }
