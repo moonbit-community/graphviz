@@ -126,7 +126,7 @@ fn build_ordering_context(
       edge_tail,
       edge_head,
     )
-  let local_cluster_order = build_local_cluster_order(
+  let local_cluster_order = @ordering.build_local_cluster_order(
     nodes,
     cluster_meta.intercluster_keys,
     ranks,
