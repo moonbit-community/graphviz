@@ -125,15 +125,22 @@ priv struct YPositionComputationData {
 }
 
 ///|
-/// Graphviz parity: y-position pre-solve input keeps rank metadata, cluster
-/// gates, and flat-label adjustments grouped before y sweep.
-priv struct YPositionBuildInput {
+/// Graphviz parity: shared position pipeline context keeps graph/rank/cluster
+/// snapshots grouped so x/y/output stages consume the same base inputs.
+priv struct PositionPipelineContext {
   graph : @cgraph.Graph
   prep : LayoutPrep
   rank_data : RankData
   rank_heights : RankHeights
   cluster_meta : ClusterMetadata
   ordering : OrderingResult
+}
+
+///|
+/// Graphviz parity: y-position pre-solve input keeps rank metadata, cluster
+/// gates, and flat-label adjustments grouped before y sweep.
+priv struct YPositionBuildInput {
+  pipeline : PositionPipelineContext
   flat_label_nodes : Map[String, FlatLabelNodeInfo]
 }
 
@@ -150,12 +157,7 @@ priv struct PositionOutputMaps {
 /// snapshots grouped so intercluster alignment, boundary capture, vnode
 /// projection, and rounding run in Graphviz-equivalent order.
 priv struct PositionOutputBuildInput {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
+  pipeline : PositionPipelineContext
   use_vnodes_for_xpos : Bool
   x_positions : Map[String, Double]
   y_positions : Map[String, Double]
@@ -167,10 +169,8 @@ priv struct PositionOutputBuildInput {
 /// vnode context grouped so direct/fallback vnode projection follows the same
 /// branch gating and data sources as Graphviz.
 priv struct VnodePositionBuildInput {
+  pipeline : PositionPipelineContext
   use_vnodes_for_xpos : Bool
-  prep : LayoutPrep
-  rank_data : RankData
-  ordering : OrderingResult
   x_positions : Map[String, Double]
   rank_y : Map[Int, Double]
 }
@@ -190,12 +190,7 @@ priv struct XWithFlatLabelData {
 /// Graphviz parity: final projection stage input keeps x-stage bundle and
 /// pipeline contexts grouped for one y/x solve and output map assembly pass.
 priv struct ProjectionBuildInput {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
+  pipeline : PositionPipelineContext
   x_data : XWithFlatLabelData
 }
 
@@ -203,11 +198,7 @@ priv struct ProjectionBuildInput {
 /// Graphviz parity: x-position solve input keeps x-stage bundle plus ordering
 /// and rank context grouped for one compute_x_positions invocation.
 priv struct XPositionBuildInput {
-  graph : @cgraph.Graph
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  ordering : OrderingResult
+  pipeline : PositionPipelineContext
   x_data : XWithFlatLabelData
 }
 
@@ -689,7 +680,7 @@ fn build_vnode_positions(
 ) -> Map[String, @geom.Point] {
   if input.use_vnodes_for_xpos {
     let positions : Map[String, @geom.Point] = Map::new()
-    for name, rank in input.ordering.vnode_info.vnode_ranks {
+    for name, rank in input.pipeline.ordering.vnode_info.vnode_ranks {
       let pos_x = input.x_positions.get(name).unwrap_or_default()
       let pos_y = input.rank_y.get(rank).unwrap_or_default()
       positions[name] = { x: pos_x, y: pos_y }
@@ -697,10 +688,10 @@ fn build_vnode_positions(
     positions
   } else {
     vnode_positions_from_edges(
-      input.prep.edges,
-      input.rank_data.ranks,
-      input.ordering.vnode_info.vnode_ranks,
-      input.ordering.vnode_info.edge_vnodes,
+      input.pipeline.prep.edges,
+      input.pipeline.rank_data.ranks,
+      input.pipeline.ordering.vnode_info.vnode_ranks,
+      input.pipeline.ordering.vnode_info.edge_vnodes,
       input.x_positions,
       input.rank_y,
     )
@@ -886,7 +877,7 @@ fn build_xpos_computation_input(
     if input.x_data.use_vnodes_for_xpos {
       @ordering.merge_sizes_with_vnodes(
         input.x_data.x_base_sizes,
-        input.ordering.vnode_info.vnode_sizes,
+        input.pipeline.ordering.vnode_info.vnode_sizes,
       )
     } else {
       input.x_data.x_base_sizes
@@ -896,8 +887,8 @@ fn build_xpos_computation_input(
   let vnode_extra_nodes =
     if input.x_data.use_vnodes_for_xpos {
       @ordering.build_vnode_extra_nodes(
-        input.ordering.vnode_creation_order,
-        input.ordering.vnode_info.vnode_ranks,
+        input.pipeline.ordering.vnode_creation_order,
+        input.pipeline.ordering.vnode_info.vnode_ranks,
       )
     } else {
       []
@@ -905,7 +896,7 @@ fn build_xpos_computation_input(
   let x_extra_nodes = vnode_extra_nodes.copy()
   let x_edge_vnodes =
     if input.x_data.use_vnodes_for_xpos {
-      input.ordering.vnode_info.edge_vnodes
+      input.pipeline.ordering.vnode_info.edge_vnodes
     } else {
       Map::new()
     }
@@ -921,22 +912,22 @@ fn compute_layout_x_positions(
 ) -> Map[String, Double] {
   let xpos_input = build_xpos_computation_input(input)
   let x_positions = compute_x_positions(
-    input.graph,
-    input.prep.nodes,
-    input.prep.edges,
-    input.rank_data.edge_tail,
-    input.rank_data.edge_head,
-    input.rank_data.edge_out_order,
-    input.ordering.nlist_order,
-    input.ordering.gdnlist_order,
+    input.pipeline.graph,
+    input.pipeline.prep.nodes,
+    input.pipeline.prep.edges,
+    input.pipeline.rank_data.edge_tail,
+    input.pipeline.rank_data.edge_head,
+    input.pipeline.rank_data.edge_out_order,
+    input.pipeline.ordering.nlist_order,
+    input.pipeline.ordering.gdnlist_order,
     xpos_input.x_ranks,
     xpos_input.x_rank_keys,
     input.x_data.x_groups,
     xpos_input.x_sizes,
-    input.prep.output_sizes,
+    input.pipeline.prep.output_sizes,
     input.x_data.x_cluster_keys,
-    input.rank_heights.nodesep_pt,
-    input.prep.has_edge_labels,
+    input.pipeline.rank_heights.nodesep_pt,
+    input.pipeline.prep.has_edge_labels,
     xpos_input.x_extra_nodes,
     input.x_data.flat_label_edges,
     xpos_input.x_edge_vnodes,
@@ -1111,42 +1102,42 @@ fn build_y_positions_with_flip(
 fn build_y_position_data(
   input : YPositionBuildInput,
 ) -> YPositionComputationData {
-  let rank_pht = input.rank_heights.rank_pht
-  let rank_ht1 = input.rank_heights.rank_ht1
-  let rank_ht2 = input.rank_heights.rank_ht2
+  let rank_pht = input.pipeline.rank_heights.rank_pht
+  let rank_ht1 = input.pipeline.rank_heights.rank_ht1
+  let rank_ht2 = input.pipeline.rank_heights.rank_ht2
   let cluster_bbox_heights =
-    if input.cluster_meta.has_clusters {
+    if input.pipeline.cluster_meta.has_clusters {
       compute_cluster_bbox_heights(
-        input.graph,
-        input.rank_data.ranks,
-        input.prep.sizes,
-        input.rank_data.self_edge_labels,
-        input.prep.rankdir,
+        input.pipeline.graph,
+        input.pipeline.rank_data.ranks,
+        input.pipeline.prep.sizes,
+        input.pipeline.rank_data.self_edge_labels,
+        input.pipeline.prep.rankdir,
       )
     } else {
       Map::new()
     }
   apply_flat_label_heights(
     input.flat_label_nodes,
-    input.ordering.vnode_info.vnode_sizes,
+    input.pipeline.ordering.vnode_info.vnode_sizes,
     rank_pht,
     rank_ht1,
     rank_ht2,
   )
   let y_all_ranks =
-    build_y_all_ranks_with_flat(input.rank_data.rank_keys, input.flat_label_nodes)
+    build_y_all_ranks_with_flat(input.pipeline.rank_data.rank_keys, input.flat_label_nodes)
   let y_position_output =
     build_y_positions_with_flip(
       {
-        graph: input.graph,
-        rankdir: input.prep.rankdir,
-        rank_keys: input.rank_data.rank_keys,
-        groups: input.rank_data.groups,
-        ranks: input.rank_data.ranks,
+        graph: input.pipeline.graph,
+        rankdir: input.pipeline.prep.rankdir,
+        rank_keys: input.pipeline.rank_data.rank_keys,
+        groups: input.pipeline.rank_data.groups,
+        ranks: input.pipeline.rank_data.ranks,
         rank_pht,
         rank_ht1,
         rank_ht2,
-        ranksep_pt: input.rank_heights.ranksep_pt,
+        ranksep_pt: input.pipeline.rank_heights.ranksep_pt,
         cluster_bbox_heights,
         y_all_ranks,
       },
@@ -1195,43 +1186,49 @@ fn build_node_positions_map(
 fn build_position_output_maps(
   input : PositionOutputBuildInput,
 ) -> PositionOutputMaps {
-  if input.cluster_meta.has_clusters && input.prep.has_dotted_edges &&
+  if input.pipeline.cluster_meta.has_clusters && input.pipeline.prep.has_dotted_edges &&
     intercluster_alignment_enabled() {
     adjust_intercluster_alignment(
-      input.prep.nodes,
-      input.prep.edges,
-      input.rank_data.ranks,
+      input.pipeline.prep.nodes,
+      input.pipeline.prep.edges,
+      input.pipeline.rank_data.ranks,
       input.x_positions,
-      input.cluster_meta.cluster_keys,
-      input.cluster_meta.intercluster_keys,
-      input.rank_heights.nodesep_pt,
-      input.prep.has_edge_labels,
+      input.pipeline.cluster_meta.cluster_keys,
+      input.pipeline.cluster_meta.intercluster_keys,
+      input.pipeline.rank_heights.nodesep_pt,
+      input.pipeline.prep.has_edge_labels,
     )
   }
   // Graphviz parity: cluster x bounds are derived from ln/rn constraint nodes.
   let cluster_boundary_x =
-    build_cluster_boundary_x(input.graph, input.cluster_meta, input.x_positions)
+    build_cluster_boundary_x(
+      input.pipeline.graph,
+      input.pipeline.cluster_meta,
+      input.x_positions,
+    )
   // Let the final bounding-box translation handle normalization, matching Graphviz.
   let vnode_positions =
     build_vnode_positions(
       {
+        pipeline: input.pipeline,
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        prep: input.prep,
-        rank_data: input.rank_data,
-        ordering: input.ordering,
         x_positions: input.x_positions,
         rank_y: input.rank_y,
       },
     )
   let positions =
-    build_node_positions_map(input.prep.nodes, input.x_positions, input.y_positions)
-  if input.cluster_meta.has_clusters && cluster_rounding_enabled() {
+    build_node_positions_map(
+      input.pipeline.prep.nodes,
+      input.x_positions,
+      input.y_positions,
+    )
+  if input.pipeline.cluster_meta.has_clusters && cluster_rounding_enabled() {
     let _ = adjust_cluster_positions(
-      input.graph,
+      input.pipeline.graph,
       positions,
       vnode_positions,
-      input.ordering.vnode_info.vnode_clusters,
-      input.prep.sizes,
+      input.pipeline.ordering.vnode_info.vnode_clusters,
+      input.pipeline.prep.sizes,
     )
   }
   {
@@ -1249,39 +1246,26 @@ fn build_position_output_maps(
 fn build_projection_result(
   input : ProjectionBuildInput,
 ) -> PositionResult {
+  let pipeline = input.pipeline
   let x_data = input.x_data
   let y_position_data =
     build_y_position_data(
       {
-        graph: input.graph,
-        prep: input.prep,
-        rank_data: input.rank_data,
-        rank_heights: input.rank_heights,
-        cluster_meta: input.cluster_meta,
-        ordering: input.ordering,
+        pipeline,
         flat_label_nodes: x_data.flat_label_nodes,
       },
     )
   let x_positions =
     compute_layout_x_positions(
       {
-        graph: input.graph,
-        prep: input.prep,
-        rank_data: input.rank_data,
-        rank_heights: input.rank_heights,
-        ordering: input.ordering,
+        pipeline,
         x_data,
       },
     )
   let position_output_maps =
     build_position_output_maps(
       {
-        graph: input.graph,
-        prep: input.prep,
-        rank_data: input.rank_data,
-        rank_heights: input.rank_heights,
-        cluster_meta: input.cluster_meta,
-        ordering: input.ordering,
+        pipeline,
         use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
         x_positions,
         y_positions: y_position_data.y_positions,
@@ -1296,8 +1280,8 @@ fn build_projection_result(
     cluster_ln_x: position_output_maps.cluster_ln_x,
     cluster_rn_x: position_output_maps.cluster_rn_x,
     flat_label_edge_vnodes: x_data.flat_label_edge_vnodes,
-    rank_ht1: input.rank_heights.rank_ht1,
-    rank_ht2: input.rank_heights.rank_ht2,
+    rank_ht1: pipeline.rank_heights.rank_ht1,
+    rank_ht2: pipeline.rank_heights.rank_ht2,
     cluster_bbox_heights: y_position_data.cluster_bbox_heights,
   }
 }
@@ -1313,6 +1297,14 @@ fn compute_positions(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
 ) -> PositionResult {
+  let pipeline : PositionPipelineContext = {
+    graph,
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+  }
   let x_data =
     build_x_with_flat_labels(
       prep,
@@ -1323,12 +1315,7 @@ fn compute_positions(
     )
   build_projection_result(
     {
-      graph,
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
+      pipeline,
       x_data,
     },
   )
