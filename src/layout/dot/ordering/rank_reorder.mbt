@@ -2423,6 +2423,83 @@ pub fn reorder_rank_groups(
 }
 
 ///|
+/// Graphviz parity: cluster-local rank reorder call payload preserves the
+/// startpass=2 + coalesced-parallel + fixed-slot wiring used by mincross_clust.
+pub(all) struct ClusterLocalRankReorderCallInputs {
+  cluster_rank_keys : Array[Int]
+  seeded_cluster_groups : Map[Int, Array[String]]
+  cluster_edges : Array[@cgraph.Edge]
+  cluster_edge_tail : Array[String]
+  cluster_edge_head : Array[String]
+  cluster_edge_tail_port_x : Array[Double]
+  cluster_edge_head_port_x : Array[Double]
+  cluster_edge_tail_port_order : Array[Double]
+  cluster_edge_head_port_order : Array[Double]
+  parents : Map[String, Array[String]]
+  children : Map[String, Array[String]]
+  cluster_keys : Map[String, String]
+  rank_same_groups : Map[String, Int]
+  rank_same_order : Map[String, Int]
+  edge_order : Map[String, Int]
+  cluster_node_order : Map[String, Int]
+  cluster_sizes : Map[String, @shared.NodeSize]
+  nodesep_pt : Double
+  has_edge_labels : Bool
+  port_order_positions : Map[String, Double]
+  port_order_contrib : Map[String, Array[(String, Double)]]
+  cluster_flat_constraints : Map[String, Bool]
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  cluster_fixed_positions : Map[String, Double]
+  fixed_ranks : Map[String, Int]
+}
+
+///|
+/// Graphviz parity: cluster-local rank reorder call uses reorder_rank_groups
+/// with fixed rank slots, startpass=2, and coalesced parallel-edge handling.
+pub fn run_cluster_local_rank_reorder_call(
+  call_inputs : ClusterLocalRankReorderCallInputs,
+) -> Map[Int, Array[String]] {
+  reorder_rank_groups(
+    call_inputs.cluster_rank_keys,
+    call_inputs.seeded_cluster_groups,
+    call_inputs.cluster_edges,
+    call_inputs.cluster_edge_tail,
+    call_inputs.cluster_edge_head,
+    call_inputs.cluster_edge_tail_port_x,
+    call_inputs.cluster_edge_head_port_x,
+    call_inputs.cluster_edge_tail_port_order,
+    call_inputs.cluster_edge_head_port_order,
+    call_inputs.parents,
+    call_inputs.children,
+    call_inputs.cluster_keys,
+    call_inputs.rank_same_groups,
+    call_inputs.rank_same_order,
+    call_inputs.edge_order,
+    call_inputs.cluster_node_order,
+    call_inputs.cluster_sizes,
+    call_inputs.nodesep_pt,
+    call_inputs.has_edge_labels,
+    call_inputs.port_order_positions,
+    call_inputs.port_order_contrib,
+    Map::new(),
+    Map::new(),
+    call_inputs.cluster_flat_constraints,
+    graphviz_out_neighbors=call_inputs.graphviz_out_neighbors,
+    graphviz_in_neighbors=call_inputs.graphviz_in_neighbors,
+    // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
+    fixed_positions=call_inputs.cluster_fixed_positions,
+    fixed_ranks=call_inputs.fixed_ranks,
+    graphviz_flip=false,
+    // Graphviz parity: cluster-local startpass=2 mincross coalesces
+    // parallel edge segments by endpoint+port order and sums xpenalty.
+    coalesce_parallel_edges=true,
+    startpass=2,
+    startpass_init_infinite=false,
+  )
+}
+
+///|
 /// Graphviz parity: non-cluster rank reorder call uses the same
 /// reorder_rank_groups wiring as Graphviz non-cluster mincross pass.
 pub fn run_noncluster_rank_reorder(

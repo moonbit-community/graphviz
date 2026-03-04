@@ -652,43 +652,36 @@ fn run_cluster_rank_reorder(
       dispatch_context.fixed_ranks,
     )
   let ordered_cluster =
-    @ordering.reorder_rank_groups(
-      local_context.cluster_rank_keys,
-      seeded_cluster_groups,
-      input_phase_output.cluster_edges,
-      input_phase_output.cluster_edge_tail,
-      input_phase_output.cluster_edge_head,
-      input_phase_output.cluster_edge_tail_port_x,
-      input_phase_output.cluster_edge_head_port_x,
-      input_phase_output.cluster_edge_tail_port_order,
-      input_phase_output.cluster_edge_head_port_order,
-      input_phase_output.parents,
-      input_phase_output.children,
-      input_phase_output.cluster_keys,
-      dispatch_context.cluster_meta.rank_same_groups,
-      dispatch_context.cluster_meta.rank_same_order,
-      input_phase_output.edge_order,
-      local_context.cluster_node_order,
-      input_phase_output.cluster_sizes,
-      dispatch_context.nodesep_pt,
-      dispatch_context.has_edge_labels,
-      dispatch_context.port_order_positions,
-      dispatch_context.port_order_contrib,
-      Map::new(),
-      Map::new(),
-      input_phase_output.cluster_flat_constraints,
-      graphviz_out_neighbors=input_phase_output.graphviz_out_neighbors,
-      graphviz_in_neighbors=input_phase_output.graphviz_in_neighbors,
-      // Graphviz parity: subgraphs use effective rankdir=TB, so flip is false.
-      fixed_positions=local_context.cluster_fixed_positions,
-      fixed_ranks=dispatch_context.fixed_ranks,
-      graphviz_flip=false,
-      // Graphviz parity: cluster-local startpass=2 mincross coalesces
-      // parallel edge segments by endpoint+port order and sums xpenalty.
-      coalesce_parallel_edges=true,
-      startpass=2,
-      startpass_init_infinite=false,
-  )
+    @ordering.run_cluster_local_rank_reorder_call(
+      {
+        cluster_rank_keys: local_context.cluster_rank_keys,
+        seeded_cluster_groups,
+        cluster_edges: input_phase_output.cluster_edges,
+        cluster_edge_tail: input_phase_output.cluster_edge_tail,
+        cluster_edge_head: input_phase_output.cluster_edge_head,
+        cluster_edge_tail_port_x: input_phase_output.cluster_edge_tail_port_x,
+        cluster_edge_head_port_x: input_phase_output.cluster_edge_head_port_x,
+        cluster_edge_tail_port_order: input_phase_output.cluster_edge_tail_port_order,
+        cluster_edge_head_port_order: input_phase_output.cluster_edge_head_port_order,
+        parents: input_phase_output.parents,
+        children: input_phase_output.children,
+        cluster_keys: input_phase_output.cluster_keys,
+        rank_same_groups: dispatch_context.cluster_meta.rank_same_groups,
+        rank_same_order: dispatch_context.cluster_meta.rank_same_order,
+        edge_order: input_phase_output.edge_order,
+        cluster_node_order: local_context.cluster_node_order,
+        cluster_sizes: input_phase_output.cluster_sizes,
+        nodesep_pt: dispatch_context.nodesep_pt,
+        has_edge_labels: dispatch_context.has_edge_labels,
+        port_order_positions: dispatch_context.port_order_positions,
+        port_order_contrib: dispatch_context.port_order_contrib,
+        cluster_flat_constraints: input_phase_output.cluster_flat_constraints,
+        graphviz_out_neighbors: input_phase_output.graphviz_out_neighbors,
+        graphviz_in_neighbors: input_phase_output.graphviz_in_neighbors,
+        cluster_fixed_positions: local_context.cluster_fixed_positions,
+        fixed_ranks: dispatch_context.fixed_ranks,
+      },
+    )
   { has_internal_constraints: true, ordered_cluster }
 }
 
