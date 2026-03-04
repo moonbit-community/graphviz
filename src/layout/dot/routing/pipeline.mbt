@@ -56,11 +56,11 @@ fn build_route_edges_input(
 pub fn route_edges_pipeline(
   input : RouteEdgesPipelineInput,
   route_base_deps : RouteBaseDeps,
-  recover_slack_vnodes_fn : EdgeContextRecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeContextBuildEdgeLayoutFn,
-  self_edge_label_height_fn : EdgeContextSelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : EdgeContextSelfEdgeLabelMetricFn,
-  edge_port_label_pos_fn : EdgeContextEdgePortLabelPosFn,
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
+  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
+  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> Array[DotLayoutEdge] {
   let sameport_overrides =
     collect_sameport_overrides(

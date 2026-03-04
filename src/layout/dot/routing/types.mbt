@@ -196,6 +196,26 @@ pub(all) struct EdgeLayoutInput {
 }
 
 ///|
+pub type RecoverSlackVnodesFn = (
+  @cgraph.Edge,
+  Array[String],
+  Array[@geom.Rect],
+  Map[String, Int],
+  Map[String, Int],
+  Map[Int, Double],
+  Map[String, @geom.Point],
+  Map[String, @dot_shared.NodeSize],
+  @routesplines.PathAdjacency,
+) -> Unit
+
+///|
+pub type EdgeLayoutBuilderFn =
+  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
+
+///|
+pub type SelfEdgeLabelMetricFn = (@cgraph.Edge, @dot_shared.RankDir) -> Double
+
+///|
 pub(all) struct RegularPassInput {
   spline_mode : Int
   ranks : Map[String, Int]

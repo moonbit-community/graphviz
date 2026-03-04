@@ -1,29 +1,4 @@
 ///|
-type EdgeContextRecoverSlackVnodesFn = (
-  @cgraph.Edge,
-  Array[String],
-  Array[@geom.Rect],
-  Map[String, Int],
-  Map[String, Int],
-  Map[Int, Double],
-  Map[String, @geom.Point],
-  Map[String, @dot_shared.NodeSize],
-  @routesplines.PathAdjacency,
-) -> Unit
-
-///|
-type EdgeContextBuildEdgeLayoutFn =
-  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
-
-///|
-type EdgeContextSelfEdgeLabelMetricFn =
-  (@cgraph.Edge, @dot_shared.RankDir) -> Double
-
-///|
-type EdgeContextEdgePortLabelPosFn =
-  (@cgraph.Edge, @geom.Spline, Bool) -> @geom.Point?
-
-///|
 fn build_regular_pass_input(
   input : RouteEdgesInput,
 ) -> RegularPassInput {
@@ -87,11 +62,11 @@ fn build_ordered_routing_input(
 /// Do not change behavior without updating fixtures/tests.
 pub fn route_edges(
   input : RouteEdgesInput,
-  recover_slack_vnodes_fn : EdgeContextRecoverSlackVnodesFn,
-  build_edge_layout_fn : EdgeContextBuildEdgeLayoutFn,
-  self_edge_label_height_fn : EdgeContextSelfEdgeLabelMetricFn,
-  self_edge_label_width_fn : EdgeContextSelfEdgeLabelMetricFn,
-  edge_port_label_pos_fn : EdgeContextEdgePortLabelPosFn,
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
+  self_edge_label_height_fn : SelfEdgeLabelMetricFn,
+  self_edge_label_width_fn : SelfEdgeLabelMetricFn,
+  edge_port_label_pos_fn : EdgePortLabelPosFn,
 ) -> Array[DotLayoutEdge] {
   let ordered_routing_input = build_ordered_routing_input(input)
   let edges_out_by_id : Map[Int, DotLayoutEdge] = Map::new()

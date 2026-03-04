@@ -1,24 +1,4 @@
 ///|
-type OrderedRecoverSlackVnodesFn = (
-  @cgraph.Edge,
-  Array[String],
-  Array[@geom.Rect],
-  Map[String, Int],
-  Map[String, Int],
-  Map[Int, Double],
-  Map[String, @geom.Point],
-  Map[String, @dot_shared.NodeSize],
-  @routesplines.PathAdjacency,
-) -> Unit
-
-///|
-type OrderedBuildEdgeLayoutFn =
-  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
-
-///|
-type SelfEdgeLabelMetricFn = (@cgraph.Edge, @dot_shared.RankDir) -> Double
-
-///|
 priv struct OrderedEdgeRoutingState {
   recovered_slack_keys : Map[String, Bool]
   self_edge_routes : Map[Int, SelfEdgeRoute]
@@ -31,7 +11,7 @@ fn maybe_build_flat_adjacent_layout(
   base : EdgeRouteBase,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  build_edge_layout_fn : OrderedBuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> Bool {
   match input.flat_adjacent_simple_beziers.get(edge_id) {
     Some(bezier) => {
@@ -54,7 +34,7 @@ fn maybe_build_self_edge_layout(
   base : EdgeRouteBase,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  build_edge_layout_fn : OrderedBuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
   self_edge_label_height_fn : SelfEdgeLabelMetricFn,
   self_edge_label_width_fn : SelfEdgeLabelMetricFn,
 ) -> Bool {
@@ -89,8 +69,8 @@ fn route_ordered_edge(
   edge : @cgraph.Edge,
   input : OrderedRoutingInput,
   state : OrderedEdgeRoutingState,
-  recover_slack_vnodes_fn : OrderedRecoverSlackVnodesFn,
-  build_edge_layout_fn : OrderedBuildEdgeLayoutFn,
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
   self_edge_label_height_fn : SelfEdgeLabelMetricFn,
   self_edge_label_width_fn : SelfEdgeLabelMetricFn,
 ) -> Unit {
@@ -146,8 +126,8 @@ fn route_ordered_edge(
 pub fn route_ordered_edges(
   input : OrderedRoutingInput,
   edges_out_by_id : Map[Int, DotLayoutEdge],
-  recover_slack_vnodes_fn : OrderedRecoverSlackVnodesFn,
-  build_edge_layout_fn : OrderedBuildEdgeLayoutFn,
+  recover_slack_vnodes_fn : RecoverSlackVnodesFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
   self_edge_label_height_fn : SelfEdgeLabelMetricFn,
   self_edge_label_width_fn : SelfEdgeLabelMetricFn,
 ) -> Unit {

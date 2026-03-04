@@ -4,23 +4,6 @@ priv struct RegularSplineLayoutResult {
 }
 
 ///|
-type RecoverSlackVnodesFn = (
-  @cgraph.Edge,
-  Array[String],
-  Array[@geom.Rect],
-  Map[String, Int],
-  Map[String, Int],
-  Map[Int, Double],
-  Map[String, @geom.Point],
-  Map[String, @dot_shared.NodeSize],
-  @routesplines.PathAdjacency,
-) -> Unit
-
-///|
-type RegularPassBuildEdgeLayoutFn =
-  (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
-
-///|
 /// Graphviz parity: recover_slack consumes vnodes in edge rank direction.
 /// Do not change behavior without updating fixtures/tests.
 fn ordered_vnodes_for_rank_direction(
@@ -142,7 +125,7 @@ fn build_regular_spline_layout(
   recover_edge_id_by_key : Map[String, Int],
   recovered_slack_keys : Map[String, Bool],
   recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> RegularSplineLayoutResult {
   let spline_result = build_edge_spline(
     base,
@@ -226,7 +209,7 @@ fn apply_regular_parallel_reuse_layouts(
   regular_parallel_groups : Map[String, Array[@cgraph.Edge]],
   base_cache : Map[Int, EdgeRouteBase],
   edges_out_by_id : Map[Int, DotLayoutEdge],
-  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> Unit {
   let sibling_edges =
     collect_parallel_reuse_siblings(
@@ -270,7 +253,7 @@ pub fn build_regular_layouts_for_edge(
   recovered_slack_keys : Map[String, Bool],
   edges_out_by_id : Map[Int, DotLayoutEdge],
   recover_slack_vnodes_fn : RecoverSlackVnodesFn,
-  build_edge_layout_fn : RegularPassBuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> Unit {
   let regular_layout = build_regular_spline_layout(
     edge,

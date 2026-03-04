@@ -4,9 +4,6 @@ priv struct BezierLayoutSplineResult {
 }
 
 ///|
-type BuildEdgeLayoutFn = (EdgeRouteBase, @geom.Spline, EdgeSplineResult) -> DotLayoutEdge
-
-///|
 /// Graphviz parity: bezier route rendering follows
 /// build_bezier_points_spline -> edge_spline_result_for_bezier ->
 /// rebuild_spline_for_render -> finalize_edge_spline.
@@ -50,7 +47,7 @@ fn build_bezier_layout_edge(
   apply_dotted_adjustment : Bool,
   tail_swap : Bool,
   head_swap : Bool,
-  build_edge_layout_fn : BuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
   let bezier_layout_result =
     build_bezier_layout_spline_result(
@@ -74,7 +71,7 @@ fn build_bezier_layout_edge(
 pub fn build_self_edge_layout(
   base : EdgeRouteBase,
   route : SelfEdgeRoute,
-  build_edge_layout_fn : BuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
   let mut edge_layout =
     build_bezier_layout_edge(
@@ -108,7 +105,7 @@ pub fn build_self_edge_layout(
 pub fn build_flat_adjacent_layout(
   base : EdgeRouteBase,
   bezier : Array[@geom.Point],
-  build_edge_layout_fn : BuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
@@ -126,7 +123,7 @@ pub fn build_flat_adjacent_layout(
 pub fn build_regular_bezier_layout(
   base : EdgeRouteBase,
   shared_spline_result : EdgeSplineResult,
-  build_edge_layout_fn : BuildEdgeLayoutFn,
+  build_edge_layout_fn : EdgeLayoutBuilderFn,
 ) -> DotLayoutEdge {
   build_bezier_layout_edge(
     base,
