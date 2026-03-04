@@ -211,6 +211,53 @@ fn compass_port_on_non_record_shape(
     None => false
   }
 }
+
+///|
+fn clustered_edge_arrow_len_override(
+  edge : @cgraph.Edge,
+  include_tail : Bool,
+  include_head : Bool,
+  tail_cluster_bbox : @geom.Rect?,
+  head_cluster_bbox : @geom.Rect?,
+  tail_clip : @geom.Point,
+  head_clip : @geom.Point,
+) -> Double? {
+  if !(include_tail || include_head) {
+    return None
+  }
+  if tail_cluster_bbox is None && head_cluster_bbox is None {
+    return None
+  }
+  let arrow_lengths = @edge_spline.arrow_length_for_edge(edge, include_tail, include_head, None)
+  let base =
+    if arrow_lengths.tail > arrow_lengths.head {
+      arrow_lengths.tail
+    } else {
+      arrow_lengths.head
+    }
+  let span = @edge_spline.point_dist(tail_clip, head_clip)
+  let max_len = if span < 12.0 { span * 0.25 } else { span }
+  if max_len > 0.0 && max_len < base {
+    Some(max_len)
+  } else {
+    None
+  }
+}
+
+///|
+fn edge_style_is_dotted(
+  edge : @cgraph.Edge,
+  enable_complex_tuning : Bool,
+) -> Bool {
+  if !enable_complex_tuning {
+    return false
+  }
+  let style_value = match edge.get_attr("style") {
+    Some(value) => value.to_lower()
+    None => ""
+  }
+  style_value.contains("dotted")
+}
 ///|
 /// Graphviz parity: edge endpoint/port setup aligned to refs/graphviz/lib/dotgen/dotsplines.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
@@ -682,39 +729,17 @@ fn build_edge_route_base(
       include_head,
       swap_ends,
     )
-  let arrow_len_override : Double? =
-    if include_tail || include_head {
-    if tail_cluster_bbox is Some(_) || head_cluster_bbox is Some(_) {
-      let arrow_lengths =
-        @edge_spline.arrow_length_for_edge(edge, include_tail, include_head, None)
-      let base =
-        if arrow_lengths.tail > arrow_lengths.head {
-          arrow_lengths.tail
-        } else {
-          arrow_lengths.head
-        }
-      let span = @edge_spline.point_dist(tail_clip, head_clip)
-      let max_len = if span < 12.0 { span * 0.25 } else { span }
-      if max_len > 0.0 && max_len < base {
-        Some(max_len)
-      } else {
-        None
-      }
-    } else {
-      None
-    }
-  } else {
-    None
-  }
-  let style_value = if enable_complex_tuning {
-    match edge.get_attr("style") {
-      Some(value) => value.to_lower()
-      None => ""
-    }
-  } else {
-    ""
-  }
-  let is_dotted = enable_complex_tuning && style_value.contains("dotted")
+  let arrow_len_override =
+    clustered_edge_arrow_len_override(
+      edge,
+      include_tail,
+      include_head,
+      tail_cluster_bbox,
+      head_cluster_bbox,
+      tail_clip,
+      head_clip,
+    )
+  let is_dotted = edge_style_is_dotted(edge, enable_complex_tuning)
   let same_outer_cluster =
     (route_base_deps.node_cluster_key)(tail_node) ==
       (route_base_deps.node_cluster_key)(head_node)
