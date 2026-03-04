@@ -260,29 +260,55 @@ fn is_record_shape(node : @cgraph.Node) -> Bool {
 const DEFAULT_VNODE_WEIGHT : Double = 1.0
 
 ///|
+priv struct EdgePolylinePointsInput {
+  edge : @cgraph.Edge
+  tail_name : String
+  head_name : String
+  tail_port : @cgraph.Port?
+  head_port : @cgraph.Port?
+  tail_anchor : @geom.Point
+  head_anchor : @geom.Point
+  ranks : Map[String, Int]
+  edge_vnodes : Map[String, Array[String]]
+  vnode_ranks : Map[String, Int]
+  vnode_positions : Map[String, @geom.Point]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  nodesep_pt : Double
+  label_width_pt : Double
+  label_height_pt : Double?
+  dotted_weight : Double
+  use_cluster_tuning : Bool
+  split_label : Bool
+  same_local_cluster : Bool
+  default_vnode_weight : Double
+}
+
+///|
 fn edge_polyline_points(
-  edge : @cgraph.Edge,
-  tail_name : String,
-  head_name : String,
-  tail_port : @cgraph.Port?,
-  head_port : @cgraph.Port?,
-  tail_anchor : @geom.Point,
-  head_anchor : @geom.Point,
-  ranks : Map[String, Int],
-  edge_vnodes : Map[String, Array[String]],
-  vnode_ranks : Map[String, Int],
-  vnode_positions : Map[String, @geom.Point],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  nodesep_pt : Double,
-  label_width_pt : Double,
-  label_height_pt : Double?,
-  dotted_weight : Double,
-  use_cluster_tuning : Bool,
-  split_label : Bool,
-  same_local_cluster : Bool,
-  default_vnode_weight : Double,
+  input : EdgePolylinePointsInput,
 ) -> Array[@geom.Point] {
+  let edge = input.edge
+  let tail_name = input.tail_name
+  let head_name = input.head_name
+  let tail_port = input.tail_port
+  let head_port = input.head_port
+  let tail_anchor = input.tail_anchor
+  let head_anchor = input.head_anchor
+  let ranks = input.ranks
+  let edge_vnodes = input.edge_vnodes
+  let vnode_ranks = input.vnode_ranks
+  let vnode_positions = input.vnode_positions
+  let rank_y = input.rank_y
+  let rank_ht1 = input.rank_ht1
+  let nodesep_pt = input.nodesep_pt
+  let label_width_pt = input.label_width_pt
+  let label_height_pt = input.label_height_pt
+  let dotted_weight = input.dotted_weight
+  let use_cluster_tuning = input.use_cluster_tuning
+  let split_label = input.split_label
+  let same_local_cluster = input.same_local_cluster
+  let default_vnode_weight = input.default_vnode_weight
   let points : Array[@geom.Point] = [tail_anchor]
   let vnodes = match edge_vnodes.get(@dot_shared.edge_vnode_key(edge)) {
     Some(list) => list
@@ -496,27 +522,29 @@ fn prepare_edge_curve_mode_route(
   let dotted_weight = if input.enable_complex_tuning { 1.0 } else { 0.8 }
   let guide_points =
     edge_polyline_points(
-      edge,
-      input.base.tail_name,
-      input.base.head_name,
-      input.base.tail_port,
-      input.base.head_port,
-      tail_anchor,
-      head_anchor,
-      input.ranks,
-      input.vnode_info.edge_vnodes,
-      input.vnode_info.vnode_ranks,
-      input.vnode_positions,
-      input.rank_y,
-      input.rank_ht1,
-      input.nodesep_pt,
-      label_width_pt,
-      label_height_pt,
-      dotted_weight,
-      input.enable_complex_tuning,
-      split_label,
-      input.base.same_local_cluster,
-      DEFAULT_VNODE_WEIGHT,
+      {
+        edge,
+        tail_name: input.base.tail_name,
+        head_name: input.base.head_name,
+        tail_port: input.base.tail_port,
+        head_port: input.base.head_port,
+        tail_anchor,
+        head_anchor,
+        ranks: input.ranks,
+        edge_vnodes: input.vnode_info.edge_vnodes,
+        vnode_ranks: input.vnode_info.vnode_ranks,
+        vnode_positions: input.vnode_positions,
+        rank_y: input.rank_y,
+        rank_ht1: input.rank_ht1,
+        nodesep_pt: input.nodesep_pt,
+        label_width_pt,
+        label_height_pt,
+        dotted_weight,
+        use_cluster_tuning: input.enable_complex_tuning,
+        split_label,
+        same_local_cluster: input.base.same_local_cluster,
+        default_vnode_weight: DEFAULT_VNODE_WEIGHT,
+      },
     )
   let route_state =
     compute_pathplan_route_points(
