@@ -288,12 +288,14 @@ fn run_root_and_cluster_ranks(
   pre_root_stage : ClusteredPreRootData,
   root_groups_override : Map[Int, Array[String]]?,
 ) -> @ordering.RootAndClusterRanksOutput {
+  let seeded_build_context =
+    build_seeded_reorder_build_context(
+      dispatch_context,
+      pre_root_stage,
+    )
   let seeded_groups =
     build_seeded_reorder_groups(
-      build_seeded_reorder_build_context(
-        dispatch_context,
-        pre_root_stage,
-      ),
+      seeded_build_context,
     )
   let root_reorder_context =
     build_root_mincross_reorder_build_context(
@@ -314,19 +316,14 @@ fn run_root_and_cluster_ranks(
     root_groups_override,
     root_mincross_reorder_inputs,
   }
+  let replay_context =
+    build_cluster_local_rank_replay_context(
+      dispatch_context,
+      pre_root_stage,
+    )
   @ordering.run_root_and_cluster_ranks(
     root_and_cluster_inputs,
     run_root_mincross_reorder,
-    (ordered) => {
-      let replay_context =
-        build_cluster_local_rank_replay_context(
-          dispatch_context,
-          pre_root_stage,
-        )
-      reorder_by_cluster_ranks(
-        ordered,
-        replay_context,
-      )
-    },
+    (ordered) => reorder_by_cluster_ranks(ordered, replay_context),
   )
 }
