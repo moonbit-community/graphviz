@@ -13,6 +13,7 @@
       "alias": "dot_shared"
     },
     "moonbit-community/graphviz/layout/dot/ordering",
+    "moonbit-community/graphviz/layout/dot/positioning",
     "moonbit-community/graphviz/layout/dot/rank_assignment",
     "moonbit-community/graphviz/layout/dot/routing",
     {
