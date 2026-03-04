@@ -3,29 +3,6 @@
 /// and reorder helpers for root-cluster arrangement.
 
 ///|
-/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
-/// then applies transpose when crossings remain (port-offset aware tie-breaks).
-/// Do not change behavior without updating fixtures/tests.
-priv struct SeededReorderBuildContext {
-  order_rank_keys : Array[Int]
-  order_groups : Map[Int, Array[String]]
-  order_edge_tail_out : Array[String]
-  order_edge_head_out : Array[String]
-  order_ranks : Map[String, Int]
-  order_node_order : Map[String, Int]
-  order_cluster_keys : Map[String, String]
-  order_cluster_skeleton : Map[String, Bool]
-  order_flat_constraints : Map[String, Bool]
-  graphviz_flip : Bool
-  graphviz_out_neighbors : Map[String, Array[String]]
-  graphviz_in_neighbors : Map[String, Array[String]]
-  order_edges_out : Array[@cgraph.Edge]
-  order_edge_tail_port_x : Array[Double]
-  order_edge_head_port_x : Array[Double]
-  flat_rank_constraints : Map[String, Bool]
-}
-
-///|
 /// Graphviz parity: clustered C4 stage views keep reorder setup, reorder
 /// context, and materialized edge snapshots aligned across seeded/root/replay
 /// context assembly.
@@ -58,90 +35,6 @@ fn build_clustered_reorder_stage_views(
 }
 
 ///|
-/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
-/// then applies transpose when crossings remain (port-offset aware tie-breaks).
-/// Do not change behavior without updating fixtures/tests.
-fn build_seeded_reorder_groups(
-  build_context : SeededReorderBuildContext,
-) -> Map[Int, Array[String]] {
-  // Graphviz parity: seed build_ranks from component-scoped walk,
-  // matching decompose/install traversal used by remincross with
-  // cluster-expanded flat constraints.
-  let seed_pass =
-    if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
-  let seeded_groups = @ordering.build_component_rank_groups(
-    build_context.order_rank_keys,
-    build_context.order_groups,
-    build_context.order_edge_tail_out,
-    build_context.order_edge_head_out,
-    build_context.order_ranks,
-    build_context.order_node_order,
-    build_context.order_cluster_keys,
-    build_context.order_cluster_skeleton,
-    seed_pass,
-    build_context.order_flat_constraints,
-    flip=build_context.graphviz_flip,
-    graphviz_out_neighbors=build_context.graphviz_out_neighbors,
-    graphviz_in_neighbors=build_context.graphviz_in_neighbors,
-  )
-  // Graphviz parity: build_ranks applies transpose if crossings remain;
-  // crossing count uses endpoint port x offsets for tie-correct ordering.
-  let seed_cross = @ordering.count_crossings_port_aware(
-    seeded_groups,
-    build_context.order_ranks,
-    build_context.order_edges_out,
-    build_context.order_edge_tail_out,
-    build_context.order_edge_head_out,
-    edge_tail_port_x=build_context.order_edge_tail_port_x,
-    edge_head_port_x=build_context.order_edge_head_port_x,
-  )
-  if seed_cross > 0 {
-    let transpose_seed_maps =
-      @ordering.build_transpose_seed_maps(
-        build_context.order_rank_keys,
-        seeded_groups,
-        build_context.order_edges_out,
-        build_context.order_edge_tail_out,
-        build_context.order_edge_head_out,
-        build_context.order_ranks,
-      )
-    let _ = @ordering.transpose_rank_groups_port(
-      build_context.order_rank_keys,
-      seeded_groups,
-      build_context.order_ranks,
-      transpose_seed_maps.edge_in,
-      transpose_seed_maps.edge_out,
-      build_context.order_edge_tail_out,
-      build_context.order_edge_head_out,
-      build_context.order_edge_tail_port_x,
-      build_context.order_edge_head_port_x,
-      transpose_seed_maps.edge_penalty,
-      build_context.order_cluster_keys,
-      build_context.order_cluster_skeleton,
-      build_context.flat_rank_constraints,
-      false,
-      0,
-    )
-  }
-  seeded_groups
-}
-
-///|
-/// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
-/// then merges reordered root positions back into seeded build_ranks groups.
-/// Do not change behavior without updating fixtures/tests.
-fn run_with_pass0_flat_seed_capture(
-  run_phase : () -> @ordering.RootMincrossReorderResult,
-) -> @ordering.RootMincrossReorderResult {
-  @ordering.capture_pass0_flat_seed_groups_value.val = None
-  @ordering.capture_pass0_flat_seed_groups_enabled.val = true
-  let result = run_phase()
-  @ordering.capture_pass0_flat_seed_groups_enabled.val = false
-  @ordering.capture_pass0_flat_seed_groups_value.val = None
-  result
-}
-
-///|
 /// Graphviz parity: root ReMincross pass reorders only root/skeleton members,
 /// then merges reordered root positions back into seeded build_ranks groups.
 /// Do not change behavior without updating fixtures/tests.
@@ -152,7 +45,7 @@ fn run_root_mincross_reorder(
   // Graphviz parity: pass0 flat-seed capture wraps the root rank-reorder call,
   // then records the same stage snapshot before resetting capture state.
   let result =
-    run_with_pass0_flat_seed_capture(() =>
+    @ordering.run_with_pass0_flat_seed_capture(() =>
       @ordering.run_root_mincross_reorder(
         inputs,
         order_groups_override,
@@ -242,7 +135,7 @@ fn build_cluster_local_rank_replay_context(
 /// Do not change behavior without updating fixtures/tests.
 fn build_seeded_reorder_build_context(
   stage_views : ClusteredReorderStageViews,
-) -> SeededReorderBuildContext {
+) -> @ordering.SeededReorderBuildContext {
   {
     order_rank_keys: stage_views.reorder_context.order_rank_keys,
     order_groups: stage_views.order_groups,
@@ -282,7 +175,7 @@ fn run_root_and_cluster_ranks(
       stage_views,
     )
   let seeded_groups =
-    build_seeded_reorder_groups(
+    @ordering.build_seeded_reorder_groups(
       seeded_build_context,
     )
   let root_reorder_context =

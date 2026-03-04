@@ -1117,6 +1117,98 @@ pub fn flat_reorder_rank_groups(
   ordered
 }
 
+///|
+/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
+/// then applies transpose when crossings remain (port-offset aware tie-breaks).
+/// Do not change behavior without updating fixtures/tests.
+pub(all) struct SeededReorderBuildContext {
+  order_rank_keys : Array[Int]
+  order_groups : Map[Int, Array[String]]
+  order_edge_tail_out : Array[String]
+  order_edge_head_out : Array[String]
+  order_ranks : Map[String, Int]
+  order_node_order : Map[String, Int]
+  order_cluster_keys : Map[String, String]
+  order_cluster_skeleton : Map[String, Bool]
+  order_flat_constraints : Map[String, Bool]
+  graphviz_flip : Bool
+  graphviz_out_neighbors : Map[String, Array[String]]
+  graphviz_in_neighbors : Map[String, Array[String]]
+  order_edges_out : Array[@cgraph.Edge]
+  order_edge_tail_port_x : Array[Double]
+  order_edge_head_port_x : Array[Double]
+  flat_rank_constraints : Map[String, Bool]
+}
+
+///|
+/// Graphviz parity: build_ranks seeding runs component-scoped ordering first,
+/// then applies transpose when crossings remain (port-offset aware tie-breaks).
+/// Do not change behavior without updating fixtures/tests.
+pub fn build_seeded_reorder_groups(
+  build_context : SeededReorderBuildContext,
+) -> Map[Int, Array[String]] {
+  // Graphviz parity: seed build_ranks from component-scoped walk,
+  // matching decompose/install traversal used by remincross with
+  // cluster-expanded flat constraints.
+  let seed_pass =
+    if @sys.get_env_var("DOT_SEED_PASS1") is Some(_) { 1 } else { 0 }
+  let seeded_groups = build_component_rank_groups(
+    build_context.order_rank_keys,
+    build_context.order_groups,
+    build_context.order_edge_tail_out,
+    build_context.order_edge_head_out,
+    build_context.order_ranks,
+    build_context.order_node_order,
+    build_context.order_cluster_keys,
+    build_context.order_cluster_skeleton,
+    seed_pass,
+    build_context.order_flat_constraints,
+    flip=build_context.graphviz_flip,
+    graphviz_out_neighbors=build_context.graphviz_out_neighbors,
+    graphviz_in_neighbors=build_context.graphviz_in_neighbors,
+  )
+  // Graphviz parity: build_ranks applies transpose if crossings remain;
+  // crossing count uses endpoint port x offsets for tie-correct ordering.
+  let seed_cross = count_crossings_port_aware(
+    seeded_groups,
+    build_context.order_ranks,
+    build_context.order_edges_out,
+    build_context.order_edge_tail_out,
+    build_context.order_edge_head_out,
+    edge_tail_port_x=build_context.order_edge_tail_port_x,
+    edge_head_port_x=build_context.order_edge_head_port_x,
+  )
+  if seed_cross > 0 {
+    let transpose_seed_maps =
+      build_transpose_seed_maps(
+        build_context.order_rank_keys,
+        seeded_groups,
+        build_context.order_edges_out,
+        build_context.order_edge_tail_out,
+        build_context.order_edge_head_out,
+        build_context.order_ranks,
+      )
+    let _ = transpose_rank_groups_port(
+      build_context.order_rank_keys,
+      seeded_groups,
+      build_context.order_ranks,
+      transpose_seed_maps.edge_in,
+      transpose_seed_maps.edge_out,
+      build_context.order_edge_tail_out,
+      build_context.order_edge_head_out,
+      build_context.order_edge_tail_port_x,
+      build_context.order_edge_head_port_x,
+      transpose_seed_maps.edge_penalty,
+      build_context.order_cluster_keys,
+      build_context.order_cluster_skeleton,
+      build_context.flat_rank_constraints,
+      false,
+      0,
+    )
+  }
+  seeded_groups
+}
+
 
 ///|
 pub let capture_pass0_flat_seed_groups_enabled : Ref[Bool] = Ref::new(false)
@@ -1145,6 +1237,21 @@ fn maybe_capture_seed_groups(
     snapshot[rank] = names
   }
   capture_pass0_flat_seed_groups_value.val = Some(snapshot)
+}
+
+///|
+/// Graphviz parity: root ReMincross pass0 capture wraps root rank-reorder and
+/// resets shared capture state immediately after the phase call returns.
+/// Do not change behavior without updating fixtures/tests.
+pub fn[T] run_with_pass0_flat_seed_capture(
+  run_phase : () -> T,
+) -> T {
+  capture_pass0_flat_seed_groups_value.val = None
+  capture_pass0_flat_seed_groups_enabled.val = true
+  let result = run_phase()
+  capture_pass0_flat_seed_groups_enabled.val = false
+  capture_pass0_flat_seed_groups_value.val = None
+  result
 }
 
 ///|
