@@ -435,21 +435,36 @@ fn add_cluster_margin_if_nonzero(height : Double, margin : Double) -> Double {
 }
 
 ///|
+/// Graphviz parity: cluster rank-height application input keeps recursive graph
+/// walk payload grouped so rank half-height propagation remains explicit.
+priv struct ClusterRankHeightsApplyInput {
+  graph : @cgraph.Graph
+  ranks : Map[String, Int]
+  sizes : Map[String, NodeSize]
+  self_edge_labels : Map[String, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+  rankdir : RankDir
+}
+
+///|
 fn apply_cluster_rank_heights(
-  graph : @cgraph.Graph,
-  ranks : Map[String, Int],
-  sizes : Map[String, NodeSize],
-  self_edge_labels : Map[String, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
-  rankdir : RankDir,
+  input : ClusterRankHeightsApplyInput,
 ) -> ClusterHeights? {
-  let is_cluster = @dot_shared.is_cluster_graph(graph)
-  let children = graph.subgraphs()
+  let is_cluster = @dot_shared.is_cluster_graph(input.graph)
+  let children = input.graph.subgraphs()
   if !is_cluster {
     for child in children {
       let _ = apply_cluster_rank_heights(
-        child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
+        {
+          graph: child,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rank_ht1: input.rank_ht1,
+          rank_ht2: input.rank_ht2,
+          rankdir: input.rankdir,
+        },
       )
     }
     return None
@@ -457,10 +472,10 @@ fn apply_cluster_rank_heights(
   let seen : Map[String, Bool] = Map::new()
   let rank_heights : Map[Int, Double] = Map::new()
   let rank_bounds = collect_cluster_rank_heights(
-    graph,
-    ranks,
-    sizes,
-    self_edge_labels,
+    input.graph,
+    input.ranks,
+    input.sizes,
+    input.self_edge_labels,
     seen,
     rank_heights,
     None,
@@ -471,13 +486,15 @@ fn apply_cluster_rank_heights(
     None => {
       for child in children {
         let _ = apply_cluster_rank_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rank_ht1,
-          rank_ht2,
-          rankdir,
+          {
+            graph: child,
+            ranks: input.ranks,
+            sizes: input.sizes,
+            self_edge_labels: input.self_edge_labels,
+            rank_ht1: input.rank_ht1,
+            rank_ht2: input.rank_ht2,
+            rankdir: input.rankdir,
+          },
         )
       }
       return None
@@ -488,19 +505,21 @@ fn apply_cluster_rank_heights(
     None => {
       for child in children {
         let _ = apply_cluster_rank_heights(
-          child,
-          ranks,
-          sizes,
-          self_edge_labels,
-          rank_ht1,
-          rank_ht2,
-          rankdir,
+          {
+            graph: child,
+            ranks: input.ranks,
+            sizes: input.sizes,
+            self_edge_labels: input.self_edge_labels,
+            rank_ht1: input.rank_ht1,
+            rank_ht2: input.rank_ht2,
+            rankdir: input.rankdir,
+          },
         )
       }
       return None
     }
   }
-  let margin = cluster_margin_pt(graph)
+  let margin = cluster_margin_pt(input.graph)
   let base_top = match rank_heights.get(max_rank_value) {
     Some(value) => value
     None => 0.0
@@ -514,7 +533,15 @@ fn apply_cluster_rank_heights(
   for child in children {
     match
       apply_cluster_rank_heights(
-        child, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
+        {
+          graph: child,
+          ranks: input.ranks,
+          sizes: input.sizes,
+          self_edge_labels: input.self_edge_labels,
+          rank_ht1: input.rank_ht1,
+          rank_ht2: input.rank_ht2,
+          rankdir: input.rankdir,
+        },
       ) {
       Some(info) => {
         if info.max_rank == max_rank_value {
@@ -533,22 +560,22 @@ fn apply_cluster_rank_heights(
       None => ()
     }
   }
-  let label_padding = cluster_label_padding_pt(graph, rankdir)
+  let label_padding = cluster_label_padding_pt(input.graph, input.rankdir)
   ht1 = ht1 + label_padding.bottom
   ht2 = ht2 + label_padding.top
-  let current_top = match rank_ht1.get(max_rank_value) {
+  let current_top = match input.rank_ht1.get(max_rank_value) {
     Some(value) => value
     None => 0.0
   }
   if ht1 > current_top {
-    rank_ht1[max_rank_value] = ht1
+    input.rank_ht1[max_rank_value] = ht1
   }
-  let current_bottom = match rank_ht2.get(min_rank_value) {
+  let current_bottom = match input.rank_ht2.get(min_rank_value) {
     Some(value) => value
     None => 0.0
   }
   if ht2 > current_bottom {
-    rank_ht2[min_rank_value] = ht2
+    input.rank_ht2[min_rank_value] = ht2
   }
   Some({ min_rank: min_rank_value, max_rank: max_rank_value, ht1, ht2 })
 }

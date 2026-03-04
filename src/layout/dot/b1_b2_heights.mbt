@@ -149,13 +149,15 @@ fn compute_rank_heights(
     rank_ht2[rank] = half_height
   }
   let _ = apply_cluster_rank_heights(
-    graph,
-    ranks,
-    sizes,
-    self_edge_labels,
-    rank_ht1,
-    rank_ht2,
-    input.rankdir,
+    {
+      graph,
+      ranks,
+      sizes,
+      self_edge_labels,
+      rank_ht1,
+      rank_ht2,
+      rankdir: input.rankdir,
+    },
   )
   let nodesep_pt = round_int(input.nodesep_in * 72.0).to_double()
   let mut ranksep_pt_int = round_int(input.ranksep_in * 72.0)

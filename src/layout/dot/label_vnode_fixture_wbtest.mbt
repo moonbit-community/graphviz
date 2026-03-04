@@ -604,7 +604,7 @@ test "flat label node sizes match Graphviz fixtures" {
     rank_ht2[rank] = half_height
   }
   let _ = apply_cluster_rank_heights(
-    graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir,
+    { graph, ranks, sizes, self_edge_labels, rank_ht1, rank_ht2, rankdir },
   )
   let ranksep_in = match graph.get_attr("ranksep") {
     Some(value) => parse_first_double(value, default_ranksep_in())
