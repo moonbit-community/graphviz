@@ -90,33 +90,40 @@ fn build_port_layout_maps(
 ///|
 /// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
 /// Do not change behavior without updating fixtures/tests.
+priv struct ClusterRouteBboxesInput {
+  graph : @cgraph.Graph
+  nodes_out : Array[DotLayoutNode]
+  cluster_ln_x : Map[String, Double]
+  cluster_rn_x : Map[String, Double]
+  cluster_bbox_heights : Map[String, ClusterBboxHeightPair]
+  rankdir : RankDir
+  ranks : Map[String, Int]
+  rank_y : Map[Int, Double]
+  rank_ht1 : Map[Int, Double]
+  rank_ht2 : Map[Int, Double]
+}
+
+///|
+/// Graphviz parity: cluster routing bboxes aligned to refs/graphviz/lib/dotgen/cluster.c + dotgen/dotsplines.c.
+/// Do not change behavior without updating fixtures/tests.
 fn compute_cluster_route_bboxes(
-  graph : @cgraph.Graph,
-  nodes_out : Array[DotLayoutNode],
-  cluster_ln_x : Map[String, Double],
-  cluster_rn_x : Map[String, Double],
-  cluster_bbox_heights : Map[String, ClusterBboxHeightPair],
-  rankdir : RankDir,
-  ranks : Map[String, Int],
-  rank_y : Map[Int, Double],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  input : ClusterRouteBboxesInput,
 ) -> Map[String, @geom.Rect] {
   let cluster_bboxes : Map[String, @geom.Rect] = Map::new()
-  if @dot_shared.graph_has_cluster(graph) {
+  if @dot_shared.graph_has_cluster(input.graph) {
     let cluster_layouts =
       layout_subgraphs(
-        graph,
-        nodes_out,
+        input.graph,
+        input.nodes_out,
         [],
-        cluster_ln_x,
-        cluster_rn_x,
-        cluster_bbox_heights,
-        rankdir,
-        ranks,
-        rank_y,
-        rank_ht1,
-        rank_ht2,
+        input.cluster_ln_x,
+        input.cluster_rn_x,
+        input.cluster_bbox_heights,
+        input.rankdir,
+        input.ranks,
+        input.rank_y,
+        input.rank_ht1,
+        input.rank_ht2,
       )
     collect_cluster_bboxes(cluster_layouts, cluster_bboxes)
   }
@@ -178,16 +185,18 @@ fn build_routing_spatial_data(
   // routing-stage inputs, positioned nodes, and rank/cluster maps.
   let cluster_bboxes =
     compute_cluster_route_bboxes(
-      graph,
-      nodes_out,
-      positions_state.cluster_ln_x,
-      positions_state.cluster_rn_x,
-      positions_state.cluster_bbox_heights,
-      prep.rankdir,
-      input.ranks,
-      positions_state.rank_y,
-      positions_state.rank_ht1,
-      positions_state.rank_ht2,
+      {
+        graph,
+        nodes_out,
+        cluster_ln_x: positions_state.cluster_ln_x,
+        cluster_rn_x: positions_state.cluster_rn_x,
+        cluster_bbox_heights: positions_state.cluster_bbox_heights,
+        rankdir: prep.rankdir,
+        ranks: input.ranks,
+        rank_y: positions_state.rank_y,
+        rank_ht1: positions_state.rank_ht1,
+        rank_ht2: positions_state.rank_ht2,
+      },
     )
   { nodes_out, label_ports_map, label_ports_raw, cluster_bboxes }
 }
