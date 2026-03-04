@@ -283,15 +283,17 @@ fn detour_spline_if_any(
   if input.needs_record_detour {
     let detour_points =
       record_port_detour_points(
-        input.base.tail_clip_center,
-        input.base.head_clip_center,
-        input.base.tail_clip_size,
-        input.base.head_clip_size,
-        input.base.tail_clip,
-        input.base.head_clip,
-        input.nodesep_pt,
-        input.base.layout_rankdir,
-        input.lr_detour_uses_x_axis,
+        {
+          tail_clip_center: input.base.tail_clip_center,
+          head_clip_center: input.base.head_clip_center,
+          tail_clip_size: input.base.tail_clip_size,
+          head_clip_size: input.base.head_clip_size,
+          tail_clip: input.base.tail_clip,
+          head_clip: input.base.head_clip,
+          nodesep_pt: input.nodesep_pt,
+          layout_rankdir: input.base.layout_rankdir,
+          lr_detour_uses_x_axis: input.lr_detour_uses_x_axis,
+        },
       )
     Some(
       build_points_spline(

@@ -265,17 +265,31 @@ fn flat_detour_points_for_line(
 }
 
 ///|
+priv struct RecordPortDetourPointsInput {
+  tail_clip_center : @geom.Point
+  head_clip_center : @geom.Point
+  tail_clip_size : NodeSize
+  head_clip_size : NodeSize
+  tail_clip : @geom.Point
+  head_clip : @geom.Point
+  nodesep_pt : Double
+  layout_rankdir : RankDir
+  lr_detour_uses_x_axis : Bool
+}
+
+///|
 fn record_port_detour_points(
-  tail_clip_center : @geom.Point,
-  head_clip_center : @geom.Point,
-  tail_clip_size : NodeSize,
-  head_clip_size : NodeSize,
-  tail_clip : @geom.Point,
-  head_clip : @geom.Point,
-  nodesep_pt : Double,
-  layout_rankdir : RankDir,
-  lr_detour_uses_x_axis : Bool,
+  input : RecordPortDetourPointsInput,
 ) -> Array[@geom.Point] {
+  let tail_clip_center = input.tail_clip_center
+  let head_clip_center = input.head_clip_center
+  let tail_clip_size = input.tail_clip_size
+  let head_clip_size = input.head_clip_size
+  let tail_clip = input.tail_clip
+  let head_clip = input.head_clip
+  let nodesep_pt = input.nodesep_pt
+  let layout_rankdir = input.layout_rankdir
+  let lr_detour_uses_x_axis = input.lr_detour_uses_x_axis
   let tail_rect = @edge_spline.port_side_rect(tail_clip_center, tail_clip_size)
   let head_rect = @edge_spline.port_side_rect(head_clip_center, head_clip_size)
   let detour_offset = nodesep_pt * 0.5
