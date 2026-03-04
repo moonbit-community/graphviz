@@ -55,23 +55,11 @@ priv struct XPositionSeedData {
 }
 
 ///|
-/// Graphviz parity: x-stage shared pipeline context keeps rank/cluster/order
-/// snapshots grouped for seed build, reorder pipeline wiring, and flat-label
-/// augmentation.
-priv struct XStagePipelineContext {
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
-}
-
-///|
 /// Graphviz parity: x-stage seed input keeps vnode mode plus ordering/rank
 /// context grouped before order-index, vnode-order, and edge-port precompute.
 priv struct XSeedBuildInput {
   use_vnodes_for_xpos : Bool
-  pipeline : XStagePipelineContext
+  pipeline : PositionPipelineContext
 }
 
 ///|
@@ -80,7 +68,7 @@ priv struct XSeedBuildInput {
 priv struct VnodeOrderBuildInput {
   use_vnodes_for_xpos : Bool
   ordered_groups_with_vnodes : Map[Int, Array[String]]
-  pipeline : XStagePipelineContext
+  pipeline : PositionPipelineContext
   order_index : Map[String, Int]
 }
 
@@ -106,7 +94,7 @@ priv struct XFlatLabelBuildInput {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
   graphviz_flip : Bool
-  pipeline : XStagePipelineContext
+  pipeline : PositionPipelineContext
   x_seed : XPositionSeedData
 }
 
@@ -115,7 +103,7 @@ priv struct XFlatLabelBuildInput {
 /// vnode-xpos gate, and mutable x-group/cluster-key snapshots grouped for one
 /// augmentation pass.
 priv struct FlatLabelAugmentationBuildInput {
-  pipeline : XStagePipelineContext
+  pipeline : PositionPipelineContext
   use_vnodes_for_xpos : Bool
   x_base_sizes : Map[String, NodeSize]
   x_groups : Map[Int, Array[String]]
@@ -256,20 +244,9 @@ fn build_position_mode_flags(
 /// and wiring.
 /// Do not change behavior without updating fixtures/tests.
 fn build_x_with_flat_labels(
-  prep : LayoutPrep,
-  rank_data : RankData,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  ordering : OrderingResult,
+  pipeline : PositionPipelineContext,
 ) -> XWithFlatLabelData {
-  let pipeline : XStagePipelineContext = {
-    prep,
-    rank_data,
-    rank_heights,
-    cluster_meta,
-    ordering,
-  }
-  let mode_flags = build_position_mode_flags(prep, ordering)
+  let mode_flags = build_position_mode_flags(pipeline.prep, pipeline.ordering)
   let x_seed =
     build_x_seed_data(
       {
@@ -1136,13 +1113,7 @@ fn compute_positions(
     ordering,
   }
   let x_data =
-    build_x_with_flat_labels(
-      prep,
-      rank_data,
-      rank_heights,
-      cluster_meta,
-      ordering,
-    )
+    build_x_with_flat_labels(pipeline)
   build_projection_result(
     {
       pipeline,
