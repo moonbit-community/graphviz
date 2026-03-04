@@ -386,15 +386,17 @@ fn resolve_short_route_detour(
     )
   let detour_spline =
     detour_spline_if_any(
-      base,
-      detour_context.needs_record_detour,
-      flat_detour,
-      using_pathplan,
-      detour_context.tail_slope_line,
-      detour_context.head_slope_line,
-      route_barriers,
-      nodesep_pt,
-      lr_detour_uses_x_axis,
+      {
+        base,
+        needs_record_detour: detour_context.needs_record_detour,
+        flat_detour,
+        using_pathplan,
+        tail_slope_line: detour_context.tail_slope_line,
+        head_slope_line: detour_context.head_slope_line,
+        route_barriers,
+        nodesep_pt,
+        lr_detour_uses_x_axis,
+      },
     )
   {
     detour_spline,

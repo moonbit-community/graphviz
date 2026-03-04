@@ -262,54 +262,61 @@ fn build_flat_detour_spline(
 }
 
 ///|
+/// Graphviz parity: detour-spline input keeps record/flat detour candidates
+/// and slope/barrier controls grouped for one detour selection boundary.
+priv struct DetourSplineBuildInput {
+  base : EdgeRouteBase
+  needs_record_detour : Bool
+  flat_detour : FlatDetourResult?
+  using_pathplan : Bool
+  tail_slope_line : @geom.Point
+  head_slope_line : @geom.Point
+  route_barriers : Array[(@geom.Point, @geom.Point)]
+  nodesep_pt : Double
+  lr_detour_uses_x_axis : Bool
+}
+
+///|
 fn detour_spline_if_any(
-  base : EdgeRouteBase,
-  needs_record_detour : Bool,
-  flat_detour : FlatDetourResult?,
-  using_pathplan : Bool,
-  tail_slope_line : @geom.Point,
-  head_slope_line : @geom.Point,
-  route_barriers : Array[(@geom.Point, @geom.Point)],
-  nodesep_pt : Double,
-  lr_detour_uses_x_axis : Bool,
+  input : DetourSplineBuildInput,
 ) -> PointsSplineResult? {
-  if needs_record_detour {
+  if input.needs_record_detour {
     let detour_points =
       record_port_detour_points(
-        base.tail_clip_center,
-        base.head_clip_center,
-        base.tail_clip_size,
-        base.head_clip_size,
-        base.tail_clip,
-        base.head_clip,
-        nodesep_pt,
-        base.layout_rankdir,
-        lr_detour_uses_x_axis,
+        input.base.tail_clip_center,
+        input.base.head_clip_center,
+        input.base.tail_clip_size,
+        input.base.head_clip_size,
+        input.base.tail_clip,
+        input.base.head_clip,
+        input.nodesep_pt,
+        input.base.layout_rankdir,
+        input.lr_detour_uses_x_axis,
       )
     Some(
       build_points_spline(
         {
-          base,
+          base: input.base,
           points: detour_points,
-          tail_slope_line,
-          head_slope_line,
+          tail_slope_line: input.tail_slope_line,
+          head_slope_line: input.head_slope_line,
           force_segmented: true,
-          using_pathplan,
-          route_barriers,
+          using_pathplan: input.using_pathplan,
+          route_barriers: input.route_barriers,
         },
       ),
     )
   } else {
-    match flat_detour {
+    match input.flat_detour {
       Some(detour) =>
         Some(
           build_flat_detour_spline(
-            base,
+            input.base,
             detour,
-            using_pathplan,
-            tail_slope_line,
-            head_slope_line,
-            route_barriers,
+            input.using_pathplan,
+            input.tail_slope_line,
+            input.head_slope_line,
+            input.route_barriers,
           ),
         )
       None => None
