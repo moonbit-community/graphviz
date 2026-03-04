@@ -236,6 +236,57 @@ fn run_clustered_rank_reorder(
 }
 
 ///|
+/// Graphviz parity: clustered root phase seeds build_ranks using mapped order
+/// edges plus Graphviz ND_out/ND_in neighbors before root-mincross reorder.
+/// Do not change behavior without updating fixtures/tests.
+fn build_seeded_groups_for_root_and_cluster(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+) -> Map[Int, Array[String]] {
+  let reorder_setup = dispatch_context.reorder_setup
+  let reorder_context = pre_root_stage.reorder_context
+  let materialized = pre_root_stage.materialized
+  build_seeded_reorder_groups(
+    reorder_context.order_rank_keys,
+    pre_root_stage.order_groups,
+    materialized.order_edge_tail_out,
+    materialized.order_edge_head_out,
+    reorder_context.order_ranks,
+    reorder_context.order_node_order,
+    pre_root_stage.order_cluster_keys,
+    pre_root_stage.order_cluster_skeleton,
+    materialized.order_flat_constraints,
+    reorder_setup.graphviz_flip,
+    materialized.graphviz_out_neighbors,
+    materialized.graphviz_in_neighbors,
+    materialized.order_edges_out,
+    materialized.order_edge_tail_port_x,
+    materialized.order_edge_head_port_x,
+    reorder_setup.flat_rank_constraints,
+  )
+}
+
+///|
+/// Graphviz parity: root+cluster rank phase input keeps root override and
+/// root-mincross payload unchanged before ordering package orchestration.
+/// Do not change behavior without updating fixtures/tests.
+fn build_root_and_cluster_ranks_inputs(
+  dispatch_context : ClusteredDispatchContext,
+  root_groups_override : Map[Int, Array[String]]?,
+  root_mincross_reorder_inputs : @ordering.RootMincrossReorderInputs,
+) -> @ordering.RootAndClusterRanksInputs {
+  let reorder_setup = dispatch_context.reorder_setup
+  {
+    order_with_clusters: reorder_setup.order_with_clusters,
+    order_with_vnodes: reorder_setup.order_with_vnodes,
+    graphviz_flip: reorder_setup.graphviz_flip,
+    cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+    root_groups_override,
+    root_mincross_reorder_inputs,
+  }
+}
+
+///|
 /// Graphviz parity: root mincross reordering is followed by clustered
 /// build_ranks application on the unmapped order graph before final cleanup.
 /// Do not change behavior without updating fixtures/tests.
@@ -244,27 +295,10 @@ fn run_root_and_cluster_ranks(
   pre_root_stage : ClusteredPreRootData,
   root_groups_override : Map[Int, Array[String]]?,
 ) -> @ordering.RootAndClusterRanksOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  let reorder_context = pre_root_stage.reorder_context
-  let materialized = pre_root_stage.materialized
   let seeded_groups =
-    build_seeded_reorder_groups(
-      reorder_context.order_rank_keys,
-      pre_root_stage.order_groups,
-      materialized.order_edge_tail_out,
-      materialized.order_edge_head_out,
-      reorder_context.order_ranks,
-      reorder_context.order_node_order,
-      pre_root_stage.order_cluster_keys,
-      pre_root_stage.order_cluster_skeleton,
-      materialized.order_flat_constraints,
-      reorder_setup.graphviz_flip,
-      materialized.graphviz_out_neighbors,
-      materialized.graphviz_in_neighbors,
-      materialized.order_edges_out,
-      materialized.order_edge_tail_port_x,
-      materialized.order_edge_head_port_x,
-      reorder_setup.flat_rank_constraints,
+    build_seeded_groups_for_root_and_cluster(
+      dispatch_context,
+      pre_root_stage,
     )
   let root_mincross_reorder_inputs =
     build_root_mincross_reorder_inputs(
@@ -274,14 +308,11 @@ fn run_root_and_cluster_ranks(
     )
   let output =
     @ordering.run_root_and_cluster_ranks(
-      {
-        order_with_clusters: reorder_setup.order_with_clusters,
-        order_with_vnodes: reorder_setup.order_with_vnodes,
-        graphviz_flip: reorder_setup.graphviz_flip,
-        cluster_keys: dispatch_context.cluster_meta.cluster_keys,
+      build_root_and_cluster_ranks_inputs(
+        dispatch_context,
         root_groups_override,
         root_mincross_reorder_inputs,
-      },
+      ),
       run_root_mincross_reorder,
       (ordered) =>
         run_clustered_rank_reorder(

@@ -112,6 +112,33 @@ fn apply_local_cluster_order(
 }
 
 ///|
+/// Graphviz parity: clustered finalize input payload keeps cluster-rank replay
+/// maps and remincross context unchanged before ordering finalize execution.
+/// Do not change behavior without updating fixtures/tests.
+fn build_clustered_finalize_inputs(
+  dispatch_context : ClusteredDispatchContext,
+  pre_root_stage : ClusteredPreRootData,
+  root_cluster_stage : @ordering.RootAndClusterRanksOutput,
+  root_tail_order_override : Array[String]?,
+  cluster_rank_order : Map[Int, Map[String, Int]],
+) -> @ordering.ClusteredFinalizeInputs {
+  let reorder_setup = dispatch_context.reorder_setup
+  {
+    order_with_clusters: reorder_setup.order_with_clusters,
+    order_rank_keys: pre_root_stage.reorder_context.order_rank_keys,
+    ordered: root_cluster_stage.ordered,
+    cluster_rank_order,
+    remincross_context:
+      build_remincross_pass_context(
+        dispatch_context,
+        pre_root_stage,
+        root_cluster_stage,
+        root_tail_order_override,
+      ),
+  }
+}
+
+///|
 /// Graphviz parity: final group cleanup keeps only real nodes, applies
 /// cluster-rank/local-cluster bucket ordering, then runs clustered ReMincross
 /// refinement before returning final groups.
@@ -123,23 +150,17 @@ fn finalize_order_groups(
   root_tail_order_override : Array[String]?,
   cluster_rank_order : Map[Int, Map[String, Int]],
 ) -> OrderingDispatchOutput {
-  let reorder_setup = dispatch_context.reorder_setup
-  let remincross_context =
-    build_remincross_pass_context(
+  let finalize_inputs =
+    build_clustered_finalize_inputs(
       dispatch_context,
       pre_root_stage,
       root_cluster_stage,
       root_tail_order_override,
+      cluster_rank_order,
     )
   let finalize_output =
     @ordering.run_clustered_finalize_order_groups(
-      {
-        order_with_clusters: reorder_setup.order_with_clusters,
-        order_rank_keys: pre_root_stage.reorder_context.order_rank_keys,
-        ordered: root_cluster_stage.ordered,
-        cluster_rank_order,
-        remincross_context,
-      },
+      finalize_inputs,
       (groups) =>
         apply_local_cluster_order(
           dispatch_context,
