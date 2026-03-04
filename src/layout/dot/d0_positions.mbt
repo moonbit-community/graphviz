@@ -55,14 +55,23 @@ priv struct XPositionSeedData {
 }
 
 ///|
+/// Graphviz parity: x-stage shared pipeline context keeps rank/cluster/order
+/// snapshots grouped for seed build, reorder pipeline wiring, and flat-label
+/// augmentation.
+priv struct XStagePipelineContext {
+  prep : LayoutPrep
+  rank_data : RankData
+  rank_heights : RankHeights
+  cluster_meta : ClusterMetadata
+  ordering : OrderingResult
+}
+
+///|
 /// Graphviz parity: x-stage seed input keeps vnode mode plus ordering/rank
 /// context grouped before order-index, vnode-order, and edge-port precompute.
 priv struct XSeedBuildInput {
   use_vnodes_for_xpos : Bool
-  prep : LayoutPrep
-  rank_data : RankData
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
+  pipeline : XStagePipelineContext
 }
 
 ///|
@@ -71,11 +80,8 @@ priv struct XSeedBuildInput {
 priv struct VnodeOrderBuildInput {
   use_vnodes_for_xpos : Bool
   ordered_groups_with_vnodes : Map[Int, Array[String]]
-  prep : LayoutPrep
-  rank_data : RankData
+  pipeline : XStagePipelineContext
   order_index : Map[String, Int]
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
 }
 
 ///|
@@ -100,12 +106,20 @@ priv struct XFlatLabelBuildInput {
   use_vnodes_for_xpos : Bool
   allow_xpos_reorder : Bool
   graphviz_flip : Bool
-  prep : LayoutPrep
-  rank_data : RankData
-  rank_heights : RankHeights
-  cluster_meta : ClusterMetadata
-  ordering : OrderingResult
+  pipeline : XStagePipelineContext
   x_seed : XPositionSeedData
+}
+
+///|
+/// Graphviz parity: flat-label augmentation input keeps x-stage pipeline,
+/// vnode-xpos gate, and mutable x-group/cluster-key snapshots grouped for one
+/// augmentation pass.
+priv struct FlatLabelAugmentationBuildInput {
+  pipeline : XStagePipelineContext
+  use_vnodes_for_xpos : Bool
+  x_base_sizes : Map[String, NodeSize]
+  x_groups : Map[Int, Array[String]]
+  x_cluster_keys : Map[String, String]
 }
 
 ///|
@@ -248,15 +262,19 @@ fn build_x_with_flat_labels(
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
 ) -> XWithFlatLabelData {
+  let pipeline : XStagePipelineContext = {
+    prep,
+    rank_data,
+    rank_heights,
+    cluster_meta,
+    ordering,
+  }
   let mode_flags = build_position_mode_flags(prep, ordering)
   let x_seed =
     build_x_seed_data(
       {
         use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
-        prep,
-        rank_data,
-        cluster_meta,
-        ordering,
+        pipeline,
       },
     )
   let flat_label_augmentation =
@@ -266,11 +284,7 @@ fn build_x_with_flat_labels(
         use_vnodes_for_xpos: mode_flags.use_vnodes_for_xpos,
         allow_xpos_reorder: mode_flags.allow_xpos_reorder,
         graphviz_flip: mode_flags.graphviz_flip,
-        prep,
-        rank_data,
-        rank_heights,
-        cluster_meta,
-        ordering,
+        pipeline,
         x_seed,
       },
     )
@@ -293,20 +307,21 @@ fn build_x_with_flat_labels(
 fn build_vnode_order_state(
   input : VnodeOrderBuildInput,
 ) -> XposVNodeOrderState {
+  let pipeline = input.pipeline
   let mut vnode_order_keys : Map[String, Double] = Map::new()
   let mut has_vnode_order = false
   if input.use_vnodes_for_xpos && input.ordered_groups_with_vnodes.length() == 0 {
     vnode_order_keys = build_vnode_order_keys(
-      input.prep.edges,
-      input.rank_data.edge_tail,
-      input.rank_data.edge_head,
-      input.rank_data.edge_reversed,
-      input.rank_data.ranks,
+      pipeline.prep.edges,
+      pipeline.rank_data.edge_tail,
+      pipeline.rank_data.edge_head,
+      pipeline.rank_data.edge_reversed,
+      pipeline.rank_data.ranks,
       input.order_index,
-      input.cluster_meta.intercluster_keys,
-      input.cluster_meta.cluster_parents,
-      input.ordering.vnode_info.edge_vnodes,
-      input.ordering.vnode_info.vnode_ranks,
+      pipeline.cluster_meta.intercluster_keys,
+      pipeline.cluster_meta.cluster_parents,
+      pipeline.ordering.vnode_info.edge_vnodes,
+      pipeline.ordering.vnode_info.vnode_ranks,
     )
     for _name, _ in vnode_order_keys {
       has_vnode_order = true
@@ -380,49 +395,42 @@ fn build_x_order_edge_port_data(
 /// label edges, and vnode cluster-key overlay only on vnode-xpos path.
 /// Do not change behavior without updating fixtures/tests.
 fn build_flat_label_augmentation(
-  use_vnodes_for_xpos : Bool,
-  prep : LayoutPrep,
-  rank_data : RankData,
-  ordering : OrderingResult,
-  rank_heights : RankHeights,
-  cluster_meta : ClusterMetadata,
-  x_base_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  x_cluster_keys : Map[String, String],
+  input : FlatLabelAugmentationBuildInput,
 ) -> XposFlatLabelAugmentation {
-  let mut next_x_groups = x_groups
+  let pipeline = input.pipeline
+  let mut next_x_groups = input.x_groups
   let mut flat_label_edges : Array[ConstraintEdge] = []
   let mut flat_label_nodes : Map[String, FlatLabelNodeInfo] = Map::new()
   let mut flat_label_edge_vnodes : Map[String, String] = Map::new()
-  let next_x_cluster_keys = x_cluster_keys
+  let next_x_cluster_keys = input.x_cluster_keys
   let existing_names : Map[String, Bool] = Map::new()
-  for node in prep.nodes {
+  for node in pipeline.prep.nodes {
     existing_names[node.name()] = true
   }
-  for vnode, _ in ordering.vnode_info.vnode_ranks {
+  for vnode, _ in pipeline.ordering.vnode_info.vnode_ranks {
     existing_names[vnode] = true
   }
-  if use_vnodes_for_xpos {
+  if input.use_vnodes_for_xpos {
     let flat_label_vnodes = add_flat_label_vnodes(
-      prep.edges,
-      rank_data.edge_tail,
-      rank_data.edge_head,
-      rank_data.ranks,
-      ordering.ordered_groups,
-      rank_heights.nodesep_pt,
-      prep.rankdir,
-      x_base_sizes,
-      ordering.edge_cluster_keys,
-      cluster_meta.cluster_parents,
+      pipeline.prep.edges,
+      pipeline.rank_data.edge_tail,
+      pipeline.rank_data.edge_head,
+      pipeline.rank_data.ranks,
+      pipeline.ordering.ordered_groups,
+      pipeline.rank_heights.nodesep_pt,
+      pipeline.prep.rankdir,
+      input.x_base_sizes,
+      pipeline.ordering.edge_cluster_keys,
+      pipeline.cluster_meta.cluster_parents,
       existing_names,
-      ordering.vnode_info,
+      pipeline.ordering.vnode_info,
       next_x_groups,
     )
     next_x_groups = flat_label_vnodes.x_groups
     flat_label_edges = flat_label_vnodes.flat_label_edges
     flat_label_nodes = flat_label_vnodes.flat_label_nodes
     flat_label_edge_vnodes = flat_label_vnodes.flat_label_edge_vnodes
-    for name, key in ordering.vnode_info.vnode_clusters {
+    for name, key in pipeline.ordering.vnode_info.vnode_clusters {
       next_x_cluster_keys[name] = key
     }
   }
@@ -552,45 +560,43 @@ fn build_initial_x_groups(
 fn build_x_seed_data(
   input : XSeedBuildInput,
 ) -> XPositionSeedData {
-  let order_index = @ordering.build_order_index(input.ordering.ordered_groups)
+  let pipeline = input.pipeline
+  let order_index = @ordering.build_order_index(pipeline.ordering.ordered_groups)
   let vnode_order_state =
     build_vnode_order_state(
       {
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
-        prep: input.prep,
-        rank_data: input.rank_data,
+        ordered_groups_with_vnodes: pipeline.ordering.ordered_groups_with_vnodes,
+        pipeline,
         order_index,
-        cluster_meta: input.cluster_meta,
-        ordering: input.ordering,
       },
     )
   let has_vnode_order = vnode_order_state.has_vnode_order
   let x_order_edge_port_data =
     build_x_order_edge_port_data(
       input.use_vnodes_for_xpos,
-      input.prep,
-      input.rank_data,
-      input.ordering,
+      pipeline.prep,
+      pipeline.rank_data,
+      pipeline.ordering,
     )
   let x_groups =
     build_initial_x_groups(
       {
         use_vnodes_for_xpos: input.use_vnodes_for_xpos,
-        ordered_groups: input.ordering.ordered_groups,
-        ordered_groups_with_vnodes: input.ordering.ordered_groups_with_vnodes,
+        ordered_groups: pipeline.ordering.ordered_groups,
+        ordered_groups_with_vnodes: pipeline.ordering.ordered_groups_with_vnodes,
         order_index,
-        vnodes_by_rank: input.ordering.vnode_info.vnodes_by_rank,
+        vnodes_by_rank: pipeline.ordering.vnode_info.vnodes_by_rank,
         vnode_order_keys: vnode_order_state.vnode_order_keys,
-        cluster_meta: input.cluster_meta,
+        cluster_meta: pipeline.cluster_meta,
       },
     )
   let x_cluster_keys : Map[String, String] = Map::new()
-  for name, key in input.cluster_meta.cluster_keys {
+  for name, key in pipeline.cluster_meta.cluster_keys {
     x_cluster_keys[name] = key
   }
   if input.use_vnodes_for_xpos {
-    for name, key in input.ordering.vnode_info.vnode_clusters {
+    for name, key in pipeline.ordering.vnode_info.vnode_clusters {
       x_cluster_keys[name] = key
     }
   }
@@ -614,47 +620,48 @@ fn build_x_seed_data(
 fn build_x_groups_after_reorder(
   input : XFlatLabelBuildInput,
 ) -> Map[Int, Array[String]] {
+  let pipeline = input.pipeline
   @positioning.build_x_groups_after_reorder(
     @positioning.build_xpos_reorder_pipeline_input(
       input.xpos_reorder_enabled,
       input.use_vnodes_for_xpos,
       input.allow_xpos_reorder,
       input.x_seed.has_vnode_order,
-      input.cluster_meta.ordering_set,
-      input.cluster_meta.has_clusters,
+      pipeline.cluster_meta.ordering_set,
+      pipeline.cluster_meta.has_clusters,
       input.x_seed.x_groups,
       input.x_seed.x_order_sizes,
       input.x_seed.x_cluster_keys,
-      input.cluster_meta.cluster_min_rank,
-      input.cluster_meta.cluster_max_rank,
-      input.prep.node_order,
+      pipeline.cluster_meta.cluster_min_rank,
+      pipeline.cluster_meta.cluster_max_rank,
+      pipeline.prep.node_order,
       CLUSTER_SKELETON_PREFIX,
       vnode_size_from_widths(1.0, 1.0),
-      input.prep.edges,
-      input.rank_data.edge_tail,
-      input.rank_data.edge_head,
-      input.rank_data.ranks,
-      input.ordering.vnode_info.edge_vnodes,
-      input.ordering.vnode_info.vnode_ranks,
+      pipeline.prep.edges,
+      pipeline.rank_data.edge_tail,
+      pipeline.rank_data.edge_head,
+      pipeline.rank_data.ranks,
+      pipeline.ordering.vnode_info.edge_vnodes,
+      pipeline.ordering.vnode_info.vnode_ranks,
       input.x_seed.x_edge_tail_port_x,
       input.x_seed.x_edge_head_port_x,
       input.x_seed.x_edge_tail_port_order,
       input.x_seed.x_edge_head_port_order,
       CL_CROSS,
-      input.cluster_meta.rank_same_groups,
-      input.cluster_meta.rank_same_order,
-      input.rank_heights.nodesep_pt,
-      input.prep.has_edge_labels,
-      input.cluster_meta.flat_constraints,
+      pipeline.cluster_meta.rank_same_groups,
+      pipeline.cluster_meta.rank_same_order,
+      pipeline.rank_heights.nodesep_pt,
+      pipeline.prep.has_edge_labels,
+      pipeline.cluster_meta.flat_constraints,
       input.graphviz_flip,
-      input.prep.nodes,
-      input.ordering.order_edges,
-      input.ordering.order_edge_tail,
-      input.ordering.order_edge_head,
-      input.ordering.edge_order,
-      input.prep.port_order_positions,
-      input.prep.port_order_contrib,
-      input.cluster_meta.cluster_skeleton,
+      pipeline.prep.nodes,
+      pipeline.ordering.order_edges,
+      pipeline.ordering.order_edge_tail,
+      pipeline.ordering.order_edge_head,
+      pipeline.ordering.edge_order,
+      pipeline.prep.port_order_positions,
+      pipeline.prep.port_order_contrib,
+      pipeline.cluster_meta.cluster_skeleton,
       4,
     ),
     (nodes, edges, edge_tail, edge_head, sizes) => {
@@ -679,15 +686,13 @@ fn build_x_flat_labels(
 ) -> XposFlatLabelAugmentation {
   let x_groups = build_x_groups_after_reorder(input)
   build_flat_label_augmentation(
-    input.use_vnodes_for_xpos,
-    input.prep,
-    input.rank_data,
-    input.ordering,
-    input.rank_heights,
-    input.cluster_meta,
-    input.x_seed.x_base_sizes,
-    x_groups,
-    input.x_seed.x_cluster_keys,
+    {
+      pipeline: input.pipeline,
+      use_vnodes_for_xpos: input.use_vnodes_for_xpos,
+      x_base_sizes: input.x_seed.x_base_sizes,
+      x_groups,
+      x_cluster_keys: input.x_seed.x_cluster_keys,
+    },
   )
 }
 
