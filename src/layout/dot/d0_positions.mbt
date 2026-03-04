@@ -1216,15 +1216,7 @@ fn build_projection_result(
   rank_heights : RankHeights,
   cluster_meta : ClusterMetadata,
   ordering : OrderingResult,
-  use_vnodes_for_xpos : Bool,
-  x_base_sizes : Map[String, NodeSize],
-  x_groups : Map[Int, Array[String]],
-  x_cluster_keys : Map[String, String],
-  flat_label_edges : Array[ConstraintEdge],
-  flat_label_nodes : Map[String, FlatLabelNodeInfo],
-  flat_label_edge_vnodes : Map[String, String],
-  rank_ht1 : Map[Int, Double],
-  rank_ht2 : Map[Int, Double],
+  x_data : XWithFlatLabelData,
 ) -> PositionResult {
   let y_position_data =
     build_y_position_data(
@@ -1234,7 +1226,7 @@ fn build_projection_result(
       rank_heights,
       cluster_meta,
       ordering,
-      flat_label_nodes,
+      x_data.flat_label_nodes,
     )
   let x_positions =
     compute_layout_x_positions(
@@ -1243,11 +1235,11 @@ fn build_projection_result(
       rank_data,
       rank_heights,
       ordering,
-      use_vnodes_for_xpos,
-      x_base_sizes,
-      x_groups,
-      x_cluster_keys,
-      flat_label_edges,
+      x_data.use_vnodes_for_xpos,
+      x_data.x_base_sizes,
+      x_data.x_groups,
+      x_data.x_cluster_keys,
+      x_data.flat_label_edges,
     )
   let position_output_maps =
     build_position_output_maps(
@@ -1258,22 +1250,22 @@ fn build_projection_result(
         rank_heights,
         cluster_meta,
         ordering,
-        use_vnodes_for_xpos,
+        use_vnodes_for_xpos: x_data.use_vnodes_for_xpos,
         x_positions,
         y_positions: y_position_data.y_positions,
         rank_y: y_position_data.rank_y,
       },
     )
   {
-    x_groups,
+    x_groups: x_data.x_groups,
     rank_y: y_position_data.rank_y,
     positions: position_output_maps.positions,
     vnode_positions: position_output_maps.vnode_positions,
     cluster_ln_x: position_output_maps.cluster_ln_x,
     cluster_rn_x: position_output_maps.cluster_rn_x,
-    flat_label_edge_vnodes,
-    rank_ht1,
-    rank_ht2,
+    flat_label_edge_vnodes: x_data.flat_label_edge_vnodes,
+    rank_ht1: rank_heights.rank_ht1,
+    rank_ht2: rank_heights.rank_ht2,
     cluster_bbox_heights: y_position_data.cluster_bbox_heights,
   }
 }
@@ -1304,14 +1296,6 @@ fn compute_positions(
     rank_heights,
     cluster_meta,
     ordering,
-    x_data.use_vnodes_for_xpos,
-    x_data.x_base_sizes,
-    x_data.x_groups,
-    x_data.x_cluster_keys,
-    x_data.flat_label_edges,
-    x_data.flat_label_nodes,
-    x_data.flat_label_edge_vnodes,
-    rank_heights.rank_ht1,
-    rank_heights.rank_ht2,
+    x_data,
   )
 }
