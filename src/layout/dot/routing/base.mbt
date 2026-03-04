@@ -175,23 +175,28 @@ fn anchor_base_for_route_endpoint(
 }
 
 ///|
+priv struct RouteEndpointPortSideInput {
+  sameport_anchor : @geom.Point?
+  dynamic_anchor : RouteDynamicPortAnchor
+  anchor_base : @geom.Point
+  port : @cgraph.Port?
+  port_rect : @geom.Rect?
+  pos : @geom.Point
+  size : NodeSize
+  port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int
+  port_side_for_edge : (@cgraph.Port?, @geom.Rect?, @geom.Point, NodeSize) -> Int
+}
+
+///|
 fn port_side_for_route_endpoint(
-  sameport_anchor : @geom.Point?,
-  dynamic_anchor : RouteDynamicPortAnchor,
-  anchor_base : @geom.Point,
-  port : @cgraph.Port?,
-  port_rect : @geom.Rect?,
-  pos : @geom.Point,
-  size : NodeSize,
-  port_side_mask_from_anchor : (@geom.Point, @geom.Point, NodeSize) -> Int,
-  port_side_for_edge : (@cgraph.Port?, @geom.Rect?, @geom.Point, NodeSize) -> Int,
+  input : RouteEndpointPortSideInput,
 ) -> Int {
-  if sameport_anchor is Some(_) {
-    port_side_mask_from_anchor(anchor_base, pos, size)
-  } else if dynamic_anchor.is_dynamic {
-    dynamic_anchor.side
+  if input.sameport_anchor is Some(_) {
+    (input.port_side_mask_from_anchor)(input.anchor_base, input.pos, input.size)
+  } else if input.dynamic_anchor.is_dynamic {
+    input.dynamic_anchor.side
   } else {
-    port_side_for_edge(port, port_rect, pos, size)
+    (input.port_side_for_edge)(input.port, input.port_rect, input.pos, input.size)
   }
 }
 
@@ -260,31 +265,36 @@ fn edge_style_is_dotted(
 }
 
 ///|
+priv struct RouteEndpointClipPointInput {
+  anchor : @geom.Point
+  opposite_anchor : @geom.Point
+  cluster_bbox : @geom.Rect?
+  dynamic_anchor : RouteDynamicPortAnchor
+  compass_clip : @geom.Point?
+  node : @cgraph.Node
+  clip_center : @geom.Point
+  clip_size : NodeSize
+  clip_target : @geom.Point
+}
+
+///|
 fn clip_point_for_route_endpoint(
-  anchor : @geom.Point,
-  opposite_anchor : @geom.Point,
-  cluster_bbox : @geom.Rect?,
-  dynamic_anchor : RouteDynamicPortAnchor,
-  compass_clip : @geom.Point?,
-  node : @cgraph.Node,
-  clip_center : @geom.Point,
-  clip_size : NodeSize,
-  clip_target : @geom.Point,
+  input : RouteEndpointClipPointInput,
 ) -> @geom.Point {
-  match cluster_bbox {
-    Some(rect) => clip_to_bbox(anchor, rect, opposite_anchor)
+  match input.cluster_bbox {
+    Some(rect) => clip_to_bbox(input.anchor, rect, input.opposite_anchor)
     None =>
-      match dynamic_anchor.anchor {
+      match input.dynamic_anchor.anchor {
         Some(pos) => pos
         None =>
-          match compass_clip {
+          match input.compass_clip {
             Some(pos) => pos
             None =>
               clip_to_node_shape(
-                node,
-                clip_center,
-                clip_size,
-                clip_target,
+                input.node,
+                input.clip_center,
+                input.clip_size,
+                input.clip_target,
               )
           }
       }
@@ -549,27 +559,31 @@ fn build_edge_route_base(
     )
   let tail_port_side =
     port_side_for_route_endpoint(
-      tail_sameport_anchor,
-      tail_dynamic_anchor,
-      tail_anchor_base,
-      tail_port,
-      tail_port_rect,
-      tail_pos,
-      tail_size,
-      route_base_deps.port_side_mask_from_anchor,
-      route_base_deps.port_side_for_edge,
+      {
+        sameport_anchor: tail_sameport_anchor,
+        dynamic_anchor: tail_dynamic_anchor,
+        anchor_base: tail_anchor_base,
+        port: tail_port,
+        port_rect: tail_port_rect,
+        pos: tail_pos,
+        size: tail_size,
+        port_side_mask_from_anchor: route_base_deps.port_side_mask_from_anchor,
+        port_side_for_edge: route_base_deps.port_side_for_edge,
+      },
     )
   let head_port_side =
     port_side_for_route_endpoint(
-      head_sameport_anchor,
-      head_dynamic_anchor,
-      head_anchor_base,
-      head_port,
-      head_port_rect,
-      head_pos,
-      head_size,
-      route_base_deps.port_side_mask_from_anchor,
-      route_base_deps.port_side_for_edge,
+      {
+        sameport_anchor: head_sameport_anchor,
+        dynamic_anchor: head_dynamic_anchor,
+        anchor_base: head_anchor_base,
+        port: head_port,
+        port_rect: head_port_rect,
+        pos: head_pos,
+        size: head_size,
+        port_side_mask_from_anchor: route_base_deps.port_side_mask_from_anchor,
+        port_side_for_edge: route_base_deps.port_side_for_edge,
+      },
     )
   let tail_anchor0 = @edge_spline.point_add(tail_anchor_base, tail_offset)
   let head_anchor0 = @edge_spline.point_add(head_anchor_base, head_offset)
@@ -680,27 +694,31 @@ fn build_edge_route_base(
     }
   let mut tail_clip =
     clip_point_for_route_endpoint(
-      tail_anchor0,
-      head_anchor0,
-      tail_cluster_bbox,
-      tail_dynamic_anchor,
-      tail_compass_clip,
-      tail_node,
-      tail_clip_center,
-      tail_clip_size,
-      tail_clip_target,
+      {
+        anchor: tail_anchor0,
+        opposite_anchor: head_anchor0,
+        cluster_bbox: tail_cluster_bbox,
+        dynamic_anchor: tail_dynamic_anchor,
+        compass_clip: tail_compass_clip,
+        node: tail_node,
+        clip_center: tail_clip_center,
+        clip_size: tail_clip_size,
+        clip_target: tail_clip_target,
+      },
     )
   let mut head_clip =
     clip_point_for_route_endpoint(
-      head_anchor0,
-      tail_anchor0,
-      head_cluster_bbox,
-      head_dynamic_anchor,
-      head_compass_clip,
-      head_node,
-      head_clip_center,
-      head_clip_size,
-      head_clip_target,
+      {
+        anchor: head_anchor0,
+        opposite_anchor: tail_anchor0,
+        cluster_bbox: head_cluster_bbox,
+        dynamic_anchor: head_dynamic_anchor,
+        compass_clip: head_compass_clip,
+        node: head_node,
+        clip_center: head_clip_center,
+        clip_size: head_clip_size,
+        clip_target: head_clip_target,
+      },
     )
   let compass_tail_on_non_record =
     compass_port_on_non_record_shape(
