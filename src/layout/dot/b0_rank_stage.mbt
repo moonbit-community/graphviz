@@ -20,10 +20,12 @@ fn compute_dot_rank_stage(
   // Graphviz parity: rank-data creation remains first before downstream stage assembly.
   let rank_data =
     compute_rank_data(
-      graph,
-      prep.nodes,
-      prep.edges,
-      prep.has_edge_labels,
+      {
+        graph,
+        nodes: prep.nodes,
+        edges: prep.edges,
+        has_edge_labels: prep.has_edge_labels,
+      },
     )
   // Graphviz parity: rank-height stage consumes computed ranks/groups
   // and spacing inputs with unchanged Graphviz argument wiring.

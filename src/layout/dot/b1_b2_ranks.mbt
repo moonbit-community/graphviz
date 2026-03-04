@@ -3,6 +3,16 @@
 /// shared by rank assignment and rank-height assembly.
 
 ///|
+/// Graphviz parity: rank-data payload keeps stage-B rank inputs grouped so
+/// edge direction/orientation wiring remains explicit and stable.
+priv struct RankDataInput {
+  graph : @cgraph.Graph
+  nodes : Array[@cgraph.Node]
+  edges : Array[@cgraph.Edge]
+  has_edge_labels : Bool
+}
+
+///|
 priv struct RankData {
   edge_tail : Array[String]
   edge_head : Array[String]
@@ -32,11 +42,11 @@ priv struct RankHeights {
 /// Graphviz parity: rank direction + acyclic edge directions aligned to refs/graphviz/lib/dotgen/rank.c + dotgen/acyclic.c (fixtures).
 /// Do not change behavior without updating fixtures/tests.
 fn compute_rank_data(
-  graph : @cgraph.Graph,
-  nodes : Array[@cgraph.Node],
-  edges : Array[@cgraph.Edge],
-  has_edge_labels : Bool,
+  input : RankDataInput,
 ) -> RankData {
+  let graph = input.graph
+  let nodes = input.nodes
+  let edges = input.edges
   // Graphviz parity: edge direction/order comes from acyclic.c for both
   // directed and undirected inputs (dot rank preprocessing orients edges first).
   let edge_out_order : Map[String, Array[Int]] = Map::new()
@@ -54,7 +64,7 @@ fn compute_rank_data(
     graph,
     nodes,
     edges,
-    has_edge_labels,
+    input.has_edge_labels,
     edge_tail,
     edge_head,
     CL_BACK,
