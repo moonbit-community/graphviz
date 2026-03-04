@@ -8,9 +8,6 @@
 /// Do not change behavior without updating fixtures/tests.
 fn run_ordering_dispatch(
   dispatch_context : ClusteredDispatchContext,
-  edge_out_order : Map[String, Array[Int]],
-  rank_keys : Array[Int],
-  groups : Map[Int, Array[String]],
 ) -> OrderingDispatchOutput {
   let reorder_setup = dispatch_context.reorder_setup
   if reorder_setup.order_with_vnodes || reorder_setup.order_with_clusters {
@@ -22,10 +19,10 @@ fn run_ordering_dispatch(
           nodes: dispatch_context.nodes,
           edges: dispatch_context.edges,
           edge_head: dispatch_context.edge_head,
-          edge_out_order,
+          edge_out_order: dispatch_context.edge_out_order,
           ranks: dispatch_context.ranks,
-          rank_keys,
-          groups,
+          rank_keys: dispatch_context.rank_keys,
+          groups: dispatch_context.groups,
           node_order: dispatch_context.node_order,
           cluster_keys: dispatch_context.cluster_meta.cluster_keys,
           cluster_skeleton: dispatch_context.cluster_meta.cluster_skeleton,

@@ -252,6 +252,9 @@ fn compute_ordering_and_vnodes(
     edge_tail,
     edge_head,
     edge_reversed,
+    edge_out_order,
+    rank_keys,
+    groups,
     ranks,
     node_order,
     order_sizes,
@@ -265,12 +268,7 @@ fn compute_ordering_and_vnodes(
     reorder_setup: pipeline_context.reorder_setup,
   }
   let dispatch_output =
-    run_ordering_dispatch(
-      dispatch_context,
-      edge_out_order,
-      rank_keys,
-      groups,
-    )
+    run_ordering_dispatch(dispatch_context)
   {
     ordered_groups: dispatch_output.ordered_groups,
     ordered_groups_with_vnodes: dispatch_output.ordered_with_vnodes,
