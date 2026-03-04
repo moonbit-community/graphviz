@@ -134,56 +134,11 @@ fn run_ordering_dispatch(
 fn compute_ordering_and_vnodes(
   input : OrderingStageInput,
 ) -> OrderingResult {
-  let graph = input.graph
-  let nodes = input.nodes
-  let edges = input.edges
-  let edge_tail = input.edge_tail
-  let edge_head = input.edge_head
-  let edge_reversed = input.edge_reversed
-  let edge_out_order = input.edge_out_order
-  let ranks = input.ranks
-  let groups = input.groups
-  let node_order = input.node_order
-  let order_sizes = input.order_sizes
-  let nodesep_pt = input.nodesep_pt
-  let rankdir = input.rankdir
-  let cluster_meta = input.cluster_meta
   let pipeline_context =
-    build_ordering_pipeline_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      ranks,
-      groups,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      rankdir,
-      cluster_meta,
-    )
+    build_ordering_pipeline_context(input)
   let dispatch_context =
     build_clustered_dispatch_context(
-      graph,
-      nodes,
-      edges,
-      edge_tail,
-      edge_head,
-      edge_reversed,
-      edge_out_order,
-      input.rank_keys,
-      groups,
-      ranks,
-      node_order,
-      order_sizes,
-      nodesep_pt,
-      input.has_edge_labels,
-      cluster_meta,
-      input.port_order_positions,
-      input.port_order_contrib,
+      input,
       pipeline_context,
     )
   let dispatch_output =
