@@ -1,0 +1,87 @@
+///|
+/// Stage E ratio=fill routing adjustment helpers.
+
+///|
+priv struct RoutingRatioAdjustedData {
+  ratio_scaled : Bool
+  ratio_sx : Double
+  ratio_sy : Double
+  positions_state : PositionResult
+  cluster_bboxes : Map[String, @geom.Rect]
+  label_ports_map : Map[String, Map[String, RecordPort]]
+  label_ports_raw : Map[String, Map[String, RecordPort]]
+}
+
+///|
+/// Graphviz parity: ratio=fill scaling is resolved once before routing
+/// precompute/edge solve and keeps position/cluster/port maps in sync.
+/// Do not change behavior without updating fixtures/tests.
+fn build_routing_ratio_adjusted_data(
+  graph : @cgraph.Graph,
+  prep : LayoutPrep,
+  rank_data : RankData,
+  nodes_out : Array[DotLayoutNode],
+  positions_state : PositionResult,
+  cluster_bboxes : Map[String, @geom.Rect],
+  label_ports_map : Map[String, Map[String, RecordPort]],
+  label_ports_raw : Map[String, Map[String, RecordPort]],
+) -> RoutingRatioAdjustedData {
+  let routing_bbox =
+    compute_dot_bbox(
+      nodes_out,
+      rank_data.all_ranks,
+      prep.sizes,
+      positions_state.rank_y,
+      positions_state.rank_ht1,
+      positions_state.rank_ht2,
+    )
+  let (ratio_sx, ratio_sy) =
+    match ratio_fill_scale_factors(graph, routing_bbox, prep.rankdir) {
+      Some(scale_factors) =>
+        if scale_factors.sx != 1.0 || scale_factors.sy != 1.0 {
+          (scale_factors.sx, scale_factors.sy)
+        } else {
+          (1.0, 1.0)
+        }
+      None => (1.0, 1.0)
+    }
+  let ratio_scaled = ratio_sx != 1.0 || ratio_sy != 1.0
+  if !ratio_scaled {
+    return {
+      ratio_scaled,
+      ratio_sx,
+      ratio_sy,
+      positions_state,
+      cluster_bboxes,
+      label_ports_map,
+      label_ports_raw,
+    }
+  }
+  let adjusted_positions_state : PositionResult = {
+    x_groups: positions_state.x_groups,
+    rank_y: scale_double_map_rounded(positions_state.rank_y, ratio_sy),
+    positions: scale_point_map_rounded(positions_state.positions, ratio_sx, ratio_sy),
+    vnode_positions:
+      scale_point_map_rounded(
+        positions_state.vnode_positions,
+        ratio_sx,
+        ratio_sy,
+      ),
+    cluster_ln_x: scale_named_double_map(positions_state.cluster_ln_x, ratio_sx),
+    cluster_rn_x: scale_named_double_map(positions_state.cluster_rn_x, ratio_sx),
+    flat_label_edge_vnodes: positions_state.flat_label_edge_vnodes,
+    rank_ht1: positions_state.rank_ht1,
+    rank_ht2: positions_state.rank_ht2,
+    cluster_bbox_heights: positions_state.cluster_bbox_heights,
+  }
+  {
+    ratio_scaled,
+    ratio_sx,
+    ratio_sy,
+    positions_state: adjusted_positions_state,
+    cluster_bboxes: scale_rect_map(cluster_bboxes, ratio_sx, ratio_sy),
+    label_ports_map: scale_record_port_maps(label_ports_map, ratio_sx, ratio_sy),
+    label_ports_raw: scale_record_port_maps(label_ports_raw, ratio_sx, ratio_sy),
+  }
+}
+
